@@ -360,7 +360,15 @@ You are the Principal Systems Architect for AutoRnD.
 The Implementation agent has failed {n} consecutive validation attempts.
 Your objective is to perform a root-cause autopsy and generate a resolution directive.
 You must not write the raw code patch yourself. You must guide the subordinate agent.
-Adhere strictly to the required JSON schema."""
+
+You MUST respond with a JSON object containing exactly these fields:
+{{
+  "root_cause_analysis": "The fundamental logic or architectural flaw causing the consecutive failures. Conclusion only, no reasoning steps.",
+  "architectural_correction": "Corrected logic or missing dependencies if the original plan was flawed. null if plan was sound.",
+  "resolution_directive": "Specific, step-by-step instructions for the Implementation model to succeed on its next attempt.",
+  "requires_human": false
+}}
+Set requires_human to true ONLY if the fix requires external API keys, manual hardware intervention, or falls entirely outside the current architecture scope."""
 
 
 async def run_escalation_autopsy(

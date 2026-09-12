@@ -167,7 +167,7 @@ class OpenRouterClient:
         rates = {
             "deepseek/deepseek-v4-flash": (0.07, 0.14),
             "minimax/minimax-m3": (0.60, 2.40),
-            "z-ai/glm-5.3": (1.40, 4.40),
+            "z-ai/glm-5.3-20260816": (1.40, 4.40),
             "google/gemini-2.5-flash": (0.15, 0.60),
             "moonshotai/kimi-k3": (3.00, 12.00),
         }

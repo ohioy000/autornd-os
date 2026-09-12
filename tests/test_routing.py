@@ -21,7 +21,7 @@ class TestModelRouting:
     def test_architecture_routes_to_glm(self):
         client = OpenRouterClient(api_key="test")
         model = client.get_model("architecture")
-        assert model == "z-ai/glm-5.3"
+        assert model == "z-ai/glm-5.3-20260816"
 
     def test_research_routes_to_gemini(self):
         client = OpenRouterClient(api_key="test")

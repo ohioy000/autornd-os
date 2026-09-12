@@ -96,8 +96,9 @@ class WorkflowEngine:
         except Exception:
             logger.exception("Workflow %d failed", workflow.id)
             workflow.status = WorkflowStatus.BLOCKED
+            workflow.updated_at = datetime.now(timezone.utc)
             await self.session.commit()
-            raise
+            return workflow
 
     async def _run_triage(self, workflow: Workflow) -> TriageVerdict:
         workflow.status = WorkflowStatus.TRIAGE
