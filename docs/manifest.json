@@ -1,0 +1,6 @@
+{
+  "description": "Default manifest — no project docs configured. Create a profile and add docs/<profile>/manifest.json for project-specific documentation.",
+  "global": [],
+  "domains": {},
+  "specialist_extras": {}
+}

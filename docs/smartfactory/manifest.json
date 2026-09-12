@@ -1,0 +1,25 @@
+{
+  "description": "SmartFactory project documentation mapping.",
+  "global": [
+    "smartfactory/architecture.md"
+  ],
+  "domains": {
+    "firmware": [
+      "smartfactory/constraints.md"
+    ],
+    "hardware": [
+      "smartfactory/constraints.md"
+    ],
+    "backend": [
+      "smartfactory/architecture.md"
+    ],
+    "frontend": [
+      "smartfactory/architecture.md"
+    ],
+    "infrastructure": [
+      "smartfactory/architecture.md",
+      "smartfactory/constraints.md"
+    ]
+  },
+  "specialist_extras": {}
+}

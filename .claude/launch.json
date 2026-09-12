@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "autornd-dev",
+      "runtimeExecutable": "uvicorn",
+      "runtimeArgs": ["autornd.main:app", "--reload", "--port", "8100"],
+      "port": 8100
+    }
+  ]
+}

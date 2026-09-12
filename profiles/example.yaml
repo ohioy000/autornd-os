@@ -1,0 +1,24 @@
+name: "SmartFactory"
+description: "IoT monitoring platform for small manufacturing facilities"
+site_url: "https://example.com"
+
+stack:
+  - "Raspberry Pi 4 + Modbus RTU sensors"
+  - "Python/FastAPI backend"
+  - "React/Vite dashboard"
+  - "SQLite (offline-first)"
+
+constraints:
+  - "4GB RAM ceiling on edge device"
+  - "Must operate without internet connectivity"
+  - "Industrial temperature range -20C to +60C"
+
+specialists:
+  firmware_engineer:
+    context: "Targets Raspberry Pi 4 with Modbus RTU via RS-485 adapter, Python GPIO libraries"
+  hardware_engineer:
+    context: "IP54 industrial enclosures, DIN rail mounting, 24V DC power supply"
+  backend_engineer:
+    context: "Modbus polling service, SQLAlchemy async ORM with SQLite, threshold-based alerts"
+  frontend_engineer:
+    context: "Factory floor dashboard, touch-friendly controls, high-contrast for industrial lighting"

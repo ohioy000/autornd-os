@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AutoRnD Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#111;color:#e0e0e0;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.2rem;border-bottom:1px solid #222;flex-shrink:0}
+.top-bar h1{font-size:1.2rem;font-weight:500;color:#ccc}
+.top-bar .controls{display:flex;gap:.5rem;align-items:center}
+.top-bar button{background:#222;border:1px solid #333;color:#aaa;padding:.35rem .7rem;border-radius:4px;cursor:pointer;font-size:.78rem}
+.top-bar button:hover{background:#2a2a2a}
+.top-bar select{background:#222;border:1px solid #333;color:#aaa;padding:.35rem .5rem;border-radius:4px;font-size:.78rem;cursor:pointer}
+.tab-bar{display:flex;border-bottom:1px solid #222;flex-shrink:0}
+.tab-bar button{background:none;border:none;border-bottom:2px solid transparent;color:#666;padding:.6rem 1.2rem;cursor:pointer;font-size:.82rem;font-weight:500}
+.tab-bar button.active{color:#5fdb9a;border-bottom-color:#5fdb9a}
+.tab-content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.panel{display:none;flex:1;overflow:hidden;flex-direction:column}
+.panel.active{display:flex}
+
+/* Chat panel */
+.chat-messages{flex:1;overflow-y:auto;padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.8rem}
+.msg{max-width:85%;border-radius:8px;padding:.7rem 1rem;font-size:.88rem;line-height:1.5;word-wrap:break-word}
+.msg-user{align-self:flex-end;background:#1a3a2a;color:#c0e8d0;border-bottom-right-radius:2px}
+.msg-system{align-self:flex-start;background:#1a1a2a;color:#b0b8d0;border-bottom-left-radius:2px;max-width:92%}
+.msg-system .phase-tag{display:inline-block;background:#222;color:#5fa0db;padding:.1em .4em;border-radius:3px;font-size:.72rem;font-weight:600;margin-right:.3rem;text-transform:uppercase}
+.msg-system .finding{border-left:2px solid #db5f5f;padding-left:.5rem;margin:.3rem 0;font-size:.82rem;color:#ccc}
+.msg-system .finding.low{border-color:#88cc88}
+.msg-system .finding.medium{border-color:#ffdd55}
+.msg-thinking{align-self:flex-start;background:#181825;color:#666;font-style:italic;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+.msg-cost{font-size:.72rem;color:#666;margin-top:.3rem}
+.msg-status{display:inline-block;padding:.1em .4em;border-radius:3px;font-size:.72rem;font-weight:600}
+.msg-status.completed{background:#1a3a2a;color:#5fdb9a}
+.msg-status.blocked{background:#3a1a1a;color:#db5f5f}
+.msg-status.escalated{background:#3a2a1a;color:#dba05f}
+.chat-input{display:flex;gap:.5rem;padding:.8rem 1.2rem;border-top:1px solid #222;flex-shrink:0;background:#151515}
+.chat-input input{flex:1;background:#1a1a1a;border:1px solid #333;color:#e0e0e0;padding:.6rem .8rem;border-radius:6px;font-size:.88rem;outline:none}
+.chat-input input:focus{border-color:#5fdb9a}
+.chat-input input:disabled{opacity:.4}
+.chat-input button{background:#1a3a2a;border:1px solid #2d7a5a;color:#5fdb9a;padding:.6rem 1.2rem;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:500;white-space:nowrap}
+.chat-input button:hover{background:#24503a}
+.chat-input button:disabled{opacity:.4;cursor:not-allowed}
+
+/* Workflows panel */
+.workflows-wrap{flex:1;overflow-y:auto;padding:1rem 1.2rem}
+.status-bar{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.status-bar button{background:#222;border:1px solid #333;color:#aaa;padding:.35rem .7rem;border-radius:4px;cursor:pointer;font-size:.78rem}
+.status-bar button.active{background:#1a3a2a;border-color:#2d7a5a;color:#5fdb9a}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th{text-align:left;padding:.45rem .6rem;color:#888;border-bottom:1px solid #333;font-weight:500;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}
+td{padding:.45rem .6rem;border-bottom:1px solid #222;vertical-align:top}
+tr:hover td{background:#1a1a1a}
+.badge{display:inline-block;padding:.15em .5em;border-radius:3px;font-size:.73rem;font-weight:500}
+.badge-completed{background:#1a3a2a;color:#5fdb9a}
+.badge-blocked{background:#3a1a1a;color:#db5f5f}
+.badge-escalated{background:#3a2a1a;color:#dba05f}
+.badge-pending,.badge-triage,.badge-plan,.badge-implement,.badge-validate,.badge-review{background:#1a2a3a;color:#5fa0db}
+.risk-critical{color:#ff5555}.risk-high{color:#ffaa55}.risk-medium{color:#ffdd55}.risk-low{color:#88cc88}
+.cost{font-family:'SF Mono',monospace;font-size:.8rem;color:#aaa}
+.empty{text-align:center;padding:3rem;color:#555}
+.detail{margin-top:1rem;background:#181818;border:1px solid #282828;border-radius:6px;padding:1rem}
+.detail h2{font-size:1rem;font-weight:500;margin-bottom:.6rem;color:#ccc}
+.phase-list{display:flex;flex-direction:column;gap:.4rem}
+.phase-card{background:#111;border:1px solid #282828;border-radius:4px;padding:.6rem}
+.phase-card h3{font-size:.8rem;font-weight:500;color:#5fa0db;margin-bottom:.2rem}
+.phase-card pre{font-size:.72rem;color:#aaa;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>AutoRnD</h1>
+  <div class="controls">
+    <select id="profileSelect" onchange="switchProfile(this.value)" title="Active profile"></select>
+    <button onclick="setApiKey()">API Key</button>
+    <button onclick="loadWorkflows()">Refresh</button>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="active" onclick="switchTab('chat',this)">Chat</button>
+  <button onclick="switchTab('workflows',this)">Workflows</button>
+</div>
+
+<div class="tab-content">
+  <!-- Chat Panel -->
+  <div id="panel-chat" class="panel active">
+    <div class="chat-messages" id="chatMessages">
+      <div class="msg msg-system">AutoRnD engineering team ready. Describe an engineering objective and I'll triage, plan, implement, validate, and review it.</div>
+    </div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Describe an engineering objective..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}" autocomplete="off">
+      <button id="chatSend" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+
+  <!-- Workflows Panel -->
+  <div id="panel-workflows" class="panel">
+    <div class="workflows-wrap">
+      <div class="status-bar" id="filters"></div>
+      <table>
+        <thead><tr><th>ID</th><th>Request</th><th>Status</th><th>Risk</th><th>Iter</th><th>Cost</th><th>Time</th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="7" class="empty">Loading...</td></tr></tbody>
+      </table>
+      <div id="detail"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let allWorkflows = [];
+let activeFilter = null;
+let chatBusy = false;
+const apiKey = localStorage.getItem('autornd_api_key') || '';
+
+function authHeaders() {
+  const h = {'Content-Type': 'application/json'};
+  if (apiKey) h['Authorization'] = 'Bearer ' + apiKey;
+  return h;
+}
+
+function setApiKey() {
+  const key = prompt('Enter API key (leave empty to clear):');
+  if (key === null) return;
+  if (key) localStorage.setItem('autornd_api_key', key);
+  else localStorage.removeItem('autornd_api_key');
+  location.reload();
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'workflows') loadWorkflows();
+  if (name === 'chat') document.getElementById('chatInput').focus();
+}
+
+// ── Chat ──
+
+function addMsg(cls, html) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + cls;
+  div.innerHTML = html;
+  const box = document.getElementById('chatMessages');
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+async function sendChat() {
+  if (chatBusy) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  addMsg('msg-user', esc(text));
+
+  chatBusy = true;
+  input.disabled = true;
+  document.getElementById('chatSend').disabled = true;
+  const thinking = addMsg('msg-thinking', 'Engineering team working...');
+
+  try {
+    const res = await fetch('/api/workflows/sync', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({request: text})
+    });
+    const json = await res.json();
+    thinking.remove();
+
+    if (!res.ok) {
+      addMsg('msg-system', '<span style="color:#db5f5f">Error: ' + esc(json.detail || JSON.stringify(json)) + '</span>');
+      return;
+    }
+
+    const w = json.data;
+    renderResult(w);
+  } catch (err) {
+    thinking.remove();
+    addMsg('msg-system', '<span style="color:#db5f5f">Connection error: ' + esc(err.message) + '</span>');
+  } finally {
+    chatBusy = false;
+    input.disabled = false;
+    document.getElementById('chatSend').disabled = false;
+    input.focus();
+  }
+}
+
+function renderResult(w) {
+  let html = '<span class="msg-status ' + w.status + '">' + w.status.toUpperCase() + '</span> ';
+  html += '<strong>Workflow #' + w.id + '</strong>';
+
+  if (w.phases && w.phases.length) {
+    html += '<div style="margin-top:.6rem">';
+    w.phases.forEach(p => {
+      const v = typeof p.verdict === 'string' ? JSON.parse(p.verdict) : p.verdict;
+      html += '<div style="margin:.4rem 0">';
+      html += '<span class="phase-tag">' + p.phase + '</span> ';
+
+      if (p.phase === 'triage') {
+        html += (v.summary || '') + ' <span style="font-size:.75rem;color:#888">[' + (v.risk || '') + ']</span>';
+      } else if (p.phase === 'plan') {
+        const planText = typeof v.plan === 'string' ? v.plan : JSON.stringify(v.plan);
+        html += v.ready ? planText.slice(0, 300) : '<span style="color:#db5f5f">Blocked: ' + (v.blockers || []).join(', ') + '</span>';
+        if (planText.length > 300) html += '...';
+      } else if (p.phase === 'plan_feasibility') {
+        if (v.blockers && v.blockers.length) {
+          html += '<span style="color:#db5f5f">Blockers: ' + v.blockers.join(', ') + '</span>';
+        } else {
+          html += '<span style="color:#88cc88">Feasible</span>';
+        }
+      } else if (p.phase === 'implement') {
+        html += esc((v.summary || '').slice(0, 200));
+      } else if (p.phase === 'validate') {
+        html += v.green ? '<span style="color:#88cc88">PASS</span>' : '<span style="color:#db5f5f">FAIL: ' + esc(v.red_cause || '') + '</span>';
+        if (v.evidence && v.evidence.length) {
+          html += '<div style="font-size:.78rem;color:#888;margin-top:.2rem">' + v.evidence.map(e => esc(e)).join(' | ') + '</div>';
+        }
+      } else if (p.phase === 'review') {
+        html += v.ship ? '<span style="color:#88cc88">SHIP</span>' : '<span style="color:#db5f5f">BLOCKED</span>';
+        html += ' &mdash; ' + esc(v.verdict || '');
+        if (v.findings && v.findings.length) {
+          v.findings.forEach(f => {
+            const sevCls = (f.severity === 'low' || f.severity === 'medium') ? f.severity : '';
+            html += '<div class="finding ' + sevCls + '">[' + (f.severity || '?') + '] ' + esc(f.detail) + '</div>';
+          });
+        }
+      } else if (p.phase === 'escalation') {
+        html += v.requires_human ? '<span style="color:#db5f5f">REQUIRES HUMAN</span>' : '<span style="color:#ffdd55">RECOVERY DIRECTIVE ISSUED</span>';
+        html += '<div style="font-size:.8rem;color:#aaa;margin-top:.2rem">' + esc(v.root_cause_analysis || '') + '</div>';
+      } else {
+        html += '<span style="font-size:.78rem;color:#888">' + esc(JSON.stringify(v).slice(0, 150)) + '</span>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  html += '<div class="msg-cost">$' + (w.total_cost || 0).toFixed(4) + ' &middot; ' + (w.iteration || 0) + ' iteration(s)</div>';
+  addMsg('msg-system', html);
+}
+
+// ── Workflows table ──
+
+async function loadWorkflows() {
+  const res = await fetch('/api/workflows?limit=50', {headers: authHeaders()});
+  const json = await res.json();
+  allWorkflows = json.data;
+  renderFilters();
+  renderTable();
+}
+
+function renderFilters() {
+  const counts = {};
+  allWorkflows.forEach(w => { counts[w.status] = (counts[w.status]||0) + 1; });
+  const bar = document.getElementById('filters');
+  bar.innerHTML = '<button class="' + (!activeFilter?'active':'') + '" onclick="setFilter(null)">All (' + allWorkflows.length + ')</button>';
+  Object.entries(counts).forEach(([s, c]) => {
+    bar.innerHTML += '<button class="' + (activeFilter===s?'active':'') + '" onclick="setFilter(\'' + s + '\')">' + s + ' (' + c + ')</button>';
+  });
+}
+
+function setFilter(f) { activeFilter = f; renderFilters(); renderTable(); }
+
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  const filtered = activeFilter ? allWorkflows.filter(w => w.status === activeFilter) : allWorkflows;
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No workflows</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(w => {
+    const riskCls = w.risk_level ? 'risk-' + w.risk_level : '';
+    const ago = timeAgo(w.updated_at);
+    return '<tr onclick="loadDetail(' + w.id + ')" style="cursor:pointer">'
+      + '<td>' + w.id + '</td>'
+      + '<td>' + esc(w.request) + '</td>'
+      + '<td><span class="badge badge-' + w.status + '">' + w.status + '</span></td>'
+      + '<td class="' + riskCls + '">' + (w.risk_level||'-') + '</td>'
+      + '<td>' + w.iteration + '</td>'
+      + '<td class="cost">$' + w.total_cost.toFixed(4) + '</td>'
+      + '<td>' + ago + '</td></tr>';
+  }).join('');
+}
+
+async function loadDetail(id) {
+  const res = await fetch('/api/workflows/' + id, {headers: authHeaders()});
+  const json = await res.json();
+  const w = json.data;
+  const det = document.getElementById('detail');
+  det.innerHTML = '<h2>Workflow #' + w.id + ' &mdash; ' + esc(w.request.slice(0,80)) + '</h2>'
+    + '<p style="margin:.5rem 0;font-size:.85rem;color:#888">Status: <span class="badge badge-' + w.status + '">' + w.status + '</span> | Risk: ' + (w.risk_level||'-') + ' | Iterations: ' + w.iteration + ' | Cost: $' + w.total_cost.toFixed(4) + '</p>'
+    + '<div class="phase-list">' + w.phases.map(p =>
+      '<div class="phase-card"><h3>' + p.phase + ' (iter ' + p.iteration + ') &mdash; ' + (p.model_used||'?') + ' &mdash; $' + p.cost.toFixed(6) + '</h3>'
+      + '<pre>' + esc(JSON.stringify(p.verdict, null, 2)) + '</pre></div>'
+    ).join('') + '</div>';
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function timeAgo(iso) {
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+// ── Profiles ──
+
+async function loadProfiles() {
+  try {
+    const res = await fetch('/api/profiles', {headers: authHeaders()});
+    const json = await res.json();
+    const sel = document.getElementById('profileSelect');
+    const active = json.data.active;
+    const profiles = json.data.available;
+    sel.innerHTML = '<option value=""' + (active === 'AutoRnD' ? ' selected' : '') + '>Default</option>';
+    profiles.forEach(p => {
+      const selected = (active !== 'AutoRnD' && p === active.toLowerCase().replace(/ /g, '_')) ? ' selected' : '';
+      sel.innerHTML += '<option value="' + esc(p) + '"' + selected + '>' + esc(p) + '</option>';
+    });
+  } catch(e) {}
+}
+
+async function switchProfile(name) {
+  if (!name) {
+    addMsg('msg-system', 'Profile switching to default requires a server restart with AUTORND_PROFILE unset.');
+    return;
+  }
+  try {
+    const res = await fetch('/api/profiles/' + encodeURIComponent(name), {method: 'POST', headers: authHeaders()});
+    const json = await res.json();
+    addMsg('msg-system', 'Profile switched to <strong>' + esc(json.data.active) + '</strong>. Specialists reloaded.');
+  } catch(e) {
+    addMsg('msg-system', '<span style="color:#db5f5f">Failed to switch profile: ' + esc(e.message) + '</span>');
+  }
+}
+
+loadProfiles();
+document.getElementById('chatInput').focus();
+</script>
+</body>
+</html>
