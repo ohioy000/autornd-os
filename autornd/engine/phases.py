@@ -154,7 +154,6 @@ Original request:
             all_blockers.append(b)
 
     if all_blockers:
-        plan.ready = False
         plan.blockers.extend(all_blockers)
 
     return responses
@@ -182,6 +181,13 @@ PRINCIPAL ARCHITECT DIRECTIVE (from root-cause autopsy):
 PREVIOUS ITERATION FAILED. Cause: {red_cause}
 Address this specific failure in your implementation."""
 
+    feasibility_block = ""
+    if plan.blockers:
+        feasibility_block = f"""
+
+FEASIBILITY CONCERNS (from domain specialist review — address these):
+{chr(10).join(f'- {b}' for b in plan.blockers)}"""
+
     context_block = f"\n\nProject context:\n{context}" if context else ""
     prompt = f"""\
 Implement the following plan. This is iteration {iteration}.
@@ -191,6 +197,7 @@ Plan:
 
 Success criteria:
 {json.dumps(plan.success_criteria)}
+{feasibility_block}
 {feedback}
 {context_block}
 
