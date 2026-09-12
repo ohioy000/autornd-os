@@ -100,8 +100,8 @@ class ValidateVerdict(BaseModel):
 # ── Review ──
 
 class ReviewFinding(BaseModel):
-    lens: str
-    severity: str
+    lens: str = "unknown"
+    severity: str = "medium"
     detail: str
 
 

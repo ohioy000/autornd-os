@@ -260,8 +260,15 @@ class WorkflowEngine:
             self.client, workflow.request, triage, plan, implement, specialists,
             context=context,
         )
-        for resp in responses:
-            await self._save_phase(workflow, "review", verdict.model_dump(), resp)
+        total_cost = sum(r.cost for r in responses)
+        models_used = ", ".join(dict.fromkeys(r.model for r in responses))
+        combined = ModelResponse(
+            content="", model=models_used,
+            prompt_tokens=sum(r.prompt_tokens for r in responses),
+            completion_tokens=sum(r.completion_tokens for r in responses),
+            cost=total_cost,
+        )
+        await self._save_phase(workflow, "review", verdict.model_dump(), combined)
 
         return verdict
 
