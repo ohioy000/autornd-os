@@ -78,7 +78,7 @@ Triage → Plan (+ Feasibility Review) → Implement ↔ Validate → Review
 | Engineering | `minimax/minimax-m3` | Implement, Validate, Review, Feasibility |
 | Architecture | `z-ai/glm-5.3` | Plan, critical Review |
 | Research | `google/gemini-2.5-flash` | Knowledge retrieval |
-| Escalation | `moonshotai/moonshot-v1-k3` | Escalation autopsy |
+| Escalation | `moonshotai/kimi-k3` | Escalation autopsy |
 
 All models configurable via environment variables.
 

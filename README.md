@@ -255,7 +255,7 @@ MODEL_TRIAGE=deepseek/deepseek-v4-flash          # $0.07/M in
 MODEL_ENGINEERING=minimax/minimax-m3              # $0.60/M in
 MODEL_ARCHITECTURE=z-ai/glm-5.3                  # $1.40/M in
 MODEL_RESEARCH=google/gemini-2.5-flash            # $0.15/M in
-MODEL_ESCALATION=moonshotai/moonshot-v1-k3        # $3.00/M in
+MODEL_ESCALATION=moonshotai/kimi-k3               # $3.00/M in
 ```
 
 Swap in any model you want:

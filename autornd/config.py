@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     model_engineering: str = "minimax/minimax-m3"
     model_architecture: str = "z-ai/glm-5.3"
     model_research: str = "google/gemini-2.5-flash"
-    model_escalation: str = "moonshotai/moonshot-v1-k3"
+    model_escalation: str = "moonshotai/kimi-k3"
 
     max_iterations: int = 5
     escalation_max_tokens: int = 1500

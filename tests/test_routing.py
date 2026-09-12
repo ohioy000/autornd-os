@@ -31,7 +31,7 @@ class TestModelRouting:
     def test_escalation_routes_to_k3(self):
         client = OpenRouterClient(api_key="test")
         model = client.get_model("escalation")
-        assert model == "moonshotai/moonshot-v1-k3"
+        assert model == "moonshotai/kimi-k3"
 
     def test_unknown_function_defaults_to_engineering(self):
         client = OpenRouterClient(api_key="test")
@@ -78,7 +78,7 @@ class TestCostEstimation:
 
     def test_k3_cost_estimation(self):
         cost = OpenRouterClient._estimate_cost(
-            "moonshotai/moonshot-v1-k3", 1000, 500
+            "moonshotai/kimi-k3", 1000, 500
         )
         expected = (1000 * 3.00 + 500 * 12.00) / 1_000_000
         assert abs(cost - expected) < 1e-10

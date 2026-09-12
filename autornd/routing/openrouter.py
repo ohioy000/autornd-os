@@ -169,7 +169,7 @@ class OpenRouterClient:
             "minimax/minimax-m3": (0.60, 2.40),
             "z-ai/glm-5.3": (1.40, 4.40),
             "google/gemini-2.5-flash": (0.15, 0.60),
-            "moonshotai/moonshot-v1-k3": (3.00, 12.00),
+            "moonshotai/kimi-k3": (3.00, 12.00),
         }
         input_rate, output_rate = rates.get(model, (1.0, 3.0))
         return (prompt_tokens * input_rate + completion_tokens * output_rate) / 1_000_000

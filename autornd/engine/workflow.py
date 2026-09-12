@@ -56,9 +56,16 @@ class WorkflowEngine:
             )
 
             if implement is None:
-                escalation = await self._run_escalation(
-                    workflow, triage, plan, failure_log, context
-                )
+                try:
+                    escalation = await self._run_escalation(
+                        workflow, triage, plan, failure_log, context
+                    )
+                except Exception:
+                    logger.exception("Workflow %d escalation failed", workflow.id)
+                    workflow.status = WorkflowStatus.ESCALATED
+                    workflow.updated_at = datetime.now(timezone.utc)
+                    await self.session.commit()
+                    return workflow
 
                 if escalation.requires_human:
                     workflow.status = WorkflowStatus.BLOCKED
