@@ -567,6 +567,8 @@ const MODEL_TIERS = {
     'Classifies domain, risk and specialists. One call, no reasoning \u2014 the cheapest model that returns valid JSON.'],
   model_ranker: ['Ranker \u2014 optional',
     'Orders retrieved documentation by usefulness before it enters a prompt. A purpose-built rerank model is used automatically when your provider serves one; any chat model falls back to listwise ranking. Idle until you ingest docs.'],
+  model_search: ['Search \u2014 optional',
+    'Looks outward for facts your documentation does not cover, and cites them. Measured against a no-search model, the unsourced answers included a charger IC that does not do that job and an RF limit in the wrong units \u2014 both stated with full confidence. Only gaps are searched, and findings are kept.'],
   model_research: ['Research \u2014 optional',
     'Briefs the other phases before work starts. With docs ingested it writes the search queries and summarises what the documentation requires; with no docs it scopes the request instead \u2014 what is unspecified, and what is being assumed. Never asserts facts it was not given.'],
   model_escalation: ['Escalation',
@@ -576,7 +578,7 @@ const MODEL_TIERS = {
 };
 
 const SETTINGS_GROUPS = {
-  'Models': ['model_engineering','model_architecture','model_triage','model_escalation','model_ranker','model_research','model_premium'],
+  'Models': ['model_engineering','model_architecture','model_triage','model_escalation','model_ranker','model_research','model_search','model_premium'],
   'Engine': ['max_iterations','escalation_max_tokens','escalation_recovery_attempts'],
   'Server': ['api_host','api_port','database_url','chromadb_path','log_level'],
   'Auth': ['api_key','jwt_secret','registration_enabled'],

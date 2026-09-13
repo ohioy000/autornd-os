@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
@@ -29,6 +29,9 @@ class ModelResponse:
     # problem from a provider returning nothing at all.
     finish_reason: str | None = None
     provider: str | None = None
+    # Where a search-backed answer came from. Without these a lookup is just
+    # another confident assertion, which is the thing it exists to replace.
+    citations: list[str] = field(default_factory=list)
 
 
 class OpenRouterClient:
@@ -41,6 +44,7 @@ class OpenRouterClient:
         "escalation": settings.model_escalation,
         **({"research": settings.model_research} if settings.model_research else {}),
         **({"ranker": settings.model_ranker} if settings.model_ranker else {}),
+        **({"search": settings.model_search} if settings.model_search else {}),
         **({"premium": settings.model_premium} if settings.model_premium else {}),
     }
 
@@ -108,6 +112,11 @@ class OpenRouterClient:
         choice = data["choices"][0]
         content = choice["message"]["content"] or ""
         finish_reason = choice.get("finish_reason")
+        citations = [
+            (a.get("url_citation") or {}).get("url", "")
+            for a in (choice.get("message", {}).get("annotations") or [])
+        ]
+        citations = [c for c in citations if c]
         provider = data.get("provider")
         usage = data.get("usage", {})
 
@@ -132,6 +141,7 @@ class OpenRouterClient:
             model=model,
             finish_reason=finish_reason,
             provider=provider,
+            citations=citations,
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
             cost=cost,
@@ -294,6 +304,7 @@ async def check_models() -> dict[str, dict]:
     for tier, model_id in (
         ("research", settings.model_research),
         ("ranker", settings.model_ranker),
+        ("search", settings.model_search),
         ("premium", settings.model_premium),
     ):
         if model_id:
@@ -382,5 +393,6 @@ def rebuild_function_models() -> None:
         "escalation": settings.model_escalation,
         **({"research": settings.model_research} if settings.model_research else {}),
         **({"ranker": settings.model_ranker} if settings.model_ranker else {}),
+        **({"search": settings.model_search} if settings.model_search else {}),
         **({"premium": settings.model_premium} if settings.model_premium else {}),
     }

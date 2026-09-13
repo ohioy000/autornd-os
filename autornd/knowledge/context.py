@@ -242,6 +242,15 @@ async def synthesize_briefing(client, request: str, chunks: list[dict]) -> str:
                 f"- {g}" for g in gaps
             )
         out += "\n\nSources: " + ", ".join(sorted({c["tag"] for c in chunks if c["tag"]}))
+
+        # The gaps are the search queries. Nothing is looked up that the
+        # documentation was not already known to be missing.
+        if gaps and settings.model_search:
+            from autornd.knowledge.research import render_findings, research_gaps
+
+            findings = await research_gaps(client, request, gaps)
+            if findings:
+                out += "\n\n" + render_findings(findings)
         return out
     except Exception as exc:
         logger.warning("Briefing synthesis failed (%s) — passing excerpts through", exc)

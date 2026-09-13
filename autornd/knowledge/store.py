@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from pathlib import Path
 from typing import Optional
@@ -73,6 +74,45 @@ def ingest_file(file_path: Path, source_tag: str | None = None) -> int:
         logger.info("No new chunks to ingest from %s", file_path)
 
     return len(new_ids)
+
+
+def ingest_text(text: str, tag: str, source: str = "") -> int:
+    """Ingest text that did not come from a file. Returns new chunk count.
+
+    Research findings arrive from a search rather than a directory, and they are
+    worth keeping: a fact looked up once should not be looked up again on the
+    next workflow that needs it. Ids are content-derived, so re-ingesting the
+    same finding is a no-op rather than a duplicate.
+    """
+    if not text.strip():
+        return 0
+
+    client = _get_chroma_client()
+    collection = client.get_or_create_collection(
+        name=COLLECTION_NAME,
+        metadata={"hnsw:space": "cosine"},
+    )
+
+    chunks = _chunk_text(text)
+    digest = hashlib.sha1(text.encode("utf-8")).hexdigest()[:12]
+    ids = [f"{tag}__{digest}__chunk_{i}" for i in range(len(chunks))]
+    metadatas = [
+        {"source": source or tag, "tag": tag, "chunk_index": i}
+        for i in range(len(chunks))
+    ]
+
+    existing = set(collection.get(ids=ids, include=[])["ids"])
+    fresh = [(i, c, m) for i, c, m in zip(ids, chunks, metadatas) if i not in existing]
+    if not fresh:
+        return 0
+
+    collection.add(
+        ids=[f[0] for f in fresh],
+        documents=[f[1] for f in fresh],
+        metadatas=[f[2] for f in fresh],
+    )
+    logger.info("Ingested %d new chunks under tag %s", len(fresh), tag)
+    return len(fresh)
 
 
 def ingest_directory(dir_path: Path, extensions: tuple[str, ...] = (".md", ".txt", ".py")) -> int:

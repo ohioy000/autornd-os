@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # Both only run once project docs are ingested, so neither is required.
     model_research: str = ""
     model_ranker: str = ""
+    # Outward lookups for facts the project's own documents do not cover. Needs
+    # a search-capable model — a ":online" variant, or one with native search.
+    model_search: str = ""
     model_premium: str = ""
 
     max_iterations: int = 5
@@ -31,6 +34,9 @@ class Settings(BaseSettings):
     # an unbounded validator produced 15k output tokens for a green/red verdict,
     # taking three minutes and costing more than the implementation it checked.
     validate_max_tokens: int = 3000
+
+    # A lookup wants room for figures and their sources, not an essay.
+    search_max_tokens: int = 1200
     escalation_recovery_attempts: int = 3
 
     chromadb_path: str = "./chromadb_data"
@@ -47,7 +53,7 @@ class Settings(BaseSettings):
     RUNTIME_MUTABLE: set[str] = {
         "max_iterations", "escalation_max_tokens", "escalation_recovery_attempts",
         "autornd_profile", "autornd_workflow", "log_level",
-        "validate_max_tokens",
+        "validate_max_tokens", "search_max_tokens",
     }
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
@@ -61,7 +67,7 @@ class Settings(BaseSettings):
 
     @field_validator(
         "model_triage", "model_engineering", "model_architecture",
-        "model_escalation", "model_research", "model_ranker",
+        "model_escalation", "model_research", "model_ranker", "model_search",
     )
     @classmethod
     def validate_model_id(cls, v: str) -> str:
@@ -98,6 +104,7 @@ _TIER_HELP = {
 _OPTIONAL_TIERS = {
     "model_research": "reads project docs and writes a grounded briefing",
     "model_ranker": "ranks retrieved documentation by usefulness",
+    "model_search": "looks up facts the project documentation does not cover",
     "model_premium": "independent Double Check review",
 }
 
