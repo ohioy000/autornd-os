@@ -1,0 +1,128 @@
+name: engineering-rnd
+description: >
+  The default AutoRnD pipeline, written as a graph. This reproduces the
+  sequence that used to be hardcoded in the engine — triage, plan, feasibility,
+  implement/validate, review — so it is the baseline any variant is measured
+  against. Copy it and change it: that is the point of it being a file.
+
+nodes:
+  # ── classify ────────────────────────────────────────────────────────────
+  - id: triage
+    kind: ai
+    tier: triage
+    prompt: triage
+    schema: TriageVerdict
+
+  # Grounding is assembled deterministically. It costs nothing and it is the
+  # single biggest lever on output quality.
+  - id: context
+    kind: check
+    check: build_context
+    depends_on: [triage]
+
+  # ── plan ────────────────────────────────────────────────────────────────
+  - id: plan
+    kind: ai
+    tier: architecture
+    specialist: systems_architect
+    prompt: plan
+    schema: PlanVerdict
+    depends_on: [context]
+
+  - id: feasibility
+    kind: ai
+    tier: engineering
+    specialist: assigned        # every assigned specialist, in parallel
+    prompt: feasibility
+    depends_on: [plan]
+
+  - id: plan_ready
+    kind: gate
+    condition: plan.ready == true
+    depends_on: [feasibility]
+    on_fail: blocked
+    on_fail_reason: "Plan not ready"
+
+  # ── build ───────────────────────────────────────────────────────────────
+  # The lead implements alone; the others review without redesigning.
+  - id: implement
+    kind: ai
+    tier: engineering
+    specialist: lead
+    prompt: implement
+    schema: ImplementVerdict
+
+  - id: domain_review
+    kind: ai
+    tier: engineering
+    specialist: reviewers
+    prompt: domain_review
+    depends_on: [implement]
+    when: implement.green == true
+
+  # Free checks run before the paid validator. If the implementation does not
+  # even mention a criterion, no model call is needed to know it is not done.
+  - id: coverage
+    kind: check
+    check: criteria_addressed
+    args:
+      criteria: plan.success_criteria
+      text: implement.summary
+    depends_on: [implement]
+
+  - id: consistency
+    kind: check
+    check: numbers_consistent
+    args:
+      plan: plan.plan
+      implementation: implement.summary
+    depends_on: [implement]
+
+  - id: validate
+    kind: ai
+    tier: engineering
+    specialist: test_engineer
+    prompt: validate
+    schema: ValidateVerdict
+    depends_on: [coverage, consistency, domain_review]
+
+  - id: build_loop
+    kind: ai
+    body: [implement, domain_review, coverage, consistency, validate]
+    until: validate.green == true
+    max_iterations: max_iterations      # resolved from settings
+    on_exhausted: escalation
+    depends_on: [plan_ready]
+
+  # ── recover ─────────────────────────────────────────────────────────────
+  - id: escalation
+    kind: ai
+    tier: escalation
+    prompt: escalation
+    schema: EscalationVerdict
+    max_tokens: escalation_max_tokens
+
+  - id: recoverable
+    kind: gate
+    condition: not escalation.requires_human
+    depends_on: [escalation]
+    on_fail: blocked
+    on_fail_reason: "Escalation requires human intervention"
+
+  - id: recovery_loop
+    kind: ai
+    body: [implement, domain_review, coverage, consistency, validate]
+    until: validate.green == true
+    max_iterations: escalation_recovery_attempts
+    on_exhausted_status: escalated
+    depends_on: [recoverable]
+
+  # ── review ──────────────────────────────────────────────────────────────
+  # Team size scales with risk; the verdict is recorded, not gating.
+  - id: review
+    kind: ai
+    tier: engineering
+    specialist: reviewers
+    prompt: review
+    schema: ReviewVerdict
+    depends_on: [build_loop]
