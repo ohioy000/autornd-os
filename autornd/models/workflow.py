@@ -42,6 +42,7 @@ class Workflow(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
     total_cost: Mapped[float] = mapped_column(Float, default=0.0)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
     user_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
     )

@@ -22,7 +22,7 @@ PLAN_RESP = {
     "ready": True,
     "plan": "Step 1: Refactor sleep state machine. Step 2: Add wake sources.",
     "blockers": [],
-    "bom_estimate": None,
+    "cost_estimate": None,
     "success_criteria": ["Sleep current < 10uA", "Wake latency < 500ms"],
 }
 
@@ -79,7 +79,7 @@ def _route_by_content(user_message: str) -> dict:
         return FEASIBILITY_RESP
     if "attempts all failed validation" in msg:
         return ESCALATION_RESP
-    if "implement the following plan" in msg:
+    if "produce the implementation for the following plan" in msg:
         return IMPLEMENT_RESP
     if "review this implementation from your domain perspective" in msg:
         return DOMAIN_REVIEW_RESP
@@ -118,7 +118,7 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
         "ready": True,
         "plan": "Refactor MQTT topic structure.",
         "blockers": [],
-        "bom_estimate": None,
+        "cost_estimate": None,
         "success_criteria": ["All topics parse correctly"],
     }
     k3_resp = {
@@ -153,7 +153,7 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
                     "red_cause": None,
                     "evidence": ["All topics parse correctly"],
                 }
-        elif "implement the following plan" in msg:
+        elif "produce the implementation for the following plan" in msg:
             data = {
                 "done": True,
                 "green": True,
@@ -196,7 +196,7 @@ class TestWorkflowEngine:
             "ready": False,
             "plan": "Cannot proceed without datasheet",
             "blockers": ["Missing XYZ sensor datasheet"],
-            "bom_estimate": None,
+            "cost_estimate": None,
             "success_criteria": [],
         }
 

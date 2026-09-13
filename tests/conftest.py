@@ -2,6 +2,13 @@
 
 from __future__ import annotations
 
+import os
+
+# AutoRnD ships no default models, so the test suite names its own before any
+# autornd module imports config. These are placeholders — nothing is called.
+for _tier in ("TRIAGE", "ENGINEERING", "ARCHITECTURE", "RESEARCH", "ESCALATION"):
+    os.environ.setdefault(f"MODEL_{_tier}", f"test-provider/test-{_tier.lower()}")
+
 import json
 from typing import Any
 from unittest.mock import AsyncMock

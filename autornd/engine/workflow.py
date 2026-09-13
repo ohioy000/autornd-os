@@ -40,14 +40,19 @@ class WorkflowEngine:
         try:
             triage = await self._run_triage(workflow)
 
-            context = build_phase_context(
-                request, triage.domains, triage.specialists
+            context = await build_phase_context(
+                request, triage.domains, triage.specialists, client=self.client
             )
 
             plan = await self._run_plan(workflow, triage, context)
 
             if not plan.ready:
                 workflow.status = WorkflowStatus.BLOCKED
+                workflow.error = (
+                    "Plan not ready: " + "; ".join(plan.blockers)
+                    if plan.blockers
+                    else "Plan not ready (no blockers given)"
+                )[:2000]
                 await self.session.commit()
                 return workflow
 
@@ -62,15 +67,20 @@ class WorkflowEngine:
                     escalation = await self._run_escalation(
                         workflow, triage, plan, failure_log, context
                     )
-                except Exception:
+                except Exception as exc:
                     logger.exception("Workflow %d escalation failed", workflow.id)
                     workflow.status = WorkflowStatus.ESCALATED
+                    workflow.error = f"Escalation failed — {type(exc).__name__}: {exc}"[:2000]
                     workflow.updated_at = datetime.now(timezone.utc)
                     await self.session.commit()
                     return workflow
 
                 if escalation.requires_human:
                     workflow.status = WorkflowStatus.BLOCKED
+                    workflow.error = (
+                        "Escalation requires human intervention: "
+                        + escalation.root_cause_analysis
+                    )[:2000]
                     await self.session.commit()
                     return workflow
 
@@ -96,9 +106,10 @@ class WorkflowEngine:
 
             return workflow
 
-        except Exception:
+        except Exception as exc:
             logger.exception("Workflow %d failed", workflow.id)
             workflow.status = WorkflowStatus.BLOCKED
+            workflow.error = f"{type(exc).__name__}: {exc}"[:2000]
             workflow.updated_at = datetime.now(timezone.utc)
             await self.session.commit()
             return workflow
@@ -196,7 +207,7 @@ class WorkflowEngine:
 
             validate_verdict, val_response = await run_validate(
                 self.client, workflow.request, plan, implement_verdict,
-                context=context,
+                context=context, domains=triage.domains,
             )
             await self._save_phase(
                 workflow, "validate", validate_verdict.model_dump(), val_response, iteration

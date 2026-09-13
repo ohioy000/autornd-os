@@ -55,7 +55,9 @@ class PlanVerdict(BaseModel):
     ready: bool
     plan: str = Field(description="Implementation plan text")
     blockers: list[str] = Field(default_factory=list)
-    bom_estimate: Optional[float] = None
+    # Generic on purpose: a bill of materials is one instance of "what will
+    # this cost to build", not the general case.
+    cost_estimate: Optional[float] = None
     success_criteria: list[str] = Field(default_factory=list)
 
     @field_validator("plan", mode="before")
@@ -78,7 +80,7 @@ class ImplementVerdict(BaseModel):
     done: bool
     green: bool
     red_cause: Optional[str] = None
-    iteration: int = Field(ge=1, le=5)
+    iteration: int = Field(ge=1)  # upper bound is settings.max_iterations (1-20)
     summary: str
     domain_concerns: list[str] = Field(default_factory=list)
 

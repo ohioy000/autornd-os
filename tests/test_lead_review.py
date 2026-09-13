@@ -85,7 +85,7 @@ class TestLeadSelection:
 
         async def _mock(function, system_prompt, user_message, **kw):
             msg = user_message.lower()
-            if "implement the following plan" in msg:
+            if "produce the implementation for the following plan" in msg:
                 call_order.append("implement")
                 data = {
                     "done": True, "green": True, "red_cause": None,
@@ -144,7 +144,7 @@ class TestLeadSelection:
 
         async def _mock(function, system_prompt, user_message, **kw):
             msg = user_message.lower()
-            if "implement the following plan" in msg:
+            if "produce the implementation for the following plan" in msg:
                 data = {
                     "done": True, "green": True, "red_cause": None,
                     "iteration": 1, "summary": "Built voltage regulator.",
@@ -175,7 +175,7 @@ class TestLeadSelection:
 
         async def _mock(function, system_prompt, user_message, **kw):
             msg = user_message.lower()
-            if "implement the following plan" in msg:
+            if "produce the implementation for the following plan" in msg:
                 data = {
                     "done": True, "green": True, "red_cause": None,
                     "iteration": 1, "summary": "Built it.",

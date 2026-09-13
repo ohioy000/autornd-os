@@ -1,4 +1,4 @@
-from pydantic import field_validator
+from pydantic import ValidationError, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -13,11 +13,15 @@ class Settings(BaseSettings):
 
     log_level: str = "INFO"
 
-    model_triage: str = "deepseek/deepseek-v4-flash"
-    model_engineering: str = "minimax/minimax-m3"
-    model_architecture: str = "z-ai/glm-5.3-20260816"
-    model_research: str = "google/gemini-2.5-flash"
-    model_escalation: str = "moonshotai/kimi-k3"
+    # AutoRnD ships no model defaults — it is a harness, not a model recommendation.
+    # Every tier must name a model your provider serves. See .env.example.
+    model_triage: str = ""
+    model_engineering: str = ""
+    model_architecture: str = ""
+    model_escalation: str = ""
+    # Both only run once project docs are ingested, so neither is required.
+    model_research: str = ""
+    model_ranker: str = ""
     model_premium: str = ""
 
     max_iterations: int = 5
@@ -48,11 +52,11 @@ class Settings(BaseSettings):
 
     @field_validator(
         "model_triage", "model_engineering", "model_architecture",
-        "model_research", "model_escalation",
+        "model_escalation", "model_research", "model_ranker",
     )
     @classmethod
     def validate_model_id(cls, v: str) -> str:
-        if "/" not in v:
+        if v and "/" not in v:
             raise ValueError(f"Model ID must contain '/' (got '{v}')")
         return v
 
@@ -72,4 +76,60 @@ class Settings(BaseSettings):
         return v.upper()
 
 
-settings = Settings()
+# Tiers that run on every workflow. AutoRnD will not start without them.
+_TIER_HELP = {
+    "model_triage": "classification and routing — cheapest tier",
+    "model_engineering": "implement, validate, review, feasibility — mid tier",
+    "model_architecture": "planning and critical review — heavyweight tier",
+    "model_escalation": "failure autopsy and recovery — reasoning tier",
+}
+
+# Tiers that only run when project documentation has been ingested, plus the
+# opt-in premium reviewer. Unset simply means the feature is off.
+_OPTIONAL_TIERS = {
+    "model_research": "reads project docs and writes a grounded briefing",
+    "model_ranker": "ranks retrieved documentation by usefulness",
+    "model_premium": "independent Double Check review",
+}
+
+
+def _config_help(problem: str, lines: list[str]) -> str:
+    return "\n".join([
+        f"AutoRnD is not configured — {problem}.",
+        "",
+        "AutoRnD ships no default models. You choose what runs at each tier:",
+        "",
+        *lines,
+        "",
+        "Set these in .env (copy .env.example) or as environment variables.",
+        "Any model your provider serves will do — AutoRnD does not recommend one.",
+        "See the README section 'Model Configuration'.",
+    ])
+
+
+def _build_settings() -> "Settings":
+    try:
+        cfg = Settings()
+    except ValidationError as exc:
+        bad = [
+            (str(e["loc"][0]), e.get("msg", ""))
+            for e in exc.errors()
+            if str(e["loc"][0]) in _TIER_HELP or str(e["loc"][0]) in _OPTIONAL_TIERS
+        ]
+        if not bad:
+            raise
+        raise SystemExit(_config_help(
+            f"{len(bad)} model id(s) are malformed",
+            [f"  {name.upper():<20} {msg}" for name, msg in bad],
+        )) from exc
+
+    unset = [name for name in _TIER_HELP if not getattr(cfg, name).strip()]
+    if unset:
+        raise SystemExit(_config_help(
+            f"no model is set for {len(unset)} of {len(_TIER_HELP)} tiers",
+            [f"  {name.upper():<20} {_TIER_HELP[name]}" for name in unset],
+        ))
+    return cfg
+
+
+settings = _build_settings()

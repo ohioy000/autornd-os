@@ -26,7 +26,7 @@ _PROMPT_TEMPLATES: dict[SpecialistRole, dict] = {
             "Your domain: embedded firmware development, microcontroller programming, "
             "RTOS task management, deep sleep and power management, OTA update mechanisms, "
             "and build systems.\n\n"
-            "You write, review, and validate firmware for embedded devices. You understand "
+            "You specify, review, and validate firmware designs for embedded devices. You understand "
             "communication protocols, ADC calibration, and sensor data encoding."
         ),
     },
@@ -49,7 +49,7 @@ _PROMPT_TEMPLATES: dict[SpecialistRole, dict] = {
         "expertise": (
             "Your domain: backend service development, API design, database management, "
             "data pipeline architecture, message broker integration, and alert engine design.\n\n"
-            "You write, review, and validate backend code. You consider data flow, "
+            "You specify, review, and validate backend implementations. You consider data flow, "
             "error handling, and performance at the application layer."
         ),
     },
@@ -60,7 +60,7 @@ _PROMPT_TEMPLATES: dict[SpecialistRole, dict] = {
         "expertise": (
             "Your domain: frontend development, data visualization, responsive design, "
             "and user interface architecture.\n\n"
-            "You write, review, and validate frontend code. You consider usability, "
+            "You specify, review, and validate frontend implementations. You consider usability, "
             "accessibility, performance, and the target user environment."
         ),
     },
@@ -90,6 +90,19 @@ _PROMPT_TEMPLATES: dict[SpecialistRole, dict] = {
     },
 }
 
+# Stated on every specialist's system prompt. Without it the role framing
+# ("you specify firmware", "you review designs") leaves a model free to assume
+# it should be editing a repository, and it answers that it cannot — which the
+# validate phase then reads as a failed implementation.
+SPECIALIST_OUTPUT_CONTRACT = (
+    "You work entirely in writing. You have no repository, file system, shell "
+    "or build tools, and you never need them: your written output is the "
+    "deliverable that a human or a downstream system applies. Produce the "
+    "engineering work itself, in full, rather than reporting on what you would "
+    "do or noting that you lack access."
+)
+
+
 _specialists: dict[SpecialistRole, Specialist] | None = None
 
 
@@ -109,6 +122,7 @@ def _build_prompt(role: SpecialistRole, template: dict) -> str:
         parts.append(f"\n{specialist_ctx}")
 
     parts.append(f"\n{template['expertise']}")
+    parts.append(f"\n{SPECIALIST_OUTPUT_CONTRACT}")
     parts.append("\nAlways respond with valid JSON matching the schema requested in the user message.")
 
     return "\n".join(parts)

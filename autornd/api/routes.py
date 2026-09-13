@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -25,9 +25,11 @@ def _get_user_id(request: Request) -> int | None:
 # ── Auth endpoints ──
 
 class RegisterRequest(BaseModel):
-    username: str
-    email: str
-    password: str
+    username: str = Field(min_length=3, max_length=64)
+    email: EmailStr
+    # NIST SP 800-63B floor. Raise it in your own deployment if you want a
+    # stricter policy — the harness shouldn't impose one on downstream users.
+    password: str = Field(min_length=8, max_length=256)
 
 
 class LoginRequest(BaseModel):
@@ -96,6 +98,7 @@ class WorkflowSummary(BaseModel):
     id: int
     request: str
     status: str
+    error: str | None = None
     risk_level: str | None
     iteration: int
     total_cost: float
@@ -121,6 +124,7 @@ def _summarize(w: Workflow) -> WorkflowSummary:
         id=w.id,
         request=w.request[:200],
         status=w.status.value,
+        error=w.error,
         risk_level=w.risk_level,
         iteration=w.iteration,
         total_cost=round(w.total_cost, 4),
@@ -215,20 +219,35 @@ async def list_workflows(
     }
 
 
-@router.get("/workflows/{workflow_id}")
-async def get_workflow(
-    workflow_id: int,
-    session: AsyncSession = Depends(get_session),
-):
+async def _load_owned_workflow(
+    workflow_id: int, request: Request, session: AsyncSession
+) -> Workflow:
+    """Load a workflow by id, scoped to the caller when one is authenticated.
+
+    Missing and not-yours both return 404 so ids stay non-enumerable.
+    """
     stmt = (
         select(Workflow)
         .where(Workflow.id == workflow_id)
         .options(selectinload(Workflow.phases))
     )
+    user_id = _get_user_id(request)
+    if user_id is not None:
+        stmt = stmt.where(Workflow.user_id == user_id)
     result = await session.execute(stmt)
     workflow = result.scalar_one_or_none()
     if not workflow:
         raise HTTPException(404, "Workflow not found")
+    return workflow
+
+
+@router.get("/workflows/{workflow_id}")
+async def get_workflow(
+    workflow_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    workflow = await _load_owned_workflow(workflow_id, request, session)
     return {"data": _detail(workflow)}
 
 
@@ -238,6 +257,7 @@ def _detail(w: Workflow) -> WorkflowDetail:
         id=w.id,
         request=w.request,
         status=w.status.value,
+        error=w.error,
         risk_level=w.risk_level,
         iteration=w.iteration,
         total_cost=round(w.total_cost, 4),
@@ -260,21 +280,14 @@ def _detail(w: Workflow) -> WorkflowDetail:
 @router.get("/workflows/{workflow_id}/doublecheck/estimate")
 async def estimate_doublecheck(
     workflow_id: int,
+    request: Request,
     session: AsyncSession = Depends(get_session),
 ):
     from autornd.config import settings
     if not settings.model_premium:
         raise HTTPException(404, "Premium model not configured")
 
-    stmt = (
-        select(Workflow)
-        .where(Workflow.id == workflow_id)
-        .options(selectinload(Workflow.phases))
-    )
-    result = await session.execute(stmt)
-    workflow = result.scalar_one_or_none()
-    if not workflow:
-        raise HTTPException(404, "Workflow not found")
+    workflow = await _load_owned_workflow(workflow_id, request, session)
     if workflow.status.value not in ("completed", "escalated", "blocked"):
         raise HTTPException(400, "Workflow is still running")
 
@@ -290,6 +303,7 @@ async def estimate_doublecheck(
 @router.post("/workflows/{workflow_id}/doublecheck")
 async def run_doublecheck_endpoint(
     workflow_id: int,
+    request: Request,
     session: AsyncSession = Depends(get_session),
 ):
     from autornd.config import settings
@@ -299,15 +313,7 @@ async def run_doublecheck_endpoint(
     if not settings.model_premium:
         raise HTTPException(404, "Premium model not configured")
 
-    stmt = (
-        select(Workflow)
-        .where(Workflow.id == workflow_id)
-        .options(selectinload(Workflow.phases))
-    )
-    result = await session.execute(stmt)
-    workflow = result.scalar_one_or_none()
-    if not workflow:
-        raise HTTPException(404, "Workflow not found")
+    workflow = await _load_owned_workflow(workflow_id, request, session)
     if workflow.status.value not in ("completed", "escalated", "blocked"):
         raise HTTPException(400, "Workflow is still running")
 
@@ -436,9 +442,14 @@ async def health():
     from autornd.routing.openrouter import get_model_status
 
     model_status = get_model_status()
-    any_unavailable = any(s.get("available") is False for s in model_status.values())
+    # `None` means the catalogue check itself failed — that is a degraded state,
+    # not a healthy one. Only an explicit True counts as verified.
+    unverified = [
+        fn for fn, st in model_status.items() if st.get("available") is not True
+    ]
     return {
-        "status": "degraded" if any_unavailable else "ok",
+        "status": "degraded" if unverified else "ok",
+        "unverified_models": unverified,
         "service": "autornd",
         "premium_model": settings.model_premium or None,
         "models": model_status,

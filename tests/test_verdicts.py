@@ -49,7 +49,7 @@ class TestPlanVerdict:
             success_criteria=["BOM < $45", "All pins assigned"],
         )
         assert v.ready
-        assert v.bom_estimate is None
+        assert v.cost_estimate is None
         assert len(v.success_criteria) == 2
 
     def test_blocked_plan(self):
@@ -83,8 +83,11 @@ class TestImplementVerdict:
     def test_iteration_bounds(self):
         with pytest.raises(ValidationError):
             ImplementVerdict(done=True, green=True, iteration=0, summary="bad")
-        with pytest.raises(ValidationError):
-            ImplementVerdict(done=True, green=True, iteration=6, summary="bad")
+
+    def test_iteration_allows_raised_max_iterations(self):
+        """max_iterations is configurable to 20, so the verdict must not cap at 5."""
+        v = ImplementVerdict(done=True, green=True, iteration=17, summary="ok")
+        assert v.iteration == 17
 
 
 class TestValidateVerdict:

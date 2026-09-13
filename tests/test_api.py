@@ -130,3 +130,67 @@ class TestDoubleCheckEndpoints:
         data = resp.json()["data"]
         assert "estimated_cost" in data
         assert data["model"] == "test/premium-model"
+
+
+@pytest.mark.asyncio
+class TestHealthReportsUnverifiedModels:
+    """Regression: the degraded check tested `available is False`, so when the
+    catalogue fetch failed every tier went None and health still said 'ok' —
+    silent in exactly the case the warning exists for."""
+
+    async def test_unknown_availability_is_degraded_not_ok(self, api_client, monkeypatch):
+        from autornd.routing import openrouter
+
+        monkeypatch.setattr(
+            openrouter, "_model_status",
+            {"triage": {"model": "v/t", "available": None},
+             "engineering": {"model": "v/e", "available": None}},
+        )
+        resp = await api_client.get("/api/health")
+        body = resp.json()
+        assert body["status"] == "degraded"
+        assert set(body["unverified_models"]) == {"triage", "engineering"}
+
+    async def test_all_verified_is_ok(self, api_client, monkeypatch):
+        from autornd.routing import openrouter
+
+        monkeypatch.setattr(
+            openrouter, "_model_status",
+            {"triage": {"model": "v/t", "available": True}},
+        )
+        resp = await api_client.get("/api/health")
+        assert resp.json()["status"] == "ok"
+        assert resp.json()["unverified_models"] == []
+
+
+@pytest.mark.asyncio
+class TestWorkflowErrorIsSurfaced:
+    """Regression: infrastructure faults and legitimate plan-blocks both ended as
+    `blocked` with no reason anywhere in the API — the cause lived only in stderr."""
+
+    async def test_error_reaches_the_api(self, api_client, db_session):
+        from autornd.models.workflow import Workflow, WorkflowStatus
+
+        wf = Workflow(
+            request="doomed run",
+            status=WorkflowStatus.BLOCKED,
+            error="HTTPStatusError: Client error '401 Unauthorized'",
+        )
+        db_session.add(wf)
+        await db_session.commit()
+
+        detail = await api_client.get(f"/api/workflows/{wf.id}")
+        assert "401 Unauthorized" in detail.json()["data"]["error"]
+
+        listed = await api_client.get("/api/workflows")
+        assert listed.json()["data"][0]["error"] is not None
+
+    async def test_healthy_workflow_has_no_error(self, api_client, db_session):
+        from autornd.models.workflow import Workflow, WorkflowStatus
+
+        wf = Workflow(request="fine", status=WorkflowStatus.COMPLETED)
+        db_session.add(wf)
+        await db_session.commit()
+
+        resp = await api_client.get(f"/api/workflows/{wf.id}")
+        assert resp.json()["data"]["error"] is None
