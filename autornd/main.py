@@ -13,6 +13,7 @@ from autornd.api.routes import router
 from autornd.config import settings
 from autornd.database import init_db
 import autornd.knowledge.episodic  # noqa: F401 — register Episode model
+import autornd.models.user  # noqa: F401 — register User model
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level),
@@ -23,6 +24,23 @@ logging.basicConfig(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+
+    from autornd.routing.openrouter import check_models
+    logger = logging.getLogger("autornd")
+    try:
+        status = await check_models()
+        available = sum(1 for s in status.values() if s.get("available") is True)
+        total = len(status)
+        if available == total:
+            logger.info("Model check: %d/%d models available", available, total)
+        else:
+            for fn, info in status.items():
+                if info.get("available") is False:
+                    logger.warning("Model unavailable — %s: %s", fn, info["model"])
+            logger.warning("Model check: %d/%d models available — check config", available, total)
+    except Exception:
+        logger.warning("Model check skipped — could not reach OpenRouter")
+
     yield
 
 

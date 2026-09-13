@@ -26,12 +26,13 @@ class ModelResponse:
 class OpenRouterClient:
     """Async client that routes requests to the right model via OpenRouter."""
 
-    FUNCTION_MODELS = {
+    FUNCTION_MODELS: dict[str, str] = {
         "triage": settings.model_triage,
         "engineering": settings.model_engineering,
         "architecture": settings.model_architecture,
         "research": settings.model_research,
         "escalation": settings.model_escalation,
+        **({"premium": settings.model_premium} if settings.model_premium else {}),
     }
 
     def __init__(self, api_key: str | None = None, base_url: str | None = None):
@@ -177,3 +178,54 @@ class OpenRouterClient:
     async def close(self):
         if self._client and not self._client.is_closed:
             await self._client.aclose()
+
+
+_model_status: dict[str, dict] = {}
+
+
+async def check_models() -> dict[str, dict]:
+    """Validate configured models against OpenRouter's model list."""
+    global _model_status
+    configured = {
+        "triage": settings.model_triage,
+        "engineering": settings.model_engineering,
+        "architecture": settings.model_architecture,
+        "research": settings.model_research,
+        "escalation": settings.model_escalation,
+    }
+    if settings.model_premium:
+        configured["premium"] = settings.model_premium
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.get(
+                f"{settings.openrouter_base_url.rstrip('/').rsplit('/v1', 1)[0]}/api/v1/models",
+                headers={"Authorization": f"Bearer {settings.openrouter_api_key}"},
+            )
+            resp.raise_for_status()
+            available_ids = {m["id"] for m in resp.json().get("data", [])}
+    except Exception as exc:
+        logger.warning("Could not fetch OpenRouter model list: %s", exc)
+        _model_status = {fn: {"model": mid, "available": None} for fn, mid in configured.items()}
+        return _model_status
+
+    status = {}
+    for fn, model_id in configured.items():
+        status[fn] = {"model": model_id, "available": model_id in available_ids}
+    _model_status = status
+    return status
+
+
+def get_model_status() -> dict[str, dict]:
+    return _model_status
+
+
+def rebuild_function_models() -> None:
+    OpenRouterClient.FUNCTION_MODELS = {
+        "triage": settings.model_triage,
+        "engineering": settings.model_engineering,
+        "architecture": settings.model_architecture,
+        "research": settings.model_research,
+        "escalation": settings.model_escalation,
+        **({"premium": settings.model_premium} if settings.model_premium else {}),
+    }

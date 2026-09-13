@@ -42,6 +42,9 @@ class Workflow(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
     total_cost: Mapped[float] = mapped_column(Float, default=0.0)
+    user_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )
 
     phases: Mapped[list[PhaseResult]] = relationship(
         back_populates="workflow", cascade="all, delete-orphan"

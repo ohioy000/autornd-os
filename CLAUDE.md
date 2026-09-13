@@ -23,36 +23,37 @@ Domain grounding is configurable via project profiles (YAML files in `profiles/`
 ```
 AutoRnD-OS/
 ├── autornd/
-│   ├── main.py              # FastAPI entry point
-│   ├── config.py            # Settings (pydantic-settings)
+│   ├── main.py              # FastAPI entry point + startup model validation
+│   ├── config.py            # Settings, field validators, RUNTIME_MUTABLE
 │   ├── profiles.py          # Project profile loader
 │   ├── database.py          # SQLAlchemy async engine
 │   ├── cli.py               # CLI commands (init-knowledge, ingest, stats, query)
 │   ├── models/
 │   │   ├── workflow.py      # ORM models (Workflow, PhaseResult)
-│   │   └── verdicts.py      # Pydantic verdict schemas (all phases)
+│   │   ├── user.py          # User ORM model (JWT auth)
+│   │   └── verdicts.py      # Pydantic verdict schemas (all phases + DoubleCheckVerdict)
 │   ├── specialists/
 │   │   ├── base.py          # Specialist base class
 │   │   └── registry.py      # 7 specialists + profile-driven system prompts
 │   ├── engine/
-│   │   ├── phases.py        # Phase implementations (triage, plan, feasibility, implement, validate, review, escalation)
+│   │   ├── phases.py        # Phase implementations (lead+review implement, doublecheck, escalation)
 │   │   ├── workflow.py      # Workflow sequencer + iteration loop + escalation recovery
 │   │   └── review_composition.py  # Risk-based review team composition
 │   ├── routing/
-│   │   └── openrouter.py    # OpenRouter client + model routing + retry logic
+│   │   └── openrouter.py    # OpenRouter client + model routing + model validation + retry
 │   ├── knowledge/
 │   │   ├── store.py         # ChromaDB ingestion + retrieval
 │   │   ├── context.py       # Context loader (profile-aware docs + retrieval)
 │   │   └── episodic.py      # Workflow outcome memory
 │   └── api/
-│       ├── auth.py          # API key authentication middleware
-│       ├── routes.py        # REST endpoints
+│       ├── auth.py          # JWT + API key authentication middleware
+│       ├── routes.py        # REST endpoints (workflows, auth, settings, doublecheck)
 │       ├── dashboard.py     # Dashboard loader
 │       └── templates/
-│           └── dashboard.html  # Chat + workflow UI
+│           └── dashboard.html  # Chat + workflows + settings UI
 ├── profiles/                # Project profile YAML files
 ├── docs/                    # Project documentation (per-profile subdirectories)
-├── tests/
+├── tests/                   # 133 tests (9 test files)
 ├── Dockerfile
 ├── .env.example
 ├── pyproject.toml
@@ -66,7 +67,7 @@ Triage → Plan (+ Feasibility Review) → Implement ↔ Validate → Review
 - **Triage**: Classifies domain, risk, and specialist assignment
 - **Plan**: Systems Architect produces implementation plan
 - **Plan Feasibility**: Domain specialists review the plan in parallel
-- **Implement ↔ Validate**: Iteration loop, max 5 attempts. If exhausted → escalation autopsy
+- **Implement ↔ Validate**: Lead+review pattern — domain lead implements, others do scoped review. Iteration loop, max 5 attempts. If exhausted → escalation autopsy
 - **Escalation Autopsy**: Reasoning model analyzes failure pattern, issues recovery directive or flags for human intervention
 - **Review**: Risk-based team composition — team size scales with risk level
 
@@ -79,8 +80,9 @@ Triage → Plan (+ Feasibility Review) → Implement ↔ Validate → Review
 | Architecture | `z-ai/glm-5.3` | Plan, critical Review |
 | Research | `google/gemini-2.5-flash` | Knowledge retrieval |
 | Escalation | `moonshotai/kimi-k3` | Escalation autopsy |
+| Premium | (optional, user-configured) | Double Check independent review |
 
-All models configurable via environment variables.
+All models configurable via environment variables. Validated against OpenRouter on startup.
 
 ## Key Commands
 

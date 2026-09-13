@@ -1,10 +1,12 @@
 """Test OpenRouter client and model routing."""
 
 import json
+from unittest.mock import AsyncMock, patch
 
+import httpx
 import pytest
 
-from autornd.routing.openrouter import OpenRouterClient
+from autornd.routing.openrouter import OpenRouterClient, check_models
 
 
 class TestModelRouting:
@@ -87,3 +89,46 @@ class TestCostEstimation:
         cost = OpenRouterClient._estimate_cost("unknown/model", 1000, 500)
         expected = (1000 * 1.0 + 500 * 3.0) / 1_000_000
         assert abs(cost - expected) < 1e-10
+
+
+@pytest.mark.asyncio
+class TestCheckModels:
+    @staticmethod
+    def _mock_response(data):
+        req = httpx.Request("GET", "https://openrouter.ai/api/v1/models")
+        return httpx.Response(200, json=data, request=req)
+
+    async def test_marks_available_models(self, monkeypatch):
+        resp = self._mock_response({"data": [
+            {"id": "deepseek/deepseek-v4-flash"},
+            {"id": "minimax/minimax-m3"},
+            {"id": "z-ai/glm-5.3-20260816"},
+            {"id": "google/gemini-2.5-flash"},
+            {"id": "moonshotai/kimi-k3"},
+        ]})
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = AsyncMock(return_value=resp)
+
+        with patch("autornd.routing.openrouter.httpx.AsyncClient", return_value=mock_client):
+            status = await check_models()
+
+        assert status["triage"]["available"] is True
+        assert status["engineering"]["available"] is True
+
+    async def test_marks_missing_model_unavailable(self, monkeypatch):
+        resp = self._mock_response({"data": [
+            {"id": "deepseek/deepseek-v4-flash"},
+        ]})
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = AsyncMock(return_value=resp)
+
+        with patch("autornd.routing.openrouter.httpx.AsyncClient", return_value=mock_client):
+            status = await check_models()
+
+        assert status["triage"]["available"] is True
+        assert status["engineering"]["available"] is False
+        assert status["architecture"]["available"] is False

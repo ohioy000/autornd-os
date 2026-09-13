@@ -21,6 +21,10 @@ Instead of asking one expensive model to do everything, AutoRnD assigns cheap mo
 - [Quick Start](#quick-start)
 - [Project Profiles](#project-profiles)
 - [Model Configuration](#model-configuration)
+- [Lead+Review Implementation](#leadreview-implementation)
+- [Double Check (Premium Review)](#double-check-premium-review)
+- [Multi-User & Authentication](#multi-user--authentication)
+- [Settings Dashboard](#settings-dashboard)
 - [API](#api)
 - [Project Structure](#project-structure)
 - [How It's Different](#how-its-different)
@@ -55,8 +59,9 @@ flowchart TD
     C -->|"Architecture model · $1.40/M"| D[Feasibility Review]
     D --> E{Plan Approved?}
     E -->|No| F[BLOCKED]
-    E -->|Yes| G[Implement]
-    G -->|"Engineering model · $0.60/M"| H[Validate]
+    E -->|Yes| G["Lead Implements"]
+    G -->|"Engineering model · $0.60/M"| G2["Domain Review"]
+    G2 -->|"Reviewers flag concerns"| H[Validate]
     H -->|Pass| I[Review]
     H -->|Fail · attempts left| G
     H -->|"Fail · exhausted 5 attempts"| J[Escalation Autopsy]
@@ -66,6 +71,9 @@ flowchart TD
     L -->|Pass| I
     L -->|Fail| M[ESCALATED]
     I --> N[COMPLETED]
+    N -.->|"Optional · user-initiated"| O["Double Check $$$"]
+    O -->|"Premium model"| P["Premium Verdict"]
+    M -.->|"Optional · user-initiated"| O
 ```
 
 ### Model Routing
@@ -77,8 +85,11 @@ flowchart TD
 | Architecture | Planning, critical review | Heavyweight | GLM 5.3, Claude Opus, GPT-4 |
 | Research | Knowledge retrieval | Efficient | Gemini Flash, GPT-4o Mini |
 | Escalation | Failure autopsy, recovery | Reasoning | Kimi K3, o1, DeepSeek R1 |
+| Premium | Double Check independent review | Optional | Any high-end model of your choice |
 
 You pick the models. AutoRnD routes them.
+
+On startup, AutoRnD validates all configured models against OpenRouter's model list and reports availability in the `/api/health` endpoint. If any model is unavailable, health status changes to `degraded` and a warning banner appears in the dashboard.
 
 ### Engineering Specialists
 
@@ -268,6 +279,102 @@ MODEL_ESCALATION=openai/o1
 
 Works with any OpenRouter-compatible model. The client is a standard OpenAI-compatible HTTP client, so you can point it at any provider.
 
+## Lead+Review Implementation
+
+The implementation phase uses a **lead+review** pattern instead of running all specialists in parallel.
+
+**Problem it solves:** When multiple specialists implement in parallel, their outputs often contradict each other — one designs a polling architecture while another designs an event-driven one. The validator rejects the merged result, and the loop wastes all 5 iterations on irreconcilable designs.
+
+**How it works:**
+
+1. **Lead selection** — Triage identifies the primary domain (e.g., `firmware`). A domain-to-specialist map selects the lead (e.g., `FIRMWARE_ENGINEER`).
+2. **Lead implements alone** — The lead specialist produces a single coherent implementation. No merge conflicts, no contradictory designs.
+3. **Domain review** — If the lead's implementation passes (`green=True`), other assigned specialists review it in parallel with a scoped prompt: *"Review this implementation from your domain perspective. Flag specific concerns. Do NOT produce an alternative design."*
+4. **Critical concern gating** — If any reviewer flags a critical concern, `green` flips to `False` and the concern is passed to the validator. Non-critical concerns are recorded but don't block.
+
+This preserves the multi-specialist value (domain experts catch issues the lead might miss) while eliminating the merge conflict problem.
+
+## Double Check (Premium Review)
+
+An optional independent review by a premium model, triggered by the user after a workflow completes.
+
+**This is not part of the workflow engine.** It's a standalone feature — a gold "Double Check $$$" button that appears on terminal workflows (completed, escalated, or blocked) in the dashboard.
+
+### Setup
+
+Set `MODEL_PREMIUM` in your `.env` to any high-end model:
+
+```bash
+MODEL_PREMIUM=anthropic/claude-opus-4
+```
+
+Leave it empty to disable the feature entirely — the button won't appear.
+
+### How it works
+
+1. Click the button — it estimates the cost first and shows a confirmation dialog
+2. The full workflow output (plan + implementation + review) is sent to the premium model with a fresh prompt: *"You are an independent senior reviewer. You have NOT seen the previous review."*
+3. Returns a `DoubleCheckVerdict`: ship/hold, confidence level, critical issues, and recommendations
+4. The verdict is saved as a `doublecheck` phase result and rendered with gold styling in the dashboard
+
+### Cost
+
+The premium review sends the entire workflow context to the model, so it's proportionally expensive. The estimate endpoint lets you see the projected cost before committing.
+
+## Multi-User & Authentication
+
+AutoRnD supports optional multi-user authentication with JWT tokens.
+
+### Auth flow
+
+1. **Register** — `POST /api/auth/register` with username, email, password
+2. **Login** — `POST /api/auth/login` returns a JWT token (72h expiry)
+3. **Use** — Include `Authorization: Bearer <token>` on API requests
+4. **Per-user workflows** — Each user only sees their own workflows
+
+The dashboard includes a login/register modal and user indicator in the top bar.
+
+### Configuration
+
+```bash
+# Auto-generated if empty — set for stable tokens across restarts
+JWT_SECRET=your-secret-here
+
+# Disable registration after initial setup
+REGISTRATION_ENABLED=false
+```
+
+### Auth priority
+
+1. JWT token (if valid) — sets `user_id` for per-user filtering
+2. API key fallback (if `API_KEY` is set and token matches) — anonymous access
+3. No auth configured — all endpoints open, no per-user filtering
+
+The dashboard uses JWT when logged in, falls back to API key from localStorage.
+
+## Settings Dashboard
+
+A "Settings" tab in the dashboard lets you view and change configuration at runtime.
+
+### Runtime-mutable settings (no restart needed)
+
+| Setting | Description | Validation |
+|---|---|---|
+| `max_iterations` | Implement/validate loop cap | 1–20 |
+| `escalation_max_tokens` | Token limit for escalation model | Integer |
+| `escalation_recovery_attempts` | Recovery retries after escalation | Integer |
+| `autornd_profile` | Active project profile | Reloads specialists on change |
+| `log_level` | Logging verbosity | DEBUG, INFO, WARNING, ERROR, CRITICAL |
+
+### Restart-required settings (display-only in UI)
+
+Model IDs, database URL, server host/port, ChromaDB path, and auth keys are shown but read-only in the settings tab — they require a server restart to take effect.
+
+### API
+
+- `GET /api/settings` — Returns all settings (API keys redacted to last 4 chars) plus a `runtime_mutable` list in meta
+- `PUT /api/settings` — Updates runtime-mutable settings. Returns 400 if you try to change an immutable field.
+
 ## API
 
 | Method | Path | Description |
@@ -275,12 +382,19 @@ Works with any OpenRouter-compatible model. The client is a standard OpenAI-comp
 | GET | `/` | Dashboard with chat interface |
 | POST | `/api/workflows/sync` | Submit workflow (blocks until complete) |
 | POST | `/api/workflows` | Submit workflow (async, returns ID) |
-| GET | `/api/workflows` | List all workflows |
+| GET | `/api/workflows` | List workflows (filtered by user when authenticated) |
 | GET | `/api/workflows/{id}` | Workflow detail with phase verdicts |
+| GET | `/api/workflows/{id}/doublecheck/estimate` | Estimated cost for premium review |
+| POST | `/api/workflows/{id}/doublecheck` | Run premium Double Check review |
+| POST | `/api/auth/register` | Create user account |
+| POST | `/api/auth/login` | Login, returns JWT token |
+| GET | `/api/auth/me` | Current user info |
+| GET | `/api/settings` | All settings (API keys redacted) |
+| PUT | `/api/settings` | Update runtime-mutable settings |
 | GET | `/api/profiles` | Active profile and available profiles |
 | POST | `/api/profiles/{name}` | Switch profile and reload specialists |
 | GET | `/api/episodes` | Recent workflow outcome history |
-| GET | `/api/health` | Health check |
+| GET | `/api/health` | Health check + model availability |
 | GET | `/api/knowledge/stats` | Knowledge store stats |
 
 ### Example: Submit a workflow
@@ -373,36 +487,37 @@ curl -X POST http://localhost:8100/api/workflows/sync \
 
 ```
 autornd/
-  main.py                 # FastAPI entry
-  config.py               # Model routing + settings
+  main.py                 # FastAPI entry + startup model check
+  config.py               # Settings, validators, RUNTIME_MUTABLE
   profiles.py             # Project profile loader
   database.py             # SQLAlchemy async engine
   cli.py                  # CLI commands (init-knowledge, ingest, stats, query)
   models/
-    verdicts.py            # Pydantic verdict schemas (every phase)
-    workflow.py            # ORM models
+    verdicts.py            # Pydantic verdict schemas (all phases + DoubleCheckVerdict)
+    workflow.py            # ORM models (Workflow, PhaseResult)
+    user.py                # User model (JWT auth)
   specialists/
     base.py                # Specialist base class
     registry.py            # 7 specialists + profile-driven prompts
   engine/
-    workflow.py            # 5-phase sequencer + iteration loop + escalation
-    phases.py              # Phase implementations + escalation autopsy
+    workflow.py            # Phase sequencer + iteration loop + escalation
+    phases.py              # Phase implementations + lead+review + doublecheck
     review_composition.py  # Risk-based review team selection
   routing/
-    openrouter.py          # Multi-model client + retry + cost tracking
+    openrouter.py          # Multi-model client + model validation + cost tracking
   knowledge/
     store.py               # ChromaDB ingestion + retrieval
     context.py             # Context builder (profile-aware docs + retrieval)
     episodic.py            # Workflow outcome memory
   api/
-    auth.py                # API key authentication middleware
-    routes.py              # REST endpoints
+    auth.py                # JWT + API key auth middleware
+    routes.py              # REST endpoints (workflows, auth, settings, doublecheck)
     dashboard.py           # Dashboard loader
     templates/
-      dashboard.html       # Chat + workflow UI
+      dashboard.html       # Chat + workflows + settings UI
 profiles/                  # Project profile configs (YAML)
 docs/                      # Your project documentation
-tests/                     # Full test suite
+tests/                     # 133 tests across 9 test files
 ```
 
 ## How It's Different
@@ -450,31 +565,33 @@ pytest tests/ -v
 pytest tests/test_engine.py -v
 ```
 
-The test suite covers verdict schemas, model routing, review composition, workflow sequencing, escalation recovery, API endpoints, knowledge store, and the profile system.
+The test suite (133 tests) covers verdict schemas, model routing, review composition, workflow sequencing, escalation recovery, lead+review pattern, API endpoints, double check, authentication, settings endpoints, config validation, knowledge store, and the profile system.
 
 ## Deployment
 
-AutoRnD is designed for **single-user, private-network use**.
+AutoRnD is designed for **private-network use** with optional multi-user support.
 
-### API Key Authentication
+### Authentication
 
-Set `API_KEY` in your `.env` to enable bearer token auth on all API endpoints (the dashboard and health check remain public):
+AutoRnD supports two auth methods that can be used independently or together:
+
+**JWT (multi-user)** — Users register and log in via the dashboard. Each user gets their own workflow history. Set `JWT_SECRET` in `.env` for stable tokens across restarts. Disable registration with `REGISTRATION_ENABLED=false` after creating accounts.
+
+**API key (programmatic)** — Set `API_KEY` in `.env` for simple bearer token auth on all API endpoints:
 
 ```bash
 API_KEY=your-secret-key-here
 ```
 
-When set, every API request must include the key:
-
 ```bash
 curl -H "Authorization: Bearer your-secret-key-here" http://localhost:8100/api/workflows
 ```
 
-The dashboard stores the key in `localStorage` — click **API Key** in the top bar to set it.
+If neither is configured, all endpoints are open without authentication.
 
 ### Network Security
 
-Even with an API key, avoid exposing AutoRnD to the public internet. For remote access:
+Even with auth, avoid exposing AutoRnD to the public internet. For remote access:
 
 - Put it behind a reverse proxy (nginx, Caddy, Traefik) with TLS
 - Use a VPN or private network (Tailscale, WireGuard)
@@ -489,7 +606,7 @@ uvicorn autornd.main:app --host 127.0.0.1 --port 8100
 
 - **No code execution.** AutoRnD generates plans, implementations, and reviews as structured text. It does not compile, run, or deploy code — that's your CI/CD pipeline.
 - **Quality depends on the models.** Cheaper models produce cheaper results. The default model selections are a tested balance of cost and quality, but your mileage will vary with different providers.
-- **Single-user.** Optional API key auth is included, but there's no multi-tenancy or role-based access. See [Deployment](#deployment) for guidance.
+- **No role-based access.** Multi-user auth is supported but there's no admin/user role distinction or team-level permissions.
 - **OpenRouter dependency.** The default routing client targets OpenRouter. You can point it at any OpenAI-compatible endpoint, but you'll need to manage model availability yourself.
 - **No streaming.** The `/api/workflows/sync` endpoint blocks until the full workflow completes. For long-running workflows, use the async endpoint and poll.
 - **Costs are real.** Every workflow calls external LLM APIs. A stuck escalation loop burns tokens. Set `MAX_ITERATIONS` conservatively and monitor your OpenRouter spend.

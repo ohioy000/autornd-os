@@ -16,8 +16,8 @@ from autornd.engine.phases import (
 from autornd.engine.review_composition import get_review_team
 from autornd.knowledge.context import build_phase_context
 from autornd.models.verdicts import (
-    Domain, EscalationVerdict, RiskLevel, SpecialistRole,
-    TriageVerdict, PlanVerdict, ImplementVerdict, ValidateVerdict, ReviewVerdict,
+    Domain, EscalationVerdict, ImplementVerdict, PlanVerdict,
+    ReviewVerdict, RiskLevel, SpecialistRole, TriageVerdict, ValidateVerdict,
 )
 from autornd.models.workflow import PhaseResult, Workflow, WorkflowStatus
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
@@ -51,8 +51,10 @@ class WorkflowEngine:
                 await self.session.commit()
                 return workflow
 
+            primary_domain = triage.domains[0] if triage.domains else None
             implement, validate, failure_log = await self._run_implement_validate_loop(
-                workflow, triage, plan, context
+                workflow, triage, plan, context,
+                primary_domain=primary_domain,
             )
 
             if implement is None:
@@ -76,6 +78,7 @@ class WorkflowEngine:
                     workflow, triage, plan, context,
                     max_attempts=settings.escalation_recovery_attempts,
                     resolution_directive=escalation.resolution_directive,
+                    primary_domain=primary_domain,
                 )
 
                 if implement is None:
@@ -151,6 +154,7 @@ class WorkflowEngine:
         context: str = "",
         max_attempts: int | None = None,
         resolution_directive: str | None = None,
+        primary_domain: "Domain | None" = None,
     ) -> tuple[ImplementVerdict | None, ValidateVerdict | None, list[dict]]:
         if max_attempts is None:
             max_attempts = settings.max_iterations
@@ -180,6 +184,7 @@ class WorkflowEngine:
                 red_cause,
                 resolution_directive=resolution_directive,
                 context=context,
+                primary_domain=primary_domain,
             )
             for resp in impl_responses:
                 await self._save_phase(

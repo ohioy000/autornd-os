@@ -80,6 +80,7 @@ class ImplementVerdict(BaseModel):
     red_cause: Optional[str] = None
     iteration: int = Field(ge=1, le=5)
     summary: str
+    domain_concerns: list[str] = Field(default_factory=list)
 
     @field_validator("summary", "red_cause", mode="before")
     @classmethod
@@ -112,6 +113,14 @@ class ReviewVerdict(BaseModel):
 
 
 # ── Escalation ──
+
+class DoubleCheckVerdict(BaseModel):
+    ship: bool
+    confidence: str = Field(description="high, medium, or low")
+    critical_issues: list[str] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
+    verdict: str
+
 
 class EscalationVerdict(BaseModel):
     root_cause_analysis: str = Field(

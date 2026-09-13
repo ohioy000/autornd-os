@@ -15,6 +15,7 @@ from autornd.database import Base, get_session
 from autornd.main import app
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
 import autornd.knowledge.episodic  # noqa: F401 — register Episode model
+import autornd.models.user  # noqa: F401 — register User model
 
 test_engine = create_async_engine("sqlite+aiosqlite://", echo=False)
 test_session_factory = async_sessionmaker(

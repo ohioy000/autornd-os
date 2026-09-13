@@ -62,6 +62,12 @@ ESCALATION_RESP = {
 }
 
 
+DOMAIN_REVIEW_RESP = {
+    "concerns": [],
+    "critical": False,
+}
+
+
 def _route_by_content(user_message: str) -> dict:
     """Route mock responses by detecting which phase the prompt belongs to."""
     msg = user_message.lower()
@@ -75,6 +81,8 @@ def _route_by_content(user_message: str) -> dict:
         return ESCALATION_RESP
     if "implement the following plan" in msg:
         return IMPLEMENT_RESP
+    if "review this implementation from your domain perspective" in msg:
+        return DOMAIN_REVIEW_RESP
     if "validate this implementation" in msg:
         return VALIDATE_RESP
     if "review this engineering work" in msg:
@@ -153,6 +161,8 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
                 "iteration": 1,
                 "summary": "Implemented topic refactor.",
             }
+        elif "review this implementation from your domain perspective" in msg:
+            data = {"concerns": [], "critical": False}
         else:
             data = {"ship": True, "findings": [], "verdict": "Ship."}
 

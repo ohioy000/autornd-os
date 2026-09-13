@@ -14,6 +14,7 @@ from typing import Any
 from autornd.config import settings
 from autornd.models.verdicts import (
     Domain,
+    DoubleCheckVerdict,
     EscalationVerdict,
     ImplementVerdict,
     PlanVerdict,
@@ -159,6 +160,17 @@ Original request:
     return responses
 
 
+DOMAIN_LEAD_MAP: dict[Domain, SpecialistRole] = {
+    Domain.FIRMWARE: SpecialistRole.FIRMWARE_ENGINEER,
+    Domain.HARDWARE: SpecialistRole.HARDWARE_ENGINEER,
+    Domain.BACKEND: SpecialistRole.BACKEND_ENGINEER,
+    Domain.FRONTEND: SpecialistRole.FRONTEND_ENGINEER,
+    Domain.SUPPLY_CHAIN: SpecialistRole.SUPPLY_CHAIN,
+    Domain.INFRASTRUCTURE: SpecialistRole.SYSTEMS_ARCHITECT,
+    Domain.DOCUMENTATION: SpecialistRole.BACKEND_ENGINEER,
+}
+
+
 async def run_implement(
     client: OpenRouterClient,
     request: str,
@@ -168,6 +180,7 @@ async def run_implement(
     red_cause: str | None = None,
     resolution_directive: str | None = None,
     context: str = "",
+    primary_domain: Domain | None = None,
 ) -> tuple[ImplementVerdict, list[ModelResponse]]:
     feedback = ""
     if resolution_directive:
@@ -189,7 +202,7 @@ FEASIBILITY CONCERNS (from domain specialist review — address these):
 {chr(10).join(f'- {b}' for b in plan.blockers)}"""
 
     context_block = f"\n\nProject context:\n{context}" if context else ""
-    prompt = f"""\
+    implement_prompt = f"""\
 Implement the following plan. This is iteration {iteration}.
 
 Plan:
@@ -213,26 +226,61 @@ Original request:
 
     responses: list[ModelResponse] = []
 
-    async def _run_specialist(spec: Specialist) -> dict[str, Any]:
-        data, resp = await spec.run(client, prompt)
-        responses.append(resp)
-        return data
+    # Select lead specialist based on primary domain
+    lead = specialists[0]
+    reviewers: list[Specialist] = []
+    if primary_domain and len(specialists) > 1:
+        target_role = DOMAIN_LEAD_MAP.get(primary_domain)
+        if target_role:
+            for s in specialists:
+                if s.role == target_role:
+                    lead = s
+                    break
+        reviewers = [s for s in specialists if s is not lead]
 
-    if len(specialists) == 1:
-        data = await _run_specialist(specialists[0])
-    else:
-        results = await asyncio.gather(
-            *[_run_specialist(s) for s in specialists]
+    # Step 1: Lead implements
+    lead_data, lead_resp = await lead.run(client, implement_prompt)
+    responses.append(lead_resp)
+    lead_data["iteration"] = iteration
+    domain_concerns: list[str] = []
+
+    # Step 2: Domain review (only if lead succeeded and there are reviewers)
+    if lead_data.get("green") and reviewers:
+        review_prompt = f"""\
+Review this implementation from your domain perspective. Do NOT produce an alternative design.
+{context_block}
+
+Implementation summary:
+{lead_data.get("summary", "")}
+
+Success criteria:
+{json.dumps(plan.success_criteria)}
+
+Return JSON with:
+- concerns: list of specific domain concerns (empty list if none)
+- critical: true if any concern is a hard blocker that would cause failure
+
+Original request:
+{request}"""
+
+        async def _domain_review(spec: Specialist) -> dict[str, Any]:
+            data, resp = await spec.run(client, review_prompt)
+            responses.append(resp)
+            return data
+
+        review_results = await asyncio.gather(
+            *[_domain_review(s) for s in reviewers]
         )
-        data = results[0]
-        for extra in results[1:]:
-            if extra.get("red_cause"):
-                data["green"] = False
-                data["red_cause"] = extra["red_cause"]
-            data["summary"] = data.get("summary", "") + "\n" + extra.get("summary", "")
+        for result in review_results:
+            for c in result.get("concerns", []):
+                if isinstance(c, str):
+                    domain_concerns.append(c)
+            if result.get("critical"):
+                lead_data["green"] = False
+                lead_data["red_cause"] = "Domain reviewer flagged critical concern"
 
-    data["iteration"] = iteration
-    verdict = ImplementVerdict(**data)
+    lead_data["domain_concerns"] = domain_concerns
+    verdict = ImplementVerdict(**lead_data)
     return verdict, responses
 
 
@@ -245,6 +293,13 @@ async def run_validate(
 ) -> tuple[ValidateVerdict, ModelResponse]:
     test_eng = get_specialist(SpecialistRole.TEST_ENGINEER)
     context_block = f"\n\nProject context:\n{context}" if context else ""
+    concerns_block = ""
+    if implement.domain_concerns:
+        concerns_block = f"""
+
+DOMAIN REVIEW CONCERNS (flagged by specialist reviewers — verify these):
+{chr(10).join(f'- {c}' for c in implement.domain_concerns)}"""
+
     prompt = f"""\
 Validate this implementation against the plan's success criteria.
 {context_block}
@@ -254,6 +309,7 @@ Success criteria:
 
 Implementation summary (iteration {implement.iteration}):
 {implement.summary}
+{concerns_block}
 
 Run deterministic checks where possible:
 - Does the power budget math work?
@@ -360,6 +416,52 @@ Original request:
     findings = [ReviewFinding(**f) for f in all_findings]
     verdict = ReviewVerdict(ship=ship, findings=findings, verdict=synthesis)
     return verdict, responses
+
+
+async def run_doublecheck(
+    client: OpenRouterClient,
+    request: str,
+    plan: PlanVerdict,
+    implement: ImplementVerdict,
+    context: str = "",
+) -> tuple[DoubleCheckVerdict, ModelResponse]:
+    context_block = f"\n\nProject context:\n{context}" if context else ""
+    system_prompt = (
+        "You are an independent senior engineering reviewer. "
+        "You have NOT seen any previous review of this work. "
+        "Evaluate this implementation for correctness, safety, and completeness. "
+        "Be thorough and adversarial — look for failure modes, edge cases, and spec violations."
+    )
+    user_message = f"""\
+Review this engineering implementation independently.
+{context_block}
+
+Plan:
+{plan.plan}
+
+Success criteria:
+{json.dumps(plan.success_criteria)}
+
+Implementation summary:
+{implement.summary}
+
+Return JSON with:
+- ship: true if safe to ship with no blocking issues
+- confidence: "high", "medium", or "low"
+- critical_issues: list of critical issues found (empty if none)
+- recommendations: list of improvement recommendations
+- verdict: one-sentence final assessment
+
+Original request:
+{request}"""
+
+    data, response = await client.chat_json(
+        function="premium",
+        system_prompt=system_prompt,
+        user_message=user_message,
+    )
+    verdict = DoubleCheckVerdict(**data)
+    return verdict, response
 
 
 K3_ESCALATION_PROMPT = """\
