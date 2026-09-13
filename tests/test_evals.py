@@ -352,3 +352,105 @@ class TestTimeoutPrecedence:
             scenario, load("workflows/triage-only.yaml"),
             lambda: make_client(scripted(), delay=0.2), SETTINGS, timeout=0.01)
         assert "timed out" in run.error
+
+
+class TestRiskCeiling:
+    """A floor alone let a regression through: every scenario kept passing
+    risk_at_least while the distribution drifted upward, until `low` was never
+    assigned and a noise measurement came back critical."""
+
+    def _one(self, expect, risk):
+        results = score(Scenario(id="s", request="r", expect=expect),
+                        outcome(triage_state(risk=risk)))
+        assert len(results) == 1
+        return results[0]
+
+    def test_within_the_ceiling_passes(self):
+        assert self._one({"risk_at_most": "high"}, "medium").passed
+
+    def test_at_the_ceiling_passes(self):
+        assert self._one({"risk_at_most": "medium"}, "medium").passed
+
+    def test_above_the_ceiling_fails(self):
+        r = self._one({"risk_at_most": "medium"}, "critical")
+        assert not r.passed and r.got == "critical"
+
+    def test_a_scenario_can_state_both_bounds(self):
+        results = score(
+            Scenario(id="s", request="r",
+                     expect={"risk_at_least": "medium", "risk_at_most": "high"}),
+            outcome(triage_state(risk="high")))
+        assert len(results) == 2 and all(r.passed for r in results)
+
+    def test_an_unknown_ceiling_is_rejected_at_load(self):
+        with pytest.raises(ScenarioError, match="expected one of"):
+            parse({"id": "a", "request": "r", "expect": {"risk_at_most": "urgent"}})
+
+    def test_a_waiver_must_give_a_reason(self):
+        """An empty waiver is the silent omission the rule exists to prevent."""
+        for empty in ("", "   ", True):
+            with pytest.raises(ScenarioError, match="state why"):
+                parse({"id": "a", "request": "r", "risk_ceiling_waived": empty,
+                       "expect": {"risk_at_least": "medium"}})
+
+    def test_a_waiver_and_a_ceiling_together_are_rejected(self):
+        """Stating both means one of them is a leftover, and which one is
+        unknowable — so it is a load error rather than a silent precedence."""
+        with pytest.raises(ScenarioError, match="also stated"):
+            parse({"id": "a", "request": "r",
+                   "risk_ceiling_waived": "both readings defensible",
+                   "expect": {"risk_at_least": "medium", "risk_at_most": "high"}})
+
+    def test_a_reasoned_waiver_loads(self):
+        sc = parse({"id": "a", "request": "r",
+                    "risk_ceiling_waived": "  occupational noise is regulated  ",
+                    "expect": {"risk_at_least": "medium"}})
+        assert sc.risk_ceiling_waived == "occupational noise is regulated"
+
+    def test_shipped_risk_scenarios_state_both_bounds(self):
+        """Guards the process, not the code: a risk scenario with only a floor
+        is how the over-correction stayed invisible."""
+        for s in load_scenarios("evals/scenarios"):
+            if "risk_at_least" in s.expect:
+                assert "risk_at_most" in s.expect or s.risk_ceiling_waived, (
+                    f"{s.id} has a risk floor but no ceiling and no stated reason. "
+                    f"Add risk_at_most, or risk_ceiling_waived: '<why>' if both "
+                    f"readings are genuinely defensible."
+                )
+
+    def test_low_is_still_anchored_somewhere(self):
+        """Without a scenario asserting `low`, nothing proves it is reachable —
+        and it was assigned zero times across twelve live subjects."""
+        scenarios = load_scenarios("evals/scenarios")
+        assert any(s.expect.get("risk") == "low"
+                   or s.expect.get("risk_at_most") == "low"
+                   for s in scenarios), "no scenario anchors the low end"
+
+
+@pytest.mark.asyncio
+class TestScenarioIsolation:
+    async def test_each_scenario_gets_its_own_store(self):
+        """Research ingests what it looks up, which is right for a workflow and
+        wrong for an experiment: one sweep had the first scenario's findings
+        grounding all eleven after it."""
+        from autornd.config import settings
+        from autornd.evals.runner import _isolated_store
+
+        before = settings.chromadb_path
+        seen = []
+        for _ in range(2):
+            with _isolated_store() as path:
+                seen.append(path)
+                assert settings.chromadb_path == path
+        assert seen[0] != seen[1]
+        assert settings.chromadb_path == before
+
+    async def test_the_path_is_restored_even_on_error(self):
+        from autornd.config import settings
+        from autornd.evals.runner import _isolated_store
+
+        before = settings.chromadb_path
+        with pytest.raises(RuntimeError):
+            with _isolated_store():
+                raise RuntimeError("boom")
+        assert settings.chromadb_path == before

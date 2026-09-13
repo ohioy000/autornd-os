@@ -5,6 +5,20 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
+
+@pytest.fixture(autouse=True)
+def _fresh_rerank_mode():
+    """Ranking strategy is cached per process, so tests must not inherit it.
+
+    Without this the result of one test depends on which test ran before it,
+    which is exactly the order-dependence a probed-once cache invites.
+    """
+    import autornd.knowledge.context as ctx
+
+    ctx.reset_rerank_mode()
+    yield
+    ctx.reset_rerank_mode()
 import pytest_asyncio
 
 from autornd.models.verdicts import Domain, SpecialistRole
@@ -218,7 +232,7 @@ class TestRerank:
         import autornd.knowledge.context as ctx
 
         monkeypatch.setattr(config.settings, "model_ranker", "vendor/ranker")
-        monkeypatch.setattr(ctx, "_native_rerank", False)   # chat model, not a reranker
+        monkeypatch.setattr(ctx, "_rerank_mode", "listwise")   # chat model, not a reranker
         client = AsyncMock()
         client.chat_json = AsyncMock(return_value=({"ranking": [1]}, None))
         await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=1)
@@ -231,7 +245,7 @@ class TestRerank:
 
         monkeypatch.setattr(config.settings, "model_ranker", "")
         monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
-        monkeypatch.setattr(ctx, "_native_rerank", False)
+        monkeypatch.setattr(ctx, "_rerank_mode", "listwise")
         client = AsyncMock()
         client.chat_json = AsyncMock(return_value=({"ranking": [1]}, None))
         await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=1)
@@ -241,7 +255,7 @@ class TestRerank:
         from unittest.mock import AsyncMock
         import autornd.knowledge.context as ctx
 
-        monkeypatch.setattr(ctx, "_native_rerank", None)
+        monkeypatch.setattr(ctx, "_rerank_mode", None)
         client = AsyncMock()
         client.rerank = AsyncMock(return_value=[(6, 0.98), (1, 0.4)])
         client.chat_json = AsyncMock()
@@ -253,19 +267,19 @@ class TestRerank:
         from unittest.mock import AsyncMock
         import autornd.knowledge.context as ctx
 
-        monkeypatch.setattr(ctx, "_native_rerank", None)
+        monkeypatch.setattr(ctx, "_rerank_mode", None)
         client = AsyncMock()
         client.rerank = AsyncMock(side_effect=RuntimeError("404 no rerank"))
         client.chat_json = AsyncMock(return_value=({"ranking": [2, 4]}, None))
         out = await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=2)
         assert [c["tag"] for c in out] == ["t2", "t4"]
-        assert ctx._native_rerank is False
+        assert ctx._rerank_mode == "listwise"
 
     async def test_both_failing_keeps_distance_order(self, monkeypatch):
         from unittest.mock import AsyncMock
         import autornd.knowledge.context as ctx
 
-        monkeypatch.setattr(ctx, "_native_rerank", None)
+        monkeypatch.setattr(ctx, "_rerank_mode", None)
         client = AsyncMock()
         client.rerank = AsyncMock(side_effect=RuntimeError("no rerank"))
         client.chat_json = AsyncMock(side_effect=RuntimeError("provider down"))
@@ -386,10 +400,11 @@ class TestRankTierSelection:
             "considerations": ["ingress rating"],
         }, None))
 
-        out = await ctx.analyze_request(client, "wire the sensor")
+        out, unknowns = await ctx.analyze_request(client, "wire the sensor")
         assert "Deliver 24V" in out
         assert "sensor current draw" in out
         assert "Assumed unless corrected" in out
+        assert unknowns == ["sensor current draw", "connector type"]
         assert client.chat_json.call_args.kwargs["function"] == "research"
 
     async def test_scoping_is_labelled_as_analysis_not_documentation(self, monkeypatch):
@@ -415,7 +430,7 @@ class TestRankTierSelection:
         import autornd.knowledge.context as ctx
 
         monkeypatch.setattr(config.settings, "model_research", "")
-        assert await ctx.analyze_request(AsyncMock(), "req") == ""
+        assert await ctx.analyze_request(AsyncMock(), "req") == ("", [])
 
     async def test_scoping_failure_is_not_fatal(self, monkeypatch):
         from unittest.mock import AsyncMock
@@ -425,4 +440,161 @@ class TestRankTierSelection:
         monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
         client = AsyncMock()
         client.chat_json = AsyncMock(side_effect=RuntimeError("down"))
-        assert await ctx.analyze_request(client, "req") == ""
+        assert await ctx.analyze_request(client, "req") == ("", [])
+
+    async def test_scoping_unknowns_drive_outward_lookups(self, monkeypatch):
+        """An empty knowledge store is how this ships, and it is the case that
+        most needs facts looked up. Search used to hang off documentation gaps
+        only, which left the search tier configured, required, and inert on a
+        default install."""
+        from unittest.mock import AsyncMock
+        from autornd import config
+        from autornd.models.verdicts import Domain
+        import autornd.knowledge.context as ctx
+        import autornd.knowledge.research as research
+
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        monkeypatch.setattr(config.settings, "model_search", "vendor/search")
+        monkeypatch.setattr(ctx, "retrieve", lambda *a, **k: [])
+        monkeypatch.setattr(ctx, "load_docs_context", lambda *a, **k: "")
+        monkeypatch.setattr(research, "ingest_text", lambda *a, **k: 0)
+
+        asked: list[str] = []
+
+        client = AsyncMock()
+        client.chat_json = AsyncMock(return_value=({
+            "objective": "wire it", "unknowns": ["sensor supply voltage"],
+            "assumptions": [], "considerations": []}, None))
+
+        async def chat(**kw):
+            asked.append(kw["user_message"])
+            from autornd.routing.openrouter import ModelResponse
+            return ModelResponse(content="18-30 V per the datasheet", model="m",
+                                 prompt_tokens=1, completion_tokens=1, cost=0.0,
+                                 citations=["https://example.com/ds.pdf"])
+
+        client.chat = AsyncMock(side_effect=chat)
+
+        out = await ctx.build_phase_context("wire it", [Domain.HARDWARE], client=client)
+        assert "REQUEST ANALYSIS" in out
+        assert "RESEARCHED FACTS" in out
+        assert "18-30 V" in out
+        assert any("sensor supply voltage" in a for a in asked)
+
+    async def test_no_search_model_still_scopes(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        from autornd import config
+        from autornd.models.verdicts import Domain
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        monkeypatch.setattr(config.settings, "model_search", "")
+        monkeypatch.setattr(ctx, "retrieve", lambda *a, **k: [])
+        monkeypatch.setattr(ctx, "load_docs_context", lambda *a, **k: "")
+        client = AsyncMock()
+        client.chat_json = AsyncMock(return_value=({
+            "objective": "o", "unknowns": ["u"], "assumptions": [],
+            "considerations": []}, None))
+        out = await ctx.build_phase_context("req", [Domain.BACKEND], client=client)
+        assert "REQUEST ANALYSIS" in out
+        assert "RESEARCHED FACTS" not in out
+
+
+@pytest.mark.asyncio
+class TestRerankModeIsProbedOnce:
+    """Regression: two states were not enough. One transient failure of the
+    native rerank call latched "unsupported", after which every workflow made a
+    listwise chat call against a rerank-only model — which cannot answer it. A
+    hiccup became a guaranteed wasted call per workflow for the life of the
+    process."""
+
+    CANDIDATES = [
+        {"text": f"chunk {i}", "tag": f"t{i}", "source": "s", "distance": i / 10}
+        for i in range(8)
+    ]
+
+    @staticmethod
+    def _ranker(monkeypatch):
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_ranker", "vendor/reranker")
+        monkeypatch.setattr(ctx, "_rerank_mode", None)
+        return ctx
+
+    async def test_native_success_latches_native_and_never_chats(self, monkeypatch):
+        from unittest.mock import AsyncMock
+
+        ctx = self._ranker(monkeypatch)
+        client = AsyncMock()
+        client.rerank = AsyncMock(return_value=[(6, 0.9), (1, 0.4)])
+        client.chat_json = AsyncMock()
+
+        out = await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=2)
+        assert [c["tag"] for c in out] == ["t6", "t1"]
+        assert ctx._rerank_mode == "native"
+        client.chat_json.assert_not_called()
+
+    async def test_a_rerank_only_model_stops_costing_calls(self, monkeypatch):
+        """The measured failure: native 404s, listwise 400s because the model
+        cannot chat, and every later workflow must then make zero calls."""
+        from unittest.mock import AsyncMock
+
+        ctx = self._ranker(monkeypatch)
+        client = AsyncMock()
+        client.rerank = AsyncMock(side_effect=RuntimeError("404 no rerank"))
+        client.chat_json = AsyncMock(side_effect=RuntimeError("400 cannot chat"))
+
+        first = await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=3)
+        assert [c["tag"] for c in first] == ["t0", "t1", "t2"]
+        assert ctx._rerank_mode == "distance"
+        assert client.rerank.await_count == 1
+        assert client.chat_json.await_count == 1
+
+        # the regression: a second workflow must cost nothing
+        second = await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=3)
+        assert [c["tag"] for c in second] == ["t0", "t1", "t2"]
+        assert client.rerank.await_count == 1
+        assert client.chat_json.await_count == 1
+
+    async def test_a_chat_ranker_latches_listwise_and_stops_probing_native(self, monkeypatch):
+        from unittest.mock import AsyncMock
+
+        ctx = self._ranker(monkeypatch)
+        client = AsyncMock()
+        client.rerank = AsyncMock(side_effect=RuntimeError("404 no rerank"))
+        client.chat_json = AsyncMock(return_value=({"ranking": [2, 4]}, None))
+
+        out = await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=2)
+        assert [c["tag"] for c in out] == ["t2", "t4"]
+        assert ctx._rerank_mode == "listwise"
+
+        await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=2)
+        assert client.rerank.await_count == 1      # native not re-probed
+        assert client.chat_json.await_count == 2
+
+    async def test_a_transient_native_failure_keeps_the_native_mode(self, monkeypatch):
+        """Worked before, failed now: a fault, not a capability change. Degrade
+        for this workflow without downgrading the strategy permanently."""
+        from unittest.mock import AsyncMock
+
+        ctx = self._ranker(monkeypatch)
+        client = AsyncMock()
+        client.rerank = AsyncMock(return_value=[(0, 0.9), (1, 0.5)])
+        client.chat_json = AsyncMock()
+        await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=2)
+        assert ctx._rerank_mode == "native"
+
+        client.rerank = AsyncMock(side_effect=RuntimeError("503 upstream"))
+        out = await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=3)
+        assert [c["tag"] for c in out] == ["t0", "t1", "t2"]
+        assert ctx._rerank_mode == "native"        # not downgraded
+        client.chat_json.assert_not_called()       # and no doomed chat call
+
+    async def test_reset_allows_a_re_probe(self, monkeypatch):
+        import autornd.knowledge.context as ctx
+
+        self._ranker(monkeypatch)
+        monkeypatch.setattr(ctx, "_rerank_mode", "distance")
+        ctx.reset_rerank_mode()
+        assert ctx._rerank_mode is None

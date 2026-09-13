@@ -13,6 +13,7 @@ from typing import Any
 
 from autornd.config import settings
 from autornd.models.verdicts import (
+    domain_key,
     Domain,
     DoubleCheckVerdict,
     EscalationVerdict,
@@ -85,32 +86,56 @@ def enforce_triage_composition(verdict: TriageVerdict) -> None:
             verdict.specialists.append(SpecialistRole.SYSTEMS_ARCHITECT)
 
 
+def _domain_vocabulary() -> str:
+    """The domains to offer triage: the shipped defaults plus the profile's own.
+
+    Offered, not enforced. Forcing a closed list is what turned civil
+    engineering into "hardware" and a latency budget into "firmware".
+    """
+    from autornd.profiles import get_profile
+
+    names = [d.value for d in Domain]
+    for extra in get_profile().domain_vocabulary():
+        if extra not in names:
+            names.append(extra)
+    return ", ".join(names)
+
+
 async def run_triage(
     client: OpenRouterClient, request: str
 ) -> tuple[TriageVerdict, ModelResponse]:
     prompt = f"""\
 Classify this engineering request. Return JSON with:
-- domains: list of applicable domains from [{', '.join(d.value for d in Domain)}]
+- domains: applicable domains. Prefer these: {_domain_vocabulary()}.
+  If none of them genuinely fits the subject, name the domain yourself in one or
+  two lowercase words rather than forcing the closest available label.
 - risk: one of [{', '.join(r.value for r in RiskLevel)}]
 - specialists: list of specialists to assign from [{', '.join(s.value for s in SpecialistRole)}]
 - summary: one-line classification
 
-Risk guide:
-- critical: safety, regulatory or compliance exposure; anything that can injure
-  someone or damage equipment; irreversible physical or financial consequence
-- high: physical or electrical work on real hardware; anything expensive or
-  impossible to undo; core system behaviour; security boundaries; data integrity
-- medium: data model and schema changes, service configuration, integrations
-- low: presentation, styling, copy, documentation — work that is trivially
+Risk guide — judge the consequence of being wrong, not the subject matter.
+Ask these two questions in order.
+
+First: if this answer is wrong, can a person be harmed, or does it breach a
+regulated requirement — structural loading, food contact, sterility, pressure
+vessels, electrical code, emissions? If so it is critical, at every stage. A
+lintel carrying a wall, a sterilisation protocol and a food-contact material
+are critical while still on paper, because the paper is what gets built and
+audited.
+
+Second, if nobody can be harmed: has anything been committed to yet?
+- high: the answer changes the physical world — wiring, installing, actuating
+  or modifying equipment — or is safety-critical in function even while still a
+  drawing, such as a control surface or a load path; or it ships as core system
+  behaviour, a security boundary, or data integrity. Routing power to a sensor
+  on a machine stays there, and someone stands next to it
+- medium: the answer is still a decision, reversible until an order is placed
+  or a part is cut — selecting a component, sizing a part, calculating a
+  budget, setting a tolerance, taking a measurement
+- low: presentation, copy, documentation or configuration that is trivially
   reversible and cannot hurt anyone
 
-Work on physical equipment — wiring, power, mechanical, thermal, anything with a
-voltage or a moving part — is never low or medium. Someone stands next to that
-machine.
-
-When a request sits between two levels, choose the higher one. The costs are not
-symmetric: over-classifying buys reviewers you did not need, while
-under-classifying ships an irreversible change past a single reviewer.
+Do not escalate because a subject sounds technical, expensive or unfamiliar.
 
 Always include test_engineer for high/critical risk.
 Always include systems_architect for multi-domain requests.
@@ -152,7 +177,7 @@ Create an implementation plan for this engineering request.
 {OUTPUT_CONTRACT}
 
 Triage classification:
-- Domains: {', '.join(d.value for d in triage.domains)}
+- Domains: {', '.join(domain_key(d) for d in triage.domains)}
 - Risk: {triage.risk.value}
 - Assigned specialists: {specialist_names}
 {context_block}
@@ -318,6 +343,37 @@ DOMAIN_LEAD_MAP: dict[Domain, SpecialistRole] = {
 }
 
 
+def lead_for_domain(domain: object) -> SpecialistRole:
+    """Which specialist leads this domain.
+
+    Profile vocabulary first, then the shipped defaults, then the architect —
+    which is the right answer for a domain nobody has mapped, since
+    cross-domain and unfamiliar work is exactly what that role is for. An
+    unrecognised domain must never raise: triage is allowed to name a subject
+    this harness has never seen.
+    """
+    from autornd.models.verdicts import domain_key
+    from autornd.profiles import get_profile
+
+    key = domain_key(domain)
+
+    declared = get_profile().get_domain_lead(key)
+    if declared:
+        try:
+            return SpecialistRole(declared)
+        except ValueError:
+            logger.warning(
+                "Profile maps domain %r to unknown specialist %r — using the architect",
+                key, declared,
+            )
+            return SpecialistRole.SYSTEMS_ARCHITECT
+
+    for domain, role in DOMAIN_LEAD_MAP.items():
+        if domain_key(domain) == key:
+            return role
+    return SpecialistRole.SYSTEMS_ARCHITECT
+
+
 def select_lead(
     specialists: list[Specialist], primary_domain: Domain | None
 ) -> tuple[Specialist, list[Specialist]]:
@@ -330,12 +386,11 @@ def select_lead(
     lead = specialists[0]
     reviewers: list[Specialist] = []
     if primary_domain and len(specialists) > 1:
-        target_role = DOMAIN_LEAD_MAP.get(primary_domain)
-        if target_role:
-            for candidate in specialists:
-                if candidate.role == target_role:
-                    lead = candidate
-                    break
+        target_role = lead_for_domain(primary_domain)
+        for candidate in specialists:
+            if candidate.role == target_role:
+                lead = candidate
+                break
         reviewers = [s for s in specialists if s is not lead]
     return lead, reviewers
 
@@ -717,7 +772,7 @@ Architect's Plan:
 {plan.plan}
 
 Triage Classification:
-- Domains: {', '.join(d.value for d in triage.domains)}
+- Domains: {', '.join(domain_key(d) for d in triage.domains)}
 - Risk: {triage.risk.value}
 - Success Criteria: {json.dumps(plan.success_criteria)}
 {context_block}"""

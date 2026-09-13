@@ -32,13 +32,19 @@ class ScenarioError(ValueError):
 
 
 _KNOWN_EXPECTATIONS = {
-    "domains", "domains_include", "risk", "risk_at_least",
+    "domains", "domains_include", "risk", "risk_at_least", "risk_at_most",
     "specialists_include", "specialists_exclude",
     "status", "converge_within", "max_calls", "criteria_addressed",
 }
 
-# Risk ordering, for `risk_at_least`. Under-classifying risk is the dangerous
-# direction: a critical change triaged as low gets one reviewer.
+# Risk ordering, for `risk_at_least` and `risk_at_most`.
+#
+# Both bounds matter, and a floor alone is what let a regression through: every
+# scenario kept passing `risk_at_least` while the whole distribution drifted
+# upward, until `low` was never assigned at all and a noise measurement came
+# back critical. Under-classifying is the dangerous direction and
+# over-classifying is the expensive one — risk sets review team size — so risk
+# scenarios should state both.
 RISK_ORDER = ["low", "medium", "high", "critical"]
 
 
@@ -59,6 +65,13 @@ class Scenario:
     timeout: float | None = None
     expect: dict[str, Any] = field(default_factory=dict)
     tags: list[str] = field(default_factory=list)
+    # Why this scenario states a risk floor but no ceiling. Some boundaries have
+    # two defensible readings — occupational noise exposure is both a health
+    # limit and a regulated one — and writing `risk_at_most: critical` there
+    # would assert nothing, since critical is the top of the scale. Omitting the
+    # ceiling is the honest option, but only with the reason recorded, so the
+    # waiver is data a test can check rather than a comment it cannot see.
+    risk_ceiling_waived: str = ""
 
     # Expectations that can only be answered by a workflow containing the node
     # that produces them. Scoring `converge_within` against a shape with no
@@ -97,7 +110,7 @@ def parse(raw: dict[str, Any], source: str = "<inline>") -> Scenario:
             f"Known: {sorted(_KNOWN_EXPECTATIONS)}"
         )
 
-    for key in ("risk", "risk_at_least"):
+    for key in ("risk", "risk_at_least", "risk_at_most"):
         value = expect.get(key)
         if value is not None and value not in RISK_ORDER:
             raise ScenarioError(
@@ -107,6 +120,16 @@ def parse(raw: dict[str, Any], source: str = "<inline>") -> Scenario:
     timeout = raw.get("timeout")
     if timeout is not None and (not isinstance(timeout, (int, float)) or timeout <= 0):
         raise ScenarioError(f"{source}: timeout must be a positive number of seconds")
+
+    waiver = raw.get("risk_ceiling_waived")
+    if waiver is not None and not (isinstance(waiver, str) and waiver.strip()):
+        raise ScenarioError(
+            f"{source}: risk_ceiling_waived must state why the ceiling is omitted"
+        )
+    if waiver and expect.get("risk_at_most"):
+        raise ScenarioError(
+            f"{source}: risk_ceiling_waived is set but risk_at_most is also stated"
+        )
 
     for key in ("converge_within", "max_calls"):
         value = expect.get(key)
@@ -119,6 +142,7 @@ def parse(raw: dict[str, Any], source: str = "<inline>") -> Scenario:
         description=raw.get("description", ""),
         workflow=raw.get("workflow"),
         timeout=raw.get("timeout"),
+        risk_ceiling_waived=(raw.get("risk_ceiling_waived") or "").strip(),
         expect=expect,
         tags=list(raw.get("tags") or []),
     )

@@ -225,6 +225,26 @@ Two composition rules are enforced in code rather than left to a model, because 
 | Medium | domain specialist + test or architect | Standard |
 | Low | single relevant specialist | Standard |
 
+Because risk sets team size, it sets cost, and it is graded on the consequence
+of being wrong rather than on how technical the subject sounds. Triage asks two
+questions in order: can a person be harmed or a regulated requirement be
+breached — structural loading, food contact, sterility, pressure, electrical
+code, emissions — and if not, has anything been committed to yet. Installing or
+wiring something is `high`; choosing what to buy is `medium`, reversible until
+the order is placed.
+
+Getting this wrong is expensive in both directions, so it is measured in both.
+Fourteen calibration scenarios spanning civil, biotech, aerospace, optics,
+acoustics, materials and real-time control assert a floor *and* a ceiling on
+each: `risk_at_least` catches under-classification, which buys one reviewer
+where the work needed seven, and `risk_at_most` catches the drift that follows
+from fixing the first. An earlier build passed every floor while classifying a
+VLAN addressing scheme, a lens choice and a bearing tolerance as `high`, and
+never once assigned `low` in twelve requests. A ceiling on a case where two
+readings are genuinely defensible — occupational noise exposure is both a
+health limit and a regulated one — is left off with the reason recorded, rather
+than written as `risk_at_most: critical`, which asserts nothing.
+
 Validation adapts too: it injects checks for the domains a request actually touches, as lenses for judging the stated criteria rather than as extra criteria of their own. A copy change is never asked whether its pin assignments conflict.
 
 ## Escalation Autopsy
@@ -353,7 +373,29 @@ constraints:
 specialists:
   hardware_engineer:
     context: "24V DC distribution, shielded sensor runs, washdown-rated connectors"
+domains:
+  mechanical:  hardware_engineer
+  optics:      hardware_engineer
+  food_safety: supply_chain
 ```
+
+### Domains are an open vocabulary
+
+The `domains:` mapping names the domains your work actually has, and who leads
+each one. It is additive: triage is offered the seven shipped defaults plus
+yours, and may name a domain that appears in neither when nothing fits.
+
+This is deliberate. A closed list does not produce an honest "none of these" —
+it produces the least-wrong label. Measured across twelve subjects with the
+enum enforced, nine had no fitting value and eight of those nine came back as
+`hardware`: civil engineering as "hardware", a 5 ms latency budget as
+"firmware, hardware", buffer chemistry as "documentation". Triage was not
+guessing badly; it was picking from a list without the answer in it.
+
+An unmapped domain still resolves a lead — the assigned specialist, falling
+back to the systems architect, whose job is cross-domain work anyway — so
+naming a new domain degrades into a sensible default rather than an error.
+Names are normalised, so `food safety` and `Food_Safety` are one domain.
 
 The documentation directory is derived from the profile's **`name:` field**, lowercased with spaces replaced by underscores — not from the filename. A profile named `"PackagingLine"` reads from `docs/packagingline/`. A missing directory is skipped silently, so check `python -m autornd.cli stats` if your docs do not seem to load.
 

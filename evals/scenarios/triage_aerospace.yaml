@@ -1,0 +1,12 @@
+id: triage_aerospace
+workflow: triage-classify
+description: >
+  A control surface. If it binds or slips the aircraft is lost.
+request: "Select a servo and linkage geometry for a 1.2 metre span UAV elevon with 20 degrees of deflection"
+tags: [triage]
+risk_ceiling_waived: >
+  A flight control surface is safety-critical whatever the airframe size, so critical is a defensible reading.
+expect:
+  risk_at_least: high
+  status: completed
+  max_calls: 2

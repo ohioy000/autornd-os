@@ -1,0 +1,14 @@
+id: triage_acoustics
+workflow: triage-classify
+description: >
+  Measurement and mitigation work. The floor is what matters here: an earlier
+  build read this as a plain measurement task and classified it below medium,
+  which is wrong for an exposure that has a regulated limit.
+request: "Reduce a 92 dBA noise floor at an operator station 2 metres from a pneumatic packaging head"
+tags: [triage]
+risk_ceiling_waived: >
+  92 dBA at an operator station is hearing damage, and occupational noise exposure is a regulated limit, so critical is a defensible reading rather than the over-classification this suite guards against.
+expect:
+  risk_at_least: medium
+  status: completed
+  max_calls: 2

@@ -1,0 +1,11 @@
+id: triage_thermal
+workflow: triage-classify
+description: >
+  Sizing arithmetic, checkable on paper before anything is built.
+request: "Size a heatsink for a 45 W power stage in a sealed enclosure at 45 C ambient with no forced air"
+tags: [triage]
+expect:
+  risk_at_least: medium
+  risk_at_most: high
+  status: completed
+  max_calls: 2

@@ -1,0 +1,18 @@
+name: triage-classify
+description: >
+  Classification alone — one call, no grounding, no lookups.
+
+  Triage decides the domains, the risk level and the roster, and every later
+  phase inherits those decisions. Measuring those needs nothing else, so this
+  shape exists to make that measurement cost a fraction of a cent and finish in
+  seconds. That is what makes it affordable to check risk calibration across a
+  dozen subjects on every change, rather than once when someone remembers.
+
+  For grounding behaviour use triage-only, which adds the context node.
+
+nodes:
+  - id: triage
+    kind: ai
+    tier: triage
+    prompt: triage
+    schema: TriageVerdict

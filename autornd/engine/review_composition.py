@@ -6,49 +6,65 @@ enforcing the exact compositions from the risk taxonomy table.
 
 from __future__ import annotations
 
-from autornd.models.verdicts import Domain, RiskLevel, SpecialistRole
+from autornd.models.verdicts import Domain, RiskLevel, SpecialistRole, domain_key
 
 
 def get_review_team(
-    risk: RiskLevel, domains: list[Domain]
+    risk: RiskLevel, domains: list[object]
 ) -> list[SpecialistRole]:
+    """Who reviews, given the risk level and the domains in play.
+
+    Domains arrive as normalised strings and may name a subject this harness
+    has never seen — R&D spans more than any shipped list. An unrecognised
+    domain is not ignored: at medium and above it pulls in the architect and a
+    test engineer, because unfamiliar work is exactly what wants a generalist
+    and someone to check it.
+    """
+    keys = {domain_key(d) for d in domains}
+    known = {domain_key(d) for d in Domain}
+    unrecognised = bool(keys - known)
+
     if risk == RiskLevel.CRITICAL:
         return list(SpecialistRole)
+
+    def ordered(team: set[SpecialistRole]) -> list[SpecialistRole]:
+        return sorted(team, key=lambda r: list(SpecialistRole).index(r))
 
     if risk == RiskLevel.HIGH:
         team: set[SpecialistRole] = {
             SpecialistRole.SYSTEMS_ARCHITECT,
             SpecialistRole.TEST_ENGINEER,
         }
-        if Domain.HARDWARE in domains or Domain.SUPPLY_CHAIN in domains:
+        if {"hardware", "supply_chain"} & keys:
             team.add(SpecialistRole.HARDWARE_ENGINEER)
             team.add(SpecialistRole.SUPPLY_CHAIN)
-        if Domain.FIRMWARE in domains:
+        if "firmware" in keys:
             team.add(SpecialistRole.FIRMWARE_ENGINEER)
-        return sorted(team, key=lambda r: list(SpecialistRole).index(r))
+        return ordered(team)
 
     if risk == RiskLevel.MEDIUM:
-        team = set[SpecialistRole]()
-        if Domain.BACKEND in domains or Domain.INFRASTRUCTURE in domains:
+        team = set()
+        if {"backend", "infrastructure"} & keys:
             team.add(SpecialistRole.BACKEND_ENGINEER)
-        if Domain.INFRASTRUCTURE in domains:
+        if "infrastructure" in keys:
             team.add(SpecialistRole.SYSTEMS_ARCHITECT)
-        if Domain.BACKEND in domains:
+        if "backend" in keys:
             team.add(SpecialistRole.TEST_ENGINEER)
-        if Domain.FIRMWARE in domains:
+        if "firmware" in keys:
             team.add(SpecialistRole.FIRMWARE_ENGINEER)
             team.add(SpecialistRole.TEST_ENGINEER)
-        if Domain.HARDWARE in domains:
+        if "hardware" in keys:
             team.add(SpecialistRole.HARDWARE_ENGINEER)
+            team.add(SpecialistRole.TEST_ENGINEER)
+        if unrecognised:
+            team.add(SpecialistRole.SYSTEMS_ARCHITECT)
             team.add(SpecialistRole.TEST_ENGINEER)
         if not team:
             team.add(SpecialistRole.BACKEND_ENGINEER)
             team.add(SpecialistRole.TEST_ENGINEER)
-        return sorted(team, key=lambda r: list(SpecialistRole).index(r))
+        return ordered(team)
 
     # Low risk
-    if Domain.FRONTEND in domains:
+    if "frontend" in keys:
         return [SpecialistRole.FRONTEND_ENGINEER]
-    if Domain.DOCUMENTATION in domains:
-        return [SpecialistRole.SYSTEMS_ARCHITECT]
     return [SpecialistRole.SYSTEMS_ARCHITECT]

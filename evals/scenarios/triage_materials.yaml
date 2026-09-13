@@ -1,0 +1,11 @@
+id: triage_materials
+workflow: triage-classify
+description: >
+  Food-grade compliance plus a hot pressurised seal.
+request: "Choose a gasket material for intermittent 140 C steam contact with food-grade compliance"
+tags: [triage]
+expect:
+  risk_at_least: high
+  risk_at_most: critical
+  status: completed
+  max_calls: 2

@@ -1,0 +1,13 @@
+id: triage_software_rt
+workflow: triage-classify
+description: >
+  A missed deadline in a control loop is a machine doing the wrong thing at
+  speed.
+request: "Bound worst-case latency for a control loop that must actuate within 5 ms of a sensor edge"
+tags: [triage]
+risk_ceiling_waived: >
+  A missed 5 ms actuation deadline is safety-critical control, so critical is a defensible reading.
+expect:
+  risk_at_least: high
+  status: completed
+  max_calls: 2

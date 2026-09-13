@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from autornd.models.verdicts import (
     Domain,
+    Domain,
     ImplementVerdict,
     PlanVerdict,
     ReviewFinding,
@@ -31,14 +32,37 @@ class TestTriageVerdict:
         assert v.risk == RiskLevel.HIGH
         assert len(v.specialists) == 3
 
-    def test_rejects_invalid_domain(self):
-        with pytest.raises(ValidationError):
-            TriageVerdict(
-                domains=["plumbing"],
-                risk=RiskLevel.LOW,
-                specialists=[SpecialistRole.BACKEND_ENGINEER],
-                summary="test",
-            )
+    def test_accepts_a_domain_outside_the_default_vocabulary(self):
+        """Domains are open-ended by design. Measured over twelve subjects,
+        nine had no fitting label in the enum and eight were forced onto
+        "hardware" — civil engineering as hardware, a latency budget as
+        firmware. Rejecting an unlisted domain is what caused that."""
+        v = TriageVerdict(
+            domains=["plumbing"],
+            risk=RiskLevel.LOW,
+            specialists=[SpecialistRole.BACKEND_ENGINEER],
+            summary="test",
+        )
+        assert v.domains == ["plumbing"]
+
+    def test_domains_are_normalised_and_deduped(self):
+        v = TriageVerdict(
+            domains=[Domain.HARDWARE, "Mechanical", "mechanical", "food safety", "  "],
+            risk=RiskLevel.MEDIUM,
+            specialists=[SpecialistRole.HARDWARE_ENGINEER],
+            summary="test",
+        )
+        assert v.domains == ["hardware", "mechanical", "food_safety"]
+
+    def test_enum_members_still_work(self):
+        """Every existing caller passes Domain members; they must keep working."""
+        v = TriageVerdict(
+            domains=[Domain.BACKEND],
+            risk=RiskLevel.MEDIUM,
+            specialists=[SpecialistRole.BACKEND_ENGINEER],
+            summary="test",
+        )
+        assert v.domains == ["backend"]
 
 
 class TestPlanVerdict:

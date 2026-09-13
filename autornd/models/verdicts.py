@@ -10,7 +10,7 @@ import json
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, model_validator, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator, field_validator
 
 
 class RiskLevel(str, Enum):
@@ -20,7 +20,26 @@ class RiskLevel(str, Enum):
     LOW = "low"
 
 
+def domain_key(value: object) -> str:
+    """One spelling for a domain, whether it arrived as an enum or a string.
+
+    Domains are open-ended: R&D spans more subjects than any fixed list can
+    name, so triage may return one that is not in the Domain enum. Everything
+    downstream keys on the normalised string, and enum members still work
+    because Domain subclasses str.
+    """
+    raw = getattr(value, "value", value)
+    return str(raw).strip().lower().replace(" ", "_").replace("-", "_")
+
+
 class Domain(str, Enum):
+    """The default domain vocabulary.
+
+    A starting set, not a closed one. Triage prefers these, a profile can
+    declare its own, and an unrecognised domain resolves to the architect
+    rather than being forced into the nearest label.
+    """
+
     FIRMWARE = "firmware"
     HARDWARE = "hardware"
     BACKEND = "backend"
@@ -43,10 +62,27 @@ class SpecialistRole(str, Enum):
 # ── Triage ──
 
 class TriageVerdict(BaseModel):
-    domains: list[Domain]
+    # Open-ended on purpose. Measured over twelve subjects, nine had no fitting
+    # label in the enum and eight of those were forced to "hardware" — civil
+    # engineering as hardware, a latency budget as firmware. Triage was not
+    # guessing badly; it was picking the least-wrong option from a list that did
+    # not contain the answer.
+    domains: list[str]
     risk: RiskLevel
     specialists: list[SpecialistRole]
     summary: str = Field(description="One-line classification of the request")
+
+    @field_validator("domains", mode="before")
+    @classmethod
+    def normalise_domains(cls, value: object) -> object:
+        if not isinstance(value, list):
+            return value
+        seen: list[str] = []
+        for item in value:
+            key = domain_key(item)
+            if key and key not in seen:
+                seen.append(key)
+        return seen
 
 
 # ── Plan ──

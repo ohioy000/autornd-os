@@ -114,6 +114,19 @@ def risk_at_least(scenario: Scenario, outcome: RunOutcome):
 
 
 @assertion
+def risk_at_most(scenario: Scenario, outcome: RunOutcome):
+    """The cost ceiling. Risk drives review team size, so a request classified
+    two levels above its consequence silently buys reviewers nobody needed."""
+    wanted = scenario.expect.get("risk_at_most")
+    if wanted is None:
+        return None
+    risk = getattr(_triage(outcome), "risk", None)
+    got = getattr(risk, "value", risk)
+    passed = got in RISK_ORDER and RISK_ORDER.index(got) <= RISK_ORDER.index(wanted)
+    return AssertionResult("risk_at_most", passed, f"<= {wanted}", got)
+
+
+@assertion
 def specialists_include(scenario: Scenario, outcome: RunOutcome):
     wanted = scenario.expect.get("specialists_include")
     if wanted is None:

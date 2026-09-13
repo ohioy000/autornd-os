@@ -1,0 +1,11 @@
+id: triage_chemistry
+workflow: triage-classify
+description: >
+  Selection work against a stated target, with no fitting built-in domain.
+request: "Choose a buffer system to hold a cell culture medium at pH 7.4 during a 6 hour room-temperature transport"
+tags: [triage]
+expect:
+  risk_at_least: medium
+  risk_at_most: high
+  status: completed
+  max_calls: 2

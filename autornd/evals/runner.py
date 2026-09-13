@@ -13,7 +13,9 @@ against the same expectations.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
+import tempfile
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable
@@ -39,6 +41,29 @@ __all__ = [
 
 DEFAULT_CALL_CEILING = 40
 DEFAULT_TIMEOUT_SECONDS = 600.0
+
+
+@contextlib.contextmanager
+def _isolated_store():
+    """Give each scenario its own knowledge store.
+
+    Research ingests what it looks up, which is right for a real workflow and
+    wrong for an experiment: in a twelve-scenario sweep the first scenario's
+    findings grounded all eleven after it, so only one was a genuine
+    empty-store test. Product behaviour is unchanged; the harness just stops
+    letting scenarios contaminate each other.
+    """
+    from autornd.config import settings
+
+    # The store builds a fresh client from settings.chromadb_path on every call,
+    # so redirecting the path is all the isolation needed.
+    original = settings.chromadb_path
+    with tempfile.TemporaryDirectory(prefix="autornd-eval-") as tmp:
+        settings.chromadb_path = tmp
+        try:
+            yield tmp
+        finally:
+            settings.chromadb_path = original
 
 
 class CallCeilingExceeded(RuntimeError):
@@ -172,7 +197,8 @@ async def run_scenario(
     started = time.perf_counter()
     error: str | None = None
     try:
-        state = await asyncio.wait_for(executor.run(scenario.request), deadline)
+        with _isolated_store():
+            state = await asyncio.wait_for(executor.run(scenario.request), deadline)
     except asyncio.TimeoutError:
         from autornd.graph.executor import ExecutionState
 

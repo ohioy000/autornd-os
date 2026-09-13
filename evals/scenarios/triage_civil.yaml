@@ -1,0 +1,13 @@
+id: triage_civil
+workflow: triage-classify
+description: >
+  A beam over a doorway. Getting it wrong drops a wall on someone, and it
+  cannot be undone once poured.
+request: "Size the reinforcement for a 4 metre simply supported concrete lintel carrying a single-storey masonry wall"
+tags: [triage]
+expect:
+  risk_at_least: critical
+  risk_at_most: critical
+  specialists_include: [test_engineer]
+  status: completed
+  max_calls: 2

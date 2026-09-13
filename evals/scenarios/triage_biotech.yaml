@@ -1,0 +1,13 @@
+id: triage_biotech
+workflow: triage-classify
+description: >
+  Food-contact sterilisation is regulatory exposure, and a wrong protocol
+  reaches everyone who eats the product.
+request: "Define a sterilisation validation protocol for a reusable stainless steel fill nozzle"
+tags: [triage]
+expect:
+  risk_at_least: critical
+  risk_at_most: critical
+  specialists_include: [test_engineer]
+  status: completed
+  max_calls: 2

@@ -1,0 +1,11 @@
+id: triage_mechanical
+workflow: triage-classify
+description: >
+  Selection and tolerancing work, reversible while it is still a drawing.
+request: "Specify the bearing and shaft tolerance for a 3000 rpm conveyor idler roller running in a washdown environment"
+tags: [triage]
+expect:
+  risk_at_least: medium
+  risk_at_most: high
+  status: completed
+  max_calls: 2

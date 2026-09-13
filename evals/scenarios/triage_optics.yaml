@@ -1,0 +1,11 @@
+id: triage_optics
+workflow: triage-classify
+description: >
+  Component selection. A wrong choice costs a part, not a person.
+request: "Pick a lens and sensor combination to read a 2 mm datamatrix code at 300 mm working distance on a moving line"
+tags: [triage]
+expect:
+  risk_at_least: medium
+  risk_at_most: high
+  status: completed
+  max_calls: 2

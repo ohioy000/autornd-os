@@ -97,3 +97,71 @@ class TestTriageEnforcement:
         original = list(verdict.specialists)
         WorkflowEngine._enforce_triage_composition(verdict)
         assert verdict.specialists == original
+
+
+class TestUnrecognisedDomains:
+    """R&D names subjects no shipped list contains. An unfamiliar domain must
+    not silently get a smaller team than a familiar one — it is the case that
+    most wants a generalist and someone to check the work."""
+
+    def test_an_unknown_domain_pulls_in_architect_and_test_at_medium(self):
+        team = get_review_team(RiskLevel.MEDIUM, ["mechanical"])
+        assert SpecialistRole.SYSTEMS_ARCHITECT in team
+        assert SpecialistRole.TEST_ENGINEER in team
+
+    def test_an_unknown_domain_does_not_crash_at_any_risk(self):
+        for risk in RiskLevel:
+            team = get_review_team(risk, ["astrophysics", "food_safety"])
+            assert team, f"empty team at {risk}"
+
+    def test_known_domains_are_unaffected(self):
+        assert get_review_team(RiskLevel.LOW, ["frontend"]) == [
+            SpecialistRole.FRONTEND_ENGINEER]
+        high = get_review_team(RiskLevel.HIGH, ["hardware"])
+        assert SpecialistRole.HARDWARE_ENGINEER in high
+
+    def test_plain_strings_and_enum_members_agree(self):
+        assert get_review_team(RiskLevel.HIGH, ["hardware"]) == \
+               get_review_team(RiskLevel.HIGH, [Domain.HARDWARE])
+
+    def test_mixed_known_and_unknown_keeps_the_known_specialists(self):
+        team = get_review_team(RiskLevel.MEDIUM, ["backend", "acoustics"])
+        assert SpecialistRole.BACKEND_ENGINEER in team
+        assert SpecialistRole.SYSTEMS_ARCHITECT in team
+
+
+class TestLeadForDomain:
+    def test_a_known_domain_resolves_to_its_specialist(self):
+        from autornd.engine.phases import lead_for_domain
+
+        assert lead_for_domain("firmware") is SpecialistRole.FIRMWARE_ENGINEER
+        assert lead_for_domain(Domain.BACKEND) is SpecialistRole.BACKEND_ENGINEER
+
+    def test_an_unknown_domain_resolves_to_the_architect(self):
+        """Not an error. Cross-domain and unfamiliar work is that role's job."""
+        from autornd.engine.phases import lead_for_domain
+
+        assert lead_for_domain("mechanical") is SpecialistRole.SYSTEMS_ARCHITECT
+
+    def test_a_profile_declared_domain_wins(self, monkeypatch):
+        from autornd.engine.phases import lead_for_domain
+        from autornd.profiles import ProjectProfile, set_profile
+
+        set_profile(ProjectProfile(
+            name="Test", domains={"Mechanical": "hardware_engineer"}))
+        try:
+            assert lead_for_domain("mechanical") is SpecialistRole.HARDWARE_ENGINEER
+        finally:
+            from autornd.profiles import DEFAULT_PROFILE
+            set_profile(DEFAULT_PROFILE)
+
+    def test_a_profile_mapping_to_a_bad_role_falls_back(self, monkeypatch):
+        from autornd.engine.phases import lead_for_domain
+        from autornd.profiles import ProjectProfile, set_profile
+
+        set_profile(ProjectProfile(name="Test", domains={"optics": "wizard"}))
+        try:
+            assert lead_for_domain("optics") is SpecialistRole.SYSTEMS_ARCHITECT
+        finally:
+            from autornd.profiles import DEFAULT_PROFILE
+            set_profile(DEFAULT_PROFILE)

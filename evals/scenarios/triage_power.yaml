@@ -1,0 +1,13 @@
+id: triage_power
+workflow: triage-classify
+description: >
+  Protection sizing is what stands between a fault and a fire.
+request: "Specify a DC bus and protection scheme for a 48 V battery feeding four 500 W motor drives"
+tags: [triage]
+expect:
+  risk_at_least: high
+  risk_at_most: critical
+  domains_include: [hardware]
+  specialists_include: [test_engineer]
+  status: completed
+  max_calls: 2

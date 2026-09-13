@@ -1,0 +1,13 @@
+id: triage_networking
+workflow: triage-classify
+description: >
+  Configuration work that is reversible. The one subject where the built-in
+  vocabulary already fits.
+request: "Design an addressing and VLAN scheme for 400 industrial sensors across six plant zones"
+tags: [triage]
+expect:
+  risk_at_least: medium
+  risk_at_most: high
+  domains_include: [infrastructure]
+  status: completed
+  max_calls: 2

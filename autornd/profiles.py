@@ -24,6 +24,10 @@ class ProjectProfile:
     stack: list[str] = field(default_factory=list)
     constraints: list[str] = field(default_factory=list)
     specialists: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # Domain name -> the specialist role that leads it. R&D spans more subjects
+    # than any shipped list can name, so a project declares the vocabulary its
+    # own work actually uses.
+    domains: dict[str, str] = field(default_factory=dict)
 
     def build_context(self) -> str:
         if not self.description and not self.stack:
@@ -36,6 +40,22 @@ class ProjectProfile:
             lines.append("Constraints:")
             lines.extend(f"  - {c}" for c in self.constraints)
         return "\n".join(lines)
+
+    def get_domain_lead(self, domain: str) -> str | None:
+        """Which specialist leads a profile-declared domain, if any."""
+        from autornd.models.verdicts import domain_key
+
+        key = domain_key(domain)
+        for name, role in self.domains.items():
+            if domain_key(name) == key:
+                return role
+        return None
+
+    def domain_vocabulary(self) -> list[str]:
+        """Profile-declared domain names, for the triage prompt."""
+        from autornd.models.verdicts import domain_key
+
+        return [domain_key(name) for name in self.domains]
 
     def get_specialist_context(self, role: str) -> str | None:
         spec_cfg = self.specialists.get(role, {})
@@ -65,6 +85,7 @@ def load_profile(name: str) -> ProjectProfile:
         stack=data.get("stack", []),
         constraints=data.get("constraints", []),
         specialists=data.get("specialists", {}),
+        domains=data.get("domains", {}) or {},
     )
 
 

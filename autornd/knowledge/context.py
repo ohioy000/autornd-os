@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 from autornd.config import settings
+from autornd.models.verdicts import domain_key
 from autornd.knowledge.store import retrieve
 from autornd.models.verdicts import Domain, SpecialistRole
 
@@ -62,7 +63,7 @@ def load_docs_context(
                 seen_paths.add(path)
 
     for domain in domains:
-        domain_paths = manifest.get("domains", {}).get(domain.value, [])
+        domain_paths = manifest.get("domains", {}).get(domain_key(domain), [])
         for path in domain_paths:
             if path not in seen_paths:
                 content = _read_doc(path)
@@ -123,10 +124,24 @@ def _rank_tier() -> str | None:
     return None
 
 
-# Whether the ranking model speaks the native rerank API. Probed once:
-# None = untried, True/False = settled. Stops us paying for a failed rerank
-# call on every workflow when the tier holds an ordinary chat model.
-_native_rerank: bool | None = None
+# Which ranking strategy works here. Probed at most once per strategy:
+#   None        untried
+#   "native"    the ranking model serves the rerank API
+#   "listwise"  it does not, but it can rank in a chat prompt
+#   "distance"  neither works — use the order retrieval already gave us
+#
+# Two states were not enough. A single transient failure of the native call
+# latched "not supported", and every workflow after that fell through to a
+# listwise chat call against a rerank-only model, which cannot answer it. One
+# hiccup turned into a guaranteed wasted call on every workflow for the life of
+# the process.
+_rerank_mode: str | None = None
+
+
+def reset_rerank_mode() -> None:
+    """Forget what was probed. For tests, and for a deliberate re-probe."""
+    global _rerank_mode
+    _rerank_mode = None
 
 RERANK_CANDIDATES = 20
 
@@ -262,21 +277,26 @@ async def rerank_chunks(
 ) -> list[dict]:
     """Order candidates by usefulness, best first (ranker tier).
 
-    Three tiers, each falling through to the next: a purpose-built rerank model
-    if the ranking tier holds one, a listwise ranking prompt if it holds a chat
-    model, and embedding-distance order if neither works. Context selection must
-    never be the thing that fails a workflow.
+    Three strategies, each tried at most once: a purpose-built rerank model if
+    the ranking tier holds one, a listwise ranking prompt if it holds a chat
+    model, and embedding-distance order if neither works. Once a strategy is
+    known to fail it is never attempted again, because context selection must
+    never be the thing that fails a workflow — and must not quietly cost a call
+    per workflow either.
     """
-    global _native_rerank
+    global _rerank_mode
 
     tier = _rank_tier()
     if client is None or tier is None or len(candidates) <= keep:
         return candidates[:keep]
 
+    if _rerank_mode == "distance":
+        return candidates[:keep]
+
     model = settings.model_ranker if tier == "ranker" else settings.model_research
 
-    # ── tier 1: purpose-built rerank model ──
-    if _native_rerank is not False:
+    # ── native rerank API ──
+    if _rerank_mode in (None, "native"):
         try:
             scored = await client.rerank(
                 model=model,
@@ -284,19 +304,27 @@ async def rerank_chunks(
                 documents=[c["text"] for c in candidates],
                 top_n=keep,
             )
-            _native_rerank = True
             picked = [candidates[i] for i, _ in scored if 0 <= i < len(candidates)]
             if picked:
+                if _rerank_mode is None:
+                    logger.info("Ranking via the rerank API (%s)", model)
+                _rerank_mode = "native"
                 return picked[:keep]
+            logger.warning("Rerank API returned nothing usable for %s", model)
         except Exception as exc:
-            if _native_rerank is None:
+            if _rerank_mode is None:
                 logger.info(
-                    "Ranking model does not serve the rerank API (%s) — "
-                    "using listwise ranking instead", type(exc).__name__,
+                    "%s does not serve the rerank API (%s) — trying listwise "
+                    "ranking once", model, type(exc).__name__,
                 )
-            _native_rerank = False
+        if _rerank_mode == "native":
+            # It worked before and failed now: a transient fault, not a
+            # capability change. Keep the mode and fall through this once.
+            logger.warning("Rerank API call failed for %s — using distance order "
+                           "for this workflow", model)
+            return candidates[:keep]
 
-    # ── tier 2: listwise ranking by a chat model ──
+    # ── listwise ranking by a chat model ──
     excerpts = "\n\n".join(
         f"[{i}] ({c['tag']}) {c['text'][:600]}" for i, c in enumerate(candidates)
     )
@@ -318,12 +346,21 @@ async def rerank_chunks(
             if isinstance(i, int) and 0 <= i < len(candidates)
         ]
         if picked:
+            if _rerank_mode is None:
+                logger.info("Ranking listwise via %s", model)
+            _rerank_mode = "listwise"
             return picked[:keep]
-        logger.warning("Rerank returned no usable ranking — falling back to distance")
+        logger.warning("Listwise ranking returned no usable order")
     except Exception as exc:
-        logger.warning("Rerank failed (%s) — falling back to distance order", exc)
+        logger.warning("Listwise ranking failed (%s)", exc)
 
-    # ── tier 3: whatever retrieval already gave us ──
+    # Neither strategy works with this model. Stop paying to rediscover that.
+    if _rerank_mode != "listwise":
+        logger.info(
+            "Neither the rerank API nor listwise ranking works with %s — "
+            "using retrieval order from here on", model,
+        )
+        _rerank_mode = "distance"
     return candidates[:keep]
 
 
@@ -369,7 +406,7 @@ Return JSON with:
 - considerations: list of factors this kind of work usually has to address"""
 
 
-async def analyze_request(client, request: str) -> str:
+async def analyze_request(client, request: str) -> tuple[str, list[str]]:
     """Scope a request when there is no documentation to ground it (research tier).
 
     Most installs have an empty knowledge store, which used to leave every phase
@@ -378,7 +415,7 @@ async def analyze_request(client, request: str) -> str:
     and keeps assumptions visible rather than buried in a plan.
     """
     if client is None or not settings.model_research:
-        return ""
+        return "", []
 
     from autornd.profiles import get_profile
 
@@ -400,9 +437,10 @@ async def analyze_request(client, request: str) -> str:
         )
     except Exception as exc:
         logger.warning("Request scoping failed (%s) — phases run on the request alone", exc)
-        return ""
+        return "", []
 
     objective = (data.get("objective") or "").strip()
+    unknowns = [u for u in data.get("unknowns", []) if isinstance(u, str) and u.strip()]
     sections = []
     if objective:
         sections.append(f"Objective: {objective}")
@@ -414,7 +452,7 @@ async def analyze_request(client, request: str) -> str:
         items = [i for i in data.get(key, []) if isinstance(i, str) and i.strip()]
         if items:
             sections.append(heading + ":\n" + "\n".join(f"- {i}" for i in items))
-    return "\n\n".join(sections)
+    return "\n\n".join(sections), unknowns
 
 
 async def build_phase_context(
@@ -441,9 +479,20 @@ async def build_phase_context(
         else:
             # Nothing ingested, or nothing matched. Scoping still helps, and it
             # is labelled as analysis so no phase mistakes it for documentation.
-            scoping = await analyze_request(client, request)
+            scoping, unknowns = await analyze_request(client, request)
             if scoping:
                 parts.append("=== REQUEST ANALYSIS (no project documentation "
                              "available — assumptions, not facts) ===\n" + scoping)
+
+            # An empty knowledge store is how this ships, and it is the case
+            # that most needs looking things up. The unknowns scoping found are
+            # the queries — the same mechanism as documentation gaps, from the
+            # only other place that knows what is missing.
+            if unknowns and settings.model_search:
+                from autornd.knowledge.research import render_findings, research_gaps
+
+                findings = await research_gaps(client, request, unknowns)
+                if findings:
+                    parts.append(render_findings(findings))
 
     return "\n\n".join(parts)

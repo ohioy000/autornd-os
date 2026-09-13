@@ -16,6 +16,7 @@ from autornd.engine.phases import (
 from autornd.engine.review_composition import get_review_team
 from autornd.knowledge.context import build_phase_context
 from autornd.models.verdicts import (
+    domain_key,
     Domain, EscalationVerdict, ImplementVerdict, PlanVerdict,
     ReviewVerdict, RiskLevel, SpecialistRole, TriageVerdict, ValidateVerdict,
 )
@@ -431,7 +432,7 @@ class WorkflowEngine:
                 self.session,
                 workflow_id=workflow.id,
                 request=workflow.request,
-                domains=[d.value for d in triage.domains],
+                domains=[domain_key(d) for d in triage.domains],
                 risk=triage.risk.value,
                 iterations=workflow.iteration,
                 shipped=review.ship,

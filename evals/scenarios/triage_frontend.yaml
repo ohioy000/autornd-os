@@ -1,5 +1,5 @@
 id: triage_frontend
-workflow: triage-only
+workflow: triage-classify
 description: >
   Cosmetic work. Guards the other direction from triage_hardware: classifying a
   restyle as high risk means seven reviewers and a reasoning model planning a
