@@ -241,7 +241,7 @@ class WorkflowEngine:
 
         specialists = get_specialists(triage.specialists)
         verdict, response = await run_plan(
-            self.client, workflow.request, triage, specialists
+            self.client, workflow.request, triage, specialists, context=context
         )
         await self._save_phase(workflow, "plan", verdict.model_dump(), response)
 

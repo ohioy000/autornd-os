@@ -185,7 +185,7 @@ class PhaseRunner:
     async def _phase_plan(self, node: Node, state: ExecutionState):
         verdict, response = await phases.run_plan(
             self.client, state.request, self._triage(state), self._specialists(state),
-            tier=self._tier(node, state),
+            tier=self._tier(node, state), context=self.context,
         )
         return verdict, [response]
 

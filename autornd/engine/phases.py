@@ -135,11 +135,16 @@ async def run_plan(
     triage: TriageVerdict,
     specialists: list[Specialist],
     tier: str | None = None,
+    context: str | None = None,
 ) -> tuple[PlanVerdict, ModelResponse]:
     specialist_names = ", ".join(s.name for s in specialists)
-    context = await build_phase_context(
-        request, triage.domains, triage.specialists, client=client
-    )
+    # Grounding is assembled once per workflow by its own node and passed in.
+    # Rebuilding it here ran the whole research pipeline a second time —
+    # expansion, ranking, briefing and any lookups — for an identical result.
+    if context is None:
+        context = await build_phase_context(
+            request, triage.domains, triage.specialists, client=client
+        )
     context_block = f"\n\nProject context:\n{context}" if context else ""
     prompt = f"""\
 Create an implementation plan for this engineering request.

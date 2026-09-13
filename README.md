@@ -138,8 +138,8 @@ Select with `AUTORND_WORKFLOW`. Copy one and change it — that is the point of 
 
 | | happy path | never converges |
 |---|---|---|
-| `engineering-rnd` | 12 calls | 25 calls |
-| `lean` | **9 calls** | **16 calls** |
+| `engineering-rnd` | 11 calls | 24 calls |
+| `lean` | **8 calls** | **15 calls** |
 
 Writing the sequence down also forced out rules that had been implicit in code: the test engineer validates the work and so does not build it or review the build (the `builders` and `peers` rosters), feasibility only reviews a plan the architect declared ready, and escalation runs because a loop gave up rather than because its dependencies happened to be satisfied.
 
@@ -499,7 +499,16 @@ Model calls for a single-iteration workflow:
 | High | 14 | 1 | 1 | 3 | 1 | 2 | 1 | 5 |
 | Critical | 18 | 1 | 1 | 4 | 1 | 3 | 1 | 7 |
 
-Retries and escalation add to this: a medium-risk workflow failing validation three times costs 14 calls, and one exhausting the loop and recovering through escalation costs 19. Research adds one to two calls, plus up to four lookups when there are gaps.
+Research adds a fixed overhead on top of that: two to three calls to write the search queries, rank the retrieved material and brief from it, plus one lookup per gap it finds, bounded at four. So a medium-risk workflow is 8 phase calls plus 3 for research, and up to 4 more if your documentation leaves gaps.
+
+| Risk | Phases | + research | Typical total |
+|---|---|---|---|
+| Low | 6 | 3 | **9** |
+| Medium | 8 | 3 | **11** |
+| High | 14 | 3 | **17** |
+| Critical | 18 | 3 | **21** |
+
+Retries and escalation add further: a medium-risk workflow failing validation three times costs 14 phase calls, and one exhausting the loop and recovering through escalation costs 19.
 
 Three things follow, and they are the levers worth pulling:
 
