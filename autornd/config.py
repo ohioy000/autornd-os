@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     model_premium: str = ""
 
     max_iterations: int = 5
-    escalation_max_tokens: int = 4096
+    escalation_max_tokens: int = 16384
     escalation_recovery_attempts: int = 3
 
     chromadb_path: str = "./chromadb_data"

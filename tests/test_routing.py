@@ -302,3 +302,41 @@ class TestSchemaRetry:
             function="triage", system_prompt="s", user_message="u",
         )
         assert data == {"anything": True}
+
+
+@pytest.mark.asyncio
+class TestEmptyReplyDiagnostics:
+    """An empty reply used to read only as "model returned no text", which hides
+    the common cause: a reasoning model spending its whole token budget on
+    reasoning and returning finish_reason=length with nothing to show."""
+
+    @staticmethod
+    def _client(finish_reason, provider="SomeProvider", completion_tokens=50):
+        from autornd.routing.openrouter import ModelResponse
+
+        client = OpenRouterClient(api_key="test")
+        client.chat = AsyncMock(return_value=ModelResponse(
+            content="", model="vendor/reasoner", prompt_tokens=10,
+            completion_tokens=completion_tokens, cost=0.0,
+            finish_reason=finish_reason, provider=provider))
+        return client
+
+    async def test_length_explains_the_reasoning_budget(self, monkeypatch):
+        monkeypatch.setattr("asyncio.sleep", AsyncMock())
+        client = self._client("length")
+        with pytest.raises(ValueError) as exc:
+            await client.chat_json(function="architecture", system_prompt="s",
+                                   user_message="u", max_retries=2)
+        msg = str(exc.value)
+        assert "finish_reason=length" in msg
+        assert "reasoning model" in msg
+        assert "max_tokens" in msg
+
+    async def test_other_empties_name_the_provider(self, monkeypatch):
+        monkeypatch.setattr("asyncio.sleep", AsyncMock())
+        client = self._client("stop", provider="Flaky")
+        with pytest.raises(ValueError) as exc:
+            await client.chat_json(function="architecture", system_prompt="s",
+                                   user_message="u", max_retries=2)
+        assert "provider=Flaky" in str(exc.value)
+        assert "reasoning model" not in str(exc.value)

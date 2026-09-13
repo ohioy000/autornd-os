@@ -23,6 +23,12 @@ class ModelResponse:
     prompt_tokens: int
     completion_tokens: int
     cost: float
+    # Why generation stopped, and which upstream served it. Both matter when a
+    # reply comes back empty: a reasoning model that spent its whole budget on
+    # reasoning returns "length" with no content, which is a very different
+    # problem from a provider returning nothing at all.
+    finish_reason: str | None = None
+    provider: str | None = None
 
 
 class OpenRouterClient:
@@ -101,7 +107,17 @@ class OpenRouterClient:
 
         choice = data["choices"][0]
         content = choice["message"]["content"] or ""
+        finish_reason = choice.get("finish_reason")
+        provider = data.get("provider")
         usage = data.get("usage", {})
+
+        if not content.strip():
+            logger.warning(
+                "Empty content from %s via %s (finish_reason=%s, "
+                "completion_tokens=%s, max_tokens=%s)",
+                model, provider, finish_reason,
+                usage.get("completion_tokens"), max_tokens,
+            )
         prompt_tokens = usage.get("prompt_tokens", 0)
         completion_tokens = usage.get("completion_tokens", 0)
 
@@ -114,6 +130,8 @@ class OpenRouterClient:
         return ModelResponse(
             content=content,
             model=model,
+            finish_reason=finish_reason,
+            provider=provider,
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
             cost=cost,
@@ -178,6 +196,26 @@ class OpenRouterClient:
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
+            if not (response.content or "").strip():
+                detail = (
+                    f"model returned no text (provider={response.provider}, "
+                    f"finish_reason={response.finish_reason}"
+                )
+                if response.finish_reason == "length":
+                    detail += (
+                        f", completion_tokens={response.completion_tokens} of "
+                        f"max_tokens={max_tokens} — a reasoning model can spend "
+                        f"its whole budget before emitting an answer; raise "
+                        f"max_tokens or use a non-reasoning model for this tier"
+                    )
+                detail += ")"
+                last_error = ValueError(detail)
+                logger.warning(
+                    "Empty reply (attempt %d/%d) for %s: %s",
+                    attempt + 1, max_retries, function, detail,
+                )
+                continue
+
             try:
                 parsed = self._extract_json(response.content)
                 if schema is not None:

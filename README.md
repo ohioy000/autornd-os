@@ -159,7 +159,7 @@ A workable approach if you are starting from nothing:
 2. **Do not economise on Architecture.** It runs once or twice, but its plan constrains everything downstream.
 3. **Make Triage the cheapest model that returns valid JSON reliably.** It does classification, not reasoning.
 4. **Put a reasoning model in Escalation.** It only runs after the loop has already failed, so its cost is rare by construction.
-5. **Set Research early** — it is the cheapest quality win here. Even with no documentation it makes every workflow's assumptions explicit instead of implicit.
+5. **Consider Research early.** With no documentation it still makes each workflow's assumptions explicit rather than implicit, which is worth one small call. Whether it reduces iterations is not something we have measured — treat it as a legibility feature, not a performance one, until you have measured it on your own workloads.
 6. **Leave Ranker and Premium empty** to begin with. Ranker does nothing until you ingest documentation; Premium is opt-in.
 
 Then watch your provider's usage dashboard for a few workflows and adjust. The per-phase call counts in [Cost and Performance](#cost-and-performance) tell you which tier your spend will actually land on.
@@ -620,7 +620,11 @@ Two things follow, and they are the levers worth pulling:
 
 **Latency.** Feasibility, domain review and final review all run in parallel, so wall-clock tracks the *critical path*, not the call count: 6–7 sequential round trips for a single-iteration workflow regardless of risk, rising to 12 with three retries and 17 through a full escalation and recovery. Harness overhead itself is negligible — around 25–35ms per workflow with everything else stubbed out. Essentially all wall-clock is provider latency.
 
-**On prompt size.** The output contracts and per-domain checks roughly doubled input prompt sizes. That is a deliberate trade: it converts workflows that previously failed every iteration and escalated into workflows that pass on the first, which is a large net saving in both tokens and time.
+**On prompt size.** The output contracts and per-domain checks roughly doubled input prompt sizes. That is a deliberate trade against workflows that previously failed every iteration before escalating.
+
+**On variance.** Measured runs of the *same* request have ranged from 7 calls and 68 seconds to 21 calls and 663 seconds. Model non-determinism dominates, so treat any single run as an anecdote and measure across several before concluding anything about a configuration change.
+
+**On wall-clock.** With reasoning models in the engineering and escalation tiers, a workflow that uses its full iteration budget can run 10–15 minutes and there is no time limit — only `MAX_ITERATIONS`. Lower that setting before running anything unattended, and watch your provider's spend.
 
 ## Testing
 

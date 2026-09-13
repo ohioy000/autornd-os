@@ -119,3 +119,24 @@ class TestReviewVerdict:
         v = ReviewVerdict(ship=False, findings=[f], verdict="Blocked on firmware issue")
         assert not v.ship
         assert len(v.findings) == 1
+
+
+class TestPlanCriteriaRequired:
+    """Regression: a ready plan with no success criteria left the validator
+    nothing to check, so it could never return green and the loop burned every
+    iteration before escalating."""
+
+    def test_ready_plan_without_criteria_is_rejected(self):
+        with pytest.raises(ValidationError, match="success_criteria"):
+            PlanVerdict(ready=True, plan="do the thing", blockers=[],
+                        success_criteria=[])
+
+    def test_ready_plan_with_criteria_is_fine(self):
+        v = PlanVerdict(ready=True, plan="do the thing", blockers=[],
+                        success_criteria=["backoff capped at 60s"])
+        assert v.success_criteria == ["backoff capped at 60s"]
+
+    def test_blocked_plan_needs_no_criteria(self):
+        v = PlanVerdict(ready=False, plan="cannot proceed",
+                        blockers=["missing datasheet"], success_criteria=[])
+        assert not v.ready

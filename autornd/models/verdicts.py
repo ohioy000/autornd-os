@@ -10,7 +10,7 @@ import json
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, model_validator, field_validator
 
 
 class RiskLevel(str, Enum):
@@ -66,6 +66,22 @@ class PlanVerdict(BaseModel):
         if isinstance(v, str):
             return v
         return json.dumps(v, indent=2)
+
+    @model_validator(mode="after")
+    def ready_plans_need_criteria(self) -> "PlanVerdict":
+        """A ready plan must say how to tell it succeeded.
+
+        Validation checks the implementation against these criteria. With an
+        empty list there is nothing to check, the validator cannot return green
+        on any evidence, and the loop burns every iteration before escalating —
+        so an empty list is a malformed plan, not an acceptable one.
+        """
+        if self.ready and not self.success_criteria:
+            raise ValueError(
+                "a ready plan must provide success_criteria; "
+                "use ready=false with blockers if the work cannot be specified"
+            )
+        return self
 
 
 # ── Implement ──

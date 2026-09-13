@@ -139,6 +139,10 @@ the implement/validate loop.
 Give between 3 and 6 criteria. Fewer leaves the work unchecked; more dilutes
 each check and lengthens every validate prompt for the rest of the run.
 
+If ready is true, success_criteria must not be empty — the validate phase has
+nothing to check against otherwise. If the work cannot be specified well enough
+to state criteria, return ready: false with the reason in blockers instead.
+
 Request:
 {request}"""
 
