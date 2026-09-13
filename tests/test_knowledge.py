@@ -40,11 +40,11 @@ class TestContextLoader:
         assert "constraints.md" in firmware_ctx
         assert "architecture.md" in backend_ctx
 
-    def test_build_phase_context_includes_docs(self):
+    async def test_build_phase_context_includes_docs(self):
         from autornd.knowledge.context import build_phase_context
 
-        ctx = build_phase_context(
-            "Add Modbus handler for new sensor",
+        ctx = await build_phase_context(
+            "Add a handler for a new sensor type",
             [Domain.BACKEND],
             include_retrieval=False,
         )
@@ -167,3 +167,262 @@ class TestEpisodicMemory:
         ctx = format_episodes_context(episodes)
         assert "BLOCKED" in ctx
         assert "missing datasheet" in ctx.lower()
+
+
+@pytest.mark.asyncio
+class TestRerank:
+    """Ranking must never be able to break a workflow: every failure path
+    degrades to the embedding-distance order retrieval already produced."""
+
+    CANDIDATES = [
+        {"text": f"chunk {i}", "tag": f"t{i}", "source": "s", "distance": i / 10}
+        for i in range(8)
+    ]
+
+    async def test_reorders_by_model_ranking(self):
+        from unittest.mock import AsyncMock
+        from autornd.knowledge.context import rerank_chunks
+
+        client = AsyncMock()
+        client.chat_json = AsyncMock(return_value=({"ranking": [5, 0, 3]}, None))
+        out = await rerank_chunks(client, "q", self.CANDIDATES, keep=3)
+        assert [c["tag"] for c in out] == ["t5", "t0", "t3"]
+
+    async def test_no_client_keeps_distance_order(self):
+        from autornd.knowledge.context import rerank_chunks
+
+        out = await rerank_chunks(None, "q", self.CANDIDATES, keep=3)
+        assert [c["tag"] for c in out] == ["t0", "t1", "t2"]
+
+    async def test_model_failure_falls_back(self):
+        from unittest.mock import AsyncMock
+        from autornd.knowledge.context import rerank_chunks
+
+        client = AsyncMock()
+        client.chat_json = AsyncMock(side_effect=RuntimeError("provider down"))
+        out = await rerank_chunks(client, "q", self.CANDIDATES, keep=3)
+        assert [c["tag"] for c in out] == ["t0", "t1", "t2"]
+
+    async def test_garbage_ranking_falls_back(self):
+        from unittest.mock import AsyncMock
+        from autornd.knowledge.context import rerank_chunks
+
+        client = AsyncMock()
+        client.chat_json = AsyncMock(return_value=({"ranking": ["nope", 99]}, None))
+        out = await rerank_chunks(client, "q", self.CANDIDATES, keep=3)
+        assert [c["tag"] for c in out] == ["t0", "t1", "t2"]
+
+    async def test_listwise_ranking_uses_the_ranker_tier(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_ranker", "vendor/ranker")
+        monkeypatch.setattr(ctx, "_native_rerank", False)   # chat model, not a reranker
+        client = AsyncMock()
+        client.chat_json = AsyncMock(return_value=({"ranking": [1]}, None))
+        await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=1)
+        assert client.chat_json.call_args.kwargs["function"] == "ranker"
+
+    async def test_falls_back_to_research_tier_when_no_ranker(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_ranker", "")
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        monkeypatch.setattr(ctx, "_native_rerank", False)
+        client = AsyncMock()
+        client.chat_json = AsyncMock(return_value=({"ranking": [1]}, None))
+        await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=1)
+        assert client.chat_json.call_args.kwargs["function"] == "research"
+
+    async def test_prefers_native_rerank_model(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(ctx, "_native_rerank", None)
+        client = AsyncMock()
+        client.rerank = AsyncMock(return_value=[(6, 0.98), (1, 0.4)])
+        client.chat_json = AsyncMock()
+        out = await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=2)
+        assert [c["tag"] for c in out] == ["t6", "t1"]
+        client.chat_json.assert_not_called()
+
+    async def test_falls_back_to_listwise_when_rerank_unsupported(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(ctx, "_native_rerank", None)
+        client = AsyncMock()
+        client.rerank = AsyncMock(side_effect=RuntimeError("404 no rerank"))
+        client.chat_json = AsyncMock(return_value=({"ranking": [2, 4]}, None))
+        out = await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=2)
+        assert [c["tag"] for c in out] == ["t2", "t4"]
+        assert ctx._native_rerank is False
+
+    async def test_both_failing_keeps_distance_order(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(ctx, "_native_rerank", None)
+        client = AsyncMock()
+        client.rerank = AsyncMock(side_effect=RuntimeError("no rerank"))
+        client.chat_json = AsyncMock(side_effect=RuntimeError("provider down"))
+        out = await ctx.rerank_chunks(client, "q", self.CANDIDATES, keep=3)
+        assert [c["tag"] for c in out] == ["t0", "t1", "t2"]
+
+
+@pytest.mark.asyncio
+class TestResearchTier:
+    """The research tier reads docs and writes a briefing. Every step degrades
+    to the behaviour that existed before it, so an unset or failing research
+    model costs grounding quality, never a workflow."""
+
+    CHUNKS = [
+        {"text": "Supply rail is 24V nominal, 18-30V tolerated.", "tag": "power", "distance": 0.1},
+        {"text": "All fill-zone connectors must be IP69K rated.", "tag": "ingress", "distance": 0.2},
+    ]
+
+    async def test_expands_into_targeted_queries(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        client = AsyncMock()
+        client.chat_json = AsyncMock(
+            return_value=({"queries": ["sensor supply voltage", "connector ingress rating"]}, None))
+        out = await ctx.expand_queries(client, "wire the laser sensor")
+        assert out == ["sensor supply voltage", "connector ingress rating"]
+        assert client.chat_json.call_args.kwargs["function"] == "research"
+
+    async def test_no_research_model_searches_raw_request(self, monkeypatch):
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_research", "")
+        assert await ctx.expand_queries(object(), "wire the sensor") == ["wire the sensor"]
+
+    async def test_expansion_failure_searches_raw_request(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        client = AsyncMock()
+        client.chat_json = AsyncMock(side_effect=RuntimeError("down"))
+        assert await ctx.expand_queries(client, "wire it") == ["wire it"]
+
+    async def test_briefing_cites_sources_and_names_gaps(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        client = AsyncMock()
+        client.chat_json = AsyncMock(return_value=(
+            {"briefing": "Supply is 24V nominal.", "gaps": ["cable length limits"]}, None))
+        out = await ctx.synthesize_briefing(client, "wire it", self.CHUNKS)
+        assert "24V nominal" in out
+        assert "cable length limits" in out
+        assert "power" in out and "ingress" in out   # sources cited
+
+    async def test_briefing_failure_passes_excerpts_through(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        client = AsyncMock()
+        client.chat_json = AsyncMock(side_effect=RuntimeError("down"))
+        out = await ctx.synthesize_briefing(client, "wire it", self.CHUNKS)
+        assert "IP69K" in out
+
+
+@pytest.mark.asyncio
+class TestRankTierSelection:
+    async def test_ranker_tier_preferred(self, monkeypatch):
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_ranker", "vendor/reranker")
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        assert ctx._rank_tier() == "ranker"
+
+    async def test_research_ranks_when_no_ranker_set(self, monkeypatch):
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_ranker", "")
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        assert ctx._rank_tier() == "research"
+
+    async def test_neither_set_means_no_ranking(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_ranker", "")
+        monkeypatch.setattr(config.settings, "model_research", "")
+        assert ctx._rank_tier() is None
+        cands = [{"text": f"c{i}", "tag": f"t{i}", "distance": i/10} for i in range(8)]
+        out = await ctx.rerank_chunks(AsyncMock(), "q", cands, keep=3)
+        assert [c["tag"] for c in out] == ["t0", "t1", "t2"]
+
+    async def test_scopes_the_request_when_there_are_no_docs(self, monkeypatch):
+        """Most installs have an empty knowledge store. Scoping needs no
+        documents, so the research tier still earns its place there."""
+        from unittest.mock import AsyncMock
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        client = AsyncMock()
+        client.chat_json = AsyncMock(return_value=({
+            "objective": "Deliver 24V from the board to the sensor.",
+            "unknowns": ["sensor current draw", "connector type"],
+            "assumptions": ["supply is regulated"],
+            "considerations": ["ingress rating"],
+        }, None))
+
+        out = await ctx.analyze_request(client, "wire the sensor")
+        assert "Deliver 24V" in out
+        assert "sensor current draw" in out
+        assert "Assumed unless corrected" in out
+        assert client.chat_json.call_args.kwargs["function"] == "research"
+
+    async def test_scoping_is_labelled_as_analysis_not_documentation(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        from autornd import config
+        from autornd.models.verdicts import Domain
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        monkeypatch.setattr(ctx, "retrieve", lambda *a, **k: [])
+        monkeypatch.setattr(ctx, "load_docs_context", lambda *a, **k: "")
+        client = AsyncMock()
+        client.chat_json = AsyncMock(return_value=(
+            {"objective": "o", "unknowns": ["u"], "assumptions": [], "considerations": []}, None))
+
+        out = await ctx.build_phase_context("req", [Domain.BACKEND], client=client)
+        assert "REQUEST ANALYSIS" in out
+        assert "assumptions, not facts" in out
+
+    async def test_no_research_model_means_no_scoping(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_research", "")
+        assert await ctx.analyze_request(AsyncMock(), "req") == ""
+
+    async def test_scoping_failure_is_not_fatal(self, monkeypatch):
+        from unittest.mock import AsyncMock
+        from autornd import config
+        import autornd.knowledge.context as ctx
+
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        client = AsyncMock()
+        client.chat_json = AsyncMock(side_effect=RuntimeError("down"))
+        assert await ctx.analyze_request(client, "req") == ""
