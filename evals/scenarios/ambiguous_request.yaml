@@ -5,6 +5,9 @@ description: >
   must not do is burn five iterations discovering it cannot be validated.
   Modelled on a live run that cost 21 calls before escalating.
 workflow: engineering-rnd
+# Measured at 79-115s for two calls: the architecture tier reasons at length
+# before concluding it cannot plan. Correct, and slow.
+timeout: 300
 request: "Change the battery charge controller cutoff thresholds and cell balancing logic"
 tags: [hardware, ambiguous, regression]
 expect:

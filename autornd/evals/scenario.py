@@ -51,6 +51,12 @@ class Scenario:
     # calls and a few seconds; asserting it against the full pipeline means a
     # ten-minute run to check something decided in the first two.
     workflow: str | None = None
+    # Scenarios differ legitimately in how long they should take. A reasoning
+    # model on the architecture tier took 79-115 seconds to decide it could not
+    # plan an underspecified request — correct behaviour, slow by nature. One
+    # global timeout either fails that scenario or lets a genuine hang run for
+    # ten minutes, so each scenario states its own.
+    timeout: float | None = None
     expect: dict[str, Any] = field(default_factory=dict)
     tags: list[str] = field(default_factory=list)
 
@@ -98,6 +104,10 @@ def parse(raw: dict[str, Any], source: str = "<inline>") -> Scenario:
                 f"{source}: {key} is {value!r}; expected one of {RISK_ORDER}"
             )
 
+    timeout = raw.get("timeout")
+    if timeout is not None and (not isinstance(timeout, (int, float)) or timeout <= 0):
+        raise ScenarioError(f"{source}: timeout must be a positive number of seconds")
+
     for key in ("converge_within", "max_calls"):
         value = expect.get(key)
         if value is not None and (not isinstance(value, int) or value < 1):
@@ -108,6 +118,7 @@ def parse(raw: dict[str, Any], source: str = "<inline>") -> Scenario:
         request=raw["request"],
         description=raw.get("description", ""),
         workflow=raw.get("workflow"),
+        timeout=raw.get("timeout"),
         expect=expect,
         tags=list(raw.get("tags") or []),
     )

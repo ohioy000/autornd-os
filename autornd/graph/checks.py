@@ -72,7 +72,50 @@ _STOPWORDS = {
     "all", "any", "each", "every", "no", "shall",
 }
 
-_NUMBER = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)\s*([a-zA-Z%$]{0,4})")
+# The unit capture is a whole word, not four characters: truncating "5 second"
+# to "seco" made it a different unit from "60s" and hid a real contradiction
+# between a plan and its implementation.
+_NUMBER = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)\s*([a-zA-Z%$µΩ°]*)")
+
+# Written forms of the same unit must compare equal, or a check that exists to
+# catch "the plan says 60s and the code says 5 seconds" never fires.
+_UNIT_ALIASES = {
+    "s": "s", "sec": "s", "secs": "s", "second": "s", "seconds": "s",
+    "ms": "ms", "millisecond": "ms", "milliseconds": "ms",
+    "min": "min", "mins": "min", "minute": "min", "minutes": "min",
+    "h": "h", "hr": "h", "hrs": "h", "hour": "h", "hours": "h",
+    "v": "v", "volt": "v", "volts": "v",
+    "mv": "mv", "millivolt": "mv", "millivolts": "mv",
+    "a": "a", "amp": "a", "amps": "a", "ampere": "a", "amperes": "a",
+    "ma": "ma", "milliamp": "ma", "milliamps": "ma",
+    "w": "w", "watt": "w", "watts": "w",
+    "hz": "hz", "hertz": "hz",
+    "khz": "khz", "kilohertz": "khz",
+    "mhz": "mhz", "megahertz": "mhz",
+    "ghz": "ghz", "gigahertz": "ghz",
+    "b": "b", "byte": "b", "bytes": "b",
+    "kb": "kb", "mb": "mb", "gb": "gb", "tb": "tb",
+    "m": "m", "meter": "m", "meters": "m", "metre": "m", "metres": "m",
+    "km": "km", "kilometer": "km", "kilometers": "km",
+    "mm": "mm", "cm": "cm",
+    "c": "c", "celsius": "c", "degc": "c", "°c": "c",
+    "%": "%", "$": "$",
+}
+
+
+def _canonical_unit(raw: str) -> str:
+    """One spelling per unit, so written and symbolic forms compare equal.
+
+    An unrecognised word is kept as itself, with a trailing plural stripped:
+    "3 retries" and "3 retry" are the same claim, and comparing them is still
+    worth doing even though "retry" is not a unit.
+    """
+    unit = raw.strip().lower()
+    if not unit:
+        return ""
+    if unit in _UNIT_ALIASES:
+        return _UNIT_ALIASES[unit]
+    return unit[:-3] + "y" if unit.endswith("ies") else unit.rstrip("s") or unit
 
 
 def _normalize(value: str) -> str:
@@ -148,8 +191,8 @@ def numbers_consistent(plan: str, implementation: str) -> Result:
     """
     def indexed(text: str) -> dict[str, set[str]]:
         found: dict[str, set[str]] = {}
-        for value, unit in _NUMBER.findall(text or ""):
-            unit = unit.lower()
+        for value, raw_unit in _NUMBER.findall(text or ""):
+            unit = _canonical_unit(raw_unit)
             if not unit:
                 continue
             found.setdefault(unit, set()).add(_normalize(value))
@@ -180,7 +223,8 @@ def totals_reconcile(text: str, tolerance: float = 0.01) -> Result:
     arithmetic, and exactly the kind of thing the original design wanted checked
     and that nobody should pay a reasoning model to do.
     """
-    amounts = [float(v) for v, u in _NUMBER.findall(text or "") if u in {"$", ""}]
+    amounts = [float(v) for v, u in _NUMBER.findall(text or "")
+               if _canonical_unit(u) in {"$", ""}]
     stated = re.search(r"total[^0-9$]{0,20}\$?\s*(\d+(?:\.\d+)?)", text or "", re.I)
     if not stated or len(amounts) < 2:
         return Result(True, "no stated total to reconcile", checked=False)

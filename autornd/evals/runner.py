@@ -166,15 +166,18 @@ async def run_scenario(
     runner = BoundedRunner(client_factory(), ceiling + 1)
     executor = GraphExecutor(spec, runner, settings_lookup)
 
+    # A scenario's own timeout wins: it knows what it is measuring.
+    deadline = scenario.timeout or timeout
+
     started = time.perf_counter()
     error: str | None = None
     try:
-        state = await asyncio.wait_for(executor.run(scenario.request), timeout)
+        state = await asyncio.wait_for(executor.run(scenario.request), deadline)
     except asyncio.TimeoutError:
         from autornd.graph.executor import ExecutionState
 
         state = ExecutionState(request=scenario.request)
-        error = f"timed out after {timeout:.0f}s"
+        error = f"timed out after {deadline:.0f}s"
     except CallCeilingExceeded as exc:
         from autornd.graph.executor import ExecutionState
 

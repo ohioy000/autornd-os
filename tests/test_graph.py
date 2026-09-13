@@ -442,3 +442,83 @@ class TestResolveArgs:
 
         node = Node(id="c", kind=NodeKind.CHECK, check="x", args={"text": "'hello'"})
         assert resolve_args(node, ExecutionState(request="r"))["text"] == "hello"
+
+
+class TestUnitAliasing:
+    """Calibration against realistic text found that "60s" and "5 second" were
+    treated as different units, so a plan reversed by its implementation passed
+    the consistency check. A check that cannot fire is worse than no check: it
+    reports confidence it has not earned."""
+
+    PLAN = "Apply exponential backoff to the reconnect loop, capped at 60s, with jitter."
+
+    @pytest.mark.parametrize("written,symbol", [
+        ("60 seconds", "60s"), ("5 volts", "5V"), ("20 milliamps", "20mA"),
+        ("3 minutes", "3min"), ("915 megahertz", "915 mhz"),
+    ])
+    def test_written_and_symbolic_forms_agree(self, written, symbol):
+        from autornd.graph.checks import _canonical_unit
+        import re
+        from autornd.graph.checks import _NUMBER
+
+        units = [_canonical_unit(u) for _, u in _NUMBER.findall(f"{written} {symbol}")]
+        assert len(set(u for u in units if u)) == 1, units
+
+    def test_a_reversed_plan_is_caught(self):
+        r = get_check("numbers_consistent")(
+            self.PLAN,
+            "Exponential backoff was removed in favour of a fixed 5 second retry interval.")
+        assert not r.passed
+
+    def test_the_same_value_written_out_is_not_a_conflict(self):
+        r = get_check("numbers_consistent")(self.PLAN, "Backoff capped at 60 seconds.")
+        assert r.passed
+
+    def test_plurals_of_non_units_still_compare(self):
+        """'3 retries' and '3 retry' are the same claim."""
+        from autornd.graph.checks import _canonical_unit
+        assert _canonical_unit("retries") == _canonical_unit("retry")
+
+
+class TestCriteriaAddressedCalibration:
+    """The threshold was a guess. Measured against realistic implementation text,
+    addressed criteria score 71-100% and unaddressed ones 0-33%, so 50%
+    discriminates — including the case that matters most, text that names every
+    topic while committing to nothing."""
+
+    CRITERIA = [
+        "Reconnect loop applies exponential backoff capped at 60s with jitter",
+        "Client re-subscribes to all topics after a successful reconnect",
+        "Each reconnect attempt emits a metric with the attempt number",
+    ]
+
+    def test_faithful_work_passes(self):
+        r = get_check("criteria_addressed")(self.CRITERIA, (
+            "Added exponential backoff to the reconnect loop, capped at 60s with "
+            "jitter. After a successful reconnect the client re-subscribes to all "
+            "topics. Each attempt emits a metric carrying the attempt number."))
+        assert r.passed
+
+    def test_topic_mentioning_waffle_is_rejected(self):
+        """The failure mode most worth catching: on-topic, commits to nothing."""
+        r = get_check("criteria_addressed")(self.CRITERIA, (
+            "Reworked the reconnection handling. The loop now backs off between "
+            "attempts, topics are handled on reconnect, and attempts are observable."))
+        assert not r.passed
+        assert r.data["addressed"] == 0
+
+    def test_partial_work_names_the_gap(self):
+        r = get_check("criteria_addressed")(self.CRITERIA,
+            "Added exponential backoff with jitter to the reconnect loop, capped at 60s.")
+        assert not r.passed
+        assert r.data["addressed"] == 1
+
+    def test_term_overlap_cannot_see_negation(self):
+        """A known, documented limit: an implementation that says it *removed*
+        the backoff scores highly on a criterion requiring backoff. That gap is
+        numbers_consistent's job, not this check's."""
+        r = get_check("criteria_addressed")(
+            [self.CRITERIA[0]],
+            "Exponential backoff and jitter were removed from the reconnect loop, "
+            "which was capped at 60s before.")
+        assert r.passed      # documents the limit rather than pretending otherwise

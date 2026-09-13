@@ -321,3 +321,34 @@ class TestRepetitions:
         result = report.results[0]
         assert result.skipped and len(result.runs) == 1
         assert report.applicable == 0
+
+
+class TestScenarioTimeout:
+    def test_a_scenario_may_state_its_own_timeout(self):
+        s = parse({"id": "a", "request": "r", "timeout": 300})
+        assert s.timeout == 300
+
+    @pytest.mark.parametrize("value", [0, -5, "soon"])
+    def test_a_bad_timeout_is_rejected(self, value):
+        with pytest.raises(ScenarioError, match="positive number"):
+            parse({"id": "a", "request": "r", "timeout": value})
+
+
+@pytest.mark.asyncio
+class TestTimeoutPrecedence:
+    async def test_the_scenario_timeout_wins_over_the_suite_default(self):
+        """A slow-by-design scenario must not be failed by a global default, and
+        a global default must not let a genuine hang run for ten minutes."""
+        scenario = parse({"id": "slow", "request": "r", "timeout": 0.01,
+                          "expect": {"risk": "medium"}})
+        run = await run_scenario(
+            scenario, load("workflows/triage-only.yaml"),
+            lambda: make_client(scripted(), delay=0.2), SETTINGS, timeout=60)
+        assert "timed out after 0s" in run.error
+
+    async def test_the_suite_default_applies_when_a_scenario_is_silent(self):
+        scenario = parse({"id": "quiet", "request": "r", "expect": {"risk": "medium"}})
+        run = await run_scenario(
+            scenario, load("workflows/triage-only.yaml"),
+            lambda: make_client(scripted(), delay=0.2), SETTINGS, timeout=0.01)
+        assert "timed out" in run.error

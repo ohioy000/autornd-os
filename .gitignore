@@ -19,3 +19,12 @@ htmlcov/
 .coverage
 *.log
 chromadb_data/
+
+# Private grounding corpora used for local testing. Real project documentation
+# is the point of the grounding experiment and must never reach a public repo —
+# keep it here, keep it out of git.
+docs/milkhouse/
+docs/private*/
+evals/private*/
+profiles/milkhouse.yaml
+profiles/private*.yaml
