@@ -1,0 +1,15 @@
+id: backend_index
+description: >
+  A routine, well-specified backend change. This is the shape that should be
+  cheap: one domain, medium risk, converging on the first attempt. If this
+  scenario starts needing two iterations, something upstream has regressed.
+request: "Add a database index on the sensor_readings timestamp column to speed up range queries"
+tags: [backend, routine]
+expect:
+  domains_include: [backend]
+  risk: medium
+  specialists_include: [backend_engineer, test_engineer]
+  status: completed
+  converge_within: 1
+  max_calls: 14
+  criteria_addressed: true

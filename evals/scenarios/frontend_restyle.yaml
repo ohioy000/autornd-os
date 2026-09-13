@@ -1,0 +1,14 @@
+id: frontend_restyle
+description: >
+  Cosmetic work. Nothing here justifies the full team, so this scenario guards
+  the other direction: over-classifying a restyle as high risk means seven
+  reviewers on a layout change.
+request: "Restyle the alert notification cards on the dashboard to use a compact two-line layout"
+tags: [frontend, cheap]
+expect:
+  domains_include: [frontend]
+  risk: low
+  specialists_exclude: [hardware_engineer, firmware_engineer, supply_chain]
+  status: completed
+  converge_within: 1
+  max_calls: 10

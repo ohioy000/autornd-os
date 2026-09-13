@@ -1,0 +1,12 @@
+id: ambiguous_request
+description: >
+  A request with no stated target, tolerance, or interface. A good run either
+  blocks with the ambiguity named, or plans with explicit assumptions — what it
+  must not do is burn five iterations discovering it cannot be validated.
+  Modelled on a live run that cost 21 calls before escalating.
+request: "Change the battery charge controller cutoff thresholds and cell balancing logic"
+tags: [hardware, ambiguous, regression]
+expect:
+  domains_include: [hardware]
+  risk_at_least: high
+  max_calls: 26
