@@ -1,0 +1,257 @@
+"""Runs a workflow graph.
+
+The executor owns sequencing and nothing else. It decides what runs, in what
+order, whether a gate closes and when a loop gives up — all of which is
+decidable without a model, and therefore testable without one.
+
+What a node *does* is delegated to a NodeRunner. In production that adapter
+calls the existing phase functions; in tests it records what it was asked for.
+Keeping the two apart is what makes "does this graph behave like the old
+hardcoded pipeline" a question you can answer for free.
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass, field
+from typing import Any, Protocol
+
+from autornd.graph.conditions import ConditionError, evaluate, resolve_path
+from autornd.graph.spec import Node, NodeKind, WorkflowSpec
+
+logger = logging.getLogger(__name__)
+
+__all__ = ["ExecutionState", "GraphExecutor", "NodeRunner", "StepRecord"]
+
+
+@dataclass
+class StepRecord:
+    """One node execution. The trace is the audit log of a run."""
+
+    node_id: str
+    kind: str
+    iteration: int = 0
+    skipped: bool = False
+    reason: str = ""
+
+
+@dataclass
+class ExecutionState:
+    request: str
+    outputs: dict[str, Any] = field(default_factory=dict)
+    trace: list[StepRecord] = field(default_factory=list)
+    status: str | None = None      # set once, ends the run
+    reason: str | None = None
+    iteration: int = 0             # current loop iteration, 0 outside a loop
+
+    @property
+    def finished(self) -> bool:
+        return self.status is not None
+
+    @property
+    def path(self) -> list[str]:
+        """Node ids actually executed, in order — skips excluded."""
+        return [s.node_id for s in self.trace if not s.skipped]
+
+    def end(self, status: str, reason: str | None = None) -> None:
+        if self.status is None:
+            self.status = status
+            self.reason = reason
+
+
+class NodeRunner(Protocol):
+    """How a node's work actually happens. Injected, so the executor stays pure."""
+
+    async def run_ai(self, node: Node, state: ExecutionState) -> dict[str, Any]:
+        ...
+
+    async def run_check(self, node: Node, state: ExecutionState) -> Any:
+        ...
+
+
+class GraphExecutor:
+    def __init__(
+        self,
+        spec: WorkflowSpec,
+        runner: NodeRunner,
+        settings_lookup: dict[str, Any] | None = None,
+    ) -> None:
+        self.spec = spec
+        self.runner = runner
+        # Loop budgets may name a setting rather than hardcode a number, so the
+        # same workflow file works across deployments with different limits.
+        self.settings = settings_lookup or {}
+
+    # ── conditions ────────────────────────────────────────────────────────
+
+    def _scope(self, state: ExecutionState) -> dict[str, Any]:
+        return {**state.outputs, "request": state.request, "iteration": state.iteration}
+
+    def _test(self, condition: str, state: ExecutionState, node_id: str) -> bool:
+        try:
+            return evaluate(condition, self._scope(state))
+        except ConditionError as exc:
+            raise ConditionError(f"node '{node_id}': {exc}") from exc
+
+    def _budget(self, node: Node) -> int:
+        raw = node.max_iterations
+        if raw is None:
+            return 1
+        if isinstance(raw, int):
+            return raw
+        if raw in self.settings:
+            return int(self.settings[raw])
+        raise ConditionError(
+            f"loop '{node.id}' wants max_iterations from setting '{raw}', "
+            f"which is not available; known: {sorted(self.settings)}"
+        )
+
+    # ── node kinds ────────────────────────────────────────────────────────
+
+    async def _run_ai(self, node: Node, state: ExecutionState) -> None:
+        output = await self.runner.run_ai(node, state)
+        state.outputs[node.id] = output
+
+    async def _run_check(self, node: Node, state: ExecutionState) -> None:
+        result = await self.runner.run_check(node, state)
+        # A check exposes its data to later conditions, plus `passed` so a gate
+        # can branch on it directly.
+        payload = dict(getattr(result, "data", {}) or {})
+        payload["passed"] = bool(getattr(result, "passed", False))
+        payload["detail"] = getattr(result, "detail", "")
+        state.outputs[node.id] = payload
+
+    def _run_gate(self, node: Node, state: ExecutionState) -> bool:
+        """Returns whether the run continues."""
+        passed = self._test(node.condition or "", state, node.id)
+        state.outputs[node.id] = {"passed": passed}
+        if passed:
+            return True
+        if node.on_fail:
+            reason = node.on_fail_reason or f"gate '{node.id}' closed"
+            detail = self._gate_detail(node, state)
+            state.end(node.on_fail, f"{reason}{detail}")
+        return False
+
+    def _gate_detail(self, node: Node, state: ExecutionState) -> str:
+        """Pull a reason out of the thing the gate was testing, when there is one.
+
+        A blocked run should say why in the terms the user cares about — the
+        blockers the architect listed, not just that a condition was false.
+        """
+        root = (node.condition or "").split(".")[0].replace("not ", "").strip()
+        source = state.outputs.get(root)
+        if isinstance(source, dict):
+            for key in ("blockers", "detail", "root_cause_analysis", "red_cause"):
+                value = source.get(key)
+                if value:
+                    text = "; ".join(value) if isinstance(value, list) else str(value)
+                    return f": {text}"
+        return ""
+
+    # ── sequencing ────────────────────────────────────────────────────────
+
+    async def _execute(self, node: Node, state: ExecutionState) -> bool:
+        """Run one node. Returns whether the run continues."""
+        if state.finished:
+            return False
+
+        if node.when:
+            if not self._test(node.when, state, node.id):
+                state.trace.append(StepRecord(
+                    node.id, node.kind.value, state.iteration,
+                    skipped=True, reason=f"when: {node.when}",
+                ))
+                return True
+
+        if node.is_loop:
+            return await self._run_loop(node, state)
+
+        state.trace.append(StepRecord(node.id, node.kind.value, state.iteration))
+
+        if node.kind is NodeKind.AI:
+            await self._run_ai(node, state)
+            return True
+        if node.kind is NodeKind.CHECK:
+            await self._run_check(node, state)
+            return True
+        return self._run_gate(node, state)
+
+    async def _run_loop(self, node: Node, state: ExecutionState) -> bool:
+        budget = self._budget(node)
+        body = [self.spec.get(b) for b in node.body]
+
+        for attempt in range(1, budget + 1):
+            state.iteration = attempt
+            logger.debug("loop %s: iteration %d of %d", node.id, attempt, budget)
+            for member in body:
+                if not await self._execute(member, state):
+                    state.iteration = 0
+                    return False
+            if self._test(node.until or "", state, node.id):
+                state.iteration = 0
+                state.outputs[node.id] = {"converged": True, "iterations": attempt}
+                return True
+
+        state.iteration = 0
+        state.outputs[node.id] = {"converged": False, "iterations": budget}
+        logger.info("loop %s exhausted %d iterations", node.id, budget)
+
+        if node.on_exhausted_status:
+            state.end(node.on_exhausted_status,
+                      f"'{node.id}' did not converge within {budget} iterations")
+            return False
+        if node.on_exhausted:
+            return await self._run_from(node.on_exhausted, state)
+        return True
+
+    async def _run_from(self, start_id: str, state: ExecutionState) -> bool:
+        """Run a handoff sub-graph: the named node and whatever hangs off it."""
+        reachable = self.spec.handoff_reachable()
+        ordered: list[Node] = []
+        included = {start_id}
+
+        for node in self.spec.nodes:
+            if node.id == start_id:
+                ordered.append(node)
+            elif (
+                node.id in reachable
+                and node.depends_on
+                and all(d in included for d in node.depends_on)
+            ):
+                ordered.append(node)
+                included.add(node.id)
+
+        for node in ordered:
+            if not await self._execute(node, state):
+                return False
+        return True
+
+    async def run(self, request: str) -> ExecutionState:
+        state = ExecutionState(request=request)
+        for node in self.spec.execution_order():
+            if not await self._execute(node, state):
+                break
+        if not state.finished:
+            state.end("completed")
+        return state
+
+
+def resolve_args(node: Node, state: ExecutionState) -> dict[str, Any]:
+    """Turn a check node's declared args into real values.
+
+    String arguments are dotted paths into node outputs; anything else is a
+    literal. A path that does not resolve raises rather than silently becoming
+    the string itself — a typo in a workflow file should be loud.
+    """
+    scope = {**state.outputs, "request": state.request}
+    resolved: dict[str, Any] = {}
+    for key, value in node.args.items():
+        if isinstance(value, str):
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+                resolved[key] = value[1:-1]
+            else:
+                resolved[key] = resolve_path(value, scope)
+        else:
+            resolved[key] = value
+    return resolved
