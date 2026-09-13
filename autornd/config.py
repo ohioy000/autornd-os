@@ -36,9 +36,12 @@ class Settings(BaseSettings):
 
     autornd_profile: str = ""
 
+    # Which workflow graph to run. A bare name resolves inside workflows/.
+    autornd_workflow: str = "engineering-rnd"
+
     RUNTIME_MUTABLE: set[str] = {
         "max_iterations", "escalation_max_tokens", "escalation_recovery_attempts",
-        "autornd_profile", "log_level",
+        "autornd_profile", "autornd_workflow", "log_level",
     }
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

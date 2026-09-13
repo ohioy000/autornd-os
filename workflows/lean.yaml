@@ -1,0 +1,77 @@
+name: lean
+description: >
+  The cheapest shape that still checks its work. No feasibility review, no
+  domain review, no escalation — just plan, build, verify against the criteria,
+  and stop. For low-risk work where the full team is more process than the
+  change deserves.
+
+  Written to be compared against engineering-rnd.yaml: same request, same
+  models, different shape.
+
+nodes:
+  - id: triage
+    kind: ai
+    tier: triage
+    prompt: triage
+    schema: TriageVerdict
+
+  - id: context
+    kind: check
+    check: build_context
+    depends_on: [triage]
+
+  - id: plan
+    kind: ai
+    tier: architecture
+    specialist: systems_architect
+    prompt: plan
+    schema: PlanVerdict
+    depends_on: [context]
+
+  - id: plan_ready
+    kind: gate
+    condition: plan.ready == true
+    depends_on: [plan]
+    on_fail: blocked
+    on_fail_reason: "Plan not ready"
+
+  - id: implement
+    kind: ai
+    tier: engineering
+    specialist: lead
+    prompt: implement
+    schema: ImplementVerdict
+
+  # The free check runs first. An implementation that never mentions a
+  # criterion is rejected before a paid validator is asked about it.
+  - id: coverage
+    kind: check
+    check: criteria_addressed
+    args:
+      criteria: plan.success_criteria
+      text: implement.summary
+    depends_on: [implement]
+
+  - id: validate
+    kind: ai
+    tier: engineering
+    specialist: test_engineer
+    prompt: validate
+    schema: ValidateVerdict
+    depends_on: [coverage]
+
+  - id: build_loop
+    kind: ai
+    body: [implement, coverage, validate]
+    until: validate.green == true
+    max_iterations: max_iterations
+    on_exhausted_status: escalated
+    depends_on: [plan_ready]
+
+  - id: review
+    kind: ai
+    tier: engineering
+    specialist: test_engineer
+    prompt: review
+    schema: ReviewVerdict
+    depends_on: [build_loop]

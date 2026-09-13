@@ -1,4 +1,8 @@
-"""The graph must do what the hardcoded engine does.
+"""The graph must do what the hardcoded engine did.
+
+`WorkflowEngine.execute()` now runs the graph. `execute_hardcoded()` is the
+original sequencer, kept as the reference these tests measure against — delete
+it and this file stops proving anything.
 
 This is the load-bearing test of the whole graph effort. `engineering-rnd.yaml`
 is only a useful baseline if running it produces the same calls, in the same
@@ -117,9 +121,12 @@ async def run_engine(script_factory, request="Add retry"):
         await conn.run_sync(Base.metadata.create_all)
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with factory() as session:
+        # execute() now drives the graph, so the reference has to be the
+        # original hardcoded sequencer — otherwise this compares the graph
+        # against itself and proves nothing.
         workflow = await WorkflowEngine(
             make_client(script_factory(), log), session
-        ).execute(request)
+        ).execute_hardcoded(request)
         result = workflow.status.value, log, round(workflow.total_cost, 6)
     await engine.dispose()
     return result
@@ -218,3 +225,48 @@ class TestAdapterWiring:
         ).run("Add retry")
         assert state.outputs["context"]["passed"] is True
         assert "chars" in state.outputs["context"]
+
+
+@pytest.mark.asyncio
+class TestVariantWorkflows:
+    """The payoff: comparing two shapes costs nothing and takes no time.
+
+    Answering "is the full team worth it for this kind of request" used to mean
+    running real workflows against real models. It is now a diff between two
+    files, measured with mocks.
+    """
+
+    async def test_lean_is_cheaper_on_the_happy_path(self):
+        full = await run_graph(Script)
+        lean_log: list[str] = []
+        lean_runner = PhaseRunner(make_client(Script(), lean_log))
+        await GraphExecutor(load("workflows/lean.yaml"), lean_runner, SETTINGS).run("Add retry")
+
+        assert len(lean_log) < len(full[1])
+        assert lean_runner.total_cost < full[2]
+
+    async def test_lean_is_cheaper_when_nothing_converges(self):
+        """The expensive path is the one worth comparing."""
+        def script():
+            return Script(validate=lambda n: {
+                "green": False, "red_cause": "red", "evidence": []})
+
+        _, full_log, full_cost = await run_graph(script)
+        lean_log: list[str] = []
+        lean_runner = PhaseRunner(make_client(script(), lean_log))
+        state = await GraphExecutor(
+            load("workflows/lean.yaml"), lean_runner, SETTINGS).run("Add retry")
+
+        assert state.status == "escalated"
+        assert len(lean_log) < len(full_log)
+
+    async def test_lean_still_checks_its_work(self):
+        """Cheaper must not mean unchecked — the free coverage check stays."""
+        spec = load("workflows/lean.yaml")
+        body = spec.get("build_loop").body
+        assert "coverage" in body
+        assert body.index("coverage") < body.index("validate")
+
+    async def test_both_shipped_workflows_load(self):
+        for name in ("engineering-rnd", "lean"):
+            assert load(f"workflows/{name}.yaml").name == name
