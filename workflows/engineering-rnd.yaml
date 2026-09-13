@@ -29,12 +29,15 @@ nodes:
     schema: PlanVerdict
     depends_on: [context]
 
+  # Specialists pressure-test the plan before any implementation tokens are
+  # spent. No point reviewing a plan the architect has already declared blocked.
   - id: feasibility
     kind: ai
     tier: engineering
     specialist: assigned        # every assigned specialist, in parallel
     prompt: feasibility
     depends_on: [plan]
+    when: plan.ready == true
 
   - id: plan_ready
     kind: gate
@@ -55,7 +58,7 @@ nodes:
   - id: domain_review
     kind: ai
     tier: engineering
-    specialist: reviewers
+    specialist: peers          # the other builders, never the validator
     prompt: domain_review
     depends_on: [implement]
     when: implement.green == true

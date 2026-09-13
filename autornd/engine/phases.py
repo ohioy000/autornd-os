@@ -282,6 +282,88 @@ DOMAIN_LEAD_MAP: dict[Domain, SpecialistRole] = {
 }
 
 
+def select_lead(
+    specialists: list[Specialist], primary_domain: Domain | None
+) -> tuple[Specialist, list[Specialist]]:
+    """Pick who implements and who reviews.
+
+    One specialist writes the implementation so it is internally coherent; the
+    rest review it without proposing an alternative. Splitting the roles is
+    what stopped parallel specialists producing contradictory designs.
+    """
+    lead = specialists[0]
+    reviewers: list[Specialist] = []
+    if primary_domain and len(specialists) > 1:
+        target_role = DOMAIN_LEAD_MAP.get(primary_domain)
+        if target_role:
+            for candidate in specialists:
+                if candidate.role == target_role:
+                    lead = candidate
+                    break
+        reviewers = [s for s in specialists if s is not lead]
+    return lead, reviewers
+
+
+def build_domain_review_prompt(
+    request: str, plan: PlanVerdict, summary: str, context: str = ""
+) -> str:
+    context_block = f"\n\nProject context:\n{context}" if context else ""
+    return f"""\
+Review this implementation from your domain perspective. Do NOT produce an alternative design.
+
+{ASSESSMENT_CONTRACT}
+{context_block}
+
+Implementation summary:
+{summary}
+
+Success criteria:
+{json.dumps(plan.success_criteria)}
+
+Return JSON with:
+- concerns: list of specific domain concerns (empty list if none)
+- critical: true if any concern is a hard blocker that would cause failure
+
+Original request:
+{request}"""
+
+
+async def run_domain_review(
+    client: OpenRouterClient,
+    request: str,
+    plan: PlanVerdict,
+    summary: str,
+    reviewers: list[Specialist],
+    context: str = "",
+) -> tuple[list[str], bool, list[ModelResponse]]:
+    """Reviewers examine one implementation in parallel.
+
+    Returns (concerns, any_critical, responses). A critical concern is the
+    caller's cue to flip the implementation red; non-critical ones are recorded
+    and passed to the validator.
+    """
+    if not reviewers:
+        return [], False, []
+
+    prompt = build_domain_review_prompt(request, plan, summary, context)
+    responses: list[ModelResponse] = []
+
+    async def _review(spec: Specialist) -> dict[str, Any]:
+        data, resp = await spec.run(client, prompt)
+        responses.append(resp)
+        return data
+
+    results = await asyncio.gather(*[_review(s) for s in reviewers])
+
+    concerns: list[str] = []
+    critical = False
+    for result in results:
+        concerns.extend(c for c in result.get("concerns", []) if isinstance(c, str))
+        if result.get("critical"):
+            critical = True
+    return concerns, critical, responses
+
+
 async def run_implement(
     client: OpenRouterClient,
     request: str,
@@ -342,17 +424,7 @@ Original request:
 
     responses: list[ModelResponse] = []
 
-    # Select lead specialist based on primary domain
-    lead = specialists[0]
-    reviewers: list[Specialist] = []
-    if primary_domain and len(specialists) > 1:
-        target_role = DOMAIN_LEAD_MAP.get(primary_domain)
-        if target_role:
-            for s in specialists:
-                if s.role == target_role:
-                    lead = s
-                    break
-        reviewers = [s for s in specialists if s is not lead]
+    lead, reviewers = select_lead(specialists, primary_domain)
 
     # Step 1: Lead implements
     lead_data, lead_resp = await lead.run(client, implement_prompt)
@@ -360,42 +432,15 @@ Original request:
     lead_data["iteration"] = iteration
     domain_concerns: list[str] = []
 
-    # Step 2: Domain review (only if lead succeeded and there are reviewers)
+    # Step 2: Domain review (only if the lead succeeded and there are reviewers)
     if lead_data.get("green") and reviewers:
-        review_prompt = f"""\
-Review this implementation from your domain perspective. Do NOT produce an alternative design.
-
-{ASSESSMENT_CONTRACT}
-{context_block}
-
-Implementation summary:
-{lead_data.get("summary", "")}
-
-Success criteria:
-{json.dumps(plan.success_criteria)}
-
-Return JSON with:
-- concerns: list of specific domain concerns (empty list if none)
-- critical: true if any concern is a hard blocker that would cause failure
-
-Original request:
-{request}"""
-
-        async def _domain_review(spec: Specialist) -> dict[str, Any]:
-            data, resp = await spec.run(client, review_prompt)
-            responses.append(resp)
-            return data
-
-        review_results = await asyncio.gather(
-            *[_domain_review(s) for s in reviewers]
+        domain_concerns, critical, review_responses = await run_domain_review(
+            client, request, plan, lead_data.get("summary", ""), reviewers, context
         )
-        for result in review_results:
-            for c in result.get("concerns", []):
-                if isinstance(c, str):
-                    domain_concerns.append(c)
-            if result.get("critical"):
-                lead_data["green"] = False
-                lead_data["red_cause"] = "Domain reviewer flagged critical concern"
+        responses.extend(review_responses)
+        if critical:
+            lead_data["green"] = False
+            lead_data["red_cause"] = "Domain reviewer flagged critical concern"
 
     lead_data["domain_concerns"] = domain_concerns
     verdict = ImplementVerdict(**lead_data)

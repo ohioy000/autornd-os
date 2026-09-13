@@ -40,9 +40,15 @@ class NodeKind(str, Enum):
 
 
 # Who runs an `ai` node. A concrete role name also works.
+#
+# `builders` exists because the test engineer validates the work rather than
+# producing it — a rule that used to live unexplained in the engine. Naming the
+# rosters here puts it in the workflow file where it can be seen and changed.
 FANOUT_ASSIGNED = "assigned"      # every specialist triage assigned, in parallel
+FANOUT_BUILDERS = "builders"      # assigned, minus whoever validates
+FANOUT_PEERS = "peers"            # builders other than the lead
 FANOUT_REVIEWERS = "reviewers"    # the risk-scaled review team, in parallel
-LEAD = "lead"                     # the domain lead for this request
+LEAD = "lead"                     # the domain lead among the builders
 
 
 @dataclass
