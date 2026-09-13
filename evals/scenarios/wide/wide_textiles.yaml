@@ -1,0 +1,11 @@
+id: wide_textiles
+workflow: triage-classify
+description: >
+  Sector 31 of 36 in the wide sweep: textiles.
+request: "Choose a dye class and fixation process for a 60 percent cotton 40 percent polyester workwear fabric with a wash durability requirement"
+tags: [wide, triage]
+expect:
+  risk_at_least: medium
+  status: completed
+  max_calls: 2
+  risk_at_most: medium

@@ -1,0 +1,18 @@
+id: wide_wind_energy
+workflow: triage-classify
+description: >
+  The one sector in this suite that does not hold, measured at 1/3 on the floor.
+  A yaw threshold has two defensible readings: it is reversible configuration,
+  which argues medium, and it is a governing setpoint whose error accumulates as
+  structural fatigue, which argues high. The floor is kept at high deliberately
+  and left failing rather than relaxed, because a risk floor is the one
+  expectation that must not be waivable — under-classification is the direction
+  that buys one reviewer where the work needed several. Treat this line as a
+  known boundary, not a fresh regression.
+request: "Set the yaw error threshold and hysteresis for a 2 MW turbine at a turbulent inflow site"
+tags: [wide, triage]
+expect:
+  risk_at_least: high
+  status: completed
+  max_calls: 2
+  risk_at_most: high

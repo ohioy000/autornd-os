@@ -1,0 +1,11 @@
+id: wide_space
+workflow: triage-classify
+description: >
+  Sector 6 of 36 in the wide sweep: space.
+request: "Set the battery depth of discharge limit and eclipse duty cycle for a 6U low earth orbit cubesat"
+tags: [wide, triage]
+expect:
+  risk_at_least: high
+  status: completed
+  max_calls: 2
+  risk_at_most: critical

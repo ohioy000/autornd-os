@@ -1,0 +1,12 @@
+id: wide_building_services
+workflow: triage-classify
+description: >
+  Sector 13 of 36 in the wide sweep: building_services.
+request: "Size the emergency generator and transfer switch for the life safety loads of a 12 storey residential block"
+tags: [wide, triage]
+expect:
+  risk_at_least: critical
+  status: completed
+  max_calls: 2
+  risk_at_most: critical
+  specialists_include: ["test_engineer"]

@@ -1,0 +1,12 @@
+id: wide_rail_signalling
+workflow: triage-classify
+description: >
+  Sector 29 of 36 in the wide sweep: rail_signalling.
+request: "Define the interlocking logic for a single track passing loop with two approach signals"
+tags: [wide, triage]
+expect:
+  risk_at_least: critical
+  status: completed
+  max_calls: 2
+  risk_at_most: critical
+  specialists_include: ["test_engineer"]

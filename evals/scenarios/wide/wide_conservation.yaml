@@ -1,0 +1,11 @@
+id: wide_conservation
+workflow: triage-classify
+description: >
+  Sector 2 of 36 in the wide sweep: conservation.
+request: "Set temperature and relative humidity setpoints and tolerance bands for a mixed media textile store"
+tags: [wide, triage]
+expect:
+  risk_at_least: medium
+  status: completed
+  max_calls: 2
+  risk_at_most: high

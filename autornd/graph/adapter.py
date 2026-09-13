@@ -111,8 +111,11 @@ class PhaseRunner:
             from autornd.engine.review_composition import get_review_team
 
             triage = self._triage(state)
-            return get_specialists(get_review_team(triage.risk, triage.domains))
-        return get_specialists([SpecialistRole(who)])
+            return get_specialists(get_review_team(
+                triage.risk, triage.domains, triage.specialists))
+        # A workflow may name any role, including one a profile declares —
+        # SpecialistRole(who) raised for everything outside the shipped enum.
+        return get_specialists([who])
 
     def _max_tokens(self, node: Node) -> int | None:
         """A node's output ceiling. An int is literal; a string names a setting."""
@@ -262,3 +265,28 @@ class PhaseRunner:
             state.outputs["implement"], self._resolve_who(node, state), self.context,
         )
         return verdict, responses
+
+    async def _phase_doublecheck(self, node: Node, state: ExecutionState):
+        """One independent pass, on a model that has seen no prior review.
+
+        Reached only when triage marks the work unrecallable. A signed rollout
+        or a mass migration harms nobody and cannot be taken back, so it stays
+        `high` rather than inflating `critical`, and buys one more reviewer
+        instead of a larger team.
+
+        The premium tier is optional, so an unconfigured one records a skip. A
+        node that raised here would make a correctly-classified request fail for
+        want of configuration.
+        """
+        from autornd.config import settings
+
+        if not settings.model_premium:
+            return {
+                "skipped": True,
+                "reason": "no premium tier configured for the independent pass",
+            }, []
+        verdict, response = await phases.run_doublecheck(
+            self.client, state.request, state.outputs["plan"],
+            state.outputs["implement"], self.context,
+        )
+        return verdict, [response]

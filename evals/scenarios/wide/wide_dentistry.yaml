@@ -1,0 +1,11 @@
+id: wide_dentistry
+workflow: triage-classify
+description: >
+  Sector 36 of 36 in the wide sweep: dentistry.
+request: "Select an impression material and set time for a full arch implant supported restoration"
+tags: [wide, triage]
+expect:
+  risk_at_least: high
+  status: completed
+  max_calls: 2
+  risk_at_most: critical

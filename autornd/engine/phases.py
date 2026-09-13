@@ -101,6 +101,23 @@ def _domain_vocabulary() -> str:
     return ", ".join(names)
 
 
+def _role_vocabulary() -> str:
+    """The roles to offer triage: the shipped roster plus the profile's own.
+
+    Offered, not enforced — for the same reason the domains are. Asked to staff
+    a firmware signing-key rotation, triage returned `infrastructure_engineer`,
+    which this harness does not ship; a legal team wants a paralegal and no
+    shipped list of engineering roles will ever contain one.
+    """
+    from autornd.profiles import get_profile
+
+    names = [r.value for r in SpecialistRole]
+    for extra in get_profile().role_vocabulary():
+        if extra not in names:
+            names.append(extra)
+    return ", ".join(names)
+
+
 async def run_triage(
     client: OpenRouterClient, request: str
 ) -> tuple[TriageVerdict, ModelResponse]:
@@ -110,18 +127,30 @@ Classify this engineering request. Return JSON with:
   If none of them genuinely fits the subject, name the domain yourself in one or
   two lowercase words rather than forcing the closest available label.
 - risk: one of [{', '.join(r.value for r in RiskLevel)}]
-- specialists: list of specialists to assign from [{', '.join(s.value for s in SpecialistRole)}]
+- specialists: who to assign. A specialist is a person's function on the team,
+  not a subject — the subject goes in `domains`. Prefer these:
+  {_role_vocabulary()}. If none of them covers the function this work needs,
+  name the role in one or two lowercase words.
+- unrecallable: true when a wrong answer cannot be taken back once released —
+  a signed firmware rollout, a mass migration, a public release. Scale alone is
+  not the test; the test is whether it can be recalled.
 - summary: one-line classification
 
 Risk guide — judge the consequence of being wrong, not the subject matter.
 Ask these two questions in order.
 
 First: if this answer is wrong, can a person be harmed, or does it breach a
-regulated requirement — structural loading, food contact, sterility, pressure
-vessels, electrical code, emissions? If so it is critical, at every stage. A
-lintel carrying a wall, a sterilisation protocol and a food-contact material
-are critical while still on paper, because the paper is what gets built and
-audited.
+rule that exists to prevent harm — structural loading, food contact,
+sterility, pressure vessels, electrical code, emissions? If so it is critical,
+at every stage. A lintel carrying a wall, a sterilisation protocol and a
+food-contact material are critical while still on paper, because the paper is
+what gets built and audited.
+
+Not every published standard is one of those. A standard that exists for
+quality, consistency or interoperability — broadcast loudness, file formats,
+naming conventions, style guides — is not a harm rule, however formally it is
+written and however much a breach embarrasses someone. Ask what the rule is
+protecting, not whether a rule exists.
 
 Second, if nobody can be harmed: has anything been committed to yet?
 - high: the answer changes the physical world — wiring, installing, actuating
@@ -134,6 +163,21 @@ Second, if nobody can be harmed: has anything been committed to yet?
   budget, setting a tolerance, taking a measurement
 - low: presentation, copy, documentation or configuration that is trivially
   reversible and cannot hurt anyone
+
+Work on something whose purpose is to protect — a backup, an interlock, an
+alarm, a containment, a life-support system — is judged by what it protects,
+not by the stage it is at. Sizing the backup aeration for a tank of live stock
+is sizing work, and a wrong answer loses the entire stock, so it is at least
+high rather than medium. It is critical only if a person can be harmed: losing
+stock, equipment or money, however much of it, is high.
+
+A protocol, schedule, policy, setpoint band or limit that will be followed
+repeatedly carries the consequence of everything it governs. Judge it by what
+happens when it is followed, not by the fact that it is a document. A
+sterilisation protocol, a return-to-play progression and a style guide are all
+paperwork: if following it can harm someone or breach a regulated requirement
+it is critical, and if the worst case is rework or an unhappy audience it stays
+low or medium.
 
 Do not escalate because a subject sounds technical, expensive or unfamiliar.
 
@@ -314,11 +358,34 @@ DOMAIN_CHECKS: dict[Domain, tuple[str, ...]] = {
 }
 
 
-def build_domain_checks(domains: list[Domain]) -> str:
-    """Deterministic checks for the domains in play, de-duplicated, order-stable."""
+# Applied when a domain has no checks of its own — which, before profiles could
+# declare them, was every domain outside the seven shipped ones. Validation was
+# reaching those with no lenses at all.
+#
+# The unit question earns its place: `14 dBm` ERP where the source meant EIRP is
+# well-formed, 2.15 dB wrong, and the difference between a compliant
+# transmitter and a failed certification. No deterministic check catches it.
+GENERIC_CHECKS: tuple[str, ...] = (
+    "Do the stated quantities, rates and totals reconcile with each other?",
+    "Is every stated constraint and success criterion addressed?",
+    "Are units and conventions stated, and used consistently throughout?",
+)
+
+
+def build_domain_checks(domains: list[object]) -> str:
+    """Deterministic checks for the domains in play, de-duplicated, order-stable.
+
+    Built-in checks, plus any the profile declares for that domain. A domain
+    with neither falls back to the generic set rather than contributing nothing.
+    """
+    from autornd.profiles import get_profile
+
+    profile = get_profile()
     seen: list[str] = []
     for domain in domains:
-        for check in DOMAIN_CHECKS.get(domain, ()):
+        specific = tuple(DOMAIN_CHECKS.get(domain_key(domain), ())) \
+            + profile.get_domain_checks(domain)
+        for check in specific or GENERIC_CHECKS:
             if check not in seen:
                 seen.append(check)
     if not seen:
@@ -343,35 +410,33 @@ DOMAIN_LEAD_MAP: dict[Domain, SpecialistRole] = {
 }
 
 
-def lead_for_domain(domain: object) -> SpecialistRole:
-    """Which specialist leads this domain.
+def lead_for_domain(domain: object) -> str:
+    """Which specialist leads this domain, as a normalised role name.
 
     Profile vocabulary first, then the shipped defaults, then the architect —
     which is the right answer for a domain nobody has mapped, since
     cross-domain and unfamiliar work is exactly what that role is for. An
     unrecognised domain must never raise: triage is allowed to name a subject
     this harness has never seen.
+
+    A profile-declared lead is returned as declared. Validating it against the
+    shipped enum here is what made a profile mapping `legal_ops` to `paralegal`
+    silently review with the architect instead — the roster is a default, not a
+    limit, and the registry resolves a declared or undeclared role either way.
     """
-    from autornd.models.verdicts import domain_key
+    from autornd.models.verdicts import domain_key, role_key
     from autornd.profiles import get_profile
 
     key = domain_key(domain)
 
     declared = get_profile().get_domain_lead(key)
     if declared:
-        try:
-            return SpecialistRole(declared)
-        except ValueError:
-            logger.warning(
-                "Profile maps domain %r to unknown specialist %r — using the architect",
-                key, declared,
-            )
-            return SpecialistRole.SYSTEMS_ARCHITECT
+        return role_key(declared)
 
     for domain, role in DOMAIN_LEAD_MAP.items():
         if domain_key(domain) == key:
-            return role
-    return SpecialistRole.SYSTEMS_ARCHITECT
+            return role_key(role)
+    return role_key(SpecialistRole.SYSTEMS_ARCHITECT)
 
 
 def select_lead(

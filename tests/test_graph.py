@@ -161,8 +161,18 @@ class TestShippedWorkflow:
         spec = load("workflows/engineering-rnd.yaml")
         assert [n.id for n in spec.execution_order()] == [
             "triage", "context", "plan", "feasibility",
-            "plan_ready", "build_loop", "review",
+            "plan_ready", "build_loop", "review", "independent_check",
         ]
+
+    def test_the_independent_pass_is_conditional_and_last(self):
+        """It exists only for work that cannot be recalled, and it must see the
+        review it is meant to be independent of — so it runs after it, and it
+        must never run unconditionally, since the premium tier costs the most."""
+        spec = load("workflows/engineering-rnd.yaml")
+        node = spec.get("independent_check")
+        assert node.when == "triage.unrecallable"
+        assert node.tier == "premium"
+        assert "review" in node.depends_on
 
     def test_free_nodes_run_before_the_paid_validator(self):
         """The cheap checks exist to avoid a model call, so they must not be
@@ -268,7 +278,7 @@ IMPL = {
                 "with jitter on every retry attempt."),
 }
 BASE = {
-    "triage": {"risk": "medium", "domains": ["backend"]},
+    "triage": {"risk": "medium", "domains": ["backend"], "unrecallable": False},
     "context": {}, "plan": PLAN, "feasibility": {"feasible": True},
     "implement": IMPL, "domain_review": {"critical": False},
     "review": {"ship": True},

@@ -214,6 +214,23 @@ Seven specialists, each with a domain, a system prompt, and a tier:
 
 Triage assigns them per workflow. Every specialist's grounding can be overridden in your [project profile](#project-profiles).
 
+### The roster is a default, not a limit
+
+`roles:` in your profile declares the roles your team actually has, and triage
+is offered the shipped seven plus yours. A role nobody declared still resolves —
+it becomes a generalist carrying that role's name, logged once so you know to
+declare it — because failing a whole workflow over a role name is worse than
+acting as the role and saying so.
+
+This is not hypothetical. Asked to staff a firmware signing-key rotation, triage
+returned `infrastructure_engineer`, which this harness does not ship, and it
+returned the domain `documentation` in the roles field. A legal team wants a
+paralegal and a marketing team a copywriter, and no shipped list of engineering
+roles will ever contain them.
+
+A declared role is built by the same path as a shipped one, so it inherits the
+project context and the output contract rather than being a second-class prompt.
+
 Two composition rules are enforced in code rather than left to a model, because they are not judgement calls: **risky work gets a test engineer, and work spanning domains gets an architect.** Measured over five live runs, triage omitted the test engineer on safety-relevant hardware work three times in five.
 
 ## Review Team Composition
@@ -225,6 +242,14 @@ Two composition rules are enforced in code rather than left to a model, because 
 | Medium | domain specialist + test or architect | Standard |
 | Low | single relevant specialist | Standard |
 
+The team is derived from whoever triage assigned, and risk decides how much
+scrutiny is added on top: a test engineer above `low`, an architect from `high`,
+and at `critical` the declared lead of every domain in play. It used to be a
+fixed table that returned *every* role at `critical` — which, measured across
+thirty-six sectors, meant seven engineers reviewing a records retention
+schedule. That is the same failure twice, since a reviewer with nothing to say
+costs a call and adds no accuracy.
+
 Because risk sets team size, it sets cost, and it is graded on the consequence
 of being wrong rather than on how technical the subject sounds. Triage asks two
 questions in order: can a person be harmed or a regulated requirement be
@@ -232,6 +257,17 @@ breached — structural loading, food contact, sterility, pressure, electrical
 code, emissions — and if not, has anything been committed to yet. Installing or
 wiring something is `high`; choosing what to buy is `medium`, reversible until
 the order is placed.
+
+Two clauses exist because a sweep across thirty-six sectors found them missing.
+A **governing document** — a protocol, schedule, policy or setpoint band that
+will be followed repeatedly — is judged by what happens when it is followed, not
+by the fact that it is a document; without that, a return-to-play progression
+and a statutory retention schedule both read as `low`. And **recall** is asked
+on its own axis: a signed rollout to 40,000 devices harms nobody and breaches
+nothing, so it is `high`, and it cannot be taken back, so it sets
+`unrecallable` and earns one extra independent pass on a model that has seen
+none of the reviews above it. Scale alone does not trigger it; the test is
+whether the thing can be recalled.
 
 Getting this wrong is expensive in both directions, so it is measured in both.
 Fourteen calibration scenarios spanning civil, biotech, aerospace, optics,
@@ -376,7 +412,16 @@ specialists:
 domains:
   mechanical:  hardware_engineer
   optics:      hardware_engineer
-  food_safety: supply_chain
+  food_safety:
+    lead: supply_chain
+    checks:
+      - "Is every food-contact material identified with its compliance basis?"
+roles:
+  quality_engineer:
+    name: "Quality Engineer"
+    domain: "Validation protocols, compliance evidence"
+    tier: engineering
+    expertise: "Your domain: IQ/OQ/PQ protocols and compliance evidence."
 ```
 
 ### Domains are an open vocabulary

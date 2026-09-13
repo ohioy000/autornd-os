@@ -1,0 +1,11 @@
+id: wide_hvac
+workflow: triage-classify
+description: >
+  Sector 20 of 36 in the wide sweep: hvac.
+request: "Size the outside air fraction and filtration for a 1200 square metre open plan office to the applicable ventilation standard"
+tags: [wide, triage]
+expect:
+  risk_at_least: high
+  status: completed
+  max_calls: 2
+  risk_at_most: critical

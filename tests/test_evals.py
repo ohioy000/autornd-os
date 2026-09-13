@@ -28,11 +28,12 @@ SETTINGS = {"max_iterations": 5, "escalation_recovery_attempts": 3}
 
 
 def triage_state(domains=("backend",), risk="medium",
-                 specialists=("backend_engineer", "test_engineer"), **outputs):
+                 specialists=("backend_engineer", "test_engineer"),
+                 unrecallable=False, **outputs):
     state = ExecutionState(request="r")
     state.outputs["triage"] = TriageVerdict(
         domains=list(domains), risk=RiskLevel(risk),
-        specialists=list(specialists), summary="s")
+        specialists=list(specialists), unrecallable=unrecallable, summary="s")
     state.outputs.update(outputs)
     state.status = outputs.pop("_status", "completed")
     return state
@@ -354,6 +355,37 @@ class TestTimeoutPrecedence:
         assert "timed out" in run.error
 
 
+class TestUnrecallableExpectation:
+    """Asked on its own axis, because a signed rollout to 40,000 devices is
+    `high` by the risk guide — it harms nobody — and still cannot be recalled."""
+
+    def _score(self, expect, **triage):
+        state = triage_state(**triage)
+        return score(Scenario(id="s", request="r", expect=expect), outcome(state))
+
+    def test_true_matches_a_marked_verdict(self):
+        r = self._score({"unrecallable": True}, unrecallable=True)
+        assert len(r) == 1 and r[0].passed
+
+    def test_true_fails_an_unmarked_verdict(self):
+        r = self._score({"unrecallable": True})
+        assert not r[0].passed and r[0].got is False
+
+    def test_false_is_asserted_not_ignored(self):
+        """`unrecallable: false` must be a real assertion — otherwise nothing
+        catches the opposite drift, marking everything unrecallable and buying
+        a premium call on every workflow."""
+        r = self._score({"unrecallable": False}, unrecallable=True)
+        assert not r[0].passed
+
+    def test_it_is_skipped_when_unstated(self):
+        assert self._score({}, unrecallable=True) == []
+
+    def test_a_non_boolean_is_rejected_at_load(self):
+        with pytest.raises(ScenarioError, match="true or false"):
+            parse({"id": "a", "request": "r", "expect": {"unrecallable": "yes"}})
+
+
 class TestRiskCeiling:
     """A floor alone let a regression through: every scenario kept passing
     risk_at_least while the distribution drifted upward, until `low` was never
@@ -410,13 +442,32 @@ class TestRiskCeiling:
     def test_shipped_risk_scenarios_state_both_bounds(self):
         """Guards the process, not the code: a risk scenario with only a floor
         is how the over-correction stayed invisible."""
-        for s in load_scenarios("evals/scenarios"):
+        shipped = (load_scenarios("evals/scenarios")
+                   + load_scenarios("evals/scenarios/wide"))
+        for s in shipped:
             if "risk_at_least" in s.expect:
                 assert "risk_at_most" in s.expect or s.risk_ceiling_waived, (
                     f"{s.id} has a risk floor but no ceiling and no stated reason. "
                     f"Add risk_at_most, or risk_ceiling_waived: '<why>' if both "
                     f"readings are genuinely defensible."
                 )
+
+    def test_the_wide_suite_spans_all_four_risk_levels(self):
+        """The wide suite exists to catch calibration drift in both directions,
+        which it cannot do if every sector it covers sits at one level. An
+        earlier build passed every floor while never assigning `low` at all."""
+        floors = {s.expect.get("risk_at_least")
+                  for s in load_scenarios("evals/scenarios/wide")}
+        assert {"low", "medium", "high", "critical"} <= floors
+
+    def test_the_wide_suite_keeps_real_ceilings(self):
+        """A ceiling of `critical` asserts nothing, since critical is the top of
+        the scale. Enough sectors must hold a genuine ceiling for the suite to
+        detect saturation."""
+        wide = load_scenarios("evals/scenarios/wide")
+        tight = [s for s in wide if s.expect.get("risk_at_most") in
+                 ("low", "medium", "high")]
+        assert len(tight) >= 15, f"only {len(tight)} sectors bound risk from above"
 
     def test_low_is_still_anchored_somewhere(self):
         """Without a scenario asserting `low`, nothing proves it is reachable —

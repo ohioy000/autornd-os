@@ -1,0 +1,11 @@
+id: wide_data_engineering
+workflow: triage-classify
+description: >
+  Sector 18 of 36 in the wide sweep: data_engineering.
+request: "Design the partitioning and retention for an 8 terabyte per day clickstream table"
+tags: [wide, triage]
+expect:
+  risk_at_least: medium
+  status: completed
+  max_calls: 2
+  risk_at_most: high

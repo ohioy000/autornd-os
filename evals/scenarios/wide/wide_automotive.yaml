@@ -1,0 +1,11 @@
+id: wide_automotive
+workflow: triage-classify
+description: >
+  Sector 14 of 36 in the wide sweep: automotive.
+request: "Bound the bus load and message priorities for a 500 kbps powertrain communication segment"
+tags: [wide, triage]
+expect:
+  risk_at_least: high
+  status: completed
+  max_calls: 2
+  risk_at_most: critical

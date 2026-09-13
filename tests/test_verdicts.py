@@ -213,3 +213,47 @@ class TestBlockedPlansAreValid:
         with pytest.raises(ValidationError, match="plan itself"):
             PlanVerdict(ready=True, plan="   ", blockers=[],
                         success_criteria=["Backoff capped at 60s"])
+
+
+class TestOpenRoster:
+    """Triage returned `infrastructure_engineer` and the domain value
+    `documentation` in the specialists field. The roster is a default, not a
+    limit, so both are accepted and normalised rather than failing the call."""
+
+    def test_a_role_outside_the_enum_is_accepted(self):
+        v = TriageVerdict(domains=["appsec"], risk="high",
+                          specialists=["infrastructure_engineer"], summary="s")
+        assert v.specialists == ["infrastructure_engineer"]
+
+    def test_roles_are_normalised_and_deduplicated(self):
+        v = TriageVerdict(domains=["legal_ops"], risk="medium",
+                          specialists=["Paralegal", "paralegal", " PARALEGAL "],
+                          summary="s")
+        assert v.specialists == ["paralegal"]
+
+    def test_enum_members_still_work(self):
+        v = TriageVerdict(domains=["backend"], risk="low",
+                          specialists=[SpecialistRole.BACKEND_ENGINEER], summary="s")
+        assert v.specialists == ["backend_engineer"]
+        assert SpecialistRole.BACKEND_ENGINEER in v.specialists
+
+    def test_blank_roles_are_dropped(self):
+        v = TriageVerdict(domains=["backend"], risk="low",
+                          specialists=["", "  ", "backend_engineer"], summary="s")
+        assert v.specialists == ["backend_engineer"]
+
+
+class TestUnrecallable:
+    """A separate axis from risk. A signed rollout to 40,000 devices harms
+    nobody — it classifies `high` 3/3, correctly — and cannot be taken back."""
+
+    def test_it_defaults_to_false(self):
+        v = TriageVerdict(domains=["backend"], risk="low",
+                          specialists=["backend_engineer"], summary="s")
+        assert v.unrecallable is False
+
+    def test_it_is_independent_of_risk(self):
+        v = TriageVerdict(domains=["firmware"], risk="high",
+                          specialists=["firmware_engineer"],
+                          unrecallable=True, summary="s")
+        assert v.risk == RiskLevel.HIGH and v.unrecallable is True

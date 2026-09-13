@@ -58,3 +58,59 @@ class TestTriageClassification:
         )
         assert verdict.risk == RiskLevel.LOW
         assert len(verdict.specialists) == 1
+
+
+class TestDomainChecks:
+    """Before profiles could declare checks, `DOMAIN_CHECKS.get(domain, ())`
+    returned nothing for every domain outside the seven shipped ones — so most
+    real-world work reached validation with no lenses at all."""
+
+    def teardown_method(self):
+        from autornd.profiles import reset_profile
+        reset_profile()
+
+    def test_a_shipped_domain_uses_its_own_checks(self):
+        from autornd.engine.phases import build_domain_checks
+
+        out = build_domain_checks(["hardware"])
+        assert "tolerances" in out
+
+    def test_an_unknown_domain_falls_back_to_generic_checks(self):
+        from autornd.engine.phases import GENERIC_CHECKS, build_domain_checks
+
+        out = build_domain_checks(["mechanical"])
+        assert out, "an unfamiliar domain used to contribute no lenses at all"
+        for check in GENERIC_CHECKS:
+            assert check in out
+
+    def test_the_unit_lens_is_always_present_for_unknown_domains(self):
+        """`14 dBm` ERP where the source meant EIRP is well-formed and 2.15 dB
+        wrong, and no deterministic check catches it."""
+        from autornd.engine.phases import build_domain_checks
+
+        assert "units" in build_domain_checks(["acoustics"]).lower()
+
+    def test_a_profile_can_declare_its_own(self):
+        from autornd.engine.phases import build_domain_checks
+        from autornd.profiles import ProjectProfile, set_profile
+
+        set_profile(ProjectProfile(name="T", domains={"legal_ops": {
+            "lead": "paralegal",
+            "checks": ["Is every retention period tied to a named statute?"]}}))
+        out = build_domain_checks(["legal_ops"])
+        assert "named statute" in out
+
+    def test_declared_checks_replace_the_generic_fallback(self):
+        from autornd.engine.phases import GENERIC_CHECKS, build_domain_checks
+        from autornd.profiles import ProjectProfile, set_profile
+
+        set_profile(ProjectProfile(name="T", domains={
+            "legal_ops": {"lead": "paralegal", "checks": ["Only this?"]}}))
+        out = build_domain_checks(["legal_ops"])
+        assert "Only this?" in out
+        assert GENERIC_CHECKS[0] not in out
+
+    def test_no_domains_yields_nothing(self):
+        from autornd.engine.phases import build_domain_checks
+
+        assert build_domain_checks([]) == ""

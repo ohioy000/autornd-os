@@ -1,0 +1,11 @@
+id: wide_pulp_paper
+workflow: triage-classify
+description: >
+  Sector 1 of 36 in the wide sweep: pulp_paper.
+request: "Set the refiner specific energy target for a 55 gram per square metre liner grade at 900 metres per minute"
+tags: [wide, triage]
+expect:
+  risk_at_least: medium
+  status: completed
+  max_calls: 2
+  risk_at_most: high

@@ -24,10 +24,29 @@ class ProjectProfile:
     stack: list[str] = field(default_factory=list)
     constraints: list[str] = field(default_factory=list)
     specialists: dict[str, dict[str, Any]] = field(default_factory=dict)
-    # Domain name -> the specialist role that leads it. R&D spans more subjects
-    # than any shipped list can name, so a project declares the vocabulary its
-    # own work actually uses.
-    domains: dict[str, str] = field(default_factory=dict)
+    # Domain name -> either the role that leads it, or a mapping carrying that
+    # lead plus the validation questions this domain is judged by. R&D spans
+    # more subjects than any shipped list can name, so a project declares the
+    # vocabulary its own work actually uses.
+    #
+    #   domains:
+    #     mechanical: hardware_engineer
+    #     legal_ops:
+    #       lead: paralegal
+    #       checks:
+    #         - "Is every retention period tied to a named statute?"
+    domains: dict[str, Any] = field(default_factory=dict)
+    # Role name -> its definition, for the roles a team has that this harness
+    # does not ship. Same shape as the built-in templates, so a declared role
+    # is built by exactly the same path.
+    #
+    #   roles:
+    #     paralegal:
+    #       name: "Paralegal"
+    #       domain: "Records retention, statutory schedules"
+    #       tier: engineering
+    #       expertise: "..."
+    roles: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     def build_context(self) -> str:
         if not self.description and not self.stack:
@@ -41,21 +60,58 @@ class ProjectProfile:
             lines.extend(f"  - {c}" for c in self.constraints)
         return "\n".join(lines)
 
-    def get_domain_lead(self, domain: str) -> str | None:
-        """Which specialist leads a profile-declared domain, if any."""
+    def _domain_entry(self, domain: str) -> Any | None:
         from autornd.models.verdicts import domain_key
 
         key = domain_key(domain)
-        for name, role in self.domains.items():
+        for name, entry in self.domains.items():
             if domain_key(name) == key:
-                return role
+                return entry
         return None
+
+    def get_domain_lead(self, domain: str) -> str | None:
+        """Which specialist leads a profile-declared domain, if any."""
+        entry = self._domain_entry(domain)
+        if isinstance(entry, dict):
+            lead = entry.get("lead")
+            return str(lead) if lead else None
+        return str(entry) if entry else None
+
+    def get_domain_checks(self, domain: str) -> tuple[str, ...]:
+        """The validation questions this domain is judged by, if declared.
+
+        Built-in checks only cover the seven shipped domains, so work in any
+        other subject reached validation with no lenses at all.
+        """
+        entry = self._domain_entry(domain)
+        if not isinstance(entry, dict):
+            return ()
+        checks = entry.get("checks") or []
+        if isinstance(checks, str):
+            checks = [checks]
+        return tuple(str(c).strip() for c in checks if str(c).strip())
 
     def domain_vocabulary(self) -> list[str]:
         """Profile-declared domain names, for the triage prompt."""
         from autornd.models.verdicts import domain_key
 
         return [domain_key(name) for name in self.domains]
+
+    def get_role(self, role: str) -> dict[str, Any] | None:
+        """A profile-declared role's definition, if it has one."""
+        from autornd.models.verdicts import role_key
+
+        key = role_key(role)
+        for name, definition in self.roles.items():
+            if role_key(name) == key:
+                return dict(definition or {})
+        return None
+
+    def role_vocabulary(self) -> list[str]:
+        """Profile-declared role names, for the triage prompt."""
+        from autornd.models.verdicts import role_key
+
+        return [role_key(name) for name in self.roles]
 
     def get_specialist_context(self, role: str) -> str | None:
         spec_cfg = self.specialists.get(role, {})
@@ -86,6 +142,7 @@ def load_profile(name: str) -> ProjectProfile:
         constraints=data.get("constraints", []),
         specialists=data.get("specialists", {}),
         domains=data.get("domains", {}) or {},
+        roles=data.get("roles", {}) or {},
     )
 
 

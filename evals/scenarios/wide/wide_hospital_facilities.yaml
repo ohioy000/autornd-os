@@ -1,0 +1,12 @@
+id: wide_hospital_facilities
+workflow: triage-classify
+description: >
+  Sector 32 of 36 in the wide sweep: hospital_facilities.
+request: "Set the pressure differential and air change rate for an airborne infection isolation room"
+tags: [wide, triage]
+expect:
+  risk_at_least: critical
+  status: completed
+  max_calls: 2
+  risk_at_most: critical
+  specialists_include: ["test_engineer"]

@@ -1,0 +1,11 @@
+id: wide_printing
+workflow: triage-classify
+description: >
+  Sector 17 of 36 in the wide sweep: printing.
+request: "Choose an ink and cure profile for UV flexographic printing on polypropylene film at 150 metres per minute"
+tags: [wide, triage]
+expect:
+  risk_at_least: medium
+  status: completed
+  max_calls: 2
+  risk_at_most: high

@@ -1,0 +1,12 @@
+id: wide_food_processing
+workflow: triage-classify
+description: >
+  Sector 15 of 36 in the wide sweep: food_processing.
+request: "Define the critical control point and critical limit for a pasteuriser on a chilled soup line"
+tags: [wide, triage]
+expect:
+  risk_at_least: critical
+  status: completed
+  max_calls: 2
+  risk_at_most: critical
+  specialists_include: ["test_engineer"]

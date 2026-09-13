@@ -20,16 +20,36 @@ class RiskLevel(str, Enum):
     LOW = "low"
 
 
-def domain_key(value: object) -> str:
-    """One spelling for a domain, whether it arrived as an enum or a string.
+def normalise_key(value: object) -> str:
+    """One spelling for a vocabulary term, whether enum member or plain string.
 
-    Domains are open-ended: R&D spans more subjects than any fixed list can
-    name, so triage may return one that is not in the Domain enum. Everything
-    downstream keys on the normalised string, and enum members still work
-    because Domain subclasses str.
+    Both open vocabularies — domains and roles — normalise identically, and
+    enum members keep working because Domain and SpecialistRole subclass str.
     """
     raw = getattr(value, "value", value)
     return str(raw).strip().lower().replace(" ", "_").replace("-", "_")
+
+
+def domain_key(value: object) -> str:
+    """One spelling for a domain.
+
+    Domains are open-ended: R&D spans more subjects than any fixed list can
+    name, so triage may return one that is not in the Domain enum. Everything
+    downstream keys on the normalised string.
+    """
+    return normalise_key(value)
+
+
+def role_key(value: object) -> str:
+    """One spelling for a specialist role.
+
+    Roles are open-ended for the same reason domains are, and measured the same
+    way: asked to staff a firmware signing-key rotation, triage returned
+    `infrastructure_engineer`, which is not a role this harness ships. A legal
+    team wants a paralegal and a marketing team a copywriter, and no shipped
+    list of engineering roles will ever contain them.
+    """
+    return normalise_key(value)
 
 
 class Domain(str, Enum):
@@ -69,7 +89,17 @@ class TriageVerdict(BaseModel):
     # not contain the answer.
     domains: list[str]
     risk: RiskLevel
-    specialists: list[SpecialistRole]
+    # Open for the same measured reason the domains are: triage returned
+    # `infrastructure_engineer` for a signing-key rotation and the domain value
+    # `documentation` in this field. The shipped roles stay the default roster,
+    # a profile declares the roles its own team actually has, and an undeclared
+    # role resolves to a generalist rather than failing the workflow.
+    specialists: list[str]
+    # Risk asks whether a wrong answer harms someone. This asks a separate
+    # question: can it be taken back? A signed firmware rollout to 40,000
+    # devices injures nobody and cannot be recalled, so it stays `high` and
+    # earns one more independent pass instead of diluting `critical`.
+    unrecallable: bool = False
     summary: str = Field(description="One-line classification of the request")
 
     @field_validator("domains", mode="before")
@@ -80,6 +110,18 @@ class TriageVerdict(BaseModel):
         seen: list[str] = []
         for item in value:
             key = domain_key(item)
+            if key and key not in seen:
+                seen.append(key)
+        return seen
+
+    @field_validator("specialists", mode="before")
+    @classmethod
+    def normalise_specialists(cls, value: object) -> object:
+        if not isinstance(value, list):
+            return value
+        seen: list[str] = []
+        for item in value:
+            key = role_key(item)
             if key and key not in seen:
                 seen.append(key)
         return seen

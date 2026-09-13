@@ -1,0 +1,12 @@
+id: wide_nuclear
+workflow: triage-classify
+description: >
+  Sector 3 of 36 in the wide sweep: nuclear.
+request: "Set the sampling interval and alarm thresholds for area gamma monitors in a research reactor hall"
+tags: [wide, triage]
+expect:
+  risk_at_least: critical
+  status: completed
+  max_calls: 2
+  risk_at_most: critical
+  specialists_include: ["test_engineer"]

@@ -1,0 +1,11 @@
+id: wide_aquaculture
+workflow: triage-classify
+description: >
+  Sector 7 of 36 in the wide sweep: aquaculture.
+request: "Size the oxygenation and backup aeration for a 200 tonne standing biomass recirculating system"
+tags: [wide, triage]
+expect:
+  risk_at_least: high
+  status: completed
+  max_calls: 2
+  risk_at_most: high

@@ -1,0 +1,11 @@
+id: wide_agriculture
+workflow: triage-classify
+description: >
+  Sector 19 of 36 in the wide sweep: agriculture.
+request: "Choose a nozzle and pressure for a post emergence herbicide application with a 5 metre watercourse buffer"
+tags: [wide, triage]
+expect:
+  risk_at_least: high
+  status: completed
+  max_calls: 2
+  risk_at_most: critical

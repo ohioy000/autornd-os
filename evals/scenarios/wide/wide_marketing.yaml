@@ -1,0 +1,11 @@
+id: wide_marketing
+workflow: triage-classify
+description: >
+  Sector 33 of 36 in the wide sweep: marketing.
+request: "Rewrite the pricing page headline and subheading for a self serve subscription tier"
+tags: [wide, triage]
+expect:
+  risk_at_least: low
+  status: completed
+  max_calls: 2
+  risk_at_most: low

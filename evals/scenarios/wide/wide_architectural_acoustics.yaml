@@ -1,0 +1,11 @@
+id: wide_architectural_acoustics
+workflow: triage-classify
+description: >
+  Sector 12 of 36 in the wide sweep: architectural_acoustics.
+request: "Choose a partition assembly to achieve a sound transmission class of 55 between hotel guest rooms"
+tags: [wide, triage]
+expect:
+  risk_at_least: medium
+  status: completed
+  max_calls: 2
+  risk_at_most: high

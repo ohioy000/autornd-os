@@ -127,6 +127,22 @@ def risk_at_most(scenario: Scenario, outcome: RunOutcome):
 
 
 @assertion
+def unrecallable(scenario: Scenario, outcome: RunOutcome):
+    """Separate from risk on purpose.
+
+    A signed rollout to 40,000 devices harms nobody and cannot be taken back.
+    Measured, it classifies `high` 3/3 — correct by the risk guide — so the
+    recall question is asked on its own axis and buys one extra independent
+    reviewer rather than inflating `critical`.
+    """
+    wanted = scenario.expect.get("unrecallable")
+    if wanted is None:
+        return None
+    got = getattr(_triage(outcome), "unrecallable", None)
+    return AssertionResult("unrecallable", got == wanted, wanted, got)
+
+
+@assertion
 def specialists_include(scenario: Scenario, outcome: RunOutcome):
     wanted = scenario.expect.get("specialists_include")
     if wanted is None:

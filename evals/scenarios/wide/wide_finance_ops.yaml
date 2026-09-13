@@ -1,0 +1,11 @@
+id: wide_finance_ops
+workflow: triage-classify
+description: >
+  Sector 9 of 36 in the wide sweep: finance_ops.
+request: "Set the three way match exception queue policy for accounts payable invoices over 50000 dollars"
+tags: [wide, triage]
+expect:
+  risk_at_least: medium
+  status: completed
+  max_calls: 2
+  risk_at_most: high

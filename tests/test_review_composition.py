@@ -2,48 +2,107 @@
 
 import pytest
 
+from autornd.engine.phases import lead_for_domain
 from autornd.engine.review_composition import get_review_team
 from autornd.engine.workflow import WorkflowEngine
 from autornd.models.verdicts import Domain, RiskLevel, SpecialistRole, TriageVerdict
 
 
 class TestReviewComposition:
-    def test_critical_includes_all_specialists(self):
-        team = get_review_team(RiskLevel.CRITICAL, [Domain.FIRMWARE])
-        assert set(team) == set(SpecialistRole)
+    """The team is derived from who triage assigned, and risk decides how much
+    scrutiny is added on top.
 
-    def test_high_hardware_includes_hw_supply_test_arch(self):
-        team = get_review_team(RiskLevel.HIGH, [Domain.HARDWARE])
+    The old fixed table returned every existing role at `critical`, which over
+    thirty-six sectors meant seven engineers reviewing a records retention
+    schedule — a cost with no accuracy behind it.
+    """
+
+    def test_critical_covers_the_assignees_plus_architect_and_tester(self):
+        team = get_review_team(RiskLevel.CRITICAL, [Domain.FIRMWARE],
+                               [SpecialistRole.FIRMWARE_ENGINEER])
+        assert SpecialistRole.FIRMWARE_ENGINEER in team
+        assert SpecialistRole.SYSTEMS_ARCHITECT in team
+        assert SpecialistRole.TEST_ENGINEER in team
+
+    def test_critical_no_longer_drags_in_every_role(self):
+        """The specific regression: a non-engineering request should not buy an
+        engineering department."""
+        team = get_review_team(RiskLevel.CRITICAL, ["legal_ops"], ["paralegal"])
+        assert "paralegal" in team
+        assert SpecialistRole.FRONTEND_ENGINEER not in team
+        assert SpecialistRole.HARDWARE_ENGINEER not in team
+        assert len(team) == 3
+
+    def test_critical_represents_a_domain_triage_left_unstaffed(self):
+        """At this level an unrepresented domain is the gap that matters, so its
+        declared lead is present even when triage did not assign one."""
+        team = get_review_team(RiskLevel.CRITICAL, [Domain.HARDWARE],
+                               [SpecialistRole.BACKEND_ENGINEER])
         assert SpecialistRole.HARDWARE_ENGINEER in team
-        assert SpecialistRole.SUPPLY_CHAIN in team
+
+    def test_high_hardware_includes_hw_test_arch(self):
+        team = get_review_team(RiskLevel.HIGH, [Domain.HARDWARE],
+                               [SpecialistRole.HARDWARE_ENGINEER])
+        assert SpecialistRole.HARDWARE_ENGINEER in team
         assert SpecialistRole.TEST_ENGINEER in team
         assert SpecialistRole.SYSTEMS_ARCHITECT in team
         assert SpecialistRole.FRONTEND_ENGINEER not in team
 
     def test_high_firmware_includes_fw_test_arch(self):
-        team = get_review_team(RiskLevel.HIGH, [Domain.FIRMWARE])
+        team = get_review_team(RiskLevel.HIGH, [Domain.FIRMWARE],
+                               [SpecialistRole.FIRMWARE_ENGINEER])
         assert SpecialistRole.FIRMWARE_ENGINEER in team
         assert SpecialistRole.TEST_ENGINEER in team
         assert SpecialistRole.SYSTEMS_ARCHITECT in team
         assert SpecialistRole.FRONTEND_ENGINEER not in team
 
     def test_medium_backend_includes_backend_test(self):
-        team = get_review_team(RiskLevel.MEDIUM, [Domain.BACKEND])
+        team = get_review_team(RiskLevel.MEDIUM, [Domain.BACKEND],
+                               [SpecialistRole.BACKEND_ENGINEER])
         assert SpecialistRole.BACKEND_ENGINEER in team
         assert SpecialistRole.TEST_ENGINEER in team
 
-    def test_medium_infra_includes_backend_arch(self):
-        team = get_review_team(RiskLevel.MEDIUM, [Domain.INFRASTRUCTURE])
-        assert SpecialistRole.BACKEND_ENGINEER in team
+    def test_medium_does_not_buy_an_architect(self):
+        """Medium work is reversible; a system-level view is what high is for."""
+        team = get_review_team(RiskLevel.MEDIUM, [Domain.BACKEND],
+                               [SpecialistRole.BACKEND_ENGINEER])
+        assert SpecialistRole.SYSTEMS_ARCHITECT not in team
+
+    def test_medium_infra_falls_back_to_the_domain_lead(self):
+        """An unstaffed request still gets the right reviewer, not an arbitrary
+        one — infrastructure leads to the architect."""
+        team = get_review_team(RiskLevel.MEDIUM, [Domain.INFRASTRUCTURE], [])
         assert SpecialistRole.SYSTEMS_ARCHITECT in team
+        assert SpecialistRole.TEST_ENGINEER in team
 
     def test_low_frontend_is_frontend_only(self):
-        team = get_review_team(RiskLevel.LOW, [Domain.FRONTEND])
+        team = get_review_team(RiskLevel.LOW, [Domain.FRONTEND],
+                               [SpecialistRole.FRONTEND_ENGINEER])
         assert team == [SpecialistRole.FRONTEND_ENGINEER]
 
-    def test_low_docs_is_architect_only(self):
-        team = get_review_team(RiskLevel.LOW, [Domain.DOCUMENTATION])
-        assert team == [SpecialistRole.SYSTEMS_ARCHITECT]
+    def test_low_is_one_reviewer_and_never_just_the_tester(self):
+        """A single reviewer at low risk should be someone who can judge the
+        work, not only someone who checks it."""
+        team = get_review_team(RiskLevel.LOW, ["marketing"],
+                               ["copywriter", SpecialistRole.TEST_ENGINEER])
+        assert team == ["copywriter"]
+
+    def test_low_unstaffed_honours_the_declared_domain_lead(self):
+        """The old table ignored the lead map at low risk and always answered
+        architect. Following the declaration is the consistent behaviour — and
+        it is what lets a profile decide who reviews its own domains."""
+        team = get_review_team(RiskLevel.LOW, [Domain.DOCUMENTATION], [])
+        assert team == [lead_for_domain(Domain.DOCUMENTATION)]
+
+    def test_low_with_no_domain_at_all_is_the_architect(self):
+        assert get_review_team(RiskLevel.LOW, [], []) == [
+            SpecialistRole.SYSTEMS_ARCHITECT]
+
+    def test_the_team_is_order_stable(self):
+        """Two identical runs must not look different."""
+        args = (RiskLevel.CRITICAL, ["hardware", "legal_ops"],
+                ["paralegal", "hardware_engineer"])
+        assert get_review_team(*args) == get_review_team(*args)
 
 
 class TestTriageEnforcement:
@@ -131,17 +190,21 @@ class TestUnrecognisedDomains:
 
 
 class TestLeadForDomain:
+    """Leads are normalised role names. They compare equal to the shipped enum
+    members, because those subclass str — but they are no longer restricted to
+    them, since a profile may declare its own roles."""
+
     def test_a_known_domain_resolves_to_its_specialist(self):
         from autornd.engine.phases import lead_for_domain
 
-        assert lead_for_domain("firmware") is SpecialistRole.FIRMWARE_ENGINEER
-        assert lead_for_domain(Domain.BACKEND) is SpecialistRole.BACKEND_ENGINEER
+        assert lead_for_domain("firmware") == SpecialistRole.FIRMWARE_ENGINEER
+        assert lead_for_domain(Domain.BACKEND) == SpecialistRole.BACKEND_ENGINEER
 
     def test_an_unknown_domain_resolves_to_the_architect(self):
         """Not an error. Cross-domain and unfamiliar work is that role's job."""
         from autornd.engine.phases import lead_for_domain
 
-        assert lead_for_domain("mechanical") is SpecialistRole.SYSTEMS_ARCHITECT
+        assert lead_for_domain("mechanical") == SpecialistRole.SYSTEMS_ARCHITECT
 
     def test_a_profile_declared_domain_wins(self, monkeypatch):
         from autornd.engine.phases import lead_for_domain
@@ -150,18 +213,38 @@ class TestLeadForDomain:
         set_profile(ProjectProfile(
             name="Test", domains={"Mechanical": "hardware_engineer"}))
         try:
-            assert lead_for_domain("mechanical") is SpecialistRole.HARDWARE_ENGINEER
+            assert lead_for_domain("mechanical") == SpecialistRole.HARDWARE_ENGINEER
         finally:
             from autornd.profiles import DEFAULT_PROFILE
             set_profile(DEFAULT_PROFILE)
 
-    def test_a_profile_mapping_to_a_bad_role_falls_back(self, monkeypatch):
+    def test_a_profile_role_outside_the_enum_is_honoured(self):
+        """Found live: a profile mapping `legal_ops` to `paralegal` reviewed
+        with the architect instead, because the lead was validated against the
+        shipped enum. The roster is a default, not a limit."""
         from autornd.engine.phases import lead_for_domain
-        from autornd.profiles import ProjectProfile, set_profile
+        from autornd.profiles import DEFAULT_PROFILE, ProjectProfile, set_profile
 
-        set_profile(ProjectProfile(name="Test", domains={"optics": "wizard"}))
+        set_profile(ProjectProfile(
+            name="Chambers",
+            domains={"legal_ops": {"lead": "paralegal"}},
+            roles={"paralegal": {"name": "Paralegal"}}))
         try:
-            assert lead_for_domain("optics") is SpecialistRole.SYSTEMS_ARCHITECT
+            assert lead_for_domain("legal_ops") == "paralegal"
         finally:
-            from autornd.profiles import DEFAULT_PROFILE
+            set_profile(DEFAULT_PROFILE)
+
+    def test_an_undeclared_lead_still_resolves_to_a_specialist(self):
+        """Even a lead the profile names without declaring must produce a
+        working specialist rather than raising."""
+        from autornd.engine.phases import lead_for_domain
+        from autornd.profiles import DEFAULT_PROFILE, ProjectProfile, set_profile
+        from autornd.specialists.registry import get_specialist
+
+        set_profile(ProjectProfile(name="T", domains={"optics": "wizard"}))
+        try:
+            lead = lead_for_domain("optics")
+            assert lead == "wizard"
+            assert get_specialist(lead).name == "Wizard"
+        finally:
             set_profile(DEFAULT_PROFILE)

@@ -303,6 +303,61 @@ class TestSchemaRetry:
         )
         assert data == {"anything": True}
 
+    async def test_the_retry_is_told_what_was_wrong(self, monkeypatch):
+        """Measured live: a triage reply used a value outside a closed enum and
+        the retry re-asked the identical question, so nothing made the second
+        answer more likely to be valid. The rejection text already lists every
+        permitted value — send it.
+
+        (The role that prompted this, `infrastructure_engineer`, is legal now:
+        the roster is open. `risk` is still closed, and closed fields are where
+        this matters.)"""
+        from autornd.models.verdicts import TriageVerdict
+
+        monkeypatch.setattr("asyncio.sleep", AsyncMock())
+        invented = json.dumps({"domains": ["appsec"], "risk": "catastrophic",
+                               "specialists": ["test_engineer"],
+                               "summary": "rotate signing keys"})
+        good = json.dumps({"domains": ["appsec"], "risk": "critical",
+                           "specialists": ["test_engineer"], "summary": "ok"})
+        client = self._client([invented, good])
+        data, _ = await client.chat_json(
+            function="triage", system_prompt="s", user_message="ORIGINAL ASK",
+            schema=TriageVerdict,
+        )
+        assert data["risk"] == "critical"
+
+        first, second = [c.kwargs["user_message"] for c in client.chat.call_args_list]
+        assert first == "ORIGINAL ASK"
+        assert second.startswith("ORIGINAL ASK")
+        assert "rejected" in second
+        # the offending value and the permitted ones both reach the model
+        assert "catastrophic" in second
+        assert "critical" in second
+
+    async def test_a_schema_violation_is_not_logged_as_a_parse_failure(self, caplog):
+        """ValidationError subclasses ValueError, so the combined
+        `except (JSONDecodeError, ValueError)` clause caught every schema
+        violation first and the specific handler below it never ran — every
+        wrong-shape reply was reported as bad JSON."""
+        import logging
+        from autornd.models.verdicts import TriageVerdict
+
+        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch.setattr("asyncio.sleep", AsyncMock())
+        good = json.dumps({"domains": ["backend"], "risk": "low",
+                          "specialists": ["backend_engineer"], "summary": "ok"})
+        bad = json.dumps({"domains": ["backend"], "risk": "nope",
+                          "specialists": ["backend_engineer"], "summary": "x"})
+        client = self._client([bad, good])
+        with caplog.at_level(logging.WARNING):
+            await client.chat_json(function="triage", system_prompt="s",
+                                   user_message="u", schema=TriageVerdict)
+        monkeypatch.undo()
+        text = caplog.text
+        assert "did not match TriageVerdict" in text
+        assert "JSON parse failed" not in text
+
 
 @pytest.mark.asyncio
 class TestEmptyReplyDiagnostics:
@@ -340,3 +395,53 @@ class TestEmptyReplyDiagnostics:
                                    user_message="u", max_retries=2)
         assert "provider=Flaky" in str(exc.value)
         assert "reasoning model" not in str(exc.value)
+
+
+class TestJsonExtraction:
+    """Three of these shapes were seen live and each cost a full retry. One of
+    them parsed into a valid-but-meaningless dict instead of failing, because
+    the fence was stripped by dropping the first line positionally."""
+
+    @staticmethod
+    def _extract(text):
+        return OpenRouterClient._extract_json(text)
+
+    def test_a_fence_with_the_object_on_the_same_line(self):
+        assert self._extract('```json {"risk": "low"}\n```') == {"risk": "low"}
+
+    def test_no_newline_before_the_closing_fence(self):
+        assert self._extract('```json\n{"risk": "low"}```') == {"risk": "low"}
+
+    def test_preamble_before_the_object(self):
+        assert self._extract('Here is the JSON:\n{"risk": "low"}') == {"risk": "low"}
+
+    def test_prose_after_the_object(self):
+        assert self._extract('{"risk": "low"}\nHope that helps!') == {"risk": "low"}
+
+    def test_a_plain_object_is_untouched(self):
+        assert self._extract('{"risk": "low"}') == {"risk": "low"}
+
+    def test_braces_inside_strings_do_not_end_the_span(self):
+        assert self._extract('{"summary": "use {this} pattern"}') == {
+            "summary": "use {this} pattern"}
+
+    def test_escaped_quotes_inside_strings(self):
+        assert self._extract(r'{"summary": "a \"quoted\" word"}') == {
+            "summary": 'a "quoted" word'}
+
+    def test_a_reasoning_block_is_stripped(self):
+        assert self._extract('<think>weighing it up</think>\n{"risk": "low"}') == {
+            "risk": "low"}
+
+    def test_genuinely_broken_json_still_raises(self):
+        """Recovering harder must not become guessing."""
+        with pytest.raises(json.JSONDecodeError):
+            self._extract('{"risk": ')
+
+    def test_a_non_object_is_rejected(self):
+        with pytest.raises(ValueError):
+            self._extract('[1, 2, 3]')
+
+    def test_empty_content_is_rejected(self):
+        with pytest.raises(ValueError):
+            self._extract('')

@@ -1,0 +1,12 @@
+id: wide_veterinary
+workflow: triage-classify
+description: >
+  Sector 16 of 36 in the wide sweep: veterinary.
+request: "Set the anaesthesia monitoring protocol and dosing interval for equine standing sedation"
+tags: [wide, triage]
+risk_ceiling_waived: >
+  Patient harm is to an animal, not a person; both high and critical are defensible readings of the guide.
+expect:
+  risk_at_least: high
+  status: completed
+  max_calls: 2

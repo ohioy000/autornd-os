@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 from autornd.config import settings
-from autornd.models.verdicts import domain_key
+from autornd.models.verdicts import domain_key, role_key
 from autornd.knowledge.store import retrieve
 from autornd.models.verdicts import Domain, SpecialistRole
 
@@ -73,7 +73,7 @@ def load_docs_context(
 
     if specialists:
         for spec in specialists:
-            extra_paths = manifest.get("specialist_extras", {}).get(spec.value, [])
+            extra_paths = manifest.get("specialist_extras", {}).get(role_key(spec), [])
             for path in extra_paths:
                 if path not in seen_paths:
                     content = _read_doc(path)

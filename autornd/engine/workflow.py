@@ -377,7 +377,8 @@ class WorkflowEngine:
         workflow.status = WorkflowStatus.REVIEW
         await self.session.flush()
 
-        review_roles = get_review_team(triage.risk, triage.domains)
+        review_roles = get_review_team(
+            triage.risk, triage.domains, triage.specialists)
         specialists = get_specialists(review_roles)
         verdict, responses = await run_review(
             self.client, workflow.request, triage, plan, implement, specialists,

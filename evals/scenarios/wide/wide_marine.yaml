@@ -1,0 +1,11 @@
+id: wide_marine
+workflow: triage-classify
+description: >
+  Sector 4 of 36 in the wide sweep: marine.
+request: "Specify the cathodic protection anode mass for a 24 metre steel hull on a five year drydock interval"
+tags: [wide, triage]
+expect:
+  risk_at_least: high
+  status: completed
+  max_calls: 2
+  risk_at_most: critical

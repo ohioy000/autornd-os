@@ -34,6 +34,21 @@ class ModelResponse:
     citations: list[str] = field(default_factory=list)
 
 
+
+def _rejection_note(error: Exception) -> str:
+    """Tell the next attempt what the last one got wrong.
+
+    Pydantic's message already names the offending value and lists every
+    permitted one, which is more than a re-ask conveys and more than a
+    hand-written hint would.
+    """
+    return (
+        "\n\nYour previous reply was rejected and must be corrected:\n"
+        f"{error}\n"
+        "Return only a JSON object. Use only values the schema permits — do not "
+        "invent new field values, and do not add fields that are not in the schema."
+    )
+
 class OpenRouterClient:
     """Async client that routes requests to the right model via OpenRouter."""
 
@@ -195,13 +210,20 @@ class OpenRouterClient:
         import asyncio as _aio
 
         last_error = None
+        # What the previous attempt got wrong, fed back into the next one.
+        # Re-asking an identical question is close to hoping: a model that
+        # answered `infrastructure_engineer` for a role enum has no reason to
+        # answer differently second time. The rejection text already names the
+        # offending value and every permitted one, so the cheapest way to spend
+        # a retry is to say what was wrong.
+        correction = ""
         for attempt in range(max_retries):
             if attempt > 0:
                 await _aio.sleep(min(2 ** attempt, 8))
             response = await self.chat(
                 function=function,
                 system_prompt=system_prompt,
-                user_message=user_message,
+                user_message=user_message + correction,
                 response_format={"type": "json_object"},
                 temperature=temperature,
                 max_tokens=max_tokens,
@@ -231,39 +253,89 @@ class OpenRouterClient:
                 if schema is not None:
                     schema(**parsed)
                 return parsed, response
-            except (json.JSONDecodeError, ValueError) as e:
-                last_error = e
-                logger.warning(
-                    "JSON parse failed (attempt %d/%d) for %s: %s — raw: %s",
-                    attempt + 1, max_retries, function, e, (response.content or "")[:300],
-                )
+            # ValidationError subclasses ValueError, so it must be caught first
+            # or the clause below swallows it — which is what happened, and it
+            # logged every schema violation as a parse failure.
             except ValidationError as e:
                 last_error = e
+                correction = _rejection_note(e)
                 logger.warning(
                     "Response did not match %s (attempt %d/%d) for %s: %s",
                     getattr(schema, "__name__", schema), attempt + 1, max_retries,
                     function, e,
                 )
+            except (json.JSONDecodeError, ValueError) as e:
+                last_error = e
+                correction = _rejection_note(e)
+                logger.warning(
+                    "JSON parse failed (attempt %d/%d) for %s: %s — raw: %s",
+                    attempt + 1, max_retries, function, e, (response.content or "")[:300],
+                )
         raise last_error
 
     @staticmethod
     def _extract_json(text: str) -> dict[str, Any]:
+        """Find the JSON object in a model's reply.
+
+        Dropping the first line positionally to remove a fence was wrong for
+        three shapes seen in practice — a fence with the object on the same
+        line (which took the object with it), a closing fence with no newline
+        before it, and a sentence of preamble. Each cost a full retry, and one
+        of them parsed into a valid-but-meaningless dict rather than failing.
+        So: strip fences by pattern, then fall back to the outermost balanced
+        object.
+        """
         if not text:
             raise ValueError("Empty response content — model returned no text")
-        text = text.strip()
-        # Strip <think>...</think> blocks from reasoning models
         import re
+
+        # Reasoning models put their working in <think> blocks.
         text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
-        if text.startswith("```"):
-            lines = text.split("\n")
-            lines = lines[1:]  # drop ```json
-            if lines and lines[-1].strip() == "```":
-                lines = lines[:-1]
-            text = "\n".join(lines)
-        parsed = json.loads(text)
+        # ```json ... ``` in any of its spellings, including same-line content.
+        text = re.sub(r"^```[A-Za-z0-9_-]*\s*", "", text).strip()
+        text = re.sub(r"```\s*$", "", text).strip()
+
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            span = OpenRouterClient._outermost_object(text)
+            if span is None:
+                raise
+            parsed = json.loads(span)
+
         if not isinstance(parsed, dict):
-            raise ValueError(f"Expected JSON object, got {type(parsed).__name__}: {text[:200]}")
+            raise ValueError(
+                f"Expected JSON object, got {type(parsed).__name__}: {text[:200]}")
         return parsed
+
+    @staticmethod
+    def _outermost_object(text: str) -> str | None:
+        """The first balanced {...} span, ignoring braces inside strings."""
+        start = text.find("{")
+        if start < 0:
+            return None
+        depth = 0
+        in_string = False
+        escaped = False
+        for i in range(start, len(text)):
+            ch = text[i]
+            if in_string:
+                if escaped:
+                    escaped = False
+                elif ch == "\\":
+                    escaped = True
+                elif ch == '"':
+                    in_string = False
+                continue
+            if ch == '"':
+                in_string = True
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    return text[start:i + 1]
+        return None
 
     @staticmethod
     def _estimate_cost(model: str, prompt_tokens: int, completion_tokens: int) -> float:

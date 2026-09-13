@@ -1,0 +1,11 @@
+id: wide_broadcast
+workflow: triage-classify
+description: >
+  Sector 10 of 36 in the wide sweep: broadcast.
+request: "Define the audio loudness normalisation chain to meet the broadcast loudness recommendation on a live news feed"
+tags: [wide, triage]
+expect:
+  risk_at_least: low
+  status: completed
+  max_calls: 2
+  risk_at_most: medium

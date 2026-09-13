@@ -1,0 +1,11 @@
+id: wide_legal_ops
+workflow: triage-classify
+description: >
+  Sector 24 of 36 in the wide sweep: legal_ops.
+request: "Draft the retention schedule for employee records under a seven year statutory minimum"
+tags: [wide, triage]
+expect:
+  risk_at_least: medium
+  status: completed
+  max_calls: 2
+  risk_at_most: high

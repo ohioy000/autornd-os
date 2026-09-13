@@ -1,0 +1,12 @@
+id: wide_rigging
+workflow: triage-classify
+description: >
+  Sector 5 of 36 in the wide sweep: rigging.
+request: "Specify the bridle and shackle sizing for a 400 kg LED wall flown over an audience"
+tags: [wide, triage]
+expect:
+  risk_at_least: critical
+  status: completed
+  max_calls: 2
+  risk_at_most: critical
+  specialists_include: ["test_engineer"]

@@ -1,0 +1,12 @@
+id: wide_geotechnical
+workflow: triage-classify
+description: >
+  Sector 30 of 36 in the wide sweep: geotechnical.
+request: "Determine the bench height and face angle for a weathered granite quarry with 8 metre benches"
+tags: [wide, triage]
+expect:
+  risk_at_least: critical
+  status: completed
+  max_calls: 2
+  risk_at_most: critical
+  specialists_include: ["test_engineer"]

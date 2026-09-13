@@ -33,7 +33,7 @@ class ScenarioError(ValueError):
 
 _KNOWN_EXPECTATIONS = {
     "domains", "domains_include", "risk", "risk_at_least", "risk_at_most",
-    "specialists_include", "specialists_exclude",
+    "specialists_include", "specialists_exclude", "unrecallable",
     "status", "converge_within", "max_calls", "criteria_addressed",
 }
 
@@ -129,6 +129,12 @@ def parse(raw: dict[str, Any], source: str = "<inline>") -> Scenario:
     if waiver and expect.get("risk_at_most"):
         raise ScenarioError(
             f"{source}: risk_ceiling_waived is set but risk_at_most is also stated"
+        )
+
+    if "unrecallable" in expect and not isinstance(expect["unrecallable"], bool):
+        raise ScenarioError(
+            f"{source}: unrecallable must be true or false, "
+            f"got {expect['unrecallable']!r}"
         )
 
     for key in ("converge_within", "max_calls"):

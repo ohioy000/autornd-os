@@ -136,3 +136,18 @@ nodes:
     prompt: review
     schema: ReviewVerdict
     depends_on: [build_loop]
+
+  # ── independent pass ────────────────────────────────────────────────────
+  # Only for work that cannot be recalled once released: a signed rollout, a
+  # mass migration, a public release. Risk asks whether a wrong answer harms
+  # someone; this asks whether it can be taken back. Such work stays `high`
+  # rather than inflating `critical`, and earns one more reviewer — on a model
+  # that has seen none of the reviews above it. Skips when no premium tier is
+  # configured.
+  - id: independent_check
+    kind: ai
+    when: triage.unrecallable
+    tier: premium
+    prompt: doublecheck
+    schema: DoubleCheckVerdict
+    depends_on: [review]

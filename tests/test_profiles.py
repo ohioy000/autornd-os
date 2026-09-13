@@ -107,3 +107,63 @@ class TestProfileSingleton:
         reset_profile()
         p = get_profile()
         assert p.name == "AutoRnD"
+
+
+class TestProfileVocabularies:
+    """Domains and roles are both declared by the project, because no shipped
+    list covers civil engineering, food safety or a paralegal."""
+
+    def test_a_domain_may_be_a_bare_lead(self):
+        profile = ProjectProfile(name="T", domains={"mechanical": "hardware_engineer"})
+        assert profile.get_domain_lead("mechanical") == "hardware_engineer"
+        assert profile.get_domain_checks("mechanical") == ()
+
+    def test_a_domain_may_carry_its_own_checks(self):
+        profile = ProjectProfile(name="T", domains={"legal_ops": {
+            "lead": "paralegal",
+            "checks": ["Is every retention period tied to a named statute?"],
+        }})
+        assert profile.get_domain_lead("legal_ops") == "paralegal"
+        assert profile.get_domain_checks("legal_ops") == (
+            "Is every retention period tied to a named statute?",)
+
+    def test_a_single_check_may_be_a_string(self):
+        profile = ProjectProfile(name="T", domains={
+            "legal_ops": {"lead": "paralegal", "checks": "One question?"}})
+        assert profile.get_domain_checks("legal_ops") == ("One question?",)
+
+    def test_domain_spelling_is_normalised(self):
+        profile = ProjectProfile(name="T", domains={"Food Safety": "supply_chain"})
+        assert profile.get_domain_lead("food_safety") == "supply_chain"
+        assert profile.domain_vocabulary() == ["food_safety"]
+
+    def test_roles_are_declared_and_normalised(self):
+        profile = ProjectProfile(name="T", roles={
+            "Paralegal": {"name": "Paralegal", "tier": "engineering"}})
+        assert profile.role_vocabulary() == ["paralegal"]
+        assert profile.get_role("paralegal")["tier"] == "engineering"
+
+    def test_an_undeclared_role_is_none(self):
+        assert ProjectProfile(name="T").get_role("paralegal") is None
+
+    def test_a_profile_file_loads_both(self, tmp_path, monkeypatch):
+        import autornd.profiles as profiles_module
+
+        (tmp_path / "wide.yaml").write_text(
+            "name: Wide\n"
+            "domains:\n"
+            "  legal_ops:\n"
+            "    lead: paralegal\n"
+            "    checks:\n"
+            "      - Is every retention period tied to a named statute?\n"
+            "roles:\n"
+            "  paralegal:\n"
+            "    name: Paralegal\n"
+            "    tier: engineering\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(profiles_module, "PROFILES_DIR", tmp_path)
+        profile = profiles_module.load_profile("wide")
+        assert profile.get_domain_lead("legal_ops") == "paralegal"
+        assert len(profile.get_domain_checks("legal_ops")) == 1
+        assert profile.get_role("paralegal")["name"] == "Paralegal"
