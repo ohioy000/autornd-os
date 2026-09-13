@@ -86,7 +86,11 @@ def _is_placeholder(value: object) -> bool:
 
 class PlanVerdict(BaseModel):
     ready: bool
-    plan: str = Field(description="Implementation plan text")
+    # Empty is valid when the plan is not ready: a request too underspecified to
+    # plan has no plan text, and the prompt tells the architect to say so in
+    # blockers. Requiring it here made the model right and the schema wrong —
+    # it refused three times, correctly, and each refusal was rejected.
+    plan: str = Field(default="", description="Implementation plan text")
     blockers: list[str] = Field(default_factory=list)
     # Generic on purpose: a bill of materials is one instance of "what will
     # this cost to build", not the general case.
@@ -110,7 +114,16 @@ class PlanVerdict(BaseModel):
         so an empty list is a malformed plan, not an acceptable one.
         """
         if not self.ready:
+            if not self.blockers:
+                raise ValueError(
+                    "a plan that is not ready must say why in blockers"
+                )
             return self
+        if not self.plan.strip():
+            raise ValueError(
+                "a ready plan must contain the plan itself; "
+                "use ready=false with blockers if it cannot be written"
+            )
         if not self.success_criteria:
             raise ValueError(
                 "a ready plan must provide success_criteria; "

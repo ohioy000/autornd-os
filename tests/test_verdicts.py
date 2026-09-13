@@ -162,3 +162,30 @@ class TestPlanCriteriaRequired:
         v = PlanVerdict(ready=False, plan="cannot proceed",
                         blockers=["missing datasheet"], success_criteria=[])
         assert not v.ready
+
+
+class TestBlockedPlansAreValid:
+    """Regression from a live run: the architect correctly refused to plan an
+    underspecified battery change, returning ready=false with detailed blockers
+    and no plan text. The schema required `plan`, so it was rejected three
+    times — the model was right and the type was wrong."""
+
+    LIVE_FAILURE = {
+        "ready": False,
+        "blockers": ["Battery chemistry, voltage and capacity are unspecified, "
+                     "so safe cutoff voltages cannot be computed."],
+        "success_criteria": [],
+    }
+
+    def test_the_live_refusal_is_accepted(self):
+        v = PlanVerdict(**self.LIVE_FAILURE)
+        assert not v.ready and v.plan == ""
+
+    def test_a_block_must_say_why(self):
+        with pytest.raises(ValidationError, match="blockers"):
+            PlanVerdict(ready=False, blockers=[], success_criteria=[])
+
+    def test_a_ready_plan_still_needs_plan_text(self):
+        with pytest.raises(ValidationError, match="plan itself"):
+            PlanVerdict(ready=True, plan="   ", blockers=[],
+                        success_criteria=["Backoff capped at 60s"])
