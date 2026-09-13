@@ -19,12 +19,17 @@ class Settings(BaseSettings):
     model_engineering: str = ""
     model_architecture: str = ""
     model_escalation: str = ""
-    # Both only run once project docs are ingested, so neither is required.
+    # Research is core, not an enhancement. Grounding a request in real
+    # documentation and looking up what that documentation does not cover is
+    # the thing that separates this from a model with a checklist — and a
+    # measured run showed a capable model confabulating a component and an RF
+    # limit with full confidence. There is no confidence signal to gate that
+    # on, so the lookup is not optional.
     model_research: str = ""
-    model_ranker: str = ""
-    # Outward lookups for facts the project's own documents do not cover. Needs
-    # a search-capable model — a ":online" variant, or one with native search.
     model_search: str = ""
+    # Ranking only improves the order of retrieved context; without it,
+    # retrieval falls back to embedding distance. A degradation, not a break.
+    model_ranker: str = ""
     model_premium: str = ""
 
     max_iterations: int = 5
@@ -97,14 +102,13 @@ _TIER_HELP = {
     "model_engineering": "implement, validate, review, feasibility — mid tier",
     "model_architecture": "planning and critical review — heavyweight tier",
     "model_escalation": "failure autopsy and recovery — reasoning tier",
+    "model_research": "grounds the request in documentation and briefs every phase",
+    "model_search": "looks up facts the documentation does not cover, with sources",
 }
 
-# Tiers that only run when project documentation has been ingested, plus the
-# opt-in premium reviewer. Unset simply means the feature is off.
+# Genuine enhancements. Unset means the feature is off, and nothing breaks.
 _OPTIONAL_TIERS = {
-    "model_research": "reads project docs and writes a grounded briefing",
     "model_ranker": "ranks retrieved documentation by usefulness",
-    "model_search": "looks up facts the project documentation does not cover",
     "model_premium": "independent Double Check review",
 }
 

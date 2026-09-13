@@ -42,9 +42,9 @@ class OpenRouterClient:
         "engineering": settings.model_engineering,
         "architecture": settings.model_architecture,
         "escalation": settings.model_escalation,
-        **({"research": settings.model_research} if settings.model_research else {}),
+        "research": settings.model_research,
+        "search": settings.model_search,
         **({"ranker": settings.model_ranker} if settings.model_ranker else {}),
-        **({"search": settings.model_search} if settings.model_search else {}),
         **({"premium": settings.model_premium} if settings.model_premium else {}),
     }
 
@@ -301,10 +301,10 @@ async def check_models() -> dict[str, dict]:
         "architecture": settings.model_architecture,
         "escalation": settings.model_escalation,
     }
+    configured["research"] = settings.model_research
+    configured["search"] = settings.model_search
     for tier, model_id in (
-        ("research", settings.model_research),
         ("ranker", settings.model_ranker),
-        ("search", settings.model_search),
         ("premium", settings.model_premium),
     ):
         if model_id:
@@ -391,8 +391,8 @@ def rebuild_function_models() -> None:
         "engineering": settings.model_engineering,
         "architecture": settings.model_architecture,
         "escalation": settings.model_escalation,
-        **({"research": settings.model_research} if settings.model_research else {}),
+        "research": settings.model_research,
+        "search": settings.model_search,
         **({"ranker": settings.model_ranker} if settings.model_ranker else {}),
-        **({"search": settings.model_search} if settings.model_search else {}),
         **({"premium": settings.model_premium} if settings.model_premium else {}),
     }
