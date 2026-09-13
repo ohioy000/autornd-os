@@ -194,3 +194,45 @@ class TestWorkflowErrorIsSurfaced:
 
         resp = await api_client.get(f"/api/workflows/{wf.id}")
         assert resp.json()["data"]["error"] is None
+
+
+@pytest.mark.asyncio
+class TestAdditiveMigration:
+    """Upgrading a live database must not need manual SQL — create_all only
+    creates missing tables, never alters an existing one."""
+
+    async def test_adds_error_column_to_an_old_table(self, tmp_path):
+        from sqlalchemy import text
+        from sqlalchemy.ext.asyncio import create_async_engine
+        from autornd.database import _add_missing_columns
+
+        db = tmp_path / "old.db"
+        eng = create_async_engine(f"sqlite+aiosqlite:///{db}")
+        async with eng.begin() as conn:
+            # a workflows table as it looked before the error column existed
+            await conn.execute(text(
+                "CREATE TABLE workflows (id INTEGER PRIMARY KEY, request TEXT)"))
+        async with eng.begin() as conn:
+            await conn.run_sync(_add_missing_columns)
+        async with eng.begin() as conn:
+            cols = [r[1] for r in (await conn.execute(text("PRAGMA table_info(workflows)")))]
+        await eng.dispose()
+        assert "error" in cols
+
+    async def test_is_idempotent(self, tmp_path):
+        from sqlalchemy import text
+        from sqlalchemy.ext.asyncio import create_async_engine
+        from autornd.database import _add_missing_columns
+
+        db = tmp_path / "twice.db"
+        eng = create_async_engine(f"sqlite+aiosqlite:///{db}")
+        async with eng.begin() as conn:
+            await conn.execute(text(
+                "CREATE TABLE workflows (id INTEGER PRIMARY KEY, request TEXT)"))
+        for _ in range(3):
+            async with eng.begin() as conn:
+                await conn.run_sync(_add_missing_columns)
+        async with eng.begin() as conn:
+            cols = [r[1] for r in (await conn.execute(text("PRAGMA table_info(workflows)")))]
+        await eng.dispose()
+        assert cols.count("error") == 1

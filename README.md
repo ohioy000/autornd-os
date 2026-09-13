@@ -643,7 +643,7 @@ AutoRnD is designed for **private-network use**.
 uvicorn autornd.main:app --host 127.0.0.1 --port 8100
 ```
 
-**Database.** SQLite by default, with no migration tooling. Schema changes between versions may need a manual `ALTER TABLE` or a fresh database.
+**Database.** SQLite by default. Additive, nullable columns are applied automatically at startup, so routine upgrades need no manual step. There is no full migration tool, so a change that alters or drops a column would still need handling by hand.
 
 ## Limitations
 
