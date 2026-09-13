@@ -51,6 +51,39 @@ class TriageVerdict(BaseModel):
 
 # ── Plan ──
 
+# A plan whose criteria are "...", "TBD" or similar passes a non-empty check but
+# leaves validate with nothing to check against — it reds the work every
+# iteration, exhausts the loop and escalates. Treat a degenerate criterion as a
+# malformed plan so the retry path asks for a real one.
+_PLACEHOLDER_WORDS = {
+    "tbd", "todo", "n/a", "na", "none", "placeholder", "criterion",
+    "criteria", "unknown", "pending", "...", "etc",
+}
+
+
+def _is_placeholder(value: object) -> bool:
+    """Does this criterion carry no checkable content?
+
+    Judged on substance rather than length — "BOM < $45" is a real criterion
+    and "success criteria 2" is not, though the second is longer.
+    """
+    if not isinstance(value, str):
+        return True
+    text = value.strip().strip(".…-–—*•[]() ").strip()
+    if not text:
+        return True
+
+    tokens = text.lower().split()
+    meaningful = [t for t in tokens if any(ch.isalnum() for ch in t)]
+    if len(meaningful) < 2:
+        # a single word is only a criterion if it is not one of the usual stubs
+        return not meaningful or meaningful[0] in _PLACEHOLDER_WORDS
+
+    # "criterion 1", "TBD - todo" and friends: nothing but stubs and numbers
+    words = [t for t in meaningful if not t.isdigit()]
+    return bool(words) and all(w in _PLACEHOLDER_WORDS for w in words)
+
+
 class PlanVerdict(BaseModel):
     ready: bool
     plan: str = Field(description="Implementation plan text")
@@ -76,10 +109,19 @@ class PlanVerdict(BaseModel):
         on any evidence, and the loop burns every iteration before escalating —
         so an empty list is a malformed plan, not an acceptable one.
         """
-        if self.ready and not self.success_criteria:
+        if not self.ready:
+            return self
+        if not self.success_criteria:
             raise ValueError(
                 "a ready plan must provide success_criteria; "
                 "use ready=false with blockers if the work cannot be specified"
+            )
+        placeholders = [c for c in self.success_criteria if _is_placeholder(c)]
+        if placeholders:
+            raise ValueError(
+                f"success_criteria contains placeholders rather than real "
+                f"criteria: {placeholders!r}. Every criterion must be a "
+                f"concrete, checkable statement about the implementation."
             )
         return self
 

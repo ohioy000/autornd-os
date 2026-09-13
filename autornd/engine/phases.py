@@ -127,21 +127,17 @@ Return JSON with:
 - blockers: list of blocking issues (empty if ready)
 - cost_estimate: estimated material or resource cost in USD where the work
   implies one (components, licences, capacity), null where it does not
-- success_criteria: list of criteria the validate phase will check
+- success_criteria: 3 to 6 concrete criteria the validate phase will check
 
-Success criteria must be verifiable by inspecting a written implementation —
-properties of the design itself, not measurements taken from a running system.
-Prefer "reconnect loop applies exponential backoff capped at 60s with jitter"
-over "reconnects within 30s in production". A criterion that can only be
-settled by executing the system can never be satisfied here, and will stall
-the implement/validate loop.
+The success criteria are the most important thing you produce. Every later
+phase is judged against them and nothing else, so write them as real sentences
+about the finished work — never placeholders, never "...", never "TBD".
 
-Give between 3 and 6 criteria. Fewer leaves the work unchecked; more dilutes
-each check and lengthens every validate prompt for the rest of the run.
+Each one must be settleable by reading the implementation rather than by
+running it: "reconnect loop applies exponential backoff capped at 60s with
+jitter", not "reconnects within 30s in production".
 
-If ready is true, success_criteria must not be empty — the validate phase has
-nothing to check against otherwise. If the work cannot be specified well enough
-to state criteria, return ready: false with the reason in blockers instead.
+If you cannot state real criteria, return ready: false and say why in blockers.
 
 Request:
 {request}"""
@@ -266,9 +262,13 @@ def build_domain_checks(domains: list[Domain]) -> str:
                 seen.append(check)
     if not seen:
         return ""
-    return ("\n\nDeterministic checks for this request's domains — settle each one\n"
-            "from the text and show your working where it is arithmetic:\n"
-            + "\n".join(f"- {c}" for c in seen))
+    return (
+        "\n\nWhen judging the criteria above, these are the questions that "
+        "usually decide\nthem in this domain. They are lenses, not extra "
+        "criteria: something here\nthat the success criteria do not cover is a "
+        "note, never a reason to fail\nthe work.\n"
+        + "\n".join(f"- {c}" for c in seen)
+    )
 
 
 DOMAIN_LEAD_MAP: dict[Domain, SpecialistRole] = {
@@ -433,9 +433,15 @@ Implementation summary (iteration {implement.iteration}):
 {implement.summary}
 {concerns_block}
 
-Check the implementation against each success criterion in turn. Where the
-criterion is quantitative and the numbers are present, do the arithmetic and
-show it. Where it is structural, check the design actually has the property.
+Check the implementation against each success criterion in turn, and judge the
+work on those criteria alone. Where a criterion is quantitative and the numbers
+are present, do the arithmetic and show it. Where it is structural, check the
+design actually has the property.
+
+Only a stated success criterion can make this red. Anything else you notice —
+a better approach, a missing extra, a concern outside the criteria — belongs in
+evidence as a note. If the criteria themselves are unusable, say so in
+red_cause rather than substituting criteria of your own.
 {checks_block}
 
 Return JSON with:

@@ -126,6 +126,28 @@ class TestPlanCriteriaRequired:
     nothing to check, so it could never return green and the loop burned every
     iteration before escalating."""
 
+    def test_placeholder_criteria_are_rejected(self):
+        """The exact failure seen in a live run: the architecture model returned
+        four literal '...' strings, which passed a non-empty check and left the
+        validator nothing to judge, so the loop could never go green."""
+        with pytest.raises(ValidationError, match="placeholder"):
+            PlanVerdict(ready=True, plan="p", blockers=[],
+                        success_criteria=["...", "...", "...", "..."])
+
+    @pytest.mark.parametrize("crit", [["TBD", "TBD"], ["criterion 1", "criterion 2"],
+                                      [""], ["…"], ["placeholder"]])
+    def test_other_degenerate_criteria_rejected(self, crit):
+        with pytest.raises(ValidationError):
+            PlanVerdict(ready=True, plan="p", blockers=[], success_criteria=crit)
+
+    @pytest.mark.parametrize("crit", ["BOM < $45", "All pins assigned",
+                                      "Backoff capped at 60s with jitter"])
+    def test_real_criteria_survive_the_guard(self, crit):
+        """Short but concrete criteria must not be rejected — a false positive
+        here costs a plan retry for no reason."""
+        v = PlanVerdict(ready=True, plan="p", blockers=[], success_criteria=[crit])
+        assert v.success_criteria == [crit]
+
     def test_ready_plan_without_criteria_is_rejected(self):
         with pytest.raises(ValidationError, match="success_criteria"):
             PlanVerdict(ready=True, plan="do the thing", blockers=[],
