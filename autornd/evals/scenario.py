@@ -47,8 +47,24 @@ class Scenario:
     id: str
     request: str
     description: str = ""
+    # Which shape this scenario is about. Triage quality is measurable in two
+    # calls and a few seconds; asserting it against the full pipeline means a
+    # ten-minute run to check something decided in the first two.
+    workflow: str | None = None
     expect: dict[str, Any] = field(default_factory=dict)
     tags: list[str] = field(default_factory=list)
+
+    # Expectations that can only be answered by a workflow containing the node
+    # that produces them. Scoring `converge_within` against a shape with no
+    # loop is not a failure, it is the wrong question.
+    _NEEDS_NODE = {"converge_within": "build_loop", "criteria_addressed": "coverage"}
+
+    def unmet_requirements(self, node_ids: set[str]) -> dict[str, str]:
+        """Expectations this workflow cannot answer, as {expectation: node}."""
+        return {
+            key: node for key, node in self._NEEDS_NODE.items()
+            if key in self.expect and node not in node_ids
+        }
 
     @property
     def max_calls(self) -> int | None:
@@ -91,6 +107,7 @@ def parse(raw: dict[str, Any], source: str = "<inline>") -> Scenario:
         id=raw["id"],
         request=raw["request"],
         description=raw.get("description", ""),
+        workflow=raw.get("workflow"),
         expect=expect,
         tags=list(raw.get("tags") or []),
     )

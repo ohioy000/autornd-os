@@ -78,6 +78,12 @@ class GraphExecutor:
     ) -> None:
         self.spec = spec
         self.runner = runner
+        # Conditional routing is evaluated here, where conditions live.
+        if getattr(runner, "executor", None) is None:
+            try:
+                runner.executor = self
+            except AttributeError:
+                pass
         # Loop budgets may name a setting rather than hardcode a number, so the
         # same workflow file works across deployments with different limits.
         self.settings = settings_lookup or {}
@@ -107,6 +113,14 @@ class GraphExecutor:
         )
 
     # ── node kinds ────────────────────────────────────────────────────────
+
+    def resolve_tier(self, node: Node, state: ExecutionState) -> str | None:
+        """Which tier this node routes to on this run."""
+        for condition, tier in node.tier_when.items():
+            if self._test(condition, state, node.id):
+                logger.debug("node %s routed to %s (%s)", node.id, tier, condition)
+                return tier
+        return node.tier
 
     async def _run_ai(self, node: Node, state: ExecutionState) -> None:
         output = await self.runner.run_ai(node, state)

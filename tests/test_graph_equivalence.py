@@ -270,3 +270,74 @@ class TestVariantWorkflows:
     async def test_both_shipped_workflows_load(self):
         for name in ("engineering-rnd", "lean"):
             assert load(f"workflows/{name}.yaml").name == name
+
+
+@pytest.mark.asyncio
+class TestTriageCompositionSurvivesTheGraph:
+    """Regression: moving the engine to the graph silently dropped the rule that
+    risky work gets a test engineer and multi-domain work gets an architect. The
+    equivalence tests missed it because their mock already returned the right
+    roster, so enforcement was a no-op — it took five live runs to notice.
+    """
+
+    @staticmethod
+    def _client(risk, specialists):
+        def reply(message: str) -> dict:
+            if "classify this engineering request" in message.lower():
+                return {"domains": ["hardware", "firmware"], "risk": risk,
+                        "specialists": specialists, "summary": "s"}
+            return Script().reply(message)
+        client = OpenRouterClient(api_key="test")
+
+        async def chat_json(function, system_prompt, user_message, **kw):
+            data = reply(user_message)
+            return data, ModelResponse(content=json.dumps(data), model="m",
+                                       prompt_tokens=1, completion_tokens=1, cost=0.0)
+
+        client.chat_json = AsyncMock(side_effect=chat_json)
+        client.close = AsyncMock()
+        return client
+
+    async def test_high_risk_gains_a_test_engineer(self):
+        from autornd.engine.phases import run_triage
+        from autornd.models.verdicts import SpecialistRole
+
+        verdict, _ = await run_triage(
+            self._client("high", ["hardware_engineer"]), "wire the sensor")
+        assert SpecialistRole.TEST_ENGINEER in verdict.specialists
+
+    async def test_multi_domain_gains_an_architect(self):
+        from autornd.engine.phases import run_triage
+        from autornd.models.verdicts import SpecialistRole
+
+        verdict, _ = await run_triage(
+            self._client("medium", ["hardware_engineer"]), "wire the sensor")
+        assert SpecialistRole.SYSTEMS_ARCHITECT in verdict.specialists
+
+    async def test_low_risk_single_domain_is_left_alone(self):
+        """Enforcement adds what the rules require and nothing else."""
+        from autornd.engine.phases import run_triage
+        from autornd.models.verdicts import SpecialistRole
+
+        client = OpenRouterClient(api_key="test")
+
+        async def chat_json(function, system_prompt, user_message, **kw):
+            data = {"domains": ["frontend"], "risk": "low",
+                    "specialists": ["frontend_engineer"], "summary": "s"}
+            return data, ModelResponse(content=json.dumps(data), model="m",
+                                       prompt_tokens=1, completion_tokens=1, cost=0.0)
+
+        client.chat_json = AsyncMock(side_effect=chat_json)
+        verdict, _ = await run_triage(client, "restyle the cards")
+        assert verdict.specialists == [SpecialistRole.FRONTEND_ENGINEER]
+
+    async def test_the_graph_path_enforces_it_too(self):
+        """The point of the regression: both paths, not just the old one."""
+        from autornd.graph.adapter import PhaseRunner
+        from autornd.graph.executor import GraphExecutor
+        from autornd.models.verdicts import SpecialistRole
+
+        runner = PhaseRunner(self._client("high", ["hardware_engineer"]))
+        state = await GraphExecutor(
+            load("workflows/triage-only.yaml"), runner, SETTINGS).run("wire it")
+        assert SpecialistRole.TEST_ENGINEER in state.outputs["triage"].specialists

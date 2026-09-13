@@ -4,9 +4,11 @@ description: >
   blocks with the ambiguity named, or plans with explicit assumptions — what it
   must not do is burn five iterations discovering it cannot be validated.
   Modelled on a live run that cost 21 calls before escalating.
+workflow: engineering-rnd
 request: "Change the battery charge controller cutoff thresholds and cell balancing logic"
 tags: [hardware, ambiguous, regression]
 expect:
-  domains_include: [hardware]
-  risk_at_least: high
-  max_calls: 26
+  # A good run refuses early. Twenty-six calls discovering the request cannot be
+  # validated is the failure, not the budget — a live run blocked in two.
+  status: blocked
+  max_calls: 4

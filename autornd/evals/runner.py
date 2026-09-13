@@ -27,7 +27,15 @@ from autornd.routing.openrouter import OpenRouterClient
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["EvalReport", "ScenarioRun", "run_scenario", "run_suite"]
+__all__ = [
+    "EvalReport",
+    "RepeatedReport",
+    "RepeatedRun",
+    "ScenarioRun",
+    "run_repeated",
+    "run_scenario",
+    "run_suite",
+]
 
 DEFAULT_CALL_CEILING = 40
 DEFAULT_TIMEOUT_SECONDS = 600.0
@@ -71,6 +79,10 @@ class ScenarioRun:
     path: list[str] = field(default_factory=list)
 
     @property
+    def skipped(self) -> bool:
+        return not self.results and bool(self.error) and "not applicable" in self.error
+
+    @property
     def passed(self) -> bool:
         return bool(self.results) and all(r.passed for r in self.results)
 
@@ -111,7 +123,7 @@ class EvalReport:
             "-" * 92,
         ]
         for run in self.runs:
-            mark = "pass" if run.passed else "FAIL"
+            mark = "skip" if run.skipped else ("pass" if run.passed else "FAIL")
             detail = ", ".join(
                 f"{f.name}(wanted {f.wanted}, got {f.got})" for f in run.failures
             ) or (run.error or "")
@@ -120,7 +132,10 @@ class EvalReport:
                 f"{detail[:44]}"
             )
         lines.append("-" * 92)
-        summary = f"{self.passed}/{self.total} scenarios passed"
+        applicable = self.total - sum(1 for r in self.runs if r.skipped)
+        summary = f"{self.passed}/{applicable} applicable scenarios passed"
+        if applicable != self.total:
+            summary += f" ({self.total - applicable} not applicable)"
         summary += f"  ·  {self.calls} model calls  ·  {self.seconds:.1f}s"
         if self.cost:
             summary += f"  ·  ${self.cost:.4f}"
@@ -135,6 +150,16 @@ async def run_scenario(
     settings_lookup: dict[str, Any],
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
 ) -> ScenarioRun:
+    unmet = scenario.unmet_requirements(set(spec.ids))
+    if unmet:
+        detail = "; ".join(
+            f"'{key}' needs a '{node}' node" for key, node in unmet.items()
+        )
+        return ScenarioRun(
+            scenario=scenario, results=[], calls=0, seconds=0.0,
+            error=f"not applicable to workflow '{spec.name}': {detail}",
+        )
+
     ceiling = scenario.max_calls or DEFAULT_CALL_CEILING
     # One call of headroom, so exceeding the expectation is reported by the
     # max_calls assertion rather than as an opaque abort.
@@ -175,6 +200,112 @@ async def run_scenario(
     )
 
 
+@dataclass
+class RepeatedRun:
+    """The same scenario, several times.
+
+    Models are stochastic: the same request produced a passing triage on one
+    run and a failing one on the next. A single result is an anecdote, so the
+    unit of measurement is a pass rate and the flaky assertions are named.
+    """
+
+    scenario: Scenario
+    runs: list[ScenarioRun]
+
+    @property
+    def skipped(self) -> bool:
+        return all(r.skipped for r in self.runs)
+
+    @property
+    def passes(self) -> int:
+        return sum(1 for r in self.runs if r.passed)
+
+    @property
+    def rate(self) -> float:
+        applicable = [r for r in self.runs if not r.skipped]
+        return self.passes / len(applicable) if applicable else 0.0
+
+    @property
+    def passed(self) -> bool:
+        """Only a clean sweep counts. A flaky assertion is a finding, not a pass."""
+        return not self.skipped and self.passes == len(self.runs)
+
+    @property
+    def flaky(self) -> dict[str, int]:
+        """How often each assertion failed across the repetitions."""
+        counts: dict[str, int] = {}
+        for run in self.runs:
+            for failure in run.failures:
+                counts[failure.name] = counts.get(failure.name, 0) + 1
+        return counts
+
+    @property
+    def calls(self) -> int:
+        return sum(r.calls for r in self.runs)
+
+    @property
+    def cost(self) -> float:
+        return sum(r.cost for r in self.runs)
+
+    @property
+    def seconds(self) -> float:
+        return sum(r.seconds for r in self.runs)
+
+
+@dataclass
+class RepeatedReport:
+    results: list[RepeatedRun]
+    workflow: str
+    repeat: int
+
+    @property
+    def passed(self) -> int:
+        return sum(1 for r in self.results if r.passed)
+
+    @property
+    def applicable(self) -> int:
+        return sum(1 for r in self.results if not r.skipped)
+
+    @property
+    def calls(self) -> int:
+        return sum(r.calls for r in self.results)
+
+    @property
+    def cost(self) -> float:
+        return sum(r.cost for r in self.results)
+
+    @property
+    def seconds(self) -> float:
+        return sum(r.seconds for r in self.results)
+
+    def render(self) -> str:
+        lines = [
+            f"workflow: {self.workflow}   repetitions: {self.repeat}",
+            f"{'scenario':<24}{'rate':>8}{'calls':>7}{'secs':>8}   flaky assertions",
+            "-" * 92,
+        ]
+        for result in self.results:
+            if result.skipped:
+                lines.append(f"{result.scenario.id:<24}{'skip':>8}{'':>7}{'':>8}   "
+                             f"{(result.runs[0].error or '')[:40]}")
+                continue
+            rate = f"{result.passes}/{len(result.runs)}"
+            flaky = ", ".join(
+                f"{name} {count}/{len(result.runs)}"
+                for name, count in sorted(result.flaky.items(), key=lambda i: -i[1])
+            )
+            lines.append(
+                f"{result.scenario.id:<24}{rate:>8}{result.calls:>7}"
+                f"{result.seconds:>8.1f}   {flaky[:44]}"
+            )
+        lines.append("-" * 92)
+        lines.append(
+            f"{self.passed}/{self.applicable} scenarios passed every repetition"
+            f"  ·  {self.calls} calls  ·  {self.seconds:.1f}s  ·  ${self.cost:.4f}"
+        )
+        return "\n".join(lines)
+
+
 async def run_suite(
     scenarios: list[Scenario],
     spec: WorkflowSpec,
@@ -188,3 +319,25 @@ async def run_suite(
         runs.append(await run_scenario(
             scenario, spec, client_factory, settings_lookup, timeout))
     return EvalReport(runs=runs, workflow=spec.name)
+
+
+async def run_repeated(
+    scenarios: list[Scenario],
+    spec: WorkflowSpec,
+    client_factory: Callable[[], OpenRouterClient],
+    settings_lookup: dict[str, Any],
+    repeat: int = 3,
+    timeout: float = DEFAULT_TIMEOUT_SECONDS,
+) -> RepeatedReport:
+    results = []
+    for scenario in scenarios:
+        runs = []
+        for attempt in range(repeat):
+            logger.info("eval: %s (%d/%d)", scenario.id, attempt + 1, repeat)
+            run = await run_scenario(
+                scenario, spec, client_factory, settings_lookup, timeout)
+            runs.append(run)
+            if run.skipped:
+                break      # the shape will not change between repetitions
+        results.append(RepeatedRun(scenario=scenario, runs=runs))
+    return RepeatedReport(results=results, workflow=spec.name, repeat=repeat)

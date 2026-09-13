@@ -1,0 +1,21 @@
+name: triage-only
+description: >
+  Classification and nothing else. Two calls, a few seconds, a fraction of a
+  cent — which makes triage quality something you can measure on every change
+  instead of once a week.
+
+  Triage decides the domains, the risk level and the roster, and every later
+  phase inherits those decisions. It is the cheapest thing in the pipeline and
+  the most consequential, so it deserves its own evals.
+
+nodes:
+  - id: triage
+    kind: ai
+    tier: triage
+    prompt: triage
+    schema: TriageVerdict
+
+  - id: context
+    kind: check
+    check: build_context
+    depends_on: [triage]

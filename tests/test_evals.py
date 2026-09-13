@@ -16,7 +16,7 @@ import pytest
 
 from autornd.evals.assertions import RunOutcome, score
 from autornd.evals.runner import (
-    DEFAULT_CALL_CEILING, EvalReport, run_scenario, run_suite,
+    DEFAULT_CALL_CEILING, EvalReport, run_repeated, run_scenario, run_suite,
 )
 from autornd.evals.scenario import Scenario, ScenarioError, load_scenarios, parse
 from autornd.graph.executor import ExecutionState
@@ -260,7 +260,7 @@ class TestRunner:
                                  lambda: make_client(scripted()), SETTINGS)
         assert report.total == 2 and report.passed == 1
         rendered = report.render()
-        assert "1/2 scenarios passed" in rendered
+        assert "1/2 applicable scenarios passed" in rendered
         assert "nope" in rendered
 
     async def test_the_same_suite_can_compare_two_workflows(self):
@@ -274,3 +274,50 @@ class TestRunner:
                                lambda: make_client(scripted()), SETTINGS)
         assert full.passed == lean.passed == 1
         assert lean.calls < full.calls
+
+
+@pytest.mark.asyncio
+class TestRepetitions:
+    """Models are stochastic. The same triage request passed on one live run and
+    failed on the next, so a single result cannot be the unit of measurement."""
+
+    async def test_a_consistent_scenario_passes_every_repetition(self):
+        scenario = parse({"id": "s", "request": "r", "expect": {"risk": "medium"}})
+        report = await run_repeated(
+            [scenario], load("workflows/engineering-rnd.yaml"),
+            lambda: make_client(scripted()), SETTINGS, repeat=3)
+        result = report.results[0]
+        assert result.passed and result.passes == 3 and result.rate == 1.0
+
+    async def test_a_flaky_assertion_is_named_and_counted(self):
+        """A scenario that passes twice out of three is not a pass."""
+        state = {"n": 0}
+
+        def wobbly(message):
+            if "classify this engineering request" in message.lower():
+                state["n"] += 1
+                risk = "medium" if state["n"] % 2 else "high"
+                return {"domains": ["backend"], "risk": risk,
+                        "specialists": ["backend_engineer"], "summary": "s"}
+            return scripted()(message)
+
+        scenario = parse({"id": "s", "request": "r", "expect": {"risk": "medium"}})
+        report = await run_repeated(
+            [scenario], load("workflows/triage-only.yaml"),
+            lambda: make_client(wobbly), SETTINGS, repeat=4)
+        result = report.results[0]
+        assert not result.passed
+        assert 0 < result.rate < 1
+        assert result.flaky.get("risk", 0) >= 1
+        assert "risk" in report.render()
+
+    async def test_an_inapplicable_scenario_is_not_repeated(self):
+        """Shape does not change between runs, so do not pay to rediscover it."""
+        scenario = parse({"id": "s", "request": "r",
+                          "expect": {"converge_within": 1}})
+        report = await run_repeated(
+            [scenario], load("workflows/triage-only.yaml"),
+            lambda: make_client(scripted()), SETTINGS, repeat=5)
+        result = report.results[0]
+        assert result.skipped and len(result.runs) == 1
+        assert report.applicable == 0

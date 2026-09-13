@@ -62,6 +62,11 @@ class Node:
 
     # ── ai ──
     tier: str | None = None
+    # Conditional routing: {condition: tier}, first match wins, falling back to
+    # `tier`. Phase alone is a crude proxy for how much model a call needs — a
+    # restyle and a battery controller both "plan", and only one of them needs
+    # a reasoning model to do it.
+    tier_when: dict[str, str] = field(default_factory=dict)
     specialist: str | None = None
     prompt: str | None = None
     schema: str | None = None
@@ -198,6 +203,7 @@ def _parse_node(raw: dict[str, Any]) -> Node:
         depends_on=list(depends_on),
         when=raw.get("when"),
         tier=raw.get("tier"),
+        tier_when=raw.get("tier_when") or {},
         specialist=raw.get("specialist"),
         prompt=raw.get("prompt"),
         schema=raw.get("schema"),

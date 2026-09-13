@@ -26,6 +26,11 @@ class Settings(BaseSettings):
 
     max_iterations: int = 5
     escalation_max_tokens: int = 16384
+
+    # Validate judges work; it does not redo it. Measured against live models
+    # an unbounded validator produced 15k output tokens for a green/red verdict,
+    # taking three minutes and costing more than the implementation it checked.
+    validate_max_tokens: int = 3000
     escalation_recovery_attempts: int = 3
 
     chromadb_path: str = "./chromadb_data"
@@ -42,6 +47,7 @@ class Settings(BaseSettings):
     RUNTIME_MUTABLE: set[str] = {
         "max_iterations", "escalation_max_tokens", "escalation_recovery_attempts",
         "autornd_profile", "autornd_workflow", "log_level",
+        "validate_max_tokens",
     }
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

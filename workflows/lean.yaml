@@ -58,6 +58,7 @@ nodes:
     specialist: test_engineer
     prompt: validate
     schema: ValidateVerdict
+    max_tokens: validate_max_tokens
     depends_on: [coverage]
 
   - id: build_loop

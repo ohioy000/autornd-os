@@ -21,9 +21,15 @@ nodes:
     depends_on: [triage]
 
   # ── plan ────────────────────────────────────────────────────────────────
+  # Planning normally wants the heavyweight tier: the plan constrains every
+  # token spent after it. Low-risk work is the exception — a reasoning model
+  # spent two and a half minutes planning a card restyle in a measured run,
+  # which is latency and spend the change did not warrant.
   - id: plan
     kind: ai
     tier: architecture
+    tier_when:
+      "triage.risk == 'low'": engineering
     specialist: systems_architect
     prompt: plan
     schema: PlanVerdict
@@ -87,6 +93,7 @@ nodes:
     specialist: test_engineer
     prompt: validate
     schema: ValidateVerdict
+    max_tokens: validate_max_tokens    # a verdict, not a second implementation
     depends_on: [coverage, consistency, domain_review]
 
   - id: build_loop

@@ -1,0 +1,14 @@
+id: triage_frontend
+workflow: triage-only
+description: >
+  Cosmetic work. Guards the other direction from triage_hardware: classifying a
+  restyle as high risk means seven reviewers and a reasoning model planning a
+  layout change.
+request: "Restyle the alert notification cards on the dashboard to use a compact two-line layout"
+tags: [triage, frontend, cheap]
+expect:
+  domains_include: [frontend]
+  risk: low
+  specialists_exclude: [hardware_engineer, firmware_engineer, supply_chain]
+  status: completed
+  max_calls: 2

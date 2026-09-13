@@ -65,6 +65,26 @@ Be exacting about the difference. "The plan says cap at 60s but the code sets \
 the text in front of you and say what you found."""
 
 
+def enforce_triage_composition(verdict: TriageVerdict) -> None:
+    """Add the specialists the rules require, whatever the model returned.
+
+    Measured over five live runs, triage omitted the test engineer on
+    safety-relevant hardware work three times out of five. These two rules are
+    not judgement calls, so they are not left to a model: risky work gets a test
+    engineer, and work spanning domains gets an architect.
+
+    Applied here rather than in a caller, because a rule enforced in one code
+    path and not another is a rule that quietly stops existing — which is what
+    happened when the engine moved to the graph.
+    """
+    if verdict.risk in (RiskLevel.CRITICAL, RiskLevel.HIGH):
+        if SpecialistRole.TEST_ENGINEER not in verdict.specialists:
+            verdict.specialists.append(SpecialistRole.TEST_ENGINEER)
+    if len(verdict.domains) > 1:
+        if SpecialistRole.SYSTEMS_ARCHITECT not in verdict.specialists:
+            verdict.specialists.append(SpecialistRole.SYSTEMS_ARCHITECT)
+
+
 async def run_triage(
     client: OpenRouterClient, request: str
 ) -> tuple[TriageVerdict, ModelResponse]:
@@ -76,12 +96,21 @@ Classify this engineering request. Return JSON with:
 - summary: one-line classification
 
 Risk guide:
-- critical: safety, regulatory or compliance exposure; irreversible physical or
-  financial consequence; anything affecting human wellbeing
-- high: expensive or impossible to reverse; core system behaviour; security
-  boundaries; data integrity
+- critical: safety, regulatory or compliance exposure; anything that can injure
+  someone or damage equipment; irreversible physical or financial consequence
+- high: physical or electrical work on real hardware; anything expensive or
+  impossible to undo; core system behaviour; security boundaries; data integrity
 - medium: data model and schema changes, service configuration, integrations
-- low: presentation, styling, copy, documentation
+- low: presentation, styling, copy, documentation — work that is trivially
+  reversible and cannot hurt anyone
+
+Work on physical equipment — wiring, power, mechanical, thermal, anything with a
+voltage or a moving part — is never low or medium. Someone stands next to that
+machine.
+
+When a request sits between two levels, choose the higher one. The costs are not
+symmetric: over-classifying buys reviewers you did not need, while
+under-classifying ships an irreversible change past a single reviewer.
 
 Always include test_engineer for high/critical risk.
 Always include systems_architect for multi-domain requests.
@@ -96,6 +125,7 @@ Request:
        schema=TriageVerdict,
     )
     verdict = TriageVerdict(**data)
+    enforce_triage_composition(verdict)
     return verdict, response
 
 
@@ -104,6 +134,7 @@ async def run_plan(
     request: str,
     triage: TriageVerdict,
     specialists: list[Specialist],
+    tier: str | None = None,
 ) -> tuple[PlanVerdict, ModelResponse]:
     specialist_names = ", ".join(s.name for s in specialists)
     context = await build_phase_context(
@@ -454,6 +485,7 @@ async def run_validate(
     implement: ImplementVerdict,
     context: str = "",
     domains: list[Domain] | None = None,
+    max_tokens: int | None = None,
 ) -> tuple[ValidateVerdict, ModelResponse]:
     test_eng = get_specialist(SpecialistRole.TEST_ENGINEER)
     context_block = f"\n\nProject context:\n{context}" if context else ""
@@ -492,16 +524,19 @@ red_cause rather than substituting criteria of your own.
 Return JSON with:
 - green: true if every success criterion is satisfied
 - red_cause: null if green, otherwise the specific failure cause
-- evidence: list of evidence strings, one per criterion, each naming the
-  criterion and what you found. Give a verdict for every criterion, whether it
-  passed or failed, e.g.
+- evidence: one line per criterion, at most 25 words each, naming the criterion,
+  the verdict, and the specific thing you saw. Not an essay — the finding is the
+  value, and a long verdict costs as much to produce as the work it judges:
     "Backoff capped at 60s: PASS — step 2 sets max_interval=60"
     "Jitter applied per attempt: FAIL — step 2 sets a fixed delay, no jitter"
 
 Original request:
 {request}"""
 
-    data, response = await test_eng.run(client, prompt, schema=ValidateVerdict)
+    data, response = await test_eng.run(
+        client, prompt, schema=ValidateVerdict,
+        max_tokens=max_tokens or settings.validate_max_tokens,
+    )
     verdict = ValidateVerdict(**data)
     return verdict, response
 

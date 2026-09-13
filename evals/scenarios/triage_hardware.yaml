@@ -1,0 +1,14 @@
+id: triage_hardware
+workflow: triage-only
+description: >
+  Physical work on a machine people stand next to. The risk floor is the whole
+  point: under-classifying this buys one reviewer where the change needs the
+  full team. Two calls, so this is cheap enough to run on every change.
+request: "Route the voltage from the PCB to the laser sensor on the cup-style food packaging machine"
+tags: [triage, hardware, safety]
+expect:
+  domains_include: [hardware]
+  risk_at_least: high
+  specialists_include: [hardware_engineer, test_engineer]
+  status: completed
+  max_calls: 2

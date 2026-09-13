@@ -6,10 +6,8 @@ description: >
 request: "Add a database index on the sensor_readings timestamp column to speed up range queries"
 tags: [backend, routine]
 expect:
-  domains_include: [backend]
-  risk: medium
-  specialists_include: [backend_engineer, test_engineer]
   status: completed
   converge_within: 1
   max_calls: 14
+  criteria_addressed: true
   criteria_addressed: true

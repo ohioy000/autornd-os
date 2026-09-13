@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Callable
 
+from autornd.config import settings
 from autornd.engine import phases
 from autornd.graph.checks import Result, get_check, registry
 from autornd.graph.executor import ExecutionState, resolve_args
@@ -51,8 +52,11 @@ class PhaseRunner:
         self,
         client: OpenRouterClient,
         on_phase: Callable[..., Any] | None = None,
+        executor: Any | None = None,
     ) -> None:
         self.client = client
+        # Set by the executor so conditional tier routing can be evaluated.
+        self.executor = executor
         self.on_phase = on_phase
         self.context: str = ""
         # Every failed attempt, for the escalation autopsy to read.
@@ -110,6 +114,13 @@ class PhaseRunner:
             return get_specialists(get_review_team(triage.risk, triage.domains))
         return get_specialists([SpecialistRole(who)])
 
+    def _max_tokens(self, node: Node) -> int | None:
+        """A node's output ceiling. An int is literal; a string names a setting."""
+        raw = node.max_tokens
+        if raw is None or isinstance(raw, int):
+            return raw
+        return getattr(settings, str(raw), None)
+
     def _record(
         self, node: Node, verdict: Any, responses: list[ModelResponse], state: ExecutionState
     ) -> None:
@@ -166,9 +177,15 @@ class PhaseRunner:
         verdict, response = await phases.run_triage(self.client, state.request)
         return verdict, [response]
 
+    def _tier(self, node: Node, state: ExecutionState) -> str | None:
+        if self.executor is not None:
+            return self.executor.resolve_tier(node, state)
+        return node.tier
+
     async def _phase_plan(self, node: Node, state: ExecutionState):
         verdict, response = await phases.run_plan(
-            self.client, state.request, self._triage(state), self._specialists(state)
+            self.client, state.request, self._triage(state), self._specialists(state),
+            tier=self._tier(node, state),
         )
         return verdict, [response]
 
@@ -217,6 +234,7 @@ class PhaseRunner:
         verdict, response = await phases.run_validate(
             self.client, state.request, state.outputs["plan"], implement,
             context=self.context, domains=triage.domains,
+            max_tokens=self._max_tokens(node),
         )
         if not verdict.green:
             self.failure_log.append({
