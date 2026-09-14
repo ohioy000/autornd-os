@@ -1,12 +1,12 @@
 id: mat_immaterial_changelog
 workflow: triage-only
 description: >
-  IMMATERIAL probe 3 of 3. Release-note phrasing, before publication.
+  IMMATERIAL probe 3 of 3. Announcement wording, decided before it ships.
 
-  The unknowns are which entries to include and how to phrase them. A wrong
-  assumption produces a worse changelog, not a wrong one, and no outside source
-  settles it.
-request: "Draft the changelog entries for the next release, for review before they publish to the status page"
+  Shipped to every user, so not trivially reversible; but what it leaves
+  unspecified — phrasing, how much detail, whether to apologise — has no
+  right answer that a lookup could supply.
+request: "Decide the wording of the in-app announcement banner for next week's maintenance window, for review before it ships to all users"
 tags: [materiality, immaterial]
 expect:
   risk_at_least: medium

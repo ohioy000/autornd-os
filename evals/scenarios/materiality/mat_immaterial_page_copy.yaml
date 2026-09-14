@@ -1,13 +1,11 @@
 id: mat_immaterial_page_copy
 workflow: triage-only
 description: >
-  IMMATERIAL probe 2 of 3. Wording and tone on a page that is not yet replaced.
+  IMMATERIAL probe 2 of 3. Banner copy, decided before a print run.
 
-  Everything the request leaves unspecified — voice, length, which objections to
-  answer first — is a matter of judgement a competent writer settles without
-  looking anything up. Nothing here has a right answer that a source could
-  supply.
-request: "Propose the wording and tone for the account-closure confirmation page, for review before it replaces the current copy"
+  A wrong call costs a reprint, not a redesign of anything. Nothing an
+  outside source could settle: the unknowns are tone, emphasis and layout.
+request: "Decide the wording and layout of the conference booth banner, for sign-off before the print run"
 tags: [materiality, immaterial]
 expect:
   risk_at_least: medium

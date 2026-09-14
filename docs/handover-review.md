@@ -1767,3 +1767,59 @@ subset-selection framing ("the subset of those where a wrong assumption changes
 the answer. Often empty. Never more than three."), and §6.2's measurement was of
 the scoping path, so the reframe targets both and the probes exercise the
 scoping one.
+
+#### Part C results — the gate stays, and the reason it exists changes
+
+**The baseline killed the experiment's premise.** All three immaterial probes
+read `low`, 2/2, and so never reached the materiality gate at all: the risk gate
+zeroes lookups below medium (§4.3), and they made 3 calls each where the two
+material probes made 4.
+
+They were rewritten once to commit to something costly to undo — a print run, a
+send to every user — since §6.6 puts copy on a page under "trivially
+reversible". **They still read `low`, 2/2, all three.** Six probe designs,
+twelve repetitions, and not one lookup fired.
+
+| run | immaterial | material | cost |
+|---|---|---|---|
+| baseline, original gate | 3 calls each, no lookup | 4 calls each, lookup | $0.1317 |
+| rewritten immaterial probes | 3 calls each, no lookup | — | $0.0105 |
+| after the reframe | 3 calls each, no lookup | contrast **3**, threshold 4 | $0.0738 |
+
+**C3's reframe was tried and is reverted.** Rewriting both gates from
+subset-selection to per-gap judgment, with an explicitly named empty case, did
+not zero anything immaterial — it zeroed a **material** lookup.
+`mat_material_contrast` fired a lookup 2/2 before and 0/2 after. The prediction
+that reframing beats self-restraint was reasonable from this codebase's own
+record, and it is wrong here: the reframe suppressed research on a figure that
+decides what gets built, which is the same dangerous direction as
+under-classifying risk. `context.py` is unchanged.
+
+**C4's rule, applied honestly, points at "drop the gate" — and the measurement
+says do not.** The rule keeps the reframe only if it zeroes the immaterial and
+preserves the material; it did the opposite, so the rule says drop the gate
+entirely. Two measured reasons not to:
+
+1. **The job the gate was built for is already done by the risk gate.** §6.2
+   showed materiality only saves money by producing zero gaps. Zero gaps is
+   exactly what work with cosmetic unknowns produces — because that work reads
+   `low`, and low-risk work looks nothing up. Measured here, twelve times out of
+   twelve. The two gates are not redundant by accident: **risk and materiality
+   are correlated**, and the cheaper, deterministic gate already catches the
+   class.
+2. **The cap is doing a different and useful job.** Dropping the gate makes
+   every gap blocking, so a medium-risk workflow would carry ~12 questions into
+   one bundled request instead of ~3, against a fixed `SEARCH_MAX_TOKENS`. §6.3
+   measured that the failure mode at a lean budget is **truncation of the tails
+   of bundled questions** — tokens buy figures. Twelve questions on a 1500-token
+   budget would answer each of them worse.
+
+**B2's disposition: the gate stays, and its description changes.** It is not the
+cost lever it was built to be — §6.2 was right about that and the finding
+stands. It is a *question-count cap* that protects the per-question token
+budget, and it should be understood and documented as one. Nothing about the
+prompt changes; what changes is that nobody need keep trying to make it produce
+empty lists, because the case where it should is already handled one gate
+earlier and more cheaply.
+
+Part C spend: **$0.2160**.

@@ -592,7 +592,7 @@ or design issue.
 | # | Issue | Severity | Notes |
 |---|---|---|---|
 | B1 | Packaging metadata was unusable | **RESOLVED** | Not one fault but three, and the trivial one was the least of them. `pyjwt` was missing from `pyproject.toml`; flat-layout discovery saw `evals/ profiles/ workflows/` beside `autornd/` and **failed the build**, so `pip install -e .` never reached the ImportError; and no wheel carried `dashboard.html`, so a built install served FileNotFoundError from the dashboard route. One manifest now, plus a CI job that installs from it. |
-| B2 | **Materiality gate is ineffective.** Model marks 2.7–2.9 gaps "blocking" every time (cap is 3); empty **0 times in 33** | high | The cost lever it was built to be, isn't. §6.2 |
+| B2 | ~~Materiality gate is ineffective~~ | **RESOLVED — it is not a cost lever, and does not need to be** | The finding stands: it never returns empty. But work whose gaps are immaterial reads `low`, and the risk gate already zeroes its lookups — measured 12/12 across six probe designs. The cap of three earns its place as a *question-count* limit protecting per-question tokens (§6.3: truncation, not ignorance). A per-gap reframe was tried and reverted: it zeroed a **material** lookup. §12.5 |
 | B3 | ~~`--max-spend` is per scenario, not per sweep~~ | **RESOLVED** | `--max-spend-sweep` bounds the whole invocation — every scenario, repetition and compared workflow against one budget. Defaults to $1.00, `none` disables. With both caps set no unit starts unless it must fit, so the sweep cap is exact; alone, it stops the crossing unit via the existing client ceiling. Fixing it exposed a second bug: six handlers on the research and rerank paths swallowed `BudgetExceeded`, so an abort did not stop the run |
 | B4 | ~~`wide_legal_ops` under-classifies on every provider~~ | **RESOLVED — the premise was wrong** | It is the serving, not the guide. Pinned six ways: fails 3/3 on OpenInference, DigitalOcean and unpinned; passes 3/3 on Alibaba and AtlasCloud, 2/3 on StreamLake. Under the adopted `triage:Alibaba` pin it passes ~8/9, and its rare excursions go in **both** directions. No guide edit was made — there was no systematic failure left to target. §12.3, §12.4 |
 | B5 | `wide_wind_energy` fails `risk_at_least` ~1/3, **deliberately left red** | low | Two defensible readings; a risk **floor must never be waivable** (§4.4) |
@@ -769,6 +769,18 @@ saving **44%**, almost entirely from 4 requests → 1.
 **Key structural insight:** with one bundled request, the *number* of gaps does
 not affect cost. Cost = fee + tokens. Materiality only saves money by producing
 **zero** gaps.
+
+**Resolved 2026-09-14 (B2).** Zero gaps is what work with cosmetic unknowns
+produces — but the risk gate gets there first and more cheaply, because that
+work reads `low`. Six probe designs at the deciding stage, twelve repetitions,
+not one lookup fired: requests whose unknowns are preferences classify `low`
+even when committed to a print run or a send to every user. **Risk and
+materiality are correlated**, so the materiality gate was never going to add a
+saving on top of the risk gate. What the cap of three actually buys is
+per-question tokens: drop it and roughly a dozen questions ride one bundled
+request against a fixed budget, which §6.3 measured as truncation of the tails.
+A per-gap reframe with an explicit empty case was tried and reverted — it
+changed nothing immaterial and zeroed a *material* lookup.
 
 ### 6.3 Search pricing and the accuracy/token curve
 
