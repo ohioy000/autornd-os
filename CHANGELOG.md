@@ -151,7 +151,35 @@ transfer to the other.
 between attempts is answerable from a finished run. It does change, by thousands
 of characters, and still fails a different criterion each round.
 
-The suite stands at **576 tests** as of `3515d16`, up from 85 at 0.1.0.
+**The build loop stops when its judges agree.** It used to exit on the
+validator alone, and was measured exiting satisfied while the implementation sat
+red in the same state — a domain reviewer had flagged a critical concern and the
+exit did not look. Reading the validator's own evidence showed it was the judge
+that was wrong: it marked a criterion passed while stating in the same sentence
+that the test case had been changed away from what the criterion asked for. Each
+loop now folds every judge its own shape produces, and the free checks carry the
+same weight as the paid ones.
+
+**Two silences closed.** When a reviewer's critical concern flipped an
+implementation red, the next attempt was told only that a concern had been
+flagged — the reviewer's actual words went onto a field nothing downstream read;
+they now travel with the reason. And a lookup the provider refuses is swallowed
+so the workflow survives, which is right and was silent: a whole evaluation once
+scored zeros that were indistinguishable from a model finding nothing. Refusals
+are counted where they are swallowed and the report says so.
+
+**The assessment contract now fixes the success criteria.** Saying a criterion
+is wrong is legitimate; passing work against a criterion quietly amended is a
+false assessment, and a false pass is the expensive direction because it ends
+the loop.
+
+**The search tier's cheap sibling ties the expensive one** at three repetitions
+— identical mean, identical per-repetition sequence — for an eighth of the cost
+per lookup. A larger token budget on the cheap model costs nothing and recovers
+fewer figures, so the accuracy curve measured on one model does not transfer to
+another in the same family.
+
+The suite stands at **592 tests** as of `0e2bd32`, up from 85 at 0.1.0.
 
 ## [0.1.0] — 2026-09-12
 

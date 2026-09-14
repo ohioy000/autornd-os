@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `641da5a` · **Branch:** `main`
-**Tests:** 561 as of `01886a2` · **Date of this snapshot:** 2026-09-13, test counts refreshed 2026-09-14
+**Tests:** 592 as of `0e2bd32` · **Date of this snapshot:** 2026-09-13, test counts refreshed 2026-09-14
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -249,7 +249,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       the only tracked profile
-tests/                      22 files, 561 tests (as of `01886a2`)
+tests/                      24 files, 592 tests (as of `0e2bd32`)
 ```
 
 ### 2.3 Key design patterns
@@ -603,7 +603,7 @@ or design issue.
 | B5 | `wide_wind_energy` fails `risk_at_least` ~1/3, **deliberately left red** | low | Two defensible readings; a risk **floor must never be waivable** (§4.4) |
 | B6 | ~~`independent_check` has never executed inside a full live workflow~~ | **RESOLVED — observed 2026-09-14** | Ran end to end on `independent-check-probe`: 10 calls, 54s, $0.0212, returning `ship=true, confidence=high, critical_issues=[]`. Trace at `docs/traces/b6-independent-check.json`. Took seven further attempts; every exit was legitimate and the *probe request* was what kept failing — see §13.4 |
 | B7 | Build loop convergence — **premise untested** | medium | The recorded claim rests on evidence that never reached the loop: 2 of 4 traces died on an `ImplementVerdict` schema violation before the first iteration completed (006 §13). The instrument fault is isolated and repaired (§14 Part A); the two runs that *did* loop both converged, one in a single iteration and one in three. Re-run evidence at §14 Part D. The earlier structural diagnosis — implementer has no filesystem, validator rejects unverifiable work — still stands as one axis |
-| B8 | Shipped-default models fail on hard requests | medium | Documented rather than changed, per owner's instruction. §6.4 |
+| B8 | Shipped-default models fail on hard requests | medium | Documented rather than changed, per owner's instruction. §6.4. **The plan-tier burn is request-driven, not serving-driven** (measured 2026-09-14, n=2 servings × 12 easy plans vs 6 servings × 4 hard ones): the same model burned seven retries on the hard set and none on the easy one. Pinning that tier is not the lever; the candidates are the plan token budget — the burn sits at `Specialist.run`'s default 16,384 while every serving advertises a ceiling above 262,000 — or the model. Both the owner's. |
 | B9 | No DB migrations (no Alembic) | low | Schema changes are destructive |
 | B10 | `ambiguous_request` — historical "mystery failure" | **RESOLVED** | It was B3's sibling: a `max_calls: 4` baseline set when the budget counted *nodes*. Measured 6. Now 8 |
 
@@ -660,7 +660,17 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
     there. B7 is why: "the build loop does not converge" was carried as
     established through three blueprints, and half its evidence turned out to be
     runs that died before reaching the loop.
-15. No linter/formatter is configured. Match surrounding style: 4-space indent,
+15. **A measured claim carries its n.** "Measured" at one observation and
+    "measured" at thirty read identically and are not the same evidence. A
+    single-repetition reading of the grounding suite was labelled measured at
+    5/8 twice over; three repetitions put it at 3.67, and the gap was variance
+    that one observation could not show. Write the count beside the number.
+16. **Run cheap arms first.** In a multi-arm experiment the expensive arm is
+    both the most likely to exhaust a budget and the one most affordable to
+    lose and repeat. One arm spent $1.12 of $1.17, hit a weekly ceiling
+    mid-experiment and took the two cheap arms with it — they cost a sixth of
+    it between them and would have been banked.
+17. No linter/formatter is configured. Match surrounding style: 4-space indent,
     `from __future__ import annotations`, type hints throughout, ~88-col soft
     wrap, module docstrings that explain rationale.
 
@@ -816,6 +826,15 @@ Graded against published figures across the 8 `evals/grounding` sectors:
 ≈ one recovered sector per 800 tokens. Misses at the lean budget were precisely
 the *tails* of bundled questions (`-1 dBTP`, `type B`, `8(d-14)`) — truncation,
 not ignorance. **Tokens buy figures; bundling saves only the fee (13%).**
+
+**Boundary, measured 2026-09-14 — this curve does not transfer between models,
+even within one family.** The table above is **n=1 on the expensive model**. On
+its cheap sibling at **n=3**, raising both search budgets to 4000 cost
+essentially nothing ($0.0061 vs $0.0062 a lookup, the fee inversion confirmed)
+and **recovered fewer** figures: 3.00 of 8 against 3.67 with the budgets
+unchanged. The swap recommended to the owner is therefore **model only, caps
+unchanged**, and this curve must be re-measured on whatever model runs the tier.
+At n=3 both models sit near 3.67, not the 5/8 recorded above at n=1.
 
 *Why research exists at all:* asked which charger IC a specific board used, a
 capable model answered "IP5306" in bold with no hedge; a search-backed model
@@ -993,7 +1012,7 @@ nowhere near sufficient.**
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 573 tests as of `977bfa1`, ~10 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 592 tests as of `0e2bd32`, ~10 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \

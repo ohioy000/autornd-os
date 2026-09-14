@@ -39,7 +39,13 @@ shape is stable enough to state once:
    a standing fact. B7 earned it — its premise was carried as established
    through three blueprints, and half its evidence was runs that died before
    reaching the thing they were evidence about.
-6. **The permission boundary** (same): *instrument repair* — crash-proofing a
+6. **A measured claim carries its n** (convention 15), and **multi-arm
+   experiments run their cheap arms first** (convention 16). Both were bought in
+   Blueprint 007: a single-repetition reading labelled "measured" set an
+   expectation of 5/8 that came back 3.67 at three repetitions, and the
+   expensive arm of a three-arm sweep exhausted a weekly spend ceiling
+   mid-experiment and took the two cheap arms down with it.
+7. **The permission boundary** (same): *instrument repair* — crash-proofing a
    phase against well-formed-enough model output, retry wiring, retention,
    accounting — needs no ruling and can be done as found. *Changes to what a
    phase means* — verdict semantics, loop behaviour, prompt text that steers
