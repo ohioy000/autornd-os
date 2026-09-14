@@ -66,11 +66,12 @@ Ordered by how much damage the drift does.
 
 | # | file | status | drift |
 |---|---|---|---|
-| D1 | `CONTRIBUTING.md` | **misdirects** | Tells contributors to "wire new phases into `autornd/engine/workflow.py`" — the **legacy** sequencer kept only as the graph's equivalence reference. Correct path: add a `_phase_<name>` method to `graph/adapter.py` and a node to a `workflows/*.yaml`. Also says to "add new `SpecialistRole` entries to `autornd/models/verdicts.py`" — roles are an **open vocabulary** now; you declare them under `roles:` in a profile and an undeclared one resolves to a generalist. A contributor following this file today builds on the deprecated path. |
-| D2 | `CHANGELOG.md` | **frozen** | Last entry `[0.1.0] — 2026-09-12`: "5-phase sequencer", "Full test suite (85 tests)", and a model nickname ("K3 escalation autopsy pattern"). Sixteen commits of substantial change are unrecorded — the workflow graph, the eval harness, outward research, open domain/role vocabularies, client-side accounting, provider pinning, the review gate, and the `unrecallable` axis. |
-| D3 | `README.md` | **stale + one model name** | Says **"339 tests"** in two places (`:728`, `:771`); actual count is **501**. Line `:103` names a specific model ("Sonar-pro bills $15.00 per million…"), which breaks the zero-model-names rule. The measurement should stay; the vendor name should become "a sonar-class search model" or similar. |
+| D1 | `CONTRIBUTING.md` | ✅ **done** (§9.2) | Tells contributors to "wire new phases into `autornd/engine/workflow.py`" — the **legacy** sequencer kept only as the graph's equivalence reference. Correct path: add a `_phase_<name>` method to `graph/adapter.py` and a node to a `workflows/*.yaml`. Also says to "add new `SpecialistRole` entries to `autornd/models/verdicts.py`" — roles are an **open vocabulary** now; you declare them under `roles:` in a profile and an undeclared one resolves to a generalist. A contributor following this file today builds on the deprecated path. |
+| D2 | `CHANGELOG.md` | ✅ **done** (§9.2) | Last entry `[0.1.0] — 2026-09-12`: "5-phase sequencer", "Full test suite (85 tests)", and a model nickname ("K3 escalation autopsy pattern"). Sixteen commits of substantial change are unrecorded — the workflow graph, the eval harness, outward research, open domain/role vocabularies, client-side accounting, provider pinning, the review gate, and the `unrecallable` axis. |
+| D3 | `README.md` | ✅ **done** (§9.2) | Says **"339 tests"** in two places (`:728`, `:771`); actual count is **501**. Line `:103` names a specific model ("Sonar-pro bills $15.00 per million…"), which breaks the zero-model-names rule. The measurement should stay; the vendor name should become "a sonar-class search model" or similar. |
 | D4 | `CLAUDE.md` | ✅ **done** | Rewritten — §3.1. |
-| D5 | `HANDOVER.md` | ✅ **done** | §1.1 and §1.2 corrections applied. |
+| D5 | `HANDOVER.md` | ✅ **done** | §1.1 and §1.2 corrections applied. §0's naming sentence rewritten to the selection-vs-record policy in Blueprint 002. |
+| D6 | `.env.example` | ✅ **done** (§9.2) | Never on this list, because this pass only audited the four docs above. Five defects, one of them a retracted measurement: a stale tier count, a figure produced by the pre-`b4cd89f` meter, a clause missing its negation, a pinning claim contradicted by §4.6, and a named model. Two more found while executing — a workflow list missing half the shipped workflows, and `AUTORND_PROFILE` orphaned thirty lines from its own documentation. |
 
 ---
 
@@ -452,6 +453,10 @@ within each file by how much damage the claim does if believed.
 
 ### 8.1 CONTRIBUTING.md
 
+> ✅ **All of C1–C10 closed by Blueprint 002.** The inventory below was
+> re-read at HEAD before executing and was accurate in every particular.
+> Kept as written — it is the record of what the file used to teach.
+
 | # | claim | why it is wrong |
 |---|---|---|
 | C1 | *"No comments unless the 'why' is non-obvious"* (Code Style) | Directly contradicts this project's strongest convention. Measurement comments are the codebase's most valuable property — nearly every constant carries the live run that set it. A contributor following this line would **strip** exactly that. |
@@ -466,6 +471,15 @@ within each file by how much damage the claim does if believed.
 | C10 | No mention of the eval suites, `--max-spend`, or the test-first convention | A contributor has no route to the cheapest quality signal in the project. |
 
 ### 8.2 CHANGELOG.md
+
+> ✅ **Closed by Blueprint 002, with one correction to this inventory.**
+> **G1 was wrong**: "85 tests" was *true* at 0.1.0. Counting test functions
+> at `7fa5b11` gives exactly 85, so the claim stands and the current count
+> belongs to `[Unreleased]`, where it is stamped with the commit that
+> produced it. G4 and G5 are also left standing: both describe behaviour
+> that was real at 0.1.0 and changed afterwards, which is what a historical
+> entry is for. G3 (the model nickname) is the only edit made to the 0.1.0
+> record, and G7 is now an `[Unreleased]` section.
 
 Frozen at a single entry, `[0.1.0] — 2026-09-12`. Every claim below is in that
 entry.
@@ -740,3 +754,104 @@ beyond the single §0 sentence in Part E; any prompt, constant, or code
 in autornd/; any live model call — this blueprint is free to execute
 and verify (suite + CI only).
 ```
+
+### 9.2 Execution record — 2026-09-14
+
+Executed at `be8fd08`, one commit per document. The suite was 501 before and is
+**504 after** — the three added tests are Part G's guards, and the count moving
+is itself the first thing one of them caught.
+
+**Prerequisite.** The count was re-derived with `--collect-only -q` rather than
+trusted, as instructed: 501. Worth knowing that `grep -c 'def test_'` gives
+**477** — parametrisation accounts for the other 24 — so the badge tracks
+*collection*, and the Part G guard had to run collection in a subprocess rather
+than count functions or read the current session.
+
+#### What the blueprint asked for and did not get
+
+**A5 — the number was derived, and the derivation changed a second row.** The
+research overhead was re-derived the way the workflow-comparison table was: the
+graph driven against billing doubles with an isolated store, free, in about a
+second. It is **two research-tier calls plus at most one lookup** — one call to
+write the retrieval queries, one to brief from what came back or to scope the
+request when nothing matched. Both grounding shapes cost the same two calls,
+which was worth establishing rather than assuming: with documentation ingested
+the second call is a briefing, with an empty store it is a scoping analysis.
+Low-risk work makes no lookup at all, so **its row was 9 and is now 8** — a
+correction the blueprint did not ask for and the derivation produced.
+
+Two things about that derivation are worth recording so nobody repeats them.
+`run_scenario` re-isolates the knowledge store per scenario (`runner.py:253`),
+so ingesting into an outer `_isolated_store()` and then calling it silently
+discards the fixture — the with-documentation path has to be driven through
+`GraphExecutor` directly. And a scripted double must return *plausible* query
+expansions: nonsense queries retrieve nothing, the run falls through to the
+empty-store branch, and the harness reports the shape you were trying to avoid
+measuring.
+
+**D2 — the inventory was wrong, and checking cost thirty seconds.** "85 tests"
+was flagged as suspect. Counting test functions at `7fa5b11` gives exactly 85.
+Left alone. §8.2 is corrected accordingly.
+
+**Part G — both taken, and G1 failed on this pass's own work.** The doc-names
+guard flagged exactly one line, written about an hour earlier in this same
+session: the corrected pinning example in `.env.example` named a provider whose
+name is also a model family. The two providers beside it are unambiguous and
+stay; that one is described rather than named, and the identity lives in §4.6
+where the measurement is. This is the argument for the guard in miniature — the
+rule was being actively applied by someone who had just written the policy, and
+it still leaked within the hour.
+
+G2 was taken rather than dropping the count from the badge. The badge is a claim
+about the repo and should be checked like one; the maintenance cost the
+blueprint worried about is real but small, and the failure message names all
+three sites that have to move together.
+
+#### Departures
+
+1. **`.env.example` got two fixes nobody listed** (recorded above as D6). Its
+   workflow selector documented two of the four shipped workflows — omitting
+   both triage shapes, including the one that makes a calibration sweep
+   affordable, which is precisely what an operator reading that file wants. And
+   `AUTORND_PROFILE` had been orphaned: its sixteen-line comment block sat above
+   the provider-pinning section while the setting itself had drifted to the last
+   line of the file, under documentation for something else. Both are the same
+   class of defect as the rest of the pass — a document asserting less than the
+   code does — so they were fixed rather than filed.
+2. **A4 replaced a limitation instead of deleting it.** "The review verdict does
+   not block" is false, but deleting it would overstate the position. Review
+   blocks and does not *rework*: feeding findings back into implement and
+   validate needs exhaustion semantics that are not settled, and the two phases
+   can disagree indefinitely. That is the honest remaining limitation and it now
+   says so.
+3. **Part F stopped at v6 for `setup-python` as instructed**, though v7.0.0 also
+   exists and the blueprint's v7 warning was about `checkout` only. Both v6 tags
+   were verified against the registry; `setup-python` v6.0.0 is indeed the
+   2025-09-04 Node-24 release.
+
+#### Verified rather than asserted
+
+- Every field on `Settings` appears in `.env.example` (`RUNTIME_MUTABLE` is a
+  class constant, not a setting), which is what lets the README call that file
+  the single source of truth for settings.
+- The Limitations entries left in place were re-checked in the tree, not
+  assumed: no role or admin field on the user model, no streaming path anywhere
+  in `api/` or `routing/`, and `criteria_addressed` documenting its own term-
+  overlap blindness at `checks.py:139`.
+- `profiles.py:144-145` really does read `domains:` and `roles:`, and
+  `registry.py:203` really does synthesize a generalist — CONTRIBUTING's new
+  profile example was written against the code, not from memory.
+
+#### Left undone, deliberately
+
+- **The Docker build is still uncovered by CI.** Recorded in `HANDOVER.md` §5
+  item 10 and explicitly out of scope here. It is the only install shape no job
+  exercises, and the Dockerfile changed in Blueprint 001.
+- **`profiles/example.yaml` declares no `domains:` or `roles:`.** It is the only
+  tracked profile and the only worked example a new user gets, and it does not
+  demonstrate the two vocabularies this pass spent a section explaining. Adding
+  them touches a shipped profile rather than a document, so it is left for a
+  blueprint that scopes it.
+- **CI's matrix job still runs `pytest tests/ -v`** while every document now
+  says `-q`. Verbose output is more useful in a CI log than in a terminal, so
+  this is a deliberate inconsistency rather than an oversight.
