@@ -125,8 +125,12 @@ install will fail at runtime on auth. *This is an unfixed bug — see §5.*
 - **Vector store:** ChromaDB, local persistent directory `./chromadb_data`.
 - **Model access:** OpenRouter (`https://openrouter.ai/api/v1`), OpenAI
   chat-completions protocol. Any compatible endpoint works.
-- **Container:** `Dockerfile` is minimal (see §3.4). No compose file, no CI
-  pipeline, no deployment automation. **There is no production deployment.** The
+- **CI:** `.github/workflows/ci.yml` — pytest on Python 3.11/3.12/3.13, on push
+  and PR to `main`. It installs from **`requirements.txt`**, which is exactly why
+  it is green while `pip install -e .` is broken (B1): the two dependency sources
+  disagree. See `docs/handover-review.md`.
+- **Container:** `Dockerfile` is minimal (see §3.4). No compose file and no
+  deployment automation. **There is no production deployment.** The
   owner runs it locally; this snapshot's development box has no sudo, no system
   pip and no Docker (venv bootstrapped via `get-pip.py`).
 - **Dev environment quirk:** use `.venv/bin/python3` explicitly. `pytest` is not
@@ -658,7 +662,11 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
 8. **Per-tier provider quality measurement.** The eval suite can now score
    providers; only triage has been measured.
 9. **Alembic migrations** before anyone stores real data.
-10. **CI.** No pipeline exists. 501 fast tests (~9 s) are begging for one.
+10. **CI — extend, do not create.** `.github/workflows/ci.yml` already runs the
+    501 tests across Python 3.11/3.12/3.13. What it lacks is an
+    **editable-install job** (`pip install -e .` + an import smoke test), which
+    is the gap that let B1 ship: CI installs from `requirements.txt` while the
+    broken metadata is in `pyproject.toml`.
 
 ### Longer term / technical debt
 
