@@ -292,6 +292,42 @@ Model check: 7/7 models available
 
 Models a provider serves but omits from its chat-model listing — rerankers, embedding models — are confirmed individually rather than reported missing. If anything cannot be verified, `/api/health` reports `degraded` and names the tiers.
 
+### A model id is not a system — pin the provider when it matters
+
+A provider serves a model id on its own hardware, quantization and settings, and
+one id is routed across many of them. Measured on a single 108-call sweep, the
+triage tier was served by **five** providers: Alibaba, AtlasCloud, DigitalOcean,
+OpenInference and StreamLake.
+
+That is not cosmetic. The same 36-sector calibration suite, the same prompt, the
+same scenarios:
+
+| provider | sectors passing | cost | wall clock |
+|---|---|---|---|
+| StreamLake (pinned) | 33/36 | $0.0185 | 1102s |
+| unpinned, five mixed | 30/36 | $0.0135 | 853s |
+| OpenInference (pinned) | 28/36 | $0.0015 | 303s |
+
+Twelve times the price bought five sectors of accuracy and cost 3.6x the
+latency. And the cheap serving did not fail randomly — it under-classified risk
+on `water_treatment`, `building_services` and `legal_ops`, every repetition,
+which is the dangerous direction.
+
+This is the one place where **frugal and accurate are not the same lever.**
+Taking a question away from a model is free accuracy. Buying a cheaper serving
+of the same model is not: it is a trade, it is silent, and it lands on exactly
+the judgement you least want degraded.
+
+So:
+
+- **Measuring anything?** Pin `OPENROUTER_PROVIDER_ORDER`. An unpinned eval
+  score is partly a record of who answered, which is how a 35/36 became a 29/36
+  with no code change in between.
+- **Running work that matters?** Pin, and choose on measured quality rather than
+  price. `--scenarios evals/scenarios/wide` scores a provider in ten minutes for
+  under two cents.
+- **Leave it unset** only when availability beats reproducibility.
+
 **Routing can depend on the run.** `tier_when` makes a node's tier conditional, so low-risk work does not wake a reasoning model to plan a layout change:
 
 ```yaml
