@@ -252,15 +252,73 @@ class ValidateVerdict(BaseModel):
 # ── Review ──
 
 class ReviewFinding(BaseModel):
+    """One thing a reviewer found.
+
+    Tolerant about shape on the way in, because reviewers write findings a
+    dozen ways and a required key is a whole review lost to a synonym. Measured
+    live: a review returned findings with no `detail` field, the schema
+    rejected it three times, and the workflow died at the last phase with the
+    findings in hand.
+    """
+
     lens: str = "unknown"
     severity: str = "medium"
-    detail: str
+    detail: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def accept_the_shapes_reviewers_use(cls, value: Any) -> Any:
+        # A bare string is the most common shape of all.
+        if isinstance(value, str):
+            return {"detail": value}
+        if not isinstance(value, dict):
+            return value
+
+        data = dict(value)
+        if not str(data.get("detail") or "").strip():
+            # Same content, different key. Take the first that carries text.
+            for alias in ("issue", "description", "finding", "concern",
+                          "text", "problem", "note", "summary", "message"):
+                candidate = data.get(alias)
+                if isinstance(candidate, str) and candidate.strip():
+                    data["detail"] = candidate.strip()
+                    break
+        return data
+
+    @field_validator("lens", "severity", "detail", mode="before")
+    @classmethod
+    def coerce_to_text(cls, value: Any) -> Any:
+        if value is None:
+            return ""
+        return value if isinstance(value, str) else _coerce_str(value)
 
 
 class ReviewVerdict(BaseModel):
     ship: bool
     findings: list[ReviewFinding] = Field(default_factory=list)
     verdict: str = Field(description="Final synthesis statement")
+
+    @field_validator("findings", mode="before")
+    @classmethod
+    def drop_empty_findings(cls, value: Any) -> Any:
+        """A finding with nothing in it is not a finding.
+
+        Kept separate from the tolerance above: that recovers content written
+        under another name, this discards entries that carry none — so a
+        reviewer padding its list cannot turn into a blocking issue with no
+        text against it.
+        """
+        if not isinstance(value, list):
+            return value
+        kept = []
+        for item in value:
+            if isinstance(item, str) and not item.strip():
+                continue
+            if isinstance(item, dict) and not any(
+                    str(v or "").strip() for v in item.values()):
+                continue
+            kept.append(item)
+        return kept
 
 
 # ── Escalation ──

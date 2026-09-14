@@ -274,6 +274,12 @@ it is still a failed run, so:
 - **Engineering, Architecture, Triage** fill schemas on every workflow. Prefer
   models that answer directly. If you want a reasoning model here, give it
   headroom well above the tokens its answer needs.
+- A model can be strong at one of these and weak at another. Measured on the
+  same request, one reasoning model returned a schema stub when asked to
+  **plan** and, as the independent reviewer, caught a real flaw nobody had
+  named — that a rename and a drop in one migration script make the observation
+  window between them impossible. Judge a tier by the job, not by the model's
+  reputation.
 - **Escalation** is the one tier where reasoning earns its keep — it reads a
   long failure log and is rarely called, so it ships with a 16k budget.
 - **Validate** is capped separately (`VALIDATE_MAX_TOKENS`, default 8000)

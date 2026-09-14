@@ -257,3 +257,50 @@ class TestUnrecallable:
                           specialists=["firmware_engineer"],
                           unrecallable=True, summary="s")
         assert v.risk == RiskLevel.HIGH and v.unrecallable is True
+
+
+class TestReviewFindingTolerance:
+    """Measured live: the review phase returned findings with no `detail` key,
+    the schema rejected them three times, and the workflow died at its last
+    phase with the findings sitting in hand. A required key should not cost a
+    whole review because a model used a synonym."""
+
+    def test_a_bare_string_is_a_finding(self):
+        v = ReviewVerdict(ship=False, verdict="no",
+                          findings=["the heatsink is undersized"])
+        assert v.findings[0].detail == "the heatsink is undersized"
+        assert v.findings[0].severity == "medium"
+
+    def test_content_under_another_key_is_recovered(self):
+        for alias in ("issue", "description", "finding", "concern", "problem"):
+            v = ReviewVerdict(ship=False, verdict="no",
+                              findings=[{"severity": "high", alias: "undersized"}])
+            assert v.findings[0].detail == "undersized", alias
+            assert v.findings[0].severity == "high"
+
+    def test_a_finding_with_no_text_still_loads(self):
+        """It should not fail the review — the severity alone is information."""
+        v = ReviewVerdict(ship=False, verdict="no",
+                          findings=[{"severity": "high"}])
+        assert v.findings[0].severity == "high"
+        assert v.findings[0].detail == ""
+
+    def test_entirely_empty_entries_are_dropped(self):
+        """So a padded list cannot become a blocking issue with nothing behind
+        it."""
+        v = ReviewVerdict(ship=True, verdict="ok",
+                          findings=["", "   ", {"detail": ""}, "a real one"])
+        assert [f.detail for f in v.findings] == ["a real one"]
+
+    def test_an_explicit_detail_wins_over_an_alias(self):
+        v = ReviewVerdict(ship=False, verdict="no", findings=[
+            {"detail": "the real text", "issue": "the alias text"}])
+        assert v.findings[0].detail == "the real text"
+
+    def test_no_findings_is_still_valid(self):
+        assert ReviewVerdict(ship=True, verdict="ok").findings == []
+
+    def test_a_finding_keeps_its_lens(self):
+        v = ReviewVerdict(ship=False, verdict="no", findings=[
+            {"lens": "thermal", "severity": "high", "detail": "undersized"}])
+        assert v.findings[0].lens == "thermal"
