@@ -1823,3 +1823,74 @@ empty lists, because the case where it should is already handled one gate
 earlier and more cheaply.
 
 Part C spend: **$0.2160**.
+
+### 12.6 Execution record
+
+*(Numbering departure: the protocol asks for the execution record at §N.2, but
+§12.2 was spent on Part A's pre-registration — which had to be committed before
+the first invocation ran. The record is here instead; §12.1–§12.5 are the
+working sections, in order.)*
+
+Executed at `4189518`→`c738271`. Suite **553 before and after** — no tests
+added, no test file touched, so the badge guard did not fire. Every part of A, B
+and C ran.
+
+**Spend, reconciled against the provider.** OpenRouter's own `total_usage` moved
+**$0.3165** across the window; our meter accounts for **$0.3173** of it once the
+~$0.016 billed before the snapshot is excluded. Agreement within **0.3%**. The
+cost meter, broken before `b4cd89f` and never externally checked since, is now
+verified against the provider's books.
+
+| part | spend |
+|---|---|
+| A — six pin sweeps | $0.0925 recorded + ~$0.018 lost to a killed run |
+| B — B4 verification | $0.0068 |
+| C — materiality probes, three runs | $0.2160 |
+| **total** | **≈$0.333** |
+
+#### Departures
+
+1. **No guide edit (B3).** Under the adopted pin there was no systematic failure
+   to target; §12.4 has the characterisation. Editing the risk guide to chase a
+   one-in-nine excursion that goes in both directions is tuning against noise.
+2. **No regression sweep (B4).** It exists to prove nothing broke after the
+   edit; there was no edit. Part A's Alibaba row is the baseline.
+3. **C1's load-figure probe replaced.** §6.6 makes structural loading `critical`
+   at every stage, so it would have failed its own risk assertion.
+4. **The immaterial probes were rewritten once** after reading `low`, then kept
+   despite still reading `low` — the second result is the finding, not a defect
+   to design around.
+5. **C4's rule was applied and then argued with.** It points at dropping the
+   gate; two measured reasons not to are in §12.5, and the gate stays with its
+   purpose redescribed rather than its wording changed.
+6. **The reframe (C3) is reverted**, not kept — it zeroed a material lookup.
+
+#### What execution found that the blueprint did not anticipate
+
+- **B4's premise was false.** Recorded as the guide's fault on every provider;
+  it is the serving's, and pinning was the entire fix.
+- **B1 is not possible today.** The harness discards the verdicts it pays for —
+  `ScenarioRun` keeps cost, calls and assertions but not the execution state, so
+  a past sweep cannot be diagnosed. Not fixed here: it is `evals/` code.
+- **The blueprint named the wrong function for C3.** With an empty store the
+  live path is `analyze_request`/`blocking_unknowns`, not
+  `synthesize_briefing`/`blocking_gaps`. Both were reframed; both reverted.
+- **A killed sweep loses everything it paid for** — ~$0.018 here — because the
+  CLI renders its report only after the last unit.
+- **StreamLake has roughly doubled in latency** since §6.1 and now loses units
+  to a 45s per-scenario timeout.
+- **Unpinned is no longer a mix**, so §6.1's framing of an unpinned score needs
+  reading with today's routing in mind.
+
+#### Left undone, deliberately
+
+- **The pin is not adopted.** G-3 forbids `.env` edits here.
+  `OPENROUTER_PROVIDER_ORDER=triage:Alibaba` is the owner's line to add; until
+  then the tier routes to the least accurate serving measured.
+- **C5's interaction note, recorded rather than acted on:** if 006-A swaps the
+  search tier to a model at ~$1/M output, a bundled lookup becomes
+  **fee-dominated** — §6.3 measured the fee at 13% of a 3000-token lookup at
+  $15/M, and at $1/M the same fee is roughly 64%. The materiality gate's
+  maximum possible value then shrinks to a fraction of a cent per workflow,
+  which is a second, independent reason not to spend more effort on it.
+- **B6 and B7** remain, and `wind_energy` (B5) is still deliberately red.
