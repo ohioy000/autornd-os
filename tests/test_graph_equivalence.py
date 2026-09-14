@@ -108,7 +108,25 @@ def make_client(script: Script, log: list[str]) -> OpenRouterClient:
     return client
 
 
+def _unprobed():
+    """Both sides must start from the same rerank state.
+
+    The rerank strategy latches in a module-level global, deliberately: each
+    strategy is probed at most once so a dead end stops costing a call forever
+    (§6.8). Inside an equivalence test that is a trap — whichever side runs
+    first does the probing and the second inherits the latched mode, so the two
+    sides legitimately make different calls and the comparison fails for a
+    reason that has nothing to do with either sequencer. Found when this file
+    passed in a full suite and failed in isolation, on unmodified code: a guard
+    whose result depends on test ordering is not a guard.
+    """
+    import autornd.knowledge.context as ctx
+
+    ctx._rerank_mode = None
+
+
 async def run_graph(script_factory, request="Add retry"):
+    _unprobed()
     log: list[str] = []
     runner = PhaseRunner(make_client(script_factory(), log))
     state = await GraphExecutor(
@@ -118,6 +136,7 @@ async def run_graph(script_factory, request="Add retry"):
 
 
 async def run_engine(script_factory, request="Add retry"):
+    _unprobed()
     log: list[str] = []
     engine = create_async_engine("sqlite+aiosqlite://", echo=False)
     async with engine.begin() as conn:

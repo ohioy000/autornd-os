@@ -136,6 +136,49 @@ def _terms(text: str) -> set[str]:
 
 # ── checks ────────────────────────────────────────────────────────────────
 
+@check("judges_agree")
+def judges_agree(**judges: Any) -> Result:
+    """Green only if every judge the loop produced says green.
+
+    The exit condition used to read one verdict. Measured 2026-09-14 on the
+    `requires_execution` trace (n=1, and it only takes one): validate returned
+    green while `implement.green` sat False in the same state — the domain
+    reviewer had flagged a critical concern and flipped it — and the loop exited
+    satisfied. Reading validate's own evidence afterwards showed it had marked
+    a criterion PASS while stating in the same sentence that the test case had
+    been changed from the demanded 101 req/s to 121. Two of the judges present
+    were right, one was wrong, and `until` consulted the wrong one.
+
+    So the loop stops when they agree, not when the most optimistic one does.
+    Each argument is one judge's green signal: a bool, or a check `Result`,
+    or anything else truthy — resolved from the workflow file, so a loop folds
+    exactly the judges its own body produces and no list here needs updating
+    when a body changes.
+
+    A missing judge is not treated as agreement. `resolve_args` already raises
+    on a path that does not exist, which is the loud failure a silently-absent
+    judge would deserve anyway.
+    """
+    if not judges:
+        return Result(False, "no judges to fold — refusing to call that agreement")
+
+    def verdict(value: Any) -> bool:
+        passed = getattr(value, "passed", None)
+        return bool(passed if passed is not None else value)
+
+    dissenting = sorted(name for name, value in judges.items() if not verdict(value))
+    if dissenting:
+        return Result(
+            False,
+            "not agreed — " + ", ".join(f"{n} is red" for n in dissenting),
+            green=False, dissenting=dissenting, judges=sorted(judges),
+        )
+    return Result(
+        True, f"all {len(judges)} judges agree",
+        green=True, dissenting=[], judges=sorted(judges),
+    )
+
+
 @check("criteria_addressed")
 def criteria_addressed(
     criteria: list[str], text: str, threshold: float = 0.5

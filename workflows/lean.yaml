@@ -61,10 +61,21 @@ nodes:
     max_tokens: validate_max_tokens
     depends_on: [coverage]
 
+  # The same fold, over the judges this shape actually has: lean runs no domain
+  # review and no consistency check, so it folds three rather than four.
+  - id: judges
+    kind: check
+    check: judges_agree
+    args:
+      implement: implement.green
+      validate: validate.green
+      coverage: coverage.passed
+    depends_on: [implement, coverage, validate]
+
   - id: build_loop
     kind: ai
-    body: [implement, coverage, validate]
-    until: validate.green == true
+    body: [implement, coverage, validate, judges]
+    until: judges.passed == true
     max_iterations: max_iterations
     on_exhausted_status: escalated
     depends_on: [plan_ready]

@@ -102,3 +102,4 @@ def make_mock_client(responses: dict[str, dict[str, Any]]) -> OpenRouterClient:
     client.chat = AsyncMock(side_effect=_mock_chat)
     client.close = AsyncMock()
     return client
+

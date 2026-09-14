@@ -96,10 +96,26 @@ nodes:
     max_tokens: validate_max_tokens    # a verdict, not a second implementation
     depends_on: [coverage, consistency, domain_review]
 
+  # Every judge this body produced, folded into one signal. The loop used to
+  # exit on validate alone; measured once (n=1, and it only takes one), that let
+  # it stop satisfied while the domain reviewer had already flagged a critical
+  # concern and flipped implement red — and validate turned out to be the judge
+  # that was wrong, having marked a criterion PASS while saying in the same
+  # sentence that the test case had been changed away from what it demanded.
+  - id: judges
+    kind: check
+    check: judges_agree
+    args:
+      implement: implement.green
+      validate: validate.green
+      coverage: coverage.passed
+      consistency: consistency.passed
+    depends_on: [implement, coverage, consistency, validate]
+
   - id: build_loop
     kind: ai
-    body: [implement, domain_review, coverage, consistency, validate]
-    until: validate.green == true
+    body: [implement, domain_review, coverage, consistency, validate, judges]
+    until: judges.passed == true
     max_iterations: max_iterations      # resolved from settings
     on_exhausted: escalation
     depends_on: [plan_ready]
@@ -121,8 +137,8 @@ nodes:
 
   - id: recovery_loop
     kind: ai
-    body: [implement, domain_review, coverage, consistency, validate]
-    until: validate.green == true
+    body: [implement, domain_review, coverage, consistency, validate, judges]
+    until: judges.passed == true
     max_iterations: escalation_recovery_attempts
     on_exhausted_status: escalated
     depends_on: [recoverable]

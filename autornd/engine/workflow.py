@@ -313,7 +313,14 @@ class WorkflowEngine:
                 workflow, "validate", validate_verdict.model_dump(), val_response, iteration
             )
 
-            if validate_verdict.green:
+            # Fold every judge this sequencer has, not just the last one to
+            # speak. The graph folds four; this path never runs the two free
+            # checks, so it has two — implement.green, which already carries the
+            # domain-review mutation, and validate.green. Measured once and once
+            # is enough: validate returned green while the domain reviewer had
+            # flipped implement red, and an exit reading validate alone stopped
+            # on the judge that turned out to be wrong.
+            if validate_verdict.green and implement_verdict.green:
                 logger.info(
                     "Workflow %d passed validation on iteration %d",
                     workflow.id,
@@ -321,7 +328,14 @@ class WorkflowEngine:
                 )
                 return implement_verdict, validate_verdict, failure_log
 
-            red_cause = validate_verdict.red_cause
+            if validate_verdict.green and not implement_verdict.green:
+                logger.info(
+                    "Workflow %d: validation green but the implementation is "
+                    "red (%s) — continuing rather than exiting on one judge",
+                    workflow.id, implement_verdict.red_cause,
+                )
+
+            red_cause = validate_verdict.red_cause or implement_verdict.red_cause
             failure_log.append({
                 "iteration": iteration,
                 "implement_summary": implement_verdict.summary,

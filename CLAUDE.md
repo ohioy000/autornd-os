@@ -22,7 +22,7 @@ by 2.6×–295×. Never cite one.** Re-measure instead.
   sequence compiled into code.
 - `evals/` is in-package (`autornd/evals/`); scenarios and suites live in
   `evals/` at the root.
-- 23 test files.
+- 24 test files.
 - `engine/workflow.py` is the **legacy** sequencer, kept only as the graph's
   equivalence reference. Do not build on it.
 

@@ -31,7 +31,12 @@ IMPLEMENT_RESP = {
     "green": True,
     "red_cause": None,
     "iteration": 1,
-    "summary": "Refactored deep sleep FSM with configurable wake sources.",
+    # Mentions both success criteria by name. It did not before, and the run
+    # still completed, because the exit read the validator alone — a drifted
+    # implementation shipping on one judge is exactly what the fold stops.
+    "summary": ("Refactored deep sleep FSM with configurable wake sources. "
+                "Measured sleep current 8.2uA against the < 10uA target and "
+                "wake latency 320ms against the < 500ms target."),
 }
 
 VALIDATE_RESP = {
@@ -163,7 +168,10 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
                 "green": True,
                 "red_cause": None,
                 "iteration": 1,
-                "summary": "Implemented topic refactor.",
+                # Addresses the criteria this scenario declares; see the note
+                # on IMPLEMENT_RESP above.
+                "summary": ("Implemented topic refactor: all topics parse "
+                            "correctly, validated on subscribe."),
             }
         elif "review this implementation from your domain perspective" in msg:
             data = {"concerns": [], "critical": False}

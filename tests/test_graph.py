@@ -329,7 +329,7 @@ class TestExecutorReproducesThePipeline:
         assert state.path == [
             "triage", "context", "plan", "feasibility", "plan_ready",
             "implement", "domain_review", "coverage", "consistency",
-            "validate", "review", "review_clean",
+            "validate", "judges", "review", "review_clean",
         ]
         assert len(runner.ai_calls) == 7
 
@@ -454,12 +454,21 @@ class TestExecutorReproducesThePipeline:
 @pytest.mark.asyncio
 class TestExecutorMechanics:
     async def test_when_skips_a_node_without_ending_the_run(self):
+        """A skipped node does not end the run — the loop still governs that.
+
+        This used to assert `completed` on a red implementation with a green
+        validate, which is the exit-on-one-judge bug written down as an
+        expectation. The loop now folds every judge, so the same inputs keep
+        iterating and finish escalated; what this test is actually about — the
+        `when` clause skipping domain review — is unchanged.
+        """
         state, runner = await _run({
             **BASE,
             "implement": {**IMPL, "green": False},
-            "validate": {"green": True}})
+            "validate": {"green": True},
+            "escalation": {"requires_human": True}})
         assert "domain_review" not in runner.ai_calls    # when: implement.green
-        assert state.status == "completed"
+        assert state.status == "blocked", "a red implementation must not ship"
         skipped = [s for s in state.trace if s.skipped]
         assert any(s.node_id == "domain_review" for s in skipped)
 
@@ -474,14 +483,21 @@ class TestExecutorMechanics:
         assert state.outputs["coverage"]["addressed"] == 2
 
     async def test_drifted_implementation_is_caught_by_a_free_check(self):
-        """The check cannot fail the run on its own here, but it records the
-        drift for the validator and for anyone reading the trace."""
+        """A free check now carries the same weight as the paid judges.
+
+        It used to record the drift and let the run finish anyway, because the
+        exit read validate alone. The fold means a red `coverage` keeps the loop
+        going: an implementation that never mentions two of the criteria does
+        not ship because the validator happened to say green.
+        """
         state, _ = await _run({
             **BASE,
             "implement": {**IMPL, "summary": "Tidied the logging."},
-            "validate": {"green": True}})
+            "validate": {"green": True},
+            "escalation": {"requires_human": True}})
         assert state.outputs["coverage"]["passed"] is False
         assert len(state.outputs["coverage"]["missed"]) == 2
+        assert state.status != "completed", "drift must not ship on one judge"
 
     async def test_budget_reads_from_settings(self):
         state, runner = await _run(
