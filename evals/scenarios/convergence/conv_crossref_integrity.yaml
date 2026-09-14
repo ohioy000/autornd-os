@@ -1,0 +1,12 @@
+id: conv_crossref_integrity
+description: >
+  B7 trace 3 of 4: definitions used before they are defined.
+request: >
+  Write the interface specification for a device provisioning protocol with
+  sections for message framing, the handshake sequence, the error taxonomy, and
+  a state machine. Every term used in a section must already be defined in an
+  earlier section, every error code referenced in the handshake must appear in
+  the taxonomy, and every state named must appear in the state machine.
+tags: [convergence, b7]
+expect:
+  max_calls: 40

@@ -1,0 +1,17 @@
+id: conv_derived_tolerances
+description: >
+  B7 trace 2 of 4: values that must be recomputed rather than carried across.
+
+  Predicted to stall: the feedback channel into the next implementation is a
+  single red_cause string (adapter.py:229), which can say a value is wrong but
+  not which derivation produced it.
+request: >
+  Specify the acceptance tolerances for a machined aluminium housing given a
+  nominal bore of 42.00 mm at H7 fit, an operating range of -20 to +60 C, and a
+  coefficient of thermal expansion of 23.1 um/m/K. State the bore tolerance
+  band, the worst-case bore at each temperature extreme, and the resulting
+  clearance against a steel shaft at h6. Every derived figure must be shown with
+  the arithmetic that produced it.
+tags: [convergence, b7]
+expect:
+  max_calls: 40

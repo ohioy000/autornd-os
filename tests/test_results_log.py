@@ -147,3 +147,50 @@ class TestTheDefaultPath:
         assert default_results_path(
             "evals/scenarios/wide/wide_legal_ops.yaml").name.endswith(
                 "-wide_legal_ops.jsonl")
+
+
+@pytest.mark.asyncio
+class TestAFailedRunKeepsWhatItCompleted:
+    """Found by execution, not by design: a transport error partway through a
+    live probe discarded every verdict already paid for, because run_scenario
+    replaced the executor's state with a blank one in its exception handlers.
+    The runs worth diagnosing are precisely the ones that broke."""
+
+    async def test_verdicts_survive_an_exception_mid_run(self, tmp_path):
+        from unittest.mock import AsyncMock
+
+        from autornd.routing.openrouter import ModelResponse, OpenRouterClient
+
+        calls = {"n": 0}
+
+        def exploding_client():
+            client = OpenRouterClient(api_key="test")
+            base = scripted("medium")
+
+            async def chat_json(function, system_prompt, user_message, **kw):
+                calls["n"] += 1
+                client._account(function, 0.001)
+                if calls["n"] > 1:            # triage lands, then the wire dies
+                    raise RuntimeError("ReadError")
+                data = base(user_message)
+                return data, ModelResponse(content=json.dumps(data), model="mock",
+                                           prompt_tokens=1, completion_tokens=1,
+                                           cost=0.001)
+
+            client.chat_json = AsyncMock(side_effect=chat_json)
+            client.chat = AsyncMock(side_effect=RuntimeError("ReadError"))
+            client.close = AsyncMock()
+            return client
+
+        log = ResultsLog(tmp_path / "r.jsonl")
+        await run_repeated(
+            [parse({"id": "s", "request": "Add retry"})],
+            load("workflows/engineering-rnd.yaml"),
+            exploding_client, SETTINGS, repeat=1, results_log=log)
+        log.close()
+
+        unit = [r for r in read(tmp_path / "r.jsonl") if r["record"] == "unit"][0]
+        assert unit["error"], "the failure is still reported"
+        assert "triage" in unit["verdicts"], (
+            "the verdict that completed before the break must survive it")
+        assert unit["verdicts"]["triage"]["risk"] == "medium"

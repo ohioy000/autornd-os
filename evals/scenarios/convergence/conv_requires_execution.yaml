@@ -1,0 +1,17 @@
+id: conv_requires_execution
+description: >
+  B7 trace 4 of 4: work whose honest validation needs running something.
+
+  The structural axis §6.8 diagnosed — specialists have no filesystem, shell or
+  repository, and the validator asks for evidence that cannot be produced
+  without one. SPECIALIST_OUTPUT_CONTRACT mitigates and does not solve it.
+  Predicted to exhaust the loop and escalate.
+request: >
+  Produce a regression test plan for a rate limiter that must admit 100 requests
+  per second per tenant with a 20-request burst bucket, including the exact test
+  cases, the expected pass criteria for each, and the measured results
+  demonstrating the limiter behaves correctly at the boundary and one step
+  beyond it.
+tags: [convergence, b7]
+expect:
+  max_calls: 40

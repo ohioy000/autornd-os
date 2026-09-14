@@ -1,0 +1,16 @@
+id: conv_numeric_consistency
+description: >
+  B7 trace 1 of 4: figures that must agree across sections of one deliverable.
+
+  An observation instrument rather than a test. The assertions are loose on
+  purpose — a run that will not converge is the measurement, and a scenario that
+  failed itself would hide it.
+request: >
+  Produce a capacity plan for a message queue sized at 4,200 messages per second
+  peak with a 3x burst allowance, covering: a sizing section, a cost section
+  priced per broker, and an operations section stating alert thresholds. Every
+  figure that appears in more than one section must agree, and the burst
+  allowance must be reflected in all three.
+tags: [convergence, b7]
+expect:
+  max_calls: 40

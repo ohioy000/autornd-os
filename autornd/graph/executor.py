@@ -278,6 +278,11 @@ class GraphExecutor:
 
     async def run(self, request: str) -> ExecutionState:
         state = ExecutionState(request=request)
+        # Kept on the executor so a caller can recover what completed when this
+        # raises. A transport error three nodes in used to discard every verdict
+        # already paid for, which is the failure the results log exists to stop
+        # — and the runs worth diagnosing are exactly the ones that broke.
+        self.state = state
         for node in self.spec.execution_order():
             if not await self._execute(node, state):
                 break

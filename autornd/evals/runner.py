@@ -393,6 +393,18 @@ class EvalReport:
         return "\n".join(lines)
 
 
+def _partial_state(executor: GraphExecutor, request: str):
+    """Whatever the run completed before it broke, rather than a blank slate.
+
+    A run that failed is the one you most want the verdicts from. Replacing its
+    state with an empty one threw away every node that had already succeeded —
+    and been paid for.
+    """
+    from autornd.graph.executor import ExecutionState
+
+    return getattr(executor, "state", None) or ExecutionState(request=request)
+
+
 async def run_scenario(
     scenario: Scenario,
     spec: WorkflowSpec,
@@ -436,19 +448,13 @@ async def run_scenario(
         with _isolated_store():
             state = await asyncio.wait_for(executor.run(scenario.request), deadline)
     except asyncio.TimeoutError:
-        from autornd.graph.executor import ExecutionState
-
-        state = ExecutionState(request=scenario.request)
+        state = _partial_state(executor, scenario.request)
         error = f"timed out after {deadline:.0f}s"
     except CallCeilingExceeded as exc:
-        from autornd.graph.executor import ExecutionState
-
-        state = ExecutionState(request=scenario.request)
+        state = _partial_state(executor, scenario.request)
         error = str(exc)
     except Exception as exc:  # a broken run is a result, not a crash
-        from autornd.graph.executor import ExecutionState
-
-        state = ExecutionState(request=scenario.request)
+        state = _partial_state(executor, scenario.request)
         error = f"{type(exc).__name__}: {exc}"
     seconds = time.perf_counter() - started
 

@@ -2177,3 +2177,51 @@ budgets were truncation rather than ignorance; both models face the same cap and
 the cheaper one can emit far more before hitting its ceiling. If that holds, the
 decision is straightforward. If figures drop materially, the current model
 stands and §4.1's fee-inversion arithmetic remains a projection.
+
+### 13.3 Part D — B7 phase 1
+
+#### D1: the three structural facts, read from source
+
+All three hold, and (a) is narrower than stated.
+
+**(a) The feedback channel into the next implement is one string.**
+`adapter.py:223-233` builds every subsequent `implement` call from exactly
+`red_cause=last.get("red_cause")` plus `self.resolution_directive`. The failure
+log records more than that — `adapter.py:261-266` appends `iteration`,
+`implement_summary`, `red_cause` **and** `evidence` — so validate's evidence is
+captured and then not passed on. It reaches the escalation autopsy, which is
+handed the whole log as JSON (`phases.py:851`), but never the next
+implementation. **The data exists; the pipe is one field wide.**
+
+**(b) A critical domain review arrives as a fixed sentence.** `adapter.py:245-248`
+sets `implement.domain_concerns = concerns` and then, if critical,
+`implement.red_cause = "Domain reviewer flagged critical concern"`. The concerns
+themselves are on the verdict; what the next iteration receives is that
+sentence, identical whatever the reviewer said.
+
+**(c) The loop tests `validate.green` alone.** `engineering-rnd.yaml:102`:
+`until: validate.green == true`. So a critical domain review can flip
+`implement` red while `validate` stays green and the loop exits satisfied —
+**converged on red**. Whether that path is ever taken is an empirical question,
+which is what the traces are for.
+
+#### D2: four scenarios, pre-registered before running
+
+In `evals/scenarios/convergence/`, kept out of default runs by the same
+non-recursive glob as `wide/` and `materiality/`. These are **observation
+instruments, not pass/fail gates** — their assertions are deliberately loose,
+because a run that fails to converge is the data, not a defect in the scenario.
+
+| # | scenario | expected iterations | expected `red_cause` shape | predicted outcome |
+|---|---|---|---|---|
+| 1 | `conv_numeric_consistency` — figures that must agree across sections | 2–3 | names a mismatched figure; **fixable-in-text** | converges |
+| 2 | `conv_derived_tolerances` — values that must be recomputed, not copied | 3–5 | names a value as unverified or inconsistent; fixable-in-text, but repeating | stalls — the one-string channel cannot carry which value or why |
+| 3 | `conv_crossref_integrity` — terms used before they are defined | 2–3 | names an undefined reference; fixable-in-text | converges |
+| 4 | `conv_requires_execution` — validation that honestly needs running something | exhausts (5) | asks for test output or a run result; **structural** | exhausts, then escalates |
+
+My own predictions, labelled and gating nothing: **at least one stall on #2 or
+#4**, and **#4 is where a structural cause should appear** — it is the axis §6.8
+diagnosed, where the validator asks for evidence a specialist with no filesystem
+cannot produce. I do **not** predict a converged-on-red, because it needs a
+critical domain review alongside a green validate, and these scenarios are
+engineering work where the two should mostly agree.
