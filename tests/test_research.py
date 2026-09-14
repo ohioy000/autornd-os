@@ -365,3 +365,56 @@ class TestRiskGate:
         that did not pass one, and guessing cheap would be the wrong default."""
         from autornd.knowledge.context import worth_a_lookup
         assert worth_a_lookup(None) is True
+
+
+class TestBudgetScalesWithConsequence:
+    """Accuracy tracks the token budget almost linearly — graded against
+    published figures, ~4800 tokens recovered 7 of 8 sectors, ~2900 recovered 5,
+    ~1400 recovered 3. Tokens buy figures, so the budget is a dial rather than
+    waste to cut, and it belongs where being wrong is expensive.
+    """
+
+    def test_consequential_work_gets_the_larger_budget(self):
+        from autornd.knowledge.context import search_budget
+        from autornd.config import settings
+        from autornd.models.verdicts import RiskLevel
+
+        for risk in (RiskLevel.HIGH, RiskLevel.CRITICAL):
+            assert search_budget(risk) == settings.search_max_tokens_consequential
+
+    def test_medium_work_gets_the_lean_budget(self):
+        from autornd.knowledge.context import search_budget
+        from autornd.config import settings
+        from autornd.models.verdicts import RiskLevel
+
+        assert search_budget(RiskLevel.MEDIUM) == settings.search_max_tokens
+
+    def test_the_larger_budget_is_actually_larger(self):
+        from autornd.config import settings
+        assert (settings.search_max_tokens_consequential
+                > settings.search_max_tokens)
+
+    def test_an_unknown_risk_takes_the_lean_budget(self):
+        """Cheap is the right default when nobody said what this costs to get
+        wrong — unlike the lookup gate, where the safe default is to ground."""
+        from autornd.knowledge.context import search_budget
+        from autornd.config import settings
+
+        assert search_budget(None) == settings.search_max_tokens
+
+    @pytest.mark.asyncio
+    async def test_the_budget_reaches_the_request(self, monkeypatch):
+        from autornd import config
+        monkeypatch.setattr(config.settings, "model_search", "vendor/search")
+        client = client_returning(reply("A: 4:1", ["https://example.org/x.pdf"]))
+        await research_gaps(client, "r", ["a blocking gap"], max_tokens=4000)
+        assert client.chat.await_args.kwargs["max_tokens"] == 4000
+
+    @pytest.mark.asyncio
+    async def test_it_falls_back_to_the_setting(self, monkeypatch):
+        from autornd import config
+        monkeypatch.setattr(config.settings, "model_search", "vendor/search")
+        monkeypatch.setattr(config.settings, "search_max_tokens", 1500)
+        client = client_returning(reply("A: 4:1", ["https://example.org/x.pdf"]))
+        await research_gaps(client, "r", ["a blocking gap"])
+        assert client.chat.await_args.kwargs["max_tokens"] == 1500

@@ -55,17 +55,29 @@ class Settings(BaseSettings):
     # unbounded validator reached.
     validate_max_tokens: int = 8000
 
-    # One lookup per workflow now carries every blocking gap at once, so the
-    # answer has to cover several questions rather than one figure.
+    # Budget for one lookup, which carries every blocking gap at once.
     #
-    # Raised deliberately but not to a maximum. Sonar-class search models bill a
-    # per-request fee AND tokens, and at 1200 the model filled its budget every
-    # time — so tokens are the larger share, and a literal maximum would cost
-    # more than the three separate lookups this replaces. 3000 buys a
-    # multi-part answer for roughly one fee. Measure before raising it again:
-    # the eval reports spend per tier, so one grounding pass tells you the real
-    # per-lookup cost.
-    search_max_tokens: int = 3000
+    # Measured, not assumed. Sonar-pro bills $15.00 per million output tokens
+    # plus about $0.007 a request, and the model fills whatever cap it is given
+    # (2907 of 3000). So at a 3000-token cap the fee is 13% of the cost and
+    # tokens are 87% — "it is priced per call, so give it the maximum" is the
+    # opposite of what the billing does.
+    #
+    # Accuracy tracks the token budget almost linearly. Graded against published
+    # figures across eight sectors: ~4800 tokens recovered 7/8, ~2900 recovered
+    # 5/8, ~1400 recovered 3/8 — roughly one sector per 800 tokens. Tokens buy
+    # figures, so this is a real trade rather than waste to be cut.
+    #
+    # Which is why it scales with consequence instead of being one number. Low
+    # risk looks nothing up at all; medium gets a lean budget; work where a
+    # wrong figure is expensive gets room to answer completely.
+    search_max_tokens: int = 1500
+
+    # Budget when being wrong is expensive — high and critical risk. About
+    # $0.067 a lookup against $0.028 at the lean budget: the extra 2500 tokens
+    # are the difference between a complete answer and a truncated one on the
+    # work that can least afford a missing figure.
+    search_max_tokens_consequential: int = 4000
     escalation_recovery_attempts: int = 3
 
     chromadb_path: str = "./chromadb_data"
@@ -83,6 +95,7 @@ class Settings(BaseSettings):
         "max_iterations", "escalation_max_tokens", "escalation_recovery_attempts",
         "autornd_profile", "autornd_workflow", "log_level",
         "validate_max_tokens", "search_max_tokens",
+        "search_max_tokens_consequential",
     }
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

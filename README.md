@@ -98,13 +98,34 @@ Three things bound it, in the order they take effect:
   the one already answered — and it is the more consistent one, since it returns
   the figure already cited instead of re-asking and hoping for the same answer.
 
-A note on the token budget, because it is counter-intuitive: sonar-class search
-models bill a per-request fee **and** tokens, and at a 1200-token cap the model
-filled its budget every time. So tokens were the larger share, and raising the
-cap to a literal maximum would cost more than the separate lookups it replaces.
-`SEARCH_MAX_TOKENS` is 3000 — enough for a multi-part answer against one fee.
-Measure before changing it: reports break spend down per tier, so one grounding
-pass tells you the real per-lookup cost.
+### The token budget is the dial, and it is measured
+
+Sonar-pro bills **$15.00 per million output tokens plus about $0.007 a
+request**, and the model fills whatever cap it is given (2907 of 3000). At a
+3000-token cap the fee is 13% of the cost and tokens are 87% — so "it is priced
+per call, give it the maximum" is the opposite of what the billing does.
+
+Accuracy tracks that budget almost linearly. Graded against published figures
+across the eight `evals/grounding` sectors:
+
+| total output tokens | figures recovered | search cost, 8 sectors |
+|---|---|---|
+| ~4800 (4 separate lookups) | 7/8 | $0.72 |
+| ~2900 | 5/8 | $0.32 |
+| ~1400 | 3/8 | $0.17 |
+
+Roughly one sector per 800 tokens. Tokens buy figures, so the budget is a dial
+rather than waste to trim — which is why it scales with consequence:
+
+| risk | lookup | budget | cost |
+|---|---|---|---|
+| low | none | — | $0 |
+| medium | one | `SEARCH_MAX_TOKENS` (1500) | ~$0.03 |
+| high, critical | one | `SEARCH_MAX_TOKENS_CONSEQUENTIAL` (4000) | ~$0.07 |
+
+Set both to the same number for a flat budget. Re-measure after changing
+either: `--scenarios evals/grounding` grades against the published figures and
+reports spend per tier, so the trade is a table rather than an argument.
 
 Run `python -m autornd.evals.cli --max-spend 0.50` on anything that touches this
 tier. Reports break spend down per tier, so you can see where it went:

@@ -112,6 +112,7 @@ async def research_gaps(
     request: str,
     gaps: list[str],
     max_lookups: int = MAX_LOOKUPS,
+    max_tokens: int | None = None,
 ) -> list[Finding]:
     """Look up the gaps a briefing identified, and keep what comes back.
 
@@ -145,7 +146,8 @@ async def research_gaps(
             findings.append(reused)
             continue
         try:
-            answer, citations, model = await _lookup(client, request, question)
+            answer, citations, model = await _lookup(
+                client, request, question, max_tokens=max_tokens)
         except Exception as exc:
             logger.warning("Lookup failed for %r: %s", question[:60], exc)
             continue
@@ -195,7 +197,8 @@ def _recall(question: str) -> Finding | None:
     )
 
 
-async def _lookup(client, request: str, question: str) -> tuple[str, list[str], str]:
+async def _lookup(client, request: str, question: str,
+                  max_tokens: int | None = None) -> tuple[str, list[str], str]:
     """One search-backed lookup. Returns (answer, citations, model)."""
     response = await client.chat(
         function="search",
@@ -206,7 +209,7 @@ async def _lookup(client, request: str, question: str) -> tuple[str, list[str], 
         user_message=LOOKUP_PROMPT.format(question=question)
         + f"\n\nThis is being looked up in service of: {request}",
         temperature=0.0,
-        max_tokens=settings.search_max_tokens,
+        max_tokens=max_tokens or settings.search_max_tokens,
     )
     return (
         (response.content or "").strip(),
