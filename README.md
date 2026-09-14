@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-339%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-501%20passing-brightgreen.svg)](#testing)
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
 
@@ -72,9 +72,8 @@ The same reasoning shapes the plan: **success criteria must be verifiable by rea
 
 Once every call was actually priced, search turned out to be **61% of a full
 workflow** and **98% of a grounding run** ($0.72 of $0.74 across eight
-sectors). Nothing else comes close, so two things bound it:
-
-Three things bound it, in the order they take effect:
+sectors). Nothing else comes close, so four things bound it, in the order they
+take effect:
 
 - **Low-risk work does not look anything up.** A wrong answer in copy,
   configuration or presentation costs a correction, not a board revision. The
@@ -100,10 +99,12 @@ Three things bound it, in the order they take effect:
 
 ### The token budget is the dial, and it is measured
 
-Sonar-pro bills **$15.00 per million output tokens plus about $0.007 a
-request**, and the model fills whatever cap it is given (2907 of 3000). At a
+One measured search model billed **$15.00 per million output tokens plus about
+$0.007 a request**, and filled whatever cap it was given (2907 of 3000). At a
 3000-token cap the fee is 13% of the cost and tokens are 87% — so "it is priced
-per call, give it the maximum" is the opposite of what the billing does.
+per call, give it the maximum" is the opposite of what the billing does. Check
+your own model's rates; the shape of the result is what transfers, not the
+number.
 
 Accuracy tracks that budget almost linearly. Graded against published figures
 across the eight `evals/grounding` sectors:
@@ -194,13 +195,14 @@ The sequence of phases is data, not code. A workflow is a graph of nodes in YAML
 
 Conditions are a deliberately small language — one comparison over a dotted path — rather than `eval`, because a workflow file is configuration and configuration must not execute code.
 
-Three workflows ship:
+Four workflows ship:
 
 | workflow | shape |
 |---|---|
 | `engineering-rnd` | the full team: feasibility, domain review, escalation, risk-scaled review |
 | `lean` | plan, build, verify. No review team, no escalation — but it keeps the free checks |
 | `triage-only` | classification and grounding, two calls, for measuring triage quality cheaply |
+| `triage-classify` | one node — triage alone. A calibration sweep costs a fraction of a cent per call instead of a whole workflow, which is what makes running one over dozens of scenarios affordable |
 
 Select with `AUTORND_WORKFLOW`. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
 
@@ -537,12 +539,17 @@ MODEL_RANKER=             # optional
 MODEL_PREMIUM=            # optional, enables Double Check
 
 AUTORND_WORKFLOW=engineering-rnd
-MAX_ITERATIONS=5          # 1-20
-VALIDATE_MAX_TOKENS=3000
-SEARCH_MAX_TOKENS=1200
+MAX_ITERATIONS=5                      # 1-20
+VALIDATE_MAX_TOKENS=8000
+SEARCH_MAX_TOKENS=1500                # medium-risk lookup budget
+SEARCH_MAX_TOKENS_CONSEQUENTIAL=4000  # high and critical
 
 API_HOST=127.0.0.1        # containers need 0.0.0.0
 ```
+
+The block above is illustrative and not exhaustive. **`.env.example` is the
+single source of truth for settings and their defaults** — it documents every
+one, and explains what each value was measured against.
 
 The bind address defaults to loopback. AutoRnD has no rate limiting and spends real money, so do not expose it directly.
 
@@ -721,11 +728,11 @@ autornd/
   specialists/            # Specialist registry + profile-driven prompts
   routing/openrouter.py   # Multi-model client, rerank, model validation
   api/                    # REST endpoints, auth, dashboard
-workflows/                # engineering-rnd, lean, triage-only
+workflows/                # engineering-rnd, lean, triage-only, triage-classify
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 339 tests
+tests/                    # 501 tests
 ```
 
 ## Cost and Performance
@@ -741,14 +748,16 @@ Model calls for a single-iteration workflow:
 | High | 14 | 1 | 1 | 3 | 1 | 2 | 1 | 5 |
 | Critical | 18 | 1 | 1 | 4 | 1 | 3 | 1 | 7 |
 
-Research adds a fixed overhead on top of that: two to three calls to write the search queries, rank the retrieved material and brief from it, plus one lookup per gap it finds, bounded at four. So a medium-risk workflow is 8 phase calls plus 3 for research, and up to 4 more if your documentation leaves gaps.
+Research adds a small fixed overhead on top of that: **two research-tier calls** — one to write the retrieval queries, one to brief from what came back, or to scope the request instead when nothing matched — plus **at most one outward lookup**. Not one per gap: every blocking gap rides in a single request, because the fee is charged per request rather than per question. Low-risk work makes no lookup at all, so it adds two calls rather than three.
 
 | Risk | Phases | + research | Typical total |
 |---|---|---|---|
-| Low | 6 | 3 | **9** |
+| Low | 6 | 2 | **8** |
 | Medium | 8 | 3 | **11** |
 | High | 14 | 3 | **17** |
 | Critical | 18 | 3 | **21** |
+
+Those research figures were derived the same way as the workflow comparison above — the graph driven against billing doubles with an isolated knowledge store, free, in under a second — rather than estimated. Both grounding shapes cost the same two calls: with documentation ingested the second call is a briefing, with an empty store it is a scoping analysis. Configuring a ranker tier adds one more call when retrieval returns material; without one, ordering falls back to embedding distance and costs nothing.
 
 Retries and escalation add further: a medium-risk workflow failing validation three times costs 14 phase calls, and one exhausting the loop and recovering through escalation costs 19.
 
@@ -768,7 +777,7 @@ Three things follow, and they are the levers worth pulling:
 pytest tests/ -v
 ```
 
-339 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
+501 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
 
 `tests/test_graph_equivalence.py` is the load-bearing one. The original hardcoded sequencer is kept as `execute_hardcoded`, and those tests assert the graph reproduces it call-for-call across five paths, including the expensive ones. Delete it and the graph stops being a measured baseline.
 
@@ -787,13 +796,12 @@ uvicorn autornd.main:app --host 127.0.0.1 --port 8100
 ## Limitations
 
 - **No code execution.** AutoRnD produces structured text. It does not compile, run, or deploy anything.
-- **The review verdict does not block.** `ship` and `findings` are recorded and surfaced, but a workflow reaching review completes regardless. Only the implement/validate loop gates progress.
 - **Checks cannot see negation.** `criteria_addressed` scores term overlap, so an implementation stating it *removed* something scores highly against a criterion requiring it. `numbers_consistent` covers the numeric case; the general case is a known gap.
 - **Research can be wrong.** It cites its sources, which makes it checkable rather than infallible — and that is the point. Verifiability is the product.
 - **Quality follows the models you choose.** Cheap tiers give cheap results.
 - **No role-based access.** Per-user isolation exists; admin/user roles and team permissions do not.
 - **No streaming.** `/api/workflows/sync` blocks. Use the async endpoint and poll for long runs.
-- **Retrieval and research cost is not attributed.** Those calls do not currently count toward a workflow's `total_cost`.
+- **Review blocks, but does not rework.** A `ship: false` verdict stops the run at the `review_clean` gate. Feeding those findings back into implement and validate would be more useful than blocking, but review and validate can disagree indefinitely, so the loop is not wired until the exhaustion semantics are settled.
 - **Costs are real.** Every workflow calls a paid API. Set `MAX_ITERATIONS` conservatively and watch your provider's spend.
 
 ## Contributing
