@@ -155,3 +155,26 @@ class TestRebuildFunctionModels:
         monkeypatch.setattr(config.settings, "model_premium", "")
         rebuild_function_models()
         assert "premium" not in OpenRouterClient.FUNCTION_MODELS
+
+
+class TestBindAddressDefault:
+    """The default must be the one that cannot be reached from another machine.
+
+    AutoRnD has no rate limiting and spends real money on every request, and
+    both .env.example and the README have always told operators it defaults to
+    loopback. The code said 0.0.0.0 from the initial commit until B3's pass.
+    Containers are unaffected: the bundled Dockerfile passes --host on its own
+    command line, and this value is read only by `python -m autornd.main`.
+    """
+
+    def test_api_host_defaults_to_loopback(self, monkeypatch):
+        monkeypatch.delenv("API_HOST", raising=False)
+        from autornd.config import Settings
+
+        assert Settings().api_host == "127.0.0.1"
+
+    def test_a_lan_bind_is_still_possible_but_deliberate(self, monkeypatch):
+        monkeypatch.setenv("API_HOST", "0.0.0.0")
+        from autornd.config import Settings
+
+        assert Settings().api_host == "0.0.0.0"

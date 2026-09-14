@@ -16,10 +16,39 @@ import sys
 from pathlib import Path
 
 from autornd.config import settings
-from autornd.evals.runner import run_repeated
+from autornd.evals.runner import SweepBudget, run_repeated
 from autornd.evals.scenario import load_scenarios
 from autornd.graph.spec import load as load_spec
 from autornd.routing.openrouter import OpenRouterClient
+
+
+# Every figure here is post-b4cd89f; anything earlier understates by 2.6x-295x.
+# A wide triage sweep costs $0.01-0.03 and a grounding sweep $0.17-0.72, so the
+# default clears real work by a wide margin. What it does not clear is the shape
+# it exists for: a full workflow over the wide suite is 108 units at ~$0.1454,
+# about $15.70. That stops here and needs a deliberate override to proceed.
+SWEEP_CAP_DEFAULT = "1.00"
+
+
+def parse_sweep_cap(value: str) -> SweepBudget | None:
+    """The flag value as a budget, or None when the operator opts out."""
+    if value.strip().lower() == "none":
+        return None
+    return SweepBudget(cap=float(value))
+
+
+def sweep_summary(budget: SweepBudget) -> str:
+    """What the sweep actually spent, and whether it ran to the end.
+
+    Four decimals on the cap as well as the spend: a live check with
+    --max-spend-sweep 0.001 printed "$0.0000 of $0.00", which reads as no
+    budget at all precisely when the budget is tightest.
+    """
+    line = f"sweep budget: ${budget.spent:.4f} of ${budget.cap:.4f}"
+    if budget.skipped:
+        total = budget.started + budget.skipped
+        line += f" · exhausted after {budget.started} of {total} units"
+    return line
 
 
 def _spec(name: str):
@@ -49,11 +78,24 @@ async def main() -> int:
                         help="runs per scenario; models are stochastic, so one "
                              "result is an anecdote")
     parser.add_argument("--max-spend", type=float, default=None, metavar="USD",
-                        help="stop a scenario once it has cost this much. Off by "
-                             "default. Worth setting on any sweep that touches "
-                             "the search tier — one sweep here ran forty minutes "
-                             "and $1.28 before anyone stopped it")
+                        help="stop ONE scenario-run once it has cost this much. "
+                             "Bounds a single repetition, not the invocation — "
+                             "see --max-spend-sweep for that. Off by default. "
+                             "Worth setting on any sweep that touches the search "
+                             "tier: one unattended sweep here ran forty minutes "
+                             "and about $3.30 (the $1.28 it reported at the time "
+                             "came from the meter that did not count search)")
+    parser.add_argument("--max-spend-sweep", default=SWEEP_CAP_DEFAULT,
+                        metavar="USD",
+                        help=f"aggregate ceiling across the WHOLE invocation — "
+                             f"every scenario, every repetition, every compared "
+                             f"workflow. Defaults to ${SWEEP_CAP_DEFAULT}; pass "
+                             f"'none' to disable. With --max-spend also set this "
+                             f"is a hard guarantee: a unit that might not fit is "
+                             f"never started")
     args = parser.parse_args()
+
+    budget = parse_sweep_cap(args.max_spend_sweep)
 
     scenarios = load_scenarios(args.scenarios)
     targets = args.compare or [args.workflow]
@@ -67,18 +109,25 @@ async def main() -> int:
         report = await run_repeated(
             chosen, _spec(name), lambda: OpenRouterClient(),
             _settings(), repeat=args.repeat, timeout=args.timeout,
-            max_spend=args.max_spend,
+            max_spend=args.max_spend, budget=budget,
         )
         for scenario in pinned:
+            # The same budget object, not a fresh one. This loop is the trap:
+            # a per-call budget would let every pinned scenario, and every
+            # compared workflow, spend the whole cap again.
             extra = await run_repeated(
                 [scenario], _spec(scenario.workflow), lambda: OpenRouterClient(),
                 _settings(), repeat=args.repeat, timeout=args.timeout,
-                max_spend=args.max_spend,
+                max_spend=args.max_spend, budget=budget,
             )
             report.results.extend(extra.results)
         report.results.sort(key=lambda r: r.scenario.id)
         reports.append((name, report))
         print(report.render())
+        print()
+
+    if budget is not None:
+        print(sweep_summary(budget))
         print()
 
     if len(reports) > 1:

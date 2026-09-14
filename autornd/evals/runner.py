@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "EvalReport",
+    "SweepBudget",
     "RepeatedReport",
     "RepeatedRun",
     "ScenarioRun",
@@ -41,6 +42,83 @@ __all__ = [
 
 DEFAULT_CALL_CEILING = 40
 DEFAULT_TIMEOUT_SECONDS = 600.0
+
+
+# 0.1 + 0.1 + 0.1 is 0.30000000000000004, which is larger than a 0.30 cap. A
+# budget that refuses the last unit it was sized for is worse than useless, so
+# every comparison carries a tolerance far below a cent.
+_BUDGET_EPSILON = 1e-9
+
+
+@dataclass
+class SweepBudget:
+    """An aggregate ceiling across a whole invocation.
+
+    `--max-spend` bounds one scenario-run, and every repetition builds a fresh
+    client carrying that ceiling — so it says nothing about what an invocation
+    costs. Thirty-six scenarios at three repetitions with `--max-spend 0.25` is
+    a $27 ceiling. This is the same defect as B10, which was a budget counting
+    nodes when the thing worth counting was calls: a limit on the wrong unit
+    reads like a limit.
+
+    Two enforcement modes, both decided before any paid call is made:
+
+    **Fit rule** — when a per-unit cap is also set, a unit starts only if it
+    could not possibly overrun the sweep cap. That makes the sweep cap a hard
+    guarantee and means no unit is ever killed mid-flight by it. It is
+    deliberately conservative: a unit is skipped even when it would have cost
+    far less than its cap. The guarantee is worth the occasional early stop.
+
+    **Backstop** — with no per-unit cap there is nothing to reason about in
+    advance, so the unit starts with its client ceiling set to whatever is left
+    and the existing BudgetExceeded machinery stops it at the crossing.
+
+    Overshoot is then bounded by the calls already in flight — NOT by one call,
+    which is what this was designed assuming. Feasibility, domain review and
+    final review each fan out with asyncio.gather, so a whole roster can be
+    billed between the crossing and the raise; measured at two calls with a
+    two-specialist roster. The bound is the widest fan-out. That is the price
+    of the parallelism, and it is why the fit rule is the stronger guarantee:
+    with a per-unit cap set there is no overshoot at all.
+    """
+
+    cap: float
+    spent: float = 0.0
+    # For the summary line: how much of the sweep actually ran.
+    started: int = 0
+    skipped: int = 0
+
+    @property
+    def remaining(self) -> float:
+        return max(0.0, self.cap - self.spent)
+
+    def can_start(self, per_unit_cap: float | None) -> bool:
+        if per_unit_cap is not None:
+            return self.spent + per_unit_cap <= self.cap + _BUDGET_EPSILON
+        return self.spent < self.cap - _BUDGET_EPSILON
+
+    def unit_ceiling(self, per_unit_cap: float | None) -> float:
+        """Compose the two ceilings rather than duplicating either.
+
+        Under the fit rule the remaining budget is never the binding one, so
+        this returns the per-unit cap; under the backstop there is no per-unit
+        cap and it returns the remainder. One expression covers both.
+        """
+        if per_unit_cap is None:
+            return self.remaining
+        return min(per_unit_cap, self.remaining)
+
+    def record(self, cost: float) -> None:
+        """Called after every unit that started, including failed and aborted
+        ones — an abort still cost whatever it spent before it stopped."""
+        self.spent += cost
+        self.started += 1
+
+    def skip(self) -> str:
+        """Mark one unit as never started, and say so in its own words."""
+        self.skipped += 1
+        return (f"skipped: sweep budget exhausted "
+                f"(${self.spent:.4f} of ${self.cap:.2f} spent)")
 
 
 @contextlib.contextmanager
@@ -143,9 +221,15 @@ class ScenarioRun:
     # id changed hands.
     providers_by_tier: dict[str, list[str]] = field(default_factory=dict)
 
+    # A unit the sweep budget never started is skipped in exactly the sense a
+    # not-applicable one is: it produced no evidence, so it must not dilute a
+    # pass rate or count towards the applicable total.
+    _SKIP_REASONS = ("not applicable", "sweep budget exhausted")
+
     @property
     def skipped(self) -> bool:
-        return not self.results and bool(self.error) and "not applicable" in self.error
+        return (not self.results and bool(self.error)
+                and any(r in self.error for r in self._SKIP_REASONS))
 
     @property
     def passed(self) -> bool:
@@ -227,6 +311,7 @@ async def run_scenario(
     settings_lookup: dict[str, Any],
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
     max_spend: float | None = None,
+    budget: SweepBudget | None = None,
 ) -> ScenarioRun:
     unmet = scenario.unmet_requirements(set(spec.ids))
     if unmet:
@@ -238,10 +323,19 @@ async def run_scenario(
             error=f"not applicable to workflow '{spec.name}': {detail}",
         )
 
+    # Decided before a client is built, so an exhausted sweep costs nothing at
+    # all — not even the first call of a unit that cannot finish.
+    if budget is not None and not budget.can_start(max_spend):
+        return ScenarioRun(
+            scenario=scenario, results=[], calls=0, seconds=0.0,
+            error=budget.skip(),
+        )
+
     ceiling = scenario.max_calls or DEFAULT_CALL_CEILING
+    spend_ceiling = budget.unit_ceiling(max_spend) if budget else max_spend
     # One call of headroom, so exceeding the expectation is reported by the
     # max_calls assertion rather than as an opaque abort.
-    runner = BoundedRunner(client_factory(), ceiling + 1, spend_ceiling=max_spend)
+    runner = BoundedRunner(client_factory(), ceiling + 1, spend_ceiling=spend_ceiling)
     executor = GraphExecutor(spec, runner, settings_lookup)
 
     # A scenario's own timeout wins: it knows what it is measuring.
@@ -268,6 +362,11 @@ async def run_scenario(
         state = ExecutionState(request=scenario.request)
         error = f"{type(exc).__name__}: {exc}"
     seconds = time.perf_counter() - started
+
+    # Every unit that started is billed to the sweep, including one that failed
+    # or was aborted — it spent whatever it spent before it stopped.
+    if budget is not None:
+        budget.record(runner.total_cost)
 
     outcome = RunOutcome(state=state, calls=runner.calls,
                          cost=runner.total_cost, error=error,
@@ -421,12 +520,14 @@ async def run_suite(
     settings_lookup: dict[str, Any],
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
     max_spend: float | None = None,
+    budget: SweepBudget | None = None,
 ) -> EvalReport:
     runs = []
     for scenario in scenarios:
         logger.info("eval: %s", scenario.id)
         runs.append(await run_scenario(
-            scenario, spec, client_factory, settings_lookup, timeout, max_spend))
+            scenario, spec, client_factory, settings_lookup, timeout, max_spend,
+            budget))
     return EvalReport(runs=runs, workflow=spec.name)
 
 
@@ -438,6 +539,7 @@ async def run_repeated(
     repeat: int = 3,
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
     max_spend: float | None = None,
+    budget: SweepBudget | None = None,
 ) -> RepeatedReport:
     results = []
     for scenario in scenarios:
@@ -445,9 +547,13 @@ async def run_repeated(
         for attempt in range(repeat):
             logger.info("eval: %s (%d/%d)", scenario.id, attempt + 1, repeat)
             run = await run_scenario(
-                scenario, spec, client_factory, settings_lookup, timeout, max_spend)
+                scenario, spec, client_factory, settings_lookup, timeout, max_spend,
+                budget)
             runs.append(run)
             if run.skipped:
-                break      # the shape will not change between repetitions
+                # Neither reason changes between repetitions: a workflow that
+                # cannot satisfy a scenario still cannot, and a budget that is
+                # exhausted stays exhausted.
+                break
         results.append(RepeatedRun(scenario=scenario, runs=runs))
     return RepeatedReport(results=results, workflow=spec.name, repeat=repeat)

@@ -26,7 +26,17 @@ from dataclasses import dataclass, field
 from autornd.config import settings
 from autornd.knowledge.store import ingest_text, retrieve
 
+from autornd.routing.openrouter import BudgetExceeded
+
 logger = logging.getLogger(__name__)
+
+# A budget stop is a decision, not a failure. Every handler below exists so a
+# lookup that breaks does not take the workflow with it, and each one would
+# otherwise swallow the ceiling that was meant to end the run — leaving the
+# sweep to keep spending after it had already been told to stop. Worse at the
+# rerank sites, which latch their strategy off any exception: an abort would
+# permanently mark a working rerank API as unsupported. §6.8 records that exact
+# bug from the last time an exception type was caught too widely.
 
 __all__ = ["Finding", "research_gaps"]
 
@@ -148,6 +158,8 @@ async def research_gaps(
         try:
             answer, citations, model = await _lookup(
                 client, request, question, max_tokens=max_tokens)
+        except BudgetExceeded:
+            raise
         except Exception as exc:
             logger.warning("Lookup failed for %r: %s", question[:60], exc)
             continue

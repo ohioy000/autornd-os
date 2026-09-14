@@ -22,7 +22,7 @@ by 2.6×–295×. Never cite one.** Re-measure instead.
   sequence compiled into code.
 - `evals/` is in-package (`autornd/evals/`); scenarios and suites live in
   `evals/` at the root.
-- 17 test files.
+- 19 test files.
 - `engine/workflow.py` is the **legacy** sequencer, kept only as the graph's
   equivalence reference. Do not build on it.
 
@@ -56,7 +56,9 @@ Condensed from `HANDOVER.md` §4.4, which holds the full list.
 - **Private corpora never enter this repo.** `profiles/milkhouse.yaml` stays
   untracked; see `.gitignore`.
 - Pass `--max-spend` on anything touching the search tier — it is by a wide
-  margin the most expensive one.
+  margin the most expensive one. It caps **one scenario-run**, not the
+  invocation; `--max-spend-sweep` does that and is on by default at $1.00
+  (`none` disables). With both set the sweep cap is exact.
 
 Corrections, doc drift and open blueprints:
 [`docs/handover-review.md`](docs/handover-review.md).

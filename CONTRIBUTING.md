@@ -43,8 +43,12 @@ mechanics:
 - **Write the expectation before the run.** Then report the mismatch honestly,
   including "my expectation was wrong". An expectation written afterwards
   measures nothing.
-- **Always pass `--max-spend`.** It bounds a scenario. Anything touching the
-  search tier is by a wide margin the most expensive thing here.
+- **Always pass `--max-spend`.** It bounds one scenario-run — a single
+  repetition, not the whole invocation. The aggregate ceiling is
+  `--max-spend-sweep`, which is **on by default at $1.00**; pass `none` to
+  disable it. Setting both makes the sweep cap exact, because a unit that
+  might not fit is never started. Anything touching the search tier is by a
+  wide margin the most expensive thing here.
 - **Repeat.** Models are stochastic; the same triage request has passed on one
   run and failed on the next. A single result is an anecdote.
 - **Test doubles must bill like the real client** — call `client._account(...)`.

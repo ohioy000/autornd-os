@@ -593,7 +593,7 @@ or design issue.
 |---|---|---|---|
 | B1 | Packaging metadata was unusable | **RESOLVED** | Not one fault but three, and the trivial one was the least of them. `pyjwt` was missing from `pyproject.toml`; flat-layout discovery saw `evals/ profiles/ workflows/` beside `autornd/` and **failed the build**, so `pip install -e .` never reached the ImportError; and no wheel carried `dashboard.html`, so a built install served FileNotFoundError from the dashboard route. One manifest now, plus a CI job that installs from it. |
 | B2 | **Materiality gate is ineffective.** Model marks 2.7–2.9 gaps "blocking" every time (cap is 3); empty **0 times in 33** | high | The cost lever it was built to be, isn't. §6.2 |
-| B3 | `--max-spend` is **per scenario, not per sweep** | high | 108-rep sweep × $0.25 could reach $27. The cap the owner actually wanted when they killed a runaway |
+| B3 | ~~`--max-spend` is per scenario, not per sweep~~ | **RESOLVED** | `--max-spend-sweep` bounds the whole invocation — every scenario, repetition and compared workflow against one budget. Defaults to $1.00, `none` disables. With both caps set no unit starts unless it must fit, so the sweep cap is exact; alone, it stops the crossing unit via the existing client ceiling. Fixing it exposed a second bug: six handlers on the research and rerank paths swallowed `BudgetExceeded`, so an abort did not stop the run |
 | B4 | `wide_legal_ops` under-classifies a 7-year statutory retention schedule on **every** provider | medium | The one genuine calibration gap left; guide's fault, not the serving's |
 | B5 | `wide_wind_energy` fails `risk_at_least` ~1/3, **deliberately left red** | low | Two defensible readings; a risk **floor must never be waivable** (§4.4) |
 | B6 | `independent_check` has **never executed inside a full live workflow** | medium | Wiring proven by test; the tier proven by a direct live call. 9 attempts each hit a *different, mostly legitimate* earlier exit |
@@ -658,11 +658,15 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
    installs from it. The lesson generalises: *the fault that a test suite
    structurally cannot see is the one that ships.* Running the install once
    found two defects that had been invisible to 501 tests.
-2. **B3 — sweep-level spend cap.** `--max-spend` currently bounds one scenario.
-   Add an aggregate ceiling across a suite run; recommended defaults
-   **$0.25/scenario, $1.00/sweep**. Production keeps *no* cap — aborting a live
-   workflow mid-flight destroys work, and search is now structurally bounded at
-   ≈$0.07/workflow.
+2. ~~**B3 — sweep-level spend cap.**~~ **Done.** `--max-spend-sweep`, default
+   $1.00, `none` to disable; `--max-spend` is unchanged and still per scenario-
+   run. Production still keeps *no* cap, for the reason originally given —
+   aborting a live workflow mid-flight destroys work, and search is
+   structurally bounded at ≈$0.07/workflow. Two things worth carrying forward:
+   overshoot under the backstop is bounded by the widest **parallel fan-out**,
+   not by one call, because feasibility and both reviews run their rosters
+   through `asyncio.gather`; and a budget abort now propagates rather than
+   being swallowed by the research and rerank error handlers.
 3. **B2 — make materiality actually discriminate.** A model asked to self-limit
    does not. Options: require a blocking gap to name a quantity/limit/standard
    (checkable, but phrasing-fragile); ask *per gap* "would a wrong assumption

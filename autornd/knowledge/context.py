@@ -17,7 +17,17 @@ from autornd.models.verdicts import domain_key, role_key
 from autornd.knowledge.store import retrieve
 from autornd.models.verdicts import Domain, SpecialistRole
 
+from autornd.routing.openrouter import BudgetExceeded
+
 logger = logging.getLogger(__name__)
+
+# A budget stop is a decision, not a failure. Every handler below exists so a
+# lookup that breaks does not take the workflow with it, and each one would
+# otherwise swallow the ceiling that was meant to end the run — leaving the
+# sweep to keep spending after it had already been told to stop. Worse at the
+# rerank sites, which latch their strategy off any exception: an abort would
+# permanently mark a working rerank API as unsupported. §6.8 records that exact
+# bug from the last time an exception type was caught too widely.
 
 DOCS_DIR = Path(__file__).resolve().parent.parent.parent / "docs"
 MAX_CONTEXT_CHARS = 32000
@@ -262,6 +272,8 @@ async def expand_queries(client, request: str) -> list[str]:
         )
         queries = [q for q in data.get("queries", []) if isinstance(q, str) and q.strip()]
         return queries[:4] or [request]
+    except BudgetExceeded:
+        raise
     except Exception as exc:
         logger.warning("Query expansion failed (%s) — searching the raw request", exc)
         return [request]
@@ -316,6 +328,8 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
             if findings:
                 out += "\n\n" + render_findings(findings)
         return out
+    except BudgetExceeded:
+        raise
     except Exception as exc:
         logger.warning("Briefing synthesis failed (%s) — passing excerpts through", exc)
         return raw
@@ -360,6 +374,8 @@ async def rerank_chunks(
                 _rerank_mode = "native"
                 return picked[:keep]
             logger.warning("Rerank API returned nothing usable for %s", model)
+        except BudgetExceeded:
+            raise
         except Exception as exc:
             if _rerank_mode is None:
                 logger.info(
@@ -400,6 +416,8 @@ async def rerank_chunks(
             _rerank_mode = "listwise"
             return picked[:keep]
         logger.warning("Listwise ranking returned no usable order")
+    except BudgetExceeded:
+        raise
     except Exception as exc:
         logger.warning("Listwise ranking failed (%s)", exc)
 
@@ -498,6 +516,8 @@ async def analyze_request(client, request: str) -> tuple[str, list[str]]:
             ),
             temperature=0.1,
         )
+    except BudgetExceeded:
+        raise
     except Exception as exc:
         logger.warning("Request scoping failed (%s) — phases run on the request alone", exc)
         return "", []

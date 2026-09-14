@@ -8,7 +8,15 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite+aiosqlite:///./autornd.db"
 
-    api_host: str = "0.0.0.0"
+    # Loopback, because AutoRnD has no rate limiting and spends real money:
+    # the safe default is the one that cannot be reached from another machine.
+    # Read only when launching via `python -m autornd.main` — the bundled
+    # Dockerfile passes --host 0.0.0.0 on its own command line, so containers
+    # are unaffected. Serving a LAN from the module entry point now needs
+    # API_HOST=0.0.0.0 set deliberately. This was 0.0.0.0 since the initial
+    # commit while both .env.example and the README said it defaulted to
+    # loopback; the documents were right about what it should be.
+    api_host: str = "127.0.0.1"
     api_port: int = 8100
 
     log_level: str = "INFO"
