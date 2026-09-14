@@ -229,7 +229,12 @@ class ImplementVerdict(BaseModel):
     done: bool
     green: bool
     red_cause: Optional[str] = None
-    iteration: int = Field(ge=1)  # upper bound is settings.max_iterations (1-20)
+    # Defaulted, not required. `run_implement` overwrites this with the loop's
+    # own counter the moment the reply lands, so demanding the model echo a
+    # number we are about to discard buys nothing — and cost a full retry
+    # whenever it echoed one we would not have accepted.
+    # Upper bound is settings.max_iterations (1-20).
+    iteration: int = Field(default=1, ge=1)
     summary: str
     domain_concerns: list[str] = Field(default_factory=list)
 

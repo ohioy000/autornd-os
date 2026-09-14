@@ -62,6 +62,14 @@ class PhaseRunner:
         # Every failed attempt, for the escalation autopsy to read.
         self.failure_log: list[dict[str, Any]] = []
         self.resolution_directive: str | None = None
+        # Every build-loop iteration, failed or not, for the results log to
+        # keep. `failure_log` records only reds and is cleared at escalation,
+        # and `state.outputs` is last-write-wins — so a three-iteration run left
+        # exactly one implement verdict behind and the question "did the
+        # implementation actually change between attempts?" was unanswerable
+        # from a finished run. This is the history, retained.
+        self.iterations: list[dict[str, Any]] = []
+        self._spend_at_last_iteration = 0.0
 
     @property
     def total_cost(self) -> float:
@@ -264,6 +272,23 @@ class PhaseRunner:
                 "red_cause": verdict.red_cause,
                 "evidence": verdict.evidence,
             })
+
+        # Validate closes an iteration, so this is where one is complete enough
+        # to record. Cost is a delta on the client's running total, which counts
+        # every path including research and rerank.
+        spend = self.client.spend
+        self.iterations.append({
+            "iteration": state.iteration,
+            "implement_green": implement.green,
+            "implement_red_cause": implement.red_cause,
+            "implement_summary": implement.summary,
+            "domain_concerns": list(implement.domain_concerns or []),
+            "validate_green": verdict.green,
+            "validate_red_cause": verdict.red_cause,
+            "validate_evidence": list(verdict.evidence or []),
+            "cost": round(spend - self._spend_at_last_iteration, 6),
+        })
+        self._spend_at_last_iteration = spend
         return verdict, [response]
 
     async def _phase_escalation(self, node: Node, state: ExecutionState):

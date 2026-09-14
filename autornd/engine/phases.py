@@ -11,6 +11,8 @@ import json
 import logging
 from typing import Any
 
+from pydantic import ValidationError
+
 from autornd.config import settings
 from autornd.models.verdicts import (
     domain_key,
@@ -582,8 +584,19 @@ Original request:
 
     lead, reviewers = select_lead(specialists, primary_domain)
 
-    # Step 1: Lead implements
-    lead_data, lead_resp = await lead.run(client, implement_prompt)
+    # Step 1: Lead implements.
+    #
+    # The schema goes INTO the call, not just around the result. Without it a
+    # reply missing one field was fatal on the first attempt, while every other
+    # schema-bearing phase got three tries and a note saying what was rejected —
+    # measured twice in one four-trace run (a verdict with no `green`, another
+    # with no `done`), each killing a workflow outright. The post-reply
+    # mutations below are unaffected: chat_json returns the parsed dict after
+    # validating it, so validating in the retry and constructing afterwards are
+    # the same two steps in the same order, exactly as run_validate does it.
+    lead_data, lead_resp = await lead.run(
+        client, implement_prompt, schema=ImplementVerdict,
+    )
     responses.append(lead_resp)
     lead_data["iteration"] = iteration
     domain_concerns: list[str] = []
@@ -727,8 +740,21 @@ Original request:
 
     for result in successful:
         for f in result.get("findings", []):
-            all_findings.append(f)
-            if f.get("severity") in ("critical", "high"):
+            # Normalise before reading a key off it. ReviewFinding accepts a
+            # bare string, and a dict carrying its detail under any of eight
+            # aliases — leniency added because a review using `issue` instead of
+            # `detail` lost three whole reviews at the final phase. That
+            # leniency was unreachable from here: `f.get("severity")` on a bare
+            # string raises AttributeError *after* every reviewer has been paid,
+            # so the shape the schema was widened to accept was the shape that
+            # crashed the aggregation.
+            try:
+                finding = ReviewFinding.model_validate(f)
+            except ValidationError:
+                logger.warning("Unusable review finding from %s: %r", result, f)
+                continue
+            all_findings.append(finding.model_dump())
+            if finding.severity in ("critical", "high"):
                 any_blocking = True
 
     if failed_specialists:
@@ -853,12 +879,19 @@ Failure Log:
 Original Request:
 {request}"""
 
+    # The same bypass as implement, in the worst possible place: the longest and
+    # messiest input in the system, read at the most expensive moment a run can
+    # reach — after the loop has already burned every iteration it was given.
+    # A malformed autopsy there lost the whole run and everything it had paid
+    # for. Extras are safe to pass through: no verdict forbids them, and this
+    # prompt asks for more than the verdict names.
     data, response = await client.chat_json(
         function="escalation",
         system_prompt=system_prompt,
         user_message=user_message,
         temperature=0.1,
         max_tokens=settings.escalation_max_tokens,
+        schema=EscalationVerdict,
     )
     verdict = EscalationVerdict(**data)
     return verdict, response

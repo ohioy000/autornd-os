@@ -178,6 +178,7 @@ class ResultsLog:
                 for r in run.results
             ],
             "path": run.path,
+            "iterations": run.iterations,
             "verdicts": run.verdicts,
         })
 
@@ -309,6 +310,8 @@ class ScenarioRun:
     # the `status` assertion already, but a result file needs it in its own
     # right: "blocked" and "failed an assertion" are different outcomes.
     status: str = ""
+    # One entry per build-loop iteration; see PhaseRunner.iterations.
+    iterations: list[dict[str, Any]] = field(default_factory=list)
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -490,6 +493,7 @@ async def run_scenario(
                            in runner.client.providers_by_function.items()},
         verdicts=verdicts,
         status=str(getattr(state, "status", "") or ""),
+        iterations=list(getattr(runner, "iterations", []) or []),
     )
 
 
