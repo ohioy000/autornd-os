@@ -126,7 +126,32 @@ each tier, flushed as it is written — so an interrupted sweep no longer discar
 what it has already paid for, and a failing sector can be diagnosed months later
 without reproducing it.
 
-The suite stands at **561 tests** as of `1d06005`, up from 85 at 0.1.0.
+**The independent pass was observed running**, for the first time, inside a
+complete workflow — a minimal probe shape reaches it by construction, and the
+trace is kept as the regression case.
+
+**Three phases could not retry.** The client validates a reply against a schema
+and retries with a note saying what was rejected, but the implement and
+escalation phases never passed their schema in, so a single malformed reply
+ended a run outright — and a review's findings loop read a key off raw items,
+crashing on exactly the shapes the finding schema had been widened to accept.
+Two of four convergence traces had been dying on the first of these and being
+read as convergence failures, which is how a diagnosis came to rest on evidence
+that never reached the thing it was evidence about. All three are repaired, with
+tests pinning every schema-bearing phase's call site, and errors now carry the
+provider's own message instead of only a status code.
+
+**The search tier's cheap sibling ties the expensive one** across three
+repetitions — identical mean, identical per-repetition sequence — at an eighth
+of the cost per lookup. A larger token budget on the cheap model costs nothing
+and recovers fewer figures, so the accuracy curve measured on one model does not
+transfer to the other.
+
+**Evals keep per-iteration history**, so whether an implementation changes
+between attempts is answerable from a finished run. It does change, by thousands
+of characters, and still fails a different criterion each round.
+
+The suite stands at **576 tests** as of `3515d16`, up from 85 at 0.1.0.
 
 ## [0.1.0] — 2026-09-12
 

@@ -2497,7 +2497,7 @@ free.
 
 ## 14. Blueprint 007 — Repair the instrument, pin the second tier, settle the search swap, re-ask B7 (verbatim, as received)
 
-**Status: not executed at the time of recording.** Execution record: §14.2.
+**Status: executed 2026-09-14 — see §14.2.** Recorded here unexecuted first.
 
 Pre-flight at recording, all clear: key live, `triage:Alibaba` present in `.env`,
 and A2's two conditions confirmed — `EscalationVerdict` **does** carry
@@ -3043,3 +3043,73 @@ disagreed is sitting in the same state.
 
 Two of four now fail, in **two different ways, neither of which is a stall**.
 D5's stall detector would have fired on neither.
+
+### 14.2 Execution record
+
+Executed at `66b8be7`→. Suite 561 → **576**, CI green. Spend **≈$1.95**:
+Part B $0.3795, Part C $1.1676 + $0.1919 + $0.1799, Part D $0.2746 + $0.0903,
+Part A free.
+
+#### Departures
+
+1. **Part B stopped at two servings of six**, on the owner's call and for a
+   reason the executor had already flagged: B2 requires probe requests that
+   reliably yield `ready=true`, so they are easy, and easy requests do not
+   provoke the burn. Four more arms would have cost ~$0.85 to confirm what two
+   showed and still not tested the burn. My "burn is model-intrinsic" prediction
+   is recorded **untested**, not confirmed.
+2. **`plan_ready` was not asserted.** The vocabulary has no such assertion and
+   B2 says reuse rather than invent, so readiness and criteria quality are read
+   from retained verdicts instead.
+3. **Parts C and D ran concurrently** to halve wall time. This did **not** cause
+   the 403 — see below — but the overlap did make the failure harder to read.
+4. **One unplanned repair**: errors now carry the provider's message. Instrument
+   repair under the permission boundary, so taken without a ruling; it is what
+   turned a wrong diagnosis into the right one.
+
+#### What execution found that the blueprint did not anticipate
+
+- **A workspace weekly spend ceiling exists and is separate from credit.** It
+  stopped every paid run at $10/week while $3.54 of purchased credit remained
+  and the credits endpoint answered normally. Checking the balance confirmed the
+  wrong thing convincingly.
+- **A status code is not a diagnosis, and this client threw away the half that
+  was.** The 403 was first attributed to rate limiting from concurrent runs.
+  That was wrong; the body said so on the first failed request and
+  `raise_for_status` discarded it. Recorded in §6.8 and fixed at all three sites.
+- **A 403 inside a lookup is silently swallowed by design**, so poisoned units
+  ran, found nothing and scored zero — indistinguishable from a model that found
+  nothing. The retained per-unit lookup counts are what separated them. **Any
+  arm's score must be read beside its lookup count**, which is a permanent
+  lesson rather than an incident.
+- **Run cheap arms first.** Arm 1 spent $1.12 of $1.17 on search and exhausted
+  the weekly ceiling mid-arm-2; arms 2 and 3 together cost a sixth of it. The
+  expensive arm is both the most likely to exhaust a budget and the one most
+  affordable to lose and repeat.
+- **Converged-on-red is real**, and validate — not the channel, not escalation
+  speed — was the judge that erred. See the Part D write-up.
+- **A larger token budget can reduce accuracy.** §6.3's curve does not transfer
+  between models in the same family.
+
+#### Predictions scored
+
+| prediction | outcome |
+|---|---|
+| B4(3) spread smaller than triage's §6.1 spread | **right, and not close** |
+| mine: burn is model-intrinsic | **untested** — the probe cannot answer it |
+| C2: arm 3's tokens cost ≈nothing | **right** ($0.0061 vs $0.0062) |
+| C2/mine: arm 3 ≥ arm 2 | **wrong** — 3.00 vs 3.67 |
+| mine: arm 2 ≈ arm 1 at three reps | **right** — exact tie |
+| D3: `numeric_consistency` converges ≤3 | right |
+| D3: `derived_tolerances` reaches the loop, converges ≤3 | right |
+| D3: `crossref_integrity` converges ≤2 | **wrong** — escalated after 5+3 |
+| D6: at least one converged-on-red | **right** |
+| mine: no converged-on-red | **wrong** |
+
+#### Left undone, deliberately
+
+- **No B7 mechanism**, per instruction. The traces now argue against the most
+  obvious lever: neither failure is a stall.
+- **The search swap is not adopted** — `.env` is the owner's.
+- **The architecture pin is not ratified**, and on this evidence buys little.
+- **Part B's burn question is open** and needs a probe built on hard requests.
