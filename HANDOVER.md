@@ -602,7 +602,7 @@ or design issue.
 | B4 | ~~`wide_legal_ops` under-classifies on every provider~~ | **RESOLVED — the premise was wrong** | It is the serving, not the guide. Pinned six ways: fails 3/3 on OpenInference, DigitalOcean and unpinned; passes 3/3 on Alibaba and AtlasCloud, 2/3 on StreamLake. Under the adopted `triage:Alibaba` pin it passes ~8/9, and its rare excursions go in **both** directions. No guide edit was made — there was no systematic failure left to target. §12.3, §12.4 |
 | B5 | `wide_wind_energy` fails `risk_at_least` ~1/3, **deliberately left red** | low | Two defensible readings; a risk **floor must never be waivable** (§4.4) |
 | B6 | ~~`independent_check` has never executed inside a full live workflow~~ | **RESOLVED — observed 2026-09-14** | Ran end to end on `independent-check-probe`: 10 calls, 54s, $0.0212, returning `ship=true, confidence=high, critical_issues=[]`. Trace at `docs/traces/b6-independent-check.json`. Took seven further attempts; every exit was legitimate and the *probe request* was what kept failing — see §13.4 |
-| B7 | Build loop does not converge on complex requests | medium | Earlier root cause diagnosed: implementer has no filesystem, validator rejected nonexistent work. `SPECIALIST_OUTPUT_CONTRACT` mitigates; not fully solved |
+| B7 | Build loop convergence — **premise untested** | medium | The recorded claim rests on evidence that never reached the loop: 2 of 4 traces died on an `ImplementVerdict` schema violation before the first iteration completed (006 §13). The instrument fault is isolated and repaired (§14 Part A); the two runs that *did* loop both converged, one in a single iteration and one in three. Re-run evidence at §14 Part D. The earlier structural diagnosis — implementer has no filesystem, validator rejects unverifiable work — still stands as one axis |
 | B8 | Shipped-default models fail on hard requests | medium | Documented rather than changed, per owner's instruction. §6.4 |
 | B9 | No DB migrations (no Alembic) | low | Schema changes are destructive |
 | B10 | `ambiguous_request` — historical "mystery failure" | **RESOLVED** | It was B3's sibling: a `max_calls: 4` baseline set when the budget counted *nodes*. Measured 6. Now 8 |
@@ -653,7 +653,14 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
     Estimates set expectations and never gate anything. Four blueprints in, the
     estimates have been the wrong part every time while the mechanisms held.
     The protocol is in `docs/handover-review.md` §0.
-14. No linter/formatter is configured. Match surrounding style: 4-space indent,
+14. **Check a recorded diagnosis before building on it.** A finding in this
+    document is evidence of what happened once, not a standing fact. Where work
+    targets one, state its premise as a testable claim and test it before
+    spending on the fix — and where a cheap test exists, spend the first dollar
+    there. B7 is why: "the build loop does not converge" was carried as
+    established through three blueprints, and half its evidence turned out to be
+    runs that died before reaching the loop.
+15. No linter/formatter is configured. Match surrounding style: 4-space indent,
     `from __future__ import annotations`, type hints throughout, ~88-col soft
     wrap, module docstrings that explain rationale.
 
@@ -949,6 +956,24 @@ important lesson about this codebase:
 - The eval suite was reading a developer's **local Chroma directory**: every gap
   came back pre-answered and not one test made a lookup.
 
+- **Two phases never opted into the schema retry at all** (found 2026-09-14).
+  `chat_json` validates against a schema and retries three times with a note
+  saying what was rejected; `implement` and `escalation` passed no schema and
+  constructed their verdicts afterwards, so one malformed reply raised and ended
+  the run. Implement killed **two of four live traces**, and those deaths were
+  read as convergence failures — which is how B7's premise came to rest on
+  evidence that never reached the loop. Escalation had it worse: the longest
+  input in the system, read only after the loop has burned every iteration.
+- **Leniency at the verdict layer, defeated three lines upstream** (same date).
+  `ReviewFinding` accepts a bare string or a detail under eight aliases, added
+  after a reviewer using `issue` lost three whole reviews. The aggregation still
+  called `f.get("severity")` on the raw item, so the exact shape the leniency
+  existed for raised `AttributeError` **after every reviewer had been paid**.
+
+Both were invisible to the suite, which was green before and after, because test
+doubles return well-formed verdicts. Pinning the call sites is the only thing
+that catches this class — `tests/test_schema_wiring.py` now does.
+
 **Therefore: live-test multi-request sequences. The unit suite is necessary and
 nowhere near sufficient.**
 
@@ -958,7 +983,7 @@ nowhere near sufficient.**
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 501 tests, ~9 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 573 tests as of `977bfa1`, ~10 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \

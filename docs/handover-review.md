@@ -32,6 +32,19 @@ shape is stable enough to state once:
    `HANDOVER` §6. Source a number from §6 before asserting it.
 4. **Expectations are pre-registered**, and a wrong one is reported as wrong
    rather than quietly adjusted to match the result (convention 7).
+5. **The premise rule** (binding from Blueprint 007): where a part targets a
+   recorded diagnosis, the diagnosis is stated as a testable claim and checked
+   before it is built on, and where a cheap test exists the first paid dollar
+   goes there. A finding in this document is evidence of what happened once, not
+   a standing fact. B7 earned it — its premise was carried as established
+   through three blueprints, and half its evidence was runs that died before
+   reaching the thing they were evidence about.
+6. **The permission boundary** (same): *instrument repair* — crash-proofing a
+   phase against well-formed-enough model output, retry wiring, retention,
+   accounting — needs no ruling and can be done as found. *Changes to what a
+   phase means* — verdict semantics, loop behaviour, prompt text that steers
+   judgment — need one. The line is whether the change alters what the harness
+   would conclude, not how reliably it reaches a conclusion.
 
 ---
 
