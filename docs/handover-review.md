@@ -860,7 +860,7 @@ three sites that have to move together.
 
 ## 10. Blueprint 003 — B3, the sweep-level spend cap (verbatim, as received)
 
-**Status: not executed at the time of recording.** Same protocol as 001 and 002.
+**Status: executed 2026-09-14 — see §10.2.** Recorded here unexecuted first. Same protocol as 001 and 002.
 The execution record is §10.2.
 
 ```text
@@ -1025,3 +1025,145 @@ wrong unit), and that every figure cited is post-b4cd89f. If D1 lands
 code-side, its commit (or its paragraph) must say it is a behavior change
 and what a LAN user must now set.
 ```
+
+### 10.2 Execution record — 2026-09-14
+
+Executed at `2214b05`, one commit. Suite 504 → **527**; 23 tests added, every
+double billing. CI green. Live cost: **$0.0009** total, against a $0.01
+authorisation.
+
+#### Every value touched
+
+| value | from | to | why |
+|---|---|---|---|
+| `--max-spend-sweep` | — | new, default `$1.00` | A1/A2 |
+| `config.py` `api_host` | `0.0.0.0` | `127.0.0.1` | D1 — **behaviour change**, below |
+| `.env.example` no-docs grounding | "One small call" | two calls | D2, re-derived |
+| `CLAUDE.md` test files | 17 | 19 | D3 |
+| `README.md` test command | `pytest tests/ -v` | `.venv/bin/python3 -m pytest tests/ -q` | D4 |
+| README badge / Testing / tree | 504 | 527 | forced by the G2 guard |
+| `sweep_summary` cap format | `:.2f` | `:.4f` | found by the live run, below |
+| `research.py` ×1, `context.py` ×5 | swallow `BudgetExceeded` | re-raise | found while building, below |
+
+Nothing else was touched. No "while here" edits.
+
+#### What building it found — the bug worth more than the feature
+
+C6 asked that the abort land on the search tier. It did not: the run continued
+past the crossing and died on the *next* phase. Six handlers catch `Exception`
+around a paid call — `research.py:151` and `context.py` at query expansion,
+briefing synthesis, both rerank strategies, and scoping — and every one of them
+swallowed `BudgetExceeded`. Each exists for a good reason (a failed lookup must
+not sink a workflow) and each was also eating the signal that says *stop
+spending*.
+
+Two of them are worse than the rest: the rerank sites **latch their strategy**
+off any exception, so a budget abort would have permanently marked a working
+rerank API as unsupported for the life of the process. That is §6.8's "the
+rerank fallback latched on any exception" happening again, to a new exception
+type, in the same lines that were fixed the first time. A budget stop is a
+decision, not a failure. All six now re-raise.
+
+Without this the sweep cap does not work — it would have shipped looking
+correct, since every unit test that does not cross a budget inside a research
+call passes either way.
+
+#### The pre-registered overshoot bound was wrong
+
+A3 states overshoot under the backstop is "bounded by a single model call". It
+is not. Feasibility, domain review and final review each run their rosters
+through `asyncio.gather` (`phases.py:310`, `512`, `725`), so a whole roster can
+bill between the crossing and the raise — **measured at two calls** with a
+two-specialist roster, giving $1.30 against a $1.20 cap where the blueprint
+predicted $1.25. The true bound is the widest parallel fan-out.
+
+The test is named for what it measures rather than adjusted quietly, the
+docstring says the same, and a companion test asserts the contrast that makes
+the looser bound acceptable: **with both caps set there is no overshoot at
+all**, because no unit that might not fit is ever started. The fit rule is the
+strong guarantee; the backstop is the weak one.
+
+#### The live proof — expectation wrong, mechanism right
+
+Pre-registered: "aborts after roughly 4–6 of 36 units (per-unit ≈ $0.0002),
+spent ≈ the cap, skip markers present, exit 0".
+
+**First run, as specified (`--max-spend-sweep 0.001`): all 36 units ran, total
+$0.0007, nothing skipped.** The cost estimate was 10× high. A `triage-classify`
+unit costs about **$0.00002**, not $0.0002 — which is exactly the figure
+`HANDOVER` §2.2 already claims for this workflow, so the blueprint's estimate
+was the outlier, not the measurement. The whole 36-sector sweep fits inside a
+tenth of a cent.
+
+So the cap was re-run at `0.0002`, tight enough to actually bite:
+
+```
+12/16 scenarios passed every repetition · 16 calls · 45.8s · $0.0002
+sweep budget: $0.0002 of $0.0002 · exhausted after 16 of 36 units
+```
+
+Sixteen units ran, twenty carried the skip marker with its reason, spend landed
+**exactly on the cap with no overshoot**, and the pass rate reads `12/16` rather
+than `12/36` — the skipped units are correctly out of the applicable count.
+
+One claim in A4 is *not* demonstrated by this run: **exit 0 on exhaustion.**
+Both runs exited 1, because genuine assertion failures were present among the
+units that did run. Exhaustion alone does not fail a run — the exit rule is
+"every result passed or skipped" and skipped now includes budget skips — but
+this live run cannot be the evidence for it; the unit tests are.
+
+The first run also printed `sweep budget: $0.0000 of $0.00`, because the cap was
+formatted to two decimals and a $0.001 cap rounds to nothing precisely when the
+budget is tightest. Fixed to four decimals, with a regression test. A defect
+that only a live run with an unusual value would have surfaced.
+
+**Incidental, not this blueprint's business but worth recording:** unpinned, the
+sweep scored **31/36** served by a mix of OpenInference and StreamLake, which
+sits exactly where §6.1 predicts an unpinned mix. Four of the five failures are
+already-known: `legal_ops`, `building_services` and `geotechnical`
+under-classifying (B4 and the §6.1 cheap-serving pattern), with `appsec` and
+`textiles` over-classifying on `risk_at_most`. No calibration was attempted and
+none should be until the pin sweep — §6.1.
+
+#### Credentials
+
+The key in the local `.env` was dead: the first attempt returned 401 on all 36
+units and billed nothing. A replacement was supplied in conversation and written
+only to the untracked, gitignored `.env`. **It should be rotated** — it has been
+pasted into a chat transcript, which is the same exposure `HANDOVER` §3.6
+already flags for the earlier keys. `git ls-files` still shows `.env.example` as
+the only env file tracked.
+
+#### Departures
+
+1. **`api_host` is a behaviour change, taken code-side as instructed.** The
+   default has been `0.0.0.0` since the initial commit while both `.env.example`
+   and the README said loopback; the documents were right about what it should
+   be. Verified before changing: the value is read only by
+   `python -m autornd.main`, and the Dockerfile passes `--host 0.0.0.0` on its
+   own command line, so containers are unaffected. **Anyone serving a LAN from
+   the module entry point must now set `API_HOST=0.0.0.0` deliberately.**
+2. **One commit rather than two.** The G2 badge guard couples the test count to
+   the README, and D1 adds tests, so splitting would have left the first commit
+   failing its own guard. D1 gets its own paragraph in the message, which the
+   blueprint allows.
+3. **C6 uses a billing double built here, not the existing grounding doubles.**
+   The ones in `test_knowledge.py` are `AsyncMock`s that never call `_account`,
+   so they cannot exercise a spend ceiling at all — convention 9 is the reason
+   the blueprint's instruction could not be followed literally. The new double
+   reuses `test_evals`'s `scripted()` for phase replies and adds only the
+   grounding shapes, plus a mocked `chat`: `test_evals`'s double leaves `chat`
+   live, which is safe there only because its replies never produce unknowns and
+   so never reach the search path.
+
+#### Left undone, deliberately
+
+- **No calibration.** B4 and B2 wait for the owner's pin sweep (§6.1). The 31/36
+  above is an observation, not a tuning input.
+- **No cap on the production path.** Unchanged and deliberate: aborting a live
+  workflow destroys work, and search is structurally bounded at ≈$0.07.
+- **`--max-spend` semantics unchanged**, per A5. Only its help text moved, and
+  the pre-epoch "$1.28" is now "$3.30" with a note that the smaller figure came
+  from the meter that did not count search.
+- Still queued from earlier passes: the **Docker build** CI job, and
+  **`profiles/example.yaml`** declaring no `domains:`/`roles:`.
