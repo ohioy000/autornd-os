@@ -2479,3 +2479,211 @@ free.
   `.env` is the owner's (G-3).
 - **Per-iteration capture** in the results log, which this blueprint's own
   Part D wanted and could not have.
+
+---
+
+## 14. Blueprint 007 — Repair the instrument, pin the second tier, settle the search swap, re-ask B7 (verbatim, as received)
+
+**Status: not executed at the time of recording.** Execution record: §14.2.
+
+Pre-flight at recording, all clear: key live, `triage:Alibaba` present in `.env`,
+and A2's two conditions confirmed — `EscalationVerdict` **does** carry
+`resolution_directive` (§3.3 is abbreviated), and no verdict sets
+`extra="forbid"` (all default to `ignore`), so schema validation tolerates model
+extras.
+
+```text
+BLUEPRINT 007 — Repair the instrument, pin the second tier, settle the search
+swap, and re-ask B7's question with a working instrument.
+
+Origin: 006's Part D — two of four traces died on ImplementVerdict schema
+violations before the loop was ever reached, so B7's recorded premise ("the
+loop does not converge") is UNTESTED, not falsified. The advisor's source read
+found the bypass is not implement alone: escalation has the identical defect,
+and review's aggregation crashes on shapes ReviewFinding was built to accept.
+Repair the class, then re-run.
+
+Protocol (as 001–006): paste verbatim into docs/handover-review.md as §14
+BEFORE executing; append §14.2 after. Provenance rule binding, counts
+included. NEW — the premise rule, binding from here: where a part targets a
+recorded diagnosis, state its premise as a testable claim and pre-register
+the check; the first paid dollar tests the claim where a cheap test exists.
+Permission boundary, now codified: instrument repair (crash-proofing phases
+against well-formed-enough model output, retry wiring, retention, accounting)
+needs no ruling; changes to what a phase MEANS (verdict semantics, loop
+behavior, judgment-steering prompt text) do.
+
+Prerequisites: suite green before and after (re-derive the count); CI green
+before finishing. Part 0 pre-flight: key live per the 005 adjudication;
+the triage pin (triage:Alibaba) present in .env — every paid part below
+env-prefixes it alongside any new pins.
+
+PART A — instrument repair (FREE; before any paid part)
+
+A1. implement passes its schema. run_implement currently calls
+    lead.run(client, implement_prompt) with no schema and constructs
+    ImplementVerdict(**lead_data) afterwards, so a reply missing one field
+    is fatal on attempt one — measured twice in 006's traces. Fix: pass
+    schema=ImplementVerdict (mirror run_validate's existing call shape).
+    Do NOT restructure the post-reply mutations (iteration overwrite, green
+    flip on critical domain review, domain_concerns) — they operate on the
+    validated dict exactly as now; chat_json returns the parsed dict after
+    validating it, so validation-in-retry and construction-after are
+    compatible. [measured: 006 §13 — derived_tolerances missing green,
+    requires_execution missing done]
+A2. escalation passes its schema — the same defect, found by the advisor's
+    read. run_escalation_autopsy calls chat_json without schema and
+    constructs EscalationVerdict(**data) after, on the longest messiest
+    input in the system, at the most expensive moment a run can fail (after
+    the loop has burned max_iterations). Pass schema=EscalationVerdict.
+    Pre-flight: confirm EscalationVerdict carries resolution_directive (the
+    prompt demands it and the recovery loop consumes it; §3.3 may be
+    abbreviated) and that no verdict sets extra="forbid" — schema validation
+    must tolerate model extras, since escalation's prompt asks for fields
+    the verdict may summarize differently.
+A3. review aggregation tolerates every shape ReviewFinding accepts. The
+    findings loop calls f.get("severity") on raw items, so a specialist
+    returning findings as bare strings — the exact shape the lenient
+    model_validator(before) exists for — raises AttributeError after every
+    review call is paid. Normalize each finding through ReviewFinding (or
+    guard with isinstance, mirroring run_domain_review's concerns loop)
+    BEFORE the severity check. The leniency must be reachable, and a test
+    must pin it: findings as bare strings, as dicts with aliased detail
+    keys, as dicts missing severity.
+A4. ImplementVerdict.iteration: relax to Field(default=1, ge=1). The phase
+    overwrites iteration unconditionally [read: phases.py run_implement],
+    so requiring the model to echo it buys nothing and costs a retry when
+    echoed wrong. Comment carries that reasoning.
+A5. Class audit + guard: for EVERY phase whose workflow node declares a
+    schema (triage, plan, implement, validate, review, escalation,
+    doublecheck), a capture-double test pins that the phase passes that
+    schema into its client call. Phases that deliberately do not
+    (feasibility, domain_review — free-form mutators) get a test each
+    documenting the exception with the reason. File docstring states the
+    pattern in force: a declared schema and an unpinned call site is how
+    006's traces died and how §6.8's latch shipped — the class has bitten
+    three times; the test set is the insurance against a fourth.
+    Also pin A3's shapes here.
+A6. Per-iteration retention — 006's own flagged gap: the results log keeps
+    final state, so D4's drift question was unanswerable and the history
+    died with PhaseRunner.failure_log. Unit records gain an "iterations"
+    list: per build-loop iteration, the implement summary (full text is
+    fine — the file is local and gitignored), red_cause, green, validate
+    green, and that iteration's cost. Source it from the run's
+    ExecutionState/trace after completion; find the seam, the requirement
+    is the requirement. D4's drift measure (length delta, rough similarity)
+    becomes computable next run.
+
+PART B — architecture tier: probe and pin (≈ $0.10–0.40, caps bound)
+
+B1. Pre-flight (free): from §13.1's retained model_used/providers, name what
+    actually served and burned on the architecture tier across 006's four
+    traces, and record it in §14.1. The pin below targets whatever
+    MODEL_ARCHITECTURE is in .env at run time; record that id too. The
+    model-swap decision is the owner's (G-3) and stays separate.
+B2. Build workflows/plan-probe.yaml — the triage-classify trick applied to
+    architecture: triage → context → plan, nothing else. A probe request
+    must reliably yield plan.ready=true (three short feasible scenarios
+    authored for the probe; read evals/scenario.py and reuse its assertion
+    vocabulary rather than inventing one).
+B3. Sweep the servings: one invocation per provider that serves the
+    architecture model (six served it in 006), env-prefixed
+    OPENROUTER_PROVIDER_ORDER="triage:Alibaba,architecture:<Name>", 2
+    repetitions, caps --max-spend 0.10 --max-spend-sweep 0.50 each.
+    Assertions per unit: PlanVerdict parses, ready=true, criteria pass the
+    placeholder validators; the JSONL's retained token data shows burns
+    (16k tokens, no text) and stubs where they occur.
+B4. Pre-registered expectations [prediction, the advisor's, labelled]:
+    at least one serving reproduces the §6.4 signature (burn or stub) if
+    the current model is the §6.4 model; servings differ measurably in
+    completion_tokens per plan; the spread across servings is smaller than
+    triage's §6.1 spread (plans are longer, more constrained outputs).
+    Wrong is recorded either way.
+B5. Proposal rule (as 005-A4): propose exactly one serving — most units
+    passing, then cheapest, with the row that justifies it. Record the
+    table in §14.1. The proposal env-prefixes Parts C and D; the owner
+    ratifies it into .env alongside the existing pin (one line, G-2 form).
+
+PART C — search swap, settled (≈ $1.40, caps bound)
+
+C1. Three arms, each pinned to the SAME search serving for all models
+    (a model comparison, not a §6.1 lottery):
+      arm 1 — current MODEL_SEARCH, caps as configured;
+      arm 2 — the cheap sibling, caps as configured;
+      arm 3 — the cheap sibling, SEARCH_MAX_TOKENS=4000 and
+              SEARCH_MAX_TOKENS_CONSEQUENTIAL=4000 via env prefix.
+    evals/grounding, triage-only, repeat 3, caps --max-spend 0.40 per
+    scenario; sweep caps: arm 1 --max-spend-sweep 1.50, arms 2–3 0.50.
+    [derived from §6.3 and 006 §13.1: ~8.7x per-lookup spread]
+C2. Pre-register before running: arm 1 mean figures-recovered ≈ 5/8
+    [measured: §6.3]; arms 2 and 3 — no prior, that is the question; the
+    fee-inversion arithmetic says arm 3's extra tokens cost ~nothing
+    [labelled projection — the measurement decides].
+C3. Decision rule, pre-registered: swap iff the best sibling arm's mean
+    figures ≥ arm 1's mean; if arm 3 beats arm 2 materially, the swap is
+    model AND cap together. If the sibling loses, the current model stands
+    and §4.1's projection stays a projection. The .env edit is the owner's
+    (G-3). Record the complementary-miss structure at 3 reps as the input
+    to a possible cascade design (sibling first, expensive fallback on
+    missed figures) — a future blueprint, since it changes MAX_LOOKUPS.
+C4. Interaction on record [derived: §6.3 fee/token split]: if the swap
+    lands, lookups become fee-dominated and the materiality cap's value
+    shrinks further — one line in HANDOVER B2's row if it happens.
+
+PART D — B7 re-asked with a working instrument (≈ $0.30–0.60, caps bound)
+
+D1. The premise, pre-registered per the new rule: "the build loop does not
+    converge on complex requests" is UNTESTED — 2/4 of its evidence died
+    pre-loop. This part tests the premise, not a fix.
+D2. Re-run 006's four scenarios verbatim under the Part B pin (env-prefixed
+    triage:Alibaba,architecture:<proposed>), engineering-rnd, repeat 1,
+    --max-spend 0.75 --max-spend-sweep 3.00.
+D3. Per-scenario expectations [prediction, labelled]:
+      numeric_consistency — converges ≤3, ships [measured: 006];
+      derived_tolerances — now reaches the loop; converges ≤3;
+      crossref_integrity — converges ≤2; review MAY block again, and if it
+        does that is §5 item 12 measured, not a failed trace;
+      requires_execution — validate red persists on structural grounds and
+        the honest outcome is exhaustion → escalation → recovery attempts
+        fail or requires_human. CONVERGENCE GREEN HERE WOULD BE A FINDING:
+        it would mean validate attested to work it could not verify, and
+        the per-criterion evidence lines get read line by line.
+D4. Deliverables: the taxonomy table v2 with per-iteration drift (A6 makes
+    it computable); all four traces committed as measurement records;
+    providers_by_function per trace (the B4 lesson in force). B7's phase-2
+    ruling — the advisor's, from this data — evaluates the old lever menu
+    against the discrimination objective: converge fast on convergent
+    work, escalate fast on structural work. NO mechanism is implemented in
+    this blueprint.
+
+PART E — records
+
+E1. HANDOVER §4.2: B7 row reframed (premise untested; instrument fault
+    isolated and repaired; re-run evidence at §14). §6.8 gains two
+    entries: the implement/escalation schema bypass (the retry machinery
+    landed in chat_json and the two phases that needed it most never opted
+    in — 561 tests green throughout, because doubles return well-formed
+    verdicts) and the review-aggregation crash (leniency at the verdict
+    layer defeated three lines upstream).
+E2. §4.4 convention 15 — the premise rule — plus the permission boundary
+    (instrument repair vs behavior change) in the blueprint-protocol
+    preamble of the review doc.
+E3. Housekeeping: §7's stale "501 tests" comment; test-count and file
+    counts refreshed commit-stamped; badge, Testing count and tree comment
+    move in the SAME commit as A5's tests (the G2 guard fires).
+E4. CHANGELOG [Unreleased]: one prose paragraph — B6 observed; the search
+    sibling measured complementary; the instrument repairs; the premise
+    rule. No model ids.
+
+COMMIT GUIDANCE: prose, convention 12. Name the lineage: the loop was
+never the thing that failed; the phases that could not retry were; the
+class guard exists because the same class bit three times; B7's question
+was re-asked rather than answered.
+
+OUT OF SCOPE, deliberately: ANY B7 mechanism (stall detection, channel
+widening, prompt alignment, escalation routing — phase 2 rules on Part D's
+traces); the cascade search design; per-tier pins beyond architecture
+(roadmap item 8 continues after); the review→rework loop (item 12 — its
+evidence base is being built by D3's crossref expectation); any .env edit
+(G-3); prompts that steer judgment.
+```
