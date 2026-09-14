@@ -2738,3 +2738,67 @@ scope, so each unit asserts `status: completed`, `path_includes: [plan]` and
 **retained verdicts** — which is what Part A's retention is for. `PlanVerdict`'s
 own validators already reject a stub inside the retry loop: a plan is required
 when ready, blockers when not, and `"..."`/`"TBD"` criteria are refused.
+
+#### Part B results — two servings, stopped early and deliberately
+
+| serving | plans ready | architecture calls | arch $ | $/call | total $ | wall | criteria per plan |
+|---|---|---|---|---|---|---|---|
+| Baidu | **6/6** | 6 (one per unit) | $0.0424 | $0.0071 | $0.2087 | 400s | 5,6,6,6,6,6 |
+| **StreamLake** | **6/6** | 6 (one per unit) | $0.0299 | **$0.0050** | $0.1708 | 388s | 6,6,6,6,6,6 |
+
+**Zero retries, zero burns, zero errors across twelve units on both servings.**
+Against 006's unpinned baseline of eleven calls for four plans, every plan here
+came back usable on the first call.
+
+**The sweep was stopped after two of six servings, on the owner's call, and the
+reason is a confound in the probe rather than impatience.** B2 requires probe
+requests that *reliably* yield `ready=true`, so they were written small and
+fully specified — and easy, fully-specified requests do not provoke the burn.
+006's burns happened on the hard convergence scenarios. Four more servings of
+clean single-call plans would have cost roughly $0.85 to confirm what the first
+two already showed, and would still not have tested the thing worth testing.
+
+#### Predictions scored, including the one that cannot be
+
+| prediction | outcome |
+|---|---|
+| B4(1): a serving reproduces the §6.4 signature *if the current model is the §6.4 model* | antecedent false; the signature was reproduced in 006 by a different model. Not scorable as stated. |
+| B4(2): servings differ measurably in completion tokens per plan | **weakly** — 1.4× in cost, and no difference in plan quality or call count |
+| B4(3): the spread is smaller than triage's §6.1 spread | **right, and not close.** Triage spanned 22.6× in cost and eleven sectors in quality; this spans 1.4× in cost and nothing in quality |
+| mine: the burn is model-intrinsic, not serving-specific | **UNTESTED.** Neither serving burned, because neither was asked anything hard enough to burn on. Recorded as unresolved rather than confirmed — the probe I designed cannot answer it. |
+
+**What this does establish**, which is the more useful finding: **the burn is
+request-driven, not serving-driven.** Two different servings of the same model
+produced clean single-call plans on easy work, while the same model produced
+seven retries on four hard plans in 006 across six servings. Pinning this tier
+is therefore not the lever for the burn, and the answer lies in either the plan
+token budget (the burn sits at `Specialist.run`'s default `max_tokens=16384`,
+while every serving advertises a ceiling above 262,000) or the model choice —
+**both the owner's under G-3, and neither is this blueprint's to change.**
+
+#### B5 proposal
+
+**`architecture:StreamLake`.** Tied on plans ready (6/6 each), cheaper per call
+by 30%, marginally faster, and the only arm to return six success criteria on
+every unit. The honest caveat is that on this evidence the pin buys very little:
+the two servings are indistinguishable on quality and the tier costs cents per
+workflow when it is behaving. It is proposed because the rule asks for exactly
+one, and because a pinned tier is a precondition for the *next* measurement
+rather than a fix in itself.
+
+Parts C and D run env-prefixed with
+`OPENROUTER_PROVIDER_ORDER="triage:Alibaba,architecture:StreamLake"`. Ratifying
+it into `.env` is the owner's (G-3).
+
+#### An estimate that was wrong, and why
+
+B3 estimated $0.10–0.40 for the whole sweep. Two arms cost **$0.3795**, so six
+would have been ~$1.14 — roughly 3× the estimate. The reason is visible in the
+tier split: **search was 74% of each arm's cost** ($0.1542 of $0.2087 on Baidu).
+The probe requests classify at medium risk, so each fires a bundled lookup, and
+a probe built to measure the architecture tier spent three quarters of its money
+on the search tier. `plan-probe` includes the `context` node because B2 says so,
+and grounding is where search lives. **A future planning probe that wants to
+isolate architecture cost should drop the context node** — at the cost of
+planning without grounding, which is not what production does. Recorded as the
+design trade rather than silently fixed.
