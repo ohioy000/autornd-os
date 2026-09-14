@@ -706,3 +706,54 @@ class TestProviderPinning:
     async def test_whitespace_and_blanks_are_ignored(self, monkeypatch):
         payload = await self._payload(monkeypatch, " , OpenInference ,, ")
         assert payload["provider"]["order"] == ["OpenInference"]
+
+
+class TestPerTierProviderOrder:
+    """A pin has to be per tier.
+
+    Tiers run different models and no provider serves them all. A global pin of
+    the triage provider would have the search tier asking it for sonar-pro,
+    which it does not host — and with fallbacks disabled that is a hard failure.
+    Shipping a global pin and documenting it as the thing to do was a defect.
+    """
+
+    @staticmethod
+    def _order(monkeypatch, value, function):
+        from autornd.config import settings
+        from autornd.routing.openrouter import provider_order_for
+
+        monkeypatch.setattr(settings, "openrouter_provider_order", value)
+        return provider_order_for(function)
+
+    def test_unset_pins_nothing(self, monkeypatch):
+        assert self._order(monkeypatch, "", "triage") == []
+
+    def test_a_bare_list_applies_to_every_tier(self, monkeypatch):
+        for tier in ("triage", "search", "architecture"):
+            assert self._order(monkeypatch, "StreamLake", tier) == ["StreamLake"]
+
+    def test_a_tier_can_be_pinned_alone(self, monkeypatch):
+        value = "triage:StreamLake"
+        assert self._order(monkeypatch, value, "triage") == ["StreamLake"]
+        assert self._order(monkeypatch, value, "search") == []
+
+    def test_a_named_tier_overrides_the_general_default(self, monkeypatch):
+        value = "triage:StreamLake,Together"
+        assert self._order(monkeypatch, value, "triage") == ["StreamLake"]
+        assert self._order(monkeypatch, value, "search") == ["Together"]
+
+    def test_an_empty_value_opts_a_tier_out(self, monkeypatch):
+        """The case that matters: pin triage for reproducibility while leaving
+        search free, because no one provider serves both models."""
+        value = "Together,search:"
+        assert self._order(monkeypatch, value, "triage") == ["Together"]
+        assert self._order(monkeypatch, value, "search") == []
+
+    def test_several_providers_for_one_tier(self, monkeypatch):
+        value = "triage:StreamLake,triage:OpenInference"
+        assert self._order(monkeypatch, value, "triage") == [
+            "StreamLake", "OpenInference"]
+
+    def test_tier_names_are_case_insensitive(self, monkeypatch):
+        assert self._order(monkeypatch, "TRIAGE:StreamLake", "triage") == [
+            "StreamLake"]

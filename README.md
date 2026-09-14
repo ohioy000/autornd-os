@@ -328,6 +328,16 @@ So:
   under two cents.
 - **Leave it unset** only when availability beats reproducibility.
 
+Pins are per tier, because they have to be — tiers run different models and no
+provider serves them all:
+
+```
+OPENROUTER_PROVIDER_ORDER=triage:StreamLake,search:
+```
+
+pins triage and leaves search free to route. A bare name applies to every tier;
+a tier named with an empty value opts out of that default.
+
 **Routing can depend on the run.** `tier_when` makes a node's tier conditional, so low-risk work does not wake a reasoning model to plan a layout change:
 
 ```yaml

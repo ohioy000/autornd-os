@@ -35,6 +35,48 @@ class ModelResponse:
 
 
 
+def provider_order_for(function: str) -> list[str]:
+    """Which providers may serve this tier, highest preference first.
+
+    Per tier, because a pin has to be. Tiers run different models and no
+    provider serves them all — a global pin of the triage provider would have
+    the search tier asking it for a model it does not host, and with fallbacks
+    disabled that is a hard failure rather than a slow one. Shipping a global
+    pin and advising people to use it was a defect; this is the fix.
+
+    Syntax, comma separated:
+
+        StreamLake                      every tier prefers StreamLake
+        triage:StreamLake,search:       triage pinned, search left free
+        triage:StreamLake,Together      triage pinned, everything else Together
+
+    A tier named with an empty value is explicitly unpinned, which is how one
+    tier opts out of a global default.
+    """
+    raw = (settings.openrouter_provider_order or "").strip()
+    if not raw:
+        return []
+
+    general: list[str] = []
+    per_tier: dict[str, list[str]] = {}
+    for entry in raw.split(","):
+        entry = entry.strip()
+        if not entry:
+            continue
+        if ":" in entry:
+            tier, _, provider = entry.partition(":")
+            tier, provider = tier.strip().lower(), provider.strip()
+            per_tier.setdefault(tier, [])
+            if provider:
+                per_tier[tier].append(provider)
+        else:
+            general.append(entry)
+
+    if function.lower() in per_tier:
+        return per_tier[function.lower()]
+    return general
+
+
 class BudgetExceeded(RuntimeError):
     """A run asked for more calls or more money than it was allowed."""
 
@@ -199,14 +241,13 @@ class OpenRouterClient:
         payload["usage"] = {"include": True}
 
         # Optionally pin who serves the request. A model id alone does not
-        # determine behaviour: the same id moved provider between two runs of
-        # the same eval suite and classified four sectors differently. Leave
-        # unset for availability, set it when a run has to be reproducible.
-        if settings.openrouter_provider_order:
-            order = [p.strip() for p in
-                     settings.openrouter_provider_order.split(",") if p.strip()]
-            if order:
-                payload["provider"] = {"order": order, "allow_fallbacks": False}
+        # determine behaviour: pinning each of five providers that served one
+        # tier gave 28/36, 30/36 and 33/36 on the same suite at 12x price
+        # spread. Leave unset for availability; set it when a run has to be
+        # reproducible or when quality has been measured.
+        order = provider_order_for(function)
+        if order:
+            payload["provider"] = {"order": order, "allow_fallbacks": False}
 
         client = await self._get_client()
         resp = await client.post("/chat/completions", json=payload)
