@@ -35,6 +35,10 @@ class ModelResponse:
 
 
 
+class BudgetExceeded(RuntimeError):
+    """A run asked for more calls or more money than it was allowed."""
+
+
 def _rejection_note(error: Exception) -> str:
     """Tell the next attempt what the last one got wrong.
 
@@ -68,6 +72,56 @@ class OpenRouterClient:
         self.base_url = base_url or settings.openrouter_base_url
         self._client: httpx.AsyncClient | None = None
 
+        # Spend and call counts live here, on the one object every request must
+        # pass through, because accounting kept anywhere else gets bypassed.
+        # It was: the phase runner tallied cost inside run_ai, so research
+        # lookups, context expansion and reranking — the three most expensive
+        # paths — were free as far as any report was concerned. Eight sectors
+        # doing roughly thirty-two search calls self-reported $0.0025.
+        self.spend: float = 0.0
+        self.calls: int = 0
+        self.spend_by_function: dict[str, float] = {}
+        self.calls_by_function: dict[str, int] = {}
+        # Optional budgets, used by experiments. Left unset in production: an
+        # abort half-way through a real workflow throws away the work done so
+        # far, whereas an experiment that runs away is a thing that has already
+        # happened here once — forty minutes and $1.28 for an inconclusive run.
+        self.call_ceiling: int | None = None
+        self.spend_ceiling: float | None = None
+
+    def _account(self, function: str, cost: float) -> None:
+        """Record one billable request. Called for every request, no exceptions.
+
+        Budgets are enforced here rather than by the caller, so a ceiling covers
+        research lookups and reranking too. A run that exceeds one has already
+        paid for the request in hand — this stops the next one.
+        """
+        self.calls += 1
+        self.calls_by_function[function] = self.calls_by_function.get(function, 0) + 1
+        if cost:
+            self.spend += cost
+            self.spend_by_function[function] = (
+                self.spend_by_function.get(function, 0.0) + cost)
+
+        if self.call_ceiling is not None and self.calls > self.call_ceiling:
+            raise BudgetExceeded(
+                f"stopped at {self.calls} model calls (ceiling {self.call_ceiling}); "
+                f"raise max_calls on the scenario if this is expected. "
+                f"By tier: {self.calls_by_function}"
+            )
+        if self.spend_ceiling is not None and self.spend > self.spend_ceiling:
+            raise BudgetExceeded(
+                f"stopped at ${self.spend:.4f} (ceiling ${self.spend_ceiling:.4f}). "
+                f"By tier: "
+                f"{ {k: round(v, 4) for k, v in self.spend_by_function.items()} }"
+            )
+
+    def reset_accounting(self) -> None:
+        self.spend = 0.0
+        self.calls = 0
+        self.spend_by_function = {}
+        self.calls_by_function = {}
+
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
             self._client = httpx.AsyncClient(
@@ -83,7 +137,27 @@ class OpenRouterClient:
         return self._client
 
     def get_model(self, function: str) -> str:
+        if function == "independent":
+            return self.independent_model() or settings.model_engineering
         return self.FUNCTION_MODELS.get(function, settings.model_engineering)
+
+    def independent_model(self) -> str | None:
+        """A model for the independent pass, or None if there isn't an honest one.
+
+        The premium tier when configured, otherwise the architecture tier —
+        already configured, and a different family from the engineering tier
+        that produces the work and its reviews.
+
+        None when the resolution lands on the engineering model, because a
+        review by the model under review is not a second opinion. This is not
+        hypothetical: `premium` is dropped from FUNCTION_MODELS when unset, and
+        the lookup then falls back to engineering, so the "independent" check
+        would quietly have been the same model all along.
+        """
+        candidate = settings.model_premium or settings.model_architecture
+        if not candidate or candidate == settings.model_engineering:
+            return None
+        return candidate
 
     async def chat(
         self,
@@ -151,6 +225,10 @@ class OpenRouterClient:
         else:
             cost = self._estimate_cost(model, prompt_tokens, completion_tokens)
 
+        # Every attempt counts, retries included. A retry storm that costs real
+        # money should look expensive rather than free.
+        self._account(function, cost)
+
         return ModelResponse(
             content=content,
             model=model,
@@ -181,6 +259,9 @@ class OpenRouterClient:
         resp.raise_for_status()
         data = resp.json()
         usage = data.get("usage", {}) or {}
+        # This cost used to reach a debug log and go no further, so reranking
+        # was the one tier that never appeared in any total.
+        self._account("ranker", float(usage.get("cost") or 0.0))
         logger.debug(
             "rerank %s: %s docs, %s tokens, cost %s",
             model, len(documents), usage.get("total_tokens"), usage.get("cost"),

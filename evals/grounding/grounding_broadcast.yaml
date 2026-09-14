@@ -1,0 +1,21 @@
+id: grounding_broadcast
+workflow: triage-only
+description: >
+  EBU R 128 fixes the target and the permitted maximum; ITU-R BS.1770 defines how both are measured.
+  
+  Graded against published figures rather than citation count, because a
+  citation proves a lookup happened and not that the answer is right.
+# Research makes several search calls; this is the expensive tier.
+timeout: 240
+request: "Define the audio loudness normalisation chain to meet the broadcast loudness recommendation on a live news feed"
+tags: [grounding, research]
+expect:
+  status: completed
+  figures_present:
+    - ["-23 LUFS", "\u221223 LUFS"]
+    - ["-1 dBTP", "\u22121 dBTP"]
+    - ["0.5 LU"]
+    - ["BS.1770", "BS 1770"]
+  # Re-baselined from measurement: the budget now counts the
+  # research lookups that used to sit outside it.
+  max_calls: 12

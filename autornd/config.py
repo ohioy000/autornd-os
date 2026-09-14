@@ -38,7 +38,15 @@ class Settings(BaseSettings):
     # Validate judges work; it does not redo it. Measured against live models
     # an unbounded validator produced 15k output tokens for a green/red verdict,
     # taking three minutes and costing more than the implementation it checked.
-    validate_max_tokens: int = 3000
+    #
+    # 3000 was too tight, though, and tight in the worst way: the default
+    # engineering tier is a reasoning model, and on a hard request it spent the
+    # whole 3000 on reasoning and emitted nothing — three times, so the run
+    # failed having paid for 9000 tokens of nothing. A ceiling is only billed
+    # when it is used, so raising it costs nothing on the runs that were already
+    # fine and rescues the ones that were not. Still far below the 15k an
+    # unbounded validator reached.
+    validate_max_tokens: int = 8000
 
     # A lookup wants room for figures and their sources, not an essay.
     search_max_tokens: int = 1200

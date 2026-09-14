@@ -68,7 +68,13 @@ def make_mock_response(content: dict[str, Any], model: str = "test-model") -> Mo
 
 
 def make_mock_client(responses: dict[str, dict[str, Any]]) -> OpenRouterClient:
-    """Create a mock OpenRouter client that returns preset responses per function."""
+    """A client that returns preset responses per function, and bills for them.
+
+    The double accounts exactly as the real client does. Spend and call counts
+    live on the client precisely so no call path can avoid them, and a test
+    double that answered for free would hide the bug this guards against —
+    including from the tests that assert one workflow is cheaper than another.
+    """
     client = OpenRouterClient(api_key="test-key")
 
     async def _mock_chat_json(
@@ -77,10 +83,22 @@ def make_mock_client(responses: dict[str, dict[str, Any]]) -> OpenRouterClient:
         user_message: str,
         temperature: float = 0.3,
         max_tokens: int = 4096,
+        **kwargs: Any,
     ) -> tuple[dict[str, Any], ModelResponse]:
         data = responses.get(function, responses.get("default", {}))
-        return data, make_mock_response(data, f"mock-{function}")
+        response = make_mock_response(data, f"mock-{function}")
+        client._account(function, response.cost)
+        return data, response
+
+    async def _mock_chat(
+        function: str, system_prompt: str, user_message: str, **kwargs: Any,
+    ) -> ModelResponse:
+        data = responses.get(function, responses.get("default", {}))
+        response = make_mock_response(data, f"mock-{function}")
+        client._account(function, response.cost)
+        return response
 
     client.chat_json = AsyncMock(side_effect=_mock_chat_json)
+    client.chat = AsyncMock(side_effect=_mock_chat)
     client.close = AsyncMock()
     return client

@@ -1,0 +1,20 @@
+id: grounding_robot_safety
+workflow: triage-only
+description: >
+  ISO 13855 gives the approach-speed formula; the detection-capability term is what people leave out.
+  
+  Graded against published figures rather than citation count, because a
+  citation proves a lookup happened and not that the answer is right.
+# Research makes several search calls; this is the expensive tier.
+timeout: 240
+request: "Determine the safety rated stopping distance and light curtain offset for a palletising cell"
+tags: [grounding, research]
+expect:
+  status: completed
+  figures_present:
+    - ["13855"]
+    - ["1600 mm/s", "1600mm/s"]
+    - ["8(d-14)", "8 (d-14)", "8 \u00d7 (d-14)", "d - 14", "d-14"]
+  # Re-baselined from measurement: the budget now counts the
+  # research lookups that used to sit outside it.
+  max_calls: 12

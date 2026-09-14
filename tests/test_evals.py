@@ -173,6 +173,9 @@ def make_client(reply, log=None, delay=0.0):
         if log is not None:
             log.append(function)
         data = reply(user_message)
+        # Bill like the real client. Budgets are enforced in the client now, so
+        # a double that answered free would make the ceiling untestable.
+        client._account(function, 0.001)
         return data, ModelResponse(content=json.dumps(data), model="mock",
                                    prompt_tokens=1, completion_tokens=1, cost=0.001)
 
@@ -231,8 +234,14 @@ class TestRunner:
         run = await run_scenario(scenario, load("workflows/engineering-rnd.yaml"),
                                  lambda: make_client(scripted(green=False)), SETTINGS)
         assert not run.passed
-        assert run.calls <= 5          # ceiling plus the headroom call
         assert "ceiling" in (run.error or "")
+        # The budget counts underlying calls now, not nodes, so it also covers
+        # research and reranking — which used to be outside it entirely. Those
+        # calls fan out concurrently, so several are in flight when the budget
+        # trips and the count overshoots by roughly one fan-out. What matters is
+        # that it stops early: unbounded, this scenario runs past twenty.
+        assert run.calls <= 10, f"stopped far too late at {run.calls} calls"
+        assert run.calls > 3, "the ceiling should not fire before it is reached"
 
     async def test_timeout_is_recorded_not_raised(self):
         scenario = parse({"id": "s", "request": "Add retry", "expect": {"risk": "medium"}})
@@ -353,6 +362,124 @@ class TestTimeoutPrecedence:
             scenario, load("workflows/triage-only.yaml"),
             lambda: make_client(scripted(), delay=0.2), SETTINGS, timeout=0.01)
         assert "timed out" in run.error
+
+
+class TestFiguresPresent:
+    """Factual accuracy, graded against published figures.
+
+    Counting citations measures whether a lookup happened, not whether the
+    answer is right. And the grader itself has to be right: an earlier pass
+    matched only ASCII hyphens while the model wrote U+2212, scored a correct
+    answer wrong, and reported 78% where the truth was 91%.
+    """
+
+    def _run(self, figures, context):
+        state = triage_state()
+        scenario = Scenario(id="s", request="r",
+                            expect={"figures_present": figures})
+        return score(scenario, RunOutcome(state=state, calls=1, context=context))
+
+    def test_all_figures_present_passes(self):
+        r = self._run([["-23 LUFS"], ["-1 dBTP"]],
+                      "target -23 LUFS with true peak -1 dBTP")
+        assert len(r) == 1 and r[0].passed
+
+    def test_a_unicode_minus_still_matches(self):
+        """The exact bug: U+2212 is what models actually write."""
+        r = self._run([["-23 LUFS"]], "target \u221223 LUFS per EBU R 128")
+        assert r[0].passed
+
+    def test_an_en_dash_still_matches(self):
+        r = self._run([["-23 LUFS"]], "target \u201323 LUFS")
+        assert r[0].passed
+
+    def test_case_and_whitespace_are_normalised(self):
+        r = self._run([["type B"]], "an RCD of   TYPE   B per section 722")
+        assert r[0].passed
+
+    def test_alternate_spellings_are_equivalent(self):
+        """Either spelling counts; the standard is named both ways in practice."""
+        for text in ("per ISO 1436", "per SAE J517"):
+            assert self._run([["ISO 1436", "SAE J517"]], text)[0].passed
+
+    def test_a_missing_figure_is_named(self):
+        """Which figure is absent is the finding. A bare fraction sends you back
+        to re-run it to find out."""
+        r = self._run([["4:1"], ["840 bar"]], "a 4:1 burst ratio applies")
+        assert not r[0].passed
+        assert "840 bar" in r[0].detail
+        assert r[0].got == "1/2"
+
+    def test_it_is_skipped_when_unstated(self):
+        assert self._run.__self__ is not None  # sanity
+        state = triage_state()
+        assert score(Scenario(id="s", request="r", expect={}),
+                     RunOutcome(state=state, calls=1, context="anything")) == []
+
+    def test_figures_are_read_from_node_outputs_too(self):
+        """Grounding can arrive in node outputs rather than the context string."""
+        state = triage_state(context={"detail": "a 4:1 burst ratio applies"})
+        r = score(Scenario(id="s", request="r",
+                           expect={"figures_present": [["4:1"]]}),
+                  RunOutcome(state=state, calls=1))
+        assert r[0].passed
+
+    def test_an_empty_list_is_rejected_at_load(self):
+        with pytest.raises(ScenarioError, match="non-empty list"):
+            parse({"id": "a", "request": "r",
+                   "expect": {"figures_present": []}})
+
+    def test_a_blank_figure_is_rejected_at_load(self):
+        with pytest.raises(ScenarioError, match="non-empty string"):
+            parse({"id": "a", "request": "r",
+                   "expect": {"figures_present": ["  "]}})
+
+    def test_the_shipped_grounding_suite_is_well_formed(self):
+        shipped = load_scenarios("evals/grounding")
+        assert len(shipped) >= 8
+        for s in shipped:
+            assert s.expect.get("figures_present"), f"{s.id} grades nothing"
+            assert s.workflow == "triage-only", (
+                f"{s.id} must run the grounding path, not the full pipeline")
+
+
+class TestPathAssertions:
+    """A conditional node is invisible to every other assertion: a workflow
+    whose `when` never fires produces the same verdicts as one without the node.
+    The independent pass sat unexercised for exactly that reason."""
+
+    def _score(self, expect, path, skipped=()):
+        from autornd.graph.executor import StepRecord
+
+        state = triage_state()
+        state.trace.clear()
+        for node_id in path:
+            state.trace.append(StepRecord(node_id, "ai", 1))
+        for node_id in skipped:
+            state.trace.append(StepRecord(node_id, "ai", 1, skipped=True))
+        return score(Scenario(id="s", request="r", expect=expect),
+                     outcome(state))
+
+    def test_a_node_that_ran_passes(self):
+        assert self._score({"path_includes": ["independent_check"]},
+                           ["triage", "review", "independent_check"])[0].passed
+
+    def test_a_node_that_never_ran_fails_and_is_named(self):
+        r = self._score({"path_includes": ["independent_check"]},
+                        ["triage", "review"])[0]
+        assert not r.passed and "independent_check" in r.detail
+
+    def test_path_excludes_catches_an_unwanted_node(self):
+        r = self._score({"path_excludes": ["independent_check"]},
+                        ["triage", "independent_check"])[0]
+        assert not r.passed
+
+    def test_a_skipped_node_does_not_count_as_run(self):
+        """The distinction the whole assertion exists for: a conditional node
+        present in the graph but skipped has not been exercised."""
+        r = self._score({"path_includes": ["independent_check"]},
+                        ["triage", "review"], skipped=["independent_check"])[0]
+        assert not r.passed
 
 
 class TestUnrecallableExpectation:

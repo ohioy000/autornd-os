@@ -1,0 +1,20 @@
+id: grounding_hydraulics
+workflow: triage-only
+description: >
+  A 4:1 burst-to-working ratio is the governing rule, so 210 bar working implies at least 840 bar burst.
+  
+  Graded against published figures rather than citation count, because a
+  citation proves a lookup happened and not that the answer is right.
+# Research makes several search calls; this is the expensive tier.
+timeout: 240
+request: "Specify hose, fitting and burst rating for a 210 bar mobile crane boom circuit"
+tags: [grounding, research]
+expect:
+  status: completed
+  figures_present:
+    - ["4:1"]
+    - ["840"]
+    - ["ISO 1436", "SAE J517", "EN 853", "EN 856"]
+  # Re-baselined from measurement: the budget now counts the
+  # research lookups that used to sit outside it.
+  max_calls: 12

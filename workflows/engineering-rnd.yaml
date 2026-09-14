@@ -137,6 +137,17 @@ nodes:
     schema: ReviewVerdict
     depends_on: [build_loop]
 
+  # ── review gate ─────────────────────────────────────────────────────────
+  # A review that says do not ship used to reach exactly one place: the
+  # `shipped` column of episodic memory. The run still reported `completed`,
+  # which made the review decorative. Now it decides.
+  - id: review_clean
+    kind: gate
+    condition: review.ship == true
+    depends_on: [review]
+    on_fail: blocked
+    on_fail_reason: "Review found blocking issues"
+
   # ── independent pass ────────────────────────────────────────────────────
   # Only for work that cannot be recalled once released: a signed rollout, a
   # mass migration, a public release. Risk asks whether a wrong answer harms
@@ -147,7 +158,7 @@ nodes:
   - id: independent_check
     kind: ai
     when: triage.unrecallable
-    tier: premium
+    tier: independent
     prompt: doublecheck
     schema: DoubleCheckVerdict
-    depends_on: [review]
+    depends_on: [review_clean]

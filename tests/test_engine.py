@@ -95,7 +95,11 @@ def _make_mock_client():
 
     async def _mock_chat_json(function, system_prompt, user_message, **kwargs):
         data = _route_by_content(user_message)
-        return data, make_mock_response(data, f"mock-{function}")
+        response = make_mock_response(data, f"mock-{function}")
+        # Bill like the real client: spend lives there so nothing can dodge it,
+        # and a double that answered free would hide exactly that.
+        client._account(function, response.cost)
+        return data, response
 
     client.chat_json = AsyncMock(side_effect=_mock_chat_json)
     client.close = AsyncMock()
@@ -166,7 +170,9 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
         else:
             data = {"ship": True, "findings": [], "verdict": "Ship."}
 
-        return data, make_mock_response(data, f"mock-{function}")
+        response = make_mock_response(data, f"mock-{function}")
+        client._account(function, response.cost)
+        return data, response
 
     client.chat_json = AsyncMock(side_effect=_mock_chat_json)
     client.close = AsyncMock()

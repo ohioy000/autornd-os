@@ -10,4 +10,3 @@ expect:
   converge_within: 1
   max_calls: 14
   criteria_addressed: true
-  criteria_addressed: true

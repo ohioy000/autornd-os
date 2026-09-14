@@ -1,0 +1,21 @@
+id: grounding_rail_signalling
+workflow: triage-only
+description: >
+  Route and approach locking with flank protection, under the EN 5012x safety-integrity framework.
+  
+  Graded against published figures rather than citation count, because a
+  citation proves a lookup happened and not that the answer is right.
+# Research makes several search calls; this is the expensive tier.
+timeout: 240
+request: "Define the interlocking logic for a single track passing loop with two approach signals"
+tags: [grounding, research]
+expect:
+  status: completed
+  figures_present:
+    - ["route lock", "route is proved", "route locking"]
+    - ["approach lock"]
+    - ["flank"]
+    - ["SIL 4", "SIL4", "50128", "50129", "50126"]
+  # Re-baselined from measurement: the budget now counts the
+  # research lookups that used to sit outside it.
+  max_calls: 12

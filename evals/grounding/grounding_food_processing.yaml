@@ -1,0 +1,20 @@
+id: grounding_food_processing
+workflow: triage-only
+description: >
+  A HACCP CCP at the holding tube with a time-temperature limit, and the flow-diversion valve that enforces it.
+  
+  Graded against published figures rather than citation count, because a
+  citation proves a lookup happened and not that the answer is right.
+# Research makes several search calls; this is the expensive tier.
+timeout: 240
+request: "Define the critical control point and critical limit for a pasteuriser on a chilled soup line"
+tags: [grounding, research]
+expect:
+  status: completed
+  figures_present:
+    - ["HACCP"]
+    - ["CCP"]
+    - ["divert", "diversion", "FDV"]
+  # Re-baselined from measurement: the budget now counts the
+  # research lookups that used to sit outside it.
+  max_calls: 12

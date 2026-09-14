@@ -45,9 +45,18 @@ Rules:
 - Distinguish units that are commonly confused. ERP is not EIRP. Typical is not
   maximum. Absolute maximum ratings are not operating ranges.
 - Name the source document for every figure.
+- Name the standard or code that governs this class of work, even when the
+  question does not mention one.
+- Add what a practitioner would expect to see that the question did not ask
+  for. Measured against published standards, the gaps were all of this kind: a
+  pasteuriser answer with no flow-diversion valve, a partition answer with no
+  flanking path, an interlocking answer with no safety-integrity level. The
+  person asking usually does not know what they left out.
 - If authoritative sources disagree, say so and give both.
 - If you cannot find it, say so plainly. An admitted gap is useful; a plausible
   guess is worse than nothing, because everything downstream will trust it.
+  This applies to the additions above too: an element you cannot source is
+  named as unverified, never stated as a specification.
 """
 
 

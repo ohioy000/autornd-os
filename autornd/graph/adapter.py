@@ -62,7 +62,21 @@ class PhaseRunner:
         # Every failed attempt, for the escalation autopsy to read.
         self.failure_log: list[dict[str, Any]] = []
         self.resolution_directive: str | None = None
-        self.total_cost: float = 0.0
+
+    @property
+    def total_cost(self) -> float:
+        """What this run has spent, read from the client rather than tallied here.
+
+        It used to accumulate in `_record`, which only sees nodes that go
+        through `run_ai` — so research lookups, context expansion and reranking
+        never counted. Reading the client's own total means a call cannot be
+        made without being priced.
+        """
+        return self.client.spend
+
+    @property
+    def total_calls(self) -> int:
+        return self.client.calls
 
     # ── casts off the shared state ────────────────────────────────────────
 
@@ -127,8 +141,8 @@ class PhaseRunner:
     def _record(
         self, node: Node, verdict: Any, responses: list[ModelResponse], state: ExecutionState
     ) -> None:
-        for response in responses:
-            self.total_cost += response.cost
+        # Cost is accounted by the client as each request is made; nothing to
+        # tally here.
         if self.on_phase:
             self.on_phase(node.id, verdict, responses, state.iteration)
 
@@ -274,16 +288,19 @@ class PhaseRunner:
         `high` rather than inflating `critical`, and buys one more reviewer
         instead of a larger team.
 
-        The premium tier is optional, so an unconfigured one records a skip. A
-        node that raised here would make a correctly-classified request fail for
-        want of configuration.
+        The tier resolves to premium when configured and the architecture tier
+        otherwise — a different family from the engineering tier that produced
+        the work. It resolves to nothing when that would land on the engineering
+        model itself, and then this records a skip: a review by the model under
+        review is not a second opinion, and claiming one would be worse than
+        admitting there is none. A node that raised here would make a correctly
+        classified request fail for want of configuration.
         """
-        from autornd.config import settings
-
-        if not settings.model_premium:
+        if self.client.independent_model() is None:
             return {
                 "skipped": True,
-                "reason": "no premium tier configured for the independent pass",
+                "reason": ("no model available for an independent pass that is "
+                           "not the engineering model itself"),
             }, []
         verdict, response = await phases.run_doublecheck(
             self.client, state.request, state.outputs["plan"],

@@ -29,6 +29,10 @@ class RunOutcome:
     calls: int
     cost: float = 0.0
     error: str | None = None
+    # The grounding the run assembled — briefing, retrieved documents and
+    # researched findings. Kept because factual accuracy is graded against it,
+    # and it does not live in node outputs.
+    context: str = ""
 
 
 @dataclass
@@ -205,6 +209,95 @@ def max_calls(scenario: Scenario, outcome: RunOutcome):
         return None
     return AssertionResult("max_calls", outcome.calls <= wanted,
                            f"<= {wanted}", outcome.calls)
+
+
+@assertion
+def path_includes(scenario: Scenario, outcome: RunOutcome):
+    """Did the run actually take the nodes it was supposed to?
+
+    A conditional node is invisible to every other assertion: a workflow whose
+    `when` never fires produces the same verdicts as one without the node at
+    all. The independent pass sat in the graph unexercised for exactly this
+    reason — its spec loaded, its condition parsed, and nothing proved it ran.
+    """
+    wanted = scenario.expect.get("path_includes")
+    if wanted is None:
+        return None
+    got = list(outcome.state.path)
+    missing = [n for n in wanted if n not in got]
+    return AssertionResult(
+        "path_includes", not missing, wanted, got,
+        detail=f"never ran {missing}" if missing else "",
+    )
+
+
+@assertion
+def path_excludes(scenario: Scenario, outcome: RunOutcome):
+    wanted = scenario.expect.get("path_excludes")
+    if wanted is None:
+        return None
+    got = list(outcome.state.path)
+    present = [n for n in wanted if n in got]
+    return AssertionResult(
+        "path_excludes", not present, f"none of {wanted}", got,
+        detail=f"unexpectedly ran {present}" if present else "",
+    )
+
+
+def _normalise(text: str) -> str:
+    """One spelling for comparison.
+
+    Models write a minus sign three different ways. Grading `-23 LUFS` with a
+    pattern that only matched the ASCII hyphen scored a correct answer wrong and
+    reported 78% where the real figure was 91% — the grader was broken, not the
+    system it was grading. Dashes, case and whitespace are normalised once,
+    here, so no scenario file can get this wrong again.
+    """
+    for dash in ("\u2212", "\u2013", "\u2014", "\u2011"):
+        text = text.replace(dash, "-")
+    return " ".join(text.lower().split())
+
+
+@assertion
+def figures_present(scenario: Scenario, outcome: RunOutcome):
+    """Are the published figures a correct answer must contain actually there?
+
+    Counting citations measures whether a lookup happened, not whether the
+    answer is right. These are checkable numbers from published standards, so
+    the miss is named rather than reduced to a fraction: which figure is absent
+    is the whole finding.
+    """
+    wanted = scenario.expect.get("figures_present")
+    if wanted is None:
+        return None
+
+    context = _normalise(_researched_text(outcome))
+    missing: list[str] = []
+    for entry in wanted:
+        alternates = entry if isinstance(entry, list) else [entry]
+        if not any(_normalise(a) in context for a in alternates):
+            missing.append(alternates[0])
+
+    found = len(wanted) - len(missing)
+    return AssertionResult(
+        "figures_present", not missing,
+        f"all {len(wanted)}", f"{found}/{len(wanted)}",
+        detail=f"missing {missing}" if missing else "",
+    )
+
+
+def _researched_text(outcome: RunOutcome) -> str:
+    """Everything the run assembled as grounding, however it is carried."""
+    parts: list[str] = []
+    for value in outcome.state.outputs.values():
+        if isinstance(value, str):
+            parts.append(value)
+        elif isinstance(value, dict):
+            for inner in value.values():
+                if isinstance(inner, str):
+                    parts.append(inner)
+    context = getattr(outcome, "context", "") or ""
+    return "\n".join([*parts, context])
 
 
 @assertion

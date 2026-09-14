@@ -25,7 +25,7 @@ from autornd.evals.scenario import Scenario
 from autornd.graph.adapter import PhaseRunner
 from autornd.graph.executor import GraphExecutor
 from autornd.graph.spec import WorkflowSpec
-from autornd.routing.openrouter import OpenRouterClient
+from autornd.routing.openrouter import BudgetExceeded, OpenRouterClient
 
 logger = logging.getLogger(__name__)
 
@@ -66,31 +66,45 @@ def _isolated_store():
             settings.chromadb_path = original
 
 
-class CallCeilingExceeded(RuntimeError):
-    """A run asked for more model calls than the scenario allows."""
+def _tier_line(by_tier: dict[str, float]) -> str:
+    """Where the money went, biggest first.
+
+    A single total hides the thing worth knowing: one search tier can outweigh
+    every other call in a workflow combined, and until now it did not appear in
+    any total at all.
+    """
+    if not by_tier:
+        return "spend by tier: nothing billed"
+    ordered = sorted(by_tier.items(), key=lambda kv: -kv[1])
+    return "spend by tier: " + ", ".join(f"{t} ${c:.4f}" for t, c in ordered)
+
+
+# Kept as an alias: the budget is now enforced by the client, so research
+# lookups and reranking count against it too. They never did before — the
+# ceiling only saw nodes that passed through run_ai.
+CallCeilingExceeded = BudgetExceeded
 
 
 class BoundedRunner(PhaseRunner):
-    """A PhaseRunner that refuses to exceed its call budget.
+    """A PhaseRunner whose client refuses to exceed its budget.
 
     MAX_ITERATIONS bounds loops but not total spend: a workflow with a wide
-    fan-out can make many calls per iteration. This bounds the thing that
-    actually costs money.
+    fan-out can make many calls per iteration, and research lookups are made
+    outside the node machinery entirely. Setting the ceiling on the client
+    bounds every path, including the ones that used to be free.
     """
 
-    def __init__(self, client: OpenRouterClient, ceiling: int) -> None:
+    def __init__(self, client: OpenRouterClient, ceiling: int,
+                 spend_ceiling: float | None = None) -> None:
         super().__init__(client)
         self.ceiling = ceiling
-        self.calls = 0
+        client.reset_accounting()
+        client.call_ceiling = ceiling
+        client.spend_ceiling = spend_ceiling
 
-    async def run_ai(self, node, state):
-        self.calls += 1
-        if self.calls > self.ceiling:
-            raise CallCeilingExceeded(
-                f"stopped at {self.calls} model calls (ceiling {self.ceiling}); "
-                f"raise max_calls on the scenario if this is expected"
-            )
-        return await super().run_ai(node, state)
+    @property
+    def calls(self) -> int:
+        return self.client.calls
 
 
 @dataclass
@@ -102,6 +116,10 @@ class ScenarioRun:
     cost: float = 0.0
     error: str | None = None
     path: list[str] = field(default_factory=list)
+    # Where the money went. A total hides the thing worth seeing: one search
+    # tier can outweigh every other call in a workflow.
+    cost_by_tier: dict[str, float] = field(default_factory=dict)
+    calls_by_tier: dict[str, int] = field(default_factory=dict)
 
     @property
     def skipped(self) -> bool:
@@ -141,6 +159,14 @@ class EvalReport:
     def seconds(self) -> float:
         return sum(r.seconds for r in self.runs)
 
+    @property
+    def cost_by_tier(self) -> dict[str, float]:
+        totals: dict[str, float] = {}
+        for run in self.runs:
+            for tier, amount in run.cost_by_tier.items():
+                totals[tier] = totals.get(tier, 0.0) + amount
+        return totals
+
     def render(self) -> str:
         lines = [
             f"workflow: {self.workflow}",
@@ -165,6 +191,7 @@ class EvalReport:
         if self.cost:
             summary += f"  ·  ${self.cost:.4f}"
         lines.append(summary)
+        lines.append(_tier_line(self.cost_by_tier))
         return "\n".join(lines)
 
 
@@ -174,6 +201,7 @@ async def run_scenario(
     client_factory: Callable[[], OpenRouterClient],
     settings_lookup: dict[str, Any],
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
+    max_spend: float | None = None,
 ) -> ScenarioRun:
     unmet = scenario.unmet_requirements(set(spec.ids))
     if unmet:
@@ -188,7 +216,7 @@ async def run_scenario(
     ceiling = scenario.max_calls or DEFAULT_CALL_CEILING
     # One call of headroom, so exceeding the expectation is reported by the
     # max_calls assertion rather than as an opaque abort.
-    runner = BoundedRunner(client_factory(), ceiling + 1)
+    runner = BoundedRunner(client_factory(), ceiling + 1, spend_ceiling=max_spend)
     executor = GraphExecutor(spec, runner, settings_lookup)
 
     # A scenario's own timeout wins: it knows what it is measuring.
@@ -217,7 +245,8 @@ async def run_scenario(
     seconds = time.perf_counter() - started
 
     outcome = RunOutcome(state=state, calls=runner.calls,
-                         cost=runner.total_cost, error=error)
+                         cost=runner.total_cost, error=error,
+                         context=getattr(runner, "context", "") or "")
     return ScenarioRun(
         scenario=scenario,
         results=score(scenario, outcome),
@@ -226,6 +255,8 @@ async def run_scenario(
         cost=runner.total_cost,
         error=error,
         path=list(state.path),
+        cost_by_tier=dict(runner.client.spend_by_function),
+        calls_by_tier=dict(runner.client.calls_by_function),
     )
 
 
@@ -307,6 +338,15 @@ class RepeatedReport:
     def seconds(self) -> float:
         return sum(r.seconds for r in self.results)
 
+    @property
+    def cost_by_tier(self) -> dict[str, float]:
+        totals: dict[str, float] = {}
+        for result in self.results:
+            for run in result.runs:
+                for tier, amount in run.cost_by_tier.items():
+                    totals[tier] = totals.get(tier, 0.0) + amount
+        return totals
+
     def render(self) -> str:
         lines = [
             f"workflow: {self.workflow}   repetitions: {self.repeat}",
@@ -332,6 +372,7 @@ class RepeatedReport:
             f"{self.passed}/{self.applicable} scenarios passed every repetition"
             f"  ·  {self.calls} calls  ·  {self.seconds:.1f}s  ·  ${self.cost:.4f}"
         )
+        lines.append(_tier_line(self.cost_by_tier))
         return "\n".join(lines)
 
 
@@ -341,12 +382,13 @@ async def run_suite(
     client_factory: Callable[[], OpenRouterClient],
     settings_lookup: dict[str, Any],
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
+    max_spend: float | None = None,
 ) -> EvalReport:
     runs = []
     for scenario in scenarios:
         logger.info("eval: %s", scenario.id)
         runs.append(await run_scenario(
-            scenario, spec, client_factory, settings_lookup, timeout))
+            scenario, spec, client_factory, settings_lookup, timeout, max_spend))
     return EvalReport(runs=runs, workflow=spec.name)
 
 
@@ -357,6 +399,7 @@ async def run_repeated(
     settings_lookup: dict[str, Any],
     repeat: int = 3,
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
+    max_spend: float | None = None,
 ) -> RepeatedReport:
     results = []
     for scenario in scenarios:
@@ -364,7 +407,7 @@ async def run_repeated(
         for attempt in range(repeat):
             logger.info("eval: %s (%d/%d)", scenario.id, attempt + 1, repeat)
             run = await run_scenario(
-                scenario, spec, client_factory, settings_lookup, timeout)
+                scenario, spec, client_factory, settings_lookup, timeout, max_spend)
             runs.append(run)
             if run.skipped:
                 break      # the shape will not change between repetitions

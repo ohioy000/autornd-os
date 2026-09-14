@@ -69,6 +69,28 @@ class NodeRunner(Protocol):
         ...
 
 
+def _render_item(value: object) -> str:
+    """One entry of a gate's reason list, readable whatever shape it arrived in.
+
+    A ReviewFinding is an object with a lens, a severity and a detail; `str()`
+    on it produces a repr nobody wants to read in a status message.
+    """
+    def field(key: str) -> str:
+        raw = (value.get(key) if isinstance(value, dict)
+               else getattr(value, key, None))
+        return str(raw) if raw else ""
+
+    detail = field("detail")
+    if not detail:
+        return str(value)
+    # Verdicts arrive as models from a live run and as plain dicts from
+    # persisted or scripted state; both carry the same fields and both should
+    # read the same way.
+    label = "/".join(p for p in (field("severity"), field("lens"))
+                     if p and p != "unknown")
+    return f"[{label}] {detail}" if label else detail
+
+
 class GraphExecutor:
     def __init__(
         self,
@@ -155,12 +177,25 @@ class GraphExecutor:
         """
         root = (node.condition or "").split(".")[0].replace("not ", "").strip()
         source = state.outputs.get(root)
-        if isinstance(source, dict):
-            for key in ("blockers", "detail", "root_cause_analysis", "red_cause"):
-                value = source.get(key)
-                if value:
-                    text = "; ".join(value) if isinstance(value, list) else str(value)
-                    return f": {text}"
+        if source is None:
+            return ""
+
+        # Verdicts are Pydantic models, not dicts. Checking only for dicts meant
+        # a gate on a verdict said nothing at all — "Review found blocking
+        # issues" with the actual findings sitting unread in the object.
+        def field(key: str):
+            if isinstance(source, dict):
+                return source.get(key)
+            return getattr(source, key, None)
+
+        for key in ("blockers", "findings", "critical_issues", "detail",
+                    "root_cause_analysis", "red_cause"):
+            value = field(key)
+            if not value:
+                continue
+            if isinstance(value, list):
+                return f": {'; '.join(_render_item(v) for v in value)}"
+            return f": {value}"
         return ""
 
     # ── sequencing ────────────────────────────────────────────────────────

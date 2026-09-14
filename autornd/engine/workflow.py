@@ -413,7 +413,12 @@ class WorkflowEngine:
             cost=response.cost,
         )
         self.session.add(phase_result)
-        workflow.total_cost += response.cost
+        # Read the client's own total rather than summing phase responses: the
+        # engine shares its client with the phase runner and with context
+        # building, so research lookups and reranking are in that figure and
+        # were missing from this one. Assigning is idempotent — it converges on
+        # the true total however many phases are recorded.
+        workflow.total_cost = self.client.spend
         workflow.updated_at = datetime.now(timezone.utc)
         await self.session.flush()
 

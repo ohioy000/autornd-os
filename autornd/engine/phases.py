@@ -795,9 +795,10 @@ Original request:
 {request}"""
 
     data, response = await client.chat_json(
-        function="premium",
+        function="independent",
         system_prompt=system_prompt,
         user_message=user_message,
+        schema=DoubleCheckVerdict,
     )
     verdict = DoubleCheckVerdict(**data)
     return verdict, response

@@ -1,0 +1,21 @@
+id: grounding_ev_charging
+workflow: triage-only
+description: >
+  Type B, or Type A with 6 mA DC detection per connector, plus PEN fault protection on a TN-C-S supply.
+  
+  Graded against published figures rather than citation count, because a
+  citation proves a lookup happened and not that the answer is right.
+# Research makes several search calls; this is the expensive tier.
+timeout: 240
+request: "Specify the earthing and residual current device arrangement for eight 22 kW chargers in a public car park"
+tags: [grounding, research]
+expect:
+  status: completed
+  figures_present:
+    - ["60364-7-722", "722"]
+    - ["type B"]
+    - ["6 mA", "6mA"]
+    - ["PEN"]
+  # Re-baselined from measurement: the budget now counts the
+  # research lookups that used to sit outside it.
+  max_calls: 12

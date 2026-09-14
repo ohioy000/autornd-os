@@ -48,6 +48,11 @@ async def main() -> int:
     parser.add_argument("--repeat", type=int, default=3,
                         help="runs per scenario; models are stochastic, so one "
                              "result is an anecdote")
+    parser.add_argument("--max-spend", type=float, default=None, metavar="USD",
+                        help="stop a scenario once it has cost this much. Off by "
+                             "default. Worth setting on any sweep that touches "
+                             "the search tier — one sweep here ran forty minutes "
+                             "and $1.28 before anyone stopped it")
     args = parser.parse_args()
 
     scenarios = load_scenarios(args.scenarios)
@@ -62,11 +67,13 @@ async def main() -> int:
         report = await run_repeated(
             chosen, _spec(name), lambda: OpenRouterClient(),
             _settings(), repeat=args.repeat, timeout=args.timeout,
+            max_spend=args.max_spend,
         )
         for scenario in pinned:
             extra = await run_repeated(
                 [scenario], _spec(scenario.workflow), lambda: OpenRouterClient(),
                 _settings(), repeat=args.repeat, timeout=args.timeout,
+                max_spend=args.max_spend,
             )
             report.results.extend(extra.results)
         report.results.sort(key=lambda r: r.scenario.id)

@@ -95,6 +95,9 @@ def make_client(script: Script, log: list[str]) -> OpenRouterClient:
     async def chat_json(function, system_prompt, user_message, **kw):
         data = script.reply(user_message)
         log.append(function)
+        # Bill like the real client, or the "lean is cheaper" comparison is
+        # comparing two zeroes.
+        client._account(function, 0.001)
         return data, ModelResponse(
             content=json.dumps(data), model=f"mock-{function}",
             prompt_tokens=10, completion_tokens=5, cost=0.001,

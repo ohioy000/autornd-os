@@ -1,0 +1,21 @@
+id: grounding_architectural_acoustics
+workflow: triage-only
+description: >
+  Lab STC per ASTM E90 is not field performance; flanking is what separates the two.
+  
+  Graded against published figures rather than citation count, because a
+  citation proves a lookup happened and not that the answer is right.
+# Research makes several search calls; this is the expensive tier.
+timeout: 240
+request: "Choose a partition assembly to achieve a sound transmission class of 55 between hotel guest rooms"
+tags: [grounding, research]
+expect:
+  status: completed
+  figures_present:
+    - ["STC"]
+    - ["E90", "E 90"]
+    - ["resilient"]
+    - ["flank"]
+  # Re-baselined from measurement: the budget now counts the
+  # research lookups that used to sit outside it.
+  max_calls: 12

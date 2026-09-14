@@ -8,6 +8,7 @@ import pytest
 
 from autornd.config import settings
 from autornd.routing.openrouter import (
+    BudgetExceeded,
     OpenRouterClient,
     check_models,
     rebuild_function_models,
@@ -445,3 +446,183 @@ class TestJsonExtraction:
     def test_empty_content_is_rejected(self):
         with pytest.raises(ValueError):
             self._extract('')
+
+
+class TestAccounting:
+    """Spend and call counts live on the client because that is the one object
+    every request must pass through.
+
+    They used to be tallied by the phase runner inside `run_ai`, so the three
+    most expensive paths were free as far as any report was concerned: research
+    lookups (`research.py`), context expansion and synthesis (four sites in
+    `context.py`), and reranking, whose cost was read into a debug log and
+    discarded. Eight sectors making roughly thirty-two search calls
+    self-reported $0.0025.
+    """
+
+    def test_a_fresh_client_has_spent_nothing(self):
+        c = OpenRouterClient(api_key="test")
+        assert c.spend == 0.0 and c.calls == 0
+        assert c.spend_by_function == {} and c.calls_by_function == {}
+
+    def test_accounting_is_per_tier(self):
+        c = OpenRouterClient(api_key="test")
+        c._account("search", 0.012)
+        c._account("search", 0.008)
+        c._account("triage", 0.0001)
+        assert c.calls == 3
+        assert c.calls_by_function == {"search": 2, "triage": 1}
+        assert round(c.spend, 5) == 0.0201
+        assert round(c.spend_by_function["search"], 4) == 0.02
+
+    def test_a_free_call_still_counts_as_a_call(self):
+        """A zero-cost reply is still a request that took time and could fail."""
+        c = OpenRouterClient(api_key="test")
+        c._account("triage", 0.0)
+        assert c.calls == 1 and c.spend == 0.0
+
+    def test_reset_clears_everything(self):
+        c = OpenRouterClient(api_key="test")
+        c._account("search", 0.01)
+        c.reset_accounting()
+        assert c.spend == 0.0 and c.calls == 0 and c.spend_by_function == {}
+
+    def test_a_call_ceiling_stops_the_next_call(self):
+        c = OpenRouterClient(api_key="test")
+        c.call_ceiling = 2
+        c._account("search", 0.01)
+        c._account("search", 0.01)
+        with pytest.raises(BudgetExceeded, match="ceiling 2"):
+            c._account("search", 0.01)
+
+    def test_a_spend_ceiling_stops_the_next_call(self):
+        c = OpenRouterClient(api_key="test")
+        c.spend_ceiling = 0.015
+        c._account("search", 0.01)
+        with pytest.raises(BudgetExceeded, match=r"\$0.0200"):
+            c._account("search", 0.01)
+
+    def test_the_budget_message_names_the_tiers(self):
+        """A budget abort should say where the money went, or the next thing
+        anyone does is re-run it to find out."""
+        c = OpenRouterClient(api_key="test")
+        c.call_ceiling = 1
+        c._account("search", 0.5)
+        with pytest.raises(BudgetExceeded, match="search"):
+            c._account("triage", 0.0001)
+
+    def test_no_ceiling_means_no_limit(self):
+        c = OpenRouterClient(api_key="test")
+        for _ in range(50):
+            c._account("triage", 0.001)
+        assert c.calls == 50
+
+
+@pytest.mark.asyncio
+class TestResearchIsBilled:
+    """The regression that started this: a run whose only model call is a
+    research lookup reported $0.0000, because research calls `client.chat`
+    directly and never touch the phase runner that was doing the counting."""
+
+    async def test_a_research_lookup_moves_the_clients_totals(self, monkeypatch):
+        from autornd.knowledge import research
+
+        client = OpenRouterClient(api_key="test")
+
+        async def fake_chat(function, system_prompt, user_message, **kw):
+            from autornd.routing.openrouter import ModelResponse
+            response = ModelResponse(
+                content="A: 4:1 burst ratio", model="mock-search",
+                prompt_tokens=10, completion_tokens=20, cost=0.017,
+                citations=["https://example.org/standard.pdf"])
+            client._account(function, response.cost)
+            return response
+
+        monkeypatch.setattr(client, "chat", fake_chat)
+        monkeypatch.setattr(research, "_remember", lambda finding: None)
+
+        findings = await research.research_gaps(
+            client, "a crane boom circuit", ["What burst ratio applies?"])
+
+        assert len(findings) == 1 and findings[0].grounded
+        assert client.calls == 1, "the lookup was not counted"
+        assert round(client.spend, 4) == 0.017, "the lookup was not priced"
+        assert "search" in client.spend_by_function
+
+
+@pytest.mark.asyncio
+class TestRunnerReadsTheClient:
+    async def test_total_cost_comes_from_the_client(self):
+        from autornd.graph.adapter import PhaseRunner
+
+        client = OpenRouterClient(api_key="test")
+        runner = PhaseRunner(client)
+        assert runner.total_cost == 0.0
+        # a call made anywhere, by anything, reaches the runner's total
+        client._account("search", 0.031)
+        assert round(runner.total_cost, 4) == 0.031
+        assert runner.total_calls == 1
+
+
+class TestIndependentTier:
+    """The independent pass must not be the model it is reviewing.
+
+    `premium` is omitted from FUNCTION_MODELS when unset, and `get_model` falls
+    back to the engineering model — so before this resolver existed, an
+    "independent" review would have run on the same model that produced the
+    work and every review of it.
+    """
+
+    def _settings(self, monkeypatch, premium="", architecture="vendor/arch",
+                  engineering="vendor/eng"):
+        from autornd.config import settings
+        monkeypatch.setattr(settings, "model_premium", premium)
+        monkeypatch.setattr(settings, "model_architecture", architecture)
+        monkeypatch.setattr(settings, "model_engineering", engineering)
+        return OpenRouterClient(api_key="test")
+
+    def test_premium_wins_when_configured(self, monkeypatch):
+        c = self._settings(monkeypatch, premium="vendor/premium")
+        assert c.independent_model() == "vendor/premium"
+        assert c.get_model("independent") == "vendor/premium"
+
+    def test_it_falls_back_to_architecture(self, monkeypatch):
+        """So the feature works without a second paid tier, on a family that did
+        not produce the work."""
+        c = self._settings(monkeypatch)
+        assert c.independent_model() == "vendor/arch"
+
+    def test_it_refuses_to_be_the_engineering_model(self, monkeypatch):
+        c = self._settings(monkeypatch, architecture="vendor/eng")
+        assert c.independent_model() is None
+
+    def test_it_refuses_even_when_premium_names_the_engineering_model(self, monkeypatch):
+        c = self._settings(monkeypatch, premium="vendor/eng")
+        assert c.independent_model() is None
+
+    def test_it_refuses_when_nothing_is_configured(self, monkeypatch):
+        c = self._settings(monkeypatch, architecture="")
+        assert c.independent_model() is None
+
+
+@pytest.mark.asyncio
+class TestIndependentPassSkips:
+    async def test_the_phase_skips_rather_than_faking_independence(self, monkeypatch):
+        """When the only available model is the one under review, the pass
+        records a skip. Claiming a second opinion that is the same model is
+        worse than admitting there is none."""
+        from autornd.config import settings
+        from autornd.graph.adapter import PhaseRunner
+        from autornd.graph.executor import ExecutionState
+
+        monkeypatch.setattr(settings, "model_premium", "")
+        monkeypatch.setattr(settings, "model_architecture", "vendor/eng")
+        monkeypatch.setattr(settings, "model_engineering", "vendor/eng")
+
+        runner = PhaseRunner(OpenRouterClient(api_key="test"))
+        verdict, responses = await runner._phase_doublecheck(
+            None, ExecutionState(request="r"))
+
+        assert verdict["skipped"] is True
+        assert "engineering model" in verdict["reason"]
+        assert responses == [], "a skip must not cost a call"

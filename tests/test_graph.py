@@ -161,7 +161,8 @@ class TestShippedWorkflow:
         spec = load("workflows/engineering-rnd.yaml")
         assert [n.id for n in spec.execution_order()] == [
             "triage", "context", "plan", "feasibility",
-            "plan_ready", "build_loop", "review", "independent_check",
+            "plan_ready", "build_loop", "review", "review_clean",
+            "independent_check",
         ]
 
     def test_the_independent_pass_is_conditional_and_last(self):
@@ -171,8 +172,13 @@ class TestShippedWorkflow:
         spec = load("workflows/engineering-rnd.yaml")
         node = spec.get("independent_check")
         assert node.when == "triage.unrecallable"
-        assert node.tier == "premium"
-        assert "review" in node.depends_on
+        # Not "premium": that key is dropped from FUNCTION_MODELS when unset and
+        # the lookup fell back to the engineering model, so the independent pass
+        # would silently have been the model it was checking.
+        assert node.tier == "independent"
+        # It depends on the gate, not the raw review: there is no point paying
+        # for a second opinion on work the first review already blocked.
+        assert node.depends_on == ["review_clean"]
 
     def test_free_nodes_run_before_the_paid_validator(self):
         """The cheap checks exist to avoid a model call, so they must not be
@@ -323,7 +329,7 @@ class TestExecutorReproducesThePipeline:
         assert state.path == [
             "triage", "context", "plan", "feasibility", "plan_ready",
             "implement", "domain_review", "coverage", "consistency",
-            "validate", "review",
+            "validate", "review", "review_clean",
         ]
         assert len(runner.ai_calls) == 7
 
@@ -334,6 +340,80 @@ class TestExecutorReproducesThePipeline:
         assert state.status == "blocked"
         assert "missing datasheet" in state.reason
         assert "implement" not in state.path
+
+    async def test_a_negative_review_blocks_the_run(self):
+        """`review.ship` used to reach one place only — the `shipped` column of
+        episodic memory — while the run still reported `completed`. A review
+        that nothing acts on is decoration."""
+        state, _ = await _run({**BASE, "validate": {"green": True},
+                               "review": {"ship": False}})
+        assert state.status == "blocked"
+        assert "Review found blocking issues" in state.reason
+
+    async def test_a_blocked_review_says_what_was_found(self):
+        """A gate on a Pydantic verdict used to produce no detail at all: the
+        detail lookup only handled dicts, so the findings sat unread."""
+        state, _ = await _run({**BASE, "validate": {"green": True}, "review": {
+            "ship": False,
+            "findings": [{"lens": "thermal", "severity": "high",
+                          "detail": "Heatsink undersized for 45 W"}],
+            "verdict": "Do not ship."}})
+        assert state.status == "blocked"
+        assert "Heatsink undersized for 45 W" in state.reason
+        assert "thermal" in state.reason
+
+    async def test_the_gate_costs_nothing(self):
+        """It is a gate, not a call. Free checks exist to avoid paid ones."""
+        _, clean = await _run({**BASE, "validate": {"green": True},
+                               "review": {"ship": True}})
+        _, blocked = await _run({**BASE, "validate": {"green": True},
+                                 "review": {"ship": False}})
+        assert len(clean.ai_calls) == len(blocked.ai_calls) == 7
+
+    async def test_the_independent_pass_runs_when_work_cannot_be_recalled(self):
+        """The wiring proof. Every other assertion is blind to a conditional
+        node: a workflow whose `when` never fires produces the same verdicts as
+        one without the node at all.
+
+        Live runs kept terminating before review for model-behaviour reasons on
+        several tiers, so this is where the wiring is actually established —
+        deterministically, and for nothing.
+        """
+        state, runner = await _run({
+            **BASE,
+            "validate": {"green": True},
+            "triage": {"risk": "high", "domains": ["firmware"],
+                       "specialists": ["firmware_engineer"],
+                       "unrecallable": True},
+            "review": {"ship": True},
+            "independent_check": {"ship": True, "confidence": "high",
+                                  "critical_issues": [],
+                                  "verdict": "Independently sound."},
+        })
+        assert state.status == "completed"
+        assert "independent_check" in state.path
+        assert "independent_check" in runner.ai_calls
+        assert state.outputs["independent_check"]["ship"] is True
+
+    async def test_recallable_work_does_not_pay_for_it(self):
+        """The other half: the node must stay dormant by default, or every
+        workflow buys the most expensive tier in the system."""
+        state, runner = await _run({**BASE, "validate": {"green": True}})
+        assert state.status == "completed"
+        assert "independent_check" not in state.path
+        assert "independent_check" not in runner.ai_calls
+
+    async def test_a_blocked_review_skips_the_independent_pass(self):
+        """No point paying for a second opinion on work the first review
+        already stopped."""
+        state, _ = await _run({
+            **BASE,
+            "validate": {"green": True},
+            "triage": {"risk": "high", "domains": ["backend"],
+                       "unrecallable": True},
+            "review": {"ship": False}})
+        assert state.status == "blocked"
+        assert "independent_check" not in state.path
 
     async def test_loop_repeats_until_green(self):
         seen = {"n": 0}

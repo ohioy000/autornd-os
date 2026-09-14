@@ -35,6 +35,7 @@ _KNOWN_EXPECTATIONS = {
     "domains", "domains_include", "risk", "risk_at_least", "risk_at_most",
     "specialists_include", "specialists_exclude", "unrecallable",
     "status", "converge_within", "max_calls", "criteria_addressed",
+    "path_includes", "path_excludes", "figures_present",
 }
 
 # Risk ordering, for `risk_at_least` and `risk_at_most`.
@@ -130,6 +131,18 @@ def parse(raw: dict[str, Any], source: str = "<inline>") -> Scenario:
         raise ScenarioError(
             f"{source}: risk_ceiling_waived is set but risk_at_most is also stated"
         )
+
+    figures = expect.get("figures_present")
+    if figures is not None:
+        if not isinstance(figures, list) or not figures:
+            raise ScenarioError(
+                f"{source}: figures_present must be a non-empty list")
+        for entry in figures:
+            alts = entry if isinstance(entry, list) else [entry]
+            if not alts or not all(isinstance(a, str) and a.strip() for a in alts):
+                raise ScenarioError(
+                    f"{source}: each figure must be a non-empty string, or a "
+                    f"list of equivalent spellings; got {entry!r}")
 
     if "unrecallable" in expect and not isinstance(expect["unrecallable"], bool):
         raise ScenarioError(

@@ -1,0 +1,20 @@
+id: grounding_water_treatment
+workflow: triage-only
+description: >
+  CT tables plus a baffling factor: the T10/T correction is the part a spreadsheet answer misses.
+  
+  Graded against published figures rather than citation count, because a
+  citation proves a lookup happened and not that the answer is right.
+# Research makes several search calls; this is the expensive tier.
+timeout: 240
+request: "Size the chlorine contact tank for 4 log Giardia inactivation at 2 million gallons per day"
+tags: [grounding, research]
+expect:
+  status: completed
+  figures_present:
+    - ["CT"]
+    - ["baffl"]
+    - ["T10", "T 10"]
+  # Re-baselined from measurement: the budget now counts the
+  # research lookups that used to sit outside it.
+  max_calls: 12
