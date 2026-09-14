@@ -27,8 +27,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 # Read by users, so anonymous. HANDOVER.md and docs/ are deliberately absent.
+#
+# Shipped configuration counts too, and counts harder: a workflow file and a
+# profile are copied and edited rather than read once, so a model id in one
+# propagates into every fork of it. The policy calls this the strictest end of
+# the rule — the closer a document sits to configuration, the less room there
+# is for a vendor name.
 USER_FACING = ["README.md", ".env.example", "CLAUDE.md",
                "CONTRIBUTING.md", "CHANGELOG.md"]
+
+SHIPPED_CONFIG = ["profiles/*.yaml", "workflows/*.yaml"]
+
+
+def _scanned_paths(root):
+    paths = [root / name for name in USER_FACING]
+    for pattern in SHIPPED_CONFIG:
+        paths.extend(sorted(root.glob(pattern)))
+    return paths
 
 # The families that have actually leaked, plus the vendor prefixes an id uses.
 MODEL_NAMES = re.compile(
@@ -62,9 +77,11 @@ def _offending_lines(text: str) -> list[tuple[int, str]]:
 class TestNoModelNamesInUserFacingDocs:
     def test_every_user_facing_doc_is_anonymous(self):
         found: list[str] = []
-        for name in USER_FACING:
-            path = ROOT / name
-            assert path.exists(), f"{name} is missing"
+        paths = _scanned_paths(ROOT)
+        assert len(paths) > len(USER_FACING), "the config globs matched nothing"
+        for path in paths:
+            assert path.exists(), f"{path} is missing"
+            name = path.relative_to(ROOT)
             for n, line in _offending_lines(path.read_text(encoding="utf-8")):
                 found.append(f"{name}:{n}: {line}")
         assert not found, (

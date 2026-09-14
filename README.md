@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-527%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-553%20passing-brightgreen.svg)](#testing)
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
 
@@ -559,6 +559,8 @@ The bind address defaults to loopback. AutoRnD has no rate limiting and spends r
 
 AutoRnD ships with no domain assumptions. You bring the context.
 
+Two worked profiles are tracked. [`profiles/example.yaml`](profiles/example.yaml) is an industrial IoT project; [`profiles/studio.yaml`](profiles/studio.yaml) is a content studio, and exists to show the same machinery running a team that is not a team of engineers — every domain and role in it is one this harness does not ship, and none of it needed a code change. Both are commented as teaching files.
+
 ```yaml
 # profiles/packaging-line.yaml
 name: "PackagingLine"
@@ -734,7 +736,7 @@ workflows/                # engineering-rnd, lean, triage-only, triage-classify
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 527 tests
+tests/                    # 553 tests
 ```
 
 ## Cost and Performance
@@ -779,7 +781,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-527 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
+553 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
 
 `tests/test_graph_equivalence.py` is the load-bearing one. The original hardcoded sequencer is kept as `execute_hardcoded`, and those tests assert the graph reproduces it call-for-call across five paths, including the expensive ones. Delete it and the graph stops being a measured baseline.
 

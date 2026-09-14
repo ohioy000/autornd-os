@@ -1,0 +1,65 @@
+name: independent-check-probe
+description: >
+  A single pass that reaches the independent check, and nothing else.
+
+  The independent pass has never executed inside a live full workflow (B6). The
+  wiring is proven by test and the tier is proven by a direct live call, but
+  nine attempts at a full engineering-rnd run each stopped somewhere earlier —
+  a planning stub, a silent engineering model, a build loop that would not
+  converge, a schema that lost a review, and finally a plan that blocked
+  correctly. Most of those exits are the pipeline working, which is exactly why
+  they are hard to design around.
+
+  So this removes every legitimate earlier exit rather than trying to survive
+  them. No feasibility review, no build loop, no escalation path, no recovery:
+  one pass through plan, implement, validate and review, then the independent
+  check. It is the triage-classify trick applied to the other end of the
+  pipeline — a shape that exists to make one measurement affordable and
+  reachable, not a shape anyone should ship work through.
+
+  Requires MODEL_PREMIUM to be set. Without it the independent pass skips
+  rather than faking independence by re-asking the tier that did the work, and
+  the probe measures nothing.
+
+nodes:
+  - {id: triage, kind: ai, tier: triage, prompt: triage, schema: TriageVerdict}
+
+  - {id: context, kind: check, check: build_context, depends_on: [triage]}
+
+  # No tier_when here. engineering-rnd drops a low-risk plan to the cheaper
+  # tier, but this probe wants the same planning tier every run, because a
+  # probe whose shape changes with the request measures two things at once.
+  - id: plan
+    kind: ai
+    tier: architecture
+    specialist: systems_architect
+    prompt: plan
+    schema: PlanVerdict
+    depends_on: [context]
+
+  # Single pass, deliberately. A build loop is the thing that consumed the nine
+  # earlier attempts, so there is none: one implementation, judged once.
+  - {id: implement, kind: ai, tier: engineering, specialist: lead,
+     prompt: implement, schema: ImplementVerdict, depends_on: [plan]}
+
+  - {id: validate, kind: ai, tier: engineering, specialist: test_engineer,
+     prompt: validate, schema: ValidateVerdict, max_tokens: validate_max_tokens,
+     depends_on: [implement]}
+
+  - {id: review, kind: ai, tier: engineering, specialist: reviewers,
+     prompt: review, schema: ReviewVerdict, depends_on: [validate]}
+
+  # Kept, not removed. The independent pass is a second opinion on work that
+  # already shipped, so reaching it past a review that said no would measure
+  # something the product never does.
+  - {id: review_clean, kind: gate, condition: "review.ship == true",
+     depends_on: [review], on_fail: blocked,
+     on_fail_reason: "Review found blocking issues"}
+
+  # The node this whole file exists to reach. `unrecallable` is a separate axis
+  # from risk: work that harms nobody and breaches nothing can still be
+  # impossible to take back, and that — not severity — is what earns the extra
+  # pass. A probe request must therefore be unrecallable, or this skips.
+  - {id: independent_check, kind: ai, when: "triage.unrecallable",
+     tier: independent, prompt: doublecheck, schema: DoubleCheckVerdict,
+     depends_on: [review_clean]}

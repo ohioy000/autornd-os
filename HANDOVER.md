@@ -642,7 +642,13 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
     Research ingests, so scenario 1 otherwise grounds scenarios 2–12.
 12. **Commit messages are prose that explains the measurement**, not bullet
     lists. Match the existing style.
-13. No linter/formatter is configured. Match surrounding style: 4-space indent,
+13. **Source a number before asserting it.** Convention 7's sibling: a figure
+    in a plan carries where it came from — measured (with the §6 reference),
+    derived (with the method), or an estimate to be derived before it is used.
+    Estimates set expectations and never gate anything. Four blueprints in, the
+    estimates have been the wrong part every time while the mechanisms held.
+    The protocol is in `docs/handover-review.md` §0.
+14. No linter/formatter is configured. Match surrounding style: 4-space indent,
     `from __future__ import annotations`, type hints throughout, ~88-col soft
     wrap, module docstrings that explain rationale.
 
@@ -689,10 +695,13 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
 8. **Per-tier provider quality measurement.** The eval suite can now score
    providers; only triage has been measured.
 9. **Alembic migrations** before anyone stores real data.
-10. ~~**CI — extend, do not create.**~~ **Done.** `.github/workflows/ci.yml`
-    now carries the `editable-install` job alongside the matrix. Still open:
-    nothing exercises the **Docker build**, which is the remaining install shape
-    no job covers.
+10. ~~**CI — extend, do not create.**~~ **Done, and now complete.**
+    `.github/workflows/ci.yml` carries the matrix, an `editable-install` job,
+    and a `docker` job that builds the image, runs it, and smokes `/api/health`
+    and `/`. Every install shape is now exercised: source tree, project
+    metadata, built wheel, and container. The dashboard template check is the
+    one that matters — it is the wheel-data fault of B1 in its deployment
+    shape.
 
 ### Longer term / technical debt
 

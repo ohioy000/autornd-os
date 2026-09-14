@@ -95,3 +95,84 @@ jobs:
           assert 'autornd/api/templates/dashboard.html' in names, names
           print('wheel carries the dashboard template')
           "
+
+  # The last install shape nothing exercised. The editable-install job above
+  # covers project metadata and a built wheel; this covers the image, which is
+  # the only shape where the package, its data files and the server all have to
+  # resolve together at runtime. Blueprint 001's lesson in its deployment form:
+  # the fault a test suite structurally cannot see is the one that ships, and
+  # `dashboard.html` missing from a build was exactly that fault.
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build the image
+        run: docker build -t autornd:ci .
+
+      # Same placeholders as the import smoke: config.py validates the six
+      # tiers at import and exits without them. No key — an empty one is the
+      # honest default, and the catalogue endpoint needs no auth anyway.
+      - name: Run the container
+        run: |
+          docker run -d --name autornd-ci -p 8100:8100 \
+            -e MODEL_TRIAGE=test-provider/test-triage \
+            -e MODEL_ENGINEERING=test-provider/test-engineering \
+            -e MODEL_ARCHITECTURE=test-provider/test-architecture \
+            -e MODEL_ESCALATION=test-provider/test-escalation \
+            -e MODEL_RESEARCH=test-provider/test-research \
+            -e MODEL_SEARCH=test-provider/test-search \
+            autornd:ci
+
+      # A retry loop rather than a sleep: startup is a couple of seconds
+      # locally, but the number to trust is the one this loop measures, not one
+      # written into a sleep.
+      - name: Wait for it to answer
+        run: |
+          for i in $(seq 1 10); do
+            if curl -sf -o /dev/null http://127.0.0.1:8100/api/health; then
+              echo "answered after $i attempt(s)"; exit 0
+            fi
+            sleep 2
+          done
+          echo "never answered"; docker logs autornd-ci; exit 1
+
+      # Asserted against what the code actually does, checked by running it:
+      # with placeholder ids every tier comes back unverified, so `degraded`
+      # naming all six is the correct answer and `ok` would mean the check had
+      # silently not run. A smoke that accepts either proves nothing.
+      - name: Health reports honestly
+        run: |
+          body=$(curl -sf http://127.0.0.1:8100/api/health) || {
+            docker logs autornd-ci; exit 1; }
+          echo "$body"
+          echo "$body" | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          assert d['service'] == 'autornd', d
+          assert d['status'] == 'degraded', (
+              'placeholder models cannot verify; ok means the check never ran', d)
+          missing = {'triage', 'engineering', 'architecture', 'escalation',
+                     'research', 'search'} - set(d['unverified_models'])
+          assert not missing, ('tiers missing from the report', missing)
+          print('health is degraded and names all six tiers, as it should be')
+          "
+
+      # The wheel-data fault in its deployment shape: dashboard.html is read
+      # off disk at request time, and no built wheel carried it until 001.
+      - name: The dashboard resolves inside the container
+        run: |
+          code=$(curl -s -o /tmp/dash.html -w '%{http_code}' http://127.0.0.1:8100/)
+          [ "$code" = "200" ] || { echo "GET / -> $code"; docker logs autornd-ci; exit 1; }
+          grep -qi '<html' /tmp/dash.html || {
+            echo "200 but not a page"; head -c 400 /tmp/dash.html; exit 1; }
+          echo "dashboard served, $(wc -c < /tmp/dash.html) bytes"
+
+      - name: Container logs
+        if: always()
+        run: docker logs autornd-ci || true
+
+      - name: Stop
+        if: always()
+        run: docker rm -f autornd-ci || true

@@ -22,3 +22,29 @@ specialists:
     context: "Modbus polling service, SQLAlchemy async ORM with SQLite, threshold-based alerts"
   frontend_engineer:
     context: "Factory floor dashboard, touch-friendly controls, high-contrast for industrial lighting"
+
+# ── declaring your own vocabulary ────────────────────────────────────────
+# The roles above are shipped defaults. These two are not, and neither needed a
+# code change: a domain names its lead and the questions work in it is judged
+# by, and a role names the specialist who does it. An undeclared role still
+# resolves — as a generalist — rather than failing the run.
+#
+# The enums exist as starting points, not limits. Enforced as a closed list,
+# Domain forced eight subjects out of twelve into "hardware", because a model
+# asked to choose from a list without the right answer picks the nearest wrong
+# one rather than refusing.
+#
+# For a fuller example on a team that is not an engineering team at all, see
+# profiles/studio.yaml.
+domains:
+  field_service:
+    lead: field_technician
+    checks:
+      - "Can this be serviced on-site without removing the enclosure from the rail?"
+
+roles:
+  field_technician:
+    name: "Field Technician"
+    domain: field_service
+    tier: engineering
+    expertise: "Installation and servicing in live plant: access, lockout, spares carried on the van, and what can be diagnosed without a laptop."

@@ -1,0 +1,99 @@
+# A worked example of the thing that makes this harness general: the
+# vocabularies are yours, not ours.
+#
+# profiles/example.yaml describes an engineering project, because that is where
+# this started. This one deliberately does not. Nothing below is a shipped
+# domain or a shipped role — there is no "copywriting" in the Domain enum and no
+# "fact_checker" in SpecialistRole — and none of it required a code change.
+#
+# Why the vocabularies are open at all is a measurement, not a preference. With
+# Domain enforced as a closed enum, nine subjects out of twelve had no fitting
+# value and eight of those came back "hardware": civil engineering as hardware,
+# buffer chemistry as documentation, a latency budget as firmware. A closed list
+# does not make a model refuse honestly. It makes it pick the least wrong label
+# and sound certain about it. Staffing had the same defect — asked to review a
+# records retention schedule, a closed roster returned seven engineers.
+#
+# Select with AUTORND_PROFILE=studio.
+
+name: "Meridian Studio"
+description: "A small content studio: brand strategy, long-form copy, and search"
+site_url: "https://example.com"
+
+# Free context every specialist prompt carries. Keep it short and true — it is
+# prepended to every call, so it is paid for on every call.
+stack:
+  - "Long-form articles and landing pages, published weekly"
+  - "Headless CMS, Markdown source of truth"
+  - "House style guide, revised quarterly"
+
+constraints:
+  - "Every factual claim needs a citable source before publication"
+  - "Reading age 14 or below on public pages"
+  - "No claim about a named competitor without legal review"
+
+# ── domains ──────────────────────────────────────────────────────────────
+# domain name -> lead specialist, or {lead, checks}.
+#
+# `checks` are the validation questions work in that domain is judged by. They
+# matter more than they look: the built-in lenses only cover the seven shipped
+# domains, so before profiles could declare these, work in any other subject
+# reached validation with no lenses at all.
+domains:
+  brand_strategy: strategist          # the short form: just name the lead
+
+  copywriting:
+    lead: copywriter
+    checks:
+      - "Does every factual claim carry a source the reader can follow?"
+      - "Is the reading age at or below 14 on anything public-facing?"
+
+  seo_analytics:
+    lead: seo_analyst
+    checks:
+      - "Is the target query named, with the evidence it is worth targeting?"
+
+# ── roles ────────────────────────────────────────────────────────────────
+# role name -> {name, domain, tier, expertise}. All four are optional; an
+# undeclared role still resolves, as a synthesized generalist, rather than
+# failing the run. `tier` picks which configured model answers for this role
+# and defaults to `engineering`.
+roles:
+  strategist:
+    name: "Brand Strategist"
+    domain: brand_strategy
+    tier: architecture                # planning work, so the planning tier
+    expertise: "Positioning, audience definition, message hierarchy. Decides what a piece is for before anyone writes it."
+
+  copywriter:
+    name: "Copywriter"
+    domain: copywriting
+    tier: engineering
+    expertise: "Long-form and landing copy in house voice. Structure, rhythm, and the discipline of cutting."
+
+  editor:
+    name: "Editor"
+    domain: copywriting
+    tier: engineering
+    expertise: "Line editing, house style, reading age. Judges the draft against the brief rather than rewriting it."
+
+  # Deliberately in the example: this is the same job the search tier does for
+  # engineering work. A confident wrong figure reads exactly like a confident
+  # right one, so somebody has to be accountable for the difference.
+  fact_checker:
+    name: "Fact Checker"
+    domain: copywriting
+    tier: engineering
+    expertise: "Verifies every claim against a primary source and names the source. Flags anything that cannot be sourced rather than softening it."
+
+  seo_analyst:
+    name: "Search Analyst"
+    domain: seo_analytics
+    tier: engineering
+    expertise: "Query intent, search volume evidence, internal linking. Distinguishes a measured opportunity from a guess."
+
+# Per-specialist context overrides, for anything a role needs that the shared
+# stack and constraints above do not cover.
+specialists:
+  fact_checker:
+    context: "Primary sources only: the originating study, filing, or dataset. A secondary article citing a study is not the study."

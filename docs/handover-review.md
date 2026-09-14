@@ -10,6 +10,31 @@ from the repo rather than from pasted conversation.
 
 ---
 
+## 0. The blueprint protocol
+
+Four blueprints have run through this document (§7, §9, §10, §11). The working
+shape is stable enough to state once:
+
+1. **The blueprint lands in the repo verbatim and unexecuted, before any of it
+   is carried out.** The session then works from the repo rather than from a
+   chat transcript, and the record shows what was asked for separately from what
+   was done.
+2. **An execution record follows as §N.2**: departures with their reasons, what
+   was left undone deliberately, and anything execution found that the blueprint
+   missed. Every value touched gets a line, "while here" edits included.
+3. **The provenance rule** (binding from Blueprint 004): every number in a
+   blueprint carries `[measured: §ref]`, `[derived: method]`, or
+   `[estimate → derive before use]`. **Estimates set expectations; they never
+   gate anything.** This exists because the estimates have been the wrong part
+   on every pass so far while the mechanisms were right — 001 assumed one
+   packaging fault and found three, 002 flagged an accurate test count as stale,
+   003 was ten times high on a unit cost whose true value was already in
+   `HANDOVER` §6. Source a number from §6 before asserting it.
+4. **Expectations are pre-registered**, and a wrong one is reported as wrong
+   rather than quietly adjusted to match the result (convention 7).
+
+---
+
 ## 1. Corrections to HANDOVER.md
 
 ### 1.1 CI exists — and that is the *point* of B1 ❗

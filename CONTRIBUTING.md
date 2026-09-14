@@ -124,6 +124,8 @@ roles:
 
 An undeclared role resolves to a **synthesized generalist** rather than failing,
 and an unmapped domain falls back to the systems architect.
+[`profiles/studio.yaml`](profiles/studio.yaml) is a full worked example on a
+non-engineering team, commented as a teaching file.
 
 This is not a style preference; it is a measured correction. With `Domain`
 enforced as a closed enum, nine of twelve subjects had no fitting value and
