@@ -2225,3 +2225,62 @@ diagnosed, where the validator asks for evidence a specialist with no filesystem
 cannot produce. I do **not** predict a converged-on-red, because it needs a
 critical domain review alongside a green validate, and these scenarios are
 engineering work where the two should mostly agree.
+
+#### Part B results
+
+One repetition each, identical suite, identical serving (Perplexity is the only
+provider for both), `--repeat 1`, 4000-token consequential budget.
+
+| | `sonar-pro` (current) | `sonar` (sibling) |
+|---|---|---|
+| sectors recovered | **5/8** | **4/8** |
+| total cost | $0.4005 | **$0.0664** |
+| search-tier cost | $0.3845 over 7 lookups | $0.0500 over 8 lookups |
+| **cost per lookup** | **$0.0549** | **$0.0063** — 8.7× cheaper |
+| wall clock | 530s | 192s — 2.8× faster |
+
+**Predictions scored.** `sonar-pro` at 5/8: **right, exactly** [measured: §6.3].
+My own added prediction, that the sibling matches within one sector: **right** —
+4/8.
+
+**The headline is not the score, it is that the misses are complementary rather
+than nested.**
+
+| sector | `sonar-pro` | `sonar` |
+|---|---|---|
+| food_processing, water_treatment | pass | pass |
+| architectural_acoustics, broadcast, rail_signalling | pass | **fail** |
+| ev_charging, hydraulics | **fail** | pass |
+| robot_safety | fail | fail |
+
+Only two sectors pass on both and only one fails on both; the **union is 7/8**.
+These are not a better and a worse model, they are two models that miss
+different things. A 5-versus-4 gap built from that pattern, on one repetition,
+is not a quality ranking — it is close to noise.
+
+One of `sonar-pro`'s three failures is not a search failure at all:
+**`hydraulics` fired no lookup** (0 search calls) and failed for want of one,
+while `sonar` looked it up and passed. That is the materiality gate declining to
+mark a blocking gap, not the model failing to find a figure — so `sonar-pro`'s
+"5/8" contains one sector it lost to a gate decision rather than to its own
+answer.
+
+**The fee inversion §4.1 projected has happened, measured.** At $0.0063 a lookup
+against a per-request fee of roughly half a cent, the fee is now the *majority*
+of a lookup's cost rather than 13% of it. Two consequences, both already
+anticipated: a generous token budget becomes nearly free, so the owner's
+original instinct — "it is priced per call, give it the maximum" — becomes
+correct for the first time; and the materiality cap's maximum possible value
+shrinks to a fraction of a cent per workflow, which is the interaction
+`HANDOVER` B2 predicted.
+
+**Recommendation — a decision input, not a decision (B4; `.env` is the owner's).**
+`sonar` is a strong candidate: 8.7× cheaper per lookup and 2.8× faster, one
+sector behind on a single repetition, with a complementary miss pattern that
+suggests the gap is not a quality ordering. Search is 61–98% of all spend
+(§6.3), so the saving is the largest single cost lever in the project. **What
+this does not yet support is a confident swap**: one repetition each, and the
+repeat convention exists precisely because a single result is an anecdote. The
+cheap, obvious next step is three repetitions of both — about $1.40 for
+`sonar-pro` and $0.20 for `sonar` — which would settle whether 5-versus-4 is a
+ranking or a coin toss.
