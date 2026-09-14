@@ -3301,3 +3301,58 @@ union is the input); per-criterion structured validate verdict
 drift read may graduate it with evidence); any .env edit (G-3);
 per-tier pins beyond the two ratified.
 ```
+
+### 15.1 Part C0 and C — pre-registration
+
+#### C1's free read: crossref is NOT channel-starved
+
+From `docs/traces/b7-convergence-v2.jsonl` (A6's retention; the filename the
+blueprint gave does not exist). Eight iterations of `conv_crossref_integrity`:
+
+| iter | summary chars | Δ | Jaccard vs prev | flagged → addressed next? |
+|---|---|---|---|---|
+| 1 | 5,754 | — | — | handshake → **yes** |
+| 2 | 6,712 | +958 | 0.83 | framing, endianness → **yes** |
+| 3 | 7,168 | +456 | 0.74 | handshake, framing → **yes** |
+| 4 | 11,220 | +4,052 | 0.57 | handshake → **yes** |
+| 5 | 7,138 | −4,082 | 0.51 | framing, endianness → framing only, **endianness missed** |
+| r1 | 9,965 | +2,827 | 0.62 | handshake → **yes** |
+| r2 | 8,907 | −1,058 | 0.75 | framing, endianness → **yes** |
+| r3 | 8,464 | −443 | 0.80 | — |
+
+**Classification: genuine difficulty, not starvation.** The implementation
+rewrites substantially every round (Jaccard 0.51–0.83) and **addresses the
+flagged topic in seven of eight iterations**. It is not churning blindly; it is
+fixing what it was told and validate is then naming a *different* criterion.
+
+**The mechanism this exposes, which is not on the lever menu.** Validate returns
+**one** `red_cause` while its `evidence` field carries a verdict for **every**
+criterion — and only `red_cause` reaches the next iteration. With five or six
+criteria and one reported at a time, the loop plays whack-a-mole: satisfy the
+named criterion, and the next round names another. **The per-criterion verdicts
+already exist and are already recorded in the failure log; the next
+implementation is simply not shown them.** Widening the channel for *validate's
+evidence* — as Part B just did for domain-review concerns — is the proposal this
+read produces. It is **not implemented here**: B1 ruled on the domain-review
+half only, and this is a second, separately rulable change.
+
+#### Pre-registered from that read, before any run
+
+| scenario | prediction | basis |
+|---|---|---|
+| `conv_crossref_integrity` | **still does not converge** → exhaust → escalate | nothing in 008 changes validate's one-criterion-at-a-time channel, which the drift read identifies as the driver. The fold adds judges; it does not add feedback. |
+| `conv_derived_tolerances` | converges ≤2 | converged in 1 at n=1 (007); the fold now also requires coverage and consistency green, so allow one more |
+| `conv_numeric_consistency` | converges ≤3, ships | [measured: 006 n=1, 007 n=1 — two single observations, not a mean] |
+| `conv_requires_execution` | exhaust → escalate | converged-on-red is structurally impossible now; B2's hardening should make validate red rather than pass a mutated criterion. **If it converges all-green, B2 failed and B3 applies.** |
+
+#### C0 arm resolution
+
+`MODEL_ARCHITECTURE` is unchanged, so arm 1 is the incumbent. **Neither fallback
+is served by StreamLake** — `qwen/qwen3.7-max` is served only by Alibaba,
+`x-ai/grok-4.3` only by xAI — which is the case C0.1 anticipated. Both would run
+with architecture explicitly unpinned (`architecture:` with an empty value), and
+each has exactly one serving anyway, so no lottery is possible either way.
+
+Cheap-first ordering, per the new convention: arm 1 ($1.89/M on StreamLake) →
+arm 3 (grok, $2.50/M) → arm 2 (qwen, $4.42/M). Per C0.3 the fallbacks run only
+if arm 1 fails a pre-registration.
