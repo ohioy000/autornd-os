@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-501%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-504%20passing-brightgreen.svg)](#testing)
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
 
@@ -732,7 +732,7 @@ workflows/                # engineering-rnd, lean, triage-only, triage-classify
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 501 tests
+tests/                    # 504 tests
 ```
 
 ## Cost and Performance
@@ -777,7 +777,7 @@ Three things follow, and they are the levers worth pulling:
 pytest tests/ -v
 ```
 
-501 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
+504 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
 
 `tests/test_graph_equivalence.py` is the load-bearing one. The original hardcoded sequencer is kept as `execute_hardcoded`, and those tests assert the graph reproduces it call-for-call across five paths, including the expensive ones. Delete it and the graph stops being a measured baseline.
 

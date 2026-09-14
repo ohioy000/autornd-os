@@ -22,10 +22,15 @@
 Four commitments follow from that, and they have shaped every design decision:
 
 1. **Model-agnostic by principle.** *"I'm not picking the model for the public,
-   I'm giving them the harness."* The repo contains **zero** model names outside
-   `.env.example` illustrations and **zero** hardcoded prices. Tiers are named by
-   *job* (triage, engineering, architecture, escalation, research, search), never
-   by vendor. Prices are learned from the provider catalogue at startup; an
+   I'm giving them the harness."* **Selection is anonymous; the record is not.**
+   Zero model ids in code, configuration defaults, profiles, workflow files and
+   any user-facing passage that recommends or defaults to a model — including
+   `.env.example`, which names none. Measured results may name their subjects
+   and live in the development records: §6 here and `docs/handover-review.md`
+   are the lab notebook, and §6.3/§6.4 name models on purpose. The closer a
+   document sits to configuration, the stricter the rule. **Zero** hardcoded
+   prices anywhere. Tiers are named by *job* (triage, engineering, architecture,
+   escalation, research, search), never by vendor. Prices are learned from the provider catalogue at startup; an
    unknown model estimates as `0.0` rather than inventing a number.
 2. **Frugal and accurate are the same lever.** Every question moved *out* of a
    model is both cheaper and more reliable. Deterministic checks run before paid

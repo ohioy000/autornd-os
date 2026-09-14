@@ -39,7 +39,10 @@ Condensed from `HANDOVER.md` §4.4, which holds the full list.
 5. **Enums are default vocabularies, not limits.** `Domain` and `SpecialistRole`
    are starting sets; profiles declare their own.
 6. **No hardcoded model names or prices.** Rates come from the provider
-   catalogue.
+   catalogue. Selection is anonymous, the record is not: no model id in code,
+   config defaults, profiles, workflows or user-facing docs — but `HANDOVER.md`
+   §6 and `docs/handover-review.md` are the lab notebook and name what they
+   measured.
 7. **Test doubles must bill** (`client._account`). A free double hid a real
    accounting bug.
 
