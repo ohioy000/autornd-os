@@ -172,6 +172,7 @@ class ResultsLog:
             "cost_by_tier": run.cost_by_tier,
             "calls_by_tier": run.calls_by_tier,
             "providers_by_function": run.providers_by_tier,
+            "refused_lookups": run.refused_lookups,
             "assertions": [
                 {"name": r.name, "passed": r.passed,
                  "wanted": r.wanted, "got": r.got, "detail": r.detail}
@@ -239,6 +240,22 @@ def _provider_line(runs) -> str:
         return ""
     return "served by: " + ", ".join(
         f"{tier} via {'/'.join(sorted(p))}" for tier, p in sorted(seen.items()))
+
+
+def _refusal_line(runs) -> str:
+    """Say it loudly when lookups were refused.
+
+    A unit whose lookups were all refused scores zero and reads exactly like a
+    model that found nothing. In 007 that difference was recoverable only by
+    going and counting lookups per unit by hand, after the scores had already
+    been written down.
+    """
+    refused = sum(getattr(r, "refused_lookups", 0) or 0 for r in runs)
+    if not refused:
+        return ""
+    affected = sum(1 for r in runs if getattr(r, "refused_lookups", 0))
+    return (f"!! {refused} lookup(s) refused across {affected} unit(s) — "
+            f"their scores are not a measurement of the model")
 
 
 def _tier_line(by_tier: dict[str, float]) -> str:
@@ -312,6 +329,9 @@ class ScenarioRun:
     status: str = ""
     # One entry per build-loop iteration; see PhaseRunner.iterations.
     iterations: list[dict[str, Any]] = field(default_factory=list)
+    # Lookups the provider refused during this unit. A unit that scored zero
+    # with refusals is a poisoned reading, not a bad model.
+    refused_lookups: int = 0
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -390,6 +410,9 @@ class EvalReport:
             summary += f"  ·  ${self.cost:.4f}"
         lines.append(summary)
         lines.append(_tier_line(self.cost_by_tier))
+        refusal = _refusal_line(self.runs)
+        if refusal:
+            lines.append(refusal)
         provider_line = _provider_line(self.runs)
         if provider_line:
             lines.append(provider_line)
@@ -434,6 +457,9 @@ async def run_scenario(
             scenario=scenario, results=[], calls=0, seconds=0.0,
             error=budget.skip(),
         )
+
+    from autornd.knowledge import research as _research
+    _research.reset_refused_lookups()
 
     ceiling = scenario.max_calls or DEFAULT_CALL_CEILING
     spend_ceiling = budget.unit_ceiling(max_spend) if budget else max_spend
@@ -494,6 +520,7 @@ async def run_scenario(
         verdicts=verdicts,
         status=str(getattr(state, "status", "") or ""),
         iterations=list(getattr(runner, "iterations", []) or []),
+        refused_lookups=_research.refused_lookups(),
     )
 
 
@@ -617,8 +644,11 @@ class RepeatedReport:
             f"  ·  {self.calls} calls  ·  {self.seconds:.1f}s  ·  ${self.cost:.4f}"
         )
         lines.append(_tier_line(self.cost_by_tier))
-        provider_line = _provider_line(
-            [run for result in self.results for run in result.runs])
+        all_runs = [run for result in self.results for run in result.runs]
+        refusal = _refusal_line(all_runs)
+        if refusal:
+            lines.append(refusal)
+        provider_line = _provider_line(all_runs)
         if provider_line:
             lines.append(provider_line)
         return "\n".join(lines)

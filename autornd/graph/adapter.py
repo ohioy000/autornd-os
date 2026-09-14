@@ -253,7 +253,11 @@ class PhaseRunner:
         implement.domain_concerns = concerns
         if critical:
             implement.green = False
-            implement.red_cause = "Domain reviewer flagged critical concern"
+            # The reviewer's own words rather than a fixed sentence — see
+            # phases.render_domain_concerns. 006-D1(b) measured this channel
+            # carrying one generic string, so the next attempt could not know
+            # which choice was objected to.
+            implement.red_cause = phases.render_domain_concerns(concerns)
         return {"concerns": concerns, "critical": critical,
                 "reviewers": len(reviewers)}, responses
 
@@ -265,11 +269,17 @@ class PhaseRunner:
             context=self.context, domains=triage.domains,
             max_tokens=self._max_tokens(node),
         )
-        if not verdict.green:
+        # Record any iteration that failed, for any judge's reason. This used
+        # to fire only on a red validate, which was sufficient while the loop
+        # exited on validate alone. It is not now: the fold keeps iterating when
+        # the implementation is red and the validator is green, and in that case
+        # nothing was written here — so the next attempt read a stale entry, or
+        # none, and was told nothing about why it was going round again.
+        if not verdict.green or not implement.green:
             self.failure_log.append({
                 "iteration": state.iteration,
                 "implement_summary": implement.summary,
-                "red_cause": verdict.red_cause,
+                "red_cause": verdict.red_cause or implement.red_cause,
                 "evidence": verdict.evidence,
             })
 

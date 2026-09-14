@@ -53,6 +53,20 @@ the task."""
 
 # The mirror of the above for the assessing phases. Without it, validators
 # reject work for "not having been executed", which is never achievable here.
+# The criteria-are-fixed clause is measured, not stylistic. 007's
+# requires_execution trace: the criterion demanded a test at exactly 101 req/s,
+# the implementation used 121, and validate returned
+#
+#   "Criterion 2 (exactly 100 and 101 req/s): PASS — Test Case 1 covers
+#    100 req/s; Test Case 2 corrected to 121 req/s, with 101 req/s explicitly
+#    noted as not causing rejection."
+#
+# — marking PASS while stating in the same sentence that the test had been
+# changed away from what the criterion asked for. The domain reviewer caught it
+# and the final review blocked on it; validate was the judge that was wrong, and
+# a false pass is the expensive direction because it stops the loop.
+#
+# Expect this to need live iterations, as the risk guide did four times over.
 ASSESSMENT_CONTRACT = """\
 You are assessing a written implementation, not a running system. You cannot \
 execute code, run tests, or inspect a repository, and the absence of a live \
@@ -65,7 +79,16 @@ or a missing step. Do not mark it red merely because the work has not been run.
 
 Be exacting about the difference. "The plan says cap at 60s but the code sets \
 600s" is red. "I cannot confirm this without running it" is not — decide from \
-the text in front of you and say what you found."""
+the text in front of you and say what you found.
+
+The success criteria are the contract you assess against, and they are fixed. \
+You may not correct, reinterpret, relax or substitute a criterion, and you may \
+not accept work that changed one. Where the work and a criterion disagree, that \
+criterion FAILS — whichever of the two looks more sensible to you. Saying a \
+criterion is wrong, ambiguous or impossible is legitimate and belongs in \
+evidence; passing work against a criterion you have quietly amended is a false \
+assessment, and a false pass is worse than a wrong criterion because it ends \
+the loop."""
 
 
 def enforce_triage_composition(verdict: TriageVerdict) -> None:
@@ -522,6 +545,29 @@ async def run_domain_review(
     return concerns, critical, responses
 
 
+# Measured 006-D1(b): when a critical domain review flipped the implementation
+# red, the entire feedback the next iteration received was the fixed sentence
+# "Domain reviewer flagged critical concern". The concerns themselves were in
+# hand at the mutation site and went onto a field nothing downstream read. One
+# generic string cannot tell an implementer which of its choices was wrong, so
+# the next attempt rewrote from the same information as the last one.
+#
+# Mechanical inclusion of what the reviewer already said. No new judgement, no
+# summarising call — the strings are copied, joined and capped.
+DOMAIN_CONCERN_BUDGET = 1200
+
+
+def render_domain_concerns(concerns: list[str]) -> str:
+    """The reviewer's own words, as the reason the implementation is red."""
+    cleaned = [str(c).strip() for c in (concerns or []) if str(c).strip()]
+    if not cleaned:
+        return "Domain reviewer flagged critical concern"
+    body = "; ".join(cleaned)
+    if len(body) > DOMAIN_CONCERN_BUDGET:
+        body = body[:DOMAIN_CONCERN_BUDGET].rsplit(" ", 1)[0] + " […]"
+    return f"Domain reviewer flagged critical concern: {body}"
+
+
 async def run_implement(
     client: OpenRouterClient,
     request: str,
@@ -609,7 +655,7 @@ Original request:
         responses.extend(review_responses)
         if critical:
             lead_data["green"] = False
-            lead_data["red_cause"] = "Domain reviewer flagged critical concern"
+            lead_data["red_cause"] = render_domain_concerns(domain_concerns)
 
     lead_data["domain_concerns"] = domain_concerns
     verdict = ImplementVerdict(**lead_data)

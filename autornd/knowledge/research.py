@@ -30,6 +30,27 @@ from autornd.routing.openrouter import BudgetExceeded
 
 logger = logging.getLogger(__name__)
 
+# Lookups the provider refused, counted since process start.
+#
+# Swallowing a failed lookup is right — three facts out of four beats aborting,
+# and the missing one stays visible as a gap — but it is silent, and silence
+# scored whole eval arms in 007. A spend ceiling began refusing every completion
+# partway through a sweep; the affected units ran, found nothing, and scored
+# zero, which is indistinguishable from a model that found nothing. Only the
+# per-unit lookup counts separated a poisoned run from a bad one, and they had
+# to be gone looking for. A refusal is now counted where it is swallowed, so a
+# result carries the reason it is empty.
+_refused_lookups = 0
+
+
+def refused_lookups() -> int:
+    return _refused_lookups
+
+
+def reset_refused_lookups() -> None:
+    global _refused_lookups
+    _refused_lookups = 0
+
 # A budget stop is a decision, not a failure. Every handler below exists so a
 # lookup that breaks does not take the workflow with it, and each one would
 # otherwise swallow the ceiling that was meant to end the run — leaving the
@@ -161,6 +182,8 @@ async def research_gaps(
         except BudgetExceeded:
             raise
         except Exception as exc:
+            global _refused_lookups
+            _refused_lookups += 1
             logger.warning("Lookup failed for %r: %s", question[:60], exc)
             continue
         if not answer:

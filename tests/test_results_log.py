@@ -194,3 +194,29 @@ class TestAFailedRunKeepsWhatItCompleted:
         assert "triage" in unit["verdicts"], (
             "the verdict that completed before the break must survive it")
         assert unit["verdicts"]["triage"]["risk"] == "medium"
+
+
+class TestRefusedLookupsAreLoud:
+    """A poisoned unit scores zero and reads exactly like a model that found
+    nothing. 007 lost most of two eval arms to that: a spend ceiling began
+    refusing every completion partway through a sweep, the affected units ran
+    and scored zero, and only a hand count of lookups per unit told the two
+    apart — after the scores had been written down."""
+
+    def test_the_report_says_so_when_lookups_were_refused(self):
+        from autornd.evals.runner import _refusal_line
+
+        class Run:
+            def __init__(self, n):
+                self.refused_lookups = n
+
+        assert _refusal_line([Run(0), Run(0)]) == ""
+        line = _refusal_line([Run(3), Run(0), Run(1)])
+        assert "4 lookup(s) refused across 2 unit(s)" in line
+        assert "not a measurement of the model" in line
+
+    def test_the_counter_resets_between_units(self):
+        from autornd.knowledge import research
+
+        research.reset_refused_lookups()
+        assert research.refused_lookups() == 0
