@@ -629,3 +629,80 @@ class TestIndependentPassSkips:
         assert verdict["skipped"] is True
         assert "engineering model" in verdict["reason"]
         assert responses == [], "a skip must not cost a call"
+
+
+class TestProviderVisibility:
+    """A model id is not a system.
+
+    The same id served by a different provider produced 70-token replies at a
+    thirtieth of the price and classified four sectors differently between two
+    runs of one eval suite. Without the provider recorded, that reads as a code
+    regression.
+    """
+
+    def test_providers_are_recorded_per_tier(self):
+        c = OpenRouterClient(api_key="test")
+        c._account("triage", 0.0001, provider="OpenInference")
+        c._account("triage", 0.0001, provider="StreamLake")
+        c._account("search", 0.02, provider="Perplexity")
+        assert c.providers_by_function["triage"] == {"OpenInference", "StreamLake"}
+        assert c.providers_by_function["search"] == {"Perplexity"}
+
+    def test_a_missing_provider_is_not_recorded_as_one(self):
+        c = OpenRouterClient(api_key="test")
+        c._account("triage", 0.0001, provider=None)
+        assert c.providers_by_function == {}
+        assert c.calls == 1, "the call still counts"
+
+    def test_reset_clears_providers(self):
+        c = OpenRouterClient(api_key="test")
+        c._account("triage", 0.0001, provider="OpenInference")
+        c.reset_accounting()
+        assert c.providers_by_function == {}
+
+
+@pytest.mark.asyncio
+class TestProviderPinning:
+    """Reproducibility and availability are different goals. Unset, the provider
+    decides and a run may be served by anyone; set, a run is repeatable."""
+
+    async def _payload(self, monkeypatch, order):
+        from autornd.config import settings
+        from autornd.routing.openrouter import ModelResponse
+
+        monkeypatch.setattr(settings, "openrouter_provider_order", order)
+        captured = {}
+
+        class FakeResponse:
+            status_code = 200
+            text = ""
+            def raise_for_status(self): pass
+            def json(self):
+                return {"choices": [{"message": {"content": "{}"},
+                                     "finish_reason": "stop"}],
+                        "usage": {"prompt_tokens": 1, "completion_tokens": 1,
+                                  "cost": 0.0}}
+
+        class FakeHttp:
+            async def post(self, path, json):
+                captured.update(json)
+                return FakeResponse()
+
+        client = OpenRouterClient(api_key="test")
+        monkeypatch.setattr(client, "_get_client", AsyncMock(return_value=FakeHttp()))
+        await client.chat(function="triage", system_prompt="s", user_message="u")
+        return captured
+
+    async def test_unset_sends_no_provider_block(self, monkeypatch):
+        payload = await self._payload(monkeypatch, "")
+        assert "provider" not in payload
+
+    async def test_a_pin_disables_fallbacks(self, monkeypatch):
+        """A pin that silently falls back to someone else is not a pin."""
+        payload = await self._payload(monkeypatch, "OpenInference, StreamLake")
+        assert payload["provider"] == {
+            "order": ["OpenInference", "StreamLake"], "allow_fallbacks": False}
+
+    async def test_whitespace_and_blanks_are_ignored(self, monkeypatch):
+        payload = await self._payload(monkeypatch, " , OpenInference ,, ")
+        assert payload["provider"]["order"] == ["OpenInference"]

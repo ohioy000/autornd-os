@@ -66,6 +66,24 @@ def _isolated_store():
             settings.chromadb_path = original
 
 
+def _provider_line(runs) -> str:
+    """Which upstream served each tier across the whole suite.
+
+    A model id is not a system. The same id served by a different provider gave
+    70-token replies at a thirtieth of the price and classified four sectors
+    differently between two runs of this suite — so the answer to "did my change
+    break this?" often lives on this line.
+    """
+    seen: dict[str, set[str]] = {}
+    for run in runs:
+        for tier, providers in (run.providers_by_tier or {}).items():
+            seen.setdefault(tier, set()).update(providers)
+    if not seen:
+        return ""
+    return "served by: " + ", ".join(
+        f"{tier} via {'/'.join(sorted(p))}" for tier, p in sorted(seen.items()))
+
+
 def _tier_line(by_tier: dict[str, float]) -> str:
     """Where the money went, biggest first.
 
@@ -120,6 +138,10 @@ class ScenarioRun:
     # tier can outweigh every other call in a workflow.
     cost_by_tier: dict[str, float] = field(default_factory=dict)
     calls_by_tier: dict[str, int] = field(default_factory=dict)
+    # Who served each tier. Recorded because a suite that drops six sectors
+    # between runs looks like a code regression until you can see that a model
+    # id changed hands.
+    providers_by_tier: dict[str, list[str]] = field(default_factory=dict)
 
     @property
     def skipped(self) -> bool:
@@ -192,6 +214,9 @@ class EvalReport:
             summary += f"  ·  ${self.cost:.4f}"
         lines.append(summary)
         lines.append(_tier_line(self.cost_by_tier))
+        provider_line = _provider_line(self.runs)
+        if provider_line:
+            lines.append(provider_line)
         return "\n".join(lines)
 
 
@@ -257,6 +282,8 @@ async def run_scenario(
         path=list(state.path),
         cost_by_tier=dict(runner.client.spend_by_function),
         calls_by_tier=dict(runner.client.calls_by_function),
+        providers_by_tier={k: sorted(v) for k, v
+                           in runner.client.providers_by_function.items()},
     )
 
 
@@ -380,6 +407,10 @@ class RepeatedReport:
             f"  ·  {self.calls} calls  ·  {self.seconds:.1f}s  ·  ${self.cost:.4f}"
         )
         lines.append(_tier_line(self.cost_by_tier))
+        provider_line = _provider_line(
+            [run for result in self.results for run in result.runs])
+        if provider_line:
+            lines.append(provider_line)
         return "\n".join(lines)
 
 

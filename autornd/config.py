@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     model_ranker: str = ""
     model_premium: str = ""
 
+    # Pin which upstream serves requests, comma separated, highest first. Empty
+    # means the provider decides, which favours availability over
+    # reproducibility — and the two are not the same: a model id served by a
+    # different provider produced shorter replies, a 30x lower price and
+    # different risk classifications between two runs of one eval suite.
+    openrouter_provider_order: str = ""
+
     max_iterations: int = 5
     escalation_max_tokens: int = 16384
 

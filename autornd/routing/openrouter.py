@@ -82,6 +82,14 @@ class OpenRouterClient:
         self.calls: int = 0
         self.spend_by_function: dict[str, float] = {}
         self.calls_by_function: dict[str, int] = {}
+        # Which upstream actually served each tier. A model id is not a system:
+        # the same id served by two providers is two different systems, with
+        # different output lengths, latencies, prices and answers. Measured —
+        # one triage model moved provider between two runs of the same suite and
+        # went from $0.0003 to $0.00001 a call, 70-token replies, and a
+        # different risk classification on four sectors. Without this recorded,
+        # that looks like a code regression.
+        self.providers_by_function: dict[str, set[str]] = {}
         # Optional budgets, used by experiments. Left unset in production: an
         # abort half-way through a real workflow throws away the work done so
         # far, whereas an experiment that runs away is a thing that has already
@@ -89,7 +97,8 @@ class OpenRouterClient:
         self.call_ceiling: int | None = None
         self.spend_ceiling: float | None = None
 
-    def _account(self, function: str, cost: float) -> None:
+    def _account(self, function: str, cost: float,
+                 provider: str | None = None) -> None:
         """Record one billable request. Called for every request, no exceptions.
 
         Budgets are enforced here rather than by the caller, so a ceiling covers
@@ -98,6 +107,8 @@ class OpenRouterClient:
         """
         self.calls += 1
         self.calls_by_function[function] = self.calls_by_function.get(function, 0) + 1
+        if provider:
+            self.providers_by_function.setdefault(function, set()).add(provider)
         if cost:
             self.spend += cost
             self.spend_by_function[function] = (
@@ -121,6 +132,7 @@ class OpenRouterClient:
         self.calls = 0
         self.spend_by_function = {}
         self.calls_by_function = {}
+        self.providers_by_function = {}
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -186,6 +198,16 @@ class OpenRouterClient:
         # this simply omit usage.cost and we fall back to catalogue rates.
         payload["usage"] = {"include": True}
 
+        # Optionally pin who serves the request. A model id alone does not
+        # determine behaviour: the same id moved provider between two runs of
+        # the same eval suite and classified four sectors differently. Leave
+        # unset for availability, set it when a run has to be reproducible.
+        if settings.openrouter_provider_order:
+            order = [p.strip() for p in
+                     settings.openrouter_provider_order.split(",") if p.strip()]
+            if order:
+                payload["provider"] = {"order": order, "allow_fallbacks": False}
+
         client = await self._get_client()
         resp = await client.post("/chat/completions", json=payload)
         if resp.status_code == 400 and response_format:
@@ -227,7 +249,7 @@ class OpenRouterClient:
 
         # Every attempt counts, retries included. A retry storm that costs real
         # money should look expensive rather than free.
-        self._account(function, cost)
+        self._account(function, cost, provider)
 
         return ModelResponse(
             content=content,
