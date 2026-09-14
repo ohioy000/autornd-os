@@ -2802,3 +2802,29 @@ and grounding is where search lives. **A future planning probe that wants to
 isolate architecture cost should drop the context node** — at the cost of
 planning without grounding, which is not what production does. Recorded as the
 design trade rather than silently fixed.
+
+### 14.3 Part C — the search swap, settled
+
+Three arms, `evals/grounding`, `triage-only`, **repeat 3**, all env-prefixed
+`triage:Alibaba,architecture:StreamLake`. The search serving is fixed by
+construction: both candidate models have exactly one provider between them
+(006 §13.1), so this is a model comparison with no lottery to control for.
+
+**Pre-registered before any arm ran:**
+
+| arm | model | caps | prediction |
+|---|---|---|---|
+| 1 | current | as configured | mean **5/8** figures [measured: §6.3; 006 saw exactly 5/8 at repeat 1] |
+| 2 | cheap sibling | as configured | **no prior** — the question |
+| 3 | cheap sibling | `SEARCH_MAX_TOKENS=4000`, `..._CONSEQUENTIAL=4000` | **no prior**; the extra tokens should cost ≈nothing [labelled projection — the fee inversion measured in 006 §13.1 puts the per-request fee at the majority of a sibling lookup] |
+
+**Decision rule, pre-registered:** swap iff the best sibling arm's mean figures
+≥ arm 1's mean. If arm 3 beats arm 2 materially, the swap is model **and** cap
+together. If the sibling loses, the current model stands and §4.1's
+fee-inversion argument remains a projection. The `.env` edit is the owner's.
+
+Mine, labelled: **arm 2 ≈ arm 1 at three repetitions**, because 006's
+one-repetition gap (5 vs 4) came from a *complementary* miss pattern — only two
+sectors passed on both, only one failed on both, union 7/8 — which is the
+signature of variance rather than a quality ordering. And **arm 3 ≥ arm 2**,
+because §6.3's misses were truncation of bundled tails rather than ignorance.
