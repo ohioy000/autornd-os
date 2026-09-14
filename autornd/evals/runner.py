@@ -363,9 +363,16 @@ class RepeatedReport:
                 f"{name} {count}/{len(result.runs)}"
                 for name, count in sorted(result.flaky.items(), key=lambda i: -i[1])
             )
+            # The name of a failed assertion is rarely the finding; the detail
+            # is. `figures_present` exists to say which figure is missing, and
+            # showing only its name sends the reader back to re-run it.
+            details = [f.detail for run in result.runs for f in run.failures
+                       if f.detail]
+            if details:
+                flaky = f"{flaky} — {details[0]}"
             lines.append(
                 f"{result.scenario.id:<24}{rate:>8}{result.calls:>7}"
-                f"{result.seconds:>8.1f}   {flaky[:44]}"
+                f"{result.seconds:>8.1f}   {flaky[:88]}"
             )
         lines.append("-" * 92)
         lines.append(
