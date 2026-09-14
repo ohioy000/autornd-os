@@ -3515,3 +3515,175 @@ C0 arm 1 $0.0707, Part C $0.1884. Parts A, B and D free.
   passes has stalled.
 - **`numeric_consistency` has one timed-out observation**, n=1. Whether 900 s is
   too short or the loop genuinely diverges is not settled by this run.
+
+---
+
+## 16. Blueprint 009 — Give review's findings a consumer (verbatim, as received)
+
+**Status: not executed at the time of recording.** Execution record: §16.2.
+
+```text
+BLUEPRINT 009 — Give review's findings a consumer: the evidence channel,
+the rework loop, the plan ceiling, and the reference's retirement.
+
+Origin: 008 §15 — three of four traces end blocked at review with nothing
+downstream to act on findings (§5 item 12, now with evidence); the
+whack-a-mole channel measured live (numeric_consistency, two reds with
+different causes, one named criterion at a time); and B8's lever made
+concrete — the plan node runs at a 16,384 default with no setting, while
+its requests burned seven full-budget retries returning nothing.
+
+Protocol (as 001–008): paste verbatim into docs/handover-review.md as §16
+BEFORE executing; append §16.2 after. Provenance, premise, and n-carrying
+conventions binding. Permission boundary: Parts A, C, D, E are instrument
+and channel (ruled here); Part B implements the advisor's ruled design —
+loop wiring and gate routing are mechanics, execute as specified,
+departures via §16.2. Prerequisites: suite green before and after
+(re-derive the count); CI green before finishing; pins env-prefixed
+(triage:Alibaba,architecture:StreamLake — the owner's .env ratification
+is still pending, nothing here blocks on it).
+
+PART A — the validate evidence channel (FREE)
+
+A1. Read the validate prompt and the failure-log seam first (phases.py —
+    where red_cause is written and where implement reads it back). When
+    validate reds, the failure-log entry carries red_cause AND the full
+    evidence list — one line per criterion — joined and capped at a sane
+    character budget with the truncation count noted. The next implement
+    sees every failing criterion in one shot. Comment names the exhibit:
+    numeric_consistency, 008, two red rounds naming a different criterion
+    each time while the evidence held both [measured: §15.1].
+A2. Test, pre-registered: a validate double reds with evidence lines for
+    criteria 2, 4 and 6 → the captured implement prompt contains ALL
+    THREE in its first retry iteration. Name the test for the old bug:
+    one-criterion-at-a-time.
+A3. Fold-dissent retention (§15.2's flagged gap): the per-iteration record
+    gains the dissenting judge(s) and the free-check results
+    (coverage.passed, consistency.passed) — the fold computes the
+    dissenting list at the moment it runs; retain what it computes.
+    derived_tolerances' dissent is currently inferable but not readable;
+    make it readable.
+
+PART B — review→rework, the ruled design (FREE to build; §5 item 12)
+
+B0. FREE FIRST, per the premise rule: read the three blocked traces'
+    review findings in docs/traces/b7-convergence-v3.jsonl. Classify each
+    finding: addressable-in-text | structural | preference. Record in
+    §16.1. THEN pre-register Part C's per-trace expectations FROM that
+    read — do not pre-register before reading.
+B1. Gate routing: Node.on_fail accepts a node id in addition to terminal
+    statuses. Load-time validation in spec.py: the value must be a known
+    terminal status or a DECLARED node id — anything else fails at load,
+    loudly (the missing-path principle). Executor: routing continues the
+    run at the named node and sets no terminal status. Tests: a gate
+    routes; an unknown on_fail target fails at parse; terminal statuses
+    behave exactly as before.
+B2. Review findings reach the failure log: when review.ship == false, the
+    failure-log entry carries the findings (lens, severity, detail),
+    joined and capped — the B1-class channel, review's half. Without
+    this the rework loop reworks blind; with it, implement receives the
+    same substance the gate read. Test: ship=false → captured implement
+    prompt contains the blocking findings.
+B3. workflows/engineering-rnd.yaml — the rework loop:
+      - review_clean: on_fail: review_rework_loop (routing; keep
+        on_fail_reason for the record).
+      - New free check review_fold: folds judges.passed and review.ship.
+      - review_rework_loop: body [implement, domain_review, coverage,
+        consistency, validate, judges, review, review_fold],
+        until: review_fold.passed == true,
+        max_iterations: review_rework_attempts (new setting, default 2;
+        comment: 3/4 traces blocked at review n=1 [measured: §15.1];
+        each round ≈ one body pass ≈ $0.02–0.05 [derived: §15.2 per-trace
+        cost]; exhaustion routes to escalation — the expensive but
+        honest path), on_exhausted: escalation.
+      - recovery_loop: extend its body with [review, review_fold] and the
+        same until — recovered work is re-reviewed before it ships.
+      - Yaml comment, the exhaustion semantics in one sentence: review
+        and implement can disagree indefinitely; the graph cannot — every
+        disagreement path is bounded and ends in escalation or a human.
+    Wire the DAG so that: rework convergence continues down the ship path
+    (independent_check and beyond); rework exhaustion reaches escalation,
+    whose requires_human → blocked now carries the full diagnosis.
+    Invariants, all tested:
+      (a) review blocks → next implement prompt contains the findings;
+      (b) rework converges → ship path proceeds;
+      (c) rework exhausts → escalation runs with findings + history in
+          the log;
+      (d) total review calls ≤ 1 + review_rework_attempts (+ the
+          recovery path, bounded by escalation_recovery_attempts) — no
+          unbounded cycle exists; add load-time validation that every
+          loop node declares max_iterations;
+      (e) requires_human → blocked, with the autopsy reachable in the
+          workflow record.
+B4. lean.yaml: read it; if it has a review + gate, apply the same shape;
+    if not, record that in §16.2.
+
+PART C — re-run under the ruled design (≈ $0.20–0.40; caps
+--max-spend 0.75 --max-spend-sweep 3.00; pins prefixed)
+
+C1. Pre-registrations FROM B0's read, recorded before running.
+C2. Fixed: the whack-a-mole shape is gone — if numeric_consistency reds,
+    its validate evidence carries every failing criterion at once, and
+    the timeout question settles: keep 900s; a second timeout WITH the
+    channel landed and the plan ceiling raised is genuine divergence,
+    and escalation with diagnosis is its honest outcome — a finding,
+    not a failure. Zero refused lookups expected (guard reports anyway).
+C3. B7's HANDOVER row, per the outcome: close it if all four terminate
+    in ship or escalated-with-diagnosis; keep it open with the next
+    failure named if one appears.
+C4. Advisor's [prediction], labelled, gating nothing: at least one of
+    the three review-blocked traces ships after rework; and no trace
+    ends in a naked blocked — every terminal carries either a ship or a
+    diagnosis. Wrong is recorded either way.
+
+PART D — retire the legacy reference (FREE; dedicated commit)
+
+D1. engine/workflow.py and tests/test_graph_equivalence.py are deleted
+    in their own commit. The commit message states the case: the
+    reference stopped paying — it did not fire on the all-judges change
+    (happy-path blind), it cost two wrong mirroring attempts, its own
+    suite carried an order-dependent defect, and gate routing makes the
+    flagship unrepresentable in a linear engine; a reference that models
+    less than the product models is false confidence. Cite the last
+    green equivalence run as the handover note. HANDOVER §5.11 is struck
+    with this story. Badge, Testing count and tree comment move in the
+    SAME commit (the count drops — that is correct, not drift).
+
+PART E — the plan token ceiling (FREE; value owner-tunable)
+
+E1. config.py: plan_max_tokens, default 32768. Comment: the plan node ran
+    at Specialist.run's 16,384 default while every serving advertises
+    262,000+; the same hard request burned seven full-budget retries
+    returning nothing — validate's 3000-token story at the plan tier;
+    a ceiling is billed only when used, and worst case one 32k success
+    costs less than seven 16k failures. [measured: §14.1 burn; §6.4
+    headroom pattern]
+E2. Wire max_tokens: plan_max_tokens on the plan node in
+    engineering-rnd.yaml, lean.yaml and plan-probe.yaml.
+E3. Part C pre-registration: no plan-phase burn — no finish_reason=length
+    storms, completion tokens well under the ceiling. [prediction]
+
+PART F — records
+
+F1. HANDOVER: B7 per C3; §5 item 12 → designed and landed, evidence
+    cited; §5.11 struck; B8 updated (the lever is now a setting — value
+    owner's); §6 gains three measured facts: the formal-vs-substantive
+    division validated as designed (B3 retired with it), the fold
+    dissent observed live (work that would have shipped under the old
+    exit), and tests-asserting-the-bug; §6.8 gains the order-dependent
+    guard defect (a guard whose result depends on test order is not a
+    guard); §4.4 convention 17: when a fix invalidates a test, ask which
+    of the two is wrong first — a test asserting current behaviour is
+    not automatically right.
+F2. Fix the stale review-node comment in engineering-rnd.yaml ("the
+    verdict is recorded, not gating" contradicts the gate below it).
+F3. CHANGELOG [Unreleased]: one prose paragraph — the evidence channel,
+    the rework loop with bounded exhaustion, the plan ceiling, the
+    reference's retirement, the formal-vs-substantive finding. No model
+    ids. Counts commit-stamped.
+
+OUT OF SCOPE, deliberately: cascade search design; per-tier pins beyond
+the two ratified; Alembic; any prompt that steers judgment (Parts A/B
+move recorded fields, phase semantics untouched); independent_check's
+placement (it runs after the ship path — unchanged); the dashboard.
+```
