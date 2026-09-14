@@ -14,4 +14,9 @@ expect:
   # A good run refuses early. Twenty-six calls discovering the request cannot be
   # validated is the failure, not the budget — a live run blocked in two.
   status: blocked
-  max_calls: 4
+  # Measured at 6: triage, the briefing, its lookups, and the plan that refuses.
+  # This was 4, set when the budget counted nodes rather than requests. The
+  # research lookups are inside the budget now, so that ceiling aborted every
+  # run and the scenario failed for a reason unrelated to what it tests.
+  # Re-baselined from measurement, with headroom for the three lookups.
+  max_calls: 8
