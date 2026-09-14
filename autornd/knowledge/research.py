@@ -30,11 +30,19 @@ logger = logging.getLogger(__name__)
 
 __all__ = ["Finding", "research_gaps"]
 
+# One request per workflow.
+#
 # Measured, not estimated: once every call was actually priced, search turned
 # out to be 61% of a full workflow and 98% of a grounding run — $0.72 of a
-# $0.74 eight-sector pass. A lookup is the most expensive thing this harness
-# does, so the ceiling is about thrift as well as bounding a runaway.
-MAX_LOOKUPS = 3
+# $0.74 eight-sector pass, about $0.024 a lookup at four lookups per workflow.
+# Search is by a wide margin the most expensive thing this harness does.
+#
+# So the gaps are asked together rather than one at a time. A search-backed
+# model answers a five-part question in one pass nearly as well as five
+# separate ones, and one request carries one search fee. The token budget goes
+# up to match, because a single answer now has to cover everything the work was
+# missing rather than one figure.
+MAX_LOOKUPS = 1
 
 # How close a stored finding must be to count as already answering a gap.
 # Chroma returns squared L2 distance here, so smaller is nearer; 0.35 keeps
@@ -44,10 +52,13 @@ MAX_LOOKUPS = 3
 REUSE_DISTANCE = 0.35
 
 LOOKUP_PROMPT = """\
-Answer this engineering question from authoritative sources — manufacturer
+Answer these engineering questions from authoritative sources — manufacturer
 datasheets, standards documents, official specifications.
 
 {question}
+
+Answer every question above. Each one is here because the work cannot proceed
+on an assumption about it, so a partial answer leaves the work blocked.
 
 Rules:
 - Give the figures, with their units exactly as the source states them.
@@ -110,6 +121,16 @@ async def research_gaps(
     """
     if client is None or not settings.model_search or not gaps:
         return []
+
+    # Ask everything in one request. Splitting the gaps would mean one search
+    # fee each, and the fee is charged per request rather than per question.
+    questions = [g.strip() for g in gaps if g and g.strip()]
+    if not questions:
+        return []
+    if max_lookups <= 1 and len(questions) > 1:
+        bundled = "\n".join(f"{i}. {q}" for i, q in enumerate(questions, 1))
+        gaps = [bundled]
+        max_lookups = 1
 
     findings: list[Finding] = []
     for question in gaps[:max_lookups]:

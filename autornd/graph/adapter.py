@@ -178,8 +178,12 @@ class PhaseRunner:
         of whichever phase happened to need it first.
         """
         triage = self._triage(state)
+        # Risk reaches the grounding decision. It is settled by triage before
+        # this runs, and it was not being passed — so a low-risk copy change
+        # bought the same paid lookups as a reactor monitoring spec.
         self.context = await build_phase_context(
-            state.request, triage.domains, triage.specialists, client=self.client
+            state.request, triage.domains, triage.specialists,
+            client=self.client, risk=triage.risk,
         )
         return Result(
             True,

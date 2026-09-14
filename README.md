@@ -74,14 +74,37 @@ Once every call was actually priced, search turned out to be **61% of a full
 workflow** and **98% of a grounding run** ($0.72 of $0.74 across eight
 sectors). Nothing else comes close, so two things bound it:
 
-- **Three lookups per workflow** (`MAX_LOOKUPS`). Gaps are ordered by the
-  briefing, so the three that run are the three the briefing thought mattered
-  most.
-- **The store is asked first.** Findings are ingested, so a fact looked up once
-  is local for every workflow afterwards, and a gap that matches a stored
-  finding closely enough is answered for free. The cheapest lookup is the one
-  already answered — and it is also the more consistent one, since it returns
+Three things bound it, in the order they take effect:
+
+- **Low-risk work does not look anything up.** A wrong answer in copy,
+  configuration or presentation costs a correction, not a board revision. The
+  floor sits below medium deliberately: both confabulations that justify
+  research at all — a charger IC named confidently and wrongly, ERP quoted as
+  EIRP — were selection work at medium risk.
+- **Only gaps that change the answer are looked up.** The briefing lists
+  everything the documentation does not cover, and separately marks which of
+  those a wrong assumption would actually change the answer for — a figure that
+  sets a dimension, a limit that decides compliance, a convention that decides
+  a unit. Often that list is empty. Every gap is still shown to the engineer;
+  only the blocking ones cost money. This is the change that mattered most: the
+  old gate was "did a model name any unknowns", and a model asked what is
+  unknown always names something, so research fired on every workflow whether
+  or not anything needed it.
+- **One request, carrying every gap.** The fee is charged per request, not per
+  question, so five gaps asked separately cost five fees. They are bundled into
+  one question with a larger token budget instead.
+- **The store is asked before anyone is paid.** Findings are ingested, so a fact
+  looked up once is local for every workflow afterwards. The cheapest lookup is
+  the one already answered — and it is the more consistent one, since it returns
   the figure already cited instead of re-asking and hoping for the same answer.
+
+A note on the token budget, because it is counter-intuitive: sonar-class search
+models bill a per-request fee **and** tokens, and at a 1200-token cap the model
+filled its budget every time. So tokens were the larger share, and raising the
+cap to a literal maximum would cost more than the separate lookups it replaces.
+`SEARCH_MAX_TOKENS` is 3000 — enough for a multi-part answer against one fee.
+Measure before changing it: reports break spend down per tier, so one grounding
+pass tells you the real per-lookup cost.
 
 Run `python -m autornd.evals.cli --max-spend 0.50` on anything that touches this
 tier. Reports break spend down per tier, so you can see where it went:

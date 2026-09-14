@@ -88,18 +88,38 @@ class TestResearchGaps:
         assert await research_gaps(client, "req", []) == []
         client.chat.assert_not_called()
 
-    async def test_each_gap_becomes_one_lookup(self, monkeypatch):
+    async def test_every_gap_rides_in_one_request(self, monkeypatch):
+        """The fee is charged per request, not per question, so asking two gaps
+        separately costs twice as much as asking them together. Measured at
+        roughly $0.024 a lookup, that is the difference between search being a
+        line item and search being the bill."""
         from autornd import config
 
         monkeypatch.setattr(config.settings, "model_search", "vendor/search")
         client = client_returning(
-            reply("3.65 V per cell", ["https://eve.com/lf280k.pdf"]),
-            reply("+16 dBm", ["https://lora-alliance.org/rp.pdf"]),
+            reply("1. 3.65 V per cell\n2. +16 dBm ERP",
+                  ["https://eve.com/lf280k.pdf",
+                   "https://lora-alliance.org/rp.pdf"]),
         )
         findings = await research_gaps(client, "req", GAPS)
-        assert [f.question for f in findings] == GAPS
-        assert all(f.grounded for f in findings)
-        assert client.chat.await_count == 2
+
+        assert client.chat.await_count == 1, "paid a second search fee"
+        assert len(findings) == 1
+        # both gaps are in the question that was asked
+        asked = client.chat.await_args.kwargs["user_message"]
+        for gap in GAPS:
+            assert gap in asked
+        assert findings[0].grounded
+
+    async def test_a_single_gap_is_not_numbered(self, monkeypatch):
+        """One question should read as a question, not as a list of one."""
+        from autornd import config
+
+        monkeypatch.setattr(config.settings, "model_search", "vendor/search")
+        client = client_returning(reply("3.65 V", ["https://eve.com/x.pdf"]))
+        findings = await research_gaps(client, "req", [GAPS[0]])
+        assert findings[0].question == GAPS[0]
+        assert not findings[0].question.startswith("1.")
 
     async def test_lookups_route_to_the_search_tier(self, monkeypatch):
         from autornd import config
@@ -109,19 +129,17 @@ class TestResearchGaps:
         await research_gaps(client, "req", GAPS[:1])
         assert client.chat.await_args.kwargs["function"] == "search"
 
-    async def test_one_failed_lookup_does_not_sink_the_rest(self, monkeypatch):
-        """Three facts out of four beats aborting; the missing one stays a gap."""
+    async def test_a_failed_lookup_does_not_sink_the_workflow(self, monkeypatch):
+        """The gaps ride in one request now, so a failure loses the findings
+        rather than some of them — and the workflow still proceeds, with the
+        gaps still named in the briefing above."""
         from autornd import config
 
         monkeypatch.setattr(config.settings, "model_search", "vendor/search")
         client = AsyncMock()
-        client.chat = AsyncMock(side_effect=[
-            RuntimeError("provider down"),
-            reply("+16 dBm", ["https://lora-alliance.org/rp.pdf"]),
-        ])
+        client.chat = AsyncMock(side_effect=RuntimeError("provider down"))
         findings = await research_gaps(client, "req", GAPS)
-        assert len(findings) == 1
-        assert findings[0].question == GAPS[1]
+        assert findings == []
 
     async def test_lookups_are_bounded(self, monkeypatch):
         """A runaway sweep cost forty minutes once. Nothing unbounded ships."""
@@ -281,5 +299,69 @@ class TestRecallBeforeSearch:
         findings = await research_gaps(client, "r", ["a gap"])
         assert client.chat.await_count == 1 and len(findings) == 1
 
-    def test_the_lookup_ceiling_reflects_what_search_costs(self):
-        assert MAX_LOOKUPS == 3
+    def test_one_request_per_workflow(self):
+        """Search was 61% of a full workflow and 98% of a grounding run. One
+        request, carrying every blocking gap."""
+        assert MAX_LOOKUPS == 1
+
+
+class TestWhenNothingIsWorthLookingUp:
+    """The cost fix. Research used to fire on every workflow because the only
+    gate was "did a model name any unknowns" — and a model asked what is
+    unknown always names something. Measured, that was 61% of a full workflow
+    and 98% of a grounding run on the most expensive tier in the system.
+    """
+
+    @pytest.mark.asyncio
+    async def test_no_gaps_means_no_call(self):
+        client = client_returning(reply("should not be called"))
+        assert await research_gaps(client, "r", []) == []
+        assert client.chat.await_count == 0
+
+    @pytest.mark.asyncio
+    async def test_blank_gaps_mean_no_call(self):
+        """A model that returns ["", " "] has named nothing."""
+        client = client_returning(reply("should not be called"))
+        assert await research_gaps(client, "r", ["", "   "]) == []
+        assert client.chat.await_count == 0
+
+    @pytest.mark.asyncio
+    async def test_no_search_tier_means_no_call(self, monkeypatch):
+        from autornd import config
+        monkeypatch.setattr(config.settings, "model_search", "")
+        client = client_returning(reply("should not be called"))
+        assert await research_gaps(client, "r", ["a real gap"]) == []
+        assert client.chat.await_count == 0
+
+
+class TestRiskGate:
+    """Low risk means a wrong answer is trivially reversible and cannot hurt
+    anyone. That does not justify the most expensive call this harness makes.
+
+    The floor sits below medium on purpose: both measured confabulations that
+    justify research at all — a charger IC named confidently and wrongly, and
+    ERP quoted as EIRP — were selection work at medium risk.
+    """
+
+    def test_low_risk_does_not_pay(self):
+        from autornd.knowledge.context import worth_a_lookup
+        from autornd.models.verdicts import RiskLevel
+        assert worth_a_lookup(RiskLevel.LOW) is False
+
+    def test_everything_above_low_pays(self):
+        from autornd.knowledge.context import worth_a_lookup
+        from autornd.models.verdicts import RiskLevel
+        for risk in (RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL):
+            assert worth_a_lookup(risk) is True, risk
+
+    def test_a_plain_string_works_too(self):
+        from autornd.knowledge.context import worth_a_lookup
+        assert worth_a_lookup("low") is False
+        assert worth_a_lookup(" LOW ") is False
+        assert worth_a_lookup("critical") is True
+
+    def test_unknown_risk_still_grounds(self):
+        """An absent risk is not a licence to skip grounding — it is a caller
+        that did not pass one, and guessing cheap would be the wrong default."""
+        from autornd.knowledge.context import worth_a_lookup
+        assert worth_a_lookup(None) is True

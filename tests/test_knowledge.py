@@ -396,15 +396,19 @@ class TestRankTierSelection:
         client.chat_json = AsyncMock(return_value=({
             "objective": "Deliver 24V from the board to the sensor.",
             "unknowns": ["sensor current draw", "connector type"],
+            "blocking_unknowns": ["sensor current draw"],
             "assumptions": ["supply is regulated"],
             "considerations": ["ingress rating"],
         }, None))
 
-        out, unknowns = await ctx.analyze_request(client, "wire the sensor")
+        out, worth_looking_up = await ctx.analyze_request(client, "wire the sensor")
         assert "Deliver 24V" in out
+        # every unknown is shown to the engineer...
         assert "sensor current draw" in out
+        assert "connector type" in out
         assert "Assumed unless corrected" in out
-        assert unknowns == ["sensor current draw", "connector type"]
+        # ...but only the blocking one is worth a search fee
+        assert worth_looking_up == ["sensor current draw"]
         assert client.chat_json.call_args.kwargs["function"] == "research"
 
     async def test_scoping_is_labelled_as_analysis_not_documentation(self, monkeypatch):
@@ -464,6 +468,7 @@ class TestRankTierSelection:
         client = AsyncMock()
         client.chat_json = AsyncMock(return_value=({
             "objective": "wire it", "unknowns": ["sensor supply voltage"],
+            "blocking_unknowns": ["sensor supply voltage"],
             "assumptions": [], "considerations": []}, None))
 
         async def chat(**kw):
@@ -598,3 +603,82 @@ class TestRerankModeIsProbedOnce:
         monkeypatch.setattr(ctx, "_rerank_mode", "distance")
         ctx.reset_rerank_mode()
         assert ctx._rerank_mode is None
+
+
+@pytest.mark.asyncio
+class TestSearchSpendIsGated:
+    """End to end: what does a workflow actually pay the search tier?
+
+    Before this, every workflow paid for three to four lookups whatever it was
+    doing, because the only gate was that a model had named some unknowns. A
+    marketing copy change bought the same premium lookups as a reactor spec.
+    """
+
+    @staticmethod
+    def _client(unknowns, blocking):
+        from unittest.mock import AsyncMock
+        from autornd.routing.openrouter import ModelResponse
+
+        client = AsyncMock()
+        client.chat_json = AsyncMock(return_value=({
+            "objective": "do the thing", "unknowns": unknowns,
+            "blocking_unknowns": blocking,
+            "assumptions": [], "considerations": []}, None))
+        client.chat = AsyncMock(return_value=ModelResponse(
+            content="A: some figure", model="m", prompt_tokens=1,
+            completion_tokens=1, cost=0.03,
+            citations=["https://example.org/ds.pdf"]))
+        return client
+
+    @pytest.fixture(autouse=True)
+    def _no_docs(self, monkeypatch):
+        from autornd import config
+        import autornd.knowledge.context as ctx
+        import autornd.knowledge.research as research
+
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        monkeypatch.setattr(config.settings, "model_search", "vendor/search")
+        monkeypatch.setattr(ctx, "retrieve", lambda *a, **k: [])
+        monkeypatch.setattr(ctx, "load_docs_context", lambda *a, **k: "")
+        monkeypatch.setattr(research, "retrieve", lambda *a, **k: [])
+        monkeypatch.setattr(research, "ingest_text", lambda *a, **k: 0)
+
+    async def test_low_risk_work_pays_nothing(self):
+        import autornd.knowledge.context as ctx
+        from autornd.models.verdicts import Domain, RiskLevel
+
+        client = self._client(["the brand voice"], ["the brand voice"])
+        out = await ctx.build_phase_context(
+            "rewrite the pricing page headline", [Domain.FRONTEND],
+            client=client, risk=RiskLevel.LOW)
+
+        assert client.chat.await_count == 0, "a copy change bought a search fee"
+        assert "REQUEST ANALYSIS" in out, "it is still scoped, just not researched"
+
+    async def test_consequential_work_with_no_blocking_gap_pays_nothing(self):
+        """Scoping naming five unknowns is not the same as five facts the work
+        cannot proceed without."""
+        import autornd.knowledge.context as ctx
+        from autornd.models.verdicts import Domain, RiskLevel
+
+        client = self._client(["nice to know", "also nice"], [])
+        await ctx.build_phase_context(
+            "size a bracket", [Domain.HARDWARE],
+            client=client, risk=RiskLevel.HIGH)
+        assert client.chat.await_count == 0
+
+    async def test_a_blocking_gap_on_consequential_work_pays_once(self):
+        import autornd.knowledge.context as ctx
+        from autornd.models.verdicts import Domain, RiskLevel
+
+        client = self._client(
+            ["the bolt grade", "the finish", "the lead time"],
+            ["the bolt grade", "the proof load"])
+        out = await ctx.build_phase_context(
+            "size a bracket", [Domain.HARDWARE],
+            client=client, risk=RiskLevel.HIGH)
+
+        assert client.chat.await_count == 1, "one request carries every gap"
+        asked = client.chat.await_args.kwargs["user_message"]
+        assert "the bolt grade" in asked and "the proof load" in asked
+        assert "RESEARCHED FACTS" in out

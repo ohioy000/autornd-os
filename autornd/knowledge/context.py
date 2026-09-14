@@ -178,6 +178,26 @@ Return JSON with:
 - queries: 2 to 4 short search queries, most important first."""
 
 
+def worth_a_lookup(risk: object) -> bool:
+    """Is this work consequential enough to pay a search fee for?
+
+    Low risk means a wrong answer is trivially reversible and cannot hurt
+    anyone — copy, configuration, presentation. Confabulation there costs a
+    correction, not a board revision, so it does not justify the most expensive
+    call this harness makes.
+
+    Everything else does. The two measured confabulations that justify research
+    at all — a charger IC named confidently and wrongly, and ERP quoted as EIRP
+    — were both selection work at medium risk, so the floor sits below that
+    deliberately.
+    """
+    from autornd.models.verdicts import RiskLevel
+
+    if risk is None:
+        return True          # unknown risk is not a licence to skip grounding
+    return str(getattr(risk, "value", risk)).strip().lower() != RiskLevel.LOW.value
+
+
 BRIEFING_PROMPT = """\
 Write a short grounding briefing for an engineer about to start this request,
 using only the project documentation excerpts below.
@@ -187,6 +207,12 @@ to respect, interfaces to match, values and limits, prior decisions. Be
 specific and quote real values. If the excerpts do not cover something the
 work will clearly need, say so plainly in `gaps` rather than guessing.
 
+A gap belongs in `blocking_gaps` only if a wrong assumption about it would
+change the answer — a figure that sets a dimension, a limit that decides
+compliance, a convention that decides a unit. Most gaps are not that: they are
+things it would be nice to know. Looking one up costs real money, so name only
+the ones that would actually change what gets built.
+
 Request:
 {request}
 
@@ -195,7 +221,9 @@ Documentation excerpts:
 
 Return JSON with:
 - briefing: the grounding text, at most 400 words
-- gaps: list of things this work needs that the documentation does not cover"""
+- gaps: list of things this work needs that the documentation does not cover
+- blocking_gaps: the subset of those where a wrong assumption changes the
+  answer. Often empty. Never more than three."""
 
 
 async def expand_queries(client, request: str) -> list[str]:
@@ -223,7 +251,8 @@ async def expand_queries(client, request: str) -> list[str]:
         return [request]
 
 
-async def synthesize_briefing(client, request: str, chunks: list[dict]) -> str:
+async def synthesize_briefing(client, request: str, chunks: list[dict],
+                              risk: object = None) -> str:
     """Read the ranked excerpts and write a grounded briefing (research tier).
 
     Falls back to handing the excerpts through verbatim, which is what every
@@ -251,6 +280,8 @@ async def synthesize_briefing(client, request: str, chunks: list[dict]) -> str:
         if not briefing:
             return raw
         gaps = [g for g in data.get("gaps", []) if isinstance(g, str)]
+        blocking = [g for g in data.get("blocking_gaps", [])
+                    if isinstance(g, str) and g.strip()][:3]
         out = briefing
         if gaps:
             out += "\n\nNot covered by project documentation:\n" + "\n".join(
@@ -258,12 +289,13 @@ async def synthesize_briefing(client, request: str, chunks: list[dict]) -> str:
             )
         out += "\n\nSources: " + ", ".join(sorted({c["tag"] for c in chunks if c["tag"]}))
 
-        # The gaps are the search queries. Nothing is looked up that the
-        # documentation was not already known to be missing.
-        if gaps and settings.model_search:
+        # Only the gaps that change the answer are looked up. Every gap is
+        # still shown above, because an engineer wants to know what is missing
+        # whether or not it was worth a search fee.
+        if blocking and settings.model_search and worth_a_lookup(risk):
             from autornd.knowledge.research import render_findings, research_gaps
 
-            findings = await research_gaps(client, request, gaps)
+            findings = await research_gaps(client, request, blocking)
             if findings:
                 out += "\n\n" + render_findings(findings)
         return out
@@ -364,7 +396,8 @@ async def rerank_chunks(
     return candidates[:keep]
 
 
-async def load_retrieval_context(query: str, n_results: int = 5, client=None) -> str:
+async def load_retrieval_context(query: str, n_results: int = 5, client=None,
+                                 risk: object = None) -> str:
     """Research the project docs for a request: expand, retrieve, rank, brief."""
     queries = await expand_queries(client, query)
 
@@ -377,7 +410,7 @@ async def load_retrieval_context(query: str, n_results: int = 5, client=None) ->
         return ""
 
     ranked = await rerank_chunks(client, query, candidates, n_results)
-    return await synthesize_briefing(client, query, ranked)
+    return await synthesize_briefing(client, query, ranked, risk=risk)
 
 
 SCOPING_PROMPT = """\
@@ -402,6 +435,10 @@ Request:
 Return JSON with:
 - objective: the restated objective
 - unknowns: list of things the work needs but the request does not specify
+- blocking_unknowns: the subset of unknowns where a wrong assumption would
+  change the answer rather than merely being nice to know — a figure that sets
+  a dimension, a limit that decides compliance, a convention that decides a
+  unit. Often empty. Never more than three.
 - assumptions: list of stated assumptions, each one challengeable
 - considerations: list of factors this kind of work usually has to address"""
 
@@ -409,10 +446,19 @@ Return JSON with:
 async def analyze_request(client, request: str) -> tuple[str, list[str]]:
     """Scope a request when there is no documentation to ground it (research tier).
 
+    Returns the scoping text and, separately, only the unknowns worth paying to
+    look up — the ones a wrong assumption would actually change the answer for.
+
     Most installs have an empty knowledge store, which used to leave every phase
     running on the raw request alone. Scoping does not need documents: naming
     what is unspecified, and what is being assumed instead, is useful on its own
     and keeps assumptions visible rather than buried in a plan.
+
+    The two lists are deliberately different sizes. Every unknown appears in the
+    scoping text, because knowing what is unspecified is the point. Only the
+    blocking ones reach a search fee — asking a model "what is unknown here?"
+    always returns a list, which is why research used to fire on every workflow
+    whether or not anything needed looking up.
     """
     if client is None or not settings.model_research:
         return "", []
@@ -440,7 +486,17 @@ async def analyze_request(client, request: str) -> tuple[str, list[str]]:
         return "", []
 
     objective = (data.get("objective") or "").strip()
+    # Two lists, two jobs. Every unknown is shown to the engineer, because
+    # knowing what is unspecified is the point of scoping. Only the blocking
+    # ones are worth paying to look up, and asking a model "what is unknown
+    # here?" always produces a list — which is why research used to fire on
+    # every workflow regardless of whether anything needed it.
     unknowns = [u for u in data.get("unknowns", []) if isinstance(u, str) and u.strip()]
+    blocking = [u for u in data.get("blocking_unknowns", [])
+                if isinstance(u, str) and u.strip()]
+    # A model that names no blocking unknowns has said the work can proceed on
+    # stated assumptions. Take it at its word rather than looking up the rest.
+    lookup_worthy = blocking[:3]
     sections = []
     if objective:
         sections.append(f"Objective: {objective}")
@@ -452,7 +508,7 @@ async def analyze_request(client, request: str) -> tuple[str, list[str]]:
         items = [i for i in data.get(key, []) if isinstance(i, str) and i.strip()]
         if items:
             sections.append(heading + ":\n" + "\n".join(f"- {i}" for i in items))
-    return "\n\n".join(sections), unknowns
+    return "\n\n".join(sections), lookup_worthy
 
 
 async def build_phase_context(
@@ -461,6 +517,7 @@ async def build_phase_context(
     specialists: list[SpecialistRole] | None = None,
     include_retrieval: bool = True,
     client=None,
+    risk: object = None,
 ) -> str:
     """Build full context string for a workflow phase.
 
@@ -473,7 +530,8 @@ async def build_phase_context(
         parts.append("=== PROJECT DOCUMENTATION ===\n" + docs_ctx)
 
     if include_retrieval:
-        retrieval_ctx = await load_retrieval_context(request, client=client)
+        retrieval_ctx = await load_retrieval_context(request, client=client,
+                                                     risk=risk)
         if retrieval_ctx:
             parts.append("=== RELEVANT KNOWLEDGE ===\n" + retrieval_ctx)
         else:
@@ -488,7 +546,7 @@ async def build_phase_context(
             # that most needs looking things up. The unknowns scoping found are
             # the queries — the same mechanism as documentation gaps, from the
             # only other place that knows what is missing.
-            if unknowns and settings.model_search:
+            if unknowns and settings.model_search and worth_a_lookup(risk):
                 from autornd.knowledge.research import render_findings, research_gaps
 
                 findings = await research_gaps(client, request, unknowns)

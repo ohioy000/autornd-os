@@ -55,8 +55,17 @@ class Settings(BaseSettings):
     # unbounded validator reached.
     validate_max_tokens: int = 8000
 
-    # A lookup wants room for figures and their sources, not an essay.
-    search_max_tokens: int = 1200
+    # One lookup per workflow now carries every blocking gap at once, so the
+    # answer has to cover several questions rather than one figure.
+    #
+    # Raised deliberately but not to a maximum. Sonar-class search models bill a
+    # per-request fee AND tokens, and at 1200 the model filled its budget every
+    # time — so tokens are the larger share, and a literal maximum would cost
+    # more than the three separate lookups this replaces. 3000 buys a
+    # multi-part answer for roughly one fee. Measure before raising it again:
+    # the eval reports spend per tier, so one grounding pass tells you the real
+    # per-lookup cost.
+    search_max_tokens: int = 3000
     escalation_recovery_attempts: int = 3
 
     chromadb_path: str = "./chromadb_data"

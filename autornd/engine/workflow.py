@@ -140,7 +140,8 @@ class WorkflowEngine:
             triage = await self._run_triage(workflow)
 
             context = await build_phase_context(
-                request, triage.domains, triage.specialists, client=self.client
+                request, triage.domains, triage.specialists,
+                client=self.client, risk=triage.risk,
             )
 
             plan = await self._run_plan(workflow, triage, context)
