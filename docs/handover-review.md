@@ -2956,3 +2956,90 @@ the change does not accumulate.
 Scored against D3's predictions: `numeric_consistency` converged ≤3 ✓;
 `derived_tolerances` reached the loop and converged ≤3 ✓; `crossref_integrity`
 "converges ≤2" ✗ **badly** — it escalated; `requires_execution` unresolved.
+
+#### Part C, settled — the sibling ties at an eighth of the price
+
+Re-run after the budget ceiling was lifted, sequentially, three clean
+repetitions per arm.
+
+| arm | mean /8 | per-rep | lookups | search $ | $/lookup | wall |
+|---|---|---|---|---|---|---|
+| 1 current | **3.67** | 4, 3, 4 | 22 | $1.1225 | $0.0510 | 1203s |
+| **2 sibling** | **3.67** | **4, 3, 4** | 23 | **$0.1416** | **$0.0062** | 573s |
+| 3 sibling + 4000 caps | 3.00 | 3, 2, 4 | 22 | $0.1344 | $0.0061 | 560s |
+
+**Arm 2 ties arm 1 exactly** — same mean, same per-repetition sequence — at
+**8.2× less per lookup** and half the wall clock. C3's rule fires: **swap**.
+
+**C2's projection was half right and the half that failed is the interesting
+one.** The extra tokens did cost ≈nothing ($0.0061 vs $0.0062 a lookup — the fee
+inversion confirmed a second time). They also **lost figures**: 3.00 against
+3.67. §6.3's "tokens buy figures, the misses are truncated tails" was measured on
+the expensive model and **does not transfer to the sibling**. So the swap is
+**model only, not model-and-cap** — the branch C3 wrote the rule to distinguish.
+
+**My pre-registration was right:** three repetitions closed 006's 5-vs-4 gap to a
+dead tie, and both models landed near 3.67 rather than the 5/8 that two separate
+single-repetition readings had recorded. One repetition of this suite is an
+anecdote, twice over now.
+
+**The complementary structure persists at three repetitions**, which is the case
+for the cascade C3 defers: arm 1 owns `architectural_acoustics` 3/3 and
+`hydraulics` 2/3; arm 2 owns `ev_charging` 3/3 and `water_treatment` 3/3. Same
+mean, different sectors.
+
+**Recommendation:** `MODEL_SEARCH=perplexity/sonar`, **caps unchanged**. Search
+is 61–98% of all spend, so this is the largest cost lever in the project — an
+8× cut on the dominant line at no measured accuracy cost. The `.env` edit is the
+owner's (G-3). Per C4, once it lands a lookup is fee-dominated and the
+materiality cap's maximum value shrinks further — one line for B2's row.
+
+#### Part D, completed — converged-on-red is real, and validate is the judge that was wrong
+
+`conv_requires_execution`, re-run after the block:
+
+```
+status=blocked   1 iteration   13 calls   $0.0903
+implement_green = False   red_cause = "Domain reviewer flagged critical concern"
+validate_green  = True
+```
+
+**The loop exited satisfied while the implementation was red.** `until:
+validate.green == true` tests one verdict; the domain review had already flipped
+`implement` to red, and the loop does not look. That is exactly the path D1(c)
+posed as an empirical question — **observed, on the first trace that could
+produce it.** D6 predicted at least one converged-on-red and was right; **I
+predicted none and was wrong.**
+
+**And validate was the judge that was wrong.** D3 said a green validate here
+would be a finding and its evidence must be read line by line. Read:
+
+> *Criterion 2 (exactly 100 and 101 req/s): **PASS** — Test Case 1 covers
+> 100 req/s; Test Case 2 **corrected to 121 req/s**, with 101 req/s explicitly
+> noted as not causing rejection.*
+
+The criterion requires a test at 101 req/s. Validate marked it **PASS while
+stating in the same sentence that the test had been changed to 121**. This is
+worse than the §6.8 diagnosis of a validator rejecting unverifiable work: here it
+*attested* to work its own evidence shows unmet. The domain reviewer caught it
+precisely — "does not include a test case for 101 requests per second as
+required by success criterion 2" — and review blocked on "mathematically
+incorrect expected outcomes".
+
+**Two of three judges were right and the loop's exit condition consults the
+third.** That reframes the lever menu more sharply than the oscillation finding
+did: the problem in this trace is not the width of the feedback channel or the
+speed of escalation, it is that `until` reads one boolean while the verdict that
+disagreed is sitting in the same state.
+
+#### Part D taxonomy, v2
+
+| trace | 006 (broken) | 007 (repaired) | classification |
+|---|---|---|---|
+| `derived_tolerances` | died pre-loop | converged in 1, review blocked | **repair confirmed** |
+| `numeric_consistency` | converged in 3 | converged in 1, shipped | converged |
+| `crossref_integrity` | converged in 1 | escalated: 5 + 3 recovery, all red | **oscillating** |
+| `requires_execution` | died pre-loop | 1 iteration, exits on green validate | **converged-on-red** |
+
+Two of four now fail, in **two different ways, neither of which is a stall**.
+D5's stall detector would have fired on neither.
