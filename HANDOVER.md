@@ -964,6 +964,16 @@ important lesson about this codebase:
   read as convergence failures — which is how B7's premise came to rest on
   evidence that never reached the loop. Escalation had it worse: the longest
   input in the system, read only after the loop has burned every iteration.
+- **A status code read as a diagnosis** (same date). A live 403 stopped every
+  paid run; it was read as rate limiting and blamed on two sweeps running
+  concurrently. The response body said `Workspace weekly budget of $10.00
+  exceeded` — a different problem, a different fix, and nothing to do with
+  concurrency. `raise_for_status` renders only the status line, so the half of
+  the error that explained it was discarded at the point of raising, at all
+  three call sites. Purchased credit was never the constraint and stayed
+  healthy, which is exactly why the balance looked fine while nothing worked:
+  **credit and the workspace's weekly ceiling are independent limits.** The
+  body travels with the exception now.
 - **Leniency at the verdict layer, defeated three lines upstream** (same date).
   `ReviewFinding` accepts a bare string or a detail under eight aliases, added
   after a reviewer using `issue` lost three whole reviews. The aggregation still

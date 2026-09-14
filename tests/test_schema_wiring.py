@@ -225,3 +225,54 @@ class TestReviewAggregationAcceptsEveryShapeTheSchemaDoes:
         ])
         assert len(verdict.findings) == 3
         assert not verdict.ship, "the high finding blocks"
+
+
+class TestErrorsCarryTheProvidersMessage:
+    """A status code is not a diagnosis.
+
+    A live 403 was read as rate limiting and blamed on running two sweeps
+    concurrently. The response body said `Workspace weekly budget of $10.00
+    exceeded` — a different problem with a different fix, discarded by
+    `raise_for_status` at the moment of raising. The provider puts the reason in
+    the body for every error class it returns; it travels with the exception now.
+    """
+
+    @staticmethod
+    def _response(status: int, payload):
+        import httpx
+
+        return httpx.Response(
+            status_code=status, json=payload,
+            request=httpx.Request("POST", "https://example.org/api/v1/chat/completions"),
+        )
+
+    def test_the_message_survives_the_raise(self):
+        import httpx
+        import pytest as _pytest
+
+        from autornd.routing.openrouter import _raise_for_status
+
+        resp = self._response(403, {"error": {
+            "message": "Workspace weekly budget of $10.00 exceeded.", "code": 403}})
+        with _pytest.raises(httpx.HTTPStatusError) as exc:
+            _raise_for_status(resp, "chat/completions")
+        assert "weekly budget" in str(exc.value)
+        assert "403" in str(exc.value)
+
+    def test_a_body_that_is_not_json_still_reaches_the_caller(self):
+        import httpx
+        import pytest as _pytest
+
+        from autornd.routing.openrouter import _raise_for_status
+
+        resp = httpx.Response(
+            status_code=502, text="upstream exploded",
+            request=httpx.Request("POST", "https://example.org/x"))
+        with _pytest.raises(httpx.HTTPStatusError) as exc:
+            _raise_for_status(resp, "chat/completions")
+        assert "upstream exploded" in str(exc.value)
+
+    def test_success_passes_through_untouched(self):
+        from autornd.routing.openrouter import _raise_for_status
+
+        _raise_for_status(self._response(200, {"ok": True}), "chat/completions")

@@ -2845,10 +2845,29 @@ because §6.3's misses were truncation of bundled tails rather than ignorance.
 #### Part C results — INCONCLUSIVE, cut short by an account-level block
 
 **The provider began returning `403 Forbidden` on every chat completion partway
-through arm 2, and has not stopped.** Credits were not the cause: $3.54 remained
-at the time and the `/credits` endpoint kept answering. Verified after the fact
-with single live calls on the triage, research and search tiers — **all three
-403**, so it is account-wide rather than model- or tier-specific.
+through arm 2.** The cause, read from the response body rather than guessed:
+
+```json
+{"error":{"message":"Workspace weekly budget of $10.00 exceeded.
+           Contact your org admin.","code":403}}
+```
+
+**A workspace weekly spend ceiling, not an account block and not rate limiting.**
+Credits were never the issue — $3.54 of purchased credit remained and the
+`/credits` endpoint kept answering throughout, which is exactly why the balance
+looked healthy while every completion failed. The two limits are independent:
+credit is what the account holds, the weekly budget is what the workspace may
+spend against it.
+
+**Recorded as a misdiagnosis, because it was one.** The first reading of this
+failure attributed it to rate limiting triggered by running Parts C and D
+concurrently. That was speculation from the status code alone and it was wrong;
+concurrency had nothing to do with it. `httpx`'s `raise_for_status` discards the
+response body, so the message naming the actual cause was thrown away at the
+point it was raised — **the diagnosis took one request to get right and only
+after someone pushed back on the wrong one.** Worth a line in `§6.8`'s register:
+a status code is not a diagnosis, and this client currently drops the half of
+the error that explains it.
 
 | arm | units | valid units | mean figures /8 | search $ | $/lookup | verdict |
 |---|---|---|---|---|---|---|

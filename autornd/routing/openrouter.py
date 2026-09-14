@@ -77,6 +77,33 @@ def provider_order_for(function: str) -> list[str]:
     return general
 
 
+def _raise_for_status(resp, what: str) -> None:
+    """raise_for_status, but keep the half of the error that explains it.
+
+    httpx renders only the status line, and a status code is not a diagnosis. A
+    403 here was read as rate limiting and blamed on concurrent runs; the body
+    said `Workspace weekly budget of $10.00 exceeded`, which is a different
+    problem with a different fix, and it had been discarded at the point of
+    raising. One request recovered it. The provider puts the reason in the body
+    on every error class it returns — spend ceilings, data-policy refusals,
+    unknown models — so the body travels with the exception from here on.
+    """
+    # Status code rather than `is_success`, so this works against any response
+    # object with a status and a body — the test doubles included.
+    if resp.status_code < 400:
+        return
+    detail = ""
+    try:
+        payload = resp.json()
+        detail = (payload.get("error") or {}).get("message") or resp.text
+    except Exception:
+        detail = resp.text
+    raise httpx.HTTPStatusError(
+        f"{resp.status_code} from {what}: {str(detail)[:400]}",
+        request=resp.request, response=resp,
+    )
+
+
 class BudgetExceeded(RuntimeError):
     """A run asked for more calls or more money than it was allowed."""
 
@@ -258,7 +285,7 @@ class OpenRouterClient:
             )
             payload.pop("response_format", None)
             resp = await client.post("/chat/completions", json=payload)
-        resp.raise_for_status()
+        _raise_for_status(resp, "chat/completions")
         data = resp.json()
 
         choice = data["choices"][0]
@@ -319,7 +346,7 @@ class OpenRouterClient:
             "documents": documents,
             "top_n": top_n,
         })
-        resp.raise_for_status()
+        _raise_for_status(resp, "rerank")
         data = resp.json()
         usage = data.get("usage", {}) or {}
         # This cost used to reach a debug log and go no further, so reranking
@@ -538,7 +565,7 @@ async def check_models() -> dict[str, dict]:
                 f"{settings.openrouter_base_url.rstrip('/')}/models",
                 headers=headers,
             )
-            resp.raise_for_status()
+            _raise_for_status(resp, "models catalogue")
             catalogue = resp.json().get("data", [])
             available_ids = {m["id"] for m in catalogue}
             for m in catalogue:
