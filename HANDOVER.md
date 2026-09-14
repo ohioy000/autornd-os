@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `641da5a` · **Branch:** `main`
-**Tests:** 501 passing · **Date of this snapshot:** 2026-09-13
+**Tests:** 561 as of `01886a2` · **Date of this snapshot:** 2026-09-13, test counts refreshed 2026-09-14
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -249,7 +249,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       the only tracked profile
-tests/                      17 files, 501 tests
+tests/                      22 files, 561 tests (as of `01886a2`)
 ```
 
 ### 2.3 Key design patterns
@@ -552,19 +552,24 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (501 total)
+### 3.7 Test distribution (561 total, as of `01886a2`)
 
 | file | n | file | n |
 |---|---|---|---|
-| test_graph.py | 82 | test_review_composition.py | 28 |
-| test_evals.py | 73 | test_profiles.py | 23 |
-| test_routing.py | 62 | test_api.py | 21 |
-| test_verdicts.py | 42 | test_settings.py | 20 |
-| test_knowledge.py | 41 | test_auth.py | 16 |
-| test_research.py | 37 | test_graph_equivalence.py | 16 |
-| test_specialists.py | 11 | test_lead_review.py | 9 |
-| test_triage.py | 10 | test_engine.py | 6 |
-| test_workflow.py | 4 | | |
+| test_graph.py | 82 | test_graph_equivalence.py | 16 |
+| test_evals.py | 73 | test_auth.py | 16 |
+| test_routing.py | 62 | test_shipped_examples.py | 15 |
+| test_verdicts.py | 42 | test_specialists.py | 11 |
+| test_knowledge.py | 41 | test_budget_transparency.py | 11 |
+| test_research.py | 37 | test_triage.py | 10 |
+| test_review_composition.py | 28 | test_lead_review.py | 9 |
+| test_profiles.py | 23 | test_results_log.py | 8 |
+| test_settings.py | 22 | test_engine.py | 6 |
+| test_sweep_budget.py | 21 | test_workflow.py | 4 |
+| test_api.py | 21 | test_docs.py | 3 |
+
+Regenerate with `pytest tests/ --collect-only -q`; the total is the part that
+matters and `tests/test_docs.py` fails if the README badge disagrees with it.
 
 ---
 
@@ -673,18 +678,19 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
    not by one call, because feasibility and both reviews run their rosters
    through `asyncio.gather`; and a budget abort now propagates rather than
    being swallowed by the research and rerank error handlers.
-3. **B2 — make materiality actually discriminate.** A model asked to self-limit
-   does not. Options: require a blocking gap to name a quantity/limit/standard
-   (checkable, but phrasing-fragile); ask *per gap* "would a wrong assumption
-   change the answer?" instead of requesting a subset; or drop the gate and
-   treat the token budget as the only dial (honest, and §6.2 shows gap *count*
-   doesn't affect cost anyway).
+3. ~~**B2 — make materiality actually discriminate.**~~ **Resolved** — see
+   §4.2 and §6.2. The second option listed here was tried and reverted: asking
+   per gap zeroed a *material* lookup. The gate stays as a question-count cap.
 4. ~~**B4 — `legal_ops` calibration.**~~ **Done, by pinning rather than
    tuning.** The instruction to pin before tuning turned out to be the whole
    fix: the governance-document clause was landing all along, on a serving
    capable of reading it. Nothing in `phases.py` changed.
-5. **Choose and document a provider pin for the owner's real workload.**
-   `--scenarios evals/scenarios/wide` scores a provider in ~10 min for <2¢.
+5. ~~**Choose and document a provider pin for the owner's real workload.**~~
+   **Done 2026-09-14.** Six servings measured (§12.3); the owner adopted
+   `OPENROUTER_PROVIDER_ORDER=triage:Alibaba`, confirmed present in `.env`.
+   Only the triage tier is pinned — the architecture and engineering tiers still
+   rotate freely, and a B6 probe run was observed drawing five different
+   architecture providers across three repetitions.
 
 ### Medium term
 
@@ -903,6 +909,12 @@ it: research (`research.py`), four `chat_json` sites in `context.py`, and
 | one full workflow | ~$0.057 | $0.1454 (2.6×) |
 
 Search was **61%** of a full workflow and **98%** of a grounding run.
+
+**The repaired meter has since been checked against the provider's own books**
+(measured 2026-09-14, §12.2): across $0.32 of live spend, OpenRouter's
+`total_usage` moved $0.3165 where the meter accounted for $0.3173 — agreement
+within **0.3%**, reading marginally *high*, which is the conservative direction
+for a ceiling. The first external validation since the fix.
 **Consequence for the new architect:** any cost figure in the git history before
 commit `b4cd89f` is understated by 2.6×–295×. That includes a "$1.28 runaway"
 (true ≈ $3.30) and a claim that sonar-pro cost "only 1.98× more" — which was

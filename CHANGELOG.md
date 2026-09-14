@@ -99,7 +99,34 @@ and checks a built wheel carries its package data — because the test suite run
 against the source tree and is structurally incapable of seeing a packaging
 fault.
 
-The suite stands at **501 tests** as of `be8fd08`, up from 85 at 0.1.0.
+**Bounded, pinned, and able to keep its own records.** `--max-spend` only ever
+capped one scenario-run, so a sweep of thirty-six scenarios at three repetitions
+could spend thirty-six times what the flag implied; `--max-spend-sweep` now caps
+the whole invocation and defaults to a dollar. Building it exposed six error
+handlers that swallowed a budget abort and let a run keep spending after it had
+been told to stop — including two that would have marked a working ranker dead
+for the rest of the process.
+
+Two long-standing calibration complaints turned out not to be what they were
+recorded as. One sector had been blamed on the risk guide for months and was the
+serving: pinned to a capable provider it passes, pinned to a cheap one it fails
+every time, and nothing in the guide needed changing. The materiality gate was
+recorded as an ineffective cost lever; it is ineffective as a cost lever and
+does not need to be one, because the work whose gaps are immaterial already
+classifies as low risk and never looks anything up. It stays as a question-count
+cap, which protects the token budget of the questions that do get asked.
+
+The cost meter, silently broken before the accounting fix and never checked
+against anything outside itself, now agrees with the provider's own books to
+within a third of a percent across a third of a dollar of live spend.
+
+Evals keep what they buy. Every unit appends a JSON record carrying the typed
+verdicts, the assertion outcomes, the per-tier cost and which provider served
+each tier, flushed as it is written — so an interrupted sweep no longer discards
+what it has already paid for, and a failing sector can be diagnosed months later
+without reproducing it.
+
+The suite stands at **561 tests** as of `1d06005`, up from 85 at 0.1.0.
 
 ## [0.1.0] — 2026-09-12
 
