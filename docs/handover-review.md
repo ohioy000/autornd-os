@@ -2139,3 +2139,41 @@ executing (phase_results from the DB); B6 closed in HANDOVER as observed
 live, the probe workflow kept as the regression shape; the trace doubles
 as live-path evidence toward eventually retiring engine/workflow.py.
 ```
+
+### 13.1 Part B — the search-tier swap
+
+**The serving is fixed by construction.** B1 asks that both models be pinned to
+one provider so this is a model comparison rather than a second §6.1 lottery.
+Checked against the catalogue: **both are served by exactly one provider,
+Perplexity**, so no pin is needed and no lottery is possible. Recorded rather
+than assumed.
+
+| model | in $/M | out $/M | max out |
+|---|---|---|---|
+| `perplexity/sonar-pro` (current) | 3.00 | **15.00** | 8,000 |
+| `perplexity/sonar` (the sibling) | 1.00 | **1.00** | 114,364 |
+
+**Correction to the blueprint's stated prior, per the provenance rule.** B3 cites
+"5/8 at the 1500-token cap [measured: §6.3]". §6.3 does not say that: its rows
+are ~4800 tokens → 7/8, ~2900 → 5/8, and ~1400 → **3/8**. The 5/8 figure belongs
+to the ~2900-token row, not to a 1500 cap. Which cap actually applies here
+depends on how these sectors classify: `SEARCH_MAX_TOKENS` is 1500 for medium
+and `SEARCH_MAX_TOKENS_CONSEQUENTIAL` is 4000 for high and critical, and the
+grounding sectors — hotel acoustics, water treatment, rail signalling, robot
+safety — are consequential work.
+
+**Pre-registered, before either run:**
+
+| | prediction | basis |
+|---|---|---|
+| `sonar-pro` sectors recovered | **5/8** | [measured: §6.3, ~2900-token row] — these sectors should take the 4000 cap and the model fills what it is given |
+| `sonar` sectors recovered | **no prior** | that is the question |
+| `sonar-pro` cost | ~$0.32 | [measured: §6.3] |
+| `sonar` cost | **~$0.08**, fee-dominated | [derived: §6.3's fee of ~$0.00698/request against $1/M output — at 2900 tokens the fee becomes ~70% of the lookup, the inversion §4.1 projected] |
+
+My own added prediction, stated so it can be wrong: **`sonar` matches within one
+sector.** §6.3's finding is that tokens buy figures and the misses at lean
+budgets were truncation rather than ignorance; both models face the same cap and
+the cheaper one can emit far more before hitting its ceiling. If that holds, the
+decision is straightforward. If figures drop materially, the current model
+stands and §4.1's fee-inversion arithmetic remains a projection.
