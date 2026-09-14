@@ -483,3 +483,260 @@ entry.
 **Note for Blueprint 002:** C1 and C4 are the two worth fixing first — C1 because
 it invites the removal of the project's most valuable property, C4 because it is
 repeated three times and sends every would-be extender to the wrong mechanism.
+
+---
+
+## 9. Blueprint 002 — the documentation truth pass (verbatim, as received)
+
+**Status: not executed at the time of recording.** Same protocol as 001: the
+blueprint is committed to the repo before any of it is carried out, so the
+executing session works from the repo rather than from pasted chat, and the
+record shows what was asked for separately from what was done. The execution
+record is §9.2.
+
+```text
+BLUEPRINT 002 — Documentation truth pass: README, .env.example, CONTRIBUTING,
+CHANGELOG, CI action pins.
+
+Goal: every user-facing document asserts only what the code does at HEAD.
+Closes D1, D2, D3 of docs/handover-review.md §2, the C1–C7/C9–C10 and G1–G7
+inventories in §8, and the README/.env.example items that never reached that
+punch list (the advisor's original list was a §5 artifact that arrived late;
+every item below was re-verified against the tree on 2026-09-14).
+
+Protocol (same as 001): paste this blueprint verbatim into
+docs/handover-review.md as §9 BEFORE executing. When done, append the
+execution record as §9.2 — departures with reasons, things left undone
+deliberately, and what a live check found that the blueprint missed.
+
+Prerequisites: run the suite first (.venv/bin/python3 -m pytest tests/ -q).
+Do not trust any test count in this blueprint — re-derive it with
+--collect-only -q; A1 exists precisely because counts drift.
+
+PART A — README.md
+
+A1. Test count, three places: the shields badge URL (tests-339%20passing),
+the Testing section ("339 tests"), and the Project Structure comment
+(tests/ # 339 tests). Update all three to the count at commit time.
+
+A2. Workflows: "Three workflows ship" table and the workflows/ line in
+Project Structure both omit triage-classify (1 node — triage alone; exists
+so calibration costs ~$0.00002/call instead of a full workflow; see
+workflows/triage-classify.yaml and HANDOVER §2.2). Add the row and comment.
+
+A3. Configuration block shows VALIDATE_MAX_TOKENS=3000 and
+SEARCH_MAX_TOKENS=1200. Actual defaults: 8000 / 1500, and
+SEARCH_MAX_TOKENS_CONSEQUENTIAL=4000 is missing. Update to match
+.env.example and say the README block is illustrative — .env.example
+documents every setting.
+
+A4. Limitations — two claims false since b4cd89f, remove or rewrite:
+  - "The review verdict does not block" — the graph has a review_clean
+    gate (on_fail: blocked). Review blocks.
+  - "Retrieval and research cost is not attributed" — research, context
+    and rerank all flow through the client meter since the cost-meter
+    fix; total_cost is assigned from client.spend.
+Re-verify the remaining Limitations lines while there (checked
+2026-09-14: no code execution, negation gap, research-can-be-wrong,
+quality-follows-models, no RBAC, no streaming, costs-are-real all still
+true).
+
+A5. Cost section: "one lookup per gap it finds, bounded at four"
+contradicts the shipped policy (EXACTLY ONE bundled request carrying
+every gap, MAX_LOOKUPS = 1; HANDOVER §4.3) and the README's own Research
+section. Rewrite the research-overhead paragraph to the bundled shape.
+Do NOT invent replacement numbers: re-derive them the same way the
+workflow-comparison table was derived — BoundedRunner with billing
+doubles, free, under a second — and say so in the text. If a number
+can't be derived that way, state the shape without the number.
+
+A6. Research intro editing artifact: "…so two things bound it:"
+immediately followed by "Three things bound it, in the order they take
+effect:" over FOUR bullets. One sentence, four bullets. (.env.example
+already says "Four things bound it" — match it.)
+
+A7. "Sonar-pro bills $15.00 per million output tokens…" — apply the
+naming ruling (Part E): keep the number, anonymize the subject, e.g.
+"One measured search model billed $15.00 per million output tokens plus
+about $0.007 a request, and filled whatever cap it was given (2907 of
+3000)…". The named subject stays in HANDOVER §6.3, which is the record.
+
+PART B — .env.example
+
+B1. Header: "until all four required model tiers name a model" → six.
+(The tier list below it is already correct.)
+
+B2. Retracted figure: "one pairing listed at 15x on completion measured
+1.98x in practice" was measured with the pre-b4cd89f meter that did not
+count search spend at all (HANDOVER §6.7 retracts it). Remove the figure.
+The honest guidance is already stated beside it: the fee/token split
+(13% fee / 87% tokens at a 3000-token cap, on the measured model) plus
+"measure rather than assume".
+
+B3. Garbled clause: "Only gaps are searched — facts the briefing already
+established are missing —" → "Only gaps are searched — facts the briefing
+did not already establish —".
+
+B4. NEW, caught by cross-reading review §4.6 against this file: the
+pinning block says "A pin disables fallbacks, so a run either uses the
+provider you named or fails loudly." Measured (§4.6): a multi-name
+allowlist fails over WITHIN itself — pinned [Perplexity, StreamLake],
+Perplexity does not serve the model, the run succeeded via StreamLake.
+Correct the line: fallbacks are disabled outside the named list; within
+a list, serving fails over between the named providers. Keep the
+pin-when-measuring advice. Optionally add the two shapes: one provider
+for measuring (reproducibility), a measured 2–3 provider allowlist for
+deployment (quality floor + failover).
+
+B5. "Measured: sonar-pro bills $15.00/M output tokens…" in the
+SEARCH_MAX_TOKENS comment — same ruling as A7: keep the number,
+anonymize the subject.
+
+PART C — CONTRIBUTING.md (C1–C7, C9–C10; the §8.1 inventory is accurate
+— it was re-read at HEAD)
+
+C1. Code Style "No comments unless the 'why' is non-obvious" invites
+contributors to strip the codebase's most valuable property. Replace
+with the real rule: comments record the measurement that set a constant.
+Read the comment beside a constant before changing it; add one when you
+set one (HANDOVER §4.4 convention 1).
+
+C2/C3. "wire new phases into autornd/engine/workflow.py" (twice) — that
+is the legacy sequencer, kept only as the graph's equivalence reference.
+Correct path: _phase_<name> dispatch in graph/adapter.py with prompt text
+in engine/phases.py, then a node in a workflows/*.yaml. The workflow
+file is the product; the code is the engine.
+
+C4 (three occurrences). "register its SpecialistRole in
+autornd/models/verdicts.py" — roles are an OPEN vocabulary. A project
+declares its roles under roles: in a profile; an undeclared role
+resolves to a synthesized generalist. The shipped enum is defaults, not
+limits, and editing it is not how anyone adds a role (HANDOVER §6.5 is
+the measured reason — closed lists produced least-wrong labels, and
+critical risk once staffed seven engineers on a retention schedule).
+
+C5. The [seam]/[internal] list omits graph/ and evals/ entirely — the
+actual engine and the quality harness. Add graph/spec.py (workflow files
+are data), graph/executor.py, graph/adapter.py, graph/checks.py (new
+deterministic checks are the welcome contribution — the README already
+says so), graph/conditions.py, and evals/. Reclassify review
+composition's [seam] entry per C6.
+
+C6. "[seam] Review composition — risk-to-team mapping" no longer
+describes the mechanism: the team is DERIVED from the specialists triage
+assigned, scaled by risk — signature get_review_team(risk, domains,
+specialists). Say that.
+
+C7. "the sequencer, review composition, and routing layers all read from
+the registry dynamically" — reword to the open-vocabulary reality:
+shipped defaults + profile-declared, generalist fallback.
+
+C9. "Running Tests": pytest tests/ -v → .venv/bin/python3 -m pytest
+tests/ -q (pytest is not on the owner's PATH; the suite is ~9 s and
+free — say so, it is a feature).
+
+C10. Add a short Evals section: scenarios live in evals/scenarios/;
+expectations are written BEFORE the run (convention 7); assertions are
+free; --max-spend bounds a scenario; runs repeat because models are
+stochastic; test doubles must bill like the real client
+(client._account(...)) — a free double hides accounting bugs, and it
+did. Point at README §Evals and HANDOVER §4.4 for depth.
+
+PART D — CHANGELOG.md (G1–G7; §8.2 inventory)
+
+The file is Keep-a-Changelog, frozen at [0.1.0] — 2026-09-12. Do NOT
+turn 0.1.0 into a description of HEAD; it is a historical record. Two
+exceptions, one addition:
+
+D1. G3: "K3 escalation autopsy pattern" names a model by nickname in a
+living document. Reword to the mechanism ("reasoning-model escalation
+autopsy") without changing meaning. 0.1.0 was never a published release
+and the nickname breaks the naming rule now in force.
+
+D2. G1: "Full test suite (85 tests)" — verify before touching: find the
+first commit (git log --reverse --oneline), count its test functions.
+True at 0.1.0 → leave it. False at release → correct it. The current
+count belongs to [Unreleased], not to 0.1.0.
+
+D3. G7: add an [Unreleased] section recording the arc since 0.1.0, in
+prose, with the measurements. Must include at least: the workflow graph
+as data (three node kinds, gates, loops, exhaustion semantics; the
+legacy sequencer kept as the equivalence reference under
+tests/test_graph_equivalence.py); the eval harness (scenarios, free
+assertions, BoundedRunner, per-tier spend, repetitions); outward
+research with recall-before-search and the single bundled lookup; open
+domain AND role vocabularies; client-side accounting and the meter fix
+(b4cd89f — earlier figures understated, §6.7); per-tier provider pinning
+and the measured serving-quality table; the review gate; the
+unrecallable axis and the independent pass; risk-scaled search budgets;
+and Blueprint 001's packaging fixes (flat-layout discovery, pyjwt in
+project metadata, wheel package data). NO model ids anywhere in the
+changelog.
+
+PART E — the naming policy (the vendor-name ruling — record it, then
+apply it)
+
+The rule: zero model ids in code, configuration defaults, profiles,
+workflow files, and any doc passage that recommends or defaults to a
+model. Measured results may name their subjects and live in the
+development records (HANDOVER §6, docs/handover-review.md). User-facing
+docs carry the lesson with the subject anonymized where the id isn't
+load-bearing. The closer a document is to configuration, the stricter
+the rule.
+
+Where to record it:
+  - CLAUDE.md: if the invariants already state the zero-model-names
+    rule, sharpen it in place with the selection-vs-record distinction
+    (one clause). Do not add a duplicate numbered invariant.
+  - HANDOVER §0: its sentence "zero model names outside .env.example
+    illustrations" is now wrong on both ends — .env.example has none
+    (and will stay anonymized), and HANDOVER §6.3/§6.4 deliberately
+    names measured models. Verify the current text first; if unamended,
+    fix the one sentence to the policy form. This is the ONLY HANDOVER
+    edit in this blueprint.
+
+PART F — CI action pins
+
+Both jobs (test, editable-install): actions/checkout@v4 → @v6,
+actions/setup-python@v5 → @v6. Both v6 lines are Node-24-native, which
+clears the deprecation annotations (setup-python v6.0.0, 2025-09-04,
+"Upgrade to node 24"; checkout v6.1.0 line). Do NOT jump checkout to v7
+— fresh breaking change (allow-unsafe-pr-checkout) this repo doesn't
+need. Verify both tags resolve and CI is green before finishing. Two
+lines, nothing else in the workflow file.
+
+PART G — optional but recommended; both FREE. Decide either way and
+record the decision with a reason.
+
+G1. A doc-names test (tests/test_docs.py or similar): scan the
+user-facing doc set — README.md, .env.example, CLAUDE.md,
+CONTRIBUTING.md, CHANGELOG.md — for vendor-model names (the regex family
+the CLAUDE.md rewrite was verified with: glm, deepseek, minimax, sonar,
+perplexity, gemini, kimi, qwen, gpt-, mistral, llama, and
+claude-as-model) with an explicit allowlist for non-selections: the
+protocol descriptors "OpenAI-compatible" and "OpenAI chat-completions"
+(the wire protocol's industry name), "Claude Code" / the CLAUDE.md
+self-reference. HANDOVER.md and docs/ are exempt BY POLICY — say so in
+the docstring. Rationale: this failure class already happened three
+times (the old CLAUDE.md model table, the K3 nickname, the sonar-pro
+mentions); a free check is cheaper than a fourth.
+
+G2. A badge-count test: parse the number out of the README tests badge
+and assert it equals the collected count. The 339/501 drift happened.
+If you judge the badge too brittle to maintain, the alternative is
+dropping the count from the badge — record which you chose and why.
+
+COMMIT GUIDANCE: prose, per convention 12. Name what was stale and what
+made it stale: the docs predate the graph/b4cd89f changes and were never
+revisited; the changelog froze at 0.1.0; CONTRIBUTING was teaching the
+two mechanisms the project itself has since measured as wrong — closed
+vocabularies and the legacy sequencer. One commit per document is
+acceptable and probably clearer; the CI pin bump may ride along or
+stand alone.
+
+OUT OF SCOPE, deliberately: the Docker build job (HANDOVER §5 item 10
+records it as the one uncovered install shape); any HANDOVER edit
+beyond the single §0 sentence in Part E; any prompt, constant, or code
+in autornd/; any live model call — this blueprint is free to execute
+and verify (suite + CI only).
+```
