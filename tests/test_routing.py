@@ -540,6 +540,9 @@ class TestResearchIsBilled:
 
         monkeypatch.setattr(client, "chat", fake_chat)
         monkeypatch.setattr(research, "_remember", lambda finding: None)
+        # Research checks the store before paying for a lookup; an empty store
+        # is what makes this a test of the lookup path.
+        monkeypatch.setattr(research, "retrieve", lambda *a, **kw: [])
 
         findings = await research.research_gaps(
             client, "a crane boom circuit", ["What burst ratio applies?"])

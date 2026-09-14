@@ -34,6 +34,25 @@ def client_returning(*responses):
     return client
 
 
+@pytest.fixture(autouse=True)
+def _empty_store(monkeypatch):
+    """No stored findings unless a test puts one there.
+
+    Research consults the store before paying for a lookup, so without this the
+    suite reads whatever a developer's local Chroma directory happens to hold —
+    which it did: every gap came back already answered by findings that earlier
+    live runs had ingested, and no test made a single lookup.
+    """
+    monkeypatch.setattr("autornd.knowledge.research.retrieve",
+                        lambda *a, **kw: [])
+
+
+def stored(text, source="https://example.org/standard.pdf", distance=0.05):
+    """A hit as the store would return it."""
+    return [{"text": text, "source": source, "tag": "research",
+             "distance": distance}]
+
+
 class TestFinding:
     def test_a_cited_finding_is_grounded(self):
         assert Finding("q", "a", ["https://example.com/ds.pdf"]).grounded
@@ -183,3 +202,84 @@ class TestRenderFindings:
     def test_the_header_says_why_these_were_looked_up(self):
         out = render_findings([Finding("q", "a", ["https://x/y.pdf"])])
         assert "project documentation did not cover" in out
+
+
+class TestRecallBeforeSearch:
+    """Search is the most expensive thing this harness does — measured at 61% of
+    a full workflow and 98% of a grounding run. Findings are ingested, so a fact
+    looked up once is local afterwards, and the cheapest lookup is the one
+    already answered.
+    """
+
+    @pytest.mark.asyncio
+    async def test_a_close_stored_finding_replaces_the_lookup(self, monkeypatch):
+        monkeypatch.setattr(
+            "autornd.knowledge.research.retrieve",
+            lambda *a, **kw: stored("Q: burst ratio\nA: 4:1 per ISO 1436"))
+        client = client_returning(reply("should not be called"))
+
+        findings = await research_gaps(client, "a crane circuit",
+                                       ["What burst ratio applies?"])
+
+        assert client.chat.await_count == 0, "paid for something already known"
+        assert len(findings) == 1
+        assert "4:1" in findings[0].answer
+        assert findings[0].model == "recalled"
+        assert findings[0].grounded, "a recalled finding keeps its source"
+
+    @pytest.mark.asyncio
+    async def test_a_distant_hit_does_not_count(self, monkeypatch):
+        """Reusing the wrong finding is a wrong figure in a design; a needless
+        lookup only costs money. The threshold leans that way on purpose."""
+        monkeypatch.setattr(
+            "autornd.knowledge.research.retrieve",
+            lambda *a, **kw: stored("Q: something else\nA: unrelated",
+                                    distance=0.9))
+        client = client_returning(reply("A: 4:1", ["https://example.org/x.pdf"]))
+
+        findings = await research_gaps(client, "r", ["What burst ratio applies?"])
+
+        assert client.chat.await_count == 1
+        assert findings[0].model != "recalled"
+
+    @pytest.mark.asyncio
+    async def test_only_researched_material_is_recalled(self, monkeypatch):
+        """Project documentation is already in the briefing that produced the
+        gap, so treating a doc chunk as the answer would mean it was never a
+        gap."""
+        seen = {}
+
+        def fake_retrieve(query, n_results=1, where=None):
+            seen["where"] = where
+            return []
+
+        monkeypatch.setattr("autornd.knowledge.research.retrieve", fake_retrieve)
+        client = client_returning(reply("A: x", ["https://example.org/x.pdf"]))
+        await research_gaps(client, "r", ["a gap"])
+        assert seen["where"] == {"tag": "research"}
+
+    @pytest.mark.asyncio
+    async def test_a_recalled_finding_is_not_stored_again(self, monkeypatch):
+        stores = []
+        monkeypatch.setattr(
+            "autornd.knowledge.research.retrieve",
+            lambda *a, **kw: stored("Q: q\nA: a"))
+        monkeypatch.setattr("autornd.knowledge.research._remember",
+                            lambda f: stores.append(f))
+        await research_gaps(client_returning(), "r", ["a gap"])
+        assert stores == []
+
+    @pytest.mark.asyncio
+    async def test_a_store_failure_falls_back_to_searching(self, monkeypatch):
+        """An unavailable store must not stop the work — it should cost a
+        lookup, not the finding."""
+        def boom(*a, **kw):
+            raise RuntimeError("chroma is down")
+
+        monkeypatch.setattr("autornd.knowledge.research.retrieve", boom)
+        client = client_returning(reply("A: 4:1", ["https://example.org/x.pdf"]))
+        findings = await research_gaps(client, "r", ["a gap"])
+        assert client.chat.await_count == 1 and len(findings) == 1
+
+    def test_the_lookup_ceiling_reflects_what_search_costs(self):
+        assert MAX_LOOKUPS == 3

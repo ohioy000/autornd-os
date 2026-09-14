@@ -24,15 +24,24 @@ import logging
 from dataclasses import dataclass, field
 
 from autornd.config import settings
-from autornd.knowledge.store import ingest_text
+from autornd.knowledge.store import ingest_text, retrieve
 
 logger = logging.getLogger(__name__)
 
 __all__ = ["Finding", "research_gaps"]
 
-# A lookup costs about half a cent. A wrong component in a BOM costs a board
-# revision, so the ceiling here is about bounding a runaway, not about thrift.
-MAX_LOOKUPS = 4
+# Measured, not estimated: once every call was actually priced, search turned
+# out to be 61% of a full workflow and 98% of a grounding run — $0.72 of a
+# $0.74 eight-sector pass. A lookup is the most expensive thing this harness
+# does, so the ceiling is about thrift as well as bounding a runaway.
+MAX_LOOKUPS = 3
+
+# How close a stored finding must be to count as already answering a gap.
+# Chroma returns squared L2 distance here, so smaller is nearer; 0.35 keeps
+# near-restatements and rejects merely related subject matter. Set
+# conservatively on purpose: reusing the wrong finding is a wrong figure in a
+# design, while a needless lookup only costs money.
+REUSE_DISTANCE = 0.35
 
 LOOKUP_PROMPT = """\
 Answer this engineering question from authoritative sources — manufacturer
@@ -104,6 +113,16 @@ async def research_gaps(
 
     findings: list[Finding] = []
     for question in gaps[:max_lookups]:
+        # Ask the store before paying anyone. Findings are ingested, so a fact
+        # looked up once is local for every workflow after — and the cheapest
+        # search is the one already answered. This is the same lever as
+        # everywhere else: the local check is free and it is also more
+        # consistent, because it returns the figure already cited rather than
+        # re-asking and hoping for the same answer.
+        reused = _recall(question)
+        if reused is not None:
+            findings.append(reused)
+            continue
         try:
             answer, citations, model = await _lookup(client, request, question)
         except Exception as exc:
@@ -114,7 +133,7 @@ async def research_gaps(
         finding = Finding(question=question, answer=answer,
                           citations=citations, model=model)
         findings.append(finding)
-        _remember(finding)
+        _remember(finding)   # recalled findings skip this: already stored
 
     if findings:
         grounded = sum(1 for f in findings if f.grounded)
@@ -123,6 +142,36 @@ async def research_gaps(
             len(findings), grounded, len(findings) - grounded,
         )
     return findings
+
+
+def _recall(question: str) -> Finding | None:
+    """A stored finding that already answers this gap, if there is one.
+
+    Only previously researched material counts. Project documentation is
+    already in the briefing that produced the gap, so treating a documentation
+    chunk as an answer would mean the gap was never a gap.
+    """
+    try:
+        hits = retrieve(question, n_results=1, where={"tag": "research"})
+    except Exception as exc:
+        logger.debug("Could not check the store for %r: %s", question[:60], exc)
+        return None
+    if not hits:
+        return None
+
+    hit = hits[0]
+    distance = hit.get("distance")
+    if distance is None or distance > REUSE_DISTANCE:
+        return None
+
+    logger.info("Reusing a stored finding for %r (distance %.3f) — no lookup",
+                question[:60], distance)
+    return Finding(
+        question=question,
+        answer=hit["text"],
+        citations=[hit["source"]] if hit.get("source") else [],
+        model="recalled",
+    )
 
 
 async def _lookup(client, request: str, question: str) -> tuple[str, list[str], str]:

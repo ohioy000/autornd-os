@@ -68,6 +68,30 @@ The same reasoning shapes the plan: **success criteria must be verifiable by rea
 
 ## Research
 
+### Search is the expensive tier — treat it that way
+
+Once every call was actually priced, search turned out to be **61% of a full
+workflow** and **98% of a grounding run** ($0.72 of $0.74 across eight
+sectors). Nothing else comes close, so two things bound it:
+
+- **Three lookups per workflow** (`MAX_LOOKUPS`). Gaps are ordered by the
+  briefing, so the three that run are the three the briefing thought mattered
+  most.
+- **The store is asked first.** Findings are ingested, so a fact looked up once
+  is local for every workflow afterwards, and a gap that matches a stored
+  finding closely enough is answered for free. The cheapest lookup is the one
+  already answered — and it is also the more consistent one, since it returns
+  the figure already cited instead of re-asking and hoping for the same answer.
+
+Run `python -m autornd.evals.cli --max-spend 0.50` on anything that touches this
+tier. Reports break spend down per tier, so you can see where it went:
+
+```
+spend by tier: search $0.0885, engineering $0.0332, architecture $0.0216,
+               research $0.0020, triage $0.0001
+```
+
+
 This is the part that makes AutoRnD more than a model with a checklist, and it exists because of a measurement rather than a theory.
 
 Asked which charger IC a specific board uses, a capable model answered `IP5306` — a power-bank part that does not do that job — in bold, with no hedge. Asked the maximum EIRP in the EU 868 MHz band, the same model answered `25 mW (+14 dBm EIRP)`, conflating ERP with EIRP: two units 2.15 dB apart, and the difference between a compliant transmitter and a failed certification.
@@ -179,7 +203,42 @@ AutoRnD routes each phase to a named tier and will not start until every require
 | Tier | Job |
 |---|---|
 | **Ranker** | orders retrieved documentation by usefulness. Without it, retrieval falls back to embedding distance |
-| **Premium** | the user-initiated Double Check review |
+| **Premium** | the independent pass on work that cannot be recalled. Falls back to the architecture tier when empty |
+
+### Choose non-reasoning models for the tiers that fill a schema
+
+Every phase returns a typed verdict, and a model that reasons at length before
+answering can spend its whole output budget on the reasoning and emit nothing.
+That is not a hypothetical: measured on one rollout request, one candidate
+architecture model returned `{"plan": "...", "success_criteria": ["...", "..."]}`
+— a schema-shaped stub, at `finish_reason=stop`, with and without a worked
+example in the prompt — and one candidate engineering model spent all 16,384
+tokens reasoning and returned no text at all.
+
+The harness handles both correctly. A stub is caught by the placeholder
+validator and a silent model is reported with its cause:
+
+```
+model returned no text (finish_reason=length, completion_tokens=16384 of
+max_tokens=16384 — a reasoning model can spend its whole budget before
+emitting an answer; raise max_tokens or use a non-reasoning model for this tier)
+```
+
+So the failure is loud, cheap and correctly attributed rather than silent. But
+it is still a failed run, so:
+
+- **Engineering, Architecture, Triage** fill schemas on every workflow. Prefer
+  models that answer directly. If you want a reasoning model here, give it
+  headroom well above the tokens its answer needs.
+- **Escalation** is the one tier where reasoning earns its keep — it reads a
+  long failure log and is rarely called, so it ships with a 16k budget.
+- **Validate** is capped separately (`VALIDATE_MAX_TOKENS`, default 8000)
+  because it judges work rather than redoing it. An unbounded validator once
+  produced 15k output tokens for a green/red verdict. 3000 proved too tight for
+  a reasoning model, which is how that default was found.
+
+A ceiling is billed only when it is used, so raising one costs nothing on the
+runs that were already fine.
 
 All tiers accept any model your provider serves, in `provider/model` form. The client speaks the OpenAI chat-completions protocol. On startup AutoRnD validates every configured id against your provider's catalogue and reports it:
 
