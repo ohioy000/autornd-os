@@ -1579,3 +1579,79 @@ span $0.120–$0.280 per million output tokens — a 2.3× spread, not 12×. The
 came from cheap servings also returning much shorter replies, so it is a
 statement about total tokens billed, not about rate. Cost per sweep is still the
 number to compare; the rate is not.
+
+### 12.3 Part A — results
+
+Six invocations, `evals/scenarios/wide` × `triage-classify`, `--repeat 3`,
+`--max-spend 0.05 --max-spend-sweep 0.10`. Headline measure is sectors passing
+**every** repetition. No invocation was truncated by the sweep cap.
+
+| pin | 3/3 | cost | wall | under-classified (≥2/3 reps) | over-classified |
+|---|---|---|---|---|---|
+| unpinned → OpenInference | 27/36 | $0.0014 | 304s | building_services, geotechnical, legal_ops, water_treatment | appsec, textiles |
+| `triage:OpenInference` | 27/36 | $0.0014 | 323s | + conservation, water_treatment 3/3 | appsec, textiles |
+| `triage:DigitalOcean` | **22/36** | $0.0041 | 766s | geotechnical, legal_ops, water_treatment, dentistry | appsec |
+| `triage:Alibaba` | 31/36 | $0.0317 | 886s | wind_energy | brewing, broadcast |
+| `triage:AtlasCloud` | 32/36 | $0.0355 | 1274s | wind_energy | brewing |
+| `triage:StreamLake` | **33/36** | $0.0184 | 2254s | **none** | — |
+
+StreamLake's three non-clean sectors are not all classification failures:
+`legal_ops` under-classified 1/3, `appsec` failed `unrecallable` 1/3, and
+`dentistry` had one run **time out at 45s** — which is the missing 108th call.
+
+**Predictions, scored honestly (§12.2):**
+
+| prediction | outcome |
+|---|---|
+| unpinned 30–31/36 | **wrong** — 27/36. §10.2's 31 was `--repeat 1`; strict 3/3 scoring over three reps is harsher. The two numbers measure different things. |
+| StreamLake 33/36 | **right**, exactly. Cost $0.0184 against §6.1's $0.0185. |
+| OpenInference 28/36 | **near** — 27/36. |
+| `legal_ops`/`building_services` under-classify somewhere | **right** |
+| `appsec` + `textiles` over-classify | **right** |
+| §6.1's under-classified triple is not stable across servings | **right**, and more so than expected — see below |
+| Alibaba / AtlasCloud / DigitalOcean | no prior offered; DigitalOcean is the surprise at 22/36 |
+
+#### ❗ B4 is a serving artifact, not a guide defect
+
+`HANDOVER` §4.2 records B4 as `wide_legal_ops` under-classifying "on **every**
+provider", and §5 item 4 as "guide's fault, not the serving's". Both are
+**false**:
+
+```
+OpenInference 0/3    DigitalOcean 0/3    unpinned 0/3
+StreamLake    2/3    Alibaba      3/3    AtlasCloud 3/3
+```
+
+The governing-documents clause lands. It does not land on a cheap serving. The
+same holds for every sector §6.1 named as dangerous — `building_services`,
+`geotechnical` and `water_treatment` are all clean on Alibaba and AtlasCloud.
+
+#### Two corrections to §6.1's framing
+
+1. **"Unpinned" is no longer a mix.** Unpinned and `OpenInference` returned
+   identical scores, identical cost and the same failure set: today the tier
+   routes to one provider. §6.1's "an unpinned score is partly a record of who
+   answered" was written when five shared it. It currently answers "OpenInference"
+   — the least accurate serving measured.
+2. **Price buys accuracy, but the multiple is bigger than recorded.** 23× the
+   cost (Alibaba vs OpenInference) bought 4 sectors; §6.1 recorded 12× for 5.
+   The direction of the failures matters more than the count: cheap servings
+   fail by **under**-classifying (7–10 sectors, the dangerous direction), the
+   dear ones by **over**-classifying (1–2 sectors, the safe one).
+
+#### Operational findings
+
+- **StreamLake has roughly doubled in latency.** §6.1 clocked this sweep at
+  1102s; it now takes 2254s and lost one unit to the 45s per-scenario timeout.
+  A first attempt was killed at a 2400s ceiling.
+- **A killed sweep loses everything it paid for.** That first attempt spent
+  **≈$0.018** and wrote nothing: the CLI renders its report only after the last
+  unit. Quantified by provider-side accounting, below.
+- **The meter cross-checks against the provider.** OpenRouter's own
+  `total_usage` moved $0.0937 across a window in which our meter recorded
+  $0.0594 of *completed* runs; the difference is an in-flight run plus the
+  killed sweep. This is the first external validation of the meter since
+  `b4cd89f`, and it is consistent.
+
+Part A total: **$0.0925 recorded + ≈$0.018 lost = ≈$0.11**, inside the
+blueprint's $0.02–0.15 estimate.
