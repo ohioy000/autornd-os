@@ -1,0 +1,15 @@
+id: mat_immaterial_changelog
+workflow: triage-only
+description: >
+  IMMATERIAL probe 3 of 3. Release-note phrasing, before publication.
+
+  The unknowns are which entries to include and how to phrase them. A wrong
+  assumption produces a worse changelog, not a wrong one, and no outside source
+  settles it.
+request: "Draft the changelog entries for the next release, for review before they publish to the status page"
+tags: [materiality, immaterial]
+expect:
+  risk_at_least: medium
+  risk_at_most: high
+  status: completed
+  max_calls: 5

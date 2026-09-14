@@ -1722,3 +1722,48 @@ OPENROUTER_PROVIDER_ORDER=triage:Alibaba
 
 Until that line exists, the tier routes unpinned — which today means
 OpenInference at 27/36, the least accurate serving measured.
+
+### 12.5 Part C — B2, materiality
+
+Five probes in `evals/scenarios/materiality/`, kept out of default runs by the
+same non-recursive glob that excludes `wide/` (`scenario.py:187`, verified:
+the default suite still loads 17 scenarios and none of them is a probe).
+
+All five sit at the **deciding** stage rather than the acting one, so they read
+`medium`. That is deliberate and load-bearing: low-risk work looks nothing up at
+all (§4.3), so a probe that read `low` would measure the risk gate instead of
+the materiality gate and prove nothing. A risk floor is never waivable, so they
+are written to be genuinely medium rather than engineered to read low.
+
+**Departure from C1's suggested content, recorded before running.** The
+blueprint proposes "a load figure that decides a code requirement" as the second
+material probe. §6.6 makes structural loading a harm rule and therefore
+`critical` **at every stage**, so that probe would have failed its own risk
+assertion and measured the risk guide rather than materiality. Replaced with an
+accessibility conformance level — a published standard that §6.6 explicitly
+classes as *not* a harm rule (quality and interoperability standards are not),
+while still carrying an unknown that genuinely changes what gets built.
+
+**Pre-registered, before the baseline ran, under the CURRENT gate:**
+
+| probe | predicted blocking gaps | predicted lookup |
+|---|---|---|
+| `mat_immaterial_faq` | 2–3 | fires |
+| `mat_immaterial_page_copy` | 2–3 | fires |
+| `mat_immaterial_changelog` | 2–3 | fires |
+| `mat_material_threshold` | ≥1 | fires |
+| `mat_material_contrast` | ≥1 | fires |
+
+Basis [measured: §6.2] — across 33 workflows the gate never returned an empty
+blocking list, averaging 2.7–2.9 of a permitted 3. The prediction is therefore
+that the current gate cannot tell these two classes apart at all, and that all
+five fire a lookup.
+
+**Which function is actually under test.** The blueprint names
+`synthesize_briefing`. With an empty store — which `run_scenario` guarantees per
+unit — the exercised path is `analyze_request` and its `blocking_unknowns`, not
+`synthesize_briefing` and its `blocking_gaps`. Both carry the identical
+subset-selection framing ("the subset of those where a wrong assumption changes
+the answer. Often empty. Never more than three."), and §6.2's measurement was of
+the scoping path, so the reframe targets both and the probes exercise the
+scoping one.

@@ -1,0 +1,21 @@
+id: mat_immaterial_faq
+workflow: triage-only
+description: >
+  IMMATERIAL probe 1 of 3. Medium-risk work whose unknowns are cosmetic.
+
+  The materiality gate (B2) asks a model to name the subset of unknowns where a
+  wrong assumption would change the answer. Measured across 33 workflows it
+  never once returned an empty list, averaging 2.7-2.9 of a permitted 3. These
+  probes exist to test whether a reframed gate can tell the difference between
+  an unknown that changes the answer and one that does not.
+
+  Deliberately at the DECIDING stage rather than the acting one, so it reads
+  medium: low-risk work looks nothing up at all, and a probe that reads low
+  would measure the risk gate instead of the materiality gate.
+request: "Draft the customer FAQ answers for the upcoming pricing change, for sign-off before the announcement goes out"
+tags: [materiality, immaterial]
+expect:
+  risk_at_least: medium
+  risk_at_most: high
+  status: completed
+  max_calls: 5

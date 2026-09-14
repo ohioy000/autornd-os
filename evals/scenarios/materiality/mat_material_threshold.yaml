@@ -1,0 +1,16 @@
+id: mat_material_threshold
+workflow: triage-only
+description: >
+  MATERIAL probe 1 of 2. A compliance threshold that varies by jurisdiction.
+
+  The unknown here genuinely changes the answer: the registration threshold is a
+  different number in each member state, and picking the wrong one produces work
+  that is confidently, checkably wrong. This is what a blocking gap is supposed
+  to mean, so a gate that zeroes this one has been tuned too far.
+request: "Decide the order value at which we must register for VAT in each EU country we ship to, and document the threshold that applies"
+tags: [materiality, material]
+expect:
+  risk_at_least: medium
+  risk_at_most: high
+  status: completed
+  max_calls: 5

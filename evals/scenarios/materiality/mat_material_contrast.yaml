@@ -1,0 +1,20 @@
+id: mat_material_contrast
+workflow: triage-only
+description: >
+  MATERIAL probe 2 of 2. A published figure that decides what gets built.
+
+  The conformance level chosen sets a specific contrast ratio, and the two
+  candidate levels do not set the same one. Assume wrong and every colour pair
+  in the design system is wrong with it.
+
+  Chosen deliberately as a quality standard rather than a harm rule: §6.6 makes
+  structural loading, food contact and the like critical at every stage, so the
+  blueprint's suggested load-figure probe would have read critical and measured
+  the risk guide rather than materiality.
+request: "Decide which accessibility conformance level the new checkout must meet, and document the text contrast ratio that follows from it"
+tags: [materiality, material]
+expect:
+  risk_at_least: medium
+  risk_at_most: high
+  status: completed
+  max_calls: 5

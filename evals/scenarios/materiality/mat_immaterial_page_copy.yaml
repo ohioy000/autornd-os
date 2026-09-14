@@ -1,0 +1,16 @@
+id: mat_immaterial_page_copy
+workflow: triage-only
+description: >
+  IMMATERIAL probe 2 of 3. Wording and tone on a page that is not yet replaced.
+
+  Everything the request leaves unspecified — voice, length, which objections to
+  answer first — is a matter of judgement a competent writer settles without
+  looking anything up. Nothing here has a right answer that a source could
+  supply.
+request: "Propose the wording and tone for the account-closure confirmation page, for review before it replaces the current copy"
+tags: [materiality, immaterial]
+expect:
+  risk_at_least: medium
+  risk_at_most: high
+  status: completed
+  max_calls: 5
