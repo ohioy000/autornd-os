@@ -1536,3 +1536,46 @@ and both are inputs Part A needs regardless.
 | Env-var-over-`.env` precedence (G-3's premise) | **Confirmed.** With no prefix, `settings.openrouter_provider_order` is `''`; with `OPENROUTER_PROVIDER_ORDER=triage:PreflightProbe` prefixed, it reads `triage:PreflightProbe`. Prefixes override cleanly, so the sweep needs no `.env` edits. |
 
 Nothing else has run. Parts A, B and C are untouched.
+
+### 12.2 Part A — pre-registered predictions, written before any sweep ran
+
+G-1 cleared 2026-09-14: the key in `.env` no longer matches the exposed one
+(fingerprint `d38e9ff…` → `d70e4c6…`). Committed before the first invocation so
+the predictions cannot be tidied afterwards.
+
+All five §6.1 provider names were confirmed live to still serve the triage
+model — it currently has 17 endpoints, so the five swept here are a deliberate
+subset carried over from §6.1, not the whole field.
+
+The headline measure is **sectors passing every repetition** (3/3), which is
+what `RepeatedRun.passed` counts; a sector at 2/3 reads as a failure in that
+column and is recorded separately as flaky.
+
+| invocation | predicted 3/3 sectors | predicted under-classified | basis |
+|---|---|---|---|
+| unpinned baseline | 30–31 / 36 | `legal_ops`, `building_services`, and at least one other that varies by serving | [measured: §6.1 = 30/36; §10.2 = 31/36] |
+| `triage:StreamLake` | 33 / 36 | `water_treatment`, `building_services`, `legal_ops` | [measured: §6.1] |
+| `triage:OpenInference` | 28 / 36 | `water_treatment`, `building_services`, `legal_ops` | [measured: §6.1] |
+| `triage:Alibaba` | **no prior** | **no prior** | never swept individually |
+| `triage:AtlasCloud` | **no prior** | **no prior** | never swept individually |
+| `triage:DigitalOcean` | **no prior** | **no prior** | never swept individually |
+
+Two further predictions, stated so they can be wrong:
+
+- **Over-classification:** `appsec` and `textiles` fail `risk_at_most` on at
+  least one invocation [measured: §10.2's incidental unpinned run failed exactly
+  those two in that direction].
+- **The §6.1 under-classified triple is not stable across servings.** §6.1
+  names `water_treatment`, `building_services`, `legal_ops` failing on every
+  repetition; §10.2's unpinned run instead failed `geotechnical` and *passed*
+  `water_treatment`. So the predicted sector *sets* above are weaker claims than
+  the predicted counts, and a mismatch in set membership is expected rather than
+  surprising.
+
+**A correction to the blueprint's own basis, recorded before it misleads
+anyone:** §6.1's "12× the price bought five sectors of accuracy" compares
+*observed sweep spend*, not list price. At list, the five providers swept here
+span $0.120–$0.280 per million output tokens — a 2.3× spread, not 12×. The 12×
+came from cheap servings also returning much shorter replies, so it is a
+statement about total tokens billed, not about rate. Cost per sweep is still the
+number to compare; the rate is not.
