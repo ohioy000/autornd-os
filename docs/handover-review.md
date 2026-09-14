@@ -1894,3 +1894,248 @@ verified against the provider's books.
   maximum possible value then shrinks to a fraction of a cent per workflow,
   which is a second, independent reason not to spend more effort on it.
 - **B6 and B7** remain, and `wind_energy` (B5) is still deliberately red.
+
+---
+
+## 13. Blueprint 006 — Harden the instrument, then observe (verbatim, as received)
+
+**Status: not executed at the time of recording.** Execution record: §13.2.
+
+Pre-flight at recording time, all three clear: the owner's pin line
+`OPENROUTER_PROVIDER_ORDER=triage:Alibaba` is present in `.env`, `MODEL_PREMIUM`
+is set, and the search tier's cheap sibling is available from the catalogue.
+
+```text
+BLUEPRINT 006 — Harden the instrument, then observe: results retention, the
+search-tier swap, the B6 probe run, and the B7 convergence traces.
+
+Origin: two defects 005 paid to discover — the harness discards the verdicts
+it buys (005's Part B1 was structurally impossible: no past sweep can be
+diagnosed after the fact), and a killed sweep loses everything it paid for
+(~$0.018 measured) because the CLI renders only at the end — plus review
+§4.8 test #1, HANDOVER B6, and B7 phase 1 of 3: capture the evidence; the
+advisor rules the design from the traces; the executor implements the
+ruling. An executor design proposal is invited and will be adjudicated like
+any departure.
+
+Protocol (as 001–005): paste verbatim into docs/handover-review.md as §13
+BEFORE executing; append §13.2 after — departures with reasons, left undone
+deliberately, and anything execution found that the blueprint missed.
+Provenance rule binding, counts included: a count beside its list equals
+the list; the list is authoritative; estimates set expectations and never
+gate. Prerequisites: suite green before and after (re-derive the count —
+do not trust any number in this blueprint), CI green before finishing.
+Paid parts pre-flight their env: Part D requires the owner's triage pin
+line in .env; Part C requires MODEL_PREMIUM; Part B pins the search
+serving per-run.
+
+PART A — the instrument keeps its readings (FREE; run before any paid part
+— B, C and D all run under its protection)
+
+A1. ScenarioRun retains what it pays for: the per-attempt verdicts (every
+    node's typed verdict, node_id → dict) and the client's
+    providers_by_function — who actually served each function. Additive
+    field with a default so no existing constructor call breaks.
+    Rationale: §6.1's lesson is that an unpinned score is a record of who
+    answered; retention that omits WHO answered leaves B4-class diagnoses
+    impossible — which is exactly what made 005's Part B1 impossible.
+A2. The CLI persists incrementally: after each unit (scenario × repetition
+    × workflow) completes, append one JSON record to a results file —
+    default evals/results/<utc-timestamp>-<suite>.jsonl, overridable with
+    --results-file. An appended line is durable the moment it is written,
+    so a killed sweep keeps everything it paid for; no signal-handler
+    gymnastics. Record contents: scenario id, workflow, repetition, cost,
+    calls, cost_by_tier, assertion results (name → outcome and detail),
+    status, verdicts (from A1), providers_by_function. Write ONE header
+    record at file open carrying the run configuration — tier → model
+    map, pins, caps — so a results file is fully self-describing and a
+    future failing sector can be priced against its serving without
+    re-running anything.
+A3. Add evals/results/ to .gitignore. Results files are local by
+    default; measurement records reach the repo only by deliberate commit
+    (the §12 tables, and in Part D the committed traces).
+A4. README Evals and CONTRIBUTING Evals: one short paragraph each —
+    results persist as JSONL, where they land, what a record carries, and
+    that a killed sweep's data survives.
+A5. Tests (billing doubles; the §9.2 traps apply — the store re-isolates
+    per scenario, and doubles must return plausible query expansions):
+      - a two-unit run writes a header record and two unit records that
+        replay to the same pass/fail as the in-memory ScenarioRun;
+      - a run aborted after unit 1 (simulate the abort — do not kill a
+        real process in CI) leaves unit 1's record on disk;
+      - a record contains verdicts and providers.
+    The G2 badge guard fires when the count moves — badge, Testing count
+    and tree comment move in the SAME commit.
+
+PART B — search-tier swap (review §4.8 test #1)
+B1. Pin the search tier's SERVING for BOTH runs — same provider for both
+    models; that is what makes this a model comparison rather than a
+    second §6.1 lottery. Verify both models are served by the named
+    provider via the catalogue before running. Record the serving in
+    §13.1.
+B2. Two invocations on evals/grounding, triage-only, repeat 1, caps
+    --max-spend 0.30 --max-spend-sweep 0.75 [derived: §6.3 grounding
+    costs $0.17–0.72 across budget shapes]: the current MODEL_SEARCH from
+    .env vs the cheap sibling from review §4.3's search-tier row (record
+    the id in §13.1). Env prefix for the sibling; pre-flight assert
+    settings picked it up (free).
+B3. Pre-register BEFORE running: the current model recovers 5/8 at the
+    1500-token cap [measured: §6.3]; the sibling has no prior — that is
+    the question. Also record token-fill behaviour and per-run cost from
+    the meter [measured: §12.2 — provider-verified to 0.3%].
+B4. Output is a DECISION INPUT, not a decision: the table lands in
+    §13.1; any .env change is the owner's (G-3). If the sibling matches
+    figures at a fraction of the cost, the recommendation carries the
+    numbers; if figures drop, the current model stands and §4.1's
+    fee-inversion arithmetic stays a labelled projection. Record the
+    interaction already noted in HANDOVER B2: if the swap lands, a
+    lookup becomes fee-dominated and the materiality cap's value shrinks
+    further.
+
+PART C — B6: run the probe
+C1. First close the records gap 004 reported: the B6 plan text is
+    appended at the end of this blueprint — paste it into §13 with this
+    blueprint so the repo finally holds the plan it executed. The built
+    probe (workflows/independent-check-probe.yaml, 8 nodes) is
+    authoritative on node shape; the plan text is the record.
+C2. Mechanism: env-prefix the server — MODEL_PREMIUM=<the §4.4
+    reassignment id> AUTORND_WORKFLOW=independent-check-probe — then
+    POST /api/workflows/sync with the plan's request, then pull the
+    workflow row and phase_results. If scenario.py admits a probe
+    scenario, prefer the eval harness for its spend caps — read it and
+    pick; record which and why. Cost [estimate → derive]: a handful of
+    cheap calls plus one premium call.
+C3. Pre-registered expectations (from the plan): triage marks
+    unrecallable=true on the deliberately-irreversible, deliberately-safe
+    request; every phase ships on trivial work; independent_check EXECUTES
+    and returns a DoubleCheckVerdict with no critical issues. If triage
+    will not mark unrecallable, that is itself a calibration finding — do
+    NOT remove the when clause to force the pass. Every deviation
+    reported honestly, including "my expectation was wrong."
+C4. Close B6 with the trace as evidence (HANDOVER §4.2 and §5 item 6);
+    the probe workflow remains the regression shape.
+
+PART D — B7 phase 1: convergence traces (run AFTER Part A)
+D1. FREE FIRST — record three facts from source, read not recalled (they
+    are the design-relevant structure; no document states them):
+      a. the build loop's entire feedback channel is
+         failure_log[-1].red_cause — ONE string — plus
+         resolution_directive after escalation; validate's findings and
+         evidence are logged but never reach the next implement;
+      b. domain_review concerns mutate the implement verdict but reach
+         the next iteration only as the generic "Domain reviewer flagged
+         critical concern" when critical;
+      c. the loop's until tests validate.green ONLY — a critical domain
+         review can flip implement red while validate stays green, and
+         the loop EXITS CONVERGED-ON-RED. Whether that path occurs is an
+         empirical question the traces answer.
+D2. Author four hard scenarios [count follows the list], each
+    pre-registered before running with expected iterations, expected
+    red_cause shape, and predicted outcome: (1) multi-artifact numeric
+    consistency — figures that must agree across sections of a written
+    deliverable; (2) derived tolerances — values that must be recomputed,
+    not copied; (3) cross-reference integrity — definitions used before
+    they are defined; (4) verification-requires-execution — work whose
+    honest validation needs running something: the structural axis §6.8
+    diagnosed and the SPECIALIST_OUTPUT_CONTRACT only mitigates.
+D3. Run engineering-rnd, repeat 1, --max-spend 0.75 --max-spend-sweep
+    3.00 — a conscious override of the $1.00 default, the Part A
+    rationale in person: this run buys the design input for the
+    highest-value open problem, and Part A is what makes the spend
+    survivable. [estimate → the caps are the bound.]
+D4. Extract per-iteration records from phase_results (rows carry
+    iteration; the persistence hook writes them) AND from Part A's JSONL
+    (verdicts, providers). Classify each:
+      red_cause → fixable-in-text | structural | token-starved;
+      loop      → converged | stalled (same red_cause ≥2 consecutive) |
+                  oscillating | converged-on-red | exhausted.
+    Measure whether implement's summary substantively changes between
+    iterations despite the one-string channel (free: length delta and a
+    rough similarity).
+D5. Deliverables: the taxonomy table with counts; all four traces
+    committed as measurement records (deliberate commits, per A3);
+    providers_by_function per trace — the B4 lesson in force: a failing
+    trace is first priced against its serving, and who served is recorded
+    before any prompt edit is proposed. An attached design proposal is
+    invited; it will be adjudicated. Phase 2 (the advisor's): the design,
+    ruled from this data, against the lever menu — stall detection and
+    early escalation; widening the feedback channel past one string;
+    aligning validate's prompt to the written-output contract; routing
+    structural red_causes straight to escalation; an echo-the-findings
+    forcing function on implement. Phase 3: implement the ruled design.
+D6. Pre-registered, the advisor's, labelled [prediction] — they gate
+    nothing, and 005 falsified one such prediction, which is the system
+    working: stalls in ≥1/3 of non-converging runs; structural causes in
+    ≥1/4 of red iterations; at least one converged-on-red. Wrong is
+    recorded either way.
+
+PART E — records and one stale row
+E1. HANDOVER §4.2: close B6 per Part C. HANDOVER §5: strike item 3 — B2
+    is resolved (§4.2 and §6.2 already say so; item 3 still presents the
+    original three options as open) — and close item 5 once the owner's
+    pin line is confirmed present in .env, recording the line and date.
+E2. HANDOVER §6.7: add one line — the post-b4cd89f meter agrees with the
+    provider's books to 0.3% across $0.32 of live spend (measured
+    2026-09-14, §12.2), reading marginally high, the conservative
+    direction for ceilings.
+E3. HANDOVER header, §2.2 and §3.7: the test count and file count have
+    drifted with every test-adding pass (header says 501). Update with
+    the commit-stamped form the CHANGELOG uses: "N tests as of
+    <commit>". The per-file table regenerates from a collection listing
+    if convenient; the total is the mandatory part.
+E4. CHANGELOG [Unreleased]: one short paragraph — the sweep cap and the
+    budget-abort propagation fix; B4 resolved by pinning; B2 resolved as
+    a question-count cap; the meter verified against the provider's
+    books; the triage pin adopted. No model ids.
+E5. §13.2 as ever: departures, left undone, and what execution found
+    that the blueprint missed.
+
+OUT OF SCOPE, deliberately: implementing ANY B7 mechanism before the
+traces are read (the free stall check included — measure first, §0's own
+rule); the production API path; any .env edit (G-3); the review→rework
+loop (§5 item 12 — it needs exhaustion semantics and will be designed
+with B7's data); per-tier pins beyond triage (roadmap item 8 — measure
+each tier before pinning it).
+
+COMMIT GUIDANCE: prose, convention 12. Name the lineage: the harness now
+keeps what it pays for because 005 had to re-buy its own verdicts; the
+search decision gets its table; the independent pass finally executes
+inside a complete run; B7 gets designed from traces rather than taste.
+```
+
+### 13.0 The B6 plan — verbatim, recorded at last
+
+`docs/handover-review.md` §5 listed this as missing from the repo through four
+blueprints; §11.2 noted 004 executed from its node list without it. It is
+recorded here so the repo holds the plan it executed.
+
+```text
+B6 — the goal is not to fix the flagship; it is to observe independent_check
+execute inside a complete live run, which has never happened (nine attempts
+each exited earlier for a legitimate reason). Apply the triage-classify
+trick: a minimal workflow that reaches review_clean by construction.
+
+Build workflows/independent-check-probe.yaml (BUILT — Blueprint 004):
+triage, context, plan, implement, validate, review + review_clean gate,
+independent_check with `when: "triage.unrecallable"`. No build_loop, no
+feasibility, no escalation path — single pass by design.
+
+The request must genuinely set unrecallable=true, or the last node
+legitimately skips. Use a trivially-safe but irreversible framing, e.g.
+"finalize the customer confirmation notice for a one-way production
+database migration that has already been run" — decides nothing, harms
+nobody, cannot be recalled. Per HANDOVER §6.6 that is exactly what sets
+unrecallable without inflating risk. Do NOT work around the when clause
+by removing it — if triage won't mark it, that is itself a calibration
+finding; record it.
+
+Pre-registered expectations (convention 7): ship=true on trivial work at
+every phase; independent_check executes and returns a DoubleCheckVerdict
+with no critical issues. Any deviation is reported honestly, including
+"my expectation was wrong."
+
+Deliverables: one clean full-path trace including independent_check
+executing (phase_results from the DB); B6 closed in HANDOVER as observed
+live, the probe workflow kept as the regression shape; the trace doubles
+as live-path evidence toward eventually retiring engine/workflow.py.
+```
