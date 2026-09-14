@@ -1167,3 +1167,117 @@ the only env file tracked.
   from the meter that did not count search.
 - Still queued from earlier passes: the **Docker build** CI job, and
   **`profiles/example.yaml`** declaring no `domains:`/`roles:`.
+
+---
+
+## 11. Blueprint 004 — Docker CI, the example profile, budget transparency, and the B6 probe (verbatim, as received)
+
+**Status: not executed at the time of recording.** Execution record: §11.2.
+
+```text
+BLUEPRINT 004 — three free closures and one guard: Docker CI, the example
+profile, budget-transparency tests, and the B6 probe workflow.
+
+Protocol (as 001–003): paste verbatim into docs/handover-review.md as §11
+BEFORE executing; append §11.2 (departures, left undone, what live execution
+found). PROVENANCE RULE, new and binding: every number below carries
+[measured: §ref], [derived: method], or [estimate → derive before use].
+Estimates set expectations only — never gates. Read HANDOVER §6 before
+trusting any figure, including mine.
+
+Prerequisites: suite green (527) before and after; CI green before finishing.
+
+PART A — Docker CI job (closes HANDOVER §5 item 10, the last uncovered
+install shape)
+
+A1. New `docker` job in ci.yml: `docker build -t autornd:ci .`, run the
+image detached on 8100 with the same dummy env block the existing jobs
+use (six MODEL_* tiers; the key defaults to empty), then smoke:
+  - GET /api/health → 200. Assert what the code actually does: degraded
+    with tier names is an acceptable — and expected — result with dummy
+    models. READ main.py's startup first: if startup crashes on an
+    invalid/empty key, that is a finding to record, and the smoke asserts
+    the truth, not a vacuous pass.
+  - GET / → 200: proves dashboard.html resolves inside the container —
+    the wheel-data fault class in its real deployment shape.
+  - Retry loop, not a bare sleep (startup is seconds [estimate → the
+    job's own timeout is the derivation]; ~10 tries × 2s is fine).
+  - On failure, dump `docker logs` before the job fails.
+A2. Do not push images. No registry, no tags beyond the local build.
+
+PART B — profiles/example.yaml (closes the §10.2 carry-forward)
+
+B1. Content decision [taste, grounded in §0 "any team" + §6.5]: the only
+worked example a new user gets must demonstrate the OPEN VOCABULARY with
+a NON-engineering team — the shipped defaults already teach engineering;
+the example's job is to prove the "works for any team" claim. Use a small
+content/marketing studio: three domains (e.g. brand_strategy, copywriting,
+seo_analytics) and three or four roles (e.g. copywriter, editor,
+fact_checker — fact_checker is deliberate: it echoes the
+anti-confabulation theme). Derive the EXACT yaml schema from
+autornd/profiles.py and tests/test_profiles.py — do not invent fields.
+Heavily commented: the file is a teaching artifact, and the comments carry
+the §6.5 rationale (closed lists produced least-wrong labels; measured).
+~20 lines of yaml plus comments.
+B2. Tests: the example loads through the profile loader; it declares at
+least one domain and one role NOT in the shipped enums; a declared role
+resolves to itself, not the synthesized generalist.
+B3. Extend the G1 naming guard's scan set with profiles/*.yaml and
+workflows/*.yaml (shipped config is user-facing; model ids are banned
+there by the Part-E policy of Blueprint 002). The example must pass it.
+B4. One README line in the profiles section pointing at the example;
+check CONTRIBUTING's profile example (from the 002 pass) agrees with the
+shipped file — one of them will need to match the other.
+
+PART C — budget-transparency pin tests (the class guard for the bug 003
+found)
+
+C1. tests/test_budget_transparency.py: for each paid-call handler that
+has a broad except — expand_queries, synthesize_briefing, analyze_request,
+research_gaps, and rerank_chunks in BOTH native and listwise modes
+(monkeypatch the mode/settings as needed) — inject a client double whose
+paid methods raise BudgetExceeded, and assert it ESCAPES the function
+(pytest.raises). These are propagation tests, not accounting tests: the
+double raises before billing, and convention 9 does not apply — say so
+in the docstring so nobody "fixes" it.
+C2. File docstring names the pattern for future sites: when adding a paid
+call with a broad handler, the same commit adds its transparency test.
+Rationale comment cites BOTH occurrences — §6.8's original latch and
+003's rediscovery in the same lines: the class has bitten twice, and a
+pinned test set is the cheapest insurance against a third.
+
+PART D — workflows/independent-check-probe.yaml (pre-builds the B6
+artifact so the owner's afternoon can observe it live)
+
+D1. Build the probe exactly per the B6 plan already delivered: 7 nodes
+(triage, context, plan, implement, validate, review + review_clean gate,
+independent_check with `when: "triage.unrecallable"`), single pass by
+design — no build_loop, no feasibility, no escalation path.
+D2. Spec test: loads; node order as above; the when clause present on the
+last node; no loop or escalation nodes. Free.
+D3. The live run is OUT OF SCOPE here — it needs MODEL_PREMIUM configured
+owner-side and runs in the measurement afternoon under the default $1.00
+sweep cap, which bounds the [estimate → measure] ~$0.05–0.15 run cost.
+
+PART E — records
+
+E1. HANDOVER §5 item 10 → closed (Docker shape now exercised). §10.2's
+carry-forward list → both remaining items closed by this blueprint.
+E2. Record the provenance rule in the review doc's blueprint-protocol
+preamble (it is now binding on future blueprints), and add one line to
+HANDOVER §4.4 pointing at it — convention 7's family: expectations are
+written before runs, and numbers are sourced before they are asserted.
+
+COMMIT GUIDANCE: prose. Name the lineage: the Docker job closes the last
+install shape after 001's lesson (the fault a suite structurally cannot
+see is the one that ships); the example profile teaches the vocabulary
+§6.5 paid to open; the transparency tests pin the class that §6.8 and
+B3 each caught a different instance of; the probe exists because nine
+full-workflow attempts never legitimately reached the independent pass
+(B6). The G2 badge guard will fire when tests land — update badge, Testing
+count, and tree comment in the SAME commit.
+
+OUT OF SCOPE, deliberately: calibration of anything (B4/B2 wait on the
+owner's pin sweep — §6.1); any prompt or constant inside autornd/engine;
+the production API path (no cap there, unchanged).
+```
