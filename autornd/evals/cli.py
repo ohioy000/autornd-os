@@ -16,7 +16,12 @@ import sys
 from pathlib import Path
 
 from autornd.config import settings
-from autornd.evals.runner import SweepBudget, run_repeated
+from autornd.evals.runner import (
+    ResultsLog,
+    SweepBudget,
+    default_results_path,
+    run_repeated,
+)
 from autornd.evals.scenario import load_scenarios
 from autornd.graph.spec import load as load_spec
 from autornd.routing.openrouter import OpenRouterClient
@@ -93,6 +98,11 @@ async def main() -> int:
                              f"'none' to disable. With --max-spend also set this "
                              f"is a hard guarantee: a unit that might not fit is "
                              f"never started")
+    parser.add_argument("--results-file", default=None, metavar="PATH",
+                        help="where to append per-unit JSONL results. Defaults "
+                             "to evals/results/<utc-timestamp>-<suite>.jsonl. "
+                             "Each line is flushed as its unit finishes, so an "
+                             "interrupted sweep keeps everything it paid for")
     args = parser.parse_args()
 
     budget = parse_sweep_cap(args.max_spend_sweep)
@@ -100,6 +110,25 @@ async def main() -> int:
     scenarios = load_scenarios(args.scenarios)
     targets = args.compare or [args.workflow]
     reports = []
+
+    # The header makes a results file self-describing: which model ran at each
+    # tier, who was pinned to serve it, and what the run was allowed to spend.
+    # Without it a stored result cannot be priced against its serving later,
+    # which is the diagnosis B4 turned on.
+    results = ResultsLog(
+        args.results_file or default_results_path(args.scenarios),
+        config={
+            "suite": args.scenarios,
+            "workflows": targets,
+            "repeat": args.repeat,
+            "max_spend": args.max_spend,
+            "max_spend_sweep": budget.cap if budget else None,
+            "timeout": args.timeout,
+            "models": OpenRouterClient.FUNCTION_MODELS,
+            "provider_order": settings.openrouter_provider_order,
+        },
+    )
+    print(f"results: {results.path}\n")
 
     for name in targets:
         # A scenario that names its own workflow always runs against that one,
@@ -109,7 +138,7 @@ async def main() -> int:
         report = await run_repeated(
             chosen, _spec(name), lambda: OpenRouterClient(),
             _settings(), repeat=args.repeat, timeout=args.timeout,
-            max_spend=args.max_spend, budget=budget,
+            max_spend=args.max_spend, budget=budget, results_log=results,
         )
         for scenario in pinned:
             # The same budget object, not a fresh one. This loop is the trap:
@@ -118,13 +147,15 @@ async def main() -> int:
             extra = await run_repeated(
                 [scenario], _spec(scenario.workflow), lambda: OpenRouterClient(),
                 _settings(), repeat=args.repeat, timeout=args.timeout,
-                max_spend=args.max_spend, budget=budget,
+                max_spend=args.max_spend, budget=budget, results_log=results,
             )
             report.results.extend(extra.results)
         report.results.sort(key=lambda r: r.scenario.id)
         reports.append((name, report))
         print(report.render())
         print()
+
+    results.close()
 
     if budget is not None:
         print(sweep_summary(budget))

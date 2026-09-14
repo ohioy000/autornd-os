@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-553%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-560%20passing-brightgreen.svg)](#testing)
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
 
@@ -481,6 +481,18 @@ triage_hardware              5/5      5    27.4
 
 **Runs are bounded.** A call ceiling and a wall-clock deadline, both recorded as failures rather than hangs, because `MAX_ITERATIONS` bounds loops and not spend — a wide fan-out makes many calls per iteration. Scenarios may set their own timeout, since a reasoning model taking two minutes to correctly decide it cannot plan is slow rather than broken. A scenario whose expectations a workflow cannot answer is skipped with the reason, not failed.
 
+**Results persist as they are produced.** Every unit appends one JSON line to
+`evals/results/<utc-timestamp>-<suite>.jsonl` — overridable with
+`--results-file` — flushed the moment it is written, so an interrupted sweep
+keeps everything it paid for rather than discarding it at the last hurdle. A
+record carries the scenario, repetition, cost and calls by tier, the assertion
+outcomes, the terminal status, **every node's typed verdict**, and **which
+provider served each tier**. One header line at the top records the run's
+configuration — the tier-to-model map, the provider pins and the spend caps — so
+a stored result can be priced against its serving months later without
+re-running anything. Results are gitignored: they reach the repo only by
+deliberate commit.
+
 **Spend is bounded twice.** `--max-spend` caps one scenario-run, which is a repetition rather than an invocation — 36 scenarios at 3 repetitions with `--max-spend 0.25` is a $27 ceiling, not a $0.25 one. `--max-spend-sweep` caps the whole invocation: every scenario, every repetition and every compared workflow against one budget. It defaults to **$1.00** and takes `none` to disable. Set both and the sweep cap is exact — a unit that cannot be guaranteed to fit is never started, so nothing is killed part-way. Set only the sweep cap and the crossing unit is stopped by the client's own ceiling instead, which overshoots by however many calls were already in flight. Units that never start are skipped with their reason and excluded from the pass rate, so a truncated sweep reports honest partial results and exits zero.
 
 Splitting triage into its own workflow is what made triage quality measurable: **30 seconds and a hundredth of a cent**, against sixteen minutes for a full-pipeline sweep. That is what caught safety-relevant hardware being classified below `high` risk three times in five.
@@ -736,7 +748,7 @@ workflows/                # engineering-rnd, lean, triage-only, triage-classify
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 553 tests
+tests/                    # 560 tests
 ```
 
 ## Cost and Performance
@@ -781,7 +793,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-553 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
+560 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
 
 `tests/test_graph_equivalence.py` is the load-bearing one. The original hardcoded sequencer is kept as `execute_hardcoded`, and those tests assert the graph reproduces it call-for-call across five paths, including the expensive ones. Delete it and the graph stops being a measured baseline.
 

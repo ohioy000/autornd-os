@@ -28,3 +28,7 @@ docs/private*/
 evals/private*/
 profiles/milkhouse.yaml
 profiles/private*.yaml
+
+# Eval results are local measurement records; they reach the repo only by
+# deliberate commit (see docs/handover-review.md §13).
+evals/results/

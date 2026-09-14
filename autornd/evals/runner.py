@@ -14,10 +14,13 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import json
 import logging
 import tempfile
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Callable
 
 from autornd.evals.assertions import AssertionResult, RunOutcome, score
@@ -31,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "EvalReport",
+    "ResultsLog",
     "SweepBudget",
     "RepeatedReport",
     "RepeatedRun",
@@ -119,6 +123,80 @@ class SweepBudget:
         self.skipped += 1
         return (f"skipped: sweep budget exhausted "
                 f"(${self.spent:.4f} of ${self.cap:.2f} spent)")
+
+
+class ResultsLog:
+    """Append-only JSONL, one line per unit, flushed as each unit finishes.
+
+    A sweep used to hold every result in memory and render once at the end, so
+    killing it threw away everything it had paid for — measured at about $0.018
+    on a single interrupted run, and the reason a whole invocation had to be
+    repeated. A line appended and flushed is durable the moment it is written,
+    which needs no signal handling and survives a kill -9 just as well as a
+    clean exit.
+
+    The header line carries the run's configuration, so a results file answers
+    "which model, served by whom, under what caps" without anyone re-running
+    anything. That is the B4 lesson made durable: a sector that fails is priced
+    against its serving before a prompt is blamed.
+    """
+
+    def __init__(self, path: str | Path, config: dict[str, Any] | None = None):
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._handle = self.path.open("a", encoding="utf-8")
+        self._write({"record": "header",
+                     "written_at": datetime.now(timezone.utc).isoformat(),
+                     **(config or {})})
+
+    def _write(self, payload: dict[str, Any]) -> None:
+        json.dump(payload, self._handle, ensure_ascii=False, default=str)
+        self._handle.write("\n")
+        # Durability is the entire point; buffering it away would restore the
+        # bug this class exists to fix.
+        self._handle.flush()
+
+    def record(self, run: "ScenarioRun", workflow: str, repetition: int) -> None:
+        self._write({
+            "record": "unit",
+            "scenario": run.scenario.id,
+            "workflow": workflow,
+            "repetition": repetition,
+            "passed": run.passed,
+            "skipped": run.skipped,
+            "status": run.status,
+            "error": run.error,
+            "calls": run.calls,
+            "seconds": round(run.seconds, 3),
+            "cost": run.cost,
+            "cost_by_tier": run.cost_by_tier,
+            "calls_by_tier": run.calls_by_tier,
+            "providers_by_function": run.providers_by_tier,
+            "assertions": [
+                {"name": r.name, "passed": r.passed,
+                 "wanted": r.wanted, "got": r.got, "detail": r.detail}
+                for r in run.results
+            ],
+            "path": run.path,
+            "verdicts": run.verdicts,
+        })
+
+    def close(self) -> None:
+        if not self._handle.closed:
+            self._handle.close()
+
+    def __enter__(self) -> "ResultsLog":
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.close()
+
+
+def default_results_path(suite: str) -> Path:
+    """evals/results/<utc-timestamp>-<suite>.jsonl"""
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    slug = Path(suite).name.replace(".yaml", "") or "suite"
+    return Path("evals/results") / f"{stamp}-{slug}.jsonl"
 
 
 @contextlib.contextmanager
@@ -220,6 +298,17 @@ class ScenarioRun:
     # between runs looks like a code regression until you can see that a model
     # id changed hands.
     providers_by_tier: dict[str, list[str]] = field(default_factory=dict)
+    # Every node's typed verdict, as plain dicts. The harness used to throw
+    # these away the moment it had scored them, which made diagnosing a past
+    # sweep impossible: Blueprint 005 set out to read eighteen triage verdicts
+    # it had already paid for and found nothing left to read. Scoring tells you
+    # *that* a sector failed; only the verdict says why, and re-buying it costs
+    # money and cannot reproduce the run that actually failed.
+    verdicts: dict[str, Any] = field(default_factory=dict)
+    # The terminal status of the run — completed, blocked, escalated. Scored by
+    # the `status` assertion already, but a result file needs it in its own
+    # right: "blocked" and "failed an assertion" are different outcomes.
+    status: str = ""
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -368,6 +457,16 @@ async def run_scenario(
     if budget is not None:
         budget.record(runner.total_cost)
 
+    # Verdicts are Pydantic models or plain values; normalise to something
+    # JSON can hold without importing the schemas back to read a result file.
+    verdicts: dict[str, Any] = {}
+    for node_id, value in (state.outputs or {}).items():
+        dump = getattr(value, "model_dump", None)
+        try:
+            verdicts[node_id] = dump(mode="json") if dump else value
+        except Exception:      # a verdict that will not serialise is not a
+            verdicts[node_id] = repr(value)   # reason to lose the whole run
+
     outcome = RunOutcome(state=state, calls=runner.calls,
                          cost=runner.total_cost, error=error,
                          context=getattr(runner, "context", "") or "")
@@ -383,6 +482,8 @@ async def run_scenario(
         calls_by_tier=dict(runner.client.calls_by_function),
         providers_by_tier={k: sorted(v) for k, v
                            in runner.client.providers_by_function.items()},
+        verdicts=verdicts,
+        status=str(getattr(state, "status", "") or ""),
     )
 
 
@@ -521,13 +622,17 @@ async def run_suite(
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
     max_spend: float | None = None,
     budget: SweepBudget | None = None,
+    results_log: "ResultsLog | None" = None,
 ) -> EvalReport:
     runs = []
     for scenario in scenarios:
         logger.info("eval: %s", scenario.id)
-        runs.append(await run_scenario(
+        run = await run_scenario(
             scenario, spec, client_factory, settings_lookup, timeout, max_spend,
-            budget))
+            budget)
+        runs.append(run)
+        if results_log is not None:
+            results_log.record(run, spec.name, repetition=1)
     return EvalReport(runs=runs, workflow=spec.name)
 
 
@@ -540,6 +645,7 @@ async def run_repeated(
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
     max_spend: float | None = None,
     budget: SweepBudget | None = None,
+    results_log: "ResultsLog | None" = None,
 ) -> RepeatedReport:
     results = []
     for scenario in scenarios:
@@ -550,6 +656,10 @@ async def run_repeated(
                 scenario, spec, client_factory, settings_lookup, timeout, max_spend,
                 budget)
             runs.append(run)
+            # Written before the next unit starts, so an interrupt anywhere
+            # after this point keeps everything bought so far.
+            if results_log is not None:
+                results_log.record(run, spec.name, repetition=attempt + 1)
             if run.skipped:
                 # Neither reason changes between repetitions: a workflow that
                 # cannot satisfy a scenario still cannot, and a budget that is

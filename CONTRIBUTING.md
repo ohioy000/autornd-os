@@ -55,6 +55,12 @@ mechanics:
   A double that answered for free once hid a real accounting bug, and it hid it
   from the very tests meant to show one workflow was cheaper than another.
 
+Every unit is appended to `evals/results/*.jsonl` as it finishes, carrying the
+typed verdicts and which provider served each tier alongside the numbers. Two
+things follow: an interrupted sweep keeps what it bought, and a failing sector
+can be diagnosed — and priced against its serving — without paying to reproduce
+it. Both were bought the hard way; see `docs/handover-review.md` §13.
+
 Assertions are free and make no model call. See the README's Evals section for
 the full assertion vocabulary.
 
