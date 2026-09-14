@@ -3124,7 +3124,7 @@ Part A free.
 
 ## 15. Blueprint 008 — The ruled design: an all-judges exit, an honest channel, an honest validator (verbatim, as received)
 
-**Status: not executed at the time of recording.** Execution record: §15.2.
+**Status: executed 2026-09-14 — see §15.2.** Recorded here unexecuted first.
 
 **C0.1 pre-flight, run before recording — three deviations from the blueprint's
 stated assumptions:**
@@ -3362,3 +3362,156 @@ each has exactly one serving anyway, so no lottery is possible either way.
 Cheap-first ordering, per the new convention: arm 1 ($1.89/M on StreamLake) →
 arm 3 (grok, $2.50/M) → arm 2 (qwen, $4.42/M). Per C0.3 the fallbacks run only
 if arm 1 fails a pre-registration.
+
+#### Part C results — the loop converges; review is now where everything stops
+
+Four scenarios, `engineering-rnd`, repeat 1, pinned `triage:Alibaba,
+architecture:StreamLake`. **$0.1884** of a $3.00 cap. **Zero refused lookups on
+every unit**, so no score here is poisoned — D1's guard answering the question
+before it had to be asked.
+
+| trace | 007 | 008 | pre-registered | verdict |
+|---|---|---|---|---|
+| `crossref_integrity` | escalated, 5+3 red | **converged iter 1**, review blocked | "still does not converge" | **wrong** |
+| `derived_tolerances` | converged 1 | **converged iter 2**, review blocked | "≤2" | **right** |
+| `numeric_consistency` | converged 1–3 | **timed out at 900s**, 2 iters both red | "≤3, ships" | **wrong** |
+| `requires_execution` | converged-on-red | **converged iter 1**, review blocked | "exhaust → escalate" | **wrong** |
+
+**Three of four pre-registrations wrong.** Recorded as they fell.
+
+**Converged-on-red is gone**, as designed — no trace exited with a red
+implementation.
+
+**The fold was observed doing its job live.** `derived_tolerances` ran two
+iterations with `implement` *and* `validate` green on both. The only thing that
+can keep the loop going in that state is a red free check, so iteration 1's work
+had a red `coverage` or `consistency` and **would have shipped under the old
+exit**. That is A4's pre-registered "coverage red + validate green → continues",
+observed outside a unit test.
+
+**A6 retention gap, found by needing it:** the per-iteration record carries
+`implement` and `validate` but not the free checks, so the dissent above is
+inferable but not readable. The fold computes exactly that list — `dissenting` —
+at the moment it runs. Next increment.
+
+#### B3's check: the hardening held, and the residual failure is a different one
+
+C2 requires that a green `requires_execution` be read line by line. Read:
+
+```
+Criterion 1: At least 5 distinct test scenarios — PASS: 8 defined (Tests 1-8).
+Criterion 2: Procedure, expected outcome, capture method — PASS.
+Criterion 3: Environment, tools, tenant identification — PASS.
+Criterion 4: Burst capacity, sustained rate, transitions — PASS: Tests 1-2, 3-4, 5-6,8.
+Criterion 5: Multi-tenant isolation — PASS: Test 7.
+Criterion 6: Pass criteria use HTTP status codes — PASS: 200/429 counts.
+```
+
+**No criterion was amended, reinterpreted or relaxed.** Every line assesses the
+criterion as written. Compare 007's `"Criterion 2 (exactly 100 and 101 req/s):
+PASS — Test Case 2 corrected to 121 req/s"`. **B2's hardening is not falsified
+and B3's stop condition does not fire.**
+
+But review blocked it anyway, on a *critical* finding validate had no way to
+reach:
+
+> Test 4 (Sustained Rate + 1) is implemented with 101 requests spaced 10 ms
+> apart, taking 1.01 s total. With a token bucket refilling at 100 tokens/s,
+> 1.01 s provides [enough refill to make the test pass spuriously].
+
+**The residual failure is formal satisfaction versus substantive correctness.**
+Criterion 4 asks that sustained rate be covered; Test 4 covers it, so the
+criterion is met as written — and the test is arithmetically wrong in a way that
+would produce false passes. Validate checks whether the criteria are satisfied;
+review checks whether the work is right. **That is the §6.8 structural axis, not
+a criterion-mutation problem**, and it is not what B2 was aimed at.
+
+#### C4 — B7 stays open, with the failure named
+
+Not all four converge-fast-or-escalate-fast: `numeric_consistency` ran out the
+900 s wall clock on its second iteration, both red, with substantively different
+causes each round (cost-section arithmetic, then an unused burst duration). That
+is the whack-a-mole shape C1's drift read predicted, surviving into this run.
+
+**And the terminal state has moved.** Three of four traces now end `blocked at
+review` rather than escalated or converged-on-red. The loop is no longer where
+work dies; **review is**, with nothing downstream of it to act on what it found
+— which is §5 item 12 (review→rework), now carrying its own evidence rather than
+waiting for some.
+
+### 15.2 Execution record
+
+Executed at `66b8be7`→. Suite 576 → **592**, CI green. Spend **$0.2591**:
+C0 arm 1 $0.0707, Part C $0.1884. Parts A, B and D free.
+
+#### Departures
+
+1. **A3 was wrong about the legacy on two counts.** It says `engine/workflow.py`
+   must fold "the same four verdicts (they are in hand there)" — they are not.
+   That path never runs the free checks, so it holds two judges and folds two.
+   And the equivalence reference **did not fire** on the change, contrary to
+   A3's expectation, because the happy path it compares has all judges agreeing.
+   The divergent case is not in its scenarios.
+2. **B1 needed a second half the blueprint did not specify.** Carrying the
+   reviewer's concerns forward is not enough on its own: Part A's fold created a
+   state — validate green, implement red — in which the loop continues and
+   **nothing was written to the failure log at all**, so the next attempt would
+   have been told nothing. An iteration failing for any judge's reason is now
+   recorded. Widening the channel without this would have closed one silence and
+   opened another.
+3. **C0's fallback arms were not run.** Arm 1 passed every pre-registration —
+   6/6 ready, no stubs, one architecture call per unit, zero refusals — and
+   C0.3 makes the fallbacks conditional on the primary failing. Neither fallback
+   is served by StreamLake in any case (one serving each: Alibaba, xAI).
+4. **D1 was executed before Part C rather than in Part D's slot**, because C0.2
+   and C3 both require refused-lookup counts beside their scores and a guard
+   added afterwards cannot report on runs already finished.
+5. **The proposal from C1's read is recorded, not built.** Widening the channel
+   for validate's *per-criterion evidence* is the same class of change as B1 and
+   was not ruled on; B1 covered the domain-review half.
+
+#### What execution found that the blueprint did not anticipate
+
+- **The equivalence suite had an order-dependent defect of its own.** It passed
+  in a full run and failed in isolation on *unmodified* code — verified by
+  stashing — because the rerank strategy latches in a module-level global and
+  whichever side ran first did the probing. Both sides now start unprobed. A
+  guard whose result depends on test ordering is not a guard.
+- **Three existing tests were asserting the bug.** A red implementation
+  completing, a drifted implementation shipping — written down as expectations.
+  Three others were engine doubles whose implementation summaries never
+  mentioned their own success criteria; **the doubles were fixed rather than the
+  assertions relaxed**, because a happy path whose implementation ignores the
+  plan is not a happy path.
+- **A6's retention does not cover the free checks**, which is exactly what was
+  needed to read `derived_tolerances`' second iteration. The fold already
+  computes the dissenting list.
+- **The bottleneck moved.** Three of four traces now end blocked at review.
+  Fixing the loop's exit did not make work ship; it made the loop stop lying,
+  and review is now the wall.
+
+#### Predictions scored
+
+| prediction | outcome |
+|---|---|
+| A4: validate green + implement red continues | **right** (test and live) |
+| A4: coverage red + validate green continues | **right**, observed live on `derived_tolerances` |
+| C1 read: crossref is channel-starved | **no** — it addresses the flagged topic 7 of 8 times |
+| mine: `crossref` still will not converge | **wrong** — converged iteration 1 |
+| mine: `derived_tolerances` ≤2 | **right** |
+| C2: `numeric_consistency` ≤3 and ships | **wrong** — timed out at 900 s |
+| C2/mine: `requires_execution` exhausts → escalates | **wrong** — converged iteration 1 |
+| C2: converged-on-red structurally impossible | **right** — none observed |
+| B2/B3: hardening holds (no mutated criterion) | **right** — no criterion amended |
+
+#### Left undone, deliberately
+
+- **No per-criterion structured validate verdict.** B3 gates it on the hardening
+  failing; it did not fail. The residual failure is formal-satisfaction versus
+  correctness, which is a different problem.
+- **No channel widening for validate's evidence** — recorded as the proposal
+  from C1's read, needing its own ruling.
+- **The stall detector stays retired.** Nothing in eight traces across two
+  passes has stalled.
+- **`numeric_consistency` has one timed-out observation**, n=1. Whether 900 s is
+  too short or the loop genuinely diverges is not settled by this run.
