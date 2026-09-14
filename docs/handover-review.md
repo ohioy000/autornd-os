@@ -353,3 +353,44 @@ the prerequisite work** — the diff and the import check still have to be run:
   `pytest-asyncio`), which means the Docker image installs a test framework into
   production. Option A resolves that as a side effect; option B should decide
   whether the parity test compares runtime sets only.
+
+---
+
+## 8. Inventory: CHANGELOG.md and CONTRIBUTING.md stale claims
+
+Inventory only — **no fixes in this pass**; they land in Blueprint 002. Ordered
+within each file by how much damage the claim does if believed.
+
+### 8.1 CONTRIBUTING.md
+
+| # | claim | why it is wrong |
+|---|---|---|
+| C1 | *"No comments unless the 'why' is non-obvious"* (Code Style) | Directly contradicts this project's strongest convention. Measurement comments are the codebase's most valuable property — nearly every constant carries the live run that set it. A contributor following this line would **strip** exactly that. |
+| C2 | *"Workflow phases — add new phases in `autornd/engine/phases.py` and wire them into the sequencer"* | "The sequencer" is `engine/workflow.py`, the **legacy** path kept only as the graph's equivalence reference. Correct path: add `_phase_<name>` to `graph/adapter.py` and a node to a `workflows/*.yaml`. |
+| C3 | *"wire new phases into `autornd/engine/workflow.py`"* (Building on AutoRnD) | Same error, stated more explicitly, in the section aimed at people extending without forking. |
+| C4 | *"register its `SpecialistRole` in `autornd/models/verdicts.py`"* — appears **three times** (What to Work On, Building on AutoRnD, `[seam]` Specialist registry) | Roles are an **open vocabulary**. You declare them under `roles:` in a profile; an undeclared role resolves to a synthesized generalist. No enum edit is needed, and editing the enum is not how a project adds its own roles. |
+| C5 | The `[seam]`/`[internal]` architecture list omits **`graph/`** entirely | `spec.py`, `executor.py`, `adapter.py`, `conditions.py`, `checks.py` — the actual engine — appear nowhere. A contributor reading the seam list would not learn the graph exists. `evals/` is likewise absent. |
+| C6 | *"`[seam]` Review composition — risk-to-team mapping. Add new composition strategies here."* | The risk-to-team **table** was replaced by derivation from the specialists triage assigned; the signature is now `get_review_team(risk, domains, specialists)`. "Risk-to-team mapping" no longer describes it. |
+| C7 | *"the sequencer, review composition, and routing layers all read from the registry dynamically"* | Outdated framing for the same reason as C6. |
+| C8 | `pip install -r requirements.txt` (Getting Started) | Under Blueprint 001 option A this file is deleted. It also installs `pytest` into a runtime environment today. |
+| C9 | `pytest tests/ -v` (Running Tests) | Repo convention is `-q`, and in the owner's environment `.venv/bin/python3 -m pytest` (pytest is not on PATH). |
+| C10 | No mention of the eval suites, `--max-spend`, or the test-first convention | A contributor has no route to the cheapest quality signal in the project. |
+
+### 8.2 CHANGELOG.md
+
+Frozen at a single entry, `[0.1.0] — 2026-09-12`. Every claim below is in that
+entry.
+
+| # | claim | why it is wrong |
+|---|---|---|
+| G1 | *"Full test suite (85 tests)"* | Actual: **501**. |
+| G2 | *"5-phase sequencer (triage, plan, implement, validate, review)"* | Now a 16-node YAML graph with gates, loops, escalation recovery, a review gate and a conditional independent pass. |
+| G3 | *"K3 escalation autopsy pattern"* | Model nickname in a user-facing document; breaks the zero-model-names rule. |
+| G4 | *"Risk-based review team composition (critical → all specialists, low → single specialist)"* | `critical` no longer returns all specialists — that behaviour was the measured defect that put seven engineers on a records-retention review. |
+| G5 | *"OpenRouter multi-model routing client with cost tracking"* | Present but misleading: cost tracking missed research, context and rerank calls until `b4cd89f`, understating by 2.6×–295×. |
+| G6 | *"7 engineering specialists"* | True as defaults, but the roster is open now — profiles declare their own. |
+| G7 | **Unrecorded since 0.1.0** | The workflow graph as data; the eval harness (scenarios, assertions, bounded runner, per-tier spend); outward research with recall-before-search; open domain **and** role vocabularies; client-side accounting and budgets; provider recording and per-tier pinning; the review gate; the `unrecallable` axis; risk-scaled search budgets. |
+
+**Note for Blueprint 002:** C1 and C4 are the two worth fixing first — C1 because
+it invites the removal of the project's most valuable property, C4 because it is
+repeated three times and sends every would-be extender to the wrong mechanism.
