@@ -282,17 +282,17 @@ executing session's context**, and they have deliberately **not** been
 reconstructed, because inventing them would put fabricated architectural
 documents into a public repo under someone else's authorship:
 
-| missing | status |
+| item | status |
 |---|---|
-| **Blueprint 001** — full text | absent. §3.2 reworks its *CI step* from first principles (the substance is unambiguous), but the surrounding document is unknown. |
-| **Blueprint 002** — full text | absent entirely. |
-| The owner's **verification response** from the prior turn | absent. The executing session's prior turn was a model-selection question. |
-| **"This turn's audit"** | absent as a supplied artifact. §1 and §2 are this session's own verification, done from the repo. |
-| The **B6 plan** ("builds a minimal workflow instead") | absent. Noted as the intended approach; the plan text is unknown. |
+| **Blueprint 001** — full text | ✅ **received — §7.** Its CI section already incorporates the rework from §3.2, so §3.2 is now background rather than a live instruction. |
+| **Blueprint 002** — full text | ❌ still absent. |
+| The owner's **verification response** from the prior turn | ❌ still absent. The executing session's prior turn was a model-selection question. |
+| **"This turn's audit"** | ❌ absent as a supplied artifact. §1 and §2 are this session's own verification, done from the repo. |
+| The **B6 plan** ("builds a minimal workflow instead") | ❌ still absent. Noted as the intended approach; the plan text is unknown. |
 
 Everything in §1–§4 is independently verified against the repo or measured live,
-and is safe to rely on. Paste the five items above and they can be appended
-verbatim under a new §6.
+and is safe to rely on. Paste the four remaining items and they can be appended
+verbatim alongside §7.
 
 ---
 
@@ -305,3 +305,51 @@ triage risk guide, each of which failed for a reason now recorded in
 
 Session history lives outside the repository, so nothing in this pass changes
 it; the recommendation is unaffected either way.
+
+---
+
+## 7. Blueprint 001 — B1 (verbatim, as received)
+
+**Status: not executed.** Recorded here so the fresh session executes from the
+repo rather than from pasted chat. Its CI section already folds in the rework
+described in §3.2 (extend rather than create), which supersedes that section as
+an instruction.
+
+Note for the executor: the two prerequisites are stated inside the blueprint and
+are not optional — diff the manifests for strays and confirm nothing else
+references `requirements.txt`; and verify whether importing `autornd.main`
+requires environment variables before writing the import smoke. Neither has been
+done in this pass.
+
+```text
+B1 Goal: fix the install-breaker, the manifest class, and add the drift-catcher. One commit.
+
+Instance: add "pyjwt>=2.8.0" to pyproject.toml dependencies.
+Class — pick one (my recommendation: A):
+A (single source): pyproject.toml becomes canonical. Dockerfile switches from pip install -r requirements.txt to COPY . . + RUN pip install --no-cache-dir .; delete requirements.txt; update README Quick Start; dev installs use .[dev].
+B (conservative): keep both files; add a free test that parses both manifests and asserts their runtime-dependency sets agree, so drift fails CI.
+Either way, Claude first diffs the two manifests for strays and confirms nothing else references requirements.txt.
+CI: .github/workflows/ci.yml — push/PR, Python 3.12, pip install -e ".[dev]", import smoke (Claude must verify first whether importing autornd.main requires env vars — if Settings validates at import time, set the six MODEL_* tiers plus OPENROUTER_API_KEY to dummies in CI env), then pytest -q. Public repo → free Actions minutes, ~9 s.
+Hygiene re-verify (the checks my sandbox couldn't run): git ls-files profiles/ → example.yaml only; git ls-files | grep .env → .env.example only; vendor-name grep across the tree → clean.
+Test-first (convention 7): manifest-parity test (if B) or the CI import smoke (if A) written before touching the manifests.
+Commit message: prose per convention 12 — a fresh editable install failed on import jwt, the root cause is two dependency manifests drifting in both directions, and CI now catches this class.
+```
+
+### 7.1 Standing observations relevant to executing it
+
+Recorded now so they are not re-derived, but note these are **observations, not
+the prerequisite work** — the diff and the import check still have to be run:
+
+- The existing `test` job installs from `requirements.txt` across a
+  3.11/3.12/3.13 matrix. **Under option A that job must also change**, or CI
+  breaks the moment `requirements.txt` is deleted. Option A therefore touches
+  both jobs, not just the new one.
+- Under option A the drift-catcher is partly structural: with one manifest there
+  is nothing to drift *between*, and installing from it in CI means a missing
+  runtime dependency fails the suite directly (`tests/test_auth.py` imports the
+  module that needs `jwt`). The import smoke still earns its place for anything
+  the tests do not import — the startup path in `autornd/main.py` in particular.
+- `requirements.txt` currently mixes runtime and dev dependencies (`pytest`,
+  `pytest-asyncio`), which means the Docker image installs a test framework into
+  production. Option A resolves that as a side effect; option B should decide
+  whether the parity test compares runtime sets only.
