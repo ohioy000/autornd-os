@@ -1401,3 +1401,138 @@ number rather than a guess.
 - **No calibration.** B4 and B2 wait on the pin sweep (§6.1), unchanged.
 - **The API key supplied during Blueprint 003 is still unrotated.** It was
   pasted into a transcript; §10.2 says the same thing and it stays true.
+
+---
+
+## 12. Blueprint 005 — Calibrate: pin the triage tier, close B4, settle B2 (verbatim, as received)
+
+**Status: recorded, NOT executed — blocked at owner gate G-1.** The exposed API
+key has not been rotated: the key in the local `.env` is byte-identical to the
+one pasted into the working conversation (verified by fingerprint, 2026-09-14).
+G-1 is blocking and non-delegable, so no part of A, B or C has run. The two free
+prerequisites were completed and are recorded in §12.1.
+
+```text
+BLUEPRINT 005 — Calibrate: pin the triage tier, close B4, settle B2.
+
+Origin: HANDOVER §4.2 B4 and B2; §6.1 makes a pin a precondition for both.
+All parts are live measurement under the sweep cap Blueprint 003 shipped.
+
+Protocol (as 001–004): paste verbatim into docs/handover-review.md as §12
+BEFORE executing; append §12.2 after. Provenance rule binding, including the
+extension: a count is a number; a count beside its list equals the list; the
+list is authoritative on disagreement. Prerequisites: suite green (re-derive
+the count, do not trust 553), CI green before finishing.
+
+PART 0 — owner gates, blocking and non-delegable
+G-1: the exposed key is rotated and the new one written to local .env at the
+     terminal. Nothing below runs before this. If it has not happened, stop
+     and say so.
+G-2: Part A ends in a STOP; the owner's one-line reply confirms the pin.
+G-3: no .env edits in this blueprint. Experiments use env-var prefixes.
+Pre-flight (free): before relying on prefixes, verify env-var-over-.env
+precedence with a one-line settings assertion and record the result.
+
+PART A — pin sweep  [measured basis: §6.1]
+A1. Six invocations, one per §6.1 provider pinned to the triage tier, plus
+    one unpinned baseline:
+    OPENROUTER_PROVIDER_ORDER=triage:<Name> \
+      .venv/bin/python3 -m autornd.evals.cli \
+      --scenarios evals/scenarios/wide --workflow triage-classify \
+      --repeat 3 --timeout 45 --max-spend 0.05 --max-spend-sweep 0.10
+    Wall clock 5–25 min each [measured: §6.1]; run as a background loop.
+    Total ≈ $0.02–0.15 [measured: §6.1 per-sweep costs].
+A2. Pre-register BEFORE running, per invocation: predicted sectors passing
+    and predicted under-classified sectors. Known priors [measured]: the
+    StreamLake pin 33/36 under-classifying water_treatment, building_services,
+    legal_ops; the OpenInference pin 28/36 in the same shape; unpinned
+    ~30–31/36 (§10.2's incidental run scored 31/36). The other three
+    providers have no individual prior — that is why they are swept; write
+    "no prior" rather than inventing one.
+A3. Record into §12.1, one row per invocation: pin, sectors passing, cost,
+    wall clock, under-classified sectors, over-classified sectors. Also
+    record providers_by_function from the unpinned baseline — who actually
+    served, as data.
+A4. Proposal rule: any pin under-classifying ≥2 sectors on ≥2/3 repetitions
+    is DISQUALIFIED for triage regardless of price — under-classification is
+    the dangerous direction [§6.1]. Among the rest: most sectors passing;
+    within one sector, the cheaper. Propose exactly one pin, with the row
+    that justifies it. Then STOP. The owner's reply is G-2.
+
+PART B — B4, under the confirmed pin
+B1. FREE FIRST: Part A already paid for 18 legal_ops triage verdicts (six
+    invocations × 3 repetitions — count follows the sweep list). Read their
+    summary fields and diagnose why the governing-documents clause does not
+    land: not recognized as governing? stage judged before consequence?
+    Quote the verdicts. Do not spend a cent until this is exhausted.
+B2. Reproduce under the pin only if B1 leaves the failure shape ambiguous.
+B3. Minimal guide edit in phases.py targeting the diagnosed shape.
+    Constraints, all measured and all load-bearing: the two-question ORDER
+    stands (consequence before stage — reordering is what demoted the lintel
+    and the sterilisation protocol, §6.6); the not-every-published-standard
+    distinction stands (broadcast went high 3/3 without it); the
+    protective-systems wording stands (the first version sent 200 t of
+    livestock to critical). Add the measurement comment naming this run.
+B4. Verify: legal_ops ×3 under the pin — pre-register 3/3 at its asserted
+    floor (the scenario file is the authority on what it asserts; read it).
+    Then the full wide ×3 as the regression net [measured cost ≈ $0.02–0.03
+    pinned; caps 0.05/0.10]. Pre-register: no sector that passed 3/3 under
+    this pin in Part A drops below 2/3 after the edit.
+B5. Close B4 in HANDOVER §4.2; add the measured fact to §6.6.
+
+PART C — B2, materiality
+C1. Author five probe scenarios [count follows the list] into
+    evals/scenarios/materiality/ — first verify how the suite globs behave
+    so these stay out of default runs, and read scenario.py for the exact
+    assertion vocabulary:
+    three IMMATERIAL (medium-risk, externally visible work whose unknowns
+    are cosmetic: FAQ copy before an announcement; tone and wording on a
+    published page; internal changelog phrasing) and two MATERIAL
+    (medium-risk work with a genuinely answer-changing unknown: a
+    compliance threshold that varies by jurisdiction; a load figure that
+    decides a code requirement). Each probe asserts its own risk class so a
+    mis-classified probe is caught, not absorbed. A risk floor is never
+    waivable — these probes must not be engineered to read low.
+C2. Pre-register under the CURRENT gate: each immaterial probe marks 2–3
+    blocking gaps and fires a lookup [measured: §6.2 — 0/33 empty, means
+    2.7–2.9]; each material probe marks ≥1. Run all five, triage-only,
+    repeat 2, --max-spend 0.05 --max-spend-sweep 0.50.
+C3. Reframe synthesize_briefing from subset-selection to per-gap judgment:
+    for each gap ask "would a wrong assumption here change the answer?" and
+    DERIVE blocking from the yes-answers instead of requesting a subset.
+    [prediction, labelled: self-restraint failed 0/33; question reframing
+    worked for the risk guide and the schema retry — the codebase's own
+    record favours reframing over restraint.]
+C4. Re-run the five probes identically. Decision rule: keep the reframed
+    gate ONLY if it zeroes blocking on all three immaterial probes AND
+    keeps ≥1 blocking on both material probes. Any other outcome → drop
+    the gate entirely and record the honest rationale [§6.2: with one
+    bundled request only zero gaps saves money; the token budget is the
+    only dial that costs anything].
+C5. Close B2 either way. Add one line on the interaction: if 006-A later
+    swaps the search model, a lookup becomes fee-dominated and the gate's
+    maximum value shrinks to a fraction of a cent [derived: §6.3 fee/token
+    split].
+
+PART D — records
+§12.1 tables, §12.2 execution record, HANDOVER B4/B2 rows closed, §6
+additions. Commits in prose, per convention 12. The badge guard will fire
+if tests are added — badge, Testing count, and tree comment move in the
+SAME commit.
+
+OUT OF SCOPE, deliberately: the production API path; any workflow yaml; the
+search-tier swap (006-A); B6 and B7 (006); any change to the wide or
+grounding scenario files beyond the new materiality/ directory.
+```
+
+### 12.1 Prerequisites and pre-flight — completed, free
+
+Both were run before the gate stopped things, because neither spends anything
+and both are inputs Part A needs regardless.
+
+| check | result |
+|---|---|
+| Suite green, count **re-derived** rather than trusted | `553 passed`; `553 tests collected`. The blueprint's figure was right. |
+| Env-var-over-`.env` precedence (G-3's premise) | **Confirmed.** With no prefix, `settings.openrouter_provider_order` is `''`; with `OPENROUTER_PROVIDER_ORDER=triage:PreflightProbe` prefixed, it reads `triage:PreflightProbe`. Prefixes override cleanly, so the sweep needs no `.env` edits. |
+
+Nothing else has run. Parts A, B and C are untouched.
