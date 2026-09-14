@@ -2284,3 +2284,58 @@ repeat convention exists precisely because a single result is an anecdote. The
 cheap, obvious next step is three repetitions of both — about $1.40 for
 `sonar-pro` and $0.20 for `sonar` — which would settle whether 5-versus-4 is a
 ranking or a coin toss.
+
+### 13.4 Part C — B6, observed
+
+**`independent_check` executed inside a complete live workflow.** The full path,
+every node, one pass:
+
+```
+triage → context → plan → implement → validate → review → review_clean → independent_check
+10 calls · 54s · $0.0212
+tiers: triage 1, research 2, search 1, architecture 1, engineering 4, independent 1
+served: triage=Alibaba, research=Google, search=Perplexity,
+        architecture=NextBit, engineering=AtlasCloud/DeepInfra/GMICloud/Venice,
+        independent=Morph
+```
+
+The `DoubleCheckVerdict`: `ship=True`, `confidence=high`, `critical_issues=[]`,
+with one optional recommendation about structuring the entry for
+machine-parseability. **All three pre-registered expectations met**: triage set
+`unrecallable=true`, every phase shipped on trivial work, and the independent
+pass executed and returned a clean verdict. Trace committed at
+`docs/traces/b6-independent-check.json`.
+
+#### It took seven attempts, and the probe was what kept failing
+
+Attempts 10 through 16, counting from the nine `HANDOVER` already records. Every
+exit was legitimate; none was a harness defect.
+
+| attempt | request framing | outcome |
+|---|---|---|
+| 1 | the plan's own example — finalize a notice about a migration already run | `unrecallable=false`, review blocked on placeholders |
+| 2 | irreversibility moved to the work product | transport `ReadError` |
+| 3 | same | **reached `independent_check`**, timed out inside it at 300s |
+| 4–6 | same | review blocked 3/3, correctly |
+| 7 (rep 1) | simplified to pure prose | review shipped, `unrecallable=false` |
+| 7 (rep 2) | same | **all gates passed; the node ran** |
+
+**The plan's example request does not set `unrecallable`, and triage is right
+about that.** "Finalize the customer confirmation notice for a one-way migration
+that has already been run" puts the irreversibility on the *migration*; the work
+requested is a draft, and a draft is recallable. §6.6's axis attaches to what the
+work commits you to. Recorded as the calibration finding the plan asked for —
+and it is a finding about the plan, not about triage.
+
+**The probe sits in a narrow window, and both walls are real.** Make the request
+consequential enough to read irreversible and it acquires genuine engineering
+surface: calling the ledger "cryptographically chained" drew three correct
+review blocks on unspecified hash construction, append API and canonicalization.
+Simplify it to pure prose and review ships but triage stops marking it
+unrecallable. The passing run threads that window; at roughly one in three, the
+probe is a repetition-and-patience instrument rather than a deterministic one.
+
+**Recorded for whoever runs it next:** the scenario's own `timeout` wins over
+`--timeout` (`runner.py`), and 300s is not enough — the independent tier is a
+reasoning model and attempt 3 died inside it with every gate already passed. The
+scenario now carries 900.

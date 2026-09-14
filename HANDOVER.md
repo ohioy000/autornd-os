@@ -601,7 +601,7 @@ or design issue.
 | B3 | ~~`--max-spend` is per scenario, not per sweep~~ | **RESOLVED** | `--max-spend-sweep` bounds the whole invocation — every scenario, repetition and compared workflow against one budget. Defaults to $1.00, `none` disables. With both caps set no unit starts unless it must fit, so the sweep cap is exact; alone, it stops the crossing unit via the existing client ceiling. Fixing it exposed a second bug: six handlers on the research and rerank paths swallowed `BudgetExceeded`, so an abort did not stop the run |
 | B4 | ~~`wide_legal_ops` under-classifies on every provider~~ | **RESOLVED — the premise was wrong** | It is the serving, not the guide. Pinned six ways: fails 3/3 on OpenInference, DigitalOcean and unpinned; passes 3/3 on Alibaba and AtlasCloud, 2/3 on StreamLake. Under the adopted `triage:Alibaba` pin it passes ~8/9, and its rare excursions go in **both** directions. No guide edit was made — there was no systematic failure left to target. §12.3, §12.4 |
 | B5 | `wide_wind_energy` fails `risk_at_least` ~1/3, **deliberately left red** | low | Two defensible readings; a risk **floor must never be waivable** (§4.4) |
-| B6 | `independent_check` has **never executed inside a full live workflow** | medium | Wiring proven by test; the tier proven by a direct live call. 9 attempts each hit a *different, mostly legitimate* earlier exit |
+| B6 | ~~`independent_check` has never executed inside a full live workflow~~ | **RESOLVED — observed 2026-09-14** | Ran end to end on `independent-check-probe`: 10 calls, 54s, $0.0212, returning `ship=true, confidence=high, critical_issues=[]`. Trace at `docs/traces/b6-independent-check.json`. Took seven further attempts; every exit was legitimate and the *probe request* was what kept failing — see §13.4 |
 | B7 | Build loop does not converge on complex requests | medium | Earlier root cause diagnosed: implementer has no filesystem, validator rejected nonexistent work. `SPECIALIST_OUTPUT_CONTRACT` mitigates; not fully solved |
 | B8 | Shipped-default models fail on hard requests | medium | Documented rather than changed, per owner's instruction. §6.4 |
 | B9 | No DB migrations (no Alembic) | low | Schema changes are destructive |
@@ -694,9 +694,12 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
 
 ### Medium term
 
-6. **B6 — reach `independent_check` in a live full workflow.** Needs a model
-   combination that reliably completes one; consider a purpose-built minimal
-   workflow (the `triage-classify` trick applied to review).
+6. ~~**B6 — reach `independent_check` in a live full workflow.**~~ **Done
+   2026-09-14.** The purpose-built minimal workflow was the answer:
+   `workflows/independent-check-probe.yaml` reaches it by construction and is
+   kept as the regression shape. It threads a narrow window — consequential
+   enough that triage marks `unrecallable`, trivial enough that review ships —
+   and lands roughly one run in three, so expect to repeat it.
 7. **B7 — build-loop convergence.** The highest-value unsolved *product*
    problem: the implement↔validate loop is where iterations and money go.
 8. **Per-tier provider quality measurement.** The eval suite can now score

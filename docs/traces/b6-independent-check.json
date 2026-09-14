@@ -1,0 +1,206 @@
+{
+  "header": {
+    "record": "header",
+    "written_at": "2026-09-14T17:43:59.498986+00:00",
+    "suite": "evals/scenarios/probe",
+    "workflows": [
+      "independent-check-probe"
+    ],
+    "repeat": 3,
+    "max_spend": 0.4,
+    "max_spend_sweep": 1.2,
+    "timeout": 900.0,
+    "models": {
+      "triage": "deepseek/deepseek-v4-flash",
+      "engineering": "deepseek/deepseek-v4-flash",
+      "architecture": "deepseek/deepseek-v4-pro",
+      "escalation": "moonshotai/kimi-k3",
+      "research": "google/gemini-2.5-flash",
+      "search": "perplexity/sonar-pro",
+      "ranker": "qwen/qwen3-reranker-8b",
+      "premium": "z-ai/glm-5.3"
+    },
+    "provider_order": "triage:Alibaba"
+  },
+  "trace": {
+    "record": "unit",
+    "scenario": "b6_independent_check",
+    "workflow": "independent-check-probe",
+    "repetition": 2,
+    "passed": true,
+    "skipped": false,
+    "status": "completed",
+    "error": null,
+    "calls": 10,
+    "seconds": 54.458,
+    "cost": 0.021176639199999996,
+    "cost_by_tier": {
+      "triage": 0.000329104,
+      "research": 0.0019133,
+      "search": 0.0082,
+      "architecture": 0.007698,
+      "engineering": 0.0009449648,
+      "independent": 0.0020912704
+    },
+    "calls_by_tier": {
+      "triage": 1,
+      "research": 2,
+      "search": 1,
+      "architecture": 1,
+      "engineering": 4,
+      "independent": 1
+    },
+    "providers_by_function": {
+      "triage": [
+        "Alibaba"
+      ],
+      "research": [
+        "Google"
+      ],
+      "search": [
+        "Perplexity"
+      ],
+      "architecture": [
+        "NextBit"
+      ],
+      "engineering": [
+        "AtlasCloud",
+        "DeepInfra",
+        "GMICloud",
+        "Venice"
+      ],
+      "independent": [
+        "Morph"
+      ]
+    },
+    "assertions": [
+      {
+        "name": "unrecallable",
+        "passed": true,
+        "wanted": true,
+        "got": true,
+        "detail": ""
+      },
+      {
+        "name": "status",
+        "passed": true,
+        "wanted": "completed",
+        "got": "completed",
+        "detail": ""
+      },
+      {
+        "name": "max_calls",
+        "passed": true,
+        "wanted": "<= 20",
+        "got": 10,
+        "detail": ""
+      },
+      {
+        "name": "path_includes",
+        "passed": true,
+        "wanted": [
+          "independent_check"
+        ],
+        "got": [
+          "triage",
+          "context",
+          "plan",
+          "implement",
+          "validate",
+          "review",
+          "review_clean",
+          "independent_check"
+        ],
+        "detail": ""
+      }
+    ],
+    "path": [
+      "triage",
+      "context",
+      "plan",
+      "implement",
+      "validate",
+      "review",
+      "review_clean",
+      "independent_check"
+    ],
+    "verdicts": {
+      "triage": {
+        "domains": [
+          "documentation"
+        ],
+        "risk": "medium",
+        "specialists": [
+          "technical_writer"
+        ],
+        "unrecallable": true,
+        "summary": "Write exact wording for permanent audit-ledger entry recording schema migration completion"
+      },
+      "context": {
+        "chars": 3120,
+        "grounded": true,
+        "passed": true,
+        "detail": "3120 characters of context assembled"
+      },
+      "plan": {
+        "ready": true,
+        "plan": "Step 1: Gather all immutable facts provided in the request: release version 2.4.0, schema migration event, completion timestamp 2026-03-15 at 02:14 UTC, 41,880 customer records migrated, source schema v11, target schema v12, zero rows rejected, signatory R. Mehta (on‑call engineer). Step 2: Determine an appropriate entry format that is self‑contained, human‑readable, and contains every fact without omission or reinterpretation. A single‑line text block using ISO 8601 timestamp is chosen for clarity and machine‑parseability. Step 3: Draft the exact wording: 'Schema migration for release 2.4.0 completed successfully at 2026-03-15T02:14:00Z. Migrated 41,880 customer records from schema v11 to v12 with zero rejected rows. Signed off by on‑call engineer R. Mehta.' Step 4: Validate the draft against success criteria: each fact appears exactly once, timestamp is unambiguous, no extra information added, wording is immutable. Step 5: Finalize the entry and inject it into the append‑only ledger. No further edits are possible.",
+        "blockers": [],
+        "cost_estimate": null,
+        "success_criteria": [
+          "The entry explicitly states the release version as 2.4.0.",
+          "The entry includes the exact timestamp 2026-03-15T02:14:00Z.",
+          "The entry reports exactly 41,880 customer records migrated.",
+          "The entry identifies schema v11 as source and v12 as target.",
+          "The entry confirms zero rejected rows.",
+          "The entry names R. Mehta as the sign‑off authority."
+        ]
+      },
+      "implement": {
+        "done": true,
+        "green": true,
+        "red_cause": null,
+        "iteration": 1,
+        "summary": "Schema migration for release 2.4.0 completed successfully at 2026-03-15T02:14:00Z. Migrated 41,880 customer records from schema v11 to v12 with zero rejected rows. Signed off by on-call engineer R. Mehta.",
+        "domain_concerns": []
+      },
+      "validate": {
+        "green": true,
+        "red_cause": null,
+        "evidence": [
+          "Release version 2.4.0: PASS — text explicitly states 'release 2.4.0'.",
+          "Timestamp 2026-03-15T02:14:00Z: PASS — exact timestamp present.",
+          "41,880 customer records: PASS — reports exactly 41,880 records.",
+          "Schema v11 source, v12 target: PASS — 'from schema v11 to v12' implies source/target.",
+          "Zero rejected rows: PASS — states 'zero rejected rows'.",
+          "R. Mehta sign-off: PASS — names 'on-call engineer R. Mehta'."
+        ]
+      },
+      "review": {
+        "ship": true,
+        "findings": [
+          {
+            "lens": "technical_writer",
+            "severity": "low",
+            "detail": "The entry uses “zero rejected rows” rather than the request’s “zero rows rejected”. Both express the same fact; this minor rewording does not change meaning or introduce error."
+          }
+        ],
+        "verdict": "Ship. The implementation is correct and complete, satisfying all success criteria with no errors or omissions. | The audit-ledger entry is complete, accurate, and immutable, containing every required fact without omission or reinterpretation."
+      },
+      "review_clean": {
+        "passed": true
+      },
+      "independent_check": {
+        "ship": true,
+        "confidence": "high",
+        "critical_issues": [],
+        "recommendations": [
+          "The entry is a single contiguous block of text, which matches the stated assumption, but if the ledger supports multi-line entries, consider whether a structured format (e.g., labeled fields) would improve machine-parseability for future automated auditing; this is optional given the request asked for exact wording only.",
+          "The phrase 'from schema v11 to v12' could be made slightly more explicit as 'from source schema v11 to target schema v12' to remove any ambiguity about which schema is which, though the current phrasing is unambiguous in practice.",
+          "The role 'on-call engineer' is included as given in the request; if the ledger convention expects a specific signatory title format (e.g., 'Signatory:'), confirm against any existing ledger entries for consistency — no such convention was specified in the request."
+        ],
+        "verdict": "The implementation text satisfies all six success criteria exactly as written, with every required fact present, no extraneous information, and no logical errors, making it safe to append to the immutable ledger."
+      }
+    }
+  }
+}
