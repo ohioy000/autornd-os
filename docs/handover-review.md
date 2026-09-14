@@ -855,3 +855,173 @@ three sites that have to move together.
 - **CI's matrix job still runs `pytest tests/ -v`** while every document now
   says `-q`. Verbose output is more useful in a CI log than in a terminal, so
   this is a deliberate inconsistency rather than an oversight.
+
+---
+
+## 10. Blueprint 003 — B3, the sweep-level spend cap (verbatim, as received)
+
+**Status: not executed at the time of recording.** Same protocol as 001 and 002.
+The execution record is §10.2.
+
+```text
+BLUEPRINT 003 — B3: a sweep-level spend cap, plus truth fixes the last pass left.
+
+Origin: HANDOVER §4.2 B3. --max-spend bounds ONE scenario-run (a fresh client
+per attempt carries spend_ceiling=max_spend), so a 108-unit sweep at $0.25 is
+a $27 ceiling. Its earlier sibling B10 was a budget counting the wrong unit.
+This blueprint is FREE to build and verify: unit tests with billing doubles
+(convention 9). The optional live proof costs at most one cent. No calibration
+happens here — B4/B2 come after the owner's pin sweep, per HANDOVER §6.1.
+
+Protocol (as 001/002): paste this verbatim into docs/handover-review.md as
+§10 BEFORE executing. Append the execution record as §10.2: departures with
+reasons, everything left undone deliberately, and anything live execution
+found that this blueprint missed. Every value you touch gets a line in the
+record — including "while here" items; the last pass changed a documented
+default under that phrase without recording it, and that is how F1 happened.
+
+Prerequisites: suite green (504) before and after; CI green before finishing.
+Read first: autornd/evals/cli.py and autornd/evals/runner.py in full, plus
+tests/test_evals.py's scripted doubles. Two §9.2 traps are load-bearing here:
+run_scenario swaps in an isolated empty store per unit (outer store fixtures
+are invisible — do not build tests on them), and a double must return
+plausible query expansions or the run falls through to a branch you were not
+measuring. Reuse the existing grounding-navigating doubles for the
+full-workflow test; do not hand-roll new ones.
+
+PART A — SEMANTICS (decided; relitigate only with a measurement)
+
+A1. New flag --max-spend-sweep USD, aggregate across the ENTIRE invocation:
+    every scenario × every repetition × every compared workflow, including
+    the pinned per-scenario run_repeated calls in --compare mode. One budget
+    object, created in main(), passed into every run_repeated call.
+
+A2. Default $1.00, disable with --max-spend-sweep none. The default is a
+    measurement, and its comment must say so: wide triage sweeps cost
+    $0.01–0.03, grounding $0.17–0.72, the planned search-swap test ~$0.40 —
+    all fit. The runaway shape this exists for — a full-workflow wide sweep,
+    108 × ~$0.1454 (post-b4cd89f meter) ≈ $15.7 — is stopped at ~$1.00 and
+    requires a conscious override. That is the control working.
+
+A3. Enforcement, BEFORE any paid call, in two tiers:
+    - FIT RULE (both caps set): do not start a unit unless
+      spent + per_unit_cap <= sweep_cap. This makes the sweep cap a hard
+      guarantee — total spend cannot exceed it, and no unit is ever aborted
+      mid-flight by the sweep budget. Deliberately conservative: a unit is
+      skipped even if it would have cost less than its cap. The guarantee is
+      worth the occasional early stop. Record that as a decision, not a bug.
+    - BACKSTOP (no per-unit cap): start a unit only while spent < cap, and
+      set that unit's client spend_ceiling to the REMAINING budget, so the
+      existing BudgetExceeded mechanism stops the unit the moment the total
+      crosses. Overshoot is then bounded by a single model call. Compose, do
+      not duplicate: the unit's ceiling is min(max_spend, remaining).
+
+A4. Abort semantics. A unit stopped by the backstop carries its
+    BudgetExceeded error exactly as a --max-spend abort does today (existing
+    precedent, do not invent new behavior). Every unit that never starts
+    gets ONE skip marker: a ScenarioRun with results=[] and an error
+    "skipped: sweep budget exhausted ($X.XXXX of $Y.YY spent)". Extend the
+    skipped predicate to recognize that reason alongside "not applicable",
+    so skipped units are excluded from pass rates and the applicable count,
+    exactly like not-applicable ones. The CLI exit rule "passed or skipped"
+    then yields exit 0 on exhaustion — a truncated sweep with honest partial
+    results is a successful bounded measurement, not a failure. Recorded
+    decision; one line to change later if a failure signal is ever wanted.
+
+A5. --max-spend semantics UNCHANGED. But fix its --help: state precisely
+    that it bounds one scenario-run (one repetition), and replace the
+    pre-epoch "$1.28" anecdote — the true figure is ~$3.30 and the $1.28 was
+    the broken meter's reading (HANDOVER §6.7). Either cite the true number
+    with that note or drop the number; never a pre-b4cd89f figure unlabelled.
+
+A6. Reporting. After all reports, print one line when a budget was in
+    effect: "sweep budget: $X.XXXX of $Y.YY · exhausted after N of M units"
+    (omit "exhausted after" when it ran to completion). The skip markers
+    carry their reasons in the per-scenario lines already.
+
+PART B — IMPLEMENTATION SHAPE
+
+B1. SweepBudget dataclass in autornd/evals/runner.py:
+    cap, spent; remaining; can_start(per_unit_cap) implementing A3;
+    record(cost) called after EVERY unit, including failed and aborted ones
+    (ScenarioRun.cost is client.spend for that unit). Float comparison with
+    a small epsilon; comment it.
+B2. Thread an optional budget through run_suite AND run_repeated (symmetry;
+    tests may use either) and into run_scenario, which composes the client
+    ceiling per A3. The CLI creates one budget and passes it to every
+    run_repeated invocation — including the pinned-scenario loop; that is
+    the multi-call trap in compare mode.
+
+PART C — TESTS FIRST (pre-registered, convention 7; every double bills)
+
+C1. Fit rule: three scripted units billing $0.50 each, --max-spend 0.50,
+    sweep $1.20 → units 1–2 run ($1.00), unit 3 never starts, one skip
+    marker, no mid-unit abort, summary spent $1.00.
+C2. Backstop: no per-unit cap, sweep $1.20, double bills $0.15/call →
+    third unit starts at $1.00, dies crossing the cap via BudgetExceeded,
+    overshoot ≤ one call's price, later units skipped.
+C3. One budget spans compare mode: two run_repeated calls against one
+    budget object; exhaustion in the first starves the second.
+C4. Flag behavior: absent → $1.00 effective and printed; "none" → uncapped.
+C5. Regression: --max-spend alone behaves exactly as before (the existing
+    eval tests are the regression suite — they must pass unmodified).
+C6. One full-workflow test where the budget lands on the RESEARCH/SEARCH
+    path — the expensive tiers — using the existing grounding-navigating
+    doubles. The abort must land on the expensive path, not before it.
+
+Badge: the G2 guard will fail the moment these tests land. Update the
+README badge AND the Testing count AND the Project Structure comment in the
+SAME commit — that is what the guard is for.
+
+PART D — TRUTH FIXES FROM THE ADVISOR'S 002 AUDIT (all small, all in this pass)
+
+D1. API_HOST (F1 — the lie the last pass planted). config.py defaults
+    api_host to "0.0.0.0" while .env.example and README now say "defaults
+    to loopback". Resolution — CODE side, owner-vetoed: change config.py to
+    api_host: str = "127.0.0.1", with a comment naming why (no rate
+    limiting, spends real money, Docker passes --host 0.0.0.0 on its own
+    command line, README says do not expose directly). Add a settings test
+    asserting the default. The docs are then true as written. If the owner
+    vetoes before you execute, flip to the docs-side fix instead:
+    document 0.0.0.0 honestly and keep the security warning. Do NOT leave
+    the two disagreeing.
+D2. Research-call count (F2): .env.example's RESEARCH block says the
+    no-docs shape is "one small call"; README's derived cost section (and
+    commit 2214b05) say both grounding shapes cost the same TWO calls.
+    Re-derive the empty-store path with billing doubles (free, seconds),
+    fix whichever document loses, and name the derivation in the comment.
+D3. CLAUDE.md: "17 test files" → 18 (this pass's own test_docs.py).
+D4. README Testing command: pytest tests/ -v → .venv/bin/python3 -m pytest
+    tests/ -q, matching CONTRIBUTING and CLAUDE.md.
+D5. HANDOVER §4.2 B3 row and §5 item 2 → closed, with the semantics in one
+    sentence each.
+
+PART E — DOCS
+
+README Evals: "Runs are bounded" gains the sweep cap (default, disable
+token, hard-guarantee-when-both-caps-set). CONTRIBUTING Evals: the
+"Always pass --max-spend" bullet mentions the sweep cap and that it is on
+by default. CLAUDE.md working rules: mention the sweep cap in the
+--max-spend line. Nothing else.
+
+OPTIONAL LIVE PROOF (≤ $0.01; do it if convenient, skip honestly if not):
+  .venv/bin/python3 -m autornd.evals.cli \
+    --scenarios evals/scenarios/wide --workflow triage-classify \
+    --repeat 1 --timeout 45 --max-spend-sweep 0.001
+Pre-registered expectation: aborts after roughly 4–6 of 36 units (per-unit
+≈ $0.0002, varies by provider), spent ≈ the cap, skip markers present,
+exit 0, partial results rendered. Any deviation — including "my
+expectation was wrong" — is reported and recorded in §10.2.
+
+OUT OF SCOPE, deliberately: the production/API path (no cap there —
+aborting live work destroys it, and search is structurally bounded);
+changing --max-spend behavior; B4/B2 calibration (pin first — §6.1);
+the Docker CI job and profiles/example.yaml (queued as their own small
+blueprints).
+
+COMMIT GUIDANCE: prose, convention 12. Name the history — the runaway
+this prevents, the $27 arithmetic, B10's sibling (a budget counting the
+wrong unit), and that every figure cited is post-b4cd89f. If D1 lands
+code-side, its commit (or its paragraph) must say it is a behavior change
+and what a LAN user must now set.
+```
