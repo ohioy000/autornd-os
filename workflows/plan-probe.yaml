@@ -1,0 +1,29 @@
+name: plan-probe
+description: >
+  Planning alone — the triage-classify trick applied to the architecture tier.
+
+  The architecture tier was 70% of a four-trace run's spend, took eleven calls
+  to produce four plans, and drew six different providers while doing it. None
+  of that is measurable from a full workflow, where a bad plan's cost is spread
+  across everything downstream of it.
+
+  Three nodes: triage, grounding, plan. Nothing consumes the plan, because the
+  question is only whether a usable one comes back, at what token cost, from
+  which serving.
+
+  No `tier_when` on the plan node, deliberately: engineering-rnd drops low-risk
+  planning to the cheaper tier, which is right for production and wrong here —
+  a probe whose tier changes with the request measures two things at once.
+
+nodes:
+  - {id: triage, kind: ai, tier: triage, prompt: triage, schema: TriageVerdict}
+
+  - {id: context, kind: check, check: build_context, depends_on: [triage]}
+
+  - id: plan
+    kind: ai
+    tier: architecture
+    specialist: systems_architect
+    prompt: plan
+    schema: PlanVerdict
+    depends_on: [context]

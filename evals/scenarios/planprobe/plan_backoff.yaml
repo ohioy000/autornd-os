@@ -1,0 +1,18 @@
+id: plan_backoff
+workflow: plan-probe
+description: >
+  Plan probe 1 of 3. Deliberately small, fully specified and plainly feasible:
+  the probe measures whether a serving returns a usable plan, so the request
+  must not be the reason one is refused.
+request: "Add exponential backoff with full jitter to the existing HTTP retry helper, capped at 60 seconds and 5 attempts"
+tags: [planprobe]
+expect:
+  # The assertion vocabulary has no plan_ready, and inventing one is out of
+  # scope here. Readiness, the success criteria and the token burn are read
+  # from the retained verdicts in the results JSONL instead — which is what
+  # that retention exists for. PlanVerdict's own validators already reject a
+  # stub: a plan is required when ready, blockers when not, and "..." or "TBD"
+  # criteria are refused, so a stub now fails inside the retry loop.
+  status: completed
+  path_includes: [plan]
+  max_calls: 6

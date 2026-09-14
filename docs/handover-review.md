@@ -2687,3 +2687,54 @@ traces); the cascade search design; per-tier pins beyond architecture
 evidence base is being built by D3's crossref expectation); any .env edit
 (G-3); prompts that steer judgment.
 ```
+
+### 14.1 Part B — the architecture tier
+
+#### B1 pre-flight, from 006's retained traces (free)
+
+| trace | servings drawn | architecture calls | architecture cost |
+|---|---|---|---|
+| `conv_crossref_integrity` | DigitalOcean, Novita, SiliconFlow | 4 | $0.0898 |
+| `conv_derived_tolerances` | Baidu | 1 | $0.0113 |
+| `conv_numeric_consistency` | Baidu, DigitalOcean, Novita, SiliconFlow, StreamLake | 5 | $0.1176 |
+| `conv_requires_execution` | Alibaba | 1 | $0.0152 |
+
+Model at run time: **`deepseek/deepseek-v4-pro`**. Six servings across four
+traces; **eleven calls to produce four plans**, so seven were retries or burns;
+**$0.2339, which is 70% of all trace spend** at $0.0213 a call. The catalogue
+currently lists **16** servings for that model, spanning $1.89–$4.00 per million
+output tokens; the six that actually appeared are the ones swept.
+
+The burn signature observed in 006 — `finish_reason=length,
+completion_tokens=16384 of 16384` — is at `Specialist.run`'s **default**
+`max_tokens=16384`, not a provider ceiling: every serving but two advertises a
+maximum above 262,000 tokens. The model spends the default budget reasoning and
+emits nothing.
+
+#### Pre-registered before the sweep
+
+**The advisor's [predictions], labelled:**
+
+1. *At least one serving reproduces the §6.4 signature if the current model is
+   the §6.4 model.* The antecedent is **false** — §6.4's stub-on-planning model
+   was the one since reassigned to premium, and the current architecture model
+   is a different id. The signature was nevertheless already reproduced by this
+   model in 006, so the prediction's conclusion holds for a reason its premise
+   did not anticipate. Recorded rather than scored.
+2. *Servings differ measurably in completion tokens per plan.*
+3. *The spread across servings is smaller than triage's §6.1 spread.*
+
+**Mine, labelled and falsifiable:** *the burn is model-intrinsic, not
+serving-specific* — it is a reasoning model spending a fixed default budget
+before emitting, so it should appear across most or all servings at a similar
+rate, unlike triage's §6.1 quality spread which was strongly serving-dependent.
+**If that holds, pinning this tier does not fix it and the real lever is a model
+swap or a larger plan budget** — which is the owner's call under G-3, not this
+blueprint's.
+
+**Assertions.** The vocabulary has no `plan_ready`, and inventing one is out of
+scope, so each unit asserts `status: completed`, `path_includes: [plan]` and
+`max_calls: 6`. Readiness, criteria quality and token burn are read from the
+**retained verdicts** — which is what Part A's retention is for. `PlanVerdict`'s
+own validators already reject a stub inside the retry loop: a plan is required
+when ready, blockers when not, and `"..."`/`"TBD"` criteria are refused.
