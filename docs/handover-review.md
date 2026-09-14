@@ -2339,3 +2339,143 @@ probe is a repetition-and-patience instrument rather than a deterministic one.
 `--timeout` (`runner.py`), and 300s is not enough — the independent tier is a
 reasoning model and attempt 3 died inside it with every gate already passed. The
 scenario now carries 900.
+
+#### Part D results — the loop could not be studied, because half the runs never reached it
+
+Four scenarios, `engineering-rnd`, one repetition, $0.3329 of a $3.00 cap.
+Traces committed at `docs/traces/b7-convergence-traces.jsonl`.
+
+| trace | iterations | outcome | classification |
+|---|---|---|---|
+| `conv_crossref_integrity` | 1 | converged green, then **review blocked** | converged |
+| `conv_numeric_consistency` | **3** | converged and shipped | converged |
+| `conv_derived_tolerances` | 1 | **died — `ImplementVerdict` missing `green`** | schema failure |
+| `conv_requires_execution` | 2 | validate went red on iter 1, then **died — `ImplementVerdict` missing `done`** | schema failure |
+
+**Two of four runs were killed by a schema violation on the implement phase.**
+Not a stall, not an oscillation, not exhaustion — the run raised and ended.
+
+#### ❗ The root cause, isolated from source
+
+`implement` is the **only** phase that does not pass its schema into the retry
+loop.
+
+| phase | how it validates |
+|---|---|
+| triage | `chat_json(..., schema=TriageVerdict)` — 3 attempts, each carrying a rejection note |
+| plan | `chat_json(..., schema=PlanVerdict)` — same |
+| doublecheck | `chat_json(..., schema=DoubleCheckVerdict)` — same |
+| **implement** | `chat_json(...)` with **no schema**, then `ImplementVerdict(**lead_data)` at `phases.py:602` |
+
+Because the construction happens *after* the retry loop, a verdict missing one
+field is fatal on the first attempt. Every other phase gets three tries and is
+told what was wrong; implement gets none. §6.8 records the fix that made schema
+retries useful — "the schema retry re-asked the identical prompt with no hint of
+what was wrong" — and that fix landed inside `chat_json`, which implement never
+opted into.
+
+This reframes B7. The loop was not observed failing to converge because **half
+the runs died before the loop could express any behaviour at all**, and the
+deaths look like convergence failures from outside. The two runs that did loop
+both converged — one in a single iteration, one in three.
+
+#### Predictions scored
+
+| prediction | outcome |
+|---|---|
+| D6: stalls in ≥1/3 of non-converging runs | **not observable** — both non-converging runs died on schema |
+| D6: structural causes in ≥1/4 of red iterations | **1/1** — the only red validate was `conv_requires_execution`, and it was structural: validate wanted execution evidence a specialist cannot produce |
+| D6: at least one converged-on-red | **no** — `crossref_integrity` converged *green* and was blocked at review, which is a different thing |
+| mine: a stall on #2 or #4 | **wrong** — both died on schema instead |
+| mine: #4 is where a structural cause appears | **right** |
+| mine: no converged-on-red | **right** |
+
+#### Design proposal, offered for adjudication (Part D invites one; phase 2 rules it)
+
+**Pass `schema=ImplementVerdict` into `chat_json` for the implement phase, and
+re-run these four traces before touching anything on the lever menu.** It is the
+smallest possible change, it brings implement in line with every other phase,
+and the evidence is that it is responsible for 50% of observed run deaths. Every
+lever D5 lists — stall detection, widening the feedback channel, aligning
+validate's prompt, routing structural causes to escalation — is a change to how
+the loop *behaves*, and none can be evaluated while half the runs never reach
+the loop. Measure again after the cheap fix; the taxonomy above is not yet a
+measurement of convergence.
+
+#### A limitation in the instrument, found by using it
+
+D4 asks whether implement's summary changes substantively between iterations.
+**It cannot be answered from this data.** The results log captures the *final*
+`ExecutionState`, so a three-iteration run yields one implement verdict, not
+three. The per-iteration history exists at run time in `PhaseRunner.failure_log`
+(iteration, summary, red_cause, evidence) and is discarded with the runner.
+Capturing it is the obvious next increment to Part A, and would have made this
+blueprint's own question answerable.
+
+#### The serving, recorded before any prompt is blamed
+
+Per the B4 lesson. The architecture tier drew **six different providers** across
+four runs (Alibaba, Baidu, DigitalOcean, Novita, SiliconFlow, StreamLake), and
+the configured architecture model is a reasoning model that repeatedly returned
+nothing at all — `finish_reason=length, completion_tokens=16384 of 16384`, the
+exact §6.4 failure, live. Architecture was also the largest spend line at
+$0.2339 of $0.3329. **No prompt should be edited on this evidence until the tier
+is pinned**, which is roadmap item 8 and explicitly out of scope here.
+
+### 13.2 Execution record
+
+Executed at `7800dae`→. Suite 553 → **561**, CI green. Spend **≈$1.20**:
+Part B $0.4669, Part C $0.5252 across seven attempts, Part D $0.3329, Part A
+free.
+
+#### Departures
+
+1. **Part C used the eval harness, not the API.** C2 offered the choice and
+   asked for the reason: the harness carries the spend caps *and*, after Part A,
+   retains every verdict — which is strictly more evidence than
+   `phase_results` would have given, and bounded. The DB route would have needed
+   a server, a manual pull, and no cap.
+2. **The B6 probe request was rewritten twice.** The plan's own example does not
+   set `unrecallable` and triage is right about that; the first rewrite
+   overshot into genuine engineering surface. Both are recorded in §13.4 as
+   findings rather than smoothed away. The `when` clause was never touched.
+3. **The probe scenario's `timeout` was raised 300 → 900.** Not a workaround: at
+   300s a run died *inside* `independent_check` with every gate passed.
+4. **No B7 mechanism was implemented.** Out of scope by instruction, and the
+   traces say the lever menu is not yet the right question — a design proposal
+   is attached instead, as Part D invites.
+5. **Part D ran concurrently with Part C.** Part A is what made that safe, and
+   D3 says so in as many words. One probe attempt died of a transport error
+   during the overlap, and the retained verdicts survived it — which is the
+   protection working rather than an argument against the overlap.
+
+#### What execution found that the blueprint did not anticipate
+
+- **Part A had the same hole it was written to close.** A transport error
+  mid-run produced a record with no verdicts, because `run_scenario` replaced
+  the executor's state with a blank one in its exception handlers. Four billed
+  calls, all outputs discarded. Fixed with a test; the runs worth diagnosing are
+  exactly the ones that broke.
+- **`implement` is the only phase that validates outside the retry loop**, and
+  it killed half the B7 traces. See the Part D results.
+- **The two search models are complementary, not ranked** — union 7/8 against 5
+  and 4 individually — so the comparison does not support the ranking its
+  headline numbers imply.
+- **One `sonar-pro` sector failed for want of a lookup that never fired**, which
+  is a materiality-gate decision showing up inside a search-quality measurement.
+- **The B6 plan's example request is miscalibrated**, and triage's refusal to
+  mark it unrecallable is correct behaviour.
+- **The results log cannot answer D4's per-iteration question**, because it
+  keeps final state rather than iteration history.
+
+#### Left undone, deliberately
+
+- **B7 remains open** and is now better posed: fix the implement schema path,
+  re-measure, *then* consider the lever menu.
+- **Only triage is pinned.** Six architecture providers appeared across four
+  runs, on a reasoning model that returned nothing at all more than once. That
+  is roadmap item 8, and Part D is now the evidence for prioritising it.
+- **The search swap is not adopted** — a decision input, one repetition, and
+  `.env` is the owner's (G-3).
+- **Per-iteration capture** in the results log, which this blueprint's own
+  Part D wanted and could not have.
