@@ -594,7 +594,7 @@ or design issue.
 | B1 | Packaging metadata was unusable | **RESOLVED** | Not one fault but three, and the trivial one was the least of them. `pyjwt` was missing from `pyproject.toml`; flat-layout discovery saw `evals/ profiles/ workflows/` beside `autornd/` and **failed the build**, so `pip install -e .` never reached the ImportError; and no wheel carried `dashboard.html`, so a built install served FileNotFoundError from the dashboard route. One manifest now, plus a CI job that installs from it. |
 | B2 | **Materiality gate is ineffective.** Model marks 2.7–2.9 gaps "blocking" every time (cap is 3); empty **0 times in 33** | high | The cost lever it was built to be, isn't. §6.2 |
 | B3 | ~~`--max-spend` is per scenario, not per sweep~~ | **RESOLVED** | `--max-spend-sweep` bounds the whole invocation — every scenario, repetition and compared workflow against one budget. Defaults to $1.00, `none` disables. With both caps set no unit starts unless it must fit, so the sweep cap is exact; alone, it stops the crossing unit via the existing client ceiling. Fixing it exposed a second bug: six handlers on the research and rerank paths swallowed `BudgetExceeded`, so an abort did not stop the run |
-| B4 | `wide_legal_ops` under-classifies a 7-year statutory retention schedule on **every** provider | medium | The one genuine calibration gap left; guide's fault, not the serving's |
+| B4 | ~~`wide_legal_ops` under-classifies on every provider~~ | **RESOLVED — the premise was wrong** | It is the serving, not the guide. Pinned six ways: fails 3/3 on OpenInference, DigitalOcean and unpinned; passes 3/3 on Alibaba and AtlasCloud, 2/3 on StreamLake. Under the adopted `triage:Alibaba` pin it passes ~8/9, and its rare excursions go in **both** directions. No guide edit was made — there was no systematic failure left to target. §12.3, §12.4 |
 | B5 | `wide_wind_energy` fails `risk_at_least` ~1/3, **deliberately left red** | low | Two defensible readings; a risk **floor must never be waivable** (§4.4) |
 | B6 | `independent_check` has **never executed inside a full live workflow** | medium | Wiring proven by test; the tier proven by a direct live call. 9 attempts each hit a *different, mostly legitimate* earlier exit |
 | B7 | Build loop does not converge on complex requests | medium | Earlier root cause diagnosed: implementer has no filesystem, validator rejected nonexistent work. `SPECIALIST_OUTPUT_CONTRACT` mitigates; not fully solved |
@@ -679,9 +679,10 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
    change the answer?" instead of requesting a subset; or drop the gate and
    treat the token budget as the only dial (honest, and §6.2 shows gap *count*
    doesn't affect cost anyway).
-4. **B4 — `legal_ops` calibration.** The governance-document clause exists for
-   exactly this case and isn't landing. **Pin the provider before tuning** (§6.1)
-   or you will be tuning against a lottery — which already happened.
+4. ~~**B4 — `legal_ops` calibration.**~~ **Done, by pinning rather than
+   tuning.** The instruction to pin before tuning turned out to be the whole
+   fix: the governance-document clause was landing all along, on a serving
+   capable of reading it. Nothing in `phases.py` changed.
 5. **Choose and document a provider pin for the owner's real workload.**
    `--scenarios evals/scenarios/wide` scores a provider in ~10 min for <2¢.
 
@@ -849,6 +850,29 @@ questions **in order**, and the ordering is load-bearing — judging *stage* bef
      life-support) are judged by *what they protect*: **at least high**, and
      critical only if a person can be harmed. Naming the level mattered — the
      first wording sent 200 t of livestock to `critical`.
+
+**A calibration gap can be a serving gap.** Measured 2026-09-14, the same
+36-sector suite pinned six ways at three repetitions:
+
+| pin | sectors 3/3 | cost | `legal_ops` |
+|---|---|---|---|
+| unpinned → OpenInference | 27/36 | $0.0014 | 0/3 |
+| OpenInference | 27/36 | $0.0014 | 0/3 |
+| DigitalOcean | 22/36 | $0.0041 | 0/3 |
+| Alibaba | 31/36 | $0.0317 | **3/3** |
+| AtlasCloud | 32/36 | $0.0355 | **3/3** |
+| StreamLake | 33/36 | $0.0184 | 2/3 |
+
+B4 was recorded for a year as the one genuine calibration gap, and as the
+guide's fault rather than the serving's. It was the serving's. The rule §6.1
+already stated — pin before you tune — was not merely a precondition for
+calibrating; **it was the fix**. Before rewriting a prompt to chase a failing
+sector, price the same sector on a better serving.
+
+Note also the *direction* of failure tracks quality. Cheap servings fail by
+under-classifying (seven to ten sectors here, the dangerous direction); capable
+ones fail by over-classifying one or two, which is the safe direction and, per
+convention 8, the waivable one.
 
 **`unrecallable` is a separate axis from risk.** A signed rollout to 40,000
 devices harms nobody and breaches nothing (so: `high`) and cannot be taken back

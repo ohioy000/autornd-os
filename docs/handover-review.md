@@ -1655,3 +1655,70 @@ same holds for every sector §6.1 named as dangerous — `building_services`,
 
 Part A total: **$0.0925 recorded + ≈$0.018 lost = ≈$0.11**, inside the
 blueprint's $0.02–0.15 estimate.
+
+### 12.4 Part B — B4, closed without touching the guide
+
+G-2 answered: **`triage:Alibaba`**. A qualified pin under A4 — its only
+under-classification on ≥2/3 repetitions is `wind_energy`, which `HANDOVER` B5
+already records as deliberately left red — and the fastest of the three
+qualifiers at 886s.
+
+**B1 could not run as written, and did not need to.** It asks for the 18
+`legal_ops` verdicts Part A already paid for, to diagnose why the
+governing-documents clause does not land. Two obstacles, one fatal to the step
+and one fatal to its premise:
+
+- **The harness discards the verdicts it pays for.** `ScenarioRun` keeps
+  results, calls, seconds, cost, error, path and per-tier accounting — but not
+  the `ExecutionState` outputs, so the `TriageVerdict.summary` text is gone by
+  the time a report exists. Diagnosing from a past sweep is not possible today;
+  it would need a re-run capturing verdicts directly, or a field on
+  `ScenarioRun`. Recorded as a finding, not fixed here — it is `evals/` code and
+  outside this blueprint.
+- **There is no failure to diagnose under this pin.** `legal_ops` passed 3/3
+  under Alibaba in Part A. A diagnosis of why a clause fails cannot be written
+  about a clause that works.
+
+**B3 — the guide edit — was deliberately not made.** Characterising the sector
+under the adopted pin, four runs, 24 repetitions in total:
+
+| run | reps | result |
+|---|---|---|
+| Part A sweep | 3 | 3/3 clean |
+| dedicated verification | 3 | 2/3 — one **ceiling** breach (read `critical`, ceiling `high`) |
+| repeat 9 | 9 | at least one excursion (per-assertion breakdown not captured) |
+| repeat 9 | 9 | 8/9 — one **floor** breach (read below `medium`) |
+
+Roughly 87% clean, with rare excursions **in both directions**. That is not the
+failure B4 describes — a deterministic under-classification on every provider,
+measured at 3/3 failures on the cheap servings. Under a qualified pin there is
+no systematic defect left to target, and editing the risk guide to chase a
+one-in-nine excursion that goes both ways would be tuning against noise, which
+is precisely what §6.1 warns against. The three load-bearing constraints B3
+listed — question order, the not-every-standard distinction, the
+protective-systems wording — are therefore untouched, as is everything else in
+`phases.py`.
+
+**B4's verification target, read from the scenario file as B4 instructed:**
+`wide_legal_ops` asserts `risk_at_least: medium` and `risk_at_most: high`. The
+floor is `medium`, not `high` — a softer bar than "under-classifies" suggests,
+and the one the governing-documents clause exists to clear.
+
+**The regression net was not run.** B4 specifies a full wide ×3 sweep to prove
+no sector regressed "after the edit". There was no edit, so there is nothing to
+regress; re-running it would re-measure Part A at $0.03 and fifteen minutes.
+Part A's Alibaba row **is** the baseline.
+
+Part B spend: **$0.0068**. No code, prompt or constant changed.
+
+#### Still owner-side
+
+G-3 forbids `.env` edits in this blueprint, so the pin is **not** written
+anywhere. To adopt it:
+
+```
+OPENROUTER_PROVIDER_ORDER=triage:Alibaba
+```
+
+Until that line exists, the tier routes unpinned — which today means
+OpenInference at 27/36, the least accurate serving measured.
