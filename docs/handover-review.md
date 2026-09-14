@@ -1197,7 +1197,7 @@ the only env file tracked.
 
 ## 11. Blueprint 004 — Docker CI, the example profile, budget transparency, and the B6 probe (verbatim, as received)
 
-**Status: not executed at the time of recording.** Execution record: §11.2.
+**Status: executed 2026-09-14 — see §11.2.** Recorded here unexecuted first.
 
 ```text
 BLUEPRINT 004 — three free closures and one guard: Docker CI, the example
@@ -1306,3 +1306,98 @@ OUT OF SCOPE, deliberately: calibration of anything (B4/B2 wait on the
 owner's pin sweep — §6.1); any prompt or constant inside autornd/engine;
 the production API path (no cap there, unchanged).
 ```
+
+### 11.2 Execution record — 2026-09-14
+
+Executed at `3502baf`, one commit (`2eae652`). Suite 527 → **553**, 26 tests
+added. CI green on all five jobs, the new `docker` job included, first run.
+
+#### Every value touched
+
+| value | change | why |
+|---|---|---|
+| `.github/workflows/ci.yml` | new `docker` job | A1/A2 |
+| `profiles/studio.yaml` | new file | B1 |
+| `profiles/example.yaml` | gains `domains:`/`roles:` | §10.2 carry-forward |
+| `workflows/independent-check-probe.yaml` | new file | D1 |
+| `tests/test_budget_transparency.py` | new, 11 tests | C1/C2 |
+| `tests/test_shipped_examples.py` | new, 15 tests | B2/D2 |
+| `tests/test_docs.py` | scan set gains `profiles/*.yaml`, `workflows/*.yaml` | B3 |
+| README profiles section, CONTRIBUTING | pointer to the new profile | B4 |
+| README badge / Testing / tree | 527 → 553 | forced by the G2 guard |
+| `CLAUDE.md` test files | 19 → 21 | follows the new files |
+| `HANDOVER` §4.4 | new convention 13 (provenance) | E2 |
+| `HANDOVER` §5 item 10 | closed | E1 |
+| this document, §0 | new — the blueprint protocol | E2 |
+
+No "while here" edits.
+
+#### The Docker job could not be verified locally, so it was derived instead
+
+This box has no Docker (`HANDOVER` §1: no sudo, no system pip, no Docker), so
+the job's first real execution was in CI. Rather than guess at the assertions,
+the server was run locally under `uvicorn` with the same placeholder tiers and
+an empty key, and the smoke was written against what it actually returned.
+
+That mattered. The obvious assertion — health returns `ok` — is wrong: with
+placeholder ids every tier comes back `available: false`, so **`degraded` naming
+all six tiers is the correct answer**, and a smoke accepting `ok` would have
+proved only that the check never ran. The catalogue endpoint needs no auth
+(§4.7), so the container reaches it even with no key and gets real negatives
+rather than the `available: None` path.
+
+CI confirmed the local derivation exactly:
+
+```
+answered after 2 attempt(s)
+{"status":"degraded","unverified_models":["triage","engineering","architecture",
+ "escalation","research","search"],...}
+dashboard served, 34902 bytes
+```
+
+34,902 bytes in the container, byte-identical to the local run — the template
+resolves in the image, which is B1's wheel-data fault in its deployment shape.
+
+**Provenance check on the blueprint's one estimate.** A1 gave `~10 tries × 2s`
+as `[estimate → the job's own timeout is the derivation]`. Derived: **2
+attempts**, in CI and locally. The loop has roughly five times the headroom it
+needs, which is the right direction for a retry loop and is now a measured
+number rather than a guess.
+
+#### Departures
+
+1. **The probe has 8 nodes, not 7.** D1 says "7 nodes" and then lists eight:
+   triage, context, plan, implement, validate, review, `review_clean`,
+   `independent_check`. The list was taken as authoritative over the count.
+2. **The non-engineering example is a new file, not a rewrite of
+   `example.yaml`.** B1 wants the worked example to be a team that is not a team
+   of engineers; `example.yaml` cannot become one, because
+   `tests/test_profiles.py` pins its name to `SmartFactory` in three places and
+   `docs/smartfactory/` is keyed to that name — rewriting it would have broken
+   passing tests to satisfy a taste decision. So `profiles/studio.yaml` carries
+   the non-engineering demonstration in full, and `example.yaml` gains a small
+   declaration of its own so that the file §10.2 actually named stops being the
+   one that teaches nothing. Both halves of the intent are met; neither test is
+   broken.
+3. **C1 gained a class the blueprint did not ask for.** Every propagation test
+   would also pass if the handlers simply stopped catching anything — which
+   would undo the reason each handler exists. Four companion tests assert
+   ordinary failures *still* degrade: a broken expansion falls back to the raw
+   request, a failed lookup returns no findings rather than failing the run, and
+   ranking falls back to retrieval order. Without them the guard is buyable by
+   deleting the thing it guards.
+4. **The "B6 plan already delivered" is still not in the repo.** §5 lists it as
+   absent and it remains so; D1's node list was complete enough to execute from,
+   so nothing was reconstructed. If a fuller plan exists, it lives outside this
+   repo.
+
+#### Left undone, deliberately
+
+- **The probe has never been run.** It needs `MODEL_PREMIUM` configured, and the
+  live run is the owner's — B6 is only closed when the independent pass is
+  observed executing, not when the shape that should reach it exists. The
+  default $1.00 sweep cap bounds it; the per-run cost is still
+  `[estimate → measure]`.
+- **No calibration.** B4 and B2 wait on the pin sweep (§6.1), unchanged.
+- **The API key supplied during Blueprint 003 is still unrotated.** It was
+  pasted into a transcript; §10.2 says the same thing and it stays true.
