@@ -3113,3 +3113,191 @@ Part A free.
 - **The search swap is not adopted** — `.env` is the owner's.
 - **The architecture pin is not ratified**, and on this evidence buys little.
 - **Part B's burn question is open** and needs a probe built on hard requests.
+
+---
+
+## 15. Blueprint 008 — The ruled design: an all-judges exit, an honest channel, an honest validator (verbatim, as received)
+
+**Status: not executed at the time of recording.** Execution record: §15.2.
+
+**C0.1 pre-flight, run before recording — three deviations from the blueprint's
+stated assumptions:**
+
+1. **The architecture pin is NOT in `.env`.** `OPENROUTER_PROVIDER_ORDER` reads
+   `triage:Alibaba` alone. The blueprint marks `architecture:StreamLake`
+   "[owner-ratified]"; it is not present, so every paid part env-prefixes both
+   pins as the blueprint separately instructs, and nothing here depends on the
+   ratification having happened.
+2. **The search swap HAS been adopted** — `MODEL_SEARCH=perplexity/sonar`. 007's
+   recommendation is live, which changes the cost basis of every paid part below
+   and is recorded so the figures are read against the right model.
+3. **`MODEL_ARCHITECTURE` is unchanged** at the same id 007 measured, so C0's
+   "primary" arm is the incumbent rather than a new candidate.
+
+**C1's named trace file does not exist** under that name: the per-iteration data
+is in `docs/traces/b7-convergence-v2.jsonl` (A6's retention, written by 007).
+The read happens against that.
+
+```text
+BLUEPRINT 008 — The ruled design: an all-judges exit, an honest channel,
+an honest validator. B7 phase 3.
+
+Origin: 007 Part D + the advisor's phase-2 ruling. The requires_execution
+trace measured the loop exiting on validate.green while implement.green
+sat false in the same state — the exit consulted the one wrong judge of
+four. The fix is a free deterministic check, not a convergence mechanism.
+
+Protocol (as 001–007): paste verbatim into docs/handover-review.md as §15
+BEFORE executing; append §15.2 after. Provenance and premise rules binding.
+TWO protocol amendments, from 007's lessons, effective now: measured claims
+carry their n (convention 16 — a "measured" label at n=1 produced the arm-1
+prediction that came in at 3.67 against "≈5/8"); multi-arm experiments run
+cheap arms first (arm 1 spent $1.12 of $1.17 and killed the ceiling mid-arm-2).
+
+Permission note: this blueprint implements the advisor's ruled design —
+loop behavior and judgment-steering text carry the ruling above; execute
+them as specified, departures via §15.2 as ever.
+
+Prerequisites: suite green before and after (re-derive the count); CI green
+before finishing. Pins env-prefixed on every paid part: triage:Alibaba,
+architecture:StreamLake [owner-ratified].
+
+PART A — the all-judges exit (FREE)
+
+A1. Read autornd/graph/checks.py first. Add a folding check to the
+    registry — a free deterministic function taking the body's green
+    signals and returning green iff ALL agree: implement.green (which
+    already carries the domain-review mutation), validate.green,
+    coverage's result, consistency's result. Mirror the existing
+    check-result shape exactly (whatever criteria_addressed returns,
+    your check returns). The measurement comment names the exhibit:
+    007's requires_execution trace — validate attested PASS to a
+    criterion its own evidence showed changed to 121 req/s against a
+    demanded 101; the domain reviewer caught it; until read neither.
+A2. workflows/engineering-rnd.yaml: add the fold node to build_loop's
+    body (kind: check, depends_on the four body outputs it reads), and
+    change until to read it. Identically for recovery_loop. Apply the
+    same fold to lean.yaml's loop — read lean.yaml first and fold ITS
+    actual judges (its body may differ; the principle is "every judge
+    the body produces").
+A3. Legacy equivalence: engine/workflow.py's loop exit must fold the
+    same four verdicts (they are in hand there) or
+    tests/test_graph_equivalence.py fires BY DESIGN. Make the legacy
+    match; the reference has caught real drift before and just caught
+    an approved change — that is it paying for its keep, note it in
+    the commit message.
+A4. Tests, pre-registered: validate green + implement red → loop
+    CONTINUES (the old code exits; this is the regression that names
+    the bug); all four green → exits; coverage red + validate green →
+    CONTINUES (the unobserved variant, now structurally covered);
+    consistency red + validate green → continues. Billing doubles per
+    convention 9 wherever paid nodes execute.
+
+PART B — the channel and the validator (per the ruling)
+
+B1. Read how the implement prompt consumes failure context
+    (phases.py, the failure_log/red_cause seam) before touching it.
+    When the domain-review mutation flips implement red, the actual
+    concern strings — in hand at the mutation site — flow into what
+    the next iteration reads. Mechanical inclusion of recorded verdict
+    fields, no new judgment, cap the joined length sensibly. Comment:
+    the one-string generic flag was the measured channel; 006-D1(b).
+B2. Validate hardening, ruled wording: success_criteria are an
+    immutable contract for the assessment. Correcting, reinterpreting,
+    or relaxing a criterion is an assessment failure. Where work and
+    criterion conflict, that criterion FAILS and a finding flags the
+    conflict — flagging a suspect criterion is legitimate, passing
+    work against a mutated criterion is a false assessment. Add to the
+    assessment contract; comment names the 121 req/s trace. Expect the
+    risk-guide lesson: wording may need live iterations to land —
+    Part C verifies, and failure there is recorded, not hidden.
+B3. If Part C shows validate STILL passes the 121 criterion, the
+    hardening failed: record it and STOP — the next step is a
+    per-criterion structured verdict (a schema change needing its own
+    ruling). Do not iterate prompt wording inside this blueprint beyond
+    one adjustment pass.
+
+PART C0 (inserted before Part C) — probe the architecture candidate
+(≈ $0.10–0.30, caps bound; cheap arms first per convention)
+
+C0.1. Pre-flight (free): confirm .env carries MODEL_ARCHITECTURE=<candidate>
+     and the ratified pin line; env-prefix runs override the model per arm:
+       arm 1 — the .env candidate (v4-pro)          [primary]
+       arm 2 — qwen3.7-max   [fallback, env-prefixed]
+       arm 3 — grok-4.3      [fallback, env-prefixed]
+     All arms pinned architecture:StreamLake; if a fallback arm's model is
+     not served by StreamLake, record that and run it unpinned with the
+     pin line env-prefixed to exclude it — noting serving per arm.
+     [estimate → caps are the bound: plan-probe ≈ triage + 2 research calls
+     + 1 plan call per unit; 3 scenarios × 2 reps × 3 arms ≈ 18 units]
+C0.2. Pre-registered per arm, BEFORE running: PlanVerdict parses 3/3;
+     ready=true 3/3; no stub — criteria pass the placeholder validators
+     (_is_placeholder rejects "..."/"TBD" — a §6.4 stub fails this);
+     no burn — completion_tokens well under the plan node's cap, no
+     empty-reply with finish_reason=length (the client's own warning
+     names both; surface it in the report). Note refused-lookup counts
+     beside every score (007's lesson: a poisoned unit scores zero and
+     reads like a dumb model).
+C0.3. Decision rule, pre-registered: the primary arm passes everything →
+     adopt, proceed to Part C. Primary fails any pre-registration → run
+     the fallback arms and bring the table back; the owner picks the
+     line (G-3), and the pin moves only if the winner needs a different
+     serving.
+C0.4. Record the arm table in §15.1 with cost, wall clock, token fill,
+     and who served per arm. Any "my expectation was wrong" is recorded,
+     not hidden.
+
+PART C — re-run under the ruled design (≈ $0.60; caps --max-spend 0.75
+--max-spend-sweep 3.00; pins prefixed)
+
+C1. FREE FIRST, per the premise rule: read crossref's retained
+    per-iteration drift (docs/traces/b7-crossref_integrity.json —
+    the A6 data exists for exactly this) and classify: implement
+    summaries churning without addressing the flagged reference
+    (channel starvation) vs implement addressing and validate finding
+    new issues (genuine difficulty). Then pre-register ALL FOUR
+    expectations FROM THAT READ — not before it.
+C2. Fixed pre-registrations: requires_execution — converged-on-red
+    is structurally impossible now (until folds implement.green);
+    honest outcomes are converge-all-green or exhaust → escalate;
+    blocked-at-review would itself be a finding. numeric_consistency
+    — converges ≤3, ships [measured: 006, 007].
+C3. Run the four scenarios, engineering-rnd, repeat 1, under the pins.
+    Classify per the 007 taxonomy v2 plus the drift measure. Note
+    beside every score its refused-lookup count (007's lesson: a
+    poisoned unit scores zero and reads as a dumb model).
+C4. B7's HANDOVER row, honestly: close it if the re-run shows
+    converge-fast-or-escalate-fast across all four; keep it open with
+    the new failure mode NAMED if one appears. "My expectation was
+    wrong" is a permitted outcome of every pre-registration.
+
+PART D — records and two small guards (FREE)
+
+D1. Refused-lookup visibility: the research path swallows failed
+    lookups by design (workflow survives; unit quietly has no
+    findings). Add the refused count to the JSONL unit record (read
+    research.py's swallow site for the cheap derivation) and one
+    warning line in the report when any unit refused. The poisoned-
+    zero trap becomes loud. Comment: 007's $10-ceiling arc scored
+    whole arms while refusing every lookup.
+D2. §4.4 convention 16 (measured claims carry their n) and the
+    cheap-arms-first protocol line land in the review doc preamble
+    and HANDOVER.
+D3. HANDOVER: B7 row per C4; §6.3 gains the boundary note (tokens-
+  buy-figures measured on the expensive model, n=1; family transfer
+  measured negative at n=3 — caps unchanged; re-measure on swap);
+  B8's row gains the request-driven plan burn (feeds the owner's
+  architecture model decision); counts commit-stamped; §7's stale
+  inline comment.
+D4. CHANGELOG [Unreleased]: one prose paragraph — the all-judges
+  exit, the honest channel, the honest validator, the search swap's
+  measured tie. No model ids.
+
+OUT OF SCOPE, deliberately: the stall detector (dead on this
+evidence — retired until a trace shows a stall); the cascade search
+design (changes MAX_LOOKUPS policy — its own blueprint, the 7/8
+union is the input); per-criterion structured validate verdict
+(only if B3 fails); the review→rework loop (§5 item 12 — crossref's
+drift read may graduate it with evidence); any .env edit (G-3);
+per-tier pins beyond the two ratified.
+```
