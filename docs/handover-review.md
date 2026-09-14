@@ -2841,3 +2841,99 @@ one-repetition gap (5 vs 4) came from a *complementary* miss pattern — only tw
 sectors passed on both, only one failed on both, union 7/8 — which is the
 signature of variance rather than a quality ordering. And **arm 3 ≥ arm 2**,
 because §6.3's misses were truncation of bundled tails rather than ignorance.
+
+#### Part C results — INCONCLUSIVE, cut short by an account-level block
+
+**The provider began returning `403 Forbidden` on every chat completion partway
+through arm 2, and has not stopped.** Credits were not the cause: $3.54 remained
+at the time and the `/credits` endpoint kept answering. Verified after the fact
+with single live calls on the triage, research and search tiers — **all three
+403**, so it is account-wide rather than model- or tier-specific.
+
+| arm | units | valid units | mean figures /8 | search $ | $/lookup | verdict |
+|---|---|---|---|---|---|---|
+| 1 current | 23 | 22 | **3.67** (per-rep 4, 3, 4) | $1.1225 | $0.0510 | **usable** |
+| 2 sibling | 24 | **8** (rep 1 only) | 1/8 on its one valid rep | $0.0488 | $0.0061 | **contaminated** |
+| 3 sibling + 4000 | 24 | **0** | — | $0.0000 | — | **void** |
+
+The contamination is unambiguous in the retained per-unit data — lookups fired
+per unit, in order:
+
+```
+arm1  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0]   22/23 fired, 1 error
+arm2  [1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]  8/24 fired, 15 errors
+```
+
+Arm 2's first eight units — one full repetition — fired lookups at $0.0061 each,
+matching 006's measured sibling price exactly. Everything after unit 8 made no
+lookup at all. **A 403 inside a lookup is swallowed by `research.py`'s broad
+handler by design** — a failed lookup must not sink a workflow, and Blueprint
+006 deliberately preserved that while making `BudgetExceeded` re-raise through
+it. So the affected units did not crash; they ran, found nothing, and scored
+zero. **A silent zero is indistinguishable from a model that found nothing**,
+which is precisely why the per-unit lookup counts had to be read before any
+number here was believed.
+
+**C3's decision rule cannot be applied** and no swap is recommended on this
+evidence. What arm 1 does establish, on three clean repetitions, is worth
+keeping: the current model's mean is **3.67/8**, not the 5/8 measured at a
+single repetition in §6.3 and reproduced at a single repetition in 006. Its
+per-rep counts were 4, 3, 4. **Pre-registration said 5/8; the answer is 3.67,
+and the reason is that both prior 5/8 readings were single repetitions.** That
+is the same lesson as 006 §13.1's complementary-miss finding, now with the
+arithmetic behind it: one repetition of this suite is an anecdote.
+
+**What Part C still needs:** arm 2 at three clean repetitions and arm 3 at all,
+once the account is unblocked. Roughly $0.40, since both sibling arms are cheap.
+
+#### Part D results — three valid traces, and B7's premise partly reproduced
+
+The fourth trace died on the same 403. Three are clean.
+
+| trace | 006 (broken instrument) | 007 (repaired) | classification |
+|---|---|---|---|
+| `conv_derived_tolerances` | **died pre-loop** (missing `green`) | **reached the loop, converged in 1**, then review blocked | repair confirmed |
+| `conv_numeric_consistency` | converged in 3 | converged in 1, shipped | converged |
+| `conv_crossref_integrity` | converged in 1, review blocked | **escalated** — 5 loop iterations, then 3 recovery attempts, all red | **non-convergence, reproduced** |
+| `conv_requires_execution` | died on schema | **died on 403** | lost to the block |
+
+**The repair is confirmed by the trace that most needed it.**
+`conv_derived_tolerances` died before the loop in 006 on a verdict missing
+`green`; with the schema inside the retry loop it reached the loop and converged
+on the first iteration. That is the instrument fault isolated, repaired, and
+demonstrated on the same scenario that exposed it.
+
+**B7's premise is partly reproduced, and the failure mode is not the one the
+lever menu assumes.** `conv_crossref_integrity` ran five iterations, escalated,
+and failed three recovery attempts — every one with `implement_green=true` and
+`validate_green=false`:
+
+```
+iter1  5,754 chars   criterion 5 unsatisfied (handshake sequence)
+iter2  6,712         criterion 4 unsatisfied (binary format)
+iter3  7,168         a different criterion again
+iter4 11,220         criterion 5
+iter5  7,138         endianness unspecified
+  → escalation → recovery
+iter1  9,965         criterion 1
+iter2  8,907         criterion 4
+iter3  8,464         criterion 5
+```
+
+**It oscillates; it does not stall.** The red cause is a *different* criterion
+almost every iteration — 5, 4, other, 5, endianness, 1, 4, 5. D5's stall
+detection ("same red_cause ≥2 consecutive") would **not have fired here**, so the
+lever most obviously suggested by the recorded diagnosis is the wrong one for
+the failure actually observed.
+
+**D4's drift question, answerable for the first time** thanks to A6's retention:
+implement's summary changes substantially every iteration — 5,754 → 6,712 →
+7,168 → 11,220 → 7,138 characters. **The one-string feedback channel does
+produce substantive rework.** The implementation is not repeating itself; it is
+rewriting, fixing the named criterion, and losing another. That reframes the
+"widen the channel" lever too: the channel carries enough to cause change, and
+the change does not accumulate.
+
+Scored against D3's predictions: `numeric_consistency` converged ≤3 ✓;
+`derived_tolerances` reached the loop and converged ≤3 ✓; `crossref_integrity`
+"converges ≤2" ✗ **badly** — it escalated; `requires_execution` unresolved.
