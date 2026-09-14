@@ -108,13 +108,14 @@ implementation.
 | httpx | `>=0.28.0` | 0.28.1 |
 | ChromaDB | `>=0.6.0` | **1.5.9** |
 | PyYAML | `>=6.0` | 6.0.3 |
-| PyJWT | `>=2.8.0` (requirements only) | 2.14.0 |
+| PyJWT | `>=2.8.0` | 2.14.0 |
 | pytest | `>=8.3.0` | 9.1.1 |
 | pytest-asyncio | `>=0.24.0` | 1.4.0 (`asyncio_mode = "auto"`) |
 
-**Note a real inconsistency:** `pyjwt` is in `requirements.txt` but **missing
-from `pyproject.toml` dependencies**, while auth imports it. A `pip install -e .`
-install will fail at runtime on auth. *This is an unfixed bug — see §5.*
+**Resolved (B1).** `pyjwt` was in `requirements.txt` and missing from
+`pyproject.toml` while auth imported it. `requirements.txt` is gone;
+`pyproject.toml` is the single manifest. Attempting the install turned up two
+further faults in the same file that no test could see — see §4.2 B1.
 
 ### Infrastructure
 
@@ -125,10 +126,13 @@ install will fail at runtime on auth. *This is an unfixed bug — see §5.*
 - **Vector store:** ChromaDB, local persistent directory `./chromadb_data`.
 - **Model access:** OpenRouter (`https://openrouter.ai/api/v1`), OpenAI
   chat-completions protocol. Any compatible endpoint works.
-- **CI:** `.github/workflows/ci.yml` — pytest on Python 3.11/3.12/3.13, on push
-  and PR to `main`. It installs from **`requirements.txt`**, which is exactly why
-  it is green while `pip install -e .` is broken (B1): the two dependency sources
-  disagree. See `docs/handover-review.md`.
+- **CI:** `.github/workflows/ci.yml` — two jobs, on push and PR to `main`.
+  `test` runs pytest on Python 3.11/3.12/3.13, now installing with
+  `pip install -e ".[dev]"`. `editable-install` installs from project metadata
+  on 3.12 alone, runs an import smoke over the startup path, and asserts a built
+  wheel carries its package data. The second job exists because the first runs
+  against the source tree and so cannot see a packaging fault at all — which is
+  how B1 shipped.
 - **Container:** `Dockerfile` is minimal (see §3.4). No compose file and no
   deployment automation. **There is no production deployment.** The
   owner runs it locally; this snapshot's development box has no sudo, no system
@@ -397,9 +401,8 @@ dependencies = [
     "fastapi>=0.115.0", "uvicorn[standard]>=0.32.0", "pydantic>=2.10.0",
     "email-validator>=2.2.0", "pydantic-settings>=2.6.0", "sqlalchemy>=2.0.36",
     "aiosqlite>=0.20.0", "httpx>=0.28.0", "python-dotenv>=1.0.1",
-    "chromadb>=0.6.0", "pyyaml>=6.0",
+    "chromadb>=0.6.0", "pyyaml>=6.0", "pyjwt>=2.8.0",
 ]
-# NOTE: pyjwt is MISSING here but present in requirements.txt and imported by auth.
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3.0", "pytest-asyncio>=0.24.0"]
@@ -410,6 +413,14 @@ autornd = "autornd.cli:main"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+# Both added by B1; without them the build fails outright and the wheel ships
+# no dashboard template. Comments trimmed here — the file carries the full ones.
+[tool.setuptools.packages.find]
+include = ["autornd*"]
+
+[tool.setuptools.package-data]
+autornd = ["api/templates/*.html"]
 
 [build-system]
 requires = ["setuptools>=75.0"]
@@ -452,9 +463,11 @@ EscalationVerdict root_cause_analysis · architectural_correction|None · requir
 ```dockerfile
 FROM python:3.11-slim
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
+# Editable: workflows/ and profiles/ resolve relative to the package directory
+# and ship in neither the wheel nor the package, so a relocating install points
+# both at paths that do not exist. Comments trimmed — see the file.
+RUN pip install --no-cache-dir -e .
 EXPOSE 8100
 CMD ["uvicorn", "autornd.main:app", "--host", "0.0.0.0", "--port", "8100"]
 ```
@@ -573,7 +586,7 @@ or design issue.
 
 | # | Issue | Severity | Notes |
 |---|---|---|---|
-| B1 | `pyjwt` missing from `pyproject.toml` deps | **high, trivial fix** | `pip install -e .` then auth → ImportError |
+| B1 | Packaging metadata was unusable | **RESOLVED** | Not one fault but three, and the trivial one was the least of them. `pyjwt` was missing from `pyproject.toml`; flat-layout discovery saw `evals/ profiles/ workflows/` beside `autornd/` and **failed the build**, so `pip install -e .` never reached the ImportError; and no wheel carried `dashboard.html`, so a built install served FileNotFoundError from the dashboard route. One manifest now, plus a CI job that installs from it. |
 | B2 | **Materiality gate is ineffective.** Model marks 2.7–2.9 gaps "blocking" every time (cap is 3); empty **0 times in 33** | high | The cost lever it was built to be, isn't. §6.2 |
 | B3 | `--max-spend` is **per scenario, not per sweep** | high | 108-rep sweep × $0.25 could reach $27. The cap the owner actually wanted when they killed a runaway |
 | B4 | `wide_legal_ops` under-classifies a 7-year statutory retention schedule on **every** provider | medium | The one genuine calibration gap left; guide's fault, not the serving's |
@@ -634,7 +647,12 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
 
 ### Immediate (prioritised)
 
-1. **B1 — add `pyjwt` to `pyproject.toml`.** One line; breaks installs today.
+1. ~~**B1 — add `pyjwt` to `pyproject.toml`.**~~ **Done**, and it was three
+   faults rather than one — see §4.2. `requirements.txt` is deleted,
+   `pyproject.toml` is canonical, and CI has an `editable-install` job that
+   installs from it. The lesson generalises: *the fault that a test suite
+   structurally cannot see is the one that ships.* Running the install once
+   found two defects that had been invisible to 501 tests.
 2. **B3 — sweep-level spend cap.** `--max-spend` currently bounds one scenario.
    Add an aggregate ceiling across a suite run; recommended defaults
    **$0.25/scenario, $1.00/sweep**. Production keeps *no* cap — aborting a live
@@ -662,11 +680,10 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
 8. **Per-tier provider quality measurement.** The eval suite can now score
    providers; only triage has been measured.
 9. **Alembic migrations** before anyone stores real data.
-10. **CI — extend, do not create.** `.github/workflows/ci.yml` already runs the
-    501 tests across Python 3.11/3.12/3.13. What it lacks is an
-    **editable-install job** (`pip install -e .` + an import smoke test), which
-    is the gap that let B1 ship: CI installs from `requirements.txt` while the
-    broken metadata is in `pyproject.toml`.
+10. ~~**CI — extend, do not create.**~~ **Done.** `.github/workflows/ci.yml`
+    now carries the `editable-install` job alongside the matrix. Still open:
+    nothing exercises the **Docker build**, which is the remaining install shape
+    no job covers.
 
 ### Longer term / technical debt
 

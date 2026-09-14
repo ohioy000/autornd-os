@@ -15,6 +15,11 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "chromadb>=0.6.0",
     "pyyaml>=6.0",
+    # api/auth.py imports jwt. This line was missing while requirements.txt
+    # carried it, so CI (which installed from requirements.txt) stayed green
+    # across three Python versions while `pip install -e .` produced an
+    # install with no JWT library at all.
+    "pyjwt>=2.8.0",
 ]
 
 [project.optional-dependencies]
@@ -29,6 +34,23 @@ autornd = "autornd.cli:main"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+# Without this, setuptools flat-layout auto-discovery sees evals/, profiles/
+# and workflows/ beside autornd/ and refuses to build at all:
+#   "Multiple top-level packages discovered in a flat-layout".
+# So `pip install -e .` failed before it could even reach the missing-pyjwt
+# problem above. Only the package ships; the YAML data dirs stay repo files.
+[tool.setuptools.packages.find]
+include = ["autornd*"]
+
+# api/dashboard.py reads dashboard.html off disk at request time. A wheel
+# built without this line contains no .html at all, so every built install
+# served a FileNotFoundError from the dashboard route. workflows/ and
+# profiles/ are deliberately NOT package data — they are repo files the
+# operator edits, and both resolve relative to the package directory, which
+# is why the Dockerfile installs editable rather than relocating the package.
+[tool.setuptools.package-data]
+autornd = ["api/templates/*.html"]
 
 [build-system]
 requires = ["setuptools>=75.0"]

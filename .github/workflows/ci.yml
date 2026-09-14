@@ -21,10 +21,77 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # pyproject.toml is the only dependency manifest. This step installed
+      # from requirements.txt until the two manifests were merged, which is
+      # precisely why this matrix stayed green on three Python versions while
+      # `pip install -e .` was completely broken.
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -e ".[dev]"
 
       - name: Run tests
         run: pytest tests/ -v
+
+  # This job exists because the matrix above cannot catch a packaging fault: it
+  # runs against the source tree, so it passes no matter what the metadata says.
+  # Both faults it guards against were live in this repo — a runtime dependency
+  # present in one manifest and absent from the other, and flat-layout package
+  # discovery that failed the build outright.
+  #
+  # One Python version on purpose: this job tests packaging metadata, not
+  # version compatibility, which the matrix already covers.
+  editable-install:
+    runs-on: ubuntu-latest
+
+    # config.py validates the six required model tiers at import time and exits
+    # if any is unset, so an import smoke needs placeholders. Nothing is called
+    # and no real key is used. The matrix job deliberately does NOT get these —
+    # tests/conftest.py injects its own, and masking that here would hide it
+    # breaking.
+    env:
+      MODEL_TRIAGE: test-provider/test-triage
+      MODEL_ENGINEERING: test-provider/test-engineering
+      MODEL_ARCHITECTURE: test-provider/test-architecture
+      MODEL_ESCALATION: test-provider/test-escalation
+      MODEL_RESEARCH: test-provider/test-research
+      MODEL_SEARCH: test-provider/test-search
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # No dev extra: this is the install a user gets.
+      - name: Editable install from project metadata
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      # Import what a real process touches at startup. The missing dependency
+      # was reached through a transitive import (api/auth.py -> jwt), so
+      # importing the package alone would not have found it.
+      - name: Import smoke test
+        run: |
+          python -c "
+          import autornd.main, autornd.api.auth, autornd.api.routes
+          import autornd.graph.executor, autornd.routing.openrouter
+          import autornd.evals.runner
+          print('editable install imports clean')
+          "
+
+      # A built wheel is a second shape with its own failure mode: the
+      # dashboard template is package data and was absent from every wheel
+      # until pyproject declared it.
+      - name: Built wheel carries its package data
+        run: |
+          python -m pip install --upgrade build
+          python -m build --wheel --outdir dist/
+          python -c "
+          import glob, zipfile
+          names = zipfile.ZipFile(glob.glob('dist/autornd-*.whl')[0]).namelist()
+          assert 'autornd/api/templates/dashboard.html' in names, names
+          print('wheel carries the dashboard template')
+          "

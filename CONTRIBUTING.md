@@ -7,7 +7,7 @@ Thanks for your interest in contributing. This guide covers the basics.
 ```bash
 git clone https://github.com/ohioy000/autornd-os.git
 cd autornd-os
-pip install -r requirements.txt
+pip install -e ".[dev]"
 cp .env.example .env
 # Add your OpenRouter API key to .env
 ```

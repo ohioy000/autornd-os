@@ -14,6 +14,11 @@ from the repo rather than from pasted conversation.
 
 ### 1.1 CI exists — and that is the *point* of B1 ❗
 
+> **Resolved.** Kept below as the record of the reasoning, which was
+> correct. The two-manifest split is gone: `requirements.txt` is deleted
+> and CI installs from `pyproject.toml`. The analysis *understated* the
+> problem — see §7.2.
+
 **HANDOVER.md claimed (§1 Infrastructure and §5 item 10): "no CI pipeline",
 "No pipeline exists."** That was wrong. Verified:
 
@@ -91,6 +96,9 @@ The rewrite is organised as: what it is → stack → layout → pipeline → ti
 part; they encode the rules that were each learned by breaking something.
 
 ### 3.2 Reworked CI step — extend, do not create
+
+> **Shipped**, with three departures from the draft below, each forced by
+> something the live install revealed — §7.2.
 
 The brief's step 3 changes from "add CI" to **"add an editable-install job"**,
 because CI exists and is green. Below is the substance, ready to drop in when B1
@@ -310,7 +318,8 @@ it; the recommendation is unaffected either way.
 
 ## 7. Blueprint 001 — B1 (verbatim, as received)
 
-**Status: not executed.** Recorded here so the fresh session executes from the
+**Status: executed 2026-09-14 — see §7.2 for what it actually took.**
+Recorded here so the fresh session executes from the
 repo rather than from pasted chat. Its CI section already folds in the rework
 described in §3.2 (extend rather than create), which supersedes that section as
 an instruction.
@@ -356,6 +365,86 @@ the prerequisite work** — the diff and the import check still have to be run:
 
 ---
 
+### 7.2 Execution record — 2026-09-14, option A
+
+The owner chose **option A** (single manifest). The blueprint's two stated
+prerequisites were run first, and both changed the work.
+
+**Prerequisite 1 — diff the manifests for strays.** Clean: `requirements.txt`
+was `pyproject.toml`'s runtime block verbatim, same order and same pins, plus
+`pyjwt>=2.8.0` and the two dev packages `pyproject` already carried under
+`[dev]`. Live consumers of the file were four — `ci.yml:27`, `Dockerfile:5-6`,
+`CONTRIBUTING.md:10`, `README.md:499`. All four now point at `pyproject.toml`.
+
+**Prerequisite 2 — does importing `autornd.main` need env vars?** Yes, six.
+`config.py:192` calls `_build_settings()` at module scope, which raises
+`SystemExit` when any required tier is empty. `OPENROUTER_API_KEY` is *not*
+required at import — it defaults to `""` — so the blueprint's instinct to set it
+was right about the shape and wrong about the key. `tests/conftest.py` already
+solves this with `os.environ.setdefault`, which is why the matrix job needs no
+env block. The new job's env block is scoped to that job alone and deliberately
+not made workflow-wide: putting it at the top level would mask a future
+regression in conftest's injection.
+
+**What the install actually found.** B1 was recorded as one line. Running
+`pip install -e .` in a clean venv found **three faults, and the documented one
+could not even be reached**:
+
+| | fault | how it presented |
+|---|---|---|
+| 1 | flat-layout package discovery | `error: Multiple top-level packages discovered in a flat-layout: ['evals', 'autornd', 'profiles', 'workflows']` — the build aborts, so `pip install -e .` never got as far as importing anything |
+| 2 | `pyjwt` absent from `pyproject.toml` | the documented B1; only observable once fault 1 was fixed |
+| 3 | no package data in the wheel | `autornd/api/templates/dashboard.html` was in **no** built wheel, so every non-editable install served `FileNotFoundError` from the dashboard route |
+
+Fault 3 is the interesting one: it was never going to surface from an editable
+install either, and `CONTRIBUTING.md:52` had been telling people to
+`pip install -e .` — which had been failing at build the whole time.
+
+**Three departures from the §3.2 draft**, each forced by the above:
+
+1. the `env:` block, per prerequisite 2;
+2. a third step asserting a built wheel carries `dashboard.html`, because an
+   import smoke passes happily on an install whose data files are missing;
+3. the **matrix** job changed too (`pip install -e ".[dev]"`). The draft touched
+   only the new job; deleting `requirements.txt` forces both, exactly as §7.1
+   predicted.
+
+**One departure from the blueprint's option A text.** It specified
+`RUN pip install --no-cache-dir .` for the Dockerfile; the file uses `-e .`.
+`workflow_path()` (`engine/workflow.py:38`) and `PROFILES_DIR` (`profiles.py:16`)
+both resolve their data directory as `Path(__file__).parent.parent.parent`, and
+neither `workflows/` nor `profiles/` ships inside the package — verified by
+inspecting the built wheel, whose only top-level entry is `autornd/`. A
+relocating install therefore puts both at paths that do not exist. It would have
+happened to work in the image, because `WORKDIR /app` shadows site-packages on
+`sys.path` — which is luck, not design. Editable keeps one copy at `/app` and
+both resolve by construction. The cost is the lost layer-caching of the old
+`COPY requirements.txt` first step; there is no production deployment and the
+image is not built in CI, so nothing is measurably worse.
+
+**Verification.** Every claim above was produced by running it, in a throwaway
+venv built from `get-pip.py` (this box has no `ensurepip`), against a copy of
+the tree — never the repo, so no build artifacts reached the working directory:
+
+- before: `pip install -e .` → build error, as quoted;
+- after: install succeeds, `pyjwt-2.14.0` resolved, import smoke clean;
+- both CI jobs replayed against the final tree — `-e ".[dev]"` + `pytest` →
+  **501 passed**; `-e .` + import smoke → clean; `python -m build --wheel` →
+  wheel carries the template.
+
+**Left undone, deliberately.** Nothing exercises the **Docker build** — it is
+now the only install shape no job covers, and it is recorded in `HANDOVER.md` §5
+item 10 rather than fixed here. `CONTRIBUTING.md` got its install line only;
+C1–C7 and C9–C10 remain Blueprint 002's.
+
+**The generalisable lesson**, in the register of §6.8: 501 tests could not see
+any of these three, because a test suite runs against the source tree and a
+packaging fault lives in the metadata. One live install found all three in under
+a minute. It is §6.8's lesson again in a new place — *the fault a suite is
+structurally incapable of seeing is the one that ships.*
+
+---
+
 ## 8. Inventory: CHANGELOG.md and CONTRIBUTING.md stale claims
 
 Inventory only — **no fixes in this pass**; they land in Blueprint 002. Ordered
@@ -372,7 +461,7 @@ within each file by how much damage the claim does if believed.
 | C5 | The `[seam]`/`[internal]` architecture list omits **`graph/`** entirely | `spec.py`, `executor.py`, `adapter.py`, `conditions.py`, `checks.py` — the actual engine — appear nowhere. A contributor reading the seam list would not learn the graph exists. `evals/` is likewise absent. |
 | C6 | *"`[seam]` Review composition — risk-to-team mapping. Add new composition strategies here."* | The risk-to-team **table** was replaced by derivation from the specialists triage assigned; the signature is now `get_review_team(risk, domains, specialists)`. "Risk-to-team mapping" no longer describes it. |
 | C7 | *"the sequencer, review composition, and routing layers all read from the registry dynamically"* | Outdated framing for the same reason as C6. |
-| C8 | `pip install -r requirements.txt` (Getting Started) | Under Blueprint 001 option A this file is deleted. It also installs `pytest` into a runtime environment today. |
+| C8 | ~~`pip install -r requirements.txt` (Getting Started)~~ | **Fixed in Blueprint 001** — now `pip install -e ".[dev]"`. The rest of this file is untouched and remains Blueprint 002's. |
 | C9 | `pytest tests/ -v` (Running Tests) | Repo convention is `-q`, and in the owner's environment `.venv/bin/python3 -m pytest` (pytest is not on PATH). |
 | C10 | No mention of the eval suites, `--max-spend`, or the test-first convention | A contributor has no route to the cheapest quality signal in the project. |
 

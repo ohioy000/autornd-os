@@ -496,7 +496,7 @@ cd autornd-os
 cp .env.example .env
 # Add your API key and choose a model for each required tier
 
-pip install -r requirements.txt
+pip install -e .
 uvicorn autornd.main:app --port 8100
 ```
 
