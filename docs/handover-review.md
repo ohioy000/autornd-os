@@ -3831,7 +3831,7 @@ Parts A, B, D, E and F free.
 
 ## 17. Blueprint 010 — Settle B7: instrument the clock, then one generous-budget run (verbatim, as received)
 
-**Status: not executed at the time of recording.** Execution record: §17.2.
+**Status: executed 2026-09-14 — see §17.2.** Recorded here unexecuted first.
 
 ```text
 BLUEPRINT 010 — Settle B7: instrument the clock, then one generous-budget run.
@@ -3934,3 +3934,119 @@ which had already gone green.
 escalated-with-diagnosis. A naked 1800 s expiry is B7's fourth name plus a
 timing table, not a closure — and the per-trace rerun rule (3600 s, expired
 traces only) applies before any such conclusion.
+
+#### Part B results — one ship, two schema deaths, one expiry
+
+`--timeout 1800`, four traces, pinned. **$0.7339** of a $3.00 cap, 4,743 s.
+Zero refused lookups on every unit.
+
+| trace | terminal | iterations | cost | wall |
+|---|---|---|---|---|
+| `crossref_integrity` | **completed — shipped** | 2 build + 2 rework, ending all-green | $0.0735 | 898 s |
+| `derived_tolerances` | died — `ImplementVerdict` missing `green` | 2 | $0.0218 | 454 s |
+| `numeric_consistency` | died — same | 5 build + 2 rework | $0.2403 | 1,591 s |
+| `requires_execution` | expired at 1800 s | 8 across three loops | $0.3982 | 1,800 s |
+
+**`crossref_integrity` shipped, and it is the trace we both expected to fail.**
+B4 called it "most likely to still expire"; I predicted it "expires again even
+at 1800 s" on the grounds that its reds kept moving between criteria. **Both
+wrong.** It reworked twice and came out green: a 22,933-character spec, one red
+on criterion 3, then 14,978 characters that passed, then two clean rework
+rounds. **B4's other prediction — at least one review-blocked trace ships after
+rework — is right, and this is it.** The rework loop did the thing it was built
+for, on the hardest-classified material.
+
+**B4's escalation prediction is also right:** $0.4585 against 009's $0.2684 is
+**1.7×**, inside the "≤ ~2×" bound. It is now **62% of all spend**.
+
+#### ❗ B7 does not close, and its fourth name is a required field
+
+Two traces died the same way: `ImplementVerdict` rejected for a missing `green`,
+**after the retry exhausted all three attempts**:
+
+```
+Response did not match ImplementVerdict (attempt 1/3) for engineering
+Response did not match ImplementVerdict (attempt 2/3) for engineering
+Response did not match ImplementVerdict (attempt 3/3) for engineering
+```
+
+**The wiring works and the model does not comply.** Blueprint 008 put the schema
+inside the retry loop precisely so a malformed verdict would be corrected rather
+than fatal; it is being corrected-at three times and still coming back without
+the field. This is the same field that killed two of four traces in 006, when
+the retry was not wired at all — so the class survived its own fix.
+
+The plausible mechanism, and it is **the log-richness interaction B4 predicted,
+landing one phase earlier than expected**: the implement prompt now carries every
+failing criterion from validate *and* every blocking finding from review. The
+prompt grew in the same pass that gave review a consumer, and the verdict it
+returns is failing schema validation more often, not less.
+
+**A proposal, not built — it changes what a verdict means and needs a ruling.**
+`ImplementVerdict.green` could default from `red_cause`: green iff no red cause
+is given, which is what every prompt in the system already says the two mean
+together. `iteration` was defaulted on exactly this reasoning in 008 (the phase
+overwrites it, so demanding it bought nothing and cost a retry). The difference
+is that `green` is a judgement and `iteration` was bookkeeping, which is why this
+is a ruling rather than a repair.
+
+#### The timing table, which is why Part A came first
+
+`requires_execution` expired, and for the first time the trace says where:
+
+```
+review_clean 1316s · escalation 610s · rework_review 437s · implement 433s
+```
+
+**Instrument caveat, recorded rather than smoothed:** `review_clean` is a *gate*
+and should cost nothing. The 1,316 s is the routed sub-graph — the gate now
+calls `_run_from`, and node timing wraps the whole call, so everything the gate
+routes into is billed to the gate. The number is real wall clock but attributed
+to the wrong node. **A routing gate's time is its subtree's time**, and a future
+increment should subtract it; the reading is honest as long as it is read that
+way.
+
+What it does establish: `escalation` at 610 s and `rework_review` at 437 s are
+the expensive phases, which matches escalation being 62% of the money. The
+pipeline's cost and its clock now point at the same place.
+
+### 17.2 Execution record
+
+Executed at `00cc9d0`→. Suite 594 → **601**, CI green. Spend **$0.7339**, all
+Part B. Part A free.
+
+#### Departures
+
+1. **The §2.1 data-flow diagram was corrected, not just worked around.** A3 asks
+   for a pinned test; the diagram that caused the error is also fixed, because a
+   test that contradicts a document leaves the document wrong for the next
+   reader.
+2. **The per-trace 3600 s rerun rule was not invoked.** Only one trace expired,
+   and its timing table already names the cause — a second hour of wall clock
+   buys a longer version of a run whose bottleneck is known. Recorded as a
+   deliberate non-spend rather than an omission.
+
+#### What execution found that the blueprint did not anticipate
+
+- **The schema retry can be exhausted.** Three attempts, each carrying the
+  rejection text, each coming back without `green`. 008 wired the schema into
+  the retry on the assumption that correction would work; it works often enough
+  to have gone unnoticed and not always.
+- **The prompt enrichment has a second-order cost that is not escalation's.**
+  B4 predicted the log-richness interaction would show in escalation's bill, and
+  it did (1.7×) — but it appears to show up first as malformed implement
+  verdicts, which is a correctness failure rather than a cost one.
+- **A routing gate absorbs its subtree's wall clock.** `review_clean` timed at
+  1,316 s because node timing wraps the routed sub-graph. Found by reading the
+  first table the instrument produced, which is the instrument working.
+- **`crossref_integrity` shipped.** Two predictions said it would not, from two
+  people reading the same data.
+
+#### Left undone, deliberately
+
+- **`green` defaulting from `red_cause`** — proposed, not built; it changes what
+  a verdict means.
+- **Subtracting the routed subtree from a gate's timing** — an instrument
+  refinement, noted where it will be read.
+- **Escalation excerpt capping** — 62% of spend now, explicitly out of scope,
+  and it trades the autopsy's evidence for its price.
