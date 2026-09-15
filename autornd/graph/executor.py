@@ -13,6 +13,7 @@ hardcoded pipeline" a question you can answer for free.
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
@@ -33,6 +34,11 @@ class StepRecord:
     iteration: int = 0
     skipped: bool = False
     reason: str = ""
+    # Wall clock for this node, in seconds. A run that expires needs to say
+    # where the time went without being bought a second time: the settling run
+    # for B7 costs about half a dollar, and "it timed out" is a reading, not a
+    # diagnosis. Zero for a skipped node, which costs nothing.
+    seconds: float = 0.0
 
 
 @dataclass
@@ -231,15 +237,21 @@ class GraphExecutor:
         if node.is_loop:
             return await self._run_loop(node, state)
 
-        state.trace.append(StepRecord(node.id, node.kind.value, state.iteration))
-
-        if node.kind is NodeKind.AI:
-            await self._run_ai(node, state)
-            return True
-        if node.kind is NodeKind.CHECK:
-            await self._run_check(node, state)
-            return True
-        return await self._run_gate(node, state)
+        record = StepRecord(node.id, node.kind.value, state.iteration)
+        state.trace.append(record)
+        started = time.perf_counter()
+        try:
+            if node.kind is NodeKind.AI:
+                await self._run_ai(node, state)
+                return True
+            if node.kind is NodeKind.CHECK:
+                await self._run_check(node, state)
+                return True
+            return await self._run_gate(node, state)
+        finally:
+            # In a finally so a node that raises still reports what it cost —
+            # the expensive failures are the ones worth timing.
+            record.seconds = round(time.perf_counter() - started, 3)
 
     async def _run_loop(self, node: Node, state: ExecutionState) -> bool:
         budget = self._budget(node)

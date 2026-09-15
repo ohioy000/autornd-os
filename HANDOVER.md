@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `641da5a` · **Branch:** `main`
-**Tests:** 594 as of `fc2b3af` · **Date of this snapshot:** 2026-09-13, test counts refreshed 2026-09-14
+**Tests:** 601 as of `00cc9d0` · **Date of this snapshot:** 2026-09-13, test counts refreshed 2026-09-14
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -155,6 +155,13 @@ further faults in the same file that no test could see — see §4.2 B1.
 HTTP request (api/routes.py)
       │
       ▼
+WorkflowEngine.execute(request)                            engine/workflow.py
+      │   resolves workflow_path(), owns the DB row and the status column,
+      │   persists PhaseResult rows and writes episodic memory afterwards.
+      │   THIS STEP WAS MISSING FROM THIS DIAGRAM until 2026-09-14, and a
+      │   blueprint consequently ruled the module legacy and ordered it
+      │   deleted. It is on the request path. tests/test_live_wiring.py pins it.
+      ▼
 GraphExecutor(spec, runner, settings_lookup).run(request)      graph/executor.py
       │   loads workflows/<name>.yaml                          graph/spec.py
       │   evaluates node.when / gate.condition / loop.until    graph/conditions.py
@@ -249,7 +256,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       the only tracked profile
-tests/                      24 files, 594 tests (as of `fc2b3af`)
+tests/                      25 files, 601 tests (as of `00cc9d0`)
 ```
 
 ### 2.3 Key design patterns
@@ -678,7 +685,23 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
     mentioned their own criteria, and those were fixed rather than the
     assertions relaxed. Five more broke on gate routing, all asserting that a
     blocked review ends the run.
-18. No linter/formatter is configured. Match surrounding style: 4-space indent,
+18. **A change that alters per-run work re-derives the harness budgets in the
+    same change.** Timeouts and caps are fitted to a pipeline's size, and a
+    pipeline that grows invalidates them. Blueprint 009 roughly doubled the work
+    per run — a build loop, a rework loop, and escalation now reachable from
+    both — and left the 900 s per-scenario timeout alone; all four traces then
+    expired, and the expiry was read as evidence about convergence. **An
+    instrument reading is a reading, not a diagnosis**: a timeout, a zero score,
+    a refused lookup and a 403 are each a fact about the apparatus until
+    something rules out the apparatus.
+19. **No deletion ruling without a recorded reference check.** Grep for
+    importers and callers, and record the result, before anything is removed.
+    `engine/workflow.py` was ruled legacy and ordered deleted; `api/routes.py`
+    imports `WorkflowEngine` from it on every workflow request. The ruling was
+    not careless — it inherited the error from §2.1's own data-flow diagram,
+    which draws the request path as routes straight to the executor. A document
+    can be wrong indefinitely; `tests/test_live_wiring.py` now pins it.
+20. No linter/formatter is configured. Match surrounding style: 4-space indent,
     `from __future__ import annotations`, type hints throughout, ~88-col soft
     wrap, module docstrings that explain rationale.
 
@@ -954,6 +977,17 @@ the thing.
 both, which can only happen if a free check dissented — so its first attempt
 would have shipped under an exit that read validate alone.
 
+**Escalation is the largest single cost line once it is actually reachable.**
+Measured 2026-09-14 (n=1, four traces): $0.2684 of $0.4431 — more than the
+architecture and engineering tiers combined. It is a reasoning tier reading the
+whole failure log, and the log got richer in the same pass that made escalation
+reachable from two loops: every failing criterion validate found, and every
+finding review blocked on, now travel in it. **The enrichment that fixed the
+feedback channel is the same enrichment escalation pays for by the token.**
+Capping the excerpt handed to the autopsy is the obvious lever and is
+deliberately untouched — it trades the autopsy's evidence for its price, and
+that is a judgement, not a repair.
+
 **`unrecallable` is a separate axis from risk.** A signed rollout to 40,000
 devices harms nobody and breaches nothing (so: `high`) and cannot be taken back
 — so it sets `unrecallable: true` and earns one extra independent pass rather
@@ -1043,6 +1077,12 @@ that catches this class — `tests/test_schema_wiring.py` now does.
   probing. The latch is right in production — each strategy is probed once, so a
   dead end stops costing a call forever — and poison in a comparison.
 
+- **A wrong diagram outlived every reader of it** (found 2026-09-14). §2.1
+  draws the request path as routes → executor, omitting the `WorkflowEngine`
+  the routes actually call. Nine blueprints read that section; the error
+  surfaced only when a ruling acted on it and ordered the live module deleted.
+  Prose is not checkable and a test is: the dependency is pinned now.
+
 **Therefore: live-test multi-request sequences. The unit suite is necessary and
 nowhere near sufficient.**
 
@@ -1052,7 +1092,7 @@ nowhere near sufficient.**
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 594 tests as of `fc2b3af`, ~10 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 601 tests as of `00cc9d0`, ~10 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \

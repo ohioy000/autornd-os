@@ -173,6 +173,7 @@ class ResultsLog:
             "calls_by_tier": run.calls_by_tier,
             "providers_by_function": run.providers_by_tier,
             "refused_lookups": run.refused_lookups,
+            "seconds_by_phase": run.seconds_by_phase,
             "assertions": [
                 {"name": r.name, "passed": r.passed,
                  "wanted": r.wanted, "got": r.got, "detail": r.detail}
@@ -332,6 +333,9 @@ class ScenarioRun:
     # Lookups the provider refused during this unit. A unit that scored zero
     # with refusals is a poisoned reading, not a bad model.
     refused_lookups: int = 0
+    # Where the wall clock went, phase -> seconds, summed across iterations. A
+    # run that expires should not need buying again to say what was slow.
+    seconds_by_phase: dict[str, float] = field(default_factory=dict)
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -417,6 +421,17 @@ class EvalReport:
         if provider_line:
             lines.append(provider_line)
         return "\n".join(lines)
+
+
+def _phase_seconds(state) -> dict[str, float]:
+    """Wall clock per node, summed over every iteration it ran in."""
+    totals: dict[str, float] = {}
+    for step in getattr(state, "trace", []) or []:
+        if getattr(step, "skipped", False):
+            continue
+        totals[step.node_id] = round(
+            totals.get(step.node_id, 0.0) + (getattr(step, "seconds", 0.0) or 0.0), 3)
+    return dict(sorted(totals.items(), key=lambda kv: -kv[1]))
 
 
 def _partial_state(executor: GraphExecutor, request: str):
@@ -521,6 +536,7 @@ async def run_scenario(
         status=str(getattr(state, "status", "") or ""),
         iterations=list(getattr(runner, "iterations", []) or []),
         refused_lookups=_research.refused_lookups(),
+        seconds_by_phase=_phase_seconds(state),
     )
 
 

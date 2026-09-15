@@ -15,6 +15,22 @@ A spec describes the same work as a graph of nodes. Three kinds:
 costlier and less reliable than arithmetic. Any question with a right answer
 belongs in a check, and the model is left to do the part that actually needs
 judgement.
+
+
+Node ownership, which is easy to trip over
+------------------------------------------
+A loop **owns** the nodes it lists in `body`, and an owning relationship takes
+those nodes off the top-level schedule — they run because the loop runs them,
+never because their dependencies happened to be satisfied. The same holds for a
+loop's `on_exhausted` target and, since gate routing, for a gate's `on_fail`
+target when it names a node.
+
+The consequence is not obvious and cost a real mistake: adding `review` to a
+rework loop's body **deleted the first review from the pipeline**, and took the
+gate that depended on it and the independent pass beyond that with it. The
+failure mode is a silently shorter pipeline, not an error. A phase that must run
+both in the main flow and inside a loop needs two nodes — same prompt, same
+tier, two ids — because the scheduler distinguishes nodes, not phases.
 """
 
 from __future__ import annotations
