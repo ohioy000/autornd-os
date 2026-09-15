@@ -4918,3 +4918,68 @@ channel → budget → verdict field"; the blueprint says "exit → channel → 
 → verdict field → clock". *Budget was never one of B7's names.* Timeout was —
 it is name 4 — but neither sequence shows that it was reached and then given up.
 The row is the record; the summaries of it were not.
+
+### 20.1(f) Part C — the run, and the constraint moving one more time
+
+`triage:Alibaba,architecture:StreamLake,engineering:GMICloud`, 3600 s, run
+sequentially. **Total $0.2154.**
+
+| trace | 011/010 | **012** | iterations | calls | seconds | spend |
+|---|---|---|---|---|---|---|
+| `derived_tolerances` | expired 1800 s | **completed — shipped** | 8 → **2** | 30 → 13 | 1800 → **299** | $0.0931 → $0.0259 |
+| `numeric_consistency` | expired 1800 s | **completed — shipped** | 4 → **1** | 28 → 9 | 1800 → **182** | $0.3423 → $0.0309 |
+| `requires_execution` | expired 1800 s | **stopped at 42 calls** | 8 → 7 | 39 → 42 | 1800 → 1161 | $0.3982 → $0.1586 |
+
+**Two traces that had never once completed under an unpinned tier both shipped,
+on the first attempt, in under five minutes.** `derived_tolerances` has now been
+run seven times and this is its first completion of any kind.
+
+#### The win is iterations, not seconds per call
+
+This is where my own prediction and the blueprint's both miss, in the same
+direction, for the same reason — and the data says something better than either.
+
+| trace | loop s/call before | after | change |
+|---|---|---|---|
+| `requires_execution` | 41.5 | **41.1** | none |
+| `derived_tolerances` | 67.1 | **26.0** | 2.6× |
+| `numeric_consistency` | 135.9 | **42.6** | 3.2× |
+| **median** | 67.1 | **41.1** | — |
+
+The blueprint predicted a median **below 30 s/call**: wrong. I predicted
+**~35 and no better than 30**: right about the threshold, and right for a reason
+that turns out to be incomplete. Because the real change is not the clock per
+call, it is **how many calls the work needs**: 8 iterations to 2, and 4 to 1.
+
+**A serving does not only run at a speed, it converges at a rate.** That is B4's
+finding — the same guide scored 3/3 on two servings and 0/3 on three others — in
+the place that had not been looked at. The sweep ranked servings on latency
+because latency is what A1 could mine; the settling run says the ranking was
+right for the wrong reason, and that `numeric_consistency` reaching green on its
+*first* iteration is worth more than any per-call figure.
+
+**Caveat carried forward, undiminished: n = 1 per trace.** `crossref_integrity`
+produced three different outcomes in three runs and is the standing reason not
+to believe a single observation. These three are single observations.
+
+#### `requires_execution` was stopped by a cost expectation, not by the workflow
+
+It did not expire — it used 1,161 s of 3,600 — and it did not exhaust its money,
+spending $0.1586 of $0.75. It was stopped at **42 model calls against a scenario
+expectation of 40**, mid-`implement`, with the loop still running.
+
+That expectation is shared by all four convergence scenarios, carries no
+measurement comment, and predates two of the workflow's three loops. Observed
+call counts across every recorded run: crossref up to 24, `derived_tolerances`
+up to 30, `numeric_consistency` up to **40 exactly**, `requires_execution` **42**.
+The ceiling only became reachable when the clock stopped binding first.
+
+**And the stop was reported opaquely, which is a defect in its own right.** The
+runner sets the ceiling one above `max_calls` with the comment *"so exceeding
+the expectation is reported by the max_calls assertion rather than as an opaque
+abort"* — while `score` discarded every assertion the moment an error was set.
+The two have disagreed for as long as both existed. Fixed: a budget stop is not
+a crash, so it scores everything and keeps the failed `run` assertion at the
+front. The prediction I made for this trace — that it would die on a budget
+rather than the clock — was **right about the trace and wrong about the
+resource**: I named money, and it was calls.
