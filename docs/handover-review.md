@@ -5685,3 +5685,90 @@ studio running 36 sectors of its own work would have an engineer appended to
 seventy-odd of them.
 
 **Zero schema rejections in either arm**, on the pinned triage serving.
+
+### 24.1(e) Part C — the flagship, unmodified, on three non-engineering deliverables
+
+`triage:Alibaba,architecture:StreamLake,engineering:GMICloud`,
+`AUTORND_PROFILE=studio`, `engineering-rnd` unchanged. **$0.2559 total.**
+
+| trace | outcome | iters | calls | seconds | risk | roster triage assigned |
+|---|---|---|---|---|---|---|
+| `contract_threshold` | **completed — shipped** | 1 | 10 | 135 | medium | `legal_counsel` *(invented)* |
+| `style_crossref` | **completed — shipped** | 2 | 15 | 339 | low | `copywriter`, `editor`, **`systems_architect`** |
+| `marketing_claims` | **stopped at 43 calls** (ceiling 41) | 6 | 43 | 838 | low | `strategist`, `copywriter`, `fact_checker`, **`systems_architect`** |
+
+**Against the engineering envelope** (299 s / 13 calls shipped; 1,235 s
+escalated): `contract_threshold` lands **inside it on both axes**, and
+`style_crossref` is at its edge — 339 s against 299, 15 calls against 13, with
+one rework round. **Two of three non-engineering traces converge like
+engineering ones.** The advisor's "at least one ships inside the envelope" holds.
+
+#### The headline: the dialect is in the prompts and does not reach the output
+
+A1 mapped 24 line-items of engineering dialect. The probe searched **18,500
+characters of model output** — three deliverables, their validate causes, their
+review findings and their autopsies — for the thirteen dialect markers those
+line-items would produce.
+
+| trace | implement | validate | review | escalation |
+|---|---|---|---|---|
+| `marketing_claims` | **clean** (3,332 ch) | `implementation` ×1 | — | **clean** |
+| `contract_threshold` | **clean** (4,947 ch) | — | **clean** (1,367 ch) | — |
+| `style_crossref` | `implementation` ×1 (8,235 ch) | — | — | — |
+
+**Two occurrences of one word, and that word is the harness's own schema field
+name.** No "test case", no "code", no "schema", no "repository", no "engineer",
+no "component". `OUTPUT_CONTRACT` tells implement to *"produce the actual
+engineering work — the design, the code, the schema, the procedure, the
+calculation"* and implement produced contract clauses, a style guide and a
+positioning brief.
+
+**Both pre-registrations about binding are wrong, in the same direction.** The
+advisor predicted binding concentrates in implement + validate; I predicted
+escalation would bind harder because its system prompt names a role rather than
+giving an example. Neither bound. **A1's map says what *could* bind; the probe
+says what *did*, and the answer is almost nothing.** The 30% is cheaper than
+even the re-priced estimate — the dialect reads as context the model discards,
+not as instruction it obeys.
+
+#### The 70%, exercised live for the first time
+
+| mechanism | result |
+|---|---|
+| profile-declared **domains** | `copywriting`, `brand_strategy`, `seo_analytics` all assigned by triage in the wild |
+| profile-declared **roles** | `strategist`, `copywriter`, `editor`, `fact_checker` all assigned and staffed |
+| profile-declared **checks** | **fired on 2 of 3 traces** — 3 studio lenses on `marketing_claims`, 2 on `style_crossref`; `contract_threshold` got `documentation` and the one shipped lens |
+| **invented** roles | `legal_counsel` staffed and reviewed an entire shipped deliverable, six findings deep |
+| literal-role injection (A2) | `systems_architect` appended to **2 of 3** traces on the multi-domain rule |
+
+#### `style_crossref` reproduces §18.1's crossref diagnosis — in a style guide
+
+Iteration 1 came back red with `dissenting = [consistency, implement, validate]`
+and the cause *"Worked examples in Sections 2, 3, and 5 violate stated rules (en
+dash…)"* — **the implementation agent wrote each section as an independent unit
+and its examples contradicted rules stated elsewhere.** That is §18.1's
+`crossref_integrity` diagnosis verbatim, in a subject with no engineering in it.
+
+**So that finding is a property of the agent, not of the subject** — which is
+what this scenario was authored to ask. And this time the loop caught it and
+fixed it in one rework round rather than eight.
+
+This is also **the first live reading from the dissent record** repaired in 012:
+it names `consistency` — a free deterministic check — as a dissenting judge, on
+work nobody thought to point a numeric check at.
+
+#### 013's budget-stop fix paid for itself inside one blueprint
+
+`marketing_claims` aborted on the call ceiling. Before 013, that would have
+produced **one opaque `run` failure** and nothing else. It reported:
+
+```
+run              False   error
+risk_at_least    True    low
+max_calls        False   43
+criteria_addressed  False  False
+```
+
+The risk reading, the coverage result and the cost overrun all survived an
+aborted run. Every Part C conclusion about that trace depends on a fix made one
+blueprint earlier for a different reason.
