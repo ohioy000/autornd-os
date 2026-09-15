@@ -4166,3 +4166,27 @@ any prompt change (the compliance branch is closed by measurement);
 done defaulting; per-tier pins beyond the two ratified; the cascade
 search design; .env edits (G-3).
 ```
+
+### 18.1 Part B — pre-registration, from 010's retained data
+
+The two traces 010 killed get their first real test: both died on
+`ImplementVerdict` rejecting a reply that had a cause and no flag, which the
+resolution now derives.
+
+| trace | what 010 showed | my prediction |
+|---|---|---|
+| `derived_tolerances` | died at iteration 2, 454 s, $0.0218 — barely started | **terminates, and early.** It was dying on arrival: 2 iterations and under 8 minutes before the verdict was refused. With the verdict arriving it should behave like 009's version, which reworked twice on one criterion with sharper numbers each round — so: ships, or escalates having converged on a real disagreement. |
+| `numeric_consistency` | died after 7 iterations (5 build + 2 rework), 1,591 s, $0.2403; **its rework round 2 had already gone green** | **terminates.** Its last recorded iteration was `impl=True val=True` — it had converged and then died on a later verdict. Most likely ships. |
+| `crossref_integrity` | **shipped** in 898 s | **ships again.** The only trace with a clean precedent under this budget. |
+| `requires_execution` | expired at 1800 s, 8 iterations across three loops, $0.3982 | **expires again.** Nothing here changes its clock: its time went to `escalation` (610 s) and `rework_review` (437 s), and the resolution removes a death, not a cost. |
+
+**My aggregate call: three of four terminate, `requires_execution` expires.**
+That contradicts B4's third prediction (escalation's share dropping below 50%)
+only partially — I expect the share to drop because two traces now run *further*
+and spend on implement and review before escalation, not because escalation
+itself gets cheaper.
+
+Where I differ from B4: it expects both formerly-killed traces to complete their
+loops, and so do I; it expects a ship among the review-blocked traces, and
+`crossref` already has one. Neither of us predicts `requires_execution`
+terminating, and it is the one trace whose failure is purely the clock.
