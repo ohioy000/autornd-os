@@ -293,18 +293,31 @@ class PhaseRunner:
         # to record. Cost is a delta on the client's running total, which counts
         # every path including research and rerank.
         spend = self.client.spend
-        # A3: the fold computes which judges dissented; retain what it computes
-        # rather than leaving it inferable. derived_tolerances ran two rounds
-        # with implement and validate both green, so a free check must have
-        # dissented — and which one was not readable from the record.
-        fold = state.outputs.get("judges")
-        coverage = state.outputs.get("coverage")
-        consistency = state.outputs.get("consistency")
+        # Which judge blocked the exit. Two things were wrong with the first
+        # attempt at this, and both made it record nothing for 64 iterations:
+        # a check's output is a plain dict in `state.outputs`, not an object,
+        # so `getattr(coverage, "passed", None)` was None every time; and the
+        # fold cannot be read here at all, because `judges` is the node *after*
+        # validate in the loop body, so the only fold in `outputs` belongs to
+        # the previous iteration. The dissent is therefore derived from the four
+        # judges themselves, all of which have run by now — which is what the
+        # fold does anyway, and cannot go stale.
+        coverage = state.outputs.get("coverage") or {}
+        consistency = state.outputs.get("consistency") or {}
+        coverage_passed = coverage.get("passed")
+        consistency_passed = consistency.get("passed")
+        judged = {
+            "implement": implement.green,
+            "validate": verdict.green,
+            "coverage": coverage_passed,
+            "consistency": consistency_passed,
+        }
         self.iterations.append({
             "iteration": state.iteration,
-            "dissenting": list((getattr(fold, "data", {}) or {}).get("dissenting", [])),
-            "coverage_passed": getattr(coverage, "passed", None),
-            "consistency_passed": getattr(consistency, "passed", None),
+            "dissenting": sorted(name for name, green in judged.items()
+                                 if green is False),
+            "coverage_passed": coverage_passed,
+            "consistency_passed": consistency_passed,
             "implement_green": implement.green,
             "implement_red_cause": implement.red_cause,
             "implement_summary": implement.summary,

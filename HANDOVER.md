@@ -256,7 +256,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       the only tracked profile
-tests/                      27 files, 624 tests (as of `8d14a62`)
+tests/                      28 files, 629 tests (as of `HEAD`)
 ```
 
 ### 2.3 Key design patterns
@@ -1114,7 +1114,7 @@ nowhere near sufficient.**
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 624 tests as of `8d14a62`, ~10 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 629 tests as of `HEAD`, ~10 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \
