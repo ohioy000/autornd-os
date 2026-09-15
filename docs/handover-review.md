@@ -4294,3 +4294,64 @@ traces, and saying so is more useful than a number computed the wrong way. Note
 also that the pre-resolution deaths cannot discriminate it even in principle:
 before the truth table, a missing `green` was fatal whether or not a `red_cause`
 stood beside it.
+
+### 18.1 Part B — what the runs showed
+
+#### B7 is a clock problem, and the whole history says so
+
+The single most useful thing these runs produced was not a verdict. Across
+**every B7 unit ever recorded — 23 of them, six blueprints** — against a $0.75
+per-scenario cap:
+
+| | |
+|---|---|
+| units that expired on the 1800 s (or 900 s) clock | **6** |
+| units that came within half their spend cap | **0** |
+| highest single-unit spend on record | **$0.3982** — 53% of the cap, on a unit that expired |
+| `derived_tolerances` under 011 | 100% of the clock, **12%** of the budget |
+| seconds per model call | min 20, **median 41**, max 90 |
+
+**Not one unit in B7's history has been stopped by money.** Every expiry had
+budget in hand — the worst case had 47% of it unspent, and 011's
+`derived_tolerances` had 88%. B7 has been carried through five names (exit
+condition → channel → budget → verdict field → ?) and the budget name was the
+wrong one; so, on this evidence, is any name about convergence. The loop
+converges or fails to converge at about 41 seconds a call, and the 1800 s
+allowance buys roughly 44 calls no matter how much money is attached to it.
+
+This is worth stating plainly because it changes what would help. Raising
+`--max-spend` cannot move a single one of these six outcomes. Pinning the
+`engineering` serving might: implement, validate, `domain_review`, `review` and
+`rework_review` all run on it, it is the only unpinned tier left in these runs,
+and B4 is the standing precedent that a tier's serving — not its prompt —
+decides how it behaves. The per-call spread of 20 to 90 seconds across units
+is the shape of an unpinned tier.
+
+#### The verdict death is gone, and the clock took its place
+
+`derived_tolerances`, which 010 killed at **iteration 2, 454 s**, on
+`ImplementVerdict` missing `green`:
+
+| | 010 | 011 |
+|---|---|---|
+| iterations | 2 | **8** |
+| calls | 13 | 30 |
+| seconds | 454 (died) | 1800 (expired) |
+| cost | $0.0218 | $0.0931 |
+| `normalised_verdicts` | — | **0** |
+| schema rejections | 3, then fatal | **0** |
+
+It ran the build loop to exhaustion (5 iterations), escalated, was judged
+**recoverable with a root cause**, re-entered, and completed three rework rounds
+before the clock ran out mid-fourth. Every phase the resolution was meant to
+unblock, it reached.
+
+**And the resolution never fired.** Zero normalisations in both completed runs —
+every verdict supplied `green` explicitly. The honest reading is that the
+resolution is insurance that has not yet been claimed on: four refusals in
+twenty-two prior units is ~18%, and two clean runs at that rate is unremarkable
+(p ≈ 0.67). **These runs do not show the truth table working; they show the
+deaths not recurring, which is a weaker claim and the only one available at
+n = 2.** What they do show is that the death was never load-bearing on
+convergence — with it removed, the trace went four times further and still did
+not finish, for a reason that has nothing to do with verdicts.
