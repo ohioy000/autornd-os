@@ -176,6 +176,7 @@ class ResultsLog:
             "normalised_verdicts": run.normalised_verdicts,
             "tokens_by_tier": run.tokens_by_tier,
             "rejections_by_tier": run.rejections_by_tier,
+            "rejections_by_provider": run.rejections_by_provider,
             "seconds_by_phase": run.seconds_by_phase,
             "assertions": [
                 {"name": r.name, "passed": r.passed,
@@ -353,6 +354,10 @@ class ScenarioRun:
     # malformed rate. Both are needed because the resolution converts the
     # second into the first — without the counts, that conversion is invisible.
     rejections_by_tier: dict[str, int] = field(default_factory=dict)
+    # The same refusals attributed to the serving that produced them. A tier is
+    # not a system: the engineering tier is served by a dozen providers inside a
+    # single run, and "the engineering tier refused" names no one.
+    rejections_by_provider: dict[str, int] = field(default_factory=dict)
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -559,6 +564,7 @@ async def run_scenario(
         tokens_by_tier={k: dict(v) for k, v
                         in runner.client.tokens_by_function.items()},
         rejections_by_tier=dict(runner.client.rejections_by_function),
+        rejections_by_provider=dict(runner.client.rejections_by_provider),
         seconds_by_phase=_phase_seconds(state),
     )
 

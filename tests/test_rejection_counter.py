@@ -31,16 +31,18 @@ class Shape(BaseModel):
     done: bool
 
 
-def replying_client(*contents: str) -> OpenRouterClient:
-    """A client whose chat returns the given bodies in order."""
+def replying_client(*contents, providers=()) -> OpenRouterClient:
+    """A client whose chat returns the given bodies, optionally per provider."""
     client = OpenRouterClient(api_key="test")
     bodies = list(contents)
+    servings = list(providers) or [None] * len(bodies)
 
     async def chat(function, system_prompt, user_message, **kw):
-        body = bodies.pop(0)
-        client._account(function, 0.001, prompt_tokens=10, completion_tokens=2)
-        return ModelResponse(content=body, model="mock", prompt_tokens=10,
-                             completion_tokens=2, cost=0.001)
+        body, provider = bodies.pop(0), servings.pop(0)
+        client._account(function, 0.001, provider=provider,
+                        prompt_tokens=10, completion_tokens=2)
+        return ModelResponse(content=body, model="mock", provider=provider,
+                             prompt_tokens=10, completion_tokens=2, cost=0.001)
 
     client.chat = chat  # type: ignore[method-assign]
     return client
@@ -56,6 +58,17 @@ async def test_rejection_is_counted_per_tier():
     # One rejection, one accepted reply — two billed calls, one rejection.
     assert client.rejections_by_function == {"implement": 1}
     assert client.calls_by_function == {"implement": 2}
+
+
+@pytest.mark.asyncio
+async def test_the_refusing_serving_is_named():
+    """"The engineering tier refused" names no one; a dozen providers serve it."""
+    client = replying_client('{"x": 1}', '{"y": 2}', '{"done": true}',
+                             providers=("Wafer", "Wafer", "Alibaba"))
+    await client.chat_json(function="implement", system_prompt="s",
+                           user_message="u", schema=Shape, max_retries=3)
+    assert client.rejections_by_function == {"implement": 2}
+    assert client.rejections_by_provider == {"Wafer": 2}
 
 
 @pytest.mark.asyncio
@@ -90,8 +103,10 @@ async def test_no_schema_means_no_rejections():
 def test_reset_clears_the_counter():
     client = OpenRouterClient(api_key="test")
     client.rejections_by_function["implement"] = 4
+    client.rejections_by_provider["Wafer"] = 4
     client.reset_accounting()
     assert client.rejections_by_function == {}
+    assert client.rejections_by_provider == {}
 
 
 def test_the_counter_reaches_the_unit_record(tmp_path):
@@ -104,6 +119,7 @@ def test_the_counter_reaches_the_unit_record(tmp_path):
         results=[], calls=2, seconds=1.0,
         normalised_verdicts=3,
         rejections_by_tier={"implement": 2, "validate": 1},
+        rejections_by_provider={"Wafer": 3},
     )
     log = ResultsLog(tmp_path / "units.jsonl")
     log.record(run, workflow="engineering-rnd", repetition=1)
@@ -112,5 +128,6 @@ def test_the_counter_reaches_the_unit_record(tmp_path):
             .splitlines()][-1]
     assert unit["record"] == "unit"
     assert unit["rejections_by_tier"] == {"implement": 2, "validate": 1}
+    assert unit["rejections_by_provider"] == {"Wafer": 3}
     # The pair travels together or the rate cannot be read.
     assert unit["normalised_verdicts"] == 3

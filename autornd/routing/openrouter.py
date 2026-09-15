@@ -173,6 +173,14 @@ class OpenRouterClient:
         # a normalisation is a reply the truth table repaired, a rejection is a
         # reply it could not.
         self.rejections_by_function: dict[str, int] = {}
+        # And by serving, because a tier is not a system — B4's whole lesson.
+        # Asked which serving refused the four verdicts that killed four
+        # convergence traces, the per-tier count could only answer "the
+        # engineering tier", and the tier's unpinned provider *set* per unit
+        # was 4/4 OpenInference against 12/18 of the survivors: proportional,
+        # therefore silent. A count attributed to the serving that produced the
+        # reply can answer it; a count attributed to the tier never can.
+        self.rejections_by_provider: dict[str, int] = {}
         self.call_ceiling: int | None = None
         self.spend_ceiling: float | None = None
 
@@ -224,6 +232,7 @@ class OpenRouterClient:
         self.calls_by_function = {}
         self.providers_by_function = {}
         self.rejections_by_function = {}
+        self.rejections_by_provider = {}
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -456,6 +465,9 @@ class OpenRouterClient:
                 correction = _rejection_note(e)
                 self.rejections_by_function[function] = (
                     self.rejections_by_function.get(function, 0) + 1)
+                if response.provider:
+                    self.rejections_by_provider[response.provider] = (
+                        self.rejections_by_provider.get(response.provider, 0) + 1)
                 logger.warning(
                     "Response did not match %s (attempt %d/%d) for %s: %s",
                     getattr(schema, "__name__", schema), attempt + 1, max_retries,
