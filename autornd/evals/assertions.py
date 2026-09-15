@@ -29,6 +29,11 @@ class RunOutcome:
     calls: int
     cost: float = 0.0
     error: str | None = None
+    # Whether a budget guard stopped the run, rather than a crash or a timeout.
+    # A guarded stop is different in kind: the run was making progress and the
+    # partial state is real, so everything the scenario asked about is still
+    # answerable. See `score`.
+    stopped_by_budget: bool = False
     # The grounding the run assembled — briefing, retrieved documents and
     # researched findings. Kept because factual accuracy is graded against it,
     # and it does not live in node outputs.
@@ -314,9 +319,28 @@ def criteria_addressed(scenario: Scenario, outcome: RunOutcome):
 
 
 def score(scenario: Scenario, outcome: RunOutcome) -> list[AssertionResult]:
-    """Every assertion the scenario actually asked for."""
-    if outcome.error:
-        return [AssertionResult("run", False, "a completed run", "error",
-                                detail=outcome.error)]
+    """Every assertion the scenario actually asked for.
+
+    A crash scores nothing but `run`, because a broken state answers no
+    question honestly. **A budget guard is not a crash.** The runner sets the
+    call ceiling one above the scenario's `max_calls` precisely "so exceeding
+    the expectation is reported by the max_calls assertion rather than as an
+    opaque abort" — and that could not happen, because this function discarded
+    every assertion the moment an error was set.
+
+    Measured: `requires_execution` stopped at 42 calls against an expectation
+    of 40 and reported one failed `run` assertion carrying the raw guard text.
+    The `max_calls` assertion it was supposed to fail was never evaluated, and
+    the question actually being asked of that run — did the workflow terminate
+    honestly — was answered by a cost expectation three blueprints old.
+
+    So a guarded stop scores everything, and keeps the failed `run` assertion
+    at the front so the stop itself is never lost.
+    """
+    run_failed = AssertionResult("run", False, "a completed run", "error",
+                                 detail=outcome.error)
+    if outcome.error and not outcome.stopped_by_budget:
+        return [run_failed]
     results = [a(scenario, outcome) for a in _ASSERTIONS]
-    return [r for r in results if r is not None]
+    scored = [r for r in results if r is not None]
+    return [run_failed, *scored] if outcome.error else scored

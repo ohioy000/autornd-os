@@ -512,6 +512,7 @@ async def run_scenario(
 
     started = time.perf_counter()
     error: str | None = None
+    stopped_by_budget = False
     try:
         with _isolated_store():
             state = await asyncio.wait_for(executor.run(scenario.request), deadline)
@@ -521,6 +522,10 @@ async def run_scenario(
     except CallCeilingExceeded as exc:
         state = _partial_state(executor, scenario.request)
         error = str(exc)
+        # Not a crash. The run was making progress and its partial state is
+        # real, so the scenario's own assertions stay answerable — which is
+        # what the ceiling's one call of headroom was always meant to allow.
+        stopped_by_budget = True
     except Exception as exc:  # a broken run is a result, not a crash
         state = _partial_state(executor, scenario.request)
         error = f"{type(exc).__name__}: {exc}"
@@ -543,6 +548,7 @@ async def run_scenario(
 
     outcome = RunOutcome(state=state, calls=runner.calls,
                          cost=runner.total_cost, error=error,
+                         stopped_by_budget=stopped_by_budget,
                          context=getattr(runner, "context", "") or "")
     return ScenarioRun(
         scenario=scenario,
