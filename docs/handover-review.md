@@ -3826,3 +3826,89 @@ Parts A, B, D, E and F free.
   and review answer different questions, and the gap is not a wording problem.
 - **`lean.yaml` has no review gate**, so B4's shape does not apply to it; its
   single loop already folds its own judges (§15).
+
+---
+
+## 17. Blueprint 010 — Settle B7: instrument the clock, then one generous-budget run (verbatim, as received)
+
+**Status: not executed at the time of recording.** Execution record: §17.2.
+
+```text
+BLUEPRINT 010 — Settle B7: instrument the clock, then one generous-budget run.
+
+Origin: 009 Part C — all four traces expired at 900 s while the pipeline's
+per-run work roughly doubled (build loop + rework loop + reachable
+escalation). The timeout was fitted to the old shape. The advisor's C2
+pre-registration conflated "times out again" with "diverges" — self-
+contradictory, since the same blueprint doubled the workload. Budgets are
+part of the experiment.
+
+Protocol (as 001–009): paste verbatim into docs/handover-review.md as §17
+BEFORE executing; append §17.2 after. Provenance, premise, and n-carrying
+rules binding. NEW — convention 18: when a change alters per-run work,
+re-derive every harness budget (timeout, caps) in the same change; an
+instrument reading (timeout, zero score, refused call, 403) is a reading,
+not a diagnosis. And convention 19: no deletion ruling without a recorded
+import/reference check — 009's D1 ordered a live file deleted because the
+handover's data-flow diagram was wrong about the request path.
+
+Prerequisites: suite green before and after (re-derive the count); CI green
+before finishing.
+
+PART A — instrument the clock (FREE; before any paid part)
+
+A1. Per-phase wall clock: StepRecord gains a duration; the JSONL unit
+    record gains a phase→seconds map. Free, testable with doubles.
+    Rationale: the settling run costs ~$0.50; if ANY trace expires, the
+    timing data must already name where the clock went — plan burns,
+    escalation reasoning, search — without another paid run.
+A2. Executor semantics, documented: a loop owns its body nodes (009
+    departure 2) — a body listing deschedules the standalone node. One
+    paragraph in graph/spec.py's docstring or HANDOVER §2.3, wherever
+    node semantics live.
+A3. Convert trust to artifact (free): the routes.py→WorkflowEngine
+    dependency that stopped 009's D1 gets a pinned test — import the
+    route handler's engine class and assert it is the facade, not the
+    deleted reference. The handover's diagram was wrong once; the test
+    makes it unfalsifiable-wrong no longer.
+A4. Record, do not act: escalation is the largest line when reached
+    ($0.2684 of $0.4431 [measured: §16]) — the channels enrich the
+    failure log and escalation reads all of it. §6 gains the fact.
+    Capping the excerpt is a future lever, deliberately untouched.
+
+PART B — the settling run (≈ $0.50, ≈ 1–2 h; owner-approved)
+
+B1. Four B7 scenarios, engineering-rnd, --timeout 1800, repeat 1,
+    --max-spend 0.75 --max-spend-sweep 3.00, pins env-prefixed
+    (triage:Alibaba, architecture:StreamLake).
+B2. Pre-register per trace BEFORE running, from the retained 009
+    iteration data (Claude's, derived from the read; the advisor's are
+    below and gate nothing).
+B3. Closure criteria, pre-registered: B7 CLOSES iff every trace
+    terminates in ship, or escalated-with-diagnosis (including
+    requires_human → blocked-with-autopsy), within budget. A naked
+    timeout at 1800 s is not closure — it is B7's fourth name, a
+    per-phase timing table, and a design conversation. Per-trace rerun
+    rule: only an expired trace re-runs, at 3600 s, same caps.
+B4. Advisor's [predictions], labeled: at least one of the three
+    review-blocked traces ships after rework [009's partial evidence:
+    rework ran; reds sharpened on the same criterion]; escalation total
+    ≤ ~2× the 009 line [if it balloons, that is the log-richness
+    interaction — measured, not fixed here]; crossref is the trace most
+    likely to still expire [008: 5+3 iterations before rework existed].
+
+PART C — records
+
+C1. HANDOVER: B7 per B3's honest outcome — closing it after four names
+    (exit condition → channel → budget → ?) requires all four terminated
+    honestly; §4.4 conventions 18 and 19; §6 the escalation fact; §6.8
+    the handover-diagram exhibit; counts commit-stamped.
+C2. CHANGELOG [Unreleased]: one prose paragraph if B7 closes. No model
+    ids.
+C3. §17.2 as ever: departures, left undone, what execution found.
+
+OUT OF SCOPE, deliberately: any prompt change; escalation log capping;
+the cascade search design; the wide suite; per-tier pins beyond the two
+ratified; repeat>1 (variance is answered by the per-trace rerun rule if
+a result is marginal).
+```
