@@ -97,10 +97,11 @@ so adding a phase is three small steps:
    `ai` (one or more model calls), `check` (a free deterministic function) and
    `gate` (a boolean over prior outputs).
 
-> **Do not extend `autornd/engine/workflow.py`.** It is the legacy hardcoded
-> sequencer, kept only as the graph's equivalence reference — the tests in
-> `tests/test_graph_equivalence.py` assert the graph reproduces it call for
-> call. Building on it adds to a path that is scheduled to be deleted.
+> **`autornd/engine/workflow.py` is the API entry point, not a place to add
+> phases.** It loads the graph, runs it and persists the results. The hardcoded
+> sequencer it once carried as the graph's equivalence reference has been
+> deleted: the graph now routes on gate failure, which a linear sequencer cannot
+> represent, so the reference modelled less than the product did.
 
 Every phase returns a **typed Pydantic verdict** from
 `autornd/models/verdicts.py`, never prose. Gates test booleans
@@ -219,8 +220,9 @@ releases.
   interface is stable; the implementation is not.
 - **[internal]** Knowledge store schema (`autornd/knowledge/store.py`) — ChromaDB
   collection structure. May change as retrieval improves.
-- **[internal]** Legacy sequencer (`autornd/engine/workflow.py`) — kept only as
-  the graph's equivalence reference. Do not build on it.
+- **[internal]** Workflow entry point (`autornd/engine/workflow.py`) — loads the
+  graph, runs it, persists phases and episodic memory. Phases go in the graph,
+  not here.
 - **[internal]** Dashboard HTML/JS (`autornd/api/templates/dashboard.html`) — the
   UI. Expect frequent changes.
 
