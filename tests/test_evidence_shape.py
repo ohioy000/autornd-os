@@ -127,3 +127,53 @@ def test_only_validate_evidence_is_folded():
     with pytest.raises(ValidationError):
         ImplementVerdict(done=True, green=True, summary="s",
                          domain_concerns={"a": "b"})
+
+
+# ── the counter must name what it counted ──
+
+def test_each_normalisation_is_counted_under_its_own_name():
+    """A run reported `normalised_verdicts: 2` and could not say which two.
+
+    The truth table deriving an absent `green`, the truth table overruling a
+    green that named a cause, and the evidence fold are three different facts
+    about three different model behaviours. C4 asked a live run which of them
+    had fired and the record could only answer "two of something".
+    """
+    from autornd.models.verdicts import (
+        EVIDENCE_FOLDED,
+        GREEN_COERCED,
+        GREEN_DERIVED,
+        normalisations_by_kind,
+    )
+
+    reset_normalisations()
+    ValidateVerdict(red_cause="criterion 2 fails")          # green absent
+    ValidateVerdict(green=True, red_cause="but also fails")  # green contradicted
+    ValidateVerdict(green=True, evidence={"criterion_1": "PASS"})
+
+    assert normalisations_by_kind() == {
+        GREEN_DERIVED: 1,
+        GREEN_COERCED: 1,
+        EVIDENCE_FOLDED: 1,
+    }
+    assert normalisations() == 3
+
+
+def test_a_clean_verdict_counts_nothing_anywhere():
+    from autornd.models.verdicts import normalisations_by_kind
+
+    reset_normalisations()
+    ValidateVerdict(green=True, evidence=["criterion 1: PASS"])
+    ValidateVerdict(green=False, red_cause="criterion 2 fails")
+    assert normalisations_by_kind() == {}
+
+
+def test_the_kinds_reach_the_unit_record():
+    from autornd.evals.runner import ScenarioRun
+    from autornd.evals.scenario import Scenario
+    from autornd.models.verdicts import EVIDENCE_FOLDED
+
+    run = ScenarioRun(scenario=Scenario(id="s", request="r"), results=[],
+                      calls=1, seconds=1.0, normalised_verdicts=2,
+                      normalised_by_kind={EVIDENCE_FOLDED: 2})
+    assert run.normalised_by_kind == {EVIDENCE_FOLDED: 2}

@@ -174,6 +174,7 @@ class ResultsLog:
             "providers_by_function": run.providers_by_tier,
             "refused_lookups": run.refused_lookups,
             "normalised_verdicts": run.normalised_verdicts,
+            "normalised_by_kind": run.normalised_by_kind,
             "tokens_by_tier": run.tokens_by_tier,
             "rejections_by_tier": run.rejections_by_tier,
             "rejections_by_provider": run.rejections_by_provider,
@@ -345,6 +346,11 @@ class ScenarioRun:
     # that hides its own trigger stops anyone noticing when it is no longer
     # needed — or when it starts firing far more than it used to.
     normalised_verdicts: int = 0
+    # And which kind. One number could say that something was normalised and
+    # not what — the truth table deriving a missing `green`, coercing a
+    # contradictory one, or the evidence fold — which are three different facts
+    # about three different model behaviours.
+    normalised_by_kind: dict[str, int] = field(default_factory=dict)
     # Prompt and completion tokens per tier. Cost alone cannot separate "this
     # tier got dearer" from "this tier was handed more to read".
     tokens_by_tier: dict[str, dict[str, int]] = field(default_factory=dict)
@@ -567,6 +573,7 @@ async def run_scenario(
         iterations=list(getattr(runner, "iterations", []) or []),
         refused_lookups=_research.refused_lookups(),
         normalised_verdicts=_verdicts.normalisations(),
+        normalised_by_kind=_verdicts.normalisations_by_kind(),
         tokens_by_tier={k: dict(v) for k, v
                         in runner.client.tokens_by_function.items()},
         rejections_by_tier=dict(runner.client.rejections_by_function),

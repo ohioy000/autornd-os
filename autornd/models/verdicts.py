@@ -279,33 +279,49 @@ class ImplementVerdict(BaseModel):
 # implies it. The resolution is counted rather than silent — a normalization is
 # a fact about the model, and a fix that hides its own trigger stops anyone
 # noticing when it stops being needed.
-_normalisations = 0
+# Counted **by kind**, not as one number. Measured: a run came back with
+# `normalised_verdicts: 2` and nothing could say whether the truth table had
+# derived a missing `green`, coerced a contradictory one, or folded an object
+# into evidence lines — three different facts about three different model
+# behaviours, and the question C4 asked of that run was exactly which. A
+# counter that cannot name what it counted answers "something happened".
+_normalisations: dict[str, int] = {}
+
+GREEN_DERIVED = "green_derived_from_red_cause"
+GREEN_COERCED = "green_coerced_false_against_its_cause"
+EVIDENCE_FOLDED = "evidence_object_folded_to_lines"
+
+
+def _count(kind: str) -> None:
+    _normalisations[kind] = _normalisations.get(kind, 0) + 1
 
 
 def normalisations() -> int:
-    return _normalisations
+    return sum(_normalisations.values())
+
+
+def normalisations_by_kind() -> dict[str, int]:
+    return dict(_normalisations)
 
 
 def reset_normalisations() -> None:
-    global _normalisations
-    _normalisations = 0
+    _normalisations.clear()
 
 
 def _resolve_green(verdict: Any) -> Any:
     """The ruled truth table, applied after construction."""
-    global _normalisations
     has_cause = bool((verdict.red_cause or "").strip())
 
     if verdict.green is None:
         verdict.green = not has_cause
-        _normalisations += 1
+        _count(GREEN_DERIVED)
         return verdict
 
     if verdict.green and has_cause:
         # The conservative side. A false red costs an iteration; a false green
         # ships work nobody checked.
         verdict.green = False
-        _normalisations += 1
+        _count(GREEN_COERCED)
         return verdict
 
     if not verdict.green and not has_cause:
@@ -353,14 +369,12 @@ def _fold_evidence(value: Any) -> Any:
     refused and the retry asks. No other field is coerced on speculation: the
     exhibit comes first, and the rejection log is what produces exhibits.
     """
-    global _normalisations
-
     if isinstance(value, dict):
         if not all(isinstance(k, str) for k in value):
             raise ValueError(_EVIDENCE_SHAPES)
         if not all(isinstance(v, str) for v in value.values()):
             raise ValueError(_EVIDENCE_SHAPES)
-        _normalisations += 1
+        _count(EVIDENCE_FOLDED)
         return [f"{k}: {value[k]}" for k in sorted(value, key=_natural_key)]
 
     if isinstance(value, list) and not all(isinstance(x, str) for x in value):

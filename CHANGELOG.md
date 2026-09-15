@@ -213,7 +213,7 @@ that sub-graph spends: one gate had been reading 1,573 seconds of an 1,800-secon
 run, in the per-phase table that exists precisely so an expired run does not have
 to be bought twice to say what was slow.
 
-The suite stands at **648 tests** as of `7bbe05b`, up from 85 at 0.1.0.
+The suite stands at **651 tests** as of `767f582`, up from 85 at 0.1.0.
 
 ## [0.1.0] — 2026-09-12
 
