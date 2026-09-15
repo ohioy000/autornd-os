@@ -1011,6 +1011,16 @@ unchanged. The swap recommended to the owner is therefore **model only, caps
 unchanged**, and this curve must be re-measured on whatever model runs the tier.
 At n=3 both models sit near 3.67, not the 5/8 recorded above at n=1.
 
+**The swap itself, measured (n=3 per arm):** the cheap sibling **ties the
+expensive model exactly** — same mean 3.67/8, same per-repetition sequence
+4, 3, 4 — at **8.2× less per lookup** ($0.0062 against $0.0510) and half the
+wall clock. Search is 61–98% of all spend, so this is the largest single cost
+lever in the project. The two arms are **complementary, not equivalent**: same
+mean, different sectors — arm 1 owns `architectural_acoustics` and `hydraulics`,
+arm 2 owns `ev_charging` and `water_treatment` — which is the evidence for a
+cascade, and the reason the swap was recommended rather than a merge. The `.env`
+edit is the owner's (G-3).
+
 *Why research exists at all:* asked which charger IC a specific board used, a
 capable model answered "IP5306" in bold with no hedge; a search-backed model
 answered "MCP73831" with 18 citations. Asked the EU 868 MHz limit, the same model
@@ -1288,6 +1298,81 @@ names was correct about what the evidence then showed, and five of them were
 about the wrong layer. The one question never asked until 012 was *who is
 serving this tier* — and it had been answerable, for free, from
 `providers_by_function`, since B4.
+
+---
+
+### 6.10 Escalation is where the money goes, and not where the time goes
+
+Measured on the three traces that ran a full 1,800 s clock (n=3, gate rows
+excluded — see §6.8 on the gate that billed itself for its own sub-graph):
+
+| trace | escalation spend | escalation clock | escalation calls |
+|---|---|---|---|
+| `derived_tolerances` | **71%** | 5% | 1 |
+| `numeric_consistency` | **70%** | 10% | 3 |
+| `requires_execution` | **78%** | 34% | 3 |
+
+A fixed prompt reading a log that grows with iteration count: per-call cost crept
+$0.0673 → $0.0895 → $0.0917 across three runs. **What is in that log**, by
+character count across four traces: **77–89% implementation summaries**, 9–17%
+the evidence and findings channels, 2–10% red causes. An earlier suspicion that
+the channels were the expense is **wrong by measurement** — cutting them would
+remove a tenth of the tokens and all of the diagnostic value the autopsy exists
+to use.
+
+**The consequence is a decision, not a design.** Compressing the failure log is
+a *cost* measure: it would take 70–78% of a bill that has **never once been the
+binding constraint** and return 5–10% of a clock that always was. Worth a
+blueprint on its own terms; not a fix for anything currently broken.
+
+### 6.11 A serving does not only run at a speed — it converges at a rate
+
+**The finding that closed B7, and the one most likely to be reused.** Pinning the
+`engineering` tier to a compliant serving changed the loop far more than it
+changed the clock:
+
+| trace | iterations before → after | loop s/call before → after |
+|---|---|---|
+| `derived_tolerances` | **8 → 2** | 67.1 → 26.0 |
+| `numeric_consistency` | **4 → 1** | 135.9 → 42.6 |
+| `requires_execution` | 8 → 8 | 41.5 → 41.1 |
+
+**n = 1 per trace.** Two traces that had never completed under an unpinned tier
+shipped on the first attempt in 299 s and 182 s; `derived_tolerances` had been
+run seven times before without completing once. Per-call latency moved from a
+67 s median to 41 s — a third — while iterations fell by 4× and 4×.
+
+**Two pre-registered predictions, both about seconds per call, both wrong in the
+same direction**, which is why this is recorded as the finding rather than the
+latency table that was expected. It is §6.1's thesis — *a model id is not a
+system* — reaching the tier that had never been pinned. Convention 23 encodes
+it: sweep on compliance, then iterations, then speed.
+
+**Also measured in the same sweep (n=1–4 per arm):** the fastest serving of five
+returned an **empty JSON object** three times running and killed its run, and a
+serving reading 18.8 s/call at one repetition produced a 1,200 s expiry and an
+escalation at its next two. A latency-only sweep would have pinned either.
+
+### 6.12 Formal satisfaction is not substantive correctness — and that is by design
+
+Measured on `requires_execution`: the validator returned green on a criterion
+asking that sustained rate be covered, because a test did cover it — while that
+test was **arithmetically wrong in a way that would produce false passes**. The
+verdict was correct as written.
+
+This is not a defect in the validator. **Validate asks whether the criteria are
+satisfied; review asks whether the work is right.** The division is deliberate,
+and this is the measurement that confirms both halves are needed: a criterion
+can be met by work that is wrong, and only a second reader with a different
+question catches it. It is the same structural axis as *specialists have no
+filesystem* (§6.9, name 1) — the validator asks for evidence that cannot be
+produced, so it grades the description of the evidence instead.
+
+**Validated in service:** the escalation autopsy for this trace named a real
+arithmetic contradiction in the plan itself — *a token bucket of depth 20
+refilling at 100/s admits at most 20 in an instantaneous burst, yet the burst
+tests expected 120*. The machinery that catches substance is working; it simply
+is not the validator, and must not be asked to be.
 
 ---
 
