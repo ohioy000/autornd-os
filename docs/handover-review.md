@@ -5429,3 +5429,119 @@ edits (G-3); B11/B12 maintenance (the probe measures the SYSTEM — any
 finding confounded by an interim pick gets priced against its serving
 first, the B4 rule).
 ```
+
+### 24.1(a) Part A — the dialect map, the roster seam, and the pre-flight
+
+#### A3 first, because it gates everything paid
+
+`AUTORND_PROFILE=studio` **is** visible to the eval path. `get_profile()` is a
+lazy module global reading `settings.autornd_profile`, and the eval CLI runs
+in-process, so an env-prefixed invocation resolves the profile for every phase.
+Verified free:
+
+```
+settings.autornd_profile = 'studio'
+active profile           = Meridian Studio
+roles declared           = copywriter, editor, fact_checker, seo_analyst, strategist
+domains declared         = brand_strategy, copywriting, seo_analytics
+```
+
+**Parts B and C proceed.**
+
+#### A1 — the dialect map, per prompt, with line references
+
+`engine/phases.py`, 1,019 lines. **24 line-items bind the dialect.** The
+classification that matters is not the count but *what kind* of text binds:
+
+| prompt | line | instruction | class |
+|---|---|---|---|
+| `OUTPUT_CONTRACT` (plan, implement) | 45 | "no repository, file system, shell, or build tools" | eng-worded, neutral intent |
+| | 48 | "Produce the actual **engineering** work as text" | **engineering** |
+| | 49 | "the design, the code, the schema, the procedure, the calculation" | **engineering** (artifact list) |
+| | 50 | "a competent **engineer** could apply it directly" | **engineering** |
+| `ASSESSMENT_CONTRACT` (feasibility, validate, review, doublecheck) | 72 | "execute code, run tests, or inspect a repository" | eng-worded, neutral intent |
+| | 80 | *"The plan says cap at 60s but the code sets 600s"* | **engineering** (example) |
+| | 83–92 | the criteria-are-fixed clause | **neutral** |
+| `triage` | 150 | "Classify this **engineering** request" | **engineering** |
+| | 151, 156 | `_domain_vocabulary()`, `_role_vocabulary()` | **profile-parameterized** ✅ |
+| | 160 | "a signed **firmware** rollout, a mass migration, a public release" | **engineering** (1 of 3) |
+| | 169 | "structural loading, food contact, sterility, pressure vessels, electrical code, emissions" | **neutral** (harm categories) |
+| | 174–176 | "broadcast loudness, file formats, naming conventions, style guides" | **neutral** — already content-adjacent |
+| | 181–183 | "wiring, installing, actuating", "a control surface or a load path", "a security boundary" | **engineering** (examples) |
+| | 186–188 | "selecting a component, sizing a part, setting a tolerance" | **engineering** (examples) |
+| | 189 | "presentation, **copy**, documentation or configuration" | **neutral** — names copy already |
+| | 191–205 | protective systems; governing documents | **neutral** (names a style guide) |
+| | 209–210 | "Always include `test_engineer`", "Always include `systems_architect`" | **literal roles** ⚠ |
+| | 217 | system: "triage classifier for an **engineering team**" | **engineering** |
+| `plan` | 244 | "implementation plan for this **engineering** request" | **engineering** |
+| | 259 | "(components, licences, capacity)" | mixed |
+| | 263–266 | the success-criteria instruction | **neutral** |
+| | 267 | *"reconnect loop applies exponential backoff capped at 60s"* | **engineering** (example) |
+| `implement` | 690 | "the design, code, schema, procedure or calculation" | **engineering** (artifact list) |
+| `domain_review`, `validate` | 400–418 | `build_domain_checks()` — profile checks + generic fallback | **profile-parameterized** ✅ |
+| `review` | 818 | "Review this **engineering work** from your specialist lens" | **engineering** |
+| | 834 | `lens: your specialist role (e.g. "firmware_engineer")` | **engineering** (example) |
+| `doublecheck` | 915 | "an independent senior **engineering** reviewer" | **engineering** |
+| | 921 | "Review this **engineering** implementation independently" | **engineering** |
+| `escalation` | 956 | "You are the Principal **Systems Architect** for AutoRnD" | **engineering** (role) |
+| | 962 | "The fundamental logic or **architectural** flaw" | eng-leaning |
+| | 958, 964–970 | autopsy, directive, `requires_human` rule | **neutral** |
+
+#### The finding that re-prices the arc
+
+**§5 priced the risk as "a generalization pass that touches the risk guide
+without re-measuring would throw away four rounds of calibration." The map says
+that risk is much smaller than it looked.**
+
+What was calibrated four times against live data is the risk guide's
+**structure**: the two questions in order, the not-every-standard-is-a-harm-rule
+clause, the protective-systems rule, the governing-documents rule. **Every one
+of those is already domain-neutral** — they reason about consequence, not about
+subject. The engineering content in the risk guide is confined to its *example
+lists*, and those lists already contain `style guides`, `broadcast loudness`,
+`naming conventions`, `presentation` and `copy`.
+
+Likewise the single most load-bearing block in the file — the criteria-are-fixed
+clause of `ASSESSMENT_CONTRACT`, bought by a live false pass — is **wholly
+neutral**. It never mentions engineering.
+
+**So the 30% is largely vocabulary substitution, not re-calibration.** Of 24
+line-items: **4 are artifact-noun lists**, **8 are examples**, **6 are the word
+"engineering" as a modifier**, **2 are role names in prose**, **2 are literal
+role injections in code** (A2), and **2 are eng-worded statements of a neutral
+intent**. None of them is a judgement rule. That is a materially cheaper
+rewrite than §5 assumed, and the probe exists to test whether it is also
+sufficient.
+
+#### A2 — the roster seam, audited
+
+**Resolving correctly through the registry** (the 70% working):
+
+| token | resolves via | under `studio` |
+|---|---|---|
+| `assigned`, `builders`, `peers`, `lead` | `PhaseRunner._resolve_who` → triage's own roster | ✅ profile roles |
+| `reviewers` | `get_review_team` → `get_specialists` | ✅ (but see below) |
+| `lead_for_domain` | profile domain → declared lead | ✅ `copywriting→copywriter`, `brand_strategy→strategist`, `seo_analytics→seo_analyst` |
+| profile-declared roles | `_profile_templates` → `_build_prompt` | ✅ inherits project context and output contract |
+| `build_domain_checks` | profile checks, else generic | ✅ exercised free — studio's checks render; an undeclared domain falls back to the generic three |
+
+**Literal role names that bind regardless of profile** (the seam's two holes):
+
+| site | what it does | under `studio` |
+|---|---|---|
+| `phases.py:104–110` `enforce_triage_composition` | appends `SpecialistRole.TEST_ENGINEER` at high/critical, `SYSTEMS_ARCHITECT` on multi-domain | a high-risk marketing brief is staffed a **Test Engineer** |
+| `review_composition.py:53–60` `get_review_team` | adds `TESTER` above low risk, `ARCHITECT` at high/critical, and `ARCHITECT` is the low-risk fallback | measured live: `medium → [test_engineer, copywriter, fact_checker]`, `high → [systems_architect, test_engineer, copywriter, fact_checker]` |
+| `lead_for_domain` fallback | an unrecognised domain leads to `systems_architect` | a studio domain outside its three gets a **Systems Architect** |
+| `workflows/engineering-rnd.yaml` | `plan` names `systems_architect`, `validate` names `test_engineer` literally | both resolve — to the **shipped** roles, never the profile's |
+
+These are not bugs by the enum rule (§6.5: enums are defaults, and an
+undeclared role synthesizes rather than failing). They are **the generalization
+boundary in code rather than in prose**, and A1's map would have missed them
+entirely — which is why A2 was a separate part.
+
+**One real defect, found in passing.** `enforce_triage_composition` appends the
+**enum member** to a `list[str]` field after construction, bypassing Pydantic:
+the verdict then holds `['copywriter', 'fact_checker', SpecialistRole.TEST_ENGINEER]`.
+Everything downstream calls `role_key()`, which unwraps it, so nothing breaks —
+but the field's declared type is not what it contains, and a verdict serialised
+straight to JSON carries a mixed list. Recorded, **not fixed** (D2: no edits).
