@@ -3687,3 +3687,33 @@ the two ratified; Alembic; any prompt that steers judgment (Parts A/B
 move recorded fields, phase semantics untouched); independent_check's
 placement (it runs after the ship path — unchanged); the dashboard.
 ```
+
+### 16.1 Part B0's read, and Part C's pre-registration
+
+#### The blocked traces' findings, classified
+
+From `docs/traces/b7-convergence-v3.jsonl`. Thirty-five findings across the
+three traces that ended blocked at review.
+
+| trace | findings | classification |
+|---|---|---|
+| `crossref_integrity` | 15 | **addressable-in-text, almost entirely.** Error code `0x0004` assigned twice; `device_id` used in §4 before being defined; state-machine transitions referenced in the handshake but absent from the table; a CRC-16 negotiation flag described but missing from the HELLO payload. These are internal-consistency defects in a written specification — precisely what editing the text fixes. One (TLS plus application-level mutual auth being redundant) is architectural preference. |
+| `derived_tolerances` | 9 | **mixed.** Two `high` findings are arithmetic errors in the clearance calculation — addressable by redoing the sum. One is a genuine engineering finding (negative clearance at −20 °C means interference), addressable by stating it rather than hiding it. Two rest on an **unverified external fact** (the steel CTE), which no amount of rewriting settles. |
+| `requires_execution` | 11 | **addressable-in-text but genuinely hard.** The critical one is that Test 4 sends 101 requests over 1.01 s against a bucket refilling at 100/s, so it would pass spuriously — a reasoning error about the token-bucket model, fixable in text by someone who follows the argument. One is a plain omission (the plan's Test 8 is missing). |
+
+**The material is overwhelmingly addressable.** That is the premise the rework
+loop rests on, and it is now checked rather than assumed: if these findings had
+been mostly structural, routing work back would have burned two more rounds to
+reach the same escalation.
+
+#### Pre-registered from that read, before Part C ran
+
+| trace | prediction |
+|---|---|
+| `crossref_integrity` | rework **converges and ships** within 2 rounds — internal-consistency defects are the easiest class there is, and the findings name the exact table rows |
+| `derived_tolerances` | rework **converges** within 2; the unverified-CTE findings are `medium` and do not block on their own |
+| `requires_execution` | **does not converge**; the token-bucket reasoning is the hard case, and exhaustion → escalation is the honest outcome |
+| `numeric_consistency` | now that every failing criterion travels at once, it **converges or reds with all criteria named together** — no whack-a-mole. Whether it beats the 900 s clock is the open question |
+
+Fixed, per C2: zero refused lookups expected (the guard reports regardless), and
+no plan-phase burn now the ceiling is 32,768 [prediction].
