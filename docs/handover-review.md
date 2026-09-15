@@ -4306,14 +4306,14 @@ per-scenario cap:
 | | |
 |---|---|
 | units that expired on the 1800 s (or 900 s) clock | **6** |
-| units that came within half their spend cap | **0** |
-| highest single-unit spend on record | **$0.3982** — 53% of the cap, on a unit that expired |
+| closest any unit came to its spend cap | **53.1%** — $0.3982, `requires_execution`, on a unit that expired |
+| units that reached even 60% of their cap | **0** |
 | `derived_tolerances` under 011 | 100% of the clock, **12%** of the budget |
 | seconds per model call | min 20, **median 41**, max 90 |
 
 **Not one unit in B7's history has been stopped by money.** Every expiry had
-budget in hand — the worst case had 47% of it unspent, and 011's
-`derived_tolerances` had 88%. B7 has been carried through five names (exit
+budget in hand — the closest approach left 47% unspent, and 011's
+`derived_tolerances` left 88%. B7 has been carried through five names (exit
 condition → channel → budget → verdict field → ?) and the budget name was the
 wrong one; so, on this evidence, is any name about convergence. The loop
 converges or fails to converge at about 41 seconds a call, and the 1800 s
@@ -4825,3 +4825,26 @@ provider order is not a latency ranking — is what the pin is for.
 **⏸ A4: STOPPING HERE for the owner's one-line ratification (G-3).** Part C runs
 `triage:Alibaba,architecture:StreamLake,engineering:GMICloud`. The standing line
 is the owner's; the env-prefix in Part C is mine.
+
+#### D1's correction, and a second one it needs
+
+§18.1 claimed **"none has ever come within half its spend cap"** and then, one
+line below, gave the highest spend on record as *"$0.3982 — 53% of the cap"*.
+Both cannot be true and the table was the honest half: the claim is wrong and is
+now corrected here and in HANDOVER's B7 row.
+
+The blueprint's replacement figure needs correcting too. It gives the closest
+approach as **46%** — `numeric_consistency` at $0.3423 of $0.75, which is 45.6%
+— but that is the **second** closest. Every B7 unit, against the cap actually in
+force in its own run header:
+
+| rank | unit | spend | % of $0.75 cap |
+|---|---|---|---|
+| 1 | `b7-settling-run/requires_execution` | $0.3982 | **53.1%** |
+| 2 | `b7-verdict-numeric/numeric_consistency` | $0.3423 | 45.6% |
+| 3 | `b7-convergence-v4/derived_tolerances` | $0.2968 | 39.6% |
+
+**The closest approach is 53.1%**, and the unit that made it expired on the
+clock. Nothing in the conclusion moves — no unit has ever been stopped by money,
+and none reached even 60% of its cap — but the number on record should be the
+one the records contain. Both corrections are in place.
