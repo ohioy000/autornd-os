@@ -5772,3 +5772,69 @@ criteria_addressed  False  False
 The risk reading, the coverage result and the cost overrun all survived an
 aborted run. Every Part C conclusion about that trace depends on a fix made one
 blueprint earlier for a different reason.
+
+### 24.1(f) C4 — the generalization scorecard, and one defect class
+
+#### What actually stopped the one trace that failed — and it is not the dialect
+
+`marketing_claims` ran six iterations fabricating sources. The autopsy named it
+without help:
+
+> *"The agent treats citation as a formatting exercise rather than a
+> verification exercise. It oscillates between two failure modes: (a)
+> fabricating plausible-looking sources — invented report titles, generic or
+> non-resolving URLs, missing publication dates — and (b) embedding
+> quantitative claims without either a real citation or the required UNSOURCED:
+> prefix. Each attempt patches the single instance flagged."*
+
+**The mechanism is a controlled contrast inside this blueprint:**
+
+| trace | risk | search calls | outcome |
+|---|---|---|---|
+| `marketing_claims` | **low** | **0** | fabricated citations, 6 iterations, died on the cost ceiling |
+| `contract_threshold` | **medium** | **1** | cited Article 33(2) GDPR correctly, shipped in **one** iteration |
+
+§4.3's search policy zeroes lookups at `low` risk. The plan phase then wrote a
+success criterion demanding *"a citable source (author, title, publication,
+date, and URL) that a reader can use to verify the claim"* — **for work that had
+already been denied any means of verifying anything.** The agent did not refuse
+honestly. It invented sources, which is §6.3's finding — *apparent certainty
+does not correlate with correctness* — arriving from inside the harness.
+
+> **B13 — the risk gate governs lookups; the success criteria govern what must
+> be verified; nothing reconciles the two.** Low-risk work can carry a criterion
+> that requires external evidence, and then there is no path to obtain it.
+> **This bites generalization specifically**: the risk guide's own `low` bucket
+> is *"presentation, copy, documentation"* — exactly the work that is most
+> citation-dependent. An engineering team rarely meets it; a content studio
+> meets it on its first brief.
+>
+> *Named, not chased* (D1). The fix is a ruling, not a patch — candidates
+> include letting a blocking gap raise the lookup budget independently of risk,
+> or forbidding plan from writing a criterion the run cannot satisfy.
+
+`contract_threshold` deserves its own line: the scenario was built so that a
+plausible invented deadline was the failure mode — there is **no** fixed
+processor deadline, only *without undue delay* under Article 33(2). It named the
+instrument and the article and **did not invent 72 hours**. One lookup, one
+iteration, $0.0175.
+
+#### The scorecard, line-priced from A1's map
+
+| | status | evidence |
+|---|---|---|
+| **The 70% — vocabularies** | ✅ **exercised and working** | studio domains and roles assigned in the wild; `wide_marketing` went 1-of-3 → 3-of-3 with the right role |
+| **The 70% — open vocabulary** | ✅ **doing more work than the profile** | 38 invented role names across 67 assignments, vs 4 profile-role assignments, on work the profile does not cover; `legal_counsel` staffed and reviewed a shipped deliverable |
+| **The 70% — checks mechanism** | ✅ **first live exercise, works** | studio lenses fired on 2 of 3 traces; generic fallback on the third |
+| **The 70% — risk invariance** | ✅ **measured, n=36×3×2** | 0 of 23 stably-read sectors moved |
+| **The 70% — roster seam** | ⚠️ **two literal holes** | `enforce_triage_composition` and `get_review_team` inject shipped engineering roles regardless of profile — 77 of 108 units, and 2 of 3 full traces |
+| **The 30% — prompts** | ✅ **does not bind in output** | 2 dialect occurrences in 18,500 characters, both of one word that is a schema field name |
+| **Termination** | ✅ **2 of 3, inside or at the envelope** | 135 s/10 calls and 339 s/15 calls against 299 s/13 |
+| **The real blocker** | ❌ **B13**, and it is not a dialect problem | the verification path, not the vocabulary |
+
+**The arc's price, re-derived.** §5 put the risk in the 30% and feared losing
+the risk guide's calibration. §24.1(a) halved that by showing the calibrated
+text is already neutral. **Part C removes most of what was left**: the dialect
+does not reach the output, so the prompt rewrite is a tidying exercise rather
+than a re-calibration, and it is **not on the critical path at all**. What is on
+the critical path is B13 and the two roster literals — **code, not prose.**
