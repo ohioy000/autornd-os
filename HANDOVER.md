@@ -245,7 +245,7 @@ autornd/
     runner.py            ★  BoundedRunner, per-tier reporting, repetitions
     cli.py                  `python -m autornd.evals.cli`
   api/
-    routes.py               17 endpoints (§3.5)
+    routes.py               16 endpoints (§3.5); `/` dashboard is on main.py
     auth.py                 JWT + API key middleware
     templates/dashboard.html  single-file chat + workflows + settings UI
 
@@ -506,16 +506,23 @@ PlanVerdict       ready: bool · plan: str="" · blockers: list[str]
                   cost_estimate: float|None · success_criteria: list[str]
                   # validators: plan required when ready; blockers required when
                   # not ready; _is_placeholder() rejects "...", "TBD" criteria
-ImplementVerdict  done · green · red_cause|None · iteration: Field(ge=1)
-                  summary · domain_concerns: list[str]
-ValidateVerdict   green · (findings)
+ImplementVerdict  done (REQUIRED) · green: bool|None · red_cause: str|None
+                  iteration: Field(ge=1) · summary · domain_concerns: list[str]
+                  # green is resolved from red_cause after construction — the
+                  # truth table in §2.3. `done` stays required: nothing in the
+                  # verdict implies it (convention 20).
+ValidateVerdict   green: bool|None · red_cause: str|None · evidence: list[str]
+                  # same green truth table; `evidence` accepts a criterion-keyed
+                  # object and folds it to "key: value" lines (convention 21)
 ReviewFinding     lens="unknown" · severity="medium" · detail=""
                   # model_validator(before) accepts a bare string, or detail under
                   # issue/description/finding/concern/text/problem/note/summary/message
 ReviewVerdict     ship: bool · findings: list[ReviewFinding] · verdict: str
                   # field_validator(before) drops entirely-empty findings
 DoubleCheckVerdict ship · confidence · critical_issues[] · recommendations[] · verdict
-EscalationVerdict root_cause_analysis · architectural_correction|None · requires_human
+EscalationVerdict root_cause_analysis · resolution_directive · requires_human
+                  architectural_correction: str|None
+                  # requires_human=False routes to recovery_loop, not to blocked
 ```
 
 ### 3.4 `Dockerfile` (verbatim)
