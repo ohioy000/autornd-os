@@ -4983,3 +4983,46 @@ a crash, so it scores everything and keeps the failed `run` assertion at the
 front. The prediction I made for this trace — that it would die on a budget
 rather than the clock — was **right about the trace and wrong about the
 resource**: I named money, and it was calls.
+
+### 20.1(g) C3 — B7 closes, on four honest terminations
+
+`requires_execution` was re-run with its cost expectation lifted, to ask the
+termination question without a cost expectation answering it. **It terminated:
+`escalated`, no error, 8 iterations, 1,235 s, $0.2427**, with a root cause that
+names a real arithmetic contradiction in the plan — *a token bucket of depth 20
+refilling at 100/s admits at most 20 in an instantaneous burst, yet the burst
+tests expected 120* — and a resolution directive.
+
+**The raised ceiling did not cause the termination, and saying so matters.** The
+probe used **35 calls against the shipped expectation of 40**. It would never
+have touched the ceiling. The first run took 42 calls on a different trajectory
+and was stopped; this one took a shorter path. At n = 2 this trace exceeds 40
+calls once in two attempts, so **the shipped expectation is marginal, not
+stale** — which is a weaker and more accurate claim than the one the first run
+invited.
+
+| trace | terminal state | diagnosis | calls | closure-grade |
+|---|---|---|---|---|
+| `crossref_integrity` (011) | `escalated` | root cause + directive | 24 | ✅ |
+| `derived_tolerances` (012) | `completed` — shipped | — | 13 | ✅ |
+| `numeric_consistency` (012) | `completed` — shipped | — | 9 | ✅ |
+| `requires_execution` (012) | `escalated` | root cause + directive | 35 | ✅ |
+
+**All four terminate in ship or escalated-with-diagnosis. B7 closes.**
+
+**What closure does and does not mean.** The criterion is 010's and it is met.
+It is met on **one observation per trace** (two for `requires_execution`), by a
+project whose own record says `crossref_integrity` produced three different
+outcomes in three runs. B7 closes as *"the loop terminates honestly under a
+compliant, pinned serving"* — not as *"the loop is reliable"*, which these four
+runs cannot establish and were never designed to.
+
+#### C4 — what the live run exercised
+
+| mechanism | exercised? |
+|---|---|
+| green truth table / evidence fold | **2 normalisations in `requires_execution`** — and the record could not say which, because one counter served three different normalisations. Split by kind now; the split lands from the next run, not this one. |
+| schema rejections | **1**, on `GMICloud`, in the first `requires_execution` run. Zero in every other trace. |
+| the coercion's own exhibit | **not reproduced** — no serving returned a criterion-keyed object again, and the one that did is no longer on the tier. |
+
+Total Blueprint 012 spend, sweep and settling run together: **$0.6113**.
