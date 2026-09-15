@@ -609,7 +609,7 @@ or design issue.
 | B4 | ~~`wide_legal_ops` under-classifies on every provider~~ | **RESOLVED — the premise was wrong** | It is the serving, not the guide. Pinned six ways: fails 3/3 on OpenInference, DigitalOcean and unpinned; passes 3/3 on Alibaba and AtlasCloud, 2/3 on StreamLake. Under the adopted `triage:Alibaba` pin it passes ~8/9, and its rare excursions go in **both** directions. No guide edit was made — there was no systematic failure left to target. §12.3, §12.4 |
 | B5 | `wide_wind_energy` fails `risk_at_least` ~1/3, **deliberately left red** | low | Two defensible readings; a risk **floor must never be waivable** (§4.4) |
 | B6 | ~~`independent_check` has never executed inside a full live workflow~~ | **RESOLVED — observed 2026-09-14** | Ran end to end on `independent-check-probe`: 10 calls, 54s, $0.0212, returning `ship=true, confidence=high, critical_issues=[]`. Trace at `docs/traces/b6-independent-check.json`. Took seven further attempts; every exit was legitimate and the *probe request* was what kept failing — see §13.4 |
-| B7 | Build loop convergence — **the loop works; a required field does not arrive** | medium | Settled far enough to name: given 1800 s, `crossref_integrity` **shipped** after two rework rounds — the hardest-classified trace, which two separate predictions expected to expire. The rework loop, the all-judges exit and both feedback channels all do their jobs. **Two of four traces now die on `ImplementVerdict` rejected for a missing `green` after all three schema retries are exhausted** — the same field that killed two of four in 006, surviving the fix that wired the schema into the retry. Likely the log-richness interaction: the implement prompt grew when review gained a consumer. Proposal on record (defaulting `green` from `red_cause`) — a verdict-semantics change needing a ruling. §17.1 |
+| B7 | Build loop convergence — **the loop is not the constraint; the clock is** | medium | **Sixth name, and the first one the whole history supports.** Across 23 recorded B7 units over six blueprints: six expired on the clock, **none has ever come within half its $0.75 spend cap**, and the worst case spent 53% of budget before the clock took it. 011's `derived_tolerances` expired having spent **12%**. At a median 41 s per model call, 1800 s buys about 44 calls no matter what budget is attached, so raising `--max-spend` cannot move one of the six. The verdict death of §17 is gone — `derived_tolerances` went from dying at iteration 2 / 454 s to running 8 iterations through build exhaustion, escalation, a recoverable diagnosis and three rework rounds — and the green resolution **never fired** (0 normalisations in three runs), so what these traces show is the deaths not recurring, not the truth table working. All three produced a real root cause and directive; none reached a terminal status. Per-phase table for the two expiries, after the gate-timing fix: `rework_review` 919 s / `implement` 432 s / `escalation` 186 s (numeric), and `validate` 783 s / `implement` 567 s / `rework_review` 238 s (tolerances). **Next lever is the `engineering` serving** — the last unpinned tier, carrying implement, validate, domain_review, review and rework_review, with a per-call spread of 20–90 s across units. §18.1 |
 | B8 | Shipped-default models fail on hard requests | medium | Documented rather than changed, per owner's instruction. §6.4. **The plan-tier burn is request-driven, not serving-driven** (measured 2026-09-14, n=2 servings × 12 easy plans vs 6 servings × 4 hard ones): the same model burned seven retries on the hard set and none on the easy one. Pinning that tier is not the lever; the candidates are the plan token budget — the burn sits at `Specialist.run`'s default 16,384 while every serving advertises a ceiling above 262,000 — or the model. **The budget is now a setting** — `PLAN_MAX_TOKENS`, default 32,768 (§16) — so that half is tunable without code; the model remains the owner's. |
 | B9 | No DB migrations (no Alembic) | low | Schema changes are destructive |
 | B10 | `ambiguous_request` — historical "mystery failure" | **RESOLVED** | It was B3's sibling: a `max_calls: 4` baseline set when the budget counted *nodes*. Measured 6. Now 8 |
@@ -758,8 +758,13 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
    kept as the regression shape. It threads a narrow window — consequential
    enough that triage marks `unrecallable`, trivial enough that review ships —
    and lands roughly one run in three, so expect to repeat it.
-7. **B7 — build-loop convergence.** The highest-value unsolved *product*
-   problem: the implement↔validate loop is where iterations and money go.
+7. **B7 — the build loop's clock.** Still the highest-value unsolved *product*
+   problem, but not the one it was filed as: the loop is where iterations and
+   *time* go, and money has never been the binding constraint in 23 recorded
+   units. The next thing to try is pinning the `engineering` serving, which
+   carries five of the loop's nodes and is the last unpinned tier. Free
+   prerequisite already landed: the dissent record now names which judge blocked
+   an exit, which no run has ever been able to say.
 8. **Per-tier provider quality measurement.** The eval suite can now score
    providers; only triage has been measured.
 9. **Alembic migrations** before anyone stores real data.
@@ -1092,6 +1097,25 @@ that catches this class — `tests/test_schema_wiring.py` now does.
   the routes actually call. Nine blueprints read that section; the error
   surfaced only when a ruling acted on it and ordered the live module deleted.
   Prose is not checkable and a test is: the dependency is pinned now.
+
+- **A gate billed for the sub-graph it routed to** (found 2026-09-15). B3 named
+  the per-phase timing table as what B7 gets from an expiry instead of closure.
+  The first expiry that needed it reported a *gate*, `review_clean`, as the
+  largest consumer of the run at 1,573 s, with the table summing to **3,374
+  seconds inside an 1,800-second run**. `_run_gate` awaited `_run_from` from
+  inside the node's timing block, so every node a closed gate routed to was
+  counted twice. The correction is exact: drop the one gate and the table reads
+  1,801 s. A measurement that is 187% of its own ceiling is not a rounding
+  error, and nothing in the suite could see it because no test timed anything.
+
+- **A record that read attributes off a dict** (found 2026-09-15).
+  `derived_tolerances` ran two build-loop rounds with implement green and
+  validate green and did not exit, so a free check dissented. The iteration
+  record was built to name which. It named nothing for **64 iterations across
+  six runs**: a check's entry in `state.outputs` is a plain dict, and the
+  retention called `getattr(coverage, "passed", None)` on it. The same code also
+  read the `judges` fold, which at that point in the loop body belongs to the
+  *previous* iteration.
 
 - **A working instrument whose output nobody kept** (found 2026-09-15). The
   schema retry has logged every rejection at `WARNING` since the clause

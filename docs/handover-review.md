@@ -4355,3 +4355,68 @@ deaths not recurring, which is a weaker claim and the only one available at
 n = 2.** What they do show is that the death was never load-bearing on
 convergence — with it removed, the trace went four times further and still did
 not finish, for a reason that has nothing to do with verdicts.
+
+#### Part B scored against its pre-registration
+
+Three of the four traces ran; `requires_execution` was **not run** — the owner
+cut the settling run from three remaining traces to two, and I chose the two the
+green resolution was built for, excluding the one that expired in 010 for
+reasons the resolution does not touch. So B7 cannot close under B3 even
+arithmetically, and does not come close to closing on the three that did run.
+
+| trace | my prediction | outcome | scored |
+|---|---|---|---|
+| `crossref_integrity` | ships again | **escalated** with a root cause and a directive, 8 iterations, 1,440 s, $0.2407 | **wrong** |
+| `derived_tolerances` | terminates, and early | **expired** at 1,800 s, 8 iterations, $0.0931 | **wrong** |
+| `numeric_consistency` | terminates; most likely ships | **expired** at 1,800 s, 4 iterations, $0.3423 | **wrong** |
+| `requires_execution` | expires again | not run | — |
+
+**Three predictions, three wrong.** B4's fared no better: both formerly-killed
+traces did run their loops (right), no review-blocked trace shipped (wrong), and
+escalation's share came to **60%** against 010's 62% — the predicted drop below
+50% did not happen (wrong).
+
+`crossref_integrity` is now the trace to distrust most: **three runs, three
+different outcomes** — 008 escalated, 010 shipped, 011 escalated. Every
+prediction ever made about it, mine included, has been scored against a single
+observation. It should not be cited again at n = 1.
+
+**Termination honesty (B3's actual criterion).** All three produced a real
+`root_cause_analysis` and a `resolution_directive` with `requires_human=False`.
+None reached a terminal status: one escalated-and-recovered into a loop that
+kept going, two ran out of clock mid-rework. The diagnosis machinery works; what
+does not arrive is an *end*.
+
+#### The first live reading from the new rejection counter
+
+`numeric_consistency` is the only run started after the counter landed, and it
+paid for itself immediately:
+
+```
+rejections_by_tier     {"engineering": 2}
+rejections_by_provider {"OpenInference": 2}
+normalised_verdicts    0
+```
+
+Both rejections are `ValidateVerdict`, and **neither is about `green`**:
+
+```
+evidence
+  Input should be a valid list
+  [input_value={'criterion_1': "FAIL — ...", ...}, input_type=dict]
+```
+
+The validator returned its evidence as a **dict keyed by criterion** rather than
+a list of strings — twice in a row, on two separate attempts, with
+`_rejection_note` feeding the type error back in between and failing to correct
+it. It succeeded on the third try. Two of eleven engineering calls in that run
+were spent on the same rejected shape.
+
+This is `ReviewFinding.detail` again (§6.8: a reviewer that wrote `issue`
+instead of `detail` lost three entire reviews). The shape the model produced is
+arguably the better one — evidence *is* per-criterion, and the prompt asks for it
+that way — and a `mode="before"` coercion folding a dict into `"key: value"`
+lines is six lines and free. **It is not implemented here**: it is a
+verdict-semantics change, and 011 A3 is the standing instruction that those are
+ruled, not assumed. It is recorded as the next ruling worth making, and it is
+now measurable, which it was not two days ago.

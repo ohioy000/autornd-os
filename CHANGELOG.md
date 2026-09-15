@@ -18,10 +18,9 @@ condition, a bounded iteration count and explicit exhaustion semantics, so a
 build loop that gives up hands off to an escalation autopsy rather than simply
 stopping. Conditions are one deliberately tiny grammar, not `eval`;
 configuration must not execute code. Four workflows ship, and comparing two of
-them is a measurement anyone can run. The original hardcoded sequencer is kept
-as the equivalence reference and `tests/test_graph_equivalence.py` asserts the
-graph reproduces it call for call — it has caught real drift, so it stays until
-it stops paying.
+them is a measurement anyone can run. A hardcoded sequencer was kept beside the
+graph as an equivalence reference for most of that work; it has since been
+retired, for the reasons recorded below.
 
 **An eval harness, so rules come from data.** Scenarios are YAML with
 expectations written *before* the run; assertions are free and make no model
@@ -200,7 +199,21 @@ wrong attempts at mirroring behaviour it lacked the inputs for, an
 order-dependent defect in its own suite, and finally a gate that routes work
 back into a loop — which a linear engine cannot represent at all.
 
-The suite stands at **594 tests** as of `5fdb0cd`, up from 85 at 0.1.0.
+**A run now records what it measured.** Three instruments were found reporting
+something other than what they observed, none of them visible to a green suite.
+The schema retry had logged every rejected reply correctly and for free since
+its clause ordering was fixed, and every line went to a stderr redirect and died
+there — so the malformed-reply rate, asked for across nine runs, could be
+computed from three. It is a field in the results file now, split by tier and by
+serving, beside the count of verdicts normalised from their own stated cause. A
+build-loop iteration records which judge blocked the exit, which it had claimed
+to do for sixty-four iterations while reading attributes off a plain dict. And a
+gate that routes work to a recovery sub-graph is no longer billed for the time
+that sub-graph spends: one gate had been reading 1,573 seconds of an 1,800-second
+run, in the per-phase table that exists precisely so an expired run does not have
+to be bought twice to say what was slow.
+
+The suite stands at **632 tests** as of `HEAD`, up from 85 at 0.1.0.
 
 ## [0.1.0] — 2026-09-12
 
