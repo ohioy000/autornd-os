@@ -4848,3 +4848,46 @@ force in its own run header:
 clock. Nothing in the conclusion moves — no unit has ever been stopped by money,
 and none reached even 60% of its cap — but the number on record should be the
 one the records contain. Both corrections are in place.
+
+### 20.1(d) Part C — ratification, and the pre-registration
+
+**Ratified by the owner: `engineering:GMICloud`.** Part C runs
+`triage:Alibaba,architecture:StreamLake,engineering:GMICloud`.
+
+**Run sequentially, not in parallel.** Three concurrent runs all pinned to one
+serving would contend on it, and the thing being measured *is* that serving's
+latency — parallelism would corrupt the measurement it exists to take. Three
+hours worst case is the price of the reading being real.
+
+#### The baseline each trace is measured against
+
+| trace | loop-node seconds | eng calls | **s/call** | escalation | spend |
+|---|---|---|---|---|---|
+| `requires_execution` (010) | 1,080 | 26 | **41.5** | 610 s | $0.3982 |
+| `derived_tolerances` (011) | 1,610 | 24 | **67.1** | 93 s | $0.0931 |
+| `numeric_consistency` (011) | 1,495 | 11 | **135.9** | 186 s | $0.3423 |
+
+#### My predictions, per trace, before the run
+
+| trace | prediction |
+|---|---|
+| `requires_execution` | **Terminates, and is the one at risk from the *cap* rather than the clock.** Its loop work falls from 1,080 s to roughly 570 s at the sweep's 1.9×, and its 610 s of escalation is on a different tier and does not move — so ~3,600 s is ample. But it already spent $0.3982 in 1,800 s, and doubling the clock at faster calls points at $0.75. If it dies, it dies on money, which **no B7 unit has ever done**. |
+| `derived_tolerances` | **Terminates.** 88% of its 1,800 s was loop work, the part the pin acts on; it expired mid-fourth rework round, and the rework loop is bounded, so it should reach its bound rather than the clock. |
+| `numeric_consistency` | **Terminates.** 83% loop work, and the worst per-call latency on record at 135.9 s — the trace with the most to gain and the one whose 011 result most looks like a bad draw. |
+
+**Aggregate: all three terminate.** Which agrees with the advisor's first
+prediction, and I expect the third one to fail:
+
+> **[prediction — mine, against the blueprint's]** Loop-node latency will
+> improve but will **not** drop below 30 s/call. The sweep measured `lean.yaml`
+> on `backend_index`, where implement returns a short answer; convergence
+> implement calls return 8,000-character summaries, and generation time scales
+> with output. Applying the measured 1.9× to a 41.5/67.1/135.9 baseline gives
+> roughly **22/35/72** — a median near 35, not under 30. §20.1(c) caveat 1 said
+> the absolute seconds would not transfer, and this is that caveat made
+> falsifiable. If the median does come in under 30, the caveat was too cautious
+> and §20.2 says so.
+
+**[prediction]** The evidence coercion is **not exercised** (zero
+normalisations from it). It has one exhibit, from one serving, and that serving
+is no longer on the tier.
