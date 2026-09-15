@@ -4759,3 +4759,69 @@ number**, and "Part B — what the runs showed" was appended *after* "Part C", s
 a reader scanning in order meets Part C, then another Part B, and can reasonably
 conclude the C section was superseded. The headings are now `18.1(a)`, `(b)` and
 `(c)`. The decomposition above is new work regardless; C1's is not repeated.
+
+### 20.1(c) Part A — the sweep, and the pin proposal
+
+One scenario (`backend_index`, the routine shape), one workflow (`lean.yaml`),
+`triage` and `architecture` pinned constant so only `engineering` varies.
+Latency is loop-node seconds over engineering calls. **$0.1533 of the $0.30
+cap.**
+
+| serving | reps | completed | s/call, each rep | median | rejections | verdict |
+|---|---|---|---|---|---|---|
+| DeepInfra | 1 | 0/1 | 14 | **14.1** | **3** | **DISQUALIFIED — A3(i)** |
+| DigitalOcean | 3 | 1/3 | 19, 142, 80 | 80.3 | 0 | unreliable |
+| **GMICloud** | 4 | **4/4** | 18, 19, 50, 19 | **19.2** | 0 | **compliant — proposed** |
+| OpenInference *(incumbent)* | 4 | 4/4 | 38, 35, 41, 34 | 36.2 | 0 | compliant |
+| StreamLake | 1 | 1/1 | 25 | 25.4 | 0 | compliant, n=1 |
+
+**A3(i) does the most work here, exactly as written.** The fastest serving in
+the sweep is disqualified: DeepInfra returned an **empty JSON object** three
+times in a row — `input_value={}` against `ImplementVerdict`, with the rejection
+note fed back between each attempt — and killed the run. It is 27% faster than
+the proposal and it never produced an implementation. "Non-compliance at the
+workhorse tier is the dangerous direction" is the rule, and this is what it
+looks like.
+
+**DigitalOcean is the reason the tiebreak was worth buying.** Its first and only
+rep in the five-arm sweep read 18.8 s/call and looked like the co-leader. At
+three reps: one expiry at 1,200 s and one escalation, on `backend_index` — the
+scenario whose own description says it "should be cheap: converging on the first
+attempt". **A serving's n=1 latency is a draw, not a property.**
+
+**Proposal: pin `engineering` to GMICloud.** Fastest among compliant servings at
+19.2 s/call median, four reps for four completions, no rejections, and the
+cheapest arm in the sweep. Against the incumbent it is **1.9× faster** on a
+tight distribution — 34/35/38/41 for the incumbent against 18/19/19 and one
+50-second outlier.
+
+**Three caveats, because this is a $0.15 experiment standing in for a $2 one.**
+
+1. **The sweep is not the settling run.** It measures `backend_index` on
+   `lean.yaml`; Part C runs convergence scenarios on `engineering-rnd.yaml`,
+   whose implement calls return 8,000-character summaries. Absolute seconds will
+   not transfer. The *ranking* plausibly does, and the two disqualifications
+   certainly do.
+2. **Within-serving variance rivals the between-serving gap.** GMICloud's own
+   reps span 18 to 50 s/call. The 1.9× median difference survives that only
+   because the incumbent's distribution is tight and entirely above GMICloud's.
+3. **StreamLake is untested at n>1** and is already the architecture pin. It sat
+   between the two leaders at n=1 and was not pursued.
+
+#### Scoring §20.1(a)'s pre-registration: one of four
+
+| prediction | outcome |
+|---|---|
+| the incumbent is **not** the fastest | **right** — it is the slowest compliant serving of three |
+| spread between fastest and slowest **compliant** serving ≥ 2× | **wrong** — 36.2/19.2 = 1.89×, just under. Across *all* arms it is 5.7× |
+| at least one arm fails outright because a pin is not honoured | **wrong** — all five pins were honoured exactly; the one failure was a schema refusal, not a routing one |
+| zero rejections across all five arms | **wrong** — three, all on one serving, all fatal |
+
+The one that mattered was right, and the reasoning behind it — that the default
+provider order is not a latency ranking — is what the pin is for.
+
+---
+
+**⏸ A4: STOPPING HERE for the owner's one-line ratification (G-3).** Part C runs
+`triage:Alibaba,architecture:StreamLake,engineering:GMICloud`. The standing line
+is the owner's; the env-prefix in Part C is mine.
