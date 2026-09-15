@@ -5135,7 +5135,7 @@ $0.30 cap, settling run $0.4580 against $3.00.
 
 ## 22. Blueprint 013 — Consolidation: the handover regenerated from the record (verbatim, as received)
 
-**Status: not executed at the time of recording.** Execution record: §22.2.
+**Status: executed 2026-09-15.** Execution record: §22.2.
 
 *(§21 is vacant, as §19 was. The blueprints have run 011 → §18, 012 → §20,
 013 → §22; each names its own section numbers internally, so each wins.)*
@@ -5229,3 +5229,81 @@ it does not open fronts"*):
 
 It lands in §5 of the regenerated handover as the chosen next arc. No work
 against it begins here.
+
+### 22.2 Execution record
+
+**Status: executed 2026-09-15.** Suite 651 → **658** across 32 files, green
+before and after; CI green. **$0.00 — no model calls**, as the blueprint
+specified.
+
+#### Departures
+
+1. **`§3.1` was replaced rather than corrected.** It held a hand-maintained
+   copy of the flagship YAML that had drifted for twelve blueprints — still
+   showing a five-node build loop exiting on `validate.green` alone, two exits
+   and one loop after that stopped being true. A hand-copied file is a
+   permanent drift source, so it is **generated from the workflow** now and says
+   so. Same for §3.7's test table.
+2. **Two open items were added to §4.2 that the blueprint named only in
+   passing** — B11 (two tier picks unmeasured at their own jobs) and B12 (four
+   tiers never measured by serving). A1 listed both as content for the bug
+   table; they had never had rows, so they are new entries rather than edits.
+3. **Convention numbering shifted twice.** B1 asked for convention 22 and the
+   number was taken by the linter note; B3's pin-sweep rule needed 23. The
+   linter note is **24** now. It has moved three times in three blueprints and
+   should probably stop being numbered at all.
+4. **The guard test checks more than the blueprint asked.** C1 specified a grep
+   for retired claims. Greps catch the claims you thought of; the counts are
+   what actually drift. So the node counts, the suite total, the pass count, the
+   test-file count and the named checks are **derived from the source and
+   compared**, and the retired-claim grep is one of six checks rather than the
+   whole test.
+
+#### Left undone, deliberately
+
+- **The arc is not started.** The owner chose generalization and the blueprint
+  puts it out of scope — *"this blueprint closes books, it does not open
+  fronts"*. It is priced in §5 and nothing else.
+- **§0, §1, §3.2, §3.4, §3.6 are untouched.** Vision, provenance, stack
+  versions, the Dockerfile and the env template were all still true. A
+  consolidation that rewrites what is already correct is how voice gets lost.
+- **The `.env` search swap is still unmade** (G-3, owner's). It remains the
+  largest single cost lever measured here — 8.2× on the line that is 61–98% of
+  spend.
+- **Nothing was deleted from the bug table.** Ten of twelve rows are resolved
+  and all ten stay, with their resolutions. Three of them closed because the
+  premise was wrong rather than because the named thing was fixed, and that is
+  the part worth keeping.
+
+#### What execution found that the blueprint missed
+
+1. **The guard caught its own file within a minute of existing.** Adding
+   `test_handover_truth.py` moved the suite to 658 across 32, and three of its
+   own assertions failed against the counts written minutes earlier. That is the
+   intended behaviour and it is also the honest summary of the problem: **the
+   document cannot be manually kept true, and nothing before this blueprint
+   noticed.**
+2. **Run against the pre-consolidation document, the guard finds eight separate
+   drifts**: three retired claims (`equivalence reference for the graph`,
+   `16 nodes`, `501/501`), three wrong node counts, a wrong pass count, and two
+   different stale totals (`561` and `651`) both carrying commit stamps. **A
+   commit stamp is not a correctness guarantee** — it says when someone last
+   believed the number.
+3. **§3.3 was wrong about the verdicts in three ways** the blueprint did not
+   list: `green` still described as a plain required bool on both schemas, after
+   two blueprints made it `Optional` with a truth table; validate's `evidence`
+   called "(findings)"; and `EscalationVerdict.resolution_directive` missing
+   entirely, though every recorded autopsy has produced one.
+4. **§2.2 claimed 17 API endpoints against 16.** The seventeenth is the
+   dashboard route and lives on `main.py`, not `routes.py` — the kind of error
+   that survives indefinitely because it is nearly right.
+5. **The B7 ledger is six names, not five.** The blueprint's §22 text says five
+   and §18.1 said five; the row itself carried six. This is the third time a
+   written summary of that ledger has disagreed with the row, which is why §6.9
+   states it is reconstructed from the row at each commit that changed it.
+6. **Most of what §2.3 now documents had never been written down anywhere but a
+   blueprint record.** The judges fold, gate routing, loop ownership, the two
+   verdict truth tables and all eight instruments existed in code and in
+   `docs/handover-review.md`, and in the document people actually read, none of
+   them did. **A lab notebook is not a handover**, and twelve blueprints of
+   careful record-keeping had quietly substituted one for the other.
