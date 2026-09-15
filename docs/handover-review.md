@@ -4514,7 +4514,7 @@ green suite, for between six runs and four blueprints.**
 
 ## 20. Blueprint 012 — The clock era (verbatim, as received)
 
-**Status: not executed at the time of recording.** Execution record: §20.2.
+**Status: executed 2026-09-15 — B7 closed.** Execution record: §20.2.
 
 *(§19 is vacant. Every prior blueprint took the section one below its own
 number — 011 → §18 — so this would have been §19; the blueprint says §20 and
@@ -5026,3 +5026,98 @@ runs cannot establish and were never designed to.
 | the coercion's own exhibit | **not reproduced** — no serving returned a criterion-keyed object again, and the one that did is no longer on the tier. |
 
 Total Blueprint 012 spend, sweep and settling run together: **$0.6113**.
+
+### 20.2 Execution record
+
+**Status: executed 2026-09-15.** Suite 643 → **651** across 31 files, green
+before and after; CI green. Total spend **$0.6113** — sweep $0.1533 against a
+$0.30 cap, settling run $0.4580 against $3.00.
+
+#### Departures
+
+1. **A tiebreak was bought that the blueprint did not specify.** A3(iii)'s
+   five-arm sweep left GMICloud at 17.9 s/call and DigitalOcean at 18.8 — a 5%
+   gap at n=1, which is a coin flip, not a ranking. Three more reps of each plus
+   the incumbent as control cost $0.09 and reversed the picture: DigitalOcean
+   produced one 1,200 s expiry and one escalation on the cheapest scenario in
+   the suite. **Without it the pin would have been a coin flip that landed on
+   the wrong side half the time.**
+2. **`requires_execution` was re-run with a probe copy of its scenario**, with
+   `max_calls` raised, after the shipped expectation of 40 stopped it at 42
+   calls mid-loop. The shipped file was not touched — the copy lives outside the
+   repo. Justification and its limit are in §20.1(g): the probe used 35 calls
+   and would never have hit the ceiling, so the lift did not produce the
+   termination.
+3. **Three instrument repairs the blueprint did not ask for**, each because a
+   deliverable could not be produced without it: a budget stop that discarded
+   the assertion it was designed to report, a normalisation counter that could
+   not say what it had normalised, and — in Part A — the confirmation that the
+   011 gate-timing fix is the only one that distorts a retained number.
+4. **§20 is §20**, with §19 left vacant. Every prior blueprint took the section
+   one below its number; this one names §20.1 and §20.2 throughout, so the
+   blueprint won and the gap is documented beside the paste.
+
+#### Left undone, deliberately
+
+- **No convergence-rate work**, per the OUT OF SCOPE list — and now with a
+  reason rather than an instruction: the iterations finding (8 → 2, 4 → 1) is
+  n=1 per trace and is exactly the evidence base that list says to read before
+  designing against.
+- **No escalation failure-log view.** A2 says plainly it would take 70–78% of a
+  bill that was never binding and return 5–10% of a clock that was. It is a cost
+  measure, not a B7 fix, and B7 is closed.
+- **No pins beyond the three.** `escalation`, `research`, `search` and the
+  reranker have never been measured by serving. That is the single largest
+  untouched surface this blueprint exposes.
+- **The `max_calls: 40` expectation is left as it stands** on all four
+  convergence scenarios. At n=2 it is marginal for one trace and comfortable for
+  the other three; "marginal" is not grounds to edit a recorded expectation.
+- **The split normalisation counter has no live reading.** It landed after the
+  last paid run.
+
+#### What execution found that the blueprint missed
+
+1. **The pin's mechanism is not the one the sweep measured, or that either of us
+   predicted.** Both pre-registrations were about seconds per call. The
+   blueprint said the median would fall below 30; it reached 41.1. I said it
+   would improve but not past 30, and was right for an incomplete reason. **The
+   actual change is iterations**: 8 → 2 and 4 → 1. A serving does not only run
+   at a speed, it converges at a rate, and *that* is what turned two permanent
+   expiries into five-minute ships.
+2. **A3(i) earned its place immediately, on the fastest serving in the field.**
+   DeepInfra led on latency at 14.1 s/call and returned an **empty JSON object**
+   three times running against `ImplementVerdict`, with the rejection note fed
+   back between attempts, killing its run. A rule written to be conservative
+   disqualified the winner on its first use.
+3. **A second disqualification that only n>1 could see.** DigitalOcean's single
+   sweep rep was the co-leader; its next two were a 1,200 s expiry and an
+   escalation on `backend_index`. The project's standing distrust of n=1 —
+   earned on `crossref_integrity`'s three-outcomes-in-three-runs — turns out to
+   apply to servings as much as to traces.
+4. **The `max_calls` headroom had never worked.** `run_scenario` sets the call
+   ceiling one above the expectation *"so exceeding the expectation is reported
+   by the max_calls assertion rather than as an opaque abort"*, while `score`
+   discarded every assertion the moment an error was set. The two disagreed for
+   as long as both existed, and the disagreement surfaced at the exact moment
+   B7's closure was being judged — a cost expectation three blueprints old
+   silently answering a termination question.
+5. **One counter cannot serve three normalisations.** A live run reported
+   `normalised_verdicts: 2` and nothing could say whether the truth table had
+   derived a missing `green`, overruled a contradictory one, or the evidence
+   fold had fired. C4 asked precisely that. Split by kind now.
+6. **That is the fourth instrument in two blueprints found reporting less than
+   it measured** — after the rejection log that lived in stderr, the dissent
+   record that read attributes off a dict, and the gate billed for its own
+   sub-graph. The pattern is specific enough to name: **an instrument added in
+   the same commit as the fix it watches gets no run of its own to prove it on.**
+   Every one of these four was written alongside the change it was meant to
+   observe, and every one was wrong in a way the next run would have caught.
+7. **The premise about 011-C1 was false, and pointed at a real defect anyway.**
+   The decomposition did land, in §18.1(b). What had gone wrong was that §18.1
+   carried three headings with the same number and the results section was
+   appended after Part C, so reading in order suggested Part C had been
+   superseded. Now (a), (b), (c).
+8. **Both written ledgers of B7's names were wrong, including mine.** §18.1
+   claimed a name — "budget" — the row never carried. §6.9 is reconstructed from
+   the row at each commit that changed it. When a record and a summary of it
+   disagree, the record is cheap to read and nobody had read it.
