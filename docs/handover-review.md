@@ -4626,3 +4626,27 @@ exactly these traces — read before designing); the escalation failure-
 log view (A2's decomposition may propose its own blueprint); cascade
 search; per-tier pins beyond the three; .env edits (G-3); prompts.
 ```
+
+### 20.1(a) Part A — the sweep's pre-registration, written before it ran
+
+A3(iii)'s trigger fired. Mining the retained records gave **one** serving with
+attributable latency, not three — so the sweep runs. Written before launching:
+
+- **[prediction]** The incumbent, the only serving with attributable numbers
+  (106–136 s/call over two units), is **not** the fastest of the five. It is
+  the default OpenRouter order, which is not a latency ranking.
+- **[prediction]** The spread between fastest and slowest compliant serving is
+  **at least 2×**. A tier that varies 20–90 s/call across units is not varying
+  by scenario alone.
+- **[prediction]** At least one of the five fails outright. Pins set
+  `allow_fallbacks: false`, so a serving that does not host the engineering
+  model is a hard error, and a serving list mined from *observed* units is not
+  the same as a list of servings that can be *pinned*.
+- **[prediction]** Zero rejections across all five arms. `backend_index` is the
+  routine shape; the two recorded rejections came from a validator reasoning
+  about a tolerance stack, and the coercion now absorbs that exhibit anyway.
+
+Arms in observation order (most-observed first, so a budget death leaves the
+best candidates measured), one scenario, `lean.yaml`, repeat 1, `--max-spend
+0.10 --max-spend-sweep 0.30`, `triage` and `architecture` pinned constant so
+only `engineering` varies.
