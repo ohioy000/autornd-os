@@ -218,10 +218,16 @@ autornd/
     conditions.py        ★  Deliberately tiny expression language (NOT eval)
     checks.py            ★  Free deterministic checks + registry
   engine/
-    phases.py            ★★ Every prompt lives here. Triage risk guide. ~750 lines
+    phases.py            ★★ Every prompt lives here. Triage risk guide. ~900 lines
     review_composition.py ★ get_review_team(risk, domains, specialists)
-    workflow.py             Legacy WorkflowEngine (hardcoded sequence; kept as
-                            the equivalence reference for the graph)
+    workflow.py          ★★ WorkflowEngine — the API's entry point, ON the request
+                            path. It loads the graph, runs it, owns the DB row and
+                            the status column, and writes episodic memory. The
+                            hardcoded sequencer it used to carry as the graph's
+                            equivalence reference is gone (251 lines): the graph
+                            outgrew what a linear engine can represent. A blueprint
+                            once ruled this module legacy and ordered it deleted —
+                            see convention 19. tests/test_live_wiring.py pins it.
   knowledge/
     context.py           ★★ Grounding assembly, rerank, scoping, research gating
     research.py          ★★ Outward lookup, recall-before-search, findings
@@ -244,8 +250,8 @@ autornd/
     templates/dashboard.html  single-file chat + workflows + settings UI
 
 workflows/
-  engineering-rnd.yaml   ★★ the flagship pipeline, 16 nodes (full text in §3.1)
-  lean.yaml                 9 nodes — cheaper variant
+  engineering-rnd.yaml   ★★ the flagship pipeline, 21 nodes, 3 loops (§3.1)
+  lean.yaml                 10 nodes — cheaper variant, one loop
   triage-only.yaml          2 nodes — triage + grounding (research measurement)
   triage-classify.yaml   ★  1 node — triage alone. Exists so calibration costs
                             ~$0.00002/call instead of a full workflow.
@@ -253,6 +259,8 @@ workflows/
 evals/
   scenarios/*.yaml          17 core scenarios (default suite)
   scenarios/wide/*.yaml  ★  36 sector scenarios — OPT-IN (non-recursive glob)
+  scenarios/convergence/ ★  4 B7 traces — the hardest shapes, all now terminating
+  scenarios/materiality/    5 · scenarios/planprobe/ 3 · scenarios/probe/ 1
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       the only tracked profile
@@ -266,15 +274,47 @@ tests/                      31 files, 651 tests (as of `767f582`)
 | kind | behaviour |
 |---|---|
 | `ai` | one or more model calls via `PhaseRunner._phase_<prompt>` |
-| `check` | free deterministic function from `checks.registry` |
-| `gate` | boolean over prior outputs; `on_fail` sets a terminal status |
+| `check` | free deterministic function from `checks.registry` (four of them: `criteria_addressed`, `numbers_consistent`, `totals_reconcile`, `judges_agree`) |
+| `gate` | boolean over prior outputs; `on_fail` names **either** a terminal status **or a node to route to** |
 
 Node fields: `id, kind, depends_on, when, tier, tier_when, specialist, prompt,
 schema, max_tokens, check, args, condition, on_fail, on_fail_reason, body,
 until, max_iterations, on_exhausted, on_exhausted_status`.
 
 A node with `body` is a **loop** over that sub-sequence until `until` holds or
-`max_iterations` (which may *name a setting*, resolved at run time).
+`max_iterations` (which may *name a setting*, resolved at run time). **Every
+loop must declare a bound at load time** — review and implement can disagree
+indefinitely, and the graph can no longer express that.
+
+**A gate may route instead of ending.** Before this, a blocking review was the
+end of the run and its findings had nowhere to go: three traces in four
+terminated there with the work unfixed and the diagnosis unread. `on_fail:
+review_rework_loop` sends the work back through implement, validate and a fresh
+review, and it ships only when every judge agrees. Routing reuses the loop
+handoff path, so a closed gate and an exhausted loop reach a recovery sub-graph
+the same way.
+
+**Loop ownership, which is easy to trip over.** A loop **owns** the nodes in its
+`body`, and ownership takes them off the top-level schedule — they run because
+the loop runs them, never because their dependencies happened to be satisfied.
+The same holds for a loop's `on_exhausted` target and for a gate's `on_fail`
+target when it names a node. **This cost a real mistake:** adding `review` to a
+rework loop's body *deleted the first review from the pipeline*, and took the
+gate depending on it and the independent pass beyond that with it. The failure
+mode is a silently shorter pipeline, not an error. A phase that must run both in
+the main flow and inside a loop needs **two nodes** — same prompt, same tier,
+two ids — because the scheduler distinguishes nodes, not phases. That is why
+`review` and `rework_review` both exist.
+
+**All judges must agree, not just the validator.** `judges_agree` folds every
+judge a loop body produced — `implement.green`, `validate.green`,
+`coverage.passed`, `consistency.passed` — into one boolean, and the build loop
+exits on the fold rather than on validate alone. Measured once, and it only
+takes one: the old exit let a run stop satisfied while the domain reviewer had
+already flagged a critical concern and flipped the implementation red, and
+validate turned out to be the judge that was wrong. `review_fold` folds the
+build judges with the re-review the same way, so reworked work ships only when
+both agree. The fold also records **which judge dissented**, per iteration.
 
 **Specialist rosters** — `specialist:` accepts a concrete role name or a roster:
 
@@ -304,6 +344,32 @@ undeclared role resolves to a **synthesized generalist** rather than raising.
 `call_ceiling` / `spend_ceiling` enforced inside `_account()`. Nothing can make
 a call without being priced. `PhaseRunner.total_cost` is a *property* reading
 `client.spend`.
+
+**Verdict truth tables — derived fields are normalized, not demanded.** Two
+schema rules, both bought by traces that died (conventions 20 and 21):
+
+| field | rule |
+|---|---|
+| `green` (implement, validate) | `Optional[bool] = None`, resolved after construction: absent + a `red_cause` → `False`; absent + none → `True`; `True` *with* a cause → coerced `False` (a false red costs an iteration, a false green ships unchecked work); `False` with no cause → **raise**, because that is the one case losing information. `done` stays required — nothing in the verdict implies it. |
+| `evidence` (validate) | a `{criterion: finding}` object folds to `"key: value"` lines, **natural-sorted** so `criterion_2` precedes `criterion_10` and a retry cannot change the answer. Non-text keys or values, or a part-string list, are refused with the accepted shapes named. |
+
+`ReviewFinding` is the older instance of the same idea: a bare string becomes a
+`detail`, and eight aliases are accepted for it, after a reviewer writing `issue`
+lost three entire reviews at the last phase with the findings in hand.
+
+**The instruments.** A run's JSONL unit record is the measurement surface, and
+almost every entry in it exists because something was once unanswerable:
+
+| instrument | what it answers |
+|---|---|
+| `rejections_by_tier` / `rejections_by_provider` | how often a reply is refused, and **by which serving** — a tier is served by up to a dozen |
+| `normalised_by_kind` | which normalization fired: green derived, green overruled, or evidence folded |
+| `seconds_by_phase` | where an expired run's clock went, without buying it again |
+| `iterations[]` | every build-loop round: both verdicts, red causes, evidence, concerns, **which judge dissented**, and the spend delta |
+| `tokens_by_tier` | prompt and completion tokens per tier — cost alone cannot separate "dearer" from "handed more to read" |
+| `refused_lookups` | a zero score with refusals is a poisoned reading, not a bad model |
+| `providers_by_function` | who served each tier; a suite that drops six sectors looks like a regression until you can see this |
+| `ResultsLog` | append-per-unit JSONL, flushed immediately, with a header naming models, servings and caps |
 
 **Three-state rerank probe.** `_rerank_mode: None → "native" | "listwise" |
 "distance"`. Each strategy is probed **at most once**; a dead end stops costing
@@ -339,67 +405,49 @@ idempotent across phases.
 
 ## 3. CURRENT STATE & SOURCE OF TRUTH
 
-### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (16 nodes)
+### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (21 nodes)
 
-Execution order: `triage → context → plan → feasibility → plan_ready →
-build_loop → review → review_clean → independent_check`
-(`build_loop` body: `implement → domain_review → coverage → consistency →
-validate`; exhaustion hands off to `escalation → recoverable → recovery_loop`.)
+**The file is the source of truth; this table is generated from it.** A
+hand-copied YAML lived here for twelve blueprints and drifted — it still
+showed a five-node build loop exiting on `validate.green` alone, two exits and
+one loop after that stopped being true.
 
-```yaml
-name: engineering-rnd
-nodes:
-  - {id: triage,  kind: ai, tier: triage, prompt: triage, schema: TriageVerdict}
-  - {id: context, kind: check, check: build_context, depends_on: [triage]}
+| node | kind | what it does |
+|---|---|---|
+| `triage` | ai | tier `triage`, → `TriageVerdict` |
+| `context` | check | `build_context` (free) |
+| `plan` | ai | tier `architecture`, as `systems_architect`, → `PlanVerdict` |
+| `feasibility` | ai | tier `engineering`, as `assigned`, when `plan.ready == true` |
+| `plan_ready` | gate | `plan.ready == true`; on_fail → `blocked` |
+| `implement` | ai | tier `engineering`, as `lead`, → `ImplementVerdict` |
+| `domain_review` | ai | tier `engineering`, as `peers`, when `implement.green == true` |
+| `coverage` | check | `criteria_addressed` (free) |
+| `consistency` | check | `numbers_consistent` (free) |
+| `validate` | ai | tier `engineering`, as `test_engineer`, → `ValidateVerdict` |
+| `judges` | check | `judges_agree` (free) |
+| `build_loop` | loop | until `judges.passed == true`, max `max_iterations`, exhausted → `escalation` |
+| `escalation` | ai | tier `escalation`, → `EscalationVerdict` |
+| `recoverable` | gate | `not escalation.requires_human`; on_fail → `blocked` |
+| `recovery_loop` | loop | until `review_fold.passed == true`, max `escalation_recovery_attempts`, exhausted ⇒ `escalated` |
+| `review` | ai | tier `engineering`, as `reviewers`, → `ReviewVerdict` |
+| `review_clean` | gate | `review.ship == true`; on_fail → `review_rework_loop` |
+| `rework_review` | ai | tier `engineering`, as `reviewers`, → `ReviewVerdict` |
+| `review_fold` | check | `judges_agree` (free) |
+| `review_rework_loop` | loop | until `review_fold.passed == true`, max `review_rework_attempts`, exhausted → `escalation` |
+| `independent_check` | ai | tier `independent`, → `DoubleCheckVerdict`, when `triage.unrecallable` |
 
-  - id: plan
-    kind: ai
-    tier: architecture
-    tier_when: {"triage.risk == 'low'": engineering}   # a restyle needn't wake a reasoner
-    specialist: systems_architect
-    prompt: plan
-    schema: PlanVerdict
-    depends_on: [context]
+**Three loops, and they share their bodies.** `recovery_loop` and
+`review_rework_loop` run the identical eight-node body — the build body plus
+`rework_review` and `review_fold` — because work sent back by a blocked review
+and work resumed after a recoverable escalation need the same treatment. They
+are separate nodes because a loop owns its body (§2.3), and `review` must
+still run once on the main schedule.
 
-  - {id: feasibility, kind: ai, tier: engineering, specialist: assigned,
-     prompt: feasibility, depends_on: [plan], when: "plan.ready == true"}
-  - {id: plan_ready, kind: gate, condition: "plan.ready == true",
-     depends_on: [feasibility], on_fail: blocked, on_fail_reason: "Plan not ready"}
+**Reading the shape in one line:** triage → ground → plan → *gate* → build
+until every judge agrees → escalate if it never does → *gate* on recoverable →
+review → *gate* on clean → rework until review and build both pass →
+independent pass on unrecallable work.
 
-  - {id: implement, kind: ai, tier: engineering, specialist: lead,
-     prompt: implement, schema: ImplementVerdict}
-  - {id: domain_review, kind: ai, tier: engineering, specialist: peers,
-     prompt: domain_review, depends_on: [implement], when: "implement.green == true"}
-  - {id: coverage, kind: check, check: criteria_addressed,
-     args: {criteria: plan.success_criteria, text: implement.summary}, depends_on: [implement]}
-  - {id: consistency, kind: check, check: numbers_consistent,
-     args: {plan: plan.plan, implementation: implement.summary}, depends_on: [implement]}
-  - {id: validate, kind: ai, tier: engineering, specialist: test_engineer,
-     prompt: validate, schema: ValidateVerdict, max_tokens: validate_max_tokens,
-     depends_on: [coverage, consistency, domain_review]}
-
-  - {id: build_loop, kind: ai, body: [implement, domain_review, coverage, consistency, validate],
-     until: "validate.green == true", max_iterations: max_iterations,
-     on_exhausted: escalation, depends_on: [plan_ready]}
-
-  - {id: escalation, kind: ai, tier: escalation, prompt: escalation,
-     schema: EscalationVerdict, max_tokens: escalation_max_tokens}
-  - {id: recoverable, kind: gate, condition: "not escalation.requires_human",
-     depends_on: [escalation], on_fail: blocked,
-     on_fail_reason: "Escalation requires human intervention"}
-  - {id: recovery_loop, kind: ai, body: [implement, domain_review, coverage, consistency, validate],
-     until: "validate.green == true", max_iterations: escalation_recovery_attempts,
-     on_exhausted_status: escalated, depends_on: [recoverable]}
-
-  - {id: review, kind: ai, tier: engineering, specialist: reviewers,
-     prompt: review, schema: ReviewVerdict, depends_on: [build_loop]}
-  - {id: review_clean, kind: gate, condition: "review.ship == true",
-     depends_on: [review], on_fail: blocked,
-     on_fail_reason: "Review found blocking issues"}
-  - {id: independent_check, kind: ai, when: "triage.unrecallable",
-     tier: independent, prompt: doublecheck, schema: DoubleCheckVerdict,
-     depends_on: [review_clean]}
-```
 
 ### 3.2 `pyproject.toml` (verbatim)
 
@@ -559,21 +607,26 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (561 total, as of `01886a2`)
+### 3.7 Test distribution (651 total, as of `4cee135`)
 
 | file | n | file | n |
 |---|---|---|---|
-| test_graph.py | 82 | test_graph_equivalence.py | 16 |
-| test_evals.py | 73 | test_auth.py | 16 |
-| test_routing.py | 62 | test_shipped_examples.py | 15 |
+| test_graph.py | 82 | test_shipped_examples.py | 15 |
+| test_evals.py | 73 | test_evidence_shape.py | 14 |
+| test_routing.py | 62 | test_budget_transparency.py | 11 |
 | test_verdicts.py | 42 | test_specialists.py | 11 |
-| test_knowledge.py | 41 | test_budget_transparency.py | 11 |
+| test_knowledge.py | 41 | test_results_log.py | 10 |
 | test_research.py | 37 | test_triage.py | 10 |
 | test_review_composition.py | 28 | test_lead_review.py | 9 |
-| test_profiles.py | 23 | test_results_log.py | 8 |
-| test_settings.py | 22 | test_engine.py | 6 |
-| test_sweep_budget.py | 21 | test_workflow.py | 4 |
-| test_api.py | 21 | test_docs.py | 3 |
+| test_profiles.py | 23 | test_live_wiring.py | 7 |
+| test_settings.py | 22 | test_rejection_counter.py | 7 |
+| test_api.py | 21 | test_engine.py | 6 |
+| test_sweep_budget.py | 21 | test_budget_stop_scoring.py | 5 |
+| test_rework_loop.py | 17 | test_iteration_dissent.py | 5 |
+| test_auth.py | 16 | test_workflow.py | 4 |
+| test_green_resolution.py | 16 | test_docs.py | 3 |
+| test_all_judges_exit.py | 15 | test_phase_timing.py | 3 |
+| test_schema_wiring.py | 15 | | |
 
 Regenerate with `pytest tests/ --collect-only -q`; the total is the part that
 matters and `tests/test_docs.py` fails if the README badge disagrees with it.
@@ -582,24 +635,46 @@ matters and `tests/test_docs.py` fails if the README badge disagrees with it.
 
 ## 4. ACTIVE CONTEXT & WORKING MEMORY
 
-### 4.1 What we were doing immediately before this handover
+### 4.1 Where the project stands
 
-Executing a 4-item list, in this order, all four now complete:
+**The flagship loop is finished.** B7 — *"the build loop does not converge on
+complex requests"*, the oldest open problem here — closed on 2026-09-15. All
+four convergence traces terminate in ship or escalated-with-diagnosis. What
+closed it was not a loop change but pinning the last unpinned tier; §6.9 has the
+ledger of the six names it carried on the way, and why five of them pointed at
+the wrong layer.
 
-1. **Measure how often research actually fires** → 33/36 (92%). §6.2.
-2. **Resolve the wide-sweep calibration drop** (35/36 → 29/36) → root cause was
-   **provider rotation**, not code. §6.1.
-3. **Provider-pin experiment** → conclusive; produced the price/quality table.
-4. **Independent pass** → verified by decomposition after 9 failed live attempts.
+**Thirteen blueprints have run through `docs/handover-review.md` §7–§22**, 92
+commits from `641da5a`. An advisor writes each blueprint; this repo executes it,
+pastes it verbatim before doing anything, and appends an execution record
+afterwards naming departures, what was deliberately left undone, and what
+execution found that the blueprint missed. **That last section is where most of
+the value landed** — six blueprints found the instrument broken rather than the
+hypothesis wrong.
 
-Immediately prior to that, a larger arc: fixing a broken cost meter, opening the
-roles vocabulary, gating review, and cutting search spend. 14 commits this
-session, `3fdf3b3` → `641da5a`.
+The arc, in one line each:
+
+| # | what it bought |
+|---|---|
+| 001–003 | packaging (three faults, not one), a documentation truth pass, a sweep-level spend cap |
+| 004–005 | three free closures; the triage tier pinned; B4 reframed — *the serving, not the guide* |
+| 006–007 | the instrument repaired: schemas wired into the retry, a provider message carried out of a 403 |
+| 008–009 | the all-judges exit; review's findings given a consumer via gate routing |
+| 010–011 | the clock instrumented; `green` resolved from `red_cause`; three broken instruments found |
+| 012 | the `engineering` serving pinned; **B7 closed**; convergence-rate discovered |
+| 013 | this consolidation |
+
+**The frontier has moved.** Calibration, cost and convergence are maintenance
+now. What is open is product: generalization beyond engineering, the human
+surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 501/501 pass.** Everything below is a live-behaviour
-or design issue.
+**No failing unit tests — 651/651 pass.** Everything below is a live-behaviour
+or design issue. **Closed items stay in the table with their resolution**: the
+ledger is most of this section's value, and three of the entries below were
+closed by discovering the premise was wrong rather than by fixing what was
+named.
 
 | # | Issue | Severity | Notes |
 |---|---|---|---|
@@ -612,6 +687,8 @@ or design issue.
 | B7 | ~~Build loop convergence~~ | **RESOLVED 2026-09-15 — and the sixth name was the right one** | Closed on 010's criterion: all four convergence traces terminate in ship or escalated-with-diagnosis. `derived_tolerances` and `numeric_consistency` **shipped** in 299 s and 182 s; `crossref_integrity` and `requires_execution` **escalated with a root cause and a directive**. What closed it was not a loop change — it was pinning the last unpinned tier. The win is **iterations, not seconds**: 8 → 2 and 4 → 1, while per-call latency moved only from a 67 s median to 41 s. **A serving does not only run at a speed, it converges at a rate** — B4's finding in the place nobody had looked. Read `§6.9` for the ledger of six names and what each one cost. **Closure means the loop terminates honestly under a compliant pinned serving, on one observation per trace** — not that it is reliable; `crossref_integrity` produced three different outcomes in three runs and is the standing reason to distrust n=1. §20.1 |
 | B8 | Shipped-default models fail on hard requests | medium | Documented rather than changed, per owner's instruction. §6.4. **The plan-tier burn is request-driven, not serving-driven** (measured 2026-09-14, n=2 servings × 12 easy plans vs 6 servings × 4 hard ones): the same model burned seven retries on the hard set and none on the easy one. Pinning that tier is not the lever; the candidates are the plan token budget — the burn sits at `Specialist.run`'s default 16,384 while every serving advertises a ceiling above 262,000 — or the model. **The budget is now a setting** — `PLAN_MAX_TOKENS`, default 32,768 (§16) — so that half is tunable without code; the model remains the owner's. |
 | B9 | No DB migrations (no Alembic) | low | Schema changes are destructive |
+| B11 | Two tier picks are **interim and unmeasured at their own jobs** | medium | `research` and `engineering` ship on models chosen for price and availability, never scored against the work they do. `engineering` carries five of the flagship's nodes and is the tier whose *serving* closed B7 — the model behind it has had no equivalent test. In service by choice, labelled so nobody mistakes the choice for a finding. |
+| B12 | Four tiers have **never been measured by serving** | medium | B4 and B7 both turned on *who serves a tier*, and it has only ever been asked of `triage`, `architecture` and `engineering`. `escalation`, `research`, `search` and the reranker are unpinned and unexamined. `escalation` is 70–78% of spend on hard traces (§6.10), so it is the obvious next place to look. Convention 23 says how. |
 | B10 | `ambiguous_request` — historical "mystery failure" | **RESOLVED** | It was B3's sibling: a `max_calls: 4` baseline set when the budget counted *nodes*. Measured 6. Now 8 |
 
 ### 4.3 Search-cost policy as it stands (the most-iterated subsystem)
