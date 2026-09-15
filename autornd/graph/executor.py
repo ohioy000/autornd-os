@@ -163,14 +163,19 @@ class GraphExecutor:
         payload["detail"] = getattr(result, "detail", "")
         state.outputs[node.id] = payload
 
-    async def _run_gate(self, node: Node, state: ExecutionState) -> bool:
-        """Returns whether the run continues."""
+    def _decide_gate(self, node: Node,
+                     state: ExecutionState) -> tuple[bool, str | None]:
+        """Settle a gate. Returns (run continues, node to route to).
+
+        The routing itself is the caller's job, so that the sub-graph a closed
+        gate hands off to is not billed to the gate's clock.
+        """
         passed = self._test(node.condition or "", state, node.id)
         state.outputs[node.id] = {"passed": passed}
         if passed:
-            return True
+            return True, None
         if not node.on_fail:
-            return False
+            return False, None
 
         reason = node.on_fail_reason or f"gate '{node.id}' closed"
         detail = self._gate_detail(node, state)
@@ -185,10 +190,10 @@ class GraphExecutor:
                         node.id, node.on_fail, reason)
             state.outputs[node.id] = {"passed": passed, "routed_to": node.on_fail,
                                       "reason": f"{reason}{detail}"}
-            return await self._run_from(node.on_fail, state)
+            return False, node.on_fail
 
         state.end(node.on_fail, f"{reason}{detail}")
-        return False
+        return False, None
 
     def _gate_detail(self, node: Node, state: ExecutionState) -> str:
         """Pull a reason out of the thing the gate was testing, when there is one.
@@ -240,6 +245,7 @@ class GraphExecutor:
         record = StepRecord(node.id, node.kind.value, state.iteration)
         state.trace.append(record)
         started = time.perf_counter()
+        route_to: str | None = None
         try:
             if node.kind is NodeKind.AI:
                 await self._run_ai(node, state)
@@ -247,11 +253,21 @@ class GraphExecutor:
             if node.kind is NodeKind.CHECK:
                 await self._run_check(node, state)
                 return True
-            return await self._run_gate(node, state)
+            proceed, route_to = self._decide_gate(node, state)
+            if route_to is None:
+                return proceed
         finally:
             # In a finally so a node that raises still reports what it cost —
             # the expensive failures are the ones worth timing.
             record.seconds = round(time.perf_counter() - started, 3)
+
+        # Deliberately outside the timer. A gate's own work is one condition
+        # test; the sub-graph it routes to is timed by its own nodes, and
+        # wrapping the delegation in the gate's clock counted every one of them
+        # twice. Measured: `review_clean` read 1,573 seconds of an 1,800-second
+        # run, and the per-phase table summed to 3,374 — the table B3 named as
+        # B7's deliverable, unusable in the run that needed it.
+        return await self._run_from(route_to, state)
 
     async def _run_loop(self, node: Node, state: ExecutionState) -> bool:
         budget = self._budget(node)
