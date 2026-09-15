@@ -694,6 +694,8 @@ named.
 | B7 | ~~Build loop convergence~~ | **RESOLVED 2026-09-15 — and the sixth name was the right one** | Closed on 010's criterion: all four convergence traces terminate in ship or escalated-with-diagnosis. `derived_tolerances` and `numeric_consistency` **shipped** in 299 s and 182 s; `crossref_integrity` and `requires_execution` **escalated with a root cause and a directive**. What closed it was not a loop change — it was pinning the last unpinned tier. The win is **iterations, not seconds**: 8 → 2 and 4 → 1, while per-call latency moved only from a 67 s median to 41 s. **A serving does not only run at a speed, it converges at a rate** — B4's finding in the place nobody had looked. Read `§6.9` for the ledger of six names and what each one cost. **Closure means the loop terminates honestly under a compliant pinned serving, on one observation per trace** — not that it is reliable; `crossref_integrity` produced three different outcomes in three runs and is the standing reason to distrust n=1. §20.1 |
 | B8 | Shipped-default models fail on hard requests | medium | Documented rather than changed, per owner's instruction. §6.4. **The plan-tier burn is request-driven, not serving-driven** (measured 2026-09-14, n=2 servings × 12 easy plans vs 6 servings × 4 hard ones): the same model burned seven retries on the hard set and none on the easy one. Pinning that tier is not the lever; the candidates are the plan token budget — the burn sits at `Specialist.run`'s default 16,384 while every serving advertises a ceiling above 262,000 — or the model. **The budget is now a setting** — `PLAN_MAX_TOKENS`, default 32,768 (§16) — so that half is tunable without code; the model remains the owner's. |
 | B9 | No DB migrations (no Alembic) | low | Schema changes are destructive |
+| B13 | **The risk gate governs lookups; the success criteria govern what must be verified; nothing reconciles them** | **high** | Measured 2026-09-15 (§6.13). §4.3 zeroes search at `low` risk; the plan phase then writes a criterion demanding "a citable source a reader can use to verify the claim" for work that has been denied any means of verifying anything. The agent does not refuse honestly — it **fabricates sources**. Controlled contrast in one blueprint: the `low`-risk trace got 0 lookups and burned 6 iterations inventing citations before dying on a cost ceiling; the `medium`-risk trace got 1 lookup and cited the correct article, shipping in one iteration. **Bites generalization hardest**: the guide's own `low` bucket is "presentation, copy, documentation", which is the most citation-dependent work there is. The fix is a ruling — raise the lookup budget on a blocking gap independently of risk, or stop plan writing criteria the run cannot satisfy. |
+| B14 | **Two literal engineering roles are injected regardless of profile** | medium | Measured 2026-09-15 (§24.1(a), §24.1(d)). `phases.py:104–110` appends `test_engineer` at high/critical and `systems_architect` on multi-domain; `review_composition.py:53–60` adds both by risk level, and an unrecognised domain leads to `systems_architect`. **77 of 108 wide-suite units in both arms** were assigned a test engineer, and 2 of 3 non-engineering full traces were staffed a systems architect. Not a bug under §6.5 — a synthesized role resolves rather than failing — but it is the generalization boundary sitting **in code rather than in prose**, which a prompt map cannot see. Also: the append bypasses Pydantic, so a `list[str]` field holds an enum member. |
 | B11 | Two tier picks are **interim and unmeasured at their own jobs** | medium | `research` and `engineering` ship on models chosen for price and availability, never scored against the work they do. `engineering` carries five of the flagship's nodes and is the tier whose *serving* closed B7 — the model behind it has had no equivalent test. In service by choice, labelled so nobody mistakes the choice for a finding. |
 | B12 | Four tiers have **never been measured by serving** | medium | B4 and B7 both turned on *who serves a tier*, and it has only ever been asked of `triage`, `architecture` and `engineering`. `escalation`, `research`, `search` and the reranker are unpinned and unexamined. `escalation` is 70–78% of spend on hard traces (§6.10), so it is the obvious next place to look. Convention 23 says how. |
 | B10 | `ambiguous_request` — historical "mystery failure" | **RESOLVED** | It was B3's sibling: a `max_calls: 4` baseline set when the budget counted *nodes*. Measured 6. Now 8 |
@@ -837,7 +839,20 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
     not only run at a speed, it converges at a rate.* **(iii) latency**, last.
     And **never at n=1**: one arm read 18.8 s/call on its single repetition and
     produced a 1,200 s expiry and an escalation on its next two.
-24. No linter/formatter is configured. Match surrounding style: 4-space indent,
+24. **A fact about the repo is generated or guarded, never hand-stamped.** Any
+    count, node list, schema listing or endpoint tally written by hand will be
+    wrong within two blueprints, and a commit stamp beside it does not help —
+    it records when someone last believed the number, not that it was right.
+    **Twelve drifts in one document, enumerated:** three retired claims
+    reasserted, two wrong workflow node counts, a wrong pass count, two
+    *differently* stale commit-stamped totals, three wrong verdict-field
+    descriptions, and an endpoint tally one too high. Eight of the twelve are
+    now caught by `tests/test_handover_truth.py`, which derives them from the
+    source; the other four were found by reading and are the argument for
+    generating rather than guarding wherever a table can be generated — §3.1
+    and §3.7 are, and no longer drift. **Where neither is possible, say what
+    the claim was measured on and let it age visibly.**
+25. No linter/formatter is configured. Match surrounding style: 4-space indent,
     `from __future__ import annotations`, type hints throughout, ~88-col soft
     wrap, module docstrings that explain rationale.
 
@@ -857,33 +872,46 @@ What is left is product, and it is a different kind of work.
 
 ### The chosen arc — generalization, "any team"
 
-**The owner's choice, 2026-09-15.** The vision's distinguishing claim is that
-this harness runs *any* team's R&D, and engineering was always "starting with".
+**The owner's choice, 2026-09-15 — and it has since been probed rather than
+estimated.** §6.13, §6.14 and §6.15 are the measurements; this is what they cost
+the plan.
+
+**The original pricing was wrong in the safe direction.** It read:
 
 > Vocabularies, profiles and `studio.yaml` are the 70% prerequisite — the
-> prompts are the 30%. Design-heavy, live-light: mostly free prompt work with
-> the wide suite as regression.
+> prompts are the 30%… the risk is that the triage risk guide was rewritten
+> four times against live data, and a generalization pass that touches it
+> without re-measuring would throw that away.
 
-**Honest pricing.** The 70% is largely *done and unexercised*: `Domain` and
-`SpecialistRole` are already open vocabularies, profiles already declare their
-own roles, and an undeclared role already resolves to a synthesized generalist
-(§2.3, §6.5). The untested part is whether those seams hold when something
-other than engineering drives them — the only non-engineering profile that has
-ever run is `legal_ops`, as a single sector in a calibration suite, and its
-lesson was about servings.
+Three findings dismantle that, in order of how much they move the estimate:
 
-The 30% is the real work: **every prompt in `phases.py` speaks engineering**,
-and there are roughly 900 lines of them. The risk is not that they are hard to
-rewrite. It is that the triage risk guide (§6.6) was rewritten **four times
-against live data** and is the most carefully calibrated artifact in the
-project — a generalization pass that touches it without re-measuring would
-throw that away. Expect the free design work to be the easy half and the
-regression evidence to be the expensive half.
+1. **The dialect does not reach the output.** 24 line-items of engineering
+   prose in `phases.py`, and **2 dialect occurrences in 18,500 characters** of
+   non-engineering deliverable — both of one word that is a schema field name.
+   The prompt rewrite is a **tidying exercise, and it is not on the critical
+   path.** (§6.13, n=3)
+2. **The calibrated text was never the problem.** What four rounds of live data
+   bought is the risk guide's *structure*, and it is already domain-neutral —
+   it reasons about consequence, not subject. Only its example lists name
+   engineering, and they already contain `style guides`, `broadcast loudness`,
+   `presentation` and `copy`. (§24.1(a))
+3. **The 70% works, measured.** Domains, roles, the checks mechanism and risk
+   invariance all hold live. **0 of 23** stably-read sectors moved risk under a
+   profile. (§6.14, n=216 units)
 
-**Cheap first move, before any prompt changes:** run the existing `wide` suite
-under a genuinely non-engineering profile and record where it breaks. That is
-free, it is a measurement rather than a guess, and it tells you whether the 70%
-is actually done.
+**What is actually on the critical path is code, not prose:**
+
+| | |
+|---|---|
+| **B13 — the verification gap** | **high.** The risk gate zeroes lookups on `low`-risk work and the plan then demands citable sources; the agent fabricates them. The guide's `low` bucket *is* "presentation, copy, documentation", so a content team meets this on its first brief and an engineering team almost never does. **This, not vocabulary, is what stopped the one trace that failed.** |
+| **B14 — two literal role injections** | medium. A content studio's high-risk work is staffed and reviewed by an engineer, in 77 of 108 measured units. Cheap to fix, invisible to a prompt map. |
+| the prompt tidy-up | low, and now optional. 24 line-items, none a judgement rule. |
+
+**Honest remaining unknown:** all of this is **n=1 per full trace**. Two of
+three non-engineering traces shipped inside or at the engineering envelope
+(135 s/10 calls and 339 s/15 against 299 s/13), which is encouraging and is not
+the same as reliable — `crossref_integrity` is the standing reminder that one
+observation of a trace predicts little.
 
 ### The other open arcs, priced
 
@@ -1361,6 +1389,91 @@ arithmetic contradiction in the plan itself — *a token bucket of depth 20
 refilling at 100/s admits at most 20 in an instantaneous burst, yet the burst
 tests expected 120*. The machinery that catches substance is working; it simply
 is not the validator, and must not be asked to be.
+
+---
+
+### 6.13 The engineering dialect is in the prompts and does not reach the output
+
+**The generalization arc's central assumption, tested.** §5 priced the prompt
+rewrite as the risky 30%. Two free measurements and three paid traces say it is
+neither risky nor, on this evidence, necessary.
+
+**What the prompts contain** (`engine/phases.py`, 1,019 lines, read line by
+line): **24 line-items bind the dialect** — 4 artifact-noun lists, 8 examples,
+6 uses of "engineering" as a modifier, 2 role names in prose, 2 literal role
+injections in code, 2 eng-worded statements of a neutral intent. **None is a
+judgement rule.** The risk guide's calibrated structure — the two questions in
+order, the standards clause, the protective-systems and governing-documents
+rules — is already domain-neutral, and so is `ASSESSMENT_CONTRACT`'s
+criteria-are-fixed clause, the most load-bearing block in the file.
+
+**What the output contains** (n=3 traces, 18,500 characters of model output
+searched for 13 dialect markers):
+
+| | dialect occurrences |
+|---|---|
+| three implement deliverables (16,514 ch) | **1** |
+| validate causes, review findings, autopsies (~2,000 ch) | **1** |
+
+Both are the word `implementation`, which is the harness's own schema field
+name. **No "test case", no "code", no "schema", no "engineer".**
+`OUTPUT_CONTRACT` instructs implement to produce *"the design, the code, the
+schema, the procedure, the calculation"*; implement produced contract clauses, a
+house style guide and a positioning brief. **The dialect reads as context the
+model discards, not as instruction it obeys.**
+
+Two pre-registrations predicted where binding would concentrate — implement and
+validate, or escalation. **Neither bound.** A prompt map says what *could* bind;
+only a probe says what *did*.
+
+### 6.14 A profile does not move risk, and the suite's own noise is larger
+
+Measured 2026-09-15, 36 sectors × 3 repetitions × 2 arms = **216 units, $0.0597**,
+same day, same pins, differing only in `AUTORND_PROFILE`:
+
+| | |
+|---|---|
+| sectors whose modal risk is unchanged | 32/36 |
+| sectors read **unanimously in both arms** | 23/36 |
+| of those 23, sectors whose risk differs | **0** |
+| sectors not unanimous **with themselves** across 3 reps | studio 9, control 8 |
+
+**Not one stably-read sector changed its risk under a profile.** All four
+apparent movers are unstable in at least one arm; one produced three different
+answers in the control alone. The profile's effect is smaller than the suite's
+own repetition spread, and that is the honest form of "risk is
+profile-invariant". The mechanism is narrow by construction: `run_triage`'s
+system prompt is a fixed literal and its user prompt carries no profile context,
+so a profile changes **only the two vocabulary lists** triage is offered.
+
+**The vocabulary earns its place on exactly the work it should.** Of 36 sectors
+one is content work; the control invented `copywriting` for it **once in three**
+unaided, and the profile made it **three of three** with `copywriter` attached.
+The other 35 were untouched.
+
+**And the open vocabulary is doing more work than any profile.** In the studio
+arm triage invented **67 role assignments across 38 distinct names** —
+`process_engineer` ×14, then `prosthodontist`, `veterinary_anesthesiologist`,
+`brewer`, `agronomist` — against **4** assignments of the profile's own declared
+roles. On work a profile does not cover, the freedom to name a role matters far
+more than the roles it declares. §6.5 from the other direction.
+
+### 6.15 The crossref failure is a property of the agent, not of the subject
+
+§18.1 diagnosed `crossref_integrity` as *"the implementation agent writes each
+section as an independent narrative unit and never performs a global
+dependency-ordering or cross-reference pass"*. That was measured on engineering
+work over eight iterations.
+
+Re-asked 2026-09-15 on a **house style guide** (n=1): iteration 1 came back red
+with `dissenting = [consistency, implement, validate]` and the cause *"Worked
+examples in Sections 2, 3, and 5 violate stated rules"* — **the same failure, in
+a subject with no engineering in it.** The loop caught and fixed it in **one**
+rework round rather than eight.
+
+This is also the first live reading from the per-iteration dissent record
+repaired in 012, and it names `consistency` — a free deterministic numeric check
+— as a judge that caught a style-guide defect nobody would have pointed it at.
 
 ---
 
