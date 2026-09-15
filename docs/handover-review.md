@@ -5545,3 +5545,28 @@ the verdict then holds `['copywriter', 'fact_checker', SpecialistRole.TEST_ENGIN
 Everything downstream calls `role_key()`, which unwraps it, so nothing breaks —
 but the field's declared type is not what it contains, and a verdict serialised
 straight to JSON carries a mixed list. Recorded, **not fixed** (D2: no edits).
+
+### 24.1(b) Part B — pre-registration, written before the run
+
+**Departure, declared before spending it (preamble rule 7):** the blueprint
+specifies one arm. B2's claim is that *risk calibration holds*, and the only
+baseline on record is §6.6's Alibaba row from **2026-09-14** — comparing a run
+today against it would confound the profile's effect with a month of serving
+drift, which is precisely the mistake B4 was. **A same-day control arm runs
+too**, identical in every respect but the profile. Expected cost ≈$0.032 per
+arm against §6.6's measured $0.0317; it de-risks the only claim Part B makes.
+
+**What triage actually sees from a profile, verified free:** the vocabularies
+and nothing else. `run_triage`'s system prompt is a fixed literal and its user
+prompt carries no `context_block`, so the studio profile's constraints — *every
+factual claim needs a citable source*, *reading age 14 or below* — **never reach
+the classifier**. It sees ten domains instead of seven and twelve roles instead
+of seven, and that is the entire intervention.
+
+| | prediction |
+|---|---|
+| **advisor's** [gating nothing] | risk calibration holds; content-adjacent sectors assign studio roles; non-content sectors fall back to synthesized generalists |
+| **mine — risk** | **Holds, and nearly exactly**, because the mechanism is narrow: the risk guide is domain-neutral (§24.1(a)) and the profile does not reach triage's reasoning at all, only its two vocabulary lists. A shift beyond one or two sectors would mean the vocabulary alone moved a consequence judgement, which would be a finding about the *guide*, not about profiles. |
+| **mine — rosters** | **Studio roles appear, and so do engineers.** A2 measured `enforce_triage_composition` appending a literal `test_engineer` at high/critical regardless of profile. The advisor's "content-adjacent sectors assign studio roles" is right and incomplete: **every high or critical sector, in any profile, gets an engineer appended after the model has spoken.** I expect this on roughly the 20 sectors §6.6 reads high or critical. |
+| **mine — domains** | **Domains move more than risk.** With `copywriting`, `brand_strategy` and `seo_analytics` newly on offer, content-adjacent sectors (`broadcast`, `technical_writing`, `marketing`-like) should relabel. That is the vocabulary working as designed and is *not* a calibration change. |
+| **mine — generalists** | **Few or no synthesized generalists in this arm.** Triage is offered twelve roles covering both worlds, so it has little reason to invent one. The generalist path is exercised by §6.5's history, not by this run. |
