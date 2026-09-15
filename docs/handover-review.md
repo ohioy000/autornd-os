@@ -5920,3 +5920,98 @@ after; CI green. **Total $0.3156** — Part B $0.0597 (two arms), Part C $0.2559
    deadline was the failure mode. It cited Article 33(2) and *"without undue
    delay"*, which is correct, and shipped in one iteration. The trap caught the
    *other* trace instead, on a criterion nobody designed as a trap at all.
+
+## 25. Blueprint 015 — The succession (verbatim, as received)
+
+**Status: not executed at the time of recording.** Execution record: §25.2.
+
+*(No gap this time: 014 took §24 and this takes §25. The vacant §19, §21 and §23
+were artifacts of blueprints naming even-numbered sections; this one names the
+next number up.)*
+
+```text
+BLUEPRINT 015 — The succession: make the execution protocol a repo
+artifact, so any agent can execute it from files, not transcripts.
+
+Origin: the executor is being replaced mid-arc (owner's subscription
+ends). The repo already carries the state of record (regenerated
+HANDOVER, §1–§24, guards, generated docs). The working PROTOCOL has
+lived in executor sessions and advisor chat — it must become files
+before the current executor's time ends. No behavior, prompts,
+workflows, or profiles change. FREE.
+
+Protocol (as 001–014): paste verbatim into docs/handover-review.md as
+§25 BEFORE executing; append §25.2 after. Suite green before and after;
+CI green before finishing.
+
+PART A — AGENTS.md / CLAUDE.md merge: one executor-facing protocol file
+A1. Create AGENTS.md (the cross-tool convention; symlink or copy
+    CLAUDE.md to it — read the current CLAUDE.md first, then extend).
+    Contents, from the record, not from memory:
+      - The permission boundary (instrument repair vs behavior change;
+        verdict semantics, loop wiring, judgment-steering prompts are
+        ruled by the advisor; mechanical execution of a ruled design
+        is executor's).
+      - Convention digest: all of §4.4's conventions 17–24 with one line
+        each, sourced from HANDOVER §4.4.
+      - The working rules: suite green before/after; CI green before
+        finishing; pre-registration BEFORE paid runs (commits as
+        evidence); departures recorded with reasons in §n.2; test
+        doubles bill; no evals/ store leakage; private corpora never
+        enter; counts re-derived, never trusted.
+      - The G-gate structure: G-1 key hygiene (keys move via terminal
+        .env only — never chat, never either direction); G-2 pin
+        ratification is the owner's one line; G-3 .env and standing
+        config is the owner's; repeat>1 buys are logged departures
+        carrying cost and de-risked decision.
+      - Where things live: HANDOVER.md §0–§7 (read first); docs/
+        handover-review.md §1–§25 (the lab notebook — blueprints AND
+        execution records); evals/results/ (gitignored, local);
+        docs/traces/ (committed measurement records).
+      - The successor-executor prompt (Part B) lives in this file too.
+
+PART B — the bootstrap prompt, as a committed file
+B1. docs/successor-prompt.md — the prompt the owner pastes into the new
+    agent to open the next session. The orientation sequence from the
+    original fresh-session bootstrap, updated to the current repo:
+      1. Read AGENTS.md (the protocol file).
+      2. Read HANDOVER.md — §0 vision, §4.4 conventions, §6 measured
+         facts, §5 frontier.
+      3. Read handover-review.md §24 (latest blueprint+record) and
+         §25 (this one).
+      4. Run the suite; report the count. Make no changes until the
+         owner confirms.
+      5. First task: Blueprint 016, delivered by the advisor in chat —
+         but the design discussion for B13 happens in the ADVISOR
+         chat first; the successor executes what's ruled.
+B2. The file states the division of labor explicitly: advisor designs
+    and rules; executor measures and implements; owner owns money,
+    pins, and standing config. New executors propose; they don't rule.
+
+PART C — B13/B14 staging (FREE; design comes later, with the successor)
+C1. In handover-review.md, open §26 titled "B13/B14 — design inputs,
+    not yet designed": paste 014's contrast table verbatim; list the
+    open design questions (B13: does the risk gate keep zero-lookups-
+    at-low and instead make low-risk grounding rely on store recall +
+    plan-side materiality? or does low risk get a minimal lookup
+    budget? every option changes the cost model §4.3 was built on —
+    do NOT design here); B14: the two literal injection sites (with
+    file:line from 014's A2) and the observation that 38 invented
+    roles vs 4 declared means the registry's synthesized generalist
+    path is doing the real work. No fixes, no partial designs.
+C2. The pin line status (unconfirmed as standing in .env) gets one
+    line in §26: the settling evidence ran env-prefixed; the owner's
+    line is ratification.
+
+PART D — records
+D1. §25.2: departures, left undone, and the handover note — the
+    successor's first read should be this section.
+D2. HANDOVER §5: one line — the arc continues under a new executor;
+    AGENTS.md is the protocol file; successor-prompt.md opens
+    sessions.
+D3. CHANGELOG [Unreleased]: one prose paragraph. No model ids.
+D4. Counts commit-stamped; the guard must pass on the new files.
+
+OUT OF SCOPE, deliberately: B13/B14 design or implementation; any
+prompt/workflow/profile edit; .env (G-3); any live spend.
+```
