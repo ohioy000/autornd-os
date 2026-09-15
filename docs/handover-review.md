@@ -4190,3 +4190,49 @@ Where I differ from B4: it expects both formerly-killed traces to complete their
 loops, and so do I; it expects a ship among the review-blocked traces, and
 `crossref` already has one. Neither of us predicts `requires_execution`
 terminating, and it is the one trace whose failure is purely the clock.
+
+### 18.1 Part C — two free measurements
+
+#### C1: escalation's bill is the implementation summaries, not the channels
+
+Across every retained trace that reached escalation (n = 9 escalation calls over
+3 runs):
+
+| run | escalation $ | calls | $/call | share of run |
+|---|---|---|---|---|
+| 009 (v2) | $0.0673 | 1 | $0.0673 | 16% |
+| 009 (v4) | $0.2684 | 3 | $0.0895 | 61% |
+| 010 settling | $0.4585 | 5 | $0.0917 | 62% |
+| **total** | **$0.7942** | **9** | **$0.0882** | **50%** |
+
+Per-call cost is stable and creeping — $0.0673 → $0.0895 → $0.0917 — which is
+what a fixed prompt shape reading a growing log looks like.
+
+**What is actually in that log**, by character count, per trace:
+
+| trace | log size | implement summaries | validate evidence | domain concerns | red causes |
+|---|---|---|---|---|---|
+| `crossref_integrity` | 75,359 | **87%** | 10% | 0% | 4% |
+| `derived_tolerances` | 23,179 | **77%** | 13% | 0% | 10% |
+| `numeric_consistency` | 40,125 | **80%** | 14% | 3% | 3% |
+| `requires_execution` | 60,598 | **89%** | 9% | 0% | 2% |
+
+**The channel enrichment is 9–17% of the log. The implementation summaries are
+77–89%.** 010 recorded the suspicion that "the enrichment that fixed the
+feedback channel is the same enrichment escalation pays for by the token" — that
+is **wrong**, and this measurement is why C1 was a measurement rather than a
+design. Escalation is expensive because it re-reads every implementation in
+full: eight iterations of `crossref_integrity` put 75,000 characters in front of
+a reasoning tier, and 65,000 of those are the work itself.
+
+**Consequence for the design C1 was to inform:** a per-consumer failure-log view
+is worth a blueprint, but it should compress **summaries** — most usefully by
+keeping the last iteration verbatim and reducing older ones to their red cause
+and a length — and leave the channels alone. Cutting the evidence and findings
+to save money would remove 9–17% of the tokens and all of the diagnostic value
+the autopsy exists to use. **No change is made here**, per the blueprint.
+
+**Caveat on the 62%:** these are traces built to exhaust loops, so they reach
+escalation by construction. The share across all retained traces is 50%, and on
+work that ships it is zero. The shape — a fixed prompt reading a log that grows
+with iteration count — is the transferable part, not the percentage.

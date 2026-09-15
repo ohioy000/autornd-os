@@ -163,11 +163,13 @@ class OpenRouterClient:
         # abort half-way through a real workflow throws away the work done so
         # far, whereas an experiment that runs away is a thing that has already
         # happened here once — forty minutes and $1.28 for an inconclusive run.
+        self.tokens_by_function: dict[str, dict[str, int]] = {}
         self.call_ceiling: int | None = None
         self.spend_ceiling: float | None = None
 
     def _account(self, function: str, cost: float,
-                 provider: str | None = None) -> None:
+                 provider: str | None = None,
+                 prompt_tokens: int = 0, completion_tokens: int = 0) -> None:
         """Record one billable request. Called for every request, no exceptions.
 
         Budgets are enforced here rather than by the caller, so a ceiling covers
@@ -182,6 +184,15 @@ class OpenRouterClient:
             self.spend += cost
             self.spend_by_function[function] = (
                 self.spend_by_function.get(function, 0.0) + cost)
+        # Tokens per tier, not just money. Cost conflates rate with volume, so a
+        # tier that got more expensive cannot be told from one that was handed
+        # more to read — which is exactly the question the escalation line
+        # raises now that the failure log carries every criterion and finding.
+        if prompt_tokens or completion_tokens:
+            seen = self.tokens_by_function.setdefault(
+                function, {"prompt": 0, "completion": 0})
+            seen["prompt"] += prompt_tokens
+            seen["completion"] += completion_tokens
 
         if self.call_ceiling is not None and self.calls > self.call_ceiling:
             raise BudgetExceeded(
@@ -199,6 +210,7 @@ class OpenRouterClient:
     def reset_accounting(self) -> None:
         self.spend = 0.0
         self.calls = 0
+        self.tokens_by_function = {}
         self.spend_by_function = {}
         self.calls_by_function = {}
         self.providers_by_function = {}
@@ -317,7 +329,9 @@ class OpenRouterClient:
 
         # Every attempt counts, retries included. A retry storm that costs real
         # money should look expensive rather than free.
-        self._account(function, cost, provider)
+        self._account(function, cost, provider,
+                      prompt_tokens=prompt_tokens,
+                      completion_tokens=completion_tokens)
 
         return ModelResponse(
             content=content,
