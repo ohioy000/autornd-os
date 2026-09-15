@@ -134,17 +134,22 @@ class TestEveryShippedLoopFoldsItsOwnJudges:
     """A loop folds the judges its body actually produces — not a list written
     here that drifts when a body changes."""
 
-    @pytest.mark.parametrize("workflow,loop,expected", [
-        ("engineering-rnd", "build_loop",
+    @pytest.mark.parametrize("workflow,loop,until,fold,expected", [
+        ("engineering-rnd", "build_loop", "judges.passed == true", "judges",
          {"implement", "validate", "coverage", "consistency"}),
-        ("engineering-rnd", "recovery_loop",
-         {"implement", "validate", "coverage", "consistency"}),
-        ("lean", "build_loop", {"implement", "validate", "coverage"}),
+        # The two loops that can ship re-review first, so they fold review in
+        # as well — work ships when everyone who looked at it agrees.
+        ("engineering-rnd", "review_rework_loop", "review_fold.passed == true",
+         "review_fold", {"build", "review"}),
+        ("engineering-rnd", "recovery_loop", "review_fold.passed == true",
+         "review_fold", {"build", "review"}),
+        ("lean", "build_loop", "judges.passed == true", "judges",
+         {"implement", "validate", "coverage"}),
     ])
-    def test_the_fold_matches_the_body(self, workflow, loop, expected):
+    def test_the_fold_matches_the_body(self, workflow, loop, until, fold, expected):
         from autornd.graph.spec import load
 
         spec = load(f"workflows/{workflow}.yaml")
-        assert spec.get(loop).until == "judges.passed == true"
-        assert set(spec.get("judges").args) == expected
-        assert "judges" in spec.get(loop).body
+        assert spec.get(loop).until == until
+        assert set(spec.get(fold).args) == expected
+        assert fold in spec.get(loop).body

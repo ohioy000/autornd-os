@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from autornd.graph.conditions import ConditionError, evaluate, resolve_path
-from autornd.graph.spec import Node, NodeKind, WorkflowSpec
+from autornd.graph.spec import TERMINAL_STATUSES, Node, NodeKind, WorkflowSpec
 
 logger = logging.getLogger(__name__)
 
@@ -157,16 +157,31 @@ class GraphExecutor:
         payload["detail"] = getattr(result, "detail", "")
         state.outputs[node.id] = payload
 
-    def _run_gate(self, node: Node, state: ExecutionState) -> bool:
+    async def _run_gate(self, node: Node, state: ExecutionState) -> bool:
         """Returns whether the run continues."""
         passed = self._test(node.condition or "", state, node.id)
         state.outputs[node.id] = {"passed": passed}
         if passed:
             return True
-        if node.on_fail:
-            reason = node.on_fail_reason or f"gate '{node.id}' closed"
-            detail = self._gate_detail(node, state)
-            state.end(node.on_fail, f"{reason}{detail}")
+        if not node.on_fail:
+            return False
+
+        reason = node.on_fail_reason or f"gate '{node.id}' closed"
+        detail = self._gate_detail(node, state)
+
+        # A closed gate may route instead of ending. Before this, a blocking
+        # review was the end of the run and its findings had nowhere to go —
+        # three traces in four terminated there with the work unfixed and the
+        # diagnosis unread (§15.1). Routing reuses the loop handoff path, so a
+        # gate and an exhausted loop reach a recovery sub-graph the same way.
+        if node.on_fail not in TERMINAL_STATUSES:
+            logger.info("gate %s closed — routing to %s (%s)",
+                        node.id, node.on_fail, reason)
+            state.outputs[node.id] = {"passed": passed, "routed_to": node.on_fail,
+                                      "reason": f"{reason}{detail}"}
+            return await self._run_from(node.on_fail, state)
+
+        state.end(node.on_fail, f"{reason}{detail}")
         return False
 
     def _gate_detail(self, node: Node, state: ExecutionState) -> str:
@@ -224,7 +239,7 @@ class GraphExecutor:
         if node.kind is NodeKind.CHECK:
             await self._run_check(node, state)
             return True
-        return self._run_gate(node, state)
+        return await self._run_gate(node, state)
 
     async def _run_loop(self, node: Node, state: ExecutionState) -> bool:
         budget = self._budget(node)

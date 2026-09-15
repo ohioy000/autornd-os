@@ -67,6 +67,8 @@ def _settings() -> dict[str, int]:
     return {
         "max_iterations": settings.max_iterations,
         "escalation_recovery_attempts": settings.escalation_recovery_attempts,
+        "review_rework_attempts": settings.review_rework_attempts,
+        "plan_max_tokens": settings.plan_max_tokens,
         "escalation_max_tokens": settings.escalation_max_tokens,
     }
 

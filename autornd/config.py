@@ -48,6 +48,24 @@ class Settings(BaseSettings):
     openrouter_provider_order: str = ""
 
     max_iterations: int = 5
+
+    # How many times review may send work back before the run escalates.
+    # Measured §15.1: three of four traces ended blocked at review (n=1 each),
+    # with the findings unread by anything downstream. A round costs about one
+    # body pass, $0.02-0.05 [derived: §15.2 per-trace cost], and exhaustion
+    # routes to the escalation autopsy rather than looping — review and
+    # implement can disagree indefinitely, the graph cannot.
+    review_rework_attempts: int = 2
+
+    # The plan node ran at Specialist.run's 16,384 default, with no setting of
+    # its own, while every serving of the planning model advertises a ceiling
+    # above 262,000. On hard requests it burned seven full-budget retries
+    # returning nothing (§14.1) — the same shape as validate at 3000 tokens
+    # (§6.4), where a reasoning model spent the whole budget thinking and
+    # emitted no text. A ceiling is billed only when used, so headroom costs
+    # nothing on the runs that were already fine, and one 32k success is
+    # cheaper than seven 16k failures.
+    plan_max_tokens: int = 32768
     escalation_max_tokens: int = 16384
 
     # Validate judges work; it does not redo it. Measured against live models
@@ -104,6 +122,7 @@ class Settings(BaseSettings):
         "autornd_profile", "autornd_workflow", "log_level",
         "validate_max_tokens", "search_max_tokens",
         "search_max_tokens_consequential",
+        "review_rework_attempts", "plan_max_tokens",
     }
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

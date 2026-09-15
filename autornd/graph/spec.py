@@ -51,6 +51,11 @@ FANOUT_REVIEWERS = "reviewers"    # the risk-scaled review team, in parallel
 LEAD = "lead"                     # the domain lead among the builders
 
 
+# The statuses a gate may end a run with. Anything else in on_fail must name a
+# node to route to, and anything that is neither fails at load.
+TERMINAL_STATUSES = frozenset({"completed", "blocked", "escalated"})
+
+
 @dataclass
 class Node:
     id: str
@@ -78,7 +83,11 @@ class Node:
 
     # ── gate ──
     condition: str | None = None
-    on_fail: str | None = None        # terminal status when the gate closes
+    # Where a closed gate goes: a terminal status, or the id of a node to
+    # continue at. Routing is what lets review's findings have a consumer —
+    # before it, a blocked review was the end of the run and the findings had
+    # nowhere to go.
+    on_fail: str | None = None
     on_fail_reason: str | None = None
 
     # ── loop ──
@@ -128,6 +137,11 @@ class WorkflowSpec:
         """
         owned = {bid for n in self.nodes for bid in n.body}
         owned |= {n.on_exhausted for n in self.nodes if n.on_exhausted}
+        # A gate that routes owns its target the same way a loop owns its
+        # on_exhausted node: the rework loop must run because review blocked,
+        # never because its dependencies happened to be satisfied.
+        owned |= {n.on_fail for n in self.nodes
+                  if n.on_fail and n.on_fail not in TERMINAL_STATUSES}
 
         # anything whose every dependency sits inside the owned set is only
         # reachable through it
@@ -264,6 +278,23 @@ def parse(data: dict[str, Any]) -> WorkflowSpec:
                 f"loop '{node.id}' names unknown on_exhausted node "
                 f"'{node.on_exhausted}'. If you meant a terminal status, use "
                 f"on_exhausted_status instead."
+            )
+        # A gate's on_fail is either a terminal status or a declared node. A
+        # typo must not become a silent terminal state — the same reasoning as
+        # a missing condition path raising rather than evaluating false.
+        if node.on_fail and node.on_fail not in TERMINAL_STATUSES:
+            if node.on_fail not in known:
+                raise SpecError(
+                    f"gate '{node.id}' has on_fail '{node.on_fail}', which is "
+                    f"neither a terminal status ({', '.join(sorted(TERMINAL_STATUSES))}) "
+                    f"nor a declared node id"
+                )
+        # Every loop must declare a bound. Review and implement can disagree
+        # indefinitely; the graph must not be able to.
+        if node.body and not node.max_iterations:
+            raise SpecError(
+                f"loop '{node.id}' declares no max_iterations — every loop is "
+                f"bounded, so that no disagreement between phases can run forever"
             )
         if node.on_exhausted and node.on_exhausted_status:
             raise SpecError(

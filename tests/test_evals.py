@@ -24,7 +24,8 @@ from autornd.graph.spec import load
 from autornd.models.verdicts import RiskLevel, TriageVerdict
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
 
-SETTINGS = {"max_iterations": 5, "escalation_recovery_attempts": 3}
+SETTINGS = {"max_iterations": 5, "escalation_recovery_attempts": 3,
+            "review_rework_attempts": 2}
 
 
 def triage_state(domains=("backend",), risk="medium",

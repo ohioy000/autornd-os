@@ -26,6 +26,7 @@ nodes:
     specialist: systems_architect
     prompt: plan
     schema: PlanVerdict
+    max_tokens: plan_max_tokens
     depends_on: [context]
 
   - id: plan_ready

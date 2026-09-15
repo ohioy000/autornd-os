@@ -556,6 +556,69 @@ async def run_domain_review(
 # summarising call — the strings are copied, joined and capped.
 DOMAIN_CONCERN_BUDGET = 1200
 
+# Measured §15.1: validate returns ONE red_cause while its `evidence` field
+# already holds a verdict for every criterion, and only the red_cause reached
+# the next attempt. With six criteria reported one at a time the loop played
+# whack-a-mole — numeric_consistency went red twice naming a different criterion
+# each round (cost-section arithmetic, then an unused burst duration) while the
+# evidence for both was sitting in the failure log, recorded and unread. These
+# budgets are generous because the lines are short by construction: validate is
+# told at most 25 words per criterion.
+EVIDENCE_BUDGET = 2000
+REVIEW_FINDINGS_BUDGET = 2000
+
+
+def _capped(lines: list[str], budget: int) -> tuple[str, int]:
+    """Join what fits, and say how many did not rather than dropping them silently."""
+    kept: list[str] = []
+    used = 0
+    for line in lines:
+        if used + len(line) + 1 > budget and kept:
+            break
+        kept.append(line)
+        used += len(line) + 1
+    return "\n".join(kept), len(lines) - len(kept)
+
+
+def render_validate_evidence(evidence: list[str]) -> str:
+    """Every criterion validate judged, not just the one it named as the cause."""
+    lines = [f"- {str(e).strip()}" for e in (evidence or []) if str(e).strip()]
+    if not lines:
+        return ""
+    body, dropped = _capped(lines, EVIDENCE_BUDGET)
+    tail = f"\n(+{dropped} further line(s) omitted for length)" if dropped else ""
+    return f"""
+
+VALIDATION FOUND, criterion by criterion — address EVERY failing one, not only
+the cause named above:
+{body}{tail}"""
+
+
+def render_review_findings(findings: list[Any]) -> str:
+    """What review blocked on, in review's own words."""
+    lines: list[str] = []
+    for f in findings or []:
+        if isinstance(f, dict):
+            sev = str(f.get("severity") or "").strip()
+            lens = str(f.get("lens") or "").strip()
+            detail = str(f.get("detail") or "").strip()
+        else:
+            sev = str(getattr(f, "severity", "") or "").strip()
+            lens = str(getattr(f, "lens", "") or "").strip()
+            detail = str(getattr(f, "detail", "") or "").strip()
+        if not detail:
+            continue
+        label = "/".join(x for x in (sev, lens) if x)
+        lines.append(f"- [{label}] {detail}" if label else f"- {detail}")
+    if not lines:
+        return ""
+    body, dropped = _capped(lines, REVIEW_FINDINGS_BUDGET)
+    tail = f"\n(+{dropped} further finding(s) omitted for length)" if dropped else ""
+    return f"""
+
+REVIEW BLOCKED THE PREVIOUS ATTEMPT on these findings — resolve each one:
+{body}{tail}"""
+
 
 def render_domain_concerns(concerns: list[str]) -> str:
     """The reviewer's own words, as the reason the implementation is red."""
@@ -578,6 +641,8 @@ async def run_implement(
     resolution_directive: str | None = None,
     context: str = "",
     primary_domain: Domain | None = None,
+    evidence: list[str] | None = None,
+    review_findings: list[Any] | None = None,
 ) -> tuple[ImplementVerdict, list[ModelResponse]]:
     feedback = ""
     if resolution_directive:
@@ -590,6 +655,10 @@ PRINCIPAL ARCHITECT DIRECTIVE (from root-cause autopsy):
 
 PREVIOUS ITERATION FAILED. Cause: {red_cause}
 Address this specific failure in your implementation."""
+    # Mechanical inclusion of fields already recorded. No new judgement and no
+    # extra call — the material was in the failure log the whole time.
+    feedback += render_validate_evidence(evidence or [])
+    feedback += render_review_findings(review_findings or [])
 
     feasibility_block = ""
     if plan.blockers:

@@ -33,6 +33,7 @@ nodes:
     specialist: systems_architect
     prompt: plan
     schema: PlanVerdict
+    max_tokens: plan_max_tokens
     depends_on: [context]
 
   # Specialists pressure-test the plan before any implementation tokens are
@@ -137,14 +138,14 @@ nodes:
 
   - id: recovery_loop
     kind: ai
-    body: [implement, domain_review, coverage, consistency, validate, judges]
-    until: judges.passed == true
+    body: [implement, domain_review, coverage, consistency, validate, judges, rework_review, review_fold]
+    until: review_fold.passed == true
     max_iterations: escalation_recovery_attempts
     on_exhausted_status: escalated
     depends_on: [recoverable]
 
   # ── review ──────────────────────────────────────────────────────────────
-  # Team size scales with risk; the verdict is recorded, not gating.
+  # Team size scales with risk; the verdict gates, and a block routes to rework.
   - id: review
     kind: ai
     tier: engineering
@@ -157,12 +158,48 @@ nodes:
   # A review that says do not ship used to reach exactly one place: the
   # `shipped` column of episodic memory. The run still reported `completed`,
   # which made the review decorative. Now it decides.
+  # A blocked review used to end the run and its findings had nowhere to go:
+  # three traces in four terminated here with the work unfixed and the diagnosis
+  # unread (§15.1). It routes into a rework loop now instead of ending.
   - id: review_clean
     kind: gate
     condition: review.ship == true
     depends_on: [review]
-    on_fail: blocked
+    on_fail: review_rework_loop
     on_fail_reason: "Review found blocking issues"
+
+  # The rework loop re-reviews its own work, and does so through a node of its
+  # own rather than reusing `review`. A loop owns its body: any node listed
+  # there is taken off the main schedule, so putting `review` in this body
+  # deleted the first review from the pipeline entirely and took `review_clean`
+  # and `independent_check` with it. Same phase, same prompt, same tier — a
+  # second call site, because the scheduler distinguishes nodes and not phases.
+  - id: rework_review
+    kind: ai
+    tier: engineering
+    specialist: reviewers
+    prompt: review
+    schema: ReviewVerdict
+    depends_on: [validate]
+
+  # Folds the build judges and the re-review together: work ships when everyone
+  # who looked at it agrees, not when the last one to speak does.
+  - id: review_fold
+    kind: check
+    check: judges_agree
+    args:
+      build: judges.passed
+      review: rework_review.ship
+    depends_on: [judges, rework_review]
+
+  # Review and implement can disagree indefinitely; the graph cannot. Every
+  # disagreement path is bounded and ends in escalation or a human.
+  - id: review_rework_loop
+    kind: ai
+    body: [implement, domain_review, coverage, consistency, validate, judges, rework_review, review_fold]
+    until: review_fold.passed == true
+    max_iterations: review_rework_attempts
+    on_exhausted: escalation
 
   # ── independent pass ────────────────────────────────────────────────────
   # Only for work that cannot be recalled once released: a signed rollout, a

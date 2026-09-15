@@ -119,21 +119,22 @@ class TestSpec:
             parse({"name": "w", "nodes": [
                 _ai("body"),
                 {"id": "l", "kind": "ai", "body": ["body"],
-                 "until": "body.green == true", "on_exhausted": "escalated"}]})
+                 "until": "body.green == true", "max_iterations": 2,
+                 "on_exhausted": "escalated"}]})
 
     def test_cannot_both_hand_off_and_end(self):
         with pytest.raises(SpecError, match="hand off or end"):
             parse({"name": "w", "nodes": [
                 _ai("body"), _ai("next"),
                 {"id": "l", "kind": "ai", "body": ["body"],
-                 "until": "body.green == true",
+                 "until": "body.green == true", "max_iterations": 2,
                  "on_exhausted": "next", "on_exhausted_status": "escalated"}]})
 
     def test_loop_bodies_are_not_scheduled_at_top_level(self):
         spec = parse({"name": "w", "nodes": [
             _ai("impl"), _ai("val"),
             {"id": "loop", "kind": "ai", "body": ["impl", "val"],
-             "until": "val.green == true"}]})
+             "until": "val.green == true", "max_iterations": 2}]})
         assert [n.id for n in spec.execution_order()] == ["loop"]
 
     def test_handoff_targets_are_not_scheduled_at_top_level(self):
@@ -144,7 +145,8 @@ class TestSpec:
             _ai("escalate"),
             _ai("recover", depends_on=["escalate"]),
             {"id": "loop", "kind": "ai", "body": ["impl"],
-             "until": "impl.green == true", "on_exhausted": "escalate"}]})
+             "until": "impl.green == true", "max_iterations": 2,
+             "on_exhausted": "escalate"}]})
         assert [n.id for n in spec.execution_order()] == ["loop"]
         assert spec.handoff_reachable() == {"impl", "escalate", "recover"}
 
@@ -268,7 +270,8 @@ class TestTotalsReconcile:
 from autornd.graph.checks import Result, registry
 from autornd.graph.executor import GraphExecutor, resolve_args
 
-SETTINGS = {"max_iterations": 5, "escalation_recovery_attempts": 3}
+SETTINGS = {"max_iterations": 5, "escalation_recovery_attempts": 3,
+            "review_rework_attempts": 2}
 
 PLAN = {
     "ready": True,
@@ -302,6 +305,12 @@ class ScriptedRunner:
     async def run_ai(self, node, state):
         self.ai_calls.append(node.id)
         out = self.verdicts.get(node.id)
+        if out is None and node.prompt:
+            # The rework loop re-runs review through a node of its own, because
+            # a loop owns its body and `review` has to stay on the main
+            # schedule. Same prompt, so a script that answers `review` answers
+            # `rework_review` too unless a test scripts it separately.
+            out = self.verdicts.get(node.prompt)
         return out(state) if callable(out) else (out or {})
 
     async def run_check(self, node, state):
@@ -341,14 +350,18 @@ class TestExecutorReproducesThePipeline:
         assert "missing datasheet" in state.reason
         assert "implement" not in state.path
 
-    async def test_a_negative_review_blocks_the_run(self):
-        """`review.ship` used to reach one place only — the `shipped` column of
-        episodic memory — while the run still reported `completed`. A review
-        that nothing acts on is decoration."""
-        state, _ = await _run({**BASE, "validate": {"green": True},
-                               "review": {"ship": False}})
-        assert state.status == "blocked"
-        assert "Review found blocking issues" in state.reason
+    async def test_a_negative_review_sends_the_work_back(self):
+        """`review.ship` reached one place only — the `shipped` column of
+        episodic memory — while the run reported `completed`. Then it gated, and
+        three traces in four died there with the findings unread. Now it routes:
+        the work goes back through the loop, and only exhausted rework escalates.
+        """
+        state, runner = await _run({**BASE, "validate": {"green": True},
+                                    "review": {"ship": False},
+                                    "escalation": {"requires_human": True}})
+        assert state.status != "completed"
+        assert runner.ai_calls.count("implement") > 1, "the work was reworked"
+        assert "rework_review" in runner.ai_calls, "and re-reviewed"
 
     async def test_a_blocked_review_says_what_was_found(self):
         """A gate on a Pydantic verdict used to produce no detail at all: the
@@ -357,18 +370,26 @@ class TestExecutorReproducesThePipeline:
             "ship": False,
             "findings": [{"lens": "thermal", "severity": "high",
                           "detail": "Heatsink undersized for 45 W"}],
-            "verdict": "Do not ship."}})
-        assert state.status == "blocked"
-        assert "Heatsink undersized for 45 W" in state.reason
-        assert "thermal" in state.reason
+            "verdict": "Do not ship."},
+            "escalation": {"requires_human": True}})
+        # The gate routes now rather than ending the run, so its detail is on
+        # its own record instead of the terminal reason — which is where the
+        # rework loop reads it from too.
+        assert state.outputs["review_clean"]["passed"] is False
+        assert "Heatsink undersized for 45 W" in state.outputs["review_clean"]["reason"]
+        assert "Review found blocking issues" in state.outputs["review_clean"]["reason"]
 
     async def test_the_gate_costs_nothing(self):
         """It is a gate, not a call. Free checks exist to avoid paid ones."""
         _, clean = await _run({**BASE, "validate": {"green": True},
                                "review": {"ship": True}})
         _, blocked = await _run({**BASE, "validate": {"green": True},
-                                 "review": {"ship": False}})
-        assert len(clean.ai_calls) == len(blocked.ai_calls) == 7
+                                 "review": {"ship": False},
+                                 "escalation": {"requires_human": True}})
+        assert len(clean.ai_calls) == 7, "a clean run pays the gate nothing"
+        assert len(blocked.ai_calls) > 7, (
+            "a blocked one pays for rework, which is the point — the gate "
+            "itself is still free")
 
     async def test_the_independent_pass_runs_when_work_cannot_be_recalled(self):
         """The wiring proof. Every other assertion is blind to a conditional
@@ -411,7 +432,8 @@ class TestExecutorReproducesThePipeline:
             "validate": {"green": True},
             "triage": {"risk": "high", "domains": ["backend"],
                        "unrecallable": True},
-            "review": {"ship": False}})
+            "review": {"ship": False},
+            "escalation": {"requires_human": True}})
         assert state.status == "blocked"
         assert "independent_check" not in state.path
 
@@ -503,7 +525,8 @@ class TestExecutorMechanics:
         state, runner = await _run(
             {**BASE, "validate": {"green": False},
              "escalation": {"requires_human": True}},
-            settings={"max_iterations": 2, "escalation_recovery_attempts": 1})
+            settings={"max_iterations": 2, "escalation_recovery_attempts": 1,
+                      "review_rework_attempts": 1})
         assert runner.ai_calls.count("implement") == 2
 
     async def test_unknown_setting_for_a_budget_is_loud(self):

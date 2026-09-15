@@ -235,6 +235,12 @@ class PhaseRunner:
             self.client, state.request, state.outputs["plan"], lead,
             iteration=state.iteration or 1,
             red_cause=last.get("red_cause"),
+            # Every criterion validate judged, and whatever review blocked on —
+            # both recorded in the failure log already, neither previously read
+            # back. §15.1 measured the loop rediscovering one criterion at a
+            # time while the rest sat in the log unread.
+            evidence=last.get("evidence"),
+            review_findings=last.get("review_findings"),
             resolution_directive=self.resolution_directive,
             context=self.context,
             primary_domain=None,      # the lead is already resolved
@@ -287,8 +293,18 @@ class PhaseRunner:
         # to record. Cost is a delta on the client's running total, which counts
         # every path including research and rerank.
         spend = self.client.spend
+        # A3: the fold computes which judges dissented; retain what it computes
+        # rather than leaving it inferable. derived_tolerances ran two rounds
+        # with implement and validate both green, so a free check must have
+        # dissented — and which one was not readable from the record.
+        fold = state.outputs.get("judges")
+        coverage = state.outputs.get("coverage")
+        consistency = state.outputs.get("consistency")
         self.iterations.append({
             "iteration": state.iteration,
+            "dissenting": list((getattr(fold, "data", {}) or {}).get("dissenting", [])),
+            "coverage_passed": getattr(coverage, "passed", None),
+            "consistency_passed": getattr(consistency, "passed", None),
             "implement_green": implement.green,
             "implement_red_cause": implement.red_cause,
             "implement_summary": implement.summary,
@@ -317,6 +333,19 @@ class PhaseRunner:
             self.client, state.request, self._triage(state), state.outputs["plan"],
             state.outputs["implement"], self._resolve_who(node, state), self.context,
         )
+        # A blocking review is a failed attempt like any other, and the rework
+        # loop downstream reads the failure log. Without this it would rework
+        # against the last validate failure while the thing that actually
+        # blocked the run sat unread — the same defect as §15.1's evidence, one
+        # phase later.
+        if not verdict.ship:
+            self.failure_log.append({
+                "iteration": state.iteration,
+                "implement_summary": state.outputs["implement"].summary,
+                "red_cause": f"Review blocked: {verdict.verdict}".strip(),
+                "evidence": [],
+                "review_findings": [f.model_dump() for f in verdict.findings],
+            })
         return verdict, responses
 
     async def _phase_doublecheck(self, node: Node, state: ExecutionState):
