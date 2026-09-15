@@ -4236,3 +4236,61 @@ the autopsy exists to use. **No change is made here**, per the blueprint.
 escalation by construction. The share across all retained traces is 50%, and on
 work that ships it is zero. The shape — a fixed prompt reading a log that grows
 with iteration count — is the transferable part, not the percentage.
+
+#### C2: the refused verdicts are the *small* prompts, not the large ones
+
+C2 asked for the malformed rate "across all retained history", and the first
+finding is about the retaining. `chat_json` has logged every schema rejection at
+`WARNING` since §6.8 fixed the clause ordering — but the eval CLI configures no
+logging, so those lines reached only Python's lastResort stderr handler and
+lived exactly as long as the shell redirect that caught them. **Of nine recorded
+runs, three logs survived, and neither of the two whose rejections the question
+turns on was among them.** A rate measurable only from a temp file is not an
+instrument, so the count now lives on the client and lands in the unit record as
+`rejections_by_tier` — beside `normalised_verdicts`, which it has to be read
+with. Parse failures stay out: unparseable text and well-formed JSON of the
+wrong shape are different defects, and §6.8 is the record of what conflating
+them costs.
+
+The rejections themselves are recoverable from the traces, because a run that
+exhausts three retries dies with the `ValidationError` in its `error` field.
+**Four deaths across twenty-two recorded units** — three `ImplementVerdict.green`
+(006 ×1, 010 ×2) and one `ImplementVerdict.done` (006), the latter being the
+field A4 deliberately left required.
+
+Against the failure log the implement prompt carries at the point of refusal:
+
+| | n | min | median | max |
+|---|---|---|---|---|
+| **verdict refused** | 4 | 0 | **5,771** | 34,864 |
+| survived | 18 | 0 | **13,014** | 133,303 |
+
+**The advisor's prediction is confirmed, and in the strongest available form:
+the refusals are not merely uncorrelated with prompt size, they cluster at the
+small end.** Two of the four happened at iteration 0 — the *first* implement
+call, the smallest prompt the run ever sends — and the largest prompt ever
+recorded, `crossref_integrity` at 133,303 characters over eight iterations,
+produced a clean verdict every time. The implement summaries themselves say the
+same: mean 8,555 characters on iterations that came back red, 8,718 on green,
+across 48 recorded iterations.
+
+**This closes the compliance-vs-size branch by measurement.** 017 §17 carried
+the suspicion as "likely the log-richness interaction: the implement prompt grew
+when review gained a consumer" — the timing was suggestive and the direction is
+wrong. No prompt change is warranted, which is what C2 was for.
+
+**What could not be measured, and the instrument added for it.** The obvious
+next axis — *which serving* refused — the data cannot answer. The engineering
+tier is unpinned, so a unit's provider *set* is up to a dozen names, and
+OpenInference appears on 4 of 4 refused units against 12 of 18 survivors:
+proportional, therefore silent. This is the B4 trap in a new place, so
+`rejections_by_provider` now attributes each refusal to the serving on the
+response that carried it. It has no history behind it; it starts from here.
+
+**Per-iteration attribution is also not retained.** The run record counts
+normalisations per run, not per verdict, so the other half of the prediction —
+that normalisations cluster on *red* verdicts — is not decidable from these
+traces, and saying so is more useful than a number computed the wrong way. Note
+also that the pre-resolution deaths cannot discriminate it even in principle:
+before the truth table, a missing `green` was fatal whether or not a `red_cause`
+stood beside it.
