@@ -4650,3 +4650,112 @@ Arms in observation order (most-observed first, so a budget death leaves the
 best candidates measured), one scenario, `lean.yaml`, repeat 1, `--max-spend
 0.10 --max-spend-sweep 0.30`, `triage` and `architecture` pinned constant so
 only `engineering` varies.
+
+### 20.1(b) Part A — mining the clock
+
+#### A1 footnote, as required: which records the gate bug spoils, and by how much
+
+Three of the 011 instrument fixes landed after every run recorded before
+2026-09-15. Only one of them distorts a retained number: a routing gate was
+billed for the sub-graph it handed to. **The workflow has three gate nodes and
+only one of them can double-bill** — `plan_ready` and `recoverable` both fail to
+a terminal status, so they never route and never wrap anything. `review_clean`
+fails to `review_rework_loop`, so it does.
+
+Exactly **three retained units carry a gate row**, and in all three the
+correction is exact:
+
+| unit | `review_clean` row | table sums to | run wall clock | table − gate |
+|---|---|---|---|---|
+| `b7-settling-run/crossref_integrity` | 450 s | 1,348 s | 898 s | **898 s** |
+| `b7-settling-run/requires_execution` | 1,316 s | 3,116 s | 1,800 s | **1,800 s** |
+| `b7-verdict-numeric/numeric_consistency` | 1,573 s | 3,373 s | 1,800 s | **1,800 s** |
+
+Three independent confirmations that subtracting the one gate row recovers the
+clock to the second. Every per-phase figure below excludes gate nodes, and every
+unit without a `review_clean` row was never affected.
+
+#### A1: the tier is unpinned, and the record cannot say who was slow
+
+| | |
+|---|---|
+| retained units | 47 |
+| distinct servings observed on `engineering` | **17** |
+| units where one serving carried the whole tier (attributable) | **5** |
+| of those, units that also carry per-phase timing | **2** |
+
+`providers_by_function` records a *set per unit*, not a provider per call. With
+17 servings and a tier that routes freely, a unit's set runs to a dozen names
+and no call's latency can be attributed to any of them. Only the five
+single-serving units attribute at all, and per-phase timing only exists from 010
+onwards, which leaves two:
+
+| serving | unit | eng calls | loop-node s | s/call |
+|---|---|---|---|---|
+| (incumbent) | `b7-settling-run/crossref_integrity` | 8 | 851 | **106.4** |
+| (incumbent) | `b7-verdict-numeric/numeric_consistency` | 11 | 1,495 | **135.9** |
+
+Both are the same serving. **A3 asks for the fastest among compliant servings
+and the record contains exactly one candidate**, which is not a comparison. The
+other three attributable units predate `seconds_by_phase` entirely.
+
+Rejections by serving are thinner still: the field exists only from commit
+`8d14a62`, one run carries it, and it reads `{OpenInference: 2}` — the exhibit
+Part B now folds. The four historical refusal deaths name only unit-level
+provider *sets*, and the incumbent appears in all four of them and in 18 of 47
+units overall: proportional, therefore silent. **No serving is disqualified
+under A3(i) on this evidence, because the evidence cannot disqualify anyone.**
+
+**A3(iii) therefore fires** — fewer than three servings observed attributably —
+and the sweep is what settles the pin. Its pre-registration is §20.1(a).
+
+#### A2: where 1,800 seconds went, three times
+
+Gate rows excluded per the footnote. All three totals land on the clock exactly.
+
+| phase | `derived_tolerances` (011) | `numeric_consistency` (011) | `requires_execution` (010) |
+|---|---|---|---|
+| `implement` | 567 s (32%) | 432 s (24%) | 433 s (24%) |
+| `validate` | **783 s (44%)** | 89 s (5%) | 96 s (5%) |
+| `rework_review` | 238 s (13%) | **919 s (51%)** | 437 s (24%) |
+| `review` | — | 55 s (3%) | 88 s (5%) |
+| `escalation` | 93 s (5%) | 186 s (10%) | **610 s (34%)** |
+| `plan` | 72 s (4%) | 99 s (6%) | 84 s (5%) |
+| `feasibility` | 21 s | — | 26 s |
+| `context` (incl. research + search) | 20 s (1%) | 14 s (1%) | 16 s (1%) |
+| `triage` | 5 s | 7 s | 10 s |
+| **total** | **1,800 s** | **1,800 s** | **1,800 s** |
+
+**The loop tier is the clock.** `implement`, `validate`, `review` and
+`rework_review` — every one of them served by `engineering` — take **89%, 83%
+and 59%** of the three runs. `context`, which carries research *and* the search
+tier, takes **1%** in all three. The most expensive tier in the system is
+invisible on the clock.
+
+#### A2 also answers 011-C1's question, and finds the opposite dissociation
+
+Escalation's share of **spend** against its share of **clock**, same three runs:
+
+| trace | escalation spend | escalation clock | calls |
+|---|---|---|---|
+| `derived_tolerances` | **71%** | 5% | 1 |
+| `numeric_consistency` | **70%** | 10% | 3 |
+| `requires_execution` | **78%** | 34% | 3 |
+
+**Escalation is where the money goes and, mostly, not where the time goes.**
+This completes 011-C1 rather than repeating it: C1 measured that escalation's
+log is 77–89% implementation summaries and recommended compressing them. That
+recommendation stands *as a cost measure* — and A2 says it is **not** a fix for
+B7. Compressing the failure log would take 70–78% of a bill that has never once
+been the binding constraint, and return 5–10% of a clock that always is.
+`requires_execution` is the one trace where escalation is also a real clock cost
+at 34%, and it is the trace that has never yet run to completion.
+
+**On the premise.** The blueprint records that 011-C1's decomposition "never
+landed in §18.1". It did land — `docs/handover-review.md` §18.1(b), with both
+the per-call cost table and the per-trace character-count table. What did go
+wrong is navigational and mine: §18.1 carried **three headings with the same
+number**, and "Part B — what the runs showed" was appended *after* "Part C", so
+a reader scanning in order meets Part C, then another Part B, and can reasonably
+conclude the C section was superseded. The headings are now `18.1(a)`, `(b)` and
+`(c)`. The decomposition above is new work regardless; C1's is not repeated.
