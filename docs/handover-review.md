@@ -3520,7 +3520,7 @@ C0 arm 1 $0.0707, Part C $0.1884. Parts A, B and D free.
 
 ## 16. Blueprint 009 — Give review's findings a consumer (verbatim, as received)
 
-**Status: not executed at the time of recording.** Execution record: §16.2.
+**Status: executed 2026-09-14 — see §16.2.** Recorded here unexecuted first.
 
 ```text
 BLUEPRINT 009 — Give review's findings a consumer: the evidence channel,
@@ -3717,3 +3717,112 @@ reach the same escalation.
 
 Fixed, per C2: zero refused lookups expected (the guard reports regardless), and
 no plan-phase burn now the ceiling is 32,768 [prediction].
+
+#### Part C results — the binding constraint is now the clock, not the exit
+
+Four scenarios, `engineering-rnd`, repeat 1, pinned. **$0.4431** of a $3.00 cap.
+**Zero refused lookups on every unit.** No plan-phase burn: the 32,768 ceiling
+held and architecture cost $0.1259 across 55 calls.
+
+| trace | iterations | terminal | pre-registered | verdict |
+|---|---|---|---|---|
+| `crossref_integrity` | 3, all red | **timed out at 900 s** | converges and ships ≤2 | **wrong** |
+| `derived_tolerances` | build converged, **then 2 rework rounds** | died — provider returned no text | converges ≤2 | **wrong** |
+| `numeric_consistency` | 2, both red | **timed out at 900 s** | no whack-a-mole | **partly right** — see below |
+| `requires_execution` | 2, **iter 2 green** | **timed out at 900 s** | does not converge | **wrong** — the build loop converged |
+
+**Every trace ran out of wall clock or hit a provider fault. None reached a
+terminal verdict.** Total 3,458 s across four traces — an average of 864 s
+against a 900 s ceiling.
+
+**C2's assumption is falsified.** It reads: "a second timeout WITH the channel
+landed and the plan ceiling raised is genuine divergence". It is not. The
+reworked pipeline does roughly twice the work per run — a blocked review now
+costs up to two further passes through implement, domain review, coverage,
+consistency, validate, judges and a fresh review — so **the 900 s budget that
+fitted the old pipeline does not fit this one.** The timeout is measuring the
+clock, not convergence, and `requires_execution` proves it: its build loop went
+green on iteration 2 and the run still expired.
+
+**What did work, observably:**
+
+- **The rework loop executes.** `derived_tolerances` shows the build loop
+  converging (`iter1 val=True`), then the iteration counter restarting at 1 with
+  two further red rounds — that is `review_rework_loop` running after review
+  blocked, re-implementing and re-validating.
+- **Escalation is reached and is the dominant cost** at $0.2684 of $0.4431, more
+  than architecture and engineering together. Exhausted rework routing to the
+  autopsy is not theoretical.
+- **The whack-a-mole shape is gone.** Validate now names criteria in groups —
+  *"Criterion 4 and 5 fail: terms PBKDF2, HMAC-SHA256, JSON, CBOR…"* — where in
+  §15.1 it named exactly one per round. The evidence channel landed.
+- **Reds became more specific, not less.** `derived_tolerances` reds twice on the
+  *same* criterion with sharper numbers each time (*"worst-case bore at −20 °C
+  to be 41.9612 mm"*), which is the opposite of the previous whack-a-mole.
+
+**C3 — B7 stays open, with the next failure named: the wall-clock budget.** The
+design question B7 asked ("does the loop converge?") is no longer answerable at
+900 s per scenario, because the pipeline that answers it is bigger. Settling it
+needs `--timeout 1800` on the convergence suite and nothing else; at the
+observed rate that is roughly an hour of wall clock and about $0.50, and it is
+the one measurement this blueprint could not buy.
+
+**C4's prediction, scored:** "at least one of the three review-blocked traces
+ships after rework" — **not demonstrated**, and not refuted either; no trace got
+far enough. "No trace ends in a naked blocked" — **held**, though for the wrong
+reason: none ended in `blocked` because none ended at all.
+
+### 16.2 Execution record
+
+Executed at `9b3e9b9`→. Suite 592 → **594** (17 added, 16 removed with the
+equivalence suite, plus one fixture split). Spend **$0.4431**, all Part C.
+Parts A, B, D, E and F free.
+
+#### Departures
+
+1. **`engine/workflow.py` was not deleted, because it is not legacy.** D1 asked
+   for the file; `api/routes.py` calls `WorkflowEngine` on every request and it
+   loads the graph, runs it, persists phases and writes episodic memory. Only
+   `execute_hardcoded` and `_run_implement_validate_loop` were the reference —
+   251 lines, removed. The file stays and three documents that called it legacy
+   were corrected.
+2. **The rework loop re-reviews through its own node.** B3's body list puts
+   `review` inside `review_rework_loop`; a loop *owns* its body, so that removed
+   `review`, `review_clean` **and** `independent_check` from the top-level
+   schedule — the first review vanished from the pipeline. `rework_review` is
+   the same prompt at the same tier, a second call site, because the scheduler
+   distinguishes nodes rather than phases.
+3. **`handoff_reachable()` had to learn about gate routing.** Otherwise the
+   rework loop was scheduled at top level and ran because its dependencies were
+   satisfied — exactly what that function exists to prevent for escalation.
+4. **Eleven existing tests changed.** Five asserted that a blocked review ends
+   the run; four were minimal loop fixtures that declared no `max_iterations`,
+   which the new load-time bound rejects; one scripted double needed to answer
+   for `rework_review`; one fold test needed the two loops that now fold review.
+   Convention 17 applied throughout: the design was not bent to keep a test
+   green.
+
+#### What execution found that the blueprint did not anticipate
+
+- **The wall clock is now the binding constraint.** All four traces expired at
+  900 s. C2 assumed a second timeout would mean divergence; it means the
+  pipeline got bigger. `requires_execution`'s build loop went green on iteration
+  2 and the run still expired.
+- **Escalation is the dominant cost line** once rework can exhaust into it —
+  $0.2684 of $0.4431, more than architecture and engineering combined.
+- **A loop owning its body is a sharper constraint than it looks.** It silently
+  removes nodes from the main schedule, and the failure is a shorter pipeline
+  rather than an error.
+- **`WorkflowEngine` being live was invisible from the blueprint's vantage** and
+  would have broken every API request had the instruction been followed
+  literally.
+
+#### Left undone, deliberately
+
+- **The 1800 s re-run**, which is the one measurement that would answer B7 as
+  now posed. It is ~1 h of wall clock and ~$0.50, and it is a spend decision
+  rather than an execution step.
+- **No per-criterion structured validate verdict** — §6 records why: validate
+  and review answer different questions, and the gap is not a wording problem.
+- **`lean.yaml` has no review gate**, so B4's shape does not apply to it; its
+  single loop already folds its own judges (§15).
