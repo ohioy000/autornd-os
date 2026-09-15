@@ -4891,3 +4891,30 @@ prediction, and I expect the third one to fail:
 **[prediction]** The evidence coercion is **not exercised** (zero
 normalisations from it). It has one exhibit, from one serving, and that serving
 is no longer on the tier.
+
+### 20.1(e) C3's ledger — reconstructed from the row itself, not from memory
+
+B7's row has carried **six** names. Recovered by reading `HANDOVER.md` at each
+commit that changed it, rather than from either ledger written from memory:
+
+| # | row title | after | the diagnosis it carried |
+|---|---|---|---|
+| 1 | *Build loop does not converge on complex requests* | — | the implementer has no filesystem; the validator rejects work that does not exist |
+| 2 | *premise **untested*** | 006 | the claim rests on evidence that never reached the loop — 2 of 4 traces died on a schema violation before the first iteration finished |
+| 3 | *premise tested; **failure mode moved*** | 008 | the all-judges exit landed; three of four converge, **one runs out the wall clock** |
+| 4 | *failure mode moved twice; **now clock-bound*** | 009 | review→rework landed and both channels opened; **clock-bound** |
+| 5 | *the loop works; **a required field does not arrive*** | 010 | two of four traces die on `ImplementVerdict` missing `green` |
+| 6 | *the loop is not the constraint; **the clock is*** | 011 | 23 units, six expiries, none stopped by money |
+
+**The finding is not the list, it is the shape of it.** The clock appears at
+name 3 as an aside, becomes the name at 4, is **displaced** at 5 by a verdict
+field, and returns at 6 with twenty-three units behind it. B7 was diagnosed
+clock-bound two blueprints before it was settled clock-bound, and the thing that
+displaced it — four traces dying on a missing field — was real, was fixed, and
+turned out not to be the constraint at all.
+
+**Both written ledgers are wrong, including mine.** §18.1 said "exit condition →
+channel → budget → verdict field"; the blueprint says "exit → channel → timeout
+→ verdict field → clock". *Budget was never one of B7's names.* Timeout was —
+it is name 4 — but neither sequence shows that it was reached and then given up.
+The row is the record; the summaries of it were not.
