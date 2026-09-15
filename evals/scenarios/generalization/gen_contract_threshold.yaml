@@ -1,0 +1,30 @@
+id: gen_contract_threshold
+description: >
+  Generalization trace 2 of 3: drafting work with a genuine material gap — a
+  statutory threshold the writer does not know and cannot invent.
+
+  Exists to exercise the grounding path on non-engineering work. B2 settled that
+  the risk gate zeroes lookups for immaterial work; this is the opposite case,
+  and it inherits from `legal_ops` (§6.6), the sector that taught the project
+  that a calibration gap can be a serving gap.
+
+  Risk, honestly: this is a governing document under the guide's own rule —
+  judged by what happens when it is followed, not by the fact that it is a
+  document. A clause stating the wrong statutory threshold, followed
+  repeatedly, breaches a regulated requirement. The honest reading is `high`;
+  the floor is set at `medium` because the "committed to yet" question has a
+  defensible reading either way before signature.
+request: >
+  Draft the data-protection clauses for a supplier agreement between a UK
+  company and a processor established in the EU. Cover the processing purposes,
+  the sub-processor consent mechanism, the breach notification obligation, and
+  the deletion-or-return duty at termination. The breach notification clause
+  must state the notification deadline that actually applies to a processor
+  under the relevant regulation — name the instrument and the article, and if
+  you cannot establish the deadline from what you have, say so plainly and mark
+  it as blocking rather than writing a plausible number.
+tags: [generalization, studio, b14, grounding]
+expect:
+  risk_at_least: medium
+  max_calls: 40
+  criteria_addressed: true

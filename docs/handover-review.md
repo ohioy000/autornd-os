@@ -5570,3 +5570,36 @@ of seven, and that is the entire intervention.
 | **mine — rosters** | **Studio roles appear, and so do engineers.** A2 measured `enforce_triage_composition` appending a literal `test_engineer` at high/critical regardless of profile. The advisor's "content-adjacent sectors assign studio roles" is right and incomplete: **every high or critical sector, in any profile, gets an engineer appended after the model has spoken.** I expect this on roughly the 20 sectors §6.6 reads high or critical. |
 | **mine — domains** | **Domains move more than risk.** With `copywriting`, `brand_strategy` and `seo_analytics` newly on offer, content-adjacent sectors (`broadcast`, `technical_writing`, `marketing`-like) should relabel. That is the vocabulary working as designed and is *not* a calibration change. |
 | **mine — generalists** | **Few or no synthesized generalists in this arm.** Triage is offered twelve roles covering both worlds, so it has little reason to invent one. The generalist path is exercised by §6.5's history, not by this run. |
+
+### 24.1(c) Part C — the three scenarios, and their pre-registration
+
+Authored into `evals/scenarios/generalization/`. **Verified out of the default
+suite**: `load_scenarios` globs `*.yaml` non-recursively, so the default run
+stays at 17 — the `wide/` precedent holds.
+
+**Risk floors set honestly, and the reasoning written down**, because a
+scenario engineered to read low would make the whole probe worthless:
+
+| scenario | what it is | honest reading | floor set | why the floor is lower than the reading |
+|---|---|---|---|---|
+| `gen_marketing_claims` | a B2B positioning brief whose three proof points must be sourced factual claims | **medium** — a decision, reversible until the campaign runs, nobody harmed | `low` | `low` is genuinely defensible for an unpublished brief, and a floor is never waivable (convention 8) |
+| `gen_contract_threshold` | data-protection clauses with a statutory notification deadline the writer must establish or mark blocking | **high** — a governing document judged by what happens when it is followed; a wrong statutory threshold, followed repeatedly, breaches a regulated requirement | `medium` | the "committed to yet" question reads either way before signature |
+| `gen_style_crossref` | a house style guide whose sections must cross-reference each other and agree on shared rules | **low–medium** | `low` | the risk guide names style guides *twice* — as a consistency standard and as paperwork whose worst case is rework |
+
+`gen_style_crossref` is deliberately the one case where **the shipped guide has
+already ruled on the subject**, which makes it a check on the guide as much as
+on the dialect. And it re-asks §18.1's crossref diagnosis — *the implementation
+agent writes each section as an independent narrative unit and never performs a
+global dependency-ordering pass* — in a non-engineering shape, to ask whether
+that is a property of the agent or of the subject.
+
+#### C3/C5 pre-registration
+
+| | prediction |
+|---|---|
+| **advisor's** [gating nothing] | risk holds; rosters resolve; binding concentrates in **implement + validate** (artifact framing), not triage or escalation; at least one trace ships inside the engineering envelope |
+| **mine — where binding shows** | **Agreed on implement, and I expect escalation to bind harder than predicted.** Its system prompt opens *"You are the Principal Systems Architect for AutoRnD"* (L956) and asks for an *architectural* flaw — a role name and a frame, not an example. Implement inherits `OUTPUT_CONTRACT`'s artifact list twice over (L49, L690). Validate inherits `ASSESSMENT_CONTRACT`, whose load-bearing clause is neutral, so I expect validate to bind **less** than the advisor does. |
+| **mine — the roster** | **Every trace is reviewed by a Test Engineer.** A2 measured it: `get_review_team` adds `TESTER` above `low` and `ARCHITECT` at `high`. `gen_contract_threshold` at `high` should be reviewed by a systems architect, a test engineer, and whatever studio roles triage assigned. This is not a prediction about the models; it is arithmetic on code already read. |
+| **mine — the checks mechanism** | **Studio's checks appear for `copywriting` work and the generic three appear otherwise.** Exercised free in §24.1(a); the live question is only whether triage labels the domains such that they fire. |
+| **mine — termination** | **At least two of three terminate**, and `gen_contract_threshold` is the one at risk — not from the dialect but from the *material gap*: it is built to have an unknowable fact, and the honest outcomes are "ship, marking it blocking" or "escalate with the gap named". Both are closure-grade; a plausible invented deadline is the failure. |
+| **mine — the envelope** | **Inside it.** These are shorter deliverables than a tolerance stack. If any trace runs past 13 calls it will be `gen_style_crossref`, for the crossref reason, not for a dialect reason. |

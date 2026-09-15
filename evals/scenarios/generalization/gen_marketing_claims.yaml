@@ -1,0 +1,29 @@
+id: gen_marketing_claims
+description: >
+  Generalization trace 1 of 3: a written deliverable with no engineering in it,
+  whose hard part is verifying factual claims rather than making something work.
+
+  Exists to give the `fact_checker` role its name for real. The studio profile
+  declares it with the note that this is the same job the search tier does for
+  engineering work — a confident wrong figure reads exactly like a confident
+  right one — and until now nothing has ever asked it to do that job.
+
+  Risk, honestly: the guide's second question puts this at `medium`. It is a
+  decision, reversible until the campaign runs, and nobody can be harmed by a
+  positioning document. The floor is set at `low` because `low` is genuinely
+  defensible for an unpublished brief and a floor must never be waivable
+  (convention 8); the expected reading is `medium` and a `low` result is a pass,
+  not a miss.
+request: >
+  Write the positioning brief for a B2B expense-management product aimed at
+  finance teams at companies of 50 to 500 staff. Include the audience
+  definition, the message hierarchy, and three proof points. The proof points
+  must be factual claims about the market — adoption rates, average time spent
+  on manual expense processing, or typical error rates — and each one must be
+  stated with the source a reader could follow to check it. Mark clearly any
+  claim you cannot source rather than softening it into something vaguer.
+tags: [generalization, studio, b14]
+expect:
+  risk_at_least: low
+  max_calls: 40
+  criteria_addressed: true
