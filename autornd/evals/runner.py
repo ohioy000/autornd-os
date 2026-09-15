@@ -175,6 +175,7 @@ class ResultsLog:
             "refused_lookups": run.refused_lookups,
             "normalised_verdicts": run.normalised_verdicts,
             "tokens_by_tier": run.tokens_by_tier,
+            "rejections_by_tier": run.rejections_by_tier,
             "seconds_by_phase": run.seconds_by_phase,
             "assertions": [
                 {"name": r.name, "passed": r.passed,
@@ -346,6 +347,12 @@ class ScenarioRun:
     # Prompt and completion tokens per tier. Cost alone cannot separate "this
     # tier got dearer" from "this tier was handed more to read".
     tokens_by_tier: dict[str, dict[str, int]] = field(default_factory=dict)
+    # Replies the schema refused, per tier, retries included. Read beside
+    # `normalised_verdicts`: a normalisation is a reply the truth table
+    # repaired, a rejection is one it could not, and the pair is the whole
+    # malformed rate. Both are needed because the resolution converts the
+    # second into the first — without the counts, that conversion is invisible.
+    rejections_by_tier: dict[str, int] = field(default_factory=dict)
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -551,6 +558,7 @@ async def run_scenario(
         normalised_verdicts=_verdicts.normalisations(),
         tokens_by_tier={k: dict(v) for k, v
                         in runner.client.tokens_by_function.items()},
+        rejections_by_tier=dict(runner.client.rejections_by_function),
         seconds_by_phase=_phase_seconds(state),
     )
 

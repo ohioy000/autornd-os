@@ -164,6 +164,15 @@ class OpenRouterClient:
         # far, whereas an experiment that runs away is a thing that has already
         # happened here once — forty minutes and $1.28 for an inconclusive run.
         self.tokens_by_function: dict[str, dict[str, int]] = {}
+        # Schema rejections per tier. The retry loop has always logged these at
+        # WARNING, but the eval CLI configures no logging, so they reached only
+        # the lastResort stderr handler — and of nine recorded runs, three run
+        # logs survived long enough to be counted. A rate that can only be
+        # measured from a temp file is not an instrument. Counted here, it lands
+        # in the JSONL beside the normalisation count it must be read with:
+        # a normalisation is a reply the truth table repaired, a rejection is a
+        # reply it could not.
+        self.rejections_by_function: dict[str, int] = {}
         self.call_ceiling: int | None = None
         self.spend_ceiling: float | None = None
 
@@ -214,6 +223,7 @@ class OpenRouterClient:
         self.spend_by_function = {}
         self.calls_by_function = {}
         self.providers_by_function = {}
+        self.rejections_by_function = {}
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -444,6 +454,8 @@ class OpenRouterClient:
             except ValidationError as e:
                 last_error = e
                 correction = _rejection_note(e)
+                self.rejections_by_function[function] = (
+                    self.rejections_by_function.get(function, 0) + 1)
                 logger.warning(
                     "Response did not match %s (attempt %d/%d) for %s: %s",
                     getattr(schema, "__name__", schema), attempt + 1, max_retries,
