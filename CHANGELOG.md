@@ -213,6 +213,29 @@ that sub-graph spends: one gate had been reading 1,573 seconds of an 1,800-secon
 run, in the per-phase table that exists precisely so an expired run does not have
 to be bought twice to say what was slow.
 
+**The build loop converges, and what fixed it was not the loop.** The oldest
+open problem in the project — recorded for seven development cycles as "the
+build loop does not converge on complex requests" — is closed. It carried six
+different names on the way: an untested premise, an exit condition, a feedback
+channel, a wall clock, a missing verdict field, and a wall clock again. Five of
+them were about the workflow. The answer was the tier: the one that runs
+implement, validate and review had never been pinned to a particular serving,
+and pinning it turned two test cases that had never once completed into finished
+deliverables in under five minutes each. The mechanism is not speed. Per-call
+latency improved by about a third, while the number of iterations the work
+needed fell from eight to two and from four to one — a serving does not only run
+at a speed, it converges at a rate, which is the same lesson this project
+learned about classification accuracy and had not thought to apply here. Three
+of the four test cases finish with a written deliverable or a diagnosis naming a
+real contradiction in their own plan; the fourth did before this cycle began.
+
+Two schema changes landed with it, both earned by a live failure rather than
+proposed. A verdict that names why it failed no longer has to also say that it
+failed, and a verdict returning its evidence as an object keyed by criterion has
+that folded into lines rather than refused three times. Both are counted, by
+kind, in the results file — because a leniency that hides how often it fires
+cannot be withdrawn later on evidence.
+
 The suite stands at **651 tests** as of `767f582`, up from 85 at 0.1.0.
 
 ## [0.1.0] — 2026-09-12

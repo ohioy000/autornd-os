@@ -609,7 +609,7 @@ or design issue.
 | B4 | ~~`wide_legal_ops` under-classifies on every provider~~ | **RESOLVED — the premise was wrong** | It is the serving, not the guide. Pinned six ways: fails 3/3 on OpenInference, DigitalOcean and unpinned; passes 3/3 on Alibaba and AtlasCloud, 2/3 on StreamLake. Under the adopted `triage:Alibaba` pin it passes ~8/9, and its rare excursions go in **both** directions. No guide edit was made — there was no systematic failure left to target. §12.3, §12.4 |
 | B5 | `wide_wind_energy` fails `risk_at_least` ~1/3, **deliberately left red** | low | Two defensible readings; a risk **floor must never be waivable** (§4.4) |
 | B6 | ~~`independent_check` has never executed inside a full live workflow~~ | **RESOLVED — observed 2026-09-14** | Ran end to end on `independent-check-probe`: 10 calls, 54s, $0.0212, returning `ship=true, confidence=high, critical_issues=[]`. Trace at `docs/traces/b6-independent-check.json`. Took seven further attempts; every exit was legitimate and the *probe request* was what kept failing — see §13.4 |
-| B7 | Build loop convergence — **the loop is not the constraint; the clock is** | medium | **Sixth name, and the first one the whole history supports.** Across 23 recorded B7 units over six blueprints: six expired on the clock, **the closest any unit came to its $0.75 spend cap was 53.1%** — and that unit expired on the clock with 47% of its budget unspent. 011's `derived_tolerances` expired having spent **12%**. At a median 41 s per model call, 1800 s buys about 44 calls no matter what budget is attached, so raising `--max-spend` cannot move one of the six. The verdict death of §17 is gone — `derived_tolerances` went from dying at iteration 2 / 454 s to running 8 iterations through build exhaustion, escalation, a recoverable diagnosis and three rework rounds — and the green resolution **never fired** (0 normalisations in three runs), so what these traces show is the deaths not recurring, not the truth table working. All three produced a real root cause and directive; none reached a terminal status. Per-phase table for the two expiries, after the gate-timing fix: `rework_review` 919 s / `implement` 432 s / `escalation` 186 s (numeric), and `validate` 783 s / `implement` 567 s / `rework_review` 238 s (tolerances). **Next lever is the `engineering` serving** — the last unpinned tier, carrying implement, validate, domain_review, review and rework_review, with a per-call spread of 20–90 s across units. §18.1 |
+| B7 | ~~Build loop convergence~~ | **RESOLVED 2026-09-15 — and the sixth name was the right one** | Closed on 010's criterion: all four convergence traces terminate in ship or escalated-with-diagnosis. `derived_tolerances` and `numeric_consistency` **shipped** in 299 s and 182 s; `crossref_integrity` and `requires_execution` **escalated with a root cause and a directive**. What closed it was not a loop change — it was pinning the last unpinned tier. The win is **iterations, not seconds**: 8 → 2 and 4 → 1, while per-call latency moved only from a 67 s median to 41 s. **A serving does not only run at a speed, it converges at a rate** — B4's finding in the place nobody had looked. Read `§6.9` for the ledger of six names and what each one cost. **Closure means the loop terminates honestly under a compliant pinned serving, on one observation per trace** — not that it is reliable; `crossref_integrity` produced three different outcomes in three runs and is the standing reason to distrust n=1. §20.1 |
 | B8 | Shipped-default models fail on hard requests | medium | Documented rather than changed, per owner's instruction. §6.4. **The plan-tier burn is request-driven, not serving-driven** (measured 2026-09-14, n=2 servings × 12 easy plans vs 6 servings × 4 hard ones): the same model burned seven retries on the hard set and none on the easy one. Pinning that tier is not the lever; the candidates are the plan token budget — the burn sits at `Specialist.run`'s default 16,384 while every serving advertises a ceiling above 262,000 — or the model. **The budget is now a setting** — `PLAN_MAX_TOKENS`, default 32,768 (§16) — so that half is tunable without code; the model remains the owner's. |
 | B9 | No DB migrations (no Alembic) | low | Schema changes are destructive |
 | B10 | `ambiguous_request` — historical "mystery failure" | **RESOLVED** | It was B3's sibling: a `max_calls: 4` baseline set when the budget counted *nodes*. Measured 6. Now 8 |
@@ -771,13 +771,14 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
    kept as the regression shape. It threads a narrow window — consequential
    enough that triage marks `unrecallable`, trivial enough that review ships —
    and lands roughly one run in three, so expect to repeat it.
-7. **B7 — the build loop's clock.** Still the highest-value unsolved *product*
-   problem, but not the one it was filed as: the loop is where iterations and
-   *time* go, and money has never been the binding constraint in 23 recorded
-   units. The next thing to try is pinning the `engineering` serving, which
-   carries five of the loop's nodes and is the last unpinned tier. Free
-   prerequisite already landed: the dissent record now names which judge blocked
-   an exit, which no run has ever been able to say.
+7. ~~**B7 — the build loop's clock.**~~ **Done 2026-09-15**, by pinning the
+   `engineering` serving rather than by changing the loop. All four convergence
+   traces now terminate honestly; two that had never completed shipped in under
+   five minutes. §6.9 has the ledger. **What it leaves behind** is the finding
+   that outlives it: a serving determines how many iterations work takes, not
+   just how fast each one is, and only `triage`, `architecture` and
+   `engineering` have ever been measured this way. `escalation`, `research`,
+   `search` and the reranker have not.
 8. **Per-tier provider quality measurement.** The eval suite can now score
    providers; only triage has been measured.
 9. **Alembic migrations** before anyone stores real data.
@@ -1144,6 +1145,43 @@ that catches this class — `tests/test_schema_wiring.py` now does.
 
 **Therefore: live-test multi-request sequences. The unit suite is necessary and
 nowhere near sufficient.**
+
+### 6.9 B7's six names — what "the build loop does not converge" decomposed into
+
+B7 was open for seven blueprints and carried **six** different names. The list
+is recovered from the row itself, by reading `HANDOVER.md` at each commit that
+changed it, because two separate summaries written from memory both got it
+wrong — one invented a name ("budget") the row never had.
+
+| # | the row said | after | the diagnosis | what it cost to find out |
+|---|---|---|---|---|
+| 1 | *does not converge on complex requests* | — | specialists have no filesystem; the validator asks for evidence that cannot exist | `SPECIALIST_OUTPUT_CONTRACT`, which mitigates and does not solve |
+| 2 | *premise **untested*** | 006 | the claim rested on runs that never reached the loop — 2 of 4 died on a schema violation first | the schema was never wired into the retry; two phases fixed |
+| 3 | *premise tested; **failure mode moved*** | 008 | the all-judges exit landed; three of four converge, **one runs out the wall clock** | the exit condition, the fold, and four judges |
+| 4 | *failure mode moved twice; **now clock-bound*** | 009 | review→rework landed; both feedback channels opened | a rework loop and two channels |
+| 5 | *the loop works; **a required field does not arrive*** | 010 | two of four traces die on `ImplementVerdict` missing `green` | the green truth table; convention 20 |
+| 6 | *the loop is not the constraint; **the clock is*** | 011 | 23 units, six expiries, **none ever stopped by money** | the gate-timing fix, the rejection counter, the dissent record |
+
+**Read the shape, not the list.** The wall clock appears as an aside in name 3,
+becomes the name in name 4, is **displaced** in name 5 by a verdict field, and
+returns in name 6 with twenty-three units behind it. B7 was diagnosed
+clock-bound two blueprints before it was settled clock-bound. The thing that
+displaced it — four traces dying on a missing field — was real, was fixed, and
+**was never the constraint**.
+
+**What actually closed it was none of the six.** Every name pointed at the
+workflow; the fix was the `engineering` tier's *serving*. Pinning it turned two
+traces that had never completed into ships in 299 s and 182 s. And the mechanism
+was not the one the sweep measured: per-call latency moved from a 67 s median to
+41 s, while **iterations went 8 → 2 and 4 → 1**. A serving does not only run at
+a speed, it converges at a rate. That is §6.1's thesis — *a model id is not a
+system* — reaching the one tier that had never been pinned, six names later.
+
+**The transferable lesson is about the naming, not the answer.** Each of the six
+names was correct about what the evidence then showed, and five of them were
+about the wrong layer. The one question never asked until 012 was *who is
+serving this tier* — and it had been answerable, for free, from
+`providers_by_function`, since B4.
 
 ---
 
