@@ -226,8 +226,13 @@ def _coerce_str(v: Any) -> str:
 
 
 class ImplementVerdict(BaseModel):
+    # Required, and staying required: nothing else in the verdict implies
+    # whether the work is finished. The 006 death on this class predated the
+    # schema being wired into the retry loop, which is the mechanism that
+    # covers an omission of genuinely independent information.
     done: bool
-    green: bool
+    # Optional and resolved from red_cause — see the truth table above.
+    green: Optional[bool] = None
     red_cause: Optional[str] = None
     # Defaulted, not required. `run_implement` overwrites this with the loop's
     # own counter the moment the reply lands, so demanding the model echo a
@@ -237,6 +242,10 @@ class ImplementVerdict(BaseModel):
     iteration: int = Field(default=1, ge=1)
     summary: str
     domain_concerns: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _green_from_red_cause(self):
+        return _resolve_green(self)
 
     @field_validator("summary", "red_cause", mode="before")
     @classmethod
@@ -248,10 +257,77 @@ class ImplementVerdict(BaseModel):
 
 # ── Validate ──
 
+# ── green/red_cause resolution ──────────────────────────────────────────────
+#
+# `green` is not independent information. Every prompt that asks for it says so
+# in the same breath — "green: true if it satisfies the criteria; red_cause:
+# null if green, otherwise what is wrong" — so a verdict carrying a red_cause
+# has already said it is red, and one carrying none has already said it is
+# green. The model supplies the cause and omits the flag.
+#
+# Measured twice, four blueprints apart. In 006 two of four convergence traces
+# died on `ImplementVerdict` rejecting a reply that had `done` and `red_cause`
+# and no `green`; the schema was then wired into the retry loop so the model
+# would be told what was wrong and asked again. In 010 two of four died the same
+# way **after all three retries were spent**, each attempt carrying the rejection
+# text and each coming back without the field. The wiring worked and the model
+# did not comply.
+#
+# So: tolerate the omission of a derivable field, and refuse the loss of a
+# non-derivable one. `done` stays required because nothing in the verdict
+# implies it. The resolution is counted rather than silent — a normalization is
+# a fact about the model, and a fix that hides its own trigger stops anyone
+# noticing when it stops being needed.
+_normalisations = 0
+
+
+def normalisations() -> int:
+    return _normalisations
+
+
+def reset_normalisations() -> None:
+    global _normalisations
+    _normalisations = 0
+
+
+def _resolve_green(verdict: Any) -> Any:
+    """The ruled truth table, applied after construction."""
+    global _normalisations
+    has_cause = bool((verdict.red_cause or "").strip())
+
+    if verdict.green is None:
+        verdict.green = not has_cause
+        _normalisations += 1
+        return verdict
+
+    if verdict.green and has_cause:
+        # The conservative side. A false red costs an iteration; a false green
+        # ships work nobody checked.
+        verdict.green = False
+        _normalisations += 1
+        return verdict
+
+    if not verdict.green and not has_cause:
+        # The one case that loses information: something is wrong and the
+        # verdict does not say what. The retry machinery exists to ask.
+        raise ValueError(
+            "a red verdict must name its cause in red_cause"
+        )
+    return verdict
+
+
 class ValidateVerdict(BaseModel):
-    green: bool
+    # Optional and resolved, for the reason recorded above. Validate's prompt
+    # carries the identical contract to implement's, verified before this was
+    # applied to it: "green: true if every success criterion is satisfied;
+    # red_cause: null if green, otherwise the specific failure cause".
+    green: Optional[bool] = None
     red_cause: Optional[str] = None
     evidence: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _green_from_red_cause(self):
+        return _resolve_green(self)
 
 
 # ── Review ──

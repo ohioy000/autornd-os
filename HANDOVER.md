@@ -701,7 +701,17 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
     not careless — it inherited the error from §2.1's own data-flow diagram,
     which draws the request path as routes straight to the executor. A document
     can be wrong indefinitely; `tests/test_live_wiring.py` now pins it.
-20. No linter/formatter is configured. Match surrounding style: 4-space indent,
+20. **Required fields are informationally independent fields.** A field the
+    verdict's own contract derives from another is normalized, loudly, never
+    demanded. `green` is defined in every prompt that asks for it as the
+    complement of `red_cause` — the model supplies the cause and omits the
+    flag, and that killed two of four convergence traces twice, four
+    blueprints apart, the second time *after* the schema retry had asked three
+    times. `done` stays required because nothing in the verdict implies it.
+    **Loudly** matters: every resolution is counted into the run record,
+    because a fix that hides its own trigger stops anyone noticing when it is
+    no longer needed — or when it starts firing far more than it did.
+21. No linter/formatter is configured. Match surrounding style: 4-space indent,
     `from __future__ import annotations`, type hints throughout, ~88-col soft
     wrap, module docstrings that explain rationale.
 

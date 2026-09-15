@@ -716,6 +716,13 @@ Original request:
     lead_data["iteration"] = iteration
     domain_concerns: list[str] = []
 
+    # The verdict's green is resolved at construction, and this reads the raw
+    # dict before that — so an omitted green would read as falsy here and skip
+    # domain review entirely, which is the opposite of what an unqualified
+    # reply should mean. Apply the same rule the verdict applies.
+    if lead_data.get("green") is None:
+        lead_data["green"] = not str(lead_data.get("red_cause") or "").strip()
+
     # Step 2: Domain review (only if the lead succeeded and there are reviewers)
     if lead_data.get("green") and reviewers:
         domain_concerns, critical, review_responses = await run_domain_review(

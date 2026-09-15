@@ -173,6 +173,7 @@ class ResultsLog:
             "calls_by_tier": run.calls_by_tier,
             "providers_by_function": run.providers_by_tier,
             "refused_lookups": run.refused_lookups,
+            "normalised_verdicts": run.normalised_verdicts,
             "seconds_by_phase": run.seconds_by_phase,
             "assertions": [
                 {"name": r.name, "passed": r.passed,
@@ -336,6 +337,11 @@ class ScenarioRun:
     # Where the wall clock went, phase -> seconds, summed across iterations. A
     # run that expires should not need buying again to say what was slow.
     seconds_by_phase: dict[str, float] = field(default_factory=dict)
+    # How many verdicts had their `green` resolved from `red_cause`. This is the
+    # malformed-verdict rate, and it is recorded rather than swallowed: a fix
+    # that hides its own trigger stops anyone noticing when it is no longer
+    # needed — or when it starts firing far more than it used to.
+    normalised_verdicts: int = 0
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -474,7 +480,9 @@ async def run_scenario(
         )
 
     from autornd.knowledge import research as _research
+    from autornd.models import verdicts as _verdicts
     _research.reset_refused_lookups()
+    _verdicts.reset_normalisations()
 
     ceiling = scenario.max_calls or DEFAULT_CALL_CEILING
     spend_ceiling = budget.unit_ceiling(max_spend) if budget else max_spend
@@ -536,6 +544,7 @@ async def run_scenario(
         status=str(getattr(state, "status", "") or ""),
         iterations=list(getattr(runner, "iterations", []) or []),
         refused_lookups=_research.refused_lookups(),
+        normalised_verdicts=_verdicts.normalisations(),
         seconds_by_phase=_phase_seconds(state),
     )
 

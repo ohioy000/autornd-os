@@ -4050,3 +4050,119 @@ Part B. Part A free.
   refinement, noted where it will be read.
 - **Escalation excerpt capping** — 62% of spend now, explicitly out of scope,
   and it trades the autopsy's evidence for its price.
+
+
+---
+
+## 18. Blueprint 011 — The verdict arrives (verbatim, as received)
+
+**Status: not executed at the time of recording.** Execution record: §18.2.
+
+```text
+BLUEPRINT 011 — The verdict arrives: resolve green from red_cause, and
+settle B7 with a verdict that cannot fail to arrive.
+
+Origin: 010's settling run — two of four traces killed by ImplementVerdict
+missing green while supplying red_cause; the same omission killed two of
+four in 006. The advisor rules: normalize, loudly. Convention 20 — required
+fields are informationally independent fields; definitionally derived
+fields are normalized loudly, never silently. The prompt's own contract
+defines green as not-red_cause, and domain_concerns already owns the
+non-blocking channel, so the identity is clean.
+
+Protocol (as 001-010): paste verbatim into docs/handover-review.md as §18
+BEFORE executing; append §18.2 after. All standing rules binding. This
+blueprint implements an advisor-ruled verdict-semantics change - execute
+the truth table as specified; departures via §18.2. Prerequisites: suite
+green before and after (re-derive the count); CI green before finishing.
+
+PART A - the resolution (FREE)
+
+A1. ImplementVerdict.green becomes Optional[bool] = None, resolved in a
+    model_validator(mode="after") by the ruled truth table:
+      green absent, red_cause set     -> green=False (derived, counted)
+      green absent, red_cause absent  -> green=True  (derived, counted)
+      green false, red_cause set      -> pass
+      green true,  red_cause absent   -> pass
+      green true,  red_cause set      -> coerce green=False, counted -
+                                        the conservative side; a false
+                                        red costs an iteration, a false
+                                        green ships bad work
+      green false, red_cause absent   -> RAISE "a red verdict must name
+                                        its cause in red_cause" - the
+                                        retry machinery asks for it
+    Rationale comment on the field names both exhibits (006 and 010) and
+    the principle: tolerate omission of derivable fields, reject loss of
+    non-derivable information.
+A2. Requirement, mechanism executor's choice: every normalization is
+    counted per run and the count lands in the JSONL unit record - this
+    is the malformed-verdict-rate instrument for Part C, and masking it
+    would defeat the point of measuring instead of guessing.
+A3. Apply the same resolution to ValidateVerdict.green ONLY after
+    verifying its prompt carries the same contract (read phases.py's
+    validate prompt first; if the contract differs, record why and leave
+    it required).
+A4. done stays required. Comment carries the defense: informationally
+    independent - nothing in the verdict implies it; the 006 death
+    predated the wired retry, which covers this class.
+A5. Guard tests pinning all six rows of the truth table, plus: the
+    domain-review mutation (flips green post-construction) is unaffected
+    by the validator - construction-time resolution must not re-fire on
+    programmatic mutation. Convention 20 recorded in §4.4.
+A6. Pre-flight check (free): grep phases.py and the yaml for any site
+    that constructs or compares green in a way the truth table changes -
+    the fold reads implement.green post-mutation; confirm nothing reads
+    green mid-construction.
+
+PART B - the settling run, settled (~ $0.50, ~ 1-2 h)
+
+B1. The four B7 scenarios, engineering-rnd, --timeout 1800, repeat 1,
+    --max-spend 0.75 --max-spend-sweep 3.00, pins env-prefixed
+    (triage:Alibaba, architecture:StreamLake).
+B2. Pre-register per trace BEFORE running, from 010's retained
+    iteration data - the two killed traces get their first real test.
+B3. Closure criteria (as 010): B7 CLOSES iff all four terminate in ship
+    or escalated-with-diagnosis (including requires_human -> blocked-
+    with-autopsy) within budget. A naked timeout at 1800 s is B7's next
+    name plus the per-phase timing table, not closure. Per-trace rerun
+    rule: only an expired trace re-runs, at 3600 s, same caps.
+B4. Advisor's [predictions], labelled: both formerly-green-killed traces
+    complete their loops (they were dying on arrival, not diverging);
+    at least one of the three review-blocked traces ships after rework;
+    escalation's share of spend drops below 50% purely because the
+    killed traces now spend elsewhere first. Wrong is recorded.
+
+PART C - free measurements, informing (not implementing) two designs
+
+C1. Escalation decomposition, from retained JSONL: escalation input
+    tokens per call, split by source - channel enrichment (evidence
+    lines, findings, concerns) vs baseline - plus absolute per-call
+    cost. Context on record: the 62% share is measured on traces
+    designed to reach escalation; the shape matters, not the share.
+    Output: whether a per-consumer failure-log view (recent iterations
+    verbatim, older compressed) is worth a blueprint.
+C2. Prompt-size vs compliance: retain per-call prompt/completion token
+    counts if not already (the client parses usage to bill); compute
+    the malformed rate (normalizations + schema-retry rejections per
+    implement/validate call) against prompt size across all retained
+    history. Advisor's discriminating pre-registration [prediction]:
+    normalizations cluster on red verdicts (contract redundancy), not
+    on prompt size; the size signal, if real, shows in all-field retry
+    rates. Both outcomes are findings.
+C3. Both land in §18.1 as measured facts with their n.
+
+PART D - records
+
+D1. HANDOVER: B7 per B3's honest outcome - closing it after five names
+    (exit -> channel -> budget -> verdict field -> ?) requires four honest
+    terminations; §4.4 convention 20; counts commit-stamped.
+D2. CHANGELOG [Unreleased]: one prose paragraph if B7 closes. No model
+    ids.
+D3. §18.2 as ever: departures, left undone, what execution found that
+    this blueprint missed.
+
+OUT OF SCOPE, deliberately: the escalation-view design (waits on C1);
+any prompt change (the compliance branch is closed by measurement);
+done defaulting; per-tier pins beyond the two ratified; the cascade
+search design; .env edits (G-3).
+```
