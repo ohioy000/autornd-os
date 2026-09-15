@@ -6015,3 +6015,89 @@ D4. Counts commit-stamped; the guard must pass on the new files.
 OUT OF SCOPE, deliberately: B13/B14 design or implementation; any
 prompt/workflow/profile edit; .env (G-3); any live spend.
 ```
+
+## 26. B13/B14 — design inputs, not yet designed
+
+**Nothing here is a design.** Blueprint 015 stages the evidence so the advisor
+can rule on it with the successor; 015's own scope forbids designing either.
+Every option below changes the cost model §4.3 was built on, which is why none
+of them is chosen here.
+
+### B13 — the risk gate and the success criteria do not reconcile
+
+**The evidence, from §24.1(f), verbatim:**
+
+| trace | risk | search calls | outcome |
+|---|---|---|---|
+| `marketing_claims` | **low** | **0** | fabricated citations, 6 iterations, died on the cost ceiling |
+| `contract_threshold` | **medium** | **1** | cited Article 33(2) GDPR correctly, shipped in **one** iteration |
+
+§4.3's search policy zeroes lookups at `low` risk. The plan phase then wrote a
+success criterion demanding *"a citable source (author, title, publication,
+date, and URL) that a reader can use to verify the claim"* — for work that had
+already been denied any means of verifying anything. The agent did not refuse
+honestly; it invented sources. The autopsy named it: *"The agent treats citation
+as a formatting exercise rather than a verification exercise… Each attempt
+patches the single instance flagged."*
+
+**Why it bites generalization specifically:** the risk guide's own `low` bucket
+is *"presentation, copy, documentation or configuration"* — which is the most
+citation-dependent work there is. An engineering team meets this rarely; a
+content studio meets it on its first brief.
+
+**Open design questions. Do not answer them here.**
+
+1. **Does `low` keep zero lookups**, with low-risk grounding relying on store
+   recall plus a plan-side materiality judgement — i.e. the plan may not write a
+   criterion the run cannot satisfy?
+2. **Or does `low` get a minimal lookup budget**, decoupling the lookup decision
+   from the risk decision entirely?
+3. **Or does a blocking gap raise the budget independently of risk**, leaving
+   `low` at zero by default but letting the grounding phase escalate itself?
+4. Whichever is chosen: **what does it do to §4.3's measured $0.0999 → $0.0562
+   per-workflow figure**, and to B2's settled finding that the materiality gate
+   is not a cost lever? Both were measured against a policy where `low` means
+   zero, and both would need re-deriving (convention 18).
+5. A separate question the evidence raises but does not settle: **should a
+   verdict be able to refuse honestly?** The failure mode was fabrication, not
+   refusal, and nothing in the schema lets implement say *"this criterion cannot
+   be satisfied with what I have"*. That is verdict semantics, so it is a ruling.
+
+### B14 — two literal engineering roles bind on every profile
+
+**The two injection sites, with references:**
+
+| site | what it does |
+|---|---|
+| `autornd/engine/phases.py:104–110` — `enforce_triage_composition` | appends `SpecialistRole.TEST_ENGINEER` at high/critical risk and `SpecialistRole.SYSTEMS_ARCHITECT` on multi-domain requests |
+| `autornd/engine/review_composition.py:53–60` — `get_review_team` | adds `TESTER` above `low` risk and `ARCHITECT` at high/critical; `ARCHITECT` is also the low-risk fallback when no lead is found |
+| `autornd/engine/phases.py` — `lead_for_domain` fallback | an unrecognised domain leads to `systems_architect` |
+| `workflows/engineering-rnd.yaml` | `plan` names `systems_architect` and `validate` names `test_engineer` literally |
+
+**Measured impact (§24.1(d)):** **77 of 108** wide-suite units in *both* the
+studio and control arms were assigned a test engineer — identical, because the
+injection never consults the profile. **2 of 3** non-engineering full traces were
+staffed a systems architect.
+
+**The observation that should shape the ruling.** In the same measurement, triage
+invented **67 role assignments across 38 distinct names** — `process_engineer`,
+`prosthodontist`, `veterinary_anesthesiologist`, `brewer`, `agronomist` — against
+**4** assignments of the studio profile's own declared roles. An invented
+`legal_counsel` then staffed and reviewed a shipped deliverable six findings
+deep. **The registry's synthesized-generalist path is doing the real work**, not
+the profile's declared roster. A fix that only makes the two literals
+profile-aware would improve the smaller half.
+
+**Also recorded, not fixed:** `enforce_triage_composition` appends the enum
+member to a `list[str]` field *after* construction, bypassing Pydantic, so the
+verdict holds a mixed list. Pure instrument repair and permitted — but it
+belongs in B14's change rather than as a drive-by.
+
+### The pin line
+
+The three serving pins that closed B7 — `triage`, `architecture`, `engineering`
+— have **only ever run env-prefixed**, on the experiments that measured them.
+They are **not standing in `.env`**. Making them standing is one line, and
+`.env` is the owner's (G-3). Until that line exists, any run not carrying the
+prefix draws whatever the provider rotation offers, and §6.11 is the measurement
+of what that costs.
