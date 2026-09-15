@@ -4056,7 +4056,7 @@ Part B. Part A free.
 
 ## 18. Blueprint 011 — The verdict arrives (verbatim, as received)
 
-**Status: not executed at the time of recording.** Execution record: §18.2.
+**Status: executed 2026-09-15.** Execution record: §18.2.
 
 ```text
 BLUEPRINT 011 — The verdict arrives: resolve green from red_cause, and
@@ -4420,3 +4420,94 @@ lines is six lines and free. **It is not implemented here**: it is a
 verdict-semantics change, and 011 A3 is the standing instruction that those are
 ruled, not assumed. It is recorded as the next ruling worth making, and it is
 now measurable, which it was not two days ago.
+
+### 18.2 Execution record
+
+**Status: executed 2026-09-15.** Suite 617 → **632** across 29 files, green
+before and after; CI green.
+
+#### Departures from the blueprint
+
+1. **Part B ran three of four traces, not four.** The owner cut the settling run
+   mid-flight: *"do we need 3 more runs can we just do 2 more and then c2 and
+   d"*. I chose `derived_tolerances` and `numeric_consistency` — the two the
+   green resolution was built for, both killed in 010 by `ImplementVerdict`
+   missing `green` — and dropped `requires_execution`, which expired on the
+   clock in 010 for reasons the resolution does not touch and is the most
+   expensive of the four. **B7 therefore cannot close under B3 even
+   arithmetically**, and did not come close to closing on the three that ran.
+2. **I owe a correction on a premise I did not check hard enough.** Asked to
+   stop a run because *"you did the test without fix"*, I verified the opposite
+   — the green-resolution commit landed at 23:24:42 and the run's
+   results file was opened at 23:25:07, with `normalised_verdicts=0` confirming
+   it behaviourally — reported
+   that, and stopped the run as instructed. The correction stands and the
+   instruction was followed; both are recorded because only one of them is
+   usually written down.
+3. **Three instruments were repaired that the blueprint did not ask for.** Each
+   was found because a C2 or B3 deliverable could not be produced without it;
+   each is free, deterministic and pinned by a test that fails against the
+   previous code. See below.
+4. **`rejections_by_provider` was added an hour after `rejections_by_tier`,**
+   because the first version could not answer the first question asked of it.
+   Recorded as two commits rather than squashed: the gap between them is the
+   finding.
+
+#### Left undone, deliberately
+
+- **`requires_execution` is untested under the resolution** — per departure 1.
+  B3's per-trace rerun rule (an expired trace re-runs at 3600 s) is unspent for
+  all three, and is the obvious next purchase if anyone wants B7 closed on the
+  original criterion rather than reframed.
+- **The `evidence` coercion is not implemented.** The live counter's first
+  reading is two `ValidateVerdict` rejections for returning evidence as a dict
+  keyed by criterion rather than a list. A `mode="before"` coercion is six lines
+  and would have saved two of eleven engineering calls in that run — material,
+  now that B7 is known to be clock-bound. **It is a verdict-semantics change,
+  and A3 is the standing instruction that those are ruled, not assumed.**
+- **No prompt change**, per the blueprint, and now per measurement too: C2
+  closed the compliance-vs-size branch.
+- **No escalation-view design.** C1 said what it should compress, and the
+  blueprint said C1 informs rather than implements.
+- **The `engineering` pin is not made.** It is the recommendation the clock
+  finding points to, and per G-3 the owner ratifies pins.
+- **The dissent data is not in these traces.** The fix landed after all three
+  runs had started, so `dissenting` is empty in all of them. The first run after
+  this one gets it free.
+
+#### What execution found that the blueprint missed
+
+This is the substance of the entry. **Blueprint 011 asked three questions and
+the instruments needed to answer two of them were broken — silently, with a
+green suite, for between six runs and four blueprints.**
+
+1. **C2 could not be computed at all as specified.** "The malformed rate across
+   all retained history" assumed the history existed. The schema retry logs
+   every rejection at `WARNING`; the eval CLI configures no logging; those lines
+   reached Python's lastResort stderr handler and lived as long as the shell
+   redirect. Three logs of nine survived. **The instrument was correct, free,
+   and discarded on every run.** Now a field in the unit record — and it earned
+   its place on the very first run that carried it.
+2. **B3's per-phase timing table, the thing it names as B7's consolation prize
+   for an expiry, was arithmetically impossible.** The first expiry that needed
+   it attributed 3,374 seconds inside an 1,800-second run, with a *gate* as the
+   largest consumer. `_run_gate` awaited `_run_from` inside the node's timing
+   block. Dropping the one gate leaves 1,801 s — the correction is exact.
+3. **The dissent record had never recorded anything**, for 64 iterations across
+   six runs, by reading attributes off a plain dict *and* by reading a fold that
+   belongs to the previous iteration. It was added to answer precisely the
+   question `derived_tolerances` then asked: two rounds went by with implement
+   and validate both green and the loop did not exit, so a free check dissented,
+   and the record could not say which. It still cannot, for these runs.
+4. **The clock, which nobody had named.** B7 has been called five things and
+   budget was one of them. Twenty-three units say no unit has ever come within
+   half its spend cap while six died on the clock. This was computable after
+   010 and was not computed, because every blueprint asked about convergence.
+5. **The green resolution has not fired once.** Zero normalisations in three
+   runs. The deaths stopped and the mechanism built to stop them was never
+   invoked, which at n=3 against an ~18% base rate is unremarkable and must be
+   said rather than glossed. **011's central change is unvalidated by 011's own
+   runs**, and the counter that says so is the part of Part A that will matter.
+6. **A prediction record worth keeping.** Three of my three Part B predictions
+   were wrong, and three of B4's four. The one trace both of us kept predicting,
+   `crossref_integrity`, has produced three different outcomes in three runs.
