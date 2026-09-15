@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `641da5a` · **Branch:** `main`
-**Tests:** 592 as of `0e2bd32` · **Date of this snapshot:** 2026-09-13, test counts refreshed 2026-09-14
+**Tests:** 594 as of `fc2b3af` · **Date of this snapshot:** 2026-09-13, test counts refreshed 2026-09-14
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -249,7 +249,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       the only tracked profile
-tests/                      24 files, 592 tests (as of `0e2bd32`)
+tests/                      24 files, 594 tests (as of `fc2b3af`)
 ```
 
 ### 2.3 Key design patterns
@@ -603,7 +603,7 @@ or design issue.
 | B5 | `wide_wind_energy` fails `risk_at_least` ~1/3, **deliberately left red** | low | Two defensible readings; a risk **floor must never be waivable** (§4.4) |
 | B6 | ~~`independent_check` has never executed inside a full live workflow~~ | **RESOLVED — observed 2026-09-14** | Ran end to end on `independent-check-probe`: 10 calls, 54s, $0.0212, returning `ship=true, confidence=high, critical_issues=[]`. Trace at `docs/traces/b6-independent-check.json`. Took seven further attempts; every exit was legitimate and the *probe request* was what kept failing — see §13.4 |
 | B7 | Build loop convergence — **premise tested; failure mode moved** | medium | The all-judges exit landed (§15): no trace now exits with a red implementation, and the fold was observed keeping a loop going that the old exit would have shipped. Three of four traces converge; one runs out the wall clock in a whack-a-mole shape — validate reports one `red_cause` at a time while its `evidence` already holds a verdict per criterion, and only `red_cause` reaches the next attempt. **Three of four now end blocked at review instead**, so the bottleneck has moved from the loop to §5 item 12. §15.1/§15.2 |
-| B8 | Shipped-default models fail on hard requests | medium | Documented rather than changed, per owner's instruction. §6.4. **The plan-tier burn is request-driven, not serving-driven** (measured 2026-09-14, n=2 servings × 12 easy plans vs 6 servings × 4 hard ones): the same model burned seven retries on the hard set and none on the easy one. Pinning that tier is not the lever; the candidates are the plan token budget — the burn sits at `Specialist.run`'s default 16,384 while every serving advertises a ceiling above 262,000 — or the model. Both the owner's. |
+| B8 | Shipped-default models fail on hard requests | medium | Documented rather than changed, per owner's instruction. §6.4. **The plan-tier burn is request-driven, not serving-driven** (measured 2026-09-14, n=2 servings × 12 easy plans vs 6 servings × 4 hard ones): the same model burned seven retries on the hard set and none on the easy one. Pinning that tier is not the lever; the candidates are the plan token budget — the burn sits at `Specialist.run`'s default 16,384 while every serving advertises a ceiling above 262,000 — or the model. **The budget is now a setting** — `PLAN_MAX_TOKENS`, default 32,768 (§16) — so that half is tunable without code; the model remains the owner's. |
 | B9 | No DB migrations (no Alembic) | low | Schema changes are destructive |
 | B10 | `ambiguous_request` — historical "mystery failure" | **RESOLVED** | It was B3's sibling: a `max_calls: 4` baseline set when the budget counted *nodes*. Measured 6. Now 8 |
 
@@ -670,7 +670,15 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
     lose and repeat. One arm spent $1.12 of $1.17, hit a weekly ceiling
     mid-experiment and took the two cheap arms with it — they cost a sixth of
     it between them and would have been banked.
-17. No linter/formatter is configured. Match surrounding style: 4-space indent,
+17. **When a fix invalidates a test, ask which of the two is wrong first.** A
+    test asserting current behaviour is not automatically right — it may be the
+    bug, written down. Six tests broke on the all-judges exit: three asserted a
+    red implementation completing and a drifted one shipping, which is the
+    defect as an expectation; three were doubles whose implementations never
+    mentioned their own criteria, and those were fixed rather than the
+    assertions relaxed. Five more broke on gate routing, all asserting that a
+    blocked review ends the run.
+18. No linter/formatter is configured. Match surrounding style: 4-space indent,
     `from __future__ import annotations`, type hints throughout, ~88-col soft
     wrap, module docstrings that explain rationale.
 
@@ -732,13 +740,22 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
 
 ### Longer term / technical debt
 
-11. **Retire `engine/workflow.py`** (legacy hardcoded sequence). It is kept as
-    the graph's equivalence reference (`test_graph_equivalence.py`, 16 tests).
-    Once the graph is trusted, deleting it removes a whole duplicated pipeline —
-    but it *has* caught real drift, so keep it until it stops paying.
-12. **Review→rework loop.** The review gate currently blocks. Feeding findings
-    back into implement/validate is more useful but needs exhaustion semantics,
-    and review/validate can disagree indefinitely.
+11. ~~**Retire `engine/workflow.py`.**~~ **Done 2026-09-14**, and the file
+    stays — only the hardcoded sequencer inside it is gone (251 lines), because
+    `WorkflowEngine` is what the API calls. It stopped paying: silent through
+    the all-judges change (its happy path has every judge agreeing), two wrong
+    mirroring attempts (it holds two judges where the graph holds four, never
+    running the free checks), an order-dependent defect in its own suite, and
+    finally gate routing — a gate that sends work back into a loop is not a
+    sequence. A reference that models less than the product is not confidence.
+    Last green run: `7e00d4d`, 16 tests.
+12. ~~**Review→rework loop.**~~ **Designed and landed 2026-09-14** (§16). The
+    evidence that justified it: three of four traces ended blocked at review
+    with the findings recorded and nothing able to read them (§15.1), and 35 of
+    those findings classified as overwhelmingly addressable-in-text (§16.1). The
+    exhaustion semantics it was waiting on are that every loop must declare a
+    bound at load time and the rework loop hands off to escalation — review and
+    implement can disagree indefinitely, the graph cannot express that.
 13. **Generalise beyond engineering.** The vision is "any team." Roles, domains
     and validation lenses are now open; the *prompts* in `phases.py` still speak
     engineering. That is the next frontier for the "works for any team" claim.
@@ -921,6 +938,22 @@ under-classifying (seven to ten sectors here, the dangerous direction); capable
 ones fail by over-classifying one or two, which is the safe direction and, per
 convention 8, the waivable one.
 
+**Validate and review answer different questions, and both are needed.**
+Measured 2026-09-14 (n=1): with the assessment contract hardened so criteria
+cannot be amended, `requires_execution` came back with all six criteria assessed
+as written and none altered — and review still blocked it, on a load test that
+sends 101 requests over 1.01 s against a bucket refilling at 100/s and would
+therefore pass spuriously. **Criterion 4 asks that sustained rate be covered;
+Test 4 covers it; the test is wrong.** Formal satisfaction of a criterion is not
+correctness of the work, and no wording fixes that — it is why the per-criterion
+structured verdict was not pursued. Validate checks the contract; review checks
+the thing.
+
+**The fold caught work the old exit would have shipped.** Measured 2026-09-14:
+`derived_tolerances` ran two iterations with `implement` and `validate` green on
+both, which can only happen if a free check dissented — so its first attempt
+would have shipped under an exit that read validate alone.
+
 **`unrecallable` is a separate axis from risk.** A signed rollout to 40,000
 devices harms nobody and breaches nothing (so: `high`) and cannot be taken back
 — so it sets `unrecallable: true` and earns one extra independent pass rather
@@ -1003,6 +1036,13 @@ Both were invisible to the suite, which was green before and after, because test
 doubles return well-formed verdicts. Pinning the call sites is the only thing
 that catches this class — `tests/test_schema_wiring.py` now does.
 
+- **A guard whose result depends on test ordering is not a guard** (found
+  2026-09-14). The equivalence suite passed in a full run and failed in
+  isolation, on unmodified code, because the rerank strategy latches in a
+  module-level global and whichever side of the comparison ran first did the
+  probing. The latch is right in production — each strategy is probed once, so a
+  dead end stops costing a call forever — and poison in a comparison.
+
 **Therefore: live-test multi-request sequences. The unit suite is necessary and
 nowhere near sufficient.**
 
@@ -1012,7 +1052,7 @@ nowhere near sufficient.**
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 592 tests as of `0e2bd32`, ~10 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 594 tests as of `fc2b3af`, ~10 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \

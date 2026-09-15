@@ -179,7 +179,28 @@ per lookup. A larger token budget on the cheap model costs nothing and recovers
 fewer figures, so the accuracy curve measured on one model does not transfer to
 another in the same family.
 
-The suite stands at **592 tests** as of `0e2bd32`, up from 85 at 0.1.0.
+**Review's findings have somewhere to go.** A blocked review used to end the
+run with its findings recorded and nothing able to read them. A closed gate can
+now route instead of ending, so the work goes back through implement, validate
+and a fresh review, and ships only when every judge agrees. Two silent channels
+were opened on the way: the validator returned one failing criterion at a time
+while its own evidence already held a verdict for each of them, and a blocking
+review wrote nothing to the failure log at all. Both now travel to the next
+attempt, in their authors' own words. Every loop must declare a bound at load
+time — review and implement can disagree indefinitely, and the graph can no
+longer express that.
+
+**The planning phase has a ceiling of its own**, where it had been running on a
+generic default while burning full-budget retries that returned nothing.
+
+**The equivalence reference is retired.** A hardcoded sequencer was kept beside
+the graph so the two could be compared call for call, and it earned its place
+for a long time. It stopped: silent through a change to how loops exit, two
+wrong attempts at mirroring behaviour it lacked the inputs for, an
+order-dependent defect in its own suite, and finally a gate that routes work
+back into a loop — which a linear engine cannot represent at all.
+
+The suite stands at **594 tests** as of `5fdb0cd`, up from 85 at 0.1.0.
 
 ## [0.1.0] — 2026-09-12
 
