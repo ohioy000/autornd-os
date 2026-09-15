@@ -12,8 +12,9 @@ from the repo rather than from pasted conversation.
 
 ## 0. The blueprint protocol
 
-Four blueprints have run through this document (§7, §9, §10, §11). The working
-shape is stable enough to state once:
+Thirteen blueprints have run through this document (§7 onward; 011 → §18,
+012 → §20, 013 → §22, each naming its own sections and leaving the odd numbers
+between them vacant). The working shape is stable enough to state once:
 
 1. **The blueprint lands in the repo verbatim and unexecuted, before any of it
    is carried out.** The session then works from the repo rather than from a
@@ -45,7 +46,17 @@ shape is stable enough to state once:
    expectation of 5/8 that came back 3.67 at three repetitions, and the
    expensive arm of a three-arm sweep exhausted a weekly spend ceiling
    mid-experiment and took the two cheap arms down with it.
-7. **The permission boundary** (same): *instrument repair* — crash-proofing a
+7. **A repetition bought beyond the blueprint is a departure, and it records
+   what it cost and what it de-risked** (binding from Blueprint 012). The
+   exemplar: a five-arm sweep left two servings 5% apart at one repetition
+   each, which is a coin flip rather than a ranking. Three more repetitions of
+   each cost **$0.09** and reversed the result — the apparent co-leader
+   produced a 1,200 s expiry and an escalation on the cheapest scenario in the
+   suite. Without it the pin would have been a coin flip landing on the wrong
+   side half the time. The rule is not "buy more repetitions"; it is that
+   buying them is a decision with a price and a reason, and both go in the
+   execution record rather than being absorbed silently.
+8. **The permission boundary** (same): *instrument repair* — crash-proofing a
    phase against well-formed-enough model output, retry wiring, retention,
    accounting — needs no ruling and can be done as found. *Changes to what a
    phase means* — verdict semantics, loop behaviour, prompt text that steers

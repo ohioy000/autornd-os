@@ -724,7 +724,36 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
     `ReviewFinding` earned eight aliases by losing three entire reviews first,
     this earned one fold by costing two calls, and the rejection log is what
     produces the next exhibit. No field is made tolerant on speculation.
-22. No linter/formatter is configured. Match surrounding style: 4-space indent,
+22. **An instrument's test simulates the condition it watches, end to end.**
+    Asserting that a counter exists, or that it increments when you increment
+    it, proves nothing about the thing it was built to see. **Five instruments
+    in two blueprints were found reporting less than they measured, every one
+    of them against a green suite:**
+
+    | instrument | what it reported | for how long |
+    |---|---|---|
+    | schema-rejection log | correct, to stderr, discarded with the shell redirect | every run; 3 logs of 9 survived |
+    | per-iteration dissent | nothing — `getattr(dict, "passed")` is always `None` | 64 iterations, 6 runs |
+    | per-phase clock | a gate billed for the sub-graph it routed to — 1,573 s of an 1,800 s run | every routed gate |
+    | `max_calls` headroom | an opaque abort, never the assertion it exists to produce | as long as both halves existed |
+    | normalisation counter | "2 of something" across three different normalisations | its whole life |
+
+    The pattern is specific: **an instrument written in the same commit as the
+    fix it watches gets no run of its own to prove it on.** So its test drives
+    the real path — a check whose output really is a dict, a gate that really
+    routes, a reply the schema really refuses — and the fix is shown to fail
+    against the previous code before it is believed.
+23. **A serving sweep measures three axes, and latency is the least of them.**
+    Ruled after a five-arm sweep would have pinned the wrong serving twice on
+    speed alone. In order: **(i) compliance** — a serving whose replies the
+    schema refuses is disqualified regardless of speed; the fastest arm in the
+    field returned an empty JSON object three times running and killed its run.
+    **(ii) iterations to termination** — the pin that closed B7 cut iterations
+    8→2 and 4→1 while per-call latency moved only 67 s → 41 s; *a serving does
+    not only run at a speed, it converges at a rate.* **(iii) latency**, last.
+    And **never at n=1**: one arm read 18.8 s/call on its single repetition and
+    produced a 1,200 s expiry and an escalation on its next two.
+24. No linter/formatter is configured. Match surrounding style: 4-space indent,
     `from __future__ import annotations`, type hints throughout, ~88-col soft
     wrap, module docstrings that explain rationale.
 
