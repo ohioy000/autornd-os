@@ -236,7 +236,7 @@ that folded into lines rather than refused three times. Both are counted, by
 kind, in the results file — because a leniency that hides how often it fires
 cannot be withdrawn later on evidence.
 
-The suite stands at **658 tests** as of `f9a7d7c`, up from 85 at 0.1.0.
+The suite stands at **674 tests** as of `fff850a`, up from 85 at 0.1.0.
 
 ## [0.1.0] — 2026-09-12
 

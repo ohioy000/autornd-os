@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       the only tracked profile
-tests/                      32 files, 658 tests (as of `f9a7d7c`)
+tests/                      33 files, 674 tests (as of `fff850a`)
 ```
 
 ### 2.3 Key design patterns
@@ -614,7 +614,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (658 total, as of `f9a7d7c`)
+### 3.7 Test distribution (674 total, as of `fff850a`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -632,8 +632,9 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_rework_loop.py | 17 | test_budget_stop_scoring.py | 5 |
 | test_auth.py | 16 | test_iteration_dissent.py | 5 |
 | test_green_resolution.py | 16 | test_workflow.py | 4 |
-| test_all_judges_exit.py | 15 | test_docs.py | 3 |
-| test_schema_wiring.py | 15 | test_phase_timing.py | 3 |
+| test_protocol_file.py | 16 | test_docs.py | 3 |
+| test_all_judges_exit.py | 15 | test_phase_timing.py | 3 |
+| test_schema_wiring.py | 15 | | |
 
 Regenerate with `pytest tests/ --collect-only -q`; the total is the part that
 matters and `tests/test_docs.py` fails if the README badge disagrees with it.
@@ -677,7 +678,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 658/658 pass.** Everything below is a live-behaviour
+**No failing unit tests — 674/674 pass.** Everything below is a live-behaviour
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
@@ -1481,7 +1482,7 @@ repaired in 012, and it names `consistency` — a free deterministic numeric che
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 658 tests as of `f9a7d7c`, ~10 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 674 tests as of `fff850a`, ~10 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \

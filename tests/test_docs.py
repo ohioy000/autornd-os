@@ -33,7 +33,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # propagates into every fork of it. The policy calls this the strictest end of
 # the rule — the closer a document sits to configuration, the less room there
 # is for a vendor name.
-USER_FACING = ["README.md", ".env.example", "CLAUDE.md",
+USER_FACING = ["README.md", ".env.example", "AGENTS.md", "CLAUDE.md",
                "CONTRIBUTING.md", "CHANGELOG.md"]
 
 SHIPPED_CONFIG = ["profiles/*.yaml", "workflows/*.yaml"]

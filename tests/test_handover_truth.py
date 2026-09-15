@@ -115,12 +115,20 @@ def test_the_pass_count_is_the_real_one(handover):
 
 
 def test_every_test_file_count_is_right(handover):
-    """"N test files" / "N files, M tests" must match what is on disk."""
+    """"N test files" / "N files, M tests" must match what is on disk.
+
+    Checked in `AGENTS.md` too, because the protocol file carries the same
+    count and a protocol file that is wrong about the repo is the worst place
+    for a stale number to sit.
+    """
     actual = len(list((ROOT / "tests").glob("test_*.py")))
-    claims = [int(n) for n in re.findall(r"(\d+) (?:test )?files", handover)]
-    assert claims, "no test-file count found in HANDOVER"
-    assert all(n == actual for n in claims), (
-        f"HANDOVER claims {sorted(set(claims))} test files, disk has {actual}")
+    sources = {"HANDOVER.md": handover,
+               "AGENTS.md": (ROOT / "AGENTS.md").read_text(encoding="utf-8")}
+    for name, text in sources.items():
+        claims = [int(n) for n in re.findall(r"(\d+) (?:test )?files", text)]
+        assert claims, f"no test-file count found in {name}"
+        assert all(n == actual for n in claims), (
+            f"{name} claims {sorted(set(claims))} test files, disk has {actual}")
 
 
 def test_named_checks_exist(handover):
