@@ -4511,3 +4511,118 @@ green suite, for between six runs and four blueprints.**
 6. **A prediction record worth keeping.** Three of my three Part B predictions
    were wrong, and three of B4's four. The one trace both of us kept predicting,
    `crossref_integrity`, has produced three different outcomes in three runs.
+
+## 20. Blueprint 012 — The clock era (verbatim, as received)
+
+**Status: not executed at the time of recording.** Execution record: §20.2.
+
+*(§19 is vacant. Every prior blueprint took the section one below its own
+number — 011 → §18 — so this would have been §19; the blueprint says §20 and
+refers to §20.1 and §20.2 throughout, so §20 it is.)*
+
+```text
+BLUEPRINT 012 — The clock era: mine the latency, pin the last unpinned
+tier, coerce the observed shape, and run the last settling run.
+
+Origin: 011 §18 — two of three traces expired at 1800 s; across six
+blueprints, six expiries, none bound by spend (closest approach 46% of
+cap — the advisor corrects §18's own "not within half" wording: numeric
+at $0.3423 of $0.75 is 45.6%). Median 41 s/call means 1800 s buys ~44
+calls whatever the budget. Two cheap levers: serving latency and
+timeout. One structural fact behind them (calls per run = convergence
+behavior — out of scope until traces terminate).
+
+Protocol (as 001–011): paste verbatim into docs/handover-review.md as
+§20 BEFORE executing; append §20.2 after. All standing rules binding —
+provenance, premise, n-carrying, conventions 17–21. Prerequisites:
+suite green before and after (re-derive the count); CI green before
+finishing.
+
+PART A — mine the clock (FREE; before any paid part)
+
+A1. From all retained JSONL records: engineering-tier servings observed
+    (providers_by_function), per-call/per-phase latency by serving,
+    rejection counts by serving. FOOTNOTE REQUIRED: the three 011
+    instrument fixes landed after those runs — gate rows in pre-fix
+    records bill their whole sub-graph (review_clean read 1,573 s of
+    an 1,800 s run); exclude gate-node durations when summing from
+    pre-fix records, and say so.
+A2. Per-phase clock decomposition of the two expired traces: where did
+    1800 s actually go — build iterations, rework, review rosters,
+    escalation, search? This also absorbs 011-C1's escalation
+    decomposition, which never landed in §18.1 (flagged by the advisor;
+    record why it was missed in §20.2).
+A3. Pin proposal, by ruled rule: (i) a serving whose rejections recur
+    across units is DISQUALIFIED regardless of speed — non-compliance
+    at the workhorse tier is the dangerous direction; (ii) among
+    compliant servings, fastest median per-call latency wins; (iii) if
+    mining is ambiguous (fewer than three servings observed, or
+    latencies confounded by the gate bug), sweep the observed servings
+    with lean.yaml, repeat 1, caps --max-spend 0.10 --max-spend-sweep
+    0.30, cheap arms first — measuring latency, rejections, green rate.
+A4. Table + proposal land in §20.1. STOP for the owner's one-line
+    ratification (G-3), then continue — the 007 pattern: Parts C
+    env-prefixes the proposal; the standing line is the owner's.
+
+PART B — evidence coercion, ruled (FREE)
+
+B1. ValidateVerdict.evidence is list[str]; a live serving returns it as
+    a dict keyed by criterion (measured twice, OpenInference, §18).
+    Convention 21: shape variance that preserves information is coerced
+    deterministically and counted; shape variance that loses it is
+    rejected. Implement tight, in a before-validator:
+      - dict, str keys, str values → [f"{k}: {v}"], natural-sorted
+        (criterion 2 before criterion 10), deterministic across retries;
+      - non-str keys or values, mixed list contents → RAISE with an
+        instructive note naming the accepted shapes; the retry asks.
+    Counted as a normalization. No speculative coercion on any other
+    field — exhibits precede leniency; the rejection log watches.
+B2. Guard tests: both live exhibits as fixtures coerce; ordering
+    deterministic; non-str values reject; mixed lists reject; the
+    counter increments. Also pre-flight one line: report whether 011-A3
+    applied the green resolution to ValidateVerdict or recorded why
+    not — §18.2 was silent on it.
+B3. Comment on the field names the exhibits and the clock bonus: at a
+    measured 41 s/call, each avoided retry is ~41 s of run budget.
+
+PART C — the last settling run (≈ $0.35–0.75; caps unchanged)
+
+C1. Env-prefix the full pin set: triage:Alibaba, architecture:StreamLake,
+    engineering:<Part A proposal>. THREE traces — requires_execution
+    (never ran), derived_tolerances, numeric_consistency — engineering-
+    rnd, --timeout 3600, repeat 1, --max-spend 0.75 --max-spend-sweep
+    3.00. crossref's escalated termination STANDS as closure-grade.
+    3600 s, not the step-up rule: this is the last settling run; ~140+
+    calls at a pinned fast serving exceeds any observed trace's needs.
+    A naked expiry at 3600 s under a pinned serving is B7's next name
+    plus a per-phase table — not another bump.
+C2. Pre-register per trace BEFORE running, from retained iteration data
+    (Claude's; the advisor's below gate nothing):
+      - [prediction] all three terminate within 3600 s;
+      - [prediction] requires_execution terminates in escalation or
+        blocked-with-autopsy (structural work; either is honest);
+      - [prediction] pinned loop-node latency median drops below 30
+        s/call — if not, the pin proposal was wrong and §20.2 says so.
+C3. B7 closure per 010's criterion, now four termination events in
+    evidence: CLOSES iff all terminate in ship or escalated-with-
+    diagnosis. Its ledger of names (exit → channel → timeout → verdict
+    field → clock) becomes the §6 entry documenting what "the loop
+    does not converge" actually decomposed into.
+C4. The truth table and coercion are live in this run; zero counts are
+    recorded as "not exercised," per 011's rule.
+
+PART D — records
+
+D1. HANDOVER: B7 per C3's outcome; §4.4 conventions 20 and 21; §18.1's
+    "not within half" corrected to "closest approach 46%"; counts
+    commit-stamped.
+D2. CHANGELOG [Unreleased]: one prose paragraph if B7 closes. No model
+    ids.
+D3. §20.2 as ever: departures, left undone, what execution found —
+    including why 011-C1's decomposition went missing.
+
+OUT OF SCOPE, deliberately: convergence-rate work (its evidence base is
+exactly these traces — read before designing); the escalation failure-
+log view (A2's decomposition may propose its own blueprint); cascade
+search; per-tier pins beyond the three; .env edits (G-3); prompts.
+```
