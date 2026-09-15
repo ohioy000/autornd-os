@@ -5307,3 +5307,125 @@ specified.
    `docs/handover-review.md`, and in the document people actually read, none of
    them did. **A lab notebook is not a handover**, and twelve blueprints of
    careful record-keeping had quietly substituted one for the other.
+
+## 24. Blueprint 014 — The generalization probe (verbatim, as received)
+
+**Status: not executed at the time of recording.** Execution record: §24.2.
+
+*(§23 is vacant, as §19 and §21 were.)*
+
+```text
+BLUEPRINT 014 — The generalization probe: measure where the engineering
+dialect binds, before rewriting a word of it.
+
+Origin: the owner's arc choice, recorded §22 and priced §5. The 70%
+(vocabularies, profiles, checks mechanism, the wide suite) is built and
+unexercised; the 30% (phase prompts) carries the stated risk. The premise
+rule applies to the arc itself: "the prompts are the 30% risk" is a
+hypothesis until the probe prices it. §5's own first move: run under a
+non-engineering profile and see what breaks. This blueprint measures; it
+rewrites nothing.
+
+Protocol (as 001–013): paste verbatim into docs/handover-review.md as §24
+BEFORE executing; append §24.2 after. All standing rules binding —
+provenance, premise, n-carrying, conventions 17–24 (24: generated or
+guarded, never hand-stamped — the advisor proposes; record with 013's
+eleven drifts as exhibits). Prerequisites: suite green before and after
+(re-derive); CI green before finishing. Pins env-prefixed on every paid
+part (triage:Alibaba, architecture:StreamLake, engineering:GMICloud).
+
+PART A — the dialect map (FREE; before any paid part)
+
+A1. Read every prompt in engine/phases.py (triage, plan, feasibility,
+    implement, domain_review, validate, review, escalation, doublecheck)
+    and classify each instruction: engineering-specific (names a
+    discipline, artifact type, or validation method particular to
+    engineering) | domain-neutral | already-profile-parameterized.
+    Output: the map, per prompt, with line references. This is the
+    design basis for any rewrite — the 30% gets a line-item price
+    instead of a vibes price.
+A2. Audit the roster seam of the 70%: which specialist tokens in the
+    shipped workflows (lead, peers, reviewers, test_engineer,
+    systems_architect) resolve through the registry (profile-aware) vs
+    which are literal role names — the last unverified seam of the
+    built-and-unexercised 70%. Record with references; if literals
+    exist, name them and where they bind.
+A3. Pre-flight (free): verify the profile loads in the EVAL path — a
+    one-line settings assertion that AUTORND_PROFILE=studio is visible
+    to the harness before paying for Part B. If the eval path ignores
+    profiles, that is a finding, recorded, and Part B/C pause for the
+    owner.
+
+PART B — the recorded first move: wide suite under a non-engineering
+profile (~$0.02–0.15)
+
+B1. AUTORND_PROFILE=studio (env-prefixed) over evals/scenarios/wide,
+    --workflow triage-classify, --repeat 3, caps --max-spend 0.05
+    --max-spend-sweep 0.15.
+B2. Pre-register BEFORE running [prediction, the advisor's, gating
+    nothing]: risk calibration HOLDS (the guide is profile-agnostic and
+    was calibrated on these same 36 sectors — only rosters should
+    shift); content-adjacent sectors assign studio roles;
+    non-content sectors fall back to synthesized generalists (§6.5's
+    designed behavior). A profile that MOVES a risk reading is a
+    finding, not a feature — the risk axis must be profile-invariant.
+B3. Measure per sector: assigned roster (studio role vs shipped default
+    vs generalist), risk delta vs the §6.6 baseline table, rejection
+    counts by serving (the instrument).
+
+PART C — the full-workflow probe: where the dialect binds
+(~$0.30–0.75; caps --max-spend 0.75 --max-spend-sweep 3.00)
+
+C1. Author three scenarios [count follows the list] into
+    evals/scenarios/generalization/ (verify the glob keeps them out of
+    default runs — the wide/ precedent), each a genuinely
+    non-engineering written deliverable, pre-registered, risk floors
+    set honestly — NOT engineered to read low:
+      (1) a marketing brief whose factual-claims section must be
+          verified — the fact_checker role earning its name;
+      (2) a contract-clause set with a jurisdictional threshold
+          unknown — material gaps, the grounding path, legal_ops
+          heritage;
+      (3) an editorial style guide with cross-reference requirements —
+          the crossref discipline in a non-engineering shape.
+C2. Run engineering-rnd — the flagship UNMODIFIED — with the studio
+    profile env-prefixed. The probe is the product as shipped; any
+    workflow or prompt change is out of scope by definition.
+C3. Pre-register per scenario: ship or escalate-with-diagnosis (the
+    B7 objective now applied to any team); validate lens coverage —
+    profile-declared checks appear in the assessment (the 70%'s checks
+    mechanism gets its first live exercise); dialect binding recorded
+    as findings with line refs back to Part A's map (implement
+    producing "test cases" for a marketing brief binds; notes
+    confirming the artifact shape do not).
+C4. Deliverables: per-trace dialect-binding findings (which
+    instructions ACTUALLY bound, vs which looked like they would);
+    iteration counts and terminations against the engineering envelope
+    (299 s/13 calls shipped, 1235 s escalated [measured: §20] — inside
+    or outside, either is a finding); the generalization scorecard:
+    what the 70% covered live, what the 30% must change, line-priced
+    from A1's map.
+C5. Advisor's [predictions], labelled, gating nothing: risk holds;
+    rosters resolve; binding concentrates in implement+validate
+    (artifact framing), not triage or escalation; at least one
+    non-engineering trace ships inside the engineering envelope.
+    These are the arc's pre-registrations — the probe exists to
+    falsify them cheaply.
+
+PART D — records
+
+D1. HANDOVER §5: the arc's risk re-priced from the scorecard (the 30%
+    line-itemed, the 70% exercised or broken). §6 gains what the probe
+    measures, with n. B13 opened if the probe finds a defect class —
+    named, not chased.
+D2. NO prompt edits, no workflow edits, no profile edits — the rewrite
+    is Blueprint 015, designed from C4's map, ruling-first as ever:
+    dialect rewrites are judgment-steering text.
+D3. §24.2 as ever: departures, left undone, what execution found.
+
+OUT OF SCOPE, deliberately: any prompt/workflow/profile change; suite
+widening beyond the three scenarios; the human surface; Alembic; .env
+edits (G-3); B11/B12 maintenance (the probe measures the SYSTEM — any
+finding confounded by an interim pick gets priced against its serving
+first, the B4 rule).
+```
