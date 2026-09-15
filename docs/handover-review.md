@@ -3912,3 +3912,25 @@ the cascade search design; the wide suite; per-tier pins beyond the two
 ratified; repeat>1 (variance is answered by the per-trace rerun rule if
 a result is marginal).
 ```
+
+### 17.1 Part B — pre-registration, from the retained 009 iteration data
+
+Derived from `docs/traces/b7-convergence-v4.jsonl`, read before predicting.
+
+| trace | what 009 showed | my prediction |
+|---|---|---|
+| `crossref_integrity` | 3 rework rounds, all red, reds moving between criteria (4-and-5, then error codes, then criterion 6); expired at 900 s having produced ~19–21k-char specs each round | **expires again even at 1800 s.** It is the only trace whose reds still move between criteria, and it was already 5+3 iterations in 008 before rework existed. If it does terminate, escalation is the likely terminal. |
+| `derived_tolerances` | build loop converged, then **2 rework rounds on the same criterion with sharper numbers each time** (bore at −20 °C, 41.9612 mm); died on a provider fault, not a budget | **terminates** — most likely ships. Converging reds on one criterion is what rework is for, and its failure last time was a provider returning no text, which is not a property of the work. |
+| `numeric_consistency` | 2 rounds, both red on criterion 4 (cost-section arithmetic), expired | **terminates**, probably escalated. Arithmetic consistency across sections is addressable, but it red twice on the same criterion without fixing it. |
+| `requires_execution` | build loop went **green on iteration 2**, then expired — the run died after the work was accepted | **terminates, and most likely ships.** It had already converged; only the clock stopped it. |
+
+**My aggregate call:** three of four terminate; `crossref` is the doubtful one.
+That is deliberately close to the advisor's B4 predictions, which were made from
+the same data — where we differ is that B4 expects a ship among the three
+review-blocked traces and I expect the ship to come from `requires_execution`,
+which had already gone green.
+
+**Closure, per B3:** B7 closes only if **all four** terminate in ship or
+escalated-with-diagnosis. A naked 1800 s expiry is B7's fourth name plus a
+timing table, not a closure — and the per-trace rerun rule (3600 s, expired
+traces only) applies before any such conclusion.
