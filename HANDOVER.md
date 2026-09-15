@@ -838,89 +838,70 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
 
 ## 5. THE ROADMAP & NEXT STEPS
 
-### Immediate (prioritised)
+**The frontier moved.** Everything the first twelve blueprints were about —
+calibration, cost, convergence — is **maintenance** now. Calibration sits at
+35/36 and is a serving question rather than a prompt question (§6.6). Cost has
+an 8× lever identified and waiting on one `.env` line (§6.3). Convergence
+closed with B7 (§6.9). None of these is finished in the sense of perfect; all
+are finished in the sense that **the next hour spent on them returns less than
+the next hour spent on anything below.**
 
-1. ~~**B1 — add `pyjwt` to `pyproject.toml`.**~~ **Done**, and it was three
-   faults rather than one — see §4.2. `requirements.txt` is deleted,
-   `pyproject.toml` is canonical, and CI has an `editable-install` job that
-   installs from it. The lesson generalises: *the fault that a test suite
-   structurally cannot see is the one that ships.* Running the install once
-   found two defects that had been invisible to 501 tests.
-2. ~~**B3 — sweep-level spend cap.**~~ **Done.** `--max-spend-sweep`, default
-   $1.00, `none` to disable; `--max-spend` is unchanged and still per scenario-
-   run. Production still keeps *no* cap, for the reason originally given —
-   aborting a live workflow mid-flight destroys work, and search is
-   structurally bounded at ≈$0.07/workflow. Two things worth carrying forward:
-   overshoot under the backstop is bounded by the widest **parallel fan-out**,
-   not by one call, because feasibility and both reviews run their rosters
-   through `asyncio.gather`; and a budget abort now propagates rather than
-   being swallowed by the research and rerank error handlers.
-3. ~~**B2 — make materiality actually discriminate.**~~ **Resolved** — see
-   §4.2 and §6.2. The second option listed here was tried and reverted: asking
-   per gap zeroed a *material* lookup. The gate stays as a question-count cap.
-4. ~~**B4 — `legal_ops` calibration.**~~ **Done, by pinning rather than
-   tuning.** The instruction to pin before tuning turned out to be the whole
-   fix: the governance-document clause was landing all along, on a serving
-   capable of reading it. Nothing in `phases.py` changed.
-5. ~~**Choose and document a provider pin for the owner's real workload.**~~
-   **Done 2026-09-14.** Six servings measured (§12.3); the owner adopted
-   `OPENROUTER_PROVIDER_ORDER=triage:Alibaba`, confirmed present in `.env`.
-   Only the triage tier is pinned — the architecture and engineering tiers still
-   rotate freely, and a B6 probe run was observed drawing five different
-   architecture providers across three repetitions.
+What is left is product, and it is a different kind of work.
 
-### Medium term
+### The chosen arc — generalization, "any team"
 
-6. ~~**B6 — reach `independent_check` in a live full workflow.**~~ **Done
-   2026-09-14.** The purpose-built minimal workflow was the answer:
-   `workflows/independent-check-probe.yaml` reaches it by construction and is
-   kept as the regression shape. It threads a narrow window — consequential
-   enough that triage marks `unrecallable`, trivial enough that review ships —
-   and lands roughly one run in three, so expect to repeat it.
-7. ~~**B7 — the build loop's clock.**~~ **Done 2026-09-15**, by pinning the
-   `engineering` serving rather than by changing the loop. All four convergence
-   traces now terminate honestly; two that had never completed shipped in under
-   five minutes. §6.9 has the ledger. **What it leaves behind** is the finding
-   that outlives it: a serving determines how many iterations work takes, not
-   just how fast each one is, and only `triage`, `architecture` and
-   `engineering` have ever been measured this way. `escalation`, `research`,
-   `search` and the reranker have not.
-8. **Per-tier provider quality measurement.** The eval suite can now score
-   providers; only triage has been measured.
-9. **Alembic migrations** before anyone stores real data.
-10. ~~**CI — extend, do not create.**~~ **Done, and now complete.**
-    `.github/workflows/ci.yml` carries the matrix, an `editable-install` job,
-    and a `docker` job that builds the image, runs it, and smokes `/api/health`
-    and `/`. Every install shape is now exercised: source tree, project
-    metadata, built wheel, and container. The dashboard template check is the
-    one that matters — it is the wheel-data fault of B1 in its deployment
-    shape.
+**The owner's choice, 2026-09-15.** The vision's distinguishing claim is that
+this harness runs *any* team's R&D, and engineering was always "starting with".
 
-### Longer term / technical debt
+> Vocabularies, profiles and `studio.yaml` are the 70% prerequisite — the
+> prompts are the 30%. Design-heavy, live-light: mostly free prompt work with
+> the wide suite as regression.
 
-11. ~~**Retire `engine/workflow.py`.**~~ **Done 2026-09-14**, and the file
-    stays — only the hardcoded sequencer inside it is gone (251 lines), because
-    `WorkflowEngine` is what the API calls. It stopped paying: silent through
-    the all-judges change (its happy path has every judge agreeing), two wrong
-    mirroring attempts (it holds two judges where the graph holds four, never
-    running the free checks), an order-dependent defect in its own suite, and
-    finally gate routing — a gate that sends work back into a loop is not a
-    sequence. A reference that models less than the product is not confidence.
-    Last green run: `7e00d4d`, 16 tests.
-12. ~~**Review→rework loop.**~~ **Designed and landed 2026-09-14** (§16). The
-    evidence that justified it: three of four traces ended blocked at review
-    with the findings recorded and nothing able to read them (§15.1), and 35 of
-    those findings classified as overwhelmingly addressable-in-text (§16.1). The
-    exhaustion semantics it was waiting on are that every loop must declare a
-    bound at load time and the rework loop hands off to escalation — review and
-    implement can disagree indefinitely, the graph cannot express that.
-13. **Generalise beyond engineering.** The vision is "any team." Roles, domains
-    and validation lenses are now open; the *prompts* in `phases.py` still speak
-    engineering. That is the next frontier for the "works for any team" claim.
-14. **Cross-workflow finding reuse.** Recall exists per gap; a warm shared store
-    across a team's workflows is where search cost goes to near zero.
-15. **Dashboard.** `dashboard.html` is a single file and has had little
-    attention relative to the engine.
+**Honest pricing.** The 70% is largely *done and unexercised*: `Domain` and
+`SpecialistRole` are already open vocabularies, profiles already declare their
+own roles, and an undeclared role already resolves to a synthesized generalist
+(§2.3, §6.5). The untested part is whether those seams hold when something
+other than engineering drives them — the only non-engineering profile that has
+ever run is `legal_ops`, as a single sector in a calibration suite, and its
+lesson was about servings.
+
+The 30% is the real work: **every prompt in `phases.py` speaks engineering**,
+and there are roughly 900 lines of them. The risk is not that they are hard to
+rewrite. It is that the triage risk guide (§6.6) was rewritten **four times
+against live data** and is the most carefully calibrated artifact in the
+project — a generalization pass that touches it without re-measuring would
+throw that away. Expect the free design work to be the easy half and the
+regression evidence to be the expensive half.
+
+**Cheap first move, before any prompt changes:** run the existing `wide` suite
+under a genuinely non-engineering profile and record where it breaks. That is
+free, it is a measurement rather than a guess, and it tells you whether the 70%
+is actually done.
+
+### The other open arcs, priced
+
+| arc | what it is | honest price |
+|---|---|---|
+| **The human surface** | Escalation produces a root cause and a directive that no human ever sees in a usable form; `dashboard.html` is one file that has had little attention relative to the engine. | Unknown and probably underestimated. The engine's output is good; nothing downstream presents it. |
+| **Cascade search** | §6.3 measured two search models tying at the same mean on **different sectors** — complementary, not equivalent. A cascade would take both. | Design is cheap, evidence is not: the tie is n=3 and a cascade needs its own suite. Blocked behind the `.env` swap, which is the owner's. |
+| **Per-serving measurement of the remaining tiers** | B12. `escalation`, `research`, `search` and the reranker have never been measured this way, and the axis decided both B4 and B7. | Cheapest high-value item on this list. Convention 23 says how; escalation first, since it is 70–78% of spend on hard traces (§6.10). |
+| **Alembic** | B9. No migrations; schema changes are destructive. | Small, dull, and blocking the moment anyone stores real data. |
+| **Cross-workflow finding reuse** | Recall exists per gap; a warm shared store across a team's workflows is where search cost goes to near zero. | Speculative — no measurement yet that team workflows overlap enough to pay. |
+
+### Done, and kept here because the ledger is the point
+
+| # | item | outcome |
+|---|---|---|
+| 1 | B1 — packaging | Three faults, not one. *The fault a suite structurally cannot see is the one that ships.* |
+| 2 | B3 — sweep-level spend cap | `--max-spend-sweep`, default $1.00. Production keeps no cap, deliberately. |
+| 3 | B2 — materiality | Resolved: not a cost lever, and does not need to be. The per-gap reframe was tried and reverted — it zeroed a *material* lookup. |
+| 4 | B4 — `legal_ops` calibration | Done by **pinning rather than tuning**. Nothing in `phases.py` changed. |
+| 5 | Provider pin for the real workload | `triage`, then `architecture`, then `engineering` — the last of which closed B7. |
+| 6 | B6 — reach `independent_check` live | Done via a purpose-built minimal workflow, kept as the regression shape. Lands ~1 run in 3. |
+| 7 | B7 — build-loop convergence | **Closed 2026-09-15.** §6.9, §6.11. |
+| 10 | CI — extend, do not create | Complete: matrix, editable install, wheel, container, dashboard template. |
+| 11 | Retire the hardcoded sequencer | Done — 251 lines. The file stays; it is the API's entry point. A reference that models less than the product is not confidence. |
+| 12 | Review→rework loop | Landed 2026-09-14. Three of four traces had been dying at review with the findings unread. |
 
 ---
 
@@ -1380,7 +1361,7 @@ is not the validator, and must not be asked to be.
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 651 tests as of `767f582`, ~10 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 651 tests as of `14fd84d`, ~10 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \
@@ -1392,6 +1373,14 @@ cd ~/projects/autornd-os
   --scenarios evals/grounding --workflow triage-only \
   --repeat 1 --timeout 240 --max-spend 0.30
 
+# the flagship, on the four hardest shapes — all four now terminate.
+# ~$0.15-0.45 and 3-20 min per trace. PIN THE TIERS or the reading is noise.
+OPENROUTER_PROVIDER_ORDER="triage:Alibaba,architecture:StreamLake,engineering:GMICloud" \
+.venv/bin/python3 -m autornd.evals.cli \
+  --scenarios evals/scenarios/convergence --workflow engineering-rnd \
+  --repeat 1 --timeout 3600 --max-spend 0.75 --max-spend-sweep 3.00 \
+  --results-file docs/traces/my-run.jsonl
+
 uvicorn autornd.main:app --reload --port 8100            # API + dashboard
 ```
 
@@ -1400,6 +1389,22 @@ uvicorn autornd.main:app --reload --port 8100            # API + dashboard
 `autornd/engine/phases.py` (the risk guide especially) →
 `autornd/routing/openrouter.py` (accounting, budgets, provider pinning).
 
-**The single most important habit:** before changing a prompt or a constant,
-read the comment beside it. It names the live run that set it, and probably a
-previous attempt that failed.
+**Three habits, in order of how much they will save you:**
+
+1. **Before changing a prompt or a constant, read the comment beside it.** It
+   names the live run that set it, and probably a previous attempt that failed.
+2. **Pin the servings before believing any live reading.** An unpinned tier
+   draws a dozen providers inside one run, and *which* one served it has decided
+   two of this project's largest findings (§6.1, §6.11). An unpinned measurement
+   is not a measurement of your change.
+3. **An instrument reading is a reading, not a diagnosis.** A timeout, a zero
+   score, a refused lookup and a 403 are each a fact about the apparatus until
+   something rules the apparatus out. Five instruments in this repo were found
+   reporting less than they measured, every one against a green suite
+   (convention 22).
+
+**Where the record lives.** `docs/handover-review.md` is the lab notebook:
+thirteen blueprints, each pasted verbatim before execution with an execution
+record after it naming departures and what execution found that the blueprint
+missed. `docs/traces/` holds the committed JSONL of every live run cited here.
+**This document is the state; that one is the evidence.**
