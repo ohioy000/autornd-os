@@ -5121,3 +5121,100 @@ $0.30 cap, settling run $0.4580 against $3.00.
    claimed a name — "budget" — the row never carried. §6.9 is reconstructed from
    the row at each commit that changed it. When a record and a summary of it
    disagree, the record is cheap to read and nobody had read it.
+
+## 22. Blueprint 013 — Consolidation: the handover regenerated from the record (verbatim, as received)
+
+**Status: not executed at the time of recording.** Execution record: §22.2.
+
+*(§21 is vacant, as §19 was. The blueprints have run 011 → §18, 012 → §20,
+013 → §22; each names its own section numbers internally, so each wins.)*
+
+```text
+BLUEPRINT 013 — Consolidation: the handover regenerated from the record.
+
+Origin: B7 closed at 012 — the flagship loop is finished. Twelve blueprints
+have rewritten the system the current HANDOVER.md describes; it was the
+session's founding artifact and is now its stalest one. Regenerate it FROM
+the record, under the session's own rules — the first handover written with
+every claim carrying its measurement and its n.
+
+Protocol (as 001–012): paste verbatim into docs/handover-review.md as §22
+BEFORE executing; append §22.2 after. All standing rules binding.
+Prerequisites: suite green before and after; CI green before finishing.
+FREE — no model calls.
+
+PART A — regenerate HANDOVER.md
+A1. Preserve the founding document's voice and structure (§0 vision and
+    provenance; the "read the comment first" header; §4.4 conventions;
+    §6 measured facts; §7 orientation) — it is the repo's most-read
+    document and the reason this session worked. Regenerate its CONTENT
+    from the session's record, not from memory:
+      - §2 architecture: the graph as it now is — the fold node, the
+        rework loop with bounded exhaustion and its own review, gate
+        routing (on_fail → node id), the three-node loop-ownership
+        semantics (009 departure 2, documented), the workflow facade
+        on the request path (A3 of 010, pinned by test), the verdict
+        truth tables, the instruments (rejection log by tier and
+        serving, per-phase clock, per-iteration records, refusal
+        counts, normalization counters per kind, JSONL retention).
+      - §4.2 bug table: the closed items recorded AS CLOSED with their
+        resolution, not deleted — the ledger is the document's value.
+        Open: B9 (Alembic), the labeled-interim model picks (research,
+        engineering — unmeasured at their jobs, in service by choice),
+        the unmeasured-by-serving tiers (escalation, research, search,
+        reranker), B5 deliberately red.
+      - §4.4: conventions 17–22 with one line each (they are currently
+        scattered across blueprints).
+      - §6: the session's new measured facts, each with its n: the
+        serving asymmetry (§6.6 table), the convergence-rate finding
+        (8→2, 4→1, n=1 each — carry the n), the meter-vs-books 0.3%
+        verification, the search tie at 8.2x, the arm-3 boundary
+        (tokens-buy-figures does not transfer within a family, n=3),
+        the five-name B7 ledger as one entry, the escalation share
+        on hard traces, the formal-vs-substantive division as designed
+        and validated.
+      - §5 roadmap: the frontier moved — calibration is maintenance;
+        the open product arcs are generalization ("any team"), the
+        human surface (escalation UX, dashboard), cascade search,
+        Alembic. Price each honestly.
+A2. The stale-count hygiene: every count in the repo commit-stamped.
+A3. CHANGELOG [Unreleased]: the B7 closure paragraph, prose, no model
+    ids.
+
+PART B — convention 22, and the two house rules from 012
+B1. §4.4 convention 22: an instrument's test simulates the watched
+    condition end-to-end, not merely asserts the counter exists —
+    the pattern is named from §20.2 with its five instances.
+B2. Repeat>1 buys recorded as departures carrying cost and de-risked
+    decision (012's tiebreak as the exemplar) — into the blueprint
+    protocol preamble.
+B3. The pin-sweep rule gains the convergence-rate axis: future serving
+    sweeps measure iterations-to-termination, not only latency and
+    rejections — 012's finding; a latency-only sweep would have
+    pinned DigitalOcean or DeepInfra.
+
+PART C — one guard, free
+C1. A consolidation-diff guard: a test that greps HANDOVER for the
+    retired claims (e.g. "does not block", "not attributed", any
+    3xx test count) — the doc-truth pass mechanized for the one
+    document that started this session. Allowlist the historical
+    sections that cite measurements.
+
+OUT OF SCOPE, deliberately: any behavior change; any prompt; any
+.env edit; the arc choice (below) — this blueprint closes books, it
+does not open fronts.
+```
+
+**The owner's arc choice, received with the blueprint and recorded here, not
+acted on** (the blueprint puts it out of scope — *"this blueprint closes books,
+it does not open fronts"*):
+
+> I choose **Generalization — "any team"**. Prompts that don't speak
+> engineering; the vision's distinguishing claim. Vocabularies, profiles,
+> `studio.yaml` are the 70% prerequisite — the prompts are the 30%. It's the
+> reason the harness exists; engineering was always "starting with".
+> Design-heavy, live-light — mostly free prompt work + the wide suite as
+> regression.
+
+It lands in §5 of the regenerated handover as the chosen next arc. No work
+against it begins here.
