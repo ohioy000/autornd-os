@@ -256,7 +256,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       the only tracked profile
-tests/                      25 files, 601 tests (as of `00cc9d0`)
+tests/                      27 files, 624 tests (as of `8d14a62`)
 ```
 
 ### 2.3 Key design patterns
@@ -1093,6 +1093,18 @@ that catches this class — `tests/test_schema_wiring.py` now does.
   surfaced only when a ruling acted on it and ordered the live module deleted.
   Prose is not checkable and a test is: the dependency is pinned now.
 
+- **A working instrument whose output nobody kept** (found 2026-09-15). The
+  schema retry has logged every rejection at `WARNING` since the clause
+  ordering above was fixed. The eval CLI configures no logging, so those lines
+  went to Python's lastResort stderr handler and lived as long as the shell
+  redirect that caught them. Asked for the malformed-verdict rate across all
+  retained history, 011 found **three run logs of nine**, and neither of the two
+  runs the question turned on was among them. This is not the meter-epoch bug —
+  nothing was mismeasured — it is the subtler one: the measurement was correct,
+  free, and thrown away every time. **A number that only exists in a temp file
+  has not been recorded.** The count lands in the JSONL unit record now, per
+  tier and per serving.
+
 **Therefore: live-test multi-request sequences. The unit suite is necessary and
 nowhere near sufficient.**
 
@@ -1102,7 +1114,7 @@ nowhere near sufficient.**
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 601 tests as of `00cc9d0`, ~10 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 624 tests as of `8d14a62`, ~10 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \
