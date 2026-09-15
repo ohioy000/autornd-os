@@ -5310,7 +5310,8 @@ specified.
 
 ## 24. Blueprint 014 — The generalization probe (verbatim, as received)
 
-**Status: not executed at the time of recording.** Execution record: §24.2.
+**Status: executed 2026-09-15 — the dialect does not bind; B13 and B14 opened.**
+Execution record: §24.2.
 
 *(§23 is vacant, as §19 and §21 were.)*
 
@@ -5838,3 +5839,84 @@ text is already neutral. **Part C removes most of what was left**: the dialect
 does not reach the output, so the prompt rewrite is a tidying exercise rather
 than a re-calibration, and it is **not on the critical path at all**. What is on
 the critical path is B13 and the two roster literals — **code, not prose.**
+
+### 24.2 Execution record
+
+**Status: executed 2026-09-15.** Suite **658** across 32 files, green before and
+after; CI green. **Total $0.3156** — Part B $0.0597 (two arms), Part C $0.2559.
+
+#### Departures
+
+1. **A control arm was bought that the blueprint did not specify** (+$0.0300,
+   declared before spending, preamble rule 7). B2's whole claim is that risk
+   calibration holds, and the only baseline on record was §6.6's Alibaba row
+   from 2026-09-14 — comparing against it would confound the profile with a
+   month of serving drift, which is exactly what B4 turned out to be. **It
+   changed the conclusion's strength entirely**: without it, four sectors look
+   like they moved. With it, all four are visibly unstable in the control too,
+   and the clean statistic — 0 of 23 stably-read sectors — only exists because
+   both arms ran.
+2. **Two defect classes were opened, not one.** D1 says "B13 opened if the probe
+   finds a defect class". It found two, and they are unrelated: B13 is a
+   reconciliation failure between the risk gate and the plan's criteria; B14 is
+   two literal role injections. Folding them would have buried the second.
+3. **The blueprint's "eleven drifts" is twelve.** Enumerated in convention 24
+   so the number is checkable: eight the guard catches, four found by reading.
+   The twelfth is §2.2's endpoint tally, one too high.
+
+#### Left undone, deliberately
+
+- **No prompt, workflow or profile edit** (D2). The `evidence` for a rewrite is
+  now in hand and argues for doing *less* of one than planned.
+- **B13 is named and not chased.** The fix is a ruling: either a blocking gap
+  raises the lookup budget independently of risk, or plan is forbidden from
+  writing a criterion the run cannot satisfy. Both change what the harness
+  concludes, so both need a ruling (preamble rule 8).
+- **B14 is named and not fixed**, same reason — changing who reviews work
+  changes judgement.
+- **The Pydantic bypass in `enforce_triage_composition` is not fixed** either,
+  though it is pure instrument repair and would be permitted. It belongs with
+  B14's fix, in one change, rather than as a drive-by.
+- **`gen_marketing_claims` was not re-run** with a raised ceiling. 012 did that
+  for `requires_execution` and learned the trajectory varies; here the autopsy
+  already names the cause and a rerun would buy a second sample of a known
+  failure, not a diagnosis.
+
+#### What execution found that the blueprint missed
+
+1. **The probe's central result is a negative one, and it inverts the arc.**
+   Both pre-registrations asked *where* the dialect would bind — the advisor
+   said implement + validate, I said escalation would bind harder. **Neither
+   bound.** The prompts are full of engineering and the output has none of it.
+   A1's map cost nothing and was still the wrong instrument on its own: **it
+   measures what could bind; only the traces measure what did.**
+2. **The failure that did occur was the opposite of a dialect failure.** It was
+   a *substantive* one — fabricated citations — and it came with a controlled
+   contrast the blueprint did not design: the `low`-risk trace got zero lookups
+   and invented sources for six iterations; the `medium`-risk trace got one
+   lookup and cited the correct article first time. That is B13, and the probe
+   found it **because** it ran non-engineering work, where `low` risk and high
+   citation-dependence coincide.
+3. **A2 was the part that paid.** A prompt map structurally cannot see a role
+   injected in Python. Two literal roles bind on every profile, and the wide
+   suite put a number on it — 77 of 108 units in *both* arms — that no reading
+   of `phases.py` would have produced.
+4. **013's budget-stop fix paid for itself inside one blueprint.**
+   `marketing_claims` aborted on the call ceiling and still reported its risk
+   reading, its coverage result and its overrun. Before 013 it would have
+   reported one opaque `run` failure, and every conclusion drawn about that
+   trace here would have been unavailable.
+5. **012's dissent record got its first live reading**, and it named a *free
+   deterministic numeric check* as the judge that caught a house style guide
+   contradicting its own worked examples. Two blueprints of instrument repair
+   paying off on work neither was written for.
+6. **The open vocabulary outperforms the profile it was built to support.**
+   38 invented role names against 4 uses of the profile's declared roles, and
+   an invented `legal_counsel` staffed and reviewed a shipped deliverable six
+   findings deep. The generalization story is less about declaring a vocabulary
+   than about never enforcing one — §6.5, arriving from the far side.
+7. **The scenario built to trap a fabrication did not catch one.**
+   `gen_contract_threshold` was authored so that inventing a 72-hour processor
+   deadline was the failure mode. It cited Article 33(2) and *"without undue
+   delay"*, which is correct, and shipped in one iteration. The trap caught the
+   *other* trace instead, on a criterion nobody designed as a trap at all.
