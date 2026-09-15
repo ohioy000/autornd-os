@@ -5603,3 +5603,85 @@ that is a property of the agent or of the subject.
 | **mine — the checks mechanism** | **Studio's checks appear for `copywriting` work and the generic three appear otherwise.** Exercised free in §24.1(a); the live question is only whether triage labels the domains such that they fire. |
 | **mine — termination** | **At least two of three terminate**, and `gen_contract_threshold` is the one at risk — not from the dialect but from the *material gap*: it is built to have an unknowable fact, and the honest outcomes are "ship, marking it blocking" or "escalate with the gap named". Both are closure-grade; a plausible invented deadline is the failure. |
 | **mine — the envelope** | **Inside it.** These are shorter deliverables than a tolerance stack. If any trace runs past 13 calls it will be `gen_style_crossref`, for the crossref reason, not for a dialect reason. |
+
+### 24.1(d) Part B — what the wide suite did under a non-engineering profile
+
+Two arms, same day, same pins, same suite, 36 sectors × 3 repetitions each.
+**$0.0297 studio, $0.0300 control — 216 units for six cents.**
+
+#### The risk axis is profile-invariant, and the clean test says so
+
+| | |
+|---|---|
+| sectors whose modal risk is unchanged | **32/36** |
+| sectors **unanimous across all 3 reps in both arms** | 23/36 |
+| of those 23, sectors whose risk differs | **0** |
+
+**Not one sector that the suite reads stably changed its risk under a profile.**
+All four apparent movers are unstable in at least one arm:
+
+| sector | control | studio | reading |
+|---|---|---|---|
+| `wide_dentistry` | medium, critical, high | critical, critical, critical | the **control** was three different answers; studio is unanimous |
+| `wide_semiconductor` | high, medium, medium | medium, high, high | 2–1 both ways, opposite directions — noise |
+| `wide_wind_energy` | high, medium, medium | medium, high, high | identical shape; this is **B5**, deliberately red for having two defensible readings |
+| `wide_conservation` | high, high, high | medium, medium, high | the only one with a stable control, and studio is still split |
+
+**Nine studio sectors and eight control sectors are not unanimous with
+themselves.** The profile's effect is smaller than the suite's own
+repetition-to-repetition spread, which is the honest way to state it. Both
+pre-registrations hold; mine said "holds, and nearly exactly", and the
+zero-of-23 figure is the sharpest form that claim could have taken.
+
+**This also re-prices B5.** It failed the same way in both arms, at the same
+2–1 split, and the sector's whole reason for being deliberately red is that the
+two readings are both defensible. That is now measured twice on one day.
+
+#### The vocabulary earns its place on exactly the work it should
+
+Of 36 sectors, **one is content work**, and it is the one that moved:
+
+| | `wide_marketing` |
+|---|---|
+| control domains | `frontend+documentation`, **`copywriting`**, `frontend+documentation` |
+| studio domains | **`copywriting` × 3** |
+| studio roles | **`copywriter` × 3** |
+
+The control invented `copywriting` **once in three** without any profile — the
+open vocabulary working unaided (§6.5) — and the profile turned that into three
+of three with the right role attached. **The intervention did nothing to the
+other 35 sectors, which is the correct behaviour**, and my prediction that
+"content-adjacent sectors should relabel" was right on the one sector where it
+could be: 1 of 1.
+
+`wide_broadcast`, the other candidate, stayed engineering in both arms and
+invented `audio_processing` / `audio_engineering` instead — a better label than
+either vocabulary offered.
+
+#### The open vocabulary is doing most of the work already
+
+| | studio | control |
+|---|---|---|
+| shipped-role assignments | 158 | 142 |
+| **invented roles** | **67 across 38 distinct names** | 76 |
+| profile-role assignments | 4 | 2 |
+
+`process_engineer` ×14, then `acoustic_engineer`, `geotechnical_engineer`,
+`corrosion_engineer`, `prosthodontist`, `veterinary_anesthesiologist`,
+`brewer`, `agronomist`. **A profile's declared roles matter far less than the
+model's freedom to name one**, on work the profile does not cover — which is
+§6.5's finding arriving from the other direction.
+
+#### A2's arithmetic, confirmed live
+
+| arm | units with `test_engineer` assigned | by risk |
+|---|---|---|
+| studio | 77 / 108 | critical 57, high 20 |
+| control | 77 / 108 | critical 53, high 24 |
+
+**Identical.** `enforce_triage_composition` appends the literal shipped role at
+high and critical regardless of profile, exactly as the code read. A content
+studio running 36 sectors of its own work would have an engineer appended to
+seventy-odd of them.
+
+**Zero schema rejections in either arm**, on the pinned triage serving.
