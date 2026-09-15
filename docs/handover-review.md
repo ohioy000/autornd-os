@@ -4167,7 +4167,7 @@ done defaulting; per-tier pins beyond the two ratified; the cascade
 search design; .env edits (G-3).
 ```
 
-### 18.1 Part B — pre-registration, from 010's retained data
+### 18.1(a) Part B — pre-registration, written before the runs
 
 The two traces 010 killed get their first real test: both died on
 `ImplementVerdict` rejecting a reply that had a cause and no flag, which the
@@ -4191,7 +4191,7 @@ loops, and so do I; it expects a ship among the review-blocked traces, and
 `crossref` already has one. Neither of us predicts `requires_execution`
 terminating, and it is the one trace whose failure is purely the clock.
 
-### 18.1 Part C — two free measurements
+### 18.1(b) Part C — two free measurements
 
 #### C1: escalation's bill is the implementation summaries, not the channels
 
@@ -4295,7 +4295,7 @@ also that the pre-resolution deaths cannot discriminate it even in principle:
 before the truth table, a missing `green` was fatal whether or not a `red_cause`
 stood beside it.
 
-### 18.1 Part B — what the runs showed
+### 18.1(c) Part B — what the runs showed
 
 #### B7 is a clock problem, and the whole history says so
 

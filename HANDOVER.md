@@ -711,7 +711,20 @@ Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sector
     **Loudly** matters: every resolution is counted into the run record,
     because a fix that hides its own trigger stops anyone noticing when it is
     no longer needed — or when it starts firing far more than it did.
-21. No linter/formatter is configured. Match surrounding style: 4-space indent,
+21. **Shape variance that preserves information is coerced; shape variance
+    that loses it is rejected.** The sibling of convention 20, and the narrower
+    rule. A serving returned `ValidateVerdict.evidence` as an object keyed by
+    criterion instead of a list of strings — twice in one run, the type error
+    fed back between attempts, correct only on the third. The key is part of
+    the finding, so nothing is lost and it folds into `"key: value"` lines,
+    deterministically ordered so a retry cannot change the answer. An object
+    with non-text keys or values, or a list half full of strings, means
+    something the code cannot know, so it is refused and the retry asks.
+    **Counted, like every normalization.** And **exhibits precede leniency**:
+    `ReviewFinding` earned eight aliases by losing three entire reviews first,
+    this earned one fold by costing two calls, and the rejection log is what
+    produces the next exhibit. No field is made tolerant on speculation.
+22. No linter/formatter is configured. Match surrounding style: 4-space indent,
     `from __future__ import annotations`, type hints throughout, ~88-col soft
     wrap, module docstrings that explain rationale.
 

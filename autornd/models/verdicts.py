@@ -7,10 +7,11 @@ checks fields like `green` and `ship` directly, no English parsing needed.
 from __future__ import annotations
 
 import json
+import re
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class RiskLevel(str, Enum):
@@ -316,6 +317,66 @@ def _resolve_green(verdict: Any) -> Any:
     return verdict
 
 
+def _natural_key(text: str) -> tuple:
+    """Sort `criterion_2` before `criterion_10`, not after it.
+
+    Plain lexical order puts "10" before "2", which would make the same dict
+    fold into a different list depending on how many criteria a plan happened
+    to have. Evidence order is what a human reads down; it has to be stable
+    and it has to be right.
+    """
+    return tuple(int(part) if part.isdigit() else part.lower()
+                 for part in re.split(r"(\d+)", text))
+
+
+def _fold_evidence(value: Any) -> Any:
+    """Accept the shape a live serving actually returns for `evidence`.
+
+    **The exhibit.** Measured twice in one run (§18.1, `numeric_consistency`,
+    OpenInference), the validator returned its evidence as an object keyed by
+    criterion rather than a list of strings:
+
+        {"criterion_1": "FAIL — the clearance table omits two combinations",
+         "criterion_2": "PASS — the CTE is cited to ISO 286-2"}
+
+    Twice rejected, twice re-asked with the type error fed back, and correct
+    only on the third attempt. Two of eleven engineering calls in that run
+    bought nothing, and at a measured 41 s per call each avoided retry is about
+    41 seconds of a run budget that expires on the clock before it exhausts its
+    money — which is what B7 turned out to be.
+
+    **Convention 21.** Shape variance that preserves information is coerced
+    deterministically and counted; shape variance that loses it is rejected. A
+    criterion-keyed object loses nothing — the key is part of the finding — so
+    it folds into `"key: value"` lines. Anything whose keys or values are not
+    text does lose something, or means something this cannot know, so it is
+    refused and the retry asks. No other field is coerced on speculation: the
+    exhibit comes first, and the rejection log is what produces exhibits.
+    """
+    global _normalisations
+
+    if isinstance(value, dict):
+        if not all(isinstance(k, str) for k in value):
+            raise ValueError(_EVIDENCE_SHAPES)
+        if not all(isinstance(v, str) for v in value.values()):
+            raise ValueError(_EVIDENCE_SHAPES)
+        _normalisations += 1
+        return [f"{k}: {value[k]}" for k in sorted(value, key=_natural_key)]
+
+    if isinstance(value, list) and not all(isinstance(x, str) for x in value):
+        raise ValueError(_EVIDENCE_SHAPES)
+
+    return value
+
+
+_EVIDENCE_SHAPES = (
+    "evidence must be either a list of strings, or an object whose keys and "
+    "values are all strings (it is folded into \"key: value\" lines). A list "
+    "mixing strings with other types, or an object with non-string keys or "
+    "values, is not accepted — put each finding in its own string."
+)
+
+
 class ValidateVerdict(BaseModel):
     # Optional and resolved, for the reason recorded above. Validate's prompt
     # carries the identical contract to implement's, verified before this was
@@ -323,7 +384,17 @@ class ValidateVerdict(BaseModel):
     # red_cause: null if green, otherwise the specific failure cause".
     green: Optional[bool] = None
     red_cause: Optional[str] = None
+    # A criterion-keyed object is folded into "key: value" lines rather than
+    # refused — measured twice on one live serving, costing two of eleven
+    # engineering calls in that run. See _fold_evidence for the exhibit and
+    # convention 21. At a measured 41 s per call, each avoided retry is about
+    # 41 seconds of a run budget that expires on the clock, not on money.
     evidence: list[str] = Field(default_factory=list)
+
+    @field_validator("evidence", mode="before")
+    @classmethod
+    def _accept_the_shape_a_serving_returns(cls, value: Any) -> Any:
+        return _fold_evidence(value)
 
     @model_validator(mode="after")
     def _green_from_red_cause(self):
