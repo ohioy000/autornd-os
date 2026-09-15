@@ -236,6 +236,20 @@ that folded into lines rather than refused three times. Both are counted, by
 kind, in the results file — because a leniency that hides how often it fires
 cannot be withdrawn later on evidence.
 
+**The way this project is built is now part of it.** For fifteen development
+cycles the working method lived in conversation: an advisor designing and ruling,
+an agent measuring and implementing, and an owner holding the money and the
+standing configuration. That method produced almost everything in this changelog,
+including most of its corrections — the recurring pattern was not a wrong
+hypothesis but a broken instrument, found while testing something else. With the
+agent being replaced, the method has been written down as files rather than
+carried in a transcript: one protocol document describing who decides what and
+where the line falls between repairing a measurement and changing a behaviour,
+and one bootstrap prompt that orients a new agent from the repository alone. Two
+open defects are staged with their evidence and their unanswered questions, and
+deliberately left undesigned, because choosing between the options would change
+a cost model that was measured rather than assumed.
+
 The suite stands at **674 tests** as of `fff850a`, up from 85 at 0.1.0.
 
 ## [0.1.0] — 2026-09-12

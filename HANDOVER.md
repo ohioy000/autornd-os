@@ -914,6 +914,24 @@ three non-engineering traces shipped inside or at the engineering envelope
 the same as reliable — `crossref_integrity` is the standing reminder that one
 observation of a trace predicts little.
 
+### The arc continues under a new executor
+
+**2026-09-15.** The executor that ran Blueprints 001–015 is being replaced
+mid-arc. The protocol those blueprints ran on had lived in session transcripts;
+it is now a repo artifact.
+
+- **[`AGENTS.md`](AGENTS.md) is the protocol file** — who decides what, the
+  permission boundary, the convention digest, the G-gates, and where the state
+  and the evidence live. `CLAUDE.md` is a symlink to it, so there is one copy
+  and it cannot drift. `tests/test_protocol_file.py` pins both.
+- **[`docs/successor-prompt.md`](../docs/successor-prompt.md) opens a session** —
+  the block the owner pastes into a new agent, with the orientation order, the
+  division of labour, and what not to touch.
+- **`docs/handover-review.md` §26 stages B13 and B14** as design inputs. Neither
+  is designed; both need a ruling before anything is built.
+
+Nothing about the harness changed. The next executor should read §25.2 first.
+
 ### The other open arcs, priced
 
 | arc | what it is | honest price |

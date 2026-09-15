@@ -5923,7 +5923,8 @@ after; CI green. **Total $0.3156** — Part B $0.0597 (two arms), Part C $0.2559
 
 ## 25. Blueprint 015 — The succession (verbatim, as received)
 
-**Status: not executed at the time of recording.** Execution record: §25.2.
+**Status: executed 2026-09-15. The protocol is a repo artifact.**
+Execution record: **§25.2 — the successor should read that section first.**
 
 *(No gap this time: 014 took §24 and this takes §25. The vacant §19, §21 and §23
 were artifacts of blueprints naming even-numbered sections; this one names the
@@ -6101,3 +6102,82 @@ They are **not standing in `.env`**. Making them standing is one line, and
 `.env` is the owner's (G-3). Until that line exists, any run not carrying the
 prefix draws whatever the provider rotation offers, and §6.11 is the measurement
 of what that costs.
+
+### 25.2 Execution record — **and the handover note. Successor: read this first.**
+
+**Status: executed 2026-09-15.** Suite 658 → **674** across 33 files, green
+before and after; CI green. **$0.00 — free, as specified.**
+
+#### If you are the new executor, this is what you need in four lines
+
+1. **`AGENTS.md` is the protocol.** `CLAUDE.md` is a symlink to it. Read it
+   before anything else; `docs/successor-prompt.md` is how your session opens.
+2. **You propose; the advisor rules; the owner owns money, pins and `.env`.**
+   The line is whether a change alters what the harness *concludes* or only how
+   reliably it reaches a conclusion. The first needs a ruling. The second is
+   yours to fix as found, and you are expected to.
+3. **The most valuable thing you will produce is the "what execution found that
+   the blueprint missed" section.** Six of fifteen blueprints found the
+   instrument broken rather than the hypothesis wrong. Report a refuted premise
+   plainly — several of this project's best findings are refutations of its own
+   earlier records, including ones written by this executor.
+4. **B13 is the open item that matters.** §26 stages it. Do not design it in an
+   executor session.
+
+#### Departures
+
+1. **`CLAUDE.md` became a symlink rather than a copy.** A1 sanctioned either.
+   Two copies drift — that is convention 24's entire subject, with twelve
+   documented drifts from one document as the exhibit — so the protocol is one
+   file with two names, and `tests/test_protocol_file.py` fails with an
+   explanation if someone replaces the link with a copy "to be safe". CI is
+   Linux-only, so the portability objection to symlinks does not apply here.
+2. **Two guards were added that the blueprint did not ask for.** D4 says "the
+   guard must pass on the new files"; it passes, and that is weaker than it
+   sounds — a guard that does not *look* at a file passes trivially. So
+   `AGENTS.md` is now inside the model-id scan and inside the test-file-count
+   check, and its load-bearing sections are pinned by name. **A protocol file
+   that quietly loses its permission boundary is worse than no protocol file**,
+   because it reads as complete.
+3. **§25 does not skip a number.** 011–014 took §18, §20, §22 and §24, leaving
+   §19, §21 and §23 vacant; §25 follows §24 directly and §26 is a standing
+   section rather than a blueprint. Noted because the gaps have caused two
+   documented misreadings already.
+
+#### Left undone, deliberately
+
+- **B13 and B14 are staged, not designed** (C1, and out of scope by name). §26
+  lists five open questions for B13 and the four binding sites for B14. Every
+  B13 option changes the cost model §4.3 was measured against, so convention 18
+  applies to whichever is chosen: the budgets get re-derived in the same change.
+- **The Pydantic bypass in `enforce_triage_composition` is still unfixed.** It
+  is pure instrument repair and permitted, but it belongs inside B14's change.
+- **No prompt, workflow or profile edit. No `.env`. No spend.**
+- **The pins are still not standing.** Every measurement that closed B7 ran
+  env-prefixed. One `.env` line makes them standing and that line is the
+  owner's (G-3). **This is the single highest-value thing waiting on nobody's
+  design.**
+
+#### What execution found that the blueprint missed
+
+1. **"The guard must pass on the new files" is not the same as the new files
+   being guarded.** Every guard passed the moment `AGENTS.md` existed, because
+   none of them looked at it. The difference took three extra assertions and is
+   the same class of error as convention 22: a test that does not simulate the
+   condition it watches proves nothing by passing.
+2. **Writing the protocol down exposed that one rule had never been written
+   anywhere.** The permission boundary existed as §0 preamble rule 8 of the lab
+   notebook and had been applied consistently for nine blueprints — but the
+   *worked examples* of which past decisions fell on which side existed only in
+   execution records scattered across four sections. `AGENTS.md` names four.
+   The rule was followable only by someone who had read the whole notebook.
+3. **The count guards caught the counts again, on this blueprint's own files.**
+   Adding two test files moved the suite 658 → 674 and 32 → 33, and four
+   assertions failed before anything was committed. That is the third
+   consecutive blueprint in which the guard has caught its own contribution,
+   which is the strongest argument available that convention 24 is right.
+4. **The successor prompt is where the project's habits became visible as a
+   set.** Written out in one place, the orientation sequence, the six-line
+   protocol, the n-carrying rule and *an instrument reading is a reading, not a
+   diagnosis* form a method — and the last of those is the one this repo has
+   paid for most often and stated least clearly.
