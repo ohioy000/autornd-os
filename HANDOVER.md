@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       the only tracked profile
-tests/                      31 files, 651 tests (as of `767f582`)
+tests/                      32 files, 658 tests (as of `f9a7d7c`)
 ```
 
 ### 2.3 Key design patterns
@@ -607,7 +607,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (651 total, as of `4cee135`)
+### 3.7 Test distribution (658 total, as of `f9a7d7c`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -618,15 +618,15 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_knowledge.py | 41 | test_results_log.py | 10 |
 | test_research.py | 37 | test_triage.py | 10 |
 | test_review_composition.py | 28 | test_lead_review.py | 9 |
-| test_profiles.py | 23 | test_live_wiring.py | 7 |
-| test_settings.py | 22 | test_rejection_counter.py | 7 |
-| test_api.py | 21 | test_engine.py | 6 |
-| test_sweep_budget.py | 21 | test_budget_stop_scoring.py | 5 |
-| test_rework_loop.py | 17 | test_iteration_dissent.py | 5 |
-| test_auth.py | 16 | test_workflow.py | 4 |
-| test_green_resolution.py | 16 | test_docs.py | 3 |
-| test_all_judges_exit.py | 15 | test_phase_timing.py | 3 |
-| test_schema_wiring.py | 15 | | |
+| test_profiles.py | 23 | test_handover_truth.py | 7 |
+| test_settings.py | 22 | test_live_wiring.py | 7 |
+| test_api.py | 21 | test_rejection_counter.py | 7 |
+| test_sweep_budget.py | 21 | test_engine.py | 6 |
+| test_rework_loop.py | 17 | test_budget_stop_scoring.py | 5 |
+| test_auth.py | 16 | test_iteration_dissent.py | 5 |
+| test_green_resolution.py | 16 | test_workflow.py | 4 |
+| test_all_judges_exit.py | 15 | test_docs.py | 3 |
+| test_schema_wiring.py | 15 | test_phase_timing.py | 3 |
 
 Regenerate with `pytest tests/ --collect-only -q`; the total is the part that
 matters and `tests/test_docs.py` fails if the README badge disagrees with it.
@@ -670,7 +670,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 651/651 pass.** Everything below is a live-behaviour
+**No failing unit tests — 658/658 pass.** Everything below is a live-behaviour
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
@@ -1361,7 +1361,7 @@ is not the validator, and must not be asked to be.
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 651 tests as of `14fd84d`, ~10 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 658 tests as of `f9a7d7c`, ~10 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \
