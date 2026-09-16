@@ -243,6 +243,16 @@ class ImplementVerdict(BaseModel):
     iteration: int = Field(default=1, ge=1)
     summary: str
     domain_concerns: list[str] = Field(default_factory=list)
+    # Ruled (Blueprint 016 B2) — the honest-refusal channel. Success criteria
+    # the work cannot satisfy with what is available, each naming why. The
+    # measured failure it exists for: a low-risk brief whose plan demanded "a
+    # citable source a reader can use to verify the claim" while the risk gate
+    # had already zeroed its lookups, and the implementer fabricated sources
+    # for six iterations rather than refusing. Independent of `green` by
+    # ruling: the loop routes on this field, not on the implementer's own
+    # green self-assessment, so an implementer that blocks does not also have
+    # to declare itself red.
+    blocked_on: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _green_from_red_cause(self):

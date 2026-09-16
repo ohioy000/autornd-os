@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-689%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-711%20passing-brightgreen.svg)](#testing)
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
 
@@ -215,13 +215,15 @@ Writing the sequence down also forced out rules that had been implicit in code: 
 
 ## Deterministic Checks
 
-A `check` node runs a function instead of a model call. Free, instant, and correct about what it measures — three properties no prompt has. Three ship:
+A `check` node runs a function instead of a model call. Free, instant, and correct about what it measures — three properties no prompt has. Five ship:
 
 | check | catches |
 |---|---|
 | `criteria_addressed` | work that does not visibly address a success criterion |
 | `numbers_consistent` | the plan saying 60s where the implementation says 600s |
 | `totals_reconcile` | parts that do not sum to a stated total |
+| `judges_agree` | a loop exiting while any judge it produced is still red |
+| `blocked_on_unmet` | an implementer refusing on a criterion the plan itself demands — routed to escalation rather than iterated against |
 
 They run **before** the paid validator, so an implementation that never mentions a criterion costs nothing to reject.
 
@@ -748,7 +750,7 @@ workflows/                # engineering-rnd, lean, triage-only, triage-classify
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 689 tests
+tests/                    # 711 tests
 ```
 
 ## Cost and Performance
@@ -793,7 +795,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-689 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
+711 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
 
 The graph tests are the load-bearing ones: node shape, gate routing, loop bounds and the all-judges exit are all decidable without a provider. An earlier hardcoded sequencer was kept alongside the graph as an equivalence reference and has been retired — once gates could route on failure, a linear engine could no longer represent the pipeline it was supposed to be checking.
 
@@ -817,7 +819,7 @@ uvicorn autornd.main:app --host 127.0.0.1 --port 8100
 - **Quality follows the models you choose.** Cheap tiers give cheap results.
 - **No role-based access.** Per-user isolation exists; admin/user roles and team permissions do not.
 - **No streaming.** `/api/workflows/sync` blocks. Use the async endpoint and poll for long runs.
-- **Review blocks, but does not rework.** A `ship: false` verdict stops the run at the `review_clean` gate. Feeding those findings back into implement and validate would be more useful than blocking, but review and validate can disagree indefinitely, so the loop is not wired until the exhaustion semantics are settled.
+- **Review reworks, within bounds.** A `ship: false` verdict routes the work back through implement, validate and a fresh review — up to `review_rework_attempts` (default 2) — and exhausted rework escalates with the findings in the failure log. Review and implement can disagree indefinitely, so every disagreement path is bounded and ends in escalation or a human.
 - **Costs are real.** Every workflow calls a paid API. Set `MAX_ITERATIONS` conservatively and watch your provider's spend.
 
 ## Contributing

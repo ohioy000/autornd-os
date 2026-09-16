@@ -179,6 +179,88 @@ def judges_agree(**judges: Any) -> Result:
     )
 
 
+@check("blocked_on_unmet")
+def blocked_on_unmet(blocked_on: list[str], criteria: list[str]) -> Result:
+    """Did the implementer refuse on a criterion the plan itself demands?
+
+    The B13 honest-refusal gate (Blueprint 016 B2/B3). `blocked_on` is the
+    implementer's ruled channel for saying "this criterion cannot be honestly
+    satisfied with what is available". The ruled loop semantics: a block naming
+    a plan success criterion routes to escalation immediately, because the
+    measured alternative was six iterations of fabricating citations against an
+    impossible criterion. A block that names NO plan criterion is the
+    implementer's judgement about something else, and the loop treats it like
+    any other dissent — the fold judges it.
+
+    Three deterministic ways an entry names a criterion, all deliberately
+    uncalibrated because no live corpus of refusals exists yet:
+
+    - by index — "criterion 2", "criterion_2", "Criteria 2" — any spelling,
+      with the number inside the plan's range;
+    - by containment — the significant terms of the entry are a subset of a
+      criterion's (a quote or fragment), or the criterion's are a subset of the
+      entry's (a full restatement). Single significant terms match, on purpose:
+      a one-word entry like "backoff" naming the backoff criterion is a
+      reference.
+    - by shared majority — at least half of the smaller term set appears in the
+      larger. The exhibit is the first scripted paraphrase this check met,
+      "cannot provide a citable source for each claim": three of its five
+      significant terms are criterion 1's, and a pure subset rule matched
+      nothing. A real refusal carries filler the criterion does not have, so
+      subset-only was the check's fault, not the entry's (convention 17). Half
+      of the smaller set is the deterministic line, and it is pinned from both
+      sides in tests/test_blocked_on.py.
+
+    The bias throughout is toward matching. A false positive routes to
+    escalation — honest and bounded. A false negative continues the fabrication
+    loop — the measured harm. No stemming: "capped" and "cap" are different
+    terms, and pretending otherwise is a leniency with no exhibit behind it.
+    """
+    entries = [str(b).strip() for b in (blocked_on or []) if str(b).strip()]
+    if not entries:
+        return Result(True, "nothing blocked on", blocked=[])
+
+    criteria = list(criteria or [])
+    wanted = [(i + 1, _terms(c)) for i, c in enumerate(criteria)]
+
+    def names_a_criterion(entry: str) -> bool:
+        for m in _CRITERION_REF.finditer(entry):
+            n = int(m.group(1))
+            if 1 <= n <= len(criteria):
+                return True
+        entry_terms = _terms(entry)
+        if not entry_terms:
+            return False
+        for _, criterion_terms in wanted:
+            if not criterion_terms:
+                continue
+            smaller, larger = sorted((entry_terms, criterion_terms), key=len)
+            if smaller <= larger:
+                return True
+            overlap = len(smaller & larger)
+            if overlap * 2 >= len(smaller):
+                return True
+        return False
+
+    matched = [e for e in entries if names_a_criterion(e)]
+    if matched:
+        return Result(
+            False,
+            "implementation names a plan criterion it cannot satisfy: "
+            + "; ".join(matched),
+            blocked=matched,
+        )
+    return Result(
+        True,
+        "no blocked entry names a plan criterion — the fold will judge them",
+        blocked=[],
+    )
+
+
+# "criterion 3", "criterion_3", "Criteria 3", "CRITERION-3" — one spelling.
+_CRITERION_REF = re.compile(r"criteri(?:a|on)[_\s\-]*(\d+)", re.IGNORECASE)
+
+
 @check("criteria_addressed")
 def criteria_addressed(
     criteria: list[str], text: str, threshold: float = 0.5

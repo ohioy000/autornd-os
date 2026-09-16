@@ -181,6 +181,8 @@ class PhaseRunner:
             return await self._build_context(state)
         if node.check == "verify_grounding":
             return await self._verify_grounding(state)
+        if node.check == "blocked_on_unmet":
+            return self._blocked_on_unmet(node, state)
         if node.check not in registry:
             raise KeyError(
                 f"node '{node.id}' names unknown check '{node.check}'; "
@@ -258,6 +260,33 @@ class PhaseRunner:
             demanded=True, looked_up=looked_up,
             deferred_gaps=len(self.deferred_gaps),
         )
+
+    def _blocked_on_unmet(self, node: Node, state: ExecutionState) -> Result:
+        """The honest-refusal gate's check, plus its failure-log write.
+
+        B3's invariant is that escalation's verdict carries blocked_on in the
+        failure log it reads — but the block fires right after implement,
+        BEFORE validate, and validate was the only phase that wrote failure-log
+        entries. Routed cold, the autopsy would read a log with nothing in it
+        about the block and would diagnose from silence. So the adapter writes
+        the entry here, on the real path only; the check itself stays a pure
+        registry function the executor and the tests drive directly.
+        """
+        result = get_check("blocked_on_unmet")(**resolve_args(node, state))
+        if not result.passed:
+            implement = state.outputs.get("implement")
+            summary = getattr(implement, "summary", None)
+            if summary is None and isinstance(implement, dict):
+                summary = implement.get("summary", "")
+            self.failure_log.append({
+                "iteration": state.iteration,
+                "implement_summary": str(summary or ""),
+                "red_cause": (
+                    "implementation blocked on a criterion it cannot satisfy"),
+                "evidence": [f"blocked: {b}" for b in result.data["blocked"]],
+                "blocked_on": list(result.data["blocked"]),
+            })
+        return result
 
     # ── phases ────────────────────────────────────────────────────────────
 

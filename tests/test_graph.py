@@ -190,6 +190,18 @@ class TestShippedWorkflow:
         assert body.index("coverage") < body.index("validate")
         assert body.index("consistency") < body.index("validate")
 
+    def test_the_block_gate_sits_right_after_implement(self):
+        """B13's refusal check must fire before any paid judge sees the work:
+        the measured failure was six iterations of fabrication against an
+        impossible criterion. And it must be in build_loop's body ONLY — a
+        routing gate inside the escalation sub-graph would re-enter it."""
+        spec = load("workflows/engineering-rnd.yaml")
+        body = spec.get("build_loop").body
+        assert body.index("blocked_check") == body.index("implement") + 1
+        assert body.index("blocked_gate") == body.index("blocked_check") + 1
+        for loop in ("recovery_loop", "review_rework_loop"):
+            assert "blocked_gate" not in spec.get(loop).body, loop
+
     def test_every_check_named_is_registered(self):
         """Two checks are adapter-owned rather than registry entries — they need
         the client or the runner's state, which a pure registry function has no
@@ -288,6 +300,12 @@ PLAN = {
 }
 IMPL = {
     "done": True, "green": True, "iteration": 1,
+    # The real verdict always carries this — it defaults to [] — so the double
+    # must too: the block check resolves implement.blocked_on, and a fixture
+    # missing a defaulted field is a fixture that does not simulate the verdict
+    # it stands in for (convention 22). Its first absence took 36 tests down
+    # with one ConditionError.
+    "blocked_on": [],
     "summary": ("Applied exponential backoff to the reconnect loop capped at 60s "
                 "with jitter on every retry attempt."),
 }
@@ -343,7 +361,8 @@ class TestExecutorReproducesThePipeline:
         assert state.path == [
             "triage", "context", "plan", "feasibility", "plan_ready",
             "verify_grounding",
-            "implement", "domain_review", "coverage", "consistency",
+            "implement", "blocked_check", "blocked_gate",
+            "domain_review", "coverage", "consistency",
             "validate", "judges", "review", "review_clean",
         ]
         assert len(runner.ai_calls) == 7

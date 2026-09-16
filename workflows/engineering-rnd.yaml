@@ -73,6 +73,34 @@ nodes:
     prompt: implement
     schema: ImplementVerdict
 
+  # B13's honest-refusal gate (Blueprint 016 B2/B3). The implementer's ruled
+  # channel for saying a criterion cannot be honestly satisfied is blocked_on;
+  # this free check asks whether any blocked entry names a plan success
+  # criterion, and if one does, the gate routes straight to escalation —
+  # before a single paid judge sees the work. The measured failure this
+  # prevents: six iterations of fabricating citations against an impossible
+  # criterion, ended only by the cost ceiling.
+  #
+  # It lives in build_loop's body ONLY. recovery_loop and review_rework_loop
+  # sit inside the escalation sub-graph — a routing gate inside them would
+  # re-enter that sub-graph with a fresh budget each time, which is an
+  # unbounded path. Their iteration bounds are the protection there, and
+  # exhaustion ends `escalated`, the honest terminal.
+  - id: blocked_check
+    kind: check
+    check: blocked_on_unmet
+    args:
+      blocked_on: implement.blocked_on
+      criteria: plan.success_criteria
+    depends_on: [implement]
+
+  - id: blocked_gate
+    kind: gate
+    condition: blocked_check.passed == true
+    depends_on: [blocked_check]
+    on_fail: escalation
+    on_fail_reason: "Implementation blocked on a criterion it cannot satisfy"
+
   - id: domain_review
     kind: ai
     tier: engineering
@@ -126,7 +154,7 @@ nodes:
 
   - id: build_loop
     kind: ai
-    body: [implement, domain_review, coverage, consistency, validate, judges]
+    body: [implement, blocked_check, blocked_gate, domain_review, coverage, consistency, validate, judges]
     until: judges.passed == true
     max_iterations: max_iterations      # resolved from settings
     on_exhausted: escalation

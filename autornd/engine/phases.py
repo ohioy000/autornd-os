@@ -668,6 +668,10 @@ FEASIBILITY CONCERNS (from domain specialist review — address these):
 {chr(10).join(f'- {b}' for b in plan.blockers)}"""
 
     context_block = f"\n\nProject context:\n{context}" if context else ""
+    # The blocked_on sentence below is RULED text (Blueprint 016 B2), carried
+    # verbatim by instruction — it is the one judgment-steering sentence added
+    # to this prompt, and it is not to be paraphrased. The blocked_on line in
+    # the JSON contract is mechanical shape, like every other field's line.
     implement_prompt = f"""\
 Produce the implementation for the following plan. This is iteration {iteration}.
 
@@ -678,6 +682,8 @@ Plan:
 
 Success criteria:
 {json.dumps(plan.success_criteria)}
+
+If a criterion cannot be honestly satisfied with the grounding available, name it in blocked_on rather than producing something that satisfies it on paper.
 {feasibility_block}
 {feedback}
 {context_block}
@@ -686,6 +692,9 @@ Return JSON with:
 - done: true if the implementation is complete
 - green: true if you believe it satisfies the success criteria
 - red_cause: null if green, otherwise a short string describing what is wrong
+- blocked_on: list of success criteria the work cannot satisfy, each entry
+  naming the criterion (quote it or give its number) and why it cannot be
+  satisfied; an empty list when there are none
 - iteration: {iteration}
 - summary: the implementation itself — the design, code, schema, procedure or
   calculation, in full. This field is the deliverable and is what the validate

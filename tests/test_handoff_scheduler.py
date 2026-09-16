@@ -14,7 +14,9 @@ structural defect fifteen blueprints of instrumentation walked past. Latent in
 every shipped workflow because each declares its handoff sub-graphs in
 dependency order, which is why the suite stayed green throughout. The first two
 tests fail against the old code by construction; the third pins the shipped
-flagship's exact routing path as the no-regression guard.
+flagship's exact routing path as the no-regression guard — any change to the
+path every live run takes must be deliberate, ruled, and visible here (B2's
+block gate changed it, and this assertion caught that on the first run).
 
 Convention 22's shape: every test drives the real executor end to end, on the
 condition the scheduler watches — a routing target whose sub-graph is not in
@@ -83,12 +85,15 @@ class TestAHandoffSubGraphRunsCompleteAndInOrder:
 
 
 class TestTheShippedFlagshipIsUnchanged:
-    async def test_the_blocked_review_routing_path_is_byte_identical(self):
+    async def test_the_blocked_review_routing_path_is_pinned(self):
         """The shipped yamls declare every handoff sub-graph in dependency
-        order, which is exactly why the defect stayed latent. This pins the
-        full blocked-review path — the one that exercises `_run_from` twice,
-        once for the gate route and once for the loop's exhaustion — so the
-        fix provably changes nothing on the path every live run takes."""
+        order, which is exactly why the scheduler defect stayed latent. This
+        pins the full blocked-review path — the one that exercises `_run_from`
+        twice, once for the gate route and once for the loop's exhaustion — so
+        any change to the path every live run takes must be deliberate and
+        visible here. The B13 block nodes sit inside the build iterations; the
+        rework loops' bodies are unchanged, because a routing gate inside the
+        escalation sub-graph would be an unbounded path."""
         state, runner = await _run({
             **BASE, "validate": {"green": True},
             "review": {"ship": False, "verdict": "no", "findings": []},
@@ -98,7 +103,8 @@ class TestTheShippedFlagshipIsUnchanged:
         assert state.path == [
             "triage", "context", "plan", "feasibility", "plan_ready",
             "verify_grounding",
-            "implement", "domain_review", "coverage", "consistency",
+            "implement", "blocked_check", "blocked_gate",
+            "domain_review", "coverage", "consistency",
             "validate", "judges", "review", "review_clean",
             "implement", "domain_review", "coverage", "consistency",
             "validate", "judges", "rework_review", "review_fold",
