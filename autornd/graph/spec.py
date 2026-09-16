@@ -172,6 +172,72 @@ class WorkflowSpec:
                     changed = True
         return owned
 
+    def handoff_subgraph(self, start_id: str) -> list[Node]:
+        """One handoff sub-graph, topologically ordered and complete.
+
+        The set is the named node, everything that depends on it (transitively,
+        within the handoff-owned set), and every handoff-owned node the set
+        depends on — support nodes included, however few dependencies they
+        declare. Dependencies outside the set are treated as satisfied: they
+        belong to the main flow or to a loop body, which provides them when it
+        runs. Loop bodies are excluded beyond the start node — a loop runs its
+        own body, and running a body member here as well would execute it
+        twice.
+
+        Provenance (Blueprint 016 A1/A4): this replaces a single linear pass
+        over the node list in file order, which dropped a handoff node whose
+        dependencies were declared later, could execute a handoff node before
+        the node it depends on, and dropped every handoff-owned node with no
+        declared dependencies. Found by external assessment, verified by the
+        advisor at 27cf116; latent in every shipped workflow because they
+        declare each sub-graph in dependency order.
+        tests/test_handoff_scheduler.py fails against the old code by
+        construction. The same method is the load-time check in parse() — one
+        definition of a sub-graph, run by the scheduler and checked by the
+        loader.
+        """
+        if start_id not in self._by_id:
+            raise SpecError(f"no node named '{start_id}'")
+        reachable = self.handoff_reachable()
+        body_members = {bid for n in self.nodes for bid in n.body}
+
+        wanted = {start_id}
+        changed = True
+        while changed:
+            changed = False
+            for node in self.nodes:
+                nid = node.id
+                if nid in wanted or nid not in reachable or nid in body_members:
+                    continue
+                # downstream: every dependency is already in the set
+                if node.depends_on and all(d in wanted for d in node.depends_on):
+                    wanted.add(nid)
+                    changed = True
+                    continue
+                # upstream support: some member of the set depends on this node
+                if any(nid in self._by_id[m].depends_on for m in wanted):
+                    wanted.add(nid)
+                    changed = True
+
+        ordered: list[Node] = []
+        done: set[str] = set()
+        pending = [self._by_id[nid] for nid in self.ids if nid in wanted]
+        while pending:
+            ready = [n for n in pending
+                     if all(d in done or d not in wanted for d in n.depends_on)]
+            if not ready:
+                stuck = ", ".join(sorted(n.id for n in pending))
+                raise SpecError(
+                    f"handoff sub-graph from '{start_id}' is not orderable — "
+                    f"dependency cycle among: {stuck}. A workflow that would "
+                    f"silently lose a node must fail at load, not mid-run."
+                )
+            for node in ready:
+                ordered.append(node)
+                done.add(node.id)
+            pending = [n for n in pending if n.id not in done]
+        return ordered
+
     def execution_order(self) -> list[Node]:
         """Top-level nodes in dependency order.
 
@@ -320,6 +386,15 @@ def parse(data: dict[str, Any]) -> WorkflowSpec:
 
     spec = WorkflowSpec(name=name, nodes=nodes, description=data.get("description", ""))
     spec.execution_order()  # surface cycles at load time, not mid-run
+    # And the same guarantee for every routing target: the sub-graph a closed
+    # gate or an exhausted loop hands off to must be orderable. Before this a
+    # cycle there surfaced mid-run, after the run had already paid for
+    # everything that came before it — the conditions module's founding
+    # principle, applied to its own scheduler (Blueprint 016 A2).
+    for node in nodes:
+        for target in (node.on_exhausted, node.on_fail):
+            if target and target not in TERMINAL_STATUSES:
+                spec.handoff_subgraph(target)
     return spec
 
 

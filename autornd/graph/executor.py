@@ -298,23 +298,27 @@ class GraphExecutor:
         return True
 
     async def _run_from(self, start_id: str, state: ExecutionState) -> bool:
-        """Run a handoff sub-graph: the named node and whatever hangs off it."""
-        reachable = self.spec.handoff_reachable()
-        ordered: list[Node] = []
-        included = {start_id}
+        """Run a handoff sub-graph: the named node and whatever hangs off it.
 
-        for node in self.spec.nodes:
-            if node.id == start_id:
-                ordered.append(node)
-            elif (
-                node.id in reachable
-                and node.depends_on
-                and all(d in included for d in node.depends_on)
-            ):
-                ordered.append(node)
-                included.add(node.id)
+        Provenance (Blueprint 016 A4): the pass this replaces walked the node
+        list once, in file order, admitting a node only if its dependencies
+        had already been admitted by that same pass. Three ways to lose a
+        node, all silent: a handoff node declared before its dependency was
+        never revisited; a handoff node could execute before the node it
+        depends on; and a handoff-owned node with no declared dependencies
+        was dropped unconditionally. Found by external assessment, verified
+        by the advisor at 27cf116 — the one structural defect fifteen
+        blueprints of instrumentation walked past, sitting under the
+        gate-routing feature that is about to carry more traffic. Latent in
+        every shipped workflow, because each declares its handoff sub-graphs
+        in dependency order; tests/test_handoff_scheduler.py fails against
+        the old code by construction.
 
-        for node in ordered:
+        The ordering itself is the spec's (WorkflowSpec.handoff_subgraph),
+        shared with the load-time validation in spec.parse — one definition
+        of a sub-graph, run by the scheduler and checked by the loader.
+        """
+        for node in self.spec.handoff_subgraph(start_id):
             if not await self._execute(node, state):
                 return False
         return True

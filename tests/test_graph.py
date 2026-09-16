@@ -163,7 +163,7 @@ class TestShippedWorkflow:
         spec = load("workflows/engineering-rnd.yaml")
         assert [n.id for n in spec.execution_order()] == [
             "triage", "context", "plan", "feasibility",
-            "plan_ready", "build_loop", "review", "review_clean",
+            "plan_ready", "verify_grounding", "build_loop", "review", "review_clean",
             "independent_check",
         ]
 
@@ -191,9 +191,14 @@ class TestShippedWorkflow:
         assert body.index("consistency") < body.index("validate")
 
     def test_every_check_named_is_registered(self):
+        """Two checks are adapter-owned rather than registry entries — they need
+        the client or the runner's state, which a pure registry function has no
+        access to. Both are special-cased in PhaseRunner.run_check beside each
+        other, so both are excluded here by name."""
         spec = load("workflows/engineering-rnd.yaml")
         for node in spec.nodes:
-            if node.kind is NodeKind.CHECK and node.check != "build_context":
+            if node.kind is NodeKind.CHECK and node.check not in (
+                    "build_context", "verify_grounding"):
                 assert node.check in registry, f"{node.id} names unknown check"
 
 
@@ -337,6 +342,7 @@ class TestExecutorReproducesThePipeline:
         assert state.status == "completed"
         assert state.path == [
             "triage", "context", "plan", "feasibility", "plan_ready",
+            "verify_grounding",
             "implement", "domain_review", "coverage", "consistency",
             "validate", "judges", "review", "review_clean",
         ]

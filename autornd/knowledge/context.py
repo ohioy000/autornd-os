@@ -224,6 +224,41 @@ def search_budget(risk: object) -> int:
     return settings.search_max_tokens
 
 
+# Criteria language that demands the work be verifiable from outside the run —
+# the B13 exhibit: a low-risk brief whose plan demanded "a citable source a
+# reader can use to verify the claim" while the risk gate had already zeroed
+# its lookups, so the implementer fabricated sources for six iterations. The
+# trigger is a free deterministic test over the criteria text, never a model
+# call (Blueprint 016 B1).
+#
+# Deliberately a plain substring test and deliberately uncalibrated: no live
+# criterion corpus exists yet (exhibits precede leniency). A false positive
+# costs one bundled lookup — post-swap roughly $0.006-0.01 [measured: §14
+# arm 2] — and a false negative costs the fabrication loop the override exists
+# to prevent, so the list leans inclusive. "references" and "sources" were
+# considered and left off: both appear in ordinary engineering criteria ("the
+# design references the existing schema") far more often than in
+# verifiability demands.
+_VERIFICATION_TERMS = (
+    "citable", "citation", "cite", "cited", "verifiable",
+    "verify", "verification", "bibliography", "attribution",
+)
+
+
+def criteria_demand_verification(criteria: list[str]) -> bool:
+    """Does any success criterion demand the work be verifiable externally?
+
+    The B13 override's trigger. Free, deterministic, and read after the plan
+    exists — which is why it lives behind its own node rather than inside the
+    context phase: the criteria are written after grounding is assembled.
+    """
+    for criterion in criteria or []:
+        text = str(criterion).lower()
+        if any(term in text for term in _VERIFICATION_TERMS):
+            return True
+    return False
+
+
 BRIEFING_PROMPT = """\
 Write a short grounding briefing for an engineer about to start this request,
 using only the project documentation excerpts below.
@@ -280,7 +315,8 @@ async def expand_queries(client, request: str) -> list[str]:
 
 
 async def synthesize_briefing(client, request: str, chunks: list[dict],
-                              risk: object = None) -> str:
+                              risk: object = None,
+                              deferred_gaps: list[str] | None = None) -> str:
     """Read the ranked excerpts and write a grounded briefing (research tier).
 
     Falls back to handing the excerpts through verbatim, which is what every
@@ -327,6 +363,12 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
                                            max_tokens=search_budget(risk))
             if findings:
                 out += "\n\n" + render_findings(findings)
+        elif blocking and settings.model_search and deferred_gaps is not None:
+            # The risk gate declined this lookup. Keep the gaps rather than
+            # dropping them: if the plan then writes a criterion demanding
+            # verifiability, the override node looks them up anyway
+            # (Blueprint 016 B1). A declined lookup is deferred, not discarded.
+            deferred_gaps.extend(blocking)
         return out
     except BudgetExceeded:
         raise
@@ -432,7 +474,8 @@ async def rerank_chunks(
 
 
 async def load_retrieval_context(query: str, n_results: int = 5, client=None,
-                                 risk: object = None) -> str:
+                                 risk: object = None,
+                                 deferred_gaps: list[str] | None = None) -> str:
     """Research the project docs for a request: expand, retrieve, rank, brief."""
     queries = await expand_queries(client, query)
 
@@ -445,7 +488,8 @@ async def load_retrieval_context(query: str, n_results: int = 5, client=None,
         return ""
 
     ranked = await rerank_chunks(client, query, candidates, n_results)
-    return await synthesize_briefing(client, query, ranked, risk=risk)
+    return await synthesize_briefing(client, query, ranked, risk=risk,
+                                     deferred_gaps=deferred_gaps)
 
 
 SCOPING_PROMPT = """\
@@ -555,10 +599,15 @@ async def build_phase_context(
     include_retrieval: bool = True,
     client=None,
     risk: object = None,
+    deferred_gaps: list[str] | None = None,
 ) -> str:
     """Build full context string for a workflow phase.
 
     Combines deterministic docs (always) + ChromaDB retrieval (when available).
+
+    `deferred_gaps`, when given, collects the blocking gaps the risk gate
+    declined to look up — the override node reads them back if the plan's
+    criteria turn out to demand verifiability (Blueprint 016 B1).
     """
     parts: list[str] = []
 
@@ -568,7 +617,8 @@ async def build_phase_context(
 
     if include_retrieval:
         retrieval_ctx = await load_retrieval_context(request, client=client,
-                                                     risk=risk)
+                                                     risk=risk,
+                                                     deferred_gaps=deferred_gaps)
         if retrieval_ctx:
             parts.append("=== RELEVANT KNOWLEDGE ===\n" + retrieval_ctx)
         else:
@@ -590,5 +640,9 @@ async def build_phase_context(
                                                max_tokens=search_budget(risk))
                 if findings:
                     parts.append(render_findings(findings))
+            elif unknowns and settings.model_search and deferred_gaps is not None:
+                # The risk gate declined. Defer, don't discard — the override
+                # node may still fire on a plan-side verifiability demand.
+                deferred_gaps.extend(unknowns)
 
     return "\n\n".join(parts)

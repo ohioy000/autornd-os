@@ -26,7 +26,10 @@ from autornd.graph.spec import (
     LEAD,
     Node,
 )
-from autornd.knowledge.context import build_phase_context
+from autornd.knowledge.context import (
+    build_phase_context,
+    criteria_demand_verification,
+)
 from autornd.models.verdicts import Domain, SpecialistRole
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
 from autornd.specialists.base import Specialist
@@ -70,6 +73,11 @@ class PhaseRunner:
         # from a finished run. This is the history, retained.
         self.iterations: list[dict[str, Any]] = []
         self._spend_at_last_iteration = 0.0
+        # Blocking gaps the risk gate declined to look up, kept so the
+        # verifiability override can look them up if the plan demands it
+        # (Blueprint 016 B1). A declined lookup is deferred, not discarded.
+        self.deferred_gaps: list[str] = []
+        self.verification_lookup_done = False
 
     @property
     def total_cost(self) -> float:
@@ -171,6 +179,8 @@ class PhaseRunner:
     async def run_check(self, node: Node, state: ExecutionState) -> Result:
         if node.check == "build_context":
             return await self._build_context(state)
+        if node.check == "verify_grounding":
+            return await self._verify_grounding(state)
         if node.check not in registry:
             raise KeyError(
                 f"node '{node.id}' names unknown check '{node.check}'; "
@@ -189,15 +199,64 @@ class PhaseRunner:
         # Risk reaches the grounding decision. It is settled by triage before
         # this runs, and it was not being passed — so a low-risk copy change
         # bought the same paid lookups as a reactor monitoring spec.
+        deferred: list[str] = []
         self.context = await build_phase_context(
             state.request, triage.domains, triage.specialists,
             client=self.client, risk=triage.risk,
+            deferred_gaps=deferred,
         )
+        self.deferred_gaps = deferred
         return Result(
             True,
             f"{len(self.context)} characters of context assembled",
             chars=len(self.context),
             grounded=bool(self.context),
+        )
+
+    async def _verify_grounding(self, state: ExecutionState) -> Result:
+        """One bundled lookup when the plan's criteria demand verifiability.
+
+        B13's override (Blueprint 016 B1). The risk gate zeroes lookups at low
+        risk, and the measured failure is what happened next: the plan wrote a
+        criterion demanding a citable source, and the implementer — denied any
+        means of verifying anything — fabricated sources for six iterations
+        rather than refusing. The demand is detected for free, deterministically,
+        over the criteria text; the lookup itself is the standard bundled one at
+        the medium-risk budget, under MAX_LOOKUPS=1, whatever the triage risk.
+        REJECTED alternatives, recorded per the blueprint: a blanket low-risk
+        lookup budget (spends where nobody asked) and forbidding verifiability
+        criteria at low risk (hides the need; the claims get written either
+        way — §6.3's exact danger).
+
+        Runs once, after the plan exists — the criteria that trigger it do not
+        exist when the context phase assembles grounding, which is why this is
+        its own node rather than a branch of build_context.
+        """
+        plan = state.outputs.get("plan")
+        criteria = list(getattr(plan, "success_criteria", None) or [])
+        demanded = criteria_demand_verification(criteria)
+        looked_up = 0
+        if demanded and self.deferred_gaps and not self.verification_lookup_done:
+            from autornd.knowledge.research import render_findings, research_gaps
+
+            findings = await research_gaps(
+                self.client, state.request, list(self.deferred_gaps),
+                max_tokens=settings.search_max_tokens,
+            )
+            looked_up = len(findings)
+            if findings:
+                self.context = (self.context + "\n\n"
+                                + render_findings(findings)).strip()
+        self.verification_lookup_done = True
+        if not demanded:
+            return Result(True, "no criterion demands verifiability — no lookup",
+                          demanded=False, looked_up=0)
+        return Result(
+            True,
+            f"criteria demand verifiability; {looked_up} finding(s) from "
+            f"{len(self.deferred_gaps)} deferred gap(s)",
+            demanded=True, looked_up=looked_up,
+            deferred_gaps=len(self.deferred_gaps),
         )
 
     # ── phases ────────────────────────────────────────────────────────────
@@ -287,6 +346,10 @@ class PhaseRunner:
                 "implement_summary": implement.summary,
                 "red_cause": verdict.red_cause or implement.red_cause,
                 "evidence": verdict.evidence,
+                # B3's invariant: the autopsy reads the failure log, so an
+                # honest refusal travels with it — escalation must be able to
+                # see what the implementer said it could not satisfy.
+                "blocked_on": list(getattr(implement, "blocked_on", None) or []),
             })
 
         # Validate closes an iteration, so this is where one is complete enough

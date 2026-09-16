@@ -53,6 +53,17 @@ nodes:
     on_fail: blocked
     on_fail_reason: "Plan not ready"
 
+  # B13's override (Blueprint 016 B1). The risk gate zeroes lookups at low
+  # risk; if the plan then writes a criterion demanding a citable source, the
+  # implementer would fabricate one rather than refuse — measured once, six
+  # iterations of it. This node re-reads the criteria for free and, when they
+  # demand verifiability, fires the one bundled lookup the risk gate declined,
+  # at the medium-risk budget. $0 where no criterion demands citation.
+  - id: verify_grounding
+    kind: check
+    check: verify_grounding
+    depends_on: [plan_ready]
+
   # ── build ───────────────────────────────────────────────────────────────
   # The lead implements alone; the others review without redesigning.
   - id: implement
@@ -119,7 +130,7 @@ nodes:
     until: judges.passed == true
     max_iterations: max_iterations      # resolved from settings
     on_exhausted: escalation
-    depends_on: [plan_ready]
+    depends_on: [verify_grounding]
 
   # ── recover ─────────────────────────────────────────────────────────────
   - id: escalation

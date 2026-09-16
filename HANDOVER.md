@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `641da5a` · **Branch:** `main`
-**Tests:** 601 as of `00cc9d0` · **Date of this snapshot:** 2026-09-13, test counts refreshed 2026-09-14
+**Tests:** 689 as of `27cf116` · **Date of this snapshot:** 2026-09-13, test counts refreshed 2026-09-14
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -250,7 +250,7 @@ autornd/
     templates/dashboard.html  single-file chat + workflows + settings UI
 
 workflows/
-  engineering-rnd.yaml   ★★ the flagship pipeline, 21 nodes, 3 loops (§3.1)
+  engineering-rnd.yaml   ★★ the flagship pipeline, 22 nodes, 3 loops (§3.1)
   lean.yaml                 10 nodes — cheaper variant, one loop
   triage-only.yaml          2 nodes — triage + grounding (research measurement)
   triage-classify.yaml   ★  1 node — triage alone. Exists so calibration costs
@@ -263,8 +263,8 @@ evals/
   scenarios/materiality/    5 · scenarios/planprobe/ 3 · scenarios/probe/ 1
   grounding/*.yaml       ★  8 sectors graded against published figures
 
-profiles/example.yaml       the only tracked profile
-tests/                      33 files, 674 tests (as of `fff850a`)
+profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
+tests/                      35 files, 689 tests (as of `27cf116`)
 ```
 
 ### 2.3 Key design patterns
@@ -405,7 +405,7 @@ idempotent across phases.
 
 ## 3. CURRENT STATE & SOURCE OF TRUTH
 
-### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (21 nodes)
+### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (22 nodes)
 
 **The file is the source of truth; this table is generated from it.** A
 hand-copied YAML lived here for twelve blueprints and drifted — it still
@@ -419,6 +419,7 @@ one loop after that stopped being true.
 | `plan` | ai | tier `architecture`, as `systems_architect`, → `PlanVerdict` |
 | `feasibility` | ai | tier `engineering`, as `assigned`, when `plan.ready == true` |
 | `plan_ready` | gate | `plan.ready == true`; on_fail → `blocked` |
+| `verify_grounding` | check | B13 override: one bundled lookup when the plan's criteria demand verifiability (free) |
 | `implement` | ai | tier `engineering`, as `lead`, → `ImplementVerdict` |
 | `domain_review` | ai | tier `engineering`, as `peers`, when `implement.green == true` |
 | `coverage` | check | `criteria_addressed` (free) |
@@ -443,10 +444,10 @@ and work resumed after a recoverable escalation need the same treatment. They
 are separate nodes because a loop owns its body (§2.3), and `review` must
 still run once on the main schedule.
 
-**Reading the shape in one line:** triage → ground → plan → *gate* → build
-until every judge agrees → escalate if it never does → *gate* on recoverable →
-review → *gate* on clean → rework until review and build both pass →
-independent pass on unrecallable work.
+**Reading the shape in one line:** triage → ground → plan → *gate* → verify
+grounding on demand → build until every judge agrees → escalate if it never
+does → *gate* on recoverable → review → *gate* on clean → rework until review
+and build both pass → independent pass on unrecallable work.
 
 
 ### 3.2 `pyproject.toml` (verbatim)
@@ -614,7 +615,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (674 total, as of `fff850a`)
+### 3.7 Test distribution (689 total, as of `27cf116`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -622,9 +623,9 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_evals.py | 73 | test_evidence_shape.py | 14 |
 | test_routing.py | 62 | test_budget_transparency.py | 11 |
 | test_verdicts.py | 42 | test_specialists.py | 11 |
-| test_knowledge.py | 41 | test_results_log.py | 10 |
-| test_research.py | 37 | test_triage.py | 10 |
-| test_review_composition.py | 28 | test_lead_review.py | 9 |
+| test_knowledge.py | 41 | test_citation_demand.py | 11 |
+| test_research.py | 37 | test_results_log.py | 10 |
+| test_review_composition.py | 28 | test_triage.py | 10 |
 | test_profiles.py | 23 | test_handover_truth.py | 7 |
 | test_settings.py | 22 | test_live_wiring.py | 7 |
 | test_api.py | 21 | test_rejection_counter.py | 7 |
@@ -632,9 +633,9 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_rework_loop.py | 17 | test_budget_stop_scoring.py | 5 |
 | test_auth.py | 16 | test_iteration_dissent.py | 5 |
 | test_green_resolution.py | 16 | test_workflow.py | 4 |
-| test_protocol_file.py | 16 | test_docs.py | 3 |
-| test_all_judges_exit.py | 15 | test_phase_timing.py | 3 |
-| test_schema_wiring.py | 15 | | |
+| test_protocol_file.py | 16 | test_handoff_scheduler.py | 4 |
+| test_all_judges_exit.py | 15 | test_docs.py | 3 |
+| test_schema_wiring.py | 15 | test_phase_timing.py | 3 |
 
 Regenerate with `pytest tests/ --collect-only -q`; the total is the part that
 matters and `tests/test_docs.py` fails if the README badge disagrees with it.
@@ -678,7 +679,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 674/674 pass.** Everything below is a live-behaviour
+**No failing unit tests — 689/689 pass.** Everything below is a live-behaviour
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
@@ -715,6 +716,12 @@ MAX_LOOKUPS = 1
 ```
 
 Result: **$0.0999 → $0.0562 per workflow (−44%)**, measured across 36 sectors.
+
+**B13's override (Blueprint 016 B1) adds one exception:** when the *plan's*
+success criteria demand verifiability ("a citable source a reader can use to
+verify"), ONE bundled lookup fires regardless of triage risk, at the
+medium-risk budget — detected free and deterministically over the criteria
+text, after the plan exists. Where no criterion demands citation it costs $0.
 
 ### 4.4 Established conventions — please preserve these
 
@@ -1111,8 +1118,8 @@ questions **in order**, and the ordering is load-bearing — judging *stage* bef
    (`medium`) vs trivially reversible (`low`).
    - **Governing documents** — a protocol, schedule, policy or setpoint band
      followed repeatedly — are judged by *what happens when they are followed*.
-     Without this, a return-to-play progression and a statutory retention
-     schedule both read `low`.
+     Without this, a return-to-play progression and a statutory retention schedule
+     both read `low`.
    - **Protective systems** (a backup, interlock, alarm, containment,
      life-support) are judged by *what they protect*: **at least high**, and
      critical only if a person can be harmed. Naming the level mattered — the
@@ -1500,7 +1507,7 @@ repaired in 012, and it names `consistency` — a free deterministic numeric che
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 674 tests as of `fff850a`, ~10 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 689 tests as of `27cf116`, ~10 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \
