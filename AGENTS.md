@@ -98,6 +98,9 @@ eight are the ones a new executor trips over.
 .venv/bin/python3 -m pytest tests/ -q     # ~27 s, free — run BEFORE and AFTER
 ```
 
+Under Aider, slash commands and shell runs are owner-invoked or owner-approved;
+the agent proposes and edits, the owner executes the git loop.
+
 - **Suite green before and after. CI green before finishing.** Both, every time.
 - **Pre-register before a paid run, and commit it first.** The commit is the
   evidence that the prediction preceded the result. A wrong prediction is

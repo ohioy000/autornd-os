@@ -1,11 +1,17 @@
-"""Tests for settings endpoints — GET/PUT, validation, runtime mutability."""
+"""Tests for settings endpoints — GET/PUT, validation, runtime mutability.
+
+No `@pytest.mark.asyncio` anywhere in this file. pyproject sets
+`asyncio_mode = "auto"`, so async tests are collected without a mark — and a
+class-level mark on a class holding sync tests makes pytest warn once per sync
+test, which is where seven of the suite's eleven warnings came from
+(TestConfigValidation is all-sync and was marked).
+"""
 
 from __future__ import annotations
 
 import pytest
 
 
-@pytest.mark.asyncio
 class TestGetSettings:
     async def test_returns_all_fields(self, api_client):
         resp = await api_client.get("/api/settings")
@@ -40,7 +46,6 @@ class TestGetSettings:
         assert "log_level" in meta["runtime_mutable"]
 
 
-@pytest.mark.asyncio
 class TestUpdateSettings:
     async def test_update_max_iterations(self, api_client, monkeypatch):
         from autornd import config
@@ -82,7 +87,6 @@ class TestUpdateSettings:
         assert resp.status_code == 400
 
 
-@pytest.mark.asyncio
 class TestConfigValidation:
     def test_max_iterations_range(self):
         from pydantic import ValidationError

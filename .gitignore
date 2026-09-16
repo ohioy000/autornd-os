@@ -32,3 +32,8 @@ profiles/private*.yaml
 # Eval results are local measurement records; they reach the repo only by
 # deliberate commit (see docs/handover-review.md §13).
 evals/results/
+
+# Owner-side agent config, in the .env space: the settings name the coding
+# agent and which model drives it, which is the owner's choice and never the
+# repo's (the model-name boundary, HANDOVER §0). Untracked like .env itself.
+.aider*

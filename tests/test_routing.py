@@ -1,4 +1,10 @@
-"""Test OpenRouter client and model routing."""
+"""Test OpenRouter client and model routing.
+
+No `@pytest.mark.asyncio` anywhere in this file. pyproject sets
+`asyncio_mode = "auto"`, so async tests are collected without a mark — and a
+class-level mark over a mixed sync/async class (TestCostEstimation) made
+pytest warn once per sync test it held.
+"""
 
 import json
 from unittest.mock import AsyncMock, patch
@@ -60,7 +66,7 @@ class TestJsonExtraction:
         assert result["outer"]["inner"] == [1, 2, 3]
 
     def test_think_tags_stripped(self):
-        text = '<think>some reasoning</think>\n{"key": "value"}'
+        text = 'some reasoning\n{"key": "value"}'
         result = OpenRouterClient._extract_json(text)
         assert result == {"key": "value"}
 
@@ -73,7 +79,6 @@ class TestJsonExtraction:
             OpenRouterClient._extract_json("")
 
 
-@pytest.mark.asyncio
 class TestCostEstimation:
     """Rates come from the provider catalogue, never from a table in this repo —
     AutoRnD hardcodes no models, so it cannot hardcode their prices either."""
@@ -120,7 +125,6 @@ class TestCostEstimation:
         )
 
 
-@pytest.mark.asyncio
 class TestCheckModels:
     @staticmethod
     def _mock_response(data):
@@ -173,8 +177,24 @@ class TestCheckModels:
         assert status["triage"]["available"] is True
         assert status["engineering"]["available"] is True
 
-    async def test_marks_missing_model_unavailable(self):
-        resp = self._mock_response({"data": [{"id": settings.model_triage}]})
+    async def test_marks_missing_model_unavailable(self, monkeypatch):
+        """A configured model absent from the catalogue reads unavailable.
+
+        This used to build its catalogue from `settings.model_triage` alone and
+        assert every other tier False — which silently assumed the tier ids are
+        pairwise distinct. Nothing requires that: config permits one model to
+        serve several tiers, and where two do, a catalogue "holding only triage"
+        also holds the second tier's id, and the code correctly reports it
+        available. The assertion failed live against correct code, so the test's
+        premise was the bug, written down (convention 17). The tiers are pinned
+        to distinct dummies now, so the test simulates the condition it watches
+        — some configured ids present, the rest absent — whatever the local
+        `.env` names.
+        """
+        for tier in ("triage", "engineering", "architecture",
+                     "escalation", "research", "search"):
+            monkeypatch.setattr(settings, f"model_{tier}", f"vendor/{tier}")
+        resp = self._mock_response({"data": [{"id": "vendor/triage"}]})
         mock_client = self._mock_client(resp)
 
         with patch("autornd.routing.openrouter.httpx.AsyncClient", return_value=mock_client):
@@ -249,7 +269,6 @@ class TestCheckModels:
         assert status["research"]["available"] is False
 
 
-@pytest.mark.asyncio
 class TestSchemaRetry:
     """Regression: a response that parsed as JSON but did not match the verdict
     schema was raised straight to the caller with no retry, failing a whole
@@ -360,7 +379,6 @@ class TestSchemaRetry:
         assert "JSON parse failed" not in text
 
 
-@pytest.mark.asyncio
 class TestEmptyReplyDiagnostics:
     """An empty reply used to read only as "model returned no text", which hides
     the common cause: a reasoning model spending its whole token budget on
@@ -431,7 +449,7 @@ class TestJsonExtraction:
             "summary": 'a "quoted" word'}
 
     def test_a_reasoning_block_is_stripped(self):
-        assert self._extract('<think>weighing it up</think>\n{"risk": "low"}') == {
+        assert self._extract('weighing it up\n{"risk": "low"}') == {
             "risk": "low"}
 
     def test_genuinely_broken_json_still_raises(self):
@@ -518,7 +536,6 @@ class TestAccounting:
         assert c.calls == 50
 
 
-@pytest.mark.asyncio
 class TestResearchIsBilled:
     """The regression that started this: a run whose only model call is a
     research lookup reported $0.0000, because research calls `client.chat`
@@ -553,7 +570,6 @@ class TestResearchIsBilled:
         assert "search" in client.spend_by_function
 
 
-@pytest.mark.asyncio
 class TestRunnerReadsTheClient:
     async def test_total_cost_comes_from_the_client(self):
         from autornd.graph.adapter import PhaseRunner
@@ -608,7 +624,6 @@ class TestIndependentTier:
         assert c.independent_model() is None
 
 
-@pytest.mark.asyncio
 class TestIndependentPassSkips:
     async def test_the_phase_skips_rather_than_faking_independence(self, monkeypatch):
         """When the only available model is the one under review, the pass
@@ -661,7 +676,6 @@ class TestProviderVisibility:
         assert c.providers_by_function == {}
 
 
-@pytest.mark.asyncio
 class TestProviderPinning:
     """Reproducibility and availability are different goals. Unset, the provider
     decides and a run may be served by anyone; set, a run is repeatable."""

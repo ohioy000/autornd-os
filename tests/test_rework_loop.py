@@ -2,7 +2,6 @@
 
 **The exhibit.** Measured §15.1: three of four traces ended `blocked` at review,
 n=1 each, with the findings recorded and nothing downstream able to read them.
-The loop had been fixed; the work still died, one phase later.
 
 Two channels were silent and one path did not exist:
 
@@ -15,6 +14,12 @@ Two channels were silent and one path did not exist:
 
 None of this is a convergence mechanism. It moves recorded fields to the place
 that reads them, and gives a gate somewhere to route.
+
+No `@pytest.mark.asyncio` anywhere in this file. pyproject sets
+`asyncio_mode = "auto"`, so async tests are collected without a mark — and a
+class-level mark over a mixed sync/async class (TestValidateEvidenceReaches...)
+made pytest warn once per sync test it held: the two warnings were the sync
+renderer tests inheriting a mark meant for the async tests beside them.
 """
 
 from __future__ import annotations
@@ -24,7 +29,6 @@ import pytest
 from tests.test_graph import BASE, IMPL, SETTINGS, _run
 
 
-@pytest.mark.asyncio
 class TestValidateEvidenceReachesTheNextAttempt:
     async def test_every_failing_criterion_not_one_at_a_time(self):
         """The bug this is named for: one criterion per round, the rest unread."""
@@ -96,7 +100,6 @@ class TestReviewFindingsReachTheNextAttempt:
         assert render_review_findings([{"severity": "low"}]) == ""
 
 
-@pytest.mark.asyncio
 class TestTheReworkLoopIsBoundedAndRoutes:
     async def test_a_blocked_review_reworks_rather_than_ending(self):
         state, runner = await _run({
