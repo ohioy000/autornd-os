@@ -1,0 +1,80 @@
+{
+  "command_id": "ARCH-20260919-008",
+  "status": "BLOCKED",
+  "executed": "2026-09-19",
+  "head_before": "46ba8eb",
+  "head_after": "70d0933",
+  "branch": "arch/20260919-008-notebook-b016-section-27",
+  "commits": ["a3192bf", "587494b", "70d0933"],
+  "files_changed": [".orchestration/commands/ARCH-20260919-008.json", ".orchestration/commands/ARCH-20260919-009.json", ".orchestration/commands/ARCH-20260919-010.json"],
+  "status_reason": "BLOCKED by the command's own instruction. Constraint: 'verify four facts against the code ... If any reads differently than the ruling above, STOP and report — the ruling waits for the reading.' Fact (b) reads differently. Nothing was written to docs/handover-review.md or HANDOVER.md; the only commits are the three command-file transports.",
+  "preconditions_confirmed": [
+    {"question": "Is §26 currently the last numbered section and §27 free?", "answer": "YES. grep '^## 2[4-9]' returns §24 at line 5311, §25 at 5924, §26 at 6020, and nothing higher. grep -c '^## 27' returns 0. The number the pre-registration cites is available."}
+  ],
+  "verification_readings": [
+    {
+      "fact": "(a) executor semantics of recovery_loop's on_exhausted_status: escalated versus review_rework_loop's on_exhausted: escalation",
+      "reads": "AS RULED.",
+      "citation": "autornd/graph/executor.py:292-297",
+      "detail": "on_exhausted_status calls state.end(status, \"'<loop>' did not converge within N iterations\") and returns False — the run ends there, terminal. on_exhausted calls await self._run_from(node.on_exhausted, state) — control hands off to the named node's sub-graph. spec.py:381-384 rejects a loop that sets both. So recovery_loop ends `escalated` and review_rework_loop routes into `escalation`, exactly as the ruling states."
+    },
+    {
+      "fact": "(c) no graph-level bound on escalation↔recovery re-entry beyond per-loop iteration bounds",
+      "reads": "AS RULED — and the unboundedness the ruling predicts is confirmed mechanically.",
+      "citation": "autornd/graph/executor.py:299-323 (_run_from) and 276-277 (_run_loop)",
+      "detail": "_run_from iterates self.spec.handoff_subgraph(start_id) with no depth counter, no visited set and no budget of its own. _run_loop opens `for attempt in range(1, budget + 1)` on every call, so each fresh entry restarts the counter at 1. A routing gate inside recovery_loop targeting escalation would therefore give escalation → recoverable → recovery_loop → gate → escalation with a full iteration budget each cycle and nothing to stop it. The ruling's rationale is correct as written."
+    },
+    {
+      "fact": "(d) per-iteration paid-call shape of a blocked_on refusal inside recovery_loop / review_rework_loop",
+      "reads": "AS RULED in substance; stated precisely here because the ruling does not enumerate it.",
+      "citation": "workflows/engineering-rnd.yaml body lists; when-clause at workflows/engineering-rnd.yaml:110",
+      "detail": "The shared body is [implement, domain_review, coverage, consistency, validate, judges, rework_review, review_fold]. Paid (kind: ai): implement, domain_review, validate, rework_review — four per iteration, with domain_review gated on `when: implement.green == true`, so three when the implementation is red. Free (kind: check): coverage, consistency, judges, review_fold. The free checks pre-empt nothing on this path, because no gate on it consumes their result to route — they feed the judges fold, which is the loop's `until` condition, not a router. So a refusal inside these loops costs three or four paid calls per iteration up to the loop bound, against zero extra on the build path where blocked_gate short-circuits before domain_review."
+    },
+    {
+      "fact": "(b) the per-iteration trace records implement.blocked_on entries in both loops",
+      "reads": "READS DIFFERENTLY. This is the block.",
+      "citation": "autornd/graph/executor.py:28-42 (StepRecord); autornd/graph/adapter.py:264-289 (_blocked_on_unmet); autornd/graph/adapter.py:358,372-382 (_phase_validate)",
+      "detail": "Three corrections to the ruling's sentence. FIRST, the trace records no verdict payload at all: StepRecord's fields are node_id, kind, iteration, skipped, reason, seconds — no blocked_on, in any loop, on any path. What carries per-iteration blocked_on is the failure_log, which is a different artifact and is read by the escalation autopsy prompt (autornd/engine/phases.py:987-1008), not by the trace. SECOND, the failure_log has two write sites and they are not equivalent. _blocked_on_unmet (adapter.py:264-289) writes an entry whenever the check fails, and that node exists only in build_loop's body. _phase_validate (adapter.py:372-382) writes an entry carrying list(getattr(implement, 'blocked_on', None) or []), and validate is in all three bodies — but that write is guarded by `if not verdict.green or not implement.green`. THIRD, and this is the consequence that matters: an implement verdict that is green and also carries blocked_on entries records NOTHING inside recovery_loop or review_rework_loop. In build_loop that same verdict routes to escalation, because blocked_check depends only on [implement], carries no when-clause, and blocked_on_unmet (checks.py:219-224) never consults green. So the asymmetry is not merely 'no short-circuit, but the record still travels'. For the green-but-blocked case the record does not travel either, and the autopsy that the ruling relies on as the rework path's protection would be diagnosing from silence — which is the exact failure mode adapter.py:267-273 documents and fixes for the build path."
+    }
+  ],
+  "blockers": [
+    {
+      "what": "The ruling's clause 'the per-iteration trace records blocked_on entries either way' does not hold as written. It holds for red iterations, via the validate write site. It fails for a green-but-blocked implement inside recovery_loop or review_rework_loop, where no failure-log entry is written and no gate exists to catch it.",
+      "why_it_matters": "That clause is load-bearing in the ruling. It is what makes 'iteration bounds are the protection, and exhaustion ends escalated' an acceptable trade rather than a silent loss — the argument is that the refusal still reaches the autopsy. In the green-but-blocked case on those two loops it does not.",
+      "needs": "An advisor ruling on the corrected reading before §27.1 is transcribed. Writing the clause as the command states it would put a false claim into the lab notebook, which the notebook exists to prevent; writing my own correction into a ruled paste would be ruling, which is not mine."
+    }
+  ],
+  "questions_for_advisor": [
+    "Three ways forward, and the choice is yours. (1) Ratify the corrected reading: §27.1 states that blocked_on travels to the autopsy on the red path via validate's failure-log write, and that the green-but-blocked case on those two loops records nothing — naming it as accepted residual risk alongside the paid-call cost already named. (2) Treat the green-but-blocked gap as a defect and rule a fix, most cheaply by dropping the `if not verdict.green or not implement.green` guard's effect on the blocked_on field so the entry is written whenever blocked_on is non-empty — that is a behaviour change to what the autopsy sees, so it is yours, and it would want its own command. (3) Reject the reading if I have misread it; the citations are above and I will re-run them.",
+    "A correction I owe the record, since the earlier response overstated it. ARCH-20260919-002's response and PR #1 said the asymmetry was one 'no document stated'. That is wrong: workflows/engineering-rnd.yaml:84-88 carries the rationale in a comment block, and it says what this command's ruling says. I derived the node lists with yaml.safe_load, which strips comments, and did not read the file's prose. The asymmetry was deliberate and documented at the point of change; what HANDOVER lacked was any mention of it. §3.1's replacement sentence should say that, and the §27.1 deviation text should not imply the rationale was unrecorded.",
+    "Blueprint-section convention in §24 that the ruled content does not cover: every prior blueprint section carries the blueprint text under a 'verbatim, as received' heading, marking it as the advisor's words transcribed unaltered. §27.1 is explicitly a reconstruction from the landed record rather than a received artifact, so that heading would be false. Recommend '## 27. Blueprint 016 — The honest-refusal gate (reconstructed from the landed record)' with the reconstruction reason in the first line, which the command's own constraint already supplies. Confirm the heading before I transcribe."
+  ],
+  "deviations": [
+    {
+      "what": "The three command files were committed as transport on this branch rather than to main.",
+      "why": "main is protected and requires the five CI checks; a direct push is refused. The commands ride the branch that executes the first of them, as 002's command files did.",
+      "impact": "Commands 008, 009 and 010 are on arch/20260919-008-notebook-b016-section-27 as a3192bf, 587494b, 70d0933."
+    },
+    {
+      "what": "No IN_PROGRESS response was committed before the verification reads.",
+      "why": "The reads are read-only and the command directs a STOP on a differing reading before any content is written. Opening at IN_PROGRESS and immediately reopening at BLOCKED records the same fact once rather than twice. Nothing was written to the notebook or HANDOVER.",
+      "impact": "Recorded, per the protocol's departure rule."
+    }
+  ],
+  "tests_run": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "pass", "summary": "712 passed — suite green before the work, and no source file was touched."},
+    {"command": "git cat-file -t b58f195 && git cat-file -t b4e1b9b && git cat-file -t aac0324", "result": "pass", "summary": "All three resolve to commits."},
+    {"command": "grep -c '^## 27' docs/handover-review.md", "result": "pass", "summary": "0 — §27 is free."}
+  ],
+  "acceptance_criteria_met": [],
+  "results": {
+    "work_done": "Preconditions confirmed and all four verification facts read against the code. No transcription performed.",
+    "cost": "$0.00"
+  },
+  "public_safe_summary": "BLOCKED on the command's own stop condition. Three of the four facts to be verified read as ruled, including the unbounded-re-entry rationale, which is confirmed mechanically. The fourth does not: the trace records no verdict payload at all, and the per-iteration blocked_on record travels via the failure log, written either by a build-loop-only node or by validate under a green guard. The consequence is that a green-but-blocked implementation inside the recovery or rework loops records nothing and reaches no gate, so the autopsy the ruling relies on would diagnose from silence. §27 is not written; the ruling waits for the reading, as the command directs.",
+  "next_recommended_commands": [
+    "An advisor ruling on the corrected (b), after which 008 can be re-issued or resumed unchanged but for that clause.",
+    "ARCH-20260919-010 is independent of all of this and can proceed now.",
+    "ARCH-20260919-009 is gated on 008 merging, by its own first constraint, so it waits."
+  ]
+}
