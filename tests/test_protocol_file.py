@@ -75,3 +75,12 @@ def test_the_successor_prompt_exists_and_is_referenced():
     prompt = ROOT / "docs" / "successor-prompt.md"
     assert prompt.is_file(), "docs/successor-prompt.md is missing"
     assert "successor-prompt.md" in AGENTS.read_text(encoding="utf-8")
+
+
+def test_the_orchestration_channel_is_documented():
+    """A protocol that lives only in chat is the failure mode the notebook
+    warns about — and a guard that does not name both directories would pass
+    on a section that documented only half the channel (convention 22)."""
+    text = AGENTS.read_text(encoding="utf-8")
+    for path in (".orchestration/commands/", ".orchestration/responses/"):
+        assert path in text, f"AGENTS.md no longer documents {path}"

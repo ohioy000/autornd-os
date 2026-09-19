@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `4bfbbc5` · **Branch:** `main`
-**Tests:** 711 as of `4bfbbc5` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
+**Tests:** 712 as of `4bfbbc5` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      36 files, 711 tests (as of `4bfbbc5`)
+tests/                      36 files, 712 tests (as of `4bfbbc5`)
 ```
 
 ### 2.3 Key design patterns
@@ -628,7 +628,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (711 total, as of `4bfbbc5`)
+### 3.7 Test distribution (712 total, as of `4bfbbc5`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -647,7 +647,7 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_rework_loop.py | 17 | test_budget_stop_scoring.py | 5 |
 | test_auth.py | 16 | test_iteration_dissent.py | 5 |
 | test_green_resolution.py | 16 | test_handoff_scheduler.py | 4 |
-| test_protocol_file.py | 16 | test_workflow.py | 4 |
+| test_protocol_file.py | 17 | test_workflow.py | 4 |
 | test_all_judges_exit.py | 15 | test_docs.py | 3 |
 | test_schema_wiring.py | 15 | test_phase_timing.py | 3 |
 
@@ -693,7 +693,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 711/711 pass.** Everything below is a live-behaviour
+**No failing unit tests — 712/712 pass.** Everything below is a live-behaviour
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
@@ -1521,7 +1521,7 @@ repaired in 012, and it names `consistency` — a free deterministic numeric che
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 711 tests as of `4bfbbc5`, ~52 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 712 tests as of `4bfbbc5`, ~52 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \
