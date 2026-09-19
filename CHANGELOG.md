@@ -250,7 +250,30 @@ open defects are staged with their evidence and their unanswered questions, and
 deliberately left undesigned, because choosing between the options would change
 a cost model that was measured rather than assumed.
 
-The suite stands at **674 tests** as of `fff850a`, up from 85 at 0.1.0.
+**A feature commit deleted most of the state-of-record document, and the
+guards caught it.** `aac0324`, whose subject names only the gate routing it
+added, also removed 1,435 lines of `HANDOVER.md` without mentioning the
+deletion — the architecture, the state, the bug ledger, the conventions, the
+measured facts and the orientation, leaving the vision and the executive
+summary. The document that both the protocol file and the bootstrap prompt
+send a new agent to read no longer contained the sections they name. Five
+documentation guards in `tests/test_handover_truth.py` failed and the suite
+stayed red on the main branch for three days across two commits. Every one of
+the five failed because the claim it watches was **absent**, not because a
+number had drifted: no guard caught a stale count, and all five caught a
+missing document — which is a stronger result than the guards were written
+for. The same commit left a placeholder in the header where a commit sha
+belongs, a stamp that resolves to no object at all; that is the failure mode
+the convention against hand-stamped facts was written against, appearing in
+the document that states the convention. The text was restored from the last
+green commit and every guarded number re-derived forward against the tree
+rather than copied back, the suite returned to green, and restoring the
+document surfaced a wiring asymmetry in the flagship pipeline that no record
+had stated — the honest-refusal gate runs in the build loop and not in the
+rework or recovery loops, so work blocked after a review reaches no gate that
+can report it. That one is recorded and left for a ruling.
+
+The suite stands at **711 tests** as of `4bfbbc5`, up from 85 at 0.1.0.
 
 ## [0.1.0] — 2026-09-12
 
