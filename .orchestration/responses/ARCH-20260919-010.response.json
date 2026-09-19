@@ -1,0 +1,61 @@
+{
+  "command_id": "ARCH-20260919-010",
+  "status": "PARTIAL",
+  "executed": "2026-09-19",
+  "head_before": "2387296",
+  "head_after": "PENDING",
+  "branch": "arch/20260919-010-agents-map-row",
+  "commits": [],
+  "files_changed": [
+    "AGENTS.md",
+    ".orchestration/responses/ARCH-20260919-010.response.json"
+  ],
+  "results": {
+    "row_added": "| `.orchestration/` | **the command channel** — work out at `commands/<command_id>.json`, work back at `responses/<command_id>.response.json`. See *Orchestration* below. |",
+    "placement": "Last row of the existing table, after `profiles/*.yaml`.",
+    "diff_lines": 1,
+    "cost": "$0.00"
+  },
+  "deviations": [],
+  "blockers": [],
+  "questions_for_advisor": [],
+  "public_safe_summary": "AGENTS.md's 'Where things live' table now carries a .orchestration/ row naming both directions and pointing at the Orchestration section. One inserted line; suite green at 712. Closes the departure PR #3 recorded.",
+  "next_recommended_commands": [
+    "008 waits on an advisor ruling; 009 waits on 008."
+  ],
+  "status_reason": "Row landed, suite green. PARTIAL only until the PR's CI reports.",
+  "tests_run": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/test_protocol_file.py -q",
+      "result": "pass",
+      "summary": "17 passed."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "pass",
+      "summary": "712 passed, 0 failed."
+    },
+    {
+      "command": "git diff --stat AGENTS.md",
+      "result": "pass",
+      "summary": "1 file changed, 1 insertion — inside the 5-line cap."
+    }
+  ],
+  "acceptance_criteria_met": [
+    {
+      "criterion": "The 'Where things live' table contains a .orchestration/ row naming both directories.",
+      "met": true,
+      "evidence": "AGENTS.md:151."
+    },
+    {
+      "criterion": "tests/test_protocol_file.py green (17) and the full suite green (712).",
+      "met": true,
+      "evidence": "17 passed; 712 passed."
+    },
+    {
+      "criterion": "Response file committed.",
+      "met": true,
+      "evidence": "this file, opened at IN_PROGRESS first."
+    }
+  ]
+}

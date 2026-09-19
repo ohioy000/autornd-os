@@ -1,0 +1,86 @@
+{
+  "command_id": "ARCH-20260919-008",
+  "parent_id": "ARCH-20260919-001",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Land Blueprint 016 in the lab notebook as §27 — the ruled design with the loop-coverage ruling recorded — so the pre-registration's citation of §27 resolves and the paste-before-executing deviation is repaired before Part E runs; resolve HANDOVER §3.1's flagged sentence in the same change.",
+  "evidence": [
+    ".orchestration/responses/ARCH-20260919-001.response.json, questions_for_advisor #3: Blueprint 016 never pasted as §27; its three landed commits are b58f195, b4e1b9b, aac0324; docs/preregistration-b016-part-e.md cites '§27 (the blueprint, committed before execution)'; the notebook stops at §26",
+    "docs/preregistration-b016-part-e.md: 'the rationale lives in §27 (the blueprint, committed before execution) and will live in §27.2'",
+    "workflows/engineering-rnd.yaml, blocked_check comment block: 'It lives in build_loop's body ONLY. recovery_loop and review_rework_loop sit inside the escalation sub-graph — a routing gate inside them would re-enter that sub-graph with a fresh budget each time, which is an unbounded path. Their iteration bounds are the protection there, and exhaustion ends escalated, the honest terminal.'",
+    "HANDOVER.md §3.1 (restored at 32fe735): 'Whether that asymmetry is intended is loop wiring, which is a ruling, not an instrument repair — it is recorded here and flagged, not changed.'",
+    "AGENTS.md 'Where things live': the notebook holds every blueprint pasted verbatim before execution, each with its execution record; §0 is the blueprint protocol",
+    "actions run 60: main green at 46ba8eb, suite 712/712 (verified 2026-09-19)"
+  ],
+  "scope": {
+    "include": [
+      "docs/handover-review.md (append §27 only)",
+      "HANDOVER.md (one sentence in §3.1 — a declared knock-on of this ruling, not scope creep)",
+      ".orchestration/responses/ARCH-20260919-008.response.json (same branch)"
+    ],
+    "exclude": [
+      "autornd/**",
+      "tests/**",
+      "workflows/**",
+      "profiles/**",
+      "evals/**",
+      "docs/preregistration-b016-part-e.md",
+      "README.md",
+      "AGENTS.md",
+      "CHANGELOG.md",
+      ".github/**",
+      "pyproject.toml"
+    ]
+  },
+  "constraints": [
+    "§27 must be the number the pre-registration already cites. Confirm §26 is currently the last numbered section and §27 is free; if either reads differently, STOP and report rather than improvising.",
+    "Match the notebook's blueprint-section format as visible in §24 and prior blueprint sections. §27.1 is the blueprint; §27.2 is the execution record slot, per the prereg's own citation and the §n.2 convention.",
+    "Advisor-ruled §27.1 content — I author this; transcribe it into the notebook's register and fill only the bracketed items from the tree: (1) The problem, measured (§4.2 B13, §6.13): the risk gate zeroes lookups at low risk; the plan then writes success criteria demanding citable sources; nothing reconciles them and the implementer fabricates rather than refuses. Controlled contrast: the low-risk trace took 0 lookups and burned 6 iterations inventing citations before dying on the cost ceiling; the medium-risk trace took 1 lookup, cited the correct article, shipped in one iteration. (2) The ruled design, three parts: B1 verify_grounding (free deterministic citation-demand detection over plan.success_criteria after plan_ready; ONE bundled lookup at the medium-risk budget when demanded, USD 0 otherwise); B2 blocked_on (ImplementVerdict's ruled honest-refusal channel naming plan success criteria); B3 blocked_check + blocked_gate in build_loop's body after implement (free check blocked_on_unmet; the gate routes to escalation BEFORE any paid judge sees refused work). (3) The loop-coverage ruling (advisor, 2026-09-19): the gates live in build_loop's body ONLY — INTENDED and ratified; rationale as the workflow file records it (unbounded escalation-sub-graph re-entry if a routing gate sat inside those loops); iteration bounds are the protection; exhaustion ends escalated — rework via the paid autopsy that reads the failure log, recovery via terminal status; the per-iteration trace records blocked_on entries either way; residual cost named (paid calls up to the loop bound, versus zero extra on the build path); symmetric wiring considered and REJECTED UNMEASURED (convention 14, n=0 in the record); reopening trigger: any committed trace showing a blocked_on refusal arising inside recovery_loop or review_rework_loop reopens the short-circuit design question (e.g. a terminal-blocked gate variant) with evidence. (4) The deviation, recorded: paste-before-executing was skipped — three commits landed before this section existed: b58f195 [B1], b4e1b9b [B2], aac0324 [B3] — the executor confirms the per-commit attribution from the diffs while transcribing and corrects the bracketed labels if they read differently; the shas are the facts, the labels are conveniences. aac0324 additionally truncated HANDOVER.md (runs 52-53 red; restored at 4bfbbc5; the CHANGELOG records the incident). This section is reconstructed from the landed record — §4.3, the workflow comments, the pre-registration — because the advisor chat that ruled it is not a repo artifact; this paste is the advisor's ratification of the design AS LANDED. Provenance: §26's staging ruling (B13 now, B14 deferred).",
+    "§27.2 opens as the execution record: Part E as pre-registered — pointer to docs/preregistration-b016-part-e.md, E1 and E2 one line each with their n, status 'registered, not executed; execution commanded as ARCH-20260919-009, ordered E2 then E1 (convention 16), to run after this section lands'. Results, departures and wrong predictions are appended there when it runs.",
+    "HANDOVER §3.1: replace the flagged sentence with the resolution — the asymmetry is intended, advisor-ruled 2026-09-19; the rationale lives in the workflow file's own comment and in §27.1; the reopening trigger stands. One sentence swap; no other HANDOVER edit; the 712 stamps are untouched.",
+    "While transcribing, verify four facts against the code and cite paths:lines in the response file: (a) the executor semantics of recovery_loop's on_exhausted_status: escalated versus review_rework_loop's on_exhausted: escalation; (b) that the per-iteration trace records implement.blocked_on entries in both loops; (c) that no graph-level bound exists on escalation↔recovery re-entry beyond per-loop iteration bounds; (d) the exact per-iteration paid-call shape of a blocked_on refusal inside those loops (which paid nodes run, and what the free checks pre-empt). If any reads differently than the ruling above, STOP and report — the ruling waits for the reading.",
+    "Every sha cited must resolve (git cat-file -t). Stamps follow convention 24. The lab-notebook model-name exemption applies (tests/test_docs.py) but name none unless the precedent sections do.",
+    "Suite green before and after (712 expected); merge with a merge commit, not squash; prose commit naming the evidence; keep §27 under ~150 lines; this command is not HEAD-pinned, so the IN_PROGRESS response rule applies normally."
+  ],
+  "acceptance_criteria": [
+    "docs/handover-review.md contains §27 with §27.1 (ruled blueprint, loop ruling, recorded deviation, three enumerated commits) and §27.2 (Part E pointer, pending).",
+    "The pre-registration's citation of §27 resolves to real content.",
+    "b58f195, b4e1b9b and aac0324 each appear with a resolvable sha and one line on what they landed.",
+    "The paste-before-executing deviation is recorded in the notebook itself, including the reconstruction-from-the-landed-reason.",
+    "HANDOVER §3.1's 'flagged, not changed' sentence is gone and the resolution sentence is in; suite green (712).",
+    "Response file carries the four verification citations (paths:lines)."
+  ],
+  "verification": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "0 failures, 712 collected — the append and the one-sentence HANDOVER edit changed no guarded count."
+    },
+    {
+      "command": "grep -n '^## 27' docs/handover-review.md",
+      "expected": "Exactly one hit: §27's heading."
+    },
+    {
+      "command": "grep -n 'flagged, not changed' HANDOVER.md",
+      "expected": "0 hits."
+    },
+    {
+      "command": "git cat-file -t b58f195 && git cat-file -t b4e1b9b && git cat-file -t aac0324",
+      "expected": "All three resolve to commits."
+    }
+  ],
+  "rollback": "Revert the merge commit or close the PR before merge.",
+  "deliverable": {
+    "branch": "arch/20260919-008-notebook-b016-section-27",
+    "pr": true,
+    "commit_style": "conventional"
+  },
+  "assumptions": [
+    "§27 is free in the notebook's numbering, as the pre-registration's citation implies.",
+    "The notebook tolerates a retroactive paste with the deviation recorded — it is an append-mostly lab record.",
+    "The three shas and their attribution in 001's response are authoritative; the executor corrects labels from the diffs if needed."
+  ],
+  "questions": [
+    "Confirm §26 is currently the last numbered section and §27 is free.",
+    "Report any blueprint-section convention visible in §24 that the ruled content above fails to cover."
+  ]
+}

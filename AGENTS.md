@@ -148,6 +148,7 @@ the agent proposes and edits, the owner executes the git loop.
 | `evals/results/` | local run output, gitignored |
 | `workflows/*.yaml` | the pipelines, as data |
 | `profiles/*.yaml` | vocabularies, roles and per-domain checks |
+| `.orchestration/` | **the command channel** — work out at `commands/<command_id>.json`, work back at `responses/<command_id>.response.json`. See *Orchestration* below. |
 
 **The shape of the record:** `HANDOVER.md` is the state; `docs/handover-review.md`
 is the evidence. A claim in the first should be traceable to a run in the second.
