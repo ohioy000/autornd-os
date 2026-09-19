@@ -1,0 +1,46 @@
+{
+  "command_id": "ARCH-20260919-001",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Establish ground truth for the red suite on main before any repair: at HEAD, run the suite read-only, capture the exact failing tests, the collected count, and the status of the 'cafebabe' stamp; change nothing; commit a response file.",
+  "evidence": [
+    "actions runs 52-53: test (3.12) and test (3.13) failed at 3159b68 and aac0324, test (3.11) cancelled, editable-install and docker green; run 51 green at b4e1b9b — the break entered at aac0324 (prior-session API reading; no push since, so no newer run exists)",
+    "commit:aac0324 deleted ~1,435 lines of HANDOVER.md (@@ -120,1437 +120,4 @@) whose claims tests/test_handover_truth.py:66-140 still guards",
+    "HANDOVER.md@HEAD lines 4-5, verified 2026-09-19: 'Tests: 711 as of cafebabe' and 'HEAD: 641da5a' — a placeholder sha and a stale stamp (convention 24: a fact about the repo is generated or guarded, never hand-stamped)",
+    "verified 2026-09-19: tree sha 3159b686aed6f9e5c1677d03fe3fda5ec25de253 (= HEAD), HANDOVER.md blob 6,371 bytes, .orchestration/ absent from the tree, pushed_at 2026-09-16T07:27:16Z",
+    "AGENTS.md working rules: run the suite before anything; counts are re-derived, never trusted"
+  ],
+  "scope": {
+    "include": ["tests/** (read-only)", "HANDOVER.md (read-only)", "README.md (read-only)", "workflows/** (read-only)"],
+    "exclude": ["** — no file may be modified by this command"]
+  },
+  "constraints": [
+    "Read-only diagnostic: modify no file, branch, or setting.",
+    "HEAD guard: git rev-parse --short HEAD must print 3159b68 before anything runs. If it does not, stop and commit a response file reporting the drift — this command's evidence basis is the 2026-09-19 session and must not execute against a moved tree.",
+    "Use the documented invocation: .venv/bin/python3 -m pytest tests/ -q (AGENTS.md working rules; about 27 s, free).",
+    "Pre-registered falsifiable prediction: failures are exactly these five, all in tests/test_handover_truth.py — test_node_counts_match_the_workflow_files, test_the_stated_test_total_is_the_real_one, test_the_pass_count_is_the_real_one, test_every_test_file_count_is_right, test_the_workflow_facade_is_still_described_as_on_the_request_path. Any failure outside that file (e.g. tests/test_blocked_on.py) means stop and report before ARCH-20260919-002 starts.",
+    "Also record: git cat-file -t cafebabe (expected: fatal — the header stamp is a placeholder, not a commit)."
+  ],
+  "acceptance_criteria": [
+    "Verbatim failing-test list (file::test with assert messages) captured.",
+    "Collected count from --collect-only -q recorded (expected 711 — confirm, do not assume).",
+    "Explicit statement of whether the failure set matches the pre-registered prediction.",
+    "Response file committed at .orchestration/responses/ARCH-20260919-001.response.json (naming ruled by the advisor this session; codified by ARCH-20260919-007)."
+  ],
+  "verification": [
+    {"command": "git rev-parse --short HEAD", "expected": "3159b68 — else abort and report drift."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Suite fails; verbatim failing list captured; predicted to be the five handover guards."},
+    {"command": ".venv/bin/python3 -m pytest tests/ --collect-only -q | tail -2", "expected": "711 collected (confirm or correct)."},
+    {"command": "git cat-file -t cafebabe", "expected": "fatal: not a valid object name — proves the stamp is hand-typed."}
+  ],
+  "rollback": "Not applicable — no changes made.",
+  "deliverable": {"branch": null, "pr": false, "commit_style": "none — response file only"},
+  "assumptions": [
+    "The venv builds from pyproject.toml (the CI install step succeeds on all three Pythons).",
+    "711 is the true collected count at HEAD — to be confirmed by this command, not assumed."
+  ],
+  "questions": [
+    "If any failure appears outside tests/test_handover_truth.py, report the full output before any edit — convention 17 (which of test or code is wrong) must be answered first."
+  ]
+}
