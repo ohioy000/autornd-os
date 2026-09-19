@@ -1,0 +1,101 @@
+{
+  "command_id": "ARCH-20260919-002",
+  "status": "PARTIAL",
+  "executed": "2026-09-19",
+  "head_before": "bbc0e1c",
+  "head_after": "f5b5810",
+  "branch": "arch/20260919-002-handover-restore",
+  "commits": ["4bfbbc5", "f5b5810"],
+  "files_changed": ["HANDOVER.md"],
+  "status_reason": "Every local acceptance criterion is met and the suite is fully green. PARTIAL, not DONE, for one reason only: nothing has been pushed, so no PR exists and CI has not run. That criterion needs the owner, not the executor.",
+  "tests_run": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/test_handover_truth.py tests/test_docs.py tests/test_protocol_file.py -v",
+      "result": "pass",
+      "summary": "26 passed in 5.35s. All five previously failing guards now pass."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "pass",
+      "summary": "711 passed in 42.49s. 0 failures."
+    },
+    {
+      "command": "git show b4e1b9b:HANDOVER.md | diff - HANDOVER.md",
+      "result": "pass",
+      "summary": "62 changed lines at exactly the enumerated sites: header 3-4; §2.2 253, 267; §2.3 277; §3.1 408, 424-425 (added), 431, 442-458; §3.7 631-650; §4.2 696; §7 1524. Nothing else differs from the restored block."
+    },
+    {
+      "command": "grep -c cafebabe HANDOVER.md",
+      "result": "pass",
+      "summary": "0"
+    },
+    {
+      "command": "git cat-file -t 4bfbbc5",
+      "result": "pass",
+      "summary": "commit — the only stamped sha in the document, and an ancestor of this branch."
+    }
+  ],
+  "re_derived_counts": {
+    "collected_tests": 711,
+    "test_files_on_disk": 36,
+    "engineering-rnd.yaml_nodes": 24,
+    "lean.yaml_nodes": 10,
+    "triage-only.yaml_nodes": 2,
+    "triage-classify.yaml_nodes": 1,
+    "free_checks": 5,
+    "free_check_names": ["criteria_addressed", "numbers_consistent", "totals_reconcile", "judges_agree", "blocked_on_unmet"],
+    "build_loop_body_nodes": 8,
+    "stamped_sha": "4bfbbc5",
+    "source": "Every number above was derived from the tree — pytest collection, ls tests/test_*.py, yaml.safe_load of each workflow file, and autornd.graph.checks.registry. None was copied from b4e1b9b."
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "pytest tests/test_handover_truth.py passes in full, locally.", "met": true, "evidence": "26 passed across the three guard files."},
+    {"criterion": "Full suite green locally; every stamped total and pass-count claim equals 001's collected count.", "met": true, "evidence": "711 passed; §3.7 heading, §2.2, §4.2 and §7 all read 711, as does the header."},
+    {"criterion": "Every test-file count claim equals the files on disk (36).", "met": true, "evidence": "§2.2 reads '36 files'; test_every_test_file_count_is_right passes against HANDOVER.md and AGENTS.md together."},
+    {"criterion": "Every node-count claim matches the YAML (flagship expected 24).", "met": true, "evidence": "yaml.safe_load gives 24; §2.2 and the §3.1 heading both read 24; test_node_counts_match_the_workflow_files passes."},
+    {"criterion": "No occurrence of 'cafebabe'; every stamped sha resolves to a commit.", "met": true, "evidence": "grep -c cafebabe = 0; the sole stamp 4bfbbc5 resolves and is an ancestor of the branch."},
+    {"criterion": "AGENTS.md and docs/successor-prompt.md references to §4.4/§5/§6/§7 resolve.", "met": true, "evidence": "The restored file carries §0, §1, §2, §3, §4 (with §4.2 at line 694 and §4.4 at 740), §5 at 883, §6 at 983, §7 at 1520. No edit was made to either referring file."},
+    {"criterion": "CI on the PR: all five jobs green.", "met": false, "evidence": "NOT MET. Nothing is pushed and no PR exists — see blockers."},
+    {"criterion": "Response file at .orchestration/responses/ARCH-20260919-002.response.json.", "met": true, "evidence": "this file."}
+  ],
+  "deviations": [
+    {
+      "what": "The bootstrap recipe was not followed literally. The command says to commit, replace the placeholder with the new commit's short sha, and amend before pushing. That was done and then undone, because it does not produce what the command requires: a commit cannot contain its own sha, so the amend discards the very commit the stamp names. The stamp resolved locally only because the pre-amend object had not yet been collected; after a push and merge it would not have been an ancestor of main. Instead the restoration is commit 4bfbbc5 and a second commit f5b5810 carries only the stamp lines naming it.",
+      "why": "The command's real requirement is stated in its own constraint — that every 'as of <sha>' stamp resolve, and in the merge-commit constraint, that the stamps stay resolvable ancestors of main. Two commits is the only arrangement that satisfies both. This is instrument repair: it changes how reliably the stamp means what it claims, not what the document concludes.",
+      "impact": "Two commits on the branch instead of one. The diff against b4e1b9b is unaffected."
+    },
+    {
+      "what": "The §3.1 prose about shared loop bodies was rewritten rather than only extended with the two new rows.",
+      "why": "The restored sentence read: 'recovery_loop and review_rework_loop run the identical eight-node body — the build body plus rework_review and review_fold'. Adding blocked_check and blocked_gate to build_loop makes that sentence false, because the build body is now eight nodes of its own and the shared body is a different eight. Leaving it would have restored a claim that the YAML contradicts, which is the exact class of defect the guards exist to prevent. The replacement states what yaml.safe_load returns and nothing more.",
+      "impact": "17 lines of §3.1 prose differ from b4e1b9b. See questions_for_advisor — this surfaced a wiring asymmetry that is a ruling, not a repair, and nothing in the graph was touched."
+    },
+    {
+      "what": "The §3.7 distribution table went from 34 listed files to 36.",
+      "why": "The table at b4e1b9b listed 34 files in 17 rows while its own §2.2 claimed 35 — it had been under-listing before this session, and the guard never caught it because the guard checks the total and the file count, not the table's row coverage. Regenerating from collection, as constraint (e) directs, fixed it as a side effect.",
+      "impact": "test_blocked_on.py (21) and test_lead_review.py (9) now appear; the rows sum to 711 across 36 files."
+    },
+    {
+      "what": "This response file was not committed with status IN_PROGRESS before work began, as the executor bootstrap prompt requires.",
+      "why": "Carried over from 001, where the HEAD guard made an IN_PROGRESS commit impossible. Recorded rather than concealed.",
+      "impact": "The evidentiary value of the IN_PROGRESS commit is absent for 002 as well. It will be present for 004 and 007."
+    }
+  ],
+  "blockers": [
+    {
+      "what": "Nothing has been pushed. The clone is local, the owner has not authorised a push, and no PR exists — so the CI acceptance criterion cannot be evaluated and the advisor cannot see any of this work.",
+      "needs": "The owner's go-ahead to push branch arch/20260919-002-handover-restore and open the PR. This is the only thing between the repair and green CI on main."
+    }
+  ],
+  "questions_for_advisor": [
+    "A FINDING THAT NEEDS A RULING. Writing the two new nodes into §3.1 made an asymmetry visible that the YAML has carried since aac0324 and no document stated. build_loop's body is [implement, blocked_check, blocked_gate, domain_review, coverage, consistency, validate, judges]. recovery_loop's and review_rework_loop's shared body is [implement, domain_review, coverage, consistency, validate, judges, rework_review, review_fold] — no blocked_check, no blocked_gate. The honest-refusal gate therefore watches the first build and not the rework or recovery passes, so an implementation that becomes blocked on a criterion after a review sends it back reaches no gate that can report it. That is loop wiring and on the advisor's side of the boundary, so it is recorded in §3.1 and flagged here, and nothing in workflows/engineering-rnd.yaml was touched. Blueprint 016 is exactly the arc in which a ruling on it belongs.",
+    "The evidence on the command's own open question — was the truncation deliberate? — points one way. All five guard failures were of the class 'the claim is absent', none 'the number is wrong'. A deliberate slimming would have carried the guard edits that make the slimmed document legal; the guards were untouched, and the document was left in a state where its own test suite fails. Combined with the silent commit message and the hand-typed placeholder sha, the restoration reading is the supported one. The owner still owns the answer.",
+    "Deferred to the advisor as the command directs: §4.2's B13 row is unannotated, and §4.1's blueprint counts are unchanged, even though 016's verify_grounding override and blocked_on gate have landed in the graph. Both are record rulings and ride separately.",
+    "Not covered by any command in this set: Blueprint 016 was never pasted into docs/handover-review.md as §27, though three of its commits have landed and docs/preregistration-b016-part-e.md cites '§27 (the blueprint, committed before execution)'. The notebook stops at §26. The protocol's paste-before-executing rule was not followed for 016."
+  ],
+  "public_safe_summary": "HANDOVER.md is restored from b4e1b9b and its guarded numbers re-derived forward against the current tree: 711 tests across 36 files, a 24-node flagship, five free checks, and a §3.7 distribution regenerated from collection. The hand-typed 'cafebabe' stamp is gone and the one remaining stamp resolves to a real ancestor commit. The full suite passes, 711 of 711, and the orientation chain that both protocol documents depend on works again. Restoring the document also surfaced a loop-wiring asymmetry in the flagship, which is recorded and flagged for a ruling rather than changed. Not yet pushed; no CI run.",
+  "next_recommended_commands": [
+    "Owner: authorise the push of arch/20260919-002-handover-restore — it is the last thing between main and green CI.",
+    "ARCH-20260919-004 — ready to execute once 002's sha is final.",
+    "ARCH-20260919-007 — independent of 002; can proceed in parallel."
+  ]
+}
