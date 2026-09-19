@@ -1,0 +1,55 @@
+{
+  "command_id": "ARCH-20260919-009",
+  "parent_id": "ARCH-20260919-008",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Execute Blueprint 016 Part E exactly as pre-registered — E2 then E1, per the ruled order — report every pre-registered prediction as it read, commit the traces, and append the §27.2 execution record.",
+  "evidence": [
+    "docs/preregistration-b016-part-e.md — committed on main before any spend, with E1 and E2 commands verbatim, pins env-prefixed (G-3: nothing standing) and caps set (E1: --max-spend 0.75, --max-spend-sweep 1.50; E2: 0.05 and 0.50 per sector invocation)",
+    ".orchestration/responses/ARCH-20260919-001.response.json — tests/test_blocked_on.py passed in full at 3159b68: 016's landed code is verified before its live validation",
+    "HANDOVER.md §2.2 — E1's path is build-only (verify_grounding, blocked_check, blocked_gate, all landed and guarded); triage-only.yaml is 2 nodes — E2 runs no loops at all. Neither part touches recovery_loop or review_rework_loop, so ARCH-20260919-008's loop ruling does not gate this run.",
+    "HANDOVER.md §4.2 B13 and §6.13 — the measured failure Part E validates the fix of",
+    "AGENTS.md working rules and conventions 7 (wrong predictions reported as wrong, never quietly adjusted), 15 (a measured claim carries its n), 16 (cheap arms first — basis for the E2-first order), 18 (an instrument reading is a reading, not a diagnosis)"
+  ],
+  "scope": {
+    "include": [
+      "docs/traces/b16-e1-marketing-claims.jsonl (new, committed)",
+      "docs/traces/b16-e2-lowrisk-<sector>.jsonl (new, one per selected sector, committed)",
+      "docs/handover-review.md (§27.2 append only)",
+      ".orchestration/responses/ARCH-20260919-009.response.json (same branch)"
+    ],
+    "exclude": ["autornd/**", "tests/**", "workflows/**", "profiles/**", "evals/scenarios/**", "docs/preregistration-b016-part-e.md", "HANDOVER.md", "README.md", "AGENTS.md", "CHANGELOG.md"]
+  },
+  "constraints": [
+    "Do not start until ARCH-20260919-008's merge is on main — the pre-registration cites §27 as where the rationale lives, and paste precedes execution. That ordering is the point of 008.",
+    "Execute the two commands VERBATIM as written in docs/preregistration-b016-part-e.md, filling only the sector placeholder in E2's template from its own free pre-flight selection: grep -l \"risk: low\" evals/scenarios/wide/*.yaml (predicted exactly three; a different count is a finding, recorded, not absorbed — the run proceeds on whatever the rule selects). If any prereg command is unexecutable as written, that is a BLOCKED report, not an improvised edit — the prereg is a pre-registered artifact and is not touched.",
+    "Ruled order: E2 first, then E1 (convention 16 — the USD 0.50-ceiling arm before the USD 1.50 one; they share no state: isolated stores, different scenarios and workflows). Record the order as ruled here, not as a prereg deviation.",
+    "Pins are exactly the prereg's string, env-prefixed per invocation. No .env edit (G-3). Total exposure across all invocations is bounded by the caps at about USD 2.00.",
+    "Report each pre-registered prediction pass/fail as the trace reads, with n (conventions 7 and 15). A timeout, zero score, refused lookup or 403 is recorded as an apparatus reading first (convention 18); a re-run to rule the apparatus out is a logged departure carrying its cost, not a silent absorb.",
+    "Commit the traces to the prereg's named paths — the notebook's citation surface. The JSONL header must name the pinned servings and caps so the record stays priceable later.",
+    "Append §27.2's execution record: what ran, each prediction's outcome with n, spend and calls by tier, departures, and what execution found that the pre-registration missed.",
+    "Do NOT annotate HANDOVER's B13 row, §4.1 blueprint counts, or §6 facts in this command — those record updates are the advisor's next ruling on this evidence, and they may close B13 or reopen it; that is not assumed here.",
+    "Suite green before and after (712); merge with a merge commit; response file on the same branch."
+  ],
+  "acceptance_criteria": [
+    "Both parts executed per the pre-registration with caps respected and pins as specified.",
+    "Every prediction reported as it read — including any reported as wrong.",
+    "Traces committed at the named paths with configuration headers intact.",
+    "§27.2 execution record appended with outcomes, n, spend, departures.",
+    "Suite green; CI green on the PR; response file carrying results and any questions."
+  ],
+  "verification": [
+    {"command": "head -1 docs/traces/b16-e1-marketing-claims.jsonl", "expected": "Header names the tier-to-model map, the provider pins and the spend caps."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "0 failures, 712 collected — execution changed no code."},
+    {"command": "grep -n 'wrong' docs/handover-review.md | tail -5", "expected": "Any wrong prediction stated as wrong in §27.2, if any occurred."}
+  ],
+  "rollback": "Spend cannot be unspent; traces stand as measured and a bad run is reported, not reverted. One re-run per unit to rule out an apparatus fault is permitted as a recorded departure carrying its cost.",
+  "deliverable": {"branch": "arch/20260919-009-b016-part-e", "pr": true, "commit_style": "conventional"},
+  "assumptions": [
+    "The owner's committed pre-registration is the spend authorization; the owner may veto in-thread before execution starts.",
+    "The pinned servings remain available; the studio profile and gen_marketing_claims scenario are as committed."
+  ],
+  "questions": [
+    "None — report findings as they read."
+  ]
+}
