@@ -1,0 +1,16 @@
+{
+  "command_id": "ARCH-20260919-004",
+  "status": "IN_PROGRESS",
+  "executed": "2026-09-19",
+  "head_before": "bb5c488",
+  "head_after": null,
+  "branch": "arch/20260919-004-incident-record",
+  "commits": [],
+  "files_changed": [],
+  "results": {},
+  "deviations": [],
+  "blockers": [],
+  "questions_for_advisor": [],
+  "public_safe_summary": "Started. CHANGELOG.md read; the incident entry is being written. This file is committed before the work so the record shows the work had not started when the response was opened.",
+  "next_recommended_commands": []
+}
