@@ -1,13 +1,18 @@
 {
   "command_id": "ARCH-20260919-002",
-  "status": "PARTIAL",
+  "status": "DONE",
   "executed": "2026-09-19",
   "head_before": "bbc0e1c",
   "head_after": "f5b5810",
   "branch": "arch/20260919-002-handover-restore",
-  "commits": ["4bfbbc5", "f5b5810"],
-  "files_changed": ["HANDOVER.md"],
-  "status_reason": "Every local acceptance criterion is met and the suite is fully green. PARTIAL, not DONE, for one reason only: nothing has been pushed, so no PR exists and CI has not run. That criterion needs the owner, not the executor.",
+  "commits": [
+    "4bfbbc5",
+    "f5b5810"
+  ],
+  "files_changed": [
+    "HANDOVER.md"
+  ],
+  "status_reason": "All acceptance criteria met, including CI. Pushed as PR #1; all five jobs green on the merge-head.",
   "tests_run": [
     {
       "command": ".venv/bin/python3 -m pytest tests/test_handover_truth.py tests/test_docs.py tests/test_protocol_file.py -v",
@@ -33,6 +38,11 @@
       "command": "git cat-file -t 4bfbbc5",
       "result": "pass",
       "summary": "commit — the only stamped sha in the document, and an ancestor of this branch."
+    },
+    {
+      "command": "gh pr checks 1",
+      "result": "pass",
+      "summary": "All five CI jobs green on PR #1."
     }
   ],
   "re_derived_counts": {
@@ -43,20 +53,58 @@
     "triage-only.yaml_nodes": 2,
     "triage-classify.yaml_nodes": 1,
     "free_checks": 5,
-    "free_check_names": ["criteria_addressed", "numbers_consistent", "totals_reconcile", "judges_agree", "blocked_on_unmet"],
+    "free_check_names": [
+      "criteria_addressed",
+      "numbers_consistent",
+      "totals_reconcile",
+      "judges_agree",
+      "blocked_on_unmet"
+    ],
     "build_loop_body_nodes": 8,
     "stamped_sha": "4bfbbc5",
     "source": "Every number above was derived from the tree — pytest collection, ls tests/test_*.py, yaml.safe_load of each workflow file, and autornd.graph.checks.registry. None was copied from b4e1b9b."
   },
   "acceptance_criteria_met": [
-    {"criterion": "pytest tests/test_handover_truth.py passes in full, locally.", "met": true, "evidence": "26 passed across the three guard files."},
-    {"criterion": "Full suite green locally; every stamped total and pass-count claim equals 001's collected count.", "met": true, "evidence": "711 passed; §3.7 heading, §2.2, §4.2 and §7 all read 711, as does the header."},
-    {"criterion": "Every test-file count claim equals the files on disk (36).", "met": true, "evidence": "§2.2 reads '36 files'; test_every_test_file_count_is_right passes against HANDOVER.md and AGENTS.md together."},
-    {"criterion": "Every node-count claim matches the YAML (flagship expected 24).", "met": true, "evidence": "yaml.safe_load gives 24; §2.2 and the §3.1 heading both read 24; test_node_counts_match_the_workflow_files passes."},
-    {"criterion": "No occurrence of 'cafebabe'; every stamped sha resolves to a commit.", "met": true, "evidence": "grep -c cafebabe = 0; the sole stamp 4bfbbc5 resolves and is an ancestor of the branch."},
-    {"criterion": "AGENTS.md and docs/successor-prompt.md references to §4.4/§5/§6/§7 resolve.", "met": true, "evidence": "The restored file carries §0, §1, §2, §3, §4 (with §4.2 at line 694 and §4.4 at 740), §5 at 883, §6 at 983, §7 at 1520. No edit was made to either referring file."},
-    {"criterion": "CI on the PR: all five jobs green.", "met": false, "evidence": "NOT MET. Nothing is pushed and no PR exists — see blockers."},
-    {"criterion": "Response file at .orchestration/responses/ARCH-20260919-002.response.json.", "met": true, "evidence": "this file."}
+    {
+      "criterion": "pytest tests/test_handover_truth.py passes in full, locally.",
+      "met": true,
+      "evidence": "26 passed across the three guard files."
+    },
+    {
+      "criterion": "Full suite green locally; every stamped total and pass-count claim equals 001's collected count.",
+      "met": true,
+      "evidence": "711 passed; §3.7 heading, §2.2, §4.2 and §7 all read 711, as does the header."
+    },
+    {
+      "criterion": "Every test-file count claim equals the files on disk (36).",
+      "met": true,
+      "evidence": "§2.2 reads '36 files'; test_every_test_file_count_is_right passes against HANDOVER.md and AGENTS.md together."
+    },
+    {
+      "criterion": "Every node-count claim matches the YAML (flagship expected 24).",
+      "met": true,
+      "evidence": "yaml.safe_load gives 24; §2.2 and the §3.1 heading both read 24; test_node_counts_match_the_workflow_files passes."
+    },
+    {
+      "criterion": "No occurrence of 'cafebabe'; every stamped sha resolves to a commit.",
+      "met": true,
+      "evidence": "grep -c cafebabe = 0; the sole stamp 4bfbbc5 resolves and is an ancestor of the branch."
+    },
+    {
+      "criterion": "AGENTS.md and docs/successor-prompt.md references to §4.4/§5/§6/§7 resolve.",
+      "met": true,
+      "evidence": "The restored file carries §0, §1, §2, §3, §4 (with §4.2 at line 694 and §4.4 at 740), §5 at 883, §6 at 983, §7 at 1520. No edit was made to either referring file."
+    },
+    {
+      "criterion": "CI on the PR: all five jobs green.",
+      "met": true,
+      "evidence": "PR #1, actions run 35474764316: test (3.11) pass 1m6s, test (3.12) pass 1m7s, test (3.13) pass 1m5s, editable-install pass 34s, docker pass 40s."
+    },
+    {
+      "criterion": "Response file at .orchestration/responses/ARCH-20260919-002.response.json.",
+      "met": true,
+      "evidence": "this file."
+    }
   ],
   "deviations": [
     {
@@ -80,12 +128,7 @@
       "impact": "The evidentiary value of the IN_PROGRESS commit is absent for 002 as well. It will be present for 004 and 007."
     }
   ],
-  "blockers": [
-    {
-      "what": "Nothing has been pushed. The clone is local, the owner has not authorised a push, and no PR exists — so the CI acceptance criterion cannot be evaluated and the advisor cannot see any of this work.",
-      "needs": "The owner's go-ahead to push branch arch/20260919-002-handover-restore and open the PR. This is the only thing between the repair and green CI on main."
-    }
-  ],
+  "blockers": [],
   "questions_for_advisor": [
     "A FINDING THAT NEEDS A RULING. Writing the two new nodes into §3.1 made an asymmetry visible that the YAML has carried since aac0324 and no document stated. build_loop's body is [implement, blocked_check, blocked_gate, domain_review, coverage, consistency, validate, judges]. recovery_loop's and review_rework_loop's shared body is [implement, domain_review, coverage, consistency, validate, judges, rework_review, review_fold] — no blocked_check, no blocked_gate. The honest-refusal gate therefore watches the first build and not the rework or recovery passes, so an implementation that becomes blocked on a criterion after a review sends it back reaches no gate that can report it. That is loop wiring and on the advisor's side of the boundary, so it is recorded in §3.1 and flagged here, and nothing in workflows/engineering-rnd.yaml was touched. Blueprint 016 is exactly the arc in which a ruling on it belongs.",
     "The evidence on the command's own open question — was the truncation deliberate? — points one way. All five guard failures were of the class 'the claim is absent', none 'the number is wrong'. A deliberate slimming would have carried the guard edits that make the slimmed document legal; the guards were untouched, and the document was left in a state where its own test suite fails. Combined with the silent commit message and the hand-typed placeholder sha, the restoration reading is the supported one. The owner still owns the answer.",
@@ -94,8 +137,7 @@
   ],
   "public_safe_summary": "HANDOVER.md is restored from b4e1b9b and its guarded numbers re-derived forward against the current tree: 711 tests across 36 files, a 24-node flagship, five free checks, and a §3.7 distribution regenerated from collection. The hand-typed 'cafebabe' stamp is gone and the one remaining stamp resolves to a real ancestor commit. The full suite passes, 711 of 711, and the orientation chain that both protocol documents depend on works again. Restoring the document also surfaced a loop-wiring asymmetry in the flagship, which is recorded and flagged for a ruling rather than changed. Not yet pushed; no CI run.",
   "next_recommended_commands": [
-    "Owner: authorise the push of arch/20260919-002-handover-restore — it is the last thing between main and green CI.",
-    "ARCH-20260919-004 — ready to execute once 002's sha is final.",
-    "ARCH-20260919-007 — independent of 002; can proceed in parallel."
+    "Merge PR #1 with a merge commit, not a squash — the 'as of 4bfbbc5' stamp must stay a resolvable ancestor of main.",
+    "Then retarget PRs #2 and #3 to main so CI runs on them."
   ]
 }

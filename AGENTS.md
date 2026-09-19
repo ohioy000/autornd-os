@@ -156,6 +156,52 @@ that is what Blueprint 013 was for.
 
 ---
 
+## Orchestration — the command channel
+
+The advisor and the executor pass work through the repository, not through a
+transcript. Two directories carry it, and **this section documents channels,
+not authority** — the permission boundary above is unchanged by it.
+
+| direction | path | written by |
+|---|---|---|
+| work out | `.orchestration/commands/<command_id>.json` | the advisor, one file per command, one command per commit, touching nothing else |
+| work back | `.orchestration/responses/<command_id>.response.json` | the executor |
+
+**The response directory is the advisor's only view of what has been done.** A
+command with no response file has not been executed, whatever a transcript says.
+
+- A command is **new** iff `commands/<id>.json` exists and
+  `responses/<id>.response.json` does not. Process in `command_id` order.
+- The executor **never modifies `.orchestration/commands/`**. Where the advisor
+  holds no commit capability, the executor may act as transport and commit the
+  command file verbatim — that is carriage, not authorship, and the commit
+  message says so.
+- The response file is committed with status `IN_PROGRESS` **before the work
+  starts**. The commit is the evidence that the work had not started when the
+  response was opened. It is then updated in place with the outcome.
+- The response and the code travel on the **same branch**, so the diff and the
+  report cannot be read apart.
+- Nobody rewrites another agent's message, and nobody force-pushes a protected
+  branch.
+
+A response carries at minimum `command_id`, `executed`, `head_before`,
+`head_after`, `results`, `deviations` and `questions_for_advisor`. Status is one
+of `IN_PROGRESS`, `DONE`, `PARTIAL`, `BLOCKED`, `FAILED`, `REJECTED` or
+`NO_ACTION` — the last for a contingent command whose trigger did not fire,
+which still gets a file, citing the command that settled it.
+
+**The two rules that collide, and which one yields.** A command pinned to a
+specific HEAD cannot also have an `IN_PROGRESS` commit written first, because
+the commit moves HEAD off the pin. The HEAD guard wins: take the reading at the
+guarded sha, then write the response, and **record the missing `IN_PROGRESS`
+commit as a departure**. This is written down because it happened on the
+channel's first command and would otherwise be rediscovered every time.
+
+**Departures and refutations belong in the response**, in the same spirit as
+`§n.2` of the notebook: what was done differently and why, what was left
+undone, and what execution found that the command missed. A measurement that
+contradicts its command is reported as it read (convention 18).
+
 ## Opening a session
 
 `docs/successor-prompt.md` is what the owner pastes to start a new executor. It
