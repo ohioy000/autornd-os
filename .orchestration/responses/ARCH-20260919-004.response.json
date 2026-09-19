@@ -1,16 +1,49 @@
 {
   "command_id": "ARCH-20260919-004",
-  "status": "IN_PROGRESS",
+  "status": "PARTIAL",
   "executed": "2026-09-19",
   "head_before": "bb5c488",
-  "head_after": null,
+  "head_after": "9956a65",
   "branch": "arch/20260919-004-incident-record",
-  "commits": [],
-  "files_changed": [],
-  "results": {},
-  "deviations": [],
-  "blockers": [],
-  "questions_for_advisor": [],
-  "public_safe_summary": "Started. CHANGELOG.md read; the incident entry is being written. This file is committed before the work so the record shows the work had not started when the response was opened.",
-  "next_recommended_commands": []
+  "commits": ["d4c9596", "9956a65"],
+  "files_changed": ["CHANGELOG.md", ".orchestration/responses/ARCH-20260919-004.response.json"],
+  "status_reason": "The entry is written and the suite is green. PARTIAL because nothing is pushed and no PR exists, so the CI criterion is the owner's.",
+  "tests_run": [
+    {"command": ".venv/bin/python3 -m pytest tests/test_docs.py -q", "result": "pass", "summary": "3 passed in 2.65s — no model-name leak introduced."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "pass", "summary": "711 passed in 41.92s."}
+  ],
+  "results": {
+    "fallback_taken": false,
+    "changelog_format": "Keep a Changelog, but written as prose paragraphs rather than bullet lists — the [Unreleased] section says so explicitly: 'written as prose rather than a bullet list because most of these changes are only meaningful with the measurement that forced them.' An operational repair entry fits that register directly, so the NO_ACTION fallback was not needed.",
+    "diff_lines": 25,
+    "entry_placement": "At the end of [Unreleased], immediately before the section's closing suite-count line."
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "A CHANGELOG.md entry consistent with the file's existing format, or a NO_ACTION response.", "met": true, "evidence": "Prose entry appended to [Unreleased], matching the surrounding register; 25 changed lines, inside the 40-line cap."},
+    {"criterion": "tests/test_docs.py still passes.", "met": true, "evidence": "3 passed."},
+    {"criterion": "Response file at .orchestration/responses/ARCH-20260919-004.response.json.", "met": true, "evidence": "this file, opened at IN_PROGRESS in d4c9596 before the work and finalised here."}
+  ],
+  "deviations": [
+    {
+      "what": "The closing line of [Unreleased] was changed from '674 tests as of fff850a' to '711 tests as of 4bfbbc5'. The command's scope names CHANGELOG.md but enumerates only the incident facts.",
+      "why": "That line is the section's summary of the present, not a historical 'as of' record of a superseded state, and it was wrong by 37 tests. Leaving a stale count in the same commit that records an incident about stale and hand-stamped counts would have been the joke telling itself. Re-deriving a count is explicitly the executor's, and 4bfbbc5 resolves.",
+      "impact": "One line beyond the entry. Total diff 25 lines, well inside the 40-line cap."
+    },
+    {
+      "what": "The branch is stacked on arch/20260919-002-handover-restore rather than cut from main.",
+      "why": "004's parent_id is 002 and its entry cites 002's commit sha, but more practically: main is red. A PR from main would fail CI on the five handover guards for reasons that have nothing to do with this change, and the acceptance criterion asking for green CI would be unreachable until 002 merges.",
+      "impact": "004's PR should be opened after 002 merges, or merged as a stack. The CHANGELOG.md diff itself is independent and touches nothing 002 touches."
+    }
+  ],
+  "blockers": [
+    {
+      "what": "Not pushed; no PR; CI has not run.",
+      "needs": "The owner's go-ahead, same as 002."
+    }
+  ],
+  "questions_for_advisor": [
+    "The entry names the loop-wiring asymmetry that 002 surfaced, in one clause, as recorded-and-left-for-a-ruling. If the advisor would rather the changelog stay silent on an unruled finding, say so and the clause comes out — it is one sentence."
+  ],
+  "public_safe_summary": "The truncation incident is recorded in CHANGELOG.md as a prose entry in the register of the section it joins, stating only checkable facts: the commit, the line count, the silent commit message, the five failing guards and that all five failed on an absent claim rather than a drifted number, the placeholder stamp that resolves to nothing, and the restoration. The section's closing suite count was re-derived from 674 to 711. Suite green at 711.",
+  "next_recommended_commands": ["ARCH-20260919-007 — the last command in the set that needs no owner decision."]
 }
