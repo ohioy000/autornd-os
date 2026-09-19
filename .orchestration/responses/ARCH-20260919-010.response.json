@@ -1,0 +1,16 @@
+{
+  "command_id": "ARCH-20260919-010",
+  "status": "IN_PROGRESS",
+  "executed": "2026-09-19",
+  "head_before": "2387296",
+  "head_after": null,
+  "branch": "arch/20260919-010-agents-map-row",
+  "commits": [],
+  "files_changed": [],
+  "results": {},
+  "deviations": [],
+  "blockers": [],
+  "questions_for_advisor": [],
+  "public_safe_summary": "Started. Committed before the work.",
+  "next_recommended_commands": []
+}
