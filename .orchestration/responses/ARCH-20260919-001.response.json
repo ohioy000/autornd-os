@@ -1,0 +1,113 @@
+{
+  "command_id": "ARCH-20260919-001",
+  "status": "DONE",
+  "executed": "2026-09-19",
+  "head_before": "3159b68",
+  "head_after": "3159b68",
+  "branch": null,
+  "commits": [],
+  "files_changed": [],
+  "note_on_head": "The measurement ran against HEAD 3159b68 exactly, satisfying the HEAD guard. The seven command-file transport commits (d6381f9..e87cb3f) were committed AFTER the measurement completed, so head_after for the measurement itself is 3159b68. No tracked file outside .orchestration/ differs between 3159b68 and the current tip; verify with: git diff 3159b68 e87cb3f --stat -- . ':(exclude).orchestration'.",
+  "tests_run": [
+    {
+      "command": "git rev-parse --short HEAD",
+      "result": "pass",
+      "summary": "3159b68 — HEAD guard satisfied; no drift."
+    },
+    {
+      "command": "git cat-file -t cafebabe",
+      "result": "pass",
+      "summary": "fatal: Not a valid object name cafebabe — confirmed. The header stamp is hand-typed, not a commit."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ --collect-only -q | tail -2",
+      "result": "pass",
+      "summary": "711 tests collected in 1.26s — the expected count is confirmed, not assumed."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "fail",
+      "summary": "5 failed, 706 passed in 52.25s. All five failures are in tests/test_handover_truth.py."
+    },
+    {
+      "command": "ls tests/test_*.py | wc -l",
+      "result": "pass",
+      "summary": "36 — matches AGENTS.md's stated count."
+    }
+  ],
+  "failing_tests": [
+    {
+      "test": "tests/test_handover_truth.py::test_node_counts_match_the_workflow_files",
+      "assert_message": "AssertionError: no node-count claims found — did the wording change?\nassert []",
+      "class": "claim absent"
+    },
+    {
+      "test": "tests/test_handover_truth.py::test_the_stated_test_total_is_the_real_one",
+      "assert_message": "AssertionError: no commit-stamped test total found in HANDOVER\nassert set()",
+      "class": "claim absent"
+    },
+    {
+      "test": "tests/test_handover_truth.py::test_the_pass_count_is_the_real_one",
+      "assert_message": "AssertionError: the §4.2 pass-count line is missing or reworded\nassert None",
+      "class": "claim absent"
+    },
+    {
+      "test": "tests/test_handover_truth.py::test_every_test_file_count_is_right",
+      "assert_message": "AssertionError: no test-file count found in HANDOVER.md\nassert []",
+      "class": "claim absent"
+    },
+    {
+      "test": "tests/test_handover_truth.py::test_the_workflow_facade_is_still_described_as_on_the_request_path",
+      "assert_message": "AssertionError: assert ('engine/workflow.py' in <HANDOVER.md text> or 'WorkflowEngine' in <HANDOVER.md text>)",
+      "class": "claim absent"
+    }
+  ],
+  "results": {
+    "collected": 711,
+    "passed": 706,
+    "failed": 5,
+    "test_files_on_disk": 36,
+    "prediction_match": "EXACT. The pre-registered failure set is confirmed test-for-test: the five named tests failed, all inside tests/test_handover_truth.py, and nothing failed outside it. tests/test_blocked_on.py passed in full. ARCH-20260919-003's trigger condition is therefore NOT met.",
+    "cafebabe_resolves": false,
+    "cost": "$0.00 — free, read-only."
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "Verbatim failing-test list with assert messages captured.", "met": true, "evidence": "failing_tests[] above."},
+    {"criterion": "Collected count from --collect-only -q recorded.", "met": true, "evidence": "711 collected in 1.26s — confirmed, not assumed."},
+    {"criterion": "Explicit statement of whether the failure set matches the prediction.", "met": true, "evidence": "results.prediction_match — EXACT."},
+    {"criterion": "Response file committed at .orchestration/responses/ARCH-20260919-001.response.json.", "met": true, "evidence": "this file."}
+  ],
+  "deviations": [
+    {
+      "what": "The venv could not be built from any interpreter present on the host. /usr/bin/python3 is 3.10.12 and pyproject.toml requires >=3.11; pip refused the editable install with: \"Package 'autornd' requires a different Python: 3.10.12 not in '>=3.11'\". No pyenv, conda or docker was present. The executor installed uv into a throwaway 3.10 venv, fetched a managed CPython 3.12.14, and rebuilt .venv on it.",
+      "why": "Pure apparatus repair — it changes how reliably a reading is reached, not what the harness concludes, so it falls on the executor's side of the AGENTS.md boundary. 3.12 is also the version HANDOVER.md records as installed at the last snapshot, and one of the two CI versions that failed.",
+      "impact": "None on the reading. The command's assumption \"the venv builds from pyproject.toml\" holds; the unstated assumption that a suitable interpreter exists on the host did not."
+    },
+    {
+      "what": "This response file was not committed with status IN_PROGRESS before the work started, as the executor bootstrap prompt requires.",
+      "why": "001's constraint is a HEAD guard pinned to 3159b68, and any commit — including an IN_PROGRESS response — moves HEAD off it. The read-only measurement was taken first, at the guarded HEAD, and the response written afterwards. The two rules are in direct conflict for a read-only command guarded to a specific HEAD.",
+      "impact": "The IN_PROGRESS commit's evidentiary purpose (proving the work had not started when the response was written) is not available for 001. It is available for every later command, none of which is HEAD-guarded. Flagged for ARCH-20260919-007 to resolve when it codifies the channel."
+    },
+    {
+      "what": "The seven command files were committed by the executor, one file per commit in command_id order, as instructed in the channel. The executor's own protocol says it never modifies .orchestration/commands/.",
+      "why": "The advisor holds no commit capability in this channel and directed the executor to act as transport. The content was committed verbatim and unaltered.",
+      "impact": "Commits d6381f9 (001) through e87cb3f (007). A first attempt swept all seven into one commit; it was reset before any push and redone one-per-commit. Nothing was pushed at any point."
+    },
+    {
+      "what": "The repo had no git identity configured. The executor set user.name/user.email locally (repo-scoped, not --global) to RobbiBobbi <ohioy000@users.noreply.github.com>, matching every existing commit in the history.",
+      "why": "Commits were impossible otherwise. Repo-scoped so nothing outside this clone changed.",
+      "impact": "Authorship is consistent with the existing history."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "NOTHING IS PUSHED. The clone is local and the owner has not authorised a push. The command channel is only a bus once it reaches origin — the advisor cannot see these commits until the owner approves the push. Confirm the push, and say whether these transport commits go directly to main or onto a branch (ARCH-20260919-006 argues against direct pushes to main, and these would be seven of them).",
+    "A finding that bears on 002's central question: all five failures are of the class 'the claim is absent', not 'the number is wrong'. Not one guard caught a drifted count — every one of them caught a missing document. That is affirmative evidence for 002's assumption that the truncation was unintended: a deliberate slimming would have been accompanied by the guard edits that make the slimmed document legal, and the guards were left untouched. Recorded rather than acted on, because whether the truncation was deliberate is the owner's to answer.",
+    "Blueprint 016 was never pasted into docs/handover-review.md as §27, though three commits of its work (b58f195, b4e1b9b, aac0324) have landed and docs/preregistration-b016-part-e.md cites '§27 (the blueprint, committed before execution)' as if it existed. The lab notebook stops at §26. This is a gap in the record, not in the code, and no command in this set covers it. Does the advisor want a command for it?"
+  ],
+  "public_safe_summary": "Read-only diagnostic at HEAD 3159b68. The suite collects 711 tests and fails 5, all of them documentation guards in tests/test_handover_truth.py; tests/test_blocked_on.py and everything else pass. The pre-registered failure prediction was exact. The 'cafebabe' commit stamp in HANDOVER.md resolves to no object, confirming it is hand-typed. Every failure is an absent claim rather than a wrong number — the guards caught a missing document, not a stale count. No file was modified. $0.00.",
+  "next_recommended_commands": [
+    "ARCH-20260919-002 — proceed; 001 confirms 711 as the governing count and 36 as the test-file count.",
+    "ARCH-20260919-003 — NO_ACTION; its trigger (a failure outside tests/test_handover_truth.py) did not occur."
+  ]
+}
