@@ -1,0 +1,44 @@
+{
+  "command_id": "ARCH-20260919-007",
+  "parent_id": null,
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Make the orchestration protocol durable: land the advisor/executor command-and-response channel in AGENTS.md, because both protocol documents predate the revamp and neither mentions it — a fresh session of either role would not know the channel exists.",
+  "evidence": [
+    "AGENTS.md read in full 2026-09-19: zero occurrences of 'orchestration'; its first line says 'This file is the protocol'",
+    "tree at 3159b68 contains no .orchestration/ path — the channel currently lives only in the chat that opened this session",
+    "CLAUDE.md is a symlink to AGENTS.md (mode 120000, 9 bytes) — one edit covers both",
+    "docs/successor-prompt.md (read 2026-09-19) equally predates the revamp and documents no response-file duty; CARRYOVER.md routes newcomers to it",
+    "docs/handover-review.md section 5 states the principle: a session must execute from the repo, not from a pasted transcript — a protocol that exists only in chat is the exact failure mode"
+  ],
+  "scope": {
+    "include": ["AGENTS.md"],
+    "exclude": ["** — everything else; no code, tests, or config"]
+  },
+  "constraints": [
+    "Documentation-only. Add one section (e.g. '## Orchestration — the command channel') near 'Opening a session'; do not alter any existing section, role table, or the permission boundary — this documents CHANNELS, not authority.",
+    "Content to land: (a) the advisor commits exactly one file per command to .orchestration/commands/<command_id>.json and touches nothing else; (b) the executor commits a response file to .orchestration/responses/<command_id>.response.json before starting the next command, carrying at minimum: command_id, executed, head_before, head_after, results, deviations, questions_for_advisor; (c) the response directory is the advisor's only view of what has been done.",
+    "Keep the addition under 60 lines.",
+    "Suite green before and after; CI green before finishing; response file after landing.",
+    "An extension to tests/test_protocol_file.py guarding the section's existence is optional; if added, keep it under 15 lines and report it in the response file."
+  ],
+  "acceptance_criteria": [
+    "AGENTS.md documents both channels with the ruled naming.",
+    "grep -n orchestration AGENTS.md returns at least one hit naming both directories.",
+    "Suite green; all CI jobs green on the PR.",
+    "Response file at .orchestration/responses/ARCH-20260919-007.response.json."
+  ],
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "0 failures."},
+    {"command": "grep -n orchestration AGENTS.md", "expected": "At least one hit naming both directories."}
+  ],
+  "rollback": "Revert the commit or close the PR.",
+  "deliverable": {"branch": "arch/20260919-007-orchestration-protocol", "pr": true, "commit_style": "conventional"},
+  "assumptions": [
+    "The v2 advisor prompt was decreed by the owner (it opened this session).",
+    "AGENTS.md is the correct home: it is the executor's protocol file and CLAUDE.md's symlink target."
+  ],
+  "questions": [
+    "Owner: confirm the ruled response-file naming (<command_id>.response.json) and the minimal field set, or amend before this lands."
+  ]
+}
