@@ -1,0 +1,36 @@
+{
+  "command_id": "ARCH-20260919-010",
+  "parent_id": "ARCH-20260919-007",
+  "priority": "P2",
+  "status": "PROPOSED",
+  "objective": "Add .orchestration/ to AGENTS.md's 'Where things live' table so a reader scanning only the map sees the command channel — closing the departure PR #3 recorded.",
+  "evidence": [
+    "PR #3 body: 'Where things live was NOT extended with .orchestration/, since the command says not to alter existing sections. A reader scanning only that table will not see the channel.'",
+    "AGENTS.md 'Where things live' table, verified 2026-09-19: rows for HANDOVER.md, docs/handover-review.md, docs/traces/, docs/successor-prompt.md, evals/results/, workflows/, profiles/ — no .orchestration/ row",
+    "AGENTS.md 'Orchestration — the command channel' section landed at c442c5f (grep -n orchestration: lines 167, 168, 175)"
+  ],
+  "scope": {
+    "include": ["AGENTS.md (one table row)", ".orchestration/responses/ARCH-20260919-010.response.json (same branch)"],
+    "exclude": ["** — everything else; no code, tests, config, or other documents"]
+  },
+  "constraints": [
+    "One row in the existing table's format, naming the channel and both directions in a single line (commands in at .orchestration/commands/, responses back at .orchestration/responses/), pointing to the Orchestration section rather than duplicating it.",
+    "No other edit to AGENTS.md or any file; keep the diff under 5 lines.",
+    "Suite green before and after (712); merge with a merge commit; response file on the same branch."
+  ],
+  "acceptance_criteria": [
+    "The 'Where things live' table contains a .orchestration/ row naming both directories.",
+    "tests/test_protocol_file.py still green (17 tests) and the full suite green (712).",
+    "Response file committed."
+  ],
+  "verification": [
+    {"command": "grep -n '.orchestration' AGENTS.md", "expected": "Hits in both the Orchestration section and the Where-things-live table."},
+    {"command": ".venv/bin/python3 -m pytest tests/test_protocol_file.py -q", "expected": "17 passed."}
+  ],
+  "rollback": "Revert the merge commit or close the PR.",
+  "deliverable": {"branch": "arch/20260919-010-agents-map-row", "pr": true, "commit_style": "conventional"},
+  "assumptions": [
+    "A one-row table addition does not conflict with 007's 'do not alter existing sections' intent — that constraint is spent; 007's own departure flagged this row as missing."
+  ],
+  "questions": []
+}
