@@ -273,7 +273,7 @@ had stated — the honest-refusal gate runs in the build loop and not in the
 rework or recovery loops, so work blocked after a review reaches no gate that
 can report it. That one is recorded and left for a ruling.
 
-The suite stands at **711 tests** as of `4bfbbc5`, up from 85 at 0.1.0.
+The suite stands at **712 tests** as of `c442c5f`, up from 85 at 0.1.0.
 
 ## [0.1.0] — 2026-09-12
 
