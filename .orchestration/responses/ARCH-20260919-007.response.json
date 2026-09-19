@@ -1,16 +1,70 @@
 {
   "command_id": "ARCH-20260919-007",
-  "status": "IN_PROGRESS",
+  "status": "PARTIAL",
   "executed": "2026-09-19",
   "head_before": "bb5c488",
-  "head_after": null,
+  "head_after": "267ec65",
   "branch": "arch/20260919-007-orchestration-protocol",
-  "commits": [],
-  "files_changed": [],
-  "results": {},
-  "deviations": [],
-  "blockers": [],
-  "questions_for_advisor": [],
-  "public_safe_summary": "Started. AGENTS.md and tests/test_protocol_file.py read; the orchestration section is being written. Committed before the work so the record shows it had not started.",
-  "next_recommended_commands": []
+  "commits": ["8ae3f4e", "c442c5f", "267ec65"],
+  "files_changed": ["AGENTS.md", "tests/test_protocol_file.py", "HANDOVER.md", "README.md", ".orchestration/responses/ARCH-20260919-007.response.json"],
+  "status_reason": "The section is landed, the guard is added and the suite is green at 712. PARTIAL because nothing is pushed and no PR exists.",
+  "tests_run": [
+    {"command": ".venv/bin/python3 -m pytest tests/test_protocol_file.py -q", "result": "pass", "summary": "17 passed — 16 existing plus the new channel guard."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "pass", "summary": "712 passed in 42.17s, 0 failures."},
+    {"command": "grep -n orchestration AGENTS.md", "result": "pass", "summary": "Hits naming both .orchestration/commands/ and .orchestration/responses/."}
+  ],
+  "results": {
+    "section_title": "## Orchestration — the command channel",
+    "placement": "Immediately before '## Opening a session'. No existing section, role table, G-gate or the permission boundary was altered.",
+    "lines_added_to_AGENTS": 46,
+    "guard_added": true,
+    "guard_name": "tests/test_protocol_file.py::test_the_orchestration_channel_is_documented",
+    "guard_lines": 8,
+    "guard_design": "It asserts the two directory paths, not the section heading. A guard that checked only for a heading would pass on a section documenting half the channel — the exact defect Blueprint 015's departure 2 recorded, where every guard passed the moment AGENTS.md existed because none of them looked at it (convention 22).",
+    "suite_before": 711,
+    "suite_after": 712
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "AGENTS.md documents both channels with the ruled naming.", "met": true, "evidence": "A direction table naming .orchestration/commands/<command_id>.json and .orchestration/responses/<command_id>.response.json, plus the minimum field set."},
+    {"criterion": "grep -n orchestration AGENTS.md returns at least one hit naming both directories.", "met": true, "evidence": "Lines 167, 168, 175."},
+    {"criterion": "Suite green.", "met": true, "evidence": "712 passed, 0 failed."},
+    {"criterion": "All CI jobs green on the PR.", "met": false, "evidence": "NOT MET — nothing pushed, no PR. See blockers."},
+    {"criterion": "Response file at .orchestration/responses/ARCH-20260919-007.response.json.", "met": true, "evidence": "this file, opened at IN_PROGRESS in 8ae3f4e before the work."}
+  ],
+  "deviations": [
+    {
+      "what": "HANDOVER.md and README.md were edited, though 007's scope excludes everything but AGENTS.md.",
+      "why": "Forced, and by the command's own sanctioned option. Adding the optional guard moved the suite 711 to 712, and three count guards then failed — two in tests/test_handover_truth.py and the README badge in tests/test_docs.py. The command sanctions the test and forbids the files the test necessarily invalidates. Convention 18 puts the re-derivation in the same change, and the alternative was to finish with the suite red, which the working rules forbid outright. The edits are the three derived numbers and one table row, nothing else.",
+      "impact": "HANDOVER.md: the header stamps, §2.2, the §3.7 heading and its test_protocol_file.py row (16 to 17), §4.2's pass count, §7's comment. README.md: the badge and two count lines. All now read 712 and the rows still sum to the total.",
+      "for_the_advisor": "If a command sanctions a new test, its scope has to include the count-bearing documents, or the two instructions cannot both be obeyed. Worth fixing in the next command that adds a test."
+    },
+    {
+      "what": "The stamp again needed a second commit (267ec65) naming the commit that changed the counts (c442c5f), for the same reason recorded under 002: a commit cannot contain its own sha, and an amend discards the commit the stamp names.",
+      "why": "Same as 002.",
+      "impact": "Three commits on the branch. c442c5f is a real ancestor and resolves."
+    },
+    {
+      "what": "The branch is stacked on arch/20260919-002-handover-restore, though 007's parent_id is null.",
+      "why": "main is red. Cut from main, this PR's CI would fail on the five handover guards for reasons unrelated to the change, and the green-CI criterion would be unreachable until 002 merges. 007's own content is independent of 002; only the count lines it had to touch overlap.",
+      "impact": "Merge order matters: 002, then 004 and 007. 007 also re-stamps HANDOVER.md's counts on top of 002's, so a merge that took 007 without 002 would conflict."
+    },
+    {
+      "what": "The 'Where things live' table was not extended with .orchestration/.",
+      "why": "The command says not to alter any existing section. The new section carries the paths in its own table.",
+      "impact": "A reader scanning only 'Where things live' will not see the channel. Flagged rather than fixed."
+    }
+  ],
+  "blockers": [
+    {"what": "Not pushed; no PR; CI has not run.", "needs": "The owner's go-ahead."}
+  ],
+  "questions_for_advisor": [
+    "The section records one rule that was learned rather than ruled, and it should be ratified or corrected: a command pinned to a specific HEAD cannot also have its IN_PROGRESS response committed first, because the commit moves HEAD off the pin. The section says the HEAD guard wins and the missing IN_PROGRESS commit is recorded as a departure. That is a process ruling the executor made under time pressure on 001 and has now written into the protocol. Confirm or replace it.",
+    "The response schema landed as the advisor ruled it — command_id, executed, head_before, head_after, results, deviations, questions_for_advisor — plus the status vocabulary. NO_ACTION was added to that vocabulary because 003 needed it and the ruled set did not contain it. Confirm.",
+    "Naming: the section documents <command_id>.response.json, as ruled. Note that the executor bootstrap prompt in this repo's chat specified <command_id>.json for responses. The ruled name is the one written down; the prompt disagrees with the protocol file and only the protocol file is guarded."
+  ],
+  "public_safe_summary": "AGENTS.md now documents the advisor/executor command channel: the two directories, the one-file-per-command rule, the IN_PROGRESS-before-work rule, the minimum response fields and the status vocabulary. A guard asserts both directory paths rather than the heading, so a half-documented channel cannot pass it. Adding that guard moved the suite to 712 and the count guards caught their own contribution for the fourth consecutive time, so HANDOVER.md and the README badge were re-derived in the same change. Suite green at 712.",
+  "next_recommended_commands": [
+    "Owner: authorise the push and the merge order — 002, then 004 and 007.",
+    "ARCH-20260919-005 and ARCH-20260919-006 both require the owner's confirmation before anything runs; neither has been executed."
+  ]
 }
