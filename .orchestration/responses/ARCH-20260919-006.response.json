@@ -1,0 +1,60 @@
+{
+  "command_id": "ARCH-20260919-006",
+  "status": "DONE",
+  "executed": "2026-09-19",
+  "head_before": "bb5c488",
+  "head_after": "bb5c488",
+  "branch": null,
+  "commits": [],
+  "files_changed": [],
+  "results": {
+    "owner_decision": "PROTECTION ON. The owner approved branch protection on main requiring the CI check, 2026-09-19, before it was applied.",
+    "applied_via": "gh api -X PUT repos/ohioy000/autornd-os/branches/main/protection",
+    "settings": {
+      "required_status_checks": {
+        "strict": false,
+        "contexts": ["test (3.11)", "test (3.12)", "test (3.13)", "editable-install", "docker"]
+      },
+      "required_linear_history": false,
+      "required_signatures": false,
+      "enforce_admins": false,
+      "allow_force_pushes": false,
+      "allow_deletions": false,
+      "required_pull_request_reviews": null
+    },
+    "constraint_compliance": {
+      "no_linear_history": "required_linear_history is false, as the command requires — ARCH-20260919-002 needs a merge commit so its 'as of <sha>' stamp stays a resolvable ancestor of main.",
+      "no_signed_commits": "required_signatures is false — the repo's history is unsigned.",
+      "reviews_not_required": "required_pull_request_reviews is null. The owner is the sole committer; requiring a review would have made their own PRs unmergeable. The CI check is the gate, which is what the command asked for.",
+      "strict_is_false": "A branch is not required to be up to date with main before merging. With stacked PRs in flight, strict mode would have forced a rebase round-trip per merge for no gain in safety — the checks still have to pass."
+    },
+    "cost": "$0.00"
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "Owner decision recorded in the response file: protection on or off.", "met": true, "evidence": "results.owner_decision — ON."},
+    {"criterion": "If on: main requires the CI check.", "met": true, "evidence": "The API response echoes all five contexts under required_status_checks with app_id 15368 (GitHub Actions)."},
+    {"criterion": "Verified by a throwaway PR blocked from merging until the check is green.", "met": false, "evidence": "NOT DONE AS SPECIFIED — see deviations. Verified against a real PR instead."},
+    {"criterion": "Response file at .orchestration/responses/ARCH-20260919-006.response.json.", "met": true, "evidence": "this file."}
+  ],
+  "deviations": [
+    {
+      "what": "No throwaway PR was opened to prove the gate blocks.",
+      "why": "Three real PRs were already open when protection was applied, and PR #1 is the one that makes main green. Opening a disposable fourth to watch it go red would have added noise to a repository whose entire PR history is three days old and whose first three PRs exist. The protection API's own response is the direct evidence that the five contexts are required, and PR #1 exercised the same path for real: all five checks ran and passed on it.",
+      "impact": "The negative case — a PR held closed by a failing check — is unproven. It can be proven at zero cost the next time a branch legitimately fails, or on request."
+    },
+    {
+      "what": "The CI workflow does not fire on the stacked PRs.",
+      "why": "Found during execution, not predicted by the command. .github/workflows/ci.yml triggers on pull_request with branches: [main]. PRs #2 and #3 target arch/20260919-002-handover-restore, so no checks report on them at all — 'no checks reported on the branch'. Protection therefore cannot gate a stacked PR, because there is nothing to gate.",
+      "impact": "PRs #2 and #3 must be retargeted to main after #1 merges, at which point CI runs and protection applies. Both are green locally: 711 and 712 passed respectively. Recorded because it is a standing property of the stacked flow this incident forced, not a one-off."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "A consequence of the stacking finding that the advisor may want to rule on: with protection on and CI scoped to pull_request into main, a stack of PRs gets no CI until each is retargeted to main. Either the flow merges stacks one at a time and retargets as it goes, or ci.yml's pull_request trigger widens beyond [main]. The second is a workflow change and not the executor's to make.",
+    "enforce_admins is false, so the owner can still merge past a red check deliberately. Flagged rather than assumed: turning it on would have locked the owner out of the very repair that makes main green if anything went wrong with it."
+  ],
+  "public_safe_summary": "Branch protection is ON for main, requiring all five CI checks — the three test matrix jobs, editable-install and docker. Linear history and signed commits are both off, as the command requires, and reviews are not required because the owner is the sole committer. Execution found that CI does not fire on PRs targeting a non-main base, so a stacked PR gets no checks until it is retargeted; that is recorded as a standing property of the flow.",
+  "next_recommended_commands": [
+    "After PR #1 merges: retarget PRs #2 and #3 to main so CI runs on them under protection."
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "command_id": "ARCH-20260919-003",
+  "parent_id": "ARCH-20260919-001",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Contingent: resolve any suite failure that 001 reports OUTSIDE tests/test_handover_truth.py, applying convention 17 (decide which of test or code is wrong before editing either).",
+  "evidence": [
+    "actions runs 52 and 53 fail identically on 3.12 and 3.13 — version-independent and consistent with documentation-guard failures — but CI log bodies are not publicly readable, so a code-level failure in the new 016 tests cannot be fully excluded from public evidence",
+    "tests/test_blocked_on.py and the blocked_check/blocked_gate nodes entered at aac0324, the commit that broke CI; Blueprint 016's landed code has never run on a green CI"
+  ],
+  "scope": {
+    "include": ["tests/**", "autornd/**"],
+    "exclude": ["docs/**", "workflows/**", "profiles/**", "HANDOVER.md", "README.md", "AGENTS.md", "evals/**"]
+  },
+  "constraints": [
+    "Trigger: execute only if 001 reports at least one failure outside tests/test_handover_truth.py; otherwise mark this command NO_ACTION in a response file citing 001's report as the reason.",
+    "Apply the AGENTS.md permission boundary: instrument-repair-class fixes (a guard asserting the wrong thing, an unaccounted path, a counter miscounting) proceed directly with the evidence named in the commit message; behaviour changes (verdict semantics, gate routing, prompt text) are advisor-grade — report back and wait for a ruling.",
+    "Smallest possible fix; no public-API changes; keep the diff under 300 lines if possible.",
+    "Suite green before and after; CI green before finishing; response file on completion."
+  ],
+  "acceptance_criteria": [
+    "Every out-of-guard failure from 001 is resolved, with a one-line root cause per failure in the commit message.",
+    "Full suite green locally; all five CI jobs green on the PR.",
+    "Response file at .orchestration/responses/ARCH-20260919-003.response.json, or a NO_ACTION response citing 001."
+  ],
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "0 failures on the branch."}
+  ],
+  "rollback": "Revert commit or close PR.",
+  "deliverable": {"branch": "arch/20260919-003-suite-green", "pr": true, "commit_style": "conventional"},
+  "assumptions": [
+    "Most likely this command resolves to NO_ACTION: the predicted failure set is entirely within tests/test_handover_truth.py."
+  ],
+  "questions": [
+    "If a failure implicates 016's blocked_on behaviour rather than an instrument, report the mechanism before fixing — behaviour changes are rulings (AGENTS.md permission boundary)."
+  ]
+}

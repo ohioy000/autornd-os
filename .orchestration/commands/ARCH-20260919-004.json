@@ -1,0 +1,38 @@
+{
+  "command_id": "ARCH-20260919-004",
+  "parent_id": "ARCH-20260919-002",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Record the incident in the repo's own record medium so the succession protocol carries the lesson: main's CI sat red across two commits because a feature commit silently truncated the state-of-record document and hand-stamped a placeholder sha.",
+  "evidence": [
+    "actions runs 52-53 left main red from 2026-09-16 to 2026-09-19; zero issues and zero PRs exist (repo open_issues 0, verified; pulls API empty) — nothing records it",
+    "CHANGELOG.md exists (16,998 bytes, verified in the tree) and is in tests/test_docs.py's scanned user-facing set (Blueprint 002 Part G1), but the advisor has not read its current format",
+    "convention 24 (AGENTS.md digest): a fact about the repo is generated or guarded, never hand-stamped — the 'cafebabe' stamp is the exact failure mode the convention warns about; a commit stamp records when someone last believed a number, not that it was right"
+  ],
+  "scope": {
+    "include": ["CHANGELOG.md"],
+    "exclude": ["autornd/**", "tests/**", "workflows/**", "docs/**", "HANDOVER.md", "README.md", "AGENTS.md"]
+  },
+  "constraints": [
+    "Read CHANGELOG.md fully first. If its structure is unsuited to an operational repair entry, do NOT force one — record the incident in 002's merge-commit prose instead and close this command NO_ACTION with that reason.",
+    "The entry states only verifiable facts: which commit truncated HANDOVER.md and by how much, that the guards caught it (naming the failing tests from 001's report), how it was repaired (002's sha), and that CI returned green.",
+    "No model names outside the lab-notebook exemption (tests/test_docs.py scans CHANGELOG.md).",
+    "Keep the diff under 40 lines; response file after landing."
+  ],
+  "acceptance_criteria": [
+    "Either a CHANGELOG.md entry consistent with the file's existing format, or a NO_ACTION response with the incident recorded in 002's merge-commit message.",
+    "tests/test_docs.py still passes.",
+    "Response file at .orchestration/responses/ARCH-20260919-004.response.json."
+  ],
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/test_docs.py -q", "expected": "Pass — no model-name leaks introduced."}
+  ],
+  "rollback": "Revert the commit or close the PR.",
+  "deliverable": {"branch": "arch/20260919-004-incident-record", "pr": true, "commit_style": "conventional"},
+  "assumptions": [
+    "The repo wants this incident recorded: its whole architecture is built on records surviving executor succession (docs/handover-review.md section 5 makes the point explicitly)."
+  ],
+  "questions": [
+    "Owner: if the changelog stays release-history-only, confirm the NO_ACTION fallback (prose in 002's merge commit) is the preferred record."
+  ]
+}

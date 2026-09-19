@@ -1,0 +1,55 @@
+{
+  "command_id": "ARCH-20260919-002",
+  "parent_id": "ARCH-20260919-001",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Restore HANDOVER.md's deleted state-of-record sections from b4e1b9b (last green), re-derive every guarded number to the current tree, and replace the 'cafebabe' placeholder with a real commit sha — so the guards pass, main's CI is green, and the session-opening orientation chain (section 0/4.4/6/5) that both the executor and advisor protocols depend on works again.",
+  "evidence": [
+    "commit:aac0324 removed ~1,435 lines of HANDOVER.md (section 2 architecture, section 3 state, section 4.2 bug ledger, section 4.4 conventions, section 6 measured facts, section 7 orientation) inside a 'feat' commit whose message never mentions the deletion",
+    "HANDOVER.md@HEAD is 6,371 bytes: sections 0-1 only; the mandated orientation read (4.4/6/5) is impossible at HEAD — verified by this advisor session, which had to orient against b4e1b9b as a recorded departure",
+    "AGENTS.md 'Where things live' maps HANDOVER sections 4.2/4.4/5/6/7; docs/successor-prompt.md orientation step 2 reads the same sections — both cite content that no longer exists",
+    "commit:b4e1b9b is the last green commit (actions run 51) and its HANDOVER.md was read this session: header '689 as of 27cf116', 35 test files, flagship 22 nodes, four free checks — counts that must be re-derived FORWARD, not copied",
+    "commit:aac0324 added blocked_check and blocked_gate nodes (flagship 22 to 24; build_loop body 6 to 8), the fifth free check (blocked_on_unmet), and tests/test_blocked_on.py; AGENTS.md now says 36 test files (verified); HANDOVER.md@HEAD says 711 tests (verified)",
+    "tests/test_handover_truth.py:66-140 defines exactly which claims must exist and be true; test_docs.py and test_protocol_file.py guard the adjacent protocol documents"
+  ],
+  "scope": {
+    "include": ["HANDOVER.md"],
+    "exclude": ["tests/**", "autornd/**", "workflows/**", "profiles/**", "evals/**", "README.md", "AGENTS.md", "docs/**", ".github/**", "pyproject.toml"]
+  },
+  "constraints": [
+    "Documentation-only change. No code, schema, workflow-YAML, or prompt changes.",
+    "Restore with: git show b4e1b9b:HANDOVER.md > HANDOVER.md — then edit ONLY the derived numbers: (a) header stamps — test total as of the real short sha of this change, HEAD stamp refreshed; (b) section 2.2 — tests/ 36 files and the count 001 reports, flagship 24 nodes, 3 loops; (c) section 2.3 — free checks are five, blocked_on_unmet named; (d) section 3.1 — add blocked_check and blocked_gate rows and the 8-node build_loop body; (e) section 3.7 — regenerate the per-file distribution from pytest tests/ --collect-only -q so the rows sum to the total; (f) section 4.2 — 'No failing unit tests — N/N pass'; (g) section 7 count claim.",
+    "Every 'as of <sha>' stamp must resolve (git cat-file -t <sha> returns commit). Bootstrap: commit first, replace the placeholder stamps with the new commit's short sha, and amend BEFORE pushing — pre-push amend is not shared-history rewrite.",
+    "Do NOT change section 4.2 bug-ledger statuses (B13/B14) or section 4.1 blueprint counts — those are record rulings; flag discrepancies in the PR description instead (AGENTS.md permission boundary). The restored 4.3 note describing the B13 override is already present at b4e1b9b and stays as written.",
+    "Preserve every measurement comment and section verbatim (convention 1); the commit message is prose naming the evidence (convention 12).",
+    "The diff will exceed 300 lines because it is restoration-dominated; require git diff b4e1b9b -- HANDOVER.md to show ONLY the enumerated count-line edits beyond the restored block.",
+    "Merge with a merge commit, not squash — the 'as of <sha>' stamps must remain resolvable ancestors of main.",
+    "After CI is green, commit the response file."
+  ],
+  "acceptance_criteria": [
+    "pytest tests/test_handover_truth.py passes in full, locally.",
+    "Full suite green locally; every stamped total and pass-count claim equals the collected count from 001.",
+    "Every test-file count claim equals the number of tests/test_*.py files on disk (36).",
+    "Every node-count claim matches the YAML files — the YAML is the source of truth (flagship expected 24).",
+    "No occurrence of 'cafebabe' remains; every stamped sha resolves to a commit.",
+    "AGENTS.md and docs/successor-prompt.md references to sections 4.4/5/6/7 resolve against the restored file (verify by reading; no edits to those files here).",
+    "CI on the PR: all five jobs green (test 3.11/3.12/3.13, editable-install, docker).",
+    "Response file at .orchestration/responses/ARCH-20260919-002.response.json with the re-derived counts and the stamped sha."
+  ],
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/test_handover_truth.py tests/test_docs.py tests/test_protocol_file.py -v", "expected": "All guard tests pass, 0 failures."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "0 failures; collected count matches every stamped total."},
+    {"command": "git show b4e1b9b:HANDOVER.md | diff - HANDOVER.md", "expected": "Differences limited to the enumerated count lines, the 3.1 rows, the 2.3 check list, and header stamps."},
+    {"command": "grep -c cafebabe HANDOVER.md", "expected": "0"}
+  ],
+  "rollback": "Revert the merge commit (documentation-only, trivially revertible) or close the PR before merge.",
+  "deliverable": {"branch": "arch/20260919-002-handover-restore", "pr": true, "commit_style": "conventional"},
+  "assumptions": [
+    "The truncation was unintended: it is silent in the commit message, contradicts AGENTS.md and docs/successor-prompt.md which still cite the deleted sections, left the guards unmodified, and introduced a placeholder sha.",
+    "001 confirms the collected count; whatever number it reports governs every edit in this command."
+  ],
+  "questions": [
+    "Owner: if the truncation WAS a deliberate slimming of HANDOVER.md, do not merge this — say so and I will issue the replacement instead: formally retire the state-of-record sections by updating AGENTS.md, docs/successor-prompt.md and tests/test_handover_truth.py together, which is an advisor-grade ruling I am prepared to write.",
+    "Owner: should section 4.2's B13 row be annotated now that 016's override and blocked_on have landed in the graph? Default: no annotation in this change — ledger edits are record rulings and ride separately."
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "command_id": "ARCH-20260919-006",
+  "parent_id": null,
+  "priority": "P2",
+  "status": "PROPOSED",
+  "objective": "Prevent recurrence: adopt a standing short-lived-branch + PR flow for every change to main (the CI's pull_request trigger exists and has never fired), and optionally enable branch protection on main requiring the CI check.",
+  "evidence": [
+    ".github/workflows/ci.yml declares both push and pull_request triggers on main (notebook section 1.1 records the same file)",
+    "pulls API (state=all) is empty — zero PRs in the repo's history; every CI run is a push event; runs 52-53: two consecutive direct pushes left main red for three days with nothing gating them",
+    "docs/handover-review.md section 5 records the standing principle: a fresh session executes from the repo rather than from pasted conversation — unreviewed direct pushes are the same class of risk"
+  ],
+  "scope": {
+    "include": ["(repository settings and process — no file change required)"],
+    "exclude": ["**"]
+  },
+  "constraints": [
+    "Branch protection is a repository-settings change: it requires the owner's explicit confirmation in this thread before the executor applies it (web UI or gh api).",
+    "If the owner declines protection, the fallback is convention only: every change to main goes through a PR — already the deliverable shape of commands 002/003/004/007 — and no feature work is pushed directly.",
+    "Do NOT enable 'require linear history' or anything that breaks merge commits — ARCH-20260919-002 requires a merge commit so 'as of <sha>' stamps stay resolvable.",
+    "Do NOT require signed commits — the repo's history is unsigned.",
+    "Response file recording the owner's decision and what was applied."
+  ],
+  "acceptance_criteria": [
+    "Owner decision recorded in the response file: protection on or off.",
+    "If on: main requires the CI check, verified by a throwaway PR that is blocked from merging until the check is green.",
+    "If off: the PR-only convention is written into the session notes or a PR template."
+  ],
+  "verification": [
+    {"command": "gh api repos/ohioy000/autornd-os/branches/main --jq '.protection'", "expected": "If enabled: required_status_checks naming the CI check; if declined: the owner's decision recorded in the response file."}
+  ],
+  "rollback": "Remove the branch protection rule in repository settings — no git history is affected.",
+  "deliverable": {"branch": null, "pr": false, "commit_style": "none — settings/process change"},
+  "assumptions": [
+    "The owner is the sole committer today; protection costs nothing operationally and would have caught this incident before it landed on main."
+  ],
+  "questions": [
+    "Owner: approve branch protection requiring the CI check on main, or prefer convention-only enforcement? Either answer closes this command."
+  ]
+}

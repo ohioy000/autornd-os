@@ -1,0 +1,39 @@
+{
+  "command_id": "ARCH-20260919-005",
+  "parent_id": null,
+  "priority": "P2",
+  "status": "PROPOSED",
+  "objective": "Delete the fully-merged, stale branch 'harness-hardening' (0 commits ahead of main, 144 behind; its head be120b5 IS the merge-base — an ancestor of main; zero data loss, exactly recoverable).",
+  "evidence": [
+    "compare main...harness-hardening (2026-09-19 session): ahead_by 0, behind_by 144, merge_base_commit.sha = be120b5 = the branch head",
+    "branches API: only main and harness-hardening exist; neither is protected",
+    "convention 19 requires a recorded reference check before any deletion — the compare result is that check, and the local precondition below re-proves it against the actual history before the delete runs"
+  ],
+  "scope": {
+    "include": ["refs/heads/harness-hardening (remote branch deletion only)"],
+    "exclude": ["** (no file changes)"]
+  },
+  "constraints": [
+    "Precondition before deleting: git branch --merged main must list harness-hardening; record the output in the response file.",
+    "Owner confirmation in this thread is required before the deletion executes.",
+    "No force-push, no history rewrite, no tag or main changes; the deletion is a ref removal only."
+  ],
+  "acceptance_criteria": [
+    "Precondition output recorded (harness-hardening listed as merged).",
+    "git ls-remote --heads origin shows only refs/heads/main.",
+    "be120b5 still resolves after deletion: git cat-file -t be120b5fa71cd95fe0b1b2124197d32591ec5be9 returns commit (reachable from main).",
+    "Response file at .orchestration/responses/ARCH-20260919-005.response.json recording the deletion."
+  ],
+  "verification": [
+    {"command": "git ls-remote --heads origin", "expected": "Only refs/heads/main remains."},
+    {"command": "git cat-file -t be120b5fa71cd95fe0b1b2124197d32591ec5be9", "expected": "commit — the deleted branch's tip is still reachable from main."}
+  ],
+  "rollback": "git branch harness-hardening be120b5fa71cd95fe0b1b2124197d32591ec5be9 && git push origin harness-hardening — exact restoration.",
+  "deliverable": {"branch": null, "pr": false, "commit_style": "none — remote ref deletion, recorded in the response file"},
+  "assumptions": [
+    "The branch has served its purpose: it is the merge source of the 2026-09-13 hardening work and has had no commits since."
+  ],
+  "questions": [
+    "Owner: confirm deletion, or state if the branch should be kept for archival reasons."
+  ]
+}
