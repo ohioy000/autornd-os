@@ -58,3 +58,20 @@ expiry on it is an apparatus reading, convention 18):
       --workflow triage-only --repeat 2 --timeout 240 \
       --max-spend 0.05 --max-spend-sweep 0.50 \
       --results-file docs/traces/b16-e2-lowrisk-<sector>.jsonl
+
+---
+
+**Amendment (advisor, 2026-09-20).** The selection rule as written selects zero —
+the wide corpus carries `risk_at_least:`/`risk_at_most:` bounds, not a `risk:`
+key. Three readings exist. **RULING: the both-ends reading governs** — E2 runs on
+the scenario(s) pinning risk to low at both bounds, because only that isolates
+the risk gate; under the floor reading the two scenarios permitting `medium` make
+the zero-lookup prediction a test of what triage happened to return. The
+registered prediction of exactly three is recorded as **WRONG** — it was the floor
+count. E2 proceeds at **n=1**, caps unchanged. The literal and floor readings are
+recorded here as considered and rejected.
+
+*Executor's precondition, re-run 2026-09-20 before this was appended:* the
+both-ends selection returns **exactly one** file — **`evals/scenarios/wide/wide_marketing.yaml`**
+(`risk_at_least: low` and `risk_at_most: low`). The corpus is unchanged since the
+reading recorded at `f8855d6`.
