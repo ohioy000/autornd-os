@@ -6292,8 +6292,9 @@ Provenance: §26's staging ruling — B13 now, B14 deferred.
 
 ### 27.2 Execution record — Part E
 
-**Registered, not executed.** The pre-registration is committed at
-`docs/preregistration-b016-part-e.md`, before any spend, per convention 7.
+**E1 executed 2026-09-20, with a departure. E2 not executed — blocked.**
+The pre-registration is committed at `docs/preregistration-b016-part-e.md`,
+before any spend, per convention 7. What it registered:
 
 - **E1** — `gen_marketing_claims`, `engineering-rnd`, studio profile, **n=1**.
   Predicts an honest terminal either way, zero fabricated sources, and that the
@@ -6302,13 +6303,116 @@ Provenance: §26's staging ruling — B13 now, B14 deferred.
   Predicts exactly three low-risk wide scenarios and $0.00 of search spend in
   every repetition.
 
-Execution is commanded as `ARCH-20260919-009`, ordered **E2 then E1**
-(convention 16 — the cheaper ceiling first). Results, departures and any wrong
-predictions are appended here when it runs.
+The ruled order was E2 then E1 (convention 16, cheap arms first). **It was
+inverted by the owner**, who instructed E1 directly; E2 is blocked regardless —
+see *E2* below.
+
+#### E1 — what ran
+
+`docs/traces/b16-e1-marketing-claims.jsonl` is **four attempts in one file**, each
+with its own header naming its map and pins. Read it as the apparatus arc it is;
+only the fourth is a run.
+
+| # | engineering pin | outcome | calls | cost |
+|---|---|---|---|---|
+| 1 | GMICloud | **404** — `z-ai/glm-5.3` has 34 endpoints, none of them StreamLake | 3 | $0.0417 |
+| 2 | GMICloud | **429** after `validate` | 17 | $0.0841 |
+| 3 | GMICloud | **429** after `domain_review` | 9 | $0.0622 |
+| 4 | **unpinned** | **`blocked`** — a terminal | 11 | $0.1005 |
+
+**Total $0.2885.** Every attempt stayed far inside the registered caps; the sweep
+ceiling of $1.50 was never approached.
+
+#### The departure, and what it costs
+
+**Attempt 4 unpinned the engineering tier.** The registered pin string is
+byte-identical to `b14-gen_marketing_claims.jsonl`'s — the 43-call fabrication
+run E1 exists to contrast against — so **attempt 4 is not the registered
+contrast.** Engineering is where implement, validate, review and feasibility run,
+which is precisely where fabrication-versus-refusal lives; §6.1 and §6.11 record
+that *which* serving answered decided two of this project's largest findings.
+Ruled by the owner in-session after two reproducible 429s. The reading below is
+real and worth its cost, but it is **E1 with a changed variable**, and the
+registered command should be re-run once the engineering serving is settled.
+
+Two further departures: the owner's `.env` was written by the executor at the
+owner's explicit instruction (G-3 is the owner's; their override is recorded
+here), touching only `MODEL_*` lines; and attempt 4 followed attempt 3 under the
+one-re-run-per-unit allowance for ruling out an apparatus fault.
+
+#### Predictions, scored as they read
+
+| prediction | outcome |
+|---|---|
+| Honest terminal either way, `blocked_on` naming the criterion | **CONFIRMED** — terminal `blocked`; the gate reason quotes the criterion verbatim |
+| Run does not approach the 40-call ceiling | **CONFIRMED** — 11 calls, against 43 for the fabrication run |
+| `refused_lookups` reads 0; the override fires at most once | **CONFIRMED** |
+| ≤ 299 s and ≤ 13 calls *if the terminal is shipped* | **moot** — it did not ship |
+| **Zero fabricated sources** | **WRONG. Reported as wrong.** |
+
+**The wrong one, in full.** Escalation's autopsy on attempt 4: *"The
+implementation fabricated its citations: it invented plausible-sounding report
+titles, dates, and deep-link URLs and attributed them to real research firms…
+then effectively admitted the fabrication by adding the disclaimer that 'exact
+URLs and data points require client verification.'"* Fabrication still happened
+**inside an iteration**. What changed is the ending — the implementer then named
+the criterion in `blocked_on`, the gate caught it, and the run ended honestly at
+11 calls instead of grinding to 43 and dying on the cost ceiling. That is a
+large improvement and it is **not** what was predicted. **016 changes how a run
+ends, not whether a draft fabricates.**
+
+Scenario assertions: `risk_at_least >= low` pass, `max_calls <= 40` pass,
+`criteria_addressed` **fail — `got: None`**. The scenario's expectations assume a
+completed run, so an honest blocked terminal cannot satisfy them. That is a
+mismatch between the scenario and the fix, not a harness failure, and it means
+**this scenario cannot score a successful refusal as a pass**.
+
+#### What execution found that the pre-registration missed
+
+1. **The pinned engineering serving is failing, reproducibly.** GMICloud returned
+   429 on both attempts that reached it, each time on an engineering-tier call
+   (`validate`, then `domain_review`), with `implement` taking 183 s and 375 s for
+   a single call beforehand. Convention 23 disqualifies a serving on compliance
+   before speed; a serving that 429s twice is disqualified. **This is the
+   standing-pin risk recorded in §26 arriving within hours of the ratification.**
+2. **The pre-registration's pins assume a model map it never names.** A pin names
+   a provider; whether that provider serves the tier's model is a property of the
+   *pair*. Attempt 1 died because the map had drifted from B14's, and no
+   registered artifact records which map the pins were settled against. **A pin
+   is not portable without its map.**
+3. **`verify_grounding` is not deterministic.** Across three attempts that
+   reached it: *1 finding from 3 deferred gaps*, then *0 from 0*, then *0 from 0*
+   — with no search call billed on the last two. B1's override fires on the same
+   scenario and looks nothing up. n=3, unexplained, and it bears directly on B13's
+   premise.
+4. **The per-iteration `blocked_on` record is lost to overwriting.** In every
+   attempt, the final `implement.blocked_on` reads `[]` and `blocked_check` reads
+   *"nothing blocked on"*, because `state.outputs` is overwritten each iteration;
+   only the gate's own record preserved what fired. §27.3 reasoned about this gap
+   from the code — **it is now observed.**
+5. **`blocked_terminal` ended a live run.** Attempt 4's path ends
+   `implement → blocked_check → blocked_terminal`. The gate added on 2026-09-20
+   is what produced the honest terminal, and it did not exist when this
+   pre-registration was written. The predicted wording is satisfied **by a
+   mechanism the prediction could not have named** — recorded rather than scored
+   as a clean hit.
+6. **Both gates fired on every attempt that reached them**, on three different
+   criteria across three runs. B3's routing gate is not a knife-edge behaviour on
+   this scenario.
+
+#### E2 — not executed, and blocked
+
+E2's pre-registered selection rule, `grep -l "risk: low"
+evals/scenarios/wide/*.yaml`, **matches zero scenarios**: the wide corpus carries
+no `risk:` key, only `risk_at_least:`/`risk_at_most:` bounds. Three readings
+exist — 0 by the literal rule, 3 by a floor of low, 1 pinned to low at both ends
+— and they disagree about what would be measured, because two of the floor-of-low
+three permit `medium`. The pre-registration is a committed artifact and was not
+touched; the rule needs a ruling, landed as a dated amendment.
 
 Neither part touches a loop §27.3 changes: E1's path is build-only, E2 is
 triage-only. No pre-registered prediction is invalidated by the amendment. The
-graph state at run time is noted here as a fact of the run.
+graph state at run time was 25 nodes, `4612855` or later.
 
 ### 27.3 Amendment — loop coverage superseded, 2026-09-20
 
