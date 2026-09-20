@@ -472,6 +472,12 @@ refusal**. There is no trace of this, because the run it produces reports
 `tests/test_blocked_on.py::TestTheGreenButBlockedGap` simulating it end to end
 (convention 22).
 
+**The loop asymmetry ended 2026-09-20.** The owner overruled the advisor's
+2026-09-19 ruling directly; both loops carry `blocked_terminal` now, ending the
+run `blocked` rather than shipping a green-but-blocked conclusion. The design is
+advisor-ratified on the merits, and the full record — including two claims of
+the original ruling recorded as wrong — is §27.3 of the notebook.
+
 **Reading the shape in one line:** triage → ground → plan → *gate* → verify
 grounding on demand → build until every judge agrees → escalate if it never
 does → *gate* on recoverable → review → *gate* on clean → rework until review
