@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-717%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-718%20passing-brightgreen.svg)](#testing)
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
 
@@ -174,7 +174,7 @@ The sequence of phases is data, not code. A workflow is a graph of nodes in YAML
 |---|---|---|
 | `ai` | one model call, routed to a tier, validated against a typed verdict | paid |
 | `check` | a deterministic function over prior outputs | **free** |
-| `gate` | a condition that lets the run continue or ends it | **free** |
+| `gate` | a condition that lets the run continue, routes it to another node, or ends it with a terminal status | **free** |
 
 ```yaml
 - id: validate
@@ -187,10 +187,13 @@ The sequence of phases is data, not code. A workflow is a graph of nodes in YAML
   depends_on: [coverage, consistency, domain_review]
 
 - id: build_loop
-  body: [implement, domain_review, coverage, consistency, validate]
-  until: validate.green == true
+  kind: ai
+  body: [implement, blocked_check, blocked_gate,
+         domain_review, coverage, consistency, validate, judges]
+  until: judges.passed == true
   max_iterations: max_iterations
   on_exhausted: escalation
+  depends_on: [verify_grounding]
 ```
 
 Conditions are a deliberately small language — one comparison over a dotted path — rather than `eval`, because a workflow file is configuration and configuration must not execute code.
@@ -750,7 +753,7 @@ workflows/                # engineering-rnd, lean, triage-only, triage-classify
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 717 tests
+tests/                    # 718 tests
 ```
 
 ## Cost and Performance
@@ -795,7 +798,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-717 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
+718 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
 
 The graph tests are the load-bearing ones: node shape, gate routing, loop bounds and the all-judges exit are all decidable without a provider. An earlier hardcoded sequencer was kept alongside the graph as an equivalence reference and has been retired — once gates could route on failure, a linear engine could no longer represent the pipeline it was supposed to be checking.
 

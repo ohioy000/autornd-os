@@ -122,3 +122,55 @@ class TestReadmeBadgeMatchesTheSuite:
             f"the Project Structure comment together — they drifted to 339 "
             f"against a real 501 once already."
         )
+
+
+class TestTheReadmeYamlExcerptIsTheRealThing:
+    """A hand-copied YAML excerpt drifts. This one is the third exhibit.
+
+    HANDOVER §3.1 carried a hand-copied node table for twelve blueprints and
+    was wrong about the loop by two exits when it was finally read; the fix
+    there was to generate the table. The README's *Workflows Are Files*
+    excerpt is the same shape of claim — real node ids, presented as the file
+    — and it drifted the same way: it showed a five-node `build_loop` exiting
+    on `validate.green` long after the fold and the block nodes landed.
+
+    So it is compared rather than eyeballed. The excerpt may show a SUBSET of
+    the file's nodes and of each node's fields — it is an illustration, and a
+    short one is better — but every field it does show must equal the file.
+    Drop a node from the excerpt and this says nothing about it; misquote one
+    and it fails.
+    """
+
+    WORKFLOW = "workflows/engineering-rnd.yaml"
+
+    @staticmethod
+    def _excerpt() -> list[dict]:
+        import yaml
+
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        blocks = re.findall(r"```yaml\n(.*?)```", readme, re.DOTALL)
+        for block in blocks:
+            if "id: build_loop" not in block:
+                continue
+            return yaml.safe_load(block)
+        raise AssertionError(
+            "the README no longer carries a yaml block naming build_loop — if "
+            "the excerpt moved, move this guard with it rather than deleting it")
+
+    def test_every_excerpted_field_matches_the_workflow_file(self):
+        import yaml
+
+        real = {n["id"]: n for n in
+                yaml.safe_load((ROOT / self.WORKFLOW).read_text())["nodes"]}
+        wrong = []
+        for shown in self._excerpt():
+            node = real.get(shown["id"])
+            if node is None:
+                wrong.append(f"{shown['id']}: not a node in {self.WORKFLOW}")
+                continue
+            for key, value in shown.items():
+                if node.get(key) != value:
+                    wrong.append(
+                        f"{shown['id']}.{key}: README says {value!r}, "
+                        f"the file says {node.get(key)!r}")
+        assert not wrong, "; ".join(wrong)
