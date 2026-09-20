@@ -101,6 +101,27 @@ nodes:
     on_fail: escalation
     on_fail_reason: "Implementation blocked on a criterion it cannot satisfy"
 
+  # The same block, inside the two loops that sit in the escalation sub-graph,
+  # ending the run instead of routing it. The routing gate above cannot go
+  # there — it would re-enter the sub-graph with a fresh iteration budget each
+  # time, which is unbounded. A TERMINAL gate has no such path: it ends.
+  #
+  # What it fixes, found by reading rather than by a trace: the block was
+  # absent from those bodies entirely, and `blocked_check` is the only thing
+  # that reads `blocked_on` independently of `green`. validate's failure-log
+  # write is guarded on the iteration being red. So an implementation that came
+  # back GREEN while naming a criterion it could not satisfy recorded nothing
+  # and met no gate in rework or recovery — the fold saw four green judges, the
+  # loop converged, and the work SHIPPED carrying the refusal. Ending `blocked`
+  # is the honest terminal: the same one `plan_ready` and `recoverable` use
+  # when the run cannot proceed truthfully.
+  - id: blocked_terminal
+    kind: gate
+    condition: blocked_check.passed == true
+    depends_on: [blocked_check]
+    on_fail: blocked
+    on_fail_reason: "Blocked on a criterion the implementation cannot satisfy"
+
   - id: domain_review
     kind: ai
     tier: engineering
@@ -177,7 +198,7 @@ nodes:
 
   - id: recovery_loop
     kind: ai
-    body: [implement, domain_review, coverage, consistency, validate, judges, rework_review, review_fold]
+    body: [implement, blocked_check, blocked_terminal, domain_review, coverage, consistency, validate, judges, rework_review, review_fold]
     until: review_fold.passed == true
     max_iterations: escalation_recovery_attempts
     on_exhausted_status: escalated
@@ -235,7 +256,7 @@ nodes:
   # disagreement path is bounded and ends in escalation or a human.
   - id: review_rework_loop
     kind: ai
-    body: [implement, domain_review, coverage, consistency, validate, judges, rework_review, review_fold]
+    body: [implement, blocked_check, blocked_terminal, domain_review, coverage, consistency, validate, judges, rework_review, review_fold]
     until: review_fold.passed == true
     max_iterations: review_rework_attempts
     on_exhausted: escalation

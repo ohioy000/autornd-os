@@ -136,6 +136,20 @@ class TestTheWiring:
         for loop in ("recovery_loop", "review_rework_loop"):
             assert "blocked_gate" not in spec.get(loop).body, loop
 
+    def test_those_loops_carry_the_terminal_gate_instead(self):
+        """What the routing gate cannot do there, a terminal gate can: it ends
+        the run, so there is nothing to re-enter. Without it a green-but-blocked
+        implementation met no gate at all on those paths and shipped."""
+        from autornd.graph.spec import TERMINAL_STATUSES, load
+
+        spec = load("workflows/engineering-rnd.yaml")
+        for loop in ("recovery_loop", "review_rework_loop"):
+            body = spec.get(loop).body
+            assert body.index("blocked_check") == body.index("implement") + 1, loop
+            assert body.index("blocked_terminal") == body.index("blocked_check") + 1, loop
+        assert spec.get("blocked_terminal").on_fail in TERMINAL_STATUSES, (
+            "a routing on_fail here would be the unbounded path B3 forbids")
+
 
 @pytest.mark.asyncio
 class TestEscalationReadsTheBlock:
@@ -226,11 +240,19 @@ class TestTheGateRoutes:
         assert state.status == "completed"
         assert runner.ai_calls.count("implement") == 1
 
-    async def test_recovery_after_a_block_is_bounded_and_ends_escalated(self):
-        """The no-unbounded-path invariant, exercised: escalation judges the
-        work recoverable, recovery runs its own bounded attempts — inside which
-        the blocked gate does NOT exist, or it would re-enter escalation
-        forever — and exhaustion ends the run escalated."""
+    async def test_a_block_inside_recovery_ends_blocked_on_its_first_attempt(self):
+        """Was: exhaustion is the honest terminal. It is not, for a block.
+
+        The old assertion here pinned three recovery attempts against a
+        criterion already named unsatisfiable, ending `escalated` — a terminal
+        the run reaches by paying for the answer it already had. `blocked` is
+        the honest one, and `blocked_terminal` reaches it on the first attempt.
+
+        The invariant the old test actually guarded is unchanged and asserted
+        below: the escalation sub-graph is never re-entered from inside itself.
+        A terminal gate cannot re-enter anything — that is why it is terminal
+        and the routing gate stays out of these bodies.
+        """
         state, runner = await _run({
             **BASE, "implement": self.BLOCKED,
             "validate": {"green": True},
@@ -239,8 +261,94 @@ class TestTheGateRoutes:
                            "root_cause_analysis": "unsatisfiable as planned",
                            "resolution_directive": "drop the criterion"}})
 
-        assert state.status == "escalated", "exhaustion is the honest terminal"
-        # 1 build attempt + escalation_recovery_attempts (3) recovery attempts
-        assert runner.ai_calls.count("implement") == 1 + 3
+        assert state.status == "blocked"
+        # 1 build attempt + 1 recovery attempt that ends on the gate, where it
+        # used to be 1 + 3 with the last two buying nothing.
+        assert runner.ai_calls.count("implement") == 1 + 1
         assert runner.ai_calls.count("escalation") == 1, (
             "the escalation sub-graph must not be re-entered from inside itself")
+
+    async def test_an_unblocked_failure_in_recovery_still_exhausts_to_escalated(self):
+        """The fix must not steal the exhaustion path from everything else.
+
+        No block anywhere: rework exhausts its two attempts, escalation judges
+        the work recoverable, recovery exhausts its three, and the run ends
+        `escalated` exactly as before.
+        """
+        state, runner = await _run({
+            **BASE,
+            "validate": {"green": True},
+            "review": {"ship": False, "verdict": "no", "findings": []},
+            "escalation": {"requires_human": False,
+                           "root_cause_analysis": "still red",
+                           "resolution_directive": "try again"}})
+
+        assert state.status == "escalated", "exhaustion is the honest terminal"
+        assert runner.ai_calls.count("escalation") == 1
+
+
+@pytest.mark.asyncio
+class TestTheGreenButBlockedGap:
+    """The defect this gate closes, simulated end to end (convention 22).
+
+    `blocked_check` is the only thing in the graph that reads `blocked_on`
+    independently of `green`; validate's failure-log write is guarded on the
+    iteration being red. So an implementation that came back GREEN while naming
+    a criterion it could not satisfy used to record nothing and meet no gate
+    inside the rework and recovery loops: four green judges, the loop
+    converged, and the work SHIPPED carrying the refusal.
+
+    Found by reading the two write sites, not by a trace — there is no trace of
+    it, because the run it produces reports `completed`.
+
+    The block has to arrive AFTER the build loop, or `blocked_gate` catches it
+    there and the rework path is never reached. So implement is scripted as a
+    callable: clean on the build attempt, green-but-blocked on every attempt
+    after it.
+    """
+
+    @staticmethod
+    def _implement_blocks_after_the_build():
+        calls = {"n": 0}
+
+        def implement(state):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return IMPL
+            return {**IMPL, "green": True, "blocked_on": [
+                "Criterion 1: no source available to verify the backoff cap"]}
+
+        return implement
+
+    async def test_a_green_block_in_the_rework_loop_does_not_ship(self):
+        state, runner = await _run({
+            **BASE,
+            "validate": {"green": True},
+            "review": {"ship": False, "verdict": "no", "findings": []},
+            "implement": self._implement_blocks_after_the_build()})
+
+        assert state.status == "blocked", (
+            "a green implementation naming an unsatisfiable criterion must not "
+            "ship out of the rework loop")
+        assert "blocked_terminal" in state.path
+
+    async def test_the_terminal_reason_names_the_criterion(self):
+        """A blocked run says why in the architect's own terms — the gate's
+        detail carries the matched entries, not just that a condition failed."""
+        state, runner = await _run({
+            **BASE,
+            "validate": {"green": True},
+            "review": {"ship": False, "verdict": "no", "findings": []},
+            "implement": self._implement_blocks_after_the_build()})
+
+        assert "criterion" in (state.reason or "").lower()
+
+    async def test_the_same_verdict_still_ships_when_nothing_is_blocked(self):
+        """The gate fires on the block, not on the rework path itself."""
+        state, runner = await _run({
+            **BASE,
+            "validate": {"green": True},
+            "review": {"ship": False, "verdict": "no", "findings": []},
+            "rework_review": {"ship": True, "verdict": "yes", "findings": []}})
+
+        assert state.status == "completed"
