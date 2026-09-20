@@ -203,9 +203,20 @@ channel's first command and would otherwise be rediscovered every time.
 undone, and what execution found that the command missed. A measurement that
 contradicts its command is reported as it read (convention 18).
 
-**A command's evidence is checkable before it is acted on.** A command that
-cites a sha, a file path, or a measured figure states it in a form the executor
-can verify first — a runnable check whose failure aborts the command, the way
+**A command's evidence is checkable before it is acted on**, and the command
+shape carries the mechanism. A command file may carry a **`preconditions`**
+array of `{"command", "expected"}` runnable checks; **a command citing a sha, a
+file path, or a measured figure MUST carry one verifying it.** The executor runs
+every precondition **before acting** and aborts on any failure, recording it in
+the response file. **A precondition failure is a `BLOCKED` report, not a
+deviation** — nothing was done differently, because nothing was done.
+
+The rule was first demonstrated by its author: commands `ARCH-20260920-002`
+through `-006` carried the field at issue, and their preconditions were the
+first this channel ran as a matter of shape rather than instinct.
+
+A command that cites a sha, a file path, or a measured figure states it in a
+form the executor can verify first — a runnable check whose failure aborts the command, the way
 `ARCH-20260919-001`'s HEAD guard did. Rationale, 2026-09-20: a command cited an
 entire paid run — call counts, dollar figures, traces, a test file, two commit
 shas — and **none of it existed**; the executor falsified every artifact against

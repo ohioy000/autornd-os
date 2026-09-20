@@ -96,3 +96,16 @@ def test_the_channel_requires_checkable_evidence():
     for phrase in ("verify", "is not evidence",
                    "ARCH-20260921-002.response.json"):
         assert phrase in text, f"the checkable-evidence precondition lost {phrase!r}"
+
+
+def test_the_command_shape_carries_preconditions():
+    """The checkable-evidence rule, made structural rather than stated.
+
+    Asserts the field, the MUST, and that a failure is BLOCKED rather than a
+    deviation — the three parts that make it a mechanism instead of advice. A
+    section keeping the word `preconditions` while losing the obligation would
+    otherwise pass (convention 22)."""
+    text = AGENTS.read_text(encoding="utf-8")
+    for phrase in ("preconditions", "MUST carry one verifying it",
+                   "`BLOCKED` report, not a"):
+        assert phrase in text, f"the preconditions schema lost {phrase!r}"
