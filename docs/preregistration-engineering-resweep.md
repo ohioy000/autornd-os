@@ -151,3 +151,76 @@ The executor proposes; the owner ratifies. Whatever this measures, changing the
 standing pin is a G-2 ratification and a G-3 edit, and neither is the executor's.
 **The outcome does not reopen B016** — it measures the apparatus E1 ran on, not
 the fix E1 tested.
+
+---
+
+## Execution record — 2026-09-20
+
+**Stopped early by the owner at 7 of 12 paced units. This sweep does not settle
+the engineering pin, and the reason is convention 23's own words: never at n=1.**
+Five of six arms have a single paced repetition. No ranking is offered and none
+should be read into the table below.
+
+Two runs, 19 units, **$0.1955** total — well inside the $1.80 ceiling and under
+A5's $0.50 prediction for the paced arm alone ($0.0880).
+
+### The paced arms, as they read
+
+| arm | n | outcome | calls | secs | iterations |
+|---|---|---|---|---|---|
+| OpenInference | 1 | **completed** | 7 | 121.8 | 1 |
+| GMICloud | 2 | 429, then **completed** | 7 / 8 | 121.0 / 134.5 | 1 / 1 |
+| StreamLake | 1 | 429 | 5 | 66.8 | 0 |
+| DeepInfra | 1 | 429 | 5 | 63.3 | 0 |
+| DigitalOcean | 1 | **expiry at 1200 s** | 13 | 1200.0 | **4** |
+| SiliconFlow | 1 | **expiry at 1200 s** | 10 | 1200.0 | 1 |
+
+### Predictions, scored as they read
+
+- **A1 — FALSIFIED.** Predicted at most 2 errors in 12 with 90 s of spacing; the
+  paced run produced **5 errors in 7**. Pacing was the wrong diagnosis. The
+  confound in the first run was real, but removing it did not restore the
+  measurement, so the cause is not the harness's request rate alone.
+- **A2 — CONFIRMED, and P1 is withdrawn.** **GMICloud completed a paced run** —
+  8 calls, 134.5 s, one iteration. It is not categorically non-compliant. E1's
+  two 429s are therefore **not** evidence that GMICloud is a bad serving, and
+  **the convention-23 disqualification recorded in §27.2 is withdrawn.** That
+  section is corrected in the same change as this record. This is the most
+  consequential thing the sweep produced and it is a retraction, not a finding.
+- **A3 — CONFIRMED.** SiliconFlow returned empty replies in E1 attempt 4, twice
+  in the confounded run (both 1200 s expiries), and expired again here at 1200 s
+  on one iteration. **Five observations across three independent contexts.**
+  Pacing does not touch it. This is a compliance property of the serving, and it
+  is the one arm this sweep can speak to.
+- **A4 (P3, P4) — NOT MEASURABLE at n=1.** Iterations and speed cannot be
+  compared across arms that mostly did not complete.
+- **A5 — CONFIRMED.** $0.0880 paced, $0.1955 across both runs.
+
+### What execution found that the pre-registration missed
+
+1. **The failures are not one failure.** Three distinct modes appeared: a fast
+   429 with no work done (StreamLake, DeepInfra, GMICloud rep 1), an expiry after
+   genuine iteration (**DigitalOcean: 4 iterations, 13 calls, never converged**),
+   and an expiry from empty replies (SiliconFlow). Only the first is plausibly a
+   throttle. **DigitalOcean's is §6.11's "a serving converges at a rate" arriving
+   unprompted** — it was compliant and simply never terminated.
+2. **The same arm both failed and passed under identical conditions.** GMICloud
+   429'd and then completed, 90 s apart, same model, same pins. Whatever produces
+   the 429 is **intermittent**, which is precisely why convention 23 forbids
+   n=1 — and why five of these arms remain unmeasured rather than merely
+   unimpressive.
+3. **OpenInference completed 3 of its 4 repetitions across both runs**, the only
+   arm to complete anything in the confounded run. Suggestive, and **not a
+   result**: n=1 paced.
+4. **The sweep cost less than the E1 arm it was diagnosing** — $0.1955 against
+   $0.2885 — because `lean` on `backend_index` is a cheap shape. A compliance
+   sweep is affordable to repeat properly.
+
+### What this leaves
+
+**The engineering pin is unsettled and stays as it is.** No proposal is made;
+changing it is a G-2 ratification and a G-3 edit and neither is the executor's.
+What a correct sweep needs, recorded so it is not re-derived: **n ≥ 2 on every
+arm**, the intermittent 429 characterised before the arms are compared, and
+SiliconFlow excluded or kept only as a known-bad control. The traces of both runs
+are committed as the evidence for all of the above.

@@ -6369,12 +6369,20 @@ mismatch between the scenario and the fix, not a harness failure, and it means
 
 #### What execution found that the pre-registration missed
 
-1. **The pinned engineering serving is failing, reproducibly.** GMICloud returned
-   429 on both attempts that reached it, each time on an engineering-tier call
-   (`validate`, then `domain_review`), with `implement` taking 183 s and 375 s for
-   a single call beforehand. Convention 23 disqualifies a serving on compliance
-   before speed; a serving that 429s twice is disqualified. **This is the
-   standing-pin risk recorded in §26 arriving within hours of the ratification.**
+1. **The pinned engineering serving returned 429 on both attempts that reached
+   it**, each time on an engineering-tier call (`validate`, then `domain_review`),
+   with `implement` taking 183 s and 375 s for a single call beforehand.
+
+   **⚠️ Retracted 2026-09-20. The disqualification this item originally recorded
+   was wrong.** It read: *"Convention 23 disqualifies a serving on compliance
+   before speed; a serving that 429s twice is disqualified."* The re-sweep
+   (`docs/preregistration-engineering-resweep.md`) found that **five other
+   servings 429'd too**, and that **GMICloud itself completed a paced run** — 8
+   calls, 134.5 s, one iteration — 90 seconds after 429'ing under identical
+   conditions. The 429 is **intermittent and not specific to the serving**, so
+   E1's two failures are not evidence against GMICloud. The observation stands;
+   the verdict drawn from it does not. Kept in place rather than edited away,
+   because a wrong reading corrected is worth more than a clean record.
 2. **The pre-registration's pins assume a model map it never names.** A pin names
    a provider; whether that provider serves the tier's model is a property of the
    *pair*. Attempt 1 died because the map had drifted from B14's, and no
