@@ -203,6 +203,17 @@ channel's first command and would otherwise be rediscovered every time.
 undone, and what execution found that the command missed. A measurement that
 contradicts its command is reported as it read (convention 18).
 
+**A command's evidence is checkable before it is acted on.** A command that
+cites a sha, a file path, or a measured figure states it in a form the executor
+can verify first — a runnable check whose failure aborts the command, the way
+`ARCH-20260919-001`'s HEAD guard did. Rationale, 2026-09-20: a command cited an
+entire paid run — call counts, dollar figures, traces, a test file, two commit
+shas — and **none of it existed**; the executor falsified every artifact against
+the tree before writing a word of record
+(`.orchestration/responses/ARCH-20260921-002.response.json`). Had it not, the bug
+ledger would have closed a defect on measurements never taken.
+**A command whose evidence cannot be checked against the tree is not evidence.**
+
 ## Opening a session
 
 `docs/successor-prompt.md` is what the owner pastes to start a new executor. It
