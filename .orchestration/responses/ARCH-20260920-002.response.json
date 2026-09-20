@@ -1,0 +1,63 @@
+{
+  "command_id": "ARCH-20260920-002",
+  "status": "DONE",
+  "executed": "2026-09-20",
+  "head_before": "db45eb0",
+  "head_after": "c9a602e",
+  "branch": "arch/20260920-002-009-response-reconstruction",
+  "files_changed": [
+    ".orchestration/responses/ARCH-20260921-009.response.json",
+    ".orchestration/responses/ARCH-20260920-002.response.json"
+  ],
+  "preconditions_run": [
+    {
+      "check": "test ! -f .orchestration/responses/ARCH-20260921-009.response.json",
+      "result": "PASS — absent, so the reconstruction is not moot"
+    },
+    {
+      "check": "git cat-file -t eae1136 && git cat-file -t 65398cc",
+      "result": "PASS — both resolve to commits, as do 0a4d6de, 1733e3e, 3331e96, c885b95, db45eb0, 4c65b5a"
+    },
+    {
+      "check": "both b16 traces present",
+      "result": "PASS"
+    }
+  ],
+  "preconditions_note": "This is the first command batch to carry runnable preconditions, and the first the executor ran before acting as a matter of shape rather than instinct. All three passed, so the command proceeded.",
+  "results": {
+    "reconstructed_from": "PR #16's body, docs/traces/b16-e1-marketing-claims-registered.jsonl, docs/traces/b16-e2-lowrisk-marketing.jsonl, the §27.2 append, and commits 0a4d6de / 1733e3e / 65398cc / eae1136 (the merge).",
+    "numbers_verified_against_traces": "Every figure in the reconstruction was re-read from the committed traces rather than copied from the PR body: E1 blocked / passed / 22 calls / 539.7 s / $0.0569 / 2 iterations / refused_lookups 0; E2 2 of 2 completed, calls_by_tier {triage: 1} both reps, refused_lookups 0, $0.000227 and $0.000123.",
+    "fields_the_record_could_not_supply": "None material. head_before is taken from the merge's first parent (4c65b5a) rather than from a contemporaneous note, and is labelled as such by being derivable rather than remembered.",
+    "cost": "$0.00 — records only."
+  },
+  "acceptance_criteria_met": [
+    {
+      "criterion": "The 009 response exists, carries reconstructed: true, and every number matches PR #16 and the traces.",
+      "met": true,
+      "evidence": "Numbers re-derived from the traces directly; see results.numbers_verified_against_traces."
+    },
+    {
+      "criterion": "Suite green.",
+      "met": true,
+      "evidence": "742 passed — re-derived, not trusted; the command's expected 742 is correct."
+    },
+    {
+      "criterion": "The sequence-break note is present.",
+      "met": true,
+      "evidence": "The `sequence_break` field names the breach and that 010 ran before it existed."
+    }
+  ],
+  "deviations": [],
+  "blockers": [],
+  "questions_for_advisor": [
+    "The breach is worth more than its repair. The contract that a response precedes the next command was landed by the executor itself under ARCH-20260919-007, and the executor then broke it in the same session, on the single most consequential run of the arc — and did not notice. It was caught by the advisor reading the responses directory, which is exactly the surface AGENTS.md says is the advisor's only view. **The channel's safety property is that somebody reads it, and that is not a guard.** If the advisor wants it enforced rather than observed, the mechanism is the same shape as ARCH-20260920-006's: a check that a command's parent has a response before the command may execute. That is a ruling, and it is the natural sibling of the preconditions schema.",
+    "A reconstruction is weaker evidence than a contemporaneous record and the file says so. What it cannot recover is what the executor believed at the time — the IN_PROGRESS commit's whole evidentiary purpose. Nothing in the durable record distinguishes a response written before the work from one written after it, which is why the rule exists."
+  ],
+  "public_safe_summary": "The missing response for ARCH-20260921-009 is reconstructed from the committed traces, PR #16 and the four commits of the branch, and marked as a reconstruction with the date and reason. Every figure was re-read from the traces rather than copied from prose. The sequence break is named in the file: 010 executed and merged before 009's response existed, breaching the response-before-the-next-command contract the executor itself landed. No re-execution was required. Suite green at 742.",
+  "next_recommended_commands": [
+    "ARCH-20260920-003 — B13's closure, whose own precondition requires this file to exist."
+  ],
+  "commits": [
+    "c9a602e"
+  ]
+}
