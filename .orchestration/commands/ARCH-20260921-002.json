@@ -1,0 +1,90 @@
+{
+  "command_id": "ARCH-20260921-002",
+  "parent_id": "ARCH-20260919-009",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Close Blueprint 016's record on Part E's committed evidence: B13's ledger row, §6.13's post-fix column, §27.2's terminal-state ruling and cross-reference repair, the shipped-state claims in HANDOVER, and the two riding hygiene lines — so the ledger, notebook and handover all state the same, current truth and the arc is closed on main.",
+  "evidence": [
+    ".orchestration/responses/ARCH-20260919-009.response.json: E1 status 'blocked', 12 calls, USD 0.0865, blocked_on criterion named at iteration 1 — prediction 1 confirmed; prediction 2 moot at n=1 (run blocked, never scored)",
+    "docs/traces/b16-e1-marketing-claims.jsonl header + units: identical map and pins to §24.1(f)'s 43-call fabrication run — GMICloud engineering pin at USD 0.091/M in, the b12-derived rate; the controlled contrast held",
+    ".orchestration/responses/ARCH-20260919-009.response.json: E2 ran FIVE sectors (grep selected five, prereg predicted three — recorded as a finding), all passed, zero lookups, USD 0.0495 total",
+    "docs/traces/b16-e2-lowrisk-*.jsonl: five committed traces, per tests/test_traces.py's 13-field header guard",
+    "tests/test_traces.py (new at 723bff3): guards every committed trace header — 717 to 720 tests; .orchestration/responses/ARCH-20260920-001.response.json attributes it",
+    "docs/handover-review.md §27.3: 'This amendment supersedes §27.1(3)'; .orchestration/responses/ARCH-20260919-009.response.json cites a '§27.3.1' that does not exist — cross-reference drift introduced by 20260920-001's numbering",
+    "HANDOVER.md §4.2 B13 row (restored at 4bfbbc5): still reads open; §6.13 still carries only the pre-fix contrast",
+    "HANDOVER.md §3.6 MODEL_PREMIUM line: says 'falls back to architecture' when unset; .env.example (verified 2026-09-20) says 'leave empty to disable the feature — the button will not appear'; one is stale — executor verifies code and fixes the HANDOVER line",
+    "docs/pre-registration-b17-citation-gates.md on main at 0f4b286: committed without passing through the command channel; provenance entry owed (advisor could not read the body this session; no BLOCKED claim made — see questions)"
+  ],
+  "scope": {
+    "include": [
+      "docs/handover-review.md (§27.2 append, §27.3 cross-reference repair, B17 provenance line)",
+      "HANDOVER.md (§4.2 B13 row, §6.13 post-fix column, §0/§2.2 shipped-state claims, §3.6 one-line hygiene fix)",
+      ".orchestration/responses/ARCH-20260921-002.response.json (same branch)"
+    ],
+    "exclude": [
+      "autornd/**",
+      "tests/**",
+      "workflows/**",
+      "profiles/**",
+      "evals/**",
+      "docs/traces/**",
+      "docs/preregistration-b016-part-e.md",
+      "docs/pre-registration-b17-citation-gates.md",
+      "README.md",
+      "AGENTS.md",
+      "CHANGELOG.md",
+      ".env.example"
+    ]
+  },
+  "constraints": [
+    "Records only — no code, tests, config, or trace edits. Every count stamp touched follows convention 24 (generated or guarded, never hand-stamped).",
+    "B13's row closes with BOTH numbers and their n: pre-fix 43 calls to a cost-ceiling fabrication death; post-fix 12 calls, USD 0.0865, honest blocked refusal; 'n=1 each; mechanism deterministic (21 unit tests + end-to-end gap test); wild frequency unmeasured — open measurement in §6'.",
+    "§6.13 gains a post-fix column or sentence: the fix replaces fabrication with refusal on the build path; the low-risk/medium-risk contrast stands as measured; the new fact (zero lookups at low risk is CORRECT behavior post-016, not the B13 defect) is stated.",
+    "§27.2: append the terminal-state ruling verbatim in substance — 'landed-validated, n=1: the mechanism is validated (gate fired, run refused, terminal outcome deterministic); the wild is not characterized (real-world blocked_on frequency unknown, recorded as an open measurement)'. Also record both of 009's absorbs (scenario config diff as run variable; merged trace count 23 to 28) as the response file already holds them.",
+    "§27 cross-references: repair every '§27.3.1' citation to the section that exists (§27.3, or renumber as the notebook's convention requires and record which). grep '27.3.1' repo-wide; every hit's disposition recorded in the response file.",
+    "B17 provenance: add one line to §27.2 or the notebook's standing provenance list — 'docs/pre-registration-b17-citation-gates.md landed at 0f4b286 owner-ruled without advisor review; unratified' — the exact wording pending the owner's answer to this command's question; if the owner answers in-thread before merge, record that answer instead.",
+    "§3.6 hygiene: executor first verifies which behavior the premium code implements (read the button code path), then fixes the HANDOVER line to match the code and .env.example. One line. If code and .env.example DISAGREE, stop and report — that would be a code bug, not a doc drift.",
+    "No edits to the pre-registrations themselves — b016-part-e and b17 are committed artifacts, record-only.",
+    "Suite green before and after (720 expected); CI green; merge with a merge commit; response file on the same branch."
+  ],
+  "acceptance_criteria": [
+    "B13's row reads closed with both call counts, both costs, both n values.",
+    "§6.13 and §27.2 state the terminal-state ruling; grep '§27.3.1' returns 0 unexplained hits.",
+    "The B17 provenance line exists and matches the owner's in-thread answer (or the default unratified wording).",
+    "§3.6's line matches the verified code behavior; response file cites the code path.",
+    "Suite green at 720; CI green; every touched count stamp is derived, not typed."
+  ],
+  "verification": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "0 failures, 720 collected."
+    },
+    {
+      "command": "grep -rn '27.3.1' docs/ HANDOVER.md README.md",
+      "expected": "0 hits, or every hit's disposition in the response file."
+    },
+    {
+      "command": "grep -n 'B13' HANDOVER.md | head -3",
+      "expected": "The row reads closed with 43 and 12 calls cited."
+    },
+    {
+      "command": "grep -n 'MODEL_PREMIUM' HANDOVER.md .env.example",
+      "expected": "The two lines agree with the code behavior cited in the response file."
+    }
+  ],
+  "rollback": "Revert the merge commit or close the PR before merge — records only, trivially revertible.",
+  "deliverable": {
+    "branch": "arch/20260921-002-b016-record-close",
+    "pr": true,
+    "commit_style": "conventional"
+  },
+  "assumptions": [
+    "Part E's traces and 009's response are the complete evidence for the 016 closure; nothing further lands mid-command.",
+    "The model map stays frozen for the duration (advisor ruling 2026-09-21, suggestion 1).",
+    "The notebook tolerates the §27.3.1 repair as a cross-reference fix, not a retcon — the wrong citation was introduced by 20260920-001's own numbering and is being corrected to what exists."
+  ],
+  "questions": [
+    "Owner: B17 — ratify as owner-ruled (I then read it and rule on the design before anything executes against it), or withdraw it? The provenance line records whichever you say.",
+    "Owner: ratify the USD 6.00 envelope for the escalation serving sweep (suggestion 4) so I can issue the pre-registration command after 002 merges?"
+  ]
+}
