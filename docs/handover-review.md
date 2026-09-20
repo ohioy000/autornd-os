@@ -6509,10 +6509,15 @@ pre-registration promised and it had never been run until now.
 
 ##### What this run added for free
 
-- **`verify_grounding` non-determinism grows to n=5.** Readings so far:
-  *1 finding from 3 gaps* once, *0 from 0* four times — including both arms here,
-  with no search call billed. B1's override fires on the same scenario and looks
-  nothing up four times in five.
+- **`verify_grounding` fired once in four.** ⚠️ *Corrected 2026-09-20 — this
+  line first read "n=5 … four times in five", and it was wrong twice over
+  (`ARCH-20260920-004`).* **The count is n=4:** exactly four committed units
+  carry a `verify_grounding` verdict; the fifth died at `plan` and never reached
+  the node, so it observed nothing. **And the component was wrong.** The detector
+  did not vary — `demanded` was **true in 4 of 4**. What varied is
+  `deferred_gaps`: 3 once, 0 three times. The lookup is gated on *having gaps to
+  spend on* (`graph/adapter.py:241`), so looking nothing up with zero deferred
+  gaps is **correct**, not a miss. The verdict is **plan variance**, now B16.
 - **The retry repair was exercised on the path that needed it.** Two earlier
   attempts died on engineering-tier 429s; this one held GMICloud to termination.
 - **`criteria_addressed` passed this time** (`True`, against `None` on the

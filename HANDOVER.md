@@ -741,7 +741,8 @@ named.
 | B9 | No DB migrations (no Alembic) | low | Schema changes are destructive |
 | B13 | ~~The risk gate governs lookups; the success criteria govern what must be verified; nothing reconciles them~~ | **CLOSED (advisor, 2026-09-20)** | Closed on the registered contrast, **n=1 each side**. **Pre-fix:** 43 calls into the cost ceiling with invented citations (§24.1(f), `b14-gen_marketing_claims.jsonl`). **Post-fix:** 22 calls, **$0.0569**, 539.7 s, an honest `blocked` terminal, claims **labelled unsourced**, the engineering pin held to termination (`b16-e1-marketing-claims-registered.jsonl`), and the scenario **scored a pass for the refusal**. **E2:** zero search spend at `low` risk, **n=2** — the risk gate's zero-lookup is *correct behaviour*, not the defect. Mechanism deterministic under test (`tests/test_blocked_on.py`, its `TestTheGreenButBlockedGap` and exhaustion companion). **Wild `blocked_on` frequency: unmeasured, open in §6.** The n resolution: the 2026-09-20 amendment's `n=1` counted scenarios, not repetitions; the registered `--repeat 2` stands. What 016 did **not** fix is B15. |
 | B14 | **Two literal engineering roles are injected regardless of profile** | medium | Measured 2026-09-15 (§24.1(a), §24.1(d)). `phases.py:104–110` appends `test_engineer` at high/critical and `systems_architect` on multi-domain; `review_composition.py:53–60` adds both by risk level, and an unrecognised domain leads to `systems_architect`. **77 of 108 wide-suite units in both arms** were assigned a test engineer, and 2 of 3 non-engineering full traces were staffed a systems architect. Not a bug under §6.5 — a synthesized role resolves rather than failing — but it is the generalization boundary sitting **in code rather than in prose**, which a prompt map cannot see. Also: the append bypasses Pydantic, so a `list[str]` field holds an enum member. |
-| B15 | **Draft-level invention persists beyond plan-demanded citations** | medium | Measured 2026-09-20 on E1's registered run. The implementer **labelled all three proof points unsourced** rather than inventing citations — B13's fix working — and in the same draft **invented a product name, 'ExpenseFlow', and presented it as fact rather than flagging it as an assumption** (escalation's autopsy, `b16-e1-marketing-claims-registered.jsonl`). 016's honest-refusal channel governs **what the plan demands citations for**, and nothing else a draft might invent. **Status: OPEN.** Disposition: candidate for B14's generalization boundary or its own design — advisor ruling pending. |
+| B15 | **Draft-level invention persists beyond plan-demanded citations** | medium | Measured 2026-09-20 on E1's registered run. The implementer **labelled all three proof points unsourced** rather than inventing citations — B13's fix working — and in the same draft **invented a product name, 'ExpenseFlow', and presented it as fact rather than flagging it as an assumption** (escalation's autopsy, `b16-e1-marketing-claims-registered.jsonl`). 016's honest-refusal channel governs **what the plan demands citations for**, and nothing else a draft might invent. **Status: OPEN.** **Disposition (advisor, 2026-09-20):** folds into B14's generalization design — the honesty question one level above citations (B13 was *the plan demanding what the run cannot supply*; B15 is *the draft supplying what nothing demanded and nothing checks*); the fix lives where drafts are composed and reviewed; no standalone arc. |
+| B16 | **Plan success criteria are rewritten from scratch on every run of the same scenario** | medium | **OPEN (advisor, 2026-09-20).** Across **4** committed plan outputs of the identical `gen_marketing_claims` request the criteria were **6, 6, 6 and 5**, each differently worded. B13/016's mechanism keys on *what the plan demands* — `verify_grounding` reads `plan.success_criteria`, and `deferred_gaps` varied **3, 0, 0, 0** across these runs — so the citation-demand pathway's **input is not stable run-to-run**. A reproducibility caveat on 016's registered contrast, which B13's row already states at n=1 each side. **No fix ruled:** the variance is inherent to a generated plan, and the mechanism held across all four (`demanded` true 4/4, zero demand-missed — `ARCH-20260920-004`). Disposition: feeds B14's design — demand-detection must tolerate criteria variance, and any future pre-registered multi-run contrast carries its per-run criteria counts as **run variables**. |
 | B11 | Two tier picks are **interim and unmeasured at their own jobs** | medium | `research` and `engineering` ship on models chosen for price and availability, never scored against the work they do. `engineering` carries five of the flagship's nodes and is the tier whose *serving* closed B7 — the model behind it has had no equivalent test. In service by choice, labelled so nobody mistakes the choice for a finding. |
 | B12 | Four tiers have **never been measured by serving** | medium | B4 and B7 both turned on *who serves a tier*, and it has only ever been asked of `triage`, `architecture` and `engineering`. `escalation`, `research`, `search` and the reranker are unpinned and unexamined. `escalation` is 70–78% of spend on hard traces (§6.10), so it is the obvious next place to look. Convention 23 says how. |
 | B10 | `ambiguous_request` — historical "mystery failure" | **RESOLVED** | It was B3's sibling: a `max_calls: 4` baseline set when the budget counted *nodes*. Measured 6. Now 8 |
@@ -1555,6 +1556,32 @@ rework round rather than eight.
 This is also the first live reading from the per-iteration dissent record
 repaired in 012, and it names `consistency` — a free deterministic numeric check
 — as a judge that caught a style-guide defect nobody would have pointed it at.
+
+---
+
+### 6.16 A 429 is a property of the (model, provider) pair
+
+**Belongs with §6.1 and §6.11** — the same thesis, one layer down: a model id is
+not a system, and neither is a provider name.
+
+**A 429 is a property of the (model, provider) pair, not of the model alone or
+the provider alone.** All twelve 429s in the committed record are
+`deepseek/deepseek-v4-flash`, spread across five providers inside one two-hour
+window, while the same model via Alibaba ran 309 units without one. The pair
+plus `allow_fallbacks: False` is what converts a transient upstream shortage
+into a dead run; an unpinned rotation answered on demand throughout. Cost of the
+twelve: **$0.2163, all of it buying nothing.**
+
+**One episode, one window, no denominator — sufficient to name the mechanism,
+not to rank servings.**
+
+Two things this fact does **not** license. The $0.2163 is a **pre-fix** number
+and is not what the retry saves: there have been **zero post-fix 429 events**, so
+the repair has never fired in production and is proved by
+`tests/test_rate_limit_retry.py` alone. And the distribution cannot rank
+providers — GMICloud carries 3 of the 12 events *and* 227 completed units of 236
+(`docs/serving-ledger.md`). Derivation and the four questions the record cannot
+answer: `.orchestration/responses/ARCH-20260920-005.response.json`.
 
 ---
 
