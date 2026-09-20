@@ -193,8 +193,10 @@ class TestShippedWorkflow:
     def test_the_block_gate_sits_right_after_implement(self):
         """B13's refusal check must fire before any paid judge sees the work:
         the measured failure was six iterations of fabrication against an
-        impossible criterion. And it must be in build_loop's body ONLY — a
-        routing gate inside the escalation sub-graph would re-enter it."""
+        impossible criterion. The ROUTING gate must be in build_loop's body
+        only — inside the escalation sub-graph it would re-enter it. The check
+        itself runs in all three; the other two route nowhere, they terminate
+        (`blocked_terminal`, pinned in tests/test_blocked_on.py)."""
         spec = load("workflows/engineering-rnd.yaml")
         body = spec.get("build_loop").body
         assert body.index("blocked_check") == body.index("implement") + 1
