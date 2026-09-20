@@ -79,3 +79,75 @@ Caps are per invocation: `--max-spend 0.10` bounds one scenario-run,
   pin.
 - **The outcome does not reopen B016.** This measures the apparatus E1 ran on,
   not the fix E1 tested. B13's ledger row stays open either way.
+
+---
+
+## Amendment 1 — pacing, 2026-09-20
+
+**Committed before the re-run, after the first run and before its replacement.**
+Nothing above is edited. The first run happened, it is reported below, and it
+failed for a reason the design did not anticipate.
+
+### What the first run measured, and why it is not an answer
+
+Nine of ten completed repetitions errored, across **five different providers**:
+StreamLake 429/429, DeepInfra 429/429, DigitalOcean 429/429, OpenInference
+429/completed, GMICloud 400/400. When every serving fails, the serving is not the
+variable.
+
+Ruled out: **credits.** The account read $0.3666 used of a $6.00 limit at the
+time, $5.63 remaining.
+
+The confound is **pacing, and it is the executor's design error.** Six arms ran
+back to back with no spacing — twelve units against one model, continuously. The
+original method above specifies arms and caps and says nothing about the rate at
+which they are issued, and B12's sweep was not run that way. **What was measured
+is the harness's request rate against an account- or model-level throttle, not
+the compliance of six servings.** Convention 18 names this exactly: a 429 is a
+fact about the apparatus until something rules the apparatus out, and here
+nothing had.
+
+The first run's traces are kept, as the evidence for this amendment. They are
+**not** a serving comparison and must not be cited as one.
+
+### What changes
+
+- **One invocation per (arm, repetition)** — twelve invocations at `--repeat 1`,
+  rather than six at `--repeat 2`, so pacing can sit between every unit.
+- **90 seconds of idle between units.** Long enough to clear a short-window
+  throttle, cheap enough to run once.
+- **Results to `resweep2-engineering-<ARM>.jsonl`**, so the paced run cannot be
+  confused with the confounded one.
+- Arms, model map, pins, caps and the three axes are **unchanged**, so the paced
+  run still compares against `b12-serving-*.jsonl`.
+
+### Predictions — revised, each still falsifiable
+
+- **A1 — pacing is the cause, n=12.** Error rate falls from 9/10 to **at most
+  2/12**. *If errors persist at a similar rate with 90 s of spacing, pacing was
+  the wrong diagnosis*, the cause is upstream congestion on
+  `deepseek/deepseek-v4-flash` itself or an account limit that spacing cannot
+  clear, and this sweep cannot settle the engineering serving on this model at
+  all. That is the outcome most worth being wrong about, and it is a real
+  possibility: every arm ran the same model.
+- **A2 — P1 is already falsified and is withdrawn, n=2+2.** GMICloud was not
+  singled out: it failed differently from the rest (400, not 429) while five
+  other servings failed too. **E1's two 429s are therefore not evidence that
+  GMICloud is non-compliant**, and the convention-23 disqualification recorded in
+  §27.2 is withdrawn pending this run. Recorded as wrong rather than quietly
+  dropped (convention 7).
+- **A3 — P2 survives and is strengthened.** SiliconFlow returned an empty reply
+  in E1 attempt 4 and again in the first sweep run — `finish_reason=length` with
+  16,384 tokens burned, then `finish_reason=None` with 5,969. **Two independent
+  observations before this run.** Predicted to repeat at least once in two paced
+  repetitions. This is a compliance failure that pacing cannot explain.
+- **A4 — P3 and P4 stand as written** and are judged on the paced run only.
+- **A5 — total spend under $0.50** across twelve units, against a ceiling of
+  $1.20 from `--max-spend 0.10` × 12.
+
+### Still recorded before the run
+
+The executor proposes; the owner ratifies. Whatever this measures, changing the
+standing pin is a G-2 ratification and a G-3 edit, and neither is the executor's.
+**The outcome does not reopen B016** — it measures the apparatus E1 ran on, not
+the fix E1 tested.
