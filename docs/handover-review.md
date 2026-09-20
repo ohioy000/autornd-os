@@ -6096,12 +6096,44 @@ belongs in B14's change rather than as a drive-by.
 
 ### The pin line
 
-The three serving pins that closed B7 — `triage`, `architecture`, `engineering`
-— have **only ever run env-prefixed**, on the experiments that measured them.
-They are **not standing in `.env`**. Making them standing is one line, and
-`.env` is the owner's (G-3). Until that line exists, any run not carrying the
-prefix draws whatever the provider rotation offers, and §6.11 is the measurement
-of what that costs.
+**Standing since 2026-09-20. Ratified by the owner (G-2).** The paragraph below
+is kept as it was written, because what it asked for is what happened and the
+asking is the record.
+
+> The three serving pins that closed B7 — `triage`, `architecture`,
+> `engineering` — have **only ever run env-prefixed**, on the experiments that
+> measured them. They are **not standing in `.env`**. Making them standing is
+> one line, and `.env` is the owner's (G-3). Until that line exists, any run not
+> carrying the prefix draws whatever the provider rotation offers, and §6.11 is
+> the measurement of what that costs.
+
+**The ratification.** The owner wrote `OPENROUTER_PROVIDER_ORDER` into `.env` on
+2026-09-20 and ratified it in one line, which is the whole of G-2. The executor
+verified the value without reading it into any transcript (G-1): it pins the
+same three tiers, in the same order, and is **byte-identical to the string
+`docs/preregistration-b016-part-e.md` registers**. §25.2 called this "the single
+highest-value thing waiting on nobody's design"; it is no longer waiting.
+
+**What changes, and what does not.**
+
+- **Part E is unaffected.** Its commands carry the pins as an environment prefix
+  per invocation, and a real environment variable takes precedence over the
+  `.env` file, so both arms run on exactly the string they pre-registered —
+  by the prefix, not by the file. The pre-registration is untouched.
+- **An unprefixed run no longer means what it meant.** Every measurement taken
+  before this date on a run *without* the prefix drew whatever the provider
+  rotation offered. That is what §6.1 and §6.11 measured, and those readings
+  stand as historical facts about an unpinned harness. A run taken from now on
+  without a prefix is a *pinned* run. **Do not compare the two without saying
+  which side of this line each was taken on.**
+- **`.env` is still the owner's** (G-3). The executor did not write this line
+  and does not edit that file; it scaffolded an unfilled template and verified
+  the result by presence, never by value.
+
+**Not yet measured:** whether these three pins remain the right ones. They were
+settled by B7 and B12 against the servings available then. A standing pin makes
+a stale pin durable, which is the cost of the convenience — a re-sweep is the
+natural next question, not a defect in this ratification.
 
 ### 25.2 Execution record — **and the handover note. Successor: read this first.**
 
@@ -6156,7 +6188,8 @@ before and after; CI green. **$0.00 — free, as specified.**
 - **The pins are still not standing.** Every measurement that closed B7 ran
   env-prefixed. One `.env` line makes them standing and that line is the
   owner's (G-3). **This is the single highest-value thing waiting on nobody's
-  design.**
+  design.** — *Resolved 2026-09-20: ratified by the owner and standing. See
+  §26's pin line.*
 
 #### What execution found that the blueprint missed
 
