@@ -1,0 +1,79 @@
+{
+  "command_id": "ARCH-20260920-008",
+  "status": "DONE",
+  "executed": "2026-09-20",
+  "head_before": "2ca6d34",
+  "head_after": "16cb308",
+  "branch": "arch/20260920-008-arrival-checks",
+  "files_changed": [
+    "AGENTS.md",
+    "tests/test_protocol_file.py",
+    "HANDOVER.md",
+    "README.md",
+    ".orchestration/responses/ARCH-20260920-008.response.json"
+  ],
+  "preconditions_run": [
+    {
+      "check": "grep -c 'preconditions' AGENTS.md >= 1",
+      "result": "PASS — 2; the 006 schema was present to extend"
+    },
+    {
+      "check": "parent ARCH-20260920-006 has a response",
+      "result": "PASS"
+    },
+    {
+      "check": "grep -n 'MUST carry' AGENTS.md",
+      "result": "PASS — the 006 rule text exists"
+    }
+  ],
+  "self_demonstration": "This command satisfies both rules it lands: its parent's response exists, and its preconditions array is non-empty. Checked before executing, not asserted afterwards.",
+  "results": {
+    "duty_one": "A non-null parent_id MUST already have a response file; a missing one is a BLOCKED report naming the file. The re-parenting escape is landed with it, and names ARCH-20260920-002 as the worked example — a repair command carries parent_id null and names the file it repairs.",
+    "duty_two": "Every command carries a non-empty preconditions array; absent or empty is a BLOCKED report on arrival.",
+    "semantics": "'A BLOCKED arrival is not a dead end; it is the report the channel exists to produce' — landed verbatim, because the failure mode of an arrival check is an executor that treats it as a reason to give up rather than a reason to report.",
+    "guard_proved": "Both MUSTs weakened one at a time and each failure captured: softening '**MUST**' to 'may' fails with \"the arrival checks lost '**MUST**'\"; dropping 'non-empty' from the preconditions clause fails with its own message. Deletion was not used — the realistic degradation keeps the prose and softens the obligation.",
+    "counts": "743 to 744, re-derived in-change as the command pre-declared.",
+    "cost": "$0.00"
+  },
+  "acceptance_criteria_met": [
+    {
+      "criterion": "AGENTS.md carries both arrival checks with BLOCKED semantics and the re-parenting escape.",
+      "met": true,
+      "evidence": "AGENTS.md:187-196, inside the executor's duty list."
+    },
+    {
+      "criterion": "The guard fails on each weakened MUST, checked not assumed.",
+      "met": true,
+      "evidence": "Both messages captured verbatim; see results.guard_proved."
+    },
+    {
+      "criterion": "Counts consistent across HANDOVER/README.",
+      "met": true,
+      "evidence": "744 across 39 files in both."
+    },
+    {
+      "criterion": "Suite green.",
+      "met": true,
+      "evidence": "744 passed, 0 failed."
+    }
+  ],
+  "deviations": [
+    {
+      "what": "The guard's asserted phrases were rewritten once during authoring.",
+      "why": "The first version asserted 'MUST** exist at', which spans a line break in the rendered markdown and so never matched. It failed on correct text — a guard that cannot pass is as useless as one that cannot fail, and in the same way: it stops carrying information. Caught by running it rather than by reading it.",
+      "impact": "None to the landed rule. Worth recording as the third instance this week of a check whose relationship to its subject was wrong rather than its logic."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "The ladder now reads stated → structural → enforced, and the last rung is narrower than it looks. The executor checks the command file's SHAPE — parent has a response, preconditions array is non-empty. It does not and cannot check that the preconditions are the RIGHT ones: a command citing three shas and carrying one precondition that greps an unrelated file passes both duties. Closing that would need the check to relate preconditions to the citations they cover, which is a heuristic rather than a rule, and the command's own assumptions say no citation-detection heuristic is ruled. Recorded so the ladder is not mistaken for complete.",
+    "Ratification still open on the stricter form, per the command's own question to the owner: every command carries preconditions, rather than only evidence-citing ones. The stricter bar landed because it is mechanically checkable and the narrower one is not. If the owner prefers the narrow bar, the rule is one sentence to amend — but the guard would then assert something the executor cannot verify, which is the shape of check this session has repeatedly found worthless."
+  ],
+  "public_safe_summary": "The channel's ladder closes at enforced. On arrival the executor now checks the command file itself: a non-null parent must already carry a response, and every command must carry a non-empty preconditions array, each failure a BLOCKED report rather than a silent execution. The re-parenting escape lands with it. The guard asserts both duties and was proved by weakening each MUST in turn rather than by deleting the paragraph. Recorded as a limit: the check verifies shape, not whether the preconditions actually cover what the command cites. Counts re-derived to 744 across 39 files, pre-declared.",
+  "next_recommended_commands": [
+    "ARCH-20260920-010 — the detail-string legibility fix."
+  ],
+  "commits": [
+    "16cb308"
+  ]
+}

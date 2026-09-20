@@ -1,0 +1,111 @@
+{
+  "command_id": "ARCH-20260920-007",
+  "status": "DONE",
+  "executed": "2026-09-20",
+  "head_before": "c91af13",
+  "head_after": "3a1dcbe",
+  "branch": "arch/20260920-007-record-adoptions",
+  "files_changed": [
+    "HANDOVER.md",
+    "docs/handover-review.md",
+    ".orchestration/responses/ARCH-20260920-007.response.json"
+  ],
+  "preconditions_run": [
+    {
+      "check": "responses 003/004/005 present",
+      "result": "PASS"
+    },
+    {
+      "check": "grep -c B15 >= 1",
+      "result": "PASS — 3 mentions"
+    },
+    {
+      "check": "grep -c B16 == 0",
+      "result": "PASS — the number was free"
+    },
+    {
+      "check": "n=5 hits to correct",
+      "result": "PASS — exactly one, docs/handover-review.md:6512, as the command predicted"
+    }
+  ],
+  "bracketed_facts_rederived": {
+    "source": "docs/traces/b16-e1-marketing-claims.jsonl and b16-e1-marketing-claims-registered.jsonl, re-read rather than copied from ARCH-20260920-004's response",
+    "plan_bearing_units": 4,
+    "criteria_counts": [
+      6,
+      6,
+      6,
+      5
+    ],
+    "deferred_gaps": [
+      3,
+      0,
+      0,
+      0
+    ],
+    "agreement": "Identical to 004's figures. Written into B16 as re-derived numbers."
+  },
+  "results": {
+    "B16": "OPEN, its own row after B15, carrying n=4, the criteria sequence 6/6/6/5, the deferred_gaps sequence 3/0/0/0, and the no-fix-ruled clause. Disposition feeds B14.",
+    "B15": "Disposition line replaced with the advisor's ruling — folds into B14's generalization design; the fix lives where drafts are composed and reviewed; no standalone arc.",
+    "section_6_16": "Landed as §6.16, placed at the end of §6 with an explicit 'belongs with §6.1 and §6.11' pointer rather than inserted mid-sequence, which would have renumbered eleven subsections. The ruled amendment is in ('not of the model alone or the provider alone') and the caveat is appended verbatim.",
+    "n_correction": "The single repo hit corrected in place with a dated ⚠️ note quoting what it used to say. Both errors are named — the count and the component — rather than only the count."
+  },
+  "naming_guard": {
+    "risk_flagged_by_command": "The §6 sentence names a model id and could trip tests/test_docs.py's scan.",
+    "checked": "tests/test_docs.py:37-38 — USER_FACING is README.md, .env.example, AGENTS.md, CLAUDE.md, CONTRIBUTING.md, CHANGELOG.md. HANDOVER.md is deliberately absent; §6 is the lab notebook and naming the subject of a measurement is the point of a record.",
+    "outcome": "No conflict. tests/test_docs.py green. The fallback of relocating the fact to the notebook was not needed."
+  },
+  "immutable_record_note": "PR #16's merged body carries the wrong n=5 framing and cannot be edited. Recorded here as the command directs: the corrected reading lives in §27.2, in B16, and in ARCH-20260920-004's response, and any reader arriving via PR #16 should be sent to those.",
+  "acceptance_criteria_met": [
+    {
+      "criterion": "B16 exists as its own numbered row, OPEN, with its n and the deferred_gaps sequence.",
+      "met": true,
+      "evidence": "HANDOVER §4.2, immediately after B15."
+    },
+    {
+      "criterion": "B15's disposition line carries the advisor ruling.",
+      "met": true,
+      "evidence": "Replaced in place."
+    },
+    {
+      "criterion": "§6 carries the 429 fact with the amendment and the caveat; tests/test_docs.py green.",
+      "met": true,
+      "evidence": "§6.16; 13 passed across the two guard files."
+    },
+    {
+      "criterion": "No verify_grounding n=5 claim remains.",
+      "met": true,
+      "evidence": "The sole surviving 'n=5' string is inside the correction note, quoting what it replaced."
+    },
+    {
+      "criterion": "Suite green at 743.",
+      "met": true,
+      "evidence": "743 passed — unchanged, as the command's no-knock-on declaration predicted."
+    }
+  ],
+  "deviations": [
+    {
+      "what": "The §6 fact landed as §6.16 at the end rather than physically adjacent to §6.1 and §6.11.",
+      "why": "Inserting mid-sequence would have renumbered eleven subsections, and §6 is cross-referenced by number from the ledger, the notebook and AGENTS.md. The adjacency the command asked for is served by an explicit pointer in the fact's first line.",
+      "impact": "None to the content. Every existing §6.n reference still resolves."
+    },
+    {
+      "what": "§6.16 carries two sentences the proposed text did not: that the $0.2163 is a pre-fix number, and that the distribution cannot rank providers.",
+      "why": "Both are from ARCH-20260920-005's own response, and both are the misreadings the number invites. A §6 fact is quoted without its response file; the caveat has to travel with it.",
+      "impact": "Six lines. The ruled sentence and the ruled caveat are verbatim."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "B16 is recorded as 'no fix ruled', which is right — but it is worth naming what it does to the evidence standard. B13 closed at n=1 each side on a contrast whose *input varies between runs*. That does not weaken the closure, because the mechanism held 4/4; it does mean **a second repetition of the registered contrast would not be a repeat** — it would be a different plan, and so a second sample rather than a confirmation. Any future ruling asking for n=2 on that contrast should say which of the two it wants.",
+    "§6.16 now states that the retry has never fired in production. That sentence has a shelf life: the next live run that hits a 429 either falsifies it or leaves it standing, and nothing currently flags it for review. It is the kind of claim that goes quietly stale, which is what §6's own guards exist to prevent — but no guard can watch it, because it is a claim about the absence of an event."
+  ],
+  "public_safe_summary": "Both free characterisations are adopted into the record. B16 opens for plan-criteria instability with its numbers re-derived from the traces rather than copied — four plan outputs of the identical request carrying 6, 6, 6 and 5 criteria and deferring 3, 0, 0, 0 gaps. B15's disposition takes the advisor's ruling and folds into B14. §6.16 lands the 429 fact with its amendment and its caveat, plus the two things it does not license. The single n=5 miscount is corrected in place with both of its errors named — the count and the component. Suite unchanged at 743.",
+  "next_recommended_commands": [
+    "ARCH-20260920-008 — the arrival checks."
+  ],
+  "commits": [
+    "3a1dcbe"
+  ]
+}

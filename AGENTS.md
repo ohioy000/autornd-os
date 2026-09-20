@@ -184,6 +184,15 @@ command with no response file has not been executed, whatever a transcript says.
   report cannot be read apart.
 - Nobody rewrites another agent's message, and nobody force-pushes a protected
   branch.
+- **On arrival, before executing, the executor checks the command file itself.**
+  **First:** if `parent_id` is non-null, a response file for that parent **MUST**
+  exist at `.orchestration/responses/<parent_id>.response.json` — a missing
+  parent response is a `BLOCKED` report naming the missing file; the advisor then
+  re-issues the command re-parented. *(Repair commands carry `parent_id: null`
+  and name the file they repair, as `ARCH-20260920-002` would have.)*
+  **Second:** every command carries a **non-empty `preconditions` array** — an
+  absent or empty array is a `BLOCKED` report on arrival. **A BLOCKED arrival is
+  not a dead end; it is the report the channel exists to produce.**
 
 A response carries at minimum `command_id`, `executed`, `head_before`,
 `head_after`, `results`, `deviations` and `questions_for_advisor`. Status is one

@@ -1,0 +1,194 @@
+{
+  "command_id": "ARCH-20260920-009",
+  "status": "DONE",
+  "executed": "2026-09-20",
+  "head_before": "b0fe060",
+  "head_after": "df2d096",
+  "branch": "arch/20260920-009-b14-design-inputs",
+  "files_changed": [
+    ".orchestration/responses/ARCH-20260920-009.response.json"
+  ],
+  "preconditions_run": [
+    {
+      "check": "docs/smartfactory exists and is non-empty",
+      "result": "PASS — 3 files"
+    },
+    {
+      "check": "grep -c B14 HANDOVER.md >= 1",
+      "result": "PASS — 4"
+    },
+    {
+      "check": "grep -c B16 HANDOVER.md >= 1",
+      "result": "PASS — ARCH-20260920-007 landed on the parent branch"
+    },
+    {
+      "check": "adapter.py and context.py present",
+      "result": "PASS"
+    }
+  ],
+  "headline": "THE BOUNDARY IS SMALLER AND MORE CONCENTRATED THAN THE RECORD IMPLIES. There is **no literal 'studio' or 'marketing' coupling anywhere in the runtime path** — a grep over autornd/** returns one hit, in a docstring explaining why vocabularies are open. Everything domain-specific arrives through the profile or the scenario. What remains hardcoded is **one vocabulary of roles and two rules that reach into it**, plus **seven prompt strings that say 'engineering' out loud**.",
+  "inventory": [
+    {
+      "item": "SpecialistRole enum — 7 members, all engineering roles",
+      "site": "autornd/models/verdicts.py:73-80",
+      "class": "HARDCODED",
+      "note": "Already a default rather than a limit (§6.5): a profile declares its own roles and an undeclared one is synthesized as a generalist (autornd/specialists/registry.py:203-210). The enum is not the boundary; the rules that reference its MEMBERS are.",
+      "generalization": "None needed for the vocabulary itself. The enum stays as a shipped default."
+    },
+    {
+      "item": "Domain enum — 7 members",
+      "site": "autornd/models/verdicts.py:56-70",
+      "class": "HARDCODED",
+      "note": "Same shape, same measurement behind it. TriageVerdict's field is open-ended on purpose (verdicts.py:85-89: nine of twelve subjects had no fitting label, eight forced to 'hardware').",
+      "generalization": "None needed."
+    },
+    {
+      "item": "enforce_triage_composition — appends TEST_ENGINEER at high/critical, SYSTEMS_ARCHITECT on multi-domain",
+      "site": "autornd/engine/phases.py:106-111",
+      "class": "HARDCODED — and this is boundary site #1",
+      "note": "Never consults the profile. §24.1(d) measured 77 of 108 wide-suite units assigned a test engineer in BOTH arms, identical, because the injection cannot see the profile. Also still bypasses Pydantic by appending an enum member to a list[str] (recorded unfixed since §26).",
+      "generalization": "Profile keys naming the role that fills each structural slot — 'who checks the work' and 'who holds the system-level view' — with the shipped roles as the default mapping. The RULE is domain-neutral; only its operands are not."
+    },
+    {
+      "item": "get_review_team — adds TESTER above low risk, ARCHITECT at high/critical, ARCHITECT as the low-risk fallback and the <2 filler",
+      "site": "autornd/engine/review_composition.py:17-18 (the constants), 50-71 (the rules)",
+      "class": "HARDCODED — boundary site #2",
+      "note": "Four separate reaches into the engineering vocabulary. The low-risk path returns `[lead or ARCHITECT]`, so a studio run with no recognised lead is reviewed by a systems architect.",
+      "generalization": "Same two profile keys as above. The risk-scaling logic itself is fully general."
+    },
+    {
+      "item": "lead_for_domain fallback — an unrecognised domain leads to the architect",
+      "site": "autornd/engine/phases.py:438-446",
+      "class": "HARDCODED — boundary site #3",
+      "note": "Deliberate and documented: profile vocabulary first, shipped defaults second, architect last, and it must never raise. The docstring argues the architect is right for unmapped work.",
+      "generalization": "A profile key for the fallback lead. Lowest value of the three — the fallback is load-bearing only when the profile has not declared a mapping, which a generalized profile would."
+    },
+    {
+      "item": "Workflow node specialists — `systems_architect` on plan, `test_engineer` on validate",
+      "site": "workflows/engineering-rnd.yaml:33, 158",
+      "class": "SCENARIO/CONFIG-BORNE — and the cheapest to fix",
+      "note": "These are DATA, not code. A profile-specific workflow file can already name different roles; nothing in the engine requires these values.",
+      "generalization": "Either a per-profile workflow copy (already supported — 'copy one and change it' is the shipped affordance) or role-slot indirection resolved from the profile at load."
+    },
+    {
+      "item": "Prompt dialect — 7 live prompt strings saying 'engineering'",
+      "site": "autornd/engine/phases.py:48, 150, 217, 244, 827, 924, 930",
+      "class": "HARDCODED",
+      "note": "§6.13 measured this as the arc's central assumption and found it NOT load-bearing: the dialect is in the prompts and does not reach the output. These are the 7 emitted strings; §6.13's 24 line-items include comments and lists.",
+      "generalization": "A noun supplied by the profile ('engineering work' / 'content' / 'analysis'). §6.13's evidence says do this LAST and expect little — it was priced as the risky 30% and measured as neither risky nor necessary."
+    },
+    {
+      "item": "SPECIALIST_OUTPUT_CONTRACT — 'your response IS the deliverable'",
+      "site": "autornd/engine/phases.py:48",
+      "class": "HARDCODED, and must stay",
+      "note": "Not a dialect binding. Without it models replied that they could not complete the work and validate read that as a failed implementation (HANDOVER §1).",
+      "generalization": "None. Domain-neutral already except for the word 'engineering' in the same sentence."
+    }
+  ],
+  "boundary_sites_relocated": {
+    "recorded": "§26 and the B14 row name phases.py:104-110 and review_composition.py:53-60.",
+    "at_head": "phases.py:106-111 and review_composition.py:50-71.",
+    "drift": "REAL BUT SMALL. phases.py has moved by 2 lines. review_composition.py's recorded range 53-60 UNDERSTATES the site: the two constants live at 17-18 and there are four reaches across 50-71, not two across 53-60. Any blueprint citing the old range would miss half the site.",
+    "third_site": "lead_for_domain at phases.py:438-446 is named in §26's prose but carries no line reference anywhere; recorded here with one."
+  },
+  "smartfactory_delta": {
+    "what_it_is": "A grounding corpus and a domain manifest — NOT a project config. Three files: architecture.md (24 lines), constraints.md (21), manifest.json (25). The manifest maps domains to documents and carries an empty `specialist_extras`.",
+    "the_surprise": "**SmartFactory is an ENGINEERING project** — its manifest's domains are firmware, hardware, backend, frontend, infrastructure, every one of them a shipped Domain enum member. It is therefore **not a test of the generalization boundary at all.** It would run on the studio-free path today without touching a single hardcode above.",
+    "unmet_requirements": [
+      {
+        "need": "A profile",
+        "class": "PROFILE-BORNE",
+        "detail": "No profiles/smartfactory.yaml exists. Without one, AUTORND_PROFILE is unset and the shipped defaults apply — which for this domain set is correct."
+      },
+      {
+        "need": "Scenarios",
+        "class": "SCENARIO-BORNE",
+        "detail": "No evals/scenarios/smartfactory/ exists. A run needs at least one scenario with its expectations."
+      },
+      {
+        "need": "Ingestion",
+        "class": "CONFIG",
+        "detail": "The corpus is documents on disk; every run this session logged 'Knowledge collection not found — run ingestion first'. Nothing has ingested it."
+      },
+      {
+        "need": "Nothing else",
+        "class": "—",
+        "detail": "No hardcode in the inventory above blocks a smartfactory run."
+      }
+    ],
+    "consequence_for_B14": "**If the advisor wants B14 validated live, smartfactory is the wrong corpus.** It exercises the engineering path the harness already serves. The studio profile is the only non-engineering vocabulary in the tree, and the wide suite's 36 sectors are the only breadth. This is the most actionable finding in the survey and it bears directly on Blueprint 017's live-validation envelope."
+  },
+  "intersections": [
+    {
+      "region": "enforce_triage_composition",
+      "B15": "No direct touch — it staffs, it does not draft.",
+      "B16": "Indirect: a differently-worded plan changes domains, which changes whether the multi-domain branch fires. The injection is a function of triage's output, which is as unstable as the plan's."
+    },
+    {
+      "region": "get_review_team",
+      "B15": "DIRECT. B15 is 'the draft supplying what nothing demanded and nothing checks' — the review team is the thing that would check it. A team drawn from the wrong vocabulary reviews a content draft with a test engineer.",
+      "B16": "Indirect, via assigned roles."
+    },
+    {
+      "region": "lead_for_domain",
+      "B15": "None.",
+      "B16": "None."
+    },
+    {
+      "region": "workflow node specialists",
+      "B15": "Indirect: `validate` runs as test_engineer on a content brief, which is the lens most likely to miss an invented product name.",
+      "B16": "None."
+    },
+    {
+      "region": "prompt dialect",
+      "B15": "PLAUSIBLE AND UNMEASURED. A prompt that says 'engineering work' may shape what a draft invents. §6.13 says the dialect does not reach the output — but it measured deliverable SHAPE, not invention.",
+      "B16": "DIRECT. The plan prompt is where success criteria are generated, and B16 is their instability. phases.py:244."
+    }
+  ],
+  "unanswerable_from_code": [
+    "Whether profile-aware role slots would change what the review team CATCHES, as opposed to who is in it. Nothing in the record measures review quality by team composition.",
+    "Whether the prompt dialect affects invention (B15). §6.13 measured that it does not affect deliverable shape; invention was not its subject.",
+    "What a non-engineering domain's correct structural slots even are. 'Who checks the work' has no obvious content-studio answer — fact checker, editor and legal reviewer are all candidates, and the studio profile declares several."
+  ],
+  "acceptance_criteria_met": [
+    {
+      "criterion": "Inventory table: every item path:line, three-way classified, with a generalization note for hardcoded items.",
+      "met": true,
+      "evidence": "inventory — 8 items."
+    },
+    {
+      "criterion": "Boundary sites re-located at HEAD with the drift.",
+      "met": true,
+      "evidence": "boundary_sites_relocated — drift found in both recorded references, and a third site given a line reference for the first time."
+    },
+    {
+      "criterion": "smartfactory delta stated as a requirement list.",
+      "met": true,
+      "evidence": "smartfactory_delta — four needs, three of them absent artifacts and none a code hardcode."
+    },
+    {
+      "criterion": "B15/B16 intersection noted per region.",
+      "met": true,
+      "evidence": "intersections — five regions."
+    },
+    {
+      "criterion": "Suite untouched at 744.",
+      "met": true,
+      "evidence": "Analysis only; no file in the runtime path was opened for writing. NOTE: the command expects 743; the suite is 744 after ARCH-20260920-008's guard, which this branch is stacked on."
+    }
+  ],
+  "deviations": [],
+  "blockers": [],
+  "questions_for_advisor": [
+    "**The survey's headline is that B14 is smaller than staged.** §26 framed it as 'two literal engineering roles bind on every profile', with the measured impact that 77 of 108 units got a test engineer. That is real — but the generalization is TWO PROFILE KEYS, not an architecture. The rules themselves (scale the review team with risk; someone checks the work; someone holds the system view) are already domain-neutral. Only their operands are engineering nouns.",
+    "**And smartfactory cannot validate it.** Its manifest's domains are firmware, hardware, backend, frontend, infrastructure — five shipped enum members. It is an engineering project and would run today. If Blueprint 017 wants live validation of the boundary, it needs a non-engineering corpus, and the only one in the tree is the studio profile with no documents behind it. That is a gap worth closing before the blueprint is written, not after.",
+    "**§26's line references have drifted and one was always incomplete.** review_composition.py's recorded 53-60 covers two of four reaches; the constants at 17-18 are outside it. A blueprint written from the recorded reference would generalize half the site and measure a partial fix. Re-stated at HEAD above — and this is the argument for the blueprint citing symbols rather than lines."
+  ],
+  "public_safe_summary": "Read-only survey of B14's design inputs, no spend. The boundary is smaller and more concentrated than the record implies: there is no literal studio or marketing coupling anywhere in the runtime path, and what remains is one role vocabulary plus three rules that reach into it, one workflow file naming two roles as data, and seven prompt strings saying 'engineering'. The recorded line references for both named boundary sites have drifted, and one always understated its site by half. The largest finding is that docs/smartfactory is an engineering project — its manifest's domains are all shipped enum members — so it cannot validate the generalization boundary; it would run on today's path unchanged.",
+  "next_recommended_commands": [
+    "Blueprint 017, with a non-engineering corpus named for its live validation."
+  ],
+  "commits": [
+    "df2d096"
+  ]
+}

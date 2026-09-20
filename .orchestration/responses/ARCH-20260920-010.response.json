@@ -1,0 +1,71 @@
+{
+  "command_id": "ARCH-20260920-010",
+  "status": "DONE",
+  "executed": "2026-09-20",
+  "head_before": "46bb1c9",
+  "head_after": "87314f3",
+  "branch": "arch/20260920-010-detail-string-legibility",
+  "files_changed": [
+    "autornd/graph/adapter.py",
+    ".orchestration/responses/ARCH-20260920-010.response.json"
+  ],
+  "preconditions_run": [
+    {
+      "check": "the old string exists at the -004-cited region",
+      "result": "PASS — autornd/graph/adapter.py:258, no drift"
+    },
+    {
+      "check": "parent ARCH-20260920-004 has a response",
+      "result": "PASS"
+    }
+  ],
+  "results": {
+    "new_strings": {
+      "no_demand": "no citation demand detected — no lookup",
+      "demand_with_lookup": "citation demand detected; 3 deferred gap(s) — lookup performed: 1 finding(s)",
+      "demand_no_gaps": "citation demand detected; 0 deferred gap(s) — nothing to look up, no lookup performed",
+      "demand_lookup_empty": "citation demand detected; 2 deferred gap(s) — lookup performed: 0 finding(s)"
+    },
+    "three_facts_distinct": "Detection, deferred gaps, and whether a lookup happened are now three clauses. The last two used to collapse: a run with zero gaps and a run whose lookup returned nothing both read '0 finding(s)', and both carried the word 'verifiability'. They are now distinguishable — 'nothing to look up' versus 'lookup performed: 0 finding(s)' — which is a distinction the old string could not make at all.",
+    "verif_removed": "The stem 'verif-' no longer appears on any emitted path. The docstring's summary line was realigned to the new vocabulary in the same change ('demand a citation' rather than 'demand verifiability'), so the code and the record it writes use one language.",
+    "behaviour": "Unchanged. `demanded`, `looked_up` and `deferred_gaps` are byte-identical in the Result; only `detail` differs. The gating expression was not touched.",
+    "tests_pinning_the_string": "NONE. A grep of tests/ found no assertion on the old text, so convention 17's question — which of the test or the code is wrong — did not arise. The full suite passes unchanged at 744 and no count moved, so the pre-declared knock-on was not needed.",
+    "cost": "$0.00"
+  },
+  "acceptance_criteria_met": [
+    {
+      "criterion": "The new string distinguishes no-lookup from verified on every path.",
+      "met": true,
+      "evidence": "Four paths enumerated in results.new_strings; no path says or implies 'verified'."
+    },
+    {
+      "criterion": "Every string-pinning test updated; node outputs unchanged.",
+      "met": true,
+      "evidence": "No test pinned it; the Result's data fields are untouched."
+    },
+    {
+      "criterion": "Suite green.",
+      "met": true,
+      "evidence": "744 passed; tests/test_blocked_on.py and tests/test_citation_demand.py green at 37."
+    }
+  ],
+  "deviations": [
+    {
+      "what": "The verification `grep -rn 'criteria demand verifiability' autornd/ | wc -l` returns 1, not 0.",
+      "why": "The surviving hit is the new comment quoting the old string to explain why it changed — 'to collapse. \"criteria demand verifiability\" was written on every path'. Removing it would delete the record of what was fixed, which is the one thing this repo consistently refuses to do. The two hits that existed before this command are both gone: the emitted string and the docstring summary.",
+      "impact": "One deliberate quotation inside a comment. Nothing emitted, nothing recorded, nothing a reader of a trace can meet."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "This closes the legibility half of ARCH-20260920-004's finding, but not the finding itself. The reason a zero-lookup override was misread is now gone from the string; the reason a zero-lookup override HAPPENS is B16, and it is open. A reader of a fresh trace will now see 'citation demand detected; 0 deferred gap(s) — nothing to look up' and correctly conclude that nothing was verified — and the next question they will ask is why the grounding phase deferred no blocking gap on a plan that demands citations. That question has no row yet.",
+    "Recorded because the shape keeps recurring: this is the fourth instrument this session whose output said less than it observed — after the 429 body, the .env comparison, and the n=5 count. In every case the code was right and its report was not. Worth considering whether that belongs in §4.4 as a convention rather than as four separate incident notes."
+  ],
+  "public_safe_summary": "verify_grounding's detail string now names detection, deferred gaps and whether a lookup happened as three separate clauses, and the stem 'verif-' is gone from every emitted path. A zero-gap override reads 'nothing to look up, no lookup performed' rather than 'criteria demand verifiability; 0 finding(s)', which is what misled the executor's own reading of its own traces. It also distinguishes a run with nothing to look up from one whose lookup returned nothing — a distinction the old string could not make. Behaviour is unchanged, no test pinned the old text, and the suite is unmoved at 744.",
+  "next_recommended_commands": [
+    "ARCH-20260920-009 — the B14 design-inputs survey."
+  ],
+  "commits": [
+    "87314f3"
+  ]
+}
