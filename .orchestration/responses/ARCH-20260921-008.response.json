@@ -1,0 +1,59 @@
+{
+  "command_id": "ARCH-20260921-008",
+  "status": "DONE",
+  "executed": "2026-09-20",
+  "head_before": "4c65b5a",
+  "head_after": "3331e96",
+  "branch": "arch/20260921-008-e2-selection-ruling",
+  "files_changed": [
+    "docs/preregistration-b016-part-e.md",
+    ".orchestration/responses/ARCH-20260921-008.response.json"
+  ],
+  "precondition": {
+    "check": "scenarios pinning risk to low at BOTH bounds, re-run before amending",
+    "result": "exactly one — evals/scenarios/wide/wide_marketing.yaml (risk_at_least: low, risk_at_most: low)",
+    "verdict": "PASS. The corpus is unchanged since the reading recorded at f8855d6, so the command proceeded rather than stopping."
+  },
+  "cited_shas_verified": {
+    "note": "Checked before acting, in the spirit of the precondition ARCH-20260921-010 is about to make policy.",
+    "0c88aca": "commit",
+    "f8855d6": "commit",
+    "7228e8b": "commit",
+    "c442c5f": "commit"
+  },
+  "acceptance_criteria_met": [
+    {
+      "criterion": "The amendment exists, dated, with the ruling, the WRONG prediction recorded, and the selected scenario named.",
+      "met": true,
+      "evidence": "Appended at the file's end; names wide_marketing.yaml and records the registered count of three as WRONG."
+    },
+    {
+      "criterion": "grep -c 'Amendment' returns exactly 1.",
+      "met": true,
+      "evidence": "0 before, 1 after."
+    },
+    {
+      "criterion": "Suite green at 731.",
+      "met": true,
+      "evidence": "731 passed, 0 failed."
+    },
+    {
+      "criterion": "Response file committed.",
+      "met": true,
+      "evidence": "this file."
+    }
+  ],
+  "deviations": [],
+  "blockers": [],
+  "questions_for_advisor": [
+    "B-2 is cleared. E2 is now executable at n=1 on one scenario — worth naming plainly that the registered n was 6 (3 sectors × 2 reps) and the amended n is 1, a sixfold reduction in evidence. The ruling is right that the floor reading measures the wrong thing, but the honest consequence is that E2's zero-lookup prediction will rest on a single observation, and convention 23's 'never at n=1' is about servings rather than gates. If the advisor wants n=2 on the one scenario, that is one more repetition and a few cents.",
+    "The amendment records the registered prediction of three as WRONG. It is worth being precise about what was wrong: the count was right for the floor reading and the rule was wrong for the corpus. The prediction and the selection rule failed together, which is why neither alone looked broken."
+  ],
+  "public_safe_summary": "B-2 cleared. The advisor's ruling on E2's selection rule is appended to the Part E pre-registration, dated, append-only, with the registered prediction of three recorded as wrong. The executor's precondition was re-run first and returned exactly one scenario, wide_marketing.yaml, confirming the corpus is unchanged. Suite green at 731.",
+  "next_recommended_commands": [
+    "ARCH-20260921-009 — E2 then E1's registered re-run."
+  ],
+  "commits": [
+    "3331e96"
+  ]
+}
