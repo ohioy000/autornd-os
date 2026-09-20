@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
-**Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `860837d` · **Branch:** `main`
-**Tests:** 723 as of `860837d` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
+**Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `7cf8e9d` · **Branch:** `main`
+**Tests:** 723 as of `7cf8e9d` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      37 files, 723 tests (as of `860837d`)
+tests/                      37 files, 723 tests (as of `7cf8e9d`)
 ```
 
 ### 2.3 Key design patterns
@@ -655,7 +655,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (723 total, as of `860837d`)
+### 3.7 Test distribution (723 total, as of `7cf8e9d`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -1549,7 +1549,7 @@ repaired in 012, and it names `consistency` — a free deterministic numeric che
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 723 tests as of `860837d`, ~52 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 723 tests as of `7cf8e9d`, ~52 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \
