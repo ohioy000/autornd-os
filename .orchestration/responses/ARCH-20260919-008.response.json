@@ -1,80 +1,65 @@
 {
   "command_id": "ARCH-20260919-008",
-  "status": "BLOCKED",
-  "executed": "2026-09-19",
-  "head_before": "46ba8eb",
-  "head_after": "70d0933",
-  "branch": "arch/20260919-008-notebook-b016-section-27",
-  "commits": ["a3192bf", "587494b", "70d0933"],
-  "files_changed": [".orchestration/commands/ARCH-20260919-008.json", ".orchestration/commands/ARCH-20260919-009.json", ".orchestration/commands/ARCH-20260919-010.json"],
-  "status_reason": "BLOCKED by the command's own instruction. Constraint: 'verify four facts against the code ... If any reads differently than the ruling above, STOP and report — the ruling waits for the reading.' Fact (b) reads differently. Nothing was written to docs/handover-review.md or HANDOVER.md; the only commits are the three command-file transports.",
-  "preconditions_confirmed": [
-    {"question": "Is §26 currently the last numbered section and §27 free?", "answer": "YES. grep '^## 2[4-9]' returns §24 at line 5311, §25 at 5924, §26 at 6020, and nothing higher. grep -c '^## 27' returns 0. The number the pre-registration cites is available."}
-  ],
-  "verification_readings": [
+  "status": "DONE",
+  "executed": "2026-09-20",
+  "head_before": "db092ec",
+  "head_after": "ec76baa",
+  "branch": "arch/20260920-003-callcounts-and-section-27",
+  "commits": ["ec76baa"],
+  "files_changed": ["docs/handover-review.md", "HANDOVER.md"],
+  "supersedes": "The earlier BLOCKED response for this command, committed at 2387296. That block was correct and is not withdrawn — the fourth verification fact did read differently. It is resolved here rather than waived: §27.1 records the ruling including the false clause, and §27.3 records the clause as wrong.",
+  "status_reason": "Executed under an owner ruling. The advisor ruling this waited on was delegated in session; the executor's recommendation — §27.1 verbatim as the ruling stood, §27.3 as the dated supersession — was taken as the default. The advisor may still amend the wording; nothing here is load-bearing on the graph.",
+  "resolution_of_the_block": {
+    "the_block": "§27.1's clause 'the per-iteration trace records blocked_on entries either way' is false, and transcribing it would put a false claim in the notebook.",
+    "how_resolved": "It is transcribed, because §27.1's purpose is to record what was ruled, and it is immediately flagged: §27.1 carries a ⚠️ marker naming two of its own claims as superseded and pointing at §27.3, which records both as wrong with the citations. The alternative — editing §27.1 to match the graph — would have erased the ruling that was in force for a day, which is what the anti-retcon constraint exists to prevent.",
+    "heading_question": "Resolved by not using the precedent heading. Every prior blueprint section is headed 'verbatim, as received'; §27 is headed 'reconstructed from the landed record', with the reason in its third paragraph. The heading would otherwise have been false."
+  },
+  "corrections_made_while_transcribing": [
     {
-      "fact": "(a) executor semantics of recovery_loop's on_exhausted_status: escalated versus review_rework_loop's on_exhausted: escalation",
-      "reads": "AS RULED.",
-      "citation": "autornd/graph/executor.py:292-297",
-      "detail": "on_exhausted_status calls state.end(status, \"'<loop>' did not converge within N iterations\") and returns False — the run ends there, terminal. on_exhausted calls await self._run_from(node.on_exhausted, state) — control hands off to the named node's sub-graph. spec.py:381-384 rejects a loop that sets both. So recovery_loop ends `escalated` and review_rework_loop routes into `escalation`, exactly as the ruling states."
-    },
-    {
-      "fact": "(c) no graph-level bound on escalation↔recovery re-entry beyond per-loop iteration bounds",
-      "reads": "AS RULED — and the unboundedness the ruling predicts is confirmed mechanically.",
-      "citation": "autornd/graph/executor.py:299-323 (_run_from) and 276-277 (_run_loop)",
-      "detail": "_run_from iterates self.spec.handoff_subgraph(start_id) with no depth counter, no visited set and no budget of its own. _run_loop opens `for attempt in range(1, budget + 1)` on every call, so each fresh entry restarts the counter at 1. A routing gate inside recovery_loop targeting escalation would therefore give escalation → recoverable → recovery_loop → gate → escalation with a full iteration budget each cycle and nothing to stop it. The ruling's rationale is correct as written."
-    },
-    {
-      "fact": "(d) per-iteration paid-call shape of a blocked_on refusal inside recovery_loop / review_rework_loop",
-      "reads": "AS RULED in substance; stated precisely here because the ruling does not enumerate it.",
-      "citation": "workflows/engineering-rnd.yaml body lists; when-clause at workflows/engineering-rnd.yaml:110",
-      "detail": "The shared body is [implement, domain_review, coverage, consistency, validate, judges, rework_review, review_fold]. Paid (kind: ai): implement, domain_review, validate, rework_review — four per iteration, with domain_review gated on `when: implement.green == true`, so three when the implementation is red. Free (kind: check): coverage, consistency, judges, review_fold. The free checks pre-empt nothing on this path, because no gate on it consumes their result to route — they feed the judges fold, which is the loop's `until` condition, not a router. So a refusal inside these loops costs three or four paid calls per iteration up to the loop bound, against zero extra on the build path where blocked_gate short-circuits before domain_review."
-    },
-    {
-      "fact": "(b) the per-iteration trace records implement.blocked_on entries in both loops",
-      "reads": "READS DIFFERENTLY. This is the block.",
-      "citation": "autornd/graph/executor.py:28-42 (StepRecord); autornd/graph/adapter.py:264-289 (_blocked_on_unmet); autornd/graph/adapter.py:358,372-382 (_phase_validate)",
-      "detail": "Three corrections to the ruling's sentence. FIRST, the trace records no verdict payload at all: StepRecord's fields are node_id, kind, iteration, skipped, reason, seconds — no blocked_on, in any loop, on any path. What carries per-iteration blocked_on is the failure_log, which is a different artifact and is read by the escalation autopsy prompt (autornd/engine/phases.py:987-1008), not by the trace. SECOND, the failure_log has two write sites and they are not equivalent. _blocked_on_unmet (adapter.py:264-289) writes an entry whenever the check fails, and that node exists only in build_loop's body. _phase_validate (adapter.py:372-382) writes an entry carrying list(getattr(implement, 'blocked_on', None) or []), and validate is in all three bodies — but that write is guarded by `if not verdict.green or not implement.green`. THIRD, and this is the consequence that matters: an implement verdict that is green and also carries blocked_on entries records NOTHING inside recovery_loop or review_rework_loop. In build_loop that same verdict routes to escalation, because blocked_check depends only on [implement], carries no when-clause, and blocked_on_unmet (checks.py:219-224) never consults green. So the asymmetry is not merely 'no short-circuit, but the record still travels'. For the green-but-blocked case the record does not travel either, and the autopsy that the ruling relies on as the rework path's protection would be diagnosing from silence — which is the exact failure mode adapter.py:267-273 documents and fixes for the build path."
+      "what": "Per-commit attribution, corrected from the diffs as the command permits ('the shas are the facts, the labels are conveniences').",
+      "command_said": "b58f195 [B1], b4e1b9b [B2], aac0324 [B3]",
+      "diffs_say": "b58f195 landed NO B-part — it is test hygiene (redundant asyncio marks, the tier-availability test premise) plus .gitignore/AGENTS.md/CARRYOVER.md. b4e1b9b is B1 (verify_grounding, knowledge/context.py, tests/test_citation_demand.py) AND A4 (the handoff sub-graph ordering fix, tests/test_handoff_scheduler.py). aac0324 is B2 and B3 together (the blocked_on field in models/verdicts.py, blocked_on_unmet in graph/checks.py, the two nodes in the workflow).",
+      "landed_as": "A three-row table in §27.1(4) giving each sha what it actually landed."
     }
   ],
-  "blockers": [
-    {
-      "what": "The ruling's clause 'the per-iteration trace records blocked_on entries either way' does not hold as written. It holds for red iterations, via the validate write site. It fails for a green-but-blocked implement inside recovery_loop or review_rework_loop, where no failure-log entry is written and no gate exists to catch it.",
-      "why_it_matters": "That clause is load-bearing in the ruling. It is what makes 'iteration bounds are the protection, and exhaustion ends escalated' an acceptable trade rather than a silent loss — the argument is that the refusal still reaches the autopsy. In the green-but-blocked case on those two loops it does not.",
-      "needs": "An advisor ruling on the corrected reading before §27.1 is transcribed. Writing the clause as the command states it would put a false claim into the lab notebook, which the notebook exists to prevent; writing my own correction into a ruled paste would be ruling, which is not mine."
-    }
-  ],
-  "questions_for_advisor": [
-    "Three ways forward, and the choice is yours. (1) Ratify the corrected reading: §27.1 states that blocked_on travels to the autopsy on the red path via validate's failure-log write, and that the green-but-blocked case on those two loops records nothing — naming it as accepted residual risk alongside the paid-call cost already named. (2) Treat the green-but-blocked gap as a defect and rule a fix, most cheaply by dropping the `if not verdict.green or not implement.green` guard's effect on the blocked_on field so the entry is written whenever blocked_on is non-empty — that is a behaviour change to what the autopsy sees, so it is yours, and it would want its own command. (3) Reject the reading if I have misread it; the citations are above and I will re-run them.",
-    "A correction I owe the record, since the earlier response overstated it. ARCH-20260919-002's response and PR #1 said the asymmetry was one 'no document stated'. That is wrong: workflows/engineering-rnd.yaml:84-88 carries the rationale in a comment block, and it says what this command's ruling says. I derived the node lists with yaml.safe_load, which strips comments, and did not read the file's prose. The asymmetry was deliberate and documented at the point of change; what HANDOVER lacked was any mention of it. §3.1's replacement sentence should say that, and the §27.1 deviation text should not imply the rationale was unrecorded.",
-    "Blueprint-section convention in §24 that the ruled content does not cover: every prior blueprint section carries the blueprint text under a 'verbatim, as received' heading, marking it as the advisor's words transcribed unaltered. §27.1 is explicitly a reconstruction from the landed record rather than a received artifact, so that heading would be false. Recommend '## 27. Blueprint 016 — The honest-refusal gate (reconstructed from the landed record)' with the reconstruction reason in the first line, which the command's own constraint already supplies. Confirm the heading before I transcribe."
+  "acceptance_criteria_met": [
+    {"criterion": "docs/handover-review.md contains §27 with §27.1 and §27.2.", "met": true, "evidence": "§27 at line 6185, §27.1 at 6200, §27.2 at 6260, §27.3 at 6280. grep -c '^## 27' returns 1."},
+    {"criterion": "The pre-registration's citation of §27 resolves to real content.", "met": true, "evidence": "docs/preregistration-b016-part-e.md cites '§27 … and will live in §27.2'; both exist, and §27.2 carries the E1/E2 pointer with their n."},
+    {"criterion": "b58f195, b4e1b9b and aac0324 each appear with a resolvable sha and one line on what they landed.", "met": true, "evidence": "§27.1(4)'s table; all three resolve under git cat-file -t, as do 4612855, 5ea4633 and 4bfbbc5."},
+    {"criterion": "The paste-before-executing deviation is recorded in the notebook itself, with the reconstruction reason.", "met": true, "evidence": "§27's heading and third paragraph, and §27.1(4)'s opening sentence."},
+    {"criterion": "HANDOVER §3.1's 'flagged, not changed' sentence is gone and a resolution sentence is in.", "met": true, "evidence": "grep 'flagged, not changed' HANDOVER.md returns 0 — it was already removed by PR #5, which rewrote §3.1. This command adds the paragraph pointing at §27.3."},
+    {"criterion": "Suite green (717 expected).", "met": true, "evidence": "720 passed, 0 failed. The expected figure is stale: two guards added since, in the same branch — see deviations."},
+    {"criterion": "Response file carries the four verification citations.", "met": true, "evidence": "They were recorded in this command's earlier BLOCKED response at 2387296 and are not repeated here; §27.3 carries the two that bear on the record."}
   ],
   "deviations": [
     {
-      "what": "The three command files were committed as transport on this branch rather than to main.",
-      "why": "main is protected and requires the five CI checks; a direct push is refused. The commands ride the branch that executes the first of them, as 002's command files did.",
-      "impact": "Commands 008, 009 and 010 are on arch/20260919-008-notebook-b016-section-27 as a3192bf, 587494b, 70d0933."
+      "what": "The suite is 720, not the 717 the command expects, and README/HANDOVER counts moved with it.",
+      "why": "Two guards landed earlier on this same branch, against README facts that had drifted — the workflow YAML excerpt and the call-count table. Neither is 008's work; they ride along because they are documentation and this is one PR.",
+      "impact": "Counts re-derived in their own commits, as convention 18 requires."
     },
     {
-      "what": "No IN_PROGRESS response was committed before the verification reads.",
-      "why": "The reads are read-only and the command directs a STOP on a differing reading before any content is written. Opening at IN_PROGRESS and immediately reopening at BLOCKED records the same fact once rather than twice. Nothing was written to the notebook or HANDOVER.",
-      "impact": "Recorded, per the protocol's departure rule."
+      "what": "§27.3 was written in this command rather than waiting for ARCH-20260920-001 to land it.",
+      "why": "20260920-001 is BLOCKED precisely because it amends a §27 that did not exist. Writing §27.1 alone would have put a false present-tense claim on main and then required a second PR to correct it. The two halves are one edit.",
+      "impact": "ARCH-20260920-001 is satisfied by this change; its own response is updated in the same commit."
+    },
+    {
+      "what": "No IN_PROGRESS response was opened for this execution.",
+      "why": "The command already carries a committed response at 2387296 (BLOCKED). This updates that file rather than opening a new one.",
+      "impact": "Recorded."
     }
   ],
-  "tests_run": [
-    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "pass", "summary": "712 passed — suite green before the work, and no source file was touched."},
-    {"command": "git cat-file -t b58f195 && git cat-file -t b4e1b9b && git cat-file -t aac0324", "result": "pass", "summary": "All three resolve to commits."},
-    {"command": "grep -c '^## 27' docs/handover-review.md", "result": "pass", "summary": "0 — §27 is free."}
+  "blockers": [],
+  "questions_for_advisor": [
+    "§27.1's ⚠️ marker is the executor's wording, not a ruled form. If the advisor wants superseded rulings marked differently — a standing convention for the notebook rather than a one-off — this is the place to set it, and §27.1 is one line to change.",
+    "§27.2 says Part E is registered and not executed, and names ARCH-20260919-009 as its execution. That command's first constraint is 'do not start until 008's merge is on main'. It is now satisfiable. It remains a paid run (~$2.00) and needs .env keys, which are the owner's under G-3 — the executor has not looked at .env and will not start without an in-thread go-ahead."
   ],
-  "acceptance_criteria_met": [],
-  "results": {
-    "work_done": "Preconditions confirmed and all four verification facts read against the code. No transcription performed.",
-    "cost": "$0.00"
-  },
-  "public_safe_summary": "BLOCKED on the command's own stop condition. Three of the four facts to be verified read as ruled, including the unbounded-re-entry rationale, which is confirmed mechanically. The fourth does not: the trace records no verdict payload at all, and the per-iteration blocked_on record travels via the failure log, written either by a build-loop-only node or by validate under a green guard. The consequence is that a green-but-blocked implementation inside the recovery or rework loops records nothing and reaches no gate, so the autopsy the ruling relies on would diagnose from silence. §27 is not written; the ruling waits for the reading, as the command directs.",
-  "next_recommended_commands": [
-    "An advisor ruling on the corrected (b), after which 008 can be re-issued or resumed unchanged but for that clause.",
-    "ARCH-20260919-010 is independent of all of this and can proceed now.",
-    "ARCH-20260919-009 is gated on 008 merging, by its own first constraint, so it waits."
-  ]
+  "tests_run": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "pass", "summary": "720 passed, 0 failed."},
+    {"command": "grep -c '^## 27' docs/handover-review.md", "result": "pass", "summary": "1."},
+    {"command": "grep -n 'flagged, not changed' HANDOVER.md", "result": "pass", "summary": "0 hits."},
+    {"command": "git cat-file -t b58f195 b4e1b9b aac0324 4612855 5ea4633 4bfbbc5", "result": "pass", "summary": "All six resolve to commits."}
+  ],
+  "results": {"section_lines": 153, "cost": "$0.00"},
+  "public_safe_summary": "§27 is written. §27.1 records Blueprint 016's design and its 2026-09-19 loop-coverage ruling unedited, carrying a marker that two of its own claims are superseded; §27.2 holds Part E as registered-not-executed; §27.3 records the 2026-09-20 supersession with its provenance, the two claims recorded as wrong, and why the original reopening trigger could not have fired. The section is headed as a reconstruction rather than 'verbatim, as received', because paste-before-executing was skipped for 016. Per-commit attribution corrected from the diffs. Suite green at 720.",
+  "next_recommended_commands": ["ARCH-20260919-009 — now unblocked, pending the owner's go-ahead on spend and keys."]
 }

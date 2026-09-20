@@ -6181,3 +6181,157 @@ before and after; CI green. **$0.00 — free, as specified.**
    protocol, the n-carrying rule and *an instrument reading is a reading, not a
    diagnosis* form a method — and the last of those is the one this repo has
    paid for most often and stated least clearly.
+
+## 27. Blueprint 016 — The honest-refusal gate (reconstructed from the landed record)
+
+**Status: A–D executed 2026-09-16 across three commits. Part E registered, not
+executed.** Execution record: §27.2. **Amended 2026-09-20 — read §27.3 before
+relying on §27.1's loop-coverage ruling.**
+
+*Not headed "verbatim, as received", and that is deliberate.* Every prior
+blueprint section carries the advisor's text as it arrived, pasted before
+execution. This one could not: **the paste-before-executing rule was skipped for
+016**, and the advisor chat that ruled it is not a repo artifact. §27.1 is a
+reconstruction from what landed — §4.3, the workflow file's comments, the
+pre-registration — ratified by the advisor as the design as landed. The
+distinction matters because a reconstruction can be wrong in ways a transcript
+cannot, and §27.3 records one place where it was.
+
+### 27.1 The ruled design, as it stood on 2026-09-19
+
+**(1) The problem, measured** (§4.2 B13, §6.13). The risk gate zeroes lookups at
+`low` risk. The plan phase then writes success criteria demanding citable
+sources. Nothing reconciles the two, and the implementer fabricates rather than
+refuses. The controlled contrast, from 014's wide run:
+
+| trace | risk | lookups | outcome |
+|---|---|---|---|
+| `marketing_claims` | low | **0** | invented citations, 6 iterations, died on the cost ceiling |
+| `contract_threshold` | medium | **1** | cited the correct article, shipped in **one** iteration |
+
+**(2) The design, three parts.**
+
+- **B1 — `verify_grounding`.** A free deterministic check for citation demand
+  over `plan.success_criteria`, after `plan_ready`. One bundled lookup at the
+  medium-risk budget when a criterion demands verifiability; $0 otherwise.
+- **B2 — `blocked_on`.** `ImplementVerdict`'s ruled honest-refusal channel: the
+  implementer names the plan success criteria it cannot satisfy, rather than
+  satisfying them on paper. The prompt sentence is ruled text and is not to be
+  paraphrased (`engine/phases.py:671-686`).
+- **B3 — `blocked_check` + `blocked_gate`**, in `build_loop`'s body after
+  `implement`. The free check `blocked_on_unmet` asks whether any blocked entry
+  names a plan criterion; the gate routes to `escalation` **before a single paid
+  judge sees refused work**.
+
+**(3) The loop-coverage ruling (advisor, 2026-09-19).** The gates live in
+`build_loop`'s body **only**, and that was ruled intended. Rationale as the
+workflow file recorded it: `recovery_loop` and `review_rework_loop` sit inside
+the escalation sub-graph, and a routing gate inside them would re-enter that
+sub-graph with a fresh budget each time — an unbounded path. Their iteration
+bounds are the protection; exhaustion ends `escalated`, the honest terminal. The
+per-iteration record was held to travel either way. Residual cost named: paid
+calls up to the loop bound, against zero extra on the build path. Symmetric
+wiring was considered and **rejected unmeasured** (convention 14, n=0).
+Reopening trigger: any committed trace showing a `blocked_on` refusal arising
+inside those loops reopens the short-circuit question, a terminal-gate variant
+among the options.
+
+**⚠️ Superseded 2026-09-20. Two of the claims in (3) are false — one was false
+when ruled. See §27.3. Kept here unaltered because the record of what was ruled
+is not improved by editing it afterwards.**
+
+**(4) The deviation, recorded.** Paste-before-executing was skipped. Three
+commits landed before this section existed, and the per-commit attribution is
+corrected here from the diffs — the shas are the facts, the labels were
+conveniences:
+
+| sha | what it actually landed |
+|---|---|
+| `b58f195` | **not a B-part.** Test hygiene: redundant asyncio marks dropped, the tier-availability test's premise fixed |
+| `b4e1b9b` | **B1** (`verify_grounding`, citation-demand detection) **and A4** (the handoff sub-graph ordering fix) |
+| `aac0324` | **B2 and B3** together (the `blocked_on` field, `blocked_check`, `blocked_gate`) |
+
+`aac0324` additionally truncated `HANDOVER.md` by 1,435 lines without mentioning
+it, leaving main red across runs 52–53. Restored at `4bfbbc5`; the CHANGELOG
+records the incident.
+
+Provenance: §26's staging ruling — B13 now, B14 deferred.
+
+### 27.2 Execution record — Part E
+
+**Registered, not executed.** The pre-registration is committed at
+`docs/preregistration-b016-part-e.md`, before any spend, per convention 7.
+
+- **E1** — `gen_marketing_claims`, `engineering-rnd`, studio profile, **n=1**.
+  Predicts an honest terminal either way, zero fabricated sources, and that the
+  run does not approach the scenario's 40-call ceiling.
+- **E2** — lookup-cost regression, `triage-only`, **n = 3 sectors × 2 reps = 6**.
+  Predicts exactly three low-risk wide scenarios and $0.00 of search spend in
+  every repetition.
+
+Execution is commanded as `ARCH-20260919-009`, ordered **E2 then E1**
+(convention 16 — the cheaper ceiling first). Results, departures and any wrong
+predictions are appended here when it runs.
+
+Neither part touches a loop §27.3 changes: E1's path is build-only, E2 is
+triage-only. No pre-registered prediction is invalidated by the amendment. The
+graph state at run time is noted here as a fact of the run.
+
+### 27.3 Amendment — loop coverage superseded, 2026-09-20
+
+**Provenance.** The owner instructed the fix directly, in session — *"fix the
+green-but-blocked gap"*, then *"merge it"* — overriding §27.1(3). The
+instruction did not pass through the advisor channel; the executor recorded the
+change as owner-ruled in PR #5, and the advisor has ratified the override as
+within the owner's authority under `AGENTS.md`. Landed at **`4612855`**.
+
+**The defect, found by reading rather than by a trace.** `blocked_check` is the
+only thing in the graph that reads `blocked_on` independently of `green`, and
+`validate`'s failure-log write is guarded on the iteration being red
+(`graph/adapter.py:372`). So an implementation that came back **green while
+naming a criterion it could not satisfy** recorded nothing and met no gate
+inside `recovery_loop` or `review_rework_loop`: the fold saw four green judges,
+the loop converged, and the work **shipped carrying the refusal**.
+
+**The design.** `blocked_terminal` — the same free `blocked_check`, behind a
+gate whose `on_fail` is the terminal status `blocked` rather than a node. A
+terminal gate has no re-entry to bound, so §27.1(3)'s unbounded-path objection
+does not reach it; that objection is otherwise correct, and confirmed
+mechanically (`graph/executor.py:299-323` carries no depth counter or visited
+set; `_run_loop` restarts its attempt counter on every entry). `build_loop`
+keeps the routing `blocked_gate`. Flagship 24 → 25 nodes; both shared bodies
+8 → 10.
+
+**Two claims in §27.1(3) recorded as wrong.**
+
+1. *"The per-iteration record travels either way."* **False when ruled.** The
+   trace carries no verdict payload at all — `StepRecord` is node id, kind,
+   iteration, skipped, reason, seconds. What carries `blocked_on` is the failure
+   log, whose two write sites are not equivalent: one is a `build_loop`-only
+   node, the other is `validate` under a green guard.
+2. *"Residual cost is paid calls plus observability."* **Incomplete.** The
+   harm-scope analysis weighed spend and traceability and missed that a
+   green-but-blocked iteration **converges**, so the run concludes `completed`
+   with the refusal shipped. That is conclusion corruption of the same class as
+   B13 itself.
+
+**The reopening trigger could not have fired, and that is its own lesson.** It
+asked for a committed trace showing `blocked_on` arising inside those loops. No
+such trace can exist: a run exhibiting the defect reports `completed`. **A
+trigger whose evidence bar can only be met by evidence the defect suppresses is
+not a trigger.** The bar was met by the defect class instead, read off the two
+write sites.
+
+**Convention 14 accounting.** The mechanism is now measured — and rejected-
+unmeasured no longer applies to the landed design. `tests/test_blocked_on.py::TestTheGreenButBlockedGap`
+simulates it end to end, and `TestTheGateRoutes` pins both corrected
+consequences: a block in recovery ends `blocked` on its first attempt, and an
+*unblocked* failure still exhausts to `escalated`. What remains unmeasured is
+real-world frequency. **The trigger flips:** any committed trace showing
+`blocked_on` arising inside those loops is now *confirming* evidence — record
+the paid judges the terminal gate pre-empted.
+
+**Cross-references.** `4612855` the merge; `5ea4633` corrected the workflow
+comment that outlived the wiring by one commit; `workflows/engineering-rnd.yaml`
+carries the routing/terminal split in its own comment; HANDOVER §3.1 points
+here.
