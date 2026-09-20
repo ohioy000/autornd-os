@@ -1,0 +1,130 @@
+{
+  "command_id": "ARCH-20260920-004",
+  "status": "DONE",
+  "executed": "2026-09-20",
+  "head_before": "49fc88e",
+  "head_after": "fafb329",
+  "branch": "arch/20260920-004-verify-grounding-characterization",
+  "files_changed": [
+    ".orchestration/responses/ARCH-20260920-004.response.json"
+  ],
+  "preconditions_run": [
+    {
+      "check": "both b16 traces and tests/test_citation_demand.py present",
+      "result": "PASS"
+    }
+  ],
+  "corrections_to_the_record": [
+    {
+      "claim": "PR #16 and §27.2 record the observation count as n=5.",
+      "correct": "It is n=4. A grep of every committed trace finds exactly four units carrying a verify_grounding verdict. The fifth 'observation' was b16-e1-marketing-claims.jsonl unit[0] — the 404 attempt, which died at `plan` and never reached the node. The executor counted a unit that could not have observed anything.",
+      "disposition": "Recorded here; §27.2 and the ledger's free-findings line should be corrected to n=4 in whichever command next touches them. Not edited in this command — its scope is the response file only."
+    },
+    {
+      "claim": "PR #16's framing: 'B1's override fires on the same scenario and looks nothing up four times in five', reported as verify_grounding non-determinism.",
+      "correct": "THE FRAMING IS WRONG, AND IT POINTED AT THE WRONG COMPONENT. The detector did not vary. `demanded` was TRUE in 4 of 4 observations — every single one reads 'criteria demand verifiability'. What varied is `deferred_gaps`: 3 once, 0 three times. The lookup is gated on `demanded AND self.deferred_gaps` (autornd/graph/adapter.py:241), so with zero deferred gaps there is nothing to bundle and looking nothing up is correct.",
+      "disposition": "The non-determinism is real but it is upstream, in how many blocking gaps the grounding phase deferred, not in the citation-demand detector."
+    }
+  ],
+  "observations": [
+    {
+      "trace": "docs/traces/b16-e1-marketing-claims.jsonl",
+      "unit": 0,
+      "status": "error (404 at plan)",
+      "verify_grounding": "ABSENT — the node never ran",
+      "criteria": "plan absent from the trace",
+      "classification": "NOT AN OBSERVATION",
+      "search_calls": 0
+    },
+    {
+      "trace": "docs/traces/b16-e1-marketing-claims.jsonl",
+      "unit": 1,
+      "status": "error (429)",
+      "verify_grounding": "criteria demand verifiability; 1 finding(s) from 3 deferred gap(s)",
+      "criteria_count": 6,
+      "demand_bearing_criterion": "'Each of the three proof points contains a factual claim about the market … accompanied by a citable source including author, publication, date, and a URL or DOI'",
+      "classification": "DEMAND-DETECTED (correct) — and the only one with gaps to spend on",
+      "search_calls": 1
+    },
+    {
+      "trace": "docs/traces/b16-e1-marketing-claims.jsonl",
+      "unit": 2,
+      "status": "error (429)",
+      "verify_grounding": "criteria demand verifiability; 0 finding(s) from 0 deferred gap(s)",
+      "criteria_count": 6,
+      "demand_bearing_criterion": "'… is followed by a citation in parentheses containing source, date …'",
+      "classification": "DEMAND-DETECTED (correct); no deferred gaps, so no lookup was possible",
+      "search_calls": 0
+    },
+    {
+      "trace": "docs/traces/b16-e1-marketing-claims.jsonl",
+      "unit": 3,
+      "status": "blocked (unpinned attempt)",
+      "verify_grounding": "criteria demand verifiability; 0 finding(s) from 0 deferred gap(s)",
+      "criteria_count": 6,
+      "demand_bearing_criterion": "'… includes a full citation (source name, publication date, URL or DOI) that a reader can independently verify'",
+      "classification": "DEMAND-DETECTED (correct); no deferred gaps",
+      "search_calls": 0
+    },
+    {
+      "trace": "docs/traces/b16-e1-marketing-claims-registered.jsonl",
+      "unit": 0,
+      "status": "blocked (registered run)",
+      "verify_grounding": "criteria demand verifiability; 0 finding(s) from 0 deferred gap(s)",
+      "criteria_count": 5,
+      "demand_bearing_criterion": "'The plan requires the Fact Checker to provide at least three market proof points, each with a direct citation to a publicly verifiable source'",
+      "classification": "DEMAND-DETECTED (correct); no deferred gaps",
+      "search_calls": 0
+    }
+  ],
+  "tally": {
+    "no_demand_correct": 0,
+    "demand_detected_correct": 4,
+    "demand_missed_bug": 0,
+    "not_an_observation": 1
+  },
+  "three_gaps_to_one_finding": {
+    "explanation": "Not a ratio and not a loss. `looked_up = len(findings)` (autornd/graph/adapter.py:249) counts the FINDINGS RETURNED, while the second number counts the gaps SENT. The three deferred gaps ride in a single request — §4.3's rule that every remaining gap rides in exactly one request, because the fee is charged per request rather than per question — and that one request returned one finding. So 3 gaps → 1 bundled lookup → 1 finding.",
+    "billed": "Yes. That observation is the only one with `search: 1` in calls_by_tier, and the only search spend in any E1 attempt.",
+    "citations": [
+      "autornd/graph/adapter.py:241-252",
+      "autornd/graph/adapter.py:256-262"
+    ]
+  },
+  "why_deferred_gaps_was_zero": {
+    "mechanism": "autornd/knowledge/context.py:347-371. The grounding phase splits unknowns into `blocking_gaps`, then: if the risk gate permits a lookup it spends immediately; ELSE it appends the blocking gaps to `deferred_gaps` for B1's override to pick up later. `deferred_gaps` is therefore zero whenever the grounding phase named no BLOCKING gap at all — a gap counts as blocking only if a wrong assumption about it would change the answer (context.py:271).",
+    "reading": "Each run produced a materially different plan — the criteria are reworded and re-scoped every time, and one run wrote five criteria where the others wrote six. Different plans imply different unknowns, and the grounding phase judged blocking-ness differently across them. Nothing in the record suggests the detector or the override misbehaved."
+  },
+  "verdict": "PLAN VARIANCE, not instrument under-firing. The citation-demand detector fired correctly on 4 of 4 observations; the override spent exactly once, in the only run where the grounding phase had deferred a blocking gap to spend on. No observation classifies as demand-missed, so the command's STOP condition did not trigger.",
+  "acceptance_criteria_met": [
+    {
+      "criterion": "All five observations classified with trace paths and unit indices.",
+      "met": true,
+      "evidence": "Five units listed; one is recorded as NOT AN OBSERVATION with the reason, which is itself the first finding."
+    },
+    {
+      "criterion": "The 3-gaps-to-1-finding semantics explained from the code, cited by path:line.",
+      "met": true,
+      "evidence": "three_gaps_to_one_finding, citing adapter.py:241-252 and 256-262."
+    },
+    {
+      "criterion": "A one-line verdict.",
+      "met": true,
+      "evidence": "verdict — plan variance."
+    }
+  ],
+  "deviations": [],
+  "blockers": [],
+  "questions_for_advisor": [
+    "The interesting question this analysis raises is not about verify_grounding. It is that **the plan's success criteria are rewritten from scratch on every run of the same scenario** — six criteria, then six differently-worded ones, then five. B13's whole mechanism depends on what the plan demands, and what the plan demands is not stable across runs of an identical request. That is upstream of everything 016 built, it is measurable for free from these four traces, and no ledger row names it.",
+    "A smaller one: with `deferred_gaps` empty, the override is a no-op that still writes 'criteria demand verifiability' into the record. That reads, at a glance, as though something was verified. The detail string is accurate but easy to misread — as the executor's own n=5 framing demonstrates. Whether to reword it is a judgement about a record's legibility rather than instrument repair, so it is left here."
+  ],
+  "public_safe_summary": "Free analysis, no spend. The record said verify_grounding fired once in five; it is once in four, and the fifth unit never reached the node. More importantly the framing was wrong: the citation-demand detector fired correctly in 4 of 4 observations — every one reads 'criteria demand verifiability'. What varied is the number of blocking gaps the grounding phase deferred, which was three once and zero three times, and the lookup is gated on there being gaps to spend on. The three gaps produced one finding because they ride in a single bundled request. Verdict: plan variance, not instrument under-firing. No observation classifies as a missed demand.",
+  "next_recommended_commands": [
+    "Correct §27.2 and the free-findings line from n=5 to n=4 in the next command that touches them.",
+    "ARCH-20260920-005 — the 429 distribution, also free."
+  ],
+  "commits": [
+    "fafb329"
+  ]
+}
