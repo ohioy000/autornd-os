@@ -216,7 +216,7 @@ class PhaseRunner:
         )
 
     async def _verify_grounding(self, state: ExecutionState) -> Result:
-        """One bundled lookup when the plan's criteria demand verifiability.
+        """One bundled lookup when the plan's criteria demand a citation.
 
         B13's override (Blueprint 016 B1). The risk gate zeroes lookups at low
         risk, and the measured failure is what happened next: the plan wrote a
@@ -251,14 +251,27 @@ class PhaseRunner:
                                 + render_findings(findings)).strip()
         self.verification_lookup_done = True
         if not demanded:
-            return Result(True, "no criterion demands verifiability — no lookup",
+            return Result(True, "no citation demand detected — no lookup",
                           demanded=False, looked_up=0)
+        # The detail names all three facts separately, because two of them used
+        # to collapse. "criteria demand verifiability" was written on every path,
+        # including the one where there was nothing to look up and nothing was
+        # looked up — which reads at a glance as though something had been
+        # verified. It misled the executor's own reading of its own traces
+        # (ARCH-20260920-004): four zero-lookup runs were reported as an override
+        # that fired and found nothing, when the override had correctly declined
+        # to spend. Detection, gaps and lookup are now three separate clauses,
+        # and "verif-" never appears on a path that looked nothing up.
+        gaps = len(self.deferred_gaps)
+        if looked_up or gaps:
+            spent = f"lookup performed: {looked_up} finding(s)"
+        else:
+            spent = "nothing to look up, no lookup performed"
         return Result(
             True,
-            f"criteria demand verifiability; {looked_up} finding(s) from "
-            f"{len(self.deferred_gaps)} deferred gap(s)",
+            f"citation demand detected; {gaps} deferred gap(s) — {spent}",
             demanded=True, looked_up=looked_up,
-            deferred_gaps=len(self.deferred_gaps),
+            deferred_gaps=gaps,
         )
 
     def _blocked_on_unmet(self, node: Node, state: ExecutionState) -> Result:
