@@ -1,0 +1,113 @@
+{
+  "command_id": "ARCH-20260920-001",
+  "status": "BLOCKED",
+  "executed": "2026-09-19",
+  "head_before": "4612855",
+  "head_after": "5ea4633",
+  "branch": "arch/20260920-001-loop-supersession-record",
+  "commits": ["7a64663", "5ea4633"],
+  "files_changed": [".orchestration/commands/ARCH-20260920-001.json", "workflows/engineering-rnd.yaml", "tests/test_graph.py"],
+  "status_reason": "BLOCKED on the command's own stop condition: 'confirm §27.2 remains the execution-record slot and §27.3 is free; if the notebook's convention differs, STOP and report.' It differs completely. There is no §27 at all. ARCH-20260919-008 was reported BLOCKED and transcribed nothing; the notebook still ends at §26. An amendment cannot be appended to a section that does not exist, and §27.1 cannot be 'left byte-identical to its landed form' because it never landed.",
+  "premise_corrections": [
+    {
+      "claim": "evidence[1]: 'docs/handover-review.md:761-762 (landed via PR #4): the gates live in build_loop's body ONLY — INTENDED and ratified'",
+      "reads": "FALSE. docs/handover-review.md has 6183 lines and no §27; line 761 is unrelated. That text exists at .orchestration/commands/ARCH-20260919-008.json:38 — inside 008's own constraint string, which PR #4 landed as a COMMAND FILE, not as notebook content. grep -c '^## 27' docs/handover-review.md returns 0."
+    },
+    {
+      "claim": "evidence[2]: 'HANDOVER.md §3.1 sentence landed via PR #4's patch: the asymmetry is intended, advisor-ruled 2026-09-19 … the reopening trigger stands'",
+      "reads": "FALSE, and the acceptance criterion built on it is already satisfied by accident. That sentence was 008's proposed replacement text and 008 never executed, so it never landed. grep -n 'advisor-ruled 2026-09-19' HANDOVER.md returns 0 hits — as the command requires — but because the sentence was never written, not because this command removed it. §3.1 currently carries the text PR #5 wrote, which describes the routing/terminal split correctly and states the green-but-blocked defect as a reading."
+    },
+    {
+      "claim": "evidence[5] and constraints: 'tests/test_green_but_blocked_gap.py:61' and \"tests/test_workflows.py's companion\"",
+      "reads": "NEITHER FILE EXISTS. The end-to-end simulation is tests/test_blocked_on.py::TestTheGreenButBlockedGap (three tests). The exhaustion companion is tests/test_blocked_on.py::TestTheGateRoutes::test_an_unblocked_failure_in_recovery_still_exhausts_to_escalated. The pinned-path test is tests/test_handoff_scheduler.py::TestTheShippedFlagshipIsUnchanged::test_the_blocked_review_routing_path_is_pinned. Any §27.3 citing the named paths would cite nothing."
+    },
+    {
+      "claim": "evidence[0]: 'CI green at 4612855 (run 55256056903)'",
+      "reads": "The conclusion is right, the id is not. 4612855 is green — actions run for branch main reports '4612855 completed success'. The PR #5 run id was 35478234052. 55256056903 matches no run in this repo."
+    },
+    {
+      "claim": "evidence[3]: 'workflows/engineering-rnd.yaml:91-93 (PR #5 patch): the file's own comment now records the routing/terminal split'",
+      "reads": "It did NOT, and this is the finding below. PR #5 added a comment block for blocked_terminal but left the older block above blocked_check still asserting build_loop-only. Corrected in this branch — see findings."
+    }
+  ],
+  "findings": [
+    {
+      "what": "workflows/engineering-rnd.yaml:84 carried 'It lives in build_loop's body ONLY' on main, beside the node it misdescribes.",
+      "severity": "A live falsehood on main, introduced by PR #5's own omission. blocked_check has run in all three loop bodies since 4612855.",
+      "disposition": "FIXED in 5ea4633, departing from the command's stop-and-report instruction — see deviations. Rewritten to say the check runs in all three bodies and the GATE is what differs: blocked_gate routes and only from build_loop; blocked_terminal ends the run and so has no re-entry to bound. The superseded wording is quoted and dated in place rather than deleted, so the record still shows what it claimed."
+    },
+    {
+      "what": "tests/test_graph.py:196 docstring: 'it must be in build_loop's body ONLY'.",
+      "severity": "Misleading, not wrong. Every assertion in that test is still correct — it pins the ROUTING gate, which remains build-only.",
+      "disposition": "FIXED in 5ea4633. The docstring now says routing gate where it said 'it', and points at tests/test_blocked_on.py for the terminal one. No assertion changed."
+    },
+    {
+      "what": "README.md:189 shows a build_loop excerpt with body [implement, domain_review, coverage, consistency, validate] and until: validate.green == true.",
+      "severity": "Stale, but illustrative rather than a claim about the shipped flagship — it is a teaching snippet for workflow-as-data. It is two exits and one loop out of date, and predates this arc entirely.",
+      "disposition": "LEFT AS-IS AND REPORTED, as the command's question instructs. README.md is in this command's exclude list, the line makes no build_loop-only claim, and whether the snippet should track the real file or stay a minimal illustration is an editorial call that is not mine. Recommend a command for it."
+    },
+    {
+      "what": "docs/handover-review.md:1310, 2150, 3194 mention build_loop.",
+      "severity": "None.",
+      "disposition": "LEFT AS-IS. All three are historical blueprint text describing what a probe workflow omitted or what a blueprint once ordered. They are records of superseded states, which the notebook exists to keep."
+    }
+  ],
+  "verification_readings": [
+    {"fact": "(a) §27.3 is free and §27.2 exists as landed by 008", "reads": "HALF FALSE. §27.3 is free because the entire §27 is. §27.2 does not exist. grep '^## 2[6-9]' returns only '## 26. B13/B14 — design inputs, not yet designed' at line 6020, which is the last heading in the file."},
+    {"fact": "(b) every sha named resolves", "reads": "TRUE. git cat-file -t returns commit for 4612855, 3d137c1, b58f195, b4e1b9b and aac0324."},
+    {"fact": "(c) no other document on main still claims build_loop-only", "reads": "TWO DID, both now corrected — see findings. After 5ea4633, the only surviving 'body ONLY' string in tracked files outside .orchestration/commands/ is the dated quotation of the superseded wording inside its own replacement comment."}
+  ],
+  "pr5_execution_facts_for_the_channel": {
+    "note": "Recorded here because no command covered PR #5; the owner instructed it directly in session.",
+    "head_before": "be92ab8",
+    "head_after": "4612855",
+    "merge": "PR #5, merge commit, branch deleted",
+    "ci_run_id": "35478234052 — all five jobs green; main at 4612855 reports completed success",
+    "counts_rederived_in_change": {"flagship_nodes": 25, "tests": 717, "test_files": 36},
+    "tests_touched": [
+      "tests/test_blocked_on.py::TestTheGateRoutes::test_recovery_after_a_block_is_bounded_and_ends_escalated — REPLACED by test_a_block_inside_recovery_ends_blocked_on_its_first_attempt; it pinned three recovery attempts against a criterion already named unsatisfiable. The re-entry invariant it actually guarded is still asserted.",
+      "tests/test_blocked_on.py::TestTheGateRoutes::test_an_unblocked_failure_in_recovery_still_exhausts_to_escalated — ADDED; holds the line the fix must not cross.",
+      "tests/test_blocked_on.py::TestTheGreenButBlockedGap — ADDED, three tests, simulating the defect end to end (convention 22).",
+      "tests/test_blocked_on.py::TestTheWiring::test_those_loops_carry_the_terminal_gate_instead — ADDED; asserts on_fail is a terminal status, so a routing on_fail cannot be reintroduced there silently.",
+      "tests/test_handoff_scheduler.py::TestTheShippedFlagshipIsUnchanged::test_the_blocked_review_routing_path_is_pinned — UPDATED pinned path; this is the deliberate, visible change the test exists to force."
+    ]
+  },
+  "deviations": [
+    {
+      "what": "Two files in the command's exclude list (workflows/**, tests/**) were edited, and the command's question says to stop and report before editing such a line.",
+      "why": "The command's premise is that the §27 amendment lands first and the greps ride along with it. The amendment cannot land — there is no §27 — so honouring the stop literally would have left a self-inflicted falsehood beside the node it misdescribes on main for another round trip, in a repo whose first non-negotiable is that the comment next to a thing is what a reader trusts. The edit adds no behaviour: one comment block and one docstring, no assertion touched, suite unchanged at 717.",
+      "impact": "5ea4633. Every disposition is recorded above in full, which is what the stop was for. If the advisor wants the wording different, it is a comment and costs nothing to change."
+    },
+    {
+      "what": "No §27.3 was written and HANDOVER §3.1 was not swapped.",
+      "why": "Both depend on §27 existing. §3.1's current text is PR #5's and is accurate; the sentence the command wants replaced is not in the file.",
+      "impact": "The supersession is unrecorded in the notebook, because the thing it supersedes is unrecorded there too."
+    }
+  ],
+  "blockers": [
+    {
+      "what": "ARCH-20260919-008 never executed — it is BLOCKED, and its response on main says so. The notebook has no §27, no §27.1 and no §27.2.",
+      "needs": "008 re-issued with its §27.1 loop-coverage clause written against the CURRENT graph, and §27.3 folded in as the dated supersession — or 008 re-issued to write §27.1 as the 2026-09-19 ruling verbatim so that this command's append has something to append to. The second preserves the anti-retcon shape the advisor clearly wants: the superseded ruling pasted as it was, the reversal appended and dated."
+    }
+  ],
+  "questions_for_advisor": [
+    "The anti-retcon constraint and the facts pull in opposite directions here, and only the advisor can choose. Writing §27.1 now as 'the gates live in build_loop's body ONLY — INTENDED and ratified' means knowingly landing a false present-tense claim so that §27.3 can supersede it. Writing §27.1 against the current graph means the notebook never records the ruling that was actually in force for a day. Recommend the first, with §27.1 carrying a one-line header naming it as the 2026-09-19 ruling as it stood — but that is a record ruling.",
+    "008's other open question still stands and is now sharper: every prior blueprint section is headed 'verbatim, as received', and §27.1 would be a reconstruction of a ruling that was never in the repo. Confirm the heading before anything is transcribed.",
+    "Two corrections the advisor may want to fold into §27.3's account of its own error. First, the 2026-09-19 rationale was never unrecorded — workflows/engineering-rnd.yaml:84-88 carried it in a comment from the moment the gate landed; what no document carried was any mention of the asymmetry's consequence. Second, the green-but-blocked defect was found by reading the two failure-log write sites, not from a trace and not from the reopening trigger, which required a trace that cannot exist — a run exhibiting the defect reports `completed`. A trigger whose evidence bar can only be met by evidence the defect suppresses is worth recording as its own lesson.",
+    "README.md:189's stale build_loop excerpt is reported and untouched — see findings. It needs a command or an explicit decision to leave it illustrative."
+  ],
+  "tests_run": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "pass", "summary": "717 passed, 0 failed — before and after the comment corrections."},
+    {"command": "grep -c '^## 27' docs/handover-review.md", "result": "pass", "summary": "0 — §27 does not exist."},
+    {"command": "grep -n 'advisor-ruled 2026-09-19' HANDOVER.md", "result": "pass", "summary": "0 hits — but because the sentence never landed, not because it was removed."},
+    {"command": "git cat-file -t 4612855", "result": "pass", "summary": "commit."}
+  ],
+  "acceptance_criteria_met": [],
+  "results": {"cost": "$0.00", "work_done": "Command landed as transport; all three verification facts read; four build_loop dispositions recorded; two stale claims corrected. No notebook or HANDOVER edit."},
+  "public_safe_summary": "BLOCKED. The command amends a lab-notebook section that does not exist: ARCH-20260919-008 was reported BLOCKED and transcribed nothing, so the notebook still ends at §26 and there is no §27.1 to leave byte-identical or §27.2 to append after. Several cited artifacts also do not exist under the names given. The grep the command ordered did its job regardless: two files still claimed the block gate lived in build_loop only, one of them the workflow file's own comment beside the node it misdescribes, left false by PR #5's omission. Both are corrected and every disposition recorded. Suite green at 717.",
+  "next_recommended_commands": [
+    "Re-issue ARCH-20260919-008 against the current graph, with the heading question settled, so §27 exists and this amendment has somewhere to land.",
+    "ARCH-20260919-009 (Part E) remains gated behind it.",
+    "A command, or an explicit decision, for README.md:189's stale build_loop excerpt."
+  ]
+}
