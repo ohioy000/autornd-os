@@ -81,11 +81,15 @@ nodes:
   # prevents: six iterations of fabricating citations against an impossible
   # criterion, ended only by the cost ceiling.
   #
-  # It lives in build_loop's body ONLY. recovery_loop and review_rework_loop
-  # sit inside the escalation sub-graph — a routing gate inside them would
-  # re-enter that sub-graph with a fresh budget each time, which is an
-  # unbounded path. Their iteration bounds are the protection there, and
-  # exhaustion ends `escalated`, the honest terminal.
+  # The check runs in all three loop bodies. What differs is the GATE behind
+  # it: `blocked_gate` routes, and routes only from build_loop, because a
+  # routing gate inside recovery_loop or review_rework_loop would re-enter the
+  # escalation sub-graph with a fresh budget each time — an unbounded path.
+  # Those two carry `blocked_terminal` instead, which ends the run rather than
+  # routing it, and so has no re-entry to bound. Superseded 2026-09-20: this
+  # comment read "it lives in build_loop's body ONLY" until the green-but-
+  # blocked gap was closed, and that sentence outlived the wiring it described
+  # by one commit.
   - id: blocked_check
     kind: check
     check: blocked_on_unmet

@@ -1,0 +1,81 @@
+{
+  "command_id": "ARCH-20260920-001",
+  "parent_id": "ARCH-20260919-008",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Record the supersession: amend the lab notebook's §27 with the owner-ruled, advisor-ratified loop-coverage reversal, and swap HANDOVER §3.1's superseded sentence for the current truth, so no document on main states that the gates live in build_loop only.",
+  "evidence": [
+    "PR #5 (merged 4612855): blocked_terminal added to recovery_loop and review_rework_loop — 25 nodes, 717 tests, 36 files re-derived in-change; CI green at 4612855 (run 55256056903)",
+    "docs/handover-review.md:761-762 (landed via PR #4): 'the gates live in build_loop's body ONLY — INTENDED and ratified' — false of the graph since 4612855",
+    "HANDOVER.md §3.1 sentence landed via PR #4's patch: 'the asymmetry is intended, advisor-ruled 2026-09-19 … the reopening trigger stands' — false twice over: no longer intended, and the ruling was superseded by the owner, not by the advisor",
+    "workflows/engineering-rnd.yaml:91-93 (PR #5 patch): the file's own comment now records the routing/terminal split — build_loop routes via blocked_gate with a bounded escalation budget; the other two terminate via blocked_terminal because a routing gate there would re-enter escalation unboundedly",
+    "AGENTS.md permission boundary: the owner may override an advisor ruling; the executor's PR #5 records the change as owner-ruled; the advisor's 2026-09-19 transcript ruling said the asymmetry stands — the instruction 'fix the green-but-blocked gap' did not pass through the advisor channel",
+    "convention 7 (wrong predictions reported as wrong): the advisor's 2026-09-19 harm-scope analysis weighed spend and observability and missed that a green-but-blocked loop converges and ships the refusal as a completed conclusion — conclusion corruption of the B13 class, per tests/test_green_but_blocked_gap.py:61"
+  ],
+  "scope": {
+    "include": [
+      "docs/handover-review.md (§27 amendment only)",
+      "HANDOVER.md (one sentence in §3.1)",
+      ".orchestration/responses/ARCH-20260920-001.response.json (same branch)"
+    ],
+    "exclude": [
+      "autornd/**",
+      "tests/**",
+      "workflows/**",
+      "profiles/**",
+      "evals/**",
+      "docs/traces/**",
+      "docs/preregistration-b016-part-e.md",
+      "README.md",
+      "AGENTS.md",
+      "CHANGELOG.md",
+      ".github/**"
+    ]
+  },
+  "constraints": [
+    "Do not rewrite or delete any line of §27.1 — the anti-retcon rule forbids quiet adjustment; the 2026-09-19 ruling stays exactly as pasted and the supersession is APPENDED, dated, provenance-explicit.",
+    "Append a §27.3 'Amendment — loop coverage superseded' (confirm §27.2 remains the execution-record slot and §27.3 is free; if the notebook's convention differs, STOP and report). Advisor-ruled content — transcribe into the notebook's register, filling only bracketed facts from the tree: (1) Provenance: on 2026-09-20 the owner directly instructed the fix ('fix the green-but-blocked gap'; 'merge it'), overriding the advisor's 2026-09-19 ruling that the asymmetry stands; the instruction did not pass through the advisor channel — the executor recorded the change as owner-ruled in PR #5, and the advisor ratifies the override as within the owner's authority under AGENTS.md. (2) The design: blocked_terminal — the same free blocked_check, behind a terminal gate ending the run blocked; no routing, no re-entry into the escalation sub-graph; the unbounded-path objection does not apply to a terminal gate; build_loop keeps blocked_gate routing with a bounded escalation budget; exhaustion semantics for unblocked failures are pinned by tests/test_workflows.py's companion. (3) The advisor's error, recorded as wrong: the 2026-09-19 harm-scope analysis named the residual cost as paid calls to the loop bound plus trace observability and missed that a green-but-blocked iteration converges and the run concludes completed with the refusal shipped — conclusion corruption of the same class as B13 (§4.2, §6.13), already measured there; the reopening trigger's evidence bar was met by the defect class, not by a new trace. (4) Convention 14 accounting: the mechanism is now measured — tests/test_green_but_blocked_gap.py proves the end-to-end behavior and tests/test_workflows.py pins both corrected consequences — so the unmeasured-change bar no longer applies to the landed design; what remains unmeasured is real-world frequency, and the trigger flips: any committed trace showing blocked_on arising inside recovery_loop or review_rework_loop now CONFIRMS the terminal gate fired and records the paid judges it pre-empted. (5) Cross-references: 4612855 (the merge), workflows/engineering-rnd.yaml:91-93 (the rewritten comment), HANDOVER §3.1 (the sentence swapped by this command), §27.2 (Part E registered, not executed; its paths — E1 build-only, E2 triage-only — touch no loop the amendment covers, so no pre-registered prediction is invalidated).",
+    "HANDOVER §3.1: replace the superseded sentence with — 'The loop asymmetry ended 2026-09-20: the owner overruled the advisor's 2026-09-19 ruling directly, and both loops now carry blocked_terminal, ending the run blocked rather than shipping a green-but-blocked conclusion; the design is advisor-ratified on the merits; the full record is §27.3 of the notebook.' One sentence swap; no other HANDOVER edit; every count stamp untouched (717 as of <current stamped sha> stays).",
+    "While transcribing, verify three facts and cite them in the response file: (a) §27.3 is free and §27.2 exists as landed by 008 (grep the headings); (b) every sha named in the amendment resolves (git cat-file -t 4612855 among them); (c) no other document on main still claims build_loop-only — grep -rn 'build_loop' README.md HANDOVER.md docs/handover-review.md CHANGELOG.md and report every hit's disposition.",
+    "The response file also records PR #5's execution facts for the channel record, since no command covered it: head_before, head_after 4612855, the four tests touched, counts re-derived (25/717/36), CI run id.",
+    "Suite green before and after (717 expected); merge with a merge commit, not squash; prose commit naming the evidence; keep the amendment under ~60 lines and the HANDOVER swap to one sentence."
+  ],
+  "acceptance_criteria": [
+    "§27.3 exists carrying the provenance (owner-ruled, advisor-ratified), the design, the advisor's recorded error, the convention-14 accounting, and the flipped trigger.",
+    "§27.1 is byte-identical to its landed form — supersession appended, nothing adjusted in place.",
+    "HANDOVER §3.1 carries the replacement sentence; grep for 'advisor-ruled 2026-09-19' in HANDOVER.md returns 0 hits.",
+    "grep -rn 'body ONLY' across the repo returns 0 hits, or every hit's disposition is recorded in the response file.",
+    "Suite green; CI green on the PR; response file committed at .orchestration/responses/ARCH-20260920-001.response.json."
+  ],
+  "verification": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "0 failures, 717 collected."
+    },
+    {
+      "command": "grep -n '## 27.3' docs/handover-review.md",
+      "expected": "Exactly one hit, after §27.2."
+    },
+    {
+      "command": "grep -n 'advisor-ruled 2026-09-19' HANDOVER.md",
+      "expected": "0 hits."
+    },
+    {
+      "command": "git cat-file -t 4612855",
+      "expected": "commit."
+    }
+  ],
+  "rollback": "Revert the merge commit or close the PR before merge.",
+  "deliverable": {
+    "branch": "arch/20260920-001-loop-supersession-record",
+    "pr": true,
+    "commit_style": "conventional"
+  },
+  "assumptions": [
+    "§27.3 is free and the notebook tolerates dated amendments — its own §5 principle requires the record to survive executor succession, which is exactly what this amendment is.",
+    "The owner's override is not in dispute; this command records it, it does not re-litigate it."
+  ],
+  "questions": [
+    "Report the disposition of every 'build_loop'-mentioning line the grep finds — if one cannot be truthfully left as-is, stop and report before editing it."
+  ]
+}
