@@ -72,6 +72,49 @@ sweep that corrected it need not have been bought.** That is the argument for
 generating the fact rather than re-deriving it, stated in the cost it already
 saved nobody.
 
+## The intermittent 429, diagnosed 2026-09-20
+
+**It is not the servings, not our request rate, and not our account.** It is
+OpenRouter's own upstream capacity for one **(model, provider)** pair. The body
+says so, and the harness was discarding the half that said it:
+
+> `deepseek/deepseek-v4-flash is temporarily rate-limited upstream. Please retry
+> shortly, or add your own key…`
+
+Controls, same key, same minute:
+
+| probe | result |
+|---|---|
+| a different model (`deepseek-v4-pro`), unpinned | **OK** |
+| the same model via **Alibaba** — triage's pin | **OK** |
+| the same model **unpinned** — rotation chose DigitalOcean | **OK** |
+| the same model via **GMICloud** | **429** |
+
+`max_tokens` is not the trigger either: a 16,384-token reservation with a short
+prompt succeeded on DeepInfra in the same sequence where a *small* request 429'd
+on StreamLake.
+
+**Why it looked like an engineering-tier fault.** Every one of the ten 429s
+landed on an engineering node — `implement` eight times, `validate` twice — and
+none on triage, architecture or research. Three things stacked:
+
+1. `triage` runs the **same model** via **Alibaba**, which was not capacity-
+   limited, so triage never failed.
+2. `architecture` runs a **different model** entirely, so it was never exposed.
+3. **Fallbacks are disabled by design** (§6.1 — pinning is a quality control).
+   A pinned tier has nowhere to go when its one provider is short, so a
+   transient shortage becomes a dead run. Unpinned, the rotation finds a working
+   host immediately — which is why E1 attempt 4 completed, and that was recorded
+   at the time as "unpinning helped" without understanding why.
+
+**The pin plus disabled fallbacks converts a transient upstream shortage into a
+hard run failure.** That is the mechanism, and it is a property of the
+configuration rather than of any serving in the table above.
+
+Repaired the same day (`tests/test_rate_limit_retry.py`): the upstream sentence
+now travels with the exception, and a 429 is retried with bounded backoff
+because the upstream itself calls the condition transient.
+
 ## What it does not yet record
 
 - **Iterations to termination and seconds per call**, which convention 23 ranks

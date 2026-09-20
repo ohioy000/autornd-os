@@ -15,6 +15,19 @@ from autornd.config import settings
 
 logger = logging.getLogger(__name__)
 
+# A 429 here is not our rate: it is OpenRouter's upstream capacity for one
+# (model, provider) pair, and the body says "Please retry shortly". Pinned
+# tiers run with `allow_fallbacks: False` on purpose (§6.1 — pinning is a
+# QUALITY control), so there is nowhere else for the request to go and a
+# transient shortage became a dead run. Measured 2026-09-20: the same pin
+# 429'd and then completed 90 s later, and a sweep of six servings read as
+# six failures when the rotation served the identical model on demand.
+#
+# Bounded and short, because the pinned tier cannot fall back and the caller
+# is holding a scenario clock. Retries bill like any other attempt.
+_RATE_LIMIT_ATTEMPTS = 3
+_RATE_LIMIT_BACKOFF_S = 2.0
+
 
 @dataclass
 class ModelResponse:
@@ -95,7 +108,20 @@ def _raise_for_status(resp, what: str) -> None:
     detail = ""
     try:
         payload = resp.json()
-        detail = (payload.get("error") or {}).get("message") or resp.text
+        error = payload.get("error") or {}
+        detail = error.get("message") or resp.text
+        # The message is sometimes a category rather than a reason. A 429 reads
+        # "Provider returned error", while `metadata.raw` carries the upstream's
+        # own sentence — "<model> is temporarily rate-limited upstream. Please
+        # retry shortly" — which names the model, says the condition is
+        # transient, and is the difference between diagnosing a bad serving and
+        # diagnosing a busy one. Measured 2026-09-20: ten 429s across five
+        # servings were read as five failing providers because this half of the
+        # body was dropped here. Same lesson as the 403 above, one status code
+        # along.
+        raw = (error.get("metadata") or {}).get("raw")
+        if raw and str(raw) not in str(detail):
+            detail = f"{detail} — {raw}"
     except Exception:
         detail = resp.text
     raise httpx.HTTPStatusError(
@@ -315,6 +341,17 @@ class OpenRouterClient:
                 model, resp.text[:300],
             )
             payload.pop("response_format", None)
+            resp = await client.post("/chat/completions", json=payload)
+        for attempt in range(1, _RATE_LIMIT_ATTEMPTS):
+            if resp.status_code != 429:
+                break
+            delay = _RATE_LIMIT_BACKOFF_S * (2 ** (attempt - 1))
+            logger.warning(
+                "429 for %s (attempt %d/%d) — upstream capacity, retrying in "
+                "%.1fs. Body: %s",
+                model, attempt, _RATE_LIMIT_ATTEMPTS, delay, resp.text[:200],
+            )
+            await asyncio.sleep(delay)
             resp = await client.post("/chat/completions", json=payload)
         _raise_for_status(resp, "chat/completions")
         data = resp.json()
