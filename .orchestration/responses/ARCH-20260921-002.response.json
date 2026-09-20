@@ -1,0 +1,156 @@
+{
+  "command_id": "ARCH-20260921-002",
+  "status": "BLOCKED",
+  "executed": "2026-09-20",
+  "head_before": "2a02e9a",
+  "head_after": "7b6f44f",
+  "branch": "arch/20260921-002-blocked-and-premium-line",
+  "commits": [
+    "81487d0",
+    "7b6f44f"
+  ],
+  "files_changed": [
+    ".orchestration/commands/ARCH-20260921-002.json",
+    "HANDOVER.md"
+  ],
+  "status_reason": "BLOCKED, and this one is not a numbering or ordering problem. The command closes Blueprint 016's record on Part E evidence. PART E HAS NOT RUN. Every load-bearing artifact it cites is absent from the tree, and its central factual claims contradict what this repository's own committed record says. Executing it would write measured conclusions into the lab notebook and the bug ledger on the strength of measurements that do not exist — which is the precise failure the notebook exists to prevent. Only the one item independent of Part E was executed: §3.6's MODEL_PREMIUM line.",
+  "premise_failures": [
+    {
+      "cited": "evidence[0]: 009's response says E1 status 'blocked', 12 calls, USD 0.0865, blocked_on named at iteration 1.",
+      "tree_says": "DIRECTLY CONTRADICTED by the file cited. .orchestration/responses/ARCH-20260919-009.response.json on main reads status BLOCKED, results.cost '$0.00', results.calls 0, blockers ['B-1','B-2']. It is a pre-spend block, not a run. B-1: no .env exists anywhere on this machine. B-2: E2's selection rule matches zero scenarios."
+    },
+    {
+      "cited": "evidence[1]: docs/traces/b16-e1-marketing-claims.jsonl, with header, units, pins and a rate.",
+      "tree_says": "ABSENT. No file matching b16 exists in docs/traces/. Nothing was run, so nothing was recorded."
+    },
+    {
+      "cited": "evidence[2]: E2 ran FIVE sectors, grep selected five, all passed, zero lookups, USD 0.0495.",
+      "tree_says": "ABSENT, and contradicted twice. No E2 run occurred. The measured pre-flight in 009's response reports grep -l \"risk: low\" evals/scenarios/wide/*.yaml selecting ZERO, not five — the wide scenarios carry no `risk:` key at all, only `risk_at_least:`/`risk_at_most:` bounds."
+    },
+    {
+      "cited": "evidence[3]: five committed b16-e2-lowrisk-*.jsonl traces.",
+      "tree_says": "ABSENT. docs/traces/ contains no b16 file of any kind."
+    },
+    {
+      "cited": "evidence[4]: tests/test_traces.py, new at 723bff3, a 13-field header guard, moving the suite 717 to 720; attributed by 20260920-001's response.",
+      "tree_says": "THE FILE DOES NOT EXIST and 723bff3 resolves to no object. The suite is 720, but it reached it from 718 via two guards this session added to tests/test_docs.py — the README yaml-excerpt guard and the workflow-comparison-table guard. 20260920-001's response attributes no test_traces.py; it records premise corrections and the §27 work."
+    },
+    {
+      "cited": "evidence[5]: 009's response cites a '§27.3.1' that does not exist — cross-reference drift.",
+      "tree_says": "NO SUCH CITATION EXISTS. grep -rn '27\\.3\\.1' over docs/, HANDOVER.md and README.md returns zero hits, and 009's response contains no such string. There is no drift to repair. The notebook has §27, §27.1, §27.2 and §27.3, all landed at ec76baa."
+    },
+    {
+      "cited": "evidence[8]: docs/pre-registration-b17-citation-gates.md on main at 0f4b286.",
+      "tree_says": "ABSENT, and 0f4b286 resolves to no object. No B17 pre-registration exists in this repository, so there is no provenance to record and nothing for the owner to ratify or withdraw."
+    },
+    {
+      "cited": "evidence[6]: HANDOVER §4.2's B13 row still reads open; §6.13 carries only the pre-fix contrast.",
+      "tree_says": "TRUE, and correctly so. B13 is open because Part E has not run. This is the one premise that holds, and it is the reason the command must not execute: the row is open because the evidence to close it was never gathered."
+    }
+  ],
+  "why_this_matters_more_than_the_others": "The two earlier blocked commands in this channel cited artifacts that did not exist, and were recoverable — the work was real and only the references were wrong. This one is different in kind. It asks for B13's ledger row to be closed, §6.13 to gain a post-fix column, and §27.2 to record a 'landed-validated, n=1' terminal-state ruling — all citing call counts, dollar figures and an n that were never measured. Had it executed, HANDOVER would state on main that the fix was validated against a live run costing $0.0865, and the notebook would carry a ruling grounded in it. Convention 24 exists because a fact nobody can re-derive is a fact nobody can check; here the fact cannot be re-derived because it never happened. The executor's standing instruction is to report what the measurement actually said, including when it contradicts the command. It says nothing was measured.",
+  "executed_anyway": {
+    "what": "§3.6's MODEL_PREMIUM line — the only constraint in this command independent of Part E.",
+    "why": "Self-contained, verifiable against code, and its instruction is explicit: verify which behaviour the premium code implements, then fix the HANDOVER line; stop and report only if code and .env.example disagree.",
+    "finding": "THEY DO NOT DISAGREE, and neither document was simply stale. There are TWO consumers with TWO behaviours, and each document described one of them as if it were the whole truth.",
+    "code_paths": [
+      "autornd/routing/openrouter.py:256-272 — independent_model(): `candidate = settings.model_premium or settings.model_architecture`. The graph's independent_check node DOES fall back to architecture when premium is unset. It returns None if the candidate resolves to the engineering model, because a review by the model under review is not a second opinion — the docstring records that this was not hypothetical.",
+      "autornd/api/routes.py:287 and :313 — both premium endpoints raise HTTPException(404, 'Premium model not configured') when model_premium is unset. The dashboard Double Check button does NOT fall back; the feature is off.",
+      "autornd/graph/adapter.py:472 — the graph consumer, gated on independent_model() being None."
+    ],
+    "disposition": "HANDOVER:624 said 'falls back to architecture' — true of the graph path, silent about the API path. .env.example:153 says 'leave empty to disable the feature — the button will not appear' — true of the API path, silent about the graph path. The HANDOVER line now states both, with the file:line for each, and says why the engineering fallback is refused. .env.example was NOT touched: it is in this command's exclude list, its statement is true of the consumer it documents, and it sits next to configuration where the stricter rule applies.",
+    "not_a_code_bug": "The stop-and-report condition did not trigger. The code is coherent; the documentation was imprecise on both sides."
+  },
+  "acceptance_criteria_met": [
+    {
+      "criterion": "B13's row reads closed with both call counts, both costs, both n values.",
+      "met": false,
+      "evidence": "NOT DONE. The post-fix numbers do not exist."
+    },
+    {
+      "criterion": "§6.13 and §27.2 state the terminal-state ruling.",
+      "met": false,
+      "evidence": "NOT DONE. There is no validated run to rule on."
+    },
+    {
+      "criterion": "grep '§27.3.1' returns 0 unexplained hits.",
+      "met": true,
+      "evidence": "0 hits repo-wide — but because no such citation was ever written, not because one was repaired. Disposition recorded; nothing to fix."
+    },
+    {
+      "criterion": "The B17 provenance line exists.",
+      "met": false,
+      "evidence": "NOT DONE. No B17 pre-registration exists to have provenance."
+    },
+    {
+      "criterion": "§3.6's line matches the verified code behaviour; response file cites the code path.",
+      "met": true,
+      "evidence": "HANDOVER:624-630, citing openrouter.py:256-272 and api/routes.py:287,313."
+    },
+    {
+      "criterion": "Suite green at 720.",
+      "met": true,
+      "evidence": "720 passed, 0 failed."
+    }
+  ],
+  "deviations": [
+    {
+      "what": "One constraint of a BLOCKED command was executed rather than held.",
+      "why": "The §3.6 fix depends on nothing the block concerns, its verification is in the code rather than in any run, and it corrects a line that was incomplete on main. Holding it would have left the imprecision in place for another round trip to fix nothing.",
+      "impact": "HANDOVER.md only. Everything the command asks that touches Part E is untouched."
+    }
+  ],
+  "blockers": [
+    {
+      "what": "Part E has not run. Its two blockers are unchanged since 009: no .env exists (B-1, owner's under G-3), and E2's pre-registered selection rule matches zero scenarios (B-2, needs an advisor ruling).",
+      "needs": "Both resolved, then 009 executed, then this command re-issued against whatever Part E actually measures. A .env scaffold has been written at /home/jb/autornd-os/.env — UNFILLED, values are the owner's; it is gitignored and carries no key."
+    }
+  ],
+  "questions_for_advisor": [
+    "The two questions this command puts to the owner are unanswerable as posed. B17 cannot be ratified or withdrawn because docs/pre-registration-b17-citation-gates.md does not exist and 0f4b286 resolves to nothing. The $6.00 escalation-sweep envelope is a real question the owner can answer, but it is gated behind 002 merging, and 002 cannot merge.",
+    "A pattern worth a ruling rather than another response. Three consecutive commands have cited artifacts that do not exist — §27 content that was never transcribed, five test files and CI run ids that do not resolve, and now an entire paid run with call counts, dollar figures and traces. The executor has caught each by reading the tree first, and each catch cost a round trip. Recommend the channel adopt a cheap precondition: a command citing a sha, a file path or a measured figure states it in a form the executor can verify FIRST and abort on, the way ARCH-20260919-001's HEAD guard did. That one worked exactly as intended.",
+    "Also worth recording: the safety property that caught this was the repository, not the executor's judgement. Every false claim was falsifiable in seconds against the tree. That is the argument for convention 24 stated in its strongest form yet, and §27.3's lesson — a trigger whose evidence can only come from evidence the defect suppresses is not a trigger — has a sibling here: a command whose evidence cannot be checked against the tree is not evidence."
+  ],
+  "tests_run": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "pass",
+      "summary": "720 passed, 0 failed, before and after the §3.6 line."
+    },
+    {
+      "command": "ls docs/traces/ | grep b16",
+      "result": "fail",
+      "summary": "No match. No Part E trace exists."
+    },
+    {
+      "command": "ls tests/test_traces.py",
+      "result": "fail",
+      "summary": "No such file."
+    },
+    {
+      "command": "git cat-file -t 723bff3 && git cat-file -t 0f4b286",
+      "result": "fail",
+      "summary": "Neither resolves to an object."
+    },
+    {
+      "command": "grep -rn '27\\.3\\.1' docs/ HANDOVER.md README.md",
+      "result": "pass",
+      "summary": "0 hits — nothing to repair."
+    },
+    {
+      "command": "grep -rn 'model_premium' autornd/",
+      "result": "pass",
+      "summary": "Two consumers identified; see executed_anyway.code_paths."
+    }
+  ],
+  "results": {
+    "cost": "$0.00",
+    "calls": 0
+  },
+  "public_safe_summary": "BLOCKED. The command closes Blueprint 016's record on Part E evidence, and Part E has not run: 009 is recorded on main as a pre-spend block at $0.00 and zero calls. Every artifact cited as evidence is absent — both trace sets, a test file, two commit shas, a B17 pre-registration — and two of the factual claims are contradicted by the repository's own committed record, including a selection-rule count of five where the measured reading is zero. Executing it would have written validated-against-a-live-run conclusions into the bug ledger and the lab notebook on measurements that were never taken. One constraint was independent of Part E and was executed: the MODEL_PREMIUM line, which turned out to be imprecise on both sides rather than stale on one — the graph's independent pass falls back to architecture, the dashboard button 404s and disappears, and each document had described one consumer as the whole truth. Suite green at 720.",
+  "next_recommended_commands": [
+    "Owner: fill /home/jb/autornd-os/.env (G-3) — seven values clear B-1.",
+    "Advisor: rule on E2's selection rule as a dated amendment to the pre-registration — clears B-2.",
+    "Then ARCH-20260919-009 runs, and this command is re-issued against what it actually measures."
+  ]
+}

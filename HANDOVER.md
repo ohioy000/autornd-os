@@ -621,7 +621,13 @@ MODEL_ESCALATION=<vendor/model>      # failure autopsy; the one tier that wants 
 MODEL_RESEARCH=<vendor/model>        # briefing/scoping; must not invent facts
 MODEL_SEARCH=<vendor/model>          # outward lookups WITH citations
 MODEL_RANKER=                        # optional: native /rerank model
-MODEL_PREMIUM=                       # optional: independent pass; falls back to architecture
+MODEL_PREMIUM=                       # optional. Two consumers, two behaviours:
+                                     #   graph `independent_check` falls back to
+                                     #   architecture (never to engineering — a
+                                     #   review by the model under review is not a
+                                     #   second opinion, `independent_model()`);
+                                     #   the dashboard Double Check button 404s and
+                                     #   does not appear (`api/routes.py:287,313`).
 
 # ── budgets (every value below was set from a measurement — see §6) ──────
 MAX_ITERATIONS=5
