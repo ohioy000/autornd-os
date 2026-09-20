@@ -109,3 +109,18 @@ def test_the_command_shape_carries_preconditions():
     for phrase in ("preconditions", "MUST carry one verifying it",
                    "`BLOCKED` report, not a"):
         assert phrase in text, f"the preconditions schema lost {phrase!r}"
+
+
+def test_the_executor_checks_commands_on_arrival():
+    """Stated, then structural, then enforced — this is the third step.
+
+    Two duties: a non-null parent must already have a response, and every
+    command must carry a non-empty preconditions array. Asserts both MUSTs and
+    the BLOCKED semantics, because a section keeping the prose while softening
+    either obligation is the degradation that actually happens (convention 22).
+    The exhibit is real: 010 executed with 009's response missing, undetected
+    until the advisor read the directory."""
+    text = AGENTS.read_text(encoding="utf-8")
+    for phrase in ("On arrival", "a response file for that parent", "**MUST**",
+                   "non-empty `preconditions` array", "report on arrival"):
+        assert phrase in text, f"the arrival checks lost {phrase!r}"
