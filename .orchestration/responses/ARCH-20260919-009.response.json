@@ -1,0 +1,91 @@
+{
+  "command_id": "ARCH-20260919-009",
+  "status": "BLOCKED",
+  "executed": "2026-09-20",
+  "head_before": "a4e7d45",
+  "head_after": "a4e7d45",
+  "branch": "arch/20260920-004-b016-parte-blocked",
+  "commits": [],
+  "files_changed": [],
+  "status_reason": "Two independent blockers, both found before any spend. One is apparatus and the owner's; the other is a pre-registered selection rule that selects nothing, which the command itself classes as a BLOCKED report rather than an improvised edit. $0.00 spent.",
+  "gating_constraint_satisfied": "Yes. 009's first constraint is 'do not start until ARCH-20260919-008's merge is on main'. §27 landed at ec76baa and merged as a4e7d45; §27.2 exists and names this command. That gate is clear — these blockers are new.",
+  "blockers": [
+    {
+      "id": "B-1",
+      "what": "No .env exists, anywhere. /home/jb/autornd-os/.env is absent — only .env.example is present, and it is gitignored so it never came down with the clone. A search of /home/jb to four levels found no .env at all. No OPENROUTER_*, MODEL_* or AUTORND_* variable is set in the environment either.",
+      "consequence": "The harness refuses to start: 'AutoRnD is not configured — no model is set for 6 of 6 tiers.' Neither E1 nor E2 can run one call.",
+      "needs": "The owner, under G-3. At minimum OPENROUTER_API_KEY and all six tier models — MODEL_TRIAGE, MODEL_ENGINEERING, MODEL_ARCHITECTURE, MODEL_ESCALATION, MODEL_RESEARCH, MODEL_SEARCH. OPENROUTER_PROVIDER_ORDER stays OUT of the file: the pre-registration runs the pins env-prefixed per invocation, and G-3 says nothing standing.",
+      "executor_action": "None taken and none available. The executor has not read, created or modified .env, and will not. No key value has entered this transcript (G-1)."
+    },
+    {
+      "id": "B-2",
+      "what": "E2's pre-registered selection rule selects zero scenarios. The rule, verbatim from docs/preregistration-b016-part-e.md: grep -l \"risk: low\" evals/scenarios/wide/*.yaml. Run against the tree at a4e7d45 it returns NOTHING. The wide scenarios carry no `risk:` key at all — they assert BOUNDS, `risk_at_least:` and `risk_at_most:`.",
+      "consequence": "E2 as written runs on zero sectors, which is not a run. The command's instruction 'the run proceeds on whatever the rule selects' cannot be honoured when the rule selects nothing, and its other instruction governs: 'If any prereg command is unexecutable as written, that is a BLOCKED report, not an improvised edit — the prereg is a pre-registered artifact and is not touched.' It has not been touched.",
+      "needs": "An advisor ruling on the selection rule. Three readings exist and they do not agree — see selection_rule_readings."
+    }
+  ],
+  "selection_rule_readings": {
+    "note": "Free, read off the tree at a4e7d45. Recorded rather than absorbed, per the command and convention 7. The executor has NOT chosen among these — the choice changes which sectors are measured, and therefore what the run concludes.",
+    "literal": {
+      "rule": "grep -l \"risk: low\" evals/scenarios/wide/*.yaml",
+      "count": 0,
+      "files": [],
+      "reading": "The rule as pre-registered. Matches nothing because no wide scenario has a `risk:` key."
+    },
+    "floor_of_low": {
+      "rule": "grep -l 'risk_at_least: low'",
+      "count": 3,
+      "files": ["wide_brewing.yaml (risk_at_most: medium)", "wide_broadcast.yaml (risk_at_most: medium)", "wide_marketing.yaml (risk_at_most: low)"],
+      "reading": "THIS IS ALMOST CERTAINLY WHAT WAS MEANT — it returns exactly the predicted three, and the prediction cites §6.2's 'low 0/3' row, which also says three. But it is a FLOOR, not an assertion of low: two of the three permit medium. If triage classifies wide_brewing or wide_broadcast medium at run time, the risk gate allows lookups and E2's prediction of $0.00 search spend in every repetition fails — for a reason that has nothing to do with the fix under test."
+    },
+    "pinned_to_low": {
+      "rule": "risk_at_least: low AND risk_at_most: low",
+      "count": 1,
+      "files": ["wide_marketing.yaml"],
+      "reading": "The only scenario whose file actually asserts low risk, which is what the pre-registration's own words describe: 'the wide scenarios whose files assert risk: low'. It gives n = 1 sector × 2 reps = 2 units, not the registered n = 6."
+    },
+    "full_distribution": {
+      "risk_at_least": {"critical": 13, "high": 11, "medium": 9, "low": 3},
+      "risk_at_most": {"critical": 19, "high": 11, "medium": 3, "low": 1},
+      "files_total": 36,
+      "files_carrying_risk_at_most": 34
+    }
+  },
+  "what_the_preregistration_missed": [
+    "The rule was written against a scenario schema that the wide corpus does not use. This is a pre-registration defect, not a measurement result, and it was free to find — the pre-flight is the first thing E2 specifies and it costs nothing. Convention 18 applies in the executor's favour here: the reading is a fact about the apparatus, and the apparatus was never run.",
+    "§6.2's 'low 0/3' row is OBSERVED triage risk over three measured units, not a count of files asserting low. The pre-registration treats the two as the same number. They agree at 3 by coincidence of the floor-of-low reading, which is what makes the defect easy to miss.",
+    "A prediction of '$0.00 search spend in every repetition' is only falsifiable if the selected sectors are actually low-risk at run time. Under the floor-of-low reading it is not — two of the three sectors may come back medium, and the prediction would read as refuted by the selection rule rather than by the harness."
+  ],
+  "e1_apparatus_check": {
+    "status": "INTACT — E1 is blocked by B-1 alone, not by B-2.",
+    "profiles/studio.yaml": "present",
+    "evals/scenarios/generalization/gen_marketing_claims.yaml": "present",
+    "workflow": "engineering-rnd, 25 nodes at a4e7d45",
+    "note": "E1's path is build-only (verify_grounding, blocked_check, blocked_gate), unchanged by the §27.3 amendment, so no pre-registered E1 prediction is invalidated by it. One thing the pre-registration could not have anticipated: since 4612855 a run that reaches the rework loop can terminate `blocked` via blocked_terminal. E1 predicts 'completed, or a blocked/escalated terminal whose diagnosis carries blocked_on'. A blocked_terminal ending satisfies that wording, but by a mechanism the prediction did not name. Recorded now so it is not read as a surprise later."
+  },
+  "deviations": [
+    {
+      "what": "E2's free pre-flight was run before an IN_PROGRESS response was committed.",
+      "why": "It is free, read-only, and the first step E2 specifies. Running it is what surfaced B-2, before any spend and before the owner was asked for keys — which is the cheaper order.",
+      "impact": "No spend. No file touched. $0.00."
+    }
+  ],
+  "acceptance_criteria_met": [],
+  "tests_run": [
+    {"command": "grep -l \"risk: low\" evals/scenarios/wide/*.yaml", "result": "fail", "summary": "0 files — the pre-registered rule selects nothing."},
+    {"command": "ls -la .env; find /home/jb -maxdepth 4 -name '.env'", "result": "fail", "summary": "No .env exists. Only .env.example, which is gitignored."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "pass", "summary": "720 passed — suite green; nothing in this command changed code."}
+  ],
+  "results": {"cost": "$0.00", "calls": 0, "work_done": "Gate check, apparatus check, and E2's free pre-flight. No paid call was made and no prereg artifact was touched."},
+  "questions_for_advisor": [
+    "B-2 needs a ruling and the executor will not choose. Recommend the pinned-to-low reading (wide_marketing.yaml alone) on the merits — it is what the pre-registration's own prose describes, and it is the only selection under which '$0.00 search spend' is a test of the risk gate rather than a test of what triage happened to return. It costs the registered n, which drops from 6 units to 2. If the advisor prefers to keep n=6, the floor-of-low reading is available but the $0.00 prediction should be re-registered as conditional on the observed risk of each unit, or it will read as refuted for the wrong reason.",
+    "Whichever is chosen, it is a change to a pre-registered artifact and should ride as a dated amendment to docs/preregistration-b016-part-e.md rather than an edit — the same anti-retcon shape §27.1/§27.3 just used, and for the same reason. The prereg's evidential value is that it preceded the result.",
+    "E1 is unblocked the moment .env exists and can run alone if the advisor wants the more valuable arm first. That would invert the ruled E2-then-E1 order, which was set by convention 16 (cheap arms first) — a ruling to invert it should be explicit, not assumed from B-2."
+  ],
+  "public_safe_summary": "BLOCKED before any spend, on two counts. No .env exists anywhere on this machine, so the harness refuses to start — that is the owner's under G-3 and no key value has entered this transcript. Separately, E2's pre-registered selection rule matches zero scenarios: it greps for a `risk:` key that the wide corpus does not use, since those files assert bounds instead. Three readings of the intent exist, returning 0, 3 and 1 scenarios, and they disagree about what would be measured — so the rule needs a ruling rather than a guess. E1's apparatus is otherwise intact. $0.00 spent, no pre-registered artifact touched.",
+  "next_recommended_commands": [
+    "Owner: create .env (G-3) with the key and the six tier models; keep the provider pins out of it, env-prefixed per invocation as the pre-registration specifies.",
+    "Advisor: rule on E2's selection rule and land it as a dated amendment to the pre-registration.",
+    "Then 009 re-runs as written, with no further change."
+  ]
+}
