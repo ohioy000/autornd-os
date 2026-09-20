@@ -91,9 +91,12 @@ class TestTheShippedFlagshipIsUnchanged:
         pins the full blocked-review path — the one that exercises `_run_from`
         twice, once for the gate route and once for the loop's exhaustion — so
         any change to the path every live run takes must be deliberate and
-        visible here. The B13 block nodes sit inside the build iterations; the
-        rework loops' bodies are unchanged, because a routing gate inside the
-        escalation sub-graph would be an unbounded path."""
+        visible here. The B13 block nodes sit inside every iteration now: the
+        ROUTING gate in the build loop, and the TERMINAL gate in the rework and
+        recovery loops. The routing gate still cannot go there — it would
+        re-enter the escalation sub-graph with a fresh budget each time, which
+        is unbounded — but a terminal gate ends the run and so has no such
+        path."""
         state, runner = await _run({
             **BASE, "validate": {"green": True},
             "review": {"ship": False, "verdict": "no", "findings": []},
@@ -106,9 +109,11 @@ class TestTheShippedFlagshipIsUnchanged:
             "implement", "blocked_check", "blocked_gate",
             "domain_review", "coverage", "consistency",
             "validate", "judges", "review", "review_clean",
-            "implement", "domain_review", "coverage", "consistency",
+            "implement", "blocked_check", "blocked_terminal",
+            "domain_review", "coverage", "consistency",
             "validate", "judges", "rework_review", "review_fold",
-            "implement", "domain_review", "coverage", "consistency",
+            "implement", "blocked_check", "blocked_terminal",
+            "domain_review", "coverage", "consistency",
             "validate", "judges", "rework_review", "review_fold",
             "escalation", "recoverable",
         ]

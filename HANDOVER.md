@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `c442c5f` · **Branch:** `main`
-**Tests:** 712 as of `c442c5f` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
+**Tests:** 717 as of `c442c5f` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -250,7 +250,7 @@ autornd/
     templates/dashboard.html  single-file chat + workflows + settings UI
 
 workflows/
-  engineering-rnd.yaml   ★★ the flagship pipeline, 24 nodes, 3 loops (§3.1)
+  engineering-rnd.yaml   ★★ the flagship pipeline, 25 nodes, 3 loops (§3.1)
   lean.yaml                 10 nodes — cheaper variant, one loop
   triage-only.yaml          2 nodes — triage + grounding (research measurement)
   triage-classify.yaml   ★  1 node — triage alone. Exists so calibration costs
@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      36 files, 712 tests (as of `c442c5f`)
+tests/                      36 files, 717 tests (as of `c442c5f`)
 ```
 
 ### 2.3 Key design patterns
@@ -405,7 +405,7 @@ idempotent across phases.
 
 ## 3. CURRENT STATE & SOURCE OF TRUTH
 
-### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (24 nodes)
+### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (25 nodes)
 
 **The file is the source of truth; this table is generated from it.** A
 hand-copied YAML lived here for twelve blueprints and drifted — it still
@@ -423,6 +423,7 @@ one loop after that stopped being true.
 | `implement` | ai | tier `engineering`, as `lead`, → `ImplementVerdict` |
 | `blocked_check` | check | `blocked_on_unmet` over `implement.blocked_on` against `plan.success_criteria` (free) |
 | `blocked_gate` | gate | `blocked_check.passed == true`; on_fail → `escalation`, reasoned "Implementation blocked on a criterion it cannot satisfy" |
+| `blocked_terminal` | gate | the same condition inside the rework and recovery loops; on_fail → terminal `blocked`. A routing gate cannot go there; a terminal one can |
 | `domain_review` | ai | tier `engineering`, as `peers`, when `implement.green == true` |
 | `coverage` | check | `criteria_addressed` (free) |
 | `consistency` | check | `numbers_consistent` (free) |
@@ -447,15 +448,29 @@ work resumed after a recoverable escalation need the same treatment. They are
 separate nodes because a loop owns its body (§2.3), and `review` must still run
 once on the main schedule.
 
-**`build_loop`'s body is also eight nodes, but it is not the same eight.** Since
-Blueprint 016 it carries `blocked_check` and `blocked_gate` after `implement`,
-which the other two loops do not: `implement`, `blocked_check`, `blocked_gate`,
-`domain_review`, `coverage`, `consistency`, `validate`, `judges`. **Read from the
-file, not inferred:** the honest-refusal gate therefore watches the first build
-and not the rework or recovery passes, so an implementation that becomes blocked
-on a criterion *after* a review sends it back reaches no gate that can say so.
-Whether that asymmetry is intended is loop wiring, which is a ruling, not an
-instrument repair — it is recorded here and flagged, not changed.
+**`build_loop`'s body is eight nodes and not the same eight.** It carries
+`blocked_check` and `blocked_gate` after `implement`: `implement`,
+`blocked_check`, `blocked_gate`, `domain_review`, `coverage`, `consistency`,
+`validate`, `judges`.
+
+**The two gates differ in what they do, and that is the ruling.** The *routing*
+gate is build-only and stays that way — inside the rework and recovery loops it
+would re-enter the escalation sub-graph with a fresh iteration budget each time,
+which is unbounded, and the workflow file has recorded that rationale since the
+gate landed. What those two loops now carry instead is `blocked_terminal`: the
+same free check, a gate that **ends** the run `blocked`. A terminal gate has no
+re-entry to bound, so the objection does not reach it.
+
+**Why it was added, found by reading rather than from a trace.** `blocked_check`
+is the only thing in the graph that reads `blocked_on` independently of `green`,
+and validate's failure-log write is guarded on the iteration being red. So an
+implementation that came back **green while naming a criterion it could not
+satisfy** recorded nothing and met no gate in rework or recovery: the fold saw
+four green judges, the loop converged, and the work **shipped carrying the
+refusal**. There is no trace of this, because the run it produces reports
+`completed` — which is why it is stated here as a reading, with
+`tests/test_blocked_on.py::TestTheGreenButBlockedGap` simulating it end to end
+(convention 22).
 
 **Reading the shape in one line:** triage → ground → plan → *gate* → verify
 grounding on demand → build until every judge agrees → escalate if it never
@@ -628,7 +643,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (712 total, as of `c442c5f`)
+### 3.7 Test distribution (717 total, as of `c442c5f`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -639,15 +654,15 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_knowledge.py | 41 | test_specialists.py | 11 |
 | test_research.py | 37 | test_results_log.py | 10 |
 | test_review_composition.py | 28 | test_triage.py | 10 |
-| test_profiles.py | 23 | test_lead_review.py | 9 |
-| test_settings.py | 22 | test_handover_truth.py | 7 |
-| test_api.py | 21 | test_live_wiring.py | 7 |
-| test_blocked_on.py | 21 | test_rejection_counter.py | 7 |
+| test_blocked_on.py | 26 | test_lead_review.py | 9 |
+| test_profiles.py | 23 | test_handover_truth.py | 7 |
+| test_settings.py | 22 | test_live_wiring.py | 7 |
+| test_api.py | 21 | test_rejection_counter.py | 7 |
 | test_sweep_budget.py | 21 | test_engine.py | 6 |
-| test_rework_loop.py | 17 | test_budget_stop_scoring.py | 5 |
-| test_auth.py | 16 | test_iteration_dissent.py | 5 |
-| test_green_resolution.py | 16 | test_handoff_scheduler.py | 4 |
-| test_protocol_file.py | 17 | test_workflow.py | 4 |
+| test_protocol_file.py | 17 | test_budget_stop_scoring.py | 5 |
+| test_rework_loop.py | 17 | test_iteration_dissent.py | 5 |
+| test_auth.py | 16 | test_handoff_scheduler.py | 4 |
+| test_green_resolution.py | 16 | test_workflow.py | 4 |
 | test_all_judges_exit.py | 15 | test_docs.py | 3 |
 | test_schema_wiring.py | 15 | test_phase_timing.py | 3 |
 
@@ -693,7 +708,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 712/712 pass.** Everything below is a live-behaviour
+**No failing unit tests — 717/717 pass.** Everything below is a live-behaviour
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
@@ -1521,7 +1536,7 @@ repaired in 012, and it names `consistency` — a free deterministic numeric che
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 712 tests as of `c442c5f`, ~52 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 717 tests as of `c442c5f`, ~52 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \
