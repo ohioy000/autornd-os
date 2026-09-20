@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-718%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-720%20passing-brightgreen.svg)](#testing)
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
 
@@ -211,8 +211,8 @@ Select with `AUTORND_WORKFLOW`. Copy one and change it — that is the point of 
 
 | | happy path | never converges |
 |---|---|---|
-| `engineering-rnd` | 11 calls | 24 calls |
-| `lean` | **8 calls** | **15 calls** |
+| `engineering-rnd` | 10 calls | 17 calls |
+| `lean` | **7 calls** | **14 calls** |
 
 Writing the sequence down also forced out rules that had been implicit in code: the test engineer validates the work and so does not build it or review the build (the `builders` and `peers` rosters), feasibility only reviews a plan the architect declared ready, and escalation runs because a loop gave up rather than because its dependencies happened to be satisfied.
 
@@ -753,7 +753,7 @@ workflows/                # engineering-rnd, lean, triage-only, triage-classify
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 718 tests
+tests/                    # 720 tests
 ```
 
 ## Cost and Performance
@@ -798,7 +798,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-718 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
+720 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
 
 The graph tests are the load-bearing ones: node shape, gate routing, loop bounds and the all-judges exit are all decidable without a provider. An earlier hardcoded sequencer was kept alongside the graph as an equivalence reference and has been retired — once gates could route on failure, a linear engine could no longer represent the pipeline it was supposed to be checking.
 

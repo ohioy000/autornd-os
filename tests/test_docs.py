@@ -19,6 +19,7 @@ the closer a document sits to configuration.
 
 from __future__ import annotations
 
+import pytest
 import re
 import subprocess
 import sys
@@ -174,3 +175,71 @@ class TestTheReadmeYamlExcerptIsTheRealThing:
                         f"{shown['id']}.{key}: README says {value!r}, "
                         f"the file says {node.get(key)!r}")
         assert not wrong, "; ".join(wrong)
+
+
+class TestTheWorkflowComparisonTableIsTheRealThing:
+    """The README's cheapest claim about the graph, re-derived rather than read.
+
+    The table under *Workflows Are Files* says what two shapes cost against the
+    same expectations. It said `11`/`24` and `8`/`15` while the harness it
+    describes reported `10`/`17` and `7`/`14` — the engineering-rnd
+    never-converges figure was out by seven, which is a whole rework loop. The
+    provenance of the old numbers is recorded nowhere, so they could not be
+    reconciled, only re-measured (convention 18: a reading is a reading).
+
+    Re-derived here with the apparatus the README names — the same scripted
+    client and settings as
+    `test_evals.py::TestSuiteReports::test_the_same_suite_can_compare_two_workflows`,
+    which is what "measured against each other with mocks, in under a second,
+    for nothing" refers to. Deterministic: three consecutive runs agreed.
+
+    A number in a document that no test derives is a number that drifts. This
+    is the second such guard in this file and the fourth hand-copied fact in
+    this repo to have gone stale.
+    """
+
+    @staticmethod
+    async def _calls(workflow: str, *, green: bool) -> int:
+        from tests.test_evals import SETTINGS, make_client, scripted
+        from autornd.evals.runner import run_suite
+        from autornd.evals.scenario import parse
+        from autornd.graph.spec import load
+
+        scenarios = [parse({"id": "s", "request": "Add retry",
+                            "expect": {"status": "completed"}})]
+        report = await run_suite(
+            scenarios, load(f"workflows/{workflow}.yaml"),
+            lambda: make_client(scripted(green=green)), SETTINGS)
+        return report.calls
+
+    @staticmethod
+    def _table() -> dict[str, tuple[int, int]]:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        rows = re.findall(
+            r"^\|\s*`(engineering-rnd|lean)`\s*\|\s*\*{0,2}(\d+) calls\*{0,2}\s*"
+            r"\|\s*\*{0,2}(\d+) calls\*{0,2}\s*\|$",
+            readme, re.MULTILINE)
+        assert len(rows) == 2, (
+            "the README's workflow comparison table is missing or reshaped — if "
+            "it moved, move this guard with it rather than deleting it")
+        return {name: (int(happy), int(never)) for name, happy, never in rows}
+
+    @pytest.mark.asyncio
+    async def test_both_rows_match_the_harness(self):
+        claimed = self._table()
+        wrong = []
+        for workflow, (happy, never) in claimed.items():
+            for label, stated, green in (("happy path", happy, True),
+                                         ("never converges", never, False)):
+                actual = await self._calls(workflow, green=green)
+                if actual != stated:
+                    wrong.append(f"{workflow} {label}: README says {stated}, "
+                                 f"the harness reports {actual}")
+        assert not wrong, "; ".join(wrong)
+
+    @pytest.mark.asyncio
+    async def test_lean_is_still_the_cheaper_shape_on_both_arms(self):
+        """The table's actual argument, independent of the exact figures."""
+        claimed = self._table()
+        assert claimed["lean"][0] < claimed["engineering-rnd"][0]
+        assert claimed["lean"][1] < claimed["engineering-rnd"][1]
