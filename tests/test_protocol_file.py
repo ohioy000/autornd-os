@@ -84,3 +84,15 @@ def test_the_orchestration_channel_is_documented():
     text = AGENTS.read_text(encoding="utf-8")
     for path in (".orchestration/commands/", ".orchestration/responses/"):
         assert path in text, f"AGENTS.md no longer documents {path}"
+
+
+def test_the_channel_requires_checkable_evidence():
+    """A command citing a sha, path or figure must be verifiable before it acts.
+
+    Written after a command cited an entire paid run that had never happened.
+    Asserts the rule and its exhibit, not the heading — a section that kept the
+    heading and lost the rule would otherwise pass (convention 22)."""
+    text = AGENTS.read_text(encoding="utf-8")
+    for phrase in ("verify", "is not evidence",
+                   "ARCH-20260921-002.response.json"):
+        assert phrase in text, f"the checkable-evidence precondition lost {phrase!r}"

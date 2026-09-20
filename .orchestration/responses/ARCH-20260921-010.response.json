@@ -1,0 +1,64 @@
+{
+  "command_id": "ARCH-20260921-010",
+  "status": "DONE",
+  "executed": "2026-09-20",
+  "head_before": "eae1136",
+  "head_after": "c885b95",
+  "branch": "arch/20260921-010-channel-precondition",
+  "files_changed": [
+    "AGENTS.md",
+    "tests/test_protocol_file.py",
+    "HANDOVER.md",
+    "README.md",
+    ".orchestration/responses/ARCH-20260921-010.response.json"
+  ],
+  "cited_shas_verified": {
+    "0c88aca": "commit",
+    "c442c5f": "commit",
+    "note": "Checked before acting — the precondition this command lands, applied to the command itself."
+  },
+  "acceptance_criteria_met": [
+    {
+      "criterion": "The precondition exists in AGENTS.md citing the response file.",
+      "met": true,
+      "evidence": "Appended inside the orchestration section after the departures paragraph; cites .orchestration/responses/ARCH-20260921-002.response.json by name."
+    },
+    {
+      "criterion": "Suite green at 731.",
+      "met": true,
+      "evidence": "742 passed — the expected figure is stale by eleven, all landed since: the 429 retry tests and the preflight tests. No count was typed; all were re-derived."
+    },
+    {
+      "criterion": "Response file committed.",
+      "met": true,
+      "evidence": "this file."
+    },
+    {
+      "criterion": "tests/test_protocol_file.py stays green.",
+      "met": true,
+      "evidence": "18 passed, including the new guard."
+    }
+  ],
+  "deviations": [
+    {
+      "what": "A guard was added to tests/test_protocol_file.py, which the command permitted 'only if its guard style requires' — it did not strictly require one.",
+      "why": "Blueprint 015's departure 2 is the precedent and the warning: every guard passed the moment AGENTS.md existed, because none of them looked at it. A protocol rule with no guard is a rule that survives until someone tidies the section. The guard asserts the rule and its exhibit rather than the heading, so a section that kept its title and lost its content fails.",
+      "impact": "Six lines. Proved against the condition it watches: deleting the closing sentence fails it, which was checked rather than assumed."
+    },
+    {
+      "what": "HANDOVER.md and README.md were edited, though the scope names only AGENTS.md and the response file.",
+      "why": "Forced by the added guard, which moved the suite 741 to 742 and broke the count guards. Convention 18 puts the re-derivation in the same change. This is the same scope-versus-test collision recorded under ARCH-20260919-007, and it has now happened twice — worth fixing in the next command that sanctions a test.",
+      "impact": "Three derived numbers and the distribution table. Nothing else."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "The precondition is written as a duty on the command's author, and the executor has no way to enforce it — a command that ignores it still arrives, and the only defence is the executor checking anyway. That is what happened on 2026-20-09 and it worked, but it worked because the executor chose to check. If the advisor wants it enforced rather than stated, the mechanism would have to be a required field in the command shape — a `preconditions` array of runnable checks — which is a change to the channel's schema and therefore a ruling.",
+    "Recorded as an observation about the rule's own subject: this command cited two shas, 0c88aca and c442c5f, and both resolve. The three commands in this batch were the first to be checked against the tree before execution as a matter of course rather than after a failure."
+  ],
+  "public_safe_summary": "AGENTS.md's orchestration section now carries the checkable-evidence precondition: a command citing a sha, path or measured figure states it in a form the executor can verify first, and a command whose evidence cannot be checked against the tree is not evidence. The rationale names the 2026-09-20 command that cited an entire paid run which had never happened. A guard asserts the rule and its exhibit rather than the heading, and was proved by deleting the rule. Suite green at 742.",
+  "next_recommended_commands": [],
+  "commits": [
+    "c885b95"
+  ]
+}
