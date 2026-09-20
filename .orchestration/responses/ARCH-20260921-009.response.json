@@ -1,0 +1,81 @@
+{
+  "command_id": "ARCH-20260921-009",
+  "status": "DONE",
+  "reconstructed": true,
+  "reconstructed_at": "2026-09-20",
+  "reconstruction_reason": "Omitted at execution; reconstructed from PR #16's body, the two committed traces, the §27.2 append, and commits 0a4d6de / 1733e3e / 65398cc / eae1136. No field is filled from memory that the durable record does not contain.",
+  "sequence_break": "ARCH-20260921-010 was executed and merged before this response existed, breaching the response-before-the-next-command contract that AGENTS.md's orchestration section states and that the executor itself landed under ARCH-20260919-007. No re-execution is required — the work and its evidence are committed and verifiable. The breach is named here rather than hidden, and it is the first failure of that contract since the channel was written down.",
+  "executed": "2026-09-20",
+  "head_before": "4c65b5a",
+  "head_after": "eae1136",
+  "branch": "arch/20260921-009-parte-registered-completion",
+  "commits": ["0a4d6de", "1733e3e", "65398cc"],
+  "merge": "eae1136",
+  "files_changed": ["docs/traces/b16-e1-marketing-claims-registered.jsonl", "docs/traces/b16-e2-lowrisk-marketing.jsonl", "docs/handover-review.md", "docs/serving-ledger.md", "autornd/preflight.py", "tests/test_preflight.py", "HANDOVER.md", "README.md", "AGENTS.md"],
+  "results": {
+    "order": "E2 first, then E1's registered re-run, as the command ruled (convention 16).",
+    "E2": {
+      "trace": "docs/traces/b16-e2-lowrisk-marketing.jsonl",
+      "selection": "wide_marketing.yaml — the single both-ends scenario, per the 2026-09-20 amendment; the executor's precondition returned exactly one file",
+      "n": "2 repetitions on 1 scenario. The registered command ran verbatim with only the sector placeholder filled, so --repeat 2 stands.",
+      "rep1": {"status": "completed", "passed": true, "calls_by_tier": {"triage": 1}, "refused_lookups": 0, "cost": 0.000227},
+      "rep2": {"status": "completed", "passed": true, "calls_by_tier": {"triage": 1}, "refused_lookups": 0, "cost": 0.000123},
+      "totals": "2/2 passed, 2 calls, 8.4 s, $0.0003",
+      "risk_observed": "low at both bounds, both repetitions",
+      "prediction": "CONFIRMED exactly — zero search spend in every repetition, no `search` entry in cost_by_tier or calls_by_tier, refused_lookups 0."
+    },
+    "E1_registered": {
+      "trace": "docs/traces/b16-e1-marketing-claims-registered.jsonl",
+      "note": "Written to a file of its own so it cannot be confused with the four-attempt apparatus trace, as the command's scope required.",
+      "status": "blocked", "scenario_passed": true, "calls": 22, "seconds": 539.7,
+      "cost": 0.0569, "iterations": 2, "refused_lookups": 0,
+      "calls_by_tier": {"triage": 1, "research": 2, "architecture": 8, "engineering": 10, "escalation": 1},
+      "served_by": "architecture via StreamLake, engineering via GMICloud, escalation via Modal, research via Google, triage via Alibaba",
+      "pin_held": "Yes — to termination. Two earlier attempts died on engineering-tier 429s; this one did not, after the retry repair landed in PR #15.",
+      "assertions": {"risk_at_least": "pass (low)", "max_calls": "pass (22 of 40)", "criteria_addressed": "pass (True)"}
+    },
+    "predictions_scored": [
+      {"prediction": "honest terminal either way, blocked_on naming the criterion", "outcome": "CONFIRMED"},
+      {"prediction": "zero fabricated sources", "outcome": "CONFIRMED — the implementer labelled all three proof points unsourced rather than inventing citations"},
+      {"prediction": "does not approach the 40-call ceiling", "outcome": "CONFIRMED — 22 of 40, against 43 for the fabrication run"},
+      {"prediction": "refused_lookups 0; the override fires at most once", "outcome": "CONFIRMED"},
+      {"prediction": "<= 299 s and <= 13 calls if the terminal is shipped", "outcome": "MOOT — it did not ship"}
+    ],
+    "contrast": {
+      "baseline": "§24.1(f) / b14-gen_marketing_claims.jsonl — 43 calls into the cost ceiling, invented report titles, dates and URLs",
+      "registered": "22 calls, honest blocked terminal, claims labelled unsourced, pin held",
+      "n": "1 each side; servings, model map and pins match between the two"
+    },
+    "boundary_finding": "Not clean, and recorded as such. Escalation's autopsy names a different invention: the product name 'ExpenseFlow' was presented as fact rather than flagged as an assumption. Sources were not fabricated; a product name was. 016's honest-refusal channel governs what the plan demands citations for, not everything a draft might invent.",
+    "free_findings": [
+      "verify_grounding non-determinism grows to n=5 — 1 finding from 3 gaps once, 0 from 0 four times, with no search call billed on any of the four.",
+      "criteria_addressed passed here (True) against None on the unpinned attempt, because two iterations ran and the check had something to read. Narrows, without retracting, the earlier note that the scenario cannot score a successful refusal.",
+      "The retry repair was exercised on the exact path that needed it."
+    ],
+    "cost": "$0.0572 across both arms ($0.0569 + $0.0003), far inside the registered caps."
+  },
+  "deviations": [
+    {
+      "what": "Two instrument repairs rode beyond the commanded scope: the standing pin was restored to .env after being found absent, and autornd/preflight.py plus tests/test_preflight.py were added.",
+      "why": "The command's scope excludes code and tests. Both were made at the owner's direct instruction mid-execution ('fix those 2'), after the executor reported that OPENROUTER_PROVIDER_ORDER had vanished from .env and that its own verification of that file had been vacuous — it compared two filtered lists and would have passed whether the key was preserved or missing from both. Instrument class under the AGENTS.md permission boundary; advisor-ratified 2026-09-20.",
+      "impact": "autornd/preflight.py (130 lines), tests/test_preflight.py (92 lines), and the count stamps re-derived with them."
+    },
+    {
+      "what": "The suite moved 731 to 741 during this command rather than staying at the expected 731.",
+      "why": "The preflight tests above, plus the 429 retry tests that landed in PR #15 between the command being written and executed.",
+      "impact": "Counts re-derived, never typed, per convention 18. The serving ledger was regenerated twice as the two new traces landed — its guard caught both, which is what it exists for."
+    },
+    {
+      "what": "This response was not committed at all at execution time, let alone at IN_PROGRESS before the work.",
+      "why": "No reason that survives inspection. The executor wrote responses for 008 and 010 in the same session and omitted this one.",
+      "impact": "See sequence_break. Reconstructed here."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "Answered in the record and restated for the channel: 008 asked whether E2 should run at n=1 or n=2. The registered command carries --repeat 2 and was executed verbatim, so the arm is n=2 on one scenario. The amendment's 'n=1' referred to the count of scenarios, not repetitions. n=2 stands; ratified by the advisor 2026-09-20.",
+    "The .env discrepancy remains unexplained and is worth a ruling on durability rather than on ratification. The pin was verified byte-identical, then found absent hours later, and the executor cannot reconstruct when it left. §26 now records that its durability rather than its ratification was at issue, and preflight catches the class — but nothing prevents a standing pin from being edited away again between runs."
+  ],
+  "public_safe_summary": "Reconstructed after the fact. Part E's registered program completed: E2 confirmed its prediction exactly at n=2 with zero search spend at low risk, and E1's registered contrast ran with the engineering pin held to termination — a blocked terminal in 22 calls at $0.0569, against 43 calls into a cost ceiling for the fabrication run it replaces, with the implementer labelling claims unsourced rather than inventing citations. Four predictions confirmed, one moot. The boundary is recorded: a product name was invented even though sources were not. Two instrument repairs rode along at the owner's instruction, one of them a configuration preflight written because a check that could not fail had let a standing pin vanish unnoticed.",
+  "next_recommended_commands": ["ARCH-20260920-003 — close B13's ledger row on this evidence."]
+}

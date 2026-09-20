@@ -1,0 +1,191 @@
+{
+  "command_id": "ARCH-20260920-005",
+  "parent_id": "ARCH-20260921-007",
+  "parent_note": "The command as issued read ARCH-20260915-015-diagnosis; the advisor's own correction in the same message names ARCH-20260921-007, the 429-fix branch of record. Recorded as corrected.",
+  "status": "DONE",
+  "executed": "2026-09-20",
+  "head_before": "06939e4",
+  "head_after": "ee2de1f",
+  "branch": "arch/20260920-005-429-characterization",
+  "files_changed": [
+    ".orchestration/responses/ARCH-20260920-005.response.json"
+  ],
+  "preconditions_run": [
+    {
+      "check": "tests/test_rate_limit_retry.py present and 12 resweep traces",
+      "result": "PASS — present, and exactly 12"
+    }
+  ],
+  "distribution": {
+    "total_events": 12,
+    "note": "Every 429 in every committed trace. Mined by joining each unit's failing `run` assertion to its header's model map and provider pins, and attributing the tier from the last node on the path.",
+    "by_model": {
+      "deepseek/deepseek-v4-flash": 12
+    },
+    "by_tier": {
+      "engineering": 12
+    },
+    "by_node": {
+      "implement": 8,
+      "validate": 3,
+      "domain_review": 1
+    },
+    "by_provider": {
+      "GMICloud": 3,
+      "DeepInfra": 3,
+      "StreamLake": 3,
+      "DigitalOcean": 2,
+      "OpenInference": 1
+    },
+    "time_window": "2026-09-20T02:09:33Z to 04:13:22Z — every event inside one 2h04m window",
+    "events": [
+      {
+        "when": "02:09:33",
+        "provider": "GMICloud",
+        "node": "validate",
+        "calls": 17,
+        "cost": 0.0841,
+        "trace": "b16-e1-marketing-claims.jsonl"
+      },
+      {
+        "when": "02:20:09",
+        "provider": "GMICloud",
+        "node": "domain_review",
+        "calls": 9,
+        "cost": 0.0622,
+        "trace": "b16-e1-marketing-claims.jsonl"
+      },
+      {
+        "when": "03:10:14",
+        "provider": "StreamLake",
+        "node": "implement",
+        "calls": 5,
+        "cost": 0.0094,
+        "trace": "resweep-engineering-StreamLake.jsonl"
+      },
+      {
+        "when": "03:10:14",
+        "provider": "StreamLake",
+        "node": "implement",
+        "calls": 4,
+        "cost": 0.0039,
+        "trace": "resweep-engineering-StreamLake.jsonl"
+      },
+      {
+        "when": "03:12:12",
+        "provider": "OpenInference",
+        "node": "validate",
+        "calls": 5,
+        "cost": 0.0038,
+        "trace": "resweep-engineering-OpenInference.jsonl"
+      },
+      {
+        "when": "03:16:16",
+        "provider": "DeepInfra",
+        "node": "implement",
+        "calls": 4,
+        "cost": 0.0038,
+        "trace": "resweep-engineering-DeepInfra.jsonl"
+      },
+      {
+        "when": "03:16:16",
+        "provider": "DeepInfra",
+        "node": "implement",
+        "calls": 4,
+        "cost": 0.0042,
+        "trace": "resweep-engineering-DeepInfra.jsonl"
+      },
+      {
+        "when": "03:18:21",
+        "provider": "DigitalOcean",
+        "node": "validate",
+        "calls": 6,
+        "cost": 0.0107,
+        "trace": "resweep-engineering-DigitalOcean.jsonl"
+      },
+      {
+        "when": "03:18:21",
+        "provider": "DigitalOcean",
+        "node": "implement",
+        "calls": 4,
+        "cost": 0.0039,
+        "trace": "resweep-engineering-DigitalOcean.jsonl"
+      },
+      {
+        "when": "04:03:39",
+        "provider": "GMICloud",
+        "node": "implement",
+        "calls": 7,
+        "cost": 0.0111,
+        "trace": "resweep2-engineering-GMICloud.jsonl"
+      },
+      {
+        "when": "04:07:11",
+        "provider": "StreamLake",
+        "node": "implement",
+        "calls": 5,
+        "cost": 0.0093,
+        "trace": "resweep2-engineering-StreamLake.jsonl"
+      },
+      {
+        "when": "04:13:22",
+        "provider": "DeepInfra",
+        "node": "implement",
+        "calls": 5,
+        "cost": 0.0097,
+        "trace": "resweep2-engineering-DeepInfra.jsonl"
+      }
+    ],
+    "spend_killed": "$0.2163 — the cost of the calls those twelve units paid for before the 429 ended them. Every dollar of it bought nothing."
+  },
+  "characterisation": "The exposure is concentrated absolutely, not merely mostly. **All 12 events are the same model — `deepseek/deepseek-v4-flash` — and all 12 are on the engineering tier**, spread across five different providers with no provider holding more than a quarter. The tier concentration is an artefact rather than a finding: engineering is the only tier that ran that model on those providers. **The control is decisive and sits in the same corpus: the triage tier runs the identical model via Alibaba across 309 committed units and has never once returned a 429.** So the axis is neither the model alone nor the provider alone but the (model, provider) pair, exactly as PR #15's live controls found. Within the window the events cluster by minute across providers — 03:10, 03:12, 03:16, 03:18 — which is consistent with a shortage moving through OpenRouter's upstream capacity rather than with any one host failing. The node split (implement 8, validate 3, domain_review 1) tracks call volume and payload size on the engineering tier and adds nothing causal.",
+  "post_fix": {
+    "events": 0,
+    "billed_retries": 0,
+    "cost": "$0.00",
+    "detail": "The registered E1 run is the only paid run after PR #15 merged. Its log contains zero 429 lines, so **the retry never fired** — the shortage had cleared by then rather than being absorbed. The repair is therefore **untested in production**: it is proved only by `tests/test_rate_limit_retry.py`, five of whose eight tests fail against the unfixed client. Nothing in the committed record shows a retry succeeding against a real 429.",
+    "consequence": "The $0.2163 figure above is a pre-fix number and must not be presented as what the fix saves. What the fix would have done to those twelve units is unmeasured."
+  },
+  "sufficient_for_pin_decisions": "NO, and the reason is structural rather than a shortage of rows. Every event falls inside one 2-hour window on one day, so the sample describes an episode, not a rate. It cannot distinguish a provider that is usually short from one that was short that afternoon — and the serving ledger makes the point sharply: GMICloud carries 3 of these 12 events and also 227 completed units out of 236. A pin decision needs exposure measured across days, which no committed trace supplies.",
+  "what_the_free_record_cannot_answer": [
+    "Whether the shortage was provider-side or OpenRouter-side. The body says 'rate-limited upstream' and the traces preserve no upstream identity beyond the provider name.",
+    "The base rate. Twelve events in one window with no denominator for the same window — the traces record failures, not attempts, so a 429-per-request rate cannot be computed.",
+    "Whether the retry would have rescued any of the twelve. Zero post-fix 429s means zero evidence either way.",
+    "Whether other models on the same providers were affected. Only `deepseek-v4-flash` ran on them in the corpus."
+  ],
+  "proposed_section_6_sentence": {
+    "note": "Offered for the advisor to rule on adopting; this command does not edit §6.",
+    "text": "**A 429 is a property of the (model, provider) pair, not of the serving.** All twelve 429s in the committed record are `deepseek/deepseek-v4-flash`, spread across five providers inside one two-hour window, while the same model via Alibaba ran 309 units without one. The pair plus `allow_fallbacks: False` is what converts a transient upstream shortage into a dead run; an unpinned rotation answered on demand throughout. Cost of the twelve: $0.2163, all of it buying nothing.",
+    "caveat_to_carry": "One episode, one window, no denominator — sufficient to name the mechanism, not to rank servings."
+  },
+  "acceptance_criteria_met": [
+    {
+      "criterion": "Distribution table with every 429 event accounted for, traced to its file.",
+      "met": true,
+      "evidence": "distribution.events — 12 of 12, each with its trace."
+    },
+    {
+      "criterion": "Billed-retry cost quantified for post-fix events.",
+      "met": true,
+      "evidence": "Zero events, zero retries, $0.00 — and the consequence recorded: the repair is untested in production."
+    },
+    {
+      "criterion": "An explicit statement of what the free record cannot answer.",
+      "met": true,
+      "evidence": "what_the_free_record_cannot_answer — four items."
+    }
+  ],
+  "deviations": [],
+  "blockers": [],
+  "questions_for_advisor": [
+    "The finding that should change behaviour is not about any provider. It is that **$0.2163 of the session's $0.541 — two fifths — was spent by units that died on a condition the upstream itself calls transient and asks callers to retry.** The retry now exists but has never fired in production, so that fraction is what the repair is worth if the episode recurs, and nothing more is known.",
+    "Worth a ruling on whether `allow_fallbacks: False` should remain absolute. §6.1 justifies it as a quality control and the justification is sound — which serving answers decided two of this project's largest findings. But the same choice is what turns a two-hour upstream shortage into twelve dead runs. A middle position exists and is not currently expressible: pin for quality, permit fallback only after the bounded retries are exhausted, and record which serving actually answered. That is loop-adjacent configuration, so it is a ruling."
+  ],
+  "public_safe_summary": "Free analysis, no spend. Twelve 429 events in the committed record, all on one model and all on the engineering tier, spread across five providers inside a single two-hour window — while the same model via Alibaba ran 309 units without one. The axis is the (model, provider) pair, confirming PR #15's live controls from the archive. The twelve units burned $0.2163 buying nothing. Zero post-fix events, so the retry repair has never fired in production and is proved only by its tests. The sample describes one episode rather than a rate and is explicitly insufficient for pin decisions.",
+  "next_recommended_commands": [
+    "ARCH-20260920-006 — the preconditions schema."
+  ],
+  "commits": [
+    "ee2de1f"
+  ]
+}

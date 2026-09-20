@@ -6487,6 +6487,13 @@ was.** The honest-refusal channel covers what the plan demands citations for and
 does not cover everything a draft might invent. Recorded as the boundary of what
 016 fixed.
 
+##### Terminal state (advisor, 2026-09-20)
+
+**Landed-validated.** The registered contrast is n=1 each side, plus E2 at n=2.
+The mechanism is deterministic under test; the **wild `blocked_on` frequency is
+open** and recorded as a measurement, not a conclusion. **The boundary is its own
+ledger row (B15)**, not a caveat on B13's closure.
+
 ##### Contrast, stated with both n
 
 | | fabrication run (§24.1(f)) | registered E1 |

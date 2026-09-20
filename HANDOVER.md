@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `c885b95` · **Branch:** `main`
-**Tests:** 742 as of `c885b95` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
+**Tests:** 743 as of `c885b95` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      39 files, 742 tests (as of `c885b95`)
+tests/                      39 files, 743 tests (as of `c885b95`)
 ```
 
 ### 2.3 Key design patterns
@@ -655,7 +655,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (742 total, as of `c885b95`)
+### 3.7 Test distribution (743 total, as of `c885b95`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -671,7 +671,7 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_settings.py | 22 | test_live_wiring.py | 7 |
 | test_api.py | 21 | test_rejection_counter.py | 7 |
 | test_sweep_budget.py | 21 | test_docs.py | 6 |
-| test_protocol_file.py | 18 | test_engine.py | 6 |
+| test_protocol_file.py | 19 | test_engine.py | 6 |
 | test_rework_loop.py | 17 | test_budget_stop_scoring.py | 5 |
 | test_auth.py | 16 | test_iteration_dissent.py | 5 |
 | test_green_resolution.py | 16 | test_handoff_scheduler.py | 4 |
@@ -722,7 +722,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 742/742 pass.** Everything below is a live-behaviour
+**No failing unit tests — 743/743 pass.** Everything below is a live-behaviour
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
@@ -739,8 +739,9 @@ named.
 | B7 | ~~Build loop convergence~~ | **RESOLVED 2026-09-15 — and the sixth name was the right one** | Closed on 010's criterion: all four convergence traces terminate in ship or escalated-with-diagnosis. `derived_tolerances` and `numeric_consistency` **shipped** in 299 s and 182 s; `crossref_integrity` and `requires_execution` **escalated with a root cause and a directive**. What closed it was not a loop change — it was pinning the last unpinned tier. The win is **iterations, not seconds**: 8 → 2 and 4 → 1, while per-call latency moved only from a 67 s median to 41 s. **A serving does not only run at a speed, it converges at a rate** — B4's finding in the place nobody had looked. Read `§6.9` for the ledger of six names and what each one cost. **Closure means the loop terminates honestly under a compliant pinned serving, on one observation per trace** — not that it is reliable; `crossref_integrity` produced three different outcomes in three runs and is the standing reason to distrust n=1. §20.1 |
 | B8 | Shipped-default models fail on hard requests | medium | Documented rather than changed, per owner's instruction. §6.4. **The plan-tier burn is request-driven, not serving-driven** (measured 2026-09-14, n=2 servings × 12 easy plans vs 6 servings × 4 hard ones): the same model burned seven retries on the hard set and none on the easy one. Pinning that tier is not the lever; the candidates are the plan token budget — the burn sits at `Specialist.run`'s default 16,384 while every serving advertises a ceiling above 262,000 — or the model. **The budget is now a setting** — `PLAN_MAX_TOKENS`, default 32,768 (§16) — so that half is tunable without code; the model remains the owner's. |
 | B9 | No DB migrations (no Alembic) | low | Schema changes are destructive |
-| B13 | **The risk gate governs lookups; the success criteria govern what must be verified; nothing reconciles them** | **high** | Measured 2026-09-15 (§6.13). §4.3 zeroes search at `low` risk; the plan phase then writes a criterion demanding "a citable source a reader can use to verify the claim" for work that has been denied any means of verifying anything. The agent does not refuse honestly — it **fabricates sources**. Controlled contrast in one blueprint: the `low`-risk trace got 0 lookups and burned 6 iterations inventing citations before dying on a cost ceiling; the `medium`-risk trace got 1 lookup and cited the correct article, shipping in one iteration. **Bites generalization hardest**: the guide's own `low` bucket is "presentation, copy, documentation", which is the most citation-dependent work there is. The fix is a ruling — raise the lookup budget on a blocking gap independently of risk, or stop plan writing criteria the run cannot satisfy. |
+| B13 | ~~The risk gate governs lookups; the success criteria govern what must be verified; nothing reconciles them~~ | **CLOSED (advisor, 2026-09-20)** | Closed on the registered contrast, **n=1 each side**. **Pre-fix:** 43 calls into the cost ceiling with invented citations (§24.1(f), `b14-gen_marketing_claims.jsonl`). **Post-fix:** 22 calls, **$0.0569**, 539.7 s, an honest `blocked` terminal, claims **labelled unsourced**, the engineering pin held to termination (`b16-e1-marketing-claims-registered.jsonl`), and the scenario **scored a pass for the refusal**. **E2:** zero search spend at `low` risk, **n=2** — the risk gate's zero-lookup is *correct behaviour*, not the defect. Mechanism deterministic under test (`tests/test_blocked_on.py`, its `TestTheGreenButBlockedGap` and exhaustion companion). **Wild `blocked_on` frequency: unmeasured, open in §6.** The n resolution: the 2026-09-20 amendment's `n=1` counted scenarios, not repetitions; the registered `--repeat 2` stands. What 016 did **not** fix is B15. |
 | B14 | **Two literal engineering roles are injected regardless of profile** | medium | Measured 2026-09-15 (§24.1(a), §24.1(d)). `phases.py:104–110` appends `test_engineer` at high/critical and `systems_architect` on multi-domain; `review_composition.py:53–60` adds both by risk level, and an unrecognised domain leads to `systems_architect`. **77 of 108 wide-suite units in both arms** were assigned a test engineer, and 2 of 3 non-engineering full traces were staffed a systems architect. Not a bug under §6.5 — a synthesized role resolves rather than failing — but it is the generalization boundary sitting **in code rather than in prose**, which a prompt map cannot see. Also: the append bypasses Pydantic, so a `list[str]` field holds an enum member. |
+| B15 | **Draft-level invention persists beyond plan-demanded citations** | medium | Measured 2026-09-20 on E1's registered run. The implementer **labelled all three proof points unsourced** rather than inventing citations — B13's fix working — and in the same draft **invented a product name, 'ExpenseFlow', and presented it as fact rather than flagging it as an assumption** (escalation's autopsy, `b16-e1-marketing-claims-registered.jsonl`). 016's honest-refusal channel governs **what the plan demands citations for**, and nothing else a draft might invent. **Status: OPEN.** Disposition: candidate for B14's generalization boundary or its own design — advisor ruling pending. |
 | B11 | Two tier picks are **interim and unmeasured at their own jobs** | medium | `research` and `engineering` ship on models chosen for price and availability, never scored against the work they do. `engineering` carries five of the flagship's nodes and is the tier whose *serving* closed B7 — the model behind it has had no equivalent test. In service by choice, labelled so nobody mistakes the choice for a finding. |
 | B12 | Four tiers have **never been measured by serving** | medium | B4 and B7 both turned on *who serves a tier*, and it has only ever been asked of `triage`, `architecture` and `engineering`. `escalation`, `research`, `search` and the reranker are unpinned and unexamined. `escalation` is 70–78% of spend on hard traces (§6.10), so it is the obvious next place to look. Convention 23 says how. |
 | B10 | `ambiguous_request` — historical "mystery failure" | **RESOLVED** | It was B3's sibling: a `max_calls: 4` baseline set when the budget counted *nodes*. Measured 6. Now 8 |
@@ -1463,6 +1464,17 @@ is not the validator, and must not be asked to be.
 
 ### 6.13 The engineering dialect is in the prompts and does not reach the output
 
+> **Post-fix reading, 2026-09-20 (B13).** On the build path the fix replaces
+> fabrication with **refusal plus labelling**: *"All three proof points are
+> labeled as unsourced because I cannot independently verify the cited
+> reports."* The contrast is 43 calls into a cost ceiling against **22 calls to
+> an honest `blocked` terminal**, n=1 each side. And the premise this section's
+> B13 row was built on is narrowed: **zero lookups at `low` risk is correct
+> behaviour, not the defect** — E2 measured it at **n=2**, with `low` returned
+> at both bounds and no search tier billed in either repetition. The defect was
+> never the zero; it was the plan writing a criterion the run could not satisfy.
+> What remains unfixed is **B15**.
+
 **The generalization arc's central assumption, tested.** §5 priced the prompt
 rewrite as the risky 30%. Two free measurements and three paid traces say it is
 neither risky nor, on this evidence, necessary.
@@ -1550,7 +1562,7 @@ repaired in 012, and it names `consistency` — a free deterministic numeric che
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 742 tests as of `c885b95`, ~52 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 743 tests as of `c885b95`, ~52 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \

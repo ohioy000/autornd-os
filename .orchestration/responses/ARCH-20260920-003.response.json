@@ -1,0 +1,81 @@
+{
+  "command_id": "ARCH-20260920-003",
+  "status": "DONE",
+  "executed": "2026-09-20",
+  "head_before": "d465bac",
+  "head_after": "15b2f9a",
+  "branch": "arch/20260920-003-b016-record-close",
+  "files_changed": [
+    "HANDOVER.md",
+    "docs/handover-review.md",
+    ".orchestration/responses/ARCH-20260920-003.response.json"
+  ],
+  "preconditions_run": [
+    {
+      "check": "009's response present",
+      "result": "PASS — created by ARCH-20260920-002 on the parent branch"
+    },
+    {
+      "check": "grep -c 'B13' HANDOVER.md >= 1",
+      "result": "PASS — 5 mentions; the row existed to close"
+    },
+    {
+      "check": "next free ledger number",
+      "result": "PASS — rows run B1..B14 contiguously, so the boundary row is B15. Recorded as the command required."
+    }
+  ],
+  "results": {
+    "B13": "CLOSED, with both call counts, both costs, both n values and the pin-held fact. The row now ends by naming what 016 did not fix, so the closure cannot be read as broader than it is.",
+    "B15": "OPEN — draft-level invention beyond plan-demanded citations. Quotes the escalation autopsy and states the scope limit: 016's channel governs what the plan demands citations for, and nothing else a draft might invent.",
+    "section_6_13": "Gained a post-fix reading, including the narrowing that matters: zero lookups at low risk is correct behaviour rather than the defect, measured at n=2. The defect was never the zero — it was the plan writing a criterion the run could not satisfy.",
+    "section_27_2": "The terminal-state ruling was ABSENT (grep returned 0 for both 'Terminal state (advisor' and 'landed-validated'), so it was appended rather than verified as present.",
+    "counts": "No count stamp moved. This command changed no tests and no code, exactly as its declared knock-on scope anticipated — the first command in this channel to pre-declare that and be right.",
+    "cost": "$0.00 — records only."
+  },
+  "acceptance_criteria_met": [
+    {
+      "criterion": "B13 reads CLOSED with both call counts, both costs, both n values.",
+      "met": true,
+      "evidence": "43 and 22 calls, $0.0569, n=1 each side plus E2 n=2."
+    },
+    {
+      "criterion": "The boundary row exists as its own numbered entry, status OPEN.",
+      "met": true,
+      "evidence": "B15, immediately after B14."
+    },
+    {
+      "criterion": "§6.13 carries the post-fix sentence including zero-lookup-is-correct with its n.",
+      "met": true,
+      "evidence": "Block quote at the section head, n=2 named."
+    },
+    {
+      "criterion": "§27.2 carries the terminal-state ruling.",
+      "met": true,
+      "evidence": "Appended; it was absent."
+    },
+    {
+      "criterion": "Suite green.",
+      "met": true,
+      "evidence": "742 passed, unchanged."
+    }
+  ],
+  "deviations": [
+    {
+      "what": "B13's ruled text was extended by one clause the command did not specify: 'What 016 did not fix is B15.'",
+      "why": "The closure and the boundary landed in the same change, and a reader meeting the closed row first would otherwise have no pointer to the limit. It states a cross-reference, not a finding.",
+      "impact": "One clause. The ruled substance is unaltered."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "B13 closed on n=1 each side, and the row says so plainly. Worth stating once more for the record: that is the weakest evidence this project accepts for a closure, and it is accepted here because the mechanism is deterministic under test and the contrast is controlled — same scenario, same map, same pins. If the advisor wants n=2 on the registered contrast before the row stays closed, it is one more invocation at roughly $0.06 and the row can carry CLOSED (provisional) until then.",
+    "B15's disposition is left to the advisor as the command directs. Recording the executor's reading for what it is worth: it is the same shape as B13 one level up. B13 was 'the plan demands what the run cannot supply'; B15 is 'the draft supplies what nothing demanded and nothing checks'. A citation channel cannot catch it because no criterion asked for a citation on a product name."
+  ],
+  "public_safe_summary": "B13 is closed on the registered contrast — 43 calls into a cost ceiling with invented citations against 22 calls to an honest blocked terminal with claims labelled unsourced, n=1 each side, plus E2's n=2 showing that zero lookups at low risk is correct behaviour rather than the defect. The boundary opens as B15: the same run invented a product name and presented it as fact, which 016's channel does not govern. §6.13 gained the post-fix reading and §27.2 the terminal-state ruling, which was absent. No count stamp moved.",
+  "next_recommended_commands": [
+    "ARCH-20260920-004 — characterise verify_grounding's 1-of-5 firing, free."
+  ],
+  "commits": [
+    "15b2f9a"
+  ]
+}

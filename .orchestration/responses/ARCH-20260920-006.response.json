@@ -1,0 +1,69 @@
+{
+  "command_id": "ARCH-20260920-006",
+  "status": "DONE",
+  "executed": "2026-09-20",
+  "head_before": "a959b0f",
+  "head_after": "3957e86",
+  "branch": "arch/20260920-006-preconditions-schema",
+  "files_changed": [
+    "AGENTS.md",
+    "tests/test_protocol_file.py",
+    "HANDOVER.md",
+    "README.md",
+    ".orchestration/responses/ARCH-20260920-006.response.json"
+  ],
+  "preconditions_run": [
+    {
+      "check": "grep -c 'checkable' AGENTS.md >= 1",
+      "result": "PASS — 1; 010's prose rule was present to be made structural"
+    }
+  ],
+  "results": {
+    "schema": "The command shape now carries `preconditions`: an array of {command, expected} runnable checks. A command citing a sha, a file path or a measured figure MUST carry one verifying it. The executor runs every precondition before acting and aborts on failure.",
+    "blocked_not_deviation": "Landed as ruled, with the reason stated: a precondition failure is a BLOCKED report because nothing was done differently — nothing was done.",
+    "demonstrated_by_its_author": "Recorded in the section: ARCH-20260920-002 through -006 carried the field at issue, and their preconditions were the first this channel ran as a matter of shape rather than instinct.",
+    "guard": "tests/test_protocol_file.py::test_the_command_shape_carries_preconditions asserts the field, the MUST, and the BLOCKED-not-deviation clause — the three parts that make it a mechanism rather than advice.",
+    "guard_proved": "By weakening 'MUST carry one verifying it' to 'may carry one' and watching it fail. That is the realistic degradation — the word survives, the obligation does not — and it is the one a presence-only check would miss.",
+    "counts": "741 to 743. Re-derived in the same change, as the command pre-declared.",
+    "cost": "$0.00"
+  },
+  "acceptance_criteria_met": [
+    {
+      "criterion": "AGENTS.md's command-shape schema carries the preconditions field with the MUST rule.",
+      "met": true,
+      "evidence": "AGENTS.md:207-215."
+    },
+    {
+      "criterion": "grep -n 'preconditions' AGENTS.md returns the schema hit.",
+      "met": true,
+      "evidence": "Lines 207 and 215."
+    },
+    {
+      "criterion": "The guard fails when the rule text is deleted (checked, not assumed).",
+      "met": true,
+      "evidence": "Weakening MUST to may fails it with 'the preconditions schema lost MUST carry one verifying it'."
+    },
+    {
+      "criterion": "Suite green; count stamps consistent.",
+      "met": true,
+      "evidence": "743 passed; HANDOVER and README re-derived to 743 across 39 files."
+    }
+  ],
+  "deviations": [
+    {
+      "what": "None to report on scope, which is itself the finding.",
+      "why": "This is the first command in the channel to pre-declare its count knock-on — 'if the guard moves the suite count, HANDOVER.md and README.md are re-derived in the same change' — and so the first where touching them is execution rather than departure. The collision was recorded twice before, under ARCH-20260919-007 and ARCH-20260921-010, both times as a deviation forced by a scope that excluded the documents a sanctioned test necessarily invalidates.",
+      "impact": "The authoring fix works. Worth keeping for every command that sanctions a test."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "The rule is now structural for the executor and still advisory for the author: the executor runs whatever preconditions arrive and aborts on failure, but nothing rejects a command that cites a sha and carries no precondition for it. Closing that needs a check on the command file itself — which the executor could run on arrival and report as BLOCKED. That is a one-line addition to the channel's duties and a ruling, and it is the last gap between 'stated', 'structural' and 'enforced'.",
+    "Recorded as an observation about this batch rather than a question: the preconditions were useful in a way the rationale did not anticipate. ARCH-20260920-002's precondition — that 009's response be ABSENT — is the only reason the reconstruction was known to be needed rather than duplicated, and 003's precondition surfaced that B15 was the next free ledger number rather than B14. Both prevented an error of a different class from the one the rule was written for."
+  ],
+  "public_safe_summary": "The checkable-evidence rule is now structural. AGENTS.md's command shape carries a preconditions array of runnable checks, required of any command citing a sha, path or measured figure; the executor runs them before acting and aborts on failure, and a failure is a BLOCKED report rather than a deviation. A guard asserts the field, the MUST and the BLOCKED clause, proved by weakening MUST to may rather than by deletion — the realistic degradation. Counts re-derived to 743 across 39 files, which this command pre-declared and so is the first where that was execution rather than departure.",
+  "next_recommended_commands": [],
+  "commits": [
+    "3957e86"
+  ]
+}
