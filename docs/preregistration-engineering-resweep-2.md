@@ -139,3 +139,80 @@ session abandoned on the envelope is recorded, not retried.
   three sessions is the minimum that can distinguish an episode from a rate.
 - **This measures the apparatus, not the harness.** No outcome reopens B013 or
   any closed row.
+
+---
+
+## Amendment 1 — the spacing control is wrong, 2026-09-21
+
+**Committed after session 1 and before session 2. Nothing above is edited.**
+Session 1 ran as registered and is reported in its own record; this amendment
+changes the design for sessions 2 and 3 because the owner spotted a pattern in
+the committed data that the original method does not control for.
+
+### The observation
+
+**Every 429 in the record falls between 21:09 and 23:13 local (CDT).** Session 1
+ran 18:11–18:58 local and produced **one** 429 in twelve units.
+
+| event times, local | source |
+|---|---|
+| 21:09, 21:20 | `b16-e1-marketing-claims.jsonl` |
+| 22:10, 22:10, 22:12, 22:16, 22:16, 22:18, 22:18 | the unpaced resweep arms |
+| 23:03, 23:07, 23:13 | the paced resweep arms |
+| **18:35** | `sweep3-engineering-DeepInfra.jsonl` — session 1's only one |
+
+Twelve of the thirteen 429s ever recorded sit inside a **two-hour evening
+window**; the thirteenth is session 1's, two and a half hours earlier.
+
+### Why this breaks the registered method
+
+The method registered **three sessions at least three hours apart**, reasoning
+that one sitting measures an episode rather than a rate. That reasoning is right
+and the control is wrong: **three sessions spaced three hours apart inside one
+evening walk through the same peak.** Starting session 2 at 02:58Z — the earliest
+the original rule allows — would have placed it at **21:58 local, dead centre of
+the failing window.** Serving and hour-of-day would have been confounded at
+exactly the hour that fails.
+
+It also adds a third candidate to session 1's open question. The one-429 result
+had two readings — the retry absorbs them, or the shortage passed — and now has
+three: **session 1 may simply have run at a quiet hour.** Nothing in the record
+separates the three.
+
+### What changes
+
+- **Sessions are spaced by time of day across days, not by elapsed hours.**
+  Session 2 runs in a **morning** local slot; session 3 in an **evening** local
+  slot on a later day, deliberately inside the 21:00–23:15 window that every
+  recorded 429 occupies.
+- **Session 3 is now an adversarial arm, not a repetition.** It is scheduled *to
+  meet* the failing window rather than to avoid it. A sweep that only ever ran at
+  quiet hours would report availability it has not earned.
+- **The local start time of every session is recorded with its results**, and the
+  arm-order rotation from the original method is retained.
+
+### Predictions — added, and one revised
+
+- **T1 — the 429 rate is higher in session 3 than in session 2 (n=12 each).**
+  *If the two sessions produce comparable 429 rates, hour-of-day is not the
+  variable and the twelve-in-one-window clustering was coincidence* — which
+  would leave the retry and the passed-shortage readings standing and this
+  amendment refuted. That is the prediction most worth being wrong about now.
+- **T2 — the retry fires in session 3 more often than in session 2**, and units
+  complete anyway. This is S3's real test: session 1 exercised the retry six
+  times at a quiet hour, which is the easy case.
+- **S2 revised.** It predicted at least four arms completing both units in at
+  least one session, and session 1 already satisfied it. It is **spent as a
+  discriminator** and is not re-scored.
+
+### Recorded
+
+- **Session 1's reading is not invalidated**, only re-read: eleven of twelve
+  units reached a terminal *at 18:11–18:58 local*, and that qualifier now travels
+  with the number.
+- The owner made this observation; the executor had the local-time data in hand
+  since the §6.16 characterisation and had not converted the timestamps.
+- **This is an amendment, not a departure.** A departure records doing something
+  other than what was registered. Here the registered control is wrong, and
+  changing it silently would leave the pre-registration claiming a design nobody
+  ran.
