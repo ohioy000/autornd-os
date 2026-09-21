@@ -14,8 +14,25 @@ from __future__ import annotations
 
 from autornd.models.verdicts import RiskLevel, SpecialistRole, role_key
 
+# The shipped defaults for the two structural slots. B14 made the slots
+# profile-declarable; these remain what an undeclared profile resolves to, so
+# an engineering project's review teams are unchanged.
 ARCHITECT = role_key(SpecialistRole.SYSTEMS_ARCHITECT)
 TESTER = role_key(SpecialistRole.TEST_ENGINEER)
+
+
+def _slots() -> tuple[str, str]:
+    """(who checks the work, who holds the system view) for the active profile.
+
+    Four reaches into the engineering vocabulary used to live in this file —
+    two of them outside the range the record cited, which is how a blueprint
+    written from that reference would have generalised half the site. They are
+    resolved here, once, so there is one place to look.
+    """
+    from autornd.profiles import get_profile
+
+    profile = get_profile()
+    return profile.role_that_checks_work(), profile.role_that_holds_system_view()
 
 # Deterministic ordering: shipped roles in their declared order, then anything
 # else alphabetically. A review team that reorders between runs makes two
@@ -47,17 +64,19 @@ def get_review_team(
     if not assigned:
         assigned = set(domain_leads)
 
+    tester, architect = _slots()
+
     if risk == RiskLevel.LOW:
         # One reviewer, and the most relevant one. Low risk means a wrong
         # answer is trivially reversible, so a second opinion buys nothing.
-        lead = next((r for r in _ordered(assigned) if r != TESTER), None)
-        return [lead or ARCHITECT]
+        lead = next((r for r in _ordered(assigned) if r != tester), None)
+        return [lead or architect]
 
     team = set(assigned)
-    team.add(TESTER)          # someone checks the work at every level above low
+    team.add(tester)          # someone checks the work at every level above low
 
     if risk in (RiskLevel.HIGH, RiskLevel.CRITICAL):
-        team.add(ARCHITECT)   # and someone holds the system-level view
+        team.add(architect)   # and someone holds the system-level view
 
     if risk == RiskLevel.CRITICAL:
         # Every domain in play gets its declared lead present, even one triage
@@ -66,6 +85,6 @@ def get_review_team(
         team |= domain_leads
 
     if len(team) < 2:
-        team.add(ARCHITECT)
+        team.add(architect)
 
     return _ordered(team)

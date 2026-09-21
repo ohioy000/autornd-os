@@ -92,6 +92,17 @@ roles:
     tier: engineering
     expertise: "Query intent, search volume evidence, internal linking. Distinguishes a measured opportunity from a guess."
 
+# The two roles this harness reaches for structurally, whatever triage staffed.
+# Before B14 these were the shipped engineering roles and could not be changed:
+# a content brief was checked by a test engineer and held together by a systems
+# architect, on every profile, measured at 77 of 108 wide-suite units.
+#
+# The rules are unchanged — risky work is checked by someone, multi-domain work
+# has someone holding the whole. Only who fills the slots is this project's.
+structural_roles:
+  checks_work: editor           # "Judges the draft against the brief rather than rewriting it."
+  holds_system_view: strategist # "Decides what a piece is for before anyone writes it."
+
 # Per-specialist context overrides, for anything a role needs that the shared
 # stack and constraints above do not cover.
 specialists:

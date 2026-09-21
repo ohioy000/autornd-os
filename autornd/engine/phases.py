@@ -26,6 +26,7 @@ from autornd.models.verdicts import (
     RiskLevel,
     SpecialistRole,
     TriageVerdict,
+    role_key,
     ValidateVerdict,
 )
 from autornd.knowledge.context import build_phase_context
@@ -103,12 +104,28 @@ def enforce_triage_composition(verdict: TriageVerdict) -> None:
     path and not another is a rule that quietly stops existing — which is what
     happened when the engine moved to the graph.
     """
+    from autornd.profiles import get_profile
+
+    profile = get_profile()
+    present = {role_key(s) for s in verdict.specialists}
+
+    # B14: the rules are unchanged; their operands come from the profile.
+    # Undeclared resolves to the shipped engineering role, so a profile that
+    # says nothing behaves exactly as it did before.
     if verdict.risk in (RiskLevel.CRITICAL, RiskLevel.HIGH):
-        if SpecialistRole.TEST_ENGINEER not in verdict.specialists:
-            verdict.specialists.append(SpecialistRole.TEST_ENGINEER)
+        checker = profile.role_that_checks_work()
+        if checker not in present:
+            # Appended as a normalised str, not as an enum member. The field is
+            # list[str]; appending the enum after construction bypassed Pydantic
+            # and left the verdict holding a mixed list (recorded unfixed since
+            # §26, and explicitly deferred to this change).
+            verdict.specialists.append(checker)
+            present.add(checker)
     if len(verdict.domains) > 1:
-        if SpecialistRole.SYSTEMS_ARCHITECT not in verdict.specialists:
-            verdict.specialists.append(SpecialistRole.SYSTEMS_ARCHITECT)
+        architect = profile.role_that_holds_system_view()
+        if architect not in present:
+            verdict.specialists.append(architect)
+            present.add(architect)
 
 
 def _domain_vocabulary() -> str:
