@@ -1,0 +1,27 @@
+{
+  "description": "Meridian Studio project documentation mapping. A non-engineering corpus: none of its domains appears in the shipped Domain enum, which is the point — it is what B14's generalization is validated against.",
+  "global": [
+    "meridian_studio/brand-platform.md"
+  ],
+  "domains": {
+    "brand_strategy": [
+      "meridian_studio/brand-platform.md"
+    ],
+    "copywriting": [
+      "meridian_studio/house-style.md",
+      "meridian_studio/brand-platform.md"
+    ],
+    "seo_analytics": [
+      "meridian_studio/search-practice.md",
+      "meridian_studio/house-style.md"
+    ]
+  },
+  "specialist_extras": {
+    "fact_checker": [
+      "meridian_studio/house-style.md"
+    ],
+    "editor": [
+      "meridian_studio/house-style.md"
+    ]
+  }
+}
