@@ -28,16 +28,16 @@ was never indexed.** This is that index.
 
 | tier | model | serving | n | completed | other terminals | errors |
 |---|---|---|---|---|---|---|
-| `architecture` | `deepseek/deepseek-v4-pro` | **StreamLake** | 316 | 269 | blocked 7, escalated 5 | 35 |
+| `architecture` | `deepseek/deepseek-v4-pro` | **StreamLake** | 340 | 285 | blocked 8, escalated 8 | 39 |
 | `architecture` | `z-ai/glm-5.3` | **StreamLake** | 1 | 0 | — | 1 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **DeepInfra** | 6 | 1 | — | 5 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **DigitalOcean** | 8 | 3 | escalated 1 | 4 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **GMICloud** | 238 | 229 | blocked 1, escalated 1 | 7 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **OpenInference** | 9 | 8 | — | 1 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **SiliconFlow** | 5 | 2 | — | 3 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **StreamLake** | 6 | 2 | escalated 1 | 3 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **DeepInfra** | 10 | 2 | — | 8 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **DigitalOcean** | 12 | 5 | escalated 2 | 5 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **GMICloud** | 242 | 233 | blocked 1, escalated 1 | 7 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **OpenInference** | 13 | 10 | escalated 2 | 1 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **SiliconFlow** | 9 | 6 | — | 3 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **StreamLake** | 10 | 5 | blocked 1, escalated 1 | 3 |
 | `engineering` | `google/gemini-2.5-flash` | **GMICloud** | 1 | 0 | — | 1 |
-| `triage` | `deepseek/deepseek-v4-flash` | **Alibaba** | 321 | 270 | blocked 8, escalated 5 | 38 |
+| `triage` | `deepseek/deepseek-v4-flash` | **Alibaba** | 345 | 286 | blocked 9, escalated 8 | 42 |
 
 ## How to read it, and how not to
 
