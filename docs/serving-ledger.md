@@ -28,16 +28,16 @@ was never indexed.** This is that index.
 
 | tier | model | serving | n | completed | other terminals | errors |
 |---|---|---|---|---|---|---|
-| `architecture` | `deepseek/deepseek-v4-pro` | **StreamLake** | 340 | 285 | blocked 8, escalated 8 | 39 |
+| `architecture` | `deepseek/deepseek-v4-pro` | **StreamLake** | 341 | 285 | blocked 8, escalated 8 | 40 |
 | `architecture` | `z-ai/glm-5.3` | **StreamLake** | 1 | 0 | — | 1 |
 | `engineering` | `deepseek/deepseek-v4-flash` | **DeepInfra** | 10 | 2 | — | 8 |
 | `engineering` | `deepseek/deepseek-v4-flash` | **DigitalOcean** | 12 | 5 | escalated 2 | 5 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **GMICloud** | 242 | 233 | blocked 1, escalated 1 | 7 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **GMICloud** | 243 | 233 | blocked 1, escalated 1 | 8 |
 | `engineering` | `deepseek/deepseek-v4-flash` | **OpenInference** | 13 | 10 | escalated 2 | 1 |
 | `engineering` | `deepseek/deepseek-v4-flash` | **SiliconFlow** | 9 | 6 | — | 3 |
 | `engineering` | `deepseek/deepseek-v4-flash` | **StreamLake** | 10 | 5 | blocked 1, escalated 1 | 3 |
 | `engineering` | `google/gemini-2.5-flash` | **GMICloud** | 1 | 0 | — | 1 |
-| `triage` | `deepseek/deepseek-v4-flash` | **Alibaba** | 345 | 286 | blocked 9, escalated 8 | 42 |
+| `triage` | `deepseek/deepseek-v4-flash` | **Alibaba** | 346 | 286 | blocked 9, escalated 8 | 43 |
 
 ## How to read it, and how not to
 

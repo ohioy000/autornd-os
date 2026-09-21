@@ -111,3 +111,107 @@ do the thing does not stop it, which bears directly on how B15 should be fixed.
   most likely to fail and the one most worth failing.
 - **No outcome reopens B13.** This measures the generalization boundary and the
   invention boundary, not the honest-refusal mechanism.
+
+---
+
+## Execution record — 2026-09-21
+
+**42 calls, 1442 s, $0.1783.** Ran to the scenario's 41-call ceiling without a
+terminal. Trace: `docs/traces/b14-demo-marketing-claims-grounded.jsonl`.
+
+### A correction the executor owes before the scores
+
+**G1 was worded against the wrong subsystem, and the executor's first reading of
+the result was wrong because of it.** The log carries
+*"Knowledge collection not found"* four times, which was read as *the corpus
+never arrived* and reported as such. It is not.
+
+There are **two** grounding sources (`knowledge/context.py:1-6`):
+
+1. **Deterministic manifest docs**, read from `docs/` **on disk** by
+   `load_docs_context`. **Unaffected by eval isolation.**
+2. **ChromaDB semantic retrieval**, which `_isolated_store()`
+   (`evals/runner.py:211`) deliberately redirects to a fresh temp directory per
+   scenario, so a developer's local store cannot pre-answer a gap.
+
+The warning comes from **(2) only** (`knowledge/store.py:135`). Path (1)
+delivered **4,020 characters** — `brand-platform.md` and `house-style.md` — for
+the domains triage returned, carrying both the sourcing rule and the invention
+rule verbatim. **G1's substance held; its wording tested a different system.**
+
+That the executor's own free pre-check queried the *real* store rather than the
+one the run would use made the error easier to make and harder to catch.
+
+### Scores
+
+| prediction | outcome |
+|---|---|
+| **G1** — corpus loads | **Substance CONFIRMED, wording wrong.** Manifest docs arrived; Chroma retrieval was isolated by design |
+| **B14-1** — no shipped engineering structural role anywhere | **CONFIRMED.** triage staffed `['strategist', 'copywriter', 'fact_checker']`. No `test_engineer`, no `systems_architect` |
+| **B14-2** — a profile-declared role appears | **CONFIRMED.** Three of them |
+| **B14-3** — the run reaches a terminal | **FAILED.** 42 calls against a 41 ceiling, 7 iterations, no terminal |
+| **B15-1** — no invented product name presented as fact | **CONFIRMED** — see below |
+| **B15-2** — no fabricated source | **NOT CONFIRMED, and probably failed** — see below |
+| **C1** — under $0.15 | **FAILED.** $0.1783 |
+
+### B14 is demonstrated
+
+Triage staffed a non-engineering team on a non-engineering brief and **no
+shipped engineering role appeared anywhere in the run.** The comparator, on the
+identical scenario before B14, did not. **That is B14's claim, observed live.**
+
+### B15-1 is the result worth having
+
+The comparator invented the product name **"ExpenseFlow" and presented it as
+fact** — escalation's autopsy named it the failure. This draft carries an
+explicit **`## Assumptions`** section, first line:
+
+> *"The product name, specific features, and unique selling propositions have not
+> been confirmed by the client. This brief assumes a generic expense-management
+> automation product."*
+
+That is exactly what `house-style.md` requires and exactly what the comparator
+failed to do. The draft also opens *"This brief serves practitioners"* — the
+audience frame is `brand-platform.md`'s, near-verbatim. **The grounding reached
+the model and changed the output.**
+
+**Confounded, and n=1.** B14's wiring and the grounding both moved. This is
+suggestive, not established.
+
+### B15-2 almost certainly failed
+
+Three proof points, each with a firm, a report title, a date and a deep URL:
+Levvel Research, **Aberdeen Strategy & Research**, **PayStream Advisors**.
+
+**The comparator's autopsy named Aberdeen and PayStream as firms whose reports
+it had invented.** The same firms reappear here with different titles and
+different URLs, none of it verified. **The pattern is the comparator's.** The
+draft does mark the sources as secondary, which the house style permits — but
+marking a fabricated citation as secondary is not sourcing it.
+
+**So the fix reached the product name and not the citation.** The house style
+forbids both. One landed.
+
+### Why it never terminated
+
+`implement.green` was **true**; the loop did not fail on refusal. It failed on
+`criteria_addressed` — *"2 of 6 success criteria are not visibly addressed"* —
+seven times, and exhausted the call ceiling. **Coverage death, not fabrication
+death**, and a different failure from the comparator's.
+
+The run cost **3× the comparator** (42 calls against 22, $0.1783 against
+$0.0569) and reached a **worse** outcome. Grounding adds tokens to every call
+and appears to have added iterations too; **whether the extra iterations come
+from the grounding or from B14's staffing is not separable at n=1.**
+
+### One loose thread
+
+Triage returned domains `['brand_strategy', 'copywriting', 'documentation']`.
+**`documentation` is a shipped `Domain` enum member**, returned on a studio run
+whose profile declares three non-shipped domains. It is not covered by the
+studio manifest, so it contributed no docs. Not investigated here.
+
+### Departures
+
+None. The registered command ran verbatim; the envelope held at $0.1783 of
+$0.50.
