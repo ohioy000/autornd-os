@@ -47,6 +47,38 @@ class ProjectProfile:
     #       tier: engineering
     #       expertise: "..."
     roles: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # The two roles this harness reaches for STRUCTURALLY — regardless of who
+    # triage staffed — because two rules are not judgement calls: risky work is
+    # checked by someone, and work spanning domains has someone holding the
+    # system-level view. Until B14 those two roles were the shipped engineering
+    # ones, hardcoded, and they bound on every profile: measured, 77 of 108
+    # wide-suite units were assigned a test engineer in BOTH arms of a
+    # studio/control comparison, identical, because the injection never
+    # consulted the profile (§24.1(d)).
+    #
+    # The RULES are domain-neutral and unchanged. Only their operands move.
+    #
+    #   structural_roles:
+    #     checks_work: editor          # engineering default: test_engineer
+    #     holds_system_view: strategist  # default: systems_architect
+    #
+    # Undeclared means the shipped default, so a profile that says nothing
+    # behaves exactly as it did before B14.
+    structural_roles: dict[str, str] = field(default_factory=dict)
+
+    def role_that_checks_work(self) -> str:
+        """Who is added when risk is high enough that somebody must check."""
+        from autornd.models.verdicts import SpecialistRole, role_key
+        declared = (self.structural_roles or {}).get("checks_work")
+        return role_key(declared) if declared else role_key(
+            SpecialistRole.TEST_ENGINEER)
+
+    def role_that_holds_system_view(self) -> str:
+        """Who is added when the work spans domains, or when nobody else fits."""
+        from autornd.models.verdicts import SpecialistRole, role_key
+        declared = (self.structural_roles or {}).get("holds_system_view")
+        return role_key(declared) if declared else role_key(
+            SpecialistRole.SYSTEMS_ARCHITECT)
 
     def build_context(self) -> str:
         if not self.description and not self.stack:
@@ -143,6 +175,7 @@ def load_profile(name: str) -> ProjectProfile:
         specialists=data.get("specialists", {}),
         domains=data.get("domains", {}) or {},
         roles=data.get("roles", {}) or {},
+        structural_roles=data.get("structural_roles", {}) or {},
     )
 
 
