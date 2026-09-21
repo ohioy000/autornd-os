@@ -216,3 +216,89 @@ separates the three.
   other than what was registered. Here the registered control is wrong, and
   changing it silently would leave the pre-registration claiming a design nobody
   ran.
+
+---
+
+## Execution record — 2026-09-21
+
+**Three sessions, 36 units, $0.3996** of the $1.00 envelope. All three ran
+**outside** the adversarial window, so **T1 is untested** and a peak-hour session
+is still owed.
+
+| session | local | 429s | terminals | spend |
+|---|---|---|---|---|
+| 1 | 18:11–18:58 | 1/12 | 11 | $0.1206 |
+| 2 | 01:16–02:05 | 1/12 | 9 | $0.1493 |
+| 3 | 03:40–04:30 | **0/12** | 11 | $0.1297 |
+
+### Predictions, scored
+
+- **S1 — FALSIFIED, and it is the sweep's sharpest result.** SiliconFlow, the
+  known-bad control chosen on five observations of it emitting nothing, went
+  **6/6 passed, 6/6 completed, mean 1.0 iterations — the cleanest arm in the
+  sweep.** Its failure was episodic. By the registered rule a passing control
+  makes every serving reading here provisional, and they are.
+- **S2 — confirmed** in session 1 alone; spent as a discriminator by Amendment 1.
+- **S3 — CONFIRMED.** The retry fired **6 times in session 1, 2 in session 2, 0
+  in session 3** and units completed anyway. Before this the PR #15 repair had
+  never run outside its tests (§6.16).
+- **S4 — CONFIRMED, and it is the most useful column produced.** Mean iterations
+  per arm tracks pass rate almost monotonically: SiliconFlow 1.0 (6/6),
+  GMICloud 1.8 (4/6), StreamLake 2.4 (3/6), DigitalOcean 2.8 (2/6),
+  OpenInference 3.3 (2/6). §6.11 again, unprompted.
+- **S5 — confirmed.** GMICloud is not disqualified: 6/6 completed, second on
+  passes, and the only arm to reach a terminal every time.
+- **S6 — confirmed.** $0.3996 against a $0.60 estimate and a $1.00 envelope.
+- **T1 — UNTESTED.** No session ran in the window. **T2 — unanswerable** for the
+  same reason.
+
+### The arms, at n=6 each
+
+| arm | passed | completed | mean iterations |
+|---|---|---|---|
+| SiliconFlow | 6/6 | 6/6 | **1.0** |
+| GMICloud | 4/6 | 6/6 | 1.8 |
+| StreamLake | 3/6 | 4/6 | 2.4 |
+| DigitalOcean | 2/6 | 4/6 | 2.8 |
+| OpenInference | 2/6 | 4/6 | 3.3 |
+| DeepInfra | 1/6 | 2/6 | 1.5 |
+
+**No pin change is proposed.** The control broke, T1 is untested, and n=6 at one
+time-of-day band is not a serving verdict. Changing the standing pin is a G-2
+ratification in any case.
+
+### Seven failure classes on one tier
+
+429; expiry at the timeout; empty reply; **413 `insufficient_quota`** (session 2,
+DeepInfra — the body names Alibaba Model Studio, which the record cannot
+reconcile with a DeepInfra pin, and which is legible **only because PR #15 now
+carries `metadata.raw`**); **ReadTimeout**; **`ValidationError` — `ImplementVerdict`
+missing `done`, input `{}`** (session 3, DeepInfra: a schema failure, which
+convention 23 ranks as disqualifying rather than as availability); and a
+legitimate `blocked` terminal on unknowns.
+
+### Departures
+
+1. **Sessions 2 and 3 ran at 01:16 and 03:40 local**, not the morning slot
+   Amendment 1 registered and not the evening window it required of session 3.
+   Ruled by the owner, who judged the specific hour immaterial for session 2 —
+   correct, since the amendment's operative requirement is *outside the failing
+   window* — and who directed session 3 to run immediately with the consequence
+   stated in advance. **The consequence held: T1 is unanswered.**
+2. **The executor over-specified Amendment 1** by naming a morning slot when the
+   design needs only a non-peak one. Recorded because it caused an argument the
+   evidence did not support.
+
+### What execution found that the pre-registration missed
+
+1. **The control was the thing most wrong.** Five observations of SiliconFlow
+   failing produced a confident classification — *"a compliance property of the
+   serving"* — and six clean units refuted it. **The failure that looked unlike
+   the transient ones was transient too.**
+2. **Seven failure classes, and only one of them is a 429.** The sweep was
+   designed around availability and found that availability is the least of it.
+   A 413 quota error and an empty-verdict `ValidationError` are compliance
+   failures in convention 23's sense, and neither was anticipated.
+3. **A third reading of the whole corpus.** 2 429s in 36 non-peak units against
+   12 in one two-hour evening. The baseline is now firm at n=36 — and the thing
+   it is a baseline *for* has still not been measured.
