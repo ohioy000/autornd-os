@@ -26,18 +26,55 @@ was never indexed.** This is that index.
 
 ## The ledger
 
-| tier | model | serving | n | completed | other terminals | errors |
-|---|---|---|---|---|---|---|
-| `architecture` | `deepseek/deepseek-v4-pro` | **StreamLake** | 341 | 285 | blocked 8, escalated 8 | 40 |
-| `architecture` | `z-ai/glm-5.3` | **StreamLake** | 1 | 0 | — | 1 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **DeepInfra** | 10 | 2 | — | 8 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **DigitalOcean** | 12 | 5 | escalated 2 | 5 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **GMICloud** | 243 | 233 | blocked 1, escalated 1 | 8 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **OpenInference** | 13 | 10 | escalated 2 | 1 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **SiliconFlow** | 9 | 6 | — | 3 |
-| `engineering` | `deepseek/deepseek-v4-flash` | **StreamLake** | 10 | 5 | blocked 1, escalated 1 | 3 |
-| `engineering` | `google/gemini-2.5-flash` | **GMICloud** | 1 | 0 | — | 1 |
-| `triage` | `deepseek/deepseek-v4-flash` | **Alibaba** | 346 | 286 | blocked 9, escalated 8 | 43 |
+| tier | model | serving | how | n | completed | other terminals | errors |
+|---|---|---|---|---|---|---|---|
+| `architecture` | `deepseek/deepseek-v4-pro` | **Alibaba** | rotated | 1 | 0 | — | 1 |
+| `architecture` | `deepseek/deepseek-v4-pro` | **Baidu** | rotated | 2 | 1 | — | 1 |
+| `architecture` | `deepseek/deepseek-v4-pro` | **DigitalOcean** | rotated | 2 | 1 | blocked 1 | 0 |
+| `architecture` | `deepseek/deepseek-v4-pro` | **Novita** | rotated | 2 | 1 | blocked 1 | 0 |
+| `architecture` | `deepseek/deepseek-v4-pro` | **SiliconFlow** | rotated | 2 | 1 | blocked 1 | 0 |
+| `architecture` | `deepseek/deepseek-v4-pro` | **StreamLake** | rotated | 1 | 1 | — | 0 |
+| `architecture` | `deepseek/deepseek-v4-pro` | **StreamLake** | pinned | 341 | 285 | blocked 8, escalated 8 | 40 |
+| `architecture` | `z-ai/glm-5.3` | **StreamLake** | pinned | 1 | 0 | — | 1 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **Alibaba** | rotated | 4 | 0 | blocked 2 | 2 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **AtlasCloud** | rotated | 3 | 0 | — | 3 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **Azure** | rotated | 2 | 0 | escalated 1 | 1 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **Baidu** | rotated | 2 | 0 | blocked 2 | 0 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **DeepInfra** | rotated | 6 | 0 | blocked 3, escalated 1 | 2 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **DeepInfra** | pinned | 10 | 2 | — | 8 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **DigitalOcean** | rotated | 8 | 0 | blocked 1, escalated 1 | 6 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **DigitalOcean** | pinned | 12 | 5 | escalated 2 | 5 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **GMICloud** | rotated | 5 | 0 | blocked 2 | 3 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **GMICloud** | pinned | 243 | 233 | blocked 1, escalated 1 | 8 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **Mancer 2** | rotated | 3 | 1 | — | 2 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **NextBit** | rotated | 3 | 0 | blocked 1 | 2 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **Novita** | rotated | 4 | 1 | blocked 1 | 2 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **OpenInference** | rotated | 18 | 2 | blocked 4, escalated 2 | 10 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **OpenInference** | pinned | 13 | 10 | escalated 2 | 1 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **Parasail** | rotated | 3 | 0 | — | 3 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **Phala** | rotated | 4 | 0 | blocked 1 | 3 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **SiliconFlow** | rotated | 2 | 0 | blocked 1, escalated 1 | 0 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **SiliconFlow** | pinned | 9 | 6 | — | 3 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **StreamLake** | rotated | 6 | 1 | blocked 2 | 3 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **StreamLake** | pinned | 10 | 5 | blocked 1, escalated 1 | 3 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **Venice** | rotated | 4 | 0 | blocked 2 | 2 |
+| `engineering` | `deepseek/deepseek-v4-flash` | **Wafer** | rotated | 2 | 0 | — | 2 |
+| `engineering` | `google/gemini-2.5-flash` | **GMICloud** | pinned | 1 | 0 | — | 1 |
+| `escalation` | `moonshotai/kimi-k3` | **Chutes** | rotated | 1 | 0 | escalated 1 | 0 |
+| `escalation` | `moonshotai/kimi-k3` | **DeepInfra** | rotated | 2 | 0 | — | 2 |
+| `escalation` | `moonshotai/kimi-k3` | **DigitalOcean** | rotated | 4 | 0 | escalated 1 | 3 |
+| `escalation` | `moonshotai/kimi-k3` | **InferenceNet** | rotated | 1 | 0 | — | 1 |
+| `escalation` | `moonshotai/kimi-k3` | **Modal** | rotated | 2 | 0 | blocked 1 | 1 |
+| `escalation` | `moonshotai/kimi-k3` | **Sail Research** | rotated | 4 | 0 | escalated 1 | 3 |
+| `escalation` | `moonshotai/kimi-k3` | **Together** | rotated | 3 | 0 | blocked 1 | 2 |
+| `research` | `google/gemini-2.5-flash` | **Google** | rotated | 126 | 68 | blocked 9, escalated 8 | 41 |
+| `research` | `moonshotai/kimi-k3` | **InferenceNet** | rotated | 1 | 0 | — | 1 |
+| `research` | `moonshotai/kimi-k3` | **Modal** | rotated | 1 | 0 | — | 1 |
+| `search` | `perplexity/sonar` | **Perplexity** | rotated | 54 | 22 | blocked 4, escalated 3 | 25 |
+| `search` | `perplexity/sonar-pro` | **Perplexity** | rotated | 30 | 24 | blocked 2, escalated 1 | 3 |
+| `triage` | `deepseek/deepseek-v4-flash` | **Alibaba** | pinned | 346 | 286 | blocked 9, escalated 8 | 43 |
+
+**Unmeasured tiers:** `premium`, `ranker` — named in a trace header's model map, but no committed unit records a provider for them. They ran no calls, or ran them before per-tier attribution existed. Listed rather than omitted, because an absent row reads as a tier that does not exist.
 
 ## How to read it, and how not to
 
@@ -45,6 +82,24 @@ was never indexed.** This is that index.
 run, not a designed comparison: an arm with 233 units and one with 3 are not
 comparable evidence, and convention 23 still governs — compliance first, then
 iterations to termination, then speed, **never at n=1**.
+
+**`pinned` and `rotated` are different evidence and are never added together.**
+A pinned row is what a serving did when it was *asked*; a rotated row is what it
+did when OpenRouter's own routing chose it. The same provider appears in both
+columns for `engineering` — GMICloud and DigitalOcean each ran the tier both
+ways — and folding them would claim a pin's evidence for rotation's.
+**Rotated rows are far noisier by construction**: rotation reaches for a
+different provider precisely when the first one failed, so a rotated arm's
+errors include the failure that caused the rotation.
+
+**This table was blind until 2026-09-22.** The derivation walked the header's
+pins and skipped any tier whose pin was empty, so an unpinned tier produced no
+row — and the table carried **three tiers while looking complete**. The tier it
+omitted was `escalation`, which §6.10 measures at **70–78% of hard-trace
+spend**. The most expensive tier in the system was the one the instrument could
+not see, and nothing said so. It is the canonical exhibit for **convention 28**:
+*an instrument asserts that it computed its subject before it asserts anything
+about it.*
 
 **A pin is not portable without its model.** The tier and the serving alone do
 not identify a configuration; the *model* is the third column for that reason.
