@@ -207,6 +207,25 @@ class OpenRouterClient:
         # therefore silent. A count attributed to the serving that produced the
         # reply can answer it; a count attributed to the tier never can.
         self.rejections_by_provider: dict[str, int] = {}
+        # EVERY retry, by class, so the two counters above can be read as what
+        # they are rather than as what they look like.
+        #
+        # Measured 2026-09-22 on the B17 prohibition run: three retry events in
+        # stderr — one JSON parse failure and two empty replies — and both
+        # rejection counters EMPTY in the unit record. The counters were right:
+        # they are scoped to schema rejections, and none of the three was one.
+        # But a reader seeing `rejections_by_tier: {}` beside 23 calls cannot
+        # tell "nothing was refused" from "the refusals were a class this does
+        # not count", and convention 26 makes that the instrument's defect
+        # rather than the reader's error.
+        #
+        # So this counts all three classes and the record reconciles them:
+        # total == attributed + unattributed, with the unattributed classes
+        # named. Widening `rejections_by_function` instead would have destroyed
+        # the distinction its own comment above exists to preserve — a schema
+        # rejection is a reply the truth table could not repair, which an empty
+        # reply is not.
+        self.retries_by_kind: dict[str, int] = {}
         self.call_ceiling: int | None = None
         self.spend_ceiling: float | None = None
 
@@ -259,6 +278,39 @@ class OpenRouterClient:
         self.providers_by_function = {}
         self.rejections_by_function = {}
         self.rejections_by_provider = {}
+        self.retries_by_kind = {}
+
+    # Retry classes. Named constants rather than string literals at the call
+    # sites, because the reconciliation below subtracts one from the total and
+    # a typo there would silently move events into "unattributed".
+    RETRY_SCHEMA_REJECTION = "schema_rejection"
+    RETRY_EMPTY_REPLY = "empty_reply"
+    RETRY_PARSE_FAILURE = "parse_failure"
+
+    def _count_retry(self, kind: str) -> None:
+        self.retries_by_kind[kind] = self.retries_by_kind.get(kind, 0) + 1
+
+    def retry_reconciliation(self) -> dict[str, Any]:
+        """Every retry, split into the part the rejection counters explain and the part they do not.
+
+        Convention 28: this states the total BEFORE the breakdown, and the
+        unattributed figure is always present — never omitted when it is zero,
+        because an absent field and a measured zero are different claims and
+        only one of them is evidence.
+        """
+        total = sum(self.retries_by_kind.values())
+        attributed = self.retries_by_kind.get(self.RETRY_SCHEMA_REJECTION, 0)
+        unattributed = total - attributed
+        return {
+            "total": total,
+            "attributed": attributed,
+            "unattributed": unattributed,
+            "by_kind": dict(self.retries_by_kind),
+            # Named so a reader of an empty rejection count knows what it
+            # excludes without reading this file.
+            "excluded_from_rejection_counters": [
+                self.RETRY_EMPTY_REPLY, self.RETRY_PARSE_FAILURE],
+        }
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -483,6 +535,7 @@ class OpenRouterClient:
                     )
                 detail += ")"
                 last_error = ValueError(detail)
+                self._count_retry(self.RETRY_EMPTY_REPLY)
                 logger.warning(
                     "Empty reply (attempt %d/%d) for %s: %s",
                     attempt + 1, max_retries, function, detail,
@@ -500,6 +553,7 @@ class OpenRouterClient:
             except ValidationError as e:
                 last_error = e
                 correction = _rejection_note(e)
+                self._count_retry(self.RETRY_SCHEMA_REJECTION)
                 self.rejections_by_function[function] = (
                     self.rejections_by_function.get(function, 0) + 1)
                 if response.provider:
@@ -513,6 +567,7 @@ class OpenRouterClient:
             except (json.JSONDecodeError, ValueError) as e:
                 last_error = e
                 correction = _rejection_note(e)
+                self._count_retry(self.RETRY_PARSE_FAILURE)
                 logger.warning(
                     "JSON parse failed (attempt %d/%d) for %s: %s — raw: %s",
                     attempt + 1, max_retries, function, e, (response.content or "")[:300],

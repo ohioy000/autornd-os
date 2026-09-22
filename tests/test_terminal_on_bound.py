@@ -213,6 +213,7 @@ class _StubClient:
         self.tokens_by_function: dict = {}
         self.rejections_by_function: dict = {}
         self.rejections_by_provider: dict = {}
+        self.retries_by_kind: dict = {}
         self.call_ceiling = None
         self.spend_ceiling = None
         self.calls = 0
@@ -220,6 +221,19 @@ class _StubClient:
 
     def reset_accounting(self) -> None:
         pass
+
+    def retry_reconciliation(self) -> dict:
+        """A run that never called anything still reports its zero.
+
+        Added when B23's reconciliation landed. The same rule that makes a
+        double bill applies here: a double that omitted this would report no
+        retries because it cannot count, which is exactly the "no evidence read
+        as no problem" confusion the reconciliation exists to prevent.
+        `unattributed` is present and zero rather than absent (convention 28).
+        """
+        return {"total": 0, "attributed": 0, "unattributed": 0,
+                "by_kind": {}, "excluded_from_rejection_counters":
+                    ["empty_reply", "parse_failure"]}
 
 
 class TestLoopExhaustionEndToEnd:

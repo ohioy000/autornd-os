@@ -1,0 +1,28 @@
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+JSON parse failed (attempt 1/3) for engineering: Unterminated string starting at: line 7 column 14 (char 107) — raw: {
+  "done": true,
+  "green": true,
+  "red_cause": null,
+  "blocked_on": [],
+  "iteration": 1,
+  "summary": "Scheduling That Works as Hard as Your Team\n\nYou’re comparing three scheduling tools because the one you have now costs too much time — maybe it’s a spreadsheet that breaks every week, or a b
+Empty content from deepseek/deepseek-v4-flash via GMICloud (finish_reason=None, completion_tokens=2758, max_tokens=8000)
+Empty reply (attempt 1/3) for engineering: model returned no text (provider=GMICloud, finish_reason=None)
+Empty content from deepseek/deepseek-v4-flash via GMICloud (finish_reason=error, completion_tokens=3656, max_tokens=8000)
+Empty reply (attempt 2/3) for engineering: model returned no text (provider=GMICloud, finish_reason=error)
+results: evals/results/b17-prohibition-branch.jsonl
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+gen_house_style_prohibition     0/1     23  1200.0   run 1/1 — timed out after 1200s
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  23 calls  ·  1200.0s  ·  $0.0434
+spend by tier: escalation $0.0175, engineering $0.0142, architecture $0.0097, research $0.0018, triage $0.0002
+served by: architecture via StreamLake, engineering via GMICloud, escalation via Moonshot AI, research via Google, triage via Alibaba
+
+sweep budget: $0.0434 of $0.2500
+
