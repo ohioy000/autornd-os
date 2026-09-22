@@ -1,0 +1,41 @@
+{
+  "command_id": "ARCH-20260922-015",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "branch": "arch/20260922-015-sequencing-ruling",
+  "files_changed": ["docs/handover-review.md", "HANDOVER.md", ".orchestration/responses/ARCH-20260922-015.response.json"],
+  "preconditions_run": [
+    {"check": "grep -n 'S1' docs/preregistration-engineering-resweep-2.md", "result": "PASS — the prediction at line 82, its refutation at line 236"},
+    {"check": "suite green before", "result": "PASS — 808 passed"}
+  ],
+  "results": {
+    "section_31": "The freeze recorded with its exit condition stated first: B17 closed, B18 closed, one B14 demonstration reaching a terminal. Written as a BOUND, not a prohibition — it expires by being satisfied and the owner may overrule it.",
+    "the_argument_made_rather_than_asserted": "The constraint said to frame this as sequencing and not as a finding about the sweeps' quality. §31 argues the point instead of stating it: a sweep measures how a serving behaves across a workflow that runs to completion, and until today the flagship non-engineering path COULD NOT complete. Buying more servings to run through a pathway that cannot terminate measures the pathway, not the servings.",
+    "the_control_framed_as_the_apparatus_working": "S1 predicted SiliconFlow would fail all six units; it went 6/6 passed at mean 1.0 iterations, the cleanest arm in the sweep. §31 records that as the apparatus working, which it is — a control that cannot be refuted is not a control.",
+    "provisional_where_the_numbers_live": "TWO block quotes added in HANDOVER §6, not one, because the serving numbers live in two places: §6.11 (the convergence-rate finding that closed B7) and §6.16's closing ledger paragraph. Each says what makes it provisional rather than pointing elsewhere — a caveat that only cites a section number is how a provisional number gets quoted as settled.",
+    "t1": "Named as never run, across 43 units and four generations, and named as the obvious first sweep once the freeze lifts — it is the one axis with a claim to being new information.",
+    "escalation_gap": "Carried into §31 and into §6.16's caveat: the ledger's three tiers and no escalation row, against §6.10's 70–78% of hard-trace spend. Repair proposed in ARCH-20260922-011 and explicitly NOT ruled here.",
+    "nothing_deleted": "No sweep record rewritten. The generations stand as measured; what changed is what may be concluded from them.",
+    "counts": "808 before and after — documentation only, no test moved.",
+    "cost": "$0.00"
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "A new dated section records the freeze, its exit condition, and the reason", "met": true, "evidence": "§31"},
+    {"criterion": "HANDOVER §6 marks the serving readings provisional, or names where they are marked", "met": true, "evidence": "marked in place, twice — §6.11 and §6.16"},
+    {"criterion": "The aggregate (43 units, $0.4876, 382 calls) and the S1 refutation appear with their sources", "met": true},
+    {"criterion": "T1's unrun status is stated", "met": true},
+    {"criterion": "Suite passes unchanged; count before and after", "met": true, "evidence": "808 / 808"}
+  ],
+  "deviations": [
+    {
+      "what": "Two provisional markers were added rather than one.",
+      "why": "The serving readings live in two sections and a single marker would have left the other quotable as settled, which is the exact failure the constraint describes.",
+      "impact": "Slightly more duplication in §6, and each marker is self-contained rather than a pointer."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "The command's own question — is the freeze absolute, or does the owner want T1 run once? — is the owner's and I have not acted on it. For the ruling: T1 is the only sweep that would produce information the four generations do not already contain, and it is also the cheapest thing to get wrong, because a peak-hour failure is indistinguishable from an off-peak one without a paired control. My recommendation is that T1 waits, not because it is low value but because it needs a paired off-peak arm in the same session to mean anything, and that doubles its cost.",
+    "The freeze's third exit condition — one B14 demonstration reaching a terminal — is not yet met. ARCH-20260922-010 ran and its trace was destroyed by executor error before it could be read (see that response). The stdout proves the run did NOT converge: 0/2, with coverage still failing 3 of 5 measurable criteria. So the freeze stands, and whether a re-run is bought is the owner's."
+  ]
+}

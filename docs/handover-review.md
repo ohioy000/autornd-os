@@ -6858,3 +6858,52 @@ something changes measures *changes*, never *state*. Every instrument in this
 repo that fires on an event has the same shape, and the question to ask of each
 is: *if the thing it watches went wrong and then nothing happened, would anyone
 find out?*
+
+---
+
+## 31. Sequencing ruling — no sweep is bought until the pathway terminates (2026-09-22)
+
+**The ruling.** No further serving sweep is purchased until all three hold:
+
+1. **B17 closed** — the coverage check reads every criterion shape it meets.
+2. **B18 closed** — a bound-stopped run ends with a typed terminal.
+3. **One B14 demonstration reaches a terminal.**
+
+**This is a bound, not a prohibition.** It has an exit condition, written above,
+and the owner may overrule it at any point. It expires by being satisfied.
+
+**Why sequencing and not quality.** The four sweep generations did exactly what
+they were designed to do. **43 units, $0.4876, 382 calls**
+(`.orchestration/responses/ARCH-20260922-005.response.json`). The control
+failing is **the apparatus working**: S1 predicted SiliconFlow would fail all
+six of its units, SiliconFlow went **6/6 passed at mean 1.0 iterations — the
+cleanest arm in the sweep** (`docs/preregistration-engineering-resweep-2.md`,
+execution record). By that pre-registration's own registered rule, a passing
+control makes **every serving reading in it provisional**, and they are.
+
+So the sweeps are not the problem. The problem is what a sweep can be *for*
+right now. A sweep measures how a serving behaves across a workflow that runs to
+completion. Until 2026-09-22 the flagship non-engineering path **could not
+complete** — B17 made a compliant draft fail a free check, and B18 meant the
+resulting stop left no terminal to score. **Buying more servings to run through
+a pathway that cannot terminate measures the pathway, not the servings.**
+
+**Two standing facts this ruling does not soften.**
+
+- **T1 is untested.** No session in any of the four generations ran in the
+  adversarial window. Peak-hour serving has never been observed, across 43 units
+  and four generations. It is the one axis with a claim to being new
+  information, and it is the obvious candidate for the first sweep after the
+  freeze lifts.
+- **The escalation tier has no ledger visibility at all.** §6.10 measures it at
+  **70–78% of hard-trace spend**, and `tests/serving_ledger.py`'s skip-unpinned
+  rule drops every unpinned arm, so the rendered table carries three tiers and no
+  row for escalation. The most expensive tier in the system is the one the
+  instrument cannot see. Proposed for repair in `ARCH-20260922-011`, not yet
+  ruled.
+
+**Superseded by quotation, not deletion.** Nothing in the sweep records is
+rewritten. The generations stand as measured; what changes is what may be
+concluded from them, and §4.2 and §6 now carry the word *provisional* where the
+numbers live rather than only here — because a caveat in a different section is
+how a provisional number gets quoted as settled.

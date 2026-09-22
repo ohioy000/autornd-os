@@ -1436,6 +1436,12 @@ blueprint on its own terms; not a fix for anything currently broken.
 
 ### 6.11 A serving does not only run at a speed — it converges at a rate
 
+> **PROVISIONAL (2026-09-22, §31).** Every serving reading below is
+> provisional by the resweep-2 pre-registration's own registered rule: its
+> control was refuted — SiliconFlow, predicted to fail all six units, went 6/6
+> at mean 1.0 iterations. 43 units across four generations license **no
+> ranking** (convention 23). **T1 — peak-hour serving — has never been run.**
+
 **The finding that closed B7, and the one most likely to be reused.** Pinning the
 `engineering` tier to a compliant serving changed the loop far more than it
 changed the clock:
@@ -1596,6 +1602,12 @@ twelve: **$0.2163, all of it buying nothing.**
 
 **One episode, one window, no denominator — sufficient to name the mechanism,
 not to rank servings.**
+
+> **PROVISIONAL (2026-09-22, §31).** The ledger this cites carries three
+> tiers and **no row for escalation**, which §6.10 measures at 70–78% of
+> hard-trace spend: `tests/serving_ledger.py`'s skip-unpinned rule drops every
+> unpinned arm, so a complete-looking table reports less than it measured
+> (convention 26). Repair proposed in `ARCH-20260922-011`, not yet ruled.
 
 Two things this fact does **not** license. The $0.2163 is a **pre-fix** number
 and is not what the retry saves: there have been **zero post-fix 429 events**, so
