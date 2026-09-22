@@ -7185,3 +7185,99 @@ the number was wrong**, which is worth separating.
 **Both B18 branches fired live.** Unit 1 hit the call ceiling, unit 2 the spend
 ceiling, and each terminal named its own bound in the operator's words. B18 was
 closed on tests alone; it is now closed on evidence.
+
+---
+
+## 35. Ruling B16-R1 — the criteria regenerate because the plan is doing its job (advisor, 2026-09-22)
+
+Recorded by `ARCH-20260922-028`. Documentation only, $0.00, no run.
+
+### 35.1 The measurement, as it read
+
+Four committed plan outputs of the identical `gen_marketing_claims` request
+carried **6, 6, 6 and 5** success criteria, each differently worded
+(`ARCH-20260920-004`). That has been in the ledger since 2026-09-20 and was
+argued rather than measured in its consequence.
+
+**§34.4 measured the consequence.** The same criterion, conceptually, across two
+runs of the same request:
+
+> `ARCH-20260922-010`: *"a core promise of exactly one sentence with no
+> subordinate clauses, and two to four supporting pillars that are each
+> defensible without reference to another pillar"* — **0.63, passed**
+>
+> `ARCH-20260922-023`: *"a core promise expressed as a single sentence with no
+> subordinate clauses, and each supporting pillar is independently defensible"*
+> — **0.43, failed**
+
+**Nothing about `criteria_addressed` changed between the two.** A rewording moved
+a criterion across the 0.50 threshold and decided the run: the first shipped that
+criterion, the second died on it.
+
+The figures are recorded at their measured precision and are not rounded into a
+softer claim. The 0.43 run's trace survived — `docs/traces/b14-rerun-2-marketing-claims.jsonl`,
+mirror byte-identical. The 0.63 run's did not; it was destroyed by executor error
+(§29.2), and §34.4 is its record.
+
+### 35.2 The ruling
+
+**The regeneration is a property of the system working, not a defect.**
+
+The plan adapts to the objective it was given. That adaptation is what grounding
+buys — a plan that produced identical criteria regardless of corpus or objective
+would not be responding to either. **Freezing the criteria would defeat the
+mechanism, so determinism is explicitly rejected as a direction.** Nothing is
+owed here in the form of a fix.
+
+**The obligation is visibility, not stability.**
+
+### 35.3 The operational consequence, which is the part that binds
+
+**Convention 27 is the governing rule.** *A repetition of a plan-dependent
+contrast is a second sample, never a confirmation.*
+
+From which: **a pass rate across runs with different criteria is not a rate.**
+Any comparison must state that the criteria differ, and the criteria must be
+quotable from the run record.
+
+**The visibility half is already built.** `ARCH-20260922-008` records the
+criteria count and the per-criterion shape in every unit record, so the criteria
+*are* quotable per run. **What remains is the reader's obligation: do not
+aggregate across differing criteria.** That is not something a counter can
+enforce, which is why it is written here rather than tested.
+
+### 35.4 A downstream consumer, found while answering this ruling's own question
+
+`ARCH-20260922-028` asked whether anything currently presents a pass rate across
+differing criteria as if it were stable. **It does.**
+
+`RepeatedRun.rate` (`autornd/evals/runner.py:757`) is `passes / applicable` over
+the repetitions of one scenario, and the class docstring states *"the unit of
+measurement is a pass rate"*. For a plan-dependent scenario, `--repeat N`
+produces N runs whose criteria were each written fresh, and `rate` presents them
+as one number with nothing saying the denominators differ.
+
+**Reported, not fixed.** This command's scope is documentation, and whether that
+display is a defect or acceptable with a caveat is a ruling rather than a repair
+— it changes what a reader concludes from a sweep. Raised in
+`.orchestration/responses/ARCH-20260922-028.response.json`.
+
+The docstring is not wrong for the case it was written for: a triage scenario
+repeated three times *does* have a stable contract, and a rate over it is a rate.
+The distinction is plan-dependence, and nothing in the type says which a given
+scenario is.
+
+### 35.5 What this ruling does not touch
+
+**The rider stays open.** B16's row carries a separate sub-question from
+2026-09-22: why the grounding phase deferred no blocking gap on plans that
+demanded citations (`deferred_gaps` 3/0/0/0, `ARCH-20260920-010`). Detection
+fired 4/4; what varied was what it handed downstream, and nothing has explained
+it. **That is a question about `deferred_gaps`, not about criteria variance, and
+this ruling does not answer it.**
+
+**B15 is untouched here and is raised as a question.** §34's R6 recorded that
+both drafts marked every proof point `unsourced` and invented no firms, where the
+`-010` comparator had fabricated sources. Whether one clean run weakens B15 or is
+simply insufficient to close it is a judgement the executor declined to make; it
+is in the response.
