@@ -1,0 +1,59 @@
+{
+  "command_id": "ARCH-20260922-026",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Register a scenario whose objective reliably drives the planner to emit at least one prohibition-shaped success criterion, and pre-register the paid run that will demonstrate B17-R1's prohibition branch on live input.",
+  "evidence": [
+    "HANDOVER.md §4.2 B17 — OPEN; 'the coverage check cannot read a prohibition'",
+    "docs/handover-review.md §29.1/§29.2 — ruling B17-R1 and its narrowing",
+    "run readout 2026-09-22 — 'the form branch is demonstrated twice; the inversion, the actual headline fix, still rests on fixtures. A third draw from the same scenario won't reliably reach it'",
+    "autornd/graph/checks.py — criteria_addressed shape classification and the prohibition token test",
+    "workflows/engineering-rnd.yaml — the coverage node: check: criteria_addressed, args: {criteria: plan.success_criteria, text: implement.summary}",
+    "docs/preregistration-b14-demonstration.md — the pre-registration pattern and its registered predictions",
+    "AGENTS.md convention 22 — an instrument's test simulates the condition it watches, end to end"
+  ],
+  "scope": {
+    "include": ["evals/", "docs/preregistration-*.md", "tests/"],
+    "exclude": ["autornd/graph/checks.py", "autornd/engine/phases.py", "workflows/", "docs/handover-review.md", "evals/results/"]
+  },
+  "constraints": [
+    "Free. No paid call, no key, no network. This command builds an input; it does not run anything.",
+    "Do NOT modify the coverage check. It is merged and correct. If you believe it is wrong, stop and report — that is a ruling, not a repair.",
+    "The scenario is engineered to reach the branch, and the pre-registration MUST say so in its first paragraph. A passing result is then evidence the branch works on live input, not evidence the corpus naturally produces such criteria. Do not let the two be confused.",
+    "The objective must name the prohibition explicitly enough that the planner reliably emits a criterion of the form 'avoids the words ...'. State the exact proposed wording in the pre-registration so it can be checked against what the planner actually emitted.",
+    "Pre-register four predictions, each numbered: (a) the planner emits at least one prohibition-shaped criterion; (b) coverage classifies it as prohibition, not presence and not form; (c) on a compliant draft, coverage passes; (d) a draft containing a banned token fails. If (d) cannot be reached by this scenario, say so now — do not promise it.",
+    "Do not hand-run the scenario to see what it emits. The registration is a file; the run is -027. Predicting and then testing is the structure — if you discover the answer first, the prediction is theatre.",
+    "Add a test that the scenario loads and is discoverable by the eval harness, per convention 22.",
+    "Do not add a case to the B14 demonstration. B14 is a registered replication of a specific contrast; changing it invalidates its history."
+  ],
+  "acceptance_criteria": [
+    "A new scenario is registered under evals/ and loads without a paid call.",
+    "A pre-registration file exists under docs/preregistration-*.md, committed, carrying the four numbered predictions and the 'engineered to reach the branch' disclosure in its first paragraph.",
+    "The pre-registration's sha is recorded in the response, and it precedes any run.",
+    "A test proves the scenario loads and is reachable by the harness.",
+    "The coverage check is provably untouched: git diff --stat -- autornd/graph/checks.py is empty.",
+    "Suite passes; count reported before and after."
+  ],
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count reported before and after."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q -k 'scenario or prereg'", "expected": "The new scenario loads; the registration is present."},
+    {"command": "git diff --stat -- autornd/graph/checks.py workflows/", "expected": "Empty output — neither the check nor the workflow is touched."}
+  ],
+  "rollback": "Revert the commit; the scenario is additive and nothing depends on it until -027 runs.",
+  "deliverable": {"branch": "arch/20260922-026-prohibition-scenario", "pr": true, "commit_style": "conventional"},
+  "assumptions": [
+    "The eval harness discovers scenarios by directory convention; the precondition locates that convention before the scenario is written.",
+    "The planner's output format can express a prohibition-shaped criterion; if it cannot, that is the finding and -027 does not run."
+  ],
+  "questions": [
+    "Should the objective ask for a compliance-shaped deliverable whose failure would be a banned word, or a pure style brief? The first risks the draft actually containing a banned word, which would reach the fail direction (d) but not the pass direction — say which the owner prefers and pre-register that one.",
+    "Is there a standing rule that scenarios must not be reverse-engineered from a check's implementation? If so, this scenario violates it in spirit and the owner should say so before it is written."
+  ],
+  "preconditions": [
+    {"command": "grep -n 'B17' HANDOVER.md | head -5", "expected": "B17 present and OPEN. If CLOSED, return NO_ACTION citing the commit that closed it."},
+    {"command": "grep -n 'def criteria_addressed' autornd/graph/checks.py", "expected": "Found; record the line. Do not read it to design around it — record the line only."},
+    {"command": "ls evals/ && grep -rn 'scenario' autornd/evals/*.py | head -10", "expected": "Establish how scenarios are registered; record the convention found."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green at the current count before the change."}
+  ]
+}
