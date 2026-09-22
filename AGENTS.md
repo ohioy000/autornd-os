@@ -74,10 +74,10 @@ behind each one.
 7. **Test doubles must bill** (`client._account`). A free double hid a real
    accounting bug.
 
-### Convention digest — §4.4 numbers 17–24, 26 and 27, one line each
+### Convention digest — §4.4 numbers 17–24 and 26–28, one line each
 
 The full text and the measurement behind each is in `HANDOVER.md` §4.4. These
-ten are the ones a new executor trips over. 25 is a style note and sits in
+eleven are the ones a new executor trips over. 25 is a style note and sits in
 §4.4 only.
 
 | # | rule |
@@ -92,6 +92,7 @@ ten are the ones a new executor trips over. 25 is a style note and sits in
 | **24** | **A fact about the repo is generated or guarded, never hand-stamped.** A commit stamp records when someone last believed a number, not that it was right. Twelve drifts in one document is the exhibit. |
 | **26** | **An instrument's report states what it measured and nothing more.** A reading that can be mistaken for a stronger claim is a **defect in the instrument, not an error in its reader**. Four exhibits in one week: a 429 handler that discarded the sentence naming the cause; an `.env` check that would have passed either way; an `n=5` that counted a unit which never ran; a `detail` string saying *verifiability* where no lookup had happened. |
 | **27** | **A repetition of a plan-dependent contrast is a second sample, never a confirmation.** The plan regenerates between runs (B16), so the second run measures a different contract. A ruling asking for `n=2` on such a contrast **says which of the two it wants**. |
+| **28** | **An instrument asserts that it computed its subject before it asserts anything about it.** An empty match set, an unread file, a dropped row and an absent tier are all *no evidence*, and **no evidence must never be reported as no problem**. Ratified after five instruments failed in one day — four that could not fail and one that could not survive. |
 
 ---
 

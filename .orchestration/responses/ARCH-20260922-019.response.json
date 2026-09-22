@@ -1,0 +1,51 @@
+{
+  "command_id": "ARCH-20260922-019",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "head_before": "7e25cad",
+  "branch": "arch/20260922-019-validation-day",
+  "files_changed": ["docs/handover-review.md", "HANDOVER.md", "AGENTS.md", ".orchestration/responses/ARCH-20260922-019.response.json"],
+  "preconditions_run": [
+    {"check": "git rev-parse --short HEAD", "result": "PASS — 7e25cad, no divergence"},
+    {"check": "the trace-destruction section exists", "result": "PASS — '## 32. Execution record for §29 — B17-R1's validation (2026-09-22)'. It is numbered 32 rather than 29.2 because §§30 and 31 landed between the registration and the run; the section says so itself."},
+    {"check": "suite green at 812", "result": "PASS"}
+  ],
+  "answers_to_the_commands_questions": {
+    "was_the_stdout_produced_by_the_writer_that_lost_the_records": "NO — different path, and the terminal line is therefore trustworthy. The JSONL records go through a file handle opened by the eval runner against docs/traces/. The summary goes to fd 1 from the CLI's printer and was captured by a shell redirect to a file OUTSIDE the repository. The stash reached the first and could not reach the second. This is also why the stdout survived at all.",
+    "did_the_run_reach_a_typed_terminal_under_B18": "UNANSWERABLE FROM THE STDOUT, and the stdout was checked rather than assumed — grepping it for terminal/status/bound/ceiling/escalat returns only the spend-by-tier and served-by lines. B18's fix WAS in the tree (a2e362e merged 00:56 local; the run branched off main after it), so a terminal was almost certainly written. It was written into the records that were destroyed. B18's row already carries this caveat: the repair is proved by tests and by nothing else."
+  },
+  "results": {
+    "section_33": "Three parts. §33.1 the result without softening; §33.2 Convention 28 with the five-instrument table and the two pre-convention exhibits; §33.3 what it cost.",
+    "p3_stated_plainly": "'P3 was refuted. The run did not converge: 0/2, with coverage still failing three of five measurable criteria. The non-engineering pathway is not demonstrated end to end. B17 stays OPEN, and §31's freeze therefore holds. This is not a partial success and is not recorded as one.'",
+    "p1_with_the_live_plan_detail": "Recorded with the distinction the command asked for: the plan was GENERATED FRESH BY THE RUN, so 'measurable' and the five-of-six count are the classifier working on live input rather than on the committed fixtures it was built against. That is why it is not a replay, and it is the only thing the day bought.",
+    "surviving_vs_lost_kept_separate": "§33.1 lists each. Surviving: unit count, calls, seconds, cost, spend by tier, provider per tier, the coverage line. Lost: every status field, every draft, every per-criterion shape table, every retry event. P2/P4/P7 are therefore 'UNSCORABLE — not unmet, not absent, unscorable'.",
+    "p5_and_p6_classified_as_the_assumption_asked": "Both are apparatus predictions and both were PARTLY scorable, stated rather than guessed. P5 held at $0.1547 for one unit but was written for a converging run and so did not measure what it asked. P6 held in part — Moonshot AI and Google served; ranker and premium never appear in the served-by line and were not exercised.",
+    "A_FREE_FACT_FOUND_WHILE_WRITING": "The pre-registration commit is AUTHORED 2026-09-22T05:57:12Z and the run's trace header is WRITTEN 2026-09-22T05:57:26Z. Fourteen seconds. The registration provably preceded the run, from two timestamps rather than anyone's word. This needed no trace and nobody had checked it; it is now in §33.1. It also identifies a guard that does not exist — see the questions.",
+    "convention_28": "Ratified verbatim at the width the command specified, and §33.2 names the serving ledger and CI as PRE-convention exhibits so it reads as the name for a class the record already contained, not as a generalisation from one day.",
+    "five_instruments_named": "A table in §33.2 names each with its class: preflight's tests, -009's runner test, _dissent_suffix's tests, the provenance stamp guard (could not fail); the trace writer (could not survive).",
+    "b19_b20_b21": "Opened in §4.2. B19 medium — and it records that it is UNRESOLVED whether the cause is the per-unit ceiling or the accounting, because if the cap is per session a repeat of 2 can legitimately stop after one and then the defect is the message. B20 high — names both mechanisms: records held open for the run's duration, and docs/traces/ untracked rather than ignored. B21 high — the four guards plus the two older exhibits, with Convention 28 named as the ruling and the row tracking outstanding repairs.",
+    "counts": "812 before and after — documentation only, no test moved.",
+    "cost": "$0.00"
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "A new dated section records the day; §32 cross-referenced not rewritten", "met": true, "evidence": "§33 opens by pointing at §32 and saying it is not rewritten here"},
+    {"criterion": "Convention 28 ratified, with the ledger and CI named as pre-convention exhibits", "met": true},
+    {"criterion": "B19, B20, B21 in §4.2 with severity, evidence and status OPEN", "met": true},
+    {"criterion": "P3's refutation and P2/P4/P7's unscorability recorded explicitly", "met": true},
+    {"criterion": "P1's holding recorded with the live-plan detail", "met": true},
+    {"criterion": "Suite passes unchanged; count before and after", "met": true, "evidence": "812 / 812"}
+  ],
+  "deviations": [
+    {
+      "what": "AGENTS.md was edited, and the scope named only the two documents.",
+      "why": "AGENTS.md carries a convention digest that enumerates a contiguous range. Ratifying 28 and leaving the digest at '17-24, 26 and 27' would make the protocol file stale about the protocol, which is convention 24's failure mode in the worst possible place. The same call was made and recorded in ARCH-20260922-001.",
+      "impact": "Three lines: the heading's range, the count word, and one row."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "NOTHING GUARDS THE PRECEDENCE CLAIM. A pre-registration's whole value is that it preceded the run, and today that is provable only because I compared a commit's author date to a trace header by hand. No test does it. A guard could: for each docs/preregistration-*.md with a matching committed trace, assert the prereg's authoring commit predates the trace's written_at. It would have to tolerate rebases, which rewrite committer dates but not author dates. This is Convention 28 pointed at the protocol itself, and I have not written it because it is a new guard rather than a repair of a broken one.",
+    "B19's row deliberately does not name a cause, because the stdout does not distinguish the two candidates and ARCH-20260922-021's own constraints forbid fixing an unobserved cause. If the sweep cap is per SESSION rather than per unit, a repeat of 2 legitimately stops after one, B19 is a message defect rather than an arithmetic one, and it is medium at most. That reading should be settled from the code before -021 writes anything.",
+    "§33.3 records that escalation took 70% of the spend, which is the second time in one day the invisible tier turned out to be where the money went. Combined with §6.10's 70-78%, that is now three independent observations of the same share on a tier with no ledger row. It may be worth promoting from 'a gap in the ledger' to a measured fact in §6 in its own right — but that is a ruling about what §6 asserts, not an instrument repair."
+  ]
+}
