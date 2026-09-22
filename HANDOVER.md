@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `039cabe` · **Branch:** `main`
-**Tests:** 805 as of `bf31dd7` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
+**Tests:** 808 as of `a2e362e` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      43 files, 805 tests (as of `bf31dd7`)
+tests/                      43 files, 808 tests (as of `a2e362e`)
 ```
 
 ### 2.3 Key design patterns
@@ -655,7 +655,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (805 total, as of `bf31dd7`)
+### 3.7 Test distribution (808 total, as of `a2e362e`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -666,13 +666,13 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_knowledge.py | 41 | test_specialists.py | 11 |
 | test_research.py | 37 | test_results_log.py | 10 |
 | test_review_composition.py | 28 | test_triage.py | 10 |
-| test_blocked_on.py | 26 | test_lead_review.py | 9 |
-| test_profiles.py | 23 | test_rate_limit_retry.py | 8 |
-| test_settings.py | 22 | test_doc_corpora.py | 7 |
-| test_api.py | 21 | test_handover_truth.py | 7 |
-| test_sweep_budget.py | 21 | test_live_wiring.py | 7 |
-| test_preflight.py | 20 | test_rejection_counter.py | 7 |
-| test_protocol_file.py | 20 | test_docs.py | 6 |
+| test_blocked_on.py | 26 | test_docs.py | 9 |
+| test_profiles.py | 23 | test_lead_review.py | 9 |
+| test_settings.py | 22 | test_rate_limit_retry.py | 8 |
+| test_api.py | 21 | test_doc_corpora.py | 7 |
+| test_sweep_budget.py | 21 | test_handover_truth.py | 7 |
+| test_preflight.py | 20 | test_live_wiring.py | 7 |
+| test_protocol_file.py | 20 | test_rejection_counter.py | 7 |
 | test_rework_loop.py | 17 | test_engine.py | 6 |
 | test_auth.py | 16 | test_budget_stop_scoring.py | 5 |
 | test_coverage_shapes.py | 16 | test_iteration_dissent.py | 5 |
@@ -724,7 +724,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 805/805 pass.** Everything below is a live-behaviour
+**No failing unit tests — 808/808 pass.** Everything below is a live-behaviour
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
@@ -1611,7 +1611,7 @@ answer: `.orchestration/responses/ARCH-20260920-005.response.json`.
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 805 tests as of `bf31dd7`, ~52 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 808 tests as of `a2e362e`, ~52 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \

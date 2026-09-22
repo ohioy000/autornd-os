@@ -243,3 +243,47 @@ class TestTheWorkflowComparisonTableIsTheRealThing:
         claimed = self._table()
         assert claimed["lean"][0] < claimed["engineering-rnd"][0]
         assert claimed["lean"][1] < claimed["engineering-rnd"][1]
+
+
+class TestCIAsksAboutStateNotOnlyEvents:
+    """ARCH-20260922-013. `main` was red for about 87 hours and CI produced
+    ZERO failed runs in that window.
+
+    Not a discipline failure — a **trigger-shape** failure. `on: push` and
+    `on: pull_request` can only answer *"did this change break anything"*. When
+    nobody is pushing, the only question with an answer is *"is main green right
+    now"*, and nothing was asking it. The two failures that opened the window
+    (runs #52 and #53, the only failures in 116 runs) mark its beginning, not
+    its duration.
+
+    The guard is on the trigger, not on the jobs: a schedule silently removed
+    would restore the blind spot without failing anything else.
+    """
+
+    CI = ROOT / ".github" / "workflows" / "ci.yml"
+
+    def _on(self) -> dict:
+        import yaml
+        loaded = yaml.safe_load(self.CI.read_text(encoding="utf-8"))
+        # YAML 1.1 reads a bare `on` as the boolean True. Both spellings are
+        # accepted so this guard cannot be defeated by a parser quirk.
+        return loaded.get("on") or loaded.get(True) or {}
+
+    def test_ci_declares_a_schedule(self):
+        schedule = self._on().get("schedule")
+        assert schedule, (
+            "CI has no schedule trigger. Without one it reports events and not "
+            "state, which is how main stayed red for 87 hours with no failed run.")
+        assert any(entry.get("cron") for entry in schedule)
+
+    def test_the_push_and_pull_request_triggers_are_still_there(self):
+        """The schedule is additive. Losing either existing trigger would trade
+        one blind spot for two."""
+        on = self._on()
+        assert "push" in on and "pull_request" in on
+
+    def test_the_workflow_is_one_workflow(self):
+        """Two copies of a check drift — convention 24's own exhibit. The
+        scheduled run must be the same workflow, not a second file."""
+        workflows = sorted(p.name for p in (ROOT / ".github" / "workflows").glob("*.yml"))
+        assert workflows == ["ci.yml"], workflows

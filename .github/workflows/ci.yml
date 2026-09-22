@@ -5,6 +5,22 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # CI reported EVENTS and not STATE. main was red from 2026-09-16T07:27Z to
+  # 2026-09-19T22:41Z -- about 87 hours -- and produced ZERO failed runs in that
+  # window, because after the second failure nothing was pushed to main and
+  # nothing re-tested it. The two failures at the start (runs #52 and #53) are
+  # the only failures in 116 runs, and they are the beginning of the red
+  # window rather than a record of it.
+  #
+  # This is a trigger-shape failure, not a discipline failure. A push-and-PR
+  # trigger can only answer "did this change break anything"; it cannot answer
+  # "is main green right now", and only the second question has an answer when
+  # nobody is pushing.
+  #
+  # 06:00 UTC is chosen to land outside the owner's working window, which the
+  # committed traces put between roughly 13:00 and 05:00 UTC.
+  schedule:
+    - cron: "0 6 * * *"
 
 jobs:
   test:
