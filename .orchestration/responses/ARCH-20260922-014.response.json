@@ -1,0 +1,94 @@
+{
+  "command_id": "ARCH-20260922-014",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "branch": "arch/20260922-014-stamp-guard",
+  "files_changed": [
+    "tests/test_handover_truth.py",
+    ".github/workflows/ci.yml",
+    "HANDOVER.md",
+    "README.md",
+    ".orchestration/responses/ARCH-20260922-014.response.json"
+  ],
+  "preconditions_run": [
+    {
+      "check": "sed -n '1,20p' HANDOVER.md",
+      "result": "PASS \u2014 two stamps: '**HEAD:** `039cabe`' and '**Tests:** N as of `<sha>`'. Exact form recorded, and it mattered (see the deviation)."
+    },
+    {
+      "check": "git log --oneline -1 <first sha in HANDOVER>",
+      "result": "PASS \u2014 039cabe resolves and is an ancestor of HEAD"
+    },
+    {
+      "check": "suite green before",
+      "result": "PASS -- 805 passed"
+    }
+  ],
+  "answer_to_the_commands_question": {
+    "question": "Does the stamp need to be an ancestor, or is a resolvable sha sufficient?",
+    "answer": "ANCESTOR. The two are different properties and the command is right that only the weaker one survives a shallow clone \u2014 so the clone was changed rather than the property. A sha from an abandoned branch resolves perfectly well and describes a state this commit never passed through; 'resolvable' would have accepted it. f5b5810 acted on the ancestor property when it named 4bfbbc5 rather than its own sha, which is the assumption the command stated and it holds."
+  },
+  "results": {
+    "guards": "Four. Three on the stamp \u2014 not a placeholder, resolves to a commit, is an ancestor of the commit under test \u2014 and a fourth on CI's checkout depth.",
+    "the_fourth_guard_and_why": "The ancestry check MUST skip on a shallow clone, because ancestry is unanswerable at fetch-depth 1. A guard that skips in CI forever is a guard that cannot fail, which is the exact class this change exists to close. So test_ci_gives_one_job_the_history_this_guard_needs asserts some CI job checks out with fetch-depth: 0. The skip cannot become permanent without the suite saying so.",
+    "ci_change": "fetch-depth: 0 on the `test` job's checkout, with the reason in the file. The other two jobs are untouched \u2014 they run no pytest and need no history.",
+    "proved_by_breaking_it_three_ways": {
+      "PENDINGSHA": "3 of 3 stamp guards fail (placeholder, resolve, ancestry)",
+      "cafebabe": "2 fail \u2014 resolve and ancestry; the placeholder guard correctly passes, because it IS sha-shaped",
+      "a real non-ancestor commit (ef6719e, made with git commit-tree)": "1 fails \u2014 ancestry alone, which is the property 'resolvable' misses"
+    },
+    "existing_guards": "All five untouched and still passing. Nothing restructured.",
+    "counts": "805 -> 809 (this branch is off main; ARCH-20260922-013's +3 is on its own branch and lands separately). Re-derived because the guard count moved; the command said not to re-derive AS PART OF this change, and four new tests make it unavoidable -- stated as a departure rather than skipped, since leaving it would have made the suite red.",
+    "cost": "$0.00"
+  },
+  "acceptance_criteria_met": [
+    {
+      "criterion": "A test parses the stamp and asserts the sha resolves and is an ancestor",
+      "met": true
+    },
+    {
+      "criterion": "Fails on PENDINGSHA, a fabricated sha, and a real non-ancestor \u2014 each demonstrated",
+      "met": true,
+      "evidence": "all three run and captured above"
+    },
+    {
+      "criterion": "The guard runs in CI, or the response says which job cannot run it and why",
+      "met": true,
+      "evidence": "it runs: fetch-depth: 0 on the test job, pinned by a fourth guard"
+    },
+    {
+      "criterion": "The five existing documentation guards are unchanged and still pass",
+      "met": true
+    },
+    {
+      "criterion": "Suite passes; count before and after",
+      "met": true,
+      "evidence": "805 -> 809"
+    }
+  ],
+  "deviations": [
+    {
+      "what": "MY FIRST VERSION OF THIS GUARD COULD NOT FAIL. It passed all three break attempts.",
+      "why": "The pattern was `(?:HEAD:|as of)\\s*`([0-9a-f]{6,40})``. The header actually reads '**HEAD:** `039cabe`' \u2014 markdown bold sits between the label and the sha, so `\\s*` matched nothing and findall returned an empty list. Every check below it then iterated over nothing and passed. I wrote a guard that cannot fail INSIDE the change whose purpose is to stop stamps going unchecked.",
+      "how_found": "By running the three break attempts and reading the result instead of assuming it. All three printed '3 passed'. That is the only reason this is a deviation and not a shipped defect.",
+      "impact": "The pattern now tolerates up to 24 non-backtick characters between label and sha, and the first guard asserts it found AT LEAST TWO stamps before anything else is checked \u2014 so a pattern that matches nothing fails loudly instead of vacuously passing. This is the FOURTH time today an instrument or its test could not fail: the preflight pair this morning, the decorative runner test in -009, the _dissent_suffix tests, and now this."
+    },
+    {
+      "what": "Counts were re-derived, which the command asked not to do as part of this change.",
+      "why": "Four new tests move the total, and the count guards are themselves in this file. Not re-deriving would have left the suite red.",
+      "impact": "805 -> 809, stamped and regenerated as usual."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "Four instruments-that-could-not-fail in one day is no longer a run of bad luck; it is the dominant defect mode of this session. Convention 26 covers an instrument that reports less than it observed. Nothing covers an instrument that reports NOTHING and is read as reporting success. The missing rule is roughly: a guard asserts it FOUND its subject before it asserts anything about it \u2014 an empty match set is a failure, never a pass. Three of today's four would have been caught by that alone. I have not written it as a convention because that is the advisor's to rule.",
+    "The HEAD stamp reads 039cabe and is ~100 commits behind main. It is a valid ancestor, so the guard passes, and the document's own text says the snapshot is dated 2026-09-13. Should the HEAD stamp track main, or is it deliberately the snapshot's HEAD? If the former, it is drifting silently and the guard cannot see it \u2014 ancestry is satisfied by any ancestor, however old."
+  ],
+  "corrections": [
+    {
+      "what": "This response first said 808 -> 812.",
+      "why": "I carried the total from the -013 branch, which is not this branch's parent. Both branch off main at 805; -013 adds 3 and -014 adds 4, and they compose only once both are merged.",
+      "impact": "Caught by reading the restamp output rather than the number I expected. Corrected before the PR was opened."
+    }
+  ]
+}
