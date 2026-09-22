@@ -1,0 +1,64 @@
+{
+  "command_id": "ARCH-20260922-008",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "head_before": "dc655b1",
+  "branch": "arch/20260922-008-coverage-shapes",
+  "files_changed": [
+    "autornd/graph/checks.py",
+    "tests/test_coverage_shapes.py",
+    "HANDOVER.md", "README.md", "AGENTS.md",
+    ".orchestration/responses/ARCH-20260922-008.response.json"
+  ],
+  "preconditions_run": [
+    {"check": "grep 'def criteria_addressed' autornd/graph/checks.py", "result": "PASS — line 265, single site. The command's assumption held: one definition, and the only non-test callers are the two workflow files' coverage nodes."},
+    {"check": "ls docs/traces/ | grep -i b14", "result": "PASS — b14-demo-marketing-claims-grounded.jsonl, plus b14-gen_marketing_claims.jsonl and b14-wide-*.jsonl (section 24-era). The demonstration trace is the first."},
+    {"check": "suite green before", "result": "PASS — 764 passed"}
+  ],
+  "answers_to_the_commands_questions": {
+    "is_implement_summary_the_complete_draft_the_validator_sees": "YES, verbatim and verified at the source, not inferred. autornd/engine/phases.py::run_validate interpolates plan.success_criteria and implement.summary into the validate prompt — the same two values the coverage node's args name. Invariant 4 of the ruling is satisfied with NO widening of the read, and nothing needed saying-so-instead.",
+    "quoted_lists_only_or_also_unquoted_enumerations": "QUOTED AND PARENTHESISED ONLY, and the exhibit that decides it is criterion 6 itself — the single committed instance, which quotes its four tokens inside parentheses. Convention 21: exhibits precede leniency, and an unquoted enumeration after 'avoids' would widen the strongest test in the check on speculation. A criterion with a prohibition marker and no extractable quoted list falls back to presence, which fails closed. Criterion 4 of the same plan is the exhibit for that fallback: 'No claim about a named competitor appears without a clear flag' reads as a prohibition, names no forbidden vocabulary because it prohibits a SITUATION, scored 64% and passed on overlap correctly. The quote requirement also does a second job: criterion 6 carries TWO parentheses, and the structure-conventions one — '(sentence case headings, no H4+, numbers as words below 10, dates as 12 March 2026)' — is a presence-shaped aside. Reading it as forbidden would have banned the draft from being correct."
+  },
+  "results": {
+    "implementation": "Three shapes, classified deterministically and free. PROHIBITION first because it is the strictly stronger test: its forbidden tokens become the test, pass iff none appear, word-boundary and case-insensitive, multi-word tokens matched as phrases with whitespace collapsed. FORM second: a structural verb plus at least two distinct field-vocabulary words, which abstains. PRESENCE is everything else, byte-identical — same _terms, same _STOPWORDS, same 0.5 threshold.",
+    "the_form_rule_and_why_it_is_narrow": "Form is exhibited exactly once, by criterion 3, so the rule is built to catch that and refuse to guess further. Two distinct field words are demanded so a single incidental noun cannot make a measurable criterion unmeasurable — criterion 1 of the same plan uses 'includes' and stays presence, criterion 2 uses 'contains' and stays presence. This is also where B17-R1 beats the superseded Blueprint 018, which located a criterion's component by heading heuristics; that was an unexhibited guess about document structure.",
+    "replay_against_the_committed_demonstration": "PASSES, and the replay is verifiably against the right draft. On the final iteration's summary the four presence criteria score 0.80, 0.63, 0.64, 0.78 — IDENTICAL to the four the run recorded. Criterion 6 becomes 1.0 (no banned word present) where it scored 0.40; criterion 3 abstains where it scored 0.37. coverage.passed goes False -> True on the iteration where the run died.",
+    "THE_PREDICTION_IS_REFUTED_BEFORE_ANY_SPEND": "Section 29.3 registered the advisor's prediction that 'coverage.passed == true at ITERATION 1'. Replaying all seven committed iterations: False, False, False, False, False, False, TRUE. coverage.passed is true on exactly ONE iteration, the last. At iteration 1 it is False — the draft genuinely had not addressed criteria 1, 2 and 4, scoring 0.53, 0.37 and 0.29, and the presence check was right about that. So the ruling does NOT produce a terminal at iteration 1, and anyone reading ARCH-20260922-010's result against that wording would score a success as a failure. What the evidence supports is narrower and still decisive: coverage stops being the thing that could never be satisfied. Reported now, from free evidence, so -010's pre-registration can state a prediction that can actually be scored. This is convention 7 applied to the advisor's own prediction, and it cost nothing.",
+    "drift_protection_proved_not_assumed": "tests/test_coverage_shapes.py::TestPresenceIsUnchanged::test_topic_mentioning_waffle_still_fails is the falsification test. The 0-33% 'names every topic while committing to nothing' exhibit still fails, still reports addressed == 0, and asserts additionally that NOTHING abstained and every shape resolved to presence — so a future widening of the classifier cannot pass this test by abstaining its way past the drift the check exists to catch.",
+    "unit_record": "shapes and abstained land in coverage's Result.data, which the runner writes into the unit record's verdicts.coverage. That satisfies 'never silent'. It does NOT yet produce a dedicated aggregate beside normalised_by_kind: that needs autornd/evals/runner.py, which this command's scope neither includes nor excludes, and I did not widen into it. Worth the advisor knowing there is a second obstacle: per-iteration shape capture is blocked by the outputs overwrite recorded in section 27.3 — verdicts.coverage holds only the last iteration's data, which is exactly the trap this replay walked into (see deviations).",
+    "counts": "764 -> 780, 41 -> 42 test files, re-derived from collection and stamped in HANDOVER, README and AGENTS. Section 3.7's per-file table was REGENERATED from pytest --collect-only rather than hand-edited, after a hand edit duplicated a row within a minute of starting it — convention 24 demonstrating itself.",
+    "paid_calls": "ZERO. Nothing in this command touches the network.",
+    "cost": "$0.00"
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "A prohibition criterion passes when its forbidden tokens are absent and fails when one is present", "met": true, "evidence": "TestProhibition, 6 tests including the phrase and line-break cases"},
+    {"criterion": "A form criterion abstains; coverage.passed unaffected; named in coverage.data.abstained with its shape", "met": true, "evidence": "TestForm"},
+    {"criterion": "Replaying the committed demonstration yields coverage.passed == true with criterion 6 tested by forbidden-token presence and criterion 3 abstained", "met": true, "evidence": "TestTheCommittedDemonstration, reading criteria and drafts from the trace"},
+    {"criterion": "The genuinely-unaddressed presence class still fails", "met": true, "evidence": "the falsification test, which also asserts nothing abstained"},
+    {"criterion": "The unit record carries per-criterion shape and the abstention count", "met": "PARTIAL", "evidence": "in verdicts.coverage.data; the dedicated aggregate needs runner.py, outside declared scope, and per-iteration capture is blocked by the section 27.3 overwrite"},
+    {"criterion": "Suite count reported before and after; no paid call", "met": true, "evidence": "764 -> 780, $0.00"}
+  ],
+  "deviations": [
+    {
+      "what": "One existing test failed and the CODE was changed, not the test — but not the way the test asked (convention 17).",
+      "why": "tests/test_graph.py asserted the phrase 'not visibly addressed' in the detail. 'Visibly' is the word that keeps the presence test honest: it can only say the implementation never mentions what a criterion is about. It is WRONG for a prohibition, where the failure is a banned token that is plainly visible. So the verb now follows the shapes that actually failed — 'not visibly addressed by' when every failure is presence, 'not met by' when a prohibition failed. The test passes unmodified.",
+      "impact": "One word of the detail string is now conditional. The test that pinned it still pins it for its own case."
+    },
+    {
+      "what": "The first replay used verdicts.implement.summary and produced WRONG scores, which I nearly reported.",
+      "why": "The section 27.3 overwrite: verdicts.coverage and verdicts.implement hold verdicts from DIFFERENT iterations. Replaying the last implement summary against the last coverage verdict compares two different moments and gave 0.6/0.37/0.29/0.78 against the recorded 0.8/0.63/0.64/0.78. The iterations list carries matched pairs and is what the tests read. The exact four-way score match is the evidence that the right pair is now being compared.",
+      "impact": "None to the result. Recorded because section 27.3 was written as an incidental and has now cost real time twice — it is a live trap for anyone replaying a trace, not a footnote."
+    },
+    {
+      "what": "The diff is 188 lines in autornd/graph/checks.py plus a 205-line new test file, against a stated ceiling of 300.",
+      "why": "The ceiling is met by the code. Convention 22 demands an instrument's test simulate its condition end to end, and there are three shapes plus a falsification case plus a trace replay. Cutting tests to make a line budget would be the wrong trade in this repo.",
+      "impact": "Stated rather than assumed forgiven."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "URGENT FOR -010: section 29.3's prediction says 'coverage.passed == true at iteration 1' and the free replay says False at iteration 1 and True only at iteration 7. The pre-registration for -010 must not restate the iteration-1 wording. I propose it predicts instead: (a) coverage no longer fails on a prohibition- or form-shaped criterion at any iteration, and (b) the run reaches a terminal within its ceiling. Both are scorable; the original is already refuted.",
+    "All-abstained semantics are mine by default and should not be. If every criterion is form-shaped, B17-R1's 'an abstention never fails the check' makes the check PASS with nothing measured. I implemented that, with the detail reading 'nothing measurable: all N success criteria abstained on shape' and an all_abstained flag, so it cannot be mistaken for a clean bill. But a plan whose entire contract the instrument cannot read arguably should not hand the loop a green judge at all, and that is a ruling about what the harness concludes.",
+    "The dedicated shape aggregate beside normalised_by_kind needs autornd/evals/runner.py and, for per-iteration shapes, a fix to the section 27.3 outputs overwrite. Neither is in this command's scope. Should they ride -009, which is already in the executor's engine files, or take their own command?"
+  ]
+}

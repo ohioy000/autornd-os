@@ -261,6 +261,123 @@ def blocked_on_unmet(blocked_on: list[str], criteria: list[str]) -> Result:
 _CRITERION_REF = re.compile(r"criteri(?:a|on)[_\s\-]*(\d+)", re.IGNORECASE)
 
 
+# ── criterion shape (ruling B17-R1, §29) ──────────────────────────────────
+#
+# Term overlap is a valid test only when a criterion is satisfied by the
+# PRESENCE of the terms it names. Two other classes exist and the check used to
+# treat all three identically, which killed a run: measured 2026-09-21 on the
+# B14 demonstration, criterion 6 ("avoids the banned words ('leverage',
+# 'seamless', 'robust', 'in today's fast-paced world')") carries 17 significant
+# terms, 6 of which are tokens the criterion FORBIDS the draft to contain and 8
+# more of which are meta-vocabulary about the rule. 14 of 17 are unreachable for
+# a compliant draft, capping it at 65% against a 50% threshold; a correct draft
+# scored 40%. Satisfying the criterion is what made it fail the check. The run
+# died at the call ceiling — 42 calls, $0.1783, no terminal — with
+# `implement.green` true on all seven iterations.
+#
+# The fix is not a threshold. 14/17 unreachable means no threshold separates
+# compliant from non-compliant here, and lowering it would let through the class
+# this check exists to catch: "names every topic while committing to nothing",
+# measured at 0–33% against 71–100% for real work.
+
+# A prohibition marker alone is not enough. Criterion 4 of the same plan — "No
+# claim about a named competitor appears without a clear flag" — reads as a
+# prohibition and has no forbidden tokens to test: it prohibits a *situation*,
+# not a vocabulary. It scored 64% and passed on overlap, correctly. So the
+# classification demands BOTH a marker and an extractable token list, and
+# anything short of both falls back to presence, which fails closed.
+_PROHIBITION_MARKER = re.compile(
+    r"\b(?:avoid(?:s|ed|ing)?|banned|forbidden|prohibit(?:s|ed)?|disallow(?:s|ed)?"
+    r"|excludes?|must\s+not|may\s+not|never\s+uses?|no\s+use\s+of)\b",
+    re.IGNORECASE,
+)
+
+# The one committed exhibit quotes its forbidden tokens inside parentheses. So
+# that is the only form accepted, per convention 21 — exhibits precede leniency.
+# An unquoted enumeration after "avoids" is NOT read as a token list, because
+# nothing in the record shows one and guessing at it would widen the strongest
+# test in the check on speculation.
+_QUOTE_CHARS = "\"'\u2018\u2019\u201c\u201d"
+
+# Field vocabulary: words that describe what an artifact CARRIES rather than
+# words it contains. A real citation holds an organization's name, not the word
+# "organization" — which is why criterion 3 scored 37% on a draft whose
+# citations were complete. This is the form class.
+_FIELD_VOCAB = frozenset({
+    "author", "authors", "byline", "citation", "citations", "date", "identifier",
+    "location", "organisation", "organization", "publisher", "source", "sources",
+    "timestamp", "title", "url", "version",
+})
+
+# A field name on its own proves nothing — "the source of the regression" is not
+# a form criterion. The structural verb is what turns a field list into a claim
+# about an artifact's shape, and two distinct fields are demanded so that a
+# single incidental noun cannot buy an abstention.
+_STRUCTURAL_VERB = re.compile(
+    r"\b(?:includ(?:e|es|ing)|contain(?:s|ing)?|accompanied\s+by|comprises?"
+    r"|consist(?:s|ing)\s+of|in\s+the\s+form\s+of|formatted\s+as)\b",
+    re.IGNORECASE,
+)
+
+PRESENCE, PROHIBITION, FORM = "presence", "prohibition", "form"
+
+
+def _forbidden_tokens(criterion: str) -> list[str]:
+    """Tokens a prohibition criterion forbids, or [] if it names none.
+
+    Takes the first parenthesised group that starts after the first prohibition
+    marker and contains a quote character. The quote requirement is what keeps
+    criterion 6's SECOND parenthesis — "(sentence case headings, no H4+, numbers
+    as words below 10, dates as '12 March 2026')", which is a presence-shaped
+    aside — from being read as a forbidden list.
+    """
+    marker = _PROHIBITION_MARKER.search(criterion)
+    if not marker:
+        return []
+    for group in re.finditer(r"\(([^()]*)\)", criterion[marker.end():]):
+        inner = group.group(1)
+        if not any(q in inner for q in _QUOTE_CHARS):
+            continue
+        tokens = [t.strip().strip(_QUOTE_CHARS).strip() for t in inner.split(",")]
+        return [t for t in tokens if t]
+    return []
+
+
+def _classify(criterion: str) -> tuple[str, list[str]]:
+    """(shape, forbidden tokens). Fail-safe direction is presence.
+
+    Order matters: prohibition is checked first because it is the strictly
+    stronger test, and a criterion carrying both a forbidden list and presence
+    language (criterion 6 does — it also demands plain language and structure
+    conventions) is better served by the test that cannot be gamed than by the
+    one that scored a compliant draft 40%.
+    """
+    forbidden = _forbidden_tokens(criterion)
+    if forbidden:
+        return PROHIBITION, forbidden
+    if _STRUCTURAL_VERB.search(criterion):
+        fields = _FIELD_VOCAB & _terms(criterion)
+        if len(fields) >= 2:
+            return FORM, []
+    return PRESENCE, []
+
+
+def _forbidden_present(token: str, text: str) -> bool:
+    """Is a forbidden token present in the artifact?
+
+    A multi-word token is matched as a phrase — "in today's fast-paced world"
+    is one banned thing, not four — with runs of whitespace collapsed so a line
+    break inside the phrase does not hide it. That last part is deliberate: a
+    guard asserting a phrase that spanned a line break failed on correct text
+    once this week, and the same shape would make this test silently lenient.
+    """
+    parts = [re.escape(w) for w in token.lower().split()]
+    if not parts:
+        return False
+    pattern = r"\b" + r"\s+".join(parts) + r"\b"
+    return re.search(pattern, " ".join(text.lower().split())) is not None
+
+
 @check("criteria_addressed")
 def criteria_addressed(
     criteria: list[str], text: str, threshold: float = 0.5
@@ -277,31 +394,88 @@ def criteria_addressed(
     if not criteria:
         return Result(False, "no success criteria to check against")
 
-    body = _terms(text or "")
+    artifact = text or ""
+    body = _terms(artifact)
     missed: list[str] = []
     coverage: dict[str, float] = {}
+    shapes: dict[str, str] = {}
+    abstained: list[dict[str, str]] = []
+    why: dict[str, str] = {}
 
     for criterion in criteria:
         wanted = _terms(criterion)
         if not wanted:
             continue
+        shape, forbidden = _classify(criterion)
+        shapes[criterion] = shape
+
+        if shape == FORM:
+            # Never fails the fold, and never silent: the paid validator reads
+            # the same summary and can judge what term overlap cannot.
+            abstained.append({
+                "criterion": criterion,
+                "shape": FORM,
+                "reason": "names the fields an artifact must carry, not words it "
+                          "contains — term overlap is not a valid test",
+            })
+            continue
+
+        if shape == PROHIBITION:
+            # Inverted, and strictly stronger than overlap ever was: the
+            # criterion's own forbidden tokens are the test.
+            present = [t for t in forbidden if _forbidden_present(t, artifact)]
+            coverage[criterion] = 0.0 if present else 1.0
+            if present:
+                missed.append(criterion)
+                why[criterion] = "uses " + ", ".join(repr(t) for t in present)
+            continue
+
         overlap = len(wanted & body) / len(wanted)
         coverage[criterion] = round(overlap, 2)
         if overlap < threshold:
             missed.append(criterion)
+            why[criterion] = f"{overlap:.0%} of its terms appear"
+
+    measured = len(coverage)
+    data = dict(
+        missed=missed, coverage=coverage, addressed=measured - len(missed),
+        shapes=shapes, abstained=abstained,
+    )
 
     if missed:
-        listed = "; ".join(f"{c!r} ({coverage[c]:.0%} of its terms appear)" for c in missed)
+        listed = "; ".join(f"{c!r} ({why[c]})" for c in missed)
+        note = f" ({len(abstained)} abstained on shape)" if abstained else ""
+        # "visibly" is the word that keeps the presence test honest — it can
+        # only say the implementation never mentions what a criterion is about,
+        # never that the criterion was met. It is wrong for a prohibition,
+        # where the failure is a banned token that IS visible, so the verb
+        # follows the shapes that actually failed rather than being one word
+        # for two different findings.
+        verb = ("not visibly addressed by"
+                if all(shapes[c] == PRESENCE for c in missed)
+                else "not met by")
         return Result(
             False,
-            f"{len(missed)} of {len(criteria)} success criteria are not visibly "
-            f"addressed by the implementation: {listed}",
-            missed=missed, coverage=coverage, addressed=len(criteria) - len(missed),
+            f"{len(missed)} of {measured} measurable success criteria are "
+            f"{verb} the implementation{note}: {listed}",
+            **data,
         )
+    if abstained and not measured:
+        # Every criterion was form-shaped. Per B17-R1 an abstention never fails
+        # the check, so this passes — but a plan whose whole contract this
+        # instrument cannot read is a finding, not a clean bill, and the detail
+        # says so rather than reading as "all criteria addressed".
+        return Result(
+            True,
+            f"nothing measurable: all {len(abstained)} success criteria abstained "
+            f"on shape — the paid validator is the only judge of this plan",
+            all_abstained=True, **data,
+        )
+    suffix = f", {len(abstained)} abstained on shape" if abstained else ""
     return Result(
         True,
-        f"all {len(criteria)} success criteria are addressed",
-        missed=[], coverage=coverage, addressed=len(criteria),
+        f"all {measured} measurable success criteria are addressed{suffix}",
+        **data,
     )
 
 
