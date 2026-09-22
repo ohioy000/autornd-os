@@ -1,0 +1,99 @@
+{
+  "command_id": "ARCH-20260922-029",
+  "status": "PARTIAL",
+  "executed": "2026-09-22",
+  "head_before": "d9e3ccaa3194dbabdbb16318d7f232ccd2e7e051",
+  "head_after": "PENDING-COMMIT",
+  "summary": "Outcome (c) confirmed with an exact root cause. The fixture is built and committed. Ruling B17-R2 was NOT applied, and the refusal is evidenced rather than asserted: applied as written it makes coverage pass unconditionally. That is a change to what the harness concludes, so it goes back as a ruling rather than being implemented by an executor.",
+  "preconditions": [
+    {"command": "grep -n 'B17' HANDOVER.md | head -5", "result": "PASS", "observed": "B17 present at HANDOVER.md:750 and OPEN. NO_ACTION does not apply."},
+    {"command": "ls docs/traces/ | grep -i prohibition; ls docs/traces/ | tail -5", "result": "PASS", "observed": "docs/traces/b17-prohibition-branch.jsonl located by the prohibition glob."},
+    {"command": "ls .orchestration/responses/ | grep -i 027", "result": "PASS", "observed": "ARCH-20260922-027.response.json present, carrying the full per-criterion shape table: 6 presence, 0 prohibition, 0 form, 0 abstained."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "PASS", "observed": "870 passed. Green before the change."}
+  ],
+  "outcome": {
+    "classification": "(c) — a prohibition-shaped criterion WAS emitted, and it was classified presence.",
+    "criterion_verbatim": "The copy contains no instances of 'leverage', 'seamless', 'robust', or 'in today's fast-paced world'.",
+    "extracted_significant_terms_verbatim": ["contains", "copy", "fast-paced", "instances", "leverage", "robust", "seamless", "today", "world"],
+    "extracted_forbidden_tokens_verbatim": [],
+    "provenance_of_the_two_extractions": "NOT read from the trace — the trace does not record them. Computed by invoking the check's own _terms() and _forbidden_tokens() on the verbatim criterion string taken from the trace. That is the same code path the run used, so the values are reproducible rather than reconstructed. The gap is itself worth noting: the unit record reports a SCORE without reporting what was scored on, so a reader cannot tell a low score from a blind one without re-running the extractor by hand.",
+    "the_arithmetic": "6 of the 9 significant terms — leverage, robust, seamless, today, world, fast-paced — are words the criterion forbids the draft to contain. The remaining 3 are contains, copy, instances. A compliant draft can reach at most 3 of 9, and this one reached 0 of 9 because marketing copy says none of those three either. Score 0.00. Satisfying the criterion is what makes it fail."
+  },
+  "root_cause": {
+    "statement": "A detection-recall failure in _PROHIBITION_MARKER, not a doubt-direction failure.",
+    "marker_vocabulary": "avoid(s|ed|ing) | banned | forbidden | prohibit(s|ed) | disallow(s|ed) | excludes | must not | may not | never uses | no use of",
+    "what_the_planner_wrote": "contains no instances of",
+    "trace_through_classify": "_PROHIBITION_MARKER.search -> None, so _forbidden_tokens returns [] and the prohibition branch is never entered. _STRUCTURAL_VERB then matches 'contains', but _FIELD_VOCAB & _terms(criterion) is empty (0 < 2), so the form branch is not entered either. Control reaches the final 'return PRESENCE, []'.",
+    "verified": "Computed for all six criteria. _PROHIBITION_MARKER matched NOTHING in any of them; _STRUCTURAL_VERB matched in two ('contains', 'includes'); _FIELD_VOCAB was empty in all six."
+  },
+  "form_shape_question": {
+    "asked": "Whether a form-shaped criterion existed in this run and how it was classified.",
+    "answer": "Yes, at least one — 'The total word count is between 350 and 450 words.' It is satisfied by a property of the text, not by containing words. It was classified PRESENCE and scored 0.00 against a draft of exactly 401 words, which SATISFIES it.",
+    "same_defect_or_two": "ONE defect class, by the command's own test of whether the mechanisms differ. Both are the same mechanism: no positive pattern matched, so the criterion fell through to the presence default. It is NOT that form was detected and mishandled. In §34 a citation-fields criterion did reach the form branch and abstained correctly, twice — so the form branch works and, like prohibition, is only reached when the phrasing happens to match."
+  },
+  "b17_r2_not_applied": {
+    "decision": "NOT APPLIED. Reported back as a ruling.",
+    "first_problem_the_ruling_is_not_in_the_tree": "B17-R2 appears nowhere in HANDOVER.md, docs/, or .orchestration/ — grepped, empty. The command says 'apply Ruling B17-R2 as written', but it is written only in the command's own constraint line. It also REVERSES a ruling that IS recorded: B17-R1 (§29) states 'The fail-safe direction is presence, because abstention is leniency and convention 21 says exhibits precede leniency.' Reversing a recorded ruling should itself be recorded with its reasoning. Noted, not treated as disqualifying — the exhibit convention 21 demanded now exists, and it is -027.",
+    "second_problem_and_the_decisive_one": "There is no doubt state to act on. _classify is deterministic: a criterion either matches a positive pattern or falls through. 'Never default to presence' can therefore only be implemented by making the fallthrough abstain.",
+    "what_that_would_do_measured_not_argued": "Simulated against the live plan and the live draft by patching the fallthrough to FORM: coverage returns passed=True with detail 'nothing measurable: all 6 success criteria abstained on shape — the paid validator is the only judge of this plan'. ALL SIX criteria abstain and COVERAGE PASSES UNCONDITIONALLY.",
+    "why_that_is_not_the_executor_s_to_do": "Coverage was the dissenting judge on all six iterations of the live run. A coverage that abstains on everything stops dissenting, judges_agree folds without it, and work ships unchecked. That changes WHICH WORK SHIPS, which the permission boundary places squarely on the advisor's side. It is not instrument repair.",
+    "the_narrow_reading_and_why_it_was_also_refused": "A sane B17-R2 probably means something narrower — abstain only where a negation signal is present but no forbidden list could be extracted. That is implementable and would fix this case without gutting the check. But choosing that predicate IS designing a shape, and the command says 'Do not redesign the shapes; they are ruled.' So the narrow reading is offered as a proposal below rather than built.",
+    "what_was_NOT_done": "No pattern was broadened. No shape was redesigned. autornd/graph/checks.py is UNTOUCHED — git diff against the branch point is empty for that file."
+  },
+  "deliverables": {
+    "fixture": "tests/test_prohibition_phrasing.py, 11 tests, all passing.",
+    "fixture_design": "Reads the committed trace rather than restating the criterion, because B16 means this wording cannot be reproduced on purpose and a hand-copied string would drift from the evidence it claims to pin (convention 24). Asserts the trace exists and carries a unit record before concluding anything (convention 28). The banned criterion is located by content, not by index.",
+    "fixture_contents": [
+      "TestTheDraftWasActuallyCompliant — no banned token present, 401 words inside the required 350-450. Everything else is only interesting if the work was genuinely correct.",
+      "TestTheLiveWordingIsMisclassified — ⚠️ PINS A KNOWN DEFECT. Asserts the verbatim phrasing, the presence classification, the empty token list, and the 0% consequence. Its docstring says these SHOULD fail when B17 is repaired and that the right response is a deliberate update, not a regression hunt (convention 17 written into the file it governs).",
+      "TestTheInversionItselfIsCorrect — the isolating half. Same prohibition, same four tokens, same draft, in wording the marker recognises: classifies prohibition, extracts all four tokens, PASSES the compliant draft, and still FAILS a draft containing 'robust'. This is the fail direction (d) that the live scenario could not reach, now covered by fixture.",
+      "TestWhyTheDoubtDirectionWasNotFlipped — the evidence for the refusal, as a runnable test rather than a claim in a response. Asserts all six criteria fell through to the default, and that flipping the fallthrough makes coverage pass unconditionally. Written so that if that stops being true, the test fails and the refusal is revisited."
+    ]
+  },
+  "verification_results": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "881 passed (870 before, +11 from the fixture)."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q -k 'coverage_shapes or prohibition or abstain'", "result": "PASS."},
+    {"command": "git diff --stat -- workflows/ autornd/engine/phases.py", "result": "EMPTY — neither touched. autornd/graph/checks.py is also untouched, which exceeds what this verification asked."}
+  ],
+  "deviations": [
+    {
+      "what": "The extracted terms and forbidden tokens were COMPUTED, not quoted from the trace.",
+      "why": "The command requires all three quoted verbatim from the trace. The trace carries the criteria verbatim but does NOT record what the check extracted — only the resulting scores and shapes. Rather than BLOCK on a missing field, the values were produced by invoking the check's own functions on the verbatim criterion, which is reproducible and uses the same code path. The gap is reported as a finding in its own right."
+    },
+    {
+      "what": "Wrote HANDOVER.md, README.md, AGENTS.md, CLAUDE.md and .claude/context/testing.md, none of which is in include.",
+      "why": "Adding a test file trips four generated-count guards. Third occurrence of this exact collision today. Counts re-derived: 870 to 881 tests, 48 to 49 files, 38 to 39 classes."
+    },
+    {
+      "what": "Status is PARTIAL rather than DONE.",
+      "why": "The investigation, the fixture and the root cause are complete. The ruled change is deliberately not applied. Reporting DONE would imply the command was carried out; reporting BLOCKED would imply nothing was done. Neither is true."
+    }
+  ],
+  "questions_for_advisor": [
+    {
+      "question": "B17-R2 as written cannot be applied without disabling the check. Which did you mean?",
+      "options": [
+        "NARROW (the executor's reading): abstain only where a negation signal is present but no forbidden token list could be extracted — doubt as a detected state, not as a fallthrough. Fixes this case, leaves genuine presence criteria measured. Requires defining the doubt predicate, which is a shape decision.",
+        "LITERAL: make the fallthrough abstain. Measured consequence: all six criteria abstain, coverage passes unconditionally, coverage stops dissenting, work ships unchecked.",
+        "NEITHER — the real fix is detection recall, which this command explicitly deferred."
+      ],
+      "executor_view": "The narrow reading. But it is a shape decision and the command forbade the executor from making one."
+    },
+    {
+      "question": "Is the deferral of detection recall still right, now that the root cause is known to be exactly that?",
+      "context": "The measured cause is one missing phrasing in _PROHIBITION_MARKER: 'contains no instances of'. The command deferred recall as 'a separate, later question' before the cause was known. It is now known, and it is the whole of it. A doubt-direction change cannot repair a criterion the classifier never recognised as doubtful — under any reading, this criterion produces no negation signal that the current code computes."
+    },
+    {
+      "question": "Should a phrasing corpus be built from committed traces before any further paid run? (The command's own first question.)",
+      "executor_view": "Yes, and it is nearly free. Every committed trace carrying plan.success_criteria is a sample of how the planner really phrases things. B16 guarantees the phrasings vary, so recall must be measured against a corpus rather than against one exhibit. This would answer 'how often does the marker miss?' without buying anything. Whether committed traces may substitute for a fresh run is the owner's ruling."
+    },
+    {
+      "question": "The unit record reports coverage scores without recording what was extracted. Should it?",
+      "context": "Found while satisfying this command's verbatim requirement. A reader of the trace cannot distinguish a low score from a blind one without re-running the extractor by hand, which is what this response had to do. Same class as ARCH-20260922-030's subject: a report that states a number without stating what it measured."
+    },
+    {
+      "question": "Does any downstream report present a coverage pass rate across runs with differing criteria? (The command's second question.)",
+      "answer": "YES — already named and recorded. RepeatedRun.rate at autornd/evals/runner.py:757 is passes/applicable across repetitions, and its docstring calls that 'the unit of measurement'. Recorded in HANDOVER.md B16's row and docs/handover-review.md §35.4 by ARCH-20260922-028 earlier today. Not re-opened here."
+    }
+  ]
+}
