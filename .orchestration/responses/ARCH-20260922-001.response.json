@@ -10,10 +10,22 @@
     ".orchestration/responses/ARCH-20260922-001.response.json"
   ],
   "preconditions_run": [
-    {"check": "trace and prereg present", "result": "PASS — b14-demo-marketing-claims-grounded.jsonl and docs/preregistration-b14-demonstration.md both in the tree"},
-    {"check": "five merge shas resolve", "result": "PASS — ab5e527, 4ada02b, f70524f, acc6ad8, 8fc63fc all commit objects"},
-    {"check": "section 28 free", "result": "PASS — notebook ended at 27; the last numbered heading was '## 27. Blueprint 016'"},
-    {"check": "B15 and B16 rows exist", "result": "PASS"}
+    {
+      "check": "trace and prereg present",
+      "result": "PASS \u2014 b14-demo-marketing-claims-grounded.jsonl and docs/preregistration-b14-demonstration.md both in the tree"
+    },
+    {
+      "check": "five merge shas resolve",
+      "result": "PASS \u2014 ab5e527, 4ada02b, f70524f, acc6ad8, 8fc63fc all commit objects"
+    },
+    {
+      "check": "section 28 free",
+      "result": "PASS \u2014 notebook ended at 27; the last numbered heading was '## 27. Blueprint 016'"
+    },
+    {
+      "check": "B15 and B16 rows exist",
+      "result": "PASS"
+    }
   ],
   "results": {
     "section_28": "Landed with all seven parts: provenance (28 preamble), design-as-implemented (28.1), corpus (28.2), demonstration (28.3), correction (28.4), incidental cross-reference (28.5), unchanneled-window inventory (28.6).",
@@ -24,31 +36,52 @@
       "B16": "Rider appended: the zero-deferred-gaps question (deferred_gaps 3/0/0/0 with detection firing 4/4) is an open sub-question of this row."
     },
     "conventions": "26 and 27 landed at the next free numbers, after 25. 26 is the instrument-report convention citing all four instances and ARCH-20260920-010. 27 is the second-sample convention citing B16.",
-    "agents_md": "UNTOUCHED, with the reason: AGENTS.md's digest does NOT enumerate conventions exhaustively. It points at 4.4 as the location and cites individual conventions by number in prose (7, 18, 24 at lines 4, 107, 213). The pre-declared knock-on's condition was not met.",
+    "agents_md": "AMENDED, and the first reading of it was wrong. AGENTS.md DOES carry a convention digest \u2014 'Convention digest \u2014 4.4 numbers 17-24, one line each' \u2014 which I missed on a first grep because the heading is the only occurrence of the capitalised word and I read it as a prose pointer. The digest enumerates a contiguous range ending at the then-highest convention, so the pre-declared knock-on's condition IS met in substance: leaving 26 and 27 out would make the digest stale by exactly the mechanism convention 24 describes. Conventions 26 and 27 are added, the heading now reads '17-24, 26 and 27', the count line reads ten rather than eight, and it says why 25 is excluded (a style note).",
     "suite": "764 passed before and after. No code changed, so no count moved and no stamp needed re-deriving.",
     "cost": "$0.00"
   },
   "acceptance_criteria_met": [
-    {"criterion": "Section 28 exists with all seven parts, provenance-explicit, B14-3 and C1 failed with numbers", "met": true},
-    {"criterion": "B14 completion pointer; B15 superseded-and-open; B16 rider", "met": true},
-    {"criterion": "Both conventions with citations; AGENTS.md consistent or untouched-with-reason", "met": true},
-    {"criterion": "grep confirms section 28 heading unique", "met": true, "evidence": "grep -c '^## 28' returns 1"},
-    {"criterion": "Suite green at 764; response file committed", "met": true}
+    {
+      "criterion": "Section 28 exists with all seven parts, provenance-explicit, B14-3 and C1 failed with numbers",
+      "met": true
+    },
+    {
+      "criterion": "B14 completion pointer; B15 superseded-and-open; B16 rider",
+      "met": true
+    },
+    {
+      "criterion": "Both conventions with citations; AGENTS.md consistent or untouched-with-reason",
+      "met": true
+    },
+    {
+      "criterion": "grep confirms section 28 heading unique",
+      "met": true,
+      "evidence": "grep -c '^## 28' returns 1"
+    },
+    {
+      "criterion": "Suite green at 764; response file committed",
+      "met": true
+    }
   ],
   "deviations": [
     {
       "what": "grep 'folds into B14' still returns a hit in HANDOVER.md.",
-      "why": "The phrase survives as a QUOTATION inside the supersession clause — 'the 2026-09-20 fold-into-B14 ruling is SUPERSEDED. It read *folds into B14's generalization design...*'. Deleting the superseded wording would remove the record of what was ruled and then overtaken, which is the one thing this repo consistently refuses to do. The criterion's substance holds: the phrase no longer reads as B15's live disposition.",
+      "why": "The phrase survives as a QUOTATION inside the supersession clause \u2014 'the 2026-09-20 fold-into-B14 ruling is SUPERSEDED. It read *folds into B14's generalization design...*'. Deleting the superseded wording would remove the record of what was ruled and then overtaken, which is the one thing this repo consistently refuses to do. The criterion's substance holds: the phrase no longer reads as B15's live disposition.",
       "impact": "A grep for the literal string is no longer a usable test of B15's disposition. A reader gets more, not less."
     },
     {
       "what": "Convention 26's key phrase was initially written across a line break and grep could not find it.",
       "why": "The same defect the convention itself describes, and the same one that bit a guard earlier this week. Caught by running the verification rather than assuming it, and the wrapping was fixed so 'defect in the instrument' sits on one line.",
       "impact": "None to the text's meaning. Worth recording: the convention nearly shipped unfindable by the check written to find it."
+    },
+    {
+      "what": "The AGENTS.md finding was reported wrong before it was reported right, inside this same command.",
+      "why": "The first check was `grep -c 'Convention' AGENTS.md`, which returned 1 and was read as 'no digest'. The 1 WAS the digest's heading. This is convention 26's own failure mode \u2014 the instrument reported what it measured (one occurrence) and the reader took it for a stronger claim (no enumeration) \u2014 committed while writing convention 26.",
+      "impact": "Caught before merge, while executing ARCH-20260922-002's precondition survey. Recorded rather than silently corrected, because a convention landing in the same change as its own violation is the more useful record."
     }
   ],
   "blockers": [],
   "questions_for_advisor": [
-    "Convention 26's four instances are all executor-side instruments. The B15 supersession in this same change is the first time convention 7 has been applied to an advisor ruling. If that is the intended reading, it may be worth stating in 4.4 that convention 7 binds all three roles — right now it reads as a rule about eval expectations, and its application to a disposition is an extension a reader has to infer."
+    "Convention 26's four instances are all executor-side instruments. The B15 supersession in this same change is the first time convention 7 has been applied to an advisor ruling. If that is the intended reading, it may be worth stating in 4.4 that convention 7 binds all three roles \u2014 right now it reads as a rule about eval expectations, and its application to a disposition is an extension a reader has to infer."
   ]
 }
