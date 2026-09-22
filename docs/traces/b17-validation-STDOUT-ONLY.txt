@@ -1,0 +1,20 @@
+EXIT 1
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+results: docs/traces/b17-validation-marketing-claims-grounded.jsonl
+
+workflow: engineering-rnd   repetitions: 2
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+gen_marketing_claims         0/2     29   865.9   criteria_addressed 1/2 — 3 of 5 measurable success criteria are not visibly addressed by
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  29 calls  ·  865.9s  ·  $0.1547
+spend by tier: escalation $0.1080, architecture $0.0322, engineering $0.0126, research $0.0018, triage $0.0002
+served by: architecture via StreamLake, engineering via GMICloud, escalation via Moonshot AI, research via Google, triage via Alibaba
+
+sweep budget: $0.1547 of $0.5000 · exhausted after 1 of 2 units
+
+
+[exited with code 0]
