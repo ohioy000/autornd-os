@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `039cabe` · **Branch:** `main`
-**Tests:** 819 as of `f5b3f29` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
+**Tests:** 850 as of `44aabe0` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      44 files, 819 tests (as of `f5b3f29`)
+tests/                      47 files, 850 tests (as of `44aabe0`)
 ```
 
 ### 2.3 Key design patterns
@@ -655,14 +655,14 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (819 total, as of `f5b3f29`)
+### 3.7 Test distribution (850 total, as of `44aabe0`)
 
 | file | n | file | n |
 |---|---|---|---|
-| test_graph.py | 83 | test_evidence_shape.py | 14 |
-| test_evals.py | 73 | test_structural_roles.py | 13 |
-| test_routing.py | 62 | test_budget_transparency.py | 11 |
-| test_verdicts.py | 42 | test_citation_demand.py | 11 |
+| test_graph.py | 83 | test_structural_roles.py | 13 |
+| test_evals.py | 73 | test_budget_transparency.py | 11 |
+| test_routing.py | 62 | test_citation_demand.py | 11 |
+| test_verdicts.py | 42 | test_guards_can_fail.py | 11 |
 | test_knowledge.py | 41 | test_handover_truth.py | 11 |
 | test_research.py | 37 | test_specialists.py | 11 |
 | test_review_composition.py | 28 | test_results_log.py | 10 |
@@ -677,10 +677,12 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_auth.py | 16 | test_engine.py | 6 |
 | test_coverage_shapes.py | 16 | test_budget_stop_scoring.py | 5 |
 | test_green_resolution.py | 16 | test_iteration_dissent.py | 5 |
-| test_all_judges_exit.py | 15 | test_handoff_scheduler.py | 4 |
+| test_all_judges_exit.py | 15 | test_preregistration_precedence.py | 5 |
+| test_repeat_and_fit_rule.py | 15 | test_handoff_scheduler.py | 4 |
 | test_schema_wiring.py | 15 | test_workflow.py | 4 |
 | test_shipped_examples.py | 15 | test_phase_timing.py | 3 |
 | test_terminal_on_bound.py | 15 | test_serving_ledger.py | 3 |
+| test_evidence_shape.py | 14 | — |  |
 
 Regenerate with `pytest tests/ --collect-only -q`; the total is the part that
 matters and `tests/test_docs.py` fails if the README badge disagrees with it.
@@ -724,7 +726,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 819/819 pass.** Everything below is a live-behaviour
+**No failing unit tests — 850/850 pass.** Everything below is a live-behaviour
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
@@ -1639,7 +1641,7 @@ answer: `.orchestration/responses/ARCH-20260920-005.response.json`.
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 819 tests as of `f5b3f29`, ~52 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 850 tests as of `44aabe0`, ~52 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \
