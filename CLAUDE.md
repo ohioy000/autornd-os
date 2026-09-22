@@ -38,7 +38,7 @@ aiosqlite / ChromaDB, talking to any OpenAI-compatible endpoint
   (`autornd/graph/adapter.py:43`), `BudgetExceeded(RuntimeError)`
   (`autornd/routing/openrouter.py:133`).
 - **Tests:** `tests/test_<subject>.py`, grouped into `class Test<Behaviour>`
-  (37 such classes across 47 files, e.g. `tests/test_green_resolution.py:37`).
+  (38 such classes across 48 files, e.g. `tests/test_green_resolution.py:37`).
 - **Vocabulary terms** (domains, specialist roles) are normalised to
   `lower_snake_case` through `normalise_key()` before any comparison
   (`autornd/models/verdicts.py:24`). Never compare raw model output to a literal.

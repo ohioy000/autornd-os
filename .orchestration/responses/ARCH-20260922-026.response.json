@@ -1,0 +1,103 @@
+{
+  "command_id": "ARCH-20260922-026",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "head_before": "e90ca89bd01d3e16535042ae6096761d489052bb",
+  "head_after": "0e611192463a21234f828704c599bf8c9998b177",
+  "preconditions": [
+    {
+      "command": "grep -n 'B17' HANDOVER.md | head -5",
+      "result": "PASS",
+      "observed": "B17 present at HANDOVER.md:750, status OPEN ('Status: OPEN, and it is a ruling'). Not closed, so NO_ACTION does not apply."
+    },
+    {
+      "command": "grep -n 'def criteria_addressed' autornd/graph/checks.py",
+      "result": "PASS",
+      "observed": "autornd/graph/checks.py:382. Line recorded only, as instructed. A prior read of this module's structure is disclosed in deviations and in the registration."
+    },
+    {
+      "command": "ls evals/ && grep -rn 'scenario' autornd/evals/*.py | head -10",
+      "result": "PASS",
+      "observed": "evals/ holds grounding/, results/, scenarios/. Convention found: autornd/evals/scenario.py load_scenarios() takes a file or a directory and globs '*.yaml' in that directory only, non-recursively; ids must be unique within a directory or ScenarioError is raised. Subdirectories of evals/scenarios/ are therefore separate load targets. Expectation keys are whitelisted by _KNOWN_EXPECTATIONS in the same module, and 'criteria_addressed' is among them."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS",
+      "observed": "855 passed in 41.71s. Green at the current count before the change."
+    }
+  ],
+  "results": {
+    "scenario": {
+      "path": "evals/scenarios/generalization/gen_house_style_prohibition.yaml",
+      "id": "gen_house_style_prohibition",
+      "discoverable": "Yes — load_scenarios('evals/scenarios/generalization') returns it; asserted by tests/test_prohibition_scenario.py::TestTheHarnessCanSeeIt.",
+      "banned_list": ["leverage", "seamless", "robust", "in today's fast-paced world"],
+      "banned_list_provenance": "Quoted verbatim from B17's row in HANDOVER.md §4.2 — the criterion that opened the bug on 2026-09-21. Taken from the ledger, not from the classifier.",
+      "expectations": "risk_at_least: low (the expected reading, not a waived floor); max_calls: 40 (carried over from gen_marketing_claims for comparability, explicitly NOT a prediction of fit — both B14 units exhausted); criteria_addressed: true (registered prediction (c))."
+    },
+    "preregistration": {
+      "path": "docs/preregistration-b17-prohibition-branch.md",
+      "sha": "0e611192463a21234f828704c599bf8c9998b177",
+      "precedes_any_run": "Yes. No paid call was made by this command. No key was read, no network touched.",
+      "engineered_disclosure": "First paragraph, first sentence: 'This scenario is engineered to reach the branch.' Followed by the explicit separation of the two claims a pass could be confused between.",
+      "proposed_criterion_wording": "avoids the banned words ('leverage', 'seamless', 'robust', 'in today's fast-paced world')",
+      "predictions": {
+        "a": "The planner emits at least one prohibition-shaped success criterion.",
+        "b": "Coverage classifies it as prohibition — not presence, not form. The extracted tokens are quoted as well as the criterion, because the right shape reached with the wrong tokens is not a pass.",
+        "c": "On a compliant draft, coverage passes that criterion. This is the headline and the thing the run is bought to test.",
+        "d": "DECLARED NOT REACHABLE BY THIS SCENARIO, and not promised. See deviations."
+      }
+    },
+    "test": {
+      "path": "tests/test_prohibition_scenario.py",
+      "count": 15,
+      "proved_able_to_fail": "Yes. Dropped 'robust' from the objective and re-ran: the guard failed naming the missing word ('the objective no longer names 'robust''). Restored, 15 passed. Convention 22.",
+      "computes_its_subject_first": "The directory load is asserted non-empty before anything is concluded from it; an empty glob would otherwise make every negative assertion vacuously true. Convention 28."
+    },
+    "coverage_check_untouched": "git diff --stat main...HEAD -- autornd/graph/checks.py workflows/ is EMPTY. Neither the check nor any workflow was modified.",
+    "suite": {
+      "before": "855 passed",
+      "after": "870 passed",
+      "delta": "+15, all from tests/test_prohibition_scenario.py"
+    }
+  },
+  "deviations": [
+    {
+      "what": "Wrote files outside the command's declared include scope: HANDOVER.md, README.md, AGENTS.md, CLAUDE.md and .claude/context/testing.md.",
+      "why": "The command's include list is ['evals/', 'docs/preregistration-*.md', 'tests/'], and its acceptance criteria require a passing suite. Those two collide: adding any test file trips four generated-count guards (test_handover_truth.py x3, test_docs.py x1), which re-derive the test total and file count from disk and fail against the stated numbers. Convention 24 makes these counts generated rather than hand-stamped precisely so this happens. Leaving them stale would leave the suite red, which is the harder violation. Counts re-derived, not estimated: 855 to 870 tests, 47 to 48 files, 37 to 38 test classes.",
+      "scope_note": "HANDOVER.md and README.md are named in neither include nor exclude. docs/handover-review.md IS excluded and was NOT touched."
+    },
+    {
+      "what": "Answered the command's first question rather than blocking on the owner.",
+      "why": "The command asks whether the objective should be a compliance-shaped deliverable or a pure style brief, and says to pre-register whichever the owner prefers. The owner's standing instruction in this session is to act on commands when given. Chose the PURE STYLE BRIEF. Reasoning, recorded so it can be overruled: the compliance-shaped option reaches the fail direction (d) at the cost of jeopardising (c), and (c) — a compliant draft passing where it previously scored 40% — is what B17 is actually about. The pass direction is the headline repair; the fail direction is already covered by fixtures.",
+      "reversible": "Yes. The scenario is additive and nothing depends on it until -027 runs."
+    },
+    {
+      "what": "Declared registered prediction (d) NOT REACHABLE by this scenario.",
+      "why": "The command explicitly requires this to be said now rather than promised. A draft containing a banned token requires the implementer to violate its own brief, which cannot be ordered reliably and would put (c) at risk in the same unit. Consequence stated in the registration and in -027's closing condition: if the fail direction is not reached, B17 does not fully close, and a second scenario is proposed rather than victory declared."
+    },
+    {
+      "what": "Disclosed a prior read of autornd/graph/checks.py that the command's second precondition would have forbidden.",
+      "why": "Before this command existed, during session orientation on 2026-09-22, the executor read the names and locations of _forbidden_tokens, _classify and _forbidden_present (checks.py:325,346,365) as part of a general survey. The bodies were not read. The banned list in the scenario comes from HANDOVER.md, not from the code. Disclosed because the command's own standard is 'if you discover the answer first, the prediction is theatre', and a partial prior read is the owner's to weigh, not the executor's to quietly discount. Recorded in the registration under 'Disclosure' as well as here."
+    },
+    {
+      "what": "No IN_PROGRESS-to-DONE amendment commit was skipped; both were made.",
+      "why": "Recorded for completeness: this command carries no HEAD pin, so the collision rule in AGENTS.md ('the HEAD guard wins') did not apply and the IN_PROGRESS commit was written first as normal, at a767936."
+    }
+  ],
+  "questions_for_advisor": [
+    {
+      "question": "Does the disclosed prior read of the classifier's structure disqualify this executor from authoring this registration?",
+      "context": "The command's second question asks whether scenarios may be reverse-engineered from a check's implementation. The executor read three function names and their line numbers, not their bodies, and sourced the banned list from the ledger. The registration is committed and can be withdrawn before -027 spends anything. This is a ruling, and the executor has not treated its own judgement as settling it."
+    },
+    {
+      "question": "Is the scope collision between 'include' and 'suite must pass' a defect in the command shape?",
+      "context": "Any command that adds a test file trips four generated-count guards in HANDOVER.md and README.md. A command whose include list omits those two files therefore cannot satisfy its own acceptance criteria. This will recur on every future command that adds a test, so it may be worth either naming those files in include by default or exempting generated counts from scope."
+    },
+    {
+      "question": "Should max_calls on this scenario be raised above 40 before -027 runs?",
+      "context": "Both B14 units exhausted at 41-42 calls and neither converged. 40 is carried over from gen_marketing_claims for comparability and is labelled in the scenario as not a prediction of fit. If the run exhausts before reaching coverage, every prediction is unscorable and the $0.25 buys nothing — which the registration names as the likeliest way to get no result. Raising it is a behaviour change to a registered input and is not the executor's to make after registration."
+    }
+  ],
+  "next": "ARCH-20260922-027 is unblocked on its parent — this response file now exists. It remains BLOCKED on owner spend authorisation (G-3) and on its own preconditions, which have not been run."
+}

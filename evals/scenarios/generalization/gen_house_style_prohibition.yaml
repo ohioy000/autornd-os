@@ -1,0 +1,60 @@
+id: gen_house_style_prohibition
+description: >
+  Engineered to reach one branch. This scenario exists to put a
+  prohibition-shaped success criterion in front of the coverage check on live
+  planner output, and its objective names the banned list explicitly so the
+  planner is likely to restate it as a criterion. A pass here is evidence that
+  B17-R1's inversion works on live input. It is NOT evidence that a content
+  corpus naturally produces such criteria — B14's two demonstrations are the
+  measurement of that, and neither of them emitted one.
+
+  Why the branch has never been reached. B17-R1 ruled that the shape of a
+  criterion selects the test applied to it: `presence` keeps term overlap,
+  `prohibition` inverts so the criterion's own forbidden tokens become the test,
+  and `form` abstains. The form branch is demonstrated live twice (§34). The
+  prohibition branch — the headline repair, the one that turns a compliant
+  draft's 40% into a pass — has survived two paid runs without ever being
+  exercised, because neither regenerated plan emitted a criterion of that shape.
+  B16 is why: criteria are rewritten from scratch every run, so drawing again
+  from `gen_marketing_claims` does not reliably reach it.
+
+  The banned list is taken verbatim from B17's own recorded exhibit
+  (HANDOVER.md §4.2 B17), which is the criterion that opened the bug:
+  "avoids the banned words ('leverage', 'seamless', 'robust', 'in today's
+  fast-paced world')". It is quoted from the ledger, not reverse-engineered from
+  the classifier.
+
+  Risk, honestly: unpublished launch copy for a product that does not exist.
+  A wrong word costs a correction. The guide reads this `low`, and `low` is the
+  expected reading rather than a floor being waived.
+request: >
+  Write the launch announcement page copy for a new team-scheduling product
+  aimed at operations managers at mid-sized companies. Around 400 words: a
+  headline, a three-sentence opening, and three short sections each with its own
+  subheading.
+
+  The house style bans four words and phrases outright, and the finished copy
+  must not contain any of them: "leverage", "seamless", "robust", and "in
+  today's fast-paced world". This is a hard constraint on the delivered text and
+  not a stylistic preference — copy containing any of the four is rejected
+  before review, whatever else is good about it.
+
+  Write to an operations manager who is comparing three tools and has ten
+  minutes. Concrete over abstract; name what the product does rather than what
+  it enables.
+tags: [generalization, studio, b17, prohibition]
+expect:
+  # The expected reading, not a waived floor — see the description. `low` is
+  # genuinely right for unpublished launch copy, and a `medium` result is a
+  # defensible second reading rather than a miss, so no ceiling is asserted.
+  risk_at_least: low
+  # Matched to gen_marketing_claims rather than derived. Both B14 demonstrations
+  # ran against a 41-call ceiling and both exhausted, so this number is a bound
+  # carried over for comparability, NOT a prediction that the run fits inside
+  # it. -027's $0.25 cap is the operative bound.
+  max_calls: 40
+  # This is registered prediction (c): on a compliant draft the prohibition
+  # branch passes coverage. It is stated here as an expectation so the harness
+  # scores it, and it is the assertion the run is bought to test. A failure here
+  # is a refutation to report, not a scenario to retune.
+  criteria_addressed: true
