@@ -118,11 +118,45 @@ class SweepBudget:
         self.spent += cost
         self.started += 1
 
-    def skip(self) -> str:
-        """Mark one unit as never started, and say so in its own words."""
+    def skip(self, per_unit_cap: float | None = None) -> str:
+        """Mark one unit as never started, and say so in its own words.
+
+        The words matter, and they were wrong. Measured 2026-09-22 on the
+        B17-R1 validation: one unit ran at $0.1547 against a $0.50 sweep cap
+        and the second was skipped with "sweep budget exhausted". **31% of a
+        cap is not exhaustion.** The unit was skipped by the FIT RULE — with a
+        $0.50 per-unit cap and $0.3453 remaining, no unit could be guaranteed
+        to fit, which is the conservative behaviour the fit rule exists to
+        provide and is not the same fact as running out of money.
+
+        Reporting the conservative case as the exhausted case cost half a
+        registered sample and sent an investigation after an arithmetic bug
+        that was not there (B19).
+        """
         self.skipped += 1
+        if per_unit_cap is not None and self.remaining > _BUDGET_EPSILON:
+            return (f"skipped: ${self.remaining:.4f} left of ${self.cap:.2f} "
+                    f"cannot guarantee a unit capped at ${per_unit_cap:.2f} "
+                    f"(fit rule — the budget is not exhausted)")
         return (f"skipped: sweep budget exhausted "
                 f"(${self.spent:.4f} of ${self.cap:.2f} spent)")
+
+    def units_that_can_ever_start(self, per_unit_cap: float | None) -> int | None:
+        """How many units this configuration permits, before anything is paid.
+
+        Free, and it would have caught a pre-registration that asked for n=2
+        under `--max-spend 0.50 --max-spend-sweep 0.50`: two units at a $0.50
+        cap need $1.00 of a $0.50 sweep, so **exactly one unit could ever
+        start** and the registered sample size was impossible on arrival.
+        Nothing said so, and the shortfall was read as a defect afterwards.
+
+        None when no per-unit cap is set — the backstop mode has nothing to
+        reason about in advance, which is the same reason the fit rule does
+        not apply to it.
+        """
+        if per_unit_cap is None or per_unit_cap <= 0:
+            return None
+        return int((self.cap + _BUDGET_EPSILON) // per_unit_cap)
 
 
 class ResultsLog:
@@ -368,10 +402,27 @@ class ScenarioRun:
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
     # pass rate or count towards the applicable total.
+    #
+    # This used to be decided by SUBSTRING-MATCHING THE ERROR MESSAGE against
+    # ("not applicable", "sweep budget exhausted"), which is control flow
+    # reading English and is what non-negotiable 3 forbids. It broke the moment
+    # the fit rule's message was corrected (B19): a skipped unit whose message
+    # no longer said "exhausted" silently started counting as a unit that RAN,
+    # which would have inflated the denominator of every pass rate in a sweep
+    # that hit its cap. Found 2026-09-22 by an existing test, which is the only
+    # reason it did not ship.
+    #
+    # The flag is now set where the skip is decided. The prose match is kept
+    # as a fallback ONLY for ScenarioRun objects built by older code paths and
+    # by tests that construct one directly from an error string.
+    was_skipped: bool = False
+
     _SKIP_REASONS = ("not applicable", "sweep budget exhausted")
 
     @property
     def skipped(self) -> bool:
+        if self.was_skipped:
+            return True
         return (not self.results and bool(self.error)
                 and any(r in self.error for r in self._SKIP_REASONS))
 
@@ -513,6 +564,7 @@ async def run_scenario(
         return ScenarioRun(
             scenario=scenario, results=[], calls=0, seconds=0.0,
             error=f"not applicable to workflow '{spec.name}': {detail}",
+            was_skipped=True,
         )
 
     # Decided before a client is built, so an exhausted sweep costs nothing at
@@ -520,7 +572,8 @@ async def run_scenario(
     if budget is not None and not budget.can_start(max_spend):
         return ScenarioRun(
             scenario=scenario, results=[], calls=0, seconds=0.0,
-            error=budget.skip(),
+            error=budget.skip(max_spend),
+            was_skipped=True,
         )
 
     from autornd.knowledge import research as _research
