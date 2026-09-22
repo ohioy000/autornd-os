@@ -238,6 +238,7 @@ class ResultsLog:
             "tokens_by_tier": run.tokens_by_tier,
             "rejections_by_tier": run.rejections_by_tier,
             "rejections_by_provider": run.rejections_by_provider,
+            "retries": run.retries,
             "seconds_by_phase": run.seconds_by_phase,
             "assertions": [
                 {"name": r.name, "passed": r.passed,
@@ -468,6 +469,13 @@ class ScenarioRun:
     # not a system: the engineering tier is served by a dozen providers inside a
     # single run, and "the engineering tier refused" names no one.
     rejections_by_provider: dict[str, int] = field(default_factory=dict)
+    # EVERY retry, reconciled: total, attributed, unattributed, by_kind, and the
+    # classes the two counters above exclude. The pair of counters is correct
+    # and narrow; without this, an empty pair reads as "nothing was refused"
+    # when it can equally mean "the refusals were a class these do not count".
+    # Measured 2026-09-22: three retries in stderr, both counters empty, and
+    # nothing in the record able to tell those two readings apart.
+    retries: dict[str, object] = field(default_factory=dict)
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -727,6 +735,7 @@ async def run_scenario(
                         in runner.client.tokens_by_function.items()},
         rejections_by_tier=dict(runner.client.rejections_by_function),
         rejections_by_provider=dict(runner.client.rejections_by_provider),
+        retries=runner.client.retry_reconciliation(),
         seconds_by_phase=_phase_seconds(state),
     )
 

@@ -1,0 +1,86 @@
+{
+  "command_id": "ARCH-20260922-030",
+  "parent_id": null,
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Determine whether rejections_by_tier / rejections_by_provider correctly exclude the three retry events or under-report them, and make the report reconcile its total against the retry count so an empty counter cannot read as no problem.",
+  "evidence": [
+    "run readout 2026-09-22 — three retry events in stderr, both rejection counters empty",
+    "AGENTS.md convention 26 — an instrument's report states what it measured and nothing more; a reading mistakable for a stronger claim is a defect in the instrument",
+    "AGENTS.md convention 28 — an instrument asserts it computed its subject before it asserts anything about it",
+    "AGENTS.md convention 22 — an instrument's test simulates the condition it watches, end to end",
+    "ARCH-20260922-024 — the serving ledger made to report every tier; the same class"
+  ],
+  "scope": {
+    "include": [
+      "autornd/routing/",
+      "autornd/engine/",
+      "tests/",
+      "HANDOVER.md"
+    ],
+    "exclude": [
+      "workflows/",
+      "autornd/graph/",
+      "docs/handover-review.md"
+    ]
+  },
+  "constraints": [
+    "Free. No paid call.",
+    "Read the three retry reasons from the committed stderr FIRST and quote each verbatim with its code path. Do not infer a cause you have not read.",
+    "Compare the guard condition on the retry path against the guard condition on the counter-increment path. State whether the counters' domain includes or excludes each retry reason.",
+    "If the counters are correctly narrow: do NOT widen them. Fix the report instead — a reconciliation stating attributed and unattributed retries, naming the excluded classes.",
+    "If the counters' domain includes a retry reason and it did not increment: that is under-reporting by three; fix the increment and state how many were missed.",
+    "Convention 28 applies: assert the retry total before asserting the breakdown. An unattributed count must never be silently zero.",
+    "One test per path, each simulating its condition end to end — an empty reply and a parse failure specifically (convention 22).",
+    "Open B23 in HANDOVER.md §4.2 with the finding, its severity and its evidence.",
+    "Do not conflate unrelated retry classes into one counter to make the numbers add up."
+  ],
+  "acceptance_criteria": [
+    "The three retry reasons are quoted verbatim, each with its code path.",
+    "A ruling is stated: correct-and-narrow, or under-reporting, with the guard comparison as evidence.",
+    "The report reconciles: retry events equal attributed plus unattributed, and unattributed is printed.",
+    "A test simulates an empty reply and a parse failure end to end and asserts the count is not silently zero.",
+    "B23 is present in §4.2.",
+    "Suite count reported before and after."
+  ],
+  "verification": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass; count reported."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q -k 'retry or rejection'",
+      "expected": "One test per retry class passes."
+    },
+    {
+      "command": "grep -n 'B23' HANDOVER.md",
+      "expected": "Present with severity and evidence."
+    }
+  ],
+  "rollback": "Revert the commit; the counters return to their previous increments.",
+  "deliverable": {
+    "branch": "arch/20260922-030-retry-reconciliation",
+    "pr": true,
+    "commit_style": "conventional"
+  },
+  "assumptions": [
+    "The three retries were logged to a committed stderr. If the stderr is not committed, say so — the cause is then unobserved and the ruling must wait."
+  ],
+  "questions": [
+    "Are the counters consumed by any report or dashboard that would now read 'zero rejections' beside a retry count? If so, name it — that surface is where the convention-26 defect lands."
+  ],
+  "preconditions": [
+    {
+      "command": "grep -rn 'rejections_by_tier\\|rejections_by_provider' autornd/ | head",
+      "expected": "Locate the increment sites; record each."
+    },
+    {
+      "command": "ls docs/traces/ | tail -5",
+      "expected": "Locate the run's stderr by name. If absent, say so and treat the cause as unobserved."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green before the change."
+    }
+  ]
+}

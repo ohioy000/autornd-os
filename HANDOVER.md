@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `039cabe` · **Branch:** `main`
-**Tests:** 881 as of `8bb0cbc` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
+**Tests:** 889 as of `8bb0cbc` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      49 files, 881 tests (as of `8bb0cbc`)
+tests/                      50 files, 889 tests (as of `8bb0cbc`)
 ```
 
 ### 2.3 Key design patterns
@@ -655,7 +655,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (881 total, as of `8bb0cbc`)
+### 3.7 Test distribution (889 total, as of `8bb0cbc`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -726,7 +726,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 881/881 pass.** Everything below is a live-behaviour
+**No failing unit tests — 889/889 pass.** Everything below is a live-behaviour
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
@@ -752,6 +752,7 @@ named.
 | B19 | ~~`--repeat N` reports exhaustion before the sample is complete~~ | **CLOSED (2026-09-22) — not the defect it looked like** | Measured 2026-09-22 on the B17-R1 validation. `--repeat 2` produced **one unit** and the sweep reported *"exhausted after 1 of 2 units"* at **$0.1547 against a $0.50 cap — 31%**. That is not exhaustion. Half the registered sample was lost and nothing asked for it. **Unresolved which**: the per-unit ceiling binding where the sweep ceiling did not, or the accounting being wrong. The distinction matters — if the cap is per session a repeat of 2 *can* legitimately stop after one, and then the defect is the message rather than the arithmetic. **RESOLVED by `ARCH-20260922-021`, and the repeat logic was never wrong.** The unit was skipped by the **fit rule**, documented on `SweepBudget` since it was written: with a $0.50 per-unit cap and $0.3453 remaining, no unit could be *guaranteed* to fit, which is the conservative behaviour that rule exists to provide. **Three real defects sat behind the wrong word.** (1) **The message.** `skip()` and the summary line both called a fit-rule decline an *exhaustion*; they now name which of the two happened and report produced-versus-requested separately. (2) **The registration was arithmetically impossible and nothing said so.** `--max-spend 0.50 --max-spend-sweep 0.50 --repeat 2` needs $1.00 of a $0.50 sweep, so **exactly one unit could ever start**; a free pre-spend check now warns before the first call. (3) **`ScenarioRun.skipped` was decided by substring-matching the error message** against `("not applicable", "sweep budget exhausted")` — control flow reading English, against non-negotiable 3. Correcting the message *broke it*: a skipped unit silently began counting as one that **ran**, which would have inflated the denominator of every pass rate in any sweep that hit its cap. Caught by an existing test, inside the change that caused it; it is now a typed flag set where the skip is decided. **Two of this repo's own tests had enshrined the wrong wording** and were corrected under convention 17 — one asserted *"sweep budget exhausted"* for a budget with $0.10 of $0.60 still in it. |
 | B20 | ~~A paid run's records do not survive a concurrent git operation~~ | **CLOSED (2026-09-22)** | Measured 2026-09-22 (§32). `git stash -u` during a live run took the directory entry of the untracked results file while the writer held the inode; **every completed unit record was written to a deleted file**. $0.1547 spent, record unrecoverable, only the header surviving. The executor caused it, and the harness made it possible: records are held open for the run's duration rather than flushed per unit, and `docs/traces/` is untracked rather than ignored, so a routine `stash -u` reaches it. **CLOSED by `ARCH-20260922-022`, and two of the three things this row originally said were wrong.** **(1) Flushing was never the problem.** `ResultsLog._write` has flushed per record since it was written; flushing does not help once the directory entry is gone, which is the entire mechanism. **(2) Ignoring `docs/traces/` is not the fix.** It is **tracked** — 60 committed files — and it *is* the evidence model. The default results path `evals/results/` is **already git-ignored and was never exposed**: `stash -u` takes untracked files, not ignored ones. The loss happened because `--results-file` aimed at the one directory that is tracked, where a brand-new file is untracked until committed. **The repair is a mirror outside the working tree**, written and flushed alongside the primary, chosen by hazard rather than by habit — no mirror for an ignored path or one outside any repo. The CLI names it, because a silent protection is an instrument asserting durability it never mentioned (convention 28). Proved by reproducing the loss: unlink the file mid-write, keep writing, and assert the mirror holds every record. **What it does not protect against, stated rather than implied:** `git stash -a`, deletion of the state directory, filesystem loss, and a `kill -9` between two records. |
 | B21 | **Guards that never found their subject and reported success** | **high** | Four instances in one day, plus two older ones now recognised as the same class (§33.2). The sharpest: the provenance stamp guard's regex used `\s*` between label and sha where the document has `**HEAD:**`, so `findall` returned `[]` and **all three deliberate break attempts passed**. The older two: the serving ledger's three-tier table with no escalation row, and CI asserting nothing-is-wrong for 87 hours without computing state. **Convention 28 is the ruling**; this row tracks the outstanding repairs. **Status: OPEN.** Repairs: `ARCH-20260922-020` (the four guards — and its executable form found **four more**, two of them the morning's own fix applied to one instance of three); **`ARCH-20260922-024` — DONE:** the serving ledger now enumerates every tier a trace header names and gives each an explicit status, so **`escalation` has rows for the first time** — seven rotated arms over 17 units, and `research`, `search`, `ranker` and `premium` all appear. Pinned numbers are unchanged, guarded by a test. CI was repaired by `-013`. |
+| B23 | ~~An empty rejection count could not be told from an uncounted retry class~~ | **CLOSED (2026-09-22)** | Measured on the B17 prohibition run (`ARCH-20260922-027`). Stderr carried **three retry events** — *"JSON parse failed (attempt 1/3) for engineering: Unterminated string starting at: line 7 column 14"*, and twice *"Empty reply for engineering: model returned no text (provider=GMICloud, finish_reason=None | error)"* — while **both `rejections_by_tier` and `rejections_by_provider` were empty** in the unit record. **The counters were RIGHT, and were not widened.** `chat_json` has three retry paths and only the `ValidationError` branch increments them, by design: the counter's own comment defines a rejection as *a reply the truth table could not repair*, which an empty reply is not, and `normalised_verdicts` is read against it as a pair. Widening would have destroyed that distinction. **The defect was the REPORT** — a reader seeing `rejections_by_tier: {}` beside 23 calls cannot tell *"nothing was refused"* from *"the refusals were a class this does not count"*, and **convention 26 makes that the instrument's defect rather than the reader's error**. **Repaired by `ARCH-20260922-030`:** every retry is now counted by class, and the unit record carries a `retries` reconciliation — `total`, `attributed`, `unattributed`, `by_kind`, and the excluded classes **named in the report** so nobody has to open `openrouter.py` to learn what an empty count excludes. Per **convention 28** the total is stated before the breakdown and **`unattributed` is present even when zero**, because an absent field and a measured zero are different claims and only one is evidence. Proved by breaking it: the stderr is committed at `docs/traces/b17-prohibition-branch-STDERR.txt`, and `tests/test_retry_reconciliation.py` simulates each of the three classes end to end (convention 22). Instrument repair, not a behaviour change — no retry logic moved. |
 | B11 | Two tier picks are **interim and unmeasured at their own jobs** | medium | `research` and `engineering` ship on models chosen for price and availability, never scored against the work they do. `engineering` carries five of the flagship's nodes and is the tier whose *serving* closed B7 — the model behind it has had no equivalent test. In service by choice, labelled so nobody mistakes the choice for a finding. |
 | B12 | Four tiers have **never been measured by serving** | medium | B4 and B7 both turned on *who serves a tier*, and it has only ever been asked of `triage`, `architecture` and `engineering`. `escalation`, `research`, `search` and the reranker are unpinned and unexamined. `escalation` is 70–78% of spend on hard traces (§6.10), so it is the obvious next place to look. Convention 23 says how. |
 | B10 | `ambiguous_request` — historical "mystery failure" | **RESOLVED** | It was B3's sibling: a `max_calls: 4` baseline set when the budget counted *nodes*. Measured 6. Now 8 |
@@ -1641,7 +1642,7 @@ answer: `.orchestration/responses/ARCH-20260920-005.response.json`.
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 881 tests as of `8bb0cbc`, ~52 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 889 tests as of `8bb0cbc`, ~52 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \

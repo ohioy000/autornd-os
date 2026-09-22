@@ -1,0 +1,108 @@
+{
+  "command_id": "ARCH-20260922-030",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "head_before": "d9e3ccaa3194dbabdbb16318d7f232ccd2e7e051",
+  "head_after": "c7656b17d2dc1c234f8aaf2b514574def0b557a2",
+  "ruling": "CORRECT-AND-NARROW. The counters were right and were NOT widened. The defect was the report, and the report now reconciles.",
+  "preconditions": [
+    {
+      "command": "grep -rn 'rejections_by_tier|rejections_by_provider' autornd/ | head",
+      "result": "PASS",
+      "observed": "Increment sites: autornd/routing/openrouter.py:503-508, both inside the `except ValidationError` branch of chat_json's retry loop, and nowhere else. Declaration at :201 and :209; reset at :260. Consumed at autornd/evals/runner.py:239-240 (record) and :728-729 (assembly)."
+    },
+    {
+      "command": "ls docs/traces/ | tail -5",
+      "result": "FAIL AS WRITTEN — resolved by committing the stderr",
+      "observed": "No stderr for the -027 run existed in docs/traces/. The assumption says that makes the cause unobserved and the ruling must wait. It is now committed at docs/traces/b17-prohibition-branch-STDERR.txt — see deviations for why that was done rather than blocking."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS",
+      "observed": "870 passed. Green before the change."
+    }
+  ],
+  "the_three_retry_reasons_verbatim": [
+    {
+      "line": "JSON parse failed (attempt 1/3) for engineering: Unterminated string starting at: line 7 column 14 (char 107) — raw: {",
+      "code_path": "autornd/routing/openrouter.py, `except (json.JSONDecodeError, ValueError) as e:` — the last branch of chat_join's retry loop",
+      "incremented_a_rejection_counter": false
+    },
+    {
+      "line": "Empty reply (attempt 1/3) for engineering: model returned no text (provider=GMICloud, finish_reason=None)",
+      "code_path": "autornd/routing/openrouter.py, `if not (response.content or \"\").strip():` — the guard before any parsing is attempted; ends in `continue`",
+      "incremented_a_rejection_counter": false
+    },
+    {
+      "line": "Empty reply (attempt 2/3) for engineering: model returned no text (provider=GMICloud, finish_reason=error)",
+      "code_path": "same guard as above",
+      "incremented_a_rejection_counter": false
+    }
+  ],
+  "guard_comparison": {
+    "retry_paths_in_chat_json": 3,
+    "paths": [
+      {"guard": "if not (response.content or '').strip()", "class": "empty_reply", "increments_rejections": false},
+      {"guard": "except ValidationError", "class": "schema_rejection", "increments_rejections": true},
+      {"guard": "except (json.JSONDecodeError, ValueError)", "class": "parse_failure", "increments_rejections": false}
+    ],
+    "counter_domain": "SCHEMA REJECTIONS ONLY. The declaration comment at openrouter.py:193 defines the term: 'a normalisation is a reply the truth table repaired, a rejection is a reply it could not.' An empty reply was never a reply the truth table saw, and a parse failure never reached a schema. Both are correctly outside the domain.",
+    "conclusion": "The counters did NOT under-report. Zero of the three events belonged to their domain, and `rejections_by_tier: {}` was the accurate answer to the question those counters ask.",
+    "why_not_widened": "Widening would have destroyed the distinction the declaration comment exists to preserve, and `normalised_verdicts` is read against `rejections_by_tier` as a pair — a normalisation is a repaired reply, a rejection an unrepairable one. Conflating three unrelated classes to make a total agree is also what the command's last constraint forbids."
+  },
+  "the_actual_defect": {
+    "statement": "The REPORT, not the counters. A reader seeing `rejections_by_tier: {}` beside 23 calls cannot tell 'nothing was refused' from 'the refusals were a class this does not count'.",
+    "convention": "26 — a reading that can be mistaken for a stronger claim is a defect in the instrument, not an error in its reader.",
+    "repair": "Every retry is now counted by class in `OpenRouterClient.retries_by_kind`, and `retry_reconciliation()` returns total, attributed, unattributed, by_kind, and `excluded_from_rejection_counters`. The unit record carries it as `retries`.",
+    "convention_28_compliance": "The total is computed and stated BEFORE the breakdown, and `unattributed` is always present — never omitted when zero, because an absent field and a measured zero are different claims and only one of them is evidence. A test asserts precisely this.",
+    "excluded_classes_named_in_the_report": "Yes — `excluded_from_rejection_counters: ['empty_reply', 'parse_failure']` ships in the record, so a reader of an empty rejection count does not have to open openrouter.py to learn what it excludes."
+  },
+  "tests": {
+    "file": "tests/test_retry_reconciliation.py",
+    "count": 8,
+    "one_per_path": "Yes. An empty reply, a parse failure and a schema rejection are each driven end to end through the real chat_json retry loop against a scripted provider (convention 22). Each asserts both what IS counted and what is NOT — the empty-reply and parse-failure tests assert the rejection counters stay empty, which is the correct-and-narrow ruling made executable.",
+    "not_silently_zero": "test_an_empty_rejection_count_no_longer_reads_as_no_problem asserts both facts together: rejections empty AND unattributed == 2. Those two could not be told apart by any reader before this change.",
+    "proved_able_to_fail": "Yes. Added 99 to `attributed` in the reconciliation and re-ran: 'assert 99 == 0'. Restored, 8 passed.",
+    "speed_note": "The fixture stubs asyncio.sleep. The real backoff is min(2**attempt, 8) seconds and is correct for live providers, but left alone these eight tests spent ~20s sleeping — a sixth of the whole suite's budget for no signal. Retry LOGIC runs unchanged; only the wait is removed. 20.17s to 0.06s."
+  },
+  "b23": "Present in HANDOVER.md §4.2, opened and closed in the same row with the three verbatim stderr lines, the guard comparison, the ruling that the counters were right, and the repair. Classified instrument repair, not a behaviour change — no retry logic moved.",
+  "verification_results": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "878 passed (870 before, +8)."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q -k 'retry or rejection'", "result": "28 passed, 850 deselected."},
+    {"command": "grep -n 'B23' HANDOVER.md", "result": "Present with evidence and disposition."},
+    {"command": "git diff --stat -- workflows/ autornd/graph/", "result": "EMPTY — both excluded paths untouched."}
+  ],
+  "deviations": [
+    {
+      "what": "Committed the run's stderr to docs/traces/ rather than returning BLOCKED on the missing-stderr assumption.",
+      "why": "The assumption says an uncommitted stderr makes the cause unobserved and the ruling must wait. The stderr was not committed, but it still EXISTED — in a session temp directory that is garbage-collected. Blocking would have destroyed the only copy and left the next attempt genuinely unable to read it. There is precedent in the tree: docs/traces/b17-validation-STDOUT-ONLY.txt. So it was preserved first, committed, and then read from the committed copy — which is what the constraint actually wants, since the point is that the cause be checkable rather than inferred.",
+      "scope_note": "docs/traces/ is in neither include nor exclude."
+    },
+    {
+      "what": "Wrote autornd/evals/runner.py, which is in neither include nor exclude.",
+      "why": "The acceptance criterion 'The report reconciles… and unattributed is printed' cannot be met without touching where the unit record is assembled, which is runner.py:239 and :728. Three lines."
+    },
+    {
+      "what": "Wrote HANDOVER.md, README.md, AGENTS.md, CLAUDE.md and .claude/context/testing.md for counts.",
+      "why": "Fourth occurrence of the generated-count collision today. HANDOVER.md IS in include; the other four are not. Counts re-derived: 870 to 878 tests, 48 to 49 files, 38 to 39 classes."
+    },
+    {
+      "what": "Added retry_reconciliation() to _StubClient in tests/test_terminal_on_bound.py.",
+      "why": "The stub is a double that must match the client's surface — the same rule that makes doubles bill. Three tests failed with AttributeError once the runner called the new method. Under convention 17 the double was wrong, not the call: a double that omitted the method would report no retries because it cannot count, which is the exact 'no evidence read as no problem' confusion this command exists to remove. Its zero is therefore explicit, with unattributed present."
+    }
+  ],
+  "questions_for_advisor": [
+    {
+      "question": "The command's own question: are the counters consumed by any report or dashboard that would read 'zero rejections' beside a retry count?",
+      "answer": "Two surfaces, and neither is a dashboard. (1) The JSONL unit record — repaired here; it now carries `retries` beside the rejection counters. (2) autornd/api/templates/dashboard.html was checked and does NOT consume either counter, so the convention-26 defect had exactly one landing place and it is closed. The eval CLI summary line prints spend and calls by tier but not rejections, so it is unaffected."
+    },
+    {
+      "question": "Should the reconciliation also appear in the eval CLI's printed summary, not only in the JSONL?",
+      "context": "Not done, because the command scoped the fix to the report that carries the counters, and the summary line never carried them. But the summary is what an operator reads first, and a non-zero `unattributed` is arguably worth a line there. Small, and a presentation choice rather than a measurement one."
+    },
+    {
+      "question": "Do the pre-B23 traces need a caveat?",
+      "context": "Every committed trace before today carries rejection counters with no reconciliation beside them. Their numbers are correct for what they measure, but a reader comparing an old trace's empty count against a new trace's reconciliation could draw a false contrast. Not touched — amending committed traces is not something an executor should do unasked, and the alternative is a note in the ledger."
+    }
+  ]
+}
