@@ -30,7 +30,14 @@ jobs:
         python-version: ["3.11", "3.12", "3.13"]
 
     steps:
+      # Full history, because one guard needs it: the provenance stamp check in
+      # tests/test_handover_truth.py asserts the sha HANDOVER names is an
+      # ANCESTOR of the commit under test, and ancestry is unanswerable in the
+      # default depth-1 clone. Without this the guard would skip in CI forever
+      # and nobody would notice, which is the failure mode it exists to catch.
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6

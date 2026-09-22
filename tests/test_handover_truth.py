@@ -148,3 +148,102 @@ def test_the_workflow_facade_is_still_described_as_on_the_request_path(handover)
     assert "request path" in handover, (
         "HANDOVER no longer says WorkflowEngine is on the request path — "
         "that omission is what got it ruled legacy (convention 19)")
+
+
+# ── the provenance stamp ──────────────────────────────────────────────────
+#
+# ARCH-20260922-014. HANDOVER's header names a sha twice — the snapshot's HEAD
+# and the commit its test total was counted at — and neither was ever checked.
+# The record holds all three ways that went wrong:
+#
+#   `0d35868`  "git cat-file -t cafebabe is fatal, confirming the header stamp
+#              is hand-typed rather than a commit" — convention 24's named
+#              failure mode, caught by reading rather than by a guard.
+#   `4bfbbc5`  "The header stamps still read PENDINGSHA."
+#   `f5b5810`  "A commit cannot contain its own sha, so the bootstrap the
+#              command describes names a commit the amend then discards."
+#
+# The property the stamp is meant to have is the one `f5b5810` acted on when it
+# named `4bfbbc5` rather than its own sha: the stamp names a real commit that is
+# an ANCESTOR of the one under test. Resolvable is weaker and would pass a sha
+# from an abandoned branch.
+
+# The markdown between the label and the sha is part of the document, not
+# noise: the header reads "**HEAD:** `039cabe`" and "**Tests:** 808 as of
+# `a2e362e`". A first version of this pattern used `\s*` after the label,
+# matched NOTHING, and passed all three break attempts — a guard that could not
+# fail, written inside the change that exists to stop guards that cannot fail.
+# `_STAMP` is therefore asserted to find something before anything is checked.
+_STAMP = re.compile(r"(?:HEAD:|as of)[^`\n]{0,24}`([0-9a-zA-Z]{6,40})`")
+
+
+def _git(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(("git",) + args, cwd=ROOT,
+                          capture_output=True, text=True)
+
+
+def _shallow() -> bool:
+    return _git("rev-parse", "--is-shallow-repository").stdout.strip() == "true"
+
+
+def test_the_provenance_stamps_are_not_placeholders(handover):
+    """`PENDINGSHA` shipped once and was replaced by hand."""
+    stamps = _STAMP.findall(handover)
+    assert len(stamps) >= 2, (
+        f"HANDOVER should carry a HEAD stamp and a test-count stamp; the "
+        f"pattern found {stamps}. A pattern that matches nothing makes every "
+        f"check below vacuous, which is how the first version of this guard "
+        f"passed all three break attempts.")
+    bad = [s for s in stamps if not re.fullmatch(r"[0-9a-f]{7,40}", s)]
+    assert not bad, (
+        f"HANDOVER's provenance stamp is not a sha: {bad}. "
+        "PENDINGSHA shipped once already (4bfbbc5).")
+
+
+def test_the_provenance_stamps_resolve_to_real_commits(handover):
+    """`cafebabe` was hand-typed and looked exactly like a sha."""
+    if not (ROOT / ".git").exists():
+        pytest.skip("not a git checkout")
+    unresolved = [s for s in _STAMP.findall(handover)
+                  if _git("cat-file", "-t", s).stdout.strip() != "commit"]
+    assert not unresolved, (
+        f"HANDOVER names shas that are not commits in this repo: {unresolved}")
+
+
+def test_the_provenance_stamps_are_ancestors_of_the_commit_under_test(handover):
+    """The property that `resolvable` misses: a sha from an abandoned branch
+    resolves perfectly well and describes a state this commit never passed
+    through."""
+    if not (ROOT / ".git").exists():
+        pytest.skip("not a git checkout")
+    if _shallow():
+        pytest.skip(
+            "shallow clone — ancestry is unanswerable at fetch-depth 1. "
+            "test_ci_gives_one_job_the_history_this_guard_needs keeps this "
+            "skip from becoming permanent.")
+    strangers = [s for s in _STAMP.findall(handover)
+                 if _git("merge-base", "--is-ancestor", s, "HEAD").returncode != 0]
+    assert not strangers, (
+        f"HANDOVER names shas that are not ancestors of HEAD: {strangers}. "
+        "A stamp naming a commit this one never descended from records a state "
+        "the repo was never in.")
+
+
+def test_ci_gives_one_job_the_history_this_guard_needs():
+    """A guard that skips in CI forever is a guard that cannot fail, which is
+    the whole class of defect this repo keeps finding. The ancestry check above
+    skips on a shallow clone by necessity; this pins the CI config that stops
+    the skip being permanent."""
+    import yaml
+
+    ci = yaml.safe_load((ROOT / ".github" / "workflows" / "ci.yml").read_text())
+    depths = [
+        step.get("with", {}).get("fetch-depth")
+        for job in ci["jobs"].values()
+        for step in job.get("steps", [])
+        if str(step.get("uses", "")).startswith("actions/checkout")
+    ]
+    assert 0 in depths, (
+        "No CI job checks out full history, so the provenance-stamp ancestry "
+        "guard skips on every run. Set fetch-depth: 0 on the job that runs "
+        "pytest.")
