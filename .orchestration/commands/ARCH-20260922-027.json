@@ -1,0 +1,62 @@
+{
+  "command_id": "ARCH-20260922-027",
+  "parent_id": "ARCH-20260922-026",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Run the prohibition-shaped scenario and report whether B17-R1's prohibition branch fires and behaves correctly on live planner output; close B17 if demonstrated, or report the refutation.",
+  "evidence": [
+    "ARCH-20260922-026 — the registered scenario and its pre-registration (locate by glob; do not cite an unverified filename)",
+    "HANDOVER.md §4.2 B17 — OPEN",
+    "run readout 2026-09-22 — the prohibition branch 'has survived two paid runs without being touched'",
+    "ARCH-20260922-021 — the caps arithmetic lesson: --max-spend 0.50 with --repeat 2 needs 1.00 of a 0.50 sweep; state the arithmetic so it is checkable before the money moves",
+    "AGENTS.md convention 23 — a serving sweep never at n=1; noted because this is a branch demonstration, not a sweep, and the two have different n rules",
+    "AGENTS.md convention 27 — a repetition of a plan-dependent contrast is a second sample, never a confirmation"
+  ],
+  "scope": {
+    "include": ["docs/preregistration-*.md", "docs/traces/", "evals/"],
+    "exclude": ["autornd/**", "workflows/**", "tests/**"]
+  },
+  "constraints": [
+    "Read -026's pre-registration and report its four predictions BEFORE the run. Do not add, drop or reorder a prediction after seeing a result.",
+    "State the cap arithmetic so it is checkable before the first call: one scenario-run, one unit, cap at $0.25. If the harness's free pre-spend check declines the unit, accept the decline and report it — do not raise the cap without the owner.",
+    "n=1 is sufficient here and is labelled an anecdote, not a rate. This run tests whether a branch fires, not whether it fires reliably. Do not buy a repetition to look more convincing.",
+    "Pin the tiers and log the versioned answering ids. An unpinned reading is partly a record of who answered (convention 23).",
+    "Isolate the knowledge store, or state that you did not and why.",
+    "NO git operation while the run is in flight. The mirror from -022 is a backstop, not a licence.",
+    "Report the full per-criterion shape table: each criterion verbatim, its classified shape, whether it abstained, and its coverage verdict. If no criterion is prohibition-shaped, that is prediction (a) refuted and B17 stays open — say so plainly.",
+    "For any prohibition-shaped criterion, quote it verbatim AND quote the banned tokens the check extracted from it. A classifier that reached the right shape by extracting the wrong tokens is not a pass.",
+    "Report every prediction held or refuted with its number and observed value. Do not adjust a prediction to match a result.",
+    "B17 closes ONLY if: a prohibition-shaped criterion was emitted on live input, coverage classified it as prohibition, the verdict demonstrably follows the banned-token test on the compliant draft, AND the response states explicitly whether the fail direction was reached. If the fail direction was not reached, B17 is not fully closed — propose the second scenario rather than declaring victory.",
+    "No change to any workflow, profile, prompt or constant during this command. If the run fails for a reason you must fix, stop and report — the fix is a new command."
+  ],
+  "acceptance_criteria": [
+    "The pre-registration's four predictions are quoted before the run, and both shas are recorded.",
+    "The cap arithmetic is stated and the free pre-spend check's output is quoted verbatim.",
+    "The per-criterion shape table is reported in full, with criteria quoted verbatim.",
+    "For any prohibition-shaped criterion, the extracted banned tokens are quoted.",
+    "Each prediction is reported held or refuted with its number and observed value.",
+    "B17 is closed, or left OPEN with the specific reason stated — not ambiguous.",
+    "The trace is committed: one record per produced unit, carrying cost, calls by tier, seconds, iterations, the shape table, the abstentions and the provider per tier."
+  ],
+  "verification": [
+    {"command": "git log --oneline -1 -- docs/preregistration-*.md", "expected": "The -026 registration precedes this run's commit; record both shas."},
+    {"command": "grep -n 'B17' HANDOVER.md", "expected": "Either CLOSED with this run's evidence, or OPEN with the refutation recorded."},
+    {"command": "git status --porcelain docs/traces/", "expected": "The trace is present and the tree is otherwise clean."}
+  ],
+  "rollback": "Not applicable — a measurement. The cap is the bound; no code, workflow or config is modified.",
+  "deliverable": {"branch": "arch/20260922-027-b17-live", "pr": true, "commit_style": "conventional"},
+  "assumptions": [
+    "The scenario from -026 registers and runs like the existing scenarios.",
+    "The standing .env carries the approved pins; if only the env-prefixed form exists, return BLOCKED naming G-2/G-3."
+  ],
+  "questions": [
+    "If the planner emits a prohibition-shaped criterion but the classifier calls it presence, is that a check defect or an input phrasing issue? It is a ruling either way — report it as a question, do not fix it.",
+    "If the draft happens to contain no banned word, the pass direction is reached and (d) is not. Should a second scenario be funded immediately, or wait for the owner to see this result first? I would wait."
+  ],
+  "preconditions": [
+    {"command": "grep -n 'B20\\|B21' HANDOVER.md | head", "expected": "B20 CLOSED. If OPEN, return BLOCKED naming the unmerged PR."},
+    {"command": "ls docs/preregistration-*.md | tail -3", "expected": "The -026 registration is present. If absent, return BLOCKED naming ARCH-20260922-026 as incomplete."},
+    {"command": "git status --porcelain", "expected": "Clean, so the run's commit contains only the trace."},
+    {"command": "test -n \"$OPENROUTER_API_KEY\" && echo present || echo absent", "expected": "Print presence only, never the value. If absent, return BLOCKED naming the owner action."}
+  ]
+}

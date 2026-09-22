@@ -1,16 +1,30 @@
-"""The executor protocol is one file with two names, and it stays that way.
+"""The executor protocol is ONE file, and no second copy of it exists.
 
 **Why this exists.** The protocol that produced fifteen blueprints lived in
 chat transcripts. Blueprint 015 moved it into `AGENTS.md` — the cross-tool
-convention — with `CLAUDE.md` as a symlink so the tool-specific name keeps
-working. **Two copies would drift**, which is convention 24's whole subject: a
-hand-maintained duplicate of anything in this repo has been wrong within two
+convention. **Two copies would drift**, which is convention 24's whole subject:
+a hand-maintained duplicate of anything in this repo has been wrong within two
 blueprints, every time it has been tried.
 
-So the symlink is pinned. If someone replaces it with a copy "to be safe", this
-fails and says why. And the protocol's load-bearing parts are pinned by name,
-because a protocol file that quietly loses its permission boundary is worse than
-no protocol file: the boundary is the thing a new executor does not know.
+**Amended 2026-09-22 (owner-ruled).** `CLAUDE.md` was a symlink to `AGENTS.md`
+so the tool-specific name resolved to the same bytes, and this file pinned the
+symlink. The owner has since made `CLAUDE.md` the repo's *derived working rules*
+— naming conventions, code patterns, validation commands, an on-demand context
+table — which is a different document with a different job. The symlink
+assertion is therefore gone.
+
+**What replaces it is a stronger guard, not a weaker one.** The symlink pinned a
+mechanism; convention 24's actual subject is the property, which is that exactly
+one copy of the protocol exists. So this now scans the tree for a duplicate by
+content. That catches the case the symlink assertion could not: a copy under
+some *other* name. It is not hypothetical — a byte-identical copy at
+`thisisnottheCLAUDE.md` sat untracked in this repo on the day of this amendment,
+and the symlink assertion said nothing about it, because it was only ever
+looking at one path (convention 28: a guard must be able to find its subject).
+
+The protocol's load-bearing parts stay pinned by name, because a protocol file
+that quietly loses its permission boundary is worse than no protocol file: the
+boundary is the thing a new executor does not know.
 """
 
 from __future__ import annotations
@@ -28,17 +42,68 @@ def test_the_protocol_file_exists():
     assert AGENTS.is_file(), "AGENTS.md is the protocol file; it is missing"
 
 
-def test_claude_md_is_a_symlink_to_it_not_a_copy():
-    """A copy drifts. This repo has twelve documented drifts to prove it."""
-    assert CLAUDE.is_symlink(), (
-        "CLAUDE.md must be a symlink to AGENTS.md, not a copy — two copies of "
-        "the protocol drift, and convention 24 exists because of exactly that"
-    )
-    assert CLAUDE.resolve() == AGENTS.resolve()
+# Where a duplicate would plausibly be dropped. Not the whole tree: docs/ is the
+# lab notebook and quotes the protocol at length by design, and .git/ holds every
+# historical version of it.
+_DUPLICATE_SEARCH = ["*.md", ".claude/*.md", ".claude/*/*.md"]
+
+# Enough of the protocol's own prose to identify a copy, short enough to survive
+# ordinary edits to it. Both lines are structural rather than incidental.
+_FINGERPRINT = [
+    "**This file is the protocol.**",
+    "A new executor proposes; it does not rule.",
+]
 
 
-def test_both_names_give_the_same_protocol():
-    assert CLAUDE.read_text(encoding="utf-8") == AGENTS.read_text(encoding="utf-8")
+def test_the_protocol_has_exactly_one_copy():
+    """A copy drifts. This repo has twelve documented drifts to prove it.
+
+    Searches by CONTENT rather than by path, because the duplicate this guard
+    exists to catch appeared under a name nobody predicted.
+    """
+    protocol = AGENTS.read_text(encoding="utf-8")
+    for line in _FINGERPRINT:
+        assert line in protocol, (
+            f"the fingerprint {line!r} is no longer in AGENTS.md, so this guard "
+            f"can no longer recognise a copy of the protocol — fix the "
+            f"fingerprint, do not delete the check (convention 28)")
+
+    candidates = []
+    for pattern in _DUPLICATE_SEARCH:
+        candidates.extend(ROOT.glob(pattern))
+    assert candidates, "the duplicate scan matched no files at all"
+
+    copies = []
+    for path in sorted(set(candidates)):
+        if path.resolve() == AGENTS.resolve() or not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        if all(line in text for line in _FINGERPRINT):
+            copies.append(str(path.relative_to(ROOT)))
+
+    assert not copies, (
+        f"a second copy of the protocol exists at {copies} — two copies drift, "
+        f"and convention 24 exists because of exactly that. AGENTS.md is the "
+        f"one copy; point at it rather than duplicating it")
+
+
+def test_claude_md_is_the_derived_rules_not_the_protocol():
+    """CLAUDE.md is this repo's working rules, and says where the protocol is.
+
+    Owner-ruled 2026-09-22. The two documents have different jobs and must not
+    be merged back together: the protocol is about who may decide what, and the
+    rules are about how this codebase is written.
+    """
+    assert CLAUDE.is_file(), "CLAUDE.md is missing"
+    text = CLAUDE.read_text(encoding="utf-8")
+    assert text != AGENTS.read_text(encoding="utf-8"), (
+        "CLAUDE.md has become a copy of the protocol again")
+    assert "AGENTS.md" in text, (
+        "CLAUDE.md must point at AGENTS.md — a new agent reads CLAUDE.md first "
+        "and would otherwise never learn the protocol exists")
 
 
 @pytest.mark.parametrize("must_carry", [

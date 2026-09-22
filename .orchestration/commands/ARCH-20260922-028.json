@@ -1,0 +1,57 @@
+{
+  "command_id": "ARCH-20260922-028",
+  "parent_id": null,
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Record B16's measurement and rule it: criteria regenerate per run by design, so every criteria-shaped check has a run-dependent input; convention 27 governs, and the obligation is to record criteria verbatim per run — not to freeze them.",
+  "evidence": [
+    "HANDOVER.md §4.2 B16 — OPEN; 'plan.success_criteria regenerated per run (6/6/6/5 across 4 runs)'",
+    "run readout 2026-09-22 — 'the same criterion scored 0.63 and passed in -010 and 0.43 and failed today. Nothing about the check changed between them. A rewording decided a run.'",
+    "AGENTS.md convention 27 — a repetition of a plan-dependent contrast is a second sample, never a confirmation",
+    "AGENTS.md convention 18 — an instrument reading is a reading, not a diagnosis",
+    "ARCH-20260922-008 — per-criterion shape and criteria count recorded in the unit record",
+    "HANDOVER.md §6.14 and the corpus finding — the coverage death was a consequence of the corpus working"
+  ],
+  "scope": {
+    "include": ["docs/handover-review.md", "HANDOVER.md"],
+    "exclude": ["autornd/**", "tests/**", "workflows/**", "evals/**"]
+  },
+  "constraints": [
+    "Documentation and ledger only. $0.00. No code, test, run or key.",
+    "Record the measurement as it read: 0.63 pass, 0.43 fail, same criterion, reworded, check unchanged. Do not round it into a softer claim.",
+    "State the ruling explicitly and attribute it to the advisor: the regeneration is a property of the system working, not a defect. The plan adapts to the objective; freezing criteria would defeat grounding. The obligation is visibility, not stability.",
+    "State the operational consequence: convention 27 is the governing rule. A pass rate across runs with different criteria is not a rate. Any comparison must state that the criteria differ, and the criteria must be quotable from the run record.",
+    "B16 changes status from OPEN as a defect to a MEASURED PROPERTY with convention 27 cited as its governing rule. Say which, and do not leave it ambiguous.",
+    "Note that ARCH-20260922-008 already records criteria count and per-criterion shape per run — the visibility half is done. The remaining obligation is the reader's: do not aggregate across differing criteria.",
+    "Do not propose making criteria deterministic. That is the defect and the ruling rejects it. If you disagree, say so as a question, not as a change.",
+    "Every count re-derived against the tree (convention 24)."
+  ],
+  "acceptance_criteria": [
+    "B16's row records the 0.63/0.43 measurement with its two source runs named.",
+    "The ruling is recorded explicitly: regeneration is a property; convention 27 governs; the obligation is visibility.",
+    "B16 is no longer recorded as an open defect in a way that implies a fix is pending — its status is stated plainly.",
+    "The consequence for readers is stated: no pass rate across differing criteria is a rate.",
+    "Suite passes unchanged; count reported before and after."
+  ],
+  "verification": [
+    {"command": "grep -n 'B16' HANDOVER.md", "expected": "The measurement, the ruling, and convention 27 all present in the row."},
+    {"command": "grep -n '0.63\\|0.43' docs/handover-review.md HANDOVER.md", "expected": "Both figures recorded with their runs."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count reported and unchanged."},
+    {"command": "git diff --stat", "expected": "Only docs/handover-review.md and HANDOVER.md."}
+  ],
+  "rollback": "Revert the commit; documentation only.",
+  "deliverable": {"branch": "arch/20260922-028-b16-ruling", "pr": true, "commit_style": "conventional"},
+  "assumptions": [
+    "B16's original exhibit — 6/6/6/5 across four runs — is still in the record and can be cited. The precondition checks that.",
+    "The coder's readout created a fresh trace that can be cited by name; locate it rather than reconstructing it."
+  ],
+  "questions": [
+    "Is there a downstream consumer — a report, a dashboard, a sweep aggregate — that currently presents a pass rate across differing criteria as if it were stable? If so, that is a separate defect and the more urgent one; name it.",
+    "B15's original exhibit was a fabricated entity asserted as fact, and today's run invented nothing and marked every proof point unsourced. Does that weaken B15, or is one clean run insufficient to close it? That is a judgement I would rather you surface than make."
+  ],
+  "preconditions": [
+    {"command": "grep -n 'B16' HANDOVER.md", "expected": "Present and OPEN; record the current row verbatim before changing it."},
+    {"command": "ls docs/traces/ | tail -5", "expected": "Locate today's run trace by name; record it. If it does not exist, say so and cite the readout instead."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green before the change."}
+  ]
+}

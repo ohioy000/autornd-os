@@ -60,6 +60,13 @@ ALLOWED = [
     "OpenAI-compatible",
     "OpenAI chat-completions",
     "CLAUDE.md",
+    # The agent-tooling directory, which is this repo's own filename in exactly
+    # the sense CLAUDE.md is. Added when the on-demand context modules landed
+    # and every `.claude/context/<topic>.md` reference in CLAUDE.md read as a
+    # vendor-prefixed model id to the regex. Stripping the directory prefix
+    # leaves the rest of the path scanned, so a real id inside one of those
+    # names would still be caught.
+    ".claude/",
     "Claude Code",
 ]
 
