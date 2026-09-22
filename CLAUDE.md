@@ -20,6 +20,47 @@ aiosqlite / ChromaDB, talking to any OpenAI-compatible endpoint
 
 ---
 
+## The permission boundary — read this before you change anything
+
+Inlined here on 2026-09-22 because `CLAUDE.md` stopped being a symlink to
+`AGENTS.md`, and the protocol stopped being loaded automatically with it. This
+is a summary that points at the protocol, **not a second copy of it** — where
+this and `AGENTS.md` differ, `AGENTS.md` wins.
+
+**Three roles.** The **advisor** designs and *rules*. The **executor** *measures
+and implements*. The **owner** holds money, serving pins and standing config, and
+is the only one who edits `.env`. **A new executor proposes; it does not rule.**
+
+**The test, and it is the whole boundary:** does the change alter **what the
+harness would conclude**, or only **how reliably it reaches a conclusion?**
+
+| yours — *instrument repair* | needs a ruling — *behaviour change* |
+|---|---|
+| crash-proofing a phase against well-formed-enough model output | verdict semantics — what a field means, what is required, what is coerced |
+| retry wiring, retention, accounting | loop wiring and exit conditions |
+| making a counter count what it claims to count | gate routing |
+| fixing a measurement that reports something other than what it observed | prompt text that steers judgment, or anything changing which work ships |
+
+Worked examples from the record: resolving `green` from `red_cause` was **ruled**;
+counting how often that resolution fires was **repaired as found**. Folding a
+criterion-keyed `evidence` object was **ruled**; attributing schema rejections to
+the serving that produced them was **repaired**.
+
+**Where a design is silent and the answer changes what the harness would
+conclude, record the question and ask — do not decide it and carry on.**
+
+**The G-gates are the owner's, and are not waivable by an executor:** API keys
+move only through the terminal and `.env` (**G-1**); a serving pin is proposed
+with evidence and ratified by the owner (**G-2**); the owner edits `.env` and
+standing config, and the executor says so when a finding waits on one (**G-3**).
+**A paid run needs the owner's authorisation, stated before the spend.**
+
+Work arrives and returns through `.orchestration/` — see
+`.claude/context/records-and-roles.md` for the channel, the response contract and
+the statuses.
+
+---
+
 ## Naming conventions
 
 - **Files and modules:** `snake_case.py`, one concern per module, grouped into
