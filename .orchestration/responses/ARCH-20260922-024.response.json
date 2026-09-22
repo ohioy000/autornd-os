@@ -1,0 +1,48 @@
+{
+  "command_id": "ARCH-20260922-024",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "branch": "arch/20260922-024-ledger-visibility",
+  "files_changed": ["tests/serving_ledger.py", "tests/test_serving_ledger.py", "docs/serving-ledger.md", "HANDOVER.md", "README.md", ".orchestration/responses/ARCH-20260922-024.response.json"],
+  "preconditions_run": [
+    {"check": "sed -n '40,60p' tests/serving_ledger.py", "result": "PASS — the skip-unpinned rule at line 49: `if not provider: continue`"},
+    {"check": "ls tests/test_serving_ledger.py", "result": "PASS"}
+  ],
+  "answer_to_the_commands_question": {
+    "question": "Does the ledger render for a repo with no committed results, or does it require a sweep to have run?",
+    "answer": "It renders, and it renders HONESTLY now, which it did not before. With no traces, `derive` returns empty combos and an empty tier set and `render` emits a header row and nothing else. Before this change that was indistinguishable from a fully-measured system with no interesting arms. Now a tier named by any header but measured by no unit is listed under 'Unmeasured tiers' with the reason, so an empty corpus reads as an empty corpus. `test_the_ledger_covers_every_trace_that_declares_a_pin` already guarded against a silently-empty derivation and still does."
+  },
+  "results": {
+    "what_changed": "The derivation now reads BOTH the header's pins and each unit's `providers_by_function`. Pinned arms are counted exactly as before; rotated arms — who actually answered when nobody pinned the tier — are counted separately. `pinned` is part of the key rather than a column computed afterwards, because the same provider serves a tier both ways and folding them would claim a pin's evidence for rotation's.",
+    "escalation_is_visible_for_the_first_time": "Seven rotated arms over 17 units: DigitalOcean 4, Sail Research 4, Together 3, DeepInfra 2, Modal 2, Chutes 1, InferenceNet 1. Zero completed across all of them, which is itself a finding the ledger could not previously state. §6.10 measures this tier at 70-78% of hard-trace spend.",
+    "the_other_four_tiers_too": "`research` (Google, 126 units), `search` (Perplexity, 54 on sonar and 30 on sonar-pro), and `ranker`/`premium`, which appear under Unmeasured with the reason — named in a header's model map, no committed unit records a provider for them.",
+    "pinned_rows_unchanged_and_guarded": "GMICloud/engineering still reads 243 units and 233 completed; StreamLake/architecture still 341 and 285; Alibaba/triage still 346 and 286. `test_the_pinned_rows_kept_their_numbers` asserts the GMICloud figure has not moved, so a future change to the derivation cannot quietly restate a published number.",
+    "the_tiers_denominator_is_derived_not_listed": "`derive` returns the set of tiers any header names a model for, so a tier added to the map tomorrow is covered without anyone remembering to add it here — which is the same failure mode one level up.",
+    "doc_updated_with_the_reading_rules": "`docs/serving-ledger.md` now says that pinned and rotated are different evidence and are never added, and that rotated rows are NOISIER BY CONSTRUCTION — rotation reaches for a different provider precisely when the first one failed, so a rotated arm's errors include the failure that caused the rotation. Without that sentence the new rows would read as a provider quality ranking, which they are not.",
+    "counts": "812 -> 816.",
+    "cost": "$0.00 — reads committed results only."
+  },
+  "proved_by_breaking_it": "The rotated-arm read was disabled and the suite run: `test_the_committed_table_is_the_derived_one`, `test_escalation_has_rows_and_not_merely_a_mention` and `test_rotated_and_pinned_evidence_is_not_folded_together` all fail. Restored, all seven pass.",
+  "A_CONVENTION_28_VIOLATION_IN_MY_OWN_NEW_GUARD": {
+    "what": "The first version of `test_escalation_is_visible` asserted that the string '`escalation`' appeared in the rendered table. It PASSED with the blind spot deliberately restored.",
+    "why": "Because the 'Unmeasured tiers' line names the tier too. The guard was satisfied by the sentence that says the thing is missing.",
+    "how_found": "By breaking the derivation and READING the result rather than trusting the guard — the same procedure that found the stamp regex this morning, and the second time today a guard of mine was satisfied by the wrong evidence.",
+    "fixed": "It now asserts escalation has table ROWS, at least ten units, and a data line starting '| `escalation`'. Renamed to `test_escalation_has_rows_and_not_merely_a_mention` so the distinction survives in the name.",
+    "second_instance_in_the_same_file": "`test_rotated_and_pinned_evidence_is_not_folded_together` originally ended `assert isinstance(both, set)`, which cannot fail. It now asserts `both` is non-empty, which the corpus supports: GMICloud and DigitalOcean each ran `engineering` both pinned and rotated."
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "All eight tiers appear with an explicit status: measured, unmeasured-with-reason, or unpinned-rotated", "met": true},
+    {"criterion": "Escalation appears, or its absence is named with the reason", "met": true, "evidence": "seven rotated arms, 17 units"},
+    {"criterion": "A reader cannot mistake the table for a complete ranking where no ranking is licensed", "met": true, "evidence": "the pinned-vs-rotated paragraph and the noisier-by-construction sentence, plus the unchanged convention 23 caveat"},
+    {"criterion": "Existing pinned rows are unchanged, verified by a test", "met": true},
+    {"criterion": "A test fails if any tier can be silently absent", "met": true},
+    {"criterion": "Suite count before and after", "met": true, "evidence": "812 -> 816"}
+  ],
+  "deviations": [],
+  "blockers": [],
+  "questions_for_advisor": [
+    "ESCALATION HAS ZERO COMPLETED UNITS ACROSS ALL SEVEN ROTATED ARMS (17 units, 0 completed, 12 errors). That is now visible for the first time and I do not know what it means. The innocent reading is selection: escalation only runs when something already went wrong, so a unit reaching it is a unit already in trouble, and the terminal it reaches is attributed to the escalation tier. The other reading is that the tier genuinely does not work. The ledger cannot distinguish them and I have not tried to — but it is the first question the new rows raise and it sits on 70-78% of the spend.",
+    "The `research` tier shows 126 rotated units on Google with 68 completed and 41 errors. That is a larger corpus than most PINNED arms in this table and it has never been read. It was pinned to Google on 2026-09-22 on the strength of 126 observations and zero schema rejections — which is the same number, now visible in the ledger rather than derived by hand from the traces. Worth noting that the pin's justification and the ledger now agree by construction rather than by coincidence.",
+    "Rotated arms are noisier by construction and the doc says so, but nothing enforces the distinction downstream. If a future command computes a compliance rate from this table, it must filter on `how == pinned` or state that it did not. That is a constraint on readers rather than a property of the instrument, which is the weaker kind."
+  ]
+}
