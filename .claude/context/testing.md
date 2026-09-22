@@ -1,10 +1,10 @@
 # Testing conventions
 
-Load when writing tests. Source: `tests/conftest.py` and the 50 files beside it.
+Load when writing tests. Source: `tests/conftest.py` and the 51 files beside it.
 
 ## What exists, honestly
 
-- **50 test files, ~889 tests, ~45 s, no network and no spend.** That is
+- **51 test files, ~923 tests, ~45 s, no network and no spend.** That is
   deliberate, not incidental: the shape of a workflow, its gates and loops, the
   deterministic checks, the condition language and the eval scoring are all
   decidable without a provider.

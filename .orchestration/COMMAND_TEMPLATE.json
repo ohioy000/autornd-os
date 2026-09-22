@@ -1,0 +1,57 @@
+{
+  "command_id": "ARCH-YYYYMMDD-NNN",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "One sentence. What the harness should be able to do, or what should be known, that is not true now.",
+
+  "evidence": [
+    "Every citation checkable against the tree. A sha, a path, a figure or a §. A command whose evidence cannot be checked against the tree is not evidence."
+  ],
+
+  "scope": {
+    "include": [
+      "<the paths this command's own work touches>",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "<paths this command must not touch, and why matters more than the list>"
+    ]
+  },
+
+  "constraints": [
+    "Free, or the spend is named and the owner's authorisation is required before the first call.",
+    "State what must NOT be done as well as what must. A constraint that only says 'do X' cannot be violated informatively."
+  ],
+
+  "acceptance_criteria": [
+    "Each one decidable by running something, not by reading prose.",
+    "Suite count reported before and after."
+  ],
+
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count reported before and after."}
+  ],
+
+  "rollback": "What undoes this, or 'Not applicable — a measurement' with the bound that limited it.",
+
+  "deliverable": {"branch": "arch/YYYYMMDD-NNN-short-slug", "pr": true, "commit_style": "conventional"},
+
+  "assumptions": [
+    "Each one a thing that could be false. If it is false, say what the executor should do about it."
+  ],
+
+  "questions": [
+    "Things the executor should report on rather than decide. A question here is not a licence to rule."
+  ],
+
+  "preconditions": [
+    {"command": "<a runnable check of a cited sha, path or figure>", "expected": "<what makes it pass, and what to return if it fails>"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green at the current count before the change."}
+  ]
+}
