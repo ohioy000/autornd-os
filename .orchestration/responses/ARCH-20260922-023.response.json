@@ -1,0 +1,49 @@
+{
+  "command_id": "ARCH-20260922-023",
+  "status": "BLOCKED",
+  "blocked_on": "the owner's authorisation to spend. Everything else is done and green.",
+  "executed": "2026-09-22",
+  "branch": "arch/20260922-023-b14-rerun-2",
+  "files_changed": ["docs/preregistration-b14-rerun-2.md", ".orchestration/responses/ARCH-20260922-023.response.json"],
+  "preconditions_run": [
+    {"check": "grep B19 / B20 in HANDOVER", "result": "PASS — both CLOSED on main"},
+    {"check": "grep 'Convention 28' docs/handover-review.md", "result": "PASS — ratified in §33.2, so the guard repairs precede this run and the precedence claim is provable"},
+    {"check": "read the surviving STDOUT-ONLY.txt for a terminal", "result": "PASS, AND IT DOES NOT ANSWER THE PRIMARY QUESTION. Grepped for terminal/status/bound/ceiling: the only hits are the spend-by-tier and served-by lines. No terminal, no status, no bound named. The question is genuinely open and this run is not buying an answer already in hand."},
+    {"check": "git status --porcelain", "result": "FAILED, THEN FIXED. The only dirty entry was `ai-native-starter-pack`, a separate cloned repository that a `git add -A` of mine had committed to main in 943f6af along with 3.9 MB of diagrams. Untracked and gitignored in PR #43 rather than worked around."},
+    {"check": "OPENROUTER_API_KEY present", "result": "PASS — presence only, never the value"},
+    {"check": "python -m autornd.preflight", "result": "PASS — 14 ok, 0 failing, all eight tiers"}
+  ],
+  "THE_ONE_GATE_THAT_IS_NOT_MET": {
+    "what": "Spend authorisation for THIS run.",
+    "why_it_is_not_inherited": "The $0.50 envelope was ratified for ARCH-20260922-010, and -010 ran. $0.3453 of it remains unspent, and the proposed $0.31 cap sits inside that — but an envelope ratified for a run that has happened is not an envelope for the next one. G-3 puts money with the owner, and the previous time I asked about a re-run I said I would not proceed without a word and did not get an unambiguous one.",
+    "what_is_staged": "The pre-registration is committed at 6e8b6a0, before any spend, which is the protocol's own requirement and is the part that cannot be done afterwards. Every free gate is green. The run is one command and one word away.",
+    "what_it_costs_to_wait": "Nothing. The pre-registration's value is precedence, and precedence is already established by the commit."
+  },
+  "answers_to_the_commands_questions": {
+    "does_the_surviving_stdout_answer_the_primary_question": "NO, and it was checked rather than assumed. If it had, the command says to stop and report rather than spend, and I would have. It names spend by tier and provider by tier and nothing about a terminal.",
+    "one_repetition_or_two": "TWO, and the caps are built so two are actually reachable — 2 × $0.155 against a $0.31 sweep, exactly. That is -010's lesson made operational: -010 asked for n=2 under `--max-spend 0.50 --max-spend-sweep 0.50`, which permits exactly ONE unit, and nothing said so. The pre-spend warning added by ARCH-20260922-021 will print nothing this time, and its silence is the confirmation. Convention 27 still applies: the two units are two SAMPLES, not a repetition, because the plan regenerates.",
+    "should_the_run_be_cancelled_and_the_money_kept": "Not on the stdout's evidence, since it answers nothing. But the owner may still decide the answer is not worth $0.31, and that is a legitimate call I have no standing to pre-empt."
+  },
+  "what_the_pre_registration_carries": {
+    "why_it_is_not_a_replication": "The apparatus changed under it: B18's typed terminal, B19's honest skip reporting, B20's mirror, and the sample-arithmetic warning. The -010 pre-registration is referenced, not rewritten, and stands committed and unedited with three of its seven predictions unscorable.",
+    "seven_predictions": "R1 two units produced · R2 the trace can answer the primary question, and if it cannot the run failed at its only job · R3 coverage still binds but on PRESENCE-shaped criteria — if a prohibition or form criterion fails again, B17-R1 is wrong and §29.1's Phase 2 fires WITH a committed trace this time · R4 a terminal, labelled weak now that B18 is closed · R5 convergence, the one worth being wrong about · R6 B15-2 persists · R7 the mirror holds every record the primary does, which is B20's first live test.",
+    "not_predicted_deliberately": "A terminal at iteration 1. That wording was refuted from free evidence before -010 and is not resurrected."
+  },
+  "deviations": [
+    {
+      "what": "The run was not executed.",
+      "why": "The command's own constraints do not carry an owner-ratification gate, but the repo's G-gates put money with the owner and the envelope in hand was ratified for a different run. Proceeding on an inherited envelope would be the quiet-proceed the channel exists to prevent.",
+      "impact": "Everything reversible is done. The irreversible thing waits for one word."
+    },
+    {
+      "what": "A precondition failure was FIXED rather than reported and abandoned.",
+      "why": "`git status --porcelain` was dirty because of files my own broad `git add -A` had committed to main — an embedded repository and 3.9 MB of diagrams belonging to a different project. Reporting BLOCKED on my own mess and stopping would have been technically correct and useless.",
+      "impact": "PR #43 untracks them and gitignores them; they stay on disk. The merge helper's `git add -A` is narrowed to the paths each change touches."
+    }
+  ],
+  "blockers": ["Owner authorisation to spend up to $0.31 on this run. One word."],
+  "questions_for_advisor": [
+    "R2 is the prediction I would most like the advisor to look at before the run: it says that if the trace cannot answer the primary question, the run failed at its only job REGARDLESS of what else it shows. That is deliberately harsher than -010's framing, where a partly-readable result got partial credit. I think the harsher form is right — a measurement that cannot answer the question it was bought for is not a cheap measurement, it is a wasted one — but it is a standard, and standards are the advisor's.",
+    "If the owner declines the spend, B17 stays open, §31's freeze holds, and the project's central claim stays undemonstrated at a cost of $0.00. That is a coherent position and I want to name it as one rather than treat the run as inevitable. The claim has been observed once (B14-1/B14-2 in the -010 arc's predecessor); what is missing is a run that TERMINATES, which is a different and smaller claim than the one the project rests on."
+  ]
+}
