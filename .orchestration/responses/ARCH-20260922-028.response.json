@@ -1,28 +1,76 @@
 {
   "command_id": "ARCH-20260922-028",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "executed": "2026-09-22",
   "head_before": "d90e4750b32504f741ffad34e7e20de093bf33c5",
-  "head_after": null,
+  "head_after": "886aff214ffb9df46d7eccb7ae24738dbdf43d84",
   "preconditions": [
     {
       "command": "grep -n 'B16' HANDOVER.md",
       "result": "PASS",
-      "observed": "Present at HANDOVER.md:749, status 'OPEN (advisor, 2026-09-20)'. Row recorded verbatim before any change in the field below."
+      "observed": "Present at HANDOVER.md:749, status 'OPEN (advisor, 2026-09-20)'. Row recorded verbatim before any change, in b16_row_before below."
     },
     {
       "command": "ls docs/traces/ | tail -5",
       "result": "PASS",
-      "observed": "Today's trace located by name: docs/traces/b14-rerun-2-marketing-claims.jsonl. It survived the run (mirror byte-identical, diff -q clean, §34). The readout's 0.43 figure is citable from it, and the 0.63 comparator is in docs/handover-review.md:7144 from ARCH-20260922-010, whose own trace was destroyed by executor error (§29.2)."
+      "observed": "Today's trace located by name: docs/traces/b14-rerun-2-marketing-claims.jsonl — the 0.43 run, which survived (mirror byte-identical, diff -q clean, §34). The 0.63 comparator is ARCH-20260922-010, whose own trace was destroyed by executor error (§29.2), so docs/handover-review.md §34.4 is cited as its record instead. Stated rather than reconstructed."
     },
     {
       "command": ".venv/bin/python3 -m pytest tests/ -q",
       "result": "PASS",
-      "observed": "870 passed in 43.26s. Green before the change. Note: the count is 870 rather than 855 because this branch is based on ARCH-20260922-026, which added 15 tests; see deviations."
+      "observed": "870 passed in 43.26s. Green before the change."
     }
   ],
   "b16_row_before": "| B16 | **Plan success criteria are rewritten from scratch on every run of the same scenario** | medium | **OPEN (advisor, 2026-09-20).** Across **4** committed plan outputs of the identical `gen_marketing_claims` request the criteria were **6, 6, 6 and 5**, each differently worded. B13/016's mechanism keys on *what the plan demands* — `verify_grounding` reads `plan.success_criteria`, and `deferred_gaps` varied **3, 0, 0, 0** across these runs — so the citation-demand pathway's **input is not stable run-to-run**. A reproducibility caveat on 016's registered contrast, which B13's row already states at n=1 each side. **No fix ruled:** the variance is inherent to a generated plan, and the mechanism held across all four (`demanded` true 4/4, zero demand-missed — `ARCH-20260920-004`). Disposition: feeds B14's design — demand-detection must tolerate criteria variance, and any future pre-registered multi-run contrast carries its per-run criteria counts as **run variables**. **Rider (advisor, 2026-09-22):** the zero-deferred-gaps question is an **open sub-question of this row** — why the grounding phase deferred no blocking gap on plans that demanded citations (`deferred_gaps` 3/0/0/0, `ARCH-20260920-010`). Detection fired 4/4; what varied was what it handed downstream, and nothing has explained it. |",
-  "results": null,
-  "deviations": null,
-  "questions_for_advisor": null
+  "results": {
+    "measurement_recorded": {
+      "figures": "0.63 passed (ARCH-20260922-010) and 0.43 failed (ARCH-20260922-023), same criterion conceptually, reworded, criteria_addressed unchanged between them.",
+      "not_softened": "Recorded at measured precision. The stated consequence is the strong one: a rewording moved a criterion across the 0.50 threshold and decided the run — the first run shipped on that criterion, the second died on it.",
+      "source_runs_named": "Yes, both. docs/traces/b14-rerun-2-marketing-claims.jsonl for the 0.43 run; docs/handover-review.md §34.4 for the 0.63 run, whose trace was destroyed by executor error (§29.2) and is cited as a record rather than a trace."
+    },
+    "ruling_recorded": {
+      "attribution": "advisor, 2026-09-22",
+      "substance": "The regeneration is a property of the system working, not a defect. The plan adapts to the objective it was given; that adaptation is what grounding buys, and freezing criteria would defeat the mechanism. Determinism is explicitly rejected as a direction. The obligation is visibility, not stability.",
+      "governing_rule": "Convention 27 — a repetition of a plan-dependent contrast is a second sample, never a confirmation.",
+      "consequence_stated": "A pass rate across runs with different criteria is not a rate. Any comparison must state that the criteria differ, and the criteria must be quotable from the run record.",
+      "visibility_half_noted": "Yes. ARCH-20260922-008 already records criteria count and per-criterion shape per unit, so the criteria are quotable. The remaining obligation is the reader's: do not aggregate across differing criteria. Written down rather than tested, because no counter can enforce it."
+    },
+    "status_change": {
+      "from": "OPEN (advisor, 2026-09-20) — an open defect implying a pending fix",
+      "to": "MEASURED PROPERTY — RULED (advisor, 2026-09-22). Severity column changed from 'medium' to 'property, not defect'. The row states plainly that no fix is pending and that it is kept because the consequence is load-bearing, not because anything is owed.",
+      "ambiguity": "None. The row opens with the ruling and says explicitly that nothing is owed."
+    },
+    "explicitly_not_closed": [
+      "The deferred_gaps rider (3/0/0/0, ARCH-20260920-010) stays OPEN. It is a question about what detection handed downstream, not about criteria variance, and the row now says so in terms.",
+      "B15. Untouched here; raised as a question below."
+    ],
+    "written": ["HANDOVER.md B16 row (line 749)", "docs/handover-review.md §35, appended"],
+    "suite": {"before": "870 passed", "after": "870 passed", "delta": "0 — documentation only"}
+  },
+  "deviations": [
+    {
+      "what": "This branch is based on ARCH-20260922-026's branch rather than on main, so the suite count reported is 870 rather than main's 855.",
+      "why": "-026 was executed first in the same session and left 15 new tests on its branch. Branching -028 from main would have produced a green 855 but a tree without -026's work, and the two would then conflict on the generated counts in HANDOVER.md. The count is unchanged BY THIS COMMAND, which is what its acceptance criterion asks; the absolute number differs from main's because of the base, not because of anything here.",
+      "check": "git diff --stat for this command's commit is exactly HANDOVER.md and docs/handover-review.md, as the fourth verification requires."
+    },
+    {
+      "what": "Answered the command's first question with an investigation rather than leaving it open.",
+      "why": "The question asks whether a downstream consumer presents a pass rate across differing criteria as if it were stable, and says that if so it is a separate and more urgent defect to be named. Naming it required looking, so the executor looked. The finding is recorded in both documents and below. NOT FIXED — autornd/** is out of scope and the display's status is a ruling."
+    }
+  ],
+  "questions_for_advisor": [
+    {
+      "question": "Is RepeatedRun.rate presenting a plan-dependent sweep as a rate a defect, and if so how urgent?",
+      "context": "autornd/evals/runner.py:757 computes passes/applicable over the repetitions of one scenario, and the class docstring calls that 'the unit of measurement'. For a plan-dependent scenario, --repeat N produces N runs whose criteria were each written fresh, and the rate presents them as one number with nothing saying the denominators differ. The docstring is not wrong for the case it was written for — a triage scenario repeated three times does have a stable contract. The distinction is plan-dependence, and nothing in the type says which a given scenario is. This is the more urgent defect the command anticipated. It is a ruling because it changes what a reader concludes from a sweep, so it is reported rather than repaired.",
+      "options_not_chosen": "Three shapes suggest themselves and the executor has picked none: a flag on Scenario declaring plan-dependence, a caveat emitted alongside any rate whose runs had differing criteria, or leaving the display alone and relying on convention 27 being read."
+    },
+    {
+      "question": "Does §34's R6 weaken B15, or is one clean run insufficient to close it?",
+      "context": "The command asks for this to be surfaced rather than decided, and it is surfaced rather than decided. R6 recorded that both units marked every proof point 'unsourced' and invented no firms, where the -010 comparator had fabricated sources. Against that: B15's row records the asymmetry as its finding — grounding moves name-invention and does not move citation-invention — and one run in the good direction at n=1 is exactly the shape convention 23 warns about. The executor's inclination is that it is insufficient, but that is a judgement about what the harness concludes and therefore not the executor's."
+    },
+    {
+      "question": "Should B16's row remain in the bug ledger at all now that it is ruled a property?",
+      "context": "It is kept there because the consequence binds every future comparison, and moving it to §6 (measured facts) would put the rule further from the table a reader consults when deciding whether something is broken. Recorded as a choice rather than an oversight, and easily reversed."
+    }
+  ]
 }
