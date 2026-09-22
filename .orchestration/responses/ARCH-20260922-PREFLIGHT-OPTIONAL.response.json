@@ -1,0 +1,45 @@
+{
+  "command_id": "ARCH-20260922-PREFLIGHT-OPTIONAL",
+  "parent_id": null,
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "provenance": "OWNER-RULED, not advisor-commanded. The owner instructed the remaining tiers be pinned; preflight then reported two failures against a correct configuration, and repairing an instrument that reports something other than what it observed is executor work under AGENTS.md's permission boundary — it changes how reliably the harness reaches a conclusion, not what it concludes. No advisor command exists and this response carries no advisor command id, per the convention ARCH-20260922-002 proposes.",
+  "head_before": "3617287",
+  "branch": "arch/20260922-preflight-optional-tiers",
+  "files_changed": ["autornd/preflight.py", "tests/test_preflight.py", "HANDOVER.md", "README.md", ".orchestration/responses/ARCH-20260922-PREFLIGHT-OPTIONAL.response.json"],
+  "what_triggered_it": "Pinning all eight tiers. `python -m autornd.preflight` then reported '[FAIL] pin ranker — pinned to Fireworks but no model is set' and the same for premium, against models that WERE set: qwen/qwen3-reranker-8b and z-ai/glm-5.3. The configuration was correct and the instrument was not.",
+  "results": {
+    "bug_1_optional_tiers_invisible": "_configured() read only REQUIRED_TIERS, so `ranker` and `premium` were absent from the models dict. A pin on either then hit the `if not model` branch and reported 'no model is set'. The instrument had observed 'this tier is not in my list' and reported 'this tier has no model' — a stronger and different claim, which is convention 26's exact shape. Fixed by adding OPTIONAL_TIERS = ('ranker', 'premium'), read for pins but never checked for being unset, because unset is their normal state.",
+    "bug_2_a_reranker_is_not_a_chat_model": "Subtler, and only visible because the reranker was pinned. run() skipped endpoint resolution for any model absent from /models. But /models lists CHAT models: qwen/qwen3-reranker-8b is not in it at all, while /models/qwen/qwen3-reranker-8b/endpoints resolves to Fireworks perfectly well. So a correctly pinned reranker reported 'cannot resolve endpoints' for endpoints that were one request away. The catalogue's SILENCE about a model was being read as the model not existing. Fixed by asking the endpoints route for every pinned model and reporting a genuine fetch failure rather than skipping.",
+    "bug_3_a_misspelled_tier": "Found while writing the first fix. A pin naming a tier the harness does not run — 'rankr:Fireworks' — read identically to an unset model. The finding now says 'not a tier this harness runs' and lists the eight, so a typo names itself.",
+    "preflight_now": "14 ok, 0 failing, with all eight tiers pinned.",
+    "counts": "780 -> 790, 42 files unchanged. Section 3.7's table regenerated from collection.",
+    "cost": "$0.00"
+  },
+  "THE_FINDING_THAT_MATTERS_MOST": {
+    "what": "I wrote seven tests for these bugs and SIX OF THEM PASSED AGAINST THE BROKEN CODE.",
+    "why": "Every one of them tested check(), which is pure and was never the problem. Both bugs lived in _configured() and run(), the two functions that BUILD check()'s arguments. Handing check() a models dict the broken code would never have produced proves nothing about the broken code. The module's own docstring says check() is pure 'so every one can be simulated without a network or a key' — that design is good, and it is also what made the untested wiring the obvious place for a bug to sit.",
+    "how_it_was_caught": "By running the new tests against the old code before believing them, which convention 22 demands and which nothing enforces. Only the misspelled-tier test failed. The other six were decoration.",
+    "what_was_done": "Three end-to-end tests added at the actual sites — TestTheWiringBeneathCheck — monkeypatching _fetch and settings and driving asyncio.run(preflight.run()). Verified by surgically reverting ONLY the two behaviours (keeping the new constant importable so collection still worked) and confirming both fail, then restoring and confirming all 20 pass.",
+    "the_pattern_this_extends": "This is the sixth instrument in two weeks to report less than it observed, and the FIRST where the test written to catch it could not fail either. Convention 26 covers the instrument. Nothing yet covers the test of an instrument, beyond convention 22's wording, which this case satisfies in letter — the test did simulate a condition — while missing entirely in substance, because it simulated a condition the code under repair was already fine with."
+  },
+  "pins_recorded": {
+    "search:Perplexity": "perplexity/sonar has exactly one endpoint. Documentary. 84 observed calls, zero rejections.",
+    "research:Google": "126 of 128 observed research calls across 346 committed units, zero schema rejections — measured compliance, which convention 23 ranks first. Google AI Studio has better catalogue numbers (100.0/99.9/99.7% uptime_1d, cheaper, faster) and zero observations here. One endpoint in Google's pool reads status -2 at 86.0%.",
+    "escalation:Moonshot AI": "NOT a measured verdict. 17 observations over 7 providers, max n=4 — nothing clears convention 23's bar. Chosen on catalogue evidence: first-party, status 0, 99.9% uptime_1d, 100% uptime_30m, structured_outputs and response_format both supported. p50 5182 ms is the slowest of the healthy group and was not allowed to decide, latency being the axis convention 23 ranks last.",
+    "ranker:Fireworks": "One endpoint. status 0, 100.0% both windows, $0.00. Advertises no structured_outputs, which is CORRECT: the rerank path returns scores, not a JSON verdict (knowledge/context.py::_rank). Checked before pinning rather than assumed.",
+    "premium:Friendli": "NOT measured — premium has never been observed in 346 units. 34 endpoints serve glm-5.3; filtered to status 0 WITH structured_outputs AND response_format, Friendli is top on uptime at 100.0% both windows, 1201 ms, cheapest of that group at $3.96/Mtok. Caveat on the quality tier: it declares no quantization. Baidu (fp8) and AkashML (fp8) are the declared-precision alternatives at near-identical numbers. NOT chosen: Alibaba, 100% uptime but no structured_outputs; and Z.AI, the FIRST-PARTY endpoint, which also lacks it — the opposite of escalation. The rule stayed the same and the evidence pointed the other way."
+  },
+  "deviations": [
+    {
+      "what": "This work has no advisor command.",
+      "why": "It arose from an owner instruction and is instrument repair, which the permission boundary assigns to the executor. Borrowing an advisor command id would be the false provenance ARCH-20260922-002 exists to forbid, so the response is filed under an owner-ruled id instead.",
+      "impact": "The advisor sees the repair and its finding without it being attributed to a command they did not write."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "Six of eight pins have NEVER RUN. Only triage/Alibaba and engineering/GMICloud carry live n. ARCH-20260922-010 will therefore be the first live exercise of research-on-Google-pinned, escalation-on-Moonshot-AI, ranker-on-Fireworks and premium-on-Friendli simultaneously, on the same run that tests B17-R1. If that run misbehaves, FOUR new pins and one new instrument are confounded with the thing being measured. I recommend -010's pre-registration name this confound explicitly, and that an escalation or research failure be read as a pin reading first and a B17-R1 reading second. This is the executor flagging a design risk, not proposing to change the run.",
+    "Does convention 22 want a rider? It says an instrument's test simulates the condition it watches end to end. Six tests here satisfied that in letter — each simulated A condition — while testing a pure function that was never broken. The missing rule is closer to: a test written for a specific defect is RUN AGAINST THAT DEFECT before it is believed. Nothing in the repo enforces it and it is the only reason these two bugs did not ship with a green suite and seven tests blessing them."
+  ]
+}
