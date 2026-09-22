@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `039cabe` · **Branch:** `main`
-**Tests:** 790 as of `3617287` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
+**Tests:** 805 as of `bf31dd7` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      42 files, 790 tests (as of `3617287`)
+tests/                      43 files, 805 tests (as of `bf31dd7`)
 ```
 
 ### 2.3 Key design patterns
@@ -655,7 +655,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (790 total, as of `3617287`)
+### 3.7 Test distribution (805 total, as of `bf31dd7`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -680,6 +680,7 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_all_judges_exit.py | 15 | test_workflow.py | 4 |
 | test_schema_wiring.py | 15 | test_phase_timing.py | 3 |
 | test_shipped_examples.py | 15 | test_serving_ledger.py | 3 |
+| test_terminal_on_bound.py | 15 | — |  |
 
 Regenerate with `pytest tests/ --collect-only -q`; the total is the part that
 matters and `tests/test_docs.py` fails if the README badge disagrees with it.
@@ -723,7 +724,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 790/790 pass.** Everything below is a live-behaviour
+**No failing unit tests — 805/805 pass.** Everything below is a live-behaviour
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
@@ -1610,7 +1611,7 @@ answer: `.orchestration/responses/ARCH-20260920-005.response.json`.
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 790 tests as of `3617287`, ~52 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 805 tests as of `bf31dd7`, ~52 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \

@@ -1,0 +1,60 @@
+{
+  "command_id": "ARCH-20260922-009",
+  "revision_executed": "the revised -009, against the narrowed framing in §29.2 / B18",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "head_before": "bf31dd7",
+  "branch": "arch/20260922-009-terminal-on-bound",
+  "files_changed": ["autornd/evals/runner.py", "autornd/graph/executor.py", "tests/test_terminal_on_bound.py", "HANDOVER.md", "README.md", "AGENTS.md", ".orchestration/responses/ARCH-20260922-009.response.json"],
+  "preconditions_run": [
+    {"check": "grep B18 HANDOVER.md", "result": "PASS — present in §4.2 at severity high"},
+    {"check": "ls docs/traces | grep b14", "result": "PASS — b14-demo-marketing-claims-grounded.jsonl"},
+    {"check": "suite green before", "result": "PASS — 790 passed"}
+  ],
+  "the_trace_read_before_writing_code": {
+    "field_that_carried_the_bound": "error — \"stopped at 42 model calls (ceiling 41); raise max_calls on the scenario if this is expected. By tier: {'triage': 1, 'research': 2, 'architecture': 11, 'engineering': 27, 'escalation': 1}\"",
+    "field_that_was_empty": "status — the empty string",
+    "which_bound": "CONFIRMED as the scenario's CALL CEILING, not a loop iteration bound. The assumption in the command held, and the trace says so in its own words. The 41 is run_scenario's `ceiling + 1` headroom over the scenario's max_calls of 40."
+  },
+  "THE_GAP_IS_NARROWER_THAN_THE_COMMAND_ASSUMED": {
+    "finding": "PRODUCTION NEVER HAD THIS DEFECT. autornd/engine/workflow.py:95-99 catches the same exception and persists WorkflowStatus.BLOCKED with the message as `error`. A ceiling-stopped production run has always had a typed terminal.",
+    "where_it_actually_was": "The EVAL RUNNER alone. run_scenario caught CallCeilingExceeded, asyncio.TimeoutError and the generic Exception, set `error` from each, and left the partial state's status as None — which the ScenarioRun then recorded as ''.",
+    "what_it_settles": "The command's open question — 'should a ceiling-stopped run persist as BLOCKED or ESCALATED?' — is ANSWERED BY THE EXISTING CODE rather than by me. Production already concludes `blocked`. Making the eval record say `blocked` is consistency repair, not a ruling, and it does not change what the harness concludes anywhere. Had I picked a value freely I would have invented a third state that nothing else in the system agrees with, which is what the command warned about.",
+    "the_second_assumption_also_verified": "The command said 'the eval runner's truncated-sweep handling may already be correct; verify before assuming'. It IS correct — SweepBudget.record bills every unit including aborted ones, and the truncation path was not touched."
+  },
+  "results": {
+    "bound_terminals": "_end_on_bound sets state.end('blocked', 'stopped by the <bound>: <the original message>'). Four bounds named in the operator's words: call ceiling, spend ceiling, deadline, unhandled error. The spend and call ceilings share one exception type and are distinguished by the message's own shape.",
+    "the_error_text_is_untouched": "As instructed. The new reason QUOTES it rather than replacing it, so the per-tier breakdown survives.",
+    "set_once_ordering": "state.end already sets only if status is None, so a run that reached its own terminal before a late bound fired keeps it. Asserted by a test, because the opposite would make every late timeout look like a block.",
+    "loop_exhaustion": "The bound was already named ('did not converge within N iterations'); the DISSENT was not. _dissent_suffix appends ', still red: coverage, validate' by reading the last body output carrying a `dissenting` key. Read by shape, not by node name, because a loop folds exactly the judges its own body produces and the fold's id belongs to the workflow file.",
+    "paths_that_can_still_stop_without_a_status": "NONE found in the eval runner: all four except branches now terminate. Named rather than widened into: a run whose executor returns normally without any node ending it would still record '' — but that is a workflow-shape defect the loader already rejects at load time (every loop must declare a bound), and repairing it here would mask it.",
+    "assertion_demanded_by_the_acceptance_criteria": "NO verdict semantics, loop body, gate condition or prompt was changed. Verified mechanically: `git diff --stat -- autornd/engine/phases.py workflows/` is EMPTY.",
+    "counts": "790 -> 805, 42 -> 43 files. §3.7 regenerated from collection.",
+    "cost": "$0.00"
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "Replaying the ceiling breach yields a terminal status naming the call ceiling", "met": true, "evidence": "TestAgainstTheRunThatOpenedB18 reads the committed trace's own error string and replays it"},
+    {"criterion": "The previously empty status is non-empty on every bound-stopped unit", "met": true, "evidence": "TestTheRunnerActuallyCallsIt drives run_scenario for all three exception paths"},
+    {"criterion": "A loop bound met by exhaustion names the bound and the dissenting judge", "met": true, "evidence": "TestLoopExhaustionEndToEnd drives the real executor loop to exhaustion"},
+    {"criterion": "Every bound has a test simulating it end to end", "met": true},
+    {"criterion": "No verdict semantics, loop body, gate or prompt changed — asserted", "met": true, "evidence": "empty diff against phases.py and workflows/"},
+    {"criterion": "Suite passes; count before and after", "met": true, "evidence": "790 -> 805"}
+  ],
+  "deviations": [
+    {
+      "what": "The first version of my end-to-end runner test was decorative and I rewrote it before committing.",
+      "why": "It called _end_on_bound by hand and asserted the helper worked — proving nothing about whether run_scenario calls it. That is the identical mistake this morning's preflight repair caught in six of seven tests. It is the third time today the distinction has mattered.",
+      "impact": "The class now drives run_scenario with a real Scenario and WorkflowSpec and asserts on ScenarioRun.status, the field that was empty in the trace. The same rewrite was needed for the loop half: the _dissent_suffix tests pass against the defect, so TestLoopExhaustionEndToEnd was added to drive the executor's real loop."
+    },
+    {
+      "what": "All four end-to-end tests were run against the defect before being believed.",
+      "why": "Convention 22 asks for it and nothing enforces it.",
+      "impact": "Verified by reverting ONLY the two call sites — keeping the helpers importable so collection survived — and confirming the three runner tests and the loop test fail, then restoring and confirming 805 pass."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "B18's ruling question is withdrawn rather than answered by me: production already persists `blocked`, so there was no free choice to make. If the advisor WANTS a ceiling stop to be `escalated` rather than `blocked`, that is a change to existing production behaviour and a separate ruling — this command deliberately did not make it.",
+    "The eval unit record's `status` is a free string while production's is a WorkflowStatus enum. They now agree on 'blocked' by construction rather than by type. A guard asserting every status a ScenarioRun can carry is a WorkflowStatus member would close that, and is a small separate command if wanted."
+  ]
+}

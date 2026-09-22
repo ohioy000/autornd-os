@@ -256,7 +256,7 @@ by 2.6×–295×. Never cite one.** Re-measure instead.
   sequence compiled into code.
 - `evals/` is in-package (`autornd/evals/`); scenarios and suites live in
   `evals/` at the root.
-- 42 test files.
+- 43 test files.
 - `engine/workflow.py` is the API entry point: it loads the graph, runs it, and
   persists phases. The hardcoded sequencer it used to carry as the graph's
   equivalence reference is gone — the graph outgrew what a linear engine can
