@@ -16,6 +16,8 @@ import asyncio
 import contextlib
 import json
 import logging
+import os
+import subprocess
 import tempfile
 import time
 from dataclasses import dataclass, field
@@ -179,16 +181,40 @@ class ResultsLog:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._handle = self.path.open("a", encoding="utf-8")
+
+        # B20. Flushing was never the problem and already worked; what killed a
+        # $0.1547 run on 2026-09-22 was `git stash -u` UNLINKING the file while
+        # the handle was open. Flushed bytes went to an inode with no directory
+        # entry and died with the handle.
+        #
+        # The default results path is git-IGNORED and was never exposed —
+        # `stash -u` takes untracked files, not ignored ones. The loss happened
+        # because `--results-file` was aimed at `docs/traces/`, which is TRACKED
+        # (60 committed files) and is the evidence model: ignoring it, which is
+        # the obvious-looking fix, would stop traces being committed at all.
+        #
+        # So the repair is a mirror outside the working tree rather than a
+        # change to where the evidence lives. No git operation on this
+        # repository can reach it.
+        self.mirror_path = _durable_mirror(self.path)
+        self._mirror = None
+        if self.mirror_path is not None:
+            self.mirror_path.parent.mkdir(parents=True, exist_ok=True)
+            self._mirror = self.mirror_path.open("a", encoding="utf-8")
+
         self._write({"record": "header",
                      "written_at": datetime.now(timezone.utc).isoformat(),
                      **(config or {})})
 
     def _write(self, payload: dict[str, Any]) -> None:
-        json.dump(payload, self._handle, ensure_ascii=False, default=str)
-        self._handle.write("\n")
-        # Durability is the entire point; buffering it away would restore the
-        # bug this class exists to fix.
-        self._handle.flush()
+        line = json.dumps(payload, ensure_ascii=False, default=str)
+        for handle in (self._handle, self._mirror):
+            if handle is None:
+                continue
+            handle.write(line + "\n")
+            # Durability is the entire point; buffering it away would restore
+            # the bug this class exists to fix.
+            handle.flush()
 
     def record(self, run: "ScenarioRun", workflow: str, repetition: int) -> None:
         self._write({
@@ -226,12 +252,56 @@ class ResultsLog:
     def close(self) -> None:
         if not self._handle.closed:
             self._handle.close()
+        if self._mirror is not None and not self._mirror.closed:
+            self._mirror.close()
 
     def __enter__(self) -> "ResultsLog":
         return self
 
     def __exit__(self, *exc: object) -> None:
         self.close()
+
+
+def _git_ignored(path: Path) -> bool:
+    """Would git leave this path alone? Asked of git, not guessed from a name."""
+    try:
+        return subprocess.run(
+            ["git", "check-ignore", "-q", str(path)],
+            cwd=path.parent if path.parent.exists() else Path.cwd(),
+            capture_output=True,
+        ).returncode == 0
+    except Exception:
+        return False
+
+
+def _durable_mirror(path: Path) -> Path | None:
+    """Where to keep a second copy a git operation cannot reach, or None.
+
+    None when there is nothing to protect against: a path outside any working
+    tree, or one git is already ignoring — the default `evals/results/` is
+    ignored and was never at risk. Mirroring those would be storage spent on a
+    hazard that does not exist.
+
+    The mirror lives under XDG state, which is deliberately not configurable
+    from inside the repository: a mirror a repository can relocate is a mirror
+    a repository can delete.
+    """
+    resolved = path.resolve()
+    try:
+        inside = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=resolved.parent, capture_output=True, text=True,
+        )
+    except Exception:
+        return None
+    if inside.returncode != 0:
+        return None                       # not in a working tree
+    if _git_ignored(resolved):
+        return None                       # git already leaves it alone
+
+    root = Path(inside.stdout.strip())
+    state = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state")
+    return state / "autornd" / "traces" / root.name / resolved.name
 
 
 def default_results_path(suite: str) -> Path:
