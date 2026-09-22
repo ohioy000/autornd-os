@@ -35,6 +35,19 @@ from dataclasses import dataclass
 REQUIRED_TIERS = ("triage", "engineering", "architecture",
                   "escalation", "research", "search")
 
+# The two tiers the harness runs without. They are not checked for being unset —
+# unset is their normal state — but a pin on one is checked exactly like any
+# other, because a pinned provider that does not serve the model is a 404
+# whether or not the tier was optional.
+#
+# Measured 2026-09-22: `_configured()` read only REQUIRED_TIERS, so pinning
+# `ranker:Fireworks,premium:Friendli` against models that WERE set reported
+# "pinned to Fireworks but no model is set" — twice, in red, against a correct
+# configuration. The instrument had observed "this tier is not in my list" and
+# reported "this tier has no model", which is a stronger and different claim
+# (convention 26).
+OPTIONAL_TIERS = ("ranker", "premium")
+
 
 @dataclass
 class Finding:
@@ -48,7 +61,8 @@ class Finding:
 
 def _configured() -> dict[str, str]:
     from autornd.config import settings
-    return {t: getattr(settings, f"model_{t}", "") or "" for t in REQUIRED_TIERS}
+    return {t: getattr(settings, f"model_{t}", "") or ""
+            for t in REQUIRED_TIERS + OPTIONAL_TIERS}
 
 
 def _pins() -> dict[str, str]:
@@ -90,7 +104,13 @@ def check(models: dict[str, str], pins: dict[str, str],
     for tier, provider in pins.items():
         model = models.get(tier, "")
         if not model:
-            out.append(Finding(False, f"pin {tier}", f"pinned to {provider} but no model is set"))
+            known_tier = tier in REQUIRED_TIERS + OPTIONAL_TIERS
+            out.append(Finding(False, f"pin {tier}", (
+                f"pinned to {provider} but no model is set"
+                if known_tier else
+                f"pinned to {provider} but '{tier}' is not a tier this harness "
+                f"runs — check the spelling against "
+                f"{', '.join(REQUIRED_TIERS + OPTIONAL_TIERS)}")))
             continue
         serving = endpoints.get(model)
         if serving is None:
@@ -109,9 +129,18 @@ async def run() -> list[Finding]:
     known = {m["id"] for m in (await _fetch("/models")).get("data", [])}
     endpoints: dict[str, set[str]] = {}
     for model in {models.get(t, "") for t in pins} - {""}:
-        if model not in known:
-            continue                      # already reported as an unknown id
-        data = (await _fetch(f"/models/{model}/endpoints")).get("data", {})
+        # Ask the endpoints route for every pinned model, INCLUDING ones absent
+        # from /models. Measured 2026-09-22: `qwen/qwen3-reranker-8b` is not in
+        # /models at all — that route lists chat models, and a reranker is not
+        # one — yet /models/qwen/qwen3-reranker-8b/endpoints resolves to
+        # Fireworks perfectly well. Skipping on `known` reported "cannot resolve
+        # endpoints" for a model whose endpoints were one request away. The
+        # catalogue's silence about a model was being read as the model not
+        # existing, which is the same shape as the bug above it.
+        try:
+            data = (await _fetch(f"/models/{model}/endpoints")).get("data", {})
+        except Exception:
+            continue                      # left unresolved, and reported as such
         endpoints[model] = {e.get("provider_name")
                             for e in data.get("endpoints", [])}
     return check(models, pins, known, endpoints)
