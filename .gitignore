@@ -37,3 +37,10 @@ evals/results/
 # agent and which model drives it, which is the owner's choice and never the
 # repo's (the model-name boundary, HANDOVER §0). Untracked like .env itself.
 .aider*
+
+# Not part of this project. A separate starter-pack repository and its
+# diagrams were cloned into the working directory on 2026-09-22 and were swept
+# into a commit by a `git add -A` in an unrelated change. They are left on disk
+# and kept out of git.
+ai-native-starter-pack/
+diagrams/
