@@ -6993,3 +6993,88 @@ $0.50 envelope has **$0.3453** remaining and the question is open.
 written outside the working tree and copied in afterwards, so that no git
 operation can reach a trace being written. No git command should ever be run
 against this repository while a paid run is in flight.
+
+---
+
+## 33. The validation day — five instruments, four that could not fail and one that could not survive (2026-09-22)
+
+§32 records what happened to `ARCH-20260922-010`'s trace and is not rewritten
+here. This section records the rest of the day and ratifies the convention that
+came out of it.
+
+### 33.1 The result, stated without softening
+
+**P3 was refuted.** The run did not converge: `0/2`, with coverage still failing
+three of five measurable criteria. **The non-engineering pathway is not
+demonstrated end to end.** **B17 stays OPEN**, and §31's freeze therefore holds.
+
+This is not a partial success and is not recorded as one. The one thing the day
+bought was **P1**, and P1 is worth stating precisely because it is narrow:
+
+> `criteria_addressed 1/2 — 3 of 5 **measurable** success criteria are not
+> visibly addressed by...`
+
+Six criteria in the plan, **five measured, one abstained on shape**. Both the
+word *measurable* and the five-of-six count are code that did not exist
+yesterday. **The plan was generated fresh by the run**, so this is the
+classifier working on live input rather than on the committed fixtures it was
+built against. That distinction is the whole value of P1 and is why it is not a
+replay.
+
+**Surviving evidence and lost evidence, kept separate.** What the terminal
+printed: unit count, calls, seconds, cost, spend by tier, provider per tier, and
+the coverage line above. What the destroyed records held: every `status` field,
+every draft, every per-criterion shape table, every retry event. **P2, P4 and P7
+are therefore UNSCORABLE — not unmet, not absent, unscorable** — and the
+pre-registration stands committed and unedited.
+
+**P5 and P6 are apparatus predictions and were partly scorable.** P5 held at
+$0.1547 for one unit, but was written for a *converging* run and so did not
+measure what it asked. P6 held in part: `escalation via Moonshot AI` and
+`research via Google` both served, while `ranker` and `premium` never appear in
+the served-by line and were **not exercised**.
+
+**One free fact that needs no trace.** The pre-registration commit is authored
+`2026-09-22T05:57:12Z`; the run's header is written `2026-09-22T05:57:26Z`.
+**Fourteen seconds.** The registration provably preceded the run, and it is
+provable from two timestamps rather than from anyone's word — which is what a
+pre-registration is for.
+
+### 33.2 Convention 28, ratified
+
+> **An instrument asserts that it computed its subject before it asserts
+> anything about it.** An empty match set, an unread file, a dropped row and an
+> absent tier are all *no evidence*, and no evidence must never be reported as
+> *no problem*.
+
+**Five instruments failed in one day. Four could not fail; one could not
+survive.**
+
+| instrument | class | what happened |
+|---|---|---|
+| `preflight`'s tests | could not fail | Six of seven tested the pure `check()`; both bugs were in `_configured()` and `run()`, which build its arguments. Six passed against the broken code |
+| `-009`'s runner test | could not fail | Called the helper by hand and asserted the helper worked, proving nothing about whether `run_scenario` calls it |
+| `_dissent_suffix`'s tests | could not fail | Same shape: the helper was tested, the call site was not |
+| the provenance stamp guard | could not fail | Its regex used `\s*` where the document has `**HEAD:** \`sha\``. It matched **nothing**, every check iterated an empty list, and **all three break attempts printed `3 passed`** |
+| the trace writer | **could not survive** | Held an open inode across a `git stash -u`; the completed unit records went to a deleted file |
+
+**Two pre-convention exhibits of the same class, already in the record and now
+named as such:**
+
+- **The serving ledger** renders three tiers and **no row for escalation**,
+  which §6.10 measures at **70–78% of hard-trace spend**. It asserts a table
+  without asserting it measured every arm. A reader sees something complete.
+- **CI** reported events and not state (§30), so it asserted *nothing is wrong*
+  for 87 hours while five guards were failing. It never computed the subject
+  it appeared to be reporting on.
+
+Convention 28 is therefore not a generalisation from one incident. It is the
+name for a class the record already contained in two places before today added
+five more.
+
+### 33.3 What it costs to have found this
+
+**$0.1547.** One unit, 29 calls, 865.9 seconds. Escalation took **$0.1080 of it
+— 70%** — replicating §6.10 on the one tier the ledger cannot see, which is the
+second time in one day that the invisible tier turned out to be where the money
+went.
