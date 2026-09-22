@@ -3,7 +3,7 @@
   "status": "DONE",
   "executed": "2026-09-22",
   "head_before": "d9e3ccaa3194dbabdbb16318d7f232ccd2e7e051",
-  "head_after": "PENDING-COMMIT",
+  "head_after": "c7656b17d2dc1c234f8aaf2b514574def0b557a2",
   "ruling": "CORRECT-AND-NARROW. The counters were right and were NOT widened. The defect was the report, and the report now reconciles.",
   "preconditions": [
     {
