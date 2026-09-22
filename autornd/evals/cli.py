@@ -162,7 +162,14 @@ async def main() -> int:
             "provider_order": settings.openrouter_provider_order,
         },
     )
-    print(f"results: {results.path}\n")
+    print(f"results: {results.path}")
+    if results.mirror_path is not None:
+        # B20: the primary path sits in the working tree and is not ignored, so
+        # an ordinary `git stash -u` can unlink it mid-run. It did once, and
+        # $0.1547 of measurement died with the handle.
+        print(f"mirrored: {results.mirror_path}  "
+              f"(outside the repo — no git operation here can reach it)")
+    print()
 
     for name in targets:
         # A scenario that names its own workflow always runs against that one,

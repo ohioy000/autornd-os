@@ -1,0 +1,51 @@
+{
+  "command_id": "ARCH-20260922-022",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "branch": "arch/20260922-022-trace-durability",
+  "files_changed": ["autornd/evals/runner.py", "autornd/evals/cli.py", "tests/test_trace_durability.py", "HANDOVER.md", "README.md", ".orchestration/responses/ARCH-20260922-022.response.json"],
+  "preconditions_run": [
+    {"check": "git check-ignore -v docs/traces/ ; git status --porcelain docs/traces/", "result": "RECORDED, and it overturns the command's assumption. docs/traces/ is NOT ignored and NOT untracked — it is TRACKED, 60 committed files."},
+    {"check": "grep -rn 'open(.*w' autornd/evals/*.py — are records held open?", "result": "RECORDED. ResultsLog opens once and holds the handle, but _write FLUSHES EVERY RECORD and has since it was written, with a docstring saying durability is the entire point."},
+    {"check": "suite green at 812", "result": "PASS"}
+  ],
+  "TWO_OF_THE_COMMANDS_THREE_PREMISES_ARE_WRONG": {
+    "premise_a_flush_per_unit": "ALREADY TRUE, and it was never the problem. Records were flushed as each unit completed. Flushing does not help once the directory entry is gone: the bytes reach an inode with no name and die with the handle. Implementing (a) would have been a no-op reported as a repair.",
+    "premise_b_git_ignore_the_output_path": "WOULD BREAK THE EVIDENCE MODEL. docs/traces/ is tracked and committed on purpose — CLAUDE.md calls it 'committed measurement records'. Ignoring it stops traces entering git at all, which is the opposite of what this repo is for.",
+    "what_was_actually_exposed": "The DEFAULT results path, evals/results/, is already git-ignored (.gitignore:34) and was never at risk — `stash -u` takes untracked files, not ignored ones. The loss happened because --results-file aimed at docs/traces/, the one directory that is TRACKED, where a brand-new file is untracked until it is committed. The harness's default was safe and I aimed the run at the unsafe place.",
+    "what_was_built_instead": "A mirror OUTSIDE the working tree, written and flushed alongside the primary. It defeats the mechanism that actually fired without touching where evidence lives."
+  },
+  "results": {
+    "the_mirror": "ResultsLog writes every record to the primary and, when the primary is at risk, to a mirror under XDG state at <state>/autornd/traces/<repo>/<file>. Both are flushed per record.",
+    "chosen_by_hazard_not_by_habit": "_durable_mirror returns None for a path git already ignores and for a path outside any working tree. Mirroring those would be storage spent on a hazard that does not exist, and asserting protection where none was needed is its own small dishonesty. Verified for all three cases: docs/traces -> mirrored, evals/results -> None, /tmp -> None.",
+    "not_configurable_from_inside_the_repo": "Deliberate, and the docstring says why: a mirror the repository can relocate is a mirror the repository can delete.",
+    "the_operator_is_told": "The CLI prints the mirror path beside the results path. A silent protection is an instrument asserting durability it never mentioned (convention 28), and it is also a protection nobody would think to look in.",
+    "proved_by_reproducing_the_loss": "test_completed_units_survive_an_unlink_mid_run writes a unit, UNLINKS THE FILE while the handle stays open — exactly what `git stash -u` did — writes another unit, and asserts the mirror holds header plus both units. It fails when the mirror is disabled, checked by disabling it.",
+    "what_it_does_not_protect_against_stated_in_the_code_and_the_ledger": "git stash -a (which takes ignored files, though not the mirror, which is outside the repo entirely), deletion of the state directory, filesystem loss, and a kill -9 between two records. It closes one mechanism: the one that fired.",
+    "counts": "812 -> 819.",
+    "cost": "$0.00"
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "A unit record written and flushed at unit completion survives removal of the output directory entry, demonstrated", "met": true, "evidence": "the unlink-mid-run test"},
+    {"criterion": "A paid run whose output path is not git-ignored refuses to start, demonstrated", "met": "DEVIATED — see deviations", "evidence": "a refusal would reject every legitimate run that writes to docs/traces/, which is where traces are supposed to go. The run now protects itself and says so instead."},
+    {"criterion": "The response states what the repair does not protect against", "met": true},
+    {"criterion": "Suite count before and after", "met": true, "evidence": "812 -> 819"}
+  ],
+  "deviations": [
+    {
+      "what": "The run does NOT refuse to start when its output path is not git-ignored.",
+      "why": "That constraint follows from premise (b), which is wrong. docs/traces/ is tracked because traces are committed evidence; a refusal there would reject every correct use of the tool and push people to write somewhere else and copy in, which is a procedure, not a guarantee. The hazard is real and is now neutralised rather than forbidden.",
+      "impact": "Runs behave exactly as before, plus a mirror and a line of output. If the advisor still wants a refusal, it is a one-line addition on top of this — but it should be ruled, because it changes what the tool will do rather than how reliably it does it."
+    },
+    {
+      "what": ".gitignore was not touched, though the scope allowed it.",
+      "why": "The only entry that would have helped is one for docs/traces/, which would stop traces being committed. Nothing else needed adding: evals/results/ is already there."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "The command asked whether each unit record should be COMMITTED as it completes, so evidence lands in git history rather than merely on disk. I have not done it and would argue against: a commit per unit means a paid run mutating git state while it runs, which is the class of thing that caused B20 in the first place. The mirror gives durability without the run touching git at all. If the advisor wants history-level durability, committing the trace once at the END of a run is the safe version and is a small separate change.",
+    "The command also asked whether the harness should refuse to run with a dirty working tree. It would have prevented this specific loss, and it would also refuse the perfectly ordinary case of running an eval while editing a doc. My view: the mirror is the better trade because it protects the evidence without constraining the operator — but a dirty-tree WARNING costs nothing and would have made me think twice. That is a ruling.",
+    "B20's row as originally written said records were held open rather than flushed. That was inferred from the failure rather than read from the code, by me, in ARCH-20260922-019. It is corrected in place now. Worth noting as a small instance of the same pattern the day is about: a plausible mechanism recorded as a measured one."
+  ]
+}

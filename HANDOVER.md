@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `039cabe` · **Branch:** `main`
-**Tests:** 843 as of `5e9b9ff` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
+**Tests:** 819 as of `f5b3f29` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19 against the restored document
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      46 files, 843 tests (as of `5e9b9ff`)
+tests/                      44 files, 819 tests (as of `f5b3f29`)
 ```
 
 ### 2.3 Key design patterns
@@ -655,7 +655,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (843 total, as of `5e9b9ff`)
+### 3.7 Test distribution (819 total, as of `f5b3f29`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -663,22 +663,21 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_evals.py | 73 | test_structural_roles.py | 13 |
 | test_routing.py | 62 | test_budget_transparency.py | 11 |
 | test_verdicts.py | 42 | test_citation_demand.py | 11 |
-| test_knowledge.py | 41 | test_guards_can_fail.py | 11 |
-| test_research.py | 37 | test_handover_truth.py | 11 |
-| test_review_composition.py | 28 | test_specialists.py | 11 |
-| test_blocked_on.py | 26 | test_results_log.py | 10 |
-| test_profiles.py | 23 | test_triage.py | 10 |
-| test_settings.py | 22 | test_docs.py | 9 |
-| test_api.py | 21 | test_lead_review.py | 9 |
-| test_sweep_budget.py | 21 | test_rate_limit_retry.py | 8 |
-| test_preflight.py | 20 | test_doc_corpora.py | 7 |
-| test_protocol_file.py | 20 | test_live_wiring.py | 7 |
-| test_rework_loop.py | 17 | test_rejection_counter.py | 7 |
+| test_knowledge.py | 41 | test_handover_truth.py | 11 |
+| test_research.py | 37 | test_specialists.py | 11 |
+| test_review_composition.py | 28 | test_results_log.py | 10 |
+| test_blocked_on.py | 26 | test_triage.py | 10 |
+| test_profiles.py | 23 | test_docs.py | 9 |
+| test_settings.py | 22 | test_lead_review.py | 9 |
+| test_api.py | 21 | test_rate_limit_retry.py | 8 |
+| test_sweep_budget.py | 21 | test_doc_corpora.py | 7 |
+| test_preflight.py | 20 | test_live_wiring.py | 7 |
+| test_protocol_file.py | 20 | test_rejection_counter.py | 7 |
+| test_rework_loop.py | 17 | test_trace_durability.py | 7 |
 | test_auth.py | 16 | test_engine.py | 6 |
 | test_coverage_shapes.py | 16 | test_budget_stop_scoring.py | 5 |
 | test_green_resolution.py | 16 | test_iteration_dissent.py | 5 |
-| test_all_judges_exit.py | 15 | test_preregistration_precedence.py | 5 |
-| test_repeat_and_fit_rule.py | 15 | test_handoff_scheduler.py | 4 |
+| test_all_judges_exit.py | 15 | test_handoff_scheduler.py | 4 |
 | test_schema_wiring.py | 15 | test_workflow.py | 4 |
 | test_shipped_examples.py | 15 | test_phase_timing.py | 3 |
 | test_terminal_on_bound.py | 15 | test_serving_ledger.py | 3 |
@@ -725,7 +724,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 843/843 pass.** Everything below is a live-behaviour
+**No failing unit tests — 819/819 pass.** Everything below is a live-behaviour
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
@@ -748,8 +747,8 @@ named.
 | B16 | **Plan success criteria are rewritten from scratch on every run of the same scenario** | medium | **OPEN (advisor, 2026-09-20).** Across **4** committed plan outputs of the identical `gen_marketing_claims` request the criteria were **6, 6, 6 and 5**, each differently worded. B13/016's mechanism keys on *what the plan demands* — `verify_grounding` reads `plan.success_criteria`, and `deferred_gaps` varied **3, 0, 0, 0** across these runs — so the citation-demand pathway's **input is not stable run-to-run**. A reproducibility caveat on 016's registered contrast, which B13's row already states at n=1 each side. **No fix ruled:** the variance is inherent to a generated plan, and the mechanism held across all four (`demanded` true 4/4, zero demand-missed — `ARCH-20260920-004`). Disposition: feeds B14's design — demand-detection must tolerate criteria variance, and any future pre-registered multi-run contrast carries its per-run criteria counts as **run variables**. **Rider (advisor, 2026-09-22):** the zero-deferred-gaps question is an **open sub-question of this row** — why the grounding phase deferred no blocking gap on plans that demanded citations (`deferred_gaps` 3/0/0/0, `ARCH-20260920-010`). Detection fired 4/4; what varied was what it handed downstream, and nothing has explained it. |
 | B17 | **`criteria_addressed` cannot read a criterion whose satisfaction is an absence** | **high** | Measured 2026-09-21 on the B14 demonstration (`b14-demo-marketing-claims-grounded.jsonl`). The check is term overlap — at least 50% of a criterion's significant terms must appear in the implementation — and it **failed the same two criteria on all seven iterations** while `implement.green` was true throughout. The run never terminated; it exhausted the 41-call ceiling at 42 calls and $0.1783, **three times the ungrounded comparator's cost for a worse outcome**. Nothing refused and nothing was wrong with the work: **the loop died because a free check could not see that the work was done.** **The mechanism.** Criterion 6 read *"avoids the banned words ('leverage', 'seamless', 'robust', 'in today's fast-paced world')"*. **Six of its seventeen significant terms are words the criterion forbids the draft to contain**, capping a perfectly compliant draft at 65% and scoring it 40%; eight more are meta-vocabulary about the rule (`avoids`, `banned`, `conventions`). **14 of 17 terms are unreachable for a compliant draft — satisfying the criterion is what makes it fail the check.** Criterion 3 fails more mildly (37%) for the second class: `author`, `organization`, `date`, `location` describe what a citation *is*, not words a citation *contains*, and the draft's citations were complete. **Why it surfaced now, and it is not a regression.** The check's docstring is honest — *term overlap, not comprehension* — and it works on engineering criteria, where the compliant artifact contains the words. `docs/meridian_studio/` made the plan's criteria **prohibition-shaped and form-shaped**, because that is what an editorial house style is. **The coverage death is a direct consequence of the corpus working** (B14, B15-1). **Status: OPEN, and it is a ruling** — any fix changes what the harness concludes about whether work is done. Recorded, not designed: two classes need different treatment, and a threshold change alone would trade this failure for the drift the check was built to catch. Interacts with B16: the criteria are regenerated per run, so the check's input is unstable as well as ill-suited. **RULED 2026-09-22 — B17-R1, §29:** shape selects the test. Presence keeps term overlap unchanged; **prohibition inverts** — the criterion's own forbidden tokens become the test, pass iff none appear; **form abstains**, never failing the fold and never silently. The fail-safe direction is presence, because abstention is leniency and convention 21 says exhibits precede leniency. Implementation `ARCH-20260922-008`; paid validation `ARCH-20260922-010`. **`ARCH-20260922-006`'s retry of the B14 demonstration was blocked on this ruling and is superseded by `-010`;** the unexecuted Blueprint 018 design is superseded by §29.2, which names the one place the two contradict. **Implemented by `ARCH-20260922-008`; validation ATTEMPTED and only partly readable** — `ARCH-20260922-010` ran at **$0.1547** and its trace was destroyed by executor error (§29.2). What survives proves the classifier fired on a live plan: *"3 of 5 **measurable** success criteria"* — six criteria, five measured, **one abstained on shape**. The run did **not** converge (0/2), so the pathway is not yet demonstrated end to end and B17 stays OPEN. §29.1(7)'s Phase 2 trigger requires classification misfiring *evidenced in a committed trace*, and there is no committed trace, so it has **not** fired. |
 | B18 | ~~A run stopped by a bound produces no terminal status~~ | **CLOSED (2026-09-22)** | Opened 2026-09-22 from the B14 demonstration (`b14-demo-marketing-claims-grounded.jsonl`). The unit's `status` is the **empty string** while `error` carries *"stopped at 42 model calls (ceiling 41); raise max_calls on the scenario if this is expected"* with a per-tier breakdown. **Read precisely, because the instrument is better than the headline suggests** (convention 18): the bound *is* named, and named well. What is missing is the **typed terminal** — nothing in the verdict set says the run ended, so a consumer reading `status` sees a run that neither finished nor stopped. README §1 promises the system *"either finishes or tells you exactly what stopped it"*; on this path it does the second in prose and neither in type. **This is a product defect, not an instrument defect, and it is independent of B17** — B17 explains why the ceiling was reached; B18 is that reaching it produced no status. Unmeasured: whether the stop happened inside the workflow or in the eval runner, and whether a ceiling-stopped run should persist as `blocked` or `escalated` (that second question is a ruling, not an implementation choice). **CLOSED by `ARCH-20260922-009`.** The gap was in the eval runner alone — `engine/workflow.py` already persisted `WorkflowStatus.BLOCKED` for the same exception, so **production never had this defect** and the open ruling question answered itself: `blocked` is what the harness already concludes. Four bounds now name themselves — call ceiling, spend ceiling, deadline, unhandled error — and loop exhaustion appends the dissenting judges. **Not yet observed live:** `ARCH-20260922-010`'s trace was destroyed by executor error before its status field could be read (§29.2), so the repair is proved by `tests/test_terminal_on_bound.py` and by nothing else. |
-| B19 | ~~`--repeat N` reports exhaustion before the sample is complete~~ | **CLOSED (2026-09-22) — not the defect it looked like** | Measured 2026-09-22 on the B17-R1 validation. `--repeat 2` produced **one unit** and the sweep reported *"exhausted after 1 of 2 units"* at **$0.1547 against a $0.50 cap — 31%**. That is not exhaustion. Half the registered sample was lost and nothing asked for it. **Unresolved which**: the per-unit ceiling binding where the sweep ceiling did not, or the accounting being wrong. The distinction matters — if the cap is per session a repeat of 2 *can* legitimately stop after one, and then the defect is the message rather than the arithmetic. **RESOLVED by `ARCH-20260922-021`, and the repeat logic was never wrong.** The unit was skipped by the **fit rule**, documented on `SweepBudget` since it was written: with a $0.50 per-unit cap and $0.3453 remaining, no unit could be *guaranteed* to fit, which is the conservative behaviour that rule exists to provide. **Three real defects sat behind the wrong word.** (1) **The message.** `skip()` and the summary line both called a fit-rule decline an *exhaustion*; they now name which of the two happened and report produced-versus-requested separately. (2) **The registration was arithmetically impossible and nothing said so.** `--max-spend 0.50 --max-spend-sweep 0.50 --repeat 2` needs $1.00 of a $0.50 sweep, so **exactly one unit could ever start**; a free pre-spend check now warns before the first call. (3) **`ScenarioRun.skipped` was decided by substring-matching the error message** against `("not applicable", "sweep budget exhausted")` — control flow reading English, against non-negotiable 3. Correcting the message *broke it*: a skipped unit silently began counting as one that **ran**, which would have inflated the denominator of every pass rate in any sweep that hit its cap. Caught by an existing test, inside the change that caused it; it is now a typed flag set where the skip is decided. **Two of this repo's own tests had enshrined the wrong wording** and were corrected under convention 17 — one asserted *"sweep budget exhausted"* for a budget with $0.10 of $0.60 still in it. |
-| B20 | **A paid run's records do not survive a concurrent git operation** | **high** | Measured 2026-09-22 (§32). `git stash -u` during a live run took the directory entry of the untracked results file while the writer held the inode; **every completed unit record was written to a deleted file**. $0.1547 spent, record unrecoverable, only the header surviving. The executor caused it, and the harness made it possible: records are held open for the run's duration rather than flushed per unit, and `docs/traces/` is untracked rather than ignored, so a routine `stash -u` reaches it. **Status: OPEN.** Repair: `ARCH-20260922-022`. |
+| B19 | **`--repeat N` reports exhaustion before the sample is complete** | medium | Measured 2026-09-22 on the B17-R1 validation. `--repeat 2` produced **one unit** and the sweep reported *"exhausted after 1 of 2 units"* at **$0.1547 against a $0.50 cap — 31%**. That is not exhaustion. Half the registered sample was lost and nothing asked for it. **Unresolved which**: the per-unit ceiling binding where the sweep ceiling did not, or the accounting being wrong. The distinction matters — if the cap is per session a repeat of 2 *can* legitimately stop after one, and then the defect is the message rather than the arithmetic. **Status: OPEN.** Repair: `ARCH-20260922-021`. |
+| B20 | ~~A paid run's records do not survive a concurrent git operation~~ | **CLOSED (2026-09-22)** | Measured 2026-09-22 (§32). `git stash -u` during a live run took the directory entry of the untracked results file while the writer held the inode; **every completed unit record was written to a deleted file**. $0.1547 spent, record unrecoverable, only the header surviving. The executor caused it, and the harness made it possible: records are held open for the run's duration rather than flushed per unit, and `docs/traces/` is untracked rather than ignored, so a routine `stash -u` reaches it. **CLOSED by `ARCH-20260922-022`, and two of the three things this row originally said were wrong.** **(1) Flushing was never the problem.** `ResultsLog._write` has flushed per record since it was written; flushing does not help once the directory entry is gone, which is the entire mechanism. **(2) Ignoring `docs/traces/` is not the fix.** It is **tracked** — 60 committed files — and it *is* the evidence model. The default results path `evals/results/` is **already git-ignored and was never exposed**: `stash -u` takes untracked files, not ignored ones. The loss happened because `--results-file` aimed at the one directory that is tracked, where a brand-new file is untracked until committed. **The repair is a mirror outside the working tree**, written and flushed alongside the primary, chosen by hazard rather than by habit — no mirror for an ignored path or one outside any repo. The CLI names it, because a silent protection is an instrument asserting durability it never mentioned (convention 28). Proved by reproducing the loss: unlink the file mid-write, keep writing, and assert the mirror holds every record. **What it does not protect against, stated rather than implied:** `git stash -a`, deletion of the state directory, filesystem loss, and a `kill -9` between two records. |
 | B21 | **Guards that never found their subject and reported success** | **high** | Four instances in one day, plus two older ones now recognised as the same class (§33.2). The sharpest: the provenance stamp guard's regex used `\s*` between label and sha where the document has `**HEAD:**`, so `findall` returned `[]` and **all three deliberate break attempts passed**. The older two: the serving ledger's three-tier table with no escalation row, and CI asserting nothing-is-wrong for 87 hours without computing state. **Convention 28 is the ruling**; this row tracks the outstanding repairs. **Status: OPEN.** Repairs: `ARCH-20260922-020` (the four guards), `ARCH-20260922-024` (the ledger). CI was repaired by `-013`. |
 | B11 | Two tier picks are **interim and unmeasured at their own jobs** | medium | `research` and `engineering` ship on models chosen for price and availability, never scored against the work they do. `engineering` carries five of the flagship's nodes and is the tier whose *serving* closed B7 — the model behind it has had no equivalent test. In service by choice, labelled so nobody mistakes the choice for a finding. |
 | B12 | Four tiers have **never been measured by serving** | medium | B4 and B7 both turned on *who serves a tier*, and it has only ever been asked of `triage`, `architecture` and `engineering`. `escalation`, `research`, `search` and the reranker are unpinned and unexamined. `escalation` is 70–78% of spend on hard traces (§6.10), so it is the obvious next place to look. Convention 23 says how. |
@@ -1640,7 +1639,7 @@ answer: `.orchestration/responses/ARCH-20260920-005.response.json`.
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 843 tests as of `5e9b9ff`, ~52 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 819 tests as of `f5b3f29`, ~52 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \
