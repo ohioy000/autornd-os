@@ -127,8 +127,16 @@ class TestFitRule:
         skipped = [r for r in report.results if r.skipped]
         assert len(skipped) == 1
         error = skipped[0].runs[0].error or ""
-        assert "sweep budget exhausted" in error
-        assert "$0.5000 of $0.60" in error, f"the numbers belong in the marker: {error}"
+        # Convention 17, decided 2026-09-22: this test was wrong, not the code.
+        # It asserted "sweep budget exhausted" for a budget with $0.10 of $0.60
+        # STILL IN IT — enshrining the exact confusion B19 turned out to be.
+        # The unit is skipped by the fit rule, which declines to start a unit it
+        # cannot guarantee; that is not the budget running out, and calling it
+        # so cost half a registered sample on a live run.
+        assert "fit rule" in error
+        assert "not exhausted" in error
+        assert "$0.1000 left of $0.60" in error, (
+            f"the numbers belong in the marker: {error}")
 
     async def test_no_unit_is_aborted_mid_flight(self):
         budget = SweepBudget(cap=1.20)
@@ -344,8 +352,12 @@ class TestTheFlag:
         assert sweep_summary(budget) == "sweep budget: $0.4000 of $1.0000"
 
         budget.skipped = 2
+        # Also convention 17. $0.40 of $1.00 is not an exhausted budget, and the
+        # line said "exhausted" for it. It now reports produced and requested
+        # separately and names which of the two reasons applied.
         assert sweep_summary(budget) == (
-            "sweep budget: $0.4000 of $1.0000 · exhausted after 4 of 6 units")
+            "sweep budget: $0.4000 of $1.0000 · 4 of 6 units ran, 2 skipped — "
+            "$0.6000 left but no unit could be guaranteed to fit")
 
     def test_a_sub_cent_cap_is_not_rounded_to_nothing(self):
         """The live check printed "$0.00" for a $0.001 cap."""

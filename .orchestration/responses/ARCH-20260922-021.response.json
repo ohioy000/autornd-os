@@ -1,0 +1,55 @@
+{
+  "command_id": "ARCH-20260922-021",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "branch": "arch/20260922-021-repeat-exhaustion",
+  "files_changed": ["autornd/evals/runner.py", "autornd/evals/cli.py", "tests/test_repeat_and_fit_rule.py", "tests/test_sweep_budget.py", "HANDOVER.md", "README.md", "AGENTS.md", ".orchestration/responses/ARCH-20260922-021.response.json"],
+  "preconditions_run": [
+    {"check": "grep -rn 'repeat' autornd/evals/", "result": "PASS — repeat handling in cli.py and run_repeated; the budget decision is SweepBudget.can_start"},
+    {"check": "read the surviving stdout before coding", "result": "PASS — read first, and it changed the diagnosis. See below."},
+    {"check": "suite green at 812", "result": "PASS"}
+  ],
+  "answer_to_the_commands_question": {
+    "question": "Is the sweep cap enforced per unit or per session? If per session, a repeat of 2 can legitimately exhaust after one — and then the defect is the message, not the arithmetic.",
+    "answer": "PER SESSION, and the command's second branch is the right one. But it is narrower still: the budget was not exhausted AT ALL. SweepBudget's FIT RULE — documented on the class since it was written — starts a unit only if it could not possibly overrun the sweep cap. With a $0.50 per-unit cap and $0.3453 remaining, no unit could be guaranteed to fit, so it was declined. That is the conservative behaviour the rule exists to provide, and it is a different fact from running out of money."
+  },
+  "THE_CAUSE_OBSERVED_NOT_INFERRED": {
+    "computed_from_the_real_numbers": "SweepBudget(cap=0.50); record(0.1547) -> spent 0.1547, remaining 0.3453; can_start(0.50) -> 0.1547 + 0.50 <= 0.50 -> FALSE. The skip is the fit rule, reproduced exactly.",
+    "and_the_registration_was_impossible_on_arrival": "--max-spend 0.50 --max-spend-sweep 0.50 --repeat 2 needs $1.00 of a $0.50 sweep. EXACTLY ONE UNIT COULD EVER START. My own pre-registration asked for n=2 under caps that made n=2 unreachable, and nothing in the tool said so before the money moved.",
+    "so_B19_is_closed_as_not_the_defect_it_looked_like": "The repeat logic was never wrong. Three real defects sat behind the wrong word."
+  },
+  "results": {
+    "defect_1_the_message": "skip() and sweep_summary both called a fit-rule decline an exhaustion. skip() now distinguishes them and names the remaining budget; the summary reports produced and requested separately — '1 of 2 units ran, 1 skipped — $0.3453 left but no unit could be guaranteed to fit'.",
+    "defect_2_the_free_check_that_did_not_exist": "SweepBudget.units_that_can_ever_start(per_unit_cap) computes the permitted sample before anything is paid, and the CLI warns when the requested sample exceeds it, with both fixes named: raise the sweep cap to $1.00, or lower the per-unit cap to $0.2500. Verified end to end through the CLI, because arithmetic being right proves nothing about whether anyone is told — the distinction that cost four guards today. A warning rather than a refusal, because a deliberately tight cap is a legitimate way to buy 'as much as this money allows'.",
+    "defect_3_THE_ONE_THAT_MATTERS_MOST": "ScenarioRun.skipped was decided by SUBSTRING-MATCHING THE ERROR MESSAGE against ('not applicable', 'sweep budget exhausted'). That is control flow reading English, which non-negotiable 3 forbids in workflow conditions and which nobody had looked for here. Correcting the fit-rule message BROKE IT INSIDE THIS CHANGE: a skipped unit whose message no longer said 'exhausted' silently started counting as a unit that RAN, which would have inflated the denominator of every pass rate in any sweep that hit its cap. It is now a typed flag, was_skipped, set where the skip is decided; the prose match is kept only as a fallback for ScenarioRun objects built directly from an error string, and a test pins that.",
+    "how_defect_3_was_caught": "An existing test failed — tests/test_sweep_budget.py, five cases. I did not go looking for it and would not have found it by reading. That is convention 22 paying for itself in a change that had nothing to do with it.",
+    "two_of_the_repos_own_tests_were_wrong": "Convention 17 applied twice. test_a_skipped_unit_says_why asserted 'sweep budget exhausted' for a budget with $0.10 OF $0.60 STILL IN IT — the test had enshrined the exact confusion B19 turned out to be. test_the_summary_line_reports_what_was_spent pinned the old summary string. Both corrected with the reasoning in a comment, neither weakened.",
+    "graph_untouched": "git diff --stat -- autornd/graph/ is EMPTY, as the verification demanded.",
+    "counts": "812 -> 827, 43 -> 44 files.",
+    "cost": "$0.00"
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "Reproducing --repeat 2 yields two units, or a shortfall naming its cause and remaining budget", "met": true, "evidence": "the shortfall now names the fit rule and prints $0.3453 left; two units were never possible under those caps and the CLI now says so before spending"},
+    {"criterion": "A false exhaustion is impossible; any exhaustion message names the bound actually reached", "met": true},
+    {"criterion": "The output reports requested repeats and produced units separately", "met": true},
+    {"criterion": "The observed cause is stated from the stdout, not inferred", "met": true, "evidence": "reproduced numerically from the run's own $0.1547 against its own $0.50 cap"},
+    {"criterion": "Suite count before and after", "met": true, "evidence": "812 -> 827"}
+  ],
+  "deviations": [
+    {
+      "what": "B19 is closed as not-a-defect in the repeat logic, while three other defects were repaired under its number.",
+      "why": "The command explicitly permits closing it as not-a-defect with evidence, and the evidence is arithmetic rather than opinion. The three repairs were all found by investigating it and none has a row of its own; filing them elsewhere would have hidden the most serious one.",
+      "impact": "B19's row records the correction and the three repairs, so a reader who remembers 'the repeat bug' finds out it was not one."
+    },
+    {
+      "what": "Two existing tests were changed.",
+      "why": "Convention 17, and in both cases the test was wrong. One asserted exhaustion of a budget that still held $0.10 of $0.60.",
+      "impact": "Recorded in the tests themselves, not only here."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "Defect 3 is a case of non-negotiable 3 — never parse English for control flow — being violated OUTSIDE the workflow conditions it was written about. `_SKIP_REASONS` is the only instance I found, but I found it by breaking it rather than by looking. A sweep for the pattern (control flow keyed on a message's contents) may be worth its own free command; it is the same shape as Convention 28 and would have the same kind of yield.",
+    "The pre-spend warning is a WARNING, not a refusal, and I chose that deliberately — a deliberately tight cap is a legitimate way to buy 'as much as this allows'. But my own pre-registration would have proceeded past it, because a warning in a terminal during a background run is a warning nobody reads. If the advisor wants registered runs protected, the stronger form is: a pre-registration naming an n that the caps cannot deliver is a BLOCKED report. That is a protocol change and therefore a ruling."
+  ]
+}

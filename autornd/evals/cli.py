@@ -17,6 +17,7 @@ from pathlib import Path
 
 from autornd.config import settings
 from autornd.evals.runner import (
+    _BUDGET_EPSILON,
     ResultsLog,
     SweepBudget,
     default_results_path,
@@ -52,7 +53,16 @@ def sweep_summary(budget: SweepBudget) -> str:
     line = f"sweep budget: ${budget.spent:.4f} of ${budget.cap:.4f}"
     if budget.skipped:
         total = budget.started + budget.skipped
-        line += f" · exhausted after {budget.started} of {total} units"
+        # "exhausted" was written for one of the two ways a unit gets skipped
+        # and printed for both. Measured 2026-09-22: one unit ran at $0.1547
+        # of a $0.50 sweep and the line read "exhausted after 1 of 2 units" —
+        # at 31% of the cap. The other way is the fit rule declining to start
+        # a unit it cannot guarantee, which is not the budget running out.
+        why = ("budget exhausted" if budget.remaining <= _BUDGET_EPSILON
+               else f"${budget.remaining:.4f} left but no unit could be "
+                    f"guaranteed to fit")
+        line += (f" · {budget.started} of {total} units ran, "
+                 f"{budget.skipped} skipped — {why}")
     return line
 
 
@@ -112,6 +122,28 @@ async def main() -> int:
     scenarios = load_scenarios(args.scenarios)
     targets = args.compare or [args.workflow]
     reports = []
+
+    # Free, and before anything is paid. Measured 2026-09-22: a pre-registration
+    # asked for n=2 under `--max-spend 0.50 --max-spend-sweep 0.50`. Two units
+    # at a $0.50 cap need $1.00 of a $0.50 sweep, so exactly ONE unit could
+    # ever start — the registered sample size was impossible on arrival and
+    # nothing said so. The shortfall was then read as a defect (B19) and cost
+    # an investigation on top of half the sample.
+    #
+    # A warning rather than a refusal: a deliberately over-tight cap is a
+    # legitimate way to buy "as much as this much money allows".
+    if budget is not None:
+        permitted = budget.units_that_can_ever_start(args.max_spend)
+        wanted = len(scenarios) * len(targets) * args.repeat
+        if permitted is not None and permitted < wanted:
+            print(
+                f"⚠ this configuration permits at most {permitted} unit(s), "
+                f"not the {wanted} requested: {wanted} × ${args.max_spend:.2f} "
+                f"exceeds the ${budget.cap:.2f} sweep cap. The fit rule will "
+                f"skip the rest before they start. Raise --max-spend-sweep to "
+                f"${wanted * args.max_spend:.2f}, or lower --max-spend to "
+                f"${budget.cap / wanted:.4f}, if you want the full sample.\n"
+            )
 
     # The header makes a results file self-describing: which model ran at each
     # tier, who was pinned to serve it, and what the run was allowed to spend.
