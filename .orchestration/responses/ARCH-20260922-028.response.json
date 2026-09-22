@@ -1,0 +1,28 @@
+{
+  "command_id": "ARCH-20260922-028",
+  "status": "IN_PROGRESS",
+  "executed": "2026-09-22",
+  "head_before": "d90e4750b32504f741ffad34e7e20de093bf33c5",
+  "head_after": null,
+  "preconditions": [
+    {
+      "command": "grep -n 'B16' HANDOVER.md",
+      "result": "PASS",
+      "observed": "Present at HANDOVER.md:749, status 'OPEN (advisor, 2026-09-20)'. Row recorded verbatim before any change in the field below."
+    },
+    {
+      "command": "ls docs/traces/ | tail -5",
+      "result": "PASS",
+      "observed": "Today's trace located by name: docs/traces/b14-rerun-2-marketing-claims.jsonl. It survived the run (mirror byte-identical, diff -q clean, §34). The readout's 0.43 figure is citable from it, and the 0.63 comparator is in docs/handover-review.md:7144 from ARCH-20260922-010, whose own trace was destroyed by executor error (§29.2)."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS",
+      "observed": "870 passed in 43.26s. Green before the change. Note: the count is 870 rather than 855 because this branch is based on ARCH-20260922-026, which added 15 tests; see deviations."
+    }
+  ],
+  "b16_row_before": "| B16 | **Plan success criteria are rewritten from scratch on every run of the same scenario** | medium | **OPEN (advisor, 2026-09-20).** Across **4** committed plan outputs of the identical `gen_marketing_claims` request the criteria were **6, 6, 6 and 5**, each differently worded. B13/016's mechanism keys on *what the plan demands* — `verify_grounding` reads `plan.success_criteria`, and `deferred_gaps` varied **3, 0, 0, 0** across these runs — so the citation-demand pathway's **input is not stable run-to-run**. A reproducibility caveat on 016's registered contrast, which B13's row already states at n=1 each side. **No fix ruled:** the variance is inherent to a generated plan, and the mechanism held across all four (`demanded` true 4/4, zero demand-missed — `ARCH-20260920-004`). Disposition: feeds B14's design — demand-detection must tolerate criteria variance, and any future pre-registered multi-run contrast carries its per-run criteria counts as **run variables**. **Rider (advisor, 2026-09-22):** the zero-deferred-gaps question is an **open sub-question of this row** — why the grounding phase deferred no blocking gap on plans that demanded citations (`deferred_gaps` 3/0/0/0, `ARCH-20260920-010`). Detection fired 4/4; what varied was what it handed downstream, and nothing has explained it. |",
+  "results": null,
+  "deviations": null,
+  "questions_for_advisor": null
+}
