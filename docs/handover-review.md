@@ -6806,7 +6806,9 @@ than open.
 
 ### 29.3 Execution record
 
-Registered, not executed. Implementation is `ARCH-20260922-008`; the paid
+**Filled by §32** — the run happened on 2026-09-22 and its trace was destroyed
+by executor error before it could be read. Registered, not executed, was true
+when this section was written and is no longer. Implementation is `ARCH-20260922-008`; the paid
 validation that either proves or refutes it is `ARCH-20260922-010`, gated on the
 owner's envelope and pins. `ARCH-20260922-006`'s retry of the B14 demonstration
 is **blocked on this ruling** and is superseded by `-010`.
@@ -6907,3 +6909,87 @@ rewritten. The generations stand as measured; what changes is what may be
 concluded from them, and §4.2 and §6 now carry the word *provisional* where the
 numbers live rather than only here — because a caveat in a different section is
 how a provisional number gets quoted as settled.
+## 32. Execution record for §29 — B17-R1's validation (2026-09-22)
+
+*This is §29.3's execution-record slot, filled. It is numbered 32 rather
+than 29.2 because §§30 and 31 landed between the registration and the run,
+and the notebook numbers monotonically.*
+
+**The trace of this run was destroyed by executor error. Read every number
+below as coming from terminal output, not from a committed trace.**
+
+### What happened to the record
+
+The run was launched in the background. While it was in flight I ran
+`git stash -q -u` to switch branches for an unrelated command. That stashed
+untracked files — including the results file the run was writing. The writer
+held the open inode; the stash removed the directory entry; **every unit record
+was written to a deleted file and is unrecoverable.** Only the 729-byte header
+survived, because that is what existed at the moment of the stash.
+
+`docs/traces/b17-validation-marketing-claims-grounded.jsonl` is committed with
+its header alone, and `docs/traces/b17-validation-STDOUT-ONLY.txt` carries the
+terminal output verbatim. **Neither is a substitute for the trace and this
+section does not treat them as one.**
+
+**$0.1547 was spent and its record is gone.** The repo's rule is that spend
+cannot be unspent and a trace stands as measured. This trace did not survive to
+stand. The cause was not the harness.
+
+### What the terminal output still proves
+
+    gen_marketing_claims   0/2   29 calls   865.9s
+      criteria_addressed 1/2 — "3 of 5 measurable success criteria are not
+                                visibly addressed by..."
+    $0.1547 of $0.5000 · exhausted after 1 of 2 units
+    spend by tier: escalation $0.1080, architecture $0.0322,
+                   engineering $0.0126, research $0.0018, triage $0.0002
+    served by: architecture via StreamLake, engineering via GMICloud,
+               escalation via Moonshot AI, research via Google, triage via Alibaba
+
+### Predictions, scored against what survives
+
+| | prediction | outcome |
+|---|---|---|
+| **P1** | shape classification fires on live criteria | **HELD, n=1.** *"3 of 5 **measurable**"* — six criteria, five measured, **one abstained on shape**. Both words are new code, and the count proves the classifier ran on a live plan |
+| **P2** | the run reaches a terminal | **UNSCORABLE.** The status field lived only in the destroyed records |
+| **P3** | the run converges | **REFUTED, n=1.** `0/2`, coverage still failing three criteria |
+| **P4** | B15-2 persists | **UNSCORABLE.** The draft lived only in the trace |
+| **P5** | under $0.15 per unit | **HELD, n=1** at $0.1547 for one unit — but see the departure below; this is not the comparison that was registered |
+| **P6** | the four never-run pins serve without incident | **HELD in part, n=1.** `escalation via Moonshot AI` and `research via Google` both served. `ranker` and `premium` do not appear, so they were not exercised |
+| **P7** | 429s recorded | **UNSCORABLE** |
+
+**P3 is the prediction that mattered and it is refuted.** Coverage still failed
+three of five measurable criteria. Under §29.1(7) that is the **Phase 2
+trigger** — but the trigger is written to fire on *classification misfiring on
+live criteria, evidenced in a committed trace*, and there is no committed trace.
+**The ruling is not refuted on this evidence; the run is.**
+
+What P1 does establish is narrower and real: the classifier **ran on a live,
+freshly generated plan and abstained on one criterion**. The machinery works
+outside its fixtures. Whether the three that failed are presence criteria the
+draft genuinely missed — which is what the free replay predicted would happen at
+early iterations — cannot be known without the per-criterion shapes.
+
+### Two findings that survive independently
+
+**Escalation took 70% of this run's spend** — $0.1080 of $0.1547 — replicating
+§6.10's 70–78% on a tier the serving ledger renders no row for.
+
+**`--repeat 2` produced one unit.** The sweep reported *exhausted after 1 of 2
+units* at $0.1547 against a $0.50 cap, which is **not exhaustion**. Either the
+per-unit ceiling bound where the sweep ceiling did not, or the accounting is
+wrong. Unresolved, and it is the reason `n=2` was bought and not obtained.
+
+### The departure
+
+One re-run to rule out an apparatus fault is a logged departure carrying its
+cost, and this *is* an apparatus fault. **It was not taken.** The fault was the
+executor's rather than the harness's, and buying a second run to cover an
+executor error is the owner's decision and not the executor's to assume. The
+$0.50 envelope has **$0.3453** remaining and the question is open.
+
+**The procedural fix, applicable regardless:** a live run's results file must be
+written outside the working tree and copied in afterwards, so that no git
+operation can reach a trace being written. No git command should ever be run
+against this repository while a paid run is in flight.

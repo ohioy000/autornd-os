@@ -1,0 +1,65 @@
+{
+  "command_id": "ARCH-20260922-010",
+  "status": "PARTIAL",
+  "executed": "2026-09-22",
+  "branch": "arch/20260922-010-b17-rerun",
+  "files_changed": ["docs/preregistration-b17-validation.md", "docs/traces/b17-validation-marketing-claims-grounded.jsonl", "docs/traces/b17-validation-STDOUT-ONLY.txt", "docs/handover-review.md", "HANDOVER.md", ".orchestration/responses/ARCH-20260922-010.response.json"],
+  "gates_run_before_spending": [
+    {"gate": "prediction file committed BEFORE the run", "result": "PASS — 47cd136, and its sha is recorded here as the command required"},
+    {"gate": "preflight zero failures", "result": "PASS — 14 ok, 0 failing, all eight tiers"},
+    {"gate": "corpus ingested", "result": "PASS — 16 chunks"},
+    {"gate": "git status clean", "result": "PASS"},
+    {"gate": "results file absent", "result": "PASS — the run had not happened"},
+    {"gate": "owner's envelope ratified", "result": "PASS — $0.50, ratified in-thread"}
+  ],
+  "THE_FAILURE_THIS_RESPONSE_EXISTS_TO_REPORT": {
+    "what": "I DESTROYED THE TRACE OF A PAID RUN. $0.1547 spent, record unrecoverable.",
+    "how": "The run was launched in the background. While it was in flight I ran `git stash -q -u` to switch branches for ARCH-20260922-013. That stashed untracked files, including the results file the run was actively writing. The writer held the open inode; the stash removed the directory entry; every unit record went to a deleted file. Only the 729-byte header survived, being what existed at the moment of the stash.",
+    "whose_fault": "Mine, entirely. Not the harness's. The harness wrote the file correctly and reported correctly.",
+    "what_was_searched_before_concluding_it_was_gone": "the working tree, evals/results/ (gitignored, empty), and a filesystem-wide find for b17-validation* modified after the run started. The header is the only copy.",
+    "what_is_committed_instead": "The header-only JSONL, and docs/traces/b17-validation-STDOUT-ONLY.txt carrying the terminal output verbatim. Both are labelled as what they are. Neither is a substitute for a trace and §29.2 does not treat them as one.",
+    "the_procedural_fix": "A live run's results file is written OUTSIDE the working tree and copied in afterwards, so no git operation can reach a trace being written. No git command is run against this repository while a paid run is in flight. This applies regardless of whether a re-run is bought."
+  },
+  "results_from_surviving_terminal_output": {
+    "units": "1 of 2 — the sweep reported 'exhausted after 1 of 2 units' at $0.1547 against a $0.50 cap, which is NOT exhaustion. Unresolved: either the per-unit ceiling bound where the sweep ceiling did not, or the accounting is wrong. It is the reason n=2 was bought and not obtained.",
+    "calls": 29, "seconds": 865.9, "cost": "$0.1547",
+    "spend_by_tier": {"escalation": 0.1080, "architecture": 0.0322, "engineering": 0.0126, "research": 0.0018, "triage": 0.0002},
+    "served_by": "architecture via StreamLake, engineering via GMICloud, escalation via Moonshot AI, research via Google, triage via Alibaba",
+    "coverage": "criteria_addressed 1/2 — '3 of 5 measurable success criteria are not visibly addressed by...'"
+  },
+  "predictions_scored": [
+    {"id": "P1", "prediction": "shape classification fires on live criteria", "outcome": "HELD, n=1", "evidence": "'3 of 5 MEASURABLE success criteria' — six criteria in the plan, five measured, ONE ABSTAINED ON SHAPE. 'measurable' and the five-of-six count are both new code. The classifier ran on a live, freshly generated plan and abstained, outside its fixtures."},
+    {"id": "P2", "prediction": "the run reaches a terminal", "outcome": "UNSCORABLE", "evidence": "the status field lived only in the destroyed records"},
+    {"id": "P3", "prediction": "the run CONVERGES (status completed)", "outcome": "REFUTED, n=1", "evidence": "0/2; coverage still failed three of five measurable criteria. This was the real test and it is the one reported wrong."},
+    {"id": "P4", "prediction": "B15-2 persists", "outcome": "UNSCORABLE", "evidence": "the draft lived only in the trace"},
+    {"id": "P5", "prediction": "under $0.15 per unit", "outcome": "HELD, n=1, but not the registered comparison", "evidence": "$0.1547 for ONE unit against a prediction written for a converging run. A non-converging run coming in near budget is not the thing P5 was asking about."},
+    {"id": "P6", "prediction": "the four never-run pins serve without incident", "outcome": "HELD IN PART, n=1", "evidence": "escalation via Moonshot AI and research via Google both served, with no error surfacing. ranker and premium do not appear in the served-by line, so they were NOT exercised and this run says nothing about them."},
+    {"id": "P7", "prediction": "429s recorded", "outcome": "UNSCORABLE"}
+  ],
+  "phase_2_trigger_NOT_fired": "§29.1(7) triggers Phase 2 on classification misfiring on live criteria EVIDENCED IN A COMMITTED TRACE. There is no committed trace. P3's refutation is a fact about this RUN, not about the ruling, and conflating the two would be the exact error convention 18 forbids — a reading is a reading until something rules the apparatus out, and here the apparatus was me.",
+  "findings_that_survive_independently": [
+    "Escalation took 70% of this run's spend ($0.1080 of $0.1547), replicating §6.10's 70-78% on the one tier the serving ledger renders no row for.",
+    "--repeat 2 produced one unit while reporting exhaustion at 31% of the sweep cap. Worth a command of its own."
+  ],
+  "ledger_updates_made": {
+    "B18": "CLOSED by ARCH-20260922-009, with the caveat recorded that the repair is proved by tests and by nothing else — this run's status field was in the destroyed records.",
+    "B17": "STAYS OPEN. Implemented and partly validated; the pathway is not demonstrated end to end."
+  },
+  "deviations": [
+    {
+      "what": "The re-run permitted by the standing rule was NOT taken.",
+      "why": "The rule allows one re-run to rule out an apparatus fault, as a logged departure carrying its cost. This is an apparatus fault, but the apparatus was the executor. Spending the owner's money to cover my own error is the owner's decision, not mine to assume, and the envelope was ratified for a run that has now happened.",
+      "impact": "$0.3453 of the ratified envelope remains. The question is open and stated in §29.2 rather than quietly resolved."
+    },
+    {
+      "what": "The pre-registration is committed and unedited despite three of its seven predictions being unscorable.",
+      "why": "A pre-registration is not amended to match what could be measured. Unscorable is reported as unscorable."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "The freeze's third exit condition (§31) — one B14 demonstration reaching a terminal — is NOT met. P3 was refuted. Does the freeze hold pending a re-run, or does P1's live confirmation of the classifier partially satisfy it? My reading is that it holds: the condition names a terminal, and no terminal was observed.",
+    "'exhausted after 1 of 2 units' at $0.1547 against a $0.50 sweep cap is either a per-unit ceiling binding invisibly or an accounting fault. It cost half the registered sample and no one asked it to. It should have its own command, and it is an instrument question rather than a ruling.",
+    "This is the fifth instrument failure of the day and the only one that destroyed data rather than misreporting it. The other four could not fail; this one could not survive. If a convention comes out of today, it may need both halves: an instrument must be able to fail, and a measurement must be able to outlive the process that took it."
+  ]
+}
