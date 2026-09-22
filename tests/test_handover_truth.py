@@ -137,6 +137,10 @@ def test_named_checks_exist(handover):
 
     listed = set(re.findall(r"`(criteria_addressed|numbers_consistent|"
                             r"totals_reconcile|judges_agree)`", handover))
+    assert listed, (
+        "§2.3 names no free checks at all. Either the section was lost or the "
+        "backtick convention changed; either way this guard was about to "
+        "confirm that an empty set contains no impostors (convention 28).")
     missing = listed - set(registry)
     assert not missing, f"HANDOVER names checks that do not exist: {missing}"
 
@@ -174,6 +178,15 @@ def test_the_workflow_facade_is_still_described_as_on_the_request_path(handover)
 # matched NOTHING, and passed all three break attempts — a guard that could not
 # fail, written inside the change that exists to stop guards that cannot fail.
 # `_STAMP` is therefore asserted to find something before anything is checked.
+# Every stamp guard says this, because on 2026-09-22 only ONE of the three got
+# the non-empty assertion and the other two went on passing vacuously for
+# another hour. A fix applied to the instance you are looking at is not a fix
+# applied to the class.
+_NOTHING_FOUND = (
+    "the stamp pattern matched nothing, so every check below this line would "
+    "iterate an empty list and pass. That is not a clean bill (convention 28)."
+)
+
 _STAMP = re.compile(r"(?:HEAD:|as of)[^`\n]{0,24}`([0-9a-zA-Z]{6,40})`")
 
 
@@ -204,7 +217,9 @@ def test_the_provenance_stamps_resolve_to_real_commits(handover):
     """`cafebabe` was hand-typed and looked exactly like a sha."""
     if not (ROOT / ".git").exists():
         pytest.skip("not a git checkout")
-    unresolved = [s for s in _STAMP.findall(handover)
+    stamps = _STAMP.findall(handover)
+    assert stamps, _NOTHING_FOUND
+    unresolved = [s for s in stamps
                   if _git("cat-file", "-t", s).stdout.strip() != "commit"]
     assert not unresolved, (
         f"HANDOVER names shas that are not commits in this repo: {unresolved}")
@@ -221,7 +236,9 @@ def test_the_provenance_stamps_are_ancestors_of_the_commit_under_test(handover):
             "shallow clone — ancestry is unanswerable at fetch-depth 1. "
             "test_ci_gives_one_job_the_history_this_guard_needs keeps this "
             "skip from becoming permanent.")
-    strangers = [s for s in _STAMP.findall(handover)
+    stamps = _STAMP.findall(handover)
+    assert stamps, _NOTHING_FOUND
+    strangers = [s for s in stamps
                  if _git("merge-base", "--is-ancestor", s, "HEAD").returncode != 0]
     assert not strangers, (
         f"HANDOVER names shas that are not ancestors of HEAD: {strangers}. "
