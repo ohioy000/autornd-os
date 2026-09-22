@@ -474,6 +474,28 @@ def _partial_state(executor: GraphExecutor, request: str):
     return getattr(executor, "state", None) or ExecutionState(request=request)
 
 
+def _end_on_bound(state, bound: str, detail: str) -> None:
+    """Give a bound-stopped run the typed terminal it never got (B18).
+
+    Measured 2026-09-21 on the B14 demonstration: the unit record's `status`
+    was the EMPTY STRING while `error` read "stopped at 42 model calls
+    (ceiling 41)" with a per-tier breakdown. The bound was named, and named
+    well. What was missing was a status, so a consumer reading the field saw a
+    run that neither finished nor stopped.
+
+    Production never had this gap. `engine/workflow.py` catches the same
+    exception and persists `WorkflowStatus.BLOCKED` with the message as
+    `error`, so `blocked` is the value the harness ALREADY concludes for a
+    bound-stopped run — matching it here is consistency repair, not a new
+    ruling about what a ceiling means.
+
+    `state.end` sets once, so a run that reached its own terminal before the
+    bound fired keeps it. That ordering matters: the bound is the reason the
+    run stopped only when nothing else already ended it.
+    """
+    state.end("blocked", f"stopped by the {bound}: {detail}")
+
+
 async def run_scenario(
     scenario: Scenario,
     spec: WorkflowSpec,
@@ -525,6 +547,7 @@ async def run_scenario(
     except asyncio.TimeoutError:
         state = _partial_state(executor, scenario.request)
         error = f"timed out after {deadline:.0f}s"
+        _end_on_bound(state, "deadline", error)
     except CallCeilingExceeded as exc:
         state = _partial_state(executor, scenario.request)
         error = str(exc)
@@ -532,9 +555,12 @@ async def run_scenario(
         # real, so the scenario's own assertions stay answerable — which is
         # what the ceiling's one call of headroom was always meant to allow.
         stopped_by_budget = True
+        _end_on_bound(state, "spend ceiling" if error.startswith("stopped at $")
+                      else "call ceiling", error)
     except Exception as exc:  # a broken run is a result, not a crash
         state = _partial_state(executor, scenario.request)
         error = f"{type(exc).__name__}: {exc}"
+        _end_on_bound(state, "unhandled error", error)
     seconds = time.perf_counter() - started
 
     # Every unit that started is billed to the sweep, including one that failed

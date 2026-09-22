@@ -75,6 +75,30 @@ class NodeRunner(Protocol):
         ...
 
 
+def _dissent_suffix(body: "list[Node]", state: "ExecutionState") -> str:
+    """", still red: coverage, validate" — who was dissenting when time ran out.
+
+    B18's second half. A loop that exhausts its bound already named the bound;
+    it did not name WHY it kept going, and the answer is sitting in the fold's
+    own output. `judges_agree` records `dissenting` on every failing fold, so
+    the last iteration's dissent is the closest thing the run has to a cause.
+
+    Read from the body's outputs rather than from a named node, because the
+    fold's id is a property of the workflow file and this executor does not
+    know it — a loop folds exactly the judges its own body produces.
+    """
+    for member in reversed(body):
+        output = (state.outputs or {}).get(getattr(member, "id", ""))
+        dissenting = None
+        if isinstance(output, dict):
+            dissenting = output.get("dissenting")
+        else:
+            dissenting = getattr(output, "dissenting", None)
+        if dissenting:
+            return ", still red: " + ", ".join(str(d) for d in dissenting)
+    return ""
+
+
 def _render_item(value: object) -> str:
     """One entry of a gate's reason list, readable whatever shape it arrived in.
 
@@ -291,7 +315,8 @@ class GraphExecutor:
 
         if node.on_exhausted_status:
             state.end(node.on_exhausted_status,
-                      f"'{node.id}' did not converge within {budget} iterations")
+                      f"'{node.id}' did not converge within {budget} iterations"
+                      + _dissent_suffix(body, state))
             return False
         if node.on_exhausted:
             return await self._run_from(node.on_exhausted, state)
