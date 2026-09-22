@@ -3,7 +3,7 @@
   "status": "DONE",
   "executed": "2026-09-22",
   "head_before": "97af0431903dd353334dee113d87bf42e31f5f4f",
-  "head_after": "PENDING-COMMIT",
+  "head_after": "5fab4b26c5234b1d414d9931e32c921ba3996bb4",
   "supersedes_own_earlier_report": {
     "earlier_status": "BLOCKED",
     "earlier_sha": "93c6c4a",
