@@ -1,0 +1,43 @@
+{
+  "command_id": "ARCH-20260922-007",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "head_before": "440962e",
+  "branch": "arch/20260922-007-b17-shape-ruling",
+  "files_changed": ["docs/handover-review.md", "HANDOVER.md", ".orchestration/responses/ARCH-20260922-007.response.json"],
+  "preconditions_run": [
+    {"check": "grep 'Blueprint 017' docs/handover-review.md", "result": "PASS — PR #28 merged at 44ead9a; section 28 is on main"},
+    {"check": "grep ARCH-20260922-005 in the record", "result": "PASS — PR #29 merged at 440962e; the readout response is on main"},
+    {"check": "suite green before", "result": "PASS — 764 passed"}
+  ],
+  "results": {
+    "section_29": "Landed, capped at about a page as instructed, with the cap itself recorded as a deliberate departure from the long-form habit of sections 24-28.",
+    "supersession_answered": "YES to the command's first question. The ARCH-20260922-003/-004/-006 chain carried a full B17 design, pasted to me as Blueprint 018. It was NEVER EXECUTED — no branch, no code, no pre-registration, nothing on main. Section 29.2 names the one place the two rulings contradict: Blueprint 018 measured a FORM criterion as component-scoped field presence, locating the component by heading heuristics, and fell back to UNMEASURED only if the component could not be found; B17-R1 abstains on form unconditionally. B17-R1 is the narrower and more honest of the two, because the heading heuristic is an unexhibited guess about document structure and convention 21 says exhibits precede leniency. Blueprint 018's fourth UNCLASSIFIED shape is also dropped: B17-R1 folds it into presence by the fail-safe rule, which fails closed rather than open.",
+    "b18_opened": "Opened at severity high, AND the reading is sharpened rather than repeated (convention 18).",
+    "b18_precise_finding": "The trace's unit record carries status = '' (empty string) while error carries 'stopped at 42 model calls (ceiling 41); raise max_calls on the scenario if this is expected' plus a per-tier call breakdown. The bound IS named, and named well. What is missing is the TYPED TERMINAL: nothing in the verdict set says the run ended, so a consumer reading status sees a run that neither finished nor stopped. This matters for -009's design: the repair is a status, not a message, and the message already exists and should not be rewritten.",
+    "b17_row": "Points at section 29, states the ruling in one paragraph, and records that ARCH-20260922-006's retry was blocked on this ruling and is superseded by -010.",
+    "counts": "764 before and after; no code changed, so nothing re-derived.",
+    "diff_scope": "Two files plus the response, as scoped.",
+    "cost": "$0.00"
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "Ruling B17-R1 verbatim as a new numbered section with B17's measurements cited", "met": true, "evidence": "section 29.1; 6 of 17 forbidden, 14 of 17 unreachable, 40% on a compliant draft, criterion 3 at 37%"},
+    {"criterion": "B18 in 4.2 at severity high with its evidence and status OPEN", "met": true},
+    {"criterion": "B17's row points at the new section and states -006's retry is blocked on it", "met": true},
+    {"criterion": "Suite passes unchanged, count reported before and after", "met": true, "evidence": "764 / 764"},
+    {"criterion": "git diff --stat touches only the two named files", "met": true}
+  ],
+  "deviations": [
+    {
+      "what": "The B18 row states a narrower defect than the command's framing.",
+      "why": "The command says a bound 'produces no terminal status' and cites 'no terminal'. That is true of the status field and false of the error field, which names the bound in the operator's words already. Writing the row as the command framed it would have licensed -009 to rewrite a message that is already correct.",
+      "impact": "-009's scope narrows to adding a typed terminal, and its own question ('was the 42nd call the client ceiling or a loop iteration') is answered in advance: the error string says model calls against a ceiling, per-tier."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "ARCH-20260922-002 (owner-ruled provenance labels in AGENTS.md's orchestration section) is still unexecuted from the previous batch and does not collide with 007-012. Should it land in this arc or be dropped? It is roughly six lines and an optional guard.",
+    "Section 29.3 registers the advisor's own prediction that the fix produces a terminal at iteration 1. That prediction is about a run that -010 will pre-register separately. If -010's pre-registration restates it, the two must not drift; I propose -010 quotes section 29.3 rather than paraphrasing it, and I will do that unless told otherwise.",
+    "B18's second unmeasured question -- whether a ceiling-stopped run persists as blocked or escalated -- changes what the harness concludes about the run and is therefore a ruling, not -009's to pick. -009 needs it answered or it will implement a third option (a distinct terminal that is neither) and that choice will be invisible until something reads it."
+  ]
+}

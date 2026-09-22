@@ -6734,3 +6734,86 @@ characterized them**: `docs/traces/resweep2-engineering-*.jsonl`,
 `docs/preregistration-engineering-resweep-2.md`. This section **names them and
 does not characterize them**; that is `ARCH-20260922-005`'s job. They are listed
 here so that the gap is visible in the record rather than only in the filesystem.
+
+---
+
+## 29. Ruling B17-R1 — shape selects the test (advisor, 2026-09-22)
+
+**Deliberate cap.** This section and its execution record are held to about a
+page each. The notebook is 383 KB and growing it is a cost this arc does not
+pay. That is a departure from the long-form habit of §§24–28 and it is recorded
+as one.
+
+### 29.1 The ruling, as received
+
+> **Options considered and rejected.**
+> **(A) Lower the threshold.** Rejected. 14/17 unreachable means no threshold
+> separates compliant from non-compliant for criterion 6; lowering to catch it
+> lets the *"names every topic while committing to nothing"* class (measured
+> <33%) through — trading this death for precisely the drift the check was built
+> to catch.
+> **(B) Demote `coverage` from the `judges_agree` fold.** Rejected. It discards a
+> real, measured signal (71–100% vs 0–33% separation) and breaks the repo's
+> non-negotiable #2 (free checks pre-empt paid ones).
+>
+> **Adopted — Ruling B17-R1.** Classify each criterion's **shape
+> deterministically** (free, no model call), and let shape select the test:
+>
+> | Shape | Test | Direction |
+> |---|---|---|
+> | **presence** (default) | unchanged term overlap, ≥ 50% of significant terms | as today |
+> | **prohibition** | the criterion's own **forbidden tokens** become the test: pass iff **none** appear in the artifact (word-boundary, case-insensitive) | **inverted — strictly stronger than overlap ever was** |
+> | **form** | **abstain** | term overlap is not a valid test; recorded, counted, passed to the paid validator with the reason |
+>
+> **Invariants that make this safe:**
+> 1. **Fail-safe direction: when in doubt, presence.** Abstention is leniency;
+>    per convention 21, **exhibits precede leniency**.
+> 2. `coverage.passed` keeps its existing meaning for the shapes it is sound on.
+>    **`judges_agree`, loop bodies, gates and exit conditions are untouched.** No
+>    loop wiring change, no model call, no new dependency.
+> 3. **An abstention never fails the check, and is never silent** — recorded in
+>    the run's unit record beside `normalised_by_kind`.
+> 4. `coverage` must read **the same artifact text the validator reads** — if
+>    that is not `implement.summary`, the executor says so rather than silently
+>    widening the read.
+
+**The measurement it rules on** (B17's row, unchanged): criterion 6 —
+*"avoids the banned words ('leverage', 'seamless', 'robust', 'in today's
+fast-paced world')"* — carries **17 significant terms, 6 of which are tokens the
+criterion forbids the draft to contain** and 8 more of which are meta-vocabulary
+about the rule. **14 of 17 are unreachable for a compliant draft**, capping it at
+65% against a 50% threshold; the check scored a correct draft **40%**. Criterion
+3 fails more mildly at **37%** for the second class: `author`, `organization`,
+`date`, `location` describe what a citation *is*, not what it contains.
+
+### 29.2 What this supersedes
+
+An earlier design for B17 was proposed as *Blueprint 018* in the
+`ARCH-20260922-003/-004/-006` chain and **was never executed** — no branch, no
+code, no pre-registration. B17-R1 supersedes it. The two contradict in one
+place, named here rather than quietly dropped:
+
+- Blueprint 018 measured a **form** criterion as *component-scoped field
+  presence*, locating the component by heading heuristics, and fell back to
+  `UNMEASURED` only when the component could not be found.
+- **B17-R1 abstains on form unconditionally.**
+
+B17-R1 is the narrower and more honest of the two: the heading heuristic is an
+unexhibited guess about document structure, and convention 21 says exhibits
+precede leniency. Blueprint 018's fourth `UNCLASSIFIED` shape is also dropped —
+B17-R1 folds it into `presence` by the fail-safe rule, which fails closed rather
+than open.
+
+### 29.3 Execution record
+
+Registered, not executed. Implementation is `ARCH-20260922-008`; the paid
+validation that either proves or refutes it is `ARCH-20260922-010`, gated on the
+owner's envelope and pins. `ARCH-20260922-006`'s retry of the B14 demonstration
+is **blocked on this ruling** and is superseded by `-010`.
+
+**Prediction, registered here and reported either way** (the advisor's, quoted):
+*criterion 6 becomes a positive test (banned words absent → pass), criterion 3
+abstains (form), `coverage.passed == true` at iteration 1 → `judges_agree` green
+→ `build_loop` converges → `review` gates → **terminal instead of a 42-call
+ceiling death**.* If the run still fails to terminate, that is **the ruling being
+wrong**, reported as such, not a workflow defect.
