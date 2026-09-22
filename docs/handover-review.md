@@ -6610,3 +6610,127 @@ history; it can make two records of the same run inconsistent with each other.**
 comment that outlived the wiring by one commit; `workflows/engineering-rnd.yaml`
 carries the routing/terminal split in its own comment; HANDOVER §3.1 points
 here.
+
+---
+
+## 28. Blueprint 017 — The generalization boundary (retroactive, owner-instructed)
+
+**Provenance, stated first.** This work was instructed by the owner on
+2026-09-21/22 and executed by the Lead Coder from the recommendations in
+`.orchestration/responses/ARCH-20260920-009.response.json`. **The advisor
+authored no blueprint before implementation.** The paste-before-executing
+convention was skipped for PRs #23 and #24 and satisfied in substance for the
+live run by PR #25, which committed a pre-registration before any spend. The
+advisor ratifies the design here **on the merits**; nothing in this section
+implies prior sanction, and the record says so rather than tidying it away.
+
+### 28.1 The design as implemented
+
+The survey that preceded the work found B14 smaller than §26 had staged it. §26
+framed it as *two literal engineering roles bind on every profile*, measured at
+77 of 108 units. That is true, but **the generalization is two profile keys, not
+an architecture**: the rules themselves — scale the review team with risk,
+someone checks the work, someone holds the system-level view — are already
+domain-neutral. Only their operands were engineering nouns.
+
+So the design is two **structural role slots**, declared by the profile:
+
+- `structural_roles.checks_work` — *who checks the work*
+- `structural_roles.holds_system_view` — *who holds the system-level view*
+
+They resolve at both injection sites — `enforce_triage_composition` in
+`autornd/engine/phases.py`, and the review-team composition in
+`autornd/engine/review_composition.py`. **Undeclared resolves to the shipped
+engineering roles**, so every engineering project behaves byte-identically; four
+regression guards pin that and pass against the pre-B14 code as well as after
+it, while nine feature tests fail before and pass after.
+
+**`lead_for_domain` was not touched.** The survey named it site #3 and rated it
+the lowest value of the three; PR #23's diff (`ab5e527`) confirms it: the
+function is unchanged, and `review_composition.py` still calls it to compute
+domain leads. Only the two structural slots moved. This is recorded because the
+survey proposed three sites and two were done — an unstated omission is how a
+partial fix gets remembered as a complete one.
+
+The blueprint **cites symbols, not lines**, on the survey's own finding: §26's
+recorded reference `review_composition.py:53-60` covered two of the four reaches;
+the constants at lines 17–18 sat outside it. A blueprint written from the
+recorded line range would have generalized half the site and measured a partial
+fix.
+
+**A Pydantic bypass was fixed in the same change** — recorded unfixed since §26
+and deferred to here: injected roles are now normalised `str`, not enum members.
+
+### 28.2 The corpus
+
+Live validation needed a non-engineering project, and the tree had none.
+**`smartfactory` was ruled out as validator**: its manifest's domains are
+`firmware`, `hardware`, `backend`, `frontend`, `infrastructure` — five shipped
+enum members. It is an engineering project and would run today under the old
+code, so it cannot distinguish the fix from its absence.
+
+`docs/meridian_studio/` was built for the purpose: a brand platform, a house
+style, a search practice, and a manifest. Its three domains — `brand_strategy`,
+`copywriting`, `seo_analytics` — are **none of them shipped enum members**, and
+`tests/test_doc_corpora.py` pins that. `profiles/studio.yaml` declares `editor`
+and `strategist` for the two slots.
+
+### 28.3 The demonstration
+
+Pre-registered in `docs/preregistration-b14-demonstration.md` (PR #25,
+`f70524f`) and committed **before spend**. The pre-registration declared, in
+advance, that **two variables move at once** — the structural wiring and the
+grounding corpus — so nothing the run shows about grounding is unconfounded
+from the wiring, and vice versa.
+
+| Prediction | Result | n |
+|---|---|---|
+| **B14-1** — no shipped engineering structural role anywhere | **CONFIRMED.** Triage staffed `['strategist', 'copywriter', 'fact_checker']`; no `test_engineer`, no `systems_architect` | 1 |
+| **B14-2** — a profile-declared role appears | **CONFIRMED.** Three of them | 1 |
+| **B14-3** — the run reaches a terminal | **FAILED.** 42 calls against a 41-call ceiling, 7 iterations, no terminal | 1 |
+| **B15-1** — no invented product name presented as fact | **CONFIRMED.** An Assumptions section, with the audience frame near-verbatim from the house style — grounding reached the model. Confounded with the wiring, as pre-registered | 1 |
+| **B15-2** — no fabricated source | **FAILED.** The proof points carry firms the escalation autopsy names as invented | 1 |
+| **C1** — under $0.15 | **FAILED.** $0.1783 | 1 |
+
+Cost: **$0.1783**, against $0.0569 for the ungrounded comparator — **three times
+the price for a worse outcome.** That is grounding's cost, and it is recorded as
+measured rather than explained away. The prediction was wrong; it is reported
+wrong (convention 7).
+
+### 28.4 The correction, recorded
+
+Mid-run I reported that the corpus had not reached the scenario, reading a
+`Knowledge collection not found` warning as the documents failing to arrive.
+**That was wrong, and it was wrong in a way worth keeping.**
+
+There are **two grounding paths**, and they have different isolation properties:
+
+- **Manifest documents** load from disk. Eval isolation does not touch them.
+- **Chroma semantic retrieval** is isolated per scenario by `_isolated_store()`,
+  by design.
+
+The warning belongs to the Chroma path alone. The documents arrived; B15-1's
+near-verbatim audience frame is the evidence that they did. **G1's substance
+held while its wording tested the wrong subsystem** — the check was right about
+what it found and wrong about what that meant.
+
+The same class of error sits underneath it: **the free pre-check queried the
+real store, not the run's isolated one**, so it could report confidence about a
+store the run would never use. That gap is recorded here and fixed by
+`ARCH-20260922-004`.
+
+### 28.5 The incidental
+
+PR #27 recorded, in §27.3, that the outputs overwrite left `coverage` and
+`implement` holding verdicts **from different iterations** that disagree with
+each other. It is cross-referenced here because it was found during this arc,
+and it is repaired alongside Blueprint 018.
+
+### 28.6 Inventory note — the unchanneled window
+
+Three engineering-sweep generations ran in the same window and **no report has
+characterized them**: `docs/traces/resweep2-engineering-*.jsonl`,
+`sweep3-engineering-*.jsonl`, `sweep3s2-engineering-*.jsonl`, governed by
+`docs/preregistration-engineering-resweep-2.md`. This section **names them and
+does not characterize them**; that is `ARCH-20260922-005`'s job. They are listed
+here so that the gap is visible in the record rather than only in the filesystem.
