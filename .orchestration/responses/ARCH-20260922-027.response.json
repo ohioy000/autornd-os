@@ -1,9 +1,9 @@
 {
   "command_id": "ARCH-20260922-027",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "executed": "2026-09-22",
   "head_before": "97af0431903dd353334dee113d87bf42e31f5f4f",
-  "head_after": null,
+  "head_after": "PENDING-COMMIT",
   "supersedes_own_earlier_report": {
     "earlier_status": "BLOCKED",
     "earlier_sha": "93c6c4a",
@@ -65,7 +65,150 @@
     "results_file": "evals/results/b17-prohibition-branch.jsonl — deliberately NOT written directly into docs/traces/. B20's row records that the loss happened because --results-file aimed at the one tracked directory, where a brand-new file is untracked until committed. evals/results/ is git-ignored and was never exposed. The trace is copied into docs/traces/ after the run completes. The -022 mirror makes this belt-and-braces rather than necessary.",
     "git_during_run": "None. No git operation will be issued while the run is in flight, per the command's constraint."
   },
-  "results": null,
-  "deviations": null,
-  "questions_for_advisor": null
+  "results": {
+    "outcome_one_line": "The branch did not fire. The planner emitted a prohibition criterion with an explicit quoted token list, the classifier called it presence, and a fully compliant 401-word draft scored 0.00 on it.",
+    "run": {
+      "status": "blocked",
+      "bound": "deadline — 'timed out after 1200s'",
+      "calls": 23,
+      "seconds": 1200.012,
+      "cost": 0.0434,
+      "cap": 0.25,
+      "cost_fraction_of_cap": "17% — the binding constraint was TIME, not money",
+      "iterations": 6,
+      "converged": false,
+      "trace": "docs/traces/b17-prohibition-branch.jsonl (copied byte-identical from the git-ignored evals/results/ primary; diff -q clean)"
+    },
+    "per_criterion_shape_table": [
+      {
+        "n": 1,
+        "criterion": "The copy contains no instances of 'leverage', 'seamless', 'robust', or 'in today's fast-paced world'.",
+        "classified": "presence",
+        "abstained": false,
+        "score": 0.0,
+        "verdict": "MISSED",
+        "note": "PROHIBITION-SHAPED WITH AN EXPLICIT QUOTED TOKEN LIST. Classified presence. Its only significant terms are the words it forbids, so a compliant draft scores 0%."
+      },
+      {
+        "n": 2,
+        "criterion": "The copy includes exactly one headline, a three-sentence opening paragraph, and three sections each with a subheading.",
+        "classified": "presence",
+        "abstained": false,
+        "score": 0.27,
+        "verdict": "MISSED"
+      },
+      {
+        "n": 3,
+        "criterion": "The total word count is between 350 and 450 words.",
+        "classified": "presence",
+        "abstained": false,
+        "score": 0.0,
+        "verdict": "MISSED",
+        "note": "FORM-SHAPED — satisfied by a property of the text, not by containing words. Classified presence, scored 0.00 against a draft of exactly 401 words, which SATISFIES it."
+      },
+      {
+        "n": 4,
+        "criterion": "The copy names at least three concrete features or actions the product performs (e.g., drag shifts, flags conflicts, staff update availability).",
+        "classified": "presence",
+        "abstained": false,
+        "score": 0.44,
+        "verdict": "MISSED"
+      },
+      {
+        "n": 5,
+        "criterion": "The opening three sentences introduce the product and its primary value without using abstract filler.",
+        "classified": "presence",
+        "abstained": false,
+        "score": 0.18,
+        "verdict": "MISSED"
+      },
+      {
+        "n": 6,
+        "criterion": "The copy addresses an operations manager comparing three tools and can be read in under ten minutes (i.e., is scannable, with short paragraphs and clear subheadings).",
+        "classified": "presence",
+        "abstained": false,
+        "score": 0.41,
+        "verdict": "MISSED"
+      }
+    ],
+    "shape_totals": {
+      "presence": 6,
+      "prohibition": 0,
+      "form": 0,
+      "abstained": 0,
+      "note": "6 of 6 presence. NEITHER branch of B17-R1 fired. In §34 the form branch abstained twice; here it did not fire at all."
+    },
+    "extracted_banned_tokens": "NONE. The command requires these quoted for any prohibition-shaped criterion. No criterion was classified prohibition, so the check extracted no forbidden tokens and there are none to quote. Recorded as an absence rather than left blank — no evidence is not no problem.",
+    "compliance_of_the_draft": {
+      "words": 401,
+      "required_range": "350-450 (criterion 3) — SATISFIED",
+      "banned_tokens_present": {
+        "leverage": false,
+        "seamless": false,
+        "robust": false,
+        "in today's fast-paced world": false
+      },
+      "conclusion": "The draft SATISFIES criteria 1 and 3. Both scored 0.00. Verified against the committed trace, not asserted."
+    },
+    "predictions_scored": {
+      "a": {
+        "verdict": "HELD",
+        "observed": "The planner emitted 'The copy contains no instances of ...' with all four tokens quoted. Note the wording differs from the registered prediction 'avoids the banned words (...)' — B16 in the act of deciding an outcome."
+      },
+      "b": {
+        "verdict": "REFUTED",
+        "observed": "Classified 'presence'. shapes shows 6/6 presence and abstained is empty."
+      },
+      "c": {
+        "verdict": "NOT SCORABLE as a test of the inversion",
+        "observed": "The prohibition branch never ran, so nothing about it was tested. What WAS observed: a compliant draft failed at 0.00. Reported as unscorable rather than as held or refuted, because scoring it either way would credit or blame a branch that did not execute."
+      },
+      "d": {
+        "verdict": "NOT REACHED",
+        "observed": "As declared at registration. Unchanged."
+      }
+    },
+    "phase_2_trigger": "FIRED. §29.1(7) requires classification misfiring evidenced in a committed trace. HANDOVER.md recorded on 2026-09-21 that no such trace existed. docs/traces/b17-prohibition-branch.jsonl is now that trace. Reported, not acted on — what Phase 2 does is the advisor's.",
+    "b17_status": "OPEN, and now demonstrated live rather than inferred. NOT closed. The command's closing condition requires the classifier to have called it prohibition; it did not.",
+    "incidentals": [
+      "B18 fired live on a FOURTH bound. status 'blocked' with 'timed out after 1200s'. Previously observed on the call ceiling and the spend ceiling (§34.6); the deadline branch is now observed too.",
+      "B14's generalization held again, n=1. Triage read risk 'low', domain ['copywriting'], staff ['copywriter']. No shipped engineering role anywhere in the run.",
+      "verify_grounding: demanded false, looked_up 0, '$0 — no citation demand detected'. The risk gate zeroed search on low-risk work, as designed.",
+      "The clock, not the meter, was the binding constraint. validate took 724s of 1200 (60%); escalation took 19.3s. Escalation was 40% of SPEND ($0.0175 of $0.0434), below §6.10's 70-78% band — but the run was truncated, so this is not a clean comparison.",
+      "The engineering tier took 18 of 23 calls and the stderr log shows three retry events: one JSON parse failure (unterminated string) and two empty replies from GMICloud (finish_reason None then error). rejections_by_tier and rejections_by_provider are both EMPTY in the record. Reported as a reading, not a diagnosis (convention 18): it may be that those counters track schema rejections only and parse/empty failures are a different class. If they are meant to cover it, an instrument is under-reporting by three on this run."
+    ]
+  },
+  "deviations": [
+    {
+      "what": "Raised --timeout from the 600s default to 1200s.",
+      "why": "Recorded in the IN_PROGRESS commit BEFORE the run, not after. §34's units ran about 800s each, so the default would have killed this one mid-run. The run still hit 1200s, so the raise did not save it — but it bought six full iterations and a scorable shape table where 600s would have produced roughly three.",
+      "honest_note": "This is the prediction-worthless condition I registered ('the run never reaches coverage') NOT occurring. Coverage ran seven times."
+    },
+    {
+      "what": "Wrote HANDOVER.md, which is named in neither include nor exclude.",
+      "why": "The command's second verification requires B17 to be 'Either CLOSED with this run's evidence, or OPEN with the refutation recorded' in HANDOVER.md, so the file is in scope by the verification even though the scope block omits it. Same collision class as -026's."
+    },
+    {
+      "what": "Precondition 3 (clean tree) was failing and was waived by the owner's instruction to start, not resolved.",
+      "why": "The five untracked .claude/ tooling entries are still present. The check's purpose is met by staging the trace path explicitly."
+    }
+  ],
+  "questions_for_advisor": [
+    {
+      "question": "THE REGISTERED QUESTION: the planner emitted a prohibition-shaped criterion and the classifier called it presence. Is that a check defect or an input-phrasing issue?",
+      "context": "Reported and NOT fixed, exactly as the command instructs. The observable that bears on it: the criterion reads 'The copy contains no instances of X, Y, Z' where B17's original exhibit and the registered prediction both read 'avoids the banned words (X, Y, Z)'. Both are prohibitions with quoted token lists; only the verb phrase differs. If classification keys on a narrower surface form than 'a quoted token list under a negation', then B16 guarantees this recurs, because the planner rewords every run. That combination — a classifier keyed on phrasing, and an input that is rephrased every run — is the thing to rule on, and it is larger than either row alone."
+    },
+    {
+      "question": "The form branch also did not fire. Is that the same defect or a second one?",
+      "context": "'The total word count is between 350 and 450 words' is satisfied by a property of the text. It was classified presence and scored 0.00 against a draft of exactly 401 words. In §34 a citation-fields criterion abstained correctly, twice. So form classification has now both fired and failed to fire on live input, which suggests it keys on something narrower than the shape."
+    },
+    {
+      "question": "Should a second run be bought, and if so with what changed?",
+      "context": "The executor's inclination is NO, not yet. This run answered its question decisively at $0.0434, and a second draw would measure a different plan (convention 27) without testing anything new while the classifier stands unchanged. The cheaper next step is a fixture using this trace's exact criterion wording, which costs nothing and is a test rather than a purchase. Raising max_calls or the timeout would buy convergence, not classification."
+    },
+    {
+      "question": "Do rejections_by_tier and rejections_by_provider cover parse failures and empty replies?",
+      "context": "Three retry events appear in stderr and both counters are empty in the record. If those counters are scoped to schema rejections only, this is correct and the question is whether a separate counter should exist. If they are meant to cover it, an instrument under-reported by three. Not touched — the command forbids changes during the run and this is a new command's work either way."
+    }
+  ]
 }
