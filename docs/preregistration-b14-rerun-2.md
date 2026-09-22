@@ -105,3 +105,32 @@ refuted from free evidence before `-010` and is not resurrected here.
 - **Spend cannot be unspent.** The trace stands as measured.
 - The executor has a stake in R3 and R5, having written the code under test.
   Recorded here rather than discovered in the write-up.
+
+---
+
+## Amendment 1 — envelope raised to $0.50 (owner, 2026-09-22)
+
+**Committed before the run, like the registration it amends.**
+
+The owner ratified **$0.50** for this run, above the $0.31 proposed. The sweep
+cap moves to **$0.50**; **the per-unit cap stays at $0.155**, and that is not an
+oversight.
+
+**Raising the per-unit cap to $0.50 would have re-created the exact defect this
+arc just closed.** Under the fit rule a unit starts only if it could not
+possibly overrun the sweep cap, so `--max-spend 0.50 --max-spend-sweep 0.50`
+permits **one unit**, not two — which is precisely what happened to
+`ARCH-20260922-010` and cost half its registered sample. The per-unit cap is the
+thing that has to stay small for `n=2` to be reachable.
+
+    --max-spend 0.155 --max-spend-sweep 0.50
+
+`0.50 // 0.155 = 3`, so two units fit with a unit of headroom. The pre-spend
+check added by `ARCH-20260922-021` will print nothing, and its silence is the
+confirmation that the arithmetic works this time.
+
+**What the extra headroom buys:** it is not a licence to spend more per unit. It
+is slack so that a unit running longer than `-010`'s $0.1547 is not cut off
+mid-flight by the sweep cap after the first one has already been paid for.
+Expected spend is unchanged at roughly **$0.31**, and the predictions are
+untouched.
