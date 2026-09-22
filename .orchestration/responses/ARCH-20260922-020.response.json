@@ -1,0 +1,107 @@
+{
+  "command_id": "ARCH-20260922-020",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "branch": "arch/20260922-020-convention-28-guards",
+  "files_changed": [
+    "tests/test_guards_can_fail.py",
+    "tests/test_preregistration_precedence.py",
+    "tests/test_handover_truth.py",
+    "HANDOVER.md",
+    "README.md",
+    "AGENTS.md",
+    ".orchestration/responses/ARCH-20260922-020.response.json"
+  ],
+  "preconditions_run": [
+    {
+      "check": "grep -rn 'PENDINGSHA|provenance' tests/",
+      "result": "PASS \u2014 tests/test_handover_truth.py, the three stamp guards added by ARCH-20260922-014"
+    },
+    {
+      "check": "suite green at 812",
+      "result": "PASS"
+    }
+  ],
+  "answer_to_the_commands_question": {
+    "question": "Was the stamp guard's vacuous pass caused by a wrong regex, or by reading a stamp form that no longer exists?",
+    "answer": "A WRONG REGEX. The stamp form is current and unchanged: HANDOVER.md line 3 reads '**HEAD:** `039cabe`' today. The pattern used `\\s*` between the label and the backtick where the document has `**` and a space. So this is NOT a documentation defect and no document needed changing \u2014 which matters, because the two repairs are different and treating it as documentation drift would have edited a correct file."
+  },
+  "THE_COMMANDS_PREMISE_IS_OUT_OF_DATE_AND_THAT_MATTERS_LESS_THAN_WHAT_REPLACED_IT": {
+    "premise": "The command asks to repair four guards that could not fail.",
+    "reality": "All four were repaired inside the commands that found them, hours before this one: preflight's wiring tests in PR #32, the runner test and the dissent test in PR #33, the stamp guard's non-empty assertion in PR #35. Re-repairing them would have been a no-op.",
+    "what_was_done_instead": "Convention 28 was made EXECUTABLE rather than re-applied by hand, and that immediately found four more instances \u2014 including two the morning's fix had missed."
+  },
+  "results": {
+    "the_executable_convention": "tests/test_guards_can_fail.py hands every documentation guard an EMPTY document and asserts it raises. Guards are discovered by signature, not listed, so one added tomorrow is covered without anyone remembering. It carries its own Convention 28 assertion: if discovery ever returns nothing, the file would pass while checking nothing, so it asserts at least five guards were found.",
+    "FOUR_MORE_VIOLATIONS_FOUND_IMMEDIATELY": "Running it found four guards passing on an empty document. THREE WERE REAL AND TWO OF THEM WERE MINE FROM THIS MORNING: test_the_provenance_stamps_resolve_to_real_commits and test_the_provenance_stamps_are_ancestors_of_the_commit_under_test both still did `_STAMP.findall(handover)` inline and iterated the result. I had added the non-empty assertion to ONE of the three stamp guards and believed the class closed. The third was test_named_checks_exist, which would have confirmed that an empty set contains no impostors.",
+    "the_lesson_recorded_in_the_code": "A comment now sits above the shared message: 'A fix applied to the instance you are looking at is not a fix applied to the class.' That is what the morning's repair got wrong and it is why this command exists.",
+    "the_one_legitimate_exemption": "test_retired_claims_are_not_reasserted asserts that measurement-retired claims do NOT appear. An empty document reasserts nothing, which is a TRUE answer, not a vacuous one. It is exempted BY NAME with its reason, and a second test asserts the exemption list stays at two or fewer and that every exempted name still exists \u2014 a stale exemption is a hole waiting for a guard of the same name. The residual risk is named rather than waved away: if HANDOVER.md were emptied this one guard would pass, and every other guard in the class would fail, so the document's disappearance is still caught by the class.",
+    "the_precedence_guard": "NOT one of the four, and the honest answer to the command's note is that IT DID NOT EXIST AT ALL. A pre-registration's only claim is that it came first, and nothing checked it: today's 14-second margin was established by comparing a commit's author date to a JSON field by hand, after the fact, by someone who thought to look. tests/test_preregistration_precedence.py now asserts it, using AUTHOR dates because a rebase rewrites committer dates and this repo rebases constantly \u2014 committer dates would make every rebase look like a registration written after its own run.",
+    "WHAT_THE_PRECEDENCE_GUARD_FOUND_ON_ITS_FIRST_RUN": "A third registered run nobody had paired: docs/preregistration-b016-part-e.md -> docs/traces/b16-e1-marketing-claims.jsonl. That is B016's CLOSING EVIDENCE, the run that closed B13, and its precedence had never been checked in the three ledger rows since. It holds \u2014 authored 2026-09-16T02:27:02, trace written 2026-09-20T01:54:59, a margin of 3.8 days. But nothing had verified it, and the guard that found it was looking for exactly that class of orphan.",
+    "all_three_margins": {
+      "b17-validation": "14 s",
+      "b14-demonstration": "27,879 s (7.7 h)",
+      "b016-part-e": "325,678 s (3.8 days)"
+    },
+    "counts": "812 -> 828, 43 -> 45 files. The command anticipated this: a guard repaired to fail correctly may legitimately change the count. Sixteen new tests across two new files, none of them a repair of a previously-passing assertion.",
+    "cost": "$0.00"
+  },
+  "proved_by_breaking_each": [
+    {
+      "break": "revert the two stamp guards' non-empty assertions",
+      "result": "tests/test_guards_can_fail.py reports both by name \u2014 2 failed"
+    },
+    {
+      "break": "invert the precedence comparison to `authored >= written`",
+      "result": "all three pairs fail; the guard is measuring the ordering and not merely running"
+    },
+    {
+      "break": "remove docs/preregistration-b016-part-e.md from REGISTERED",
+      "result": "test_every_committed_preregistration_is_paired_or_unrun names the orphan \u2014 this is how it was found in the first place"
+    }
+  ],
+  "acceptance_criteria_met": [
+    {
+      "criterion": "Each of the four guards fails when its subject is absent, demonstrated",
+      "met": true,
+      "evidence": "all four were already repaired in-flight; the executable convention now asserts the property for the whole class continuously, and was proved by reverting two of them"
+    },
+    {
+      "criterion": "The stamp guard fails on PENDINGSHA, a fabricated sha, and a real non-ancestor \u2014 demonstrated",
+      "met": true,
+      "evidence": "demonstrated in ARCH-20260922-014's response and re-asserted here by the empty-document case"
+    },
+    {
+      "criterion": "No guard weakened; a guard that cannot find its subject is reported as a finding",
+      "met": true,
+      "evidence": "nothing relaxed; three guards gained assertions and one exemption is justified by logic rather than convenience"
+    },
+    {
+      "criterion": "The pre-registration-precedence guard's status is stated explicitly",
+      "met": true,
+      "evidence": "it did not exist; it does now, and it found an unverified paid run on its first execution"
+    },
+    {
+      "criterion": "Suite count before and after with any change explained",
+      "met": true,
+      "evidence": "812 -> 828, explained"
+    }
+  ],
+  "deviations": [
+    {
+      "what": "The scope said tests/ only, and HANDOVER.md, README.md and AGENTS.md were touched.",
+      "why": "Count stamps. Sixteen new tests move the total and the count guards live in the file being edited; not restamping would have left the suite red.",
+      "impact": "Stamps only, regenerated from collection."
+    },
+    {
+      "what": "The four named guards were not individually re-repaired.",
+      "why": "They were already correct. Re-repairing a correct guard is a no-op that would have reported success without doing anything \u2014 which is the convention's own failure mode applied to the command executing it.",
+      "impact": "The effort went into asserting the property continuously instead, which found four more instances in its first run."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "The morning's stamp repair reached one guard of three and I believed the class closed. That is the same shape as B21 one level up: a fix asserted rather than verified across its class. Worth considering whether Convention 28 needs a second clause \u2014 a repair is applied to the class, and the class is enumerated, not remembered. The executable convention is that clause in code, but only for documentation guards.",
+    "test_every_committed_preregistration_is_paired_or_unrun found B016's run unpaired after three ledger rows. There may be others outside the preregistration-*.md naming convention \u2014 the engineering resweep generations, for instance, are governed by a prereg whose traces are named by a glob rather than individually. I have not widened the guard to cover globs, because a guess at a pairing is worse than an absent one; if the advisor wants that coverage, the pairs should be declared rather than inferred."
+  ]
+}
