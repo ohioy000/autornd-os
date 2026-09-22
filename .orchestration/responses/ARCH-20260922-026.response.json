@@ -1,0 +1,32 @@
+{
+  "command_id": "ARCH-20260922-026",
+  "status": "IN_PROGRESS",
+  "executed": "2026-09-22",
+  "head_before": "e90ca89bd01d3e16535042ae6096761d489052bb",
+  "head_after": null,
+  "preconditions": [
+    {
+      "command": "grep -n 'B17' HANDOVER.md | head -5",
+      "result": "PASS",
+      "observed": "B17 present at HANDOVER.md:750, status OPEN ('Status: OPEN, and it is a ruling'). Not closed, so NO_ACTION does not apply."
+    },
+    {
+      "command": "grep -n 'def criteria_addressed' autornd/graph/checks.py",
+      "result": "PASS",
+      "observed": "autornd/graph/checks.py:382. Line recorded only, as instructed. See deviations — a prior read of this file's structure is disclosed there."
+    },
+    {
+      "command": "ls evals/ && grep -rn 'scenario' autornd/evals/*.py | head -10",
+      "result": "PASS",
+      "observed": "evals/ holds grounding/, results/, scenarios/. Convention found: autornd/evals/scenario.py load_scenarios() takes a file or a directory and globs '*.yaml' in that directory only, non-recursively; ids must be unique within a directory or ScenarioError is raised. Subdirectories of evals/scenarios/ (wide/, generalization/, convergence/, materiality/, planprobe/, probe/) are therefore separate load targets, each passed explicitly. Expectation keys are whitelisted by _KNOWN_EXPECTATIONS in the same module."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS",
+      "observed": "855 passed in 41.71s. Green at the current count before the change."
+    }
+  ],
+  "results": null,
+  "deviations": null,
+  "questions_for_advisor": null
+}
