@@ -1,0 +1,138 @@
+{
+  "command_id": "ARCH-20260922-005",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "head_before": "8fc63fc",
+  "branch": "arch/20260922-005-sweep-generations-readout",
+  "files_changed": [
+    ".orchestration/responses/ARCH-20260922-005.response.json"
+  ],
+  "preconditions_run": [
+    {
+      "check": "6 traces each for resweep2, sweep3, sweep3s2",
+      "result": "PASS \u2014 6/6/6"
+    },
+    {
+      "check": "docs/preregistration-engineering-resweep-2.md present",
+      "result": "PASS"
+    }
+  ],
+  "correction_to_the_command": {
+    "premise": "The command states these are '18 traces no report has mentioned' and that the governing pre-registration is 'unread by the advisor'. The second is true and explains the first, which is not.",
+    "what_the_record_actually_holds": "There are FOUR generations on disk, not three: resweep2, sweep3, sweep3s2 and **sweep3s3** \u2014 24 traces, 43 units. sweep3/sweep3s2/sweep3s3 are sessions 1/2/3 of the resweep-2 pre-registration, and they ARE characterized, in that file's own committed execution record (36 units, $0.3996, all six predictions scored). The generation with no report is **resweep2** (n=7, $0.0880), the attempt the owner killed mid-flight on 2026-09-20.",
+    "arithmetic": "sweep3 $0.1206 + sweep3s2 $0.1493 + sweep3s3 $0.1297 = $0.3996, matching the amendment's figure to the cent, and 12+12+12 = the 36 units it reports. This is the join that identifies the three sessions with the three trace prefixes; nothing in the filenames says so."
+  },
+  "generations": [
+    {
+      "name": "resweep",
+      "governing_prereg": "docs/preregistration-engineering-resweep.md",
+      "units": 12,
+      "spend": "$0.1075",
+      "status": "the first attempt; folded into the resweep-2 prereg's '3 completions in 19 units' prior"
+    },
+    {
+      "name": "resweep2",
+      "governing_prereg": "docs/preregistration-engineering-resweep.md (same registration, continued)",
+      "landed_in": "45ccbc5",
+      "window_utc": "2026-09-20T04:03\u201304:37",
+      "units": 7,
+      "spend": "$0.0880",
+      "envelope": "--max-spend 0.10 --max-spend-sweep 0.30 per invocation; no session envelope was declared for a run that was abandoned",
+      "outcome": "ABANDONED on the owner's instruction ('kill it and do what you can'), and it is the generation with no report. 7 units, 6 arms, one arm (GMICloud) run twice. 2 passed. Three 429s (DeepInfra, GMICloud, StreamLake) and two 1200s timeouts (DigitalOcean, SiliconFlow). DeepInfra and StreamLake's 429s killed the unit before the engineering tier was reached at all \u2014 providers_by_function carries no 'engineering' key on either.",
+      "why_it_matters": "It is the evidence base for the disqualification the executor later retracted: GMICloud's single 429 here, plus one earlier, is what produced the wrong call recorded in \u00a727.2. The generation that caused the error has never been written up. That is now done."
+    },
+    {
+      "name": "sweep3",
+      "alias": "resweep-2 SESSION 1",
+      "window_local": "18:11\u201318:58",
+      "units": 12,
+      "spend": "$0.1206",
+      "terminals": 11,
+      "retry_fired": 6
+    },
+    {
+      "name": "sweep3s2",
+      "alias": "resweep-2 SESSION 2",
+      "window_local": "01:16\u201302:05",
+      "units": 12,
+      "spend": "$0.1493",
+      "terminals": 9,
+      "retry_fired": 2
+    },
+    {
+      "name": "sweep3s3",
+      "alias": "resweep-2 SESSION 3",
+      "window_local": "03:40\u201304:30",
+      "units": 12,
+      "spend": "$0.1297",
+      "terminals": 11,
+      "retry_fired": 0,
+      "note": "NOT NAMED IN THE COMMAND. The command lists resweep2 as one of the three sessions; it is not one. Session 3 is sweep3s3."
+    }
+  ],
+  "predictions_as_scored_in_the_committed_amendment": {
+    "S1": "FALSIFIED \u2014 SiliconFlow, the known-bad control, went 6/6 passed and 6/6 completed at mean 1.0 iterations, the cleanest arm in the sweep. By the registered rule a passing control makes every serving reading in this sweep provisional.",
+    "S2": "confirmed in session 1 alone",
+    "S3": "CONFIRMED \u2014 the retry fired 6/2/0 across the three sessions and units completed anyway. Before this the PR #15 repair had never run outside its own tests.",
+    "S4": "CONFIRMED \u2014 mean iterations tracks pass rate almost monotonically, replicating \u00a76.11 unprompted.",
+    "S5": "confirmed \u2014 GMICloud not disqualified; 6/6 completed, the only arm to reach a terminal every time.",
+    "S6": "confirmed \u2014 $0.3996 against a $0.60 estimate and the $1.00 envelope.",
+    "T1": "UNTESTED \u2014 no session ran in the adversarial window. T2 unanswerable for the same reason. A peak-hour session is still owed."
+  },
+  "aggregate_across_all_four_generations": {
+    "n": 43,
+    "spend": "$0.4876",
+    "calls": 382,
+    "by_arm_compliance": "Compliance here means: did the pinned provider actually serve the engineering tier? Counting units where providers_by_function['engineering'] == [the pinned arm]: GMICloud 8/8, OpenInference 7/7, SiliconFlow 7/7, DigitalOcean 6/7, StreamLake 5/7, DeepInfra 4/7. The shortfalls are all units that died upstream of the engineering tier \u2014 a 429, a 413 or a ReadTimeout on an earlier call \u2014 so they are NOT non-compliance by the pinned provider. They are apparatus readings, per the ledger's own caution, and this readout does not convert them.",
+    "what_43_more_units_license": "On convention 23's bar: **nothing that was not already licensed.** The bar is compliance, then iterations, then speed, and never n=1. n=6\u20138 per arm at one or two time-of-day bands does not clear it, and the amendment says so itself ('no pin change is proposed'). More decisively, **the control broke**: S1's falsification means every serving reading in the largest generation is provisional by the pre-registration's own registered rule. The 43 units do not rank the arms. What they do license is narrower and real: the retry works in production (S3, first exercise outside its tests), the iterations axis discriminates better than latency (S4, replicated), and GMICloud's standing is unchanged \u2014 the retraction in \u00a727.2 holds and nothing here reopens it.",
+    "gmicloud_standing": "Unchanged. 8/8 compliant across these generations, 5/8 passed, the only arm to terminate every time in the 36-unit sweep. The ledger's 243/233 aggregate is not contradicted."
+  },
+  "ledger_blind_spot": {
+    "finding": "The ledger's skip-unpinned rule (tests/serving_ledger.py:49 \u2014 `if not provider: # explicitly unpinned \u2014 not a pin`) drops every unpinned arm from the join. The consequence is not a gap at the margin: the ledger's rendered table carries exactly three tiers \u2014 triage, architecture, engineering \u2014 and **no row for escalation, research, search, ranker or premium**. \u00a76.10 measures escalation at 70\u201378% of hard-trace spend. The most expensive tier in the system has ZERO ledger visibility, and the ledger does not say so; a reader sees a complete-looking table.",
+    "proposed_rule_change_NOT_IMPLEMENTED": "Record unpinned arms with their rotation outcome \u2014 the serving column reads e.g. `(rotated \u2192 Together)` rather than the row being dropped, with a column distinguishing pinned from rotated so no reading mixes them. This turns the escalation tier from invisible into visible-and-unpinned, which is the true state. Two riders the advisor should rule on with it: (a) the ledger should carry an explicit line naming which tiers have no pinned observations, so absence is legible without counting rows; (b) a rotated observation is evidence about a (model, provider) pair whether or not anyone pinned it \u2014 if that is accepted, the ledger stops being a pin ledger and becomes a serving ledger, which is what its filename already claims.",
+    "authority": "Advisor's to rule. This is a change to what a generated fact reports, and the ledger is guarded (convention 24), so the guard moves with it."
+  },
+  "trace_inventory_confirmation": {
+    "b14_prefixed_new_since_c91af13": "CONFIRMED as expected, with one correction to the expectation's wording: the only b14-prefixed trace added since c91af13 is b14-demo-marketing-claims-grounded.jsonl. b14-gen_marketing_claims.jsonl and b14-wide-*.jsonl are \u00a724-era originals.",
+    "surprise": "sweep3s3-engineering-*.jsonl \u2014 six traces, 12 units, $0.1297, landed in 9012f34. The command's inventory did not name them. They are session 3 of the resweep-2 sweep and are accounted for in that prereg's execution record; the omission is in the command, not the tree."
+  },
+  "what_the_record_cannot_answer": [
+    "Whether any of the 429/413/ReadTimeout failures were caused by the pinned provider or by an upstream tier. The traces carry the status and, since PR #15, metadata.raw \u2014 but the 413 in session 2 names Alibaba Model Studio on a DeepInfra-pinned unit, which the record cannot reconcile. It is reported unreconciled.",
+    "Peak-hour behaviour. T1 is untested across all four generations; every session ran outside the adversarial window.",
+    "Escalation-tier serving of any kind, for the reason above.",
+    "Why sweep3s3's StreamLake repetition 2 ended at 5 calls in 53s with no error string and no engineering call. It is the one unit in 43 whose outcome the trace does not explain."
+  ],
+  "cost": "$0.00 \u2014 read-only.",
+  "acceptance_criteria_met": [
+    {
+      "criterion": "Three generation tables with envelopes, n, outcomes, spend; pre-registration lineage stated",
+      "met": true,
+      "evidence": "Four generations reported, since four exist. Lineage: resweep/resweep2 under the first prereg; sweep3/s2/s3 as sessions 1-3 under resweep-2."
+    },
+    {
+      "criterion": "Aggregate-licensing answer stated against convention 23",
+      "met": true,
+      "evidence": "Stated and not softened: the 43 units do not rank the arms, and the control's falsification makes the largest generation's readings provisional."
+    },
+    {
+      "criterion": "Escalation-tier ledger gap named with a proposed, not implemented, rule change",
+      "met": true
+    },
+    {
+      "criterion": "Trace-inventory confirmation recorded",
+      "met": true
+    }
+  ],
+  "deviations": [
+    {
+      "what": "The command's central premise is corrected rather than executed as written.",
+      "why": "Three of the named generations are already characterized in a committed pre-registration's execution record, and a fourth generation the command does not name exists. Producing three fresh tables as if nothing had been reported would have duplicated the record and left sweep3s3 invisible.",
+      "impact": "The readout is a join and a correction rather than a first characterization. The one genuinely unreported generation, resweep2, is written up here for the first time."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "resweep2 is the generation whose two 429s produced the GMICloud disqualification the executor retracted in \u00a727.2. It had no report until now. Is an abandoned generation owed a write-up as a matter of course? The pattern that produced the wrong call was: a run killed mid-flight, no report written, and a conclusion drawn from it anyway in the next report. A convention that says an abandoned run is reported before anything is concluded from it would have caught it.",
+    "The ledger's filename claims 'serving'; its rule makes it a pin ledger. If the proposed change is ruled in, the escalation tier appears for the first time and \u00a76.10's 70-78% spend finding gains a serving dimension it has never had. If it is ruled out, the ledger should say in its own header which tiers it cannot see, because at present a complete-looking table is the instrument reporting more than it measured (convention 26)."
+  ]
+}
