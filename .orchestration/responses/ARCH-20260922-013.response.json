@@ -1,0 +1,41 @@
+{
+  "command_id": "ARCH-20260922-013",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "head_before": "a2e362e",
+  "branch": "arch/20260922-013-ci-sees-state",
+  "files_changed": [".github/workflows/ci.yml", "tests/test_docs.py", "docs/handover-review.md", "HANDOVER.md", "README.md", "AGENTS.md", ".orchestration/responses/ARCH-20260922-013.response.json"],
+  "preconditions_run": [
+    {"check": "sed -n '1,10p' .github/workflows/ci.yml", "result": "PASS — two triggers at lines 3-7 (push: branches [main]; pull_request: branches [main]), no schedule. Recorded before editing."},
+    {"check": "suite green before", "result": "PASS — 805 passed"}
+  ],
+  "results": {
+    "trigger": "One `schedule: - cron: \"0 6 * * *\"` appended to the SAME workflow. The three jobs, their steps and their names are byte-identical; `git diff` on ci.yml is additive only.",
+    "hour_chosen_on_evidence": "06:00 UTC. The committed traces put the owner's working window roughly between 13:00 and 05:00 UTC — the four sweep generations ran at 04:03-04:37, 23:11-23:52, 06:16-07:00 and 08:41-09:34 UTC. 06:00 is the quietest hour that does not collide, and the reasoning is in the file rather than in this response alone.",
+    "guard": "tests/test_docs.py::TestCIAsksAboutStateNotOnlyEvents, three tests. It guards the TRIGGER, not the jobs, because a schedule silently removed would restore the blind spot without failing anything else. It also accepts both YAML spellings of `on` — YAML 1.1 reads a bare `on` as the boolean True — so the guard cannot be defeated by a parser quirk.",
+    "guard_proved_by_breaking_it": "Removed the schedule block, ran, watched test_ci_declares_a_schedule FAIL, restored, watched it pass. Not by reading it (convention 22).",
+    "notebook": "§30 records the window as 2026-09-16T07:27Z to 2026-09-19T22:41Z, about 87 hours, with zero failed runs, and states plainly that CI reports events and not state.",
+    "framing_honoured": "Written as a TRIGGER-SHAPE failure, not a discipline failure, as instructed — and the section argues the point rather than asserting it: adding vigilance would not have helped, because the signal did not exist to be noticed.",
+    "counts": "805 -> 808, 43 files. §3.7 regenerated from collection.",
+    "cost": "$0.00 — the scheduled job uses placeholder model ids and makes no paid call."
+  },
+  "acceptance_criteria_met": [
+    {"criterion": "ci.yml declares a schedule; workflow name unchanged", "met": true, "evidence": "name: CI, untouched"},
+    {"criterion": "A test asserts the schedule and fails if removed — proved by removing it", "met": true},
+    {"criterion": "The notebook records the window, its cause, and that it produced zero failed runs", "met": true, "evidence": "§30"},
+    {"criterion": "The matrix, editable-install and docker jobs are byte-identical", "met": true, "evidence": "the ci.yml diff adds lines and removes none"},
+    {"criterion": "Suite passes; count before and after", "met": true, "evidence": "805 -> 808"}
+  ],
+  "deviations": [
+    {
+      "what": "A third guard was added beyond the one asked for: that .github/workflows contains exactly one workflow file.",
+      "why": "The constraint said the scheduled run must be the same workflow and not a second copy, because two copies of a check drift. Nothing enforced that, so the constraint would have survived exactly as long as the next person remembered it.",
+      "impact": "Adding a second workflow file now fails the suite, which is a real constraint on future changes and is stated here so it is a decision rather than a surprise."
+    }
+  ],
+  "blockers": [],
+  "questions_for_advisor": [
+    "The command's own question — should the scheduled run also assert the README's advertised promise? — is the owner's, and I have not acted on it. My recommendation, for whatever it is worth to the ruling: NO. That promise is only observable on a live run, which costs money, and a daily paid job is a standing spend nobody authorised. B18's guards already assert the promise's mechanism for free, and ARCH-20260922-010 tests it live under a pre-registration.",
+    "§30 ends with a general form that may deserve a convention: a check that runs only when something changes measures CHANGES, never STATE. Every event-triggered instrument in this repo has that shape. The question to ask of each is whether anyone would find out if the thing it watches went wrong and then nothing happened. I have not written it as a convention because generalising from one incident is the error convention 23 guards against, and one is one."
+  ]
+}

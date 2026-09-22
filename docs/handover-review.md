@@ -6817,3 +6817,44 @@ abstains (form), `coverage.passed == true` at iteration 1 → `judges_agree` gre
 → `build_loop` converges → `review` gates → **terminal instead of a 42-call
 ceiling death**.* If the run still fails to terminate, that is **the ruling being
 wrong**, reported as such, not a workflow defect.
+
+---
+
+## 30. The red window — CI reported events, not state (2026-09-22)
+
+**The incident.** `main` was red from **2026-09-16T07:27Z to 2026-09-19T22:41Z**
+— about **87 hours** — and CI produced **zero failed runs** in that window.
+
+**How that is possible.** Runs **#52** (`aac0324`) and **#53** (`3159b68`) both
+concluded `failure`, on 2026-09-16 at 07:03Z and 07:27Z. They are the *only*
+two failures in 116 runs. They are not a record of the red window; they are its
+**first two minutes**. After #53, nothing was pushed to `main` and nothing
+re-tested it, so the suite's state was never asked about again until the next
+push three and a half days later.
+
+Five documentation guards were failing on a document that had been truncated —
+1,435 lines deleted by `aac0324` — and every one of them was correct. The
+instrument was right and nobody was listening, because nothing was asking.
+
+**This is a trigger-shape failure, not a discipline failure,** and it is
+recorded that way deliberately. `on: push` and `on: pull_request` can answer
+exactly one question: *did this change break anything?* When nobody is pushing,
+the only question with an answer is *is `main` green right now?* — and no
+trigger was asking it. Adding vigilance would not have helped; the signal did
+not exist to be noticed.
+
+**The repair.** One `schedule: cron: "0 6 * * *"` on the **same** workflow — not
+a second copy, because two copies of a check drift, which is convention 24's own
+exhibit. 06:00 UTC lands outside the owner's working window, which the committed
+traces put roughly between 13:00 and 05:00 UTC.
+
+`tests/test_docs.py::TestCIAsksAboutStateNotOnlyEvents` guards the trigger
+rather than the jobs, because a schedule silently removed would restore the
+blind spot without failing anything else. Proved by removing the schedule block
+and watching it fail, then restoring it — not by reading it.
+
+**The general form, worth more than the incident.** A check that runs only when
+something changes measures *changes*, never *state*. Every instrument in this
+repo that fires on an event has the same shape, and the question to ask of each
+is: *if the thing it watches went wrong and then nothing happened, would anyone
+find out?*
