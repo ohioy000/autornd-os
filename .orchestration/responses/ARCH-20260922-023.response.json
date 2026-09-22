@@ -1,49 +1,107 @@
 {
   "command_id": "ARCH-20260922-023",
-  "status": "BLOCKED",
-  "blocked_on": "the owner's authorisation to spend. Everything else is done and green.",
+  "status": "DONE",
+  "supersedes": "the BLOCKED response filed earlier the same day; the owner authorised $0.50 in-thread and the run executed.",
   "executed": "2026-09-22",
-  "branch": "arch/20260922-023-b14-rerun-2",
-  "files_changed": ["docs/preregistration-b14-rerun-2.md", ".orchestration/responses/ARCH-20260922-023.response.json"],
-  "preconditions_run": [
-    {"check": "grep B19 / B20 in HANDOVER", "result": "PASS — both CLOSED on main"},
-    {"check": "grep 'Convention 28' docs/handover-review.md", "result": "PASS — ratified in §33.2, so the guard repairs precede this run and the precedence claim is provable"},
-    {"check": "read the surviving STDOUT-ONLY.txt for a terminal", "result": "PASS, AND IT DOES NOT ANSWER THE PRIMARY QUESTION. Grepped for terminal/status/bound/ceiling: the only hits are the spend-by-tier and served-by lines. No terminal, no status, no bound named. The question is genuinely open and this run is not buying an answer already in hand."},
-    {"check": "git status --porcelain", "result": "FAILED, THEN FIXED. The only dirty entry was `ai-native-starter-pack`, a separate cloned repository that a `git add -A` of mine had committed to main in 943f6af along with 3.9 MB of diagrams. Untracked and gitignored in PR #43 rather than worked around."},
-    {"check": "OPENROUTER_API_KEY present", "result": "PASS — presence only, never the value"},
-    {"check": "python -m autornd.preflight", "result": "PASS — 14 ok, 0 failing, all eight tiers"}
+  "branch": "arch/20260922-023-b14-rerun-2-exec",
+  "prereg_sha": "6e8b6a0",
+  "amendment_sha": "8bb0cbc",
+  "precedence_margin": "the pre-registration is authored 2026-09-22T09:42:46Z; the trace header is written 2026-09-22T10:09:36Z. 1,610 seconds. Asserted by tests/test_preregistration_precedence.py rather than by hand this time.",
+  "gates": [
+    {
+      "gate": "prediction file committed before the run",
+      "result": "PASS \u2014 6e8b6a0, amended 8bb0cbc, both before"
+    },
+    {
+      "gate": "surviving -010 stdout does not already answer the primary question",
+      "result": "PASS \u2014 grepped for terminal/status/bound/ceiling; names none"
+    },
+    {
+      "gate": "B19 and B20 closed on main",
+      "result": "PASS"
+    },
+    {
+      "gate": "preflight",
+      "result": "PASS \u2014 14 ok, 0 failing"
+    },
+    {
+      "gate": "owner's envelope",
+      "result": "PASS \u2014 $0.50 ratified in-thread"
+    },
+    {
+      "gate": "no git command during the run",
+      "result": "HELD \u2014 the specific fault of -010"
+    }
   ],
-  "THE_ONE_GATE_THAT_IS_NOT_MET": {
-    "what": "Spend authorisation for THIS run.",
-    "why_it_is_not_inherited": "The $0.50 envelope was ratified for ARCH-20260922-010, and -010 ran. $0.3453 of it remains unspent, and the proposed $0.31 cap sits inside that — but an envelope ratified for a run that has happened is not an envelope for the next one. G-3 puts money with the owner, and the previous time I asked about a re-run I said I would not proceed without a word and did not get an unambiguous one.",
-    "what_is_staged": "The pre-registration is committed at 6e8b6a0, before any spend, which is the protocol's own requirement and is the part that cannot be done afterwards. Every free gate is green. The run is one command and one word away.",
-    "what_it_costs_to_wait": "Nothing. The pre-registration's value is precedence, and precedence is already established by the commit."
-  },
-  "answers_to_the_commands_questions": {
-    "does_the_surviving_stdout_answer_the_primary_question": "NO, and it was checked rather than assumed. If it had, the command says to stop and report rather than spend, and I would have. It names spend by tier and provider by tier and nothing about a terminal.",
-    "one_repetition_or_two": "TWO, and the caps are built so two are actually reachable — 2 × $0.155 against a $0.31 sweep, exactly. That is -010's lesson made operational: -010 asked for n=2 under `--max-spend 0.50 --max-spend-sweep 0.50`, which permits exactly ONE unit, and nothing said so. The pre-spend warning added by ARCH-20260922-021 will print nothing this time, and its silence is the confirmation. Convention 27 still applies: the two units are two SAMPLES, not a repetition, because the plan regenerates.",
-    "should_the_run_be_cancelled_and_the_money_kept": "Not on the stdout's evidence, since it answers nothing. But the owner may still decide the answer is not worth $0.31, and that is a legitimate call I have no standing to pre-empt."
-  },
-  "what_the_pre_registration_carries": {
-    "why_it_is_not_a_replication": "The apparatus changed under it: B18's typed terminal, B19's honest skip reporting, B20's mirror, and the sample-arithmetic warning. The -010 pre-registration is referenced, not rewritten, and stands committed and unedited with three of its seven predictions unscorable.",
-    "seven_predictions": "R1 two units produced · R2 the trace can answer the primary question, and if it cannot the run failed at its only job · R3 coverage still binds but on PRESENCE-shaped criteria — if a prohibition or form criterion fails again, B17-R1 is wrong and §29.1's Phase 2 fires WITH a committed trace this time · R4 a terminal, labelled weak now that B18 is closed · R5 convergence, the one worth being wrong about · R6 B15-2 persists · R7 the mirror holds every record the primary does, which is B20's first live test.",
-    "not_predicted_deliberately": "A terminal at iteration 1. That wording was refuted from free evidence before -010 and is not resurrected."
+  "headline": "Two units, 62 calls, 1,596.6 s, $0.2530 of $0.50. Both reached a typed terminal. Neither converged. The trace survived.",
+  "the_primary_question_answered": "The loop exhausted BECAUSE COVERAGE STILL FAILED \u2014 on a `presence`-shaped criterion scoring 0.43 against a 0.50 threshold, in both units. Not because the check was blind to a shape. -010 could not answer this; the records were destroyed.",
+  "predictions_scored": [
+    {
+      "id": "R1",
+      "text": "two units produced",
+      "outcome": "HELD",
+      "evidence": "2 of 2. The summary carries no skip clause at all, where -010 claimed 'exhausted after 1 of 2 units' at 31% of its cap. The pre-spend check printed nothing, and its silence was the confirmation the arithmetic worked."
+    },
+    {
+      "id": "R2",
+      "text": "the trace answers the primary question",
+      "outcome": "HELD",
+      "evidence": "status, per-criterion shapes, per-iteration coverage and per-iteration dissent all present in both units"
+    },
+    {
+      "id": "R3",
+      "text": "coverage still binds, on presence-shaped criteria",
+      "outcome": "HELD, BUT WEAKLY, AND I WILL NOT GLOSS IT",
+      "evidence": "The only failure in each unit is presence-shaped and the form criterion abstained in both. BUT NEITHER PLAN EMITTED A PROHIBITION CRITERION AT ALL. B17-R1's headline repair \u2014 the inversion that turns a compliant draft's 40% into a pass \u2014 had nothing to act on and was NEVER EXERCISED LIVE. R3 is held in the sense that nothing of the wrong shape failed; it is NOT evidence that the prohibition branch works in production. The form half is demonstrated twice; the prohibition half remains proved by fixtures alone."
+    },
+    {
+      "id": "R4",
+      "text": "a terminal is reached",
+      "outcome": "HELD",
+      "evidence": "both units `blocked`, where -010's was the empty string. And TWO DIFFERENT BOUNDS fired: unit 1 the call ceiling (42 of 41), unit 2 the spend ceiling ($0.1721 of $0.1550). Each terminal named its own bound in the operator's words. B18 was closed on tests alone and is now closed on evidence."
+    },
+    {
+      "id": "R5",
+      "text": "the run converges",
+      "outcome": "REFUTED",
+      "evidence": "neither unit reached `completed`. This was the one worth being wrong about and it is reported wrong."
+    },
+    {
+      "id": "R6",
+      "text": "B15-2 persists \u2014 fabricated sources still appear",
+      "outcome": "REFUTED, AND IT IS THE BEST RESULT OF THE DAY",
+      "evidence": "Both drafts marked every proof point 'unsourced' and invented no firms. Unit 1: three claims, all 'Source: unsourced', plus an explicit note that no verifiable source has been identified. Unit 2 likewise. -010's comparator carried firms the escalation autopsy named as invented. The pre-registration said a clean pass would be reported wrong and is a gift to B15's design; it is both. n=2, and the plans differed, so this is two samples and not a rate."
+    },
+    {
+      "id": "R7",
+      "text": "the trace survives",
+      "outcome": "HELD",
+      "evidence": "`diff -q` between the primary and the mirror is clean; both carry 3 records. B20's first live test, on a real run rather than a simulated unlink."
+    }
+  ],
+  "new_findings": {
+    "a_fourth_shape_n1": "The criterion that failed unit 1 asks for 'a single sentence with NO SUBORDINATE CLAUSES' and pillars that are 'INDEPENDENTLY DEFENSIBLE'. A draft that HAS no subordinate clauses does not contain the words 'subordinate clauses'; a pillar that IS defensible does not say 'defensible'. This is prohibition-in-meaning with no quoted token list, so the fail-safe rule classifies it `presence` \u2014 correctly by the ruling as written \u2014 and it fails there. A PROPERTY-OF-THE-PROSE criterion: satisfied by how the text reads, not by what it contains. Unlike -010's equivalent finding, IT IS IN A COMMITTED TRACE. Exhibited once; unit 2's failing criterion does not obviously belong to the class, so it is recorded as an observation and not yet a design input.",
+    "B16_MEASURED_RATHER_THAN_ARGUED": "The same criterion, conceptually, scored 0.63 and PASSED in -010 and 0.43 and FAILED today. -010: 'a core promise of exactly one sentence with no subordinate clauses, and two to four supporting pillars that are each defensible without reference to another pillar'. Today: 'a core promise expressed as a single sentence with no subordinate clauses, and each supporting pillar is independently defensible'. NOTHING ABOUT THE CHECK CHANGED. A rewording moved a criterion across the threshold and decided the run.",
+    "coverage_now_flaps_rather_than_never_passing": "-010: coverage failed all seven iterations on the same two criteria. Today: unit 1 F T F F F T F, unit 2 F T T F F. The check went from structurally unsatisfiable to marginal, which is term overlap behaving as designed.",
+    "escalation_68_percent": "$0.1714 of $0.2530 \u2014 a third independent observation of \u00a76.10's 70-78%, now on a tier the ledger finally renders a row for."
   },
   "deviations": [
     {
-      "what": "The run was not executed.",
-      "why": "The command's own constraints do not carry an owner-ratification gate, but the repo's G-gates put money with the owner and the envelope in hand was ratified for a different run. Proceeding on an inherited envelope would be the quiet-proceed the channel exists to prevent.",
-      "impact": "Everything reversible is done. The irreversible thing waits for one word."
+      "what": "The per-unit cap was set $0.02 too tight and cut unit 2 off.",
+      "why": "The amendment argued $0.155 was 'just above -010's observed $0.1547, so a unit that behaves like the last one completes'. Unit 2 did not behave like the last one: 20 calls, escalation-heavy, $0.1721. The REASONING was sound and the NUMBER was wrong, and those are worth separating \u2014 the error was treating one prior observation as the shape of the distribution.",
+      "impact": "Unit 2 stopped on spend rather than running to its own conclusion. It did produce a terminal and a full record, so nothing was lost but the tail of one unit. It also exercised B18's spend-ceiling branch live, which nothing else had."
     },
     {
-      "what": "A precondition failure was FIXED rather than reported and abandoned.",
-      "why": "`git status --porcelain` was dirty because of files my own broad `git add -A` had committed to main — an embedded repository and 3.9 MB of diagrams belonging to a different project. Reporting BLOCKED on my own mess and stopping would have been technically correct and useless.",
-      "impact": "PR #43 untracks them and gitignores them; they stay on disk. The merge helper's `git add -A` is narrowed to the paths each change touches."
+      "what": "Two guards written earlier today failed on arrival and were satisfied rather than bypassed.",
+      "why": "test_every_committed_preregistration_is_paired_or_unrun demanded the new run be paired for precedence checking; test_the_committed_table_is_the_derived_one demanded the ledger be regenerated against the new trace. Both are doing exactly what they were built for.",
+      "impact": "The pair is registered and the ledger regenerated. The precedence margin, 1,610 s, is now asserted by a test rather than compared by hand as it was this morning."
     }
   ],
-  "blockers": ["Owner authorisation to spend up to $0.31 on this run. One word."],
+  "blockers": [],
   "questions_for_advisor": [
-    "R2 is the prediction I would most like the advisor to look at before the run: it says that if the trace cannot answer the primary question, the run failed at its only job REGARDLESS of what else it shows. That is deliberately harsher than -010's framing, where a partly-readable result got partial credit. I think the harsher form is right — a measurement that cannot answer the question it was bought for is not a cheap measurement, it is a wasted one — but it is a standard, and standards are the advisor's.",
-    "If the owner declines the spend, B17 stays open, §31's freeze holds, and the project's central claim stays undemonstrated at a cost of $0.00. That is a coherent position and I want to name it as one rather than treat the run as inevitable. The claim has been observed once (B14-1/B14-2 in the -010 arc's predecessor); what is missing is a run that TERMINATES, which is a different and smaller claim than the one the project rests on."
-  ]
+    "B17-R1'S PROHIBITION BRANCH IS STILL UNEXERCISED IN PRODUCTION, and no amount of re-running this scenario guarantees it will be, because whether a prohibition criterion appears is B16's coin flip. Two paid runs have now failed to reach it. If the advisor wants it demonstrated, the honest route is a scenario whose request makes a banned-words criterion near-certain, registered as such \u2014 not another draw from the same distribution hoping for one.",
+    "R5 is refuted twice now, and the reason has changed. -010 failed because coverage COULD NOT be satisfied; today it failed because a presence criterion scored 0.43. Those are different defects wearing the same outcome, and the second one may not be a defect at all \u2014 the drafts genuinely did not use the criterion's words. The open question is whether 'the implementation never mentions what the criterion is about' is the right exit condition for a LOOP, as opposed to a warning. That is a ruling about what the harness concludes and I have not touched it.",
+    "The fourth shape is exhibited once. I have deliberately NOT designed for it: one instance is one instance, and B17-R1 was ruled from a two-instance exhibit with arithmetic behind it. If the advisor wants it opened as a row, the evidence is in \u00a734.5; if not, the observation stands in the notebook and waits for a second instance."
+  ],
+  "cost": "$0.2530 of the $0.50 ratified. Key: $1.5430 used of $6.00."
 }

@@ -7078,3 +7078,110 @@ five more.
 — 70%** — replicating §6.10 on the one tier the ledger cannot see, which is the
 second time in one day that the invisible tier turned out to be where the money
 went.
+
+---
+
+## 34. Execution record — B14's second demonstration attempt (2026-09-22)
+
+Registered at `6e8b6a0`, amended at `8bb0cbc`, both **before the run**. Trace
+committed at `docs/traces/b14-rerun-2-marketing-claims.jsonl`, and **it
+survived** — which `-010`'s did not.
+
+**Two units, 62 calls, 1,596.6 s, $0.2530 of a $0.50 envelope.**
+
+### 34.1 The primary question, answered
+
+**Did the loop exhaust because coverage still failed, or for another reason?**
+
+**Because coverage still failed — on a `presence`-shaped criterion, at 0.43
+against a 0.50 threshold.** Not because the check was blind to a shape.
+
+| | unit 1 | unit 2 |
+|---|---|---|
+| terminal | `blocked` | `blocked` |
+| bound | **call ceiling**, 42 of 41 | **spend ceiling**, $0.1721 of $0.1550 |
+| cost | $0.0809 | $0.1721 |
+| iterations | 7 | 5 |
+| criteria | 5 presence + 1 form | 5 presence + 1 form |
+| **prohibition criteria** | **none emitted** | **none emitted** |
+| failing | 1, presence | 1, presence |
+| form criterion | **abstained** | **abstained** |
+| coverage across iterations | F T F F F T F | F T T F F |
+
+### 34.2 Predictions, scored
+
+| | | |
+|---|---|---|
+| **R1** two units produced | **HELD** | `2 of 2`. The summary carries no skip clause at all, where `-010` claimed exhaustion at 31% of its cap |
+| **R2** the trace answers the question | **HELD** | status, per-criterion shapes, per-iteration coverage and dissent all present |
+| **R3** coverage binds on presence | **HELD, and weakly — see below** | the only failure in each unit is presence-shaped; form abstained both times |
+| **R4** a terminal is reached | **HELD** | both `blocked`, where `-010`'s was `''`. Two *different* bounds, each named correctly |
+| **R5** the run converges | **REFUTED** | neither unit reached `completed` |
+| **R6** B15-2 persists | **REFUTED, and it is the best result of the day** | both drafts marked every proof point `unsourced`. **No invented firms.** `-010`'s comparator carried fabricated sources |
+| **R7** the trace survives | **HELD** | mirror byte-identical to the primary, `diff -q` clean |
+
+### 34.3 R3 held in a weaker sense than it reads, and this must not be glossed
+
+**Neither plan emitted a prohibition criterion.** The banned-words criterion
+that defined B17 did not regenerate in either unit. So **B17-R1's headline
+repair — the inversion that turns a compliant draft's 40% into a pass — had
+nothing to act on and was never exercised live.**
+
+R3 is recorded as held because no prohibition or form criterion failed. It is
+**not** evidence that the prohibition branch works in production. The form
+branch *was* exercised, twice, and abstained correctly both times; that half is
+demonstrated. **The prohibition half remains proved by fixtures alone**, and
+§29.1's Phase 2 has still not been given a chance to fire.
+
+The reason is B16, not the fix.
+
+### 34.4 What B16 did, with numbers
+
+The *same* criterion, conceptually, across the two runs:
+
+> `-010`: *"a core promise of exactly one sentence with no subordinate clauses,
+> and two to four supporting pillars that are each defensible without reference
+> to another pillar"* — **0.63, passed**
+>
+> today: *"a core promise expressed as a single sentence with no subordinate
+> clauses, and each supporting pillar is independently defensible"* — **0.43,
+> failed**
+
+**Nothing about the check changed between them. A rewording moved a criterion
+across the threshold and decided the run.** That is the sharpest evidence yet
+for B16, and it is now measured rather than argued.
+
+### 34.5 A fourth shape, which B17-R1 does not name
+
+The criterion that failed in unit 1 asks for *"a single sentence with **no
+subordinate clauses**"* and pillars that are *"**independently defensible**"*.
+
+A draft that **has** no subordinate clauses does not contain the words
+*"subordinate clauses"*. A pillar that **is** defensible does not say
+*"defensible"*. This is prohibition-in-meaning with **no quoted token list**, so
+the fail-safe rule classifies it `presence` — correctly, by the ruling as
+written — and it fails there.
+
+**This is a property-of-the-prose criterion: satisfied by how the text reads,
+not by what it contains.** B17-R1 names three shapes and this is a fourth.
+Unlike `-010`, **it is in a committed trace.**
+
+Unit 2's failure is a different criterion (*"the audience definition clearly
+distinguishes between practitioners and buyers"*) and does **not** obviously
+belong to this class — so the class is exhibited once, at n=1, and is recorded
+as an observation rather than a design input.
+
+### 34.6 Incidentals
+
+**Escalation took 68% of the spend** — $0.1714 of $0.2530 — a third independent
+observation of §6.10's 70–78%, now on a tier the ledger finally renders.
+
+**The per-unit cap was set too tight by $0.02.** The amendment argued $0.155 was
+"just above `-010`'s observed $0.1547, so a unit that behaves like the last one
+completes". Unit 2 did not behave like the last one: it spent $0.1721 in 20
+calls, escalation-heavy, and the cap cut it off. **The reasoning was sound and
+the number was wrong**, which is worth separating.
+
+**Both B18 branches fired live.** Unit 1 hit the call ceiling, unit 2 the spend
+ceiling, and each terminal named its own bound in the operator's words. B18 was
+closed on tests alone; it is now closed on evidence.
