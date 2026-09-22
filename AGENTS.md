@@ -1,7 +1,7 @@
 # AutoRnD-OS — the executor's protocol
 
-**This file is the protocol, and there is exactly one copy of it** (convention
-24). `CLAUDE.md` was a symlink to this file until 2026-09-22; it is now the
+**This file is the protocol.** There is exactly one copy of it (convention 24).
+`CLAUDE.md` was a symlink to this file until 2026-09-22; it is now the
 repo's *derived working rules* — a different document with a different job — and
 it carries a summary of the permission boundary that points here. Where the two
 differ, **this file wins**. `tests/test_protocol_file.py` scans the tree by
