@@ -6597,6 +6597,15 @@ real-world frequency. **The trigger flips:** any committed trace showing
 `blocked_on` arising inside those loops is now *confirming* evidence — record
 the paid judges the terminal gate pre-empted.
 
+**Observed again, 2026-09-21, with a new consequence.** The B14 demonstration
+left `coverage` and `implement` holding verdicts **from different iterations** —
+the run died mid-iteration on the call ceiling, so the last `implement` ran and
+the `coverage` that would have judged it did not. Two stored verdicts that
+disagree, with nothing marking which is newer. The executor computed coverage
+from the stored summary, got six numbers that did not match the stored coverage
+map, and had to discard its own arithmetic. **The overwrite does not only lose
+history; it can make two records of the same run inconsistent with each other.**
+
 **Cross-references.** `4612855` the merge; `5ea4633` corrected the workflow
 comment that outlived the wiring by one commit; `workflows/engineering-rnd.yaml`
 carries the routing/terminal split in its own comment; HANDOVER §3.1 points
