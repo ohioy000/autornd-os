@@ -1,0 +1,100 @@
+{
+  "command_id": "ARCH-20260922-029",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Capture the live prohibition criterion verbatim as a fixture, determine whether criteria_addressed misclassifies the phrasings the planner actually emits, and apply Ruling B17-R2 (doubt abstains, never presence) if the misread is confirmed.",
+  "evidence": [
+    "HANDOVER.md §4.2 B17 — OPEN; 'the coverage check cannot read a prohibition'",
+    "docs/handover-review.md §34 — the form branch's two abstentions on record",
+    "ARCH-20260922-026 — the prohibition scenario and its pre-registration",
+    "ARCH-20260922-027 — the live run and its per-criterion shape table",
+    "autornd/graph/checks.py — criteria_addressed shape classification and the prohibition token test",
+    "AGENTS.md convention 2 — free checks before paid calls",
+    "AGENTS.md convention 21 — shape variance that preserves information is coerced; exhibits precede leniency",
+    "AGENTS.md convention 22 — an instrument's test simulates the condition it watches, end to end",
+    "AGENTS.md convention 27 — a repetition of a plan-dependent contrast is a second sample, never a confirmation"
+  ],
+  "scope": {
+    "include": [
+      "autornd/graph/checks.py",
+      "tests/",
+      "docs/preregistration-*.md"
+    ],
+    "exclude": [
+      "workflows/",
+      "autornd/engine/phases.py",
+      "evals/results/",
+      "docs/handover-review.md"
+    ]
+  },
+  "constraints": [
+    "Free. No paid call, no key, no network. This command reads a committed trace and writes a fixture.",
+    "Read the -027 trace and quote three things VERBATIM: each criterion, the significant terms the check extracted, and the forbidden tokens it extracted. Do not paraphrase, summarise or reconstruct.",
+    "State which happened: (a) no prohibition-shaped criterion was emitted at all; (b) one was emitted and classified prohibition correctly; (c) one was emitted and classified presence or form. These are three different findings.",
+    "If (a): the scenario engineering failed, B17 stays open for a different reason, and the fix is the scenario — say so, do not touch the check.",
+    "If (c): apply Ruling B17-R2 as written — on doubt, abstain; never default to presence. Do not redesign the shapes; they are ruled.",
+    "Apply the doubt-direction change ONLY if the fixture confirms a misread. If the fixture shows correct classification, the fixture stands alone as a regression test and checks.py is untouched.",
+    "Do NOT broaden the classifier's pattern as a fix. Detection recall is a separate, later question; the ruled change is the direction of doubt.",
+    "Do NOT compare classifier behaviour across runs as though the input were constant. B16 regenerates criteria per run (convention 27). Report detections, not a change in the classifier.",
+    "Report whether a form-shaped criterion existed in this run and whether it was classified form, presence or prohibition. If a second shape was also missed, say so — one defect class, not two, unless the mechanisms differ.",
+    "The fixture asserts the exact classification of the exact wording (convention 22). It must fail if the classification changes for the wrong reason.",
+    "Prove any applied change by breaking it: a criterion the classifier should abstain on, and one it should test, each simulated end to end.",
+    "Do not touch the workflow, any prompt, or any other check.",
+    "Keep the diff small and confined to checks.py and the fixture."
+  ],
+  "acceptance_criteria": [
+    "The criterion, its extracted significant terms, and its extracted forbidden tokens are all quoted verbatim.",
+    "The outcome is stated as (a), (b) or (c), with the evidence.",
+    "A committed fixture asserts the exact classification of the exact wording.",
+    "If (c): Ruling B17-R2 is applied, and a test demonstrates that a doubtful shape abstains rather than defaulting to presence.",
+    "If (a): B17 stays open and the finding is the scenario, not the check — stated plainly.",
+    "No pattern was broadened and no shape was redesigned; assert this in the response.",
+    "Suite count reported before and after."
+  ],
+  "verification": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass; count reported before and after."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q -k 'coverage_shapes or prohibition or abstain'",
+      "expected": "The fixture and any doubt-direction test pass."
+    },
+    {
+      "command": "git diff --stat -- workflows/ autornd/engine/phases.py",
+      "expected": "Empty — neither is touched."
+    }
+  ],
+  "rollback": "Revert the commit; the classifier returns to its previous doubt direction and the fixture is removed with it.",
+  "deliverable": {
+    "branch": "arch/20260922-029-prohibition-fixture",
+    "pr": true,
+    "commit_style": "conventional"
+  },
+  "assumptions": [
+    "The -027 trace is committed and quotes the planner's emitted criteria. If the trace does not carry the criteria verbatim, return BLOCKED naming what is missing rather than reconstructing."
+  ],
+  "questions": [
+    "If (c) is confirmed, should a phrasing corpus be built from committed traces before any further paid run? If so, ask the owner for the ruling on whether committed traces may substitute for a fresh run.",
+    "Does any downstream report present a coverage pass rate across runs with differing criteria? If yes, that is a separate convention-27 defect and should be named."
+  ],
+  "preconditions": [
+    {
+      "command": "grep -n 'B17' HANDOVER.md | head -5",
+      "expected": "B17 present and OPEN. If CLOSED, return NO_ACTION citing the commit that closed it."
+    },
+    {
+      "command": "ls docs/traces/ | grep -i prohibition; ls docs/traces/ | tail -5",
+      "expected": "Locate the -027 trace by name; record it. If nothing matches, return BLOCKED naming the glob searched."
+    },
+    {
+      "command": "ls .orchestration/responses/ | grep -i 027",
+      "expected": "The -027 response file exists; record the shape table it carries."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green at the current count before the change."
+    }
+  ]
+}
