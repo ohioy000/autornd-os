@@ -1,79 +1,71 @@
 {
   "command_id": "ARCH-20260922-027",
-  "status": "BLOCKED",
+  "status": "IN_PROGRESS",
   "executed": "2026-09-22",
-  "head_before": "956c1b10560eca705047320652be5bb89903f899",
-  "head_after": "956c1b10560eca705047320652be5bb89903f899",
-  "blocked_on": [
-    "OPENROUTER_API_KEY is absent from the executor's environment (precondition 4). Owner action, G-3.",
-    "No owner authorisation exists for this run's $0.25 spend. G-2/G-3, and the command itself does not carry one.",
-    "git status --porcelain is not clean (precondition 3)."
-  ],
-  "arrival_check": {
-    "parent_id": "ARCH-20260922-026",
-    "parent_response_present": true,
-    "note": "The parent response now exists at .orchestration/responses/ARCH-20260922-026.response.json (status DONE, head_after 0e611192463a21234f828704c599bf8c9998b177). This command was BLOCKED on arrival when it reached the channel, because that file did not yet exist; it is no longer blocked on its parent. It is blocked on its own preconditions instead.",
-    "preconditions_non_empty": true
+  "head_before": "97af0431903dd353334dee113d87bf42e31f5f4f",
+  "head_after": null,
+  "supersedes_own_earlier_report": {
+    "earlier_status": "BLOCKED",
+    "earlier_sha": "93c6c4a",
+    "why_it_was_wrong": "The earlier report blocked on precondition 4, `test -n \"$OPENROUTER_API_KEY\"`, which returned 'absent'. That reading was correct about the shell environment and WRONG about the system. autornd/config.py:128 sets model_config = {'env_file': '.env'}, so the harness loads the key from .env via pydantic-settings and never consults the exported shell variable. .env exists, carries a non-empty OPENROUTER_API_KEY, configures all six required tiers plus ranker and premium, and sets OPENROUTER_PROVIDER_ORDER. Verified by presence only; no value was read or printed, per G-1.",
+    "classification": "A third convention-28 failure in this one command, and the only one that changed an outcome. Precondition 2 could not see the registration because of lexical sort order; precondition 4 could not see the key because it looked in the wrong place. Both reported the subject's absence rather than their own blindness. The earlier BLOCKED report stands in the record at 93c6c4a and is not rewritten — it is superseded here, with the reason.",
+    "what_remains_true_from_it": "B20 CLOSED (precondition 1) and the untracked .claude/ tooling (precondition 3) were both read correctly."
   },
   "preconditions": [
     {
       "command": "grep -n 'B20\\|B21' HANDOVER.md | head",
       "result": "PASS",
-      "observed": "B20 is CLOSED (2026-09-22), at HANDOVER.md:753. B21 is OPEN, but the precondition's stated expectation is on B20 only ('B20 CLOSED. If OPEN, return BLOCKED naming the unmerged PR'), so B21's status does not block. Recorded rather than assumed, because the command's grep pattern matches both and only one carries an expectation."
+      "observed": "B20 CLOSED at HANDOVER.md:753. B21 OPEN, but carries no expectation in this precondition."
     },
     {
       "command": "ls docs/preregistration-*.md | tail -3",
-      "result": "PASS ON SUBSTANCE, FAIL AS WRITTEN — see defect note",
-      "observed": "The -026 registration IS present: docs/preregistration-b17-prohibition-branch.md, committed at 0e611192463a21234f828704c599bf8c9998b177. But 'tail -3' returns b17-validation, engineering-resweep-2 and engineering-resweep, and the registration is NOT among them, because ls sorts lexically and 'prohibition' precedes 'validation'. Run literally, this precondition returns a FALSE BLOCKED against a registration that exists.",
-      "defect_note": "This is convention 28 in the command shape rather than in the code: the check cannot see its subject, and its failure would have been reported as the subject's absence. Taken as PASS on the substance, with the discrepancy recorded rather than silently resolved. A precondition of the form `test -f docs/preregistration-b17-prohibition-branch.md` would answer the question it means to ask."
+      "result": "PASS ON SUBSTANCE",
+      "observed": "docs/preregistration-b17-prohibition-branch.md exists, committed at 0e61119. The literal command still cannot see it — 'prohibition' sorts before 'validation' so it falls outside tail -3. Recorded again rather than quietly passed."
     },
     {
       "command": "git status --porcelain",
-      "result": "FAIL",
-      "observed": "Not clean. Five untracked entries, all pre-existing agent tooling that predates this session's work and none of it produced by -026 or -028: .claude/agents/, .claude/hooks/, .claude/references/, .claude/settings.json.example, .claude/skills/. No tracked file is modified.",
-      "assessment": "The command's stated purpose for this check is 'Clean, so the run's commit contains only the trace.' That purpose is arguably satisfiable — none of the untracked entries would be swept into a trace commit that adds a single file under docs/traces/. But the check is a check, it failed, and the executor does not get to decide that a precondition meant something looser than it said. Reported as a failure for the owner to waive or resolve."
+      "result": "FAIL — OWNER-WAIVED",
+      "observed": "Five untracked agent-tooling entries under .claude/ (agents, hooks, references, settings.json.example, skills). No tracked file modified. Waived by the owner's instruction to start the run; the check's stated purpose — that the run's commit contain only the trace — is met by staging the trace path explicitly, which is what will be done."
     },
     {
       "command": "test -n \"$OPENROUTER_API_KEY\" && echo present || echo absent",
-      "result": "FAIL",
-      "observed": "absent",
-      "assessment": "Presence only; no value was read, printed, or otherwise handled. The precondition's own instruction on this outcome is 'If absent, return BLOCKED naming the owner action.' The owner action: place the key in .env per G-1 and G-3. The executor never edits .env and has not."
+      "result": "PASS — the check is defective; the key is present",
+      "observed": "The literal command prints 'absent'. The harness nevertheless has a key: autornd/config.py reads .env, and a presence-only check confirms settings.openrouter_api_key is non-empty and six tiers are configured. Preflight then resolved all 8 tiers and all 8 pins live: 14 ok, 0 failing."
     }
   ],
-  "executed_work": "NONE. No model call, no network request, no spend, no file written outside this response. Nothing was done differently because nothing was done — a precondition failure is a BLOCKED report, not a deviation.",
-  "spend": {
-    "authorised": false,
-    "incurred": 0.0,
-    "proposed_cap": 0.25,
-    "cap_arithmetic_unverified": "The command proposes one scenario-run, one unit, at $0.25, and asks for the arithmetic to be stated before the money moves. It is not stated here because the run did not start and the harness's free pre-spend check was never invoked. Recorded so the next attempt does not mistake this file for that check having passed. Note for that attempt: -026's scenario carries max_calls 40, which both B14 units exceeded; the interaction between that per-scenario bound and the $0.25 cap should be computed before the first call, not after."
+  "preflight": {
+    "command": ".venv/bin/python3 -m autornd.preflight",
+    "result": "14 ok, 0 failing",
+    "note": "Free. Every model tier resolves and every pinned provider serves it. Run before any paid call, per the free-checks-before-paid-calls rule."
   },
-  "predictions_unscored": {
-    "note": "-026's four registered predictions are NOT quoted here. The command requires them quoted BEFORE the run, and quoting them in a file that reports no run would put them in the record twice with only one of the two occasions being the registered one. They stand at docs/preregistration-b17-prohibition-branch.md, sha 0e611192463a21234f828704c599bf8c9998b177, unedited.",
-    "a": "unscored",
-    "b": "unscored",
-    "c": "unscored",
-    "d": "declared NOT REACHABLE by this scenario at registration; unaffected by this block"
+  "registered_predictions_quoted_before_the_run": {
+    "source": "docs/preregistration-b17-prohibition-branch.md at sha 0e611192463a21234f828704c599bf8c9998b177, unedited since registration",
+    "a": "The planner emits at least one prohibition-shaped success criterion. Observable in plan.success_criteria. Refuted if no criterion quotes a forbidden token list. If (a) is refuted, B17 stays OPEN and the finding is about the planner, not the check.",
+    "b": "Coverage classifies that criterion as prohibition — not presence, not form. A classifier that reaches the right shape while extracting the wrong tokens is not a pass, so the extracted tokens are quoted as well as the criterion.",
+    "c": "On a compliant draft, coverage passes that criterion. This is the headline: the inversion is what turns a compliant draft's 40% into a pass.",
+    "d": "A draft containing a banned token fails that criterion — NOT REACHABLE BY THIS SCENARIO, and not promised. Exercised by fixtures only and remains so after this run.",
+    "worthless_conditions_registered": [
+      "(a) refuted — no prohibition criterion emitted despite an objective naming one.",
+      "The run never reaches coverage — a bound hit before the first coverage evaluation leaves every prediction unscorable. Named at registration as the likeliest way to get nothing.",
+      "Coverage passes for the wrong reason — classified presence but scoring above 0.50 on term overlap would read as (c) held while (b) is refuted. (b) is reported before (c), and (c) without (b) is NOT a demonstration of the branch."
+    ]
   },
-  "b17_status": "OPEN, unchanged. This command produced no evidence either way, and nothing in HANDOVER.md was touched.",
-  "deviations": [
-    {
-      "what": "No IN_PROGRESS response was committed before this file.",
-      "why": "The IN_PROGRESS commit is evidence that work had not started when the response was opened. No work started: the preconditions were run, two failed, and the command aborted. A BLOCKED arrival is the report the channel exists to produce, and opening it IN_PROGRESS first would assert a work phase that never existed."
-    }
-  ],
-  "questions_for_advisor": [
-    {
-      "question": "Does the untracked .claude/ tooling waive precondition 3, or should it be resolved before -027 runs?",
-      "context": "Five untracked directories of agent tooling sit in the tree and predate this session's commits. They cannot be swept into a trace commit that adds one file under docs/traces/, so the precondition's stated purpose is arguably met while its literal test fails. The executor declined to decide this. Resolving it means either gitignoring or committing that tooling, which is the owner's call about their own working tree."
-    },
-    {
-      "question": "Should -027's second precondition be re-issued in a form that can find its subject?",
-      "context": "`ls docs/preregistration-*.md | tail -3` returned a set not containing the registration it was checking for, purely because of lexical sort order. Run without inspection it would have produced a BLOCKED report naming ARCH-20260922-026 as incomplete, against a command that completed. This is the class convention 28 was ratified for, appearing in a precondition rather than in an instrument."
-    },
-    {
-      "question": "Should -026's max_calls of 40 be revisited before this run is funded?",
-      "context": "Carried from -026's response and repeated here because it bears on whether $0.25 buys anything. Both B14 units exhausted at 41-42 calls without converging. If this run exhausts before coverage is first evaluated, every prediction is unscorable. Raising a registered input after registration is not the executor's to do."
-    }
-  ],
-  "next": "Owner action required: (1) place OPENROUTER_API_KEY in .env, (2) authorise the $0.25 spend in one line, (3) waive or resolve the untracked-tree precondition. With those three, this command is executable as written and needs no re-issue."
+  "cap_arithmetic_stated_before_the_first_call": {
+    "invocation": "--repeat 1 --max-spend 0.25 --max-spend-sweep 0.25",
+    "arithmetic": "One unit requested. The fit rule starts a unit only when the sweep's remaining budget is at least the per-unit cap: remaining 0.25 >= per-unit 0.25, so exactly one unit can start, and after it the remaining budget cannot cover a second. Total bound is therefore exactly $0.25 and the request is arithmetically satisfiable — unlike ARCH-20260922-021's exhibit, where --max-spend 0.50 with --repeat 2 needed $1.00 of a $0.50 sweep and exactly one unit could ever start with nothing saying so.",
+    "authorisation": "Owner instruction 2026-09-22, in direct reply to a message naming the $0.25 cap: 'yes set both and start b17'. Recorded as the G-3 line.",
+    "n": "n=1, and labelled an anecdote rather than a rate. This run tests whether a branch fires, not whether it fires reliably. No repetition is bought to look more convincing."
+  },
+  "run_configuration": {
+    "scenario": "evals/scenarios/generalization/gen_house_style_prohibition.yaml (single file, not a directory glob)",
+    "workflow": "engineering-rnd — the pipeline carrying the coverage node (workflows/engineering-rnd.yaml:141, check: criteria_addressed)",
+    "pins": "From the standing .env: 8 tiers pinned, all 8 verified serving by preflight. The standing line is the owner's; nothing was env-prefixed by the executor.",
+    "store_isolation": "Automatic — runner.py:668 wraps the run in _isolated_store(), which redirects settings.chromadb_path to a temporary directory. Not asserted by hand; read from the code.",
+    "timeout": "1200s per scenario-run, raised from the CLI default of 600s. Recorded as a deliberate choice: §34's two units took 1596.6s combined, about 800s each, so the 600s default would likely have killed this unit mid-run and produced an apparatus artifact rather than a reading. This is a CLI argument, not a config or workflow change.",
+    "results_file": "evals/results/b17-prohibition-branch.jsonl — deliberately NOT written directly into docs/traces/. B20's row records that the loss happened because --results-file aimed at the one tracked directory, where a brand-new file is untracked until committed. evals/results/ is git-ignored and was never exposed. The trace is copied into docs/traces/ after the run completes. The -022 mirror makes this belt-and-braces rather than necessary.",
+    "git_during_run": "None. No git operation will be issued while the run is in flight, per the command's constraint."
+  },
+  "results": null,
+  "deviations": null,
+  "questions_for_advisor": null
 }
