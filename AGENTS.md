@@ -1,9 +1,16 @@
 # AutoRnD-OS — the executor's protocol
 
-**This file is the protocol.** `CLAUDE.md` is a symlink to it, so there is one
-copy and it cannot drift (convention 24). If you are an agent working in this
-repo, read this file, then `HANDOVER.md`, then the last two sections of
-`docs/handover-review.md`.
+**This file is the protocol, and there is exactly one copy of it** (convention
+24). `CLAUDE.md` was a symlink to this file until 2026-09-22; it is now the
+repo's *derived working rules* — a different document with a different job — and
+it carries a summary of the permission boundary that points here. Where the two
+differ, **this file wins**. `tests/test_protocol_file.py` scans the tree by
+content for a second copy, which is a stronger guard than the symlink it
+replaced: the duplicate that prompted it had appeared under a name nobody
+predicted.
+
+If you are an agent working in this repo, read this file, then `HANDOVER.md`,
+then the last two sections of `docs/handover-review.md`.
 
 A multi-model agentic harness for team work that aims to be frugal and accurate,
 starting with engineering R&D. You give it an objective in prose; it classifies
@@ -175,6 +182,19 @@ not authority** — the permission boundary above is unchanged by it.
 **The response directory is the advisor's only view of what has been done.** A
 command with no response file has not been executed, whatever a transcript says.
 
+**The command's shape lives in `.orchestration/COMMAND_TEMPLATE.json`**, with the
+reasoning in `.orchestration/README.md`. This section governs *authority*; those
+govern *shape*, and where they differ this one wins. The template carries an
+**always-in-scope set** — `.orchestration/responses/`, `HANDOVER.md`,
+`README.md`, `AGENTS.md`, `CLAUDE.md` and `.claude/context/testing.md` — which is
+**permission, not instruction**. Measured 2026-09-22: six commands in one day
+each logged a scope deviation for the same arithmetic reason, because adding one
+test file turns four generated-count guards red and a command cannot satisfy
+"suite passes" without writing files its `include` list never named. The guards
+are right; the `include` lists were wrong. `tests/test_command_template.py`
+checks the set against the documents that actually state counts, so it cannot go
+quietly stale.
+
 - A command is **new** iff `commands/<id>.json` exists and
   `responses/<id>.response.json` does not. Process in `command_id` order.
 - The executor **never modifies `.orchestration/commands/`**. Where the advisor
@@ -257,7 +277,7 @@ by 2.6×–295×. Never cite one.** Re-measure instead.
   sequence compiled into code.
 - `evals/` is in-package (`autornd/evals/`); scenarios and suites live in
   `evals/` at the root.
-- 50 test files.
+- 51 test files.
 - `engine/workflow.py` is the API entry point: it loads the graph, runs it, and
   persists phases. The hardcoded sequencer it used to carry as the graph's
   equivalence reference is gone — the graph outgrew what a linear engine can
