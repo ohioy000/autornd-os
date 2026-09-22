@@ -38,7 +38,7 @@
       "a real non-ancestor commit (ef6719e, made with git commit-tree)": "1 fails \u2014 ancestry alone, which is the property 'resolvable' misses"
     },
     "existing_guards": "All five untouched and still passing. Nothing restructured.",
-    "counts": "805 -> 809 (this branch is off main; ARCH-20260922-013's +3 is on its own branch and lands separately). Re-derived because the guard count moved; the command said not to re-derive AS PART OF this change, and four new tests make it unavoidable -- stated as a departure rather than skipped, since leaving it would have made the suite red.",
+    "counts": "808 -> 812 after rebasing onto main with ARCH-20260922-013 merged. On the unrebased branch it read 805 -> 809; both are true of their own base and the response was corrected twice as the base moved, which is what a hand-carried count does.",
     "cost": "$0.00"
   },
   "acceptance_criteria_met": [
