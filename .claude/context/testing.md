@@ -4,7 +4,7 @@ Load when writing tests. Source: `tests/conftest.py` and the 51 files beside it.
 
 ## What exists, honestly
 
-- **51 test files, ~943 tests, ~45 s, no network and no spend.** That is
+- **51 test files, ~949 tests, ~45 s, no network and no spend.** That is
   deliberate, not incidental: the shape of a workflow, its gates and loops, the
   deterministic checks, the condition language and the eval scoring are all
   decidable without a provider.

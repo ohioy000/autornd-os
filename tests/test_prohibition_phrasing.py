@@ -2,13 +2,12 @@
 
 **What this is.** A characterisation fixture built from `ARCH-20260922-027`'s
 committed trace. It pins what `_classify` does with the exact criterion the
-planner produced on a live run — **including where that is wrong.**
+planner produced on a live run.
 
-**Read this before "fixing" a failure here.** `TestTheLiveWordingIsMisclassified`
-asserts a KNOWN DEFECT (B17). It is not a description of desired behaviour. When
-B17 is repaired those assertions SHOULD fail, and the right response is to update
-them deliberately and say so — not to treat the failure as a regression. That is
-convention 17 written into the file it applies to.
+**History.** `TestTheLiveWordingIsMisclassified` (now
+`TestTheLiveWordingIsNowClassifiedCorrectly`) was updated deliberately by
+ARCH-20260922-032 per convention 17 when the defect it pinned was repaired.
+The assertions now test the FIXED state.
 
 **Why a fixture and not another paid run.** The run cost $0.0434 and produced
 this wording once. B16 regenerates criteria every run, so a second run measures a
@@ -92,8 +91,13 @@ class TestTheDraftWasActuallyCompliant:
         assert 350 <= words <= 450, words
 
 
-class TestTheLiveWordingIsMisclassified:
-    """⚠️ PINS A KNOWN DEFECT (B17). These SHOULD fail when it is repaired."""
+class TestTheLiveWordingIsNowClassifiedCorrectly:
+    """Convention 17: this class was TestTheLiveWordingIsMisclassified until
+    ARCH-20260922-032 broadened _PROHIBITION_MARKER to include "contains no
+    instances of" (R2'(a), corpus-derived, -031).  The defect it pinned is
+    repaired, and these assertions now test the FIXED state.  Deliberately
+    updated, not deleted — the trace, the wording and the tokens are the same;
+    only the expected classification and its consequence have changed."""
 
     def test_the_planner_wrote_contains_no_instances_of(self, banned_criterion):
         """The wording, verbatim, so the root cause is legible without the trace."""
@@ -101,27 +105,20 @@ class TestTheLiveWordingIsMisclassified:
             f"the live criterion no longer carries the phrasing this fixture "
             f"exists to pin: {banned_criterion!r}")
 
-    def test_it_is_classified_presence_not_prohibition(self, banned_criterion):
-        """DEFECT. It is a negation over an explicit quoted token list.
-
-        _PROHIBITION_MARKER knows avoid / banned / forbidden / prohibit /
-        disallow / excludes / must not / may not / never uses / no use of.
-        It does not know "contains no instances of", so no forbidden list is
-        extracted, and the criterion falls through to the presence default.
-        """
+    def test_it_is_now_classified_prohibition(self, banned_criterion):
+        """FIXED. _PROHIBITION_MARKER now recognises "contains no instances of"
+        (-031 corpus: 1 occurrence, the -027 criterion, the only genuine
+        invertible prohibition in 597 distinct criteria).  The non-parenthesised
+        fallback in _forbidden_tokens extracts all four quoted tokens."""
         shape, forbidden = _classify(banned_criterion)
-        assert shape == PRESENCE, f"classification moved to {shape} — see this class's docstring"
-        assert forbidden == [], f"tokens are now extracted: {forbidden}"
+        assert shape == PROHIBITION, f"expected prohibition, got {shape}"
+        assert forbidden == BANNED, f"expected {BANNED}, got {forbidden}"
 
-    def test_a_compliant_draft_therefore_scores_zero(self, banned_criterion, draft):
-        """The consequence, and the reason the run died.
-
-        Under presence, the criterion's only significant terms are the words it
-        forbids — so satisfying it is what makes it fail.
-        """
+    def test_a_compliant_draft_now_passes(self, banned_criterion, draft):
+        """The repair.  Under prohibition, the criterion's forbidden tokens
+        become the test — and a draft that contains none of them passes."""
         result = criteria_addressed(criteria=[banned_criterion], text=draft)
-        assert result.passed is False
-        assert "0%" in result.detail, result.detail
+        assert result.passed is True, result.detail
 
 
 class TestTheInversionItselfIsCorrect:
@@ -154,14 +151,13 @@ class TestTheInversionItselfIsCorrect:
     def test_the_two_wordings_are_the_same_prohibition(self, banned_criterion):
         """Both name all four tokens; only the verb phrase differs.
 
-        Stated as an assertion rather than a comment, because it is the whole
-        finding: what separated a working branch from a dead run was phrasing,
-        and B16 rewrites that phrasing every run.
+        Before ARCH-20260922-032, only the recognised wording classified
+        prohibition — which was B17's defect. Now both do, which is the repair.
         """
         for token in BANNED:
             assert token in banned_criterion.lower()
             assert token in self.RECOGNISED.lower()
-        assert _classify(banned_criterion)[0] != _classify(self.RECOGNISED)[0]
+        assert _classify(banned_criterion)[0] == _classify(self.RECOGNISED)[0] == PROHIBITION
 
 
 class TestWhyTheDoubtDirectionWasNotFlipped:
@@ -174,11 +170,14 @@ class TestWhyTheDoubtDirectionWasNotFlipped:
     this test records what that would do to the live plan.
     """
 
-    def test_no_criterion_in_the_live_plan_matched_any_positive_pattern(self, criteria):
-        """All six fell through to the default — so the default IS the check."""
+    def test_five_of_six_criteria_still_fall_through_to_presence(self, criteria):
+        """Before ARCH-20260922-032 all six fell through. Now criterion 1 is
+        correctly recognised as prohibition (-031 corpus, R2'(a)), so five of
+        six still rely on the presence default — the default is still the
+        dominant path, and the evidence for refusing B17-R2 still holds."""
         shapes = [_classify(c)[0] for c in criteria]
-        assert shapes == [PRESENCE] * len(criteria), shapes
-        assert FORM not in shapes and PROHIBITION not in shapes
+        assert shapes[0] == PROHIBITION, "criterion 1 should now be prohibition"
+        assert shapes[1:] == [PRESENCE] * 5, shapes[1:]
 
     def test_flipping_the_fallthrough_would_make_coverage_pass_unconditionally(
         self, criteria, draft, monkeypatch
@@ -203,3 +202,92 @@ class TestWhyTheDoubtDirectionWasNotFlipped:
             "longer holds, the evidence for refusing B17-R2 has changed and the "
             "refusal should be revisited")
         assert "abstained" in result.detail, result.detail
+
+
+class TestReplayCommitted027Criteria:
+    """ARCH-20260922-032 acceptance: replay the committed -027 criteria through
+    the repaired classifier.  Read from the trace by content (convention 24),
+    not from a restated string."""
+
+    def test_criterion_1_classifies_prohibition_with_all_four_tokens(self, criteria):
+        shape, tokens = _classify(criteria[0])
+        assert shape == PROHIBITION, f"criterion 1 classified {shape}, expected prohibition"
+        assert tokens == BANNED, f"extracted {tokens}, expected {BANNED}"
+
+    def test_criterion_3_classifies_presence(self, criteria):
+        """Criterion 3 ('total word count between 350 and 450') classifies
+        presence today. Under -034's clause (iii) it will move to abstain."""
+        shape, _ = _classify(criteria[2])
+        assert shape == PRESENCE, f"criterion 3 classified {shape}, not presence"
+
+    def test_the_compliant_draft_passes_criterion_1(self, criteria, draft):
+        result = criteria_addressed(criteria=[criteria[0]], text=draft)
+        assert result.passed is True, result.detail
+
+    def test_the_full_plan_still_fails_on_presence_criteria(self, criteria, draft):
+        """The ruling is not a blanket pass. The draft still fails on criteria
+        the presence test legitimately catches."""
+        result = criteria_addressed(criteria=criteria, text=draft)
+        assert result.data["shapes"][criteria[0]] == PROHIBITION
+
+
+class TestRecallBroadeningRegression:
+    """No existing classification changed.  Every criterion that classified
+    prohibition or form before ARCH-20260922-032 must classify the same way
+    after it, and no new prohibition or form was introduced from the presence
+    population except for the -027 target (convention 21: exhibits precede
+    leniency)."""
+
+    @staticmethod
+    def _corpus_criteria():
+        import json
+        from pathlib import Path
+        criteria = set()
+        for p in sorted(Path("docs/traces").glob("*.jsonl")):
+            for line in p.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    obj = json.loads(line)
+                except (json.JSONDecodeError, ValueError):
+                    continue
+                def _find(d):
+                    if isinstance(d, dict):
+                        for k, v in d.items():
+                            if k == "success_criteria" and isinstance(v, list):
+                                criteria.update(v)
+                            else:
+                                _find(v)
+                    elif isinstance(d, list):
+                        for item in d:
+                            _find(item)
+                _find(obj)
+        return criteria
+
+    # The B14 exhibit criterion, already prohibition before this change.
+    _B14_PROHIBITION = (
+        "The brief uses plain language, avoids the banned words ('leverage', "
+        "'seamless', 'robust', 'in today's fast-paced world'), and follows "
+        "Meridian's structure conventions (sentence case headings, no H4+, numbers "
+        "as words below 10, dates as '12 March 2026')."
+    )
+
+    def test_no_existing_prohibition_or_form_changed(self):
+        """The only classification change is the -027 target: presence -> prohibition."""
+        target = "The copy contains no instances of"
+        already_prohibition = {self._B14_PROHIBITION}
+        changed = []
+        for c in self._corpus_criteria():
+            shape, tokens = _classify(c)
+            if shape == PROHIBITION and not c.startswith(target):
+                if c not in already_prohibition:
+                    changed.append(("new prohibition", c[:80]))
+        assert not changed, f"unexpected new classifications: {changed}"
+
+    def test_existing_form_criteria_unchanged(self):
+        from autornd.graph.checks import _STRUCTURAL_VERB, _FIELD_VOCAB, _terms
+        for c in self._corpus_criteria():
+            shape, _ = _classify(c)
+            if shape == FORM:
+                assert _STRUCTURAL_VERB.search(c), f"form without structural verb: {c[:80]}"
+                assert len(_FIELD_VOCAB & _terms(c)) >= 2, f"form with <2 fields: {c[:80]}"
