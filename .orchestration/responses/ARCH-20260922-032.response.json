@@ -1,0 +1,82 @@
+{
+  "command_id": "ARCH-20260922-032",
+  "parent_id": "ARCH-20260922-031",
+  "status": "NO_ACTION",
+  "executed": "2026-09-22",
+  "head_before": "afc1113cfd0270b2e5d1cc93f9faca48ce50f89c",
+  "head_after": "PENDING-COMMIT",
+  "settled_by": "ARCH-20260922-031 (.orchestration/responses/ARCH-20260922-031.response.json), and confirmed by the owner 2026-09-22: 'confirm the stop on -032'.",
+
+  "why_no_action": {
+    "the_commands_own_instruction": "-032 question 1: 'If the corpus shows the planner's prohibition phrasings are open-ended — many distinct verbs, few repeats — then a pattern list cannot keep up and the detector needs a different mechanism. If that is what you find, STOP and report rather than adding patterns; that is a shape decision and mine.'",
+    "the_trigger_fired": "That is what -031 found. The stop is the command's own contingent branch, not a refusal by the executor and not a deviation.",
+    "owner_confirmation": "Asked and given explicitly before this file was written."
+  },
+
+  "the_measurement_that_settled_it": {
+    "corpus": "55 committed traces, 600 criteria, 597 distinct.",
+    "unmatched_negation_shape": "28 distinct surface forms over 45 occurrences across 41 criteria. Maximum repeat 4. The most common form, 'without locking', is not a token prohibition at all but a condition on behaviour — as are 'without affecting', 'without disrupting', 'without causing', 'without errors', 'without downtime'. Term overlap is a defensible test for those.",
+    "invertible_population": "Of the 41, only 4 carry a quoted token list. Of those 4, exactly ONE is a genuine prohibition. One genuine invertible prohibition in 597 distinct criteria — 0.17%.",
+    "the_other_three": [
+      "'No claim about a named competitor appears without a legal review annotation (e.g., \\'Pending legal review\\') next to it.' — the quoted token MUST BE PRESENT.",
+      "'The index is defined as a single-column index (only the \\'timestamp\\' column) without additional included columns…' — 'timestamp' must be present.",
+      "'…executed without causing table locks or downtime (CrateDB\\'s default non-blocking behavior).' — the only quote character is a possessive apostrophe."
+    ],
+    "conclusion": "Broadening the marker would chase a 0.17% population while increasing the number of criteria that reach an inversion which is wrong for three cases in four."
+  },
+
+  "what_was_not_done": {
+    "checks_py": "UNTOUCHED. git diff --stat for autornd/graph/checks.py against the branch point is empty.",
+    "patterns_added": "NONE.",
+    "tests_changed": "NONE. tests/test_prohibition_phrasing.py is unmodified and its 11 tests pass, including TestTheLiveWordingIsMisclassified, which continues to pin the defect because the defect continues to exist.",
+    "b17": "NOT closed, and it would not have closed here even had the replay run — the owner ruled 2026-09-22 that the ledger requires a live draft containing a banned token, which supersedes this command's acceptance criterion 'B17 closes here if the replay passes'."
+  },
+
+  "preconditions": [
+    {
+      "command": ".orchestration/responses/ARCH-20260922-031.response.json && echo present",
+      "result": "PASS — interpreted",
+      "observed": "The literal string is a PATH, not a command, and fails as written ('Permission denied'). Interpreted as `test -f`, which passes: the -031 response exists. The same malformation appears in -033, -034 and -035. Flagged rather than silently accommodated; the intent is unambiguous so it was not treated as a BLOCKED arrival."
+    },
+    {
+      "command": "grep -n '_PROHIBITION_MARKER|_forbidden_tokens|_STRUCTURAL_VERB|_FIELD_VOCAB' autornd/graph/checks.py",
+      "result": "PASS",
+      "observed": "_PROHIBITION_MARKER:289, _FIELD_VOCAB:306, _STRUCTURAL_VERB:316, _forbidden_tokens:325. Recorded, not modified."
+    },
+    {
+      "command": "ls tests/test_prohibition_phrasing.py",
+      "result": "PASS",
+      "observed": "Present. 11 tests, all passing."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS",
+      "observed": "923 passed, before and after — this command changed nothing."
+    }
+  ],
+
+  "what_replaces_this_command": {
+    "not_proposed_as_a_decision": "The executor is not ruling on the replacement; these are the options -031's measurement makes visible.",
+    "observation_1": "The recall problem is real but the addressable population is one criterion. A mechanism that reads a criterion rather than pattern-matching it would be the different mechanism this command's question anticipates — and that is a shape decision.",
+    "observation_2": "Two latent defects found by -031 are more urgent than recall, because they invert criteria BACKWARDS. B17 fails correct work; these PASS incorrect work. Both are reachable today with no change to the marker, and broadening recall would have increased exposure to them.",
+    "observation_3": "-031 also measured that 98.7% of the corpus classifies presence and 57.5% matches no signal at all. Whether coverage is the right test for most criteria is a larger question than B17, and -031's own first question proposes it deserves its own ledger row."
+  },
+
+  "deviations": [
+    {
+      "what": "This response is committed on branch arch/20260922-031-criteria-corpus rather than the declared arch/20260922-032-prohibition-recall.",
+      "why": "This command produced no code. A separate branch would be a PR whose entire diff is one response file asserting that nothing was done, and it would stack on -031 — the two-branch count collision measured earlier today is the reason stacking is avoided. The response travels with the measurement that settled it, which keeps the diff and the report together as the channel requires."
+    }
+  ],
+
+  "questions_for_advisor": [
+    {
+      "question": "Do the two backwards-inversion defects open a ledger row, and at what severity?",
+      "context": "Carried forward from -031 because they are the most consequential thing that command found and nothing in the five commands addresses them. An apostrophe inside a parenthetical becomes a forbidden token; a quoted must-be-present token becomes a forbidden one. Both demonstrated by invoking the check's own functions. Repairing them alters what the harness concludes, so it is a ruling."
+    },
+    {
+      "question": "Does -033 still proceed, given -032 did not?",
+      "context": "-033 is parented to -031, not to -032, and its subject — the fold treating an abstention as agreement — is independent of recall. It remains executable on its own terms. It is currently BLOCKED only on the text of Ruling B17-R2′(c), which has not been supplied."
+    }
+  ]
+}
