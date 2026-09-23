@@ -301,3 +301,41 @@ class TestRecallBroadeningRegression:
             # and must still be FORM.
             if _STRUCTURAL_VERB.search(c) and len(_FIELD_VOCAB & _terms(c)) >= 2:
                 assert shape == FORM, f"former FORM is now {shape}: {c[:80]}"
+
+
+class TestB17ClosureReplay:
+    """ARCH-20260922-041: regression guard pinning B17's closure.
+
+    B17 closes because the repaired classifier reaches the prohibition branch
+    on the live -027 planner output and passes the committed compliant draft.
+    This test replays the committed trace through the classifier and asserts
+    all three closure conditions hold.  If any fails, B17 is no longer closed
+    and the failure must be investigated — do not delete this test.
+
+    Limitation (stated per -041): this is the -027 draw only, n=1 on phrasing.
+    It demonstrates the branch is reachable on live planner output; it does not
+    measure recall across phrasings.  The corpus in -031 measures that.
+    """
+
+    BANNED = ["leverage", "seamless", "robust", "in today's fast-paced world"]
+
+    def test_b17_closure_criterion_1_classifies_prohibition(self, criteria):
+        """Acceptance (1): criterion 1 classifies as PROHIBITION."""
+        shape, _ = _classify(criteria[0])
+        assert shape == PROHIBITION, (
+            f"B17 closure requires criterion 1 to classify prohibition; "
+            f"got {shape} — B17 is no longer closed")
+
+    def test_b17_closure_all_four_tokens_extracted(self, criteria):
+        """Acceptance (2): all four forbidden tokens are extracted verbatim."""
+        _, tokens = _classify(criteria[0])
+        assert tokens == self.BANNED, (
+            f"B17 closure requires all four tokens; got {tokens} — "
+            f"B17 is no longer closed")
+
+    def test_b17_closure_compliant_draft_passes(self, criteria, draft):
+        """Acceptance (3): the committed 401-word compliant draft passes."""
+        result = criteria_addressed(criteria=[criteria[0]], text=draft)
+        assert result.passed is True, (
+            f"B17 closure requires the compliant draft to pass criterion 1; "
+            f"it failed: {result.detail} — B17 is no longer closed")

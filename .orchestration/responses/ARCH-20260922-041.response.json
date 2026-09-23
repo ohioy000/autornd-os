@@ -1,0 +1,30 @@
+{
+  "command_id": "ARCH-20260922-041",
+  "status": "DONE",
+  "executed": "2026-09-23",
+  "head_before": "27e3e8f",
+  "summary": "Replayed the committed -027 criteria through the repaired classifier. All three closure conditions hold: (1) criterion 1 classifies PROHIBITION, (2) all four tokens extracted verbatim, (3) the 401-word compliant draft passes. B17 is CLOSED in HANDOVER.md. Criterion 3 classifies FORM under clause (iii). Regression test added (TestB17ClosureReplay, 3 tests). checks.py untouched. Suite 959/959, $0.00.",
+  "acceptances": {
+    "1_classifies_prohibition": true,
+    "2_all_four_tokens_extracted": {
+      "result": true,
+      "tokens": ["leverage", "seamless", "robust", "in today's fast-paced world"]
+    },
+    "3_compliant_draft_passes": true,
+    "criterion_3_classification": "FORM (clause iii, abstains)"
+  },
+  "b17_status": "CLOSED",
+  "limitation": "n=1 on phrasing (the -027 draw). Demonstrates the branch is reachable on live planner output; does not measure recall across phrasings. The corpus in -031 measures that.",
+  "questions_answered": {
+    "token_extraction_vs_closure": "All four tokens extracted; the question does not arise.",
+    "banned_words_in_draft": "The draft contains none of the four banned words. The pass direction is demonstrated from the committed trace."
+  },
+  "regression_test": "tests/test_prohibition_phrasing.py::TestB17ClosureReplay (3 tests)",
+  "verification_results": [
+    {"command": "grep 'B17' HANDOVER.md", "result": "CLOSED (2026-09-22), citing this replay"},
+    {"command": "git diff --stat -- autornd/graph/checks.py", "result": "Empty — classifier untouched"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "959 passed"}
+  ],
+  "cost": "$0.00",
+  "deviations": []
+}

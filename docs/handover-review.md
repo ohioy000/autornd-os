@@ -7531,3 +7531,36 @@ both cases and the distinction is lost.
 
 **Not repaired here — recording.** Changing what `judges_agree` does with an
 all-abstained pass alters what the harness concludes, so it is a ruling.
+
+## 48. B17 closure replay (ARCH-20260922-041, 2026-09-22)
+
+**Replay of the committed -027 criteria through the repaired classifier.**
+Free and deterministic — no paid call, no model. The trace
+(`docs/traces/b17-prohibition-branch.jsonl`) carries both the criteria and the
+401-word compliant draft.
+
+**Acceptance (1):** criterion 1 classifies **PROHIBITION**. The phrasing
+"contains no instances of" is matched by the broadened `_PROHIBITION_MARKER`
+(PR #61, ARCH-20260922-032).
+
+**Acceptance (2):** all four forbidden tokens extracted verbatim:
+`['leverage', 'seamless', 'robust', "in today's fast-paced world"]`. The
+non-parenthesized fallback in `_forbidden_tokens` (added by PR #61) handles the
+single-quoted list after "contains no instances of".
+
+**Acceptance (3):** the committed 401-word compliant draft **passes** criterion
+1. None of the four banned words appear in the draft (verified by
+`_forbidden_present`).
+
+**Criterion 3** ("The total word count is between 350 and 450 words") classifies
+**FORM** under clause (iii) — it abstains, it does not fail. Under the
+pre-doubt classifier it classified presence and scored 0.00 against a 401-word
+draft.
+
+**B17 is CLOSED.** All three acceptances hold. The fail direction is
+fixture-covered per Ruling D6 (`tests/test_prohibition_phrasing.py::
+TestB17ClosureReplay`, 3 tests).
+
+**Limitation:** this is the -027 draw only, n=1 on phrasing. It demonstrates
+the branch is reachable on live planner output; it does not measure recall
+across phrasings. The corpus in ARCH-20260922-031 measures that.
