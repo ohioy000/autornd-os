@@ -7564,3 +7564,165 @@ TestB17ClosureReplay`, 3 tests).
 **Limitation:** this is the -027 draw only, n=1 on phrasing. It demonstrates
 the branch is reachable on live planner output; it does not measure recall
 across phrasings. The corpus in ARCH-20260922-031 measures that.
+
+## 49. Validator coverage of abstained criteria (ARCH-20260922-038, 2026-09-23)
+
+**Measurement.** For each committed trace that carries both `plan.success_criteria`
+and `validate.evidence`, identify which criteria the deterministic coverage check
+abstains on (classifies FORM under clause i, ii, or iii), and ask whether the
+validator's prose evidence addresses each one — names it or states a verdict about
+it — or glosses it.
+
+**Denominator.** 60 trace files scanned, 84 unit records with both criteria and
+validator evidence. 488 criteria in that population. 194 abstained (39.8%).
+Clause breakdown of the 194: clause (i) 32, clause (ii) 140, clause (iii) 21,
+Tier 1 compute 1.
+
+**Attribution method.** Term overlap between the criterion and each evidence item,
+with a judgment-signal filter. ADDRESSED: ≥35% term overlap AND the evidence
+item contains a judgment signal (pass, fail, present, absent, verified, etc.).
+GLOSSED: ≥25% term overlap but no judgment signal, or judgment signal but below
+35%. UNATTRIBUTABLE: no evidence item reaches 25% overlap. Thresholds are the
+instrument; the numbers they produce are the finding.
+
+### Aggregate
+
+| class | count | rate |
+|---|---|---|
+| **addressed** | 132 / 194 | 68.0% |
+| **glossed** | 38 / 194 | 19.6% |
+| **unattributable** | 24 / 194 | 12.4% |
+
+### By clause
+
+| clause | abstained | addressed | glossed | unattributable |
+|---|---|---|---|---|
+| (i) negation, no tokens | 32 | 19 (59.4%) | 9 (28.1%) | 4 (12.5%) |
+| (ii) structural, empty field-vocab | 140 | 100 (71.4%) | 23 (16.4%) | 17 (12.1%) |
+| (iii) cardinality / numeric | 21 | 12 (57.1%) | 6 (28.6%) | 3 (14.3%) |
+| Tier 1 compute | 1 | 1 (100%) | 0 | 0 |
+
+### Verbatim examples — ADDRESSED
+
+**Clause (i):** criterion "The plan documents that the index is non-unique and
+ascending, suitable for range queries, and does not include additional columns."
+Evidence: `"Criterion 6 (Index documentation): PASS — step 6.1 documents
+non-unique, ascending, single-column."` — names the criterion's subject, states
+what was found, passes.
+
+**Clause (ii):** criterion "The plan contains a verification step that queries
+the database catalog (e.g., SHOW INDEX) to confirm the index exists after
+creation." Evidence: `"Criterion 2 (Verification step): PASS — step 3.3 uses
+SHOW INDEX to confirm existence."` — names the action (SHOW INDEX), confirms it
+exists, passes.
+
+### Verbatim examples — GLOSSED
+
+**Clause (i):** criterion "The index creation statement uses an online method
+(e.g., `CREATE INDEX CONCURRENTLY` for PostgreSQL, `ONLINE=ON` for SQL Server,
+or `ALGORITHM=INPLACE, LOCK=NONE` for MySQL) to avoid blocking concurrent
+writes." Evidence: `"Criterion 2: Online method used — CREATE INDEX CONCURRENTLY
+specified."` — names the method used but the criterion enumerates three
+DB-specific alternatives; the evidence names only the one that applies, driving
+term overlap to 25%. A human reader would call this addressed; the term-overlap
+instrument undercounts it because verbose criteria dilute the denominator.
+
+**Clause (ii):** criterion "The plan addresses write performance impact by
+specifying online/non-blocking index creation options (e.g., ALGORITHM=INPLACE,
+LOCK=NONE for MySQL or CONCURRENTLY for PostgreSQL) and includes post-deployment
+monitoring of write latency." Evidence: `"Criterion 4 (Write latency monitoring):
+FAIL — step 4.3 measures latency but does not verify online creation options were
+used."` — the evidence names the latency monitoring half and fails it, but does
+not address the non-blocking creation half. This is a genuine gloss: partial
+address.
+
+### Verbatim examples — UNATTRIBUTABLE
+
+**Clause (i):** criterion "The index was created using a method that minimizes
+locking (e.g., CONCURRENTLY, ONLINE, or ALGORITHM=INPLACE LOCK=NONE) to avoid
+blocking concurrent writes." No evidence item reached 25% overlap. The validator
+output for this unit did not address non-blocking creation.
+
+**Clause (iii):** criterion "Write throughput (inserts per second) on the
+`sensor_readings` table, measured under a representative load, does not degrade
+by more than 10% compared to the pre-index baseline." No evidence item matched.
+The validator did not address write throughput degradation measurement.
+
+### Limitation
+
+This corpus is 60 trace files from this repo's committed scenarios — a
+convenience sample, not a distribution over all objectives. The validator model,
+serving, prompt, and objective distribution are not controlled. The finding says
+what happened on these traces; it does not predict a rate on unseen runs.
+
+### Finding
+
+The validator addresses 68% of what coverage abstains on, and another 20%
+is glossed (partially addressed). 12% of abstained criteria receive no signal
+from either instrument.
+
+The glossed category is inflated by verbose criteria whose term count dilutes
+the overlap denominator. Spot-checking shows that many glossed items (like
+the CONCURRENTLY example above) are genuinely addressed from a human reader's
+perspective. A generous reading puts addressed-or-glossed at 88%. The
+conservative reading holds at 68%.
+
+The clause-level result that matters most for the original question (the fate
+of clause ii) is that clause (ii) is the BEST covered: 71.4% addressed, 87.8%
+addressed-or-glossed, 12.1% unattributable. Clause (ii) criteria — structural
+claims about what an artifact carries — are exactly the kind of thing the
+validator naturally checks (does the plan include a rollback? does it include
+a verification step?).
+
+Clause (iii) is the least well covered at 57.1% addressed, but this is a
+small population (21 criteria) and the remaining Tier 1 compute criterion
+(word count) is 100% addressed — redundantly, since it is now also computed
+deterministically.
+
+### Tier 1 compute observation
+
+The one Tier 1 criterion ("between 350 and 450 words") is addressed by both
+the deterministic compute (added by ARCH-20260922-037) AND the validator
+(`"Word count: counted 419 words, within 350–450 range."`). The deterministic
+check is redundant with the validator for this criterion. It is still justified:
+it is free, it is correct, and it does not depend on the validator's model or
+prompt.
+
+### The question about attributability
+
+If attribution is unattributable for most criteria, is that evidence for
+Option B on its own? The answer from this corpus is: attribution is NOT
+unattributable for most criteria. 68-88% are attributable. The question does
+not arise in its strong form.
+
+However: the validator's evidence is prose, and attribution required a term-
+overlap instrument to establish. A typed judge layer (Option B) would return
+per-criterion verdicts that are inherently attributable — no matching heuristic
+needed. The 12% unattributable gap is a real gap, and a typed layer would
+close it by construction.
+
+### Recommendation
+
+**Option A: the validator suffices — with a stated limitation.**
+
+The numbers: 68% conservatively addressed, 88% with glossed, 12%
+unattributable. The clause that prompted this measurement (clause ii) is
+the best covered at 71-88%. A typed judge layer (Option B) would close the
+12% gap and make per-criterion attribution mechanical rather than heuristic,
+but the cost is a new model call per unit, a new schema, and a new failure
+mode. The current validator already produces per-criterion evidence in most
+cases; the gap is in coverage and format, not in kind.
+
+The 12% unattributable rate is a limitation, not a crisis. It means ~24
+criteria across 84 units (roughly 1 in 3.5 units) have a criterion that
+neither instrument addresses. Whether that rate justifies the cost of a
+typed layer is a threshold question the owner sets — this measurement
+provides the number, not the threshold.
+
+**The recommendation is Option A.** The clause-level result that drives it
+is clause (ii)'s 71-88% coverage rate: clause (ii) is the largest abstention
+class (140 of 194, 72% of all abstentions), and its coverage is the strongest.
+If clause (ii) were poorly covered, Option B would be justified regardless of
+the aggregate. It is not.
+
+**The decision is the advisor's.**

@@ -1,0 +1,43 @@
+{
+  "command_id": "ARCH-20260922-038",
+  "status": "DONE",
+  "executed": "2026-09-23",
+  "head_before": "0cb0ffa",
+  "summary": "Measured validator coverage of the 194 criteria the deterministic coverage check abstains on (FORM), across 84 unit records from 60 committed trace files. 68% addressed (evidence names the criterion and judges it), 20% glossed (partial address), 12% unattributable (no evidence item relates). Clause (ii) — the largest abstention class at 140/194 and the trigger for this measurement — is the best covered at 71% addressed, 88% addressed-or-glossed. Recommendation: Option A (validator suffices). Suite 970/970, $0.00.",
+  "population": {
+    "trace_files_scanned": 60,
+    "unit_records_with_both": 84,
+    "total_criteria": 488,
+    "total_abstained_FORM": 194,
+    "abstention_rate": "39.8%"
+  },
+  "by_clause": {
+    "clause_i": {"abstained": 32, "addressed": 19, "glossed": 9, "unattributable": 4},
+    "clause_ii": {"abstained": 140, "addressed": 100, "glossed": 23, "unattributable": 17},
+    "clause_iii": {"abstained": 21, "addressed": 12, "glossed": 6, "unattributable": 3},
+    "tier1_compute": {"abstained": 1, "addressed": 1, "glossed": 0, "unattributable": 0}
+  },
+  "aggregate": {
+    "addressed": {"count": 132, "rate": "68.0%"},
+    "glossed": {"count": 38, "rate": "19.6%"},
+    "unattributable": {"count": 24, "rate": "12.4%"}
+  },
+  "recommendation": "Option A — validator suffices",
+  "recommendation_driver": "Clause (ii) is 72% of all abstentions and its coverage is the strongest (71-88%). If clause (ii) were poorly covered, Option B would be justified regardless of the aggregate. It is not.",
+  "tier1_compute_observation": "The one Tier 1 word count criterion is addressed by both the deterministic compute and the validator — redundant but justified as the deterministic check is free and correct.",
+  "glossed_inflation": "The glossed category is inflated by verbose criteria that dilute the term-overlap denominator. Spot-checking shows many glossed items are genuinely addressed from a human reader's perspective. A generous reading puts addressed-or-glossed at 88%.",
+  "limitation": "60 trace files from this repo's committed scenarios — a convenience sample, not a distribution over all objectives. The validator model, serving, prompt, and objective distribution are not controlled.",
+  "questions_answered": {
+    "attributability_question": "Attribution is NOT unattributable for most criteria (68-88% are attributable). The question does not arise in its strong form. However, a typed judge layer would make per-criterion attribution mechanical rather than heuristic.",
+    "standing_rule_on_committed_traces": "Yes — every command in this sequence assumes committed traces are subjects for new measurement without a new run. No command contradicts this.",
+    "threshold_question": "The 12% unattributable rate is the number; the owner sets the threshold. This measurement does not invent one."
+  },
+  "verification_results": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "970 passed — unchanged"},
+    {"command": "grep -n 'Option A\\|Option B' docs/handover-review.md", "result": "Recommendation recorded at lines 7706-7726"},
+    {"command": "git diff --stat -- autornd/routing/ autornd/evals/runner.py", "result": "Empty — no dependency or instrument change"}
+  ],
+  "cost": "$0.00",
+  "deviations": [],
+  "changes": ["docs/handover-review.md (§49 appended — finding and recommendation)"]
+}
