@@ -109,8 +109,17 @@ eleven are the ones a new executor trips over. 25 is a style note and sits in
 .venv/bin/python3 -m pytest tests/ -q     # ~27 s, free — run BEFORE and AFTER
 ```
 
-Under Aider, slash commands and shell runs are owner-invoked or owner-approved;
-the agent proposes and edits, the owner executes the git loop.
+The executor holds repository write capability (Ruling D13). The executor
+creates branches, commits, pushes and opens pull requests, and commits command
+files verbatim as carriage per the channel transport rule. The advisor has no
+commit capability; the executor is the channel's transport. Merges to main
+remain owner-only unless the owner grants merge-on-green in one line.
+Invariants: no force-push; no history rewrite; no deletion on a protected
+branch; no direct push to main; and **no git operation while a paid run is in
+flight** — that last caused the -010 trace loss and git capability increases
+its likelihood. A paid run must not start with a dirty working tree; this rule
+is procedural as of 2026-09-23 and mechanical enforcement is named in
+ARCH-20260922-035.
 
 - **Suite green before and after. CI green before finishing.** Both, every time.
 - **Pre-register before a paid run, and commit it first.** The commit is the

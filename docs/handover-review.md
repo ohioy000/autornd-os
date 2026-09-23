@@ -7726,3 +7726,74 @@ If clause (ii) were poorly covered, Option B would be justified regardless of
 the aggregate. It is not.
 
 **The decision is the advisor's.**
+
+## 50. Ruling D8 — B17 and B24 closed on source (advisor, 2026-09-23)
+
+Ruling D8 — B17 and B24 are closed on source. B17 closed on the -041 replay: criterion 1 classified prohibition, all four tokens extracted, the committed 401-word compliant draft passed, 3 regression tests added. B24 closed by -040: both polarity inversions fixed, punctuation-only tokens filtered, must-be-present parentheticals skipped. No further work on either.
+
+Cross-reference: §48 (B17 closure replay), §45 (Ruling D6).
+
+## 51. Ruling D9 — the fold has no empty seat, and that is the critical path (advisor, 2026-09-23)
+
+Ruling D9 — the fold has no empty seat, and that is the critical path. judges_agree folds coverage.passed into a boolean and cannot distinguish a pass-by-measurement from a pass-by-abstention. Coverage abstains on 194 of 488 criteria (39.8%). Since PR #62 that abstention has folded as agreement. This does not fail runs; it ships unchecked work and reports nothing. Repaired by ARCH-20260922-043, which is P0.
+
+Cross-reference: §47 (judges_agree fold finding).
+
+## 52. Ruling D10 — Option A is the default, with its boundary stated (advisor, 2026-09-23)
+
+Ruling D10 — Option A is the default, with its boundary stated. -038 measured 68.0% of abstained criteria addressed, 19.6% glossed, 12.4% unattributable, across 194 criteria in 84 units from 60 traces. The response 88% addressed-or-glossed figure is a spot-check, not a measured rate, and must not be quoted as one (convention 26). The validator fills most empty seats; it does not fill them all.
+
+Cross-reference: §49 (validator coverage measurement).
+
+## 53. Ruling D11 — Tiers 1 and 2 are smaller than designed (advisor, 2026-09-23)
+
+Ruling D11 — Tiers 1 and 2 are smaller than designed. ARCH-20260922-037 converted 1 of 26 clause-(iii) criteria; the other 25 assert cardinality about domain concepts and require comprehension, not a counter. With prohibition at 0.2%, the free tiers cover approximately 0.4% of the criteria the planner emits. Comprehension is the whole game, and term overlap is a proxy for it. This corrects the SIZING of Ruling D5, not its shape.
+
+Cross-reference: §44 (Ruling D5), ARCH-20260922-037 response.
+
+## 54. Ruling D12 — a typed judgment layer is ratified as the Tier 3 filler (advisor, 2026-09-23)
+
+Ruling D12 — a typed judgment layer is ratified as the Tier 3 filler for the empty seat, and it ships after the fold. Coverage abstains (39.8%), the validator fills 68% of those, and the residual is filled by silence. The layer may not be built before ARCH-20260922-043, because until an abstention is a distinguishable state it has nothing to route from and its contribution is unmeasurable. It fires only where the record says a seat is empty. Build is contingent on the owner threshold ruling (D14) and on ARCH-20260922-046 resolving the glossed class.
+
+Cross-reference: §49 (the 68% and 12.4% figures), Ruling D14 (§57).
+
+## 55. Ruling D13 — the executor holds repository write capability (advisor, 2026-09-23)
+
+Ruling D13 — the executor holds repository write capability. The executor creates branches, commits, pushes and opens pull requests, and commits command files verbatim as carriage per the channel transport rule. Merges to main remain owner-only unless the owner grants merge-on-green in one line. Invariants: no force-push; no history rewrite; no deletion on a protected branch; no direct push to main; and NO git operation while a paid run is in flight — that last caused the -010 trace loss and git capability increases its likelihood.
+
+**AGENTS.md amended** (lines 112-122): the clause stating that the owner executes the git loop has been replaced with the D13 capability statement. The advisor has no commit capability; the executor is the channel's transport.
+
+**Dirty-tree rule:** a paid run must not start with a dirty working tree. As of 2026-09-23, this rule is **procedural, not mechanically enforced**. Mechanical enforcement is named in ARCH-20260922-035 (exhibit 3).
+
+## 56. Owner confirmation (owner, 2026-09-23)
+
+The owner confirms Rulings D8, D9, D10, D11, D12, D13 and D14 as stated in
+this command (ARCH-20260922-044). This extends the confirmation in §46 (which
+covered D1-REVISED through D7) to the complete ruling set.
+
+## 57. Ruling D14 — the residual threshold is 81% addressed-or-attributed (advisor, 2026-09-23)
+
+Ruling D14 — the residual threshold is 81 percent addressed-or-attributed. Measured: 68.0% addressed, 19.6% glossed, 12.4% unattributable over 194 criteria. The threshold cannot be evaluated without resolving the glossed class, so the glossed class is a required measurement and not an accepted gap. The bar is met if and only if at least 26 of the 38 glossed criteria resolve to addressed. If it resolves to 25 or fewer, a typed judgment layer is required.
+
+**Derivation:** 81% of 194 = 157.14, so ≥158 must be addressed-or-attributed.
+132 are already addressed. 158 − 132 = 26. Therefore the bar is met iff at
+least 26 of the 38 glossed criteria resolve to addressed under ARCH-20260922-046's
+rubric.
+
+## 58. Unjudged-residual row and arithmetic (ARCH-20260922-044, 2026-09-23)
+
+**B26 opened** in HANDOVER.md: "Unjudged residual: 12.7% of criteria receive no
+verdict." A criterion coverage abstained on and the validator did not address
+receives no verdict, and until ARCH-20260922-043 the fold records it as agreement.
+
+**Arithmetic (re-derived against the tree, convention 24):**
+- Abstention rate: 194/488 = 39.8%
+- Of those, not addressed by the validator: 32% (= 1 − 68.0%)
+- Unjudged per criterion: 0.398 × 0.32 = 12.7%
+- Average criteria per unit: 5.8 (re-derived over 84 units from 60 traces)
+- P(a run carries at least one unjudged criterion) = 1 − (1−0.127)^5.8 = **55%**
+
+More than half of runs ship with at least one criterion that no instrument checked.
+
+**B25 stays OPEN** pending ARCH-20260922-042 (false-fail measurement on the
+presence-tested criteria that remain).
