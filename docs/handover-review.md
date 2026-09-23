@@ -7946,3 +7946,56 @@ Three tests in `TestEmptySeat`:
    coexists with `abstained_judges`.
 
 Suite: 973/973, $0.00.
+
+## 61. Refuted prediction and D12 contingency resolution (ARCH-20260922-047, 2026-09-23)
+
+### Prediction refuted
+
+Ruling D12 was contingent on two events: (1) ARCH-20260922-046 resolving the
+glossed class, and (2) the owner threshold ruling (D14). Both have resolved:
+
+- **D14** set the bar at 81% addressed-or-attributed.
+- **-046** measured 86.1% (35 of 38 glossed criteria resolved to addressed),
+  above the bar.
+
+D12 predicted the typed judgment layer would be needed as the Tier 3 filler.
+The 86.1% rate refutes the immediate need: the validator covers enough of the
+abstained criteria that the residual falls below the threshold. The typed
+judgment layer (-045) does not run.
+
+### D12 contingency resolution
+
+D12's build conditions were:
+
+1. **ARCH-20260922-043 ships** — so abstention is a distinguishable state in
+   the fold. **Done:** fold now records `abstained_judges` and rewrites the
+   detail string (commit `49664d0`).
+2. **ARCH-20260922-046 resolves the glossed class** — so the residual is known.
+   **Done:** 86.1% addressed-or-attributed (commit `cd862e2`).
+3. **D14's threshold is met** — so the layer is optional, not required.
+   **Met:** 86.1% > 81%.
+
+Since the bar is met, D12's typed judgment layer is **ratified but dormant**.
+The infrastructure to route from an empty seat exists (the enrichment from -043);
+the layer that fills it is not built because the residual does not require it.
+If a future measurement drops the rate below 81%, D12's ratification stands and
+the layer should be built then.
+
+### Updated residual arithmetic
+
+| Category | Count | Rate |
+|---|---|---|
+| Addressed (deterministic + glossed resolved) | 167 | 86.1% |
+| Not addressed (glossed not resolved) | 3 | 1.5% |
+| Unattributable (no evidence relates) | 24 | 12.4% |
+| **Total abstained criteria** | **194** | **100%** |
+| **Unjudged residual** (not addressed + unattributable) | **27** | **13.9%** |
+
+The 13.9% residual is now VISIBLE in the fold: runs will report "empty seat, not
+unanimous" when coverage has abstained criteria, rather than "all judges agree."
+Before -043, this 13.9% was invisible — silence was recorded as assent.
+
+The probability that at least one criterion is unjudged in a run (B26's
+P(at least one unjudged) = 55% from §58) is unchanged — the unjudged criteria
+still exist. What changed is that the fold now SAYS SO in every run that carries
+them.
