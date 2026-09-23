@@ -7281,3 +7281,146 @@ both drafts marked every proof point `unsourced` and invented no firms, where th
 `-010` comparator had fabricated sources. Whether one clean run weakens B15 or is
 simply insufficient to close it is a judgement the executor declined to make; it
 is in the response.
+
+---
+
+## 36. Ruling B17-R3 — the misclassification is a check defect (advisor, 2026-09-22)
+
+Recorded by `ARCH-20260922-031`. Documentation only, $0.00, no run.
+
+### 36.1 The ruling
+
+**B17-R3 (advisor, 2026-09-22).** The -027 trace demonstrated that the planner
+wrote *"The copy contains no instances of 'leverage', 'seamless', 'robust', or
+'in today's fast-paced world'"* and the classifier called it `presence`. **This
+is a check defect, not an input-phrasing issue.**
+
+The planner's job is to describe what the work must do. The classifier's job is
+to recognise what the planner wrote. A classifier that can only read one verb
+for "must not contain" is too narrow, and the obligation to widen it belongs to
+the check, not to the prompt.
+
+### 36.2 Bounded by -032's finding
+
+-031 measured 28 distinct unmatched negation forms with max repeat 4 and only
+one genuine invertible prohibition in 597 criteria (0.17%). A pattern list
+cannot keep up with open-ended phrasings, so the recall fix is bounded: -033
+adds the patterns the corpus justifies, and anything beyond that needs a
+different mechanism — which is a future ruling, not this one.
+
+### 36.3 B17 closure
+
+**B17 closure requires a live draft containing a banned token**, not just
+fixtures. The -027 trace has the criterion; the draft contained none of the four
+tokens, so the prohibition branch had nothing to reject. Until a live run
+produces a draft that *uses* a banned word and the check *catches* it, B17 stays
+open.
+
+---
+
+## 37. Ruling on RepeatedRun.rate — the display is acceptable (advisor, 2026-09-22)
+
+Recorded by `ARCH-20260922-031`, raised by `ARCH-20260922-028`. Documentation
+only, $0.00, no run.
+
+### 37.1 The finding
+
+`RepeatedRun.rate` (`autornd/evals/runner.py:757`) is `passes / applicable`
+across repetitions of one scenario. For a plan-dependent scenario, `--repeat N`
+produces N runs whose criteria were each written fresh, and `rate` presents them
+as one number with nothing saying the denominators differ.
+
+### 37.2 The ruling
+
+**The display is acceptable as-is.** The type cannot distinguish a
+plan-dependent scenario from a plan-independent one, and adding that distinction
+would require every scenario to declare its dependence — a classification that
+does not exist and would be wrong as often as it helped.
+
+**The obligation is the docstring, not the code.** `RepeatedRun`'s docstring
+must state that for plan-dependent scenarios the criteria may differ across
+runs, and a rate across differing criteria is a measure of the system's overall
+behaviour on that request class, not of its performance on one contract.
+Convention 27 governs the reader: a repetition of a plan-dependent contrast is
+a second sample, never a confirmation.
+
+**No code change is required.** The caveat is documented; the reader who
+aggregates without checking is the one with the error.
+
+---
+
+## 38. Rulings B17-R2'(a), R2'(b), R2'(c) — recall, doubt, and the fold (advisor, 2026-09-22)
+
+Recorded by `ARCH-20260922-031`. These three rulings specification -033 and
+-034 respectively.
+
+### 38.1 R2'(a) — recall is corpus-derived (specification for -033)
+
+Recall is derived from and validated against the corpus, never from one exhibit.
+Convention 21 applied to patterns: a pattern with no corpus exhibit behind it is
+not licensed.
+
+Recall may only ADD recognised surface forms to `_PROHIBITION_MARKER`. Every
+criterion classified prohibition or form before the change must classify the
+same way after it. No new abstention path is introduced by -033 — that belongs
+to -034 and ships only after -033 gives the fold an empty seat.
+
+**The replay is the acceptance.** Replaying the committed -027 criteria through
+the repaired classifier must classify criterion 1 as prohibition, extract all
+four forbidden tokens, and PASS the committed 401-word compliant draft.
+Criterion 3 must classify form. If either does not, that is the result, not a
+reason to widen further.
+
+### 38.2 R2'(b) — doubt is a detected state (specification for -034)
+
+Doubt is a detected state, not a design choice. A criterion abstains when a
+shape signal is present whose required evidence cannot be extracted, or when it
+asserts a cardinality or numeric threshold over a property of the artifact.
+
+**The doubt predicate is exactly:**
+
+| clause | condition | action |
+|---|---|---|
+| **(i)** | negation signal present and no forbidden token list extractable | abstain |
+| **(ii)** | structural signal present and `_FIELD_VOCAB & _terms` is empty | abstain |
+| **(iii)** | the criterion asserts a cardinality or numeric threshold over a property of the artifact | form, abstain |
+| **(iv)** | no signal at all | presence, **UNCHANGED** |
+
+**Clause (iv) is deliberate and load-bearing.** The fallthrough stays presence.
+Making the fallthrough abstain is the measured change that disables the check
+(-029) and is explicitly rejected.
+
+**Clause (ii) is retained despite being 73% of the new leniency.** -031
+measured 159 criteria (26.6% of the corpus) that carry a structural signal with
+no field vocab. The projected abstention rate of 36.2% is reported, not tuned
+away.
+
+**Clause (iii) is retained despite capturing 33 criteria currently judged
+correctly.** Abstaining on all 34 gives up judging 33 easy ones to stop
+misjudging 1 hard one — "word count between 350 and 450" on a 401-word draft
+scored 0.00. The trade is accepted.
+
+**Ordering:** -034 may not ship before -033. Without -033's broader recall, a
+prohibition criterion that should reach the prohibition branch instead falls
+through to clause (iv) and is tested as presence — B17's original failure mode.
+
+### 38.3 R2'(c) — an abstention is agreement in the fold
+
+When `criteria_addressed` abstains on a criterion, the fold treats that
+criterion as not having dissented. An abstention never fails the check and never
+causes the loop to continue on that criterion's account.
+
+**This is already the implemented behaviour since B17-R1**, where form-shaped
+criteria abstain and are excluded from the `missed` list. R2'(c) confirms that
+the same treatment applies to every new abstention path -034 introduces.
+
+**The rationale is convention 21.** Abstention is leniency, and exhibits precede
+leniency. A criterion whose shape the classifier cannot fully resolve is better
+served by the paid validator than by a free check that would test it with the
+wrong method. Failing on doubt is the dangerous direction: it killed a run on
+-010 and again on -027.
+
+**An abstention is never silent.** Every abstention carries its shape and reason
+in the unit record, so the paid validator receives the reason and the sweep
+summary can report the rate. A leniency that hides how often it fires cannot be
+withdrawn on evidence.

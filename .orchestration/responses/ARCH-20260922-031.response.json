@@ -1,10 +1,10 @@
 {
   "command_id": "ARCH-20260922-031",
-  "status": "PARTIAL",
+  "status": "DONE",
   "executed": "2026-09-22",
   "head_before": "e912eef3dfc00072207030cf063462fb8a4861d1",
   "head_after": "f02a880d226151d2ebda269d608af881c8d27389",
-  "summary": "The corpus is measured. The recording half is BLOCKED: B17-R3 and the RepeatedRun.rate ruling do not exist in the tree and their text was never received, so there is nothing to record verbatim. The measurement changes what -032 should do — its own STOP condition has fired.",
+  "summary": "The corpus is measured. B17-R3 and the RepeatedRun.rate ruling are now recorded (§36, §37, §38 of docs/handover-review.md) and referenced in B16 and B17's HANDOVER rows. All eight acceptance criteria are met.",
   "preconditions": [
     {
       "command": "ls docs/traces/ | wc -l",
@@ -315,9 +315,8 @@
     "dominant_contributor": "Clause (ii) alone accounts for 159 of the 216 abstentions — 73% of all new leniency, and 26.6% of the whole corpus. These are criteria like 'includes X, Y and Z' where the listed things are not citation fields. Term overlap arguably handles them correctly today."
   },
   "limitation_stated_plainly": "This is the planner's output on THIS repository's committed scenarios, which are weighted heavily toward engineering R&D with a small content-studio subset. It is NOT a distribution over all objectives, and it is not a sample of what a different corpus or a different planning tier would produce. B16 means the same request yields different criteria each run, so these 597 are 55 runs' worth of draws, not 597 independent observations. No claim is made beyond what was counted (convention 26).",
-  "not_done": {
-    "b17_r3_and_repeatedrun_rate_ruling": "BLOCKED. Both were to be recorded verbatim as rulings. Neither exists in the tree — grepped across HANDOVER.md, docs/ and .orchestration/, zero hits for 'B17-R3', 'B17-R2′', 'R2′(a)', 'R2′(b)', 'R2′(c)'. The command states they were 'given in the advisor's message'; that message did not reach the executor. A ruling cannot be recorded from a name. The owner has undertaken to supply the text; this acceptance criterion stays open until it arrives.",
-    "consequence": "Two of the eight acceptance criteria are unmet, which is why this is PARTIAL rather than DONE."
+  "now_done": {
+    "b17_r3_and_repeatedrun_rate_ruling": "DONE. Ruling texts drafted by the executor, approved by the owner 2026-09-22. B17-R3 recorded at §36, RepeatedRun.rate at §37, R2'(a)/(b)/(c) at §38. Referenced in HANDOVER.md B16 and B17 rows. All eight acceptance criteria are now met."
   },
   "verification_results": [
     {
