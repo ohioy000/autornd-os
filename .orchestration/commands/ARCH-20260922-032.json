@@ -1,0 +1,95 @@
+{
+  "command_id": "ARCH-20260922-032",
+  "parent_id": "ARCH-20260922-031",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Repair detection recall in criteria_addressed so the prohibition and form branches are reached on the phrasings the planner actually emits, and demonstrate it by replaying the committed -027 criteria.",
+  "evidence": [
+    ".orchestration/responses/ARCH-20260922-029.response.json — _PROHIBITION_MARKER vocabulary verbatim; 'contains no instances of' unmatched; _STRUCTURAL_VERB matched 'contains' but _FIELD_VOCAB & _terms was empty so form was not entered either",
+    ".orchestration/responses/ARCH-20260922-031.response.json — the corpus measurement and the unmatched-phrase list (this command's input)",
+    "docs/traces/b17-prohibition-branch.jsonl — criterion 1 and the 401-word compliant draft",
+    "tests/test_prohibition_phrasing.py — TestTheLiveWordingIsMisclassified pins the known defect and is EXPECTED to fail when this command lands; TestTheInversionItselfIsCorrect must keep passing unchanged",
+    "AGENTS.md convention 17 — when a fix invalidates a test, ask which of the two is wrong first",
+    "AGENTS.md convention 22 — an instrument's test simulates the condition it watches, end to end"
+  ],
+  "scope": {
+    "include": [
+      "autornd/graph/checks.py",
+      "tests/"
+    ],
+    "exclude": [
+      "workflows/",
+      "autornd/engine/phases.py",
+      "autornd/evals/runner.py",
+      "docs/handover-review.md"
+    ]
+  },
+  "constraints": [
+    "Ruling B17-R2′(a) is the specification: recall derived from and validated against the corpus, never from one exhibit.",
+    "THIS IS RECALL ONLY. Do NOT introduce an abstention on any path that does not already abstain. Do NOT touch the fallthrough. An abstention may not ship before ARCH-20260922-033 gives the fold an empty seat — that ordering is ruled.",
+    "Recall may only ADD recognized surface forms. Every criterion classified prohibition or form BEFORE this change must still be classified the same way after it. Assert this as a test.",
+    "Broaden by deriving patterns from the corpus's verbatim phrases, and cite which corpus phrase justifies each added pattern. A pattern with no corpus exhibit behind it is not licensed (convention 21, applied to patterns).",
+    "Do not broaden so far that a genuine presence criterion is captured. Presence-shaped criteria must be unaffected; assert on the presence exhibits and confirm the 71-100% / 0-33% separation from the record still holds.",
+    "Do not change the 50% threshold. The threshold is not the question; recognition is.",
+    "TestTheLiveWordingIsMisclassified is EXPECTED to fail after this change. Do not delete or weaken it — update it deliberately and say so, per convention 17 and per its own docstring, which instructs exactly that.",
+    "THE REPLAY IS THE ACCEPTANCE: replaying the committed -027 criteria through the repaired classifier must classify criterion 1 as prohibition, extract all four forbidden tokens, and PASS the committed 401-word compliant draft. Criterion 3 must classify form. If either does not, say so — that is the result, not a reason to widen further.",
+    "The replay must read the criteria from the committed trace by content, not from a restated string (convention 24).",
+    "Keep the diff small and confined to checks.py and tests/."
+  ],
+  "acceptance_criteria": [
+    "Criterion 1 of the committed -027 trace classifies prohibition, with all four forbidden tokens extracted, quoted in the response.",
+    "The committed compliant 401-word draft PASSES criterion 1 under the repaired classifier.",
+    "Criterion 3 classifies form (or abstains once -034 lands; until then it may classify as it does now — state which).",
+    "No criterion classified prohibition or form before the change classifies differently after it, demonstrated by a regression test over the corpus.",
+    "Each added pattern cites the corpus phrase that justifies it.",
+    "TestTheLiveWordingIsMisclassified was updated deliberately, not deleted, and the update is stated.",
+    "No new abstention path was introduced — assert this in the response.",
+    "Suite count reported before and after."
+  ],
+  "verification": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass; count reported before and after."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q -k 'prohibition or coverage_shapes or recall'",
+      "expected": "The replay test and the regression test pass."
+    },
+    {
+      "command": "git diff --stat -- workflows/ autornd/evals/runner.py",
+      "expected": "Empty — neither is touched."
+    }
+  ],
+  "rollback": "Revert the commit; the marker vocabulary returns to the exhibit-derived set and the -027 criterion is misclassified again.",
+  "deliverable": {
+    "branch": "arch/20260922-032-prohibition-recall",
+    "pr": true,
+    "commit_style": "conventional"
+  },
+  "assumptions": [
+    "The prohibition branch, once reached, is correct — it is demonstrated by fixtures in tests/test_prohibition_phrasing.py::TestTheInversionItselfIsCorrect. This command repairs REACHING it, not its logic.",
+    "The corpus from -031 covers enough distinct phrasings to derive patterns from."
+  ],
+  "questions": [
+    "If the corpus shows the planner's prohibition phrasings are open-ended — many distinct verbs, few repeats — then a pattern list cannot keep up and the detector needs a different mechanism. If that is what you find, STOP and report rather than adding patterns; that is a shape decision and mine.",
+    "B17 closes here if the replay passes. Do you agree that fixture coverage of the fail direction is sufficient for closure, or should the ledger require a live draft containing a banned token?"
+  ],
+  "preconditions": [
+    {
+      "command": ".orchestration/responses/ARCH-20260922-031.response.json && echo present",
+      "expected": "The corpus measurement exists. If absent, return BLOCKED naming ARCH-20260922-031."
+    },
+    {
+      "command": "grep -n '_PROHIBITION_MARKER\\|_forbidden_tokens\\|_STRUCTURAL_VERB\\|_FIELD_VOCAB' autornd/graph/checks.py | head",
+      "expected": "Locate each constant; record the lines."
+    },
+    {
+      "command": "ls tests/test_prohibition_phrasing.py",
+      "expected": "Present; record its test count."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green at the current count before the change."
+    }
+  ]
+}

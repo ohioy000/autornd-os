@@ -1,0 +1,369 @@
+{
+  "command_id": "ARCH-20260922-031",
+  "status": "PARTIAL",
+  "executed": "2026-09-22",
+  "head_before": "e912eef3dfc00072207030cf063462fb8a4861d1",
+  "head_after": "f02a880d226151d2ebda269d608af881c8d27389",
+  "summary": "The corpus is measured. The recording half is BLOCKED: B17-R3 and the RepeatedRun.rate ruling do not exist in the tree and their text was never received, so there is nothing to record verbatim. The measurement changes what -032 should do — its own STOP condition has fired.",
+  "preconditions": [
+    {
+      "command": "ls docs/traces/ | wc -l",
+      "result": "PASS",
+      "observed": "63 entries."
+    },
+    {
+      "command": "grep -c 'success_criteria' docs/traces/*.jsonl | grep -v ':0$' | wc -l",
+      "result": "PASS",
+      "observed": "55 trace files carry the field."
+    },
+    {
+      "command": "grep -n 'def criteria_addressed' autornd/graph/checks.py",
+      "result": "PASS",
+      "observed": "autornd/graph/checks.py:382."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS",
+      "observed": "923 passed. Green before the change."
+    }
+  ],
+  "corpus": {
+    "enumeration_method": "Every *.jsonl under docs/traces/ was walked recursively for any object carrying a list-valued success_criteria key, at any depth — enumerated by content, not by a filename list. Extractions were computed by invoking the check's own _classify(), _forbidden_tokens() and _terms(), never reimplemented (as -029 did).",
+    "trace_files_with_criteria": 55,
+    "criteria_total": 600,
+    "criteria_distinct": 597,
+    "note_on_distinct": "600 occurrences, 597 distinct. B16 means near-duplicates are the norm rather than exact repeats; all figures below are over the 597 distinct."
+  },
+  "shape_distribution_current_classifier": {
+    "presence": {
+      "n": 589,
+      "pct": 98.7
+    },
+    "prohibition": {
+      "n": 1,
+      "pct": 0.2
+    },
+    "form": {
+      "n": 7,
+      "pct": 1.2
+    },
+    "abstained": {
+      "n": 0,
+      "note": "_classify has no abstain state; abstention is decided downstream in criteria_addressed."
+    },
+    "fallthrough_vs_deliberate": {
+      "no_signal_at_all": {
+        "n": 343,
+        "pct_of_all": 57.5,
+        "meaning": "neither _PROHIBITION_MARKER nor _STRUCTURAL_VERB matched — pure fallthrough to the presence default"
+      },
+      "signal_present_shape_not_concluded": {
+        "n": 246,
+        "meaning": "a marker or structural verb DID match but the branch was not entered — no quoted token list, or fewer than 2 field-vocab terms. This is the population a doubt predicate would act on."
+      }
+    },
+    "headline": "ONE criterion in 597 reaches the prohibition branch. The branch B17-R1 was built for is exercised by 0.2% of the corpus."
+  },
+  "unmatched_negation_phrases": {
+    "distinct": 28,
+    "occurrences": 45,
+    "criteria_carrying_one": 41,
+    "max_repeat": 4,
+    "verbatim_with_counts": [
+      {
+        "n": 4,
+        "phrase": "without locking"
+      },
+      {
+        "n": 3,
+        "phrase": "without a"
+      },
+      {
+        "n": 3,
+        "phrase": "without affecting"
+      },
+      {
+        "n": 3,
+        "phrase": "with no subordinate claus"
+      },
+      {
+        "n": 2,
+        "phrase": "without disrupting"
+      },
+      {
+        "n": 2,
+        "phrase": "without an"
+      },
+      {
+        "n": 2,
+        "phrase": "no term is used"
+      },
+      {
+        "n": 2,
+        "phrase": "without causing"
+      },
+      {
+        "n": 2,
+        "phrase": "without errors"
+      },
+      {
+        "n": 2,
+        "phrase": "without error"
+      },
+      {
+        "n": 2,
+        "phrase": "without additional"
+      },
+      {
+        "n": 2,
+        "phrase": "does not include"
+      },
+      {
+        "n": 1,
+        "phrase": "without the"
+      },
+      {
+        "n": 1,
+        "phrase": "without being"
+      },
+      {
+        "n": 1,
+        "phrase": "with no unreferenced stat"
+      },
+      {
+        "n": 1,
+        "phrase": "with no undefined transit"
+      },
+      {
+        "n": 1,
+        "phrase": "without undue"
+      },
+      {
+        "n": 1,
+        "phrase": "without false"
+      },
+      {
+        "n": 1,
+        "phrase": "contains no instances of"
+      },
+      {
+        "n": 1,
+        "phrase": "without external"
+      },
+      {
+        "n": 1,
+        "phrase": "with no additional column"
+      },
+      {
+        "n": 1,
+        "phrase": "with no additional expres"
+      },
+      {
+        "n": 1,
+        "phrase": "without reference"
+      },
+      {
+        "n": 1,
+        "phrase": "without using"
+      },
+      {
+        "n": 1,
+        "phrase": "without downtime"
+      },
+      {
+        "n": 1,
+        "phrase": "with no expected downtime"
+      },
+      {
+        "n": 1,
+        "phrase": "without resource"
+      },
+      {
+        "n": 1,
+        "phrase": "zero"
+      }
+    ],
+    "reading": "A long tail. 28 distinct forms over 45 occurrences, maximum repeat 4, and the single most common — 'without locking' — is not a token prohibition at all but a condition on behaviour. The great majority of 'without X' phrases describe how the work must BEHAVE, not tokens it must not CONTAIN, and term overlap is a defensible test for those."
+  },
+  "invertibility": {
+    "question": "A prohibition is only testable by inversion if forbidden tokens can be extracted. How many of the 41 unmatched-negation criteria carry a quoted token list?",
+    "carry_a_quoted_list": 4,
+    "do_not": 37,
+    "of_the_four_how_many_are_genuine_prohibitions": 1,
+    "the_four_verbatim": [
+      {
+        "criterion": "The copy contains no instances of 'leverage', 'seamless', 'robust', or 'in today's fast-paced world'.",
+        "genuine": true,
+        "note": "The -027 criterion. The only true invertible prohibition in 597."
+      },
+      {
+        "criterion": "No claim about a named competitor appears without a legal review annotation (e.g., 'Pending legal review') next to it.",
+        "genuine": false,
+        "note": "The quoted token MUST BE PRESENT. Inverting it tests for its absence — backwards."
+      },
+      {
+        "criterion": "The index is defined as a single-column index (only the 'timestamp' column) without additional included columns, matching the scope of range query optimisation.",
+        "genuine": false,
+        "note": "'timestamp' must be present. Backwards again."
+      },
+      {
+        "criterion": "The index creation statement is idempotent and can be executed without causing table locks or downtime (CrateDB's default non-blocking behavior).",
+        "genuine": false,
+        "note": "FALSE POSITIVE ON AN APOSTROPHE. The only 'quote' is the possessive in CrateDB's."
+      }
+    ],
+    "rate": "1 genuine invertible prohibition in 597 distinct criteria — 0.17%."
+  },
+  "two_latent_defects_found_and_reachable_today": {
+    "note": "Neither needs -032. Both misfire under the CURRENT marker vocabulary, and broadening recall would increase exposure to them. Demonstrated by invoking _forbidden_tokens() and _classify() directly.",
+    "defect_1_apostrophe_as_quote_delimiter": {
+      "probe": "The statement avoids table locks (CrateDB's default non-blocking behavior).",
+      "extracted": [
+        "CrateDB's default non-blocking behavior"
+      ],
+      "classified": "prohibition",
+      "consequence": "_QUOTE_CHARS includes ' and U+2019, so any possessive or contraction inside a parenthetical after a prohibition marker becomes a forbidden token. An implementation that mentions CrateDB's behaviour FAILS a criterion that never forbade anything."
+    },
+    "defect_2_must_be_present_tokens_inverted": {
+      "probe": "The draft avoids competitor names without a note (e.g., 'Pending legal review') beside it.",
+      "extracted": [
+        "e.g.",
+        "Pending legal review"
+      ],
+      "classified": "prohibition",
+      "consequence": "The quoted token is a thing the work MUST CONTAIN. Inverted, work that correctly includes the legal-review note FAILS, and work that omits it PASSES. The check runs backwards on that criterion. 'e.g.' is also captured as a forbidden token."
+    },
+    "severity_view": "Higher than B17's original, because B17 fails work that is correct, and these PASS work that is wrong. Reported, not repaired — repairing them changes what the harness concludes and is not this command's scope."
+  },
+  "cardinality_surface_forms": {
+    "criteria_asserting_a_threshold_or_count": 34,
+    "pct_of_corpus": 5.7,
+    "currently_classified_presence": "34 of 34 (100%)",
+    "forms_with_counts": [
+      {
+        "n": 10,
+        "form": "exactly N"
+      },
+      {
+        "n": 8,
+        "form": "N%"
+      },
+      {
+        "n": 6,
+        "form": "at least N"
+      },
+      {
+        "n": 6,
+        "form": "up to N"
+      },
+      {
+        "n": 5,
+        "form": "greater/more than N"
+      },
+      {
+        "n": 2,
+        "form": "maximum/minimum of N"
+      },
+      {
+        "n": 1,
+        "form": "within N units"
+      },
+      {
+        "n": 1,
+        "form": "between N and M"
+      }
+    ],
+    "counter_intuitive_finding": "MOST of these are correctly presence-shaped and term overlap judges them fine, because the artifact restates the number. 'a CPU alert threshold at 80% utilization' produces an implementation containing '80'. The genuinely form-shaped case — a number describing a PROPERTY the artifact does not state, like 'total word count is between 350 and 450 words' — is the rarest form in the list at ONE occurrence. -034's clause (iii) as ruled would abstain on all 34."
+  },
+  "projected_abstention_rate_under_034": {
+    "requested_by": "-034's constraint to measure the rate before and after, and to report rather than tune it.",
+    "now": "0.0%",
+    "after": "36.2% (216 of 597)",
+    "still_measured": "381 (63.8%)",
+    "breakdown": [
+      {
+        "clause": "(iv) presence, unchanged",
+        "n": 373,
+        "pct": 62.5
+      },
+      {
+        "clause": "(ii) structural signal, no field vocab -> abstain",
+        "n": 159,
+        "pct": 26.6
+      },
+      {
+        "clause": "(i) negation signal, no tokens -> abstain",
+        "n": 39,
+        "pct": 6.5
+      },
+      {
+        "clause": "(iii) cardinality -> abstain",
+        "n": 18,
+        "pct": 3.0
+      },
+      {
+        "clause": "form",
+        "n": 7,
+        "pct": 1.2
+      },
+      {
+        "clause": "prohibition",
+        "n": 1,
+        "pct": 0.2
+      }
+    ],
+    "dominant_contributor": "Clause (ii) alone accounts for 159 of the 216 abstentions — 73% of all new leniency, and 26.6% of the whole corpus. These are criteria like 'includes X, Y and Z' where the listed things are not citation fields. Term overlap arguably handles them correctly today."
+  },
+  "limitation_stated_plainly": "This is the planner's output on THIS repository's committed scenarios, which are weighted heavily toward engineering R&D with a small content-studio subset. It is NOT a distribution over all objectives, and it is not a sample of what a different corpus or a different planning tier would produce. B16 means the same request yields different criteria each run, so these 597 are 55 runs' worth of draws, not 597 independent observations. No claim is made beyond what was counted (convention 26).",
+  "not_done": {
+    "b17_r3_and_repeatedrun_rate_ruling": "BLOCKED. Both were to be recorded verbatim as rulings. Neither exists in the tree — grepped across HANDOVER.md, docs/ and .orchestration/, zero hits for 'B17-R3', 'B17-R2′', 'R2′(a)', 'R2′(b)', 'R2′(c)'. The command states they were 'given in the advisor's message'; that message did not reach the executor. A ruling cannot be recorded from a name. The owner has undertaken to supply the text; this acceptance criterion stays open until it arrives.",
+    "consequence": "Two of the eight acceptance criteria are unmet, which is why this is PARTIAL rather than DONE."
+  },
+  "verification_results": [
+    {
+      "command": "git diff --stat -- autornd/graph/checks.py workflows/",
+      "result": "EMPTY — the check and the workflow are untouched."
+    },
+    {
+      "command": "grep -n 'B17-R3|RepeatedRun.rate' docs/handover-review.md HANDOVER.md",
+      "result": "NOT SATISFIED — see not_done. RepeatedRun.rate IS already recorded in B16's row and §35.4 by ARCH-20260922-028, but as a NAMED CONSUMER rather than as the ruling this command refers to."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "923 passed, unchanged before and after."
+    }
+  ],
+  "deviations": [
+    {
+      "what": "No IN_PROGRESS response was committed before the measurement.",
+      "why": "The owner asked for approval questions before any task started; those were asked and answered, and the measurement began immediately on the answers. The IN_PROGRESS commit should still have preceded it. Recorded rather than backfilled, because a backdated IN_PROGRESS is the one thing that commit exists to make impossible."
+    },
+    {
+      "what": "The measurement was computed by scripts held outside the repository.",
+      "why": "-031's scope excludes tests/ and autornd/, so there is nowhere in scope to commit a re-derivation script. The method is stated precisely enough to reproduce, but this is a convention-24 gap: these figures are hand-carried into a document rather than generated by something the suite runs. Proposed as follow-up work, not done here."
+    }
+  ],
+  "questions_for_advisor": [
+    {
+      "question": "-032's STOP condition has fired. Confirm the stop.",
+      "context": "-032 says: 'If the corpus shows the planner's prohibition phrasings are open-ended — many distinct verbs, few repeats — then a pattern list cannot keep up and the detector needs a different mechanism. If that is what you find, STOP and report rather than adding patterns; that is a shape decision and mine.' Measured: 28 distinct unmatched forms over 45 occurrences, max repeat 4, and only ONE genuine invertible prohibition in 597. Adding patterns would chase a 0.17% population while increasing exposure to the two latent defects below.",
+      "executor_view": "Stop. The recall fix as specified is not worth its risk on this corpus."
+    },
+    {
+      "question": "The two latent defects invert criteria backwards. Do they open a ledger row, and are they P0?",
+      "context": "An apostrophe inside a parenthetical becomes a forbidden token, and a quoted token that MUST BE PRESENT becomes one that must be absent. Both are reachable today with no change. They are worse in kind than B17: B17 fails correct work, these PASS incorrect work. Repairing them alters what the harness concludes, so it is a ruling and it is not in any of the five commands."
+    },
+    {
+      "question": "-034's clause (ii) is 73% of the new leniency. Is that intended?",
+      "context": "Projected abstention 36.2% overall; clause (ii) alone is 159 of 216. Those are 'includes X, Y, Z' criteria whose listed items are not citation fields — arguably judged correctly by term overlap today. Clauses (i) and (iii) together are only 57 criteria (9.5%). If clause (ii) were dropped, the abstention rate falls to 9.5% and coverage still measures 90.5%."
+    },
+    {
+      "question": "-034's clause (iii) may be too broad in the other direction.",
+      "context": "34 criteria assert a threshold, and most are correctly presence-shaped because the artifact restates the number ('CPU warning at 70%' → the implementation contains '70'). The genuinely form-shaped case is the rarest form in the corpus at one occurrence. Abstaining on all 34 gives up judging 33 criteria that are currently judged correctly."
+    },
+    {
+      "question": "The command's own first question: does the fallthrough finding open its own row?",
+      "context": "Asked whether the fallthrough being the majority path is a finding about the SHAPE of the check rather than about one regex. Measured: 57.5% match no signal at all, and 98.7% classify presence. The executor agrees with the command's own view — its own row, because B17 is 'cannot read a prohibition' and this is 'is the wrong test for most criteria'. Not opened here; opening a ledger row on a shape question is a ruling."
+    }
+  ]
+}

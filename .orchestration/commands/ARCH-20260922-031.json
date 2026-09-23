@@ -1,0 +1,98 @@
+{
+  "command_id": "ARCH-20260922-031",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Measure criteria_addressed's detection recall and the true shape distribution across every plan.success_criteria in the committed traces, so the recall fix is derived from a corpus rather than from one exhibit.",
+  "evidence": [
+    ".orchestration/responses/ARCH-20260922-029.response.json — root cause: _PROHIBITION_MARKER.search -> None for 'contains no instances of'; marker vocabulary listed verbatim in the response",
+    ".orchestration/responses/ARCH-20260922-027.response.json — per_criterion_shape_table: 6 presence, 0 prohibition, 0 form, 0 abstained",
+    "docs/traces/b17-prohibition-branch.jsonl — the criterion verbatim and the 401-word compliant draft",
+    "docs/preregistration-b17-prohibition-branch.md at 0e611192463a21234f828704c599bf8c9998b177 — registered prediction (a) predicted the wording 'avoids the banned words'; the planner wrote 'contains no instances of'",
+    "HANDOVER.md §4.2 B16 — criteria regenerate on every run of the same scenario (6/6/6/5 across 4 runs)",
+    "AGENTS.md convention 21 — exhibits precede leniency; the mirror principle is that an exhibit does not establish a surface-form set",
+    "AGENTS.md convention 27 — a repetition of a plan-dependent contrast is a second sample, never a confirmation"
+  ],
+  "scope": {
+    "include": [
+      "docs/traces/",
+      "docs/handover-review.md",
+      "HANDOVER.md",
+      ".orchestration/responses/"
+    ],
+    "exclude": [
+      "autornd/**",
+      "workflows/**",
+      "tests/**",
+      "evals/results/**"
+    ]
+  },
+  "constraints": [
+    "FREE. Read committed traces only. No paid call, no key, no network, no model.",
+    "Enumerate the corpus by content, not by a remembered filename list: every committed file under docs/traces/ that carries plan.success_criteria. Report the file count and the criterion count, both re-derived (convention 24).",
+    "Report the shape distribution under the CURRENT classifier: presence / prohibition / form / abstained counts, and the fraction that fall through to the presence DEFAULT as opposed to matching the presence shape deliberately. The second number is the one that matters.",
+    "For every criterion, report whether a negation phrase appears that _PROHIBITION_MARKER does not match. Quote each distinct unmatched negation phrase verbatim with a count. Do not paraphrase.",
+    "Do the same for cardinality/numeric criteria: count how many criteria assert a threshold or count over a property of the artifact, and list the surface forms ('between N and M', 'at least N', 'exactly N', 'no more than N').",
+    "Where the classifier's extraction is not recorded in a trace, compute it by invoking the check's own _terms()/_forbidden_tokens()/_classify() rather than reimplementing them — and say that you did, as -029 did.",
+    "State the limitation plainly: this corpus is the planner's output on THIS repo's committed scenarios. It is not a distribution over all objectives. Do not generalise past what was measured (convention 26).",
+    "Do NOT change checks.py. This command measures; the fix is -032.",
+    "Record B17-R3 and the RepeatedRun.rate ruling (both given in the advisor's message) in the notebook and HANDOVER.md B16's row. They are rulings, not proposals.",
+    "Suite passes unchanged; count reported before and after."
+  ],
+  "acceptance_criteria": [
+    "The trace file count and criterion count are reported, re-derived, with the enumeration shown.",
+    "The shape distribution is reported, including the fallthrough count as distinct from deliberate presence classification.",
+    "Every unmatched negation phrase is quoted verbatim with its occurrence count, or its absence is stated.",
+    "The cardinality/numeric surface forms are listed with counts.",
+    "The corpus's limitation is stated explicitly and no claim is made beyond it.",
+    "B17-R3 and the RepeatedRun.rate ruling appear in the notebook and in B16's row.",
+    "checks.py is untouched — git diff --stat for it is empty.",
+    "Suite passes; count reported before and after."
+  ],
+  "verification": [
+    {
+      "command": "git diff --stat -- autornd/graph/checks.py workflows/",
+      "expected": "Empty — the check and the workflow are untouched."
+    },
+    {
+      "command": "grep -n 'B17-R3\\|RepeatedRun.rate' docs/handover-review.md HANDOVER.md",
+      "expected": "Both rulings recorded."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass; count reported and unchanged."
+    }
+  ],
+  "rollback": "Revert the commit; documentation and a measurement, nothing depends on it at run time.",
+  "deliverable": {
+    "branch": "arch/20260922-031-criteria-corpus",
+    "pr": true,
+    "commit_style": "conventional"
+  },
+  "assumptions": [
+    "Most committed traces carry plan.success_criteria in a readable field. If they do not, report what fraction does — an unmeasured corpus is itself the finding.",
+    "The current classifier is importable without a configured provider, since it is a free check."
+  ],
+  "questions": [
+    "If the fallthrough turns out to be the majority path — meaning most criteria are not presence-shaped — that is a finding about the SHAPE of a check the harness leans on, not about one regex. Should it open its own ledger row, or fold into B17? My view: its own row, because B17 is 'cannot read a prohibition' and this would be 'is the wrong test for most criteria'.",
+    "The B16 rate finding and this corpus finding are the same measurement seen twice. Should they share a row?"
+  ],
+  "preconditions": [
+    {
+      "command": "ls docs/traces/ | wc -l",
+      "expected": "The trace corpus exists; record the count. If zero, return BLOCKED."
+    },
+    {
+      "command": "grep -c 'success_criteria' docs/traces/*.jsonl 2>/dev/null | grep -v ':0$' | wc -l",
+      "expected": "Report how many traces carry the field. If none, return BLOCKED naming the field searched."
+    },
+    {
+      "command": "grep -n 'def criteria_addressed' autornd/graph/checks.py",
+      "expected": "Found; record the line."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green at the current count before the change."
+    }
+  ]
+}
