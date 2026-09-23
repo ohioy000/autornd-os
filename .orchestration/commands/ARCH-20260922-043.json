@@ -1,0 +1,7 @@
+{
+  "command_id": "ARCH-20260922-043",
+  "parent_id": "ARCH-20260922-044",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Give judges_agree an empty seat: an abstaining coverage judge must be distinguishable from one that passed, so silence is never recorded as assent."
+}
