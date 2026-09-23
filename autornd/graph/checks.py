@@ -362,6 +362,55 @@ _CARDINALITY = re.compile(
     re.IGNORECASE,
 )
 
+# Tier 1 compute (Ruling D3, D5, ARCH-20260922-037): word count is the one
+# genuinely computable form in the corpus. "between 350 and 450 words" is the
+# exhibited surface form (-027 criterion 3). The regex covers the corpus forms
+# from -031: "between N and M words", "at least N words", "exactly N words",
+# "up to / no more than N words", "greater/more than N words".
+_WORD_BOUND = re.compile(
+    r"(?:between\s+(\d+)\s+and\s+(\d+)"
+    r"|at\s+least\s+(\d+)"
+    r"|(?:exactly|precisely)\s+(\d+)"
+    r"|(?:up\s+to|no\s+more\s+than|at\s+most)\s+(\d+)"
+    r"|(?:(?:greater|more)\s+than)\s+(\d+)"
+    r"|(?:(?:fewer|less)\s+than)\s+(\d+))"
+    r"\s+words\b",
+    re.IGNORECASE,
+)
+
+
+def _try_word_count(criterion: str, text: str) -> tuple[bool, str] | None:
+    """If the criterion asserts a word count, compute it. None if not."""
+    m = _WORD_BOUND.search(criterion)
+    if not m:
+        return None
+    count = len(text.split())
+    lo, hi = m.group(1), m.group(2)
+    if lo and hi:
+        ok = int(lo) <= count <= int(hi)
+        return ok, f"word count {count}, required {lo}–{hi}"
+    at_least = m.group(3)
+    if at_least:
+        ok = count >= int(at_least)
+        return ok, f"word count {count}, required ≥{at_least}"
+    exactly = m.group(4)
+    if exactly:
+        ok = count == int(exactly)
+        return ok, f"word count {count}, required exactly {exactly}"
+    at_most = m.group(5)
+    if at_most:
+        ok = count <= int(at_most)
+        return ok, f"word count {count}, required ≤{at_most}"
+    more_than = m.group(6)
+    if more_than:
+        ok = count > int(more_than)
+        return ok, f"word count {count}, required >{more_than}"
+    less_than = m.group(7)
+    if less_than:
+        ok = count < int(less_than)
+        return ok, f"word count {count}, required <{less_than}"
+    return None
+
 
 # A token is QUOTED only when its opening mark sits at a boundary — start of the
 # group, or after whitespace, a comma or an open bracket — and its closing mark
@@ -574,6 +623,21 @@ def criteria_addressed(
                               "field-vocabulary terms matched — term overlap "
                               "measures the wrong thing")
             else:
+                # Tier 1 compute (Ruling D3, D5): try word count before
+                # abstaining on a cardinality criterion.
+                wc = _try_word_count(criterion, artifact)
+                if wc is not None:
+                    ok, detail = wc
+                    shapes[criterion] = "computed"
+                    extractions[criterion] = {
+                        "terms": sorted(wanted), "forbidden_tokens": [],
+                        "computed": detail,
+                    }
+                    coverage[criterion] = 1.0 if ok else 0.0
+                    if not ok:
+                        missed.append(criterion)
+                        why[criterion] = detail
+                    continue
                 reason = ("asserts a cardinality or numeric threshold — "
                           "term overlap cannot count")
             abstained.append({

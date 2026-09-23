@@ -1,0 +1,35 @@
+{
+  "command_id": "ARCH-20260922-037",
+  "status": "DONE",
+  "executed": "2026-09-23",
+  "head_before": "c30df9d",
+  "summary": "Tier 1 compute implemented: word count criteria are now computed rather than proxied by term overlap. The -027 criterion ('between 350 and 450 words') passes the committed 401-word draft. 1 of 26 clause-(iii) criteria is now computed; the other 25 require comprehension and stay abstained per constraint. Zero newly-failing criteria. Suite 970/970, $0.00.",
+  "acceptance_numbers": {
+    "clause_iii_before": 26,
+    "clause_iii_after_abstain": 25,
+    "clause_iii_after_computed": 1,
+    "reduction": "1 of 26 (the only genuinely computable form in the corpus)"
+  },
+  "forms_implemented": {
+    "between_N_and_M_words": {"corpus_count": 1, "exhibited_by": "-027 criterion 3"},
+    "at_least_N_words": {"corpus_count": 0, "implemented_for_completeness": true},
+    "exactly_N_words": {"corpus_count": 0, "implemented_for_completeness": true},
+    "up_to_N_words": {"corpus_count": 0, "implemented_for_completeness": true},
+    "greater_than_N_words": {"corpus_count": 0, "implemented_for_completeness": true},
+    "less_than_N_words": {"corpus_count": 0, "implemented_for_completeness": true}
+  },
+  "newly_failing_criteria": [],
+  "why_only_one": "The other 25 clause-(iii) criteria assert cardinality or numeric thresholds about domain concepts ('exactly three tiers', 'at least two finance roles', '80% CPU utilization') that require comprehension to count or verify. Word count is the only property of the TEXT ITSELF that can be computed from the artifact. The 25 keep their deterministically-testable flag per constraint.",
+  "questions_answered": {
+    "artifact_text": "criteria_addressed reads implement.summary via the 'text' parameter. Word count is computed against the same text term overlap reads. If the criterion asserts a word count on a different text (e.g., a section), this is a limitation.",
+    "newly_failing_surfacing": "Zero newly-failing criteria. The one computed criterion (word count 350-450) passes on the committed 401-word draft. No product judgement needed."
+  },
+  "untouched": ["50% threshold", "fallthrough", "_PROHIBITION_MARKER", "clause (i)", "clause (ii)", "apostrophe extraction"],
+  "tests_added": "tests/test_coverage_shapes.py::TestTier1WordCount (7 tests)",
+  "verification_results": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "970 passed"},
+    {"command": "git diff --stat -- workflows/ autornd/evals/runner.py", "result": "Empty — neither touched"}
+  ],
+  "cost": "$0.00",
+  "deviations": []
+}

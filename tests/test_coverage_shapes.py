@@ -462,3 +462,63 @@ class TestPolarityInversion:
         assert shape == FORM, (
             f"ambiguous polarity (e.g.) should abstain, got {shape}")
         assert tokens == [], "no forbidden tokens should be extracted"
+
+
+class TestTier1WordCount:
+    """ARCH-20260922-037: Tier 1 compute (Ruling D3, D5).
+
+    Convention 22: each test simulates its condition end to end. Convention 21:
+    the corpus form that licenses the implementation is "between 350 and 450
+    words" (-027 criterion 3, one occurrence in 597). The other forms ("at
+    least N words", "exactly N words", etc.) are implemented for completeness
+    but have no corpus exhibit.
+    """
+
+    def test_word_count_between_passes_a_compliant_draft(self):
+        """The -027 replay: a 401-word draft passes a 350-450 criterion."""
+        criterion = "The total word count is between 350 and 450 words."
+        draft = " ".join(["word"] * 401)
+        result = COVERAGE([criterion], draft)
+        assert result.passed is True, result.detail
+        assert result.data["shapes"][criterion] == "computed"
+
+    def test_word_count_between_fails_outside_range(self):
+        criterion = "The total word count is between 350 and 450 words."
+        assert COVERAGE([criterion], " ".join(["w"] * 250)).passed is False
+        assert COVERAGE([criterion], " ".join(["w"] * 500)).passed is False
+
+    def test_word_count_at_least(self):
+        criterion = "The summary is at least 100 words."
+        assert COVERAGE([criterion], " ".join(["w"] * 150)).passed is True
+        assert COVERAGE([criterion], " ".join(["w"] * 50)).passed is False
+
+    def test_word_count_exactly(self):
+        criterion = "The abstract is exactly 200 words."
+        assert COVERAGE([criterion], " ".join(["w"] * 200)).passed is True
+        assert COVERAGE([criterion], " ".join(["w"] * 201)).passed is False
+
+    def test_word_count_at_most(self):
+        criterion = "The title is no more than 10 words."
+        assert COVERAGE([criterion], " ".join(["w"] * 8)).passed is True
+        assert COVERAGE([criterion], " ".join(["w"] * 15)).passed is False
+
+    def test_committed_027_draft_passes(self):
+        """The specific -027 replay from the committed trace."""
+        import json
+        with open("docs/traces/b17-prohibition-branch.jsonl") as f:
+            records = [json.loads(line) for line in f if line.strip()]
+        unit = [r for r in records if r.get("record") == "unit"][0]
+        criterion = unit["verdicts"]["plan"]["success_criteria"][2]
+        draft = unit["verdicts"]["implement"]["summary"]
+        assert "between 350 and 450 words" in criterion.lower()
+        result = COVERAGE([criterion], draft)
+        assert result.passed is True, result.detail
+        assert result.data["shapes"][criterion] == "computed"
+
+    def test_non_word_count_cardinality_still_abstains(self):
+        """A cardinality criterion that is NOT about word count stays
+        abstained — the compute does not overreach."""
+        criterion = "The plan defines at least 5 distinct test scenarios."
+        result = COVERAGE([criterion], "any text")
+        assert result.data["shapes"][criterion] == FORM
+        assert result.data["abstained"]
