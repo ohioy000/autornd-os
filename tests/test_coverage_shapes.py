@@ -123,14 +123,17 @@ class TestForm:
         assert result.data["all_abstained"] is True
         assert "nothing measurable" in result.detail
 
-    def test_a_structural_verb_alone_does_not_buy_an_abstention(self):
-        """Two distinct field words are demanded so a single incidental noun
-        cannot make a measurable criterion unmeasurable. Criterion 1 of the
-        same plan uses 'includes' and is pure presence."""
+    def test_a_structural_verb_with_no_field_vocab_abstains(self):
+        """R2'(b) clause (ii): structural signal with no field-vocabulary terms
+        matched → abstain. Convention 17: updated deliberately from the test
+        that asserted PRESENCE, because the ruling R2'(b) changed the behaviour
+        for criteria with a structural signal but empty field-vocab intersection.
+        Criteria with exactly 1 field-vocab term still fall through to presence
+        — only an empty intersection triggers clause (ii)."""
         criterion = ("The audience definition explicitly names whether the "
                      "piece serves practitioners or buyers, and includes the "
                      "company size range 50–500 employees.")
-        assert _classify(criterion)[0] == PRESENCE
+        assert _classify(criterion)[0] == FORM
 
 
 class TestPresenceIsUnchanged:
@@ -195,17 +198,25 @@ class TestTheCommittedDemonstration:
         assert shapes[criteria[2]] == FORM           # criterion 3, scored 37%
         assert shapes[criteria[5]] == PROHIBITION    # criterion 6, scored 40%
 
-    def test_the_earlier_drafts_still_fail_on_presence(self):
-        """The ruling is not a blanket pass. Six of the seven iterations still
-        fail, on presence criteria the drafts genuinely did not address — which
-        is the check working, and is why the advisor's registered prediction of
-        a terminal at iteration 1 is refuted before a dollar is spent."""
+    def test_the_check_still_catches_genuinely_missed_criteria(self):
+        """Convention 17: updated by ARCH-20260922-034 (R2'(b) doubt predicate).
+
+        Pre-doubt, 6 of 7 iterations failed. Post-doubt, criteria 1 and 2
+        abstain (clause ii — structural signal, no field vocab) alongside the
+        original form abstention (criterion 3), so only 3 criteria remain
+        measurable. Most iterations now pass. But at least one early iteration
+        still fails on the criteria the presence test CAN judge, proving the
+        check is still discerning on what it measures."""
         unit = self._unit()
         criteria = unit["verdicts"]["plan"]["success_criteria"]
         outcomes = [COVERAGE(criteria, it["implement_summary"]).passed
                     for it in unit["iterations"]]
-        assert outcomes.count(True) == 1
-        assert outcomes[0] is False
+        assert any(not o for o in outcomes), (
+            "every iteration passes — if the check cannot dissent on any draft "
+            "in a run that died at the call ceiling, it is not measuring "
+            "anything")
+        assert outcomes[-1] is True, (
+            "the final draft should pass — this is the one B17-R1 was built for")
 
 
 class TestOnlyProperlyQuotedTokensAreForbidden:
@@ -324,3 +335,75 @@ class TestCoverageRecordStatesItsSubject:
         assert "extractions" in result.data, (
             "the extractions field was removed — the record no longer states "
             "what was scored on, which is the defect -029 measured")
+
+
+class TestDoubtPredicate:
+    """R2'(b): doubt is a detected state. A criterion abstains when a shape
+    signal is present whose required evidence cannot be extracted, or when it
+    asserts a cardinality or numeric threshold.
+
+    R2'(c): an abstention never fails the check — it is agreement in the fold.
+    """
+
+    def test_clause_i_negation_signal_no_tokens(self):
+        """Prohibition marker present but no forbidden tokens extractable."""
+        criterion = "The statement avoids table locks during the migration."
+        shape, _ = _classify(criterion)
+        assert shape == FORM, f"expected form (clause i), got {shape}"
+        result = COVERAGE([criterion], "Migrates the table without locking.")
+        assert result.passed, "clause (i) abstention must not fail the fold"
+        assert result.data["abstained"][0]["reason"].startswith("negation signal")
+
+    def test_clause_ii_structural_signal_no_field_vocab(self):
+        """Structural verb present but no field-vocabulary terms matched."""
+        criterion = ("The implementation includes retry logic with exponential "
+                     "backoff and jitter for transient failures.")
+        shape, _ = _classify(criterion)
+        assert shape == FORM, f"expected form (clause ii), got {shape}"
+        result = COVERAGE([criterion], "Added retry with backoff.")
+        assert result.passed, "clause (ii) abstention must not fail the fold"
+        assert "structural signal" in result.data["abstained"][0]["reason"]
+
+    def test_clause_ii_requires_empty_not_fewer_than_two(self):
+        """One field-vocab term is not enough for original FORM, but clause (ii)
+        only fires when the intersection is EMPTY. One field stays presence."""
+        criterion = ("The implementation includes a timestamp for each retry "
+                     "attempt with the error message.")
+        shape, _ = _classify(criterion)
+        assert shape == PRESENCE, (
+            f"expected presence (1 field term, not 0), got {shape}")
+
+    def test_clause_iii_cardinality_digits(self):
+        """Numeric threshold with digits."""
+        criterion = "The CPU alert threshold is set at exactly 80%."
+        shape, _ = _classify(criterion)
+        assert shape == FORM, f"expected form (clause iii), got {shape}"
+        result = COVERAGE([criterion], "CPU alerting at 80%.")
+        assert result.passed
+        assert "cardinality" in result.data["abstained"][0]["reason"]
+
+    def test_clause_iii_cardinality_word_numbers(self):
+        """Numeric threshold with word-form numbers."""
+        criterion = "The plan defines at least three test scenarios."
+        shape, _ = _classify(criterion)
+        assert shape == FORM, f"expected form (clause iii), got {shape}"
+
+    def test_clause_iv_no_signal_stays_presence(self):
+        """No prohibition marker, no structural verb, no cardinality → presence.
+        This is the fallthrough, and it is UNCHANGED — making it abstain would
+        disable the check (-029)."""
+        criterion = "The reconnect loop uses exponential backoff with jitter."
+        shape, _ = _classify(criterion)
+        assert shape == PRESENCE, f"expected presence (clause iv), got {shape}"
+
+    def test_abstention_carries_shape_and_reason(self):
+        """R2'(c): every abstention carries its shape and reason. A leniency
+        that hides how often it fires cannot be withdrawn on evidence."""
+        criterion = "The draft avoids passive voice throughout."
+        result = COVERAGE([criterion], "anything")
+        assert result.data["abstained"], "expected an abstention"
+        entry = result.data["abstained"][0]
+        assert "shape" in entry, "abstained entry missing shape"
+        assert "reason" in entry, "abstained entry missing reason"
+        assert entry["shape"] == FORM
+        assert entry["reason"], "reason must not be empty"

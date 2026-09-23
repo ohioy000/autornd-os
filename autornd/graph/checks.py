@@ -327,6 +327,24 @@ _STRUCTURAL_VERB = re.compile(
 
 PRESENCE, PROHIBITION, FORM = "presence", "prohibition", "form"
 
+# Cardinality: a criterion asserting a count or numeric threshold. Term overlap
+# cannot count, so R2'(b) clause (iii) abstains on these.
+#
+# Corpus-derived (-031): 34 criteria carry one of these forms. "exactly N" (10),
+# "N%" (8), "at least N" (6), "up to N" (6), "greater/more than N" (5),
+# "maximum/minimum of N" (2), "within N units" (1), "between N and M" (1).
+# Word-form numbers (one…ten) are matched because the corpus uses them
+# interchangeably with digits — "exactly one headline", "at least three
+# concrete features".
+_NUM = r"(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)"
+_CARDINALITY = re.compile(
+    r"\b(?:exactly|at\s+least|up\s+to|(?:greater|more|fewer|less)\s+than"
+    r"|(?:maximum|minimum)\s+of|no\s+(?:more|fewer)\s+than"
+    r"|between|within)\s+" + _NUM + r"\b"
+    r"|\b\d+\s*%",
+    re.IGNORECASE,
+)
+
 
 # A token is QUOTED only when its opening mark sits at a boundary — start of the
 # group, or after whitespace, a comma or an open bracket — and its closing mark
@@ -421,19 +439,39 @@ def _forbidden_tokens(criterion: str) -> list[str]:
 def _classify(criterion: str) -> tuple[str, list[str]]:
     """(shape, forbidden tokens). Fail-safe direction is presence.
 
-    Order matters: prohibition is checked first because it is the strictly
-    stronger test, and a criterion carrying both a forbidden list and presence
-    language (criterion 6 does — it also demands plain language and structure
-    conventions) is better served by the test that cannot be gamed than by the
-    one that scored a compliant draft 40%.
+    Implements B17-R2'(b)'s doubt predicate — four clauses, in order:
+
+      (i)   negation signal present, no forbidden tokens → FORM (abstain)
+      (ii)  structural signal present, field-vocab intersection EMPTY → FORM
+      (iii) cardinality or numeric threshold → FORM (abstain)
+      (iv)  no signal at all → PRESENCE, unchanged
+
+    Clause (iv) is deliberate: the fallthrough stays presence. Making it
+    abstain is the change that disables the check (-029), explicitly rejected.
+
+    Prohibition is checked first because it is the strictly stronger test,
+    and a criterion carrying both a forbidden list and presence language
+    (criterion 6 does) is better served by the test that cannot be gamed.
     """
     forbidden = _forbidden_tokens(criterion)
     if forbidden:
         return PROHIBITION, forbidden
+    # Clause (i): negation signal present, no tokens extractable.
+    if _PROHIBITION_MARKER.search(criterion):
+        return FORM, []
+    # Original FORM + clause (ii).
     if _STRUCTURAL_VERB.search(criterion):
         fields = _FIELD_VOCAB & _terms(criterion)
         if len(fields) >= 2:
             return FORM, []
+        if not fields:
+            return FORM, []
+        # Exactly 1 field: not enough for form, not empty — presence.
+        return PRESENCE, []
+    # Clause (iii): cardinality or numeric threshold.
+    if _CARDINALITY.search(criterion):
+        return FORM, []
+    # Clause (iv): no signal at all — presence, unchanged.
     return PRESENCE, []
 
 
@@ -492,11 +530,26 @@ def criteria_addressed(
             extractions[criterion] = {
                 "terms": sorted(wanted), "forbidden_tokens": [],
             }
+            # R2'(b): clause-specific reason. R2'(c): never silent.
+            if _PROHIBITION_MARKER.search(criterion):
+                reason = ("negation signal present but no forbidden tokens "
+                          "extractable — cannot invert what is not named")
+            elif _STRUCTURAL_VERB.search(criterion):
+                if len(_FIELD_VOCAB & wanted) >= 2:
+                    reason = ("names the fields an artifact must carry, not "
+                              "words it contains — term overlap is not a "
+                              "valid test")
+                else:
+                    reason = ("structural signal present but no "
+                              "field-vocabulary terms matched — term overlap "
+                              "measures the wrong thing")
+            else:
+                reason = ("asserts a cardinality or numeric threshold — "
+                          "term overlap cannot count")
             abstained.append({
                 "criterion": criterion,
                 "shape": FORM,
-                "reason": "names the fields an artifact must carry, not words it "
-                          "contains — term overlap is not a valid test",
+                "reason": reason,
             })
             continue
 

@@ -170,14 +170,21 @@ class TestWhyTheDoubtDirectionWasNotFlipped:
     this test records what that would do to the live plan.
     """
 
-    def test_five_of_six_criteria_still_fall_through_to_presence(self, criteria):
-        """Before ARCH-20260922-032 all six fell through. Now criterion 1 is
-        correctly recognised as prohibition (-031 corpus, R2'(a)), so five of
-        six still rely on the presence default — the default is still the
-        dominant path, and the evidence for refusing B17-R2 still holds."""
+    def test_the_doubt_predicate_reshapes_the_plan(self, criteria):
+        """Convention 17: updated by ARCH-20260922-034 (R2'(b) doubt predicate).
+
+        Pre-doubt: criterion 1 prohibition, criteria 2–6 presence.
+        Post-doubt: criterion 1 prohibition, criteria 2 and 4 form (clause ii
+        and iii respectively), criterion 3 form (clause iii), criteria 5–6
+        presence (clause iv, no signal).  The fallthrough is still the dominant
+        test for the two criteria the check CAN judge on this plan."""
         shapes = [_classify(c)[0] for c in criteria]
-        assert shapes[0] == PROHIBITION, "criterion 1 should now be prohibition"
-        assert shapes[1:] == [PRESENCE] * 5, shapes[1:]
+        assert shapes[0] == PROHIBITION, "criterion 1: prohibition (repaired by -032)"
+        assert shapes[1] == FORM, "criterion 2: structural verb, no field vocab (clause ii)"
+        assert shapes[2] == FORM, "criterion 3: cardinality 'between 350 and 450' (clause iii)"
+        assert shapes[3] == FORM, "criterion 4: cardinality 'at least three' (clause iii)"
+        assert shapes[4] == PRESENCE, "criterion 5: no signal (clause iv)"
+        assert shapes[5] == PRESENCE, "criterion 6: no signal (clause iv)"
 
     def test_flipping_the_fallthrough_would_make_coverage_pass_unconditionally(
         self, criteria, draft, monkeypatch
@@ -214,11 +221,11 @@ class TestReplayCommitted027Criteria:
         assert shape == PROHIBITION, f"criterion 1 classified {shape}, expected prohibition"
         assert tokens == BANNED, f"extracted {tokens}, expected {BANNED}"
 
-    def test_criterion_3_classifies_presence(self, criteria):
-        """Criterion 3 ('total word count between 350 and 450') classifies
-        presence today. Under -034's clause (iii) it will move to abstain."""
+    def test_criterion_3_classifies_form_cardinality(self, criteria):
+        """R2'(b) clause (iii): 'between 350 and 450' is a cardinality
+        assertion — term overlap cannot count, so the criterion abstains."""
         shape, _ = _classify(criteria[2])
-        assert shape == PRESENCE, f"criterion 3 classified {shape}, not presence"
+        assert shape == FORM, f"criterion 3 classified {shape}, expected form (clause iii)"
 
     def test_the_compliant_draft_passes_criterion_1(self, criteria, draft):
         result = criteria_addressed(criteria=[criteria[0]], text=draft)
@@ -284,10 +291,13 @@ class TestRecallBroadeningRegression:
                     changed.append(("new prohibition", c[:80]))
         assert not changed, f"unexpected new classifications: {changed}"
 
-    def test_existing_form_criteria_unchanged(self):
+    def test_no_former_prohibition_or_form_lost_its_classification(self):
+        """No criterion that was PROHIBITION or original FORM before -034 may
+        have changed shape. New FORM criteria are expected (doubt predicate)."""
         from autornd.graph.checks import _STRUCTURAL_VERB, _FIELD_VOCAB, _terms
         for c in self._corpus_criteria():
             shape, _ = _classify(c)
-            if shape == FORM:
-                assert _STRUCTURAL_VERB.search(c), f"form without structural verb: {c[:80]}"
-                assert len(_FIELD_VOCAB & _terms(c)) >= 2, f"form with <2 fields: {c[:80]}"
+            # A criterion with structural verb + ≥2 fields was FORM before -034
+            # and must still be FORM.
+            if _STRUCTURAL_VERB.search(c) and len(_FIELD_VOCAB & _terms(c)) >= 2:
+                assert shape == FORM, f"former FORM is now {shape}: {c[:80]}"
