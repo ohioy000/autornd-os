@@ -7797,3 +7797,98 @@ More than half of runs ship with at least one criterion that no instrument check
 
 **B25 stays OPEN** pending ARCH-20260922-042 (false-fail measurement on the
 presence-tested criteria that remain).
+
+## 59. Glossed-criterion attribution (ARCH-20260922-046, 2026-09-23)
+
+**Rubric committed** at `5e90aba`, before classification. The rubric
+(`docs/preregistration-glossed-attribution.md`) states three rules: (1) the
+evidence item names the criterion's subject; (2) it states a verdict; (3) it is
+attributable to this criterion and no other. All three must hold. A taste
+declaration marks Rule 1 as the one requiring judgment.
+
+**Population:** 38 glossed criteria from ARCH-20260922-038. The 132 addressed and
+24 unattributable were held fixed — they were measured by the same instrument and
+re-classifying them would change the denominator and invalidate the threshold
+derivation.
+
+**Denominator:** 60 traces, 84 units, 488 criteria, 194 abstained (FORM). Of
+those 194: 132 addressed (held), 38 glossed (classified here), 24 unattributable
+(held).
+
+### Result
+
+**35 of 38** glossed criteria resolve to ADDRESSED under the rubric. 3 do not.
+
+**Addressed-or-attributed rate:** (132 + 35) / 194 = **167 / 194 = 86.1%**.
+
+**Comparison to D14's threshold:** 86.1% **≥** 81%. The bar is met. 35 ≥ 26.
+
+### Verbatim examples — resolved to ADDRESSED
+
+**Example 1** (b12-serving-DeepInfra.jsonl): criterion "The plan addresses write
+performance impact by specifying online/non-blocking index creation options (e.g.,
+ALGORITHM=INPLACE, LOCK=NONE for MySQL or CONCURRENTLY for PostgreSQL) and
+includes post-deployment monitoring of write latency." Evidence:
+`"Criterion 4 (Write latency monitoring): FAIL — step 4.3 measures latency but
+does not verify online creation options were used."` Shared terms: creation,
+latency, monitoring, online, options, write. Names the subject (write performance
+monitoring), states a verdict (FAIL), attributable to this criterion only.
+
+**Example 2** (b12-serving-GMICloud.jsonl): criterion "The implementation plan
+includes a step to verify index usage using EXPLAIN or equivalent on
+representative range queries." Evidence: `"Verification step with EXPLAIN:
+PASS — Section 5a provides EXPLAIN (ANALYZE, BUFFERS) on a representative range
+query."` Shared terms: explain, range, representative, step. Names the subject
+(EXPLAIN verification), states a verdict (PASS), attributable uniquely.
+
+### Verbatim examples — NOT resolved
+
+**Example 1 — Gap A** (b12-serving-GMICloud.jsonl): criterion "The index creation
+statement uses an online method (e.g., `CREATE INDEX CONCURRENTLY` for
+PostgreSQL, `ONLINE=ON` for SQL Server, or `ALGORITHM=INPLACE, LOCK=NONE` for
+MySQL) to avoid blocking concurrent writes." Evidence: `"Criterion 2: Online
+method used — CREATE INDEX CONCURRENTLY specified."` **Names the subject
+(online index creation) but the evidence contains no explicit judgment word** —
+"used" and "specified" are not in the verdict vocabulary. Gap A: named but no
+verdict.
+
+**Example 2 — Gap B** (sweep3s2-engineering-GMICloud.jsonl): criterion "The
+migration script creates a B-tree index named `idx_sensor_readings_timestamp` on
+the `timestamp` column of the `sensor_readings` table using the `CONCURRENTLY`
+option to avoid locking." Evidence: `"ANALYZE after index creation: PASS —
+migration script includes ANALYZE sensor_readings."` **States a verdict (PASS)
+but about ANALYZE, not index creation method** — the evidence is equally
+attributable to a different criterion. Gap B: verdict about a different condition.
+
+### Gap distribution
+
+| gap kind | count | description |
+|---|---|---|
+| A — named, no verdict | 1 | evidence item names the subject but contains no judgment word |
+| B — verdict about different condition | 2 | evidence item's verdict applies to a different criterion |
+
+### Taste declaration
+
+Rule 1 required taste on 0 of 38 criteria. In all cases the shared content words
+unambiguously identified the same concept. No criteria were marked ambiguous.
+
+### Limitation
+
+This corpus is 60 trace files from this repo's committed scenarios — a
+convenience sample, not a distribution over all objectives. This measurement
+decides a ruling (D14), so its weakness is stated here rather than elsewhere:
+a different corpus could produce a different rate. The threshold itself (81%)
+was set by the advisor; the arithmetic that decides it is from this sample.
+
+### Decision
+
+The addressed-or-attributed rate is **86.1%**, which is **above** the 81%
+threshold set by Ruling D14. The bar is met. Under the ruling's own terms:
+the validator suffices and **ARCH-20260922-045 does not run**.
+
+The 3 not-addressed criteria (1 Gap A, 2 Gap B) and the 24 unattributable
+criteria remain unjudged. Their combined count is 27 of 194 (13.9%), which is
+the residual gap the fold will carry until ARCH-20260922-043 makes the empty
+seat distinguishable and a future instrument fills it.
+
+**The decision is the advisor's to record.**

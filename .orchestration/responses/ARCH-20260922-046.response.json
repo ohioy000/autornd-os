@@ -1,0 +1,41 @@
+{
+  "command_id": "ARCH-20260922-046",
+  "status": "DONE",
+  "executed": "2026-09-23",
+  "head_before": "a50d7ee",
+  "summary": "35 of 38 glossed criteria resolve to addressed under the pre-registered rubric. Addressed-or-attributed rate: 167/194 = 86.1%, above D14's 81% threshold. The bar is met; ARCH-20260922-045 does not run. Rubric committed at 5e90aba before classification. 3 not-addressed: 1 Gap A (named, no verdict), 2 Gap B (verdict about different condition). Suite 970/970, $0.00.",
+  "rubric_sha": "5e90aba",
+  "classification_result": {
+    "glossed_total": 38,
+    "resolved_addressed": 35,
+    "not_addressed": 3,
+    "gaps": {"A_named_no_verdict": 1, "B_verdict_different_condition": 2},
+    "taste_required": 0
+  },
+  "threshold_comparison": {
+    "addressed_or_attributed": 167,
+    "denominator": 194,
+    "rate": "86.1%",
+    "threshold": "81%",
+    "bar_met": true,
+    "required_from_glossed": 26,
+    "achieved_from_glossed": 35
+  },
+  "consequence": "ARCH-20260922-045 does not run — the validator suffices under D14's threshold",
+  "residual": {
+    "not_addressed": 3,
+    "unattributable": 24,
+    "combined": 27,
+    "combined_rate": "13.9% of 194 abstained criteria"
+  },
+  "limitation": "60 trace files, convenience sample, not a distribution over all objectives",
+  "held_fixed": {"addressed": 132, "unattributable": 24, "reason": "same instrument, same denominator"},
+  "verification_results": [
+    {"command": "git log --oneline -1 -- docs/preregistration-glossed-attribution.md", "result": "5e90aba — precedes classification"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "970 passed"},
+    {"command": "grep -n '81%|addressed-or-attributed' docs/handover-review.md", "result": "Recorded at §59"},
+    {"command": "git diff --stat -- autornd/ workflows/", "result": "Empty — nothing executable changed"}
+  ],
+  "cost": "$0.00",
+  "deviations": []
+}
