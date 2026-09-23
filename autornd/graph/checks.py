@@ -327,6 +327,23 @@ _STRUCTURAL_VERB = re.compile(
 
 PRESENCE, PROHIBITION, FORM = "presence", "prohibition", "form"
 
+# Must-be-present signals (ARCH-20260922-040, Ruling D2). A quoted token after
+# one of these is something the artifact MUST CONTAIN, not something it must
+# avoid. Two kinds: clear-polarity (the criterion explicitly says to include
+# the token) and ambiguous (an example or enumeration whose intent is mixed).
+# Ruling D2: clear polarity → test by presence (term overlap); ambiguous →
+# abstain. Measured over the 597-criterion corpus (-031): zero corpus criteria
+# currently hit either case, so this is prophylaxis, not a live defect repair.
+_CLEAR_MUST_PRESENT = re.compile(
+    r"\b(?:must|should)\s+(?:include|contain|have|use)\b",
+    re.IGNORECASE,
+)
+_AMBIGUOUS_MUST_PRESENT = re.compile(
+    r"(?:\be\.g\.(?=[\s,;:)\]]|$)"
+    r"|\b(?:for\s+example|such\s+as)\b)",
+    re.IGNORECASE,
+)
+
 # Cardinality: a criterion asserting a count or numeric threshold. Term overlap
 # cannot count, so R2'(b) clause (iii) abstains on these.
 #
@@ -405,23 +422,31 @@ def _forbidden_tokens(criterion: str) -> list[str]:
     aside became a forbidden token. See the comment above `_QUOTED_TOKEN` for
     the three measured exhibits.
 
-    What this does NOT fix, and it is a ruling rather than a repair: a token
-    that is correctly quoted but must be PRESENT rather than absent. In
-    "avoids competitor names without a note (e.g., 'Pending legal review')" the
-    surviving token is still inverted the wrong way round, because deciding
-    which side of a negation a quoted token falls on is comprehension, not
-    extraction.
+    **Polarity** (ARCH-20260922-040, Ruling D2): a quoted token that must be
+    PRESENT rather than absent is not a forbidden token. In "avoids competitor
+    names without a note (e.g., 'Pending legal review')" the token is a thing
+    the work must contain; inverting it would pass work that omits the
+    annotation and fail work that includes it. A parenthetical whose text
+    contains a must-be-present signal (``_MUST_BE_PRESENT``) is skipped.
+
+    **Word content** (ARCH-20260922-040): a token containing no word characters
+    (purely punctuation, e.g. ``'...'`` or ``'---'``) is not a meaningful
+    prohibition and is filtered out. If filtering leaves an empty list, the
+    criterion abstains rather than testing against garbage.
     """
     marker = _PROHIBITION_MARKER.search(criterion)
     if not marker:
         return []
     tail = criterion[marker.end():]
     for group in re.finditer(r"\(([^()]*)\)", tail):
+        group_text = group.group(1)
+        if _CLEAR_MUST_PRESENT.search(group_text) or _AMBIGUOUS_MUST_PRESENT.search(group_text):
+            continue
         tokens = [
             next(g for g in match.groups() if g is not None).strip()
             for match in _QUOTED_TOKEN.finditer(group.group(1))
         ]
-        tokens = [t for t in tokens if t]
+        tokens = [t for t in tokens if t and re.search(r"\w", t)]
         if tokens:
             return tokens
     # Fallback: the -027 criterion quotes its tokens directly after the marker,
@@ -429,11 +454,13 @@ def _forbidden_tokens(criterion: str) -> list[str]:
     # zero existing marker-matched criteria have non-parenthesised quoted tokens,
     # so this path fires only for new phrasings like "contains no instances of
     # 'x', 'y'".
+    if _CLEAR_MUST_PRESENT.search(tail) or _AMBIGUOUS_MUST_PRESENT.search(tail):
+        return []
     tokens = [
         next(g for g in match.groups() if g is not None).strip()
         for match in _QUOTED_TOKEN.finditer(tail)
     ]
-    return [t for t in tokens if t]
+    return [t for t in tokens if t and re.search(r"\w", t)]
 
 
 def _classify(criterion: str) -> tuple[str, list[str]]:
@@ -458,6 +485,9 @@ def _classify(criterion: str) -> tuple[str, list[str]]:
         return PROHIBITION, forbidden
     # Clause (i): negation signal present, no tokens extractable.
     if _PROHIBITION_MARKER.search(criterion):
+        # Ruling D2: clear must-be-present polarity → presence, not abstention.
+        if _CLEAR_MUST_PRESENT.search(criterion):
+            return PRESENCE, []
         return FORM, []
     # Original FORM + clause (ii).
     if _STRUCTURAL_VERB.search(criterion):

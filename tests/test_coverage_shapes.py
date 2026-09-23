@@ -246,7 +246,7 @@ class TestOnlyProperlyQuotedTokensAreForbidden:
         ("The draft avoids jargon (don't use it, it's bad)",
          [], "two contractions are not two forbidden tokens"),
         ("The draft avoids competitor names without a note (e.g., 'Pending legal review') beside it.",
-         ["Pending legal review"], "'e.g.' was never quoted and must not be extracted"),
+         [], "e.g. signals must-be-present — the parenthetical is skipped (Ruling D2, -040)"),
     ])
     def test_prose_is_not_mistaken_for_a_token_list(self, criterion, expected, why):
         from autornd.graph.checks import _forbidden_tokens
@@ -281,19 +281,19 @@ class TestOnlyProperlyQuotedTokensAreForbidden:
         # Only the genuinely quoted fragment survives; the unquoted conventions do not.
         assert _forbidden_tokens(criterion) == ["12 March 2026"]
 
-    def test_what_this_does_not_fix_is_stated_not_hidden(self):
-        """A correctly quoted token that must be PRESENT is still inverted.
+    def test_must_be_present_token_is_no_longer_inverted(self):
+        """Convention 17: updated by ARCH-20260922-040 (Ruling D2).
 
-        Deciding which side of a negation a quoted token falls on is
-        comprehension, not extraction, so it is a ruling and stays open. Pinned
-        here so the remaining defect cannot be mistaken for a fixed one.
+        B24's open half — a correctly quoted token that must be PRESENT was
+        treated as a prohibition and tested for absence. Now fixed: 'e.g.'
+        is an ambiguous-polarity signal, so the parenthetical is skipped and
+        the criterion abstains rather than inverting (Ruling D2).
         """
         from autornd.graph.checks import _forbidden_tokens
         criterion = ("The draft avoids competitor names without a note "
                      "(e.g., 'Pending legal review') beside it.")
-        assert _forbidden_tokens(criterion) == ["Pending legal review"], (
-            "still extracted, and still inverted the wrong way round — B24's "
-            "open half, reported rather than silently repaired")
+        assert _forbidden_tokens(criterion) == [], (
+            "must-be-present parenthetical should be skipped — Ruling D2")
 
 
 class TestCoverageRecordStatesItsSubject:
@@ -407,3 +407,58 @@ class TestDoubtPredicate:
         assert "reason" in entry, "abstained entry missing reason"
         assert entry["shape"] == FORM
         assert entry["reason"], "reason must not be empty"
+
+
+class TestPolarityInversion:
+    """ARCH-20260922-040: the two backwards inversions in the prohibition branch.
+
+    Convention 22: each test simulates its condition end to end and proves it
+    by breaking it.
+    """
+
+    def test_must_contain_passes_a_draft_with_the_token(self):
+        """Defect B: a must-contain criterion tested as prohibition FAILS a
+        compliant draft — the inversion. Fixed: clear-polarity must-contain
+        falls through to PRESENCE (Ruling D2), and term overlap passes."""
+        criterion = ("The implementation avoids unverified claims "
+                     "(must include 'Pending legal review' annotation).")
+        shape, _ = _classify(criterion)
+        assert shape == PRESENCE, (
+            f"clear must-contain should classify presence, got {shape}")
+        compliant = ("This implementation includes a Pending legal review "
+                     "annotation on all claims. The review annotation is "
+                     "clearly visible.")
+        result = COVERAGE([criterion], compliant)
+        assert result.passed is True, result.detail
+
+    def test_must_contain_fails_a_draft_lacking_the_token(self):
+        """The pass direction: a draft that omits the required token fails."""
+        criterion = ("The implementation avoids unverified claims "
+                     "(must include 'Pending legal review' annotation).")
+        non_compliant = ("This implementation makes several claims about "
+                         "competitors without any notation.")
+        result = COVERAGE([criterion], non_compliant)
+        assert result.passed is False, (
+            "a draft lacking the must-contain token should fail")
+
+    def test_apostrophe_only_token_abstains(self):
+        """Defect A: a punctuation-only quotation yielded a garbage forbidden
+        token. Fixed: tokens with no word characters are filtered out, and the
+        criterion abstains rather than testing against garbage."""
+        criterion = "The code avoids known pitfalls ('...') in its implementation."
+        shape, tokens = _classify(criterion)
+        assert shape == FORM, f"punctuation-only should abstain (form), got {shape}"
+        assert tokens == [], f"no tokens should be extracted, got {tokens}"
+        result = COVERAGE([criterion], "any text at all")
+        assert result.passed is True, "abstention should pass the fold"
+        assert result.data["abstained"], "should record an abstention"
+
+    def test_ambiguous_eg_abstains_not_inverts(self):
+        """The e.g. case: ambiguous polarity abstains per Ruling D2,
+        rather than inverting the token as a prohibition."""
+        criterion = ("The draft avoids competitor names without a note "
+                     "(e.g., 'Pending legal review') beside it.")
+        shape, tokens = _classify(criterion)
+        assert shape == FORM, (
+            f"ambiguous polarity (e.g.) should abstain, got {shape}")
+        assert tokens == [], "no forbidden tokens should be extracted"

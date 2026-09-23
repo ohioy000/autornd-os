@@ -1,0 +1,47 @@
+{
+  "command_id": "ARCH-20260922-040",
+  "status": "DONE",
+  "executed": "2026-09-23",
+  "head_before": "331e80e",
+  "summary": "Both backwards inversions repaired. Defect A (punctuation-only token): tokens with no word characters are filtered at extraction. Defect B (must-be-present polarity): parentheticals containing a must-be-present signal (e.g., 'must include', 'e.g.') are skipped by _forbidden_tokens; clear-polarity criteria fall through to PRESENCE, ambiguous-polarity criteria abstain per Ruling D2. Corpus incidence: zero — both defects are latent and reachable, not live. B24's open half is CLOSED. Suite 963/963, $0.00.",
+  "four_quoted_token_criteria": [
+    {
+      "criterion": "The copy contains no instances of 'leverage', 'seamless', 'robust', or 'in today's fast-paced world'.",
+      "polarity": "forbidden — genuine prohibition",
+      "points_wrong_way": false
+    },
+    {
+      "criterion": "No claim about a named competitor appears without a legal review annotation (e.g., 'Pending legal review') next to it.",
+      "polarity": "must-be-present — the annotation must EXIST, not be absent",
+      "points_wrong_way": true,
+      "note": "Prohibition marker does not match this criterion (no 'avoids' etc.), so the defect is not reachable on this exact phrasing. Reachable on the probe 'avoids competitor names without a note (e.g., ...)'"
+    },
+    {
+      "criterion": "The index is defined as a single-column index (only the 'timestamp' column) without additional included columns.",
+      "polarity": "must-be-present — 'timestamp' must be the column, not forbidden",
+      "points_wrong_way": true,
+      "note": "Prohibition marker does not match this phrasing either. Same class as above."
+    },
+    {
+      "criterion": "The index creation statement is idempotent and can be executed without causing table locks or downtime (CrateDB's default non-blocking behavior).",
+      "polarity": "not a token list — apostrophe in possessive",
+      "points_wrong_way": false,
+      "note": "Already fixed by B24's boundary-delimited _QUOTED_TOKEN."
+    }
+  ],
+  "corpus_incidence": {
+    "must_be_present_criteria_in_corpus": 0,
+    "prohibition_marker_with_ambiguous_eg": 13,
+    "prohibition_marker_with_clear_must_include": 0,
+    "note": "Zero corpus criteria currently extract must-be-present tokens. The 13 with 'e.g.' parentheticals use backticks (not quotes) for their examples, so _QUOTED_TOKEN does not match. Both defects are latent and reachable, not live — this is prophylaxis."
+  },
+  "b24_status": "CLOSED — both defects repaired",
+  "verification_results": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "963 passed"},
+    {"command": "git diff --stat -- workflows/ autornd/evals/runner.py", "result": "Empty — neither touched"}
+  ],
+  "tests_added": "tests/test_coverage_shapes.py::TestPolarityInversion (4 tests)",
+  "tests_updated": "TestOnlyProperlyQuotedTokensAreForbidden: test_prose_is_not_mistaken_for_a_token_list (expected [] not ['Pending legal review']), test_must_be_present_token_is_no_longer_inverted (convention 17)",
+  "cost": "$0.00",
+  "deviations": []
+}
