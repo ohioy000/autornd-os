@@ -1,0 +1,31 @@
+{
+  "command_id": "ARCH-20260923-051",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Exercise the full workflow graph end to end, provider-free, under three criterion outcomes — satisfied, abstained, and genuinely unmet — and verify each reaches a correct terminal, especially the failure path that ran 42 calls into a ceiling.",
+  "evidence": [
+    "workflows/engineering-rnd.yaml — build_loop until judges.passed == true, on_exhausted escalation; recovery_loop on_exhausted_status escalated; review_rework_loop on_exhausted escalation; review_fold folds judges.passed with rework_review.ship",
+    "HANDOVER.md §4.2 B14 — '42 calls against a 41-call ceiling, no terminal' on the run that motivated the shape work",
+    "HANDOVER.md §4.2 B18 — CLOSED; every bound now produces a terminal naming the bound",
+    "ARCH-20260922-043 — the fold now records an abstention as an empty seat rather than as assent",
+    "ARCH-20260922-034 — coverage abstains on prohibition-without-tokens, structural-with-empty-field-vocab, and cardinality/numeric criteria",
+    "HANDOVER.md §3.7 — 973 tests, ~27s, mostly provider-free; a provider-free full-graph path may already exist",
+    "AGENTS.md convention 22 — an instrument's test simulates the condition it watches, end to end",
+    "AGENTS.md convention 7 — test doubles must bill (client._account); a free double hid a real accounting bug"
+  ],
+  "scope": {
+    "include": ["tests/", "autornd/evals/", "autornd/graph/"],
+    "exclude": ["workflows/*.yaml beyond reading", "autornd/engine/phases.py", "evals/results/**"]
+  },
+  "constraints": [
+    "FREE. No paid call, no provider, no network. This runs the graph against a deterministic client.",
+    "FIRST, establish whether a provider-free full-graph run already exists.",
+    "If the client is a test double, it MUST bill, per convention 7.",
+    "THREE CASES end to end through the full graph.",
+    "CASE (c) IS THE PRIMARY SUBJECT.",
+    "Do NOT change any workflow, bound, threshold or gate condition.",
+    "Do NOT modify checks.py.",
+    "Keep the diff small."
+  ]
+}
