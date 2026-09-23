@@ -7424,3 +7424,110 @@ wrong method. Failing on doubt is the dangerous direction: it killed a run on
 in the unit record, so the paid validator receives the reason and the sweep
 summary can report the rate. A leniency that hides how often it fires cannot be
 withdrawn on evidence.
+
+## 39. Process ruling D7 — a ruling exists only when it is in a command file (advisor, 2026-09-22)
+
+**Ruling D7 (advisor, 2026-09-22).** A ruling exists only when it is in a
+command file. A ruling stated in a transcript is a draft, not a ruling. No
+executor may act on one, and no executor is in default for not having acted on
+one. The advisor issues rulings as command files; the transcript is commentary.
+First exhibit: B17-R2-prime and D1-D6 were stated in prose and reached no file.
+Second exhibit: D1, which would have changed -034 before it shipped.
+
+## 40. Ruling D1-REVISED — clause (ii) retained as shipped (advisor, 2026-09-22)
+
+**Ruling D1-REVISED (advisor, 2026-09-22).** Clause (ii) of -034 is retained as
+shipped and is not tuned. D1, which withdrew it, is itself withdrawn. Reason:
+under -033's fold an abstention is recorded and does not fail the loop, while a
+false failure can kill it; over-abstention is therefore the safer error. Clause
+(ii) is suspended pending ARCH-20260922-038: if the validator addresses the
+criteria clause (ii) abstains on, the clause stands; if it glosses them, clause
+(ii) narrows from empty-intersection to a stricter trigger and that narrowing is
+a new command.
+
+**Note.** D1 as originally written was never issued as a command file and
+therefore, per D7, was never a ruling. ARCH-20260922-039 found no D-rulings in
+the tree and returned BLOCKED. D1-REVISED supersedes D1 by quotation.
+
+## 41. Ruling D2 — criterion polarity is comprehension, not extraction (advisor, 2026-09-22)
+
+**Ruling D2 (advisor, 2026-09-22).** Criterion polarity is a comprehension
+question, not an extraction one. Whether a criterion requires presence or
+absence must not be guessed by a surface heuristic. Where polarity is clear, it
+is tested; where polarity is ambiguous, the criterion abstains. The apostrophe
+exhibit is an extraction defect, not a shape question, and is repaired as
+extraction.
+
+## 42. Ruling D3 — clause (iii) is a flag, and ARCH-20260922-037 is the conversion (advisor, 2026-09-22)
+
+**Ruling D3 (advisor, 2026-09-22).** Clause (iii) is a flag, and
+ARCH-20260922-037 is the conversion. Abstaining on computable criteria is
+correct interim behaviour and wrong as a destination. A word count is computed,
+not proxied. Each clause-(iii) abstention is recorded as deterministically
+testable so that -037 has a worklist rather than a memory.
+
+**Worklist (re-derived, convention 24):** clause (iii) currently abstains on
+26 criteria (4.4% of the 597-criterion corpus). Each is computable.
+
+## 43. Ruling D4 — B25 opened (advisor, 2026-09-22)
+
+**Ruling D4 (advisor, 2026-09-22).** B25 is opened. `criteria_addressed`
+miscomputes satisfaction for the criteria the planner actually emits: 98.7%
+classify presence and are tested by term overlap, which is not concept
+containment. B17 is *cannot read a prohibition*; B25 is *may be the wrong test
+for most criteria*. These are different sizes of claim and both are true.
+
+**Conjunction arithmetic — why B17 was mis-prioritised.** Per-criterion rarity
+is not per-run rarity, because `judges_agree` requires every criterion.
+A plan of 6 criteria has probability 1 − 0.987⁶ = 7.6% that at least one is
+non-presence. B17 is not a one-in-597 event; it is a one-in-13 plan.
+
+## 44. Ruling D5 — the architecture is three tiers (advisor, 2026-09-22)
+
+**Ruling D5 (advisor, 2026-09-22).** The architecture is three tiers, not two.
+
+| Tier | What | Cost | Corpus share | Purpose |
+|---|---|---|---|---|
+| 1 | Computable (word counts, cardinality, structure) | free | ~4.4% | Makes the loop terminate |
+| 2 | Prohibition (extractable tokens absent → pass) | free | 0.2% | Makes the loop terminate |
+| 3 | Comprehension (the 98.7% presence + ambiguous polarity) | judged, gated on measurement | ~95% | Makes the loop sound |
+
+Tiers 1 and 2 make the loop terminate; Tier 3 makes it sound. These are
+different goals at different urgencies.
+
+## 45. Ruling D6 — B17 closes on the replay, free (advisor, 2026-09-22)
+
+**Ruling D6 (advisor, 2026-09-22).** B17 closes on the replay, free. Replaying
+the committed -027 criteria through the repaired classifier is the exact input
+at no cost. If criterion 1 classifies prohibition, extracts all four tokens, and
+passes the committed compliant draft, the branch is demonstrated on live planner
+output. No paid run is required. B17's fail direction stays fixture-covered and
+that is sufficient for closure. A paid re-run is optional and only proves recall
+on a fresh draw, which the corpus measures more cheaply.
+
+## 46. Owner ratification (owner, 2026-09-22)
+
+The owner ratifies Rulings D1-REVISED, D2, D3, D4, D5, D6 and D7. Ruling D1 is
+superseded by D1-REVISED; the ratification of D1 applies to D1-REVISED.
+
+Cross-reference: B17-R3, R2'(a)/(b)/(c) and the RepeatedRun.rate ruling were
+recorded by ARCH-20260922-031 in §§36-38 and are NOT duplicated here.
+
+## 47. judges_agree fold finding (ARCH-20260922-036, 2026-09-22)
+
+**Finding (instrument, not ruling).** `judges_agree` (`autornd/graph/checks.py:139`)
+takes `coverage: coverage.passed` as a bool. It does not distinguish a pass
+earned by measuring criteria (all addressed) from a pass earned by abstaining
+on all of them. Under -034's 38.5% abstention rate, a plan whose measurable
+criteria happen to be addressed passes coverage identically to a plan whose
+criteria all abstained — and `judges_agree` cannot tell the two apart.
+
+This is the meaning of -036's question 2: "Did -033 change `judges_agree` to
+represent an empty seat?" **No.** PR #61 was the recall fix alone; PR #62 added
+the doubt predicate. Neither touched `judges_agree` or the fold. The fold is
+sound in that it does not fail on an abstention (R2'(c)), but **it cannot report
+how much of the contract was actually tested** — `coverage.passed` is True in
+both cases and the distinction is lost.
+
+**Not repaired here — recording.** Changing what `judges_agree` does with an
+all-abstained pass alters what the harness concludes, so it is a ruling.

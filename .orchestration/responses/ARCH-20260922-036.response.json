@@ -1,0 +1,43 @@
+{
+  "command_id": "ARCH-20260922-036",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "head_before": "5397112",
+  "summary": "Rulings D1-REVISED through D7 transcribed verbatim into docs/handover-review.md (§§39-47). Owner ratification recorded (§46). B25 opened in HANDOVER.md §4.2 at severity high. judges_agree fold finding recorded (§47). Conjunction arithmetic (1 − 0.987⁶ = 7.6%) recorded in D4. D3 worklist (26 criteria, 4.4%) recorded. Cross-references §§36-38 (not duplicated). -039 BLOCKED status noted. Suite 956/956 before and after, $0.00 spend.",
+  "sections_written": {
+    "39": "D7 — a ruling exists only when it is in a command file",
+    "40": "D1-REVISED — clause (ii) retained as shipped",
+    "41": "D2 — criterion polarity is comprehension, not extraction",
+    "42": "D3 — clause (iii) is a flag, and -037 is the conversion",
+    "43": "D4 — B25 opened",
+    "44": "D5 — the architecture is three tiers",
+    "45": "D6 — B17 closes on the replay, free",
+    "46": "Owner ratification",
+    "47": "judges_agree fold finding"
+  },
+  "command_questions_answered": {
+    "Q1": "-039 was BLOCKED. No D-rulings had been recorded in the tree when -039 ran; it found nothing and returned BLOCKED. D1 was never issued as a command file and therefore, per D7, was never a ruling. D1-REVISED supersedes D1 by quotation.",
+    "Q2": "PR #61 (recall fix) did not change judges_agree. PR #62 (doubt predicate) did not change judges_agree. The fold treats coverage.passed as a bool and does not distinguish pass-by-abstention from pass-by-measurement. This is recorded as a finding, not repaired — changing it alters what the harness concludes."
+  },
+  "b25_opened": {
+    "location": "HANDOVER.md §4.2, after B24",
+    "severity": "high",
+    "title": "Term overlap may be the wrong test for most criteria"
+  },
+  "verification_results": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "956 passed — green before and after"
+    },
+    {
+      "command": "grep -c 'D1-REVISED\\|D2\\|D3\\|D4\\|D5\\|D6\\|D7' docs/handover-review.md",
+      "result": "All seven rulings present"
+    },
+    {
+      "command": "grep 'B25' HANDOVER.md",
+      "result": "B25 row present at severity high"
+    }
+  ],
+  "cost": "$0.00",
+  "deviations": []
+}
