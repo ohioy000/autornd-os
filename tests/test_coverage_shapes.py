@@ -206,3 +206,80 @@ class TestTheCommittedDemonstration:
                     for it in unit["iterations"]]
         assert outcomes.count(True) == 1
         assert outcomes[0] is False
+
+
+class TestOnlyProperlyQuotedTokensAreForbidden:
+    """B24: a possessive is not a quotation, and an unquoted aside is not a token.
+
+    **The defect.** `_forbidden_tokens` used to accept any parenthetical that
+    *contained a quote character*, then split the whole group on commas and
+    strip quotes from each part. A possessive, a contraction or an unquoted
+    aside therefore became a forbidden token — and a forbidden token that was
+    never forbidden is a FALSE PROHIBITION.
+
+    **Why that direction matters.** B17 fails work that is correct. These pass
+    work that is wrong: invert a criterion whose quoted token must be PRESENT
+    and the draft that omits it passes while the draft that includes it fails.
+
+    **Measured impact on the committed corpus: zero.** All 597 criteria extract
+    identically before and after, because the 40 that match a prohibition
+    marker use backticks in their parentheticals rather than quotes. The defect
+    was latent and reachable, not live — and it is fixed before it fired rather
+    than after, which is the only reason this change alters nothing the harness
+    currently concludes.
+    """
+
+    @pytest.mark.parametrize("criterion,expected,why", [
+        ("The statement avoids table locks (CrateDB's default non-blocking behavior).",
+         [], "a possessive apostrophe is not a quotation"),
+        ("The draft avoids jargon (don't use it, it's bad)",
+         [], "two contractions are not two forbidden tokens"),
+        ("The draft avoids competitor names without a note (e.g., 'Pending legal review') beside it.",
+         ["Pending legal review"], "'e.g.' was never quoted and must not be extracted"),
+    ])
+    def test_prose_is_not_mistaken_for_a_token_list(self, criterion, expected, why):
+        from autornd.graph.checks import _forbidden_tokens
+        assert _forbidden_tokens(criterion) == expected, why
+
+    def test_the_genuine_exhibit_still_extracts_all_four(self):
+        """The narrowing must not cost the one prohibition the corpus contains.
+
+        The fourth token carries an apostrophe INSIDE the quotes. A pattern that
+        forbade internal apostrophes would drop it, trading a false-prohibition
+        bug for a false negative on B17's own exhibit.
+        """
+        from autornd.graph.checks import _forbidden_tokens
+        criterion = ("The brief uses plain language, avoids the banned words "
+                     "('leverage', 'seamless', 'robust', 'in today's fast-paced world')")
+        assert _forbidden_tokens(criterion) == [
+            "leverage", "seamless", "robust", "in today's fast-paced world"]
+
+    @pytest.mark.parametrize("criterion,expected", [
+        ('The copy avoids the terms ("foo", "bar")', ["foo", "bar"]),
+        ("The copy avoids the words ‘alpha’, and (‘beta’)", ["beta"]),
+    ])
+    def test_other_quote_styles_still_work(self, criterion, expected):
+        from autornd.graph.checks import _forbidden_tokens
+        assert _forbidden_tokens(criterion) == expected
+
+    def test_the_presence_shaped_aside_is_still_excluded(self):
+        """The case the original quote requirement was written for, kept working."""
+        from autornd.graph.checks import _forbidden_tokens
+        criterion = ("The copy avoids passive voice (sentence case headings, "
+                     "no H4+, numbers as words below 10, dates as '12 March 2026')")
+        # Only the genuinely quoted fragment survives; the unquoted conventions do not.
+        assert _forbidden_tokens(criterion) == ["12 March 2026"]
+
+    def test_what_this_does_not_fix_is_stated_not_hidden(self):
+        """A correctly quoted token that must be PRESENT is still inverted.
+
+        Deciding which side of a negation a quoted token falls on is
+        comprehension, not extraction, so it is a ruling and stays open. Pinned
+        here so the remaining defect cannot be mistaken for a fixed one.
+        """
+        from autornd.graph.checks import _forbidden_tokens
+        criterion = ("The draft avoids competitor names without a note "
+                     "(e.g., 'Pending legal review') beside it.")
+        assert _forbidden_tokens(criterion) == ["Pending legal review"], (
+            "still extracted, and still inverted the wrong way round — B24's "
+            "open half, reported rather than silently repaired")

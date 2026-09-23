@@ -322,24 +322,77 @@ _STRUCTURAL_VERB = re.compile(
 PRESENCE, PROHIBITION, FORM = "presence", "prohibition", "form"
 
 
+# A token is QUOTED only when its opening mark sits at a boundary — start of the
+# group, or after whitespace, a comma or an open bracket — and its closing mark
+# is followed by a boundary. That is what separates a quotation from a
+# possessive or a contraction, which are the same character mid-word.
+#
+# Measured 2026-09-22 over the 597-criterion corpus (B24, ARCH-20260922-031).
+# The previous rule was "the group contains a quote character somewhere", and
+# it produced forbidden tokens out of prose:
+#
+#   "avoids table locks (CrateDB's default non-blocking behavior)"
+#       -> ["CrateDB's default non-blocking behavior"]
+#   "avoids jargon (don't use it, it's bad)"
+#       -> ["don't use it", "it's bad"]
+#   "avoids competitor names without a note (e.g., 'Pending legal review')"
+#       -> ["e.g.", "Pending legal review"]      <- "e.g." was never quoted
+#
+# Each of those is a FALSE PROHIBITION, and a false prohibition fails work that
+# merely mentions the phrase while passing work that omits what the criterion
+# actually required. That is the opposite direction from B17, which fails
+# correct work: these pass incorrect work.
+# The single-quote arm allows an apostrophe INSIDE the token when a word
+# character follows it, so a contraction or possessive inside a genuine quoted
+# token survives. Without that clause the pattern drops the fourth token of
+# B17's own exhibit — "'in today's fast-paced world'" — which would trade one
+# false-prohibition bug for a false-negative on the single genuine prohibition
+# in the corpus.
+_QUOTED_TOKEN = re.compile(
+    r"""(?:(?<=^)|(?<=[\s,(\[]))       # opening mark sits at a boundary
+        (?:'((?:[^']|'(?=\w))+)'
+          |"([^"]+)"
+          |‘([^’]+)’
+          |“([^”]+)”)
+        (?=$|[\s,.;:)\]])""",          # closing mark is followed by one
+    re.VERBOSE,
+)
+
+
 def _forbidden_tokens(criterion: str) -> list[str]:
     """Tokens a prohibition criterion forbids, or [] if it names none.
 
-    Takes the first parenthesised group that starts after the first prohibition
-    marker and contains a quote character. The quote requirement is what keeps
-    criterion 6's SECOND parenthesis — "(sentence case headings, no H4+, numbers
-    as words below 10, dates as '12 March 2026')", which is a presence-shaped
-    aside — from being read as a forbidden list.
+    Takes the first parenthesised group after the first prohibition marker that
+    contains at least one properly QUOTED token, and returns those tokens. The
+    quote requirement is what keeps criterion 6's SECOND parenthesis —
+    "(sentence case headings, no H4+, numbers as words below 10, dates as
+    '12 March 2026')", which is a presence-shaped aside — from being read as a
+    forbidden list.
+
+    **Quoted means delimited, not merely containing a quote character** (B24).
+    The earlier rule split the whole parenthetical on commas and stripped quote
+    characters from each part, so a possessive, a contraction or an unquoted
+    aside became a forbidden token. See the comment above `_QUOTED_TOKEN` for
+    the three measured exhibits.
+
+    What this does NOT fix, and it is a ruling rather than a repair: a token
+    that is correctly quoted but must be PRESENT rather than absent. In
+    "avoids competitor names without a note (e.g., 'Pending legal review')" the
+    surviving token is still inverted the wrong way round, because deciding
+    which side of a negation a quoted token falls on is comprehension, not
+    extraction.
     """
     marker = _PROHIBITION_MARKER.search(criterion)
     if not marker:
         return []
     for group in re.finditer(r"\(([^()]*)\)", criterion[marker.end():]):
-        inner = group.group(1)
-        if not any(q in inner for q in _QUOTE_CHARS):
-            continue
-        tokens = [t.strip().strip(_QUOTE_CHARS).strip() for t in inner.split(",")]
-        return [t for t in tokens if t]
+        tokens = [
+            next(g for g in match.groups() if g is not None).strip()
+            for match in _QUOTED_TOKEN.finditer(group.group(1))
+        ]
+        tokens = [t for t in tokens if t]
+        if tokens:
+            return tokens
     return []
 
 
