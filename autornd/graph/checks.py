@@ -288,7 +288,13 @@ _CRITERION_REF = re.compile(r"criteri(?:a|on)[_\s\-]*(\d+)", re.IGNORECASE)
 # anything short of both falls back to presence, which fails closed.
 _PROHIBITION_MARKER = re.compile(
     r"\b(?:avoid(?:s|ed|ing)?|banned|forbidden|prohibit(?:s|ed)?|disallow(?:s|ed)?"
-    r"|excludes?|must\s+not|may\s+not|never\s+uses?|no\s+use\s+of)\b",
+    r"|excludes?|must\s+not|may\s+not|never\s+uses?|no\s+use\s+of"
+    # -031 corpus: 1 occurrence, the -027 criterion — the only genuine
+    # invertible prohibition in 597 distinct criteria (0.17%).
+    r"|contains?\s+no\s+instances?\s+of"
+    # -031 corpus: 2 occurrences (index criteria, no tokens, stays presence).
+    r"|does\s+not\s+(?:include|contain)"
+    r")\b",
     re.IGNORECASE,
 )
 
@@ -362,9 +368,15 @@ _QUOTED_TOKEN = re.compile(
 def _forbidden_tokens(criterion: str) -> list[str]:
     """Tokens a prohibition criterion forbids, or [] if it names none.
 
-    Takes the first parenthesised group after the first prohibition marker that
-    contains at least one properly QUOTED token, and returns those tokens. The
-    quote requirement is what keeps criterion 6's SECOND parenthesis —
+    Tries parenthesised groups first, then falls back to quoted tokens anywhere
+    after the marker. The parenthesised path takes the first group containing
+    at least one properly QUOTED token. The fallback fires only when no
+    parenthesised tokens exist — measured over the 597-criterion corpus (-031),
+    zero existing marker-matched criteria have non-parenthesised quoted tokens,
+    so the fallback is safe for the current corpus and catches new phrasings
+    like the -027 criterion's "contains no instances of 'x', 'y'".
+
+    The quote requirement is what keeps criterion 6's SECOND parenthesis —
     "(sentence case headings, no H4+, numbers as words below 10, dates as
     '12 March 2026')", which is a presence-shaped aside — from being read as a
     forbidden list.
@@ -385,7 +397,8 @@ def _forbidden_tokens(criterion: str) -> list[str]:
     marker = _PROHIBITION_MARKER.search(criterion)
     if not marker:
         return []
-    for group in re.finditer(r"\(([^()]*)\)", criterion[marker.end():]):
+    tail = criterion[marker.end():]
+    for group in re.finditer(r"\(([^()]*)\)", tail):
         tokens = [
             next(g for g in match.groups() if g is not None).strip()
             for match in _QUOTED_TOKEN.finditer(group.group(1))
@@ -393,7 +406,16 @@ def _forbidden_tokens(criterion: str) -> list[str]:
         tokens = [t for t in tokens if t]
         if tokens:
             return tokens
-    return []
+    # Fallback: the -027 criterion quotes its tokens directly after the marker,
+    # not inside parentheses.  Measured over the 597-criterion corpus (-031):
+    # zero existing marker-matched criteria have non-parenthesised quoted tokens,
+    # so this path fires only for new phrasings like "contains no instances of
+    # 'x', 'y'".
+    tokens = [
+        next(g for g in match.groups() if g is not None).strip()
+        for match in _QUOTED_TOKEN.finditer(tail)
+    ]
+    return [t for t in tokens if t]
 
 
 def _classify(criterion: str) -> tuple[str, list[str]]:
