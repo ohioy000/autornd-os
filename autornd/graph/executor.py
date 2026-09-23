@@ -185,6 +185,28 @@ class GraphExecutor:
         payload = dict(getattr(result, "data", {}) or {})
         payload["passed"] = bool(getattr(result, "passed", False))
         payload["detail"] = getattr(result, "detail", "")
+        # Ruling D9: after judges_agree, detect abstention from source outputs
+        # so silence is never recorded as assent. The fold's DECISION is
+        # unchanged (abstention does not fail the fold); only the RECORD gains
+        # a third state.
+        if node.check == "judges_agree" and payload.get("passed"):
+            abstained_judges: dict[str, int] = {}
+            for arg_name, arg_path in (node.args or {}).items():
+                if not isinstance(arg_path, str):
+                    continue
+                source_id = arg_path.split(".")[0]
+                source = state.outputs.get(source_id)
+                if isinstance(source, dict) and source.get("abstained"):
+                    abstained_judges[arg_name] = len(source["abstained"])
+            if abstained_judges:
+                payload["abstained_judges"] = abstained_judges
+                payload["abstention_count"] = sum(abstained_judges.values())
+                n = len(node.args or {})
+                names = ", ".join(
+                    f"{k} ({v})" for k, v in sorted(abstained_judges.items()))
+                payload["detail"] = (
+                    f"{n} judges agree, but {names} abstained — "
+                    f"empty seat, not unanimous")
         state.outputs[node.id] = payload
 
     def _decide_gate(self, node: Node,

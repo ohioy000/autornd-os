@@ -7892,3 +7892,57 @@ the residual gap the fold will carry until ARCH-20260922-043 makes the empty
 seat distinguishable and a future instrument fills it.
 
 **The decision is the advisor's to record.**
+
+## 60. Fold empty seat — abstention enrichment (ARCH-20260922-043, 2026-09-23)
+
+### Instrument change
+
+Ruling D9 names the problem: `judges_agree` folds four booleans. When coverage
+abstains (FORM-shaped criteria the deterministic check cannot classify), the
+fold receives `True` and records "all judges agree." Silence is recorded as
+assent.
+
+The enrichment runs AFTER the fold's verdict in `executor._run_check`. It
+inspects `state.outputs[source_id].abstained` for each judge argument and, when
+non-empty, replaces the detail string with "N judges agree, but X (count)
+abstained — empty seat, not unanimous." The fold's DECISION is unchanged:
+abstention does not fail the fold. Only the RECORD gains a third state.
+
+### Files changed
+
+- `autornd/graph/executor.py` — `_run_check` enriched (lines 188–209)
+- `autornd/graph/adapter.py` — iteration record gains `coverage_abstained_count`
+- `tests/test_all_judges_exit.py` — `TestEmptySeat`: 3 tests
+
+### B7 convergence trace replay
+
+Replayed the four B7 scenarios (v4 traces) through the new fold logic:
+
+| Scenario | Final iter | Fold passed | Abstention data | New detail |
+|---|---|---|---|---|
+| conv_crossref_integrity | 3 | No (validate) | unavailable | no change |
+| conv_derived_tolerances | 2 | No (validate) | unavailable | no change |
+| conv_numeric_consistency | 2 | No (validate) | unavailable | no change |
+| conv_requires_execution | 2 | No (coverage/consistency None) | unavailable | no change |
+
+All four traces had the fold failing — validate dissented in three, and
+coverage/consistency were `None` in all four (the old adapter code did not
+extract them). The D9 enrichment fires only when `passed is True` with non-empty
+abstention data, so it does not alter any B7 outcome. The criteria lists needed
+to reconstruct abstention counts are not stored in the v4 trace format; the
+`coverage_abstained_count` field added to the adapter will be present in future
+traces.
+
+### Tests
+
+Three tests in `TestEmptySeat`:
+
+1. **empty_seat_passes_but_is_not_unanimous** — coverage has one abstained
+   criterion; fold passes; detail says "empty seat, not unanimous"; no "all"
+   in detail.
+2. **no_abstention_is_unanimous** — zero abstentions; fold says "all 4 judges
+   agree" as before.
+3. **regression_unanimous_excludes_empty_seat** — invariant: "all" never
+   coexists with `abstained_judges`.
+
+Suite: 973/973, $0.00.
