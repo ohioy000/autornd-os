@@ -264,3 +264,100 @@ def test_ci_gives_one_job_the_history_this_guard_needs():
         "No CI job checks out full history, so the provenance-stamp ancestry "
         "guard skips on every run. Set fetch-depth: 0 on the job that runs "
         "pytest.")
+
+
+# How far the document's own stamp may lag the commit under test, counted in
+# commits that actually MODIFIED HANDOVER.md.
+#
+# It cannot be zero: the commit that writes the stamp necessarily edits the
+# document, so a freshly-stamped document always lags itself by one. Three
+# allows that commit, a merge commit, and one concurrent edit landing beside it.
+#
+# It is not a finely-tuned number. Measured 2026-09-22 (B22): the stamp read
+# `039cabe` while 32 HANDOVER-touching commits had landed since, and its
+# companion tests stamp read `8bb0cbc` with 9. The gap between 3 and 32 is an
+# order of magnitude, so the bound distinguishes "just stamped" from "a day
+# stale" without needing to be exact.
+_MAX_STAMP_LAG = 3
+
+
+def test_the_head_stamp_is_the_newest_sha_the_document_stamps(handover):
+    """Internal coherence: HEAD cannot be older than a fact the document reports.
+
+    **The defect this exists for (B22).** The header read ``**HEAD:** `039cabe` ``
+    beside ``**Tests:** 931 as of `8bb0cbc` `` — and `039cabe` is an ANCESTOR of
+    `8bb0cbc`. The document claimed to describe a commit older than the commit
+    whose test count it was reporting. Both stamps resolved, both were ancestors
+    of HEAD, and all three existing guards passed.
+
+    HEAD names the commit the document DESCRIBES. That reading is forced by the
+    header's own shape: the snapshot DATE is carried separately, so HEAD would
+    be redundant if it meant "last substantive rewrite", and the tests stamp
+    carries its own sha, so HEAD is the document-level equivalent of a per-fact
+    stamp. A description cannot predate what it describes.
+    """
+    if not (ROOT / ".git").exists():
+        pytest.skip("not a git checkout")
+    if _shallow():
+        pytest.skip("shallow clone — ancestry is unanswerable at fetch-depth 1")
+
+    head = re.search(r"HEAD:[^`\n]{0,24}`([0-9a-f]{7,40})`", handover)
+    assert head, _NOTHING_FOUND
+    head_sha = head.group(1)
+
+    # Non-vacuity is about the PATTERN finding stamps, not about the shas
+    # differing. A correctly maintained document stamps every fact at the same
+    # commit, so "all stamps equal" is the right answer and must not be
+    # mistaken for "nothing to check" — an earlier version of this assertion
+    # required a differing sha and therefore failed on exactly the state it
+    # exists to certify.
+    stamps = _STAMP.findall(handover)
+    assert len(stamps) >= 2, _NOTHING_FOUND
+    others = [s for s in stamps if s != head_sha]
+
+    newer = [s for s in others
+             if _git("merge-base", "--is-ancestor", head_sha, s).returncode == 0
+             and _git("rev-parse", s).stdout != _git("rev-parse", head_sha).stdout]
+    assert not newer, (
+        f"HANDOVER's HEAD stamp `{head_sha}` is OLDER than shas it stamps "
+        f"elsewhere: {newer}. A document whose HEAD predates its own newest "
+        f"stamp describes a state that never existed.")
+
+
+def test_the_head_stamp_is_fresh_not_merely_a_real_ancestor(handover):
+    """The property `resolvable` and `ancestor` both miss: staleness.
+
+    A stamp a month old resolves and is an ancestor. Both existing guards pass
+    on it, which is exactly what happened — `039cabe` sat in the header while
+    32 commits edited the document underneath it.
+
+    **What this measures, and nothing more** (convention 26): the number of
+    commits that modified HANDOVER.md between the stamped sha and the commit
+    under test. It does NOT establish that the stamp is correct, only that the
+    document has not been substantially rewritten since it was written. A set
+    of stamps that are uniformly and consistently stale would still pass, and
+    `test_the_head_stamp_is_the_newest_sha_the_document_stamps` is what covers
+    the incoherent case.
+    """
+    if not (ROOT / ".git").exists():
+        pytest.skip("not a git checkout")
+    if _shallow():
+        pytest.skip("shallow clone — rev-list is unanswerable at fetch-depth 1")
+
+    head = re.search(r"HEAD:[^`\n]{0,24}`([0-9a-f]{7,40})`", handover)
+    assert head, _NOTHING_FOUND
+    head_sha = head.group(1)
+
+    counted = _git("rev-list", "--count", f"{head_sha}..HEAD", "--", "HANDOVER.md")
+    assert counted.returncode == 0, (
+        f"could not count commits between `{head_sha}` and HEAD: "
+        f"{counted.stderr.strip()}. An uncountable lag is no evidence, and no "
+        f"evidence must not read as no problem (convention 28).")
+    lag = int(counted.stdout.strip() or 0)
+
+    assert lag <= _MAX_STAMP_LAG, (
+        f"HANDOVER's HEAD stamp `{head_sha}` is STALE: {lag} commits have "
+        f"modified HANDOVER.md since it, against a bound of {_MAX_STAMP_LAG}. "
+        f"The stamp resolves and is an ancestor, so the other guards pass — "
+        f"staleness is the property they miss (B22). Restamp to the commit "
+        f"this change is built on.")
