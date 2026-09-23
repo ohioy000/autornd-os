@@ -1,0 +1,70 @@
+{
+  "command_id": "ARCH-20260922-035",
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "head_before": "0e38e91",
+  "summary": "Both instruments now report what they measured. The coverage record carries the extracted terms and forbidden tokens per criterion, and the precondition blindness rule is documented with a demonstrated test.",
+  "exhibits": {
+    "exhibit_1_coverage_states_its_subject": {
+      "what_changed": "criteria_addressed() in autornd/graph/checks.py now builds an `extractions` dict keyed by criterion, each carrying `terms` (sorted list of significant terms from _terms()) and `forbidden_tokens` (list from _forbidden_tokens()). The dict is passed through Result.data alongside the existing coverage, shapes and abstained fields. Nothing is removed; the record gains a field.",
+      "how_it_follows_retry_reconciliation": "Convention 28 / retry_reconciliation() pattern: the subject (what was extracted) is stated BEFORE the conclusion (the score), so a reader can verify the score without re-running the extractor. A score of 0.7 on a presence criterion now comes with the 10 terms that were extracted and checked, not just the fraction.",
+      "what_it_does_not_change": "The same criteria pass and fail as before. No threshold, routing or verdict semantics moved. The Result.passed value is computed from the same coverage dict with the same threshold. The extractions dict is additional data, not additional logic.",
+      "data_flow": "checks.py:criteria_addressed() → Result.data → executor._run_check() → state.outputs[node.id] → verdicts in the JSONL unit record. The extraction data travels the same path every other Result.data field already takes.",
+      "tests": "tests/test_coverage_shapes.py::TestCoverageRecordStatesItsSubject — 4 tests: presence criterion carries terms, prohibition carries tokens, form carries terms even though it abstains, and removing the field breaks the guard."
+    },
+    "exhibit_2_precondition_blindness_rule": {
+      "what_changed": ".orchestration/README.md now documents the three-outcome precondition rule: present, absent, or blind. The rule is motivated by two measured failures (-027 precondition 2 and 4) and names the three concrete patterns that cause blindness: windowed searches, wrong-location lookups, and unchecked glob roots.",
+      "why_documented_not_coded": "The command's own assumption: 'Whether the precondition rule needs a code helper or only a documented rule is an implementation judgement; either is acceptable, and a helper is preferred only if more than one command shape would use it.' Preconditions in this channel are shell commands written by the advisor. The rule tells the author how to write one that is not blind; a runtime helper would have to parse arbitrary shell to detect a problem that is a design-time choice.",
+      "tests": "tests/test_command_template.py::TestPreconditionBlindnessRule — 4 tests: rule is documented, a glob in a missing directory reports blindness (None) distinct from an absent subject ([]), a glob in an empty directory reports genuine absence, and removing the rule from the README breaks the guard."
+    }
+  },
+  "acceptance_criteria_status": {
+    "coverage_record_names_extractions": "MET — TestCoverageRecordStatesItsSubject demonstrates all three shapes.",
+    "precondition_reports_blindness": "MET — TestPreconditionBlindnessRule::test_a_glob_in_a_missing_directory_is_blind_not_absent.",
+    "no_verdict_threshold_or_routing_change": "MET — git diff --stat -- workflows/ autornd/graph/executor.py is EMPTY. The only code change is in checks.py, and it adds data to Result.data without changing Result.passed.",
+    "no_committed_trace_amended": "MET — git diff -- docs/traces/ is EMPTY.",
+    "b23_caveat_recorded": "MET — B23 row in HANDOVER.md now carries the coverage extractions caveat.",
+    "suite_count_before_and_after": "935 before, 943 after (8 new tests: 4 for Exhibit 1, 4 for Exhibit 2)."
+  },
+  "verification_results": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "943 passed."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q -k 'extract or precondition or blind'",
+      "result": "24 passed — both exhibits covered."
+    },
+    {
+      "command": "git diff --stat -- workflows/ autornd/graph/executor.py",
+      "result": "EMPTY — no routing or wiring touched."
+    }
+  ],
+  "questions_answered": {
+    "cli_summary_extractions": "Not implemented. The command itself anticipated this answer: 'the summary is what an operator reads first, but it is a presentation choice and not required for the measurement to be honest.' The JSONL carries the data; the summary is a separate concern.",
+    "blindness_rule_in_command_template": "Not added. The rule is documented in .orchestration/README.md, which is where the channel's shape rules live. COMMAND_TEMPLATE.json carries structure, not advice."
+  },
+  "preconditions": [
+    {
+      "command": "grep -rn 'def retry_reconciliation' autornd/routing/openrouter.py",
+      "result": "PASS",
+      "observed": "autornd/routing/openrouter.py:293. Present; used as the reference pattern."
+    },
+    {
+      "command": "grep -n 'abstained\\|normalised_by_kind' autornd/evals/runner.py | head",
+      "result": "PASS",
+      "observed": "Lines 237, 458, 733. Record assembly located."
+    },
+    {
+      "command": "ls .orchestration/README.md .orchestration/COMMAND_TEMPLATE.json",
+      "result": "PASS",
+      "observed": "Both present."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS",
+      "observed": "935 passed before the change."
+    }
+  ],
+  "deviations": []
+}

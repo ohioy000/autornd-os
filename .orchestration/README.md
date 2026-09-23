@@ -67,6 +67,45 @@ Not in the default set, because most commands do not touch them:
   a command touching the ledger does not also rewrite the evidence.
 - `docs/preregistration-*.md` — required before any paid run, committed first.
 
+## Preconditions: blindness is not absence
+
+**Measured 2026-09-22 (-027, -029).** Two preconditions reported "absent" when
+the subject was present but the search could not see it:
+
+- `-027` precondition 2 ran `ls docs/traces/ | tail -3` to check for a file
+  whose name sorted before the last three entries. The file was there; the
+  search window was too narrow.
+- `-027` precondition 4 tested `echo $OPENROUTER_API_KEY` in the shell when
+  `config.py:128` reads from `.env`. The key was set; the precondition looked
+  in the wrong place.
+
+Both reported PASS or absence. Neither was true. Convention 28 says an
+instrument asserts that it computed its subject before it asserts anything about
+it, and convention 26 says a reading that can be mistaken for a stronger claim
+is a defect in the instrument.
+
+**The rule:** a precondition that searches for a subject must be able to report
+three outcomes, not two:
+
+| outcome | meaning |
+|---|---|
+| **present** | found what was asked for |
+| **absent** | searched exhaustively and the subject is not there |
+| **blind** | the search could not have seen the subject — the window was too narrow, the path was wrong, or the method does not reach where the subject lives |
+
+A precondition that can only say "found" or "not found" conflates absence with
+blindness. When it reports "not found", the executor cannot tell whether to
+BLOCK (subject genuinely missing) or to REPAIR THE SEARCH (method was wrong).
+
+**How to write a precondition that is not blind:**
+- Search the full population, not a window: `ls dir/` not `ls dir/ | tail -3`.
+- Test the subject where it lives: if the code reads `.env`, test `.env`, not
+  the shell environment.
+- When a glob returns nothing, check whether the glob's own directory exists
+  before concluding the files are absent.
+
+---
+
 ## What is never in scope
 
 - **`.env`** — the owner's, and only the owner's (G-3). It carries a live key.

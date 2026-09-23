@@ -283,3 +283,44 @@ class TestOnlyProperlyQuotedTokensAreForbidden:
         assert _forbidden_tokens(criterion) == ["Pending legal review"], (
             "still extracted, and still inverted the wrong way round — B24's "
             "open half, reported rather than silently repaired")
+
+
+class TestCoverageRecordStatesItsSubject:
+    """ARCH-20260922-035 Exhibit 1: the coverage record must carry the
+    extracted terms and forbidden tokens per criterion, not only the score.
+
+    Convention 28 / retry_reconciliation() pattern: a score without the
+    extraction that produced it is a conclusion a reader cannot verify without
+    re-running the extractor by hand (-029).
+    """
+
+    def test_presence_criterion_carries_its_extracted_terms(self):
+        criterion = "The implementation uses exponential backoff with jitter."
+        result = COVERAGE([criterion], "applies exponential backoff with jitter")
+        ext = result.data["extractions"][criterion]
+        assert "terms" in ext
+        assert "exponential" in ext["terms"]
+        assert "backoff" in ext["terms"]
+        assert ext["forbidden_tokens"] == []
+
+    def test_prohibition_criterion_carries_its_forbidden_tokens(self):
+        result = COVERAGE([CRITERION_PROHIBITION],
+                          "A plain-language brief for finance leads.")
+        ext = result.data["extractions"][CRITERION_PROHIBITION]
+        assert ext["forbidden_tokens"], "prohibition must name its tokens"
+        assert "leverage" in ext["forbidden_tokens"]
+        assert "terms" in ext
+
+    def test_form_criterion_carries_its_extracted_terms(self):
+        result = COVERAGE([CRITERION_FORM], "")
+        ext = result.data["extractions"][CRITERION_FORM]
+        assert ext["terms"], "even an abstained criterion states its subject"
+        assert ext["forbidden_tokens"] == []
+
+    def test_removing_the_field_breaks_this_test(self):
+        """Convention 22: prove by breaking."""
+        result = COVERAGE([CRITERION_PROHIBITION],
+                          "A plain-language brief for finance leads.")
+        assert "extractions" in result.data, (
+            "the extractions field was removed — the record no longer states "
+            "what was scored on, which is the defect -029 measured")
