@@ -1,0 +1,110 @@
+{
+  "command_id": "ARCH-20260922-025",
+  "parent_id": null,
+  "status": "DONE",
+  "executed": "2026-09-22",
+  "head_before": "91d243c",
+  "head_after": "8b3e5916f5a2abeacc578cb271a9fe56da8cb9d8",
+  "preconditions": [
+    {
+      "command": "git rev-parse --short HEAD",
+      "result": "PASS",
+      "observed": "91d243c — matches the command's expectation exactly."
+    },
+    {
+      "command": "grep -n 'HEAD:' HANDOVER.md README.md AGENTS.md",
+      "result": "PASS",
+      "observed": "Only HANDOVER.md:3 carries a HEAD stamp: '**Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `039cabe` · **Branch:** `main`'. README.md and AGENTS.md carry NO HEAD stamp — reported as the verification asks rather than treated as a defect. Line 4 read '**Tests:** 931 as of `8bb0cbc` · **Date of this snapshot:** 2026-09-13, counts re-derived 2026-09-19'."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS",
+      "observed": "931 passed. Green at the expected count before the change."
+    }
+  ],
+  "the_count_check_the_command_demanded": {
+    "instruction": "Report the observed count; if it differs from 931, that is the finding — stop and name it, do not stamp what you see.",
+    "observed_before": "931 — matches. No divergence to name.",
+    "observed_after": "935. The +4 is this command's own two freshness guards plus their parametrisation; the command's own changes are the only cause and the after-count equals the stamped value, as its acceptance criterion requires."
+  },
+  "intended_property_established_before_changing_the_value": {
+    "conclusion": "HEAD names the commit the document DESCRIBES.",
+    "reasoning": "Forced by the header's own shape, not assumed. (1) The snapshot DATE is carried separately on the same line, so HEAD would be redundant if it meant 'last substantive rewrite'. (2) The tests stamp carries its OWN sha ('931 as of `8bb0cbc`'), so HEAD is the document-level equivalent of a per-fact stamp rather than a different kind of thing. (3) Under the 'describes' reading the current state is a defect; under the 'rewrite boundary' reading it is merely odd. The command's own evidence line — 'a document whose HEAD predates its own newest stamp is internally incoherent' — only holds under (1).",
+    "action_taken": "Set to this command's parent commit, 91d243c, per the command's instruction for that branch."
+  },
+  "the_defect_measured": {
+    "head_stamp": "039cabe",
+    "tests_stamp": "8bb0cbc",
+    "relation": "039cabe is an ANCESTOR of 8bb0cbc — verified with git merge-base --is-ancestor. The document claimed to describe a commit older than the commit whose test count it reported.",
+    "staleness": "32 commits had modified HANDOVER.md since 039cabe; 9 since 8bb0cbc.",
+    "why_existing_guards_passed": "All three assert properties equally true of a stale stamp: not-a-placeholder, resolves, is-an-ancestor. B21's repair of the stamp regex was correct and could not reach this, because the regex was never the reason these passed."
+  },
+  "the_guard": {
+    "count": 2,
+    "coherence": "HEAD must be the newest sha the document stamps. Catches 039cabe beside 8bb0cbc exactly.",
+    "freshness": "At most 3 commits may have modified HANDOVER.md between the stamp and the commit under test. The bound cannot be 0 — the commit writing a stamp necessarily edits the document — and 3 allows that commit, a merge, and one concurrent edit. Not finely tuned: observed staleness was 32, an order of magnitude clear.",
+    "what_it_does_not_catch": "Stated in the docstring per convention 26. Uniformly and consistently stale stamps pass coherence; freshness only knows whether the document moved. Neither establishes that a stamp is CORRECT.",
+    "proved_by_breaking_three_ways": [
+      {
+        "break": "fabricated sha (cafebabe)",
+        "result": "FAILED — 'could not count commits between `cafebabe` and HEAD: fatal: bad revision'. An uncountable lag is reported as no evidence rather than no problem (convention 28)."
+      },
+      {
+        "break": "real but non-ancestor sha (7fa5b11, the repo's oldest commit)",
+        "result": "FAILED — named as older than the shas stamped elsewhere."
+      },
+      {
+        "break": "real ANCESTOR that is merely stale (039cabe), with every stamp set to it so coherence passes and freshness must act alone",
+        "result": "FAILED — '32 commits have modified HANDOVER.md since it, against a bound of 3.' THIS IS THE CASE THAT PASSED BEFORE THIS COMMAND."
+      }
+    ]
+  },
+  "a_self_inflicted_exhibit": {
+    "what": "The coherence guard's first anti-vacuity assertion demanded a DIFFERING sha to prove it was not vacuous. A correctly maintained document stamps every fact at the same commit, so the guard failed on exactly the state it exists to certify — caught by the suite one run later.",
+    "fix": "Non-vacuity belongs to the PATTERN finding stamps, not to the shas differing.",
+    "why_kept_in_the_record": "A guard that fails on correct input is the same family as one that cannot fail at all, and B21 is the row for that family."
+  },
+  "b22": "OPENED and CLOSED in the same row in §4.2, since the repair landed with the finding. Did not exist before — grep returned 0 — so there was no row to update.",
+  "verification_results": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "935 passed; equals the stamped value."
+    },
+    {
+      "command": "grep -n 'HEAD:' HANDOVER.md README.md AGENTS.md",
+      "result": "HANDOVER.md:3 only, now `91d243c`. README.md and AGENTS.md carry no HEAD stamp — reported, not added."
+    },
+    {
+      "command": "grep -n 'B22' HANDOVER.md",
+      "result": "Present in §4.2."
+    },
+    {
+      "command": "git diff --stat",
+      "result": "5 files: HANDOVER.md, README.md, tests/test_handover_truth.py, CLAUDE.md and .claude/context/testing.md. The command allowed four; see deviations."
+    }
+  ],
+  "deviations": [
+    {
+      "what": "Five files changed, where the verification expects at most four.",
+      "why": "CLAUDE.md and .claude/context/testing.md carry test counts and are in the always-in-scope set established by ARCH-20260922-033's template work. Leaving them stale would have left the suite red on the generated-count guards. AGENTS.md was NOT changed — it carries a file count, which did not move."
+    },
+    {
+      "what": "An additional stale stamp was corrected beyond the two the command names.",
+      "why": "HANDOVER.md:267 read '51 files, 935 tests (as of `8bb0cbc`)'. It is the same defect in the same document and the coherence guard would have flagged it the moment 8bb0cbc stopped being an ancestor of the HEAD stamp. Fixing two of three instances is the failure mode B21 records."
+    },
+    {
+      "what": "No IN_PROGRESS response was committed before the work.",
+      "why": "The owner's standing instruction this session is to act on commands when given, and the work began on that. The commit should still have preceded it. Recorded rather than backfilled."
+    }
+  ],
+  "questions_for_advisor": [
+    {
+      "question": "The command's own question: is HEAD meant to name the described commit, or a snapshot boundary that moves only on substantive rewrites?",
+      "answer": "Concluded: the described commit, on the three-part reasoning above. Recorded as a conclusion with its argument rather than an assumption, so it can be overruled cheaply. If the other reading was intended, the freshness guard is wrong and should be deleted rather than loosened — a boundary that moves only on rewrites is not mechanically checkable, which the command itself observes."
+    },
+    {
+      "question": "Should README.md carry a HEAD stamp at all?",
+      "context": "It carries a test badge but no provenance sha, so it can drift from HANDOVER without any guard noticing. Not added — adding a stamp is a documentation decision rather than a repair."
+    }
+  ]
+}
