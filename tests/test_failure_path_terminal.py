@@ -131,3 +131,83 @@ class TestThreeTerminals:
         judges = state.outputs["judges"]
         assert judges["passed"] is False
         assert "coverage" in judges["detail"]
+
+    async def test_failure_record_names_the_persistent_criteria(self):
+        """ARCH-20260923-052 Assertion 1: the record names which criteria stayed
+        unsatisfied. They live in coverage.missed and coverage.detail, reachable
+        from the terminal via: reason → 'still red: build' → judges.dissenting
+        → coverage.missed."""
+        verdicts = {
+            "triage": {"risk": "medium", "domains": ["backend"],
+                       "unrecallable": False},
+            "context": {}, "plan": PLAN_UNMET,
+            "feasibility": {"feasible": True},
+            "implement": IMPL_UNMET,
+            "domain_review": {"critical": False},
+            "review": {"ship": True},
+            "validate": {"green": True},
+            "escalation": {"requires_human": False,
+                           "root_cause_analysis": "Implementation does not "
+                           "address caching requirements"},
+        }
+        state, _ = await _run(verdicts)
+
+        coverage = state.outputs["coverage"]
+        assert set(coverage["missed"]) == {
+            "Caching layer stores computed results in Redis",
+            "Cache invalidation runs on every write",
+        }
+        assert "0% of its terms appear" in coverage["detail"]
+
+        # The criteria are in the record but NOT in the terminal reason itself.
+        # A reader must chase: reason → judges → coverage to reach them.
+        assert "Caching" not in (state.reason or ""), (
+            "if this starts passing, the criteria were surfaced in the "
+            "terminal and the -052 finding is resolved")
+
+    async def test_escalation_diagnosis_is_captured(self):
+        """ARCH-20260923-052 Assertion 2: the escalation node produces a
+        diagnosis (root_cause_analysis) and it is present in the record."""
+        verdicts = {
+            "triage": {"risk": "medium", "domains": ["backend"],
+                       "unrecallable": False},
+            "context": {}, "plan": PLAN_UNMET,
+            "feasibility": {"feasible": True},
+            "implement": IMPL_UNMET,
+            "domain_review": {"critical": False},
+            "review": {"ship": True},
+            "validate": {"green": True},
+            "escalation": {"requires_human": False,
+                           "root_cause_analysis": "Implementation does not "
+                           "address caching requirements"},
+        }
+        state, _ = await _run(verdicts)
+
+        esc = state.outputs["escalation"]
+        assert esc["root_cause_analysis"] == (
+            "Implementation does not address caching requirements")
+
+        # The diagnosis is in state.outputs but NOT in the terminal reason.
+        assert "caching" not in (state.reason or "").lower(), (
+            "if this starts passing, the diagnosis was surfaced in the "
+            "terminal and the -052 finding is resolved")
+
+    async def test_escalation_sets_human_or_not_signal(self):
+        """ARCH-20260923-052 Assertion 3: the escalation verdict carries
+        requires_human and it gates recovery."""
+        verdicts = {
+            "triage": {"risk": "medium", "domains": ["backend"],
+                       "unrecallable": False},
+            "context": {}, "plan": PLAN_UNMET,
+            "feasibility": {"feasible": True},
+            "implement": IMPL_UNMET,
+            "domain_review": {"critical": False},
+            "review": {"ship": True},
+            "validate": {"green": True},
+            "escalation": {"requires_human": False,
+                           "root_cause_analysis": "wrong topic"},
+        }
+        state, _ = await _run(verdicts)
+        assert state.outputs["escalation"]["requires_human"] is False
+        assert state.status == "escalated"
+        assert "recovery_loop" in state.outputs, "recovery ran"
