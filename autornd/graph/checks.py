@@ -454,6 +454,10 @@ def criteria_addressed(
     shapes: dict[str, str] = {}
     abstained: list[dict[str, str]] = []
     why: dict[str, str] = {}
+    # Convention 28 / retry_reconciliation() pattern: state the subject before
+    # stating the conclusion. A score without its extraction is a conclusion a
+    # reader cannot verify without re-running the extractor by hand (-029).
+    extractions: dict[str, dict[str, Any]] = {}
 
     for criterion in criteria:
         wanted = _terms(criterion)
@@ -463,8 +467,9 @@ def criteria_addressed(
         shapes[criterion] = shape
 
         if shape == FORM:
-            # Never fails the fold, and never silent: the paid validator reads
-            # the same summary and can judge what term overlap cannot.
+            extractions[criterion] = {
+                "terms": sorted(wanted), "forbidden_tokens": [],
+            }
             abstained.append({
                 "criterion": criterion,
                 "shape": FORM,
@@ -474,15 +479,19 @@ def criteria_addressed(
             continue
 
         if shape == PROHIBITION:
-            # Inverted, and strictly stronger than overlap ever was: the
-            # criterion's own forbidden tokens are the test.
             present = [t for t in forbidden if _forbidden_present(t, artifact)]
+            extractions[criterion] = {
+                "terms": sorted(wanted), "forbidden_tokens": list(forbidden),
+            }
             coverage[criterion] = 0.0 if present else 1.0
             if present:
                 missed.append(criterion)
                 why[criterion] = "uses " + ", ".join(repr(t) for t in present)
             continue
 
+        extractions[criterion] = {
+            "terms": sorted(wanted), "forbidden_tokens": [],
+        }
         overlap = len(wanted & body) / len(wanted)
         coverage[criterion] = round(overlap, 2)
         if overlap < threshold:
@@ -492,7 +501,7 @@ def criteria_addressed(
     measured = len(coverage)
     data = dict(
         missed=missed, coverage=coverage, addressed=measured - len(missed),
-        shapes=shapes, abstained=abstained,
+        shapes=shapes, abstained=abstained, extractions=extractions,
     )
 
     if missed:

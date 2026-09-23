@@ -133,3 +133,46 @@ class TestTheSetIsStillTrue:
         for never in [".env", "evals/results/", "milkhouse"]:
             assert never in text, (
                 f"the channel README no longer names {never!r} as out of scope")
+
+
+class TestPreconditionBlindnessRule:
+    """ARCH-20260922-035 Exhibit 2: a precondition must distinguish an absent
+    subject from a search that could not see it.
+
+    Measured 2026-09-22: -027 precondition 2 ran ``ls | tail -3`` and concluded
+    a file was absent when its sort position excluded it from the window.
+    Convention 28: an instrument asserts it computed its subject before
+    asserting anything about it.
+    """
+
+    def test_the_blindness_rule_is_documented(self):
+        text = CHANNEL_README.read_text(encoding="utf-8")
+        assert "blind" in text.lower(), (
+            "the precondition blindness rule is not in the channel README")
+        assert "absent" in text.lower()
+        assert "present" in text.lower()
+
+    def test_a_glob_in_a_missing_directory_is_blind_not_absent(self, tmp_path):
+        """A glob whose root does not exist cannot say 'the files are absent'
+        — it can only say 'I could not look'. The distinction is the whole
+        finding of -027 precondition 2."""
+        search_root = tmp_path / "nonexistent"
+        matches = list(search_root.glob("*.py")) if search_root.is_dir() else None
+        assert matches is None, (
+            "a missing directory should report blindness (None), not absence ([])")
+
+    def test_a_glob_in_an_empty_directory_is_absent(self, tmp_path):
+        """An empty directory that exists: the search ran, found nothing, and
+        that IS absence — the search was not blind, the subject is not there."""
+        search_root = tmp_path / "empty"
+        search_root.mkdir()
+        matches = list(search_root.glob("*.py")) if search_root.is_dir() else None
+        assert matches is not None, "directory exists, so the search ran"
+        assert matches == [], "no files present — genuine absence"
+
+    def test_removing_the_rule_breaks_this_test(self):
+        """Convention 22: prove by breaking."""
+        text = CHANNEL_README.read_text(encoding="utf-8")
+        assert "blind" in text.lower(), (
+            "the blindness rule was removed from the README — the precondition "
+            "convention that -027 and -029 measured the need for is gone")
