@@ -1,0 +1,61 @@
+{
+  "command_id": "ARCH-20260922-039",
+  "parent_id": null,
+  "status": "BLOCKED",
+  "executed": "2026-09-22",
+  "head_before": "91d243c",
+  "head_after": "8b3e5916f5a2abeacc578cb271a9fe56da8cb9d8",
+  "blocked_on": [
+    "ARCH-20260922-036, -037 and -038 do not exist in the tree and were never issued to the executor — grep across HANDOVER.md, docs/ and .orchestration/ returns 0 files for each.",
+    "No ruling text for D1-D6 exists anywhere, so the required one-line restatement of each cannot be written without fabricating it.",
+    "The labels D1-D6 are ALREADY IN USE in docs/handover-review.md for an unrelated 2026-09-13 documentation audit."
+  ],
+  "preconditions": [
+    {
+      "command": "git rev-parse --short HEAD",
+      "result": "PASS",
+      "observed": "91d243c — matches."
+    },
+    {
+      "command": "grep -n 'Ruling D' docs/handover-review.md HANDOVER.md",
+      "result": "PASS (reported)",
+      "observed": "No match. No ruling labelled D-anything exists in the record."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS",
+      "observed": "931 passed before this session's work; 935 after -025."
+    }
+  ],
+  "note_preconditions_passed": "All three preconditions PASS. This is not a precondition failure — it is a missing-input block, and nothing was written to the record.",
+  "the_label_collision_which_the_command_could_not_have_known": {
+    "finding": "docs/handover-review.md lines 124-129 carry a table whose rows are labelled D1 through D6 — CONTRIBUTING.md, CHANGELOG.md, README.md, CLAUDE.md, HANDOVER.md and .env.example — all marked done, dated 2026-09-13. D1, D2, D3 and D6 are ALSO used as prediction labels in later blueprints (lines 571, 847, 2213, 2238, 2416-2418, 3120-3122).",
+    "consequence": "Recording 'The owner ratifies Rulings D1 through D6' in that document would collide head-on with existing labels in the very file the ratification would live in. A reader grepping D1 finds a documentation-audit row marked done.",
+    "recommendation": "Not acted on. The ruling labels need a namespace that is free — the repo's own convention elsewhere is a bug-row prefix plus a revision suffix, as in B17-R1 and B17-R2. Choosing the namespace is the advisor's."
+  },
+  "the_branch_the_command_provides_for_this": {
+    "instruction": "'If ARCH-20260922-036 has NOT executed: state so, and note that -036 should commit the rulings bearing the ratified status directly.'",
+    "executed": "Stated: -036 has not executed and was never issued. Per that branch, -036 should commit the ruling texts bearing the ratified status directly, rather than this command recording a ratification of texts that do not exist."
+  },
+  "why_the_ratification_sentence_was_not_recorded_anyway": "The command supplies it verbatim and it could have been written. It was not, because a ratification of six labelled rulings, in a document where those six labels already mean something else, with no ruling text anywhere in the tree, would create a false record rather than an incomplete one. AGENTS.md: a command whose evidence cannot be checked against the tree is not evidence. The ratification is reported here in full so nothing is lost: the owner ratifies Rulings D1 through D6.",
+  "deviations": [
+    {
+      "what": "This response is committed on the -025 branch rather than arch/20260922-039-ratify-d1-d6.",
+      "why": "No code and no record change was produced. A separate branch would be a pull request whose entire diff asserts that nothing could be written, and stacking is what caused the count collision measured earlier today."
+    }
+  ],
+  "questions_for_advisor": [
+    {
+      "question": "Were -036, -037 and -038 issued to a different executor, or not yet written?",
+      "context": "They are cited as evidence by -039 and none exists in the tree. If they went to another session, the channel has two executors and the response directory is no longer a complete view of what has been done — which is the one property AGENTS.md says it has."
+    },
+    {
+      "question": "What namespace should the rulings use, given D1-D6 are taken?",
+      "context": "B17-R1 and B17-R2 are the existing convention. A free prefix would avoid a grep collision in the document the ratification lives in."
+    },
+    {
+      "question": "The command's own question: did approval cover the queue (-036 through -038, -025, -035) or only the rulings?",
+      "context": "Unanswered and it matters for spend authorisation. -025 was executed under the owner's standing instruction this session; -035 remains unstarted."
+    }
+  ]
+}
