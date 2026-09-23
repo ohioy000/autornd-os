@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `ddaee02` · **Branch:** `main`
-**Tests:** 949 as of `ddaee02` · **Date of this snapshot:** 2026-09-22, counts and stamps re-derived against the tree at the sha above
+**Tests:** 956 as of `ddaee02` · **Date of this snapshot:** 2026-09-22, counts and stamps re-derived against the tree at the sha above
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      51 files, 949 tests (as of `ddaee02`)
+tests/                      51 files, 956 tests (as of `ddaee02`)
 ```
 
 ### 2.3 Key design patterns
@@ -655,7 +655,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (949 total, as of `ddaee02`)
+### 3.7 Test distribution (956 total, as of `ddaee02`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -726,7 +726,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 949/949 pass.** Everything below is a live-behaviour
+**No failing unit tests — 956/956 pass.** Everything below is a live-behaviour
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
@@ -1644,7 +1644,7 @@ answer: `.orchestration/responses/ARCH-20260920-005.response.json`.
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 949 tests as of `ddaee02`, ~52 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 956 tests as of `ddaee02`, ~52 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \
