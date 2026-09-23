@@ -7999,3 +7999,68 @@ The probability that at least one criterion is unjudged in a run (B26's
 P(at least one unjudged) = 55% from §58) is unchanged — the unjudged criteria
 still exist. What changed is that the fold now SAYS SO in every run that carries
 them.
+
+## 62. Presence-tested criteria false-fail measurement (ARCH-20260922-042, 2026-09-23)
+
+### Population
+
+288 presence-tested criteria across 82 units from 60 trace files. Only criteria
+that `_classify` classifies as `presence` (tested by term overlap) are included;
+FORM (abstained) and PROHIBITION criteria are excluded.
+
+### Shape distribution (600 total criteria)
+
+| Shape | Count | Rate |
+|---|---|---|
+| presence | 368 | 61.3% |
+| form | 230 | 38.3% |
+| prohibition | 2 | 0.3% |
+| computed | 0 | 0.0% |
+
+B25's stated "98.7% classify presence" is incorrect for the current instrument.
+After FORM was introduced (Ruling D3, D5), 38.3% of criteria abstain. The
+presence share is 61.3%, not 98.7%. B25's row should be updated.
+
+### False-fail measurement
+
+A false fail is: the coverage check marks a presence criterion as "missed"
+(term overlap < 0.5) but the validator's evidence actually addresses it
+(evidence term overlap ≥ 0.35 with a judgment signal).
+
+| Metric | Value |
+|---|---|
+| Presence-tested criteria | 288 |
+| Missed by coverage check | 11 (3.8%) |
+| False fails (missed by coverage, addressed by validator) | 3 (1.0% of presence criteria) |
+| True fails (missed by coverage, not addressed by validator either) | 8 (2.8%) |
+| False-fail share of misses | 3/11 = 27% |
+
+### Examples
+
+1. **"The specification is self-contained: all referenced protocols..."** —
+   coverage score 0.24, evidence overlap 0.41. The implementation used different
+   vocabulary to describe the same concept.
+2. **"The cost section multiplies the per-broker cost by the exact broker
+   count..."** — coverage score 0.44, evidence overlap 0.89. Nearly at
+   threshold; the validator saw it clearly.
+3. **"The index name follows the naming convention idx_sensor_readings_timestamp"**
+   — coverage score 0.33, evidence overlap 0.50. Domain-specific naming not in
+   the implementation's general vocabulary.
+
+### Interpretation
+
+The false-fail rate is low (1.0% of presence criteria). When coverage DOES miss,
+it is wrong 27% of the time — but coverage misses are rare (3.8%). The combined
+impact is: out of every 100 presence criteria, 1 is incorrectly blocked by the
+coverage check. This is an acceptable false-positive cost for a free deterministic
+check.
+
+The presence test is sound enough for its role in the loop: it catches genuine
+drift (73% of its misses are real) and its false fails are low enough that the
+loop's paid validator can correct them on the next iteration.
+
+### B25 update
+
+B25 should record: the presence test has a 1.0% false-fail rate over 288 criteria
+from 60 traces. The 98.7% figure should be corrected to 61.3%. The shape
+distribution should cite this measurement.
