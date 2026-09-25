@@ -1,19 +1,47 @@
 {
+  "acceptance": {
+    "branch_green": "8/8 handover_truth + 989 full suite on branch",
+    "ci_real": "three jobs named with ci.yml lines",
+    "guard_git_free": "empty grep for git-based assertions",
+    "landable_alone": "branch from origin/main + docs/guard only; 989 green without any stacked PR",
+    "no_sha": "test_no_sha_stamp_remains passes (bold stamps gone; exhibit spans stripped as memory)",
+    "ruling_verbatim": "D27 in \u00a774 + HANDOVER header quote",
+    "stack_recommendation": "see questions_for_advisor \u2014 rebase each onto new main, take the deletion where HANDOVER conflicts; -067/-068 work preserved (rebases carry their code, only stamp lines conflict)",
+    "suite": "989 passed; counts re-derived to this tree",
+    "superseded_quoted": "D18/D19/D20 quoted in \u00a774 + advisor error recorded"
+  },
   "command_id": "ARCH-20260925-069",
-  "delivery_state": "IN_PROGRESS_NO_PR_YET",
-  "deviations": [],
+  "delivery_state": "PUSHED_PENDING_PR",
+  "deviations": [
+    {
+      "reason": "D27 orders re-derivation against the tree under test; this branch lacks the stacked PRs' tests (1008-989=19: the -064..-068 additions). Landing updates main's count to whatever the merge tree collects \u2014 the guard, not a remembered number, decides.",
+      "what": "Counts stamped 989, not main's 1008."
+    }
+  ],
   "executed": "2026-09-25",
-  "head_after": "PENDING_WORK",
+  "head_after": "PENDING_COMMIT",
   "head_before": "32bf1dd",
-  "questions_for_advisor": [],
+  "questions_for_advisor": [
+    "STACK RECOMMENDATION (not an action): after -069 lands, rebase #78..#82 onto new main in order; where HANDOVER.md conflicts, take the deletion (the stamp section stops existing). -067 (adapter rework_extra) and -068 (verdicts coercion) have no HANDOVER-code overlap with this change \u2014 their work rebases cleanly. Do not force-push without owner instruction."
+  ],
   "results": {
+    "branch_demo": "the commit itself: guard file changed (-git machinery, +convention-28 assertion) with counts re-derived in the same change; guard green on branch (8/8 file, 989 full)",
+    "ci_corrected": "\u00a71 now three jobs (test matrix, editable-install, docker) verified against ci.yml:26,67,128",
+    "date_answer": "Date stays; NOTHING guards it (verified empty grep) \u2014 stated, not silently kept",
+    "deleted": "HEAD + Branch lines gone; as-of-sha count lines rewritten bare (header, tree, \u00a73.7, \u00a77)",
+    "git_free": "no rev-parse/merge-base/is-ancestor/commit-tree in test_handover_truth.py \u2014 verified empty grep",
+    "guard": "count-only: header **Tests:**, \u00a73.7 title, tree line vs collection on this tree. No git import use at runtime (subprocess import remains but no git call sites \u2014 verify: no _git/_shallow/_STAMP/merge-base/rev-parse/commit-tree references left).",
     "preconditions": {
       "ci_jobs": "test (3.11/3.12/3.13 matrix), editable-install, docker \u2014 three jobs (ci.yml:26,67,128), not two",
       "git_assertions": "test_handover_truth.py carries rev-parse (345,348,462,463,503-512), merge-base --is-ancestor (249,373,412,560-561), commit-tree (422-434) \u2014 full list in response",
       "head": "32bf1dd = origin/main; no divergence",
       "stamp": "HEAD: 5d94c20, Branch: main \u2014 verbatim; neither main's tip nor its newest HANDOVER modifier",
       "suite_before": "1008 passed green on main"
-    }
+    },
+    "reach_answer": "no main-relationship assertions left in handover_truth/docs/command_template (verified empty grep) \u2014 D27 reaches exactly the stamp class",
+    "ruling": "D27 recorded verbatim in \u00a774 before implementation",
+    "suite": "989 passed green on branch; re-derived 1008 (main) -> 989 (this tree: stacked PR tests absent)",
+    "supersession": "D18/D19/D20 superseded by quotation in \u00a774, not deleted; advisor four-ruling error recorded per convention 7"
   },
-  "status": "IN_PROGRESS"
+  "status": "DONE"
 }
