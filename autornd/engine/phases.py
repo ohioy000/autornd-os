@@ -583,6 +583,12 @@ DOMAIN_CONCERN_BUDGET = 1200
 # told at most 25 words per criterion.
 EVIDENCE_BUDGET = 2000
 REVIEW_FINDINGS_BUDGET = 2000
+# Ruling D21 (2026-09-25): recovery must carry the failure forward. The
+# recovery implement attempt receives the previous iteration's unmet criteria
+# quoted, so it knows what stayed unsatisfied rather than rediscovering it.
+# Same budget as the evidence and findings channels — the lines are criteria,
+# short by construction.
+UNMET_CRITERIA_BUDGET = 2000
 
 
 def _capped(lines: list[str], budget: int) -> tuple[str, int]:
@@ -648,6 +654,26 @@ def render_domain_concerns(concerns: list[str]) -> str:
     return f"Domain reviewer flagged critical concern: {body}"
 
 
+def render_unmet_criteria(missed: list[str]) -> str:
+    """Ruling D21: the previous iteration's unmet criteria, quoted verbatim.
+
+    MEASURED, not assessed — these are the presence test's own output
+    (`coverage.missed`), carried forward so the recovery attempt knows what
+    stayed unsatisfied rather than rediscovering it one criterion at a time.
+    Empty when nothing is recorded as missed, so build-loop iterations (no
+    prior failure) and runs without a coverage node read no new text.
+    """
+    lines = [f"- '{str(m).strip()}'" for m in (missed or []) if str(m).strip()]
+    if not lines:
+        return ""
+    body, dropped = _capped(lines, UNMET_CRITERIA_BUDGET)
+    tail = f"\n(+{dropped} further criteri(on/a) omitted for length)" if dropped else ""
+    return f"""
+
+THE PREVIOUS ATTEMPT LEFT THESE SUCCESS CRITERIA UNMET — satisfy each one:
+{body}{tail}"""
+
+
 async def run_implement(
     client: OpenRouterClient,
     request: str,
@@ -660,6 +686,7 @@ async def run_implement(
     primary_domain: Domain | None = None,
     evidence: list[str] | None = None,
     review_findings: list[Any] | None = None,
+    unmet_criteria: list[str] | None = None,
 ) -> tuple[ImplementVerdict, list[ModelResponse]]:
     feedback = ""
     if resolution_directive:
@@ -674,6 +701,7 @@ PREVIOUS ITERATION FAILED. Cause: {red_cause}
 Address this specific failure in your implementation."""
     # Mechanical inclusion of fields already recorded. No new judgement and no
     # extra call — the material was in the failure log the whole time.
+    feedback += render_unmet_criteria(unmet_criteria or [])
     feedback += render_validate_evidence(evidence or [])
     feedback += render_review_findings(review_findings or [])
 

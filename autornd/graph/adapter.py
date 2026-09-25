@@ -332,6 +332,17 @@ class PhaseRunner:
     async def _phase_implement(self, node: Node, state: ExecutionState):
         lead = self._resolve_who(node, state)
         last = self.failure_log[-1] if self.failure_log else {}
+        # Ruling D21: on a recovery iteration the implement phase receives
+        # the previous iteration's unmet criteria quoted. The coverage node's
+        # output is last-write-wins, so at recovery time it still holds the
+        # final build-loop verdict — the failure being recovered from. Empty
+        # on build iterations (no prior coverage output) and on workflows
+        # without a coverage node, so those prompts read no new text.
+        coverage = state.outputs.get("coverage") or {}
+        if isinstance(coverage, dict):
+            missed = coverage.get("missed") or []
+        else:
+            missed = list(getattr(coverage, "missed", None) or [])
         verdict, responses = await phases.run_implement(
             self.client, state.request, state.outputs["plan"], lead,
             iteration=state.iteration or 1,
@@ -342,6 +353,7 @@ class PhaseRunner:
             # time while the rest sat in the log unread.
             evidence=last.get("evidence"),
             review_findings=last.get("review_findings"),
+            unmet_criteria=[str(m) for m in missed],
             resolution_directive=self.resolution_directive,
             context=self.context,
             primary_domain=None,      # the lead is already resolved

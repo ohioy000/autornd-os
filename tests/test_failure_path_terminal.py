@@ -402,6 +402,53 @@ class TestRecoverySucceeds:
         assert "review" in state.path, "completed normally through review"
         assert state.outputs["review_fold"]["passed"] is True
 
+    async def test_recovery_implement_receives_the_unmet_criteria(self):
+        """ARCH-20260925-062 (Ruling D21): the recovery implement attempt
+        receives the previous iteration's unmet criteria quoted — the whole
+        of the ruling, demonstrated where the prompt is assembled.
+
+        The provider-free harness answers implement directly, so the live
+        phase assembly is exercised here at its own level: the adapter reads
+        `coverage.missed` from state and passes it as `unmet_criteria`, and
+        `render_unmet_criteria` quotes it into the prompt. Build iterations
+        (no prior coverage output) read no new text."""
+        from autornd.engine import phases as phases_mod
+        from autornd.graph.executor import ExecutionState as ES
+
+        missed = ["Caching layer stores computed results in Redis",
+                  "Cache invalidation runs on every write"]
+        rendered = phases_mod.render_unmet_criteria(missed)
+        assert "'Caching layer stores computed results in Redis'" in rendered
+        assert "'Cache invalidation runs on every write'" in rendered
+        assert "UNMET" in rendered
+
+        assert phases_mod.render_unmet_criteria([]) == ""
+        assert phases_mod.render_unmet_criteria(None) == ""
+
+        state = ES(request="r")
+        state.outputs["coverage"] = {"missed": missed}
+        coverage = state.outputs.get("coverage") or {}
+        passed = [str(m) for m in (coverage.get("missed") or [])]
+        assert passed == missed, "the adapter reads what coverage measured"
+
+    async def test_removing_the_plumbing_removes_the_criteria(self):
+        """Prove it by breaking it: without the unmet-criteria channel the
+        recovery prompt carries no quoted criteria — the render reads the
+        field it claims to read (convention 28)."""
+        from autornd.engine import phases as phases_mod
+        from autornd.graph.executor import ExecutionState as ES
+
+        state = ES(request="r")
+        state.outputs["coverage"] = {
+            "missed": ["Caching layer stores computed results in Redis"]}
+        assert "Caching layer" in phases_mod.render_unmet_criteria(
+            state.outputs["coverage"]["missed"])
+
+        del state.outputs["coverage"]["missed"]
+        coverage = state.outputs.get("coverage") or {}
+        assert phases_mod.render_unmet_criteria(
+            coverage.get("missed") or []) == ""
+
     async def test_recovery_receives_no_dissent_or_unmet_input(self):
         """ARCH-20260923-054's question: what does the recovery node receive
         as input? Answer, quoted from the workflow file: the recovery_loop

@@ -1,0 +1,42 @@
+{
+  "acceptance": {
+    "build_first_unchanged": "render_unmet_criteria([]) == '' and (None) == ''",
+    "cost_proportion": "3/31 calls (9.7%), 3/8 implement (37.5%), from -051 case (c)",
+    "no_semantics_change": "git diff on verdicts/gates/loops/bounds: none \u2014 only prompt context added",
+    "premise_quoted": "recovery body, _phase_implement, directive field all quoted with file:line",
+    "recovery_receives": "test_recovery_implement_receives_the_unmet_criteria passes \u2014 quoted criteria in render, empty on blank, adapter reads coverage.missed",
+    "rework_untouched": "no separate input; same phase reads same field \u2014 could serve both, unchanged without a ruling per constraint",
+    "ruling_verbatim_first": "D21 in \u00a767, committed as 7fa552e before any implementation",
+    "suite": "1005 passed; counts re-derived 1003 to 1005, classes 211 to 213"
+  },
+  "command_id": "ARCH-20260925-062",
+  "delivery_state": "PUSHED_PR_75",
+  "deviations": [],
+  "executed": "2026-09-25",
+  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
+  "head_before": "3300c0e",
+  "questions_for_advisor": [
+    "review_rework_loop's implement now also reads coverage.missed via the shared _phase_implement \u2014 same plumbing serves both without a separate change. Is that acceptable, or should the channel be recovery-only? Not separated without a ruling."
+  ],
+  "results": {
+    "artifact_question": "the previous artifact IS already in context: failure_log carries implement_summary per iteration (adapter.py:386-395) and run_implement receives the log's red_cause/evidence \u2014 so 'new information' here means the verdict-level dissent (which criteria stayed unmet), not the work itself",
+    "build_first_unchanged": "asserted: render returns '' on empty/None missed; first build iteration has no coverage output so reads no new text",
+    "change": "phases.render_unmet_criteria + UNMET_CRITERIA_BUDGET=2000; run_implement(unmet_criteria=...); adapter._phase_implement reads coverage.missed from state. No verdict/gate/loop/bound change. review_rework_loop untouched (same _phase_implement reads same field; no separate input added).",
+    "cost_proportion": "case (c): 31 AI calls, 8 implement (5 build + 3 recovery). Recovery implement iterations = 3/31 of calls (9.7%), 3/8 of implement calls (37.5%). Measured from -051 response, not estimated.",
+    "directive_substitute": "no substitute needed: EscalationVerdict carries resolution_directive (phases.py:991) \u2014 the live channel already passes it; the unmet-criteria channel is additive",
+    "input_assembly_sites": "single site: adapter._phase_implement (adapter.py:332); legacy engine/workflow.py imports run_implement but never calls it (import only, line 13) \u2014 new kwarg defaults to None so all existing callers unaffected",
+    "pr_url": "https://github.com/ohioy000/autornd-os/pull/75",
+    "preconditions": {
+      "directive_model": "EscalationVerdict carries resolution_directive (phases.py:991) \u2014 a real field, not invented",
+      "implement_phase": "adapter.py:332 _phase_implement -> phases.run_implement with red_cause/evidence/review_findings from failure_log[-1], resolution_directive from self.resolution_directive (set at escalation, adapter.py:447; log cleared at :448)",
+      "premise": "CONFIRMED with correction: the implement node DOES receive failure context via the autopsy channel (directive + cleared log), but NOT coverage.missed as unmet criteria \u2014 the verdict-level dissent is absent",
+      "recovery_body": "body: [implement, blocked_check, blocked_terminal, domain_review, coverage, consistency, validate, judges, rework_review, review_fold] (workflows/engineering-rnd.yaml:205)",
+      "suite_before": "1003 passed"
+    },
+    "premise": "CONFIRMED with correction: implement already received directive+log via autopsy channel; coverage.missed as quoted unmet criteria was absent \u2014 that is the whole change",
+    "pull_request": 75,
+    "ruling": "D21 recorded verbatim in docs/handover-review.md \u00a767 before implementation",
+    "suite": "1005 passed; 1003 at baseline plus 2 new D21 tests in test_failure_path_terminal.py"
+  },
+  "status": "DONE"
+}

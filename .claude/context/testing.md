@@ -4,14 +4,14 @@ Load when writing tests. Source: `tests/conftest.py` and the 54 test files besid
 
 ## What exists, honestly
 
-- **54 test files, 1003 tests, ~52 s, no network and no spend.** That is
+- **54 test files, 1005 tests, ~52 s, no network and no spend.** That is
   deliberate, not incidental: the shape of a workflow, its gates and loops, the
   deterministic checks, the condition language and the eval scoring are all
   decidable without a provider.
 - **There is no coverage threshold and no coverage tooling.** Don't claim one.
 - **There is no linter, formatter or type-checker.** Match surrounding style by hand.
 - Tests are `tests/test_<subject>.py` with `class Test<Behaviour>` groupings
-  (211 such classes). `asyncio_mode = "auto"` — async tests need no decorator.
+  (213 such classes). `asyncio_mode = "auto"` — async tests need no decorator.
 - Many test modules open with a **module docstring stating why the behaviour
   exists and what measured it** (`tests/test_green_resolution.py:1-21` is the
   model). Match that when the test encodes a hard-won rule.
