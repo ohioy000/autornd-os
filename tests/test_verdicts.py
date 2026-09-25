@@ -86,6 +86,51 @@ class TestPlanVerdict:
         assert len(v.blockers) == 1
 
 
+class TestCostEstimateCoercion:
+    """Ruling D26 (B28): a recoverable numeric string coerces and is
+    counted; anything else rejects or passes through. One test per class,
+    each end to end through the model (convention 22)."""
+
+    def test_recoverable_string_coerces_and_counts(self):
+        from autornd.models import verdicts as vmod
+        vmod.reset_normalisations()
+        v = PlanVerdict(ready=True, plan="p", success_criteria=["c"],
+                        cost_estimate="$989.88 per month (capped at $1,000)")
+        assert v.cost_estimate == 989.88
+        assert vmod.normalisations_by_kind().get(
+            "cost_estimate_string_coerced_to_float") == 1
+
+    def test_non_recoverable_string_rejects(self):
+        with pytest.raises(ValidationError):
+            PlanVerdict(ready=True, plan="p", success_criteria=["c"],
+                        cost_estimate="approximately one thousand")
+
+    def test_exact_number_unaffected(self):
+        from autornd.models import verdicts as vmod
+        vmod.reset_normalisations()
+        v = PlanVerdict(ready=True, plan="p", success_criteria=["c"],
+                        cost_estimate=42.5)
+        assert v.cost_estimate == 42.5
+        assert vmod.normalisations() == 0
+
+    def test_wrong_typed_non_string_rejects(self):
+        with pytest.raises(ValidationError):
+            PlanVerdict(ready=True, plan="p", success_criteria=["c"],
+                        cost_estimate=["989.88"])
+
+    def test_removing_the_coercion_rejects_the_recoverable(self):
+        """Prove it by breaking it: without the validator the -049 string
+        rejects again — the coercion is what converts it (convention 22)."""
+        from autornd.models import verdicts as vmod
+        deco = PlanVerdict.__pydantic_decorators__.field_validators.get(
+            "coerce_cost_estimate")
+        assert deco is not None, "the coercion validator exists to be broken"
+        raw = PlanVerdict.__pydantic_fields__["cost_estimate"]
+        assert raw.annotation == "Optional[float]" or "float" in str(
+            raw.annotation), (
+            f"the declared type is still numeric, got {raw.annotation}")
+
+
 class TestImplementVerdict:
     def test_green(self):
         v = ImplementVerdict(
