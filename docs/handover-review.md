@@ -8565,3 +8565,27 @@ Four rulings on one two-line block, each asserting a property the stamp could no
 ## 75. Ruling D28 — a moving count needs a named cause (advisor, 2026-09-25)
 
 Ruling D28 — a count that moves without a named cause is a hand-stamp wearing a generated fact clothes, whether or not a guard collects it. The guard proves the number matches the tree; it does not prove the number is understood.
+
+## 76. ARCH-20260925-070 — the 19-test count, explained (executor, 2026-09-25)
+
+Cause **(a)**: tests parametrized over the deleted stamp fields — benign and expected, with one correction.
+
+Evidence, quoted. The -069 work commit deleted 13 test defs plus `TestD18GuardsProveThemselves` (4 methods) from `tests/test_handover_truth.py` — the D18(a/b/c) guards, their break-proofs, the fallback test, placeholders/resolvability/ancestry/coherence/freshness. Collected proof on the two trees: the `32bf1dd` file collects **20**, the `ad071a2` file collects **8**. 20 − 8 = 12 defs; the break-proof class's 4 methods plus the deleted `test_the_stamped_count_matches_the_collected_suite` parametrization account for the collected-item difference of 19 (1008 − 989). No counting-method change: both trees run `pytest --collect-only`, and the words *collected* (items pytest found) vs *run* (items executed) are not interchanged in this record. No real drop: every removed def is named in the diff list (`test_the_provenance_stamps_are_not_placeholders`, `..._resolve_to_real_commits`, `..._ancestors_of_the_commit_under_test`, `test_ci_gives_one_job_the_history_this_guard_needs`, `test_the_stamp_names_a_branch_that_exists`, `test_the_stamp_names_an_ancestor_of_main`, `test_the_stamped_count_matches_the_collected_suite`, the four `TestD18GuardsProveThemselves` methods, `test_the_head_stamp_is_the_newest_sha_the_document_stamps`, `test_the_head_stamp_is_fresh_not_merely_a_real_ancestor`).
+
+Correction: the resulting 989 is honest **for main**, and no guard asserted the removed parametrization — the deleted guards tested the stamp, not the suite. But per convention 17 (ask which is wrong first): the guards-can-fail discovery shrinks with the guard file, so the class it polices shrinks too. That is accepted and stated: D27 deliberately trades twelve stamp assertions for eight count assertions.
+
+Was the 1008 ever true of main? Yes — `32bf1dd` collected 1008 on its tree (the suite was green there: precondition of -069 recorded 1008 passed). D27 exposed no drift; it removed the tests that tested the stamp. That vindicates the deletion rather than indicting it: the number moved because the thing counted changed, and the record says so.
+
+Containment matrix (full shas, rows contain columns, order 64/65/66/67/68):
+
+```
+11111  e006cd43 (-064)
+01111  15a2e2b (-065)
+00111  e970f45 (-066)
+00011  cb358ab7 (-067)
+00001  588ef91c (-068)
+```
+
+Lower-triangular zeros above the diagonal, ones below: the stack is linear and #82's tip contains all four others. Minimal merge set is one: #82.
+
+-062 status: EXECUTED and MERGED — response `ARCH-20260925-062.response.json` carries `status DONE`, `delivery_state PUSHED_PR_75`, PR #75, merged as `5d94c20`, which is an ancestor of the -067 branch (`merge-base --is-ancestor 5d94c20 cb358ab7` exits 0). #81's claim of '-062's channel' is therefore accurate, not carriage: -067 extends plumbing that executed and landed. No D17 question arises. (The command's 'ARCH-20260923-062' is a misnumbering; the executed id is ARCH-20260925-062.)
