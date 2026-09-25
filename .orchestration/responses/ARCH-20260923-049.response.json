@@ -1,0 +1,55 @@
+{
+  "acceptance": {
+    "empty_seat": "absent \u2014 fold dissented rather than abstained; recorded as not demonstrated",
+    "envelope": "n=1 at $0.25, owner-ratified this run; spent $0.0527",
+    "precedence": "prereg @950ff77 precedes run header 2026-09-25T07:58:16Z; pair registered, guard passes",
+    "prediction_before_result": "COMPLETED stated in prereg; result NO TERMINAL \u2014 prediction wrong, recorded as wrong",
+    "prespend_quoted": "1 x $0.25 = $0.25 exactly the sweep cap; silence-is-confirmation per precedent",
+    "shapes_and_abstentions": "2 measured (0.78/0.84), 3 abstained, fold 'not agreed \u2014 consistency is red'",
+    "terminal_or_absence": "absence stated plainly: timed out after 600s in rework_review, status blocked is the runner label not a workflow terminal",
+    "trace_committed": "docs/traces/049-live-terminal.jsonl + STDERR committed; mirror quoted"
+  },
+  "command_id": "ARCH-20260923-049",
+  "delivery_state": "PUSHED_PR_77",
+  "deviations": [
+    {
+      "reason": "That IS the result this command exists to detect: no terminal in bounds. Not a defect to fix here \u2014 reported with the trace.",
+      "what": "The run exceeded its 600s timeout without a workflow terminal; the unit's 'blocked' status is the runner's timeout label."
+    },
+    {
+      "reason": "Two guards went red on the measurement (ledger drift, unpaired prereg); the always-in-scope set covers generated counts and the channel's own artifacts. Recorded here.",
+      "what": "serving-ledger.md regenerated and precedence REGISTERED extended \u2014 files outside the command's include list."
+    }
+  ],
+  "executed": "2026-09-25",
+  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
+  "head_before": "b11faad",
+  "questions_for_advisor": [
+    "The rework loop waited ~590s on rework_review (81.9s) + review (66.9s) + implement (208s) + plan (171s). Is a 600s timeout too short for a live convergence run, or is the latency itself the finding? The timeout was the scenario default, not chosen.",
+    "PlanVerdict.cost_estimate rejected '$989.88 per month ...' as float_parsing \u2014 a prohibition-shaped cost against a numeric field. Is that B17's fourth class (satisfied-by-reading) reaching the plan verdict, and does shape-selects-the-test generalise to verdict fields?"
+  ],
+  "results": {
+    "calls": "12 total (triage 1, research 2, search 1, architecture 5, engineering 3); $0.0527 of $0.25; 600.0s",
+    "empty_seat": "not demonstrated live: coverage abstained 3 but the fold detail names the consistency dissent, not an empty seat",
+    "guards": "precedence pair registered (preregistration test extended); serving-ledger.md regenerated (new architecture/GMICloud + triage/Alibaba rows)",
+    "iterations": "2 recorded: iter1 (build) all green, coverage passed with 3 abstentions; iter2 (rework) dissenting=['consistency'], coverage passed with 3 abstentions. The dissent moved from review to consistency while the run waited on rework_review.",
+    "path": "triage, context, plan, feasibility, plan_ready, verify_grounding, implement, blocked_check, blocked_gate, domain_review, coverage, consistency, validate, judges, review (ship=false), review_clean -> rework loop (implement, blocked_check, blocked_terminal, domain_review, coverage, consistency, validate, judges, rework_review ...) \u2014 rework_review pending at timeout",
+    "pr_url": "https://github.com/ohioy000/autornd-os/pull/77",
+    "preconditions": {
+      "breadth_061": "present",
+      "envelope": "n=1 at $0.25 owner-ratified this run",
+      "key": "present (presence only)",
+      "tree_clean": "clean except untracked scratch"
+    },
+    "prediction": "WRONG \u2014 the run did not complete. Reported as wrong, never adjusted.",
+    "prediction_registered": "COMPLETED (docs/preregistration-049-live-terminal.md @950ff77, before run header 2026-09-25T07:58:16Z)",
+    "provider_variance": "1 schema rejection (PlanVerdict.cost_estimate float_parsing \u2014 '$989.88 per month ...' where a number was required; StreamLake/architecture), 1 empty reply (engineering via GMICloud, finish_reason=error, retried). Both counted in retries reconciliation (attributed 1, excluded empty_reply named).",
+    "pull_request": 77,
+    "served_by": "triage Alibaba, architecture StreamLake, engineering GMICloud, research Google, search Perplexity",
+    "shapes": "coverage.measured 2 of 5 criteria (0.78, 0.84); 3 abstained (form-shaped numeric criteria) \u2014 abstention_count=3, fold detail 'not agreed \u2014 consistency is red' (no empty-seat quote: the fold dissented, not abstained)",
+    "suite": "1008 passed; counts re-derived 1007 to 1008 (precedence parametrisation)",
+    "terminal": "NO TERMINAL in 600s. Unit record status: 'blocked' with error 'timed out after 600s' \u2014 that is the runner's timeout label, not a workflow terminal: the path shows review_clean routed into the rework loop and rework_review never returned.",
+    "trace": "docs/traces/049-live-terminal.jsonl (4 lines: 3 headers + 1 unit); mirror /home/jb/.local/state/autornd/traces/autornd-os/049-live-terminal.jsonl; stderr docs/traces/049-live-terminal-STDERR.txt"
+  },
+  "status": "DONE"
+}
