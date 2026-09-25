@@ -1,0 +1,17 @@
+{
+  "command_id": "ARCH-20260925-061",
+  "delivery_state": "IN_PROGRESS_NO_PR_YET",
+  "deviations": [],
+  "executed": "2026-09-25",
+  "head_after": "PENDING_WORK",
+  "head_before": "f11403d",
+  "questions_for_advisor": [],
+  "results": {
+    "preconditions": {
+      "parent_051": "present",
+      "suite_before": "998 passed",
+      "workflows": 6
+    }
+  },
+  "status": "IN_PROGRESS"
+}
