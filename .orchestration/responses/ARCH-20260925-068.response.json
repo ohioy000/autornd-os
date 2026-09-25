@@ -1,0 +1,18 @@
+{
+  "command_id": "ARCH-20260925-068",
+  "delivery_state": "IN_PROGRESS_NO_PR_YET",
+  "deviations": [],
+  "executed": "2026-09-25",
+  "head_after": "PENDING_WORK",
+  "head_before": "cb358ab",
+  "questions_for_advisor": [],
+  "results": {
+    "preconditions": {
+      "field": "PlanVerdict.cost_estimate: Optional[float] = None (verdicts.py:176); no validator \u2014 bare float_parsing is the rejection path. Premise CONFIRMED.",
+      "normalisation": "verdicts.py: normalise_key/domains/specialists + normalisations()/normalisations_by_kind() counters \u2014 reuse for counting coercions",
+      "parent_065": "present on branch (cb358ab records PR 81); gate clears",
+      "suite_before": "1012 passed + 4 stamp red on branch (2 D18-ancestry + freshness + D20; all resolve at merge/restamp)"
+    }
+  },
+  "status": "IN_PROGRESS"
+}
