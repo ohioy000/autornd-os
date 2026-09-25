@@ -1,0 +1,43 @@
+{
+  "acceptance": {
+    "D26_B28": "D26 in \u00a773; B28 CLOSED with mechanism named",
+    "coerces_counted": "test_recoverable_string_coerces_and_counts (989.88, count 1)",
+    "exact_unaffected": "test_exact_number_unaffected (count 0)",
+    "field_quoted": "verdicts.py:176, no validator, float_parsing confirmed",
+    "no_any": "declared type untouched; coercion returns float or passes through",
+    "reach_stated": "only numeric field; iteration excluded with reason",
+    "rejects": "test_non_recoverable_string_rejects",
+    "suite": "1021 collected, 1017 green on branch (+5 new)"
+  },
+  "command_id": "ARCH-20260925-068",
+  "delivery_state": "PUSHED_PR_82",
+  "deviations": [
+    {
+      "reason": "Expected on unmerged branch + 065/066/067 HANDOVER edits. D26 work green (47/47 verdicts).",
+      "what": "4 stamp red on branch (2 D18-ancestry + freshness + D20)."
+    }
+  ],
+  "executed": "2026-09-25",
+  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
+  "head_before": "cb358ab",
+  "questions_for_advisor": [],
+  "results": {
+    "B28": "CLOSED by ARCH-20260925-068",
+    "change": "coerce_cost_estimate (mode=before) + COST_ESTIMATE_COERCED counter via _count; recoverability test: first $-optional number; no digits = reject; non-string passthrough (still rejects); None/int/float untouched",
+    "consumption": "informational only (phases.py:275 prompt text, :323-324 render) \u2014 no gate/bound/routing reads it; touches no conclusion",
+    "field": "cost_estimate: Optional[float] = None, no validator \u2014 bare float_parsing confirmed by construction",
+    "pr_url": "https://github.com/ohioy000/autornd-os/pull/82",
+    "preconditions": {
+      "field": "PlanVerdict.cost_estimate: Optional[float] = None (verdicts.py:176); no validator \u2014 bare float_parsing is the rejection path. Premise CONFIRMED.",
+      "normalisation": "verdicts.py: normalise_key/domains/specialists + normalisations()/normalisations_by_kind() counters \u2014 reuse for counting coercions",
+      "parent_065": "present on branch (cb358ab records PR 81); gate clears",
+      "suite_before": "1012 passed + 4 stamp red on branch (2 D18-ancestry + freshness + D20; all resolve at merge/restamp)"
+    },
+    "pull_request": 82,
+    "reach": "cost_estimate is the ONLY float/int verdict field (iteration is bounded bookkeeping, out of reach \u2014 stated explicitly). No type relaxed to Any.",
+    "ruling": "D26 recorded for implementation in \u00a773 before code (ruled behaviour change, issued here)",
+    "shape_question": "only partially \u2014 one declared type means recoverability not shape; code agrees",
+    "suite": "1017 passed + 4 stamp red on branch; 1021 collected (+5 D26 tests)"
+  },
+  "status": "DONE"
+}

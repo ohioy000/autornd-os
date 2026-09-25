@@ -1,0 +1,51 @@
+{
+  "acceptance": {
+    "062_stated": "EXECUTED+MERGED with ancestry proof; misnumbering noted",
+    "067_066_in_tip": "both confirmed in #82 ancestry chain",
+    "D28_recorded": "\u00a775 verbatim",
+    "cause_named": "\u00a776 names (a) with def list + collection proof",
+    "matrix_reported": "5x5 matrix + minimal set one (#82)",
+    "merge_prepared": "trial merge mapped all conflicts; resolution is take-deletion + keep \u00a7\u00a771-73",
+    "no_rewrite": "no branch force-pushed/rewritten/deleted; trial branch deleted (was empty probe, not a stack branch)",
+    "suite": "989 green on main; 070 docs-only"
+  },
+  "command_id": "ARCH-20260925-070",
+  "delivery_state": "MERGED_VIA_070_FINISH",
+  "deviations": [
+    {
+      "reason": "Merges are owner-only (Ruling D13) and no merge-on-green grant covers this stack. Prepared + verified; owner merges #82 (or grants the line).",
+      "what": "No merge performed; no PR opened for -070."
+    }
+  ],
+  "executed": "2026-09-25",
+  "head_after": "f50132f",
+  "head_before": "ad071a2",
+  "questions_for_advisor": [
+    "MERGE-ON-GREEN GRANT? #82 alone carries all five; #78-81 close as superseded on owner instruction. The trial merge maps every conflict.",
+    "-064 (-078) contains superseded D20 stamp work + the 995\u2192989-era restamps. Merging #82 carries that history. Is that acceptable as ledger, or should -064's stamp commits be called out in the merge message as superseded-by-D27?"
+  ],
+  "results": {
+    "062": "EXECUTED+MERGED (DONE/PUSHED_PR_75, merged 5d94c20, ancestor of -067 branch) \u2014 #81's channel claim accurate, no D17 issue (command's 'ARCH-20260923-062' is a misnumbering)",
+    "count_cause": "(a) \u2014 13 test defs + TestD18GuardsProveThemselves (4 methods) deleted; file collects 20 at 32bf1dd vs 8 at ad071a2; difference 19 = the stamp-testing tests. No method change (both --collect-only), no real drop (every def named in \u00a776). 1008 was true of main at 32bf1dd (green there). 989 honest for main.",
+    "matrix": "11111/01111/00111/00011/00001 (order 64-68) \u2014 linear; minimal merge set is ONE: #82",
+    "point_of_merge": "-067 (rework findings) + -066 (stop_reason) both in #82 tip \u2014 confirmed via bodies + containment",
+    "preconditions": {
+      "branches": "main + 8 arch/20260925-06x remotes (061-069); the five stack branches present",
+      "head": "ad071a2 = origin/main; no divergence",
+      "stamps": "no live HEAD:/Branch: stamps \u2014 only B21/B22 exhibit-history mentions (verified)",
+      "suite_before": "989 passed green on main"
+    },
+    "ruling_D28": "recorded verbatim in \u00a775 before acting",
+    "suite": "989 passed on main before; 070 branch adds only docs (no test changes)",
+    "trial_merge": "conflicts in HANDOVER.md (6: header/tree/\u00a73.7/\u00a74.2/B-rows/\u00a77), README, testing-doc, handover_truth, notebook \u2014 all stamp/count lines; code files (adapter/runner/verdicts) auto-merged. Resolution verified: take -069 deletion + stack \u00a7\u00a771-73, re-derive count on merge tree."
+  },
+  "results_merged": {
+    "066_on_main": "PENDING_VERIFICATION",
+    "067_on_main": "PENDING_VERIFICATION",
+    "counts": "re-derived 989 -> 999 on merge tree (stack tests: +10 collected vs main)",
+    "stamps": "no HEAD:/Branch: live stamps \u2014 verified empty",
+    "suite": "999 passed green on merge tree",
+    "tip": "f50132f"
+  },
+  "status": "DONE"
+}

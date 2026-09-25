@@ -1,0 +1,42 @@
+{
+  "acceptance": {
+    "ceilings_hold": "test_call_ceiling, test_spend_ceiling pass",
+    "deadline_terminal": "test_deadline (pre-existing) + both-fields test simulates via real _end_on_bound",
+    "no_bound_change": "workflows/ + checks.py empty diff",
+    "real_terminal_unaffected": "test_a_run_that_already_ended_keeps_its_own_status passes; stop_reason None when concluded",
+    "separate_fields": "test_a_bound_stopped_run_carries_both_fields + test_a_workflow_that_concluded_has_no_stop_reason",
+    "site_quoted": "runner.py:670, :676-683, :607-625, executor.py:46-66",
+    "suite": "1014 collected, 1011 green on branch (+3 new)"
+  },
+  "command_id": "ARCH-20260925-066",
+  "delivery_state": "PUSHED_PR_80",
+  "deviations": [
+    {
+      "reason": "Expected on any unmerged branch (stamp names branch commits) + 065 HANDOVER edits moved newest-modifier. Resolve at merge/restamp; D23 work itself is green (18/18 in test_terminal_on_bound.py).",
+      "what": "D18-ancestry (2) + D20 (1) red on the branch at PR time."
+    }
+  ],
+  "executed": "2026-09-25",
+  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
+  "head_before": "15a2e2b",
+  "questions_for_advisor": [],
+  "results": {
+    "053_regression": "test_failure_path_terminal.py 16 passed \u2014 exhausted terminal still names unmet criteria",
+    "bounds_untouched": "workflows/ + checks.py diff empty; no max_iterations/threshold/gate/verdict change",
+    "change": "ExecutionState.stop_reason field; _end_on_bound sets it when the run had no terminal; ScenarioRun.stop_reason + unit record 'stop_reason'. Runner still stops the run \u2014 only the record changes.",
+    "deadline_vs_bound": "deadline wins (outer bound; wait_for wraps executor.run; -049 exhibit: loop bound never reached)",
+    "ownership": "600s in 3 layers (CLI 600.0, DEFAULT_TIMEOUT_SECONDS, scenario.timeout wins at :670); fix in runner where the stop happens (D25: scenario declares, loop observes)",
+    "pr_url": "https://github.com/ohioy000/autornd-os/pull/80",
+    "preconditions": {
+      "bounds_pattern": "call/spend ceilings via BoundedRunner (openrouter.py:229-267); deadline + unhandled error via _end_on_bound (runner.py) \u2014 all four already emit blocked+reason; the missing piece is the SEPARATE stop-reason field",
+      "parent_065": "present on branch (15a2e2b records PR 79); gate clears",
+      "suite_before": "1008 passed + 3 red on branch: 2 D18-ancestry (unmerged) + D20 (065 HANDOVER edits moved newest-modifier to da162d9)",
+      "timeout_site": "autornd/evals/runner.py:670 deadline = scenario.timeout or timeout; :676-683 asyncio.wait_for + TimeoutError -> _end_on_bound(state, 'deadline', 'timed out after {deadline:.0f}s'); _end_on_bound at :~615 sets state.end('blocked', ...) \u2014 runner stop-reason and workflow terminal SHARE state.status/reason today. That shared field IS the D23 defect, named explicitly."
+    },
+    "pull_request": 80,
+    "ruling": "D23 recorded for implementation in \u00a771 before code (ruled instrument repair)",
+    "site": "runner.py:670 deadline, :676-683 wait_for+TimeoutError->_end_on_bound, _end_on_bound :607-625, ExecutionState.status/reason executor.py:46-66 \u2014 shared field IS the defect, named explicitly",
+    "suite": "1011 passed + 3 stamp red on branch (2 D18-ancestry + D20 \u2014 resolve at merge/restamp); 1014 collected (+3 D23 tests)"
+  },
+  "status": "DONE"
+}
