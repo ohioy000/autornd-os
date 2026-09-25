@@ -1,0 +1,73 @@
+{
+  "command_id": "ARCH-20260923-053",
+  "parent_id": "ARCH-20260925-056",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "revision": "Re-issued. Not executed in any prior batch. The design is unchanged from the ruling; the -052 measurement supplies the exact fields and the precedent.",
+  "objective": "Make the exhausted terminal name what was never satisfied: append the unmet criteria (measured) and the escalation assessment (labelled as a model claim) to the terminal reason.",
+  "evidence": [
+    ".orchestration/responses/ARCH-20260923-052.response.json — persistent criteria reachable at coverage.missed / coverage.detail (3 hops); escalation diagnosis at escalation.root_cause_analysis (1 hop); requires_human works and gates recovery; the remedy proposed is a _criteria_suffix() in executor.py parallel to _dissent_suffix()",
+    "commit:93041d75 — the -052 commit body: 'the executor terminal reason quotes only the loop bound and judge category, not the criteria or diagnosis it already has'",
+    ".orchestration/responses/ARCH-20260923-051.response.json — case (c) terminal verbatim: 'recovery_loop did not converge within 3 iterations, still red: build'",
+    "autornd/graph/executor.py — _dissent_suffix(), the existing precedent for appending state to a terminal reason",
+    "AGENTS.md convention 26 — a reading mistakable for a stronger claim is a defect in the instrument",
+    "AGENTS.md convention 28 — an instrument asserts it computed its subject before asserting anything about it",
+    "ARCH-20260922-021 — ScenarioRun.skipped was decided by substring-matching the error message; the reason string must not carry control flow"
+  ],
+  "scope": {
+    "include": ["autornd/graph/executor.py", "tests/"],
+    "exclude": ["workflows/*.yaml", "autornd/graph/checks.py", "autornd/engine/phases.py"]
+  },
+  "constraints": [
+    "RULED INSTRUMENT REPAIR, not a behaviour change. It alters what the RECORD carries, not what any verdict, gate or model concludes. _dissent_suffix() is the precedent and the -052 response proposed the same shape.",
+    "PRECONDITION THAT DECIDES THE CLASS: establish that nothing parses the terminal reason. If any code path branches on the reason string, appending to it is a behaviour change — STOP and report, naming the path. This is -021's defect and must not be reintroduced.",
+    "PROVENANCE MUST BE DISTINGUISHABLE. coverage.missed is MEASURED; escalation.root_cause_analysis is a MODEL'S CLAIM. Do not merge them into one unlabelled sentence. Label each part so a reader cannot mistake the model's assessment for the harness's finding (convention 26).",
+    "The measured part names the unmet criteria. The model part is explicitly marked as an assessment.",
+    "BOUND THE LENGTH: a run may carry many unmet criteria. Truncate the measured list with an explicit count beyond a small number so the terminal cannot grow without limit. State the bound chosen and why.",
+    "Do NOT change any workflow, bound, threshold, gate or check. Do NOT change the escalation node's prose or what any model is told.",
+    "Do NOT alter the reason for a COMPLETED run or an abstained run. This touches the exhausted-terminal path only — cases (a) and (b) of the -051 harness must be unchanged, asserted.",
+    "Extend the -051/-052 harness rather than building a second one. Assert case (c)'s terminal now carries the measured unmet criteria and the labelled assessment.",
+    "Omit the labelled assessment when root_cause_analysis is empty or a placeholder, rather than printing an empty label — and say so in the response.",
+    "Prove it by breaking it: remove coverage.missed and show the assertion fail.",
+    "Keep the diff small."
+  ],
+  "acceptance_criteria": [
+    "Nothing parses the terminal reason — demonstrated, or the command stops and reports the path.",
+    "Case (c)'s terminal names the unmet criteria from coverage.missed, quoted.",
+    "The escalation assessment appears in the terminal, explicitly labelled as a model claim.",
+    "The measured and model parts are distinguishable in the terminal string.",
+    "The terminal length is bounded, with the bound stated.",
+    "Cases (a) and (b) terminals are unchanged, asserted.",
+    "No workflow, bound, threshold, gate or check was modified.",
+    "Suite count reported before and after."
+  ],
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count reported."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q -k 'terminal or unmet or criteria_suffix'", "expected": "The case (c) assertion passes; cases (a) and (b) unchanged."},
+    {"command": "grep -rn 'reason.split\\|parse.*reason\\|in .*reason' autornd/ | head", "expected": "No control flow branches on the reason string. If any does, stop."},
+    {"command": "git diff --stat -- workflows/ autornd/graph/checks.py", "expected": "Empty — neither is touched."}
+  ],
+  "rollback": "Revert the commit; the terminal reason returns to naming only the bound.",
+  "deliverable": {
+    "branch": "arch/20260923-053-actionable-terminal",
+    "branch_created_by": "executor",
+    "pr": true,
+    "merge": "owner-only",
+    "commit_style": "conventional"
+  },
+  "transport": "Commit this command file verbatim as carriage before executing; commit the response IN_PROGRESS first, then update it in place. The response must carry delivery_state per Ruling D15.",
+  "assumptions": [
+    "coverage.missed and escalation.root_cause_analysis are both reachable from state.outputs at the point the terminal reason is composed, as -052 established.",
+    "The -051/-052 harness is on main at d733e63."
+  ],
+  "questions": [
+    "Does the terminal reason surface anywhere user-facing beyond the record — a dashboard or an API field? If it does, the bound and the labels must read well there too; name the surface.",
+    "If the escalation assessment is a placeholder string in some runs, is omitting it always correct? Report what the code shows rather than deciding."
+  ],
+  "preconditions": [
+    {"command": "ls .orchestration/responses/ARCH-20260925-056.response.json", "expected": "Present. If absent, return BLOCKED naming ARCH-20260925-056."},
+    {"command": "grep -n 'def _dissent_suffix' autornd/graph/executor.py", "expected": "Found; it is the pattern to parallel. Record the line."},
+    {"command": "grep -rn 'coverage.missed\\|root_cause_analysis' autornd/graph/executor.py autornd/evals/ | head", "expected": "Locate both fields as state outputs; record how they are reached."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green at 980 before the change."}
+  ]
+}
