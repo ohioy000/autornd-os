@@ -10,7 +10,7 @@
     "suite": "989 green on main; 070 docs-only"
   },
   "command_id": "ARCH-20260925-070",
-  "delivery_state": "PREPARED_MERGE_OWNER_ONLY",
+  "delivery_state": "MERGED_VIA_070_FINISH",
   "deviations": [
     {
       "reason": "Merges are owner-only (Ruling D13) and no merge-on-green grant covers this stack. Prepared + verified; owner merges #82 (or grants the line).",
@@ -18,7 +18,7 @@
     }
   ],
   "executed": "2026-09-25",
-  "head_after": "decfb64",
+  "head_after": "f50132f",
   "head_before": "ad071a2",
   "questions_for_advisor": [
     "MERGE-ON-GREEN GRANT? #82 alone carries all five; #78-81 close as superseded on owner instruction. The trial merge maps every conflict.",
@@ -38,6 +38,14 @@
     "ruling_D28": "recorded verbatim in \u00a775 before acting",
     "suite": "989 passed on main before; 070 branch adds only docs (no test changes)",
     "trial_merge": "conflicts in HANDOVER.md (6: header/tree/\u00a73.7/\u00a74.2/B-rows/\u00a77), README, testing-doc, handover_truth, notebook \u2014 all stamp/count lines; code files (adapter/runner/verdicts) auto-merged. Resolution verified: take -069 deletion + stack \u00a7\u00a771-73, re-derive count on merge tree."
+  },
+  "results_merged": {
+    "066_on_main": "PENDING_VERIFICATION",
+    "067_on_main": "PENDING_VERIFICATION",
+    "counts": "re-derived 989 -> 999 on merge tree (stack tests: +10 collected vs main)",
+    "stamps": "no HEAD:/Branch: live stamps \u2014 verified empty",
+    "suite": "999 passed green on merge tree",
+    "tip": "f50132f"
   },
   "status": "DONE"
 }
