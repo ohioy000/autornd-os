@@ -1,0 +1,33 @@
+{
+  "command_id": "ARCH-20260922-044",
+  "status": "DONE",
+  "executed": "2026-09-23",
+  "head_before": "d952e59",
+  "summary": "Rulings D8-D14 committed verbatim. Owner confirmation recorded. 81% threshold with 26-of-38 derivation recorded. B25 stays OPEN with -038 numbers; B26 opened (unjudged residual, 12.7% per criterion, 55% per run). AGENTS.md amended: D13 capability statement replaces the git-loop clause; dirty-tree rule recorded as procedural with ARCH-20260922-035 named for mechanical enforcement. Suite 970/970, $0.00.",
+  "rulings_committed": ["D8", "D9", "D10", "D11", "D12", "D13", "D14"],
+  "agents_md_amended": {
+    "line_replaced": "112-113 ('Under Aider... the owner executes the git loop')",
+    "replaced_with": "D13 capability statement (lines 112-122)"
+  },
+  "b25_status": "OPEN — numbers recorded, pending ARCH-20260922-042",
+  "b26_status": "OPEN — unjudged residual 12.7% per criterion, 55% per run",
+  "threshold": {
+    "ruling": "D14",
+    "value": "81% addressed-or-attributed",
+    "derivation": "81% of 194 = ≥158; 132 already addressed; 158-132 = 26 of 38 glossed must resolve to addressed",
+    "evaluator": "ARCH-20260922-046"
+  },
+  "dirty_tree_rule": {
+    "status": "procedural, not mechanically enforced",
+    "enforcement_home": "ARCH-20260922-035 (exhibit 3)"
+  },
+  "not_duplicated": "D1-REVISED through D7 (committed by ARCH-20260922-036, §§39-47); cross-referenced only",
+  "verification_results": [
+    {"command": "grep -n 'Ruling D8..D14' docs/handover-review.md HANDOVER.md", "result": "All seven present"},
+    {"command": "grep -n '81|26 of the 38|39.8|12.7|55%' HANDOVER.md", "result": "Threshold, derivation, abstention, unjudged and run-level numbers present"},
+    {"command": "grep -n 'write capability|git operation while a paid run' AGENTS.md", "result": "Lines 112, 118"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "970 passed"}
+  ],
+  "cost": "$0.00",
+  "deviations": []
+}

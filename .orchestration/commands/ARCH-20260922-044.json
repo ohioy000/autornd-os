@@ -1,0 +1,77 @@
+{
+  "command_id": "ARCH-20260922-044",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Commit Rulings D8-D14, the owner's confirmation, the 81% residual threshold, the git-auth channel amendment, and the unjudged-residual row.",
+  "evidence": [
+    ".orchestration/responses/ARCH-20260922-041.response.json — B17 closed on the -041 replay, 3 regression tests",
+    ".orchestration/responses/ARCH-20260922-040.response.json — both polarity inversions fixed; B24 fully closed",
+    ".orchestration/responses/ARCH-20260922-037.response.json — Tier 1: 1 of 26 converted; the other 25 require comprehension",
+    ".orchestration/responses/ARCH-20260922-038.response.json — 194/488 abstain (39.8%); 68.0% addressed / 19.6% glossed / 12.4% unattributable; the 88% figure is a spot-check",
+    ".orchestration/responses/ARCH-20260922-036.response.json — the fold does not distinguish pass-by-abstention from pass-by-measurement",
+    "AGENTS.md Working rules — 'Under Aider, slash commands and shell runs are owner-invoked or owner-approved; the agent proposes and edits, the owner executes the git loop' (this command amends that clause)",
+    "AGENTS.md orchestration — 'the executor never modifies .orchestration/commands/ ... the executor may act as transport and commit the command file verbatim'",
+    "owner — confirmation of all rulings; threshold set to 81%; git auth granted to the executor"
+  ],
+  "scope": {
+    "include": ["docs/handover-review.md", "HANDOVER.md", "AGENTS.md"],
+    "exclude": ["autornd/**", "tests/**", "workflows/**", "evals/**"]
+  },
+  "constraints": [
+    "Documentation and ledger only. $0.00. No code, test, run or key.",
+    "Transcribe each ruling VERBATIM (Ruling D7). A ruling reworded in transit is a ruling changed in transit.",
+    "RULINGS TO COMMIT, VERBATIM:",
+    "'Ruling D8 — B17 and B24 are closed on source. B17 closed on the -041 replay: criterion 1 classified prohibition, all four tokens extracted, the committed 401-word compliant draft passed, 3 regression tests added. B24 closed by -040: both polarity inversions fixed, punctuation-only tokens filtered, must-be-present parentheticals skipped. No further work on either.'",
+    "'Ruling D9 — the fold has no empty seat, and that is the critical path. judges_agree folds coverage.passed into a boolean and cannot distinguish a pass-by-measurement from a pass-by-abstention. Coverage abstains on 194 of 488 criteria (39.8%). Since PR #62 that abstention has folded as agreement. This does not fail runs; it ships unchecked work and reports nothing. Repaired by ARCH-20260922-043, which is P0.'",
+    "'Ruling D10 — Option A is the default, with its boundary stated. -038 measured 68.0% of abstained criteria addressed, 19.6% glossed, 12.4% unattributable, across 194 criteria in 84 units from 60 traces. The response 88% addressed-or-glossed figure is a spot-check, not a measured rate, and must not be quoted as one (convention 26). The validator fills most empty seats; it does not fill them all.'",
+    "'Ruling D11 — Tiers 1 and 2 are smaller than designed. ARCH-20260922-037 converted 1 of 26 clause-(iii) criteria; the other 25 assert cardinality about domain concepts and require comprehension, not a counter. With prohibition at 0.2%, the free tiers cover approximately 0.4% of the criteria the planner emits. Comprehension is the whole game, and term overlap is a proxy for it. This corrects the SIZING of Ruling D5, not its shape.'",
+    "'Ruling D12 — a typed judgment layer is ratified as the Tier 3 filler for the empty seat, and it ships after the fold. Coverage abstains (39.8%), the validator fills 68% of those, and the residual is filled by silence. The layer may not be built before ARCH-20260922-043, because until an abstention is a distinguishable state it has nothing to route from and its contribution is unmeasurable. It fires only where the record says a seat is empty. Build is contingent on the owner threshold ruling (D14) and on ARCH-20260922-046 resolving the glossed class.'",
+    "'Ruling D13 — the executor holds repository write capability. The executor creates branches, commits, pushes and opens pull requests, and commits command files verbatim as carriage per the channel transport rule. Merges to main remain owner-only unless the owner grants merge-on-green in one line. Invariants: no force-push; no history rewrite; no deletion on a protected branch; no direct push to main; and NO git operation while a paid run is in flight — that last caused the -010 trace loss and git capability increases its likelihood.'",
+    "'Ruling D14 — the residual threshold is 81 percent addressed-or-attributed. Measured: 68.0% addressed, 19.6% glossed, 12.4% unattributable over 194 criteria. The threshold cannot be evaluated without resolving the glossed class, so the glossed class is a required measurement and not an accepted gap. The bar is met if and only if at least 26 of the 38 glossed criteria resolve to addressed. If it resolves to 25 or fewer, a typed judgment layer is required.'",
+    "RESOLVE THE B25 ROW: keep it OPEN pending ARCH-20260922-042, recording the current numbers — 39.8% of criteria abstain; of the residual 32%, 12.7% of all criteria receive no verdict.",
+    "OPEN the unjudged-residual row with its number: a criterion coverage abstained on and the validator did not address receives no verdict, and until ARCH-20260922-043 the fold records it as agreement.",
+    "Record the arithmetic: unjudged per criterion = 0.398 x 0.32 = 12.7%; at 5.8 criteria per unit, P(a run carries at least one unjudged criterion) = 1 - (1-0.127)^5.8 = 55%.",
+    "AMEND AGENTS.md 'Working rules': replace the clause stating that the owner executes the git loop with the D13 capability statement, and record that the advisor has no commit capability and the executor is the channel's transport.",
+    "Record the procedural rule from D13: a paid run must not start with a dirty working tree. State whether it is mechanically enforced; if not, name ARCH-20260922-035 as its enforcement home.",
+    "Do NOT re-record what -036 already recorded (D1-REVISED through D7). Cross-reference.",
+    "Every count re-derived against the tree (convention 24)."
+  ],
+  "acceptance_criteria": [
+    "Rulings D8 through D14 appear verbatim; a grep for each distinctive phrase finds them.",
+    "The owner's confirmation of all rulings is recorded.",
+    "The 81% threshold is recorded with the 26-of-38 derivation.",
+    "B25 stays OPEN with its numbers; the unjudged-residual row is open with its number.",
+    "AGENTS.md Working rules carries the D13 capability statement and the no-git-during-paid-run invariant.",
+    "The dirty-tree rule is recorded, with its enforcement status stated plainly.",
+    "Suite passes unchanged; count reported before and after."
+  ],
+  "verification": [
+    {"command": "grep -n 'Ruling D8\\|Ruling D9\\|Ruling D10\\|Ruling D11\\|Ruling D12\\|Ruling D13\\|Ruling D14' docs/handover-review.md HANDOVER.md", "expected": "All seven present."},
+    {"command": "grep -n '81\\|26 of the 38\\|39.8\\|12.7\\|55%' HANDOVER.md", "expected": "Threshold, derivation, abstention, unjudged and run-level numbers present."},
+    {"command": "grep -n 'write capability\\|git operation while a paid run' AGENTS.md", "expected": "The capability statement and the invariant present."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "970 passed; count reported and unchanged."}
+  ],
+  "rollback": "Revert the commit; the rulings return to existing only in a transcript, which Ruling D7 names as their defective state.",
+  "deliverable": {
+    "branch": "arch/20260922-044-commit-the-rulings",
+    "branch_created_by": "executor",
+    "pr": true,
+    "merge": "owner-only",
+    "commit_style": "conventional"
+  },
+  "transport": "Commit this command file verbatim to .orchestration/commands/ARCH-20260922-044.json as carriage before executing; the commit message says so. Commit the response file with status IN_PROGRESS before starting work, then update it in place.",
+  "assumptions": [
+    "The owner's confirmation covers D8-D12 as restated here plus D13 and D14 as newly stated."
+  ],
+  "questions": [
+    "Does the executor merge its own PRs when CI is green and every acceptance criterion is demonstrated, or does merging stay owner-only? D13 defaults to owner-only; one line changes it.",
+    "Should the dirty-tree rule be enforced mechanically (a paid run refuses to start on a dirty tree) or remain procedural? My recommendation is mechanical, and I have named ARCH-20260922-035 as its home."
+  ],
+  "preconditions": [
+    {"command": "git rev-parse --short HEAD", "expected": "Record the current sha; name any divergence rather than assuming one."},
+    {"command": "grep -n 'Ruling D' docs/handover-review.md HANDOVER.md | tail -20", "expected": "Report what -036 recorded so nothing is duplicated."},
+    {"command": "grep -n 'executes the git loop' AGENTS.md", "expected": "Locate the clause D13 amends; record the line."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green at 970 before the change."}
+  ]
+}
