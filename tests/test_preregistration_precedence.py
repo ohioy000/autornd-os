@@ -48,6 +48,8 @@ REGISTERED = [
      "docs/traces/b14-rerun-2-marketing-claims.jsonl"),
     ("docs/preregistration-049-live-terminal.md",
      "docs/traces/049-live-terminal.jsonl"),
+    ("docs/preregistration-071-live-terminal-2.md",
+     "docs/traces/071-live-terminal-2.jsonl"),
 ]
 
 
