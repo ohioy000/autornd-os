@@ -602,3 +602,71 @@ def test_the_head_stamp_is_fresh_not_merely_a_real_ancestor(handover):
         f"The stamp resolves and is an ancestor, so the other guards pass — "
         f"staleness is the property they miss (B22). Restamp to the commit "
         f"this change is built on.")
+
+
+def test_the_stamp_names_the_commit_the_document_describes(handover):
+    """Ruling D20: one field, one property, one guard. HEAD declares the
+    commit the document describes, so the guard tests exactly that: the
+    stamped sha must resolve to the most recent commit that modified
+    HANDOVER.md — the document's own history is the property.
+
+    A stamp naming an ancestor that merely passes the freshness bound (lag
+    ≤ 3) FAILS here when history moved on without it. That is the stamp on
+    main now, and every branch-base restamp this session. The committed
+    stamp names its parent — committing the restamp is what moves the
+    document forward — so the guard resolves the stamp and compares full
+    shas rather than demanding the stamp name HEAD itself.
+    """
+    if not (ROOT / ".git").exists():
+        pytest.skip("not a git checkout")
+    if _shallow():
+        pytest.skip("shallow clone — rev-list is unanswerable at fetch-depth 1")
+
+    head = re.search(r"HEAD:[^`\n]{0,24}`([0-9a-f]{7,40})`", handover)
+    assert head, _NOTHING_FOUND
+    head_sha = head.group(1)
+
+    resolved = _git("rev-parse", head_sha)
+    assert resolved.returncode == 0, (
+        f"HANDOVER's HEAD stamp `{head_sha}` does not resolve — no evidence, "
+        f"never no problem (convention 28)")
+    latest = _git("rev-list", "--max-count=1", "HEAD", "--", "HANDOVER.md")
+    assert latest.returncode == 0, (
+        "could not determine the most recent HANDOVER.md modifier — "
+        "no evidence, never no problem (convention 28)")
+    # The committed stamp names its parent: committing a restamp is itself a
+    # HANDOVER.md modification, so the newest modifier is always the restamp
+    # commit, one ahead of the stamp it carries. The guard therefore passes
+    # when the stamp resolves to HEAD~0's parent chain tip — i.e. the stamp
+    # is the newest modifier's PARENT, or the newest modifier itself (a
+    # content commit restamped in the working tree but not yet committed).
+    # Anything older is staleness, and fails.
+    latest_sha = latest.stdout.strip()
+    parents = _git("rev-list", "--parents", "--max-count=1", latest_sha)
+    assert parents.returncode == 0
+    acceptable = set(parents.stdout.strip().split()[1:])
+    acceptable.add(latest_sha)
+    assert resolved.stdout.strip() in acceptable, (
+        f"HANDOVER's HEAD stamp `{head_sha}` does not name the commit the "
+        f"document describes: the most recent HANDOVER.md modifier is "
+        f"`{latest_sha[:7]}`. Ruling D20 — one field, one property, one "
+        f"guard. Restamp to the commit that last modified "
+        f"the document.")
+
+
+class TestD20GuardProvesItself:
+    """The break runs only where a local main exists — declared and bounded,
+    the same limitation as the D18 break-proof: CI proves the guard by the
+    weaker test (the assertions above passing on a correct stamp), not by
+    the break."""
+
+    def test_a_stale_count_that_passes_freshness_fails_here(self, handover):
+        if _git("rev-parse", "main").returncode != 0:
+            pytest.skip("no local main — nothing stale to prove with")
+        if _shallow():
+            pytest.skip("shallow clone — rev-list is unanswerable")
+        broken = re.sub(r"\*\*HEAD:\*\* `([0-9a-f]{7,40})`", "**HEAD:** `5d94c20`",
+                        handover)
+        with pytest.raises(AssertionError,
+                           match="does not name the commit"):
+            test_the_stamp_names_the_commit_the_document_describes(broken)

@@ -8547,3 +8547,33 @@ no downstream gate reads `review.ship`. `review_clean` exists only in
 engineering-rnd (line 228) and independent-check-probe (line 55). lean's
 review runs unconditionally and decides nothing — reached on every run,
 advisory on every run.
+
+## 69. Ruling D20 — a stamp declares what it names (advisor, 2026-09-25)
+
+Ruling D20 — a stamp declares what it names, and the guard tests the declared property. A HEAD field that names a branch tip is guarded by equality with that tip; a HEAD field that names the commit the document describes is guarded by that commit being the most recent to modify the document. One field, one property, one guard — a stamp whose guard tests something else is a hand-stamp wearing a generated fact's clothes.
+
+### ARCH-20260925-060 status
+
+Never transported: no command file and no response file exist on the tree.
+This is the first issue of the stamp-property kind; nothing is superseded.
+
+### Property choice (ARCH-20260925-064)
+
+Option (b): HEAD names the commit the document describes, guarded by that
+commit being the most recent to modify HANDOVER.md, with the count true of
+that commit's tree. Why: the history shows the stamp is maintained on the
+branch that edits the document — every restamp commit in this session
+(631f259, 582f255) names its own branch base, never a merge that did not
+touch the document — and the header carries the snapshot date separately,
+so HEAD would be redundant if it meant tip-of-main. Option (a) would be
+correct only between a merge and the next merge; option (b) is correct
+wherever the document is read.
+
+### CI provability
+
+Resolvability and count-equality prove on CI (tree-local). Main-ancestry
+resolves origin/main second (the -058 lesson) and proves on CI. The
+most-recent-modifier assertion shells to git log and proves on CI wherever
+history is present; the synthetic-stale break (ancestor that is not the
+most recent modifier) runs only where a local main exists, same bounded
+limitation as the D18 break-proof.
