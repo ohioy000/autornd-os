@@ -1,0 +1,18 @@
+{
+  "command_id": "ARCH-20260925-065",
+  "delivery_state": "IN_PROGRESS_NO_PR_YET",
+  "deviations": [],
+  "executed": "2026-09-25",
+  "head_after": "PENDING_WORK",
+  "head_before": "97fe140",
+  "questions_for_advisor": [],
+  "results": {
+    "preconditions": {
+      "064_062": "both response files PRESENT on tree: -062 DONE/MERGED via #75 (5d94c20), -064 DONE/PUSHED via #78 (merge blocked by D18 red \u2014 expected on unmerged branch)",
+      "B18": "CLOSED (2026-09-22) by ARCH-20260922-009 \u2014 'Four bounds now name themselves: call ceiling, spend ceiling, deadline, unhandled error'",
+      "head": "97fe140 (065 branch on 064 stack; main at 32bf1dd \u2014 divergence named)",
+      "suite_before": "1009 passed + 2 D18-ancestry red (branch unmerged; resolves at merge)"
+    }
+  },
+  "status": "IN_PROGRESS"
+}
