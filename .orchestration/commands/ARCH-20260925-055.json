@@ -1,0 +1,76 @@
+{
+  "command_id": "ARCH-20260925-055",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Determine which stranded branches are contained in which, record the minimal merge set, and verify main's state of record after the merges land — closing the PUSHED-vs-MERGED gap.",
+  "evidence": [
+    "GET /branches — main=d952e59e; siblings: arch/20260922-044-commit-the-rulings=a50d7ee, arch/20260922-043-fold-empty-seat=74036d6178fc5a4020c1a6cdf2b9124e3b595ca1, arch/20260923-051-failure-path-terminal=214f7961f2cdfd90f5f974ac70913a2f8c8370dd, arch/20260923-052-actionable-failure=93041d75ad44cc8283ece021b23470e61f6e7fe6",
+    "GET /pulls — #66, #67, #68 all state=open, merged_at=null; each body carries '- [ ] CI green' unticked",
+    "GET /commits — main's tip is d952e59e 'Measure validator coverage of abstained criteria: 68% addressed, 12% gap', authored 2026-09-23T20:03:21Z",
+    "repo.pushed_at = 2026-09-23T23:11:16Z; open_issues_count = 4 against 3 enumerable PRs",
+    "commits on main include -036 (-27e3e8f), -041 (-331e80e), -040 (-c30df9d), -037 (-0cb0ffa), -038 (-d952e59)",
+    ".orchestration/responses/ARCH-20260922-046.response.json — head_before: a50d7ee, which is the -044 branch tip, not main",
+    "HANDOVER.md on main — the -038 commit records 68% addressed; the -046 result of 86.1% is on a branch",
+    "AGENTS.md convention 24 — a fact about the repo is generated or guarded, never hand-stamped",
+    "AGENTS.md convention 28 — an instrument asserts that it computed its subject before it asserts anything about it"
+  ],
+  "scope": {
+    "include": [".orchestration/responses/", "HANDOVER.md", "docs/handover-review.md"],
+    "exclude": ["autornd/**", "workflows/**", "tests/**", "evals/**"]
+  },
+  "constraints": [
+    "The Owner performs the merges (Ruling D13 default: merges are owner-only). This command DETERMINES and then VERIFIES; it does not merge unless the owner grants merge-on-green in one line.",
+    "DETERMINE CONTAINMENT FIRST, before recommending any order: for each ordered pair of the four branch tips, run git merge-base --is-ancestor A B and report the matrix. A stacked branch contains its parent and merging the child lands both.",
+    "Report the MINIMAL merge set: the smallest set of branch tips whose merge places every stranded commit on main. If one branch contains all others, the set is one.",
+    "Report, per branch, whether CI is green. Do not infer it from the unticked checkbox — query the check runs for the head sha and report the conclusions by name (test 3.11/3.12/3.13, editable-install, docker).",
+    "Do NOT force-push, rewrite history, or delete a protected branch. Do NOT delete any branch without explicit owner approval.",
+    "AFTER THE MERGES, verify rather than assume: report main's new tip, re-run the suite and report the count, and confirm each previously-stranded artifact is now an ancestor of HEAD.",
+    "Specifically verify the two artifacts whose absence makes main unsound: that the fold change (-043, the empty seat) is now on main, and that the state of record carries the corrected 86.1% rather than the superseded 68%.",
+    "Record Ruling D15 verbatim in the notebook and ledger, with this batch as its first exhibit.",
+    "Record the advisor error against the advisor: four commands were ruled on as landed while main never moved; the response files reported DONE for pushed work.",
+    "If any branch does NOT contain what its PR claims, report that as a finding rather than merging around it.",
+    "Every count re-derived against the tree (convention 24)."
+  ],
+  "acceptance_criteria": [
+    "The containment matrix across the four tips is reported, derived by ancestry checks.",
+    "The minimal merge set is stated.",
+    "CI conclusion per branch head is reported from check runs, not inferred from the checkbox.",
+    "After merge, main's new tip is reported and each previously-stranded artifact is confirmed an ancestor of it.",
+    "The suite count on merged main is reported.",
+    "The fold change and the corrected 86.1% are both confirmed present on main, or their absence is reported as a finding.",
+    "Ruling D15 is recorded verbatim with this batch as its exhibit.",
+    "The advisor's error is recorded and attributed to the advisor.",
+    "No branch was force-pushed, rewritten or deleted."
+  ],
+  "verification": [
+    {"command": "git merge-base --is-ancestor 74036d6178fc5a4020c1a6cdf2b9124e3b595ca1 214f7961f2cdfd90f5f974ac70913a2f8c8370dd; echo $?", "expected": "0 means -051 contains -043; non-zero means they are independent. Record the matrix for all pairs."},
+    {"command": "git merge-base --is-ancestor 74036d6178fc5a4020c1a6cdf2b9124e3b595ca1 HEAD; echo $?", "expected": "After merge: 0 — the fold change is on main."},
+    {"command": "grep -n '86.1\\|68%' HANDOVER.md docs/handover-review.md", "expected": "86.1% present and 68% marked superseded by quotation."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass on merged main; count reported."},
+    {"command": "grep -n 'Ruling D15' docs/handover-review.md HANDOVER.md", "expected": "Present in both."}
+  ],
+  "rollback": "Not applicable to the verification. A merge on main is reverted by the owner with a revert commit, never a force-push.",
+  "deliverable": {
+    "branch": "arch/20260925-055-land-the-stack",
+    "branch_created_by": "executor",
+    "pr": true,
+    "merge": "owner-only",
+    "commit_style": "conventional"
+  },
+  "transport": "Commit this command file verbatim as carriage before executing; commit the response IN_PROGRESS first, then update it in place. The response status must distinguish PUSHED from MERGED per Ruling D15.",
+  "assumptions": [
+    "The four branches are the complete set of stranded work; the PR enumeration was truncated at 3 of a reported 4 open items, so a fourth PR is likely and must be named rather than ignored.",
+    "CI on main re-runs on merge; the scheduled trigger from -013 exists so main's state is retested without a push."
+  ],
+  "questions": [
+    "Does the owner grant merge-on-green to the executor for this stack, or does the owner merge? D13 defaults to owner-only; one line changes it.",
+    "Is there a fourth open PR carrying -044/-046, and what is its number and tip? open_issues_count is 4 against 3 enumerable — name the fourth rather than leaving the count unexplained."
+  ],
+  "preconditions": [
+    {"command": "git rev-parse --short HEAD", "expected": "d952e59 before any merge. If main has moved, name the divergence."},
+    {"command": "git branch -r --contains 74036d6178fc5a4020c1a6cdf2b9124e3b595ca1", "expected": "Report which remote branches contain the -043 tip; this is the containment evidence."},
+    {"command": "ls .orchestration/responses/ | tail -20", "expected": "List the recent responses so the stranded commands are enumerated from the channel rather than from memory."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green on main as it stands; record the count — it is the pre-merge baseline."}
+  ]
+}
