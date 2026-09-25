@@ -132,6 +132,123 @@ class TestThreeTerminals:
         assert judges["passed"] is False
         assert "coverage" in judges["detail"]
 
+    async def test_exhausted_terminal_names_unmet_criteria(self):
+        """ARCH-20260923-053: case (c)'s terminal quotes the unmet criteria
+        from coverage.missed — MEASURED, the presence test's own output."""
+        verdicts = {
+            "triage": {"risk": "medium", "domains": ["backend"],
+                       "unrecallable": False},
+            "context": {}, "plan": PLAN_UNMET,
+            "feasibility": {"feasible": True},
+            "implement": IMPL_UNMET,
+            "domain_review": {"critical": False},
+            "review": {"ship": True},
+            "validate": {"green": True},
+            "escalation": {"requires_human": False,
+                           "root_cause_analysis": "Implementation does not "
+                           "address caching requirements"},
+        }
+        state, _ = await _run(verdicts)
+
+        assert state.status == "escalated"
+        assert "'Caching layer stores computed results in Redis'" in state.reason
+        assert "'Cache invalidation runs on every write'" in state.reason
+
+    async def test_exhausted_terminal_labels_the_assessment(self):
+        """ARCH-20260923-053: the escalation diagnosis appears in the terminal
+        explicitly labelled as a model claim — never merged with the measured
+        part (convention 26: a reading mistakable for a stronger claim is a
+        defect in the instrument)."""
+        verdicts = {
+            "triage": {"risk": "medium", "domains": ["backend"],
+                       "unrecallable": False},
+            "context": {}, "plan": PLAN_UNMET,
+            "feasibility": {"feasible": True},
+            "implement": IMPL_UNMET,
+            "domain_review": {"critical": False},
+            "review": {"ship": True},
+            "validate": {"green": True},
+            "escalation": {"requires_human": False,
+                           "root_cause_analysis": "Implementation does not "
+                           "address caching requirements"},
+        }
+        state, _ = await _run(verdicts)
+
+        assert "— assessment: Implementation does not address caching requirements" in state.reason
+        # The label sits between the measured part and the diagnosis, so the
+        # two can never read as one unlabelled sentence.
+        assert state.reason.index("unmet:") < state.reason.index("— assessment:")
+
+    async def test_exhausted_terminal_bounds_a_long_criteria_list(self):
+        """ARCH-20260923-053: the terminal names the first few criteria and
+        counts the rest — it cannot grow without limit. Bound: three shown."""
+        from autornd.graph.executor import CRITERIA_SUFFIX_SHOWN, _criteria_suffix
+        from autornd.graph.executor import ExecutionState as ES
+
+        many = [f"criterion {i} about caching" for i in range(6)]
+        state = ES(request="r")
+        state.outputs["coverage"] = {"missed": many}
+        suffix = _criteria_suffix(state)
+
+        assert "'criterion 0 about caching'" in suffix
+        assert "'criterion 2 about caching'" in suffix
+        assert "criterion 3" not in suffix
+        assert "and 3 more" in suffix
+        assert CRITERIA_SUFFIX_SHOWN == 3
+
+    async def test_exhausted_terminal_omits_empty_assessment(self):
+        """ARCH-20260923-053: no empty label — an empty or placeholder
+        diagnosis leaves no 'assessment' text in the terminal."""
+        from autornd.graph.executor import _assessment_suffix
+        from autornd.graph.executor import ExecutionState as ES
+
+        for blank in ("", "   ", "n/a", "N/A", "none", "tbd", "unknown", None):
+            state = ES(request="r")
+            state.outputs["escalation"] = {"root_cause_analysis": blank}
+            assert _assessment_suffix(state) == "", f"blank {blank!r} printed"
+
+        state = ES(request="r")
+        state.outputs["escalation"] = {"root_cause_analysis": "real finding"}
+        assert _assessment_suffix(state) == " — assessment: real finding"
+
+    async def test_satisfied_and_abstained_terminals_unchanged(self):
+        """ARCH-20260923-053: cases (a) and (b) carry no unmet list and no
+        assessment label — the exhausted path only."""
+        satisfied, _ = await _run({**BASE, "validate": {"green": True}})
+        assert satisfied.status == "completed"
+        assert "unmet:" not in (satisfied.reason or "")
+        assert "assessment:" not in (satisfied.reason or "")
+
+        verdicts = {
+            "triage": {"risk": "medium", "domains": ["backend"],
+                       "unrecallable": False},
+            "context": {}, "plan": PLAN_ABSTAINED,
+            "feasibility": {"feasible": True},
+            "implement": {**IMPL},
+            "domain_review": {"critical": False},
+            "review": {"ship": True},
+            "validate": {"green": True},
+        }
+        abstained, _ = await _run(verdicts)
+        assert abstained.status == "completed"
+        assert "unmet:" not in (abstained.reason or "")
+        assert "assessment:" not in (abstained.reason or "")
+
+    async def test_breaking_coverage_missed_breaks_the_terminal(self):
+        """ARCH-20260923-053, prove it by breaking it: with coverage.missed
+        removed, the terminal loses the criteria — the suffix reads the field
+        it claims to read (convention 28)."""
+        from autornd.graph.executor import _criteria_suffix
+        from autornd.graph.executor import ExecutionState as ES
+
+        state = ES(request="r")
+        state.outputs["coverage"] = {
+            "missed": ["Caching layer stores computed results in Redis"]}
+        assert "Caching layer" in _criteria_suffix(state)
+
+        del state.outputs["coverage"]["missed"]
+        assert _criteria_suffix(state) == ""
+
     async def test_failure_record_names_the_persistent_criteria(self):
         """ARCH-20260923-052 Assertion 1: the record names which criteria stayed
         unsatisfied. They live in coverage.missed and coverage.detail, reachable
@@ -159,11 +276,12 @@ class TestThreeTerminals:
         }
         assert "0% of its terms appear" in coverage["detail"]
 
-        # The criteria are in the record but NOT in the terminal reason itself.
-        # A reader must chase: reason → judges → coverage to reach them.
-        assert "Caching" not in (state.reason or ""), (
-            "if this starts passing, the criteria were surfaced in the "
-            "terminal and the -052 finding is resolved")
+        # ARCH-20260923-053 resolved the -052 finding: the criteria ARE now
+        # surfaced in the terminal itself (see
+        # test_exhausted_terminal_names_unmet_criteria above). This keeps the
+        # record-level assertion: they live quoted in coverage.missed.
+        assert "'Caching layer stores computed results in Redis'" in (state.reason or ""), (
+            "-053 resolved the -052 finding: the criteria are now in the terminal")
 
     async def test_escalation_diagnosis_is_captured(self):
         """ARCH-20260923-052 Assertion 2: the escalation node produces a
@@ -187,10 +305,11 @@ class TestThreeTerminals:
         assert esc["root_cause_analysis"] == (
             "Implementation does not address caching requirements")
 
-        # The diagnosis is in state.outputs but NOT in the terminal reason.
-        assert "caching" not in (state.reason or "").lower(), (
-            "if this starts passing, the diagnosis was surfaced in the "
-            "terminal and the -052 finding is resolved")
+        # ARCH-20260923-053 resolved the -052 finding: the diagnosis IS now
+        # in the terminal, labelled as a model claim (see
+        # test_exhausted_terminal_labels_the_assessment above).
+        assert "caching" in (state.reason or "").lower(), (
+            "-053 resolved the -052 finding: the diagnosis is in the terminal, labelled")
 
     async def test_escalation_sets_human_or_not_signal(self):
         """ARCH-20260923-052 Assertion 3: the escalation verdict carries

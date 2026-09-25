@@ -22,7 +22,8 @@ from autornd.graph.spec import TERMINAL_STATUSES, Node, NodeKind, WorkflowSpec
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["ExecutionState", "GraphExecutor", "NodeRunner", "StepRecord"]
+__all__ = ["ExecutionState", "GraphExecutor", "NodeRunner", "StepRecord",
+           "_assessment_suffix", "_criteria_suffix"]
 
 
 @dataclass
@@ -97,6 +98,69 @@ def _dissent_suffix(body: "list[Node]", state: "ExecutionState") -> str:
         if dissenting:
             return ", still red: " + ", ".join(str(d) for d in dissenting)
     return ""
+
+
+# Bound for the terminal's measured list: a run may carry many unmet
+# criteria, so the terminal names the first few and counts the rest rather
+# than growing without limit. Three because two is the common case in the
+# harness and three still reads in one glance — a longer list belongs in
+# coverage.detail, which the terminal does not replace.
+CRITERIA_SUFFIX_SHOWN = 3
+
+
+def _criteria_suffix(state: "ExecutionState") -> str:
+    """", unmet: 'criterion one'; 'criterion two'" — what stayed unsatisfied.
+
+    The -052 remedy, parallel to `_dissent_suffix()`. The dissent names the
+    judge category ("coverage"); this names the criteria sitting in
+    `coverage.missed`, which is MEASURED — the presence test's own output —
+    not anyone's assessment. Read from the whole state's outputs rather than
+    the loop body's, because the coverage node's id is a property of the
+    workflow file and the loop body may not contain it.
+    """
+    coverage = (state.outputs or {}).get("coverage")
+    missed = None
+    if isinstance(coverage, dict):
+        missed = coverage.get("missed")
+    else:
+        missed = getattr(coverage, "missed", None)
+    if not missed:
+        return ""
+    names = [str(m) for m in missed]
+    shown = names[:CRITERIA_SUFFIX_SHOWN]
+    quoted = "; ".join(f"'{s}'" for s in shown)
+    rest = len(names) - len(shown)
+    tail = f", and {rest} more" if rest else ""
+    return f", unmet: {quoted}{tail}"
+
+
+# Placeholder strings an escalation model emits instead of a diagnosis.
+# Compared case-insensitively after stripping; anything else is treated as
+# a real assessment and quoted as one, labelled.
+ASSESSMENT_PLACEHOLDERS = frozenset({"", "n/a", "none", "tbd", "unknown"})
+
+
+def _assessment_suffix(state: "ExecutionState") -> str:
+    """' — assessment: <diagnosis>' — what the escalation model concluded.
+
+    Labelled as a MODEL'S CLAIM, never merged with the measured part:
+    convention 26 says a reading mistakable for a stronger claim is a defect
+    in the instrument, and an unlabelled diagnosis in the terminal would read
+    as the harness's own finding. Empty or placeholder output is omitted
+    rather than printed as an empty label.
+    """
+    escalation = (state.outputs or {}).get("escalation")
+    diagnosis = None
+    if isinstance(escalation, dict):
+        diagnosis = escalation.get("root_cause_analysis")
+    else:
+        diagnosis = getattr(escalation, "root_cause_analysis", None)
+    if not diagnosis or not str(diagnosis).strip():
+        return ""
+    text = str(diagnosis).strip()
+    if text.lower() in ASSESSMENT_PLACEHOLDERS:
+        return ""
+    return f" — assessment: {text}"
 
 
 def _render_item(value: object) -> str:
@@ -338,7 +402,9 @@ class GraphExecutor:
         if node.on_exhausted_status:
             state.end(node.on_exhausted_status,
                       f"'{node.id}' did not converge within {budget} iterations"
-                      + _dissent_suffix(body, state))
+                      + _dissent_suffix(body, state)
+                      + _criteria_suffix(state)
+                      + _assessment_suffix(state))
             return False
         if node.on_exhausted:
             return await self._run_from(node.on_exhausted, state)
