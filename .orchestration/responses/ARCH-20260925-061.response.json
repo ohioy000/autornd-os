@@ -1,0 +1,55 @@
+{
+  "acceptance": {
+    "blocked_nodes": "none blocked; independent_check reached with unrecallable triage, skipped otherwise \u2014 both terminals asserted",
+    "count_and_names": "six files enumerated from ls workflows/*.yaml, tabled in \u00a76.17",
+    "no_wiring_modified": "git diff --stat on workflows/ and checks.py is empty",
+    "section_6_recorded": "\u00a76.17 present in HANDOVER.md",
+    "suite": "1003 passed; counts re-derived 998 to 1003, files 53 to 54, classes 210 to 211",
+    "terminals_verbatim": "each status completed with reason None and full path asserted in tests/test_all_workflows_terminate.py"
+  },
+  "command_id": "ARCH-20260925-061",
+  "delivery_state": "PUSHED_PR_74",
+  "deviations": [
+    {
+      "reason": "The command's count was remembered, not read from the tree; the constraint to enumerate by reading governs, so the tree's six win.",
+      "what": "Command says 'four workflows'; tree holds six. All six enumerated and all five unproven ones driven (engineering-rnd already proven)."
+    }
+  ],
+  "executed": "2026-09-25",
+  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
+  "head_before": "f11403d",
+  "questions_for_advisor": [
+    "The independent_check node is answered by the harness \u2014 path proven, but what a real independent tier concludes is unmeasured. Is a live independent-tier reading wanted, and at what envelope?",
+    "lean has no review gate (review.ship is advisory \u2014 no review_clean). Is that deliberate for the cheap shape, or should lean gate on its review? Not changed; needs a ruling."
+  ],
+  "results": {
+    "blocked_nodes": "none \u2014 every workflow drives provider-free with the -051 ScriptedRunner; bespoke stubbing was one triage unrecallable flag, not a second harness",
+    "engineering_rnd": "already proven by -051 (a/b/c) and -054 (d); not re-driven",
+    "enumeration": [
+      "engineering-rnd.yaml",
+      "independent-check-probe.yaml",
+      "lean.yaml",
+      "plan-probe.yaml",
+      "triage-classify.yaml",
+      "triage-only.yaml"
+    ],
+    "pr_url": "https://github.com/ohioy000/autornd-os/pull/74",
+    "preconditions": {
+      "parent_051": "present",
+      "suite_before": "998 passed",
+      "workflows": 6
+    },
+    "pull_request": 74,
+    "section_6": "\u00a76.17 records per-workflow terminals as a measured fact",
+    "suite": "1003 passed (45.13s); 998 at baseline plus 5 new tests in test_all_workflows_terminate.py",
+    "terminals": {
+      "independent-check-probe": "completed, reason None \u2014 reaches independent_check with unrecallable triage (6 AI calls); skips it with recallable triage and still completes",
+      "lean": "completed, reason None \u2014 triage, context, plan, plan_ready, implement, coverage, validate, judges, review (5 AI calls)",
+      "plan-probe": "completed, reason None \u2014 triage, context, plan (2 AI calls)",
+      "triage-classify": "completed, reason None \u2014 triage (1 AI call)",
+      "triage-only": "completed, reason None \u2014 triage, context (1 AI call)"
+    },
+    "wiring_diff": "empty \u2014 workflows/, autornd/graph/checks.py unmodified"
+  },
+  "status": "DONE"
+}
