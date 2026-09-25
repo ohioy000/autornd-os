@@ -40,6 +40,16 @@ IMPL_UNMET = {
     "summary": "Applied exponential backoff to the reconnect loop capped at 60s.",
 }
 
+# ARCH-20260923-054: the recovery-succeeds case. The deterministic implement
+# answers failure for the first five attempts and success thereafter, so the
+# build_loop exhausts (5) and the FIRST recovery attempt converges. The
+# transition is explicit and controlled: GOOD_SUMMARY names both Redis
+# criteria, so the real coverage check flips red to green.
+IMPL_RECOVERED_GOOD_SUMMARY = (
+    "Stored computed results in Redis cache; "
+    "cache invalidation runs on every write."
+)
+
 
 @pytest.mark.asyncio
 class TestThreeTerminals:
@@ -312,8 +322,6 @@ class TestThreeTerminals:
             "-053 resolved the -052 finding: the diagnosis is in the terminal, labelled")
 
     async def test_escalation_sets_human_or_not_signal(self):
-        """ARCH-20260923-052 Assertion 3: the escalation verdict carries
-        requires_human and it gates recovery."""
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
@@ -330,3 +338,99 @@ class TestThreeTerminals:
         assert state.outputs["escalation"]["requires_human"] is False
         assert state.status == "escalated"
         assert "recovery_loop" in state.outputs, "recovery ran"
+
+
+@pytest.mark.asyncio
+class TestRecoverySucceeds:
+    """ARCH-20260923-054: the fourth case — build_loop fails and a recovery
+    attempt satisfies the criteria, so the run reaches completed rather than
+    escalating. Convention 22: the condition is simulated end to end through
+    the real workflow, not asserted on a mock return."""
+
+    async def test_build_fails_then_recovery_completes(self):
+        """build_loop exhausts at 5, the first recovery attempt converges,
+        the run completes normally through review — no escalation, no
+        ceiling."""
+        from tests.test_graph import SETTINGS
+
+        attempts = {"n": 0}
+
+        def implement(state):
+            attempts["n"] += 1
+            ok = attempts["n"] > SETTINGS["max_iterations"]
+            return {
+                "done": True, "green": True, "iteration": attempts["n"],
+                "blocked_on": [],
+                "summary": (IMPL_RECOVERED_GOOD_SUMMARY
+                            if ok else IMPL_UNMET["summary"]),
+            }
+
+        verdicts = {
+            "triage": {"risk": "medium", "domains": ["backend"],
+                       "unrecallable": False},
+            "context": {}, "plan": PLAN_UNMET,
+            "feasibility": {"feasible": True},
+            "implement": implement,
+            "domain_review": {"critical": False},
+            "review": {"ship": True},
+            "validate": {"green": True},
+            "escalation": {"requires_human": False,
+                           "root_cause_analysis": "Implementation does not "
+                           "address caching requirements"},
+            "rework_review": {"ship": True},
+        }
+        state, runner = await _run(verdicts)
+
+        assert state.status == "completed", (
+            f"recovery should converge, got {state.status}: {state.reason}")
+        assert state.reason is None
+        assert "escalation" in state.path, "the escalation node ran"
+
+        build = state.outputs["build_loop"]
+        assert build["converged"] is False
+        assert build["iterations"] == SETTINGS["max_iterations"]
+
+        recovery = state.outputs["recovery_loop"]
+        assert recovery["converged"] is True
+        assert recovery["iterations"] == 1, (
+            "the first recovery attempt carries the fixed summary")
+
+        expected_impl = SETTINGS["max_iterations"] + 1
+        assert runner.ai_calls.count("implement") == expected_impl
+        assert len(runner.ai_calls) < 41, "no call ceiling reached"
+
+        assert "review" in state.path, "completed normally through review"
+        assert state.outputs["review_fold"]["passed"] is True
+
+    async def test_recovery_receives_no_dissent_or_unmet_input(self):
+        """ARCH-20260923-054's question: what does the recovery node receive
+        as input? Answer, quoted from the workflow file: the recovery_loop
+        body is `[implement, blocked_check, blocked_terminal, domain_review,
+        coverage, consistency, validate, judges, rework_review, review_fold]`
+        (`workflows/engineering-rnd.yaml:206`) — the same implement node with
+        the same prompt, and no node in the body reads `escalation.*`,
+        `coverage.missed`, or `judges.dissenting`. Recovery re-runs the
+        implement node with the same context; the dissent and the unmet
+        criteria are NOT passed as input. That is the finding, stated
+        plainly: in this harness recovery is a retry, not a mechanism — and
+        it explains why recovery is only ever observed failing live."""
+        import yaml
+        from pathlib import Path
+
+        workflow = yaml.safe_load(
+            (Path(__file__).resolve().parents[1]
+             / "workflows" / "engineering-rnd.yaml").read_text())
+        recovery = next(n for n in workflow["nodes"]
+                        if n["id"] == "recovery_loop")
+        assert recovery["body"][0] == "implement"
+        assert "escalation" not in recovery["body"]
+        body_text = " ".join(str(v) for v in recovery["body"])
+        assert "missed" not in body_text
+        assert "dissent" not in body_text
+
+        args_text = " ".join(
+            str(n.get("args", "")) for n in workflow["nodes"]
+            if n["id"] in recovery["body"])
+        assert "escalation" not in args_text, (
+            "no recovery body node takes the escalation verdict as input")
+        assert "missed" not in args_text
