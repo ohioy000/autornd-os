@@ -1,0 +1,19 @@
+{
+  "command_id": "ARCH-20260925-062",
+  "delivery_state": "IN_PROGRESS_NO_PR_YET",
+  "deviations": [],
+  "executed": "2026-09-25",
+  "head_after": "PENDING_WORK",
+  "head_before": "3300c0e",
+  "questions_for_advisor": [],
+  "results": {
+    "preconditions": {
+      "directive_model": "EscalationVerdict carries resolution_directive (phases.py:991) \u2014 a real field, not invented",
+      "implement_phase": "adapter.py:332 _phase_implement -> phases.run_implement with red_cause/evidence/review_findings from failure_log[-1], resolution_directive from self.resolution_directive (set at escalation, adapter.py:447; log cleared at :448)",
+      "premise": "CONFIRMED with correction: the implement node DOES receive failure context via the autopsy channel (directive + cleared log), but NOT coverage.missed as unmet criteria \u2014 the verdict-level dissent is absent",
+      "recovery_body": "body: [implement, blocked_check, blocked_terminal, domain_review, coverage, consistency, validate, judges, rework_review, review_fold] (workflows/engineering-rnd.yaml:205)",
+      "suite_before": "1003 passed"
+    }
+  },
+  "status": "IN_PROGRESS"
+}
