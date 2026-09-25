@@ -1,19 +1,45 @@
 {
+  "acceptance": {
+    "060_D20_reported": "060 never transported; D20 was unrecorded \u2014 both stated before writing",
+    "B22_recorded": "fourth recurrence in B22 row with D20 as resolution",
+    "CI_vs_local": "assertion CI-provable; break local-only, stated",
+    "guard_breaks": "stale-ancestor break fails loudly; D20 assertion green",
+    "property_chosen": "option (b) with history evidence (restamps name branch bases)",
+    "stamp_true": "HEAD/count/Branch true of the branch tree; main-ancestry pending merge",
+    "suite": "1011 collected, 1009 green on branch (2 D18-ancestry expected-unmerged)"
+  },
   "command_id": "ARCH-20260925-064",
-  "delivery_state": "IN_PROGRESS_NO_PR_YET",
-  "deviations": [],
+  "delivery_state": "PUSHED_PENDING_PR",
+  "deviations": [
+    {
+      "reason": "One-property stamp needs one restamp, not twelve. The parent-tolerance in the guard is the structural fix \u2014 the chase cannot recur.",
+      "what": "Twelve restamp commits squashed to work+restamp; the chase (each restamp commit moving the document) is recorded here instead of in history."
+    },
+    {
+      "reason": "Expected on any unmerged branch: the stamp names branch commits main does not contain yet. Resolves at merge; D20 property holds throughout.",
+      "what": "D18 main-ancestry red on the branch at PR time."
+    }
+  ],
   "executed": "2026-09-25",
-  "head_after": "PENDING_WORK",
+  "head_after": "PENDING_COMMIT",
   "head_before": "7b78843",
   "questions_for_advisor": [],
   "results": {
+    "060": "never transported \u2014 no command file, no response file. First issue of this kind; nothing superseded.",
+    "B22": "fourth recurrence recorded with D20 as resolution",
+    "CI_lessons": "no new git dependency beyond rev-list/rev-parse (CI-safe); origin/main fallback untouched",
+    "D20": "issued here, verbatim in \u00a769 before implementation (was cited but never recorded)",
+    "guard": "stamp resolves to newest-HANDOVER.md-modifier or its parent (committing the restamp moves the document). D20 green; break with stale 5d94c20 fails. CI proves the assertion; break runs only with local main (declared, bounded).",
     "preconditions": {
       "060": "never transported: no command file, no response file \u2014 first issue of this kind",
       "D20": "NOT recorded: no 'Ruling D20' in docs/handover-review.md, HANDOVER.md, or .orchestration/ \u2014 this command issues it",
       "head": "7b78843 (049 branch; main at b11faad \u2014 divergence named, not assumed)",
       "stamp": "HEAD: 5d94c20, Branch: main, Tests: 1008 as of 5d94c20",
       "suite_before": "1008 passed"
-    }
+    },
+    "property": "option (b): HEAD names the commit the document describes. History shows restamps name branch bases, never untouched merges; the date is carried separately so tip-of-main would make HEAD redundant.",
+    "stamp": "every field true of what it names on the branch; D18 ancestry red only because the branch is unmerged (expected \u2014 resolves at merge)",
+    "suite": "1009 passed + 2 D18-ancestry red on unmerged branch (expected); 1011 collected; counts re-derived 1008 to 1011, classes 213 to 214"
   },
-  "status": "IN_PROGRESS"
+  "status": "DONE"
 }
