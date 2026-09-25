@@ -8561,3 +8561,7 @@ Ruling D27 — the sha stamp is deleted. A fact about the tree you are on can be
 ### The advisor's error
 
 Four rulings on one two-line block, each asserting a property the stamp could not hold, each corrected by the next. The correct move, available from the first, was to ask whether the stamp should exist. Recorded against the advisor per convention 7, which binds the advisor as it binds the executor: a wrong prediction is reported as wrong, never quietly adjusted — and D18 through D20 were three quiet adjustments before the deletion.
+
+## 75. Ruling D28 — a moving count needs a named cause (advisor, 2026-09-25)
+
+Ruling D28 — a count that moves without a named cause is a hand-stamp wearing a generated fact clothes, whether or not a guard collects it. The guard proves the number matches the tree; it does not prove the number is understood.
