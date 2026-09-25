@@ -1,0 +1,19 @@
+{
+  "command_id": "ARCH-20260925-064",
+  "delivery_state": "IN_PROGRESS_NO_PR_YET",
+  "deviations": [],
+  "executed": "2026-09-25",
+  "head_after": "PENDING_WORK",
+  "head_before": "7b78843",
+  "questions_for_advisor": [],
+  "results": {
+    "preconditions": {
+      "060": "never transported: no command file, no response file \u2014 first issue of this kind",
+      "D20": "NOT recorded: no 'Ruling D20' in docs/handover-review.md, HANDOVER.md, or .orchestration/ \u2014 this command issues it",
+      "head": "7b78843 (049 branch; main at b11faad \u2014 divergence named, not assumed)",
+      "stamp": "HEAD: 5d94c20, Branch: main, Tests: 1008 as of 5d94c20",
+      "suite_before": "1008 passed"
+    }
+  },
+  "status": "IN_PROGRESS"
+}
