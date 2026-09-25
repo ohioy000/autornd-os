@@ -1,0 +1,70 @@
+{
+  "command_id": "ARCH-20260922-046",
+  "parent_id": "ARCH-20260922-044",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Pre-register an attribution rubric, then apply it to the 38 glossed criteria to produce the addressed-or-attributed rate and decide Ruling D14's 81% bar.",
+  "evidence": [
+    ".orchestration/responses/ARCH-20260922-038.response.json — 194 abstained; 132 addressed (68.0%), 38 glossed (19.6%), 24 unattributable (12.4%); 'spot-checking shows many glossed items are genuinely addressed from a human reader's perspective'",
+    "ARCH-20260922-044 — Ruling D14, the 81% threshold; Ruling D12, the typed layer is contingent on this result",
+    "docs/traces/ — the 60 committed traces whose 84 unit records carry the validator evidence",
+    "AGENTS.md — pre-register before a paid run and commit it first; the same principle applies to a rubric that decides a ruling",
+    "AGENTS.md convention 26 — an instrument's report states what it measured and nothing more",
+    "AGENTS.md convention 28 — state the denominator and excluded classes before stating any rate"
+  ],
+  "scope": {
+    "include": ["docs/preregistration-*.md", "docs/traces/", "docs/handover-review.md", "HANDOVER.md"],
+    "exclude": ["autornd/**", "workflows/**", "tests/**", "evals/results/**"]
+  },
+  "constraints": [
+    "FREE. Committed traces only. No paid call, no key, no network, no model, no dependency.",
+    "PRE-REGISTER THE RUBRIC FIRST, and commit it. The rubric must state, as rules, what makes a validator evidence item count as ADDRESSING a specific criterion: it names the criterion or restates its condition; it states a verdict about that condition; and it is attributable to that criterion and no other. Commit the rubric before applying it — the commit is the evidence the rule preceded the classification.",
+    "The rubric must be decidable by a reader who did not write it. If any rule requires taste, say so and mark that class separately rather than folding it.",
+    "Apply the rubric to the 38 glossed criteria only. Do not re-classify the 132 addressed or the 24 unattributable — state that they were held fixed and why.",
+    "Report: x of 38 glossed resolve to addressed; the resulting addressed-or-attributed rate (132 + x) / 194; and the comparison to 81%.",
+    "State the decision plainly: if the rate is at or above 81%, the validator suffices and ARCH-20260922-045 does not run; if below, the typed layer is required and ARCH-20260922-045 is issued. The DECISION is the advisor's to record, but the arithmetic decides it and you report the arithmetic.",
+    "Quote two verbatim examples for each outcome: a glossed criterion that resolves to addressed, and one that does not. Paraphrase proves nothing (convention 26).",
+    "For each criterion that does NOT resolve to addressed, state which kind of gap it is: the validator named the criterion but gave no verdict; it gave a verdict about a different condition; or no evidence item relates to it.",
+    "State the denominator and the class breakdown before any rate (convention 28). Report trace, unit and criterion counts, re-derived (convention 24).",
+    "State the limitation plainly: committed scenarios only; a convenience sample; not a distribution over all objectives. This measurement decides a ruling, so its weakness must be stated in the same section as its result.",
+    "Do NOT change checks.py, the validator, or any workflow. This measures.",
+    "Record the finding and the threshold comparison in the notebook against B25's row and the unjudged-residual row."
+  ],
+  "acceptance_criteria": [
+    "A rubric is committed BEFORE the classification, and both shas are recorded.",
+    "The 38 glossed criteria are classified, with x reported and the resulting rate computed.",
+    "The rate is compared to 81% and the comparison is stated unambiguously.",
+    "Two verbatim examples are quoted for each outcome.",
+    "Each non-addressed criterion is assigned a gap kind.",
+    "The limitation is stated in the same section as the result.",
+    "No code, workflow, or dependency was changed — asserted in the response.",
+    "Suite passes unchanged; count reported before and after."
+  ],
+  "verification": [
+    {"command": "git log --oneline -1 -- docs/preregistration-glossed-attribution.md", "expected": "The rubric commit precedes the classification commit; record both shas."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count reported and unchanged."},
+    {"command": "grep -n '81%\\|addressed-or-attributed' docs/handover-review.md", "expected": "The result and the comparison are recorded."},
+    {"command": "git diff --stat -- autornd/ workflows/", "expected": "Empty — nothing executable was changed."}
+  ],
+  "rollback": "Revert the commit; the rubric and the classification are documentation only.",
+  "deliverable": {
+    "branch": "arch/20260922-046-glossed-attribution",
+    "branch_created_by": "executor",
+    "pr": true,
+    "merge": "owner-only",
+    "commit_style": "conventional"
+  },
+  "transport": "Commit this command file verbatim as carriage before executing; commit the response IN_PROGRESS first, then update it in place.",
+  "assumptions": [
+    "The 38 glossed criteria are identified in the -038 response or reconstructable from committed traces. If they cannot be reconstructed exactly, report the shortfall rather than re-deriving a different set — a different set would not answer the question the threshold asks."
+  ],
+  "questions": [
+    "If the rubric resolves the rate to 80 or 81 exactly at the boundary, is the threshold met at 81 inclusive? D14 reads as inclusive; confirm.",
+    "Should the same rubric be applied to the 24 unattributable criteria as a secondary reading, or is that a different question? I read it as a different question — unattributable means the evidence cannot be paired, not that a verdict is absent — and it should not be folded in."
+  ],
+  "preconditions": [
+    {"command": ".orchestration/responses/ARCH-20260922-044.response.json && echo present", "expected": "Ruling D14 committed. If absent, return BLOCKED naming ARCH-20260922-044."},
+    {"command": "grep -n 'glossed' docs/handover-review.md | head", "expected": "Locate -038's class breakdown; record the 38 and the 24 as reported."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green at 970 before the change."}
+  ]
+}

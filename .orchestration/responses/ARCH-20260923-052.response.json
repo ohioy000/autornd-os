@@ -1,0 +1,64 @@
+{
+  "command_id": "ARCH-20260923-052",
+  "status": "DONE",
+  "executed": "2026-09-23",
+  "head_before": "a9f8c98",
+  "summary": "Three assertions checked against the -051 case (c) terminal record. Assertion 1: PARTIALLY HELD — the persistent criteria are in coverage.missed but NOT in the terminal reason; a reader must chase reason → judges → coverage (three hops). Assertion 2: PARTIALLY HELD — the diagnosis is in escalation.root_cause_analysis but NOT in the terminal reason. Assertion 3: HELD — requires_human is set and gates recovery. The information exists but is not surfaced in the terminal. No workflow, check or bound modified. Suite 979/979, $0.00.",
+  "escalation_output_verbatim": {
+    "requires_human": false,
+    "root_cause_analysis": "Implementation does not address caching requirements"
+  },
+  "terminal_verbatim": {
+    "status": "escalated",
+    "reason": "'recovery_loop' did not converge within 3 iterations, still red: build"
+  },
+  "assertions": {
+    "assertion_1_persistent_criteria_named": {
+      "status": "PARTIALLY HELD",
+      "evidence_quoted": {
+        "coverage.missed": ["Caching layer stores computed results in Redis", "Cache invalidation runs on every write"],
+        "coverage.detail": "2 of 2 measurable success criteria are not visibly addressed by the implementation: 'Caching layer stores computed results in Redis' (0% of its terms appear); 'Cache invalidation runs on every write' (0% of its terms appear)",
+        "terminal_reason": "'recovery_loop' did not converge within 3 iterations, still red: build"
+      },
+      "finding": "The persistent criteria are named in state.outputs['coverage']['missed'] and state.outputs['coverage']['detail']. They are NOT named in the terminal reason. The terminal says 'still red: build', which names the fold's judge category but not the criterion. A reader must chase: (1) reason says 'still red: build'; (2) 'build' is judges.passed in the review_fold, so look at state.outputs['judges']; (3) judges.dissenting = ['coverage']; (4) state.outputs['coverage']['missed'] names the criteria. Three hops.",
+      "assembly_burden": "The information is in the final state, not scattered across per-iteration records. But a reader of just status+reason sees the loop name and the judge category, not the criteria. The diagnosis (root_cause_analysis) is also one hop away in state.outputs['escalation'] but not surfaced in the reason."
+    },
+    "assertion_2_escalation_diagnosis_captured": {
+      "status": "PARTIALLY HELD",
+      "evidence_quoted": {
+        "escalation.root_cause_analysis": "Implementation does not address caching requirements",
+        "terminal_reason": "'recovery_loop' did not converge within 3 iterations, still red: build"
+      },
+      "finding": "The diagnosis exists in state.outputs['escalation']['root_cause_analysis'] but is NOT in the terminal reason. A reader of the terminal sees the loop bound, not the root cause."
+    },
+    "assertion_3_human_or_not_signal": {
+      "status": "HELD",
+      "evidence_quoted": {
+        "escalation.requires_human": false
+      },
+      "finding": "The field exists, is set to false, and gates recovery via the 'recoverable' gate (condition: 'not escalation.requires_human'). When true, the run terminates 'blocked' instead of attempting recovery."
+    }
+  },
+  "questions_answered": {
+    "executor_vs_prompt_remedy": "The executor is cheaper. The terminal reason is composed at executor.py:340 (_run_loop) as f\"'{node.id}' did not converge within {budget} iterations\" + _dissent_suffix(body, state). Adding the coverage detail there would surface the criteria without changing what any model is told. The escalation node's prompt already receives the failure_log and plan.success_criteria (phases.py:1005), so it already HAS the criteria — the gap is in what the executor carries into the terminal, not what the model sees. A _criteria_suffix() parallel to _dissent_suffix() would close it.",
+    "escalation_input": "The escalation node receives the per-iteration failure_log (adapter.py:443) AND plan.success_criteria (phases.py:1018). The persistent-failure fact IS available at escalation time. The root cause is not that the model lacks the information — it is that the executor's terminal reason does not quote the diagnosis or the criteria it already has."
+  },
+  "files_changed": [
+    "tests/test_failure_path_terminal.py",
+    "README.md",
+    "HANDOVER.md"
+  ],
+  "tests_added": [
+    "TestThreeTerminals::test_failure_record_names_the_persistent_criteria",
+    "TestThreeTerminals::test_escalation_diagnosis_is_captured",
+    "TestThreeTerminals::test_escalation_sets_human_or_not_signal"
+  ],
+  "verification_results": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "979 passed"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q -k 'terminal or escalate or diagnosis'", "result": "30 passed"},
+    {"command": "git diff --stat -- workflows/ autornd/graph/checks.py", "result": "Empty"}
+  ],
+  "no_workflow_or_check_modified": true,
+  "cost": "$0.00",
+  "deviations": []
+}

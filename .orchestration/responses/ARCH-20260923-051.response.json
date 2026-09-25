@@ -1,0 +1,90 @@
+{
+  "command_id": "ARCH-20260923-051",
+  "status": "DONE",
+  "executed": "2026-09-23",
+  "head_before": "058ff0c",
+  "summary": "Three criterion outcomes driven end to end through engineering-rnd.yaml, provider-free, via the existing ScriptedRunner harness (tests/test_graph.py:322). (a) satisfied → completed, 1 iteration, no escalation. (b) abstained → completed with empty seat, coverage.abstained_judges={'coverage':1}. (c) unmet → escalated after build_loop (5 iterations) + recovery_loop (3 iterations) = 8 implement calls, 31 total AI calls. Terminal: 'recovery_loop did not converge within 3 iterations, still red: build'. No ceiling reached. Suite 976/976, $0.00.",
+  "provider_free_harness_exists": {
+    "answer": true,
+    "file": "tests/test_graph.py",
+    "line": 348,
+    "name": "_run()",
+    "mechanism": "ScriptedRunner returns canned verdicts for AI nodes, runs real checks. GraphExecutor.run() drives the full workflow."
+  },
+  "billing_convention": {
+    "applies": false,
+    "reason": "ScriptedRunner is a NodeRunner (graph level), not a provider client. Convention 7 applies to provider client doubles (conftest.py:90), which call client._account. ScriptedRunner makes no provider calls — there is no cost to account for. The established test infrastructure (13 test files use it) operates at a layer where billing does not exist."
+  },
+  "cases": {
+    "a_satisfied": {
+      "criteria": ["Reconnect loop applies exponential backoff capped at 60s", "Jitter is applied to every retry attempt"],
+      "terminal": "completed",
+      "reason": null,
+      "judges_passed": true,
+      "judges_detail": "all 4 judges agree",
+      "escalation_ran": false,
+      "implement_calls": 1,
+      "iterations": 1
+    },
+    "b_abstained": {
+      "criteria": ["Reconnect loop applies exponential backoff capped at 60s", "The system handles exactly 100 concurrent connections"],
+      "criteria_shapes": {"criterion_1": "presence", "criterion_2": "form"},
+      "terminal": "completed",
+      "reason": null,
+      "judges_passed": true,
+      "judges_detail": "4 judges agree, but coverage (1) abstained — empty seat, not unanimous",
+      "abstained_judges": {"coverage": 1},
+      "coverage_passed": true,
+      "coverage_abstained_count": 1,
+      "escalation_ran": false,
+      "empty_seat_confirmed": true,
+      "not_a_dissent": true,
+      "not_unanimous": true
+    },
+    "c_unmet": {
+      "criteria": ["Caching layer stores computed results in Redis", "Cache invalidation runs on every write"],
+      "terminal": "escalated",
+      "reason": "'recovery_loop' did not converge within 3 iterations, still red: build",
+      "judges_passed": false,
+      "judges_detail": "not agreed — coverage is red",
+      "coverage_passed": false,
+      "coverage_missed": ["Caching layer stores computed results in Redis", "Cache invalidation runs on every write"],
+      "build_loop": {"converged": false, "iterations": 5},
+      "recovery_loop": {"converged": false, "iterations": 3},
+      "escalation_ran": true,
+      "implement_calls": 8,
+      "total_ai_calls": 31,
+      "ceiling_reached": false,
+      "diagnosis_in_reason": true,
+      "bound_in_reason": true
+    }
+  },
+  "questions_answered": {
+    "ceiling_or_recovery": "The failure path terminates correctly at 31 AI calls (8 implement). build_loop exhausts at 5 (its declared max_iterations), recovery_loop exhausts at 3 (escalation_recovery_attempts). The terminal 'escalated' with reason naming the bound and dissent is correct. The 42-call B14 was a historical defect, now fixed.",
+    "recovery_bound": "Recovery inherits its OWN bound: recovery_loop has max_iterations: escalation_recovery_attempts (3 in test settings), not the build_loop's max_iterations (5). The two bounds are independent. Total implement calls = max_iterations + escalation_recovery_attempts."
+  },
+  "acceptance_criteria": {
+    "provider_free_path_stated": "YES — tests/test_graph.py:348, ScriptedRunner.",
+    "three_terminals_reported": "YES — completed, completed (empty seat), escalated.",
+    "case_c_path_reported": "YES — 5+3 iterations, recovery_loop exhausted, terminal 'escalated', reason verbatim above.",
+    "case_c_within_bounds": "YES — 31 AI calls, no ceiling reached.",
+    "case_b_empty_seat": "YES — abstained_judges={'coverage': 1}, detail says 'empty seat', does NOT say 'all ... agree'.",
+    "case_a_completed": "YES — completed, 1 iteration, no escalation.",
+    "no_workflow_or_check_modified": "YES — git diff --stat -- workflows/ autornd/graph/checks.py is empty.",
+    "billing_addressed": "YES — ScriptedRunner is not a provider client; convention 7 does not apply at this layer.",
+    "suite_counts": {"before": 973, "after": 976, "delta": 3}
+  },
+  "files_changed": [
+    "tests/test_failure_path_terminal.py",
+    "README.md",
+    "HANDOVER.md",
+    "AGENTS.md"
+  ],
+  "verification_results": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "976 passed"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q -k 'terminal or exhaust or escalate or empty_seat'", "result": "36 passed"},
+    {"command": "git diff --stat -- workflows/ autornd/graph/checks.py", "result": "Empty"}
+  ],
+  "cost": "$0.00",
+  "deviations": []
+}

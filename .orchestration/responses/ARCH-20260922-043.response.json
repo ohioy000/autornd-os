@@ -1,0 +1,35 @@
+{
+  "command_id": "ARCH-20260922-043",
+  "status": "DONE",
+  "executed": "2026-09-23",
+  "head_before": "f118ae7",
+  "summary": "Enriched judges_agree fold to detect abstention from source outputs (Ruling D9). The fold's decision is unchanged — abstention does not fail it. The record now distinguishes silence from assent: when coverage has abstained criteria, the detail says 'empty seat, not unanimous' instead of 'all judges agree', and the payload carries abstained_judges and abstention_count. Adapter iteration record gains coverage_abstained_count. Three tests added (TestEmptySeat). B7 replay: all four traces had the fold failing already, so the enrichment fires in none. Suite 973/973, $0.00.",
+  "files_changed": [
+    "autornd/graph/executor.py",
+    "autornd/graph/adapter.py",
+    "tests/test_all_judges_exit.py",
+    "README.md",
+    "HANDOVER.md",
+    "docs/handover-review.md"
+  ],
+  "tests_added": [
+    "TestEmptySeat::test_empty_seat_passes_but_is_not_unanimous",
+    "TestEmptySeat::test_no_abstention_is_unanimous",
+    "TestEmptySeat::test_regression_unanimous_excludes_empty_seat"
+  ],
+  "b7_replay": {
+    "traces": "docs/traces/b7-convergence-v4.jsonl",
+    "scenarios": 4,
+    "affected_by_enrichment": 0,
+    "reason": "fold was failing in all four (validate dissented); enrichment fires only on passed=True"
+  },
+  "ruling_implemented": "D9",
+  "design_note": "Enrichment runs in executor._run_check AFTER the fold, inspecting state.outputs[source_id].abstained. Does not modify the fold's check function. Adapter records coverage_abstained_count for future traces.",
+  "verification_results": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "result": "973 passed"},
+    {"command": ".venv/bin/python3 -m pytest tests/test_all_judges_exit.py::TestEmptySeat -q", "result": "3 passed"},
+    {"command": "B7 v4 trace replay", "result": "0 of 4 affected — fold was failing in all"}
+  ],
+  "cost": "$0.00",
+  "deviations": []
+}

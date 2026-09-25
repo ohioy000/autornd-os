@@ -1,0 +1,7 @@
+{
+  "command_id": "ARCH-20260922-047",
+  "parent_id": "ARCH-20260922-046",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Record the -046 refuted prediction, resolve D12's contingency, update residual arithmetic (13.9%, 28%). Documentation only."
+}

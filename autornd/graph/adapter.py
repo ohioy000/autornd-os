@@ -411,6 +411,7 @@ class PhaseRunner:
         consistency = state.outputs.get("consistency") or {}
         coverage_passed = coverage.get("passed")
         consistency_passed = consistency.get("passed")
+        coverage_abstained = coverage.get("abstained", [])
         judged = {
             "implement": implement.green,
             "validate": verdict.green,
@@ -422,6 +423,7 @@ class PhaseRunner:
             "dissenting": sorted(name for name, green in judged.items()
                                  if green is False),
             "coverage_passed": coverage_passed,
+            "coverage_abstained_count": len(coverage_abstained),
             "consistency_passed": consistency_passed,
             "implement_green": implement.green,
             "implement_red_cause": implement.red_cause,

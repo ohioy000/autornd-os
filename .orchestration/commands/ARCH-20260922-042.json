@@ -1,0 +1,6 @@
+{
+  "command_id": "ARCH-20260922-042",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Measure false-fail rate for presence-tested criteria."
+}

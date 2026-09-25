@@ -130,6 +130,76 @@ class TestTheFoldItself:
             resolve_args(spec.get("judges"), ExecutionState(request="r"))
 
 
+class TestEmptySeat:
+    """Ruling D9: an abstaining judge passes the fold but is not recorded as
+    agreeing. The fold's DECISION is unchanged; only the RECORD distinguishes
+    silence from assent."""
+
+    @staticmethod
+    async def _enriched_fold(coverage_abstained):
+        """Run _run_check on a judges_agree node where coverage has the given
+        abstention list. Returns the judges output dict."""
+        from autornd.graph.checks import get_check
+        from autornd.graph.executor import ExecutionState, GraphExecutor, resolve_args
+        from autornd.graph.spec import Node
+
+        node = Node(id="judges", kind="check", check="judges_agree",
+                    args={"implement": "implement.green",
+                          "validate": "validate.green",
+                          "coverage": "coverage.passed",
+                          "consistency": "consistency.passed"})
+        state = ExecutionState(request="test")
+        state.outputs["implement"] = {"green": True}
+        state.outputs["validate"] = {"green": True}
+        state.outputs["coverage"] = {
+            "passed": True, "detail": "",
+            "abstained": coverage_abstained,
+            "missed": [], "coverage": {}, "shapes": {}, "addressed": 0,
+            "extractions": {},
+        }
+        state.outputs["consistency"] = {"passed": True, "detail": ""}
+
+        class FakeRunner:
+            async def run_check(self, node, state):
+                return get_check(node.check)(**resolve_args(node, state))
+
+        executor = GraphExecutor.__new__(GraphExecutor)
+        executor.runner = FakeRunner()
+        await executor._run_check(node, state)
+        return state.outputs["judges"]
+
+    @pytest.mark.asyncio
+    async def test_empty_seat_passes_but_is_not_unanimous(self):
+        """Coverage abstains on one criterion — the fold passes (abstention
+        is not dissent) but the record says 'empty seat, not unanimous'."""
+        judges = await self._enriched_fold(
+            [{"criterion": "c1", "shape": "form", "reason": "r"}])
+        assert judges["passed"] is True
+        assert judges["abstained_judges"] == {"coverage": 1}
+        assert judges["abstention_count"] == 1
+        assert "empty seat" in judges["detail"]
+        assert "all " not in judges["detail"]
+
+    @pytest.mark.asyncio
+    async def test_no_abstention_is_unanimous(self):
+        """Zero abstentions → the fold reports unanimity normally."""
+        judges = await self._enriched_fold([])
+        assert judges["passed"] is True
+        assert judges.get("abstained_judges") is None
+        assert "all " in judges["detail"] and "agree" in judges["detail"]
+
+    @pytest.mark.asyncio
+    async def test_regression_unanimous_excludes_empty_seat(self):
+        """Invariant: 'all judges agree' and 'abstained_judges' never coexist.
+        Without the D9 enrichment this would silently pass."""
+        judges = await self._enriched_fold(
+            [{"criterion": "c1", "shape": "form", "reason": "r"},
+             {"criterion": "c2", "shape": "form", "reason": "r2"}])
+        if judges.get("abstained_judges"):
+            assert "all " not in judges.get("detail", ""), (
+                "a panel with an empty seat must not be recorded as unanimous")
+
+
 class TestEveryShippedLoopFoldsItsOwnJudges:
     """A loop folds the judges its body actually produces — not a list written
     here that drifts when a body changes."""

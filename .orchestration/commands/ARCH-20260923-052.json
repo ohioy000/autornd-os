@@ -1,0 +1,7 @@
+{
+  "command_id": "ARCH-20260923-052",
+  "parent_id": "ARCH-20260923-051",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Make the failure terminal actionable: assert that an exhausted run names which criteria stayed unsatisfied across all iterations and records an escalation diagnosis, not only the bound reached."
+}
