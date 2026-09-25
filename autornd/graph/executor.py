@@ -50,6 +50,14 @@ class ExecutionState:
     status: str | None = None      # set once, ends the run
     reason: str | None = None
     iteration: int = 0             # current loop iteration, 0 outside a loop
+    # Ruling D23: the runner's stop-reason is not the workflow's terminal.
+    # A bound that stops the run from outside (wall-clock deadline, call or
+    # spend ceiling) records how the runner stopped it here; the workflow's
+    # own terminal stays in status/reason. A reader can therefore tell a
+    # workflow that concluded blocked from a runner that killed a workflow
+    # that never concluded. Set alongside status by _end_on_bound, never by
+    # the workflow itself.
+    stop_reason: str | None = None
 
     @property
     def finished(self) -> bool:

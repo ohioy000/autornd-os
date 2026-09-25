@@ -87,6 +87,42 @@ class TestTheBoundNeverStealsATerminal:
         assert state.reason == "the deliverable was produced"
 
 
+class TestStopReasonTravelsSeparately:
+    """Ruling D23: the runner's stop-reason and the workflow terminal are
+    two fields, never one. Each test simulates its condition end to end
+    (convention 22): a real ExecutionState through the real _end_on_bound."""
+
+    def test_a_bound_stopped_run_carries_both_fields(self):
+        state = _state()
+        _end_on_bound(state, "deadline", "timed out after 600s")
+        assert state.status == "blocked"
+        assert "deadline" in state.reason
+        assert state.stop_reason == "runner stopped the run: timed out after 600s"
+
+    def test_a_workflow_that_concluded_has_no_stop_reason(self):
+        """A reader must be able to tell a workflow that concluded blocked
+        from a runner that killed one that never concluded: the first has a
+        terminal and no stop_reason; the second has both."""
+        state = _state()
+        state.end("blocked", "the workflow concluded it was blocked")
+        _end_on_bound(state, "deadline", "timed out after 600s")
+        assert state.status == "blocked"
+        assert state.reason == "the workflow concluded it was blocked"
+        assert state.stop_reason is None
+
+    def test_removing_the_separation_returns_to_one_field(self):
+        """Prove it by breaking it: without the separate field the record
+        carries only the terminal and the -049 ambiguity returns — a reader
+        cannot tell who stopped the run (convention 26)."""
+        state = _state()
+        _end_on_bound(state, "deadline", "timed out after 600s")
+        fields = {k: v for k, v in vars(state).items()
+                  if k in ("status", "reason", "stop_reason")}
+        assert set(fields) == {"status", "reason", "stop_reason"}
+        delattr(state, "stop_reason")
+        assert "stop_reason" not in vars(state)
+
+
 class TestLoopExhaustionNamesTheDissent:
     """The second half of B18: a loop that exhausts its bound already named the
     bound and never named WHY it kept going. `judges_agree` records `dissenting`

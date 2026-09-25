@@ -343,6 +343,36 @@ class PhaseRunner:
             missed = coverage.get("missed") or []
         else:
             missed = list(getattr(coverage, "missed", None) or [])
+        # Ruling D24: on a rework iteration implement receives the incoming
+        # review's findings plus the gate's reason, through the same
+        # unmet_criteria channel — one mechanism, two sources. The review
+        # verdict that failed review_clean is what exists when the rework
+        # input assembles (the loop's own rework_review is its judge, not
+        # its input). Empty on build iterations (no review output yet).
+        review = state.outputs.get("review")
+        rework_extra: list[str] = []
+        gate_reason = ""
+        gate_out = state.outputs.get("review_clean")
+        if isinstance(gate_out, dict) and gate_out.get("routed_to") == "review_rework_loop":
+            gate_reason = str(gate_out.get("reason") or "")
+            findings = None
+            if isinstance(review, dict):
+                findings = review.get("findings") or review.get("detail")
+            else:
+                findings = getattr(review, "findings",
+                                   getattr(review, "detail", None))
+            if isinstance(findings, list):
+                for f in findings:
+                    if isinstance(f, dict):
+                        d = str(f.get("detail") or f.get("text") or "").strip()
+                        if d:
+                            rework_extra.append(d)
+                    elif str(f).strip():
+                        rework_extra.append(str(f).strip())
+            elif findings and str(findings).strip():
+                rework_extra.append(str(findings).strip())
+            if gate_reason.strip():
+                rework_extra.append(f"Gate: {gate_reason.strip()}")
         verdict, responses = await phases.run_implement(
             self.client, state.request, state.outputs["plan"], lead,
             iteration=state.iteration or 1,
@@ -353,7 +383,7 @@ class PhaseRunner:
             # time while the rest sat in the log unread.
             evidence=last.get("evidence"),
             review_findings=last.get("review_findings"),
-            unmet_criteria=[str(m) for m in missed],
+            unmet_criteria=[str(m) for m in missed] + rework_extra,
             resolution_directive=self.resolution_directive,
             context=self.context,
             primary_domain=None,      # the lead is already resolved

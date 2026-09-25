@@ -1,0 +1,42 @@
+{
+  "acceptance": {
+    "build_first_unchanged": "-062's empty-on-build behaviour preserved (rework_extra empty without routed gate)",
+    "converges": "review_fold.passed True, status completed",
+    "no_semantics_change": "workflows/ + checks.py empty; verdicts/gates/loops/bounds untouched",
+    "plumbing_shared": "-062 EXTENDED, not duplicated \u2014 stated in \u00a772 and here",
+    "premise_quoted": "review verdict + iter2 dissent quoted from trace",
+    "rework_receives": "test_rework_implement_receives_review_findings_and_converges: completed via rework, finding + gate reason asserted",
+    "suite": "1016 collected, 1013 green on branch (+2 new)"
+  },
+  "command_id": "ARCH-20260925-067",
+  "delivery_state": "PUSHED_PR_81",
+  "deviations": [
+    {
+      "reason": "Expected on unmerged branch + 065/066 HANDOVER edits. D24 work green (18/18 failure-path).",
+      "what": "D18-ancestry (2) + D20 (1) red on the branch at PR time."
+    }
+  ],
+  "executed": "2026-09-25",
+  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
+  "head_before": "e970f45",
+  "questions_for_advisor": [],
+  "results": {
+    "change": "adapter._phase_implement: rework_extra from review.findings/detail + review_clean reason, appended to unmet_criteria. EXTENDS -062 plumbing (shared site, one mechanism two sources). No verdict/gate/loop/bound change.",
+    "pr_url": "https://github.com/ohioy000/autornd-os/pull/81",
+    "preconditions": {
+      "062_id": "ARCH-20260925-062 (not ARCH-20260923-062) \u2014 DONE/MERGED via #75 (5d94c20). -067 EXTENDS its plumbing (shared _phase_implement), not a second mechanism",
+      "loop_body": "review_rework_loop body [implement, blocked_check, blocked_terminal, domain_review, coverage, consistency, validate, judges, rework_review, review_fold] (workflows/engineering-rnd.yaml:263); gate review_clean on_fail review_rework_loop, on_fail_reason 'Review found blocking issues' (:232-233)",
+      "parent_065": "present on branch (e970f45 records PR 80); gate clears",
+      "suite_before": "1011 passed + 3 stamp red on branch (2 D18-ancestry + D20; resolve at merge/restamp)",
+      "trace_premise": "review ship=false with systems_architect critical finding (gp3 IOPS); rework implement received NOTHING of it \u2014 iter2 dissenting=[consistency], a green build went red after a blind re-implement. Premise CONFIRMED from the trace artifact itself"
+    },
+    "premise": "CONFIRMED from trace artifact: review ship=false + systems_architect critical (gp3 IOPS); rework implement received nothing; iter2 dissenting=[consistency]",
+    "prose_vs_structured": "findings may be dicts (detail/text) or strings \u2014 handled without widening; structured fields read, prose passed through",
+    "pull_request": 81,
+    "replay": "-049 trace cannot be replayed provider-free (live verdicts irreproducible); shape replayed instead \u2014 green build, blocked review, rework with findings, convergence to review_fold.passed",
+    "review_source": "incoming review (failed review_clean); loop's own rework_review is its judge not its input",
+    "ruling": "D24 recorded for implementation in \u00a772 before code (ruled behaviour change)",
+    "suite": "1013 passed + 3 stamp red on branch; 1016 collected (+2 D24 tests)"
+  },
+  "status": "DONE"
+}

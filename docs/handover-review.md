@@ -8548,6 +8548,76 @@ engineering-rnd (line 228) and independent-check-probe (line 55). lean's
 review runs unconditionally and decides nothing — reached on every run,
 advisory on every run.
 
+## 69. Ruling D20 — a stamp declares what it names (advisor, 2026-09-25)
+
+Ruling D20 — a stamp declares what it names, and the guard tests the declared property. A HEAD field that names a branch tip is guarded by equality with that tip; a HEAD field that names the commit the document describes is guarded by that commit being the most recent to modify the document. One field, one property, one guard — a stamp whose guard tests something else is a hand-stamp wearing a generated fact's clothes.
+
+### ARCH-20260925-060 status
+
+Never transported: no command file and no response file exist on the tree.
+This is the first issue of the stamp-property kind; nothing is superseded.
+
+### Property choice (ARCH-20260925-064)
+
+Option (b): HEAD names the commit the document describes, guarded by that
+commit being the most recent to modify HANDOVER.md, with the count true of
+that commit's tree. Why: the history shows the stamp is maintained on the
+branch that edits the document — every restamp commit in this session
+(631f259, 582f255) names its own branch base, never a merge that did not
+touch the document — and the header carries the snapshot date separately,
+so HEAD would be redundant if it meant tip-of-main. Option (a) would be
+correct only between a merge and the next merge; option (b) is correct
+wherever the document is read.
+
+### CI provability
+
+Resolvability and count-equality prove on CI (tree-local). Main-ancestry
+resolves origin/main second (the -058 lesson) and proves on CI. The
+most-recent-modifier assertion shells to git log and proves on CI wherever
+history is present; the synthetic-stale break (ancestor that is not the
+most recent modifier) runs only where a local main exists, same bounded
+limitation as the D18 break-proof.
+
+## 70. ARCH-20260925-065 — the refuted prediction and what the trace proved (executor, 2026-09-25)
+
+Advisor prediction for ARCH-20260923-049, pre-registered 2026-09-25 before the run: the live run reaches COMPLETED; the only live risk is provider variance. RESULT: REFUTED. The run reached no terminal in 600s. Reported as wrong, never adjusted.
+
+Session pattern, attributed honestly: for ARCH-20260922-046 the advisor was too pessimistic; for ARCH-20260923-049 too optimistic. The model is not biased in one direction; it is wrong about this system in both. No shape should be drawn from the sequence.
+
+Mechanism, read from the trace (`docs/traces/049-live-terminal.jsonl`, `seconds_by_phase`) rather than the response summary: implement 208.0s + plan 171.2s + rework_review 81.9s + review 66.9s = 528.0s of a 600.0s budget, 88% in four calls. The loop bound was never reached; rework_review was pending at timeout. A 600s scenario budget is shorter than one convergence cycle.
+
+Ruling D23 — a bound that is not a workflow terminal must not be recorded as one. The 600s scenario timeout wrote status blocked into the unit record. blocked is a workflow terminal status; the workflow never terminated. Two consequences: the runner stop-reason and the workflow terminal must be separate fields and never the same one, and every bound must produce a workflow terminal naming it, including the wall-clock deadline, which Ruling D18-era B18 did not cover. B18 is therefore not fully closed and its status is corrected here.
+
+Ruling D24 — both loops must carry the failure forward, and the advisor exclusion of review_rework_loop from ARCH-20260923-062 is withdrawn. review_rework_loop implement must receive the review block findings (rework_review) and the fold dissent. The live run proved the exclusion wrong: iteration 1 build was all green, iteration 2 rework was not agreed with consistency dissenting. A green build went red on consistency after a blind re-implement. A rework loop that discards the review findings cannot converge, and this is why ARCH-20260923-049 timed out.
+
+Ruling D25 — a scenario wall-clock budget is a declared bound, not a default. 600s is shorter than one convergence cycle, 528s of it spent in four calls. A scenario must declare a budget sized to its iterations, and the loop must emit its own terminal when its deadline arrives rather than waiting for the runner to kill it.
+
+-062 state, from the channel rather than inferred: DONE/MERGED via PR #75 (`5d94c20`). It is not CARRIED; D21 is implemented on main. -067 extends its plumbing to the rework loop rather than writing a second one.
+-064 state: DONE/PUSHED via PR #78; merge blocked by the expected D18-ancestry red (branch unmerged — resolves at merge, recorded in the -064 response).
+
+Note: the defect is recorded as B28 in HANDOVER.md §4.2 — B27 was already taken (CLOSED 2026-09-24, §63). The -065 command text names B27; the ledger's B28 is that defect.
+
+## 71. Ruling D23 recorded for implementation (ARCH-20260925-066, 2026-09-25)
+
+Ruling D23 — a bound that is not a workflow terminal must not be recorded as one. (Full text in §70; recorded for implementation here before the code, per the ruled-instrument-repair constraint.) The site: `autornd/evals/runner.py:670` (`deadline = scenario.timeout or timeout`), `:676-683` (`asyncio.wait_for` + `TimeoutError` → `_end_on_bound(state, "deadline", ...)`), `_end_on_bound` at `:607-625` calling `state.end("blocked", ...)` on `ExecutionState.status/reason` (`autornd/graph/executor.py:46-66`). The runner's stop-reason and the workflow terminal share one field today — that shared field IS the defect, named explicitly.
+
+Deadline ownership (the command's first question): the 600s lives in three layers — CLI default 600.0 (`cli.py:92`), `DEFAULT_TIMEOUT_SECONDS` (runner default), scenario `timeout` override (`scenario.py:121-123`). The scenario's own timeout wins at runner.py:670. Per D25 the scenario declares its budget; the loop must then observe it — so the record fix belongs in the runner (where the stop happens), not in any one layer's default.
+
+Which wins, deadline or iteration bound (second question): the deadline, because it is the outer bound — the code shows it: `asyncio.wait_for` wraps the whole `executor.run`, so wall-clock kills the run wherever a loop is. The -049 trace is the exhibit: the loop bound was never reached because time ended the run first.
+
+## 72. Ruling D24 recorded for implementation (ARCH-20260925-067, 2026-09-25)
+
+Ruling D24 — both loops must carry the failure forward, and the advisor exclusion of review_rework_loop from ARCH-20260923-062 is withdrawn. (Full text in §70; recorded for implementation here before the code.) Premise read from the trace artifact first: `review` returned `ship: false` with a `systems_architect` critical finding (gp3 baseline 3000 IOPS vs 4,200 messages/s peak); the rework iteration's implement received none of it — iter2 came back `dissenting=[consistency]`, a green build gone red after a blind re-implement. The premise is confirmed, and the artifact is the trace, not prose about it.
+
+Path taken: EXTEND -062's plumbing. The two loops run the identical eight-node body and share the single input-assembly site (`adapter._phase_implement`); the rework channel rides the same `unmet_criteria` mechanism with review findings as its source. One mechanism, two sources — not a second plumbing.
+
+Review-source question: the incoming review's findings (the `review` verdict that failed `review_clean`) — that is what is available when the rework iteration assembles its input, and that is what implement receives, plus the gate's `on_fail_reason`. The loop's own `rework_review` does not exist yet on the first rework iteration; it is the judge of the rework, not its input.
+
+## 73. Ruling D26 recorded for implementation (ARCH-20260925-068, 2026-09-25)
+
+Ruling D26 — a numeric verdict field coerces a string when the number is unambiguously recoverable, and the coercion is counted. If no number is recoverable, the rejection stands. (Issued in ARCH-20260925-068; recorded for implementation here before the code.) Premise verified: `PlanVerdict.cost_estimate: Optional[float] = None` (`autornd/models/verdicts.py:176`) with no validator — bare `float_parsing` is the rejection path, confirmed by constructing with `'$989.88 per month (capped at $1,000)'`. The test is recoverability, not shape: '$989.88 per month' recovers 989.88 and coerces; 'approximately one thousand' carries no digits and is rejected. Counting reuses `_count(kind)` / `normalisations_by_kind()` (`verdicts.py:298-314`), the -011 precedent mechanism.
+
+Shape-selects-the-test (the executor's question): only partially — a verdict field has one declared type, so the question is recoverability, not shape. The code agrees: the field declares `float`, so a string either recovers a float or it does not; there is no second type to select. Cost-consumption question: `cost_estimate` is informational (a bill-of-materials note on the plan) — grep shows no gate, bound or routing reads it, so the coercion touches no conclusion.
 ## 74. Ruling D27 — the sha stamp is deleted (advisor, 2026-09-25)
 
 Ruling D27 — the sha stamp is deleted. A fact about the tree you are on can be verified on the tree you are on; a fact about a relationship to main cannot be verified before you merge. The HANDOVER HEAD and Branch stamps assert a relationship to main and are therefore unsatisfiable on any unmerged branch and stale on main for most of the time between merges. The sha has failed six ways: a stale sha, a misattributed count, a sha on a deleted branch, a guard that went red against a correct stamp because CI has no local main, a break-proof that could not break because CI has no committer identity, and a ruling (D20) that is unsatisfiable by construction. Rulings D18, D19 and D20 are superseded. The stamp is removed; the test count remains because it is a property of the tree under test and is verifiable there.
@@ -8561,3 +8631,4 @@ Ruling D27 — the sha stamp is deleted. A fact about the tree you are on can be
 ### The advisor's error
 
 Four rulings on one two-line block, each asserting a property the stamp could not hold, each corrected by the next. The correct move, available from the first, was to ask whether the stamp should exist. Recorded against the advisor per convention 7, which binds the advisor as it binds the executor: a wrong prediction is reported as wrong, never quietly adjusted — and D18 through D20 were three quiet adjustments before the deletion.
+

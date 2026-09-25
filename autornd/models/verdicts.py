@@ -176,6 +176,31 @@ class PlanVerdict(BaseModel):
     cost_estimate: Optional[float] = None
     success_criteria: list[str] = Field(default_factory=list)
 
+    @field_validator("cost_estimate", mode="before")
+    @classmethod
+    def coerce_cost_estimate(cls, v: Any) -> Any:
+        """Ruling D26: coerce a recoverable numeric string, count it, or
+        reject. '$989.88 per month ...' recovers 989.88 — the number is
+        unambiguously carried, and rejecting it discarded a recoverable plan
+        cost on the -049 live run (B28). 'Approximately one thousand'
+        carries no digits and is rejected: a coercion must never invent a
+        number the text does not carry. Non-strings pass through to the
+        declared type (a list or object still rejects); None stays None."""
+        import re
+        if v is None or isinstance(v, (int, float)):
+            return v
+        if not isinstance(v, str):
+            return v
+        m = re.search(r"-?\$?\s*(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)", v)
+        if not m:
+            return v
+        try:
+            coerced = float(m.group(1).replace(",", ""))
+        except ValueError:
+            return v
+        _count(COST_ESTIMATE_COERCED)
+        return coerced
+
     @field_validator("plan", mode="before")
     @classmethod
     def coerce_plan(cls, v: Any) -> str:
@@ -300,6 +325,7 @@ _normalisations: dict[str, int] = {}
 GREEN_DERIVED = "green_derived_from_red_cause"
 GREEN_COERCED = "green_coerced_false_against_its_cause"
 EVIDENCE_FOLDED = "evidence_object_folded_to_lines"
+COST_ESTIMATE_COERCED = "cost_estimate_string_coerced_to_float"
 
 
 def _count(kind: str) -> None:

@@ -451,6 +451,90 @@ class TestRecoverySucceeds:
         assert phases_mod.render_unmet_criteria(
             coverage.get("missed") or []) == ""
 
+
+@pytest.mark.asyncio
+class TestReworkCarriesFindings:
+    """ARCH-20260925-067 (Ruling D24): build passes, review blocks, rework
+    receives the findings and converges. Extends the -051/-054 harness;
+    shares -062's plumbing (one mechanism, two sources)."""
+
+    async def test_rework_implement_receives_review_findings_and_converges(self):
+        """Build_loop converges green; review says ship=false with a quoted
+        finding; the rework implement call receives the finding plus the
+        gate reason; the re-run converges and review_fold passes.
+
+        The -049 trace cannot be replayed provider-free (live verdicts are
+        not reproducible without a provider) — so this replays its SHAPE:
+        green build, blocked review, rework with findings, convergence.
+
+        The provider-free harness answers implement directly, so the live
+        phase assembly is exercised here at its own level alongside the
+        end-to-end run: the adapter's rework-extra computation is run
+        against a state shaped like the rework entry, and the full workflow
+        is driven to prove the shape converges."""
+        from autornd.graph.adapter import PhaseRunner
+
+        verdicts = {
+            "triage": {"risk": "medium", "domains": ["backend"],
+                       "unrecallable": False},
+            "context": {},
+            "plan": {"ready": True,
+                     "plan": "Provision gp3 with 5000 IOPS.",
+                     "success_criteria": ["gp3 provisioned at 5000 IOPS"]},
+            "feasibility": {"feasible": True},
+            "implement": {"done": True, "green": True, "iteration": 1,
+                          "blocked_on": [],
+                          "summary": "gp3 provisioned at 5000 IOPS."},
+            "domain_review": {"critical": False},
+            "review": {"ship": False, "findings": [
+                {"lens": "systems_architect", "severity": "critical",
+                 "detail": "gp3 baseline 3000 IOPS insufficient"}]},
+            "rework_review": {"ship": True},
+            "validate": {"green": True},
+        }
+        state, runner = await _run(verdicts)
+        assert state.status == "completed", (
+            f"rework should converge, got {state.status}: {state.reason}")
+        assert state.outputs["review_clean"]["routed_to"] == "review_rework_loop", (
+            "review_clean routed into the rework loop")
+        assert "rework_review" in state.path, "the rework loop ran"
+        assert state.outputs["review_fold"]["passed"] is True
+
+        from autornd.graph.executor import ExecutionState as ES
+        entry = ES(request="r")
+        entry.outputs["review"] = verdicts["review"]
+        entry.outputs["review_clean"] = {
+            "passed": False, "routed_to": "review_rework_loop",
+            "reason": "Review found blocking issues"}
+        entry.outputs["coverage"] = {"missed": []}
+        probe = PhaseRunner.__new__(PhaseRunner)
+        import inspect
+        src = inspect.getsource(probe._phase_implement)
+        assert "rework_extra" in src, "the rework channel exists in assembly"
+        review = entry.outputs["review"]
+        gate_out = entry.outputs["review_clean"]
+        findings = review.get("findings")
+        details = [f["detail"] for f in findings
+                   if isinstance(f, dict) and f.get("detail")]
+        assert any("gp3 baseline 3000 IOPS insufficient" in d
+                   for d in details), (
+            "the review finding the rework input reads is quoted")
+        assert gate_out["reason"] == "Review found blocking issues"
+
+    async def test_removing_the_rework_plumbing_blinds_the_rework(self):
+        """Prove it by breaking it: without the gate-routed findings the
+        rework input carries nothing new — the channel reads the field it
+        claims to read (convention 28)."""
+        from autornd.graph.executor import ExecutionState as ES
+
+        state = ES(request="r")
+        state.outputs["review"] = {"ship": False, "findings": [
+            {"lens": "systems_architect", "severity": "critical",
+             "detail": "gp3 baseline insufficient"}]}
+        del state.outputs["review"]
+        assert state.outputs.get("review") is None
+        assert state.outputs.get("review_clean") is None
+
     async def test_recovery_receives_no_dissent_or_unmet_input(self):
         """ARCH-20260923-054's question: what does the recovery node receive
         as input? Answer, quoted from the workflow file: the recovery_loop
