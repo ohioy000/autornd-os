@@ -42,7 +42,8 @@
   "terminal_verbatim": {
    "reason": "'recovery_loop' did not converge within 3 iterations, still red: build, unmet: 'Caching layer stores computed results in Redis'; 'Cache invalidation runs on every write' \u2014 assessment: Implementation does not address caching requirements",
    "status": "escalated"
-  }
+  },
+  "pr": "https://github.com/ohioy000/autornd-os/pull/71"
  },
  "status": "DONE"
 }
