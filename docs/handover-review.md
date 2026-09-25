@@ -8577,3 +8577,22 @@ most-recent-modifier assertion shells to git log and proves on CI wherever
 history is present; the synthetic-stale break (ancestor that is not the
 most recent modifier) runs only where a local main exists, same bounded
 limitation as the D18 break-proof.
+
+## 70. ARCH-20260925-065 — the refuted prediction and what the trace proved (executor, 2026-09-25)
+
+Advisor prediction for ARCH-20260923-049, pre-registered 2026-09-25 before the run: the live run reaches COMPLETED; the only live risk is provider variance. RESULT: REFUTED. The run reached no terminal in 600s. Reported as wrong, never adjusted.
+
+Session pattern, attributed honestly: for ARCH-20260922-046 the advisor was too pessimistic; for ARCH-20260923-049 too optimistic. The model is not biased in one direction; it is wrong about this system in both. No shape should be drawn from the sequence.
+
+Mechanism, read from the trace (`docs/traces/049-live-terminal.jsonl`, `seconds_by_phase`) rather than the response summary: implement 208.0s + plan 171.2s + rework_review 81.9s + review 66.9s = 528.0s of a 600.0s budget, 88% in four calls. The loop bound was never reached; rework_review was pending at timeout. A 600s scenario budget is shorter than one convergence cycle.
+
+Ruling D23 — a bound that is not a workflow terminal must not be recorded as one. The 600s scenario timeout wrote status blocked into the unit record. blocked is a workflow terminal status; the workflow never terminated. Two consequences: the runner stop-reason and the workflow terminal must be separate fields and never the same one, and every bound must produce a workflow terminal naming it, including the wall-clock deadline, which Ruling D18-era B18 did not cover. B18 is therefore not fully closed and its status is corrected here.
+
+Ruling D24 — both loops must carry the failure forward, and the advisor exclusion of review_rework_loop from ARCH-20260923-062 is withdrawn. review_rework_loop implement must receive the review block findings (rework_review) and the fold dissent. The live run proved the exclusion wrong: iteration 1 build was all green, iteration 2 rework was not agreed with consistency dissenting. A green build went red on consistency after a blind re-implement. A rework loop that discards the review findings cannot converge, and this is why ARCH-20260923-049 timed out.
+
+Ruling D25 — a scenario wall-clock budget is a declared bound, not a default. 600s is shorter than one convergence cycle, 528s of it spent in four calls. A scenario must declare a budget sized to its iterations, and the loop must emit its own terminal when its deadline arrives rather than waiting for the runner to kill it.
+
+-062 state, from the channel rather than inferred: DONE/MERGED via PR #75 (`5d94c20`). It is not CARRIED; D21 is implemented on main. -067 extends its plumbing to the rework loop rather than writing a second one.
+-064 state: DONE/PUSHED via PR #78; merge blocked by the expected D18-ancestry red (branch unmerged — resolves at merge, recorded in the -064 response).
+
+Note: the defect is recorded as B28 in HANDOVER.md §4.2 — B27 was already taken (CLOSED 2026-09-24, §63). The -065 command text names B27; the ledger's B28 is that defect.
