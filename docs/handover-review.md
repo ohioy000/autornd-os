@@ -8547,3 +8547,17 @@ no downstream gate reads `review.ship`. `review_clean` exists only in
 engineering-rnd (line 228) and independent-check-probe (line 55). lean's
 review runs unconditionally and decides nothing — reached on every run,
 advisory on every run.
+
+## 74. Ruling D27 — the sha stamp is deleted (advisor, 2026-09-25)
+
+Ruling D27 — the sha stamp is deleted. A fact about the tree you are on can be verified on the tree you are on; a fact about a relationship to main cannot be verified before you merge. The HANDOVER HEAD and Branch stamps assert a relationship to main and are therefore unsatisfiable on any unmerged branch and stale on main for most of the time between merges. The sha has failed six ways: a stale sha, a misattributed count, a sha on a deleted branch, a guard that went red against a correct stamp because CI has no local main, a break-proof that could not break because CI has no committer identity, and a ruling (D20) that is unsatisfiable by construction. Rulings D18, D19 and D20 are superseded. The stamp is removed; the test count remains because it is a property of the tree under test and is verifiable there.
+
+### Supersession by quotation (D18, D19, D20 — not deleted)
+
+- **D18** (recorded §66): a stamp names an existing branch, the named commit is an ancestor of main, the header count matches collection. Superseded: every clause asserts a relationship to main or a ref that CI cannot resolve; the count clause survives in reduced form (count equals collection on the tree under test).
+- **D19** (recorded §66): a labelled verbatim block is a claim. Superseded as a stamp rule only — it survives as a general documentation rule; it simply no longer has a stamp to apply to.
+- **D20** (recorded §69): one field, one property, one guard — HEAD names the commit the document describes. Superseded: unsatisfiable by construction on a stacked branch (each restamp commit moves the document; the -064 chase proved it), and stale on main whenever a merge carries HANDOVER content without restamping (the #77 merge proved that).
+
+### The advisor's error
+
+Four rulings on one two-line block, each asserting a property the stamp could not hold, each corrected by the next. The correct move, available from the first, was to ask whether the stamp should exist. Recorded against the advisor per convention 7, which binds the advisor as it binds the executor: a wrong prediction is reported as wrong, never quietly adjusted — and D18 through D20 were three quiet adjustments before the deletion.
