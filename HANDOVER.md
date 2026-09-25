@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
-**Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `2104e48` · **Branch:** `main`
-**Tests:** 1011 as of `2104e48` · **Date of this snapshot:** 2026-09-25, counts and stamps re-derived against the tree at the sha above
+**Repo:** `github.com/ohioy000/autornd-os` (public) · **HEAD:** `b0fbfaa` · **Branch:** `main`
+**Tests:** 1011 as of `b0fbfaa` · **Date of this snapshot:** 2026-09-25, counts and stamps re-derived against the tree at the sha above
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -264,7 +264,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      54 files, 1011 tests (as of `2104e48`)
+tests/                      54 files, 1011 tests (as of `b0fbfaa`)
 ```
 
 ### 2.3 Key design patterns
@@ -655,7 +655,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (1011 total, as of `2104e48`)
+### 3.7 Test distribution (1011 total, as of `b0fbfaa`)
 
 | file | n | file | n |
 |---|---|---|---|
@@ -1675,7 +1675,7 @@ that kind.
 
 ```bash
 cd ~/projects/autornd-os
-.venv/bin/python3 -m pytest tests/ -q                    # 1011 tests as of `2104e48`, ~52 s, free
+.venv/bin/python3 -m pytest tests/ -q                    # 1011 tests as of `b0fbfaa`, ~52 s, free
 
 # cheap live calibration — 108 calls, ~5-18 min, under 2 cents
 .venv/bin/python3 -m autornd.evals.cli \
