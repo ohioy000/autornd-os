@@ -8596,3 +8596,11 @@ Ruling D25 — a scenario wall-clock budget is a declared bound, not a default. 
 -064 state: DONE/PUSHED via PR #78; merge blocked by the expected D18-ancestry red (branch unmerged — resolves at merge, recorded in the -064 response).
 
 Note: the defect is recorded as B28 in HANDOVER.md §4.2 — B27 was already taken (CLOSED 2026-09-24, §63). The -065 command text names B27; the ledger's B28 is that defect.
+
+## 71. Ruling D23 recorded for implementation (ARCH-20260925-066, 2026-09-25)
+
+Ruling D23 — a bound that is not a workflow terminal must not be recorded as one. (Full text in §70; recorded for implementation here before the code, per the ruled-instrument-repair constraint.) The site: `autornd/evals/runner.py:670` (`deadline = scenario.timeout or timeout`), `:676-683` (`asyncio.wait_for` + `TimeoutError` → `_end_on_bound(state, "deadline", ...)`), `_end_on_bound` at `:607-625` calling `state.end("blocked", ...)` on `ExecutionState.status/reason` (`autornd/graph/executor.py:46-66`). The runner's stop-reason and the workflow terminal share one field today — that shared field IS the defect, named explicitly.
+
+Deadline ownership (the command's first question): the 600s lives in three layers — CLI default 600.0 (`cli.py:92`), `DEFAULT_TIMEOUT_SECONDS` (runner default), scenario `timeout` override (`scenario.py:121-123`). The scenario's own timeout wins at runner.py:670. Per D25 the scenario declares its budget; the loop must then observe it — so the record fix belongs in the runner (where the stop happens), not in any one layer's default.
+
+Which wins, deadline or iteration bound (second question): the deadline, because it is the outer bound — the code shows it: `asyncio.wait_for` wraps the whole `executor.run`, so wall-clock kills the run wherever a loop is. The -049 trace is the exhibit: the loop bound was never reached because time ended the run first.
