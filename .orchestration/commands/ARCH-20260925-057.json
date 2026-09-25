@@ -1,0 +1,68 @@
+{
+  "command_id": "ARCH-20260925-057",
+  "parent_id": null,
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Record D15's third exhibit — a command file can be carried to main without ever executing — and name CARRIED as a distinct channel state.",
+  "evidence": [
+    "commit:4ab956f8 — 'Transport: commit ARCH-20260925-056, -053 and -054 command files as carriage'; parent d733e63; sits in PR #70's history",
+    "main = 11be081e (PR #70, 2026-09-25T04:54:55Z); branches API returns main only; open_issues_count 0",
+    "GET /pulls — #70 (-056) merged; no PR exists for -053 or -054",
+    "suite 980 on -056; -053 would move the count and has not run",
+    "docs/handover-review.md §64 — Ruling D15 as recorded by -056",
+    ".orchestration/README.md — 'A command is new iff commands/<id>.json exists and responses/<id>.response.json does not'",
+    "AGENTS.md convention 28 — an instrument asserts it computed its subject before it asserts anything about it",
+    "AGENTS.md convention 24 — a fact about the repo is generated or guarded, never hand-stamped"
+  ],
+  "scope": {
+    "include": ["docs/handover-review.md", "HANDOVER.md", ".orchestration/README.md"],
+    "exclude": ["autornd/**", "tests/**", "workflows/**", "evals/**"]
+  },
+  "constraints": [
+    "Documentation and channel rule only. $0.00. No code, test, run or key.",
+    "ADD THE THIRD EXHIBIT to Ruling D15 in the notebook, verbatim: 'Third exhibit, 2026-09-25: ARCH-20260923-053 and ARCH-20260923-054 were carried to main by commit 4ab956f8 (Transport: commit command files as carriage) and never executed. The commit that carried the instruction was merged; the instruction was not run. CARRIED is therefore distinct from PUSHED and from MERGED: a command file can be a tracked ancestor of HEAD while no work has been done at all.'",
+    "ADD CARRIED AS A NAMED STATE in .orchestration/README.md alongside the existing new/executed rule. State it as: CARRIED means the command file is on main and no response file exists; the command is still new work and processes in command_id order. Do not invent a new workflow — the existing rule already produces the correct behaviour; this names the state so a reader does not mistake a merged carriage commit for completed work.",
+    "RECORD the corrected reading of the merge table: -056 DONE and MERGED; -053 and -054 CARRIED, unexecuted. State that the advisor's 'some was merged' check found exactly this and that the executor should not assume a merge implies execution.",
+    "RECORD the agent change as a plain fact, not a defect: -055 and -056 carry Co-authored-by: Qwen-Coder trailers where earlier work carried Claude-session trailers. State that -053 and -054 will be executed by a different agent than the one that produced -052's findings, so their deviations should be read accordingly. Name no vendor preference.",
+    "DO NOT re-issue -053 or -054 in this command. They are already new work in the channel and process in command_id order. State that plainly.",
+    "Do NOT change any code, test, workflow or bound.",
+    "Every count re-derived against the tree (convention 24)."
+  ],
+  "acceptance_criteria": [
+    "D15's third exhibit appears verbatim in the notebook; a grep for a distinctive phrase finds it.",
+    "CARRIED is named as a distinct state in .orchestration/README.md with its definition.",
+    "The corrected merge-table reading is recorded: -056 MERGED, -053 and -054 CARRIED and unexecuted.",
+    "The agent change is recorded as a fact without a vendor preference.",
+    "No code, test, workflow or bound was modified.",
+    "Suite passes unchanged; count reported before and after."
+  ],
+  "verification": [
+    {"command": "grep -n 'CARRIED\\|Third exhibit, 2026-09-25' docs/handover-review.md .orchestration/README.md", "expected": "The exhibit and the state both present."},
+    {"command": "ls .orchestration/commands/ | grep -E '053|054'; ls .orchestration/responses/ | grep -E '053|054'", "expected": "Command files present; response files absent — the CARRIED state demonstrated in the repo itself."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "980 passed; count reported and unchanged."},
+    {"command": "git diff --stat", "expected": "Only docs/handover-review.md, HANDOVER.md and .orchestration/README.md."}
+  ],
+  "rollback": "Revert the commit; documentation and a channel rule only.",
+  "deliverable": {
+    "branch": "arch/20260925-057-carried-state",
+    "branch_created_by": "executor",
+    "pr": true,
+    "merge": "owner-only",
+    "commit_style": "conventional"
+  },
+  "transport": "Commit this command file verbatim as carriage before executing; commit the response IN_PROGRESS first, then update it in place. The response must carry delivery_state per Ruling D15, and must state CARRIED where the command file is on main unexecuted.",
+  "assumptions": [
+    "The -053 and -054 command files on main at 11be081e are the versions issued on 2026-09-23 and are unmodified. If either was edited in transit, say so.",
+    "No response file for -053 or -054 exists anywhere. If one does, name it and this command's premise is wrong."
+  ],
+  "questions": [
+    "Should a carriage commit be permitted to carry an unexecuted command at all, or should carriage and execution always travel together? My reading is that carriage is legitimate as transport and the defect is the reader's expectation, not the mechanism — but that is a channel ruling and the owner may want it changed.",
+    "Has -056 recorded delivery_state MERGED on its own response now that PR #70 is merged, or does it still read PUSHED? The response was written when the PR was open."
+  ],
+  "preconditions": [
+    {"command": "git rev-parse --short HEAD", "expected": "11be081e. If not, name the divergence rather than assuming."},
+    {"command": "ls .orchestration/commands/ | grep -E '20260923-05[34]'", "expected": "Both command files present on main; record them. If absent, this command's premise is wrong."},
+    {"command": "ls .orchestration/responses/ | grep -E '20260923-05[34]'", "expected": "Report. An empty result is the finding this command records."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green at 980 before the change."}
+  ]
+}
