@@ -1,0 +1,11 @@
+{
+  "command_id": "ARCH-20260923-054",
+  "delivery_state": "IN_PROGRESS_NO_PR_YET",
+  "deviations": [],
+  "executed": "2026-09-25",
+  "head_after": "PENDING_WORK",
+  "head_before": "07b86c9",
+  "questions_for_advisor": [],
+  "results": {},
+  "status": "IN_PROGRESS"
+}
