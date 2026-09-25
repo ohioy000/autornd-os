@@ -11,7 +11,7 @@
     "trace_committed": "jsonl + STDERR committed; mirror quoted"
   },
   "command_id": "ARCH-20260925-071",
-  "delivery_state": "PUSHED_PENDING_PR",
+  "delivery_state": "PUSHED_PR_85",
   "deviations": [
     {
       "reason": "Two guards went red on the measurement; always-in-scope set covers generated counts + channel artifacts.",
@@ -19,7 +19,7 @@
     }
   ],
   "executed": "2026-09-25",
-  "head_after": "PENDING_COMMIT",
+  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
   "head_before": "08f5643",
   "questions_for_advisor": [
     "The failure is a reasoning model spending 8000/8000 tokens before emitting (GMICloud/deepseek-v4-flash, validate tier). Is capping max_tokens per tier, or routing validate away from reasoning models, a new command \u2014 or does an existing pin already cover it?",
@@ -30,6 +30,7 @@
     "guards": "precedence pair registered; serving-ledger.md regenerated",
     "mechanism": "NOT the loop: the run died on a provider failure at validate (553.6s < 1800s; spend $0.0287 << $1.00 \u2014 neither bound near). The deadline is exonerated; the loop never got its second cycle.",
     "outcome": "status 'blocked', error 'ValueError: model returned no text (provider=GMICloud, finish_reason=length, completion_tokens=8000 of max_tokens=8000)' at the validate node \u2014 path ends [..., coverage, consistency, validate]. 12 calls, 553.6s, $0.0287 of $1.00.",
+    "pr_url": "https://github.com/ohioy000/autornd-os/pull/85",
     "preconditions": {
       "070_branch": "contained in main (origin/HEAD, origin/__070_finish, origin/arch/20260925-070-land-the-stack all list it)",
       "envelope": "$1.00 owner-approved this run (supersedes command's $0.25 assumption); caps --max-spend 1.00 --max-spend-sweep 1.00",
@@ -41,6 +42,7 @@
     "prediction": "REFUTED \u2014 no workflow terminal reached. Reported as refuted (favourable direction not taken; this is the unfavourable one).",
     "prediction_registered": "ESCALATED WITH A DIAGNOSIS (docs/preregistration-071-live-terminal-2.md, before run header)",
     "provider_variance": "4 empty_reply retries (all engineering/GMICloud, finish_reason=length, 8000/8000 tokens \u2014 reasoning model spent whole budget before emitting); counted, excluded from rejection counters per rule.",
+    "pull_request": 85,
     "rework_received": "NOTHING \u2014 no rework iteration ran (the run died at validate, before review). The -067 change is therefore UNOBSERVED live, not refuted: rework never had an iteration to carry findings into.",
     "served_by": "triage Alibaba, architecture StreamLake, engineering GMICloud (deepseek-v4-flash), research Google, search Perplexity",
     "shapes": "no per-criterion shapes: iterations[] empty (run died before coverage recorded). Abstentions: none recorded. Fold: never ran \u2014 no empty seat to demonstrate.",
