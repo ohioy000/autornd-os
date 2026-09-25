@@ -8,7 +8,7 @@
     "terminals_verbatim": "each status completed with reason None and full path asserted in tests/test_all_workflows_terminate.py"
   },
   "command_id": "ARCH-20260925-061",
-  "delivery_state": "PUSHED_PENDING_PR",
+  "delivery_state": "PUSHED_PR_74",
   "deviations": [
     {
       "reason": "The command's count was remembered, not read from the tree; the constraint to enumerate by reading governs, so the tree's six win.",
@@ -16,7 +16,7 @@
     }
   ],
   "executed": "2026-09-25",
-  "head_after": "ccab4a3",
+  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
   "head_before": "f11403d",
   "questions_for_advisor": [
     "The independent_check node is answered by the harness \u2014 path proven, but what a real independent tier concludes is unmeasured. Is a live independent-tier reading wanted, and at what envelope?",
@@ -33,11 +33,13 @@
       "triage-classify.yaml",
       "triage-only.yaml"
     ],
+    "pr_url": "https://github.com/ohioy000/autornd-os/pull/74",
     "preconditions": {
       "parent_051": "present",
       "suite_before": "998 passed",
       "workflows": 6
     },
+    "pull_request": 74,
     "section_6": "\u00a76.17 records per-workflow terminals as a measured fact",
     "suite": "1003 passed (45.13s); 998 at baseline plus 5 new tests in test_all_workflows_terminate.py",
     "terminals": {
