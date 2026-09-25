@@ -1,0 +1,25 @@
+{
+  "command_id": "ARCH-20260925-071",
+  "delivery_state": "IN_PROGRESS_NO_PR_YET",
+  "deviations": [
+    {
+      "reason": "Owner granted '$1 envelope approved' after the command text; the assumption clause anticipates exactly this ('If the owner has not extended it, --max-spend 0.1973'). Stated in preregistration.",
+      "what": "Spend caps raised to 1.00/1.00 vs the command's 0.25/0.25."
+    }
+  ],
+  "executed": "2026-09-25",
+  "head_after": "PENDING_WORK",
+  "head_before": "08f5643",
+  "questions_for_advisor": [],
+  "results": {
+    "preconditions": {
+      "070_branch": "contained in main (origin/HEAD, origin/__070_finish, origin/arch/20260925-070-land-the-stack all list it)",
+      "envelope": "$1.00 owner-approved this run (supersedes command's $0.25 assumption); caps --max-spend 1.00 --max-spend-sweep 1.00",
+      "head": "34595bb = origin/main; no divergence",
+      "key": "present (presence only)",
+      "stop_reason": "present (executor.py:60, runner.py:232,449,635,644)",
+      "tree": "clean"
+    }
+  },
+  "status": "IN_PROGRESS"
+}
