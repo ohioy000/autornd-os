@@ -8604,3 +8604,11 @@ Ruling D23 — a bound that is not a workflow terminal must not be recorded as o
 Deadline ownership (the command's first question): the 600s lives in three layers — CLI default 600.0 (`cli.py:92`), `DEFAULT_TIMEOUT_SECONDS` (runner default), scenario `timeout` override (`scenario.py:121-123`). The scenario's own timeout wins at runner.py:670. Per D25 the scenario declares its budget; the loop must then observe it — so the record fix belongs in the runner (where the stop happens), not in any one layer's default.
 
 Which wins, deadline or iteration bound (second question): the deadline, because it is the outer bound — the code shows it: `asyncio.wait_for` wraps the whole `executor.run`, so wall-clock kills the run wherever a loop is. The -049 trace is the exhibit: the loop bound was never reached because time ended the run first.
+
+## 72. Ruling D24 recorded for implementation (ARCH-20260925-067, 2026-09-25)
+
+Ruling D24 — both loops must carry the failure forward, and the advisor exclusion of review_rework_loop from ARCH-20260923-062 is withdrawn. (Full text in §70; recorded for implementation here before the code.) Premise read from the trace artifact first: `review` returned `ship: false` with a `systems_architect` critical finding (gp3 baseline 3000 IOPS vs 4,200 messages/s peak); the rework iteration's implement received none of it — iter2 came back `dissenting=[consistency]`, a green build gone red after a blind re-implement. The premise is confirmed, and the artifact is the trace, not prose about it.
+
+Path taken: EXTEND -062's plumbing. The two loops run the identical eight-node body and share the single input-assembly site (`adapter._phase_implement`); the rework channel rides the same `unmet_criteria` mechanism with review findings as its source. One mechanism, two sources — not a second plumbing.
+
+Review-source question: the incoming review's findings (the `review` verdict that failed `review_clean`) — that is what is available when the rework iteration assembles its input, and that is what implement receives, plus the gate's `on_fail_reason`. The loop's own `rework_review` does not exist yet on the first rework iteration; it is the judge of the rework, not its input.
