@@ -11,7 +11,7 @@
     "superseded_quoted": "D18/D19/D20 quoted in \u00a774 + advisor error recorded"
   },
   "command_id": "ARCH-20260925-069",
-  "delivery_state": "PUSHED_PENDING_PR",
+  "delivery_state": "PUSHED_PR_83",
   "deviations": [
     {
       "reason": "D27 orders re-derivation against the tree under test; this branch lacks the stacked PRs' tests (1008-989=19: the -064..-068 additions). Landing updates main's count to whatever the merge tree collects \u2014 the guard, not a remembered number, decides.",
@@ -19,7 +19,7 @@
     }
   ],
   "executed": "2026-09-25",
-  "head_after": "PENDING_COMMIT",
+  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
   "head_before": "32bf1dd",
   "questions_for_advisor": [
     "STACK RECOMMENDATION (not an action): after -069 lands, rebase #78..#82 onto new main in order; where HANDOVER.md conflicts, take the deletion (the stamp section stops existing). -067 (adapter rework_extra) and -068 (verdicts coercion) have no HANDOVER-code overlap with this change \u2014 their work rebases cleanly. Do not force-push without owner instruction."
@@ -31,6 +31,7 @@
     "deleted": "HEAD + Branch lines gone; as-of-sha count lines rewritten bare (header, tree, \u00a73.7, \u00a77)",
     "git_free": "no rev-parse/merge-base/is-ancestor/commit-tree in test_handover_truth.py \u2014 verified empty grep",
     "guard": "count-only: header **Tests:**, \u00a73.7 title, tree line vs collection on this tree. No git import use at runtime (subprocess import remains but no git call sites \u2014 verify: no _git/_shallow/_STAMP/merge-base/rev-parse/commit-tree references left).",
+    "pr_url": "https://github.com/ohioy000/autornd-os/pull/83",
     "preconditions": {
       "ci_jobs": "test (3.11/3.12/3.13 matrix), editable-install, docker \u2014 three jobs (ci.yml:26,67,128), not two",
       "git_assertions": "test_handover_truth.py carries rev-parse (345,348,462,463,503-512), merge-base --is-ancestor (249,373,412,560-561), commit-tree (422-434) \u2014 full list in response",
@@ -38,6 +39,7 @@
       "stamp": "HEAD: 5d94c20, Branch: main \u2014 verbatim; neither main's tip nor its newest HANDOVER modifier",
       "suite_before": "1008 passed green on main"
     },
+    "pull_request": 83,
     "reach_answer": "no main-relationship assertions left in handover_truth/docs/command_template (verified empty grep) \u2014 D27 reaches exactly the stamp class",
     "ruling": "D27 recorded verbatim in \u00a774 before implementation",
     "suite": "989 passed green on branch; re-derived 1008 (main) -> 989 (this tree: stacked PR tests absent)",
