@@ -1,0 +1,98 @@
+{
+  "command_id": "ARCH-20260925-055",
+  "status": "PARTIAL",
+  "executed": "2026-09-24",
+  "head_before": "d952e59e917df05e422c355290eb2ed899afcf3f",
+  "head_after": "9681a930d9a82dd91035a29a0f1057f951e7d463",
+  "delivery_state": {
+    "stranded_stack": "MERGED",
+    "main_merge_commit": "67e4493dddc40cd0a576759d9228b9d20e611473",
+    "ci_repair": "COMMITTED_LOCALLY",
+    "reporting_branch": "arch/20260925-055-land-the-stack"
+  },
+  "results": {
+    "preconditions": {
+      "guarded_main_tip": "d952e59",
+      "carriage_head": "be63e09",
+      "remote_branches_containing_043": [
+        "origin/arch/20260922-043-fold-empty-seat",
+        "origin/arch/20260923-051-failure-path-terminal",
+        "origin/arch/20260923-052-actionable-failure"
+      ],
+      "response_population": "55 response files enumerated exhaustively; the prescribed lexical tail did not enumerate the newest command IDs",
+      "baseline_suite": "970 passed in 54.46s"
+    },
+    "containment_matrix": {
+      "meaning": "true means row is an ancestor of column",
+      "columns": ["044", "043", "051", "052"],
+      "044": [true, true, true, true],
+      "043": [false, true, true, true],
+      "051": [false, false, true, true],
+      "052": [false, false, false, true],
+      "046_additional": "cd862e2 is an ancestor of 043, 051 and 052"
+    },
+    "minimal_merge_set": [
+      "93041d75ad44cc8283ece021b23470e61f6e7fe6"
+    ],
+    "pull_requests": {
+      "65": "arch/20260922-044-commit-the-rulings at a50d7ee; all five required checks successful; merged as ancestor",
+      "66": "arch/20260922-043-fold-empty-seat at 74036d6; all five required checks successful; merged as ancestor",
+      "67": "arch/20260923-051-failure-path-terminal at 214f796; all five required checks successful; merged as ancestor",
+      "68": "arch/20260923-052-actionable-failure at 93041d7; all five required checks successful; directly merged"
+    },
+    "merge": {
+      "command": "gh pr merge 68 --merge",
+      "main_tip": "67e4493dddc40cd0a576759d9228b9d20e611473",
+      "ancestors_confirmed": [
+        "a50d7eeccd74b4356a4b6cb2a3eab8b8fbfc5263",
+        "cd862e250f73271798d0d3b60431a76e7abe35d5",
+        "74036d6178fc5a4020c1a6cdf2b9124e3b595ca1",
+        "214f7961f2cdfd90f5f974ac70913a2f8c8370dd",
+        "93041d75ad44cc8283ece021b23470e61f6e7fe6"
+      ],
+      "branches_deleted": false,
+      "force_push_or_history_rewrite": false
+    },
+    "state_of_record": {
+      "fold_empty_seat_present": true,
+      "addressed_or_attributed": "167/194 = 86.1%, above D14's 81% threshold",
+      "historical_68_percent": "retained as the deterministic-only component and historical measurement, not the final addressed-or-attributed result",
+      "advisor_error_recorded": true,
+      "ruling_d15": "NOT RECORDED: the command and repository omitted the required verbatim text; owner directed the executor not to invent it"
+    },
+    "merged_main_ci": {
+      "run": 36092131347,
+      "status": "FAILED",
+      "failures": [
+        "test (3.11): missing greenlet before test collection",
+        "editable-install: missing greenlet during startup import",
+        "docker: missing greenlet during container startup",
+        "test (3.12): cancelled after failure"
+      ],
+      "root_cause": "pyproject declared sqlalchemy without the asyncio extra even though the runtime imports sqlalchemy.ext.asyncio"
+    },
+    "authorized_ci_repair": {
+      "commit": "5dabcaa",
+      "manifest": "sqlalchemy[asyncio]>=2.0.36",
+      "guard": "tests/test_runtime_dependencies.py",
+      "red_before": "1 failed: sqlalchemy>=2.0.36",
+      "green_after": "1 passed"
+    },
+    "verification": {
+      "merged_tree_before_new_guard": "979 passed in 49.61s",
+      "final_local_suite": "980 passed in 46.06s",
+      "targeted_guards": "23 passed in 7.44s",
+      "diff_check": "clean"
+    }
+  },
+  "deviations": [
+    "The command's HEAD precondition required d952e59 before execution, while transport required a carriage commit first. Per AGENTS.md, the HEAD guard won: the base reading was taken at main=d952e59, then the command was committed as carriage at be63e09. No separate pre-work IN_PROGRESS commit was made because that would move HEAD again.",
+    "The prescribed 'ls .orchestration/responses/ | tail -20' precondition was blind to newer command IDs because lexical sorting ended at ARCH-20260922-041. The full directory was enumerated separately before drawing conclusions.",
+    "The installed gh lacked --match-head-commit. The approved pinned command failed without merging; the owner separately approved compatible 'gh pr merge 68 --merge'.",
+    "Merged-main CI exposed a clean-install defect outside the command's original path scope. The owner explicitly authorized repair on -055; pyproject.toml and tests/test_runtime_dependencies.py were added to scope.",
+    "The command required Ruling D15 verbatim but did not provide its text and no D15 existed in the repository. The owner chose 'Record missing text', so no ruling was fabricated."
+  ],
+  "questions_for_advisor": [
+    "Supply the exact authoritative text of Ruling D15 in a new command if it is still to be recorded."
+  ]
+}
