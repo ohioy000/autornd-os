@@ -1,0 +1,19 @@
+{
+  "command_id": "ARCH-20260925-067",
+  "delivery_state": "IN_PROGRESS_NO_PR_YET",
+  "deviations": [],
+  "executed": "2026-09-25",
+  "head_after": "PENDING_WORK",
+  "head_before": "e970f45",
+  "questions_for_advisor": [],
+  "results": {
+    "preconditions": {
+      "062_id": "ARCH-20260925-062 (not ARCH-20260923-062) \u2014 DONE/MERGED via #75 (5d94c20). -067 EXTENDS its plumbing (shared _phase_implement), not a second mechanism",
+      "loop_body": "review_rework_loop body [implement, blocked_check, blocked_terminal, domain_review, coverage, consistency, validate, judges, rework_review, review_fold] (workflows/engineering-rnd.yaml:263); gate review_clean on_fail review_rework_loop, on_fail_reason 'Review found blocking issues' (:232-233)",
+      "parent_065": "present on branch (e970f45 records PR 80); gate clears",
+      "suite_before": "1011 passed + 3 stamp red on branch (2 D18-ancestry + D20; resolve at merge/restamp)",
+      "trace_premise": "review ship=false with systems_architect critical finding (gp3 IOPS); rework implement received NOTHING of it \u2014 iter2 dissenting=[consistency], a green build went red after a blind re-implement. Premise CONFIRMED from the trace artifact itself"
+    }
+  },
+  "status": "IN_PROGRESS"
+}
