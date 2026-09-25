@@ -8274,3 +8274,46 @@ Unproven (open, named, not reconstructed):
    built.
 
 B25, B17 and B24 are not reopened by this command. No code was changed.
+
+## 65. Ruling D15, third exhibit — CARRIED is distinct from PUSHED and MERGED (ARCH-20260925-057, 2026-09-25)
+
+Third exhibit, 2026-09-25: ARCH-20260923-053 and ARCH-20260923-054 were carried to main by commit 4ab956f8 (Transport: commit command files as carriage) and never executed. The commit that carried the instruction was merged; the instruction was not run. CARRIED is therefore distinct from PUSHED and from MERGED: a command file can be a tracked ancestor of HEAD while no work has been done at all.
+
+The premise was verified, not assumed. Both command files are present on `main`
+at `11be081e`; no response file for `-053` or `-054` exists anywhere, and the
+suite stands at 980 — `-053` would move the count and has not run. The `-053`
+and `-054` files on `main` are the versions issued on 2026-09-23, unmodified in
+transit (single history entry: `4ab956f8`; the d733e63-to-HEAD diff for the two
+paths is their own creation, nothing after). Per the channel rule a command is
+new iff its command file exists and its response file does not — so both are
+still new work and process in `command_id` order. This command does not
+re-issue either of them; they are already in the channel.
+
+### Corrected reading of the merge table
+
+- `-056`: DONE and MERGED (PR #70, `11be081e`).
+- `-053`, `-054`: CARRIED, unexecuted.
+
+The advisor's "some was merged" check found exactly this. The executor should
+not assume a merge implies execution — that is the reader's expectation
+defect, not a mechanism defect. Carriage is legitimate as transport; whether it
+should be permitted to carry an unexecuted command at all is left as the
+command's open question for a channel ruling, not decided here.
+
+### Agent change, recorded as fact
+
+`-055` (`be63e09`) and `-056` (`4ab956f8`) carry `Co-authored-by: Qwen-Coder`
+trailers; the earlier carriage commits (`a9f8c98`, `35cd2fb`) carry
+`Co-Authored-By: Claude Opus 4.6` with a `Claude-Session` trailer. `-053` and
+`-054` will therefore be executed by a different agent than the one that
+produced `-052`'s findings, so their deviations should be read accordingly. No
+vendor preference is named.
+
+### Open questions carried
+
+1. Carriage-without-execution permission (above) — a channel ruling, owner's to
+   make.
+2. `-056`'s own response still reads `delivery_state: PUSHED`, written when PR
+   #70 was open; it is now merged at `11be081e`. Updating that field is a
+   separate write, not made here — this response states its own state and
+   leaves `-056`'s record as the exhibit of a PUSHED write that later merged.

@@ -7,6 +7,24 @@ Where they differ, `AGENTS.md` wins.
 - `commands/<command_id>.json` — work out, written by the advisor.
 - `responses/<command_id>.response.json` — work back, written by the executor.
 
+### Channel states: new, CARRIED, PUSHED, MERGED
+
+A command is **new** iff `commands/<id>.json` exists and
+`responses/<id>.response.json` does not — process in `command_id` order.
+
+**CARRIED** means the command file is on `main` and no response file exists.
+The command is still new work: a carriage commit merged the *instruction*
+without running it. Exhibit 2026-09-25: `ARCH-20260923-053` and
+`ARCH-20260923-054` reached `main` inside commit `4ab956f8` (PR #70) and were
+never executed — the commit that carried them was merged; the work was not
+done. Do not mistake a merged carriage commit for completed work; the existing
+new/executed rule already produces the correct behaviour (they process in
+`command_id` order), this names the state so a reader sees it.
+
+**PUSHED** means work is done on a branch and the response is written, but the
+branch is not merged. **MERGED** means the work's branch is merged to `main`
+— the channel state of record changes only at merge (Ruling D15).
+
 ---
 
 ## The always-in-scope set, and what bought it
