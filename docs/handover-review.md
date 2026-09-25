@@ -8064,3 +8064,106 @@ loop's paid validator can correct them on the next iteration.
 B25 should record: the presence test has a 1.0% false-fail rate over 288 criteria
 from 60 traces. The 98.7% figure should be corrected to 61.3%. The shape
 distribution should cite this measurement.
+
+## 63. PUSHED versus MERGED — stranded stack landed (ARCH-20260925-055, 2026-09-24)
+
+### Advisor error
+
+The advisor ruled four commands as landed while `main` had not moved from
+`d952e59`. Response files reported `DONE` for work that had been pushed to topic
+branches, not merged to `main`. This error belongs to the advisor: the advisor
+read completion from the command responses without checking ancestry against
+`main`.
+
+The command required **Ruling D15 verbatim**, but supplied no D15 text. An
+exhaustive search of `HANDOVER.md`, this notebook and `.orchestration/` found no
+D15 to quote. The owner directed the executor to record the missing text rather
+than invent a ruling. Accordingly, no Ruling D15 is asserted here.
+
+### Preconditions and baseline
+
+- Guarded base: `main=d952e59`.
+- Baseline suite: **970 passed**.
+- The prescribed `ls .orchestration/responses/ | tail -20` was blind: lexical
+  ordering ended at `ARCH-20260922-041` and did not enumerate later command IDs.
+  The full directory contained 55 response files on the base tree.
+- Command carriage moved the reporting branch to `be63e09`; per the documented
+  HEAD-guard collision rule, the guarded base reading came first and the missing
+  pre-work `IN_PROGRESS` commit is a recorded departure.
+
+### Containment matrix
+
+Derived with `git merge-base --is-ancestor` for every ordered pair. **Yes means
+the row tip is an ancestor of the column tip.**
+
+| row \\ column | `-044` `a50d7ee` | `-043` `74036d6` | `-051` `214f796` | `-052` `93041d7` |
+|---|---:|---:|---:|---:|
+| `-044` `a50d7ee` | yes | yes | yes | yes |
+| `-043` `74036d6` | no | yes | yes | yes |
+| `-051` `214f796` | no | no | yes | yes |
+| `-052` `93041d7` | no | no | no | yes |
+
+The `-046` measurement tip `cd862e2` is also an ancestor of `-043`, `-051` and
+`-052`. Therefore the **minimal merge set was one tip: `-052` at `93041d7`**.
+Merging it lands `-051`, `-043`, `-046` and `-044`.
+
+### Pull requests and CI before merge
+
+The fourth open PR was **#65**, not an unexplained issue:
+
+| PR | branch | head | required checks at head |
+|---|---|---|---|
+| #65 | `arch/20260922-044-commit-the-rulings` | `a50d7ee` | test 3.11/3.12/3.13, editable-install, docker: success |
+| #66 | `arch/20260922-043-fold-empty-seat` | `74036d6` | test 3.11/3.12/3.13, editable-install, docker: success |
+| #67 | `arch/20260923-051-failure-path-terminal` | `214f796` | test 3.11/3.12/3.13, editable-install, docker: success |
+| #68 | `arch/20260923-052-actionable-failure` | `93041d7` | test 3.11/3.12/3.13, editable-install, docker: success |
+
+The earlier count mismatch came from treating `open_issues_count` as distinct
+from pull requests. GitHub's issues endpoint includes PRs; all four open items
+were PRs #65–#68.
+
+### Merge result
+
+The owner granted merge-on-green. PR #68 was merged with a merge commit and no
+branch deletion. GitHub recorded:
+
+- merged `main`: **`67e4493dddc40cd0a576759d9228b9d20e611473`**;
+- PR #68 merged directly; ancestor PRs #65, #66 and #67 were simultaneously
+  marked merged;
+- `a50d7ee`, `cd862e2`, `74036d6`, `214f796` and `93041d7` are all ancestors of
+  merged `main`;
+- the fold change is present through `74036d6`;
+- the corrected addressed-or-attributed result is present through `cd862e2`:
+  **167/194 = 86.1%**, above D14's 81% threshold. The earlier 68% figure remains
+  as the quoted deterministic-only component and historical measurement, not as
+  the final addressed-or-attributed result.
+
+The local suite on the merged tree was **979 passed** before this command added
+its dependency guard.
+
+### Merged-main CI found a fourth packaging fault
+
+The push run on `67e4493` was not green. Python 3.11, editable-install and Docker
+failed before tests/startup while importing `sqlalchemy.ext.asyncio`:
+
+```text
+ImportError: The SQLAlchemy asyncio module requires that the Python 'greenlet'
+library is installed. In order to ensure this dependency is available, use the
+'sqlalchemy[asyncio]' install target.
+```
+
+Python 3.12 was cancelled after the failure. The owner authorized repair on this
+command. A test was written first and failed on the exact live declaration
+`sqlalchemy>=2.0.36`; `pyproject.toml` now declares
+`sqlalchemy[asyncio]>=2.0.36`. `tests/test_runtime_dependencies.py` guards the
+contract. The repaired tree collects **980 tests across 53 files**.
+
+### Safety and departures
+
+- No branch was force-pushed, rewritten or deleted.
+- The installed `gh` lacked `--match-head-commit`; after that approved command
+  failed without merging, the owner separately approved compatible
+  `gh pr merge 68 --merge`.
+- Scope expanded to `pyproject.toml` and one test only after the owner explicitly
+  authorized repair of merged-main CI.
+- Ruling D15 remains absent rather than reconstructed from intent.
