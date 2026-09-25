@@ -334,6 +334,23 @@ def test_the_stamp_names_a_branch_that_exists(handover):
         f"stamp pointing at a deleted branch is not a stamp (Ruling D18).")
 
 
+def _resolve_main_ref() -> tuple[str, str]:
+    """The ref D18(b) checks, and the sha it resolves to.
+
+    Local `main` first, `origin/main` second: a PR checkout names only the
+    branch under review, so local `main` does not exist there while the
+    remote-tracking ref does. Returns (ref, sha); asserts the subject was
+    computed before anything is judged (convention 28).
+    """
+    main = _git("rev-parse", "main")
+    if main.returncode == 0:
+        return "main", main.stdout.strip()
+    origin = _git("rev-parse", "origin/main")
+    assert origin.returncode == 0, (
+        "no local main and no origin/main — cannot check main-ancestry")
+    return "origin/main", origin.stdout.strip()
+
+
 def test_the_stamp_names_an_ancestor_of_main(handover):
     """D18(b): the named commit must be an ancestor of MAIN, not of HEAD.
 
@@ -343,26 +360,20 @@ def test_the_stamp_names_an_ancestor_of_main(handover):
 
     The ref searched is local `main` first, `origin/main` second: a PR
     checkout names only the branch under review, so local `main` does not
-    exist there while the remote-tracking ref does. A checkout with neither
-    is no evidence, and no evidence must never read as no problem
-    (convention 28).
+    exist there while the remote-tracking ref does (`_resolve_main_ref`).
+    A checkout with neither is no evidence, and no evidence must never read
+    as no problem (convention 28).
     """
     if not (ROOT / ".git").exists():
         pytest.skip("not a git checkout")
     if _shallow():
         pytest.skip("shallow clone — ancestry is unanswerable at fetch-depth 1")
     _, named_sha = _header_branch_and_sha(handover)
-    main = _git("rev-parse", "main")
-    main_ref = "main"
-    if main.returncode != 0:
-        main = _git("rev-parse", "origin/main")
-        main_ref = "origin/main"
-    assert main.returncode == 0, (
-        "no local main and no origin/main — cannot check main-ancestry")
+    main_ref, main_sha = _resolve_main_ref()
     is_ancestor = _git("merge-base", "--is-ancestor", named_sha, main_ref)
     assert is_ancestor.returncode == 0, (
         f"HANDOVER's HEAD stamp `{named_sha}` is not an ancestor of main "
-        f"(`{main.stdout.strip()[:7]}`). Resolvable and ancestor-of-HEAD both "
+        f"(`{main_sha[:7]}`). Resolvable and ancestor-of-HEAD both "
         f"pass on a stamp from a live side branch; only main-ancestry catches "
         f"it (Ruling D18, third exhibit of B22).")
 
@@ -405,7 +416,7 @@ def _break_d18b_side_branch_commit(handover: str) -> str:
                   "HEAD:** `2e75232`", handover, count=1)
 
 
-def _main_without_history() -> str:
+def _main_without_history() -> str | None:
     """A ref main never passed: the root commit's tree with no parents.
 
     `git hash-object -t commit` writes no object; `commit-tree` with no
@@ -414,10 +425,17 @@ def _main_without_history() -> str:
     an ancestor of the checkout's HEAD (so ancestry-of-HEAD passes), but is
     not an ancestor of this synthetic main — the exact shape D18(b) exists
     to catch. Caller must delete the ref afterwards; see the test.
+
+    Returns None where the commit cannot be created — a checkout without a
+    committer identity, as in CI's container, refuses `commit-tree`. That is
+    no evidence, never no problem (convention 28), so the caller skips.
     """
     empty_tree = _git("hash-object", "-t", "tree", "/dev/null").stdout.strip()
-    return _git("commit-tree", empty_tree,
-                "-m", "synthetic main for D18(b) demonstration").stdout.strip()
+    made = _git("commit-tree", empty_tree,
+                "-m", "synthetic main for D18(b) demonstration")
+    if made.returncode != 0:
+        return None
+    return made.stdout.strip()
 
 
 def _break_d18c_wrong_count(handover: str) -> str:
@@ -441,16 +459,28 @@ class TestD18GuardsProveThemselves:
             test_the_stamp_names_a_branch_that_exists(broken)
 
     def test_a_side_branch_commit_fails_loudly(self, handover):
+        if _git("rev-parse", "main").returncode != 0:
+            pytest.skip("no local main — the synthetic-main swap needs a "
+                        "local ref to move aside; CI's checkout proves the "
+                        "guard itself via the fallback test below")
         broken = _break_d18b_side_branch_commit(handover)
         synthetic = _main_without_history()
-        real_main = _git("rev-parse", "main").stdout.strip()
+        if synthetic is None:
+            pytest.skip("no committer identity — cannot mint the synthetic "
+                        "main this break demonstrates against")
+        main_ref, real_sha = _resolve_main_ref()
+        if main_ref == "main":
+            moved, restore = ["refs/heads/main"], ["refs/heads/main", real_sha]
+        else:
+            moved, restore = (["refs/remotes/origin/main"],
+                              ["refs/remotes/origin/main", real_sha])
         try:
-            _git("update-ref", "refs/heads/main", synthetic)
+            _git("update-ref", moved[0], synthetic)
             with pytest.raises(AssertionError,
                                match="not an ancestor of main"):
                 test_the_stamp_names_an_ancestor_of_main(broken)
         finally:
-            _git("update-ref", "refs/heads/main", real_main)
+            _git("update-ref", restore[0], restore[1])
 
     def test_main_ancestry_survives_a_pr_checkout_without_local_main(self,
                                                                      handover):

@@ -1,15 +1,15 @@
 {
   "acceptance": {
-    "after_count_equals_stamp": "995 passed; header stamps 995 as of 01632c9.",
+    "after_count_equals_stamp": "996 passed; header stamps 996 as of 01632c9.",
     "branch_exists": "D18(a) asserts local or origin ref; break with never-existed branch fails loudly, quoted in \u00a766.",
-    "count_match": "D18(c) asserts header count equals collection; break with count+1 fails loudly, quoted in \u00a766.",
-    "main_ancestry": "D18(b) asserts merge-base --is-ancestor <sha> main; break via synthetic parentless main fails loudly, quoted in \u00a766.",
+    "count_match": "D18(c) plus total/pass guards re-derived to 996 (new fallback test).",
+    "main_ancestry": "D18(b) asserts merge-base --is-ancestor <sha> main; break via synthetic parentless main fails loudly, quoted in \u00a766. Fallback to origin/main proven by moving local main aside (CI-blindness repair).",
     "merge_path": "PUSHED via PR #72 (https://github.com/ohioy000/autornd-os/pull/72); merge is owner-only.",
     "pr_regression": "PR #71's lean body recorded without blame, D15 cited; this PR's body demonstrates the shape.",
     "rulings_verbatim": "D16, D17, D18, D19 each appear verbatim in \u00a766; grep finds 8 hits (heading + text each).",
     "s32_match": "\u00a73.2 shows sqlalchemy[asyncio]>=2.0.36, matching pyproject.toml:12; heading states hand copy, still unguarded.",
     "stamp_repaired": "HEAD 01632c9, Branch main, Tests 995 as of 01632c9; STOP condition met by naming the 986\u2192995 difference (guard's own growth).",
-    "suite": "995 passed (60.00s); 986 at baseline, +9 from D18 tests and signature-discovered guard cases."
+    "suite": "996 passed locally; CI re-run in progress at 6057a19."
   },
   "command_id": "ARCH-20260925-058",
   "delivery_state": "PUSHED_PR_72",
@@ -29,10 +29,14 @@
     {
       "reason": "Every live side-branch tip is already merged to main (all eight arch/* tips exit 0), so no live sha can break main-ancestry; a fabricated sha fails resolvability first. The synthetic parentless main runs the real merge-base path with a resolving subject.",
       "what": "D18(b) proved via synthetic main, not a live side-branch tip."
+    },
+    {
+      "reason": "CI run 36102588884 failed test (3.13) with 'no local main': the PR checkout names only the branch under review, so rev-parse main fails while origin/main resolves. The stamp was right; the ref lookup was blind (protocol: precondition blindness is not absence). New test moves local main aside and watches the guard resolve origin/main. Suite 996 green locally at commit.",
+      "what": "D18(b) repaired after CI red: local-main-first, origin/main fallback, plus a fallback-proof test. Counts re-derived 995 to 996."
     }
   ],
   "executed": "2026-09-25",
-  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
+  "head_after": "PENDING_CI_AND_PUSH",
   "head_before": "e29d271",
   "questions_for_advisor": [
     "Why has no PR been opened for two consecutive batches \u2014 capability gap or repeated omission? Measured: omission (gh pr create worked first try where invoked). D16 now makes the omission fail loudly.",
@@ -40,6 +44,7 @@
   ],
   "results": {
     "057_merge_path": "Content already on main: git diff --quiet main..a6dcf6a on notebook/README/057-files exits 0. -053 merge (#71) carried all four -057 artifacts. No PR from that branch (empty diff); nothing to reproduce. Branch safe to delete after this lands.",
+    "ci_blindness_repair": "D18(b) falls back to origin/main; proven by test_main_ancestry_survives_a_pr_checkout_without_local_main; counts 996.",
     "notebook_section": 66,
     "pr_url": "https://github.com/ohioy000/autornd-os/pull/72",
     "preconditions": {
