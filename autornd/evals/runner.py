@@ -226,6 +226,10 @@ class ResultsLog:
             "skipped": run.skipped,
             "status": run.status,
             "error": run.error,
+            # Ruling D23: the runner's stop-reason travels beside the
+            # workflow terminal, never inside it. None when the workflow
+            # concluded on its own.
+            "stop_reason": run.stop_reason,
             "calls": run.calls,
             "seconds": round(run.seconds, 3),
             "cost": run.cost,
@@ -438,6 +442,11 @@ class ScenarioRun:
     # the `status` assertion already, but a result file needs it in its own
     # right: "blocked" and "failed an assertion" are different outcomes.
     status: str = ""
+    # Ruling D23: how the runner stopped the run, separate from the
+    # workflow's terminal. None when the workflow concluded on its own;
+    # "runner stopped the run: ..." when a bound (deadline, ceiling) ended
+    # it from outside. A reader must be able to tell the two apart.
+    stop_reason: str | None = None
     # One entry per build-loop iteration; see PhaseRunner.iterations.
     iterations: list[dict[str, Any]] = field(default_factory=list)
     # Lookups the provider refused during this unit. A unit that scored zero
@@ -621,8 +630,18 @@ def _end_on_bound(state, bound: str, detail: str) -> None:
     `state.end` sets once, so a run that reached its own terminal before the
     bound fired keeps it. That ordering matters: the bound is the reason the
     run stopped only when nothing else already ended it.
+
+    Ruling D23: the stop-reason travels separately. `state.end` records the
+    workflow terminal in status/reason; `stop_reason` records how the runner
+    stopped the run. The two must never be the same field — a workflow that
+    concluded blocked and a runner that killed a workflow that never
+    concluded are different facts, and the -049 trace proved the record
+    could not tell them apart.
     """
+    reached_terminal = state.finished
     state.end("blocked", f"stopped by the {bound}: {detail}")
+    if not reached_terminal:
+        state.stop_reason = f"runner stopped the run: {detail}"
 
 
 async def run_scenario(
@@ -679,6 +698,11 @@ async def run_scenario(
         state = _partial_state(executor, scenario.request)
         error = f"timed out after {deadline:.0f}s"
         _end_on_bound(state, "deadline", error)
+        # Ruling D23/D25: the deadline is a declared bound, so the run emits
+        # the workflow terminal naming it — in the operator's words, exactly
+        # as the call ceiling and iteration bounds do. The runner still stops
+        # the run; only the record changes.
+        state.stop_reason = f"runner stopped the run: {error}"
     except CallCeilingExceeded as exc:
         state = _partial_state(executor, scenario.request)
         error = str(exc)
@@ -727,6 +751,7 @@ async def run_scenario(
                            in runner.client.providers_by_function.items()},
         verdicts=verdicts,
         status=str(getattr(state, "status", "") or ""),
+        stop_reason=getattr(state, "stop_reason", None),
         iterations=list(getattr(runner, "iterations", []) or []),
         refused_lookups=_research.refused_lookups(),
         normalised_verdicts=_verdicts.normalisations(),
