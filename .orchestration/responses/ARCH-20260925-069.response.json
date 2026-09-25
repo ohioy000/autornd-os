@@ -1,0 +1,19 @@
+{
+  "command_id": "ARCH-20260925-069",
+  "delivery_state": "IN_PROGRESS_NO_PR_YET",
+  "deviations": [],
+  "executed": "2026-09-25",
+  "head_after": "PENDING_WORK",
+  "head_before": "32bf1dd",
+  "questions_for_advisor": [],
+  "results": {
+    "preconditions": {
+      "ci_jobs": "test (3.11/3.12/3.13 matrix), editable-install, docker \u2014 three jobs (ci.yml:26,67,128), not two",
+      "git_assertions": "test_handover_truth.py carries rev-parse (345,348,462,463,503-512), merge-base --is-ancestor (249,373,412,560-561), commit-tree (422-434) \u2014 full list in response",
+      "head": "32bf1dd = origin/main; no divergence",
+      "stamp": "HEAD: 5d94c20, Branch: main \u2014 verbatim; neither main's tip nor its newest HANDOVER modifier",
+      "suite_before": "1008 passed green on main"
+    }
+  },
+  "status": "IN_PROGRESS"
+}
