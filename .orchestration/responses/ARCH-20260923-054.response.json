@@ -8,7 +8,7 @@
     "suite": "998 passed; counts re-derived 996 to 998 across header, tree, table, badge, docs."
   },
   "command_id": "ARCH-20260923-054",
-  "delivery_state": "PUSHED_PENDING_PR",
+  "delivery_state": "PUSHED_PR_73",
   "deviations": [
     {
       "reason": "Owner's reply granted full execution permission for -054 first ('you complete 54 full execution permission granted'); -061's questions (breadth-vs-depth order, merge-on-green grant) went unanswered and its command file is not on the tree. Out-of-order pasted-text commands are not executed without checkable source.",
@@ -16,7 +16,7 @@
     }
   ],
   "executed": "2026-09-25",
-  "head_after": "d35e37c",
+  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
   "head_before": "07b86c9",
   "questions_for_advisor": [
     "Recovery re-runs implement identically with no dissent or unmet criteria as input \u2014 retry, not mechanism. Is that deliberate design or a defect? The code shows it; the ruling is the advisor's.",
@@ -30,6 +30,8 @@
     "ceiling": "not reached (28 < 41)",
     "implement_calls": 6,
     "path": "build 5 iterations, escalation node ran, recovery converged at attempt 1, review passed, completed",
+    "pr_url": "https://github.com/ohioy000/autornd-os/pull/73",
+    "pull_request": 73,
     "recovery_input": "recovery_loop body is [implement, blocked_check, blocked_terminal, domain_review, coverage, consistency, validate, judges, rework_review, review_fold] (workflows/engineering-rnd.yaml:206) \u2014 the same implement node, same prompt; no body node reads escalation.*, coverage.missed, or judges.dissenting. Recovery is a retry, not a mechanism.",
     "recovery_loop": {
       "converged": true,
