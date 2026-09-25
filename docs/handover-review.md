@@ -8535,3 +8535,15 @@ the fresh log plus the directive (`adapter.py:332-348`), and
 (`autornd/engine/phases.py:991`). What is absent — and what this ruling
 adds — is the verdict-level dissent: `coverage.missed` as unmet criteria,
 quoted, on the recovery iteration. That is the whole of the change.
+
+## 68. Ruling D22 — a review that cannot block must not read as passed (advisor, 2026-09-25)
+
+Ruling D22 — a review that cannot block must not read as a review that passed. lean's review node is advisory: review.ship does not stop the run because there is no review_clean gate. A completed lean run therefore carries no quality verdict while reading as though it does. The terminal must state the review outcome and label it advisory, so completed cannot be mistaken for reviewed and approved. Whether lean should additionally gate on its review is a separate question and the owner's; the minimum is that the advisory status is recorded and a dissent is visible.
+
+### Premise verification (ARCH-20260925-063, against the workflow)
+
+CONFIRMED. `workflows/lean.yaml:84` carries `id: review` with no `when` and
+no downstream gate reads `review.ship`. `review_clean` exists only in
+engineering-rnd (line 228) and independent-check-probe (line 55). lean's
+review runs unconditionally and decides nothing — reached on every run,
+advisory on every run.
