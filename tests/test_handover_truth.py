@@ -340,6 +340,12 @@ def test_the_stamp_names_an_ancestor_of_main(handover):
     HEAD moves with every checkout, so ancestry-of-HEAD passes on any branch
     that contains the stamp. Main is the state of record (D15); a stamp must
     name somewhere main has been.
+
+    The ref searched is local `main` first, `origin/main` second: a PR
+    checkout names only the branch under review, so local `main` does not
+    exist there while the remote-tracking ref does. A checkout with neither
+    is no evidence, and no evidence must never read as no problem
+    (convention 28).
     """
     if not (ROOT / ".git").exists():
         pytest.skip("not a git checkout")
@@ -347,8 +353,13 @@ def test_the_stamp_names_an_ancestor_of_main(handover):
         pytest.skip("shallow clone — ancestry is unanswerable at fetch-depth 1")
     _, named_sha = _header_branch_and_sha(handover)
     main = _git("rev-parse", "main")
-    assert main.returncode == 0, "no local main — cannot check main-ancestry"
-    is_ancestor = _git("merge-base", "--is-ancestor", named_sha, "main")
+    main_ref = "main"
+    if main.returncode != 0:
+        main = _git("rev-parse", "origin/main")
+        main_ref = "origin/main"
+    assert main.returncode == 0, (
+        "no local main and no origin/main — cannot check main-ancestry")
+    is_ancestor = _git("merge-base", "--is-ancestor", named_sha, main_ref)
     assert is_ancestor.returncode == 0, (
         f"HANDOVER's HEAD stamp `{named_sha}` is not an ancestor of main "
         f"(`{main.stdout.strip()[:7]}`). Resolvable and ancestor-of-HEAD both "
@@ -432,17 +443,48 @@ class TestD18GuardsProveThemselves:
     def test_a_side_branch_commit_fails_loudly(self, handover):
         broken = _break_d18b_side_branch_commit(handover)
         synthetic = _main_without_history()
-        _git("update-ref", "refs/heads/__d18_synthetic_main", synthetic)
         real_main = _git("rev-parse", "main").stdout.strip()
         try:
-            _git("update-ref", "refs/heads/main",
-                 "__d18_synthetic_main")
+            _git("update-ref", "refs/heads/main", synthetic)
             with pytest.raises(AssertionError,
                                match="not an ancestor of main"):
                 test_the_stamp_names_an_ancestor_of_main(broken)
         finally:
             _git("update-ref", "refs/heads/main", real_main)
-            _git("update-ref", "-d", "refs/heads/__d18_synthetic_main")
+
+    def test_main_ancestry_survives_a_pr_checkout_without_local_main(self,
+                                                                     handover):
+        """Convention 28 on the guard above it: the guard asserts it resolved
+        its subject before judging it, so the test removes the local ref and
+        watches the guard resolve `origin/main` instead of failing loudly.
+
+        Exhibit: CI's PR checkout names only the branch under review, so
+        `rev-parse main` fails while `origin/main` resolves — the guard as
+        written at 5abe6a7 could not compute its subject there and the run
+        went red on `test (3.13)` with "no local main". The failure was in
+        the instrument, not the document: the stamp was right, the ref lookup
+        was blind (protocol: precondition blindness is not absence). Local
+        `main` is moved aside rather than deleted, and restored in `finally`.
+        """
+        if not (ROOT / ".git").exists():
+            pytest.skip("not a git checkout")
+        if _shallow():
+            pytest.skip("shallow clone — ancestry is unanswerable")
+        real_main = _git("rev-parse", "main").stdout.strip()
+        assert real_main, "no local main to move aside — nothing to prove"
+        origin = _git("rev-parse", "origin/main")
+        if origin.returncode != 0:
+            pytest.skip("no origin/main — cannot demonstrate the fallback")
+        _git("update-ref", "-m", "d18 fallback proof", "refs/heads/__d18_real_main",
+             real_main)
+        try:
+            _git("update-ref", "-d", "refs/heads/main")
+            assert _git("rev-parse", "main").returncode != 0, (
+                "local main still resolves — the fallback path never ran")
+            test_the_stamp_names_an_ancestor_of_main(handover)
+        finally:
+            _git("update-ref", "refs/heads/main", "__d18_real_main")
+            _git("update-ref", "-d", "refs/heads/__d18_real_main")
 
     def test_a_wrong_count_fails_loudly(self, handover):
         broken = _break_d18c_wrong_count(handover)
