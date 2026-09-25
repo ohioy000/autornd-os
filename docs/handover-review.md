@@ -8167,3 +8167,110 @@ contract. The repaired tree collects **980 tests across 53 files**.
 - Scope expanded to `pyproject.toml` and one test only after the owner explicitly
   authorized repair of merged-main CI.
 - Ruling D15 remains absent rather than reconstructed from intent.
+
+## 64. Ruling D15 — DONE means PUSHED, not MERGED (advisor, 2026-09-25)
+
+Ruling D15 — a response status of DONE means the work is PUSHED, not MERGED. The channel state of record changes only at merge. A response must distinguish PUSHED from MERGED, and a command may not treat DONE as a precondition met unless the artifact is an ancestor of HEAD. First exhibit: ARCH-20260922-043, ARCH-20260922-046 and ARCH-20260922-042 were ruled on as landed on 2026-09-23 while main did not move until 2026-09-25; four commands were treated as merged for two days because the response files reported DONE for pushed work. Second exhibit: ARCH-20260925-055 introduced the delivery_state field, distinguishing MERGED, PUSHED_CI_GREEN and the pull request, which is the shape this ruling requires.
+
+Transcribed verbatim from ARCH-20260925-056, which carried the text the -055
+command had required but omitted. No D15 text existed anywhere in the tree
+before this section — HANDOVER.md, this notebook and `.orchestration/` were
+searched exhaustively — so there was nothing to quote until the advisor
+supplied it. The -055 executor correctly reported PARTIAL rather than inventing
+a ruling, and the owner correctly declined to reconstruct one from intent
+(convention 24: a fact about the repo is generated or guarded, never
+hand-stamped).
+
+### The advisor's error, attributed
+
+The advisor transmitted a ruling in prose and then issued a command instructing
+the executor to record it verbatim without carrying the text — a command citing
+a ruling it did not supply, which is the same class as a command citing a sha
+it does not verify (AGENTS.md: a command citing a sha, a file path, or a
+measured figure MUST carry one verifying it). This is the third D7 violation of
+the session (Ruling D7: a ruling exists only when it is in a command). The
+executor's PARTIAL is named here as correct: a missing precondition text is a
+BLOCKED-or-PARTIAL report, not a deviation.
+
+### The merge outcome, recorded
+
+The advisor's stranded-stack call was correct at the time and is now resolved.
+Containment was linear (`-044` > `-043` > `-051` > `-052`; `-046`'s `cd862e2`
+also an ancestor of `-043`, `-051`, `-052`), the minimal merge set was one tip
+(`93041d7`), PR #68 carried the chain to merged `main` at `67e4493`, and all
+five stranded artifacts (`a50d7ee`, `cd862e2`, `74036d6`, `214f796`,
+`93041d7`) are ancestors of `main`. Recorded in §63; B27 CLOSED 2026-09-24.
+
+### The dependency-contract defect, recorded as the fourth B1 fault
+
+The declared package contract did not match the runtime imports: `pyproject.toml`
+declared plain `sqlalchemy>=2.0.36` while the runtime imports
+`sqlalchemy.ext.asyncio`, so a clean install could not import the database layer
+while the source-tree suite passed. Merged-main CI run 36092131347 on `67e4493`
+showed it — Python 3.11, editable-install and Docker all failed on the missing
+`greenlet` before tests or startup; Python 3.12 was cancelled after the
+failure. The distinction to record: **979 source-tree tests passed while the
+package was broken; only the editable-install and docker jobs could see it.**
+CLOSED by `5dabcaa` (`sqlalchemy[asyncio]>=2.0.36`), evidenced by the run number
+above and by `tests/test_runtime_dependencies.py` green after (it failed first
+on the exact live declaration). Recorded here rather than as a new ledger row
+because B26 and B27 were already taken: B1's row in HANDOVER.md §4.2 carries
+all four clean-install faults, and this section is the evidence half.
+
+### B7's open question, resolved from the traces rather than by assertion
+
+ARCH-20260922-043's replay (§60) reported the fold FAILING in all four v4
+convergence traces, while B7's row says two of the four shipped. Read against
+the traces, there is no contradiction, and B7's wording needs no correction —
+but only because the two statements are about different runs:
+
+- §60 replayed the **v4 traces** (`docs/traces/b7-convergence-v4.jsonl`), an
+  unpinned run in which all four units failed without a terminal (three 900 s
+  timeouts, one `ValueError: model returned no text`). Per-trace fold results
+  from that file: `conv_crossref_integrity` fold failing (validate dissented),
+  `conv_derived_tolerances` fold failing (validate dissented),
+  `conv_numeric_consistency` fold failing (validate dissented),
+  `conv_requires_execution` fold failing (coverage/consistency `None` — the old
+  adapter did not extract them). The fold failed in every trace because no trace
+  converged; nothing shipped, and B7's row does not claim otherwise about v4.
+- B7's "shipped" names the **012 pinned-serving runs** (§20.1(g)):
+  `derived_tolerances` completed-shipped in 299 s (13 calls, 8 → 2 iterations),
+  `numeric_consistency` completed-shipped in 182 s (9 calls, 4 → 1 iteration),
+  `crossref_integrity` (011) and `requires_execution` (012) escalated with root
+  cause and directive. All four terminated in ship or escalated-with-diagnosis,
+  which is 010's stated closure criterion.
+
+So "shipped" in B7's row means the run reached the `completed` terminal with
+the fold passing under a compliant pinned serving — not that the v4 fold
+passed. The v4 file is the pre-pin baseline (0/4 terminal), and the closure
+runs are the post-pin measurement (4/4 honest termination). The reconciliation
+is reported here as resolved with the per-trace fold results quoted above; no
+row wording was changed.
+
+### The frontier, stated plainly
+
+Proven (measured, committed, guarded):
+
+1. Pinning a tier changes convergence rate, not just latency — 012's 8 → 2 and
+   4 → 1 iterations (§20.1(f), B7 CLOSED).
+2. The fold's empty seat is now a distinguishable record state — abstention
+   enrichment lands without changing the decision (§60, D9).
+3. The glossed class resolves to 86.1% addressed-or-attributed, above D14's 81%
+   bar — 167/194 (§59, §63).
+4. PUSHED is not MERGED — the channel distinguishes them from this ruling on
+   (D15, B27).
+5. A clean-install defect is visible only to the install-shape jobs — the
+   fourth B1 fault above (run 36092131347).
+
+Unproven (open, named, not reconstructed):
+
+1. B21 — guards that never found their subject (convention 28 class; four
+   repaired, the class stays OPEN).
+2. B25 — whether term overlap is the right test (adequate at 1% false-fail,
+   not shown optimal).
+3. B12 — four tiers never measured by serving (`escalation`, `research`,
+   `search`, reranker).
+4. The typed judgment layer for the residual — ratified (D12), contingent, not
+   built.
+
+B25, B17 and B24 are not reopened by this command. No code was changed.
