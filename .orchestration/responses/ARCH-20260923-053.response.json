@@ -1,1 +1,48 @@
-{"acceptance":{"assessment_labelled":"Terminal carries '— assessment: <diagnosis>' with the label between the measured part and the diagnosis; asserted in test_exhausted_terminal_labels_the_assessment.","bound_stated":"CRITERIA_SUFFIX_SHOWN = 3; six criteria render as three quoted plus ', and 3 more'; asserted in test_exhausted_terminal_bounds_a_long_criteria_list.","cases_ab_unchanged":"Completed runs carry no unmet list and no assessment label; asserted for satisfied and abstained paths in test_satisfied_and_abstained_terminals_unchanged.","empty_assessment_omitted":"Empty, whitespace, None and placeholder diagnoses (n/a, none, tbd, unknown, case-insensitive) leave no assessment text; asserted in test_exhausted_terminal_omits_empty_assessment.","measured_criteria_quoted":"Case (c) terminal quotes both coverage.missed criteria verbatim; asserted in test_exhausted_terminal_names_unmet_criteria.","no_branch_on_reason":"grep for reason.split / parse.*reason across autornd/ returns nothing; workflow.py:112 copies the reason to workflow.error and assertions.py:189 copies it to a failure detail — neither branches on its content.","no_workflow_change":"git diff --stat on workflows/ and autornd/graph/checks.py is empty.","proven_by_breaking":"With coverage.missed deleted the suffix returns ''; asserted in test_breaking_coverage_missed_breaks_the_terminal.","suite":"986 passed (46.60s); 980 at baseline plus 6 new tests in test_failure_path_terminal.py."},"command_id":"ARCH-20260923-053","delivery_state":"PUSHED","deviations":[{"reason":"The stale local branch arch/20260923-053-actionable-terminal at 35cd2fb (carriage-only) was renamed to arch/20260923-053-actionable-terminal-stale-35cd2fb and a fresh execution branch of the same deliverable name was cut from a6dcf6a; the stale ref is untouched and the rename is recorded here.","what":"Branch name reused after renaming the stale holder."},{"reason":"The command file was already on the branch at a6dcf6a, so the carriage commit had no diff and was correctly skipped; the file was verified byte-identical rather than recommitted.","what":"Transport carriage produced no commit (already carried by -057 at 382a1be)."},{"reason":"Six new tests moved the suite 980 → 986, so the four generated-count guards plus the HEAD-coherence guard went red exactly as designed; counts re-derived against 2e75232 (IN_PROGRESS commit) per convention 24. The §3.7 table predated test_failure_path_terminal.py (added by -051 at 214f796, never tabulated) and was missing four files' worth of drift (all_judges_exit 15→18, guards_can_fail 11→13, handover_truth 11→13, coverage_shapes 16→46); the table is now generated complete at 986.","what":"Counts re-derived: HANDOVER header/§2/§3.7/§4.2/§7, README badge/structure/Testing, testing.md."},{"reason":"Two -052 tests asserted the OLD terminal (criteria absent, diagnosis absent from the reason). Per convention 17 the tests were wrong, not the fix: they now assert the criteria and the labelled diagnosis ARE in the terminal, keeping the record-level assertions on coverage.missed and escalation.root_cause_analysis.","what":"Invalidated tests updated, not appeased."}],"executed":"2026-09-25","head_after":"PENDING_PUSH","head_before":"a6dcf6a","questions_for_advisor":["Does the exhausted terminal surface anywhere user-facing beyond the record — a dashboard or an API field? workflow.py:112 copies state.reason into workflow.error for non-completed runs, so the longer reason now lands there; name any surface where the bound and labels must read well.","If the escalation assessment is a placeholder string in some runs, omitting it is as implemented (empty, whitespace, n/a, none, tbd, unknown case-insensitive). Is omitting always correct, or are there placeholders in the wild this set misses? Report what the code shows rather than deciding."],"results":{"notebook_section":null,"terminal_verbatim":{"reason":"'recovery_loop' did not converge within 3 iterations, still red: build, unmet: 'Caching layer stores computed results in Redis'; 'Cache invalidation runs on every write' — assessment: Implementation does not address caching requirements","status":"escalated"}},"status":"DONE"}
+{
+ "acceptance": {
+  "assessment_labelled": "Terminal carries '\u2014 assessment: <diagnosis>' with the label between the measured part and the diagnosis; asserted in test_exhausted_terminal_labels_the_assessment.",
+  "bound_stated": "CRITERIA_SUFFIX_SHOWN = 3; six criteria render as three quoted plus ', and 3 more'; asserted in test_exhausted_terminal_bounds_a_long_criteria_list.",
+  "cases_ab_unchanged": "Completed runs carry no unmet list and no assessment label; asserted for satisfied and abstained paths in test_satisfied_and_abstained_terminals_unchanged.",
+  "empty_assessment_omitted": "Empty, whitespace, None and placeholder diagnoses (n/a, none, tbd, unknown, case-insensitive) leave no assessment text; asserted in test_exhausted_terminal_omits_empty_assessment.",
+  "measured_criteria_quoted": "Case (c) terminal quotes both coverage.missed criteria verbatim; asserted in test_exhausted_terminal_names_unmet_criteria.",
+  "no_branch_on_reason": "grep for reason.split / parse.*reason across autornd/ returns nothing; workflow.py:112 copies the reason to workflow.error and assertions.py:189 copies it to a failure detail \u2014 neither branches on its content.",
+  "no_workflow_change": "git diff --stat on workflows/ and autornd/graph/checks.py is empty.",
+  "proven_by_breaking": "With coverage.missed deleted the suffix returns ''; asserted in test_breaking_coverage_missed_breaks_the_terminal.",
+  "suite": "986 passed (46.60s); 980 at baseline plus 6 new tests in test_failure_path_terminal.py."
+ },
+ "command_id": "ARCH-20260923-053",
+ "delivery_state": "PUSHED",
+ "deviations": [
+  {
+   "reason": "The stale local branch arch/20260923-053-actionable-terminal at 35cd2fb (carriage-only) was renamed to arch/20260923-053-actionable-terminal-stale-35cd2fb and a fresh execution branch of the same deliverable name was cut from a6dcf6a; the stale ref is untouched and the rename is recorded here.",
+   "what": "Branch name reused after renaming the stale holder."
+  },
+  {
+   "reason": "The command file was already on the branch at a6dcf6a, so the carriage commit had no diff and was correctly skipped; the file was verified byte-identical rather than recommitted.",
+   "what": "Transport carriage produced no commit (already carried by -057 at 382a1be)."
+  },
+  {
+   "reason": "Six new tests moved the suite 980 \u2192 986, so the four generated-count guards plus the HEAD-coherence guard went red exactly as designed; counts re-derived against 2e75232 (IN_PROGRESS commit) per convention 24. The \u00a73.7 table predated test_failure_path_terminal.py (added by -051 at 214f796, never tabulated) and was missing four files' worth of drift (all_judges_exit 15\u219218, guards_can_fail 11\u219213, handover_truth 11\u219213, coverage_shapes 16\u219246); the table is now generated complete at 986.",
+   "what": "Counts re-derived: HANDOVER header/\u00a72/\u00a73.7/\u00a74.2/\u00a77, README badge/structure/Testing, testing.md."
+  },
+  {
+   "reason": "Two -052 tests asserted the OLD terminal (criteria absent, diagnosis absent from the reason). Per convention 17 the tests were wrong, not the fix: they now assert the criteria and the labelled diagnosis ARE in the terminal, keeping the record-level assertions on coverage.missed and escalation.root_cause_analysis.",
+   "what": "Invalidated tests updated, not appeased."
+  }
+ ],
+ "executed": "2026-09-25",
+ "head_after": "2b8d452",
+ "head_before": "a6dcf6a",
+ "questions_for_advisor": [
+  "Does the exhausted terminal surface anywhere user-facing beyond the record \u2014 a dashboard or an API field? workflow.py:112 copies state.reason into workflow.error for non-completed runs, so the longer reason now lands there; name any surface where the bound and labels must read well.",
+  "If the escalation assessment is a placeholder string in some runs, omitting it is as implemented (empty, whitespace, n/a, none, tbd, unknown case-insensitive). Is omitting always correct, or are there placeholders in the wild this set misses? Report what the code shows rather than deciding."
+ ],
+ "results": {
+  "notebook_section": null,
+  "terminal_verbatim": {
+   "reason": "'recovery_loop' did not converge within 3 iterations, still red: build, unmet: 'Caching layer stores computed results in Redis'; 'Cache invalidation runs on every write' \u2014 assessment: Implementation does not address caching requirements",
+   "status": "escalated"
+  }
+ },
+ "status": "DONE"
+}
