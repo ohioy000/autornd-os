@@ -23,7 +23,7 @@ from autornd.graph.spec import TERMINAL_STATUSES, Node, NodeKind, WorkflowSpec
 logger = logging.getLogger(__name__)
 
 __all__ = ["ExecutionState", "GraphExecutor", "NodeRunner", "StepRecord",
-           "_assessment_suffix", "_criteria_suffix"]
+           "_advisory_review_suffix", "_assessment_suffix", "_criteria_suffix"]
 
 
 @dataclass
@@ -138,6 +138,38 @@ def _criteria_suffix(state: "ExecutionState") -> str:
 # Compared case-insensitively after stripping; anything else is treated as
 # a real assessment and quoted as one, labelled.
 ASSESSMENT_PLACEHOLDERS = frozenset({"", "n/a", "none", "tbd", "unknown"})
+
+
+def _advisory_review_suffix(state: "ExecutionState") -> str:
+    """", advisory review: shipped" (or "did not ship: <findings>").
+
+    Ruling D22: lean's review node is advisory — no gate reads review.ship,
+    so a completed lean run carries no quality verdict while reading as
+    though it does. The terminal states the review outcome and labels it
+    advisory. MEASURED part (ship true/false, the harness's own record) is
+    stated first; the MODEL part (the reviewer's findings, where the run
+    dissents) follows labelled, per the -053 pattern. Empty when no review
+    output is recorded, so workflows without a review node — and runs that
+    never reached one — read no new text.
+
+    The label carries no leading comma: the caller joins it to the reason.
+    """
+    review = (state.outputs or {}).get("review")
+    ship = None
+    findings = ""
+    if isinstance(review, dict):
+        ship = review.get("ship")
+        findings = str(review.get("findings") or review.get("detail") or "").strip()
+    else:
+        ship = getattr(review, "ship", None)
+        findings = str(getattr(review, "findings",
+                               getattr(review, "detail", "")) or "").strip()
+    if ship is None:
+        return ""
+    if ship is True or ship == "true":
+        return "advisory review: shipped"
+    tail = f": {findings}" if findings else ""
+    return f"advisory review: did not ship (advisory){tail}"
 
 
 def _assessment_suffix(state: "ExecutionState") -> str:
@@ -447,7 +479,7 @@ class GraphExecutor:
             if not await self._execute(node, state):
                 break
         if not state.finished:
-            state.end("completed")
+            state.end("completed", _advisory_review_suffix(state) or None)
         return state
 
 

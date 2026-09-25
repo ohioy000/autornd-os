@@ -1,0 +1,45 @@
+{
+  "acceptance": {
+    "dissent_visible": "test_lean_dissent_is_visible asserts did-not-ship + findings quoted, status still completed",
+    "no_routing_change": "status stays 'completed'; TERMINAL_STATUSES, gates, API untouched",
+    "others_unchanged": "no file change to other five workflow files; -054 recovery test updated to the new reason (convention 17 \u2014 the test asserted the old terminal)",
+    "premise_quoted": "lean.yaml:84 review node, review_clean only in engineering-rnd:228 and probe:55",
+    "ruling_verbatim_first": "D22 in \u00a768, committed before implementation",
+    "suite": "1007 passed; counts re-derived 1005 to 1007, table row added",
+    "terminal_labelled": "test_lean_completes asserts reason == 'advisory review: shipped'"
+  },
+  "command_id": "ARCH-20260925-063",
+  "delivery_state": "PUSHED_PR_76",
+  "deviations": [
+    {
+      "reason": "Per-workflow gating in the executor would branch the terminal on the workflow name, which is exactly the kind of special case the executor must not carry. The label states a true property everywhere it appears; lean is where it matters.",
+      "what": "The suffix fires on every completed run with a review node, not lean only \u2014 engineering-rnd and independent-check-probe terminals gain the label too."
+    },
+    {
+      "reason": "Convention 17: the test asserted the old terminal (reason None); the fix changed what completed carries, so the test was wrong, not the fix.",
+      "what": "-054's test_build_fails_then_recovery_completes updated to assert the new reason."
+    }
+  ],
+  "executed": "2026-09-25",
+  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
+  "head_before": "0e4780e",
+  "questions_for_advisor": [
+    "Should lean gate on its review? Gating cost: zero extra calls when ship-true; a rework loop (review_rework_attempts=2) when ship-false. Owner's decision."
+  ],
+  "results": {
+    "advisory_elsewhere": "engineering-rnd and independent-check-probe also carry advisory reviews (no gate on their review.ship reads as approval the same way) \u2014 the suffix labels them too. triage-only/triage-classify/plan-probe have no review node and read no new text. Generalisation is by construction, not per-workflow.",
+    "change": "executor._advisory_review_suffix + run() ends ('completed', suffix or None). Status stays 'completed' \u2014 the label travels in reason, so TERMINAL_STATUSES/gates/API are untouched. No gate/bound/iteration/routing added. Other five workflows' files untouched; their terminals gain the label only where a review node ran (engineering-rnd, independent-check-probe), none where none ran.",
+    "gating_cost": "lean's review already runs (5th AI call); a gate would add zero calls on ship-true and a rework loop on ship-false \u2014 cost unmeasured live, iterations would come from review_rework_attempts=2. Owner's decision, not taken.",
+    "pr_url": "https://github.com/ohioy000/autornd-os/pull/76",
+    "preconditions": {
+      "gating": "review_clean exists only in engineering-rnd (line 228) and independent-check-probe (line 55); lean has none \u2014 premise CONFIRMED",
+      "harness": "test_lean_completes at tests/test_all_workflows_terminate.py:54",
+      "review_node": "lean.yaml:84 \u2014 id: review, kind: ai, no when, no gate downstream reads review.ship",
+      "suite_before": "1005 passed"
+    },
+    "pull_request": 76,
+    "ruling": "D22 recorded verbatim in docs/handover-review.md \u00a768 before implementation",
+    "suite": "1007 passed; 1005 at baseline plus 2 new D22 tests in test_all_workflows_terminate.py"
+  },
+  "status": "DONE"
+}

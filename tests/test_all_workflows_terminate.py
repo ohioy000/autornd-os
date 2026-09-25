@@ -54,11 +54,39 @@ class TestEveryWorkflowReachesATerminal:
     async def test_lean_completes(self):
         state, runner = await _drive("lean", _satisfying_verdicts())
         assert state.status == "completed", state.reason
-        assert state.reason is None
+        assert state.reason == "advisory review: shipped"
         assert state.path == [
             "triage", "context", "plan", "plan_ready",
             "implement", "coverage", "validate", "judges", "review",
         ]
+
+    async def test_lean_dissent_is_visible(self):
+        """ARCH-20260925-063 (Ruling D22): a dissenting lean review is
+        visible in the terminal — the run still completes (no gate added),
+        but completed can no longer read as reviewed and approved."""
+        state, _ = await _drive(
+            "lean",
+            _satisfying_verdicts(review={"ship": False,
+                                         "findings": "missing tests"}))
+        assert state.status == "completed"
+        assert state.reason is not None
+        assert "advisory" in state.reason
+        assert "did not ship" in state.reason
+        assert "missing tests" in state.reason
+
+    async def test_advisory_label_breaks_without_the_plumbing(self):
+        """Prove it by breaking it: with review.ship removed the suffix
+        reads nothing — the label reads the field it claims to read
+        (convention 28)."""
+        from autornd.graph.executor import _advisory_review_suffix
+        from autornd.graph.executor import ExecutionState as ES
+
+        state = ES(request="r")
+        state.outputs["review"] = {"ship": True}
+        assert "advisory" in _advisory_review_suffix(state)
+
+        del state.outputs["review"]["ship"]
+        assert _advisory_review_suffix(state) == ""
 
     async def test_triage_only_completes(self):
         state, runner = await _drive("triage-only", _satisfying_verdicts())

@@ -383,7 +383,9 @@ class TestRecoverySucceeds:
 
         assert state.status == "completed", (
             f"recovery should converge, got {state.status}: {state.reason}")
-        assert state.reason is None
+        assert state.reason == "advisory review: shipped", (
+            "D22: engineering-rnd's review is advisory-labelled like lean's; "
+            "the run completes and the review outcome is stated")
         assert "escalation" in state.path, "the escalation node ran"
 
         build = state.outputs["build_loop"]
