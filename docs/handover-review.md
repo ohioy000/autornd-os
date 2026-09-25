@@ -8513,3 +8513,25 @@ the transport lines say "pr: true" and the branch gets pushed, but the PR
 open is a separate command nobody issued. That is exactly the gap D16 closes:
 a response claiming PUSHED with no PR number is now a BLOCKED-class report,
 so the omission fails loudly instead of sitting quietly.
+
+## 67. Ruling D21 — recovery must carry the failure forward (advisor, 2026-09-25)
+
+Ruling D21 — recovery must carry the failure forward or not exist. ARCH-20260923-054 established that recovery_loop re-runs the implement node with no dissent, no unmet criteria and no escalation diagnosis as input: it is a retry, not a mechanism. A retry that supplies no new information cannot convert a failure that feedback would have fixed, and it costs three implement iterations on every recoverable failure. When the implement phase runs inside recovery_loop it must receive the previous iteration unmet criteria (coverage.missed) and the escalation resolution_directive as input. This is a behaviour change and it is ruled here. If it cannot be done without altering what the harness concludes elsewhere, stop and report rather than widening it.
+
+### Premise verification (ARCH-20260925-062, against the code)
+
+The premise is CONFIRMED with one correction that narrows the change. The
+recovery_loop body is `[implement, blocked_check, blocked_terminal,
+domain_review, coverage, consistency, validate, judges, rework_review,
+review_fold]` (`workflows/engineering-rnd.yaml:205`) — the same implement
+node, and no body node reads `escalation.*`, `coverage.missed`, or
+`judges.dissenting`. But the implement phase is not told nothing: the live
+path already carries failure context through the autopsy channel.
+`_phase_escalation` sets `self.resolution_directive` from the verdict and
+clears the failure log (`autornd/graph/adapter.py:447-448`); the next
+`_phase_implement` passes `red_cause`, `evidence` and `review_findings` from
+the fresh log plus the directive (`adapter.py:332-348`), and
+`EscalationVerdict` genuinely carries `resolution_directive`
+(`autornd/engine/phases.py:991`). What is absent — and what this ruling
+adds — is the verdict-level dissent: `coverage.missed` as unmet criteria,
+quoted, on the recovery iteration. That is the whole of the change.
