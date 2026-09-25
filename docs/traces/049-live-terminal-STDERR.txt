@@ -1,0 +1,21 @@
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Empty content from deepseek/deepseek-v4-flash via GMICloud (finish_reason=error, completion_tokens=3243, max_tokens=8000)
+Empty reply (attempt 1/3) for engineering: model returned no text (provider=GMICloud, finish_reason=error)
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Response did not match PlanVerdict (attempt 1/3) for architecture: 1 validation error for PlanVerdict
+cost_estimate
+  Input should be a valid number, unable to parse string as a number [type=float_parsing, input_value='$989.88 per month (3 × ...rge on-demand, US East)', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.13/v/float_parsing
