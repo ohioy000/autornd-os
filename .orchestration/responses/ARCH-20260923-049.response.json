@@ -1,0 +1,18 @@
+{
+  "command_id": "ARCH-20260923-049",
+  "delivery_state": "IN_PROGRESS_NO_PR_YET",
+  "deviations": [],
+  "executed": "2026-09-25",
+  "head_after": "PENDING_WORK",
+  "head_before": "b11faad",
+  "questions_for_advisor": [],
+  "results": {
+    "preconditions": {
+      "breadth_061": "present",
+      "envelope": "n=1 at $0.25 owner-ratified this run",
+      "key": "present (presence only)",
+      "tree_clean": "clean except untracked scratch"
+    }
+  },
+  "status": "IN_PROGRESS"
+}
