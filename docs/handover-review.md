@@ -8317,3 +8317,199 @@ vendor preference is named.
    #70 was open; it is now merged at `11be081e`. Updating that field is a
    separate write, not made here — this response states its own state and
    leaves `-056`'s record as the exhibit of a PUSHED write that later merged.
+
+## 66. STRANDED is named, the stamp is repaired, the hand copy is labelled (ARCH-20260925-058, 2026-09-25)
+
+### The command
+
+`ARCH-20260925-058`, REPROPOSED. The prior -058 never reached the tree (no
+command file, no branch, no response — the BLOCKED arrival reported
+2026-09-25). This revision keeps the objective and adds two state-of-record
+defects found on main at `01632c9`: a stamp naming a deleted branch, and a
+block labelled verbatim that contradicts the ledger. Pasted here verbatim
+before executing; the executed file is
+`.orchestration/commands/ARCH-20260925-058.json`.
+
+### Preconditions, run before acting
+
+| # | check | result |
+|---|---|---|
+| 1 | `git rev-parse --short HEAD` | `01632c9` — matches the command's stated main, no divergence |
+| 2 | `git branch -r --contains a6dcf6a` | reachable on `origin/arch/20260925-057-carried-state` and (via the -053 merge) on `origin/main` — the -057 content is already on main, see below |
+| 3 | `grep -n 'HEAD:' HANDOVER.md` | `**HEAD:** \`2e75232\` · **Branch:** \`arch/20260923-053-actionable-terminal\`` — the defect exactly as cited; branch deleted at the #71 merge |
+| 4 | `grep -n 'sqlalchemy' pyproject.toml` | `"sqlalchemy[asyncio]>=2.0.36"` (line 12) — §3.2's `sqlalchemy>=2.0.36` contradicts it |
+| 5 | suite | 986 passed in 45.75s before the change |
+
+### FIRST: the merge path for this branch
+
+None exists yet — this response is being written on
+`arch/20260925-058-strand-ruling` before any PR. Per Ruling D16 this command
+must not itself be STRANDED: a PR will be opened from this branch and its
+number recorded in the response's `delivery_state` before this command is DONE.
+
+### SECOND: the -057 branch needs no merge — its content is already on main
+
+Checked, not assumed (`git diff --quiet main..a6dcf6a -- <paths>`, exit 0 —
+no output, no differences):
+
+- `docs/handover-review.md` §65, `.orchestration/README.md`'s CARRIED state,
+  `.orchestration/commands/ARCH-20260925-057.json` and
+  `.orchestration/responses/ARCH-20260925-057.response.json` are byte-identical
+  between `main` (`01632c9`) and `a6dcf6a`. The -053 merge (#71) carried them:
+  its diff touched all ten files including the four -057 artifacts. There is
+  nothing to merge and nothing to reproduce — opening a PR from
+  `arch/20260925-057-carried-state` would be an empty diff against main.
+- What the -057 branch does NOT have and main does: the -053 code, tests and
+  counts (executor.py +70, test_failure_path_terminal.py +137, counts
+  980 → 986). Merging -057 *into* main would revert them. The direction that
+  "brings -057 to main" is backwards; main is ahead of -057 in every file
+  that matters and equal in every file -057 touched.
+- The command's constraint ("state how — a PR from that branch, or its
+  content reproduced") is therefore answered: NEITHER — the content is
+  already there, demonstrated by the empty diff above. The -057 branch is
+  safe to delete after this command lands; it is fully contained, not
+  stranded. Its response stays `DONE/PUSHED` as the first STRANDED exhibit —
+  updating it is a separate write, not made here.
+
+This is the mirror of the CARRIED finding, and worth stating plainly: -057
+looked STRANDED (pushed branch, no PR) but its *content* was MERGED by
+accident — the -053 branch was cut from the -057 tip (`a6dcf6a`), so the #71
+merge carried -057's work along with -053's. The branch has no merge path
+because it needs none. The loneliness of a branch is not the state of its
+content; only the diff tells.
+
+### Ruling D16 — PUSHED requires a merge path
+
+Ruling D16 — PUSHED requires a merge path. A branch with committed work and no pull request is not PUSHED; it is STRANDED, and the response must name it so. D15 states the channel state of record changes only at merge, so a state from which no merge can occur is not a state the channel can reason about. delivery_state must carry the pull request number wherever one exists, and a response claiming PUSHED with no pull request is a BLOCKED-class report, not a DONE. First exhibit: ARCH-20260925-057 at a6dcf6ab, pushed 2026-09-25T05:18:47Z, no pull request at the time of this ruling. Second exhibit: the same branch still had no pull request at 01632c97, three and a half hours later.
+
+Recorded with a correction the execution forced: the second exhibit's branch
+is no longer STRANDED in content (see above — main contains every byte), only
+in form (no PR was ever opened for it). The ruling stands; the exhibit's
+current reading is that a branch can look STRANDED while its content has
+already merged — which is itself a reason to require the PR number, so the
+channel can tell the two apart.
+
+### Ruling D17 — carriage may carry an instruction, not work
+
+Ruling D17 — carriage may carry an instruction; it may not carry work. Carriage is legitimate as transport: an instruction is a message, and moving it to main without executing it is honest provided the CARRIED state is named. The permission has a boundary: carriage must never carry an artifact that asserts work was done. ARCH-20260923-053 and -054 are instructions, so 4ab956f8 was correct. A response file claiming DONE is not transport and travels only with the work it describes, on the same branch, as the protocol already requires.
+
+This closes the open question §65 carried: carriage is permitted, and the
+defect was the reader's expectation, not the mechanism — with the boundary
+that a DONE response is never carriage.
+
+### Ruling D18 — a stamp must name main and an ancestor of main
+
+Ruling D18 — a stamp must name main and an ancestor of main, or it is not a stamp. The freshness guard introduced for B22 asserts that the named commit resolves and is an ancestor of the commit under test. At main 01632c97 the HANDOVER stamp named commit 2e75232 on branch arch/20260923-053-actionable-terminal — a branch that no longer exists. Resolvability and ancestry are both insufficient: the guard must also assert the named BRANCH exists, and the named commit is an ancestor of MAIN specifically. Third exhibit of B22, and the first the guard could have caught and did not.
+
+Three assertions added to `tests/test_handover_truth.py`, each proved by
+breaking (convention 22), quoted as they read:
+
+- (a) branch exists — break stamps `branch-that-never-existed`: *"HANDOVER's
+  Branch stamp `branch-that-never-existed` names a branch that does not exist
+  locally or on origin. The stamp at main `01632c9` named
+  `arch/20260923-053-actionable-terminal`, deleted at merge — a stamp pointing
+  at a deleted branch is not a stamp (Ruling D18)."*
+- (b) ancestor of MAIN — break demonstrated against a synthetic main (a
+  parentless `commit-tree` ref sharing no history): *"HANDOVER's HEAD stamp
+  `2e75232` is not an ancestor of main (`f859c55`). Resolvable and
+  ancestor-of-HEAD both pass on a stamp from a live side branch; only
+  main-ancestry catches it (Ruling D18, third exhibit of B22)."*
+- (c) header count equals collection — break stamps one above: *"HANDOVER's
+  header stamps 996 tests, collection found 995 (Ruling D18)."*
+
+Why synthetic for (b), stated rather than implied (convention 26): every live
+side-branch tip was already merged to main (all eight `arch/*` tips return
+exit 0 against main, checked 2026-09-25), so no live commit can demonstrate
+the failure; a fabricated sha fails resolvability first and proves the wrong
+guard. The synthetic-main failure runs the real `merge-base --is-ancestor`
+path with a subject that resolves (convention 28). The (b) break helper keeps
+its `2e75232` stamp — a real commit, resolvable, ancestor of its own HEAD —
+so the shape is the one D18(b) names even though the failure is forced via
+the ref swap; the test restores `main` in a `finally` and deletes the
+synthetic ref.
+
+Two further exhibits from the same run, kept because they are the class:
+
+- The (b) guard as first written used the -057 tip `a6dcf6a` as its break —
+  and PASSED, because the -053 merge had made `a6dcf6a` an ancestor of main.
+  A break that stops breaking when history moves is a brittle break; the
+  synthetic main does not move. This is the same lesson as the empty-diff
+  above: ancestry is a reading of the tree at a moment, not a property of a
+  sha.
+- The suite moved 986 → 995 UNDER this command: the D18(c) guard plus its
+  three self-proofs added 6 to `test_handover_truth.py`, and the
+  signature-discovered `test_guards_can_fail.py` parametrisation grew 13 → 16
+  for the same reason. The count was re-derived twice (986, then 995); the
+  stamp below carries 995. A count is a reading of the tree at a moment
+  (README channel notes), and this command watched it move.
+
+### Ruling D19 — a labelled verbatim is a claim
+
+Ruling D19 — a document labelled verbatim is a claim, and claims are guarded. HANDOVER.md section 3.2 labels its pyproject.toml block verbatim and shows sqlalchemy>=2.0.36, while the B1 row in the same document records that the manifest was changed to sqlalchemy[asyncio]>=2.0.36 after merged-main CI failed. The block is a stale hand copy. Either generate and guard it, or stop labelling it verbatim. Convention 24, applied to the section that most invites hand-copying.
+
+Repaired halfway, stated halfway: §3.2 now shows
+`sqlalchemy[asyncio]>=2.0.36`, matching `pyproject.toml:12` — and its heading
+no longer says verbatim. It reads "hand copy — corrected 2026-09-25, still
+unguarded". Generating and guarding the block (a test that diffs §3.2 against
+the manifest) is named but NOT done here — small diff, and the label now
+tells the truth about what the block is.
+
+### The stamp, repaired
+
+Header now reads `**HEAD:** \`01632c9\` · **Branch:** \`main\`` with
+`**Tests:** 995 as of \`01632c9\``; §2 tree line, §3.7 title and table (995
+total — `test_handover_truth.py` 13 → 19, `test_guards_can_fail.py` 13 → 16),
+§4.2 pass line (995/995), §7 command comment. README badge / structure /
+Testing section and `testing.md` likewise 995. The stamp names main's tip at
+the time of writing; the merge commit for THIS command will move main, and
+restamping to it is the owner's merge or a follow-up — the stamp names where
+it was derived, not where it is going.
+
+Per the command's STOP condition: the count did differ from 986 (995 — the
+guard's own growth, above). Named, not stamped blindly: the difference is six
+new D18 tests plus three signature-discovered guard-failure cases.
+
+### The reporting regression, without blame
+
+PR #71's body ("Executes ARCH-20260923-053. … Owner-only merge.") carries no
+delivery-state section and no branch-hygiene line, where PR #69 carried both.
+D15 requires the `delivery_state` field on the response, and the PR body is
+where a reader meets the work before the response file — the reporting shape
+should not get leaner as the work gets better. This command's PR body carries
+both sections; the shape is demonstrated, not just asked for.
+
+### The channel account, fourth in a class
+
+- `-053`/`-054` CARRIED without execution (commit `4ab956f8`, PR #70).
+- `-057` PUSHED without a merge path (branch `a6dcf6a`, no PR ever) — content
+  since absorbed by the #71 merge, form still unmerged.
+- `-058` REPROPOSED because its objective was unmet (no file, no branch, no
+  response on the first issue).
+
+The class is now named (CARRIED / STRANDED) and mechanically detectable: a
+command file with no response file after N hours (CARRIED), a branch with
+commits and no PR (STRANDED). Both are free to detect — `ls` against the two
+directories, `gh pr list` against the branches. Whether that detection should
+be a scheduled job is the command's second question, carried to the response:
+my reading is yes, and the check is three lines — but scheduling is the
+owner's, not mine.
+
+### Scorecard answers (command §4)
+
+- `-053`: CONFIRMED — the response file carries the terminal verbatim
+  (`'recovery_loop' did not converge within 3 iterations, still red: build,
+  unmet: 'Caching layer…' … — assessment: Implementation does not address
+  caching requirements`) and the acceptance record. Nothing parses the reason
+  (workflow.py:112 and assertions.py:189 copy it, neither branches) — the
+  prediction held.
+- `-054`: still UNSCORED — never run, now parented to -058's response. Third
+  issue stands.
+
+### First question (why no PR two batches running)
+
+Omission, not tooling: `gh pr create` worked first try in both cases where it
+was invoked (#71 here, and the -053 run). STRANDED is a repeated omission —
+the transport lines say "pr: true" and the branch gets pushed, but the PR
+open is a separate command nobody issued. That is exactly the gap D16 closes:
+a response claiming PUSHED with no PR number is now a BLOCKED-class report,
+so the omission fails loudly instead of sitting quietly.

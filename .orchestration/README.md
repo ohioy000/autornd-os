@@ -7,7 +7,7 @@ Where they differ, `AGENTS.md` wins.
 - `commands/<command_id>.json` — work out, written by the advisor.
 - `responses/<command_id>.response.json` — work back, written by the executor.
 
-### Channel states: new, CARRIED, PUSHED, MERGED
+### Channel states: new, CARRIED, PUSHED, STRANDED, MERGED
 
 A command is **new** iff `commands/<id>.json` exists and
 `responses/<id>.response.json` does not — process in `command_id` order.
@@ -24,6 +24,20 @@ new/executed rule already produces the correct behaviour (they process in
 **PUSHED** means work is done on a branch and the response is written, but the
 branch is not merged. **MERGED** means the work's branch is merged to `main`
 — the channel state of record changes only at merge (Ruling D15).
+
+**STRANDED** means a branch carries committed work and no pull request —
+there is no merge path, so the channel cannot reason about its state (Ruling
+D16). A response claiming PUSHED with no pull request is a BLOCKED-class
+report, not a DONE. First exhibit 2026-09-25: `ARCH-20260925-057` at
+`a6dcf6a`, pushed 05:18:47Z with no PR — and still none three and a half
+hours later at `01632c9`. With a correction the execution forced: -057's
+*content* had already reached main inside the -053 merge (#71), so the branch
+looked STRANDED while its content was MERGED — which is itself why the PR
+number is required, so the channel can tell the two apart. CARRIED and
+STRANDED are mirrors: CARRIED is an instruction merged without execution;
+STRANDED is work pushed without a merge path. Both are free to detect — a
+command file with no response file (CARRIED), a branch with commits and no PR
+(STRANDED).
 
 ---
 
