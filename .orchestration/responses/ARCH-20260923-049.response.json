@@ -10,7 +10,7 @@
     "trace_committed": "docs/traces/049-live-terminal.jsonl + STDERR committed; mirror quoted"
   },
   "command_id": "ARCH-20260923-049",
-  "delivery_state": "PUSHED_PENDING_PR",
+  "delivery_state": "PUSHED_PR_77",
   "deviations": [
     {
       "reason": "That IS the result this command exists to detect: no terminal in bounds. Not a defect to fix here \u2014 reported with the trace.",
@@ -22,7 +22,7 @@
     }
   ],
   "executed": "2026-09-25",
-  "head_after": "PENDING_COMMIT",
+  "head_after": "POST_PR_NUMBER_RECORDING_PENDING_PUSH",
   "head_before": "b11faad",
   "questions_for_advisor": [
     "The rework loop waited ~590s on rework_review (81.9s) + review (66.9s) + implement (208s) + plan (171s). Is a 600s timeout too short for a live convergence run, or is the latency itself the finding? The timeout was the scenario default, not chosen.",
@@ -34,6 +34,7 @@
     "guards": "precedence pair registered (preregistration test extended); serving-ledger.md regenerated (new architecture/GMICloud + triage/Alibaba rows)",
     "iterations": "2 recorded: iter1 (build) all green, coverage passed with 3 abstentions; iter2 (rework) dissenting=['consistency'], coverage passed with 3 abstentions. The dissent moved from review to consistency while the run waited on rework_review.",
     "path": "triage, context, plan, feasibility, plan_ready, verify_grounding, implement, blocked_check, blocked_gate, domain_review, coverage, consistency, validate, judges, review (ship=false), review_clean -> rework loop (implement, blocked_check, blocked_terminal, domain_review, coverage, consistency, validate, judges, rework_review ...) \u2014 rework_review pending at timeout",
+    "pr_url": "https://github.com/ohioy000/autornd-os/pull/77",
     "preconditions": {
       "breadth_061": "present",
       "envelope": "n=1 at $0.25 owner-ratified this run",
@@ -43,6 +44,7 @@
     "prediction": "WRONG \u2014 the run did not complete. Reported as wrong, never adjusted.",
     "prediction_registered": "COMPLETED (docs/preregistration-049-live-terminal.md @950ff77, before run header 2026-09-25T07:58:16Z)",
     "provider_variance": "1 schema rejection (PlanVerdict.cost_estimate float_parsing \u2014 '$989.88 per month ...' where a number was required; StreamLake/architecture), 1 empty reply (engineering via GMICloud, finish_reason=error, retried). Both counted in retries reconciliation (attributed 1, excluded empty_reply named).",
+    "pull_request": 77,
     "served_by": "triage Alibaba, architecture StreamLake, engineering GMICloud, research Google, search Perplexity",
     "shapes": "coverage.measured 2 of 5 criteria (0.78, 0.84); 3 abstained (form-shaped numeric criteria) \u2014 abstention_count=3, fold detail 'not agreed \u2014 consistency is red' (no empty-seat quote: the fold dissented, not abstained)",
     "suite": "1008 passed; counts re-derived 1007 to 1008 (precedence parametrisation)",
