@@ -1,0 +1,76 @@
+{
+  "command_id": "ARCH-20260925-056",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Supply Ruling D15 verbatim, record the D11-ancestry merge outcome and the clean-install defect, and close the -055 PARTIAL.",
+  "evidence": [
+    ".orchestration/responses/ARCH-20260925-055.response.json — status PARTIAL; 'ruling_d15: NOT RECORDED: the command and repository omitted the required verbatim text'; question_for_advisor: 'Supply the exact authoritative text of Ruling D15 in a new command'",
+    ".orchestration/responses/ARCH-20260925-055.response.json — merged_main_ci run 36092131347 FAILED: test (3.11), editable-install, docker all 'missing greenlet'; root cause pyproject declared sqlalchemy without the asyncio extra",
+    ".orchestration/responses/ARCH-20260925-055.response.json — authorized_ci_repair commit 5dabcaa, manifest sqlalchemy[asyncio]>=2.0.36, guard tests/test_runtime_dependencies.py, red_before 1 failed, green_after 1 passed",
+    ".orchestration/responses/ARCH-20260925-055.response.json — containment_matrix 044 > 043 > 051 > 052; minimal_merge_set 93041d75; main_merge_commit 67e4493; ancestors confirmed incl. a50d7ee and cd862e2",
+    ".orchestration/responses/ARCH-20260925-055.response.json — deviation: the prescribed 'ls .orchestration/responses/ | tail -20' precondition was blind to newer command IDs because lexical sorting ended at ARCH-20260922-041",
+    "branch main = d733e6325f664d745be83e305b1a49319e6a4120; branches API returns main only; open_issues_count 0",
+    "workflows/engineering-rnd.yaml — judges_agree fold; HANDOVER.md §2.3",
+    "AGENTS.md — a command citing a sha, a file path, or a measured figure must carry one verifying it",
+    "AGENTS.md convention 24 — a fact about the repo is generated or guarded, never hand-stamped",
+    "AGENTS.md convention 28 — an instrument asserts it computed its subject before it asserts anything about it"
+  ],
+  "scope": {
+    "include": ["docs/handover-review.md", "HANDOVER.md", ".orchestration/README.md"],
+    "exclude": ["autornd/**", "tests/**", "workflows/**", "evals/**"]
+  },
+  "constraints": [
+    "Documentation and ledger only. $0.00. No code, test, run or key.",
+    "RULING D15, TRANSCRIBED VERBATIM — this is the text the -055 command failed to carry:",
+    "'Ruling D15 — a response status of DONE means the work is PUSHED, not MERGED. The channel state of record changes only at merge. A response must distinguish PUSHED from MERGED, and a command may not treat DONE as a precondition met unless the artifact is an ancestor of HEAD. First exhibit: ARCH-20260922-043, ARCH-20260922-046 and ARCH-20260922-042 were ruled on as landed on 2026-09-23 while main did not move until 2026-09-25; four commands were treated as merged for two days because the response files reported DONE for pushed work. Second exhibit: ARCH-20260925-055 introduced the delivery_state field, distinguishing MERGED, PUSHED_CI_GREEN and the pull request, which is the shape this ruling requires.'",
+    "RECORD THE ADVISOR'S ERROR, verbatim and attributed to the advisor: the advisor transmitted a ruling in prose and then issued a command instructing the executor to record it verbatim without carrying the text — a command citing a ruling it did not supply, which is the same class as a command citing a sha it does not verify. This is the third D7 violation of the session. The executor correctly reported PARTIAL and the owner correctly declined to invent the text.",
+    "OPEN THE DEPENDENCY-CONTRACT DEFECT as the next free ledger row (recorded here as B26 if free; use the next available identifier and say which you used): the declared package contract did not match the runtime imports — pyproject declared sqlalchemy without the asyncio extra while the runtime imports sqlalchemy.ext.asyncio, so a clean install could not import the database layer while the source-tree suite passed. Status CLOSED by 5dabcaa, evidenced by run 36092131347 FAILED and the guard green after. The DISTINCTION TO RECORD: 979 source-tree tests passed while the package was broken; only the editable-install and docker jobs could see it.",
+    "ADD THE SECOND EXHIBIT to the precondition rule in .orchestration/README.md: a listing truncated with tail/head is a BLINDNESS, not an enumeration — it can return a plausible non-empty answer while being blind to the entries that matter. Exhibits: ARCH-20260922-027's tail -3, which excluded the pre-registration because prohibition sorts before validation; and ARCH-20260925-055's tail -20, which ended lexically at ARCH-20260922-041. State the rule: a precondition that enumerates must enumerate completely or declare that it truncated.",
+    "RECORD THE MERGE OUTCOME: containment was linear (044 > 043 > 051 > 052), the minimal merge set was one tip, PR #68 carried the chain to 67e4493, and the four ancestor shas are on main. State that the advisor's stranded-stack call was correct at the time and is now resolved.",
+    "RECORD THE OPEN QUESTION AGAINST B7, and resolve it from the traces rather than by assertion: ARCH-20260922-043's replay reported the fold FAILING in all four v4 convergence traces, while B7's row reports two of the four shipped. Read the four traces and report, per trace, whether judges_agree passed. If the fold failed in a trace that B7 records as shipped, state what 'shipped' means in that row and correct the wording. Do NOT resolve it by assumption.",
+    "State the frontier plainly with the five proven items and the four unproven ones, so the next reader sees the gap without reconstructing it.",
+    "Do NOT reopen B25, B17 or B24. Do NOT change any code.",
+    "Every count re-derived against the tree (convention 24)."
+  ],
+  "acceptance_criteria": [
+    "Ruling D15 appears verbatim in the notebook and ledger; a grep for a distinctive phrase finds it.",
+    "The advisor's third D7 violation is recorded and attributed to the advisor, with the executor's PARTIAL named as correct.",
+    "The dependency-contract defect has a ledger row, status CLOSED, with the run number and the guard named, and the source-tree-passed-while-package-broken distinction recorded.",
+    "The second precondition exhibit is in .orchestration/README.md with both exhibits and the stated rule.",
+    "The merge outcome and the four ancestor shas are recorded.",
+    "B7's open question is resolved from the traces, or the reconciliation is reported as unresolved with the per-trace fold results quoted.",
+    "The frontier is stated with proven and unproven items separated.",
+    "Suite passes unchanged; count reported before and after."
+  ],
+  "verification": [
+    {"command": "grep -n 'Ruling D15\\|PUSHED, not MERGED' docs/handover-review.md HANDOVER.md", "expected": "The ruling text present in both."},
+    {"command": "grep -n 'B26\\|asyncio extra\\|greenlet' HANDOVER.md docs/handover-review.md", "expected": "The dependency-contract row present with its evidence."},
+    {"command": "grep -n 'blindness, not an enumeration\\|tail' .orchestration/README.md", "expected": "The rule and both exhibits present."},
+    {"command": "grep -n 'B7' HANDOVER.md", "expected": "The fold question recorded or resolved with per-trace results."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "980 passed; count reported and unchanged."}
+  ],
+  "rollback": "Revert the commit; documentation only.",
+  "deliverable": {
+    "branch": "arch/20260925-056-record-d15",
+    "branch_created_by": "executor",
+    "pr": true,
+    "merge": "owner-only",
+    "commit_style": "conventional"
+  },
+  "transport": "Commit this command file verbatim as carriage before executing; commit the response IN_PROGRESS first, then update it in place. The response must carry delivery_state per Ruling D15.",
+  "assumptions": [
+    "Main is at d733e63 and the stack is merged, per the -055 response and the branches API.",
+    "The four v4 convergence traces are locatable under evals/scenarios/convergence/ with committed results under docs/traces/."
+  ],
+  "questions": [
+    "Which ledger identifier is free for the dependency-contract defect? Use the next available and name it.",
+    "Does B7's 'shipped' mean judges_agree passed, or that the run reached a completed terminal by another route? If the fold failed in a trace B7 calls shipped, the row's wording is imprecise and should be corrected — do not soften it."
+  ],
+  "preconditions": [
+    {"command": "git rev-parse --short HEAD", "expected": "d733e63. If not, name the divergence rather than assuming."},
+    {"command": "ls .orchestration/responses/ARCH-20260925-055.response.json", "expected": "Present; the PARTIAL to close."},
+    {"command": "grep -n 'B25' HANDOVER.md", "expected": "Present as the last free row; establish the numbering before adding one."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green at 980 before the change."}
+  ]
+}

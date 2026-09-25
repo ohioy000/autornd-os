@@ -1,0 +1,63 @@
+{
+  "command_id": "ARCH-20260923-054",
+  "parent_id": "ARCH-20260923-053",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "revision": "Re-issued, not executed in any prior batch.",
+  "objective": "Prove the recovery path recovers: a fourth provider-free case where build_loop fails and a recovery attempt satisfies the criteria, asserting the run reaches completed rather than escalating.",
+  "evidence": [
+    ".orchestration/responses/ARCH-20260923-051.response.json — case (c) escalates after build_loop (5 iters) + recovery_loop (3 iters); recovery is only ever observed failing; recovery has its own bound escalation_recovery_attempts, not inherited",
+    "workflows/engineering-rnd.yaml — recovery_loop with on_exhausted_status: escalated",
+    "HANDOVER.md §2.3 — the fold and the loops; recovery exists to re-attempt with the dissent recorded",
+    "AGENTS.md convention 22 — an instrument's test simulates the condition it watches, end to end"
+  ],
+  "scope": {
+    "include": ["tests/", "autornd/evals/"],
+    "exclude": ["workflows/*.yaml", "autornd/graph/checks.py", "autornd/graph/executor.py"]
+  },
+  "constraints": [
+    "FREE. No paid call, no provider. Extend the -051/-052/-053 harness with a fourth case; do not build a second harness.",
+    "THE CASE: build_loop exhausts, then a recovery attempt satisfies the criteria, and the run reaches COMPLETED. The deterministic client must return failure for the first N attempts and success thereafter, so the transition is explicit and controlled.",
+    "Report the full path: build iterations, recovery attempts, the attempt that succeeded, and whether the run then completed normally through review.",
+    "Assert the run does NOT escalate and does NOT reach the call ceiling.",
+    "THE QUESTION THIS CASE EXISTS TO ANSWER: what does recovery receive as input — the recorded dissent, the unmet criteria, or merely the same prompt again? Quote what the recovery node is passed. If recovery retries identically, say so plainly; that is the finding and it would explain why recovery may never succeed live.",
+    "Do NOT change any workflow, bound, threshold, gate or check. Do NOT adjust a bound to make the case pass — if recovery cannot succeed within existing bounds, that is the result.",
+    "Simulate the condition end to end (convention 22), not by asserting on a mock return.",
+    "Keep the diff small."
+  ],
+  "acceptance_criteria": [
+    "A fourth case exists in which build_loop fails and recovery succeeds, demonstrated by a test.",
+    "The run reaches COMPLETED, quoted, with no escalation and no ceiling.",
+    "The path is reported: build iterations, recovery attempts, the successful attempt.",
+    "What the recovery node receives as input is quoted — dissent, unmet criteria, or neither.",
+    "No workflow, bound, threshold, gate or check was modified.",
+    "Suite count reported before and after."
+  ],
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count reported."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q -k 'recovery or recovers'", "expected": "The recovery-succeeds case passes."},
+    {"command": "git diff --stat -- workflows/ autornd/graph/checks.py autornd/graph/executor.py", "expected": "Empty — the graph, checks and executor are not modified by a measurement of them."}
+  ],
+  "rollback": "Revert the commit; the fourth case is removed and the prior harness is unaffected.",
+  "deliverable": {
+    "branch": "arch/20260923-054-recovery-succeeds",
+    "branch_created_by": "executor",
+    "pr": true,
+    "merge": "owner-only",
+    "commit_style": "conventional"
+  },
+  "transport": "Commit this command file verbatim as carriage before executing; commit the response IN_PROGRESS first, then update it in place. The response must carry delivery_state per Ruling D15.",
+  "assumptions": [
+    "The harness's deterministic client can be made to return failure then success across attempts. If it cannot express a per-attempt transition, say so — that is a finding about the harness's expressiveness."
+  ],
+  "questions": [
+    "Does the recovery node receive the dissent and unmet criteria as input, or re-run the implement node with the same context? The answer decides whether recovery is a mechanism or a retry.",
+    "If recovery retries identically, is that a defect or a deliberate design? Report which the code shows; do not decide it."
+  ],
+  "preconditions": [
+    {"command": "ls .orchestration/responses/ARCH-20260923-053.response.json", "expected": "Present. If absent, return BLOCKED naming ARCH-20260923-053."},
+    {"command": "grep -n 'recovery_loop\\|escalation_recovery_attempts' workflows/engineering-rnd.yaml", "expected": "Locate the recovery loop and its bound; record them."},
+    {"command": "grep -rn 'recovery' autornd/graph/executor.py | head", "expected": "Locate how recovery input is assembled; record it."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green before the change."}
+  ]
+}

@@ -69,7 +69,7 @@ Not in the default set, because most commands do not touch them:
 
 ## Preconditions: blindness is not absence
 
-**Measured 2026-09-22 (-027, -029).** Two preconditions reported "absent" when
+**Measured 2026-09-22 (-027, -029), second exhibit 2026-09-24 (-055).** Three preconditions reported "absent" when
 the subject was present but the search could not see it:
 
 - `-027` precondition 2 ran `ls docs/traces/ | tail -3` to check for a file
@@ -78,8 +78,21 @@ the subject was present but the search could not see it:
 - `-027` precondition 4 tested `echo $OPENROUTER_API_KEY` in the shell when
   `config.py:128` reads from `.env`. The key was set; the precondition looked
   in the wrong place.
+- `-055`'s response-population precondition ran `ls .orchestration/responses/ |
+  tail -20` to enumerate response files. Lexical sorting ended at
+  `ARCH-20260922-041`, so the window returned a plausible non-empty answer
+  while being blind to every newer command ID — including the `-055` response
+  file's own neighbours. The full directory held 55 files; the window showed
+  none past `-041`.
 
-Both reported PASS or absence. Neither was true. Convention 28 says an
+A listing truncated with `tail`/`head` is a BLINDNESS, not an enumeration — it
+can return a plausible non-empty answer while being blind to the entries that
+matter. Exhibits: `-027`'s `tail -3`, which excluded the pre-registration
+because prohibition sorts before validation; and `-055`'s `tail -20`, which
+ended lexically at `ARCH-20260922-041`. The rule: a precondition that
+enumerates must enumerate completely or declare that it truncated.
+
+All three reported PASS or absence. None was true. Convention 28 says an
 instrument asserts that it computed its subject before it asserts anything about
 it, and convention 26 says a reading that can be mistaken for a stronger claim
 is a defect in the instrument.
