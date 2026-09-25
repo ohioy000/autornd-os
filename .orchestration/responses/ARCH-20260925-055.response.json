@@ -7,8 +7,9 @@
   "delivery_state": {
     "stranded_stack": "MERGED",
     "main_merge_commit": "67e4493dddc40cd0a576759d9228b9d20e611473",
-    "ci_repair": "COMMITTED_LOCALLY",
-    "reporting_branch": "arch/20260925-055-land-the-stack"
+    "ci_repair": "PUSHED_CI_GREEN",
+    "reporting_branch": "arch/20260925-055-land-the-stack",
+    "pull_request": "https://github.com/ohioy000/autornd-os/pull/69"
   },
   "results": {
     "preconditions": {
@@ -82,7 +83,15 @@
       "merged_tree_before_new_guard": "979 passed in 49.61s",
       "final_local_suite": "980 passed in 46.06s",
       "targeted_guards": "23 passed in 7.44s",
-      "diff_check": "clean"
+      "diff_check": "clean",
+      "pr_69_ci": {
+        "head": "26532aec66dca30f963c3873668d181befe71d21",
+        "test (3.11)": "success",
+        "test (3.12)": "success",
+        "test (3.13)": "success",
+        "editable-install": "success",
+        "docker": "success"
+      }
     }
   },
   "deviations": [
