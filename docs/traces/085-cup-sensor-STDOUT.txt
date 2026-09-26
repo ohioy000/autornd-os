@@ -1,0 +1,14 @@
+results: docs/traces/085-cup-sensor.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/085-cup-sensor.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_cup_line_sensor         1/1     11   196.4   
+--------------------------------------------------------------------------------------------
+1/1 scenarios passed every repetition  ·  11 calls  ·  196.4s  ·  $0.0685
+spend by tier: engineering $0.0537, search $0.0063, architecture $0.0060, research $0.0020, triage $0.0003
+served by: architecture via DeepInfra, engineering via StreamLake, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.0685 of $2.0000
+
