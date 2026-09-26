@@ -15,8 +15,45 @@ It starts from engineering R&D, but nothing in it is specific to engineering. Th
 
 ---
 
+## Scope and Provenance
+
+### What this is
+
+A working multi-model agentic harness for engineering R&D: six workflows
+(engineering-rnd, lean, triage-only, triage-classify, plan-probe,
+independent-check-probe) that drive a request through grounding, planning,
+building, validation, review and escalation, reaching a typed terminal on a
+live run. Measured: one live completed run, 9 calls, six cents, validate 6/6,
+review ship:true — with the limits beside it: quality is measured as
+termination, not correctness; six tiers require configuration; auth is open
+by default.
+
+### Scope
+
+For engineering objectives stated in prose: grounding in your docs, outward
+lookup with sources, planning against pre-written criteria, implementation as
+structured text, validation, risk-scaled review, escalation with a diagnosis.
+It produces artifacts as text — plans, designs, calculations — and explicitly
+does not compile, run, deploy, or edit files. No streaming, no roles, no
+coverage tooling; see Limitations.
+
+### How it was built
+
+By agents operating under a written protocol (`AGENTS.md`), with a
+deliberate division of labour: an advisory model with read-only access to
+the public history rules on what the harness concludes, and coding agents
+with write access execute — the two meet only through versioned
+command/response files (`.orchestration/`), never through shared state.
+Commit trailers credit the coding agents; the advisory role is evidenced by
+the channel, not by a name in history. The project is therefore both a
+working program and a worked record of how agents can produce one: the
+command channel, the serving ledger and the conventions are the evidence.
+
+---
+
 ## Table of Contents
 
+- [Scope and Provenance](#scope-and-provenance)
 - [Frugal and accurate are the same lever](#frugal-and-accurate-are-the-same-lever)
 - [What AutoRnD Produces](#what-autornd-produces)
 - [Research](#research)
