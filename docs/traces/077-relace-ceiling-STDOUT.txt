@@ -1,0 +1,14 @@
+results: docs/traces/077-relace-ceiling.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/077-relace-ceiling.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_numeric_consistency     0/1      4    22.4   run 1/1 — HTTPStatusError: 404 from chat/completions: No endpoints found for z-ai/glm-5.
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  4 calls  ·  22.4s  ·  $0.0085
+spend by tier: search $0.0057, research $0.0024, triage $0.0004
+served by: research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.0085 of $2.0000
+
