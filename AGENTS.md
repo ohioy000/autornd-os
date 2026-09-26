@@ -114,8 +114,12 @@ creates branches, commits, pushes and opens pull requests, and commits command
 files verbatim as carriage per the channel transport rule. The advisor has no
 commit capability; the executor is the channel's transport. Merges to main
 remain owner-only unless the owner grants merge-on-green in one line.
+The executor merges when CI is green AND every acceptance criterion is demonstrated. This permission is conditional on CI honesty and is withdrawn if a guard is found that cannot fail or cannot pass (Conventions 22, 28). Three classes remain owner-only regardless of CI: anything touching .env or standing config; anything changing branch protection; and anything whose acceptance CI cannot see — a live paid run result, or a claim about provider behaviour.
 Invariants: no force-push; no history rewrite; no deletion on a protected
-branch; no direct push to main; and **no git operation while a paid run is in
+branch; no direct push to main; do not stack branches — merge each pull
+request before opening the next, so a branch is cut from a current main
+(if stacking is unavoidable, the minimal merge set is the tip and it is
+stated in the response); and **no git operation while a paid run is in
 flight** — that last caused the -010 trace loss and git capability increases
 its likelihood. A paid run must not start with a dirty working tree; this rule
 is procedural as of 2026-09-23 and mechanical enforcement is named in

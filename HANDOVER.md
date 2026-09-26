@@ -5,6 +5,12 @@
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
+> **Ruling D29 (2026-09-26):** delete what cannot be verified, do not guard it. A fact about the tree you are on can be verified on that tree. A fact about a relationship to another ref cannot be verified before you merge, and a guard for it will either pass vacuously, fail on a correct value, or be unsatisfiable. Four rulings (D18, D19, D20, D27) and half a working day were spent guarding one such fact; deleting it took one commit. When a guard has failed twice for different reasons, the question is not how to guard it third, but whether the fact belongs in the document at all.
+
+> **Ruling D30 (2026-09-26):** the process budget. At most one instrument or process command per batch, and it must name what it prevents rather than what it enforces. A second process command in a batch requires stating why the first was insufficient. Product commands are unbounded. First exhibit: ARCH-20260925-064, -065 and -069 were issued in three consecutive turns, one of which existed only to correct the ruling before it.
+
+> **Ruling D31 (2026-09-26):** a security warning has a lifecycle or it has no value. HANDOVER.md section 3.6 carried an ACTION REQUIRED warning naming two GitHub PATs and three OpenRouter keys. The credentials were rotated several times; the warning read identically throughout, and was reported as an outstanding owner action for a week by a reader who had no way to tell it had been satisfied. A warning that outlives its exposure trains its readers to ignore warnings; a warning removed before the exposure is closed hides one. It must therefore state what was exposed, what was done, and when — so a reader can see it is closed — and it is superseded by a dated note rather than deleted.
+
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -659,6 +665,19 @@ AUTORND_PROFILE=                     # loads profiles/<name>.yaml
 working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
+
+```plaintext
+DISPOSITION (2026-09-26, supersedes the warning above, which is retained
+for the record and no longer action).
+Owner states 2026-09-26: FALSE ALARM — the "three credentials" were a
+misreading (advisory-model misread); no live secret crossed the
+transcript, none ever reached git (verified: full history + dangling
+objects + tree sweep, notebook §78). No rotation was required and none
+is claimed. The staleness lesson stands: the note read as outstanding
+for a week with no reader able to tell it was vacuous — hence Ruling
+D31 below. If any credential is later shown exposed, this disposition
+is revoked and the warning re-opens with a date.
+```
 
 ### 3.7 Test distribution (1018 total)
 
