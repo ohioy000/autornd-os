@@ -121,6 +121,9 @@ def check(models: dict[str, str], pins: dict[str, str],
                 f"{provider} does not serve {model} — with fallbacks disabled this is a 404"))
         else:
             out.append(Finding(True, f"pin {tier}", f"{provider} serves {model}"))
+    from autornd.routing.openrouter import provider_fallbacks_allowed
+    if provider_fallbacks_allowed():
+        out.append(Finding(True, "fallbacks", "preferred-first failover open (OPENROUTER_PROVIDER_FALLBACKS)"))
     return out
 
 

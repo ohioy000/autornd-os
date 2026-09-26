@@ -1,0 +1,6 @@
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+EXIT=1

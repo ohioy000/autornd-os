@@ -47,6 +47,16 @@ class Settings(BaseSettings):
     # different risk classifications between two runs of one eval suite.
     openrouter_provider_order: str = ""
 
+    # Preferred-first failover beyond the pin. Empty/false (default) keeps
+    # hard pins: the router serves ONLY the named providers and 404s when
+    # its filters strip them all — measured 2026-09-26 on four traces
+    # (076/077/078/082), where the same 112768-token ask 404d pinned and
+    # served first try with fallbacks allowed, through the pin itself.
+    # Set to 1/true to let the router fail over instead of 404ing. The
+    # pin is still tried first; who answers is recorded per call, so the
+    # ledger keeps attribution. Owner config (like the order itself).
+    openrouter_provider_fallbacks: str = ""
+
     max_iterations: int = 5
 
     # How many times review may send work back before the run escalates.
