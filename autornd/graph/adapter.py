@@ -388,6 +388,7 @@ class PhaseRunner:
             resolution_directive=self.resolution_directive,
             context=self.context,
             primary_domain=None,      # the lead is already resolved
+            max_tokens=self._max_tokens(node),
         )
         return verdict, responses
 
@@ -495,6 +496,7 @@ class PhaseRunner:
         verdict, responses = await phases.run_review(
             self.client, state.request, self._triage(state), state.outputs["plan"],
             state.outputs["implement"], self._resolve_who(node, state), self.context,
+            max_tokens=self._max_tokens(node),
         )
         # A blocking review is a failed attempt like any other, and the rework
         # loop downstream reads the failure log. Without this it would rework

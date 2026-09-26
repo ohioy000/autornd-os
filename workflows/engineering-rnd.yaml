@@ -72,6 +72,7 @@ nodes:
     specialist: lead
     prompt: implement
     schema: ImplementVerdict
+    max_tokens: plan_max_tokens    # the deliverable is plan-sized; 16k truncated it twice (073, 075)
 
   # B13's honest-refusal gate (Blueprint 016 B2/B3). The implementer's ruled
   # channel for saying a criterion cannot be honestly satisfied is blocked_on;
@@ -216,6 +217,7 @@ nodes:
     specialist: reviewers
     prompt: review
     schema: ReviewVerdict
+    max_tokens: plan_max_tokens    # findings must fit beside the work they judge; 16k truncated two reviewers (073)
     depends_on: [build_loop]
 
   # ── review gate ─────────────────────────────────────────────────────────
@@ -244,6 +246,7 @@ nodes:
     specialist: reviewers
     prompt: review
     schema: ReviewVerdict
+    max_tokens: plan_max_tokens    # same ceiling as review: same prompt, same tier, second call site
     depends_on: [validate]
 
   # Folds the build judges and the re-review together: work ships when everyone

@@ -689,6 +689,7 @@ async def run_implement(
     evidence: list[str] | None = None,
     review_findings: list[Any] | None = None,
     unmet_criteria: list[str] | None = None,
+    max_tokens: int | None = None,
 ) -> tuple[ImplementVerdict, list[ModelResponse]]:
     feedback = ""
     if resolution_directive:
@@ -767,6 +768,7 @@ Original request:
     # the same two steps in the same order, exactly as run_validate does it.
     lead_data, lead_resp = await lead.run(
         client, implement_prompt, schema=ImplementVerdict,
+        max_tokens=max_tokens or settings.plan_max_tokens,
     )
     responses.append(lead_resp)
     lead_data["iteration"] = iteration
@@ -865,6 +867,7 @@ async def run_review(
     implement: ImplementVerdict,
     specialists: list[Specialist],
     context: str = "",
+    max_tokens: int | None = None,
 ) -> tuple[ReviewVerdict, list[ModelResponse]]:
     adversarial = triage.risk in (RiskLevel.CRITICAL, RiskLevel.HIGH)
     review_mode = "ADVERSARIAL — actively search for failure modes" if adversarial else "COLLABORATIVE"
@@ -905,7 +908,10 @@ Original request:
 
     async def _review(spec: Specialist) -> dict[str, Any] | None:
         try:
-            data, resp = await spec.run(client, prompt)
+            data, resp = await spec.run(
+                client, prompt,
+                max_tokens=max_tokens or settings.plan_max_tokens,
+            )
             responses.append(resp)
             return data
         except Exception:
