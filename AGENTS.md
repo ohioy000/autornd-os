@@ -133,6 +133,10 @@ ARCH-20260922-035.
 - **Counts are re-derived, never trusted.** Every count in the repo is generated
   or guarded (`tests/test_handover_truth.py`).
 - **Commit messages are prose that names the measurement**, not bullet lists.
+  Cost figures in a message or generated body must be single-quoted or the
+  dollar escaped: a shell expands `$0` to its own name, so `$0.06` committed
+  through `bash -c` reads `(bash.06)` — fine-looking and wrong (convention
+  26). Measured 2026-09-26: three trace commits and one PR body.
 - **Private corpora never enter this repo.** `profiles/milkhouse.yaml` stays
   untracked; see `.gitignore`.
 - **Isolate the knowledge store in experiments** (`_isolated_store()`). The eval

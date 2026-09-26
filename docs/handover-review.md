@@ -8660,3 +8660,94 @@ Lower-triangular zeros above the diagonal, ones below: the stack is linear and #
 
 -062 status: EXECUTED and MERGED — response `ARCH-20260925-062.response.json` carries `status DONE`, `delivery_state PUSHED_PR_75`, PR #75, merged as `5d94c20`, which is an ancestor of the -067 branch (`merge-base --is-ancestor 5d94c20 cb358ab7` exits 0). #81's claim of '-062's channel' is therefore accurate, not carriage: -067 extends plumbing that executed and landed. No D17 question arises. (The command's 'ARCH-20260923-062' is a misnumbering; the executed id is ARCH-20260925-062.)
 
+
+## 77. ARCH-20260926-076 — the first completed live run (executor, 2026-09-26)
+
+Command pasted verbatim in `.orchestration/commands/ARCH-20260926-076.json`;
+this is the execution record (§n.2). Documentation and record only — $0.00,
+no code, run or key. Preconditions, all met on arrival: HEAD `6577924`
+(diverged from `07153afe` by the 085-cup-sensor branch work — scenario,
+preregistrations, shootout, prompt pin — named, not assumed); traces
+072-085 present (fourteen run/probe files: 072, 073, 074, 075, 076, 077,
+078, 079-probe, 080, 081, 082, 083, 084, 085 — the command's "nine
+traces 072-084" assumption corrected: 079-probe and 085 exist too);
+corrupted cost figures located in commit subjects (`3cb366e` reads
+"(bash.06)" for $0.06, `f94e62d` "(bash.07)" for $0.07, `dbcba2b`
+"(bash.02)" for $0.02), PR #85's body ("bash.0287" for $0.0287)
+unreachable via API in this environment — quoted from the command's own
+evidence rather than re-fetched; suite 1018 green before.
+
+### What the trace says (read, not summarized)
+
+084 (`docs/traces/084-sane-ceilings.jsonl`): `status: completed`,
+`stop_reason: null`, path the full sixteen nodes
+triage→context→plan→feasibility→plan_ready→verify_grounding→implement→
+blocked_check→blocked_gate→domain_review→coverage→consistency→validate→
+judges→review→review_clean. 9 calls, $0.0573, one build iteration
+(`iterations: [{iteration 1, dissenting [], ...}]`), verdict keys all
+present. This answers the command's Q1: full graph, not a reduced path —
+`review_clean` is the last node and it is in the path.
+
+The milestone with its arc: 084 COMPLETED 1/1, 9 calls, $0.0573,
+validate 6/6, review ship:true (6 findings, all low) — against -027
+(42 calls/$0.1783/no terminal), -049 (12/$0.0527/no terminal, falsified
+COMPLETED the same way), -071 (12/$0.0287/no terminal). Fewer calls
+than every failing run. Recorded in HANDOVER.md §6.20 with the figures
+quoted from the trace, not the PR body.
+
+### What fixed it (no credit inflation)
+
+Heterogeneous roster + per-tier wired ceilings + preferred-first
+failover. The loop fixes (B18, D23/-066, D24/-067, D25) were necessary
+and were NOT the last blocker — the last blocker was serving
+selection, measured across 072-083. Stated in §6.20 as the command
+requires, including the sentence a future reader most needs: the loop
+fixes predate the milestone.
+
+### What remains unobserved (the part that would otherwise be assumed)
+
+-067 NEVER fired live: 084 returned ship:true, no rework ran; the
+review-findings carry path is provider-free only. -066 and -073 not
+exercised by 084 either (clean completions exercise neither); both
+observed on -071. 085 (second domain, cup-line sensor, 11 calls,
+$0.0685, COMPLETED 1/1) generalizes the loop but touched no rework
+either — -067 unobserved twice over. Provider-free proof is not live
+proof; stated, not conflated.
+
+### The owner-ruled runs (fact, not deviation)
+
+072-084 iterated hands-on, pre-registration before each header
+(`docs/preregistration-07*.md` + `085` + `086`), each stating
+owner-ruled/authorized, no command file. Owner holds the money
+(G-1/G-3), acted within it; channel is for code. Elapsed 20:12→23:35
+local 2026-09-25 (072 trace commit → 084 prereg). D29/D30 unrecorded —
+stated, not skipped.
+
+### The shell corrupts cost figures (finding + rule)
+
+`$0` expands to the shell's name: "(bash.06)" for $0.06, "(bash.07)"
+for $0.07, "(bash.02)" for $0.02, "bash.0287" for $0.0287. A corrupted
+figure reads as fine and is wrong (convention 26). Commits NOT
+rewritten; corrected by quotation in §6.20. Rule stated in AGENTS.md
+(non-negotiables area, next edit): cost figures in commit messages or
+generated bodies must be single-quoted or the dollar escaped.
+
+### Ledger question (the command's Q2)
+
+The ledger renders every tier from the fourteen traces — no arm
+dropped: unpinned arms never existed in this corpus (every run
+pinned every tier). Newest rows: Inkling-small/DeepInfra 6/2,
+GLM-5/StreamLake 3/1, triage Flash/Alibaba 361+. Reported from the
+derived table, not hand-stamped.
+
+### Departures
+
+Two, both measurement-driven. (1) The branch carries the 085-cup-sensor
+work (scenario + 085 trace + 086 shootout + prompt pin) because HEAD
+had moved past `07153afe` when the command arrived — the record is
+written from the tree under test, and the tree is named in the
+IN_PROGRESS commit. (2) Corrupted-figure exhibits verified against
+`git log` subjects, not `grep` over `.md`/`.jsonl` (which finds
+nothing — the corruption lives in commit messages and the PR body,
+neither of which is in the tree). No code, test or workflow touched —
+asserted below by diff.

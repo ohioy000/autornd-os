@@ -1720,6 +1720,63 @@ here: GMICloud served validate on -071 and the failure is now counted
 per serving in `provider_failures`, so a future disqualification ruling
 has the reading it needs.
 
+### 6.20 The first completed live run (ARCH-20260926-076, run 084)
+
+084 COMPLETED 1/1 on `evals/scenarios/convergence/
+conv_numeric_consistency.yaml` (engineering-rnd): 9 calls, $0.0573,
+validate green 6/6 with arithmetic shown, review `ship: true` (6
+findings, all low), full path first try, zero retries, zero
+rejections, zero provider failures (`docs/traces/084-sane-ceilings.
+jsonl`). The successful run used FEWER calls than every failing one
+it is measured against: -027 at 42 calls/$0.1783/no terminal, -049 at
+12 calls/$0.0527/no terminal (falsified COMPLETED the same way, §6.18),
+-071 at 12 calls/$0.0287/no terminal.
+
+What fixed it, without credit inflation: a heterogeneous roster (a
+planning serving and a building serving, rather than one model for
+every tier), per-tier wired ceilings (plan, implement, review — the
+072/073 defect class, one line each), and preferred-first failover
+(the same 112768-token ask 404d pinned and served first try through
+the pin itself). The loop fixes were necessary and were NOT the last
+blocker: B18 (terminals on bounds), D23/-066 (stop_reason separate),
+D24/-067 (rework carries review findings), D25 (sized budgets) all
+predate the milestone, and the last blocker was serving selection —
+which door answers at which ceiling, measured across runs 072-083.
+
+What remains unobserved, stated so no future reader assumes it:
+ARCH-20260925-067 has NEVER fired on a live run — 084 returned
+review `ship: true`, so no rework ran and the review-findings
+carry path is proven provider-free only. -066's stop_reason and
+-073's provider terminal were not exercised by this run either (a
+clean completion exercises neither); both were observed on -071.
+085 then COMPLETED 1/1 on a second domain (cup-line sensor wiring,
+11 calls, $0.0685) — the loop generalizes, but neither run touched
+rework, so -067 stands unobserved twice over.
+
+The owner-ruled runs, as fact not deviation: runs 072-084 were
+iterated hands-on by the owner — who holds the money (G-1/G-3) and
+acted within that authority — with a pre-registration committed
+before each run header (`docs/preregistration-07*.md`, each stating
+owner-ruled/owner-authorized, no command file). The channel is for
+code; the live-run search was faster done directly. Elapsed:
+2026-09-25 20:12 to 23:35 local (072 trace to 084 prereg), thirteen
+runs and probes in one session. D29/D30 remain unrecorded; that is
+stated here, not silently skipped.
+
+Cost-figure corruption, recorded as a finding: a cost written
+through a shell expands `$0` to the shell's own name, so the 084
+trace commit reads "(bash.06)" where the figure is $0.06
+(`3cb366e`), the 085 trace "(bash.07)" for $0.07 (`f94e62d`), the
+079 probe "(bash.02)" for $0.02, and PR #85's body reads "bash.0287"
+where the figure is $0.0287. A corrupted cost figure reads as fine
+and is wrong (convention 26) — the commits are NOT rewritten; each
+figure is corrected here by quotation. The rule is now stated in
+AGENTS.md: cost figures in commit messages or generated bodies must
+be single-quoted or the dollar escaped.
+
+Leftover: branch `arch/20260925-070-land-the-stack` @ `93a1f722` is
+contained in main — cosmetic, the owner may delete.
+
 ---
 
 ## 7. FAST ORIENTATION FOR THE NEW ARCHITECT
