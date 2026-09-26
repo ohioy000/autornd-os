@@ -8751,3 +8751,77 @@ IN_PROGRESS commit. (2) Corrupted-figure exhibits verified against
 nothing — the corruption lives in commit messages and the PR body,
 neither of which is in the tree). No code, test or workflow touched —
 asserted below by diff.
+
+## 78. ARCH-20260926-077/078 — README scope + first-run roster, Option B (executor, 2026-09-26)
+
+Two commands, one session, both documentation-only ($0.00, no code/run/key).
+-077: scope + provenance in README (four things: what-it-is, scope,
+provenance, dual nature), attribution from trailers, guard read first.
+-078: Option B, owner-ruled in-session before execution (recorded in the
+command file transport_note) — placeholder `.env.example` + dated roster
+doc, no amendment, no shipped ids.
+
+### Guard first (-077 Q1)
+
+`tests/test_docs.py` predicate, quoted: `MODEL_NAMES` regex over
+`glm|deepseek|minimax|sonar|perplexity|gemini|kimi|qwen|gpt-|mistral|llama|
+claude|openai|anthropic|moonshot|z-ai` (case-insensitive), scanned files
+README.md, .env.example, AGENTS.md, CLAUDE.md, CONTRIBUTING.md,
+CHANGELOG.md plus `profiles/*.yaml` and `workflows/*.yaml` globs, with
+`ALLOWED` carve-outs (OpenAI-compatible, OpenAI chat-completions,
+CLAUDE.md, .claude/, Claude Code). Answer: flat token list — it CANNOT
+distinguish a development-agent name from a serving id ("Claude Opus 5"
+trips `claude`, "Qwen-Coder" trips `qwen`). So the README names roles,
+not models ("advisory model", "coding agents") — the command's own Q2
+exit, and the more durable claim. `test_docs.py` 9/9 after.
+
+### Trailers (-077 Q2)
+
+527 commits: Co-authored-by Claude Opus 5 ×222, Opus 4.6 ×23, Qwen-Coder
+×18; 263 commits no trailer; author RobbiBobbi ×521 + Jean Blue ×6. The
+owner-named DeepSeek architect appears NOWHERE in history. Per the
+constraint the README credits what the trailers say, narrowed to roles —
+and states the advisory role is "evidenced by the channel, not by a name
+in history." The DeepSeek-V4-Flash-as-read-only-advisor detail is the
+owner's stated workflow (rulings without write access — the novel split),
+recorded here as stated-by-owner, not as history-derived.
+
+### Roster (-078, Option B)
+
+Sourced tier-by-tier from the 084 header + providers_by_function (9
+calls, COMPLETED 1/1): planning/architecture/grounding/lookup/
+classification pins as answered, escalation/ranker/premium UNPINNED
+(never fired — clean completions exercise no autopsy; stated, not
+filled). Dated 2026-09-26, decay caveat with the 071 exhibit (whole
+budget, zero bytes), no price anywhere, re-verify pointer. `.env`
+untouched (G-3); nothing paid.
+
+### Credentials (owner-ordered sweep)
+
+Full negative, three layers: (1) history — no `sk-*`/`ghp_`/`gsk_`/
+`xox`/Bearer-token/password patterns in any reachable commit; `.env`
+never tracked (gitignored L12, absent from `git log -- .env`);
+`.env.example` carries empty keys only. (2) dangling objects — 4 blobs
+verified (one false-positive grep hit re-checked clean: "key" prose,
+not key material; three are doc revisions), dangling commits all
+synthetic D18(b) fixtures or WIP/stash residue. (3) working tree —
+only `tests/conftest.py:78` `api_key="test-key"` placeholder. NOTHING
+TO REMOVE — recorded so the next sweep starts from a clean finding,
+not from fear.
+
+### Contradictions named, not corrected
+
+README's "You choose every model" vs the roster doc: resolved by
+shape — the doc is a dated snapshot that recommends, the example
+configures nothing (placeholders only, guard-passing). No existing
+README text contradicted a measured fact; nothing silently corrected.
+
+### Departures
+
+(1) Both commands executed from one working tree across two
+deliverable branches (077-readme-scope, 078-first-run-roster) — the
+response files name their branch; diffs kept disjoint (README vs
+example+roster). (2) -078's ruling arrived in-session with the
+command text ("awe do option b"), recorded in transport_note rather
+than a separate ruling commit — the owner's words, not the
+executor's choice.
