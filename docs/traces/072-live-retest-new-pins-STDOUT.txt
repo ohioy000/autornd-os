@@ -1,0 +1,14 @@
+results: docs/traces/072-live-retest-new-pins.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/072-live-retest-new-pins.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_numeric_consistency     0/1      7   498.6   run 1/1 — JSONDecodeError: Unterminated string starting at: line 3 column 11 (char 29)
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  7 calls  ·  498.6s  ·  $0.4500
+spend by tier: architecture $0.4413, search $0.0061, research $0.0022, triage $0.0004
+served by: architecture via Alibaba, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.4500 of $1.0000
+
