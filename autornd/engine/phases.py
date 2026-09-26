@@ -247,6 +247,7 @@ async def run_plan(
     specialists: list[Specialist],
     tier: str | None = None,
     context: str | None = None,
+    max_tokens: int | None = None,
 ) -> tuple[PlanVerdict, ModelResponse]:
     specialist_names = ", ".join(s.name for s in specialists)
     # Grounding is assembled once per workflow by its own node and passed in.
@@ -294,7 +295,8 @@ Request:
         function="architecture",
         system_prompt=architect.system_prompt,
         user_message=prompt,
-       schema=PlanVerdict,
+        max_tokens=max_tokens or settings.plan_max_tokens,
+        schema=PlanVerdict,
     )
     verdict = PlanVerdict(**data)
     return verdict, response

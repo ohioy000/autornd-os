@@ -316,6 +316,7 @@ class PhaseRunner:
         verdict, response = await phases.run_plan(
             self.client, state.request, self._triage(state), self._specialists(state),
             tier=self._tier(node, state), context=self.context,
+            max_tokens=self._max_tokens(node),
         )
         return verdict, [response]
 
