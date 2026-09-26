@@ -30,7 +30,9 @@ from autornd.evals.scenario import Scenario
 from autornd.graph.adapter import PhaseRunner
 from autornd.graph.executor import GraphExecutor
 from autornd.graph.spec import WorkflowSpec
-from autornd.routing.openrouter import BudgetExceeded, OpenRouterClient
+from autornd.routing.openrouter import (
+    BudgetExceeded, OpenRouterClient, ProviderFailure,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -242,6 +244,7 @@ class ResultsLog:
             "tokens_by_tier": run.tokens_by_tier,
             "rejections_by_tier": run.rejections_by_tier,
             "rejections_by_provider": run.rejections_by_provider,
+            "provider_failures": run.provider_failures,
             "retries": run.retries,
             "seconds_by_phase": run.seconds_by_phase,
             "assertions": [
@@ -485,6 +488,13 @@ class ScenarioRun:
     # Measured 2026-09-22: three retries in stderr, both counters empty, and
     # nothing in the record able to tell those two readings apart.
     retries: dict[str, object] = field(default_factory=dict)
+    # Provider failures that ended a call: one entry per exhausted empty-reply
+    # sequence, naming the tier and the serving. Beside `rejections_by_tier`,
+    # not inside it — an empty reply is not a schema rejection. A truncated
+    # reply must be countable and attributable to the serving that produced
+    # it; providers_by_tier already carries the serving, this carries the
+    # failure.
+    provider_failures: list[dict[str, Any]] = field(default_factory=list)
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -712,6 +722,27 @@ async def run_scenario(
         stopped_by_budget = True
         _end_on_bound(state, "spend ceiling" if error.startswith("stopped at $")
                       else "call ceiling", error)
+    except ProviderFailure as exc:
+        # A provider that consumed its whole budget and emitted nothing ended
+        # the run — the -071 shape. ProviderFailure subclasses RuntimeError,
+        # NOT BudgetExceeded, so this clause must precede the generic
+        # Exception handler and must not be folded into the ceiling branch:
+        # a provider failure is not a budget decision. The workflow never
+        # concluded, so this is NOT a workflow verdict about the work; it is
+        # a typed terminal NAMING the provider failure, the way _end_on_bound
+        # names the bound that stopped it. Ruling D23 holds: status/reason
+        # carry the terminal, stop_reason carries how the runner stopped —
+        # the two fields are written together here and never merged.
+        state = _partial_state(executor, scenario.request)
+        error = f"{type(exc).__name__}: {exc}"
+        state.end("blocked",
+                  f"provider failure on tier '{exc.function}': {exc}")
+        state.stop_reason = f"runner stopped the run: {error}"
+        # The ScenarioRun's error is what the unit record carries: it must
+        # name the failure the same way the terminal does, not the bare
+        # exception string — which is what run.error would otherwise hold
+        # and what the -071 record still reads.
+        error = f"provider failure on tier '{exc.function}': {error}"
     except Exception as exc:  # a broken run is a result, not a crash
         state = _partial_state(executor, scenario.request)
         error = f"{type(exc).__name__}: {exc}"
@@ -737,6 +768,7 @@ async def run_scenario(
                          cost=runner.total_cost, error=error,
                          stopped_by_budget=stopped_by_budget,
                          context=getattr(runner, "context", "") or "")
+    client = runner.client
     return ScenarioRun(
         scenario=scenario,
         results=score(scenario, outcome),
@@ -760,6 +792,7 @@ async def run_scenario(
                         in runner.client.tokens_by_function.items()},
         rejections_by_tier=dict(runner.client.rejections_by_function),
         rejections_by_provider=dict(runner.client.rejections_by_provider),
+        provider_failures=list(getattr(client, "provider_failures", []) or []),
         retries=runner.client.retry_reconciliation(),
         seconds_by_phase=_phase_seconds(state),
     )

@@ -134,6 +134,36 @@ class BudgetExceeded(RuntimeError):
     """A run asked for more calls or more money than it was allowed."""
 
 
+class ProviderFailure(RuntimeError):
+    """A provider ended the run without producing usable output.
+
+    Raised when every retry for one call consumed its budget and emitted
+    nothing — the -071 shape: `finish_reason=length`, the full
+    `completion_tokens` spent, `content` empty, three attempts, zero
+    verdicts. It is NOT a schema rejection (a reply the truth table could
+    not repair) and NOT a parse failure (text that was not JSON): there
+    was no reply at all, so there was nothing to validate or parse.
+    Carries the serving that produced it, because a tier is not a system
+    and "the engineering tier failed" names no one. The message is the
+    last attempt's detail, so the terminal that quotes it names the
+    provider, the finish reason, and the spent budget.
+    """
+
+    def __init__(self, function: str, provider: str | None, detail: str):
+        super().__init__(detail)
+        self.function = function
+        self.provider = provider
+
+    # The serving that produced the failure, for the unit record beside
+    # `rejections_by_provider`. Recorded as "provider/model" when both are
+    # known — the ledger counts servings, not providers alone — else
+    # whichever half is known, else None.
+    def serving(self, model: str | None = None) -> str | None:
+        if self.provider and model:
+            return f"{self.provider}/{model}"
+        return self.provider
+
+
 def _rejection_note(error: Exception) -> str:
     """Tell the next attempt what the last one got wrong.
 
@@ -226,6 +256,7 @@ class OpenRouterClient:
         # rejection is a reply the truth table could not repair, which an empty
         # reply is not.
         self.retries_by_kind: dict[str, int] = {}
+        self.provider_failures: list[dict[str, Any]] = []
         self.call_ceiling: int | None = None
         self.spend_ceiling: float | None = None
 
@@ -279,6 +310,12 @@ class OpenRouterClient:
         self.rejections_by_function = {}
         self.rejections_by_provider = {}
         self.retries_by_kind = {}
+        # Provider failures that ended a call: one entry per exhausted
+        # empty-reply sequence, naming the tier and the serving. Beside
+        # `rejections_by_provider`, not inside it — an empty reply is not a
+        # schema rejection, and widening that counter would destroy the
+        # distinction its own comment exists to preserve.
+        self.provider_failures = []
 
     # Retry classes. Named constants rather than string literals at the call
     # sites, because the reconciliation below subtracts one from the total and
@@ -510,6 +547,17 @@ class OpenRouterClient:
         # offending value and every permitted one, so the cheapest way to spend
         # a retry is to say what was wrong.
         correction = ""
+        # The empty-reply attempts of THIS call, for the provider-failure
+        # record if the retries exhaust. Tracked per call, not per client:
+        # a call that eventually parses must not carry earlier calls'
+        # failures, and the record below is one entry per exhausted call.
+        # Counted, not flagged: a mixed sequence (some empty, some
+        # malformed) has no single owning class, and claiming one would be
+        # convention 26.
+        empty_attempts = 0
+        empty_provider: str | None = None
+        empty_finish: str | None = None
+        empty_completion: int = 0
         for attempt in range(max_retries):
             if attempt > 0:
                 await _aio.sleep(min(2 ** attempt, 8))
@@ -536,6 +584,13 @@ class OpenRouterClient:
                 detail += ")"
                 last_error = ValueError(detail)
                 self._count_retry(self.RETRY_EMPTY_REPLY)
+                # The last attempt's serving wins: with fallbacks disabled a
+                # call is one serving throughout, and if that ever changes the
+                # failure belongs to the serving that ended it.
+                empty_attempts += 1
+                empty_provider = response.provider
+                empty_finish = response.finish_reason
+                empty_completion = response.completion_tokens
                 logger.warning(
                     "Empty reply (attempt %d/%d) for %s: %s",
                     attempt + 1, max_retries, function, detail,
@@ -572,6 +627,25 @@ class OpenRouterClient:
                     "JSON parse failed (attempt %d/%d) for %s: %s — raw: %s",
                     attempt + 1, max_retries, function, e, (response.content or "")[:300],
                 )
+        # The retries exhausted. An all-empty sequence means the provider
+        # ended the call without producing output — a distinct failure
+        # class, not a schema rejection and not a parse failure, so it
+        # raises its own exception carrying the serving. Counted per call
+        # above (empty_attempts), not read back from the client-wide
+        # counter, so a call whose own attempts were mixed — or a client
+        # with history — cannot be misread as all-empty.
+        if empty_attempts >= max_retries and empty_provider is not None:
+            failure = ProviderFailure(function, empty_provider, str(last_error))
+            self.provider_failures.append({
+                "function": function,
+                "provider": empty_provider,
+                "model": self.get_model(function),
+                "serving": failure.serving(self.get_model(function)),
+                "finish_reason": empty_finish,
+                "completion_tokens": empty_completion,
+                "attempts": max_retries,
+            })
+            raise failure from last_error
         raise last_error
 
     @staticmethod

@@ -249,6 +249,7 @@ class _StubClient:
         self.tokens_by_function: dict = {}
         self.rejections_by_function: dict = {}
         self.rejections_by_provider: dict = {}
+        self.provider_failures: list = []
         self.retries_by_kind: dict = {}
         self.call_ceiling = None
         self.spend_ceiling = None
@@ -270,6 +271,134 @@ class _StubClient:
         return {"total": 0, "attributed": 0, "unattributed": 0,
                 "by_kind": {}, "excluded_from_rejection_counters":
                     ["empty_reply", "parse_failure"]}
+
+
+class TestAProviderFailureReachesATypedTerminal:
+    """ARCH-20260926-073: the -071 shape, simulated end to end (convention 22).
+
+    Read the trace before believing the framing, which is what the command
+    asked for. `docs/traces/071-live-terminal-2.jsonl` unit record:
+
+        error: "ValueError: model returned no text (provider=GMICloud,
+                finish_reason=length, completion_tokens=8000 of
+                max_tokens=8000 — ...)"
+        status: "blocked", stop_reason: "runner stopped the run: ValueError:
+                model returned no text (provider=GMICloud, ...)"
+        path: [..., "consistency", "validate"] — died AT validate, 12 calls,
+              $0.0287.
+        retries: total 4, unattributed 4, by_kind {empty_reply: 4}.
+
+    Two corrections to the command's framing, both from the trace rather
+    than the PR body. First, the failing tier was VALIDATE on the
+    architecture tier (StreamLake served plan, GMICloud served validate —
+    providers_by_function), and the FIRST empty reply (16384/16384) was an
+    earlier engineering call; validate then failed 8000/8000 three times.
+    So: finish_reason=length, completion 8000 of max_tokens 8000, content
+    EMPTY (not truncated — nothing was emitted at all). Second, the -071
+    unit record ALREADY carries status "blocked" — the B18 terminal, which
+    fires for any exception. What was missing was not a terminal but a
+    terminal that NAMES the provider failure: the reason read "stopped by
+    the unhandled error: ValueError: model returned no text (...)", which
+    is the generic bucket, not the failure class. This class asserts the
+    terminal names the tier and the serving, and the unit record carries
+    the failure beside rejections_by_tier.
+    """
+
+    TRACE_071 = Path("docs/traces/071-live-terminal-2.jsonl")
+
+    def test_the_trace_shows_empty_not_truncated(self):
+        """Acceptance 1: the validate call's finish_reason, quoted from the
+        trace rather than the PR body. If this fails, the 'truncated reply'
+        framing is wrong and so is everything built on it."""
+        if not self.TRACE_071.exists():
+            pytest.skip("071 trace not committed")
+        records = [json.loads(line) for line in self.TRACE_071.read_text().splitlines()
+                   if line.strip()]
+        unit = next(r for r in records if r.get("record") == "unit")
+        assert "finish_reason=length" in unit["error"]
+        assert "completion_tokens=8000 of max_tokens=8000" in unit["error"]
+        assert unit["retries"]["by_kind"] == {"empty_reply": 4}
+        assert unit["path"][-1] == "validate"
+
+    @staticmethod
+    def _drive(provider_failure):
+        import autornd.evals.runner as runner_mod
+        from autornd.evals.scenario import Scenario
+        from autornd.graph.spec import WorkflowSpec
+
+        class FakeExecutor:
+            def __init__(self, *a, **k):
+                self.state = ExecutionState(request="r")
+
+            async def run(self, request):
+                raise provider_failure
+
+        original = runner_mod.GraphExecutor
+        runner_mod.GraphExecutor = FakeExecutor
+        try:
+            return asyncio.run(runner_mod.run_scenario(
+                scenario=Scenario(id="s", request="r", expect={}),
+                spec=WorkflowSpec(name="w", nodes=[]),
+                client_factory=lambda: _StubClient(),
+                settings_lookup={},
+                timeout=5.0,
+            ))
+        finally:
+            runner_mod.GraphExecutor = original
+
+    def test_a_provider_failure_reaches_a_typed_terminal_naming_it(self):
+        """Acceptance 3: the run ends blocked with the tier and provider in
+        the reason — not the generic 'unhandled error' bucket."""
+        from autornd.routing.openrouter import ProviderFailure
+
+        run = self._drive(ProviderFailure(
+            "engineering", "GMICloud",
+            "model returned no text (provider=GMICloud, finish_reason=length, "
+            "completion_tokens=8000 of max_tokens=8000)"))
+        assert run.status == "blocked"
+        assert "provider failure" in (run.error or "")
+        assert "engineering" in (run.error or "")
+        assert "GMICloud" in (run.error or "")
+        assert "unhandled error" not in (run.error or "")
+
+    def test_stop_reason_and_terminal_stay_separate(self):
+        """Acceptance 4 (Ruling D23): the terminal names the failure, the
+        stop_reason names how the runner stopped — asserted, not merged."""
+        import autornd.evals.runner as runner_mod
+        from autornd.evals.scenario import Scenario
+        from autornd.graph.spec import WorkflowSpec
+        from autornd.routing.openrouter import ProviderFailure
+
+        states = {}
+
+        class FakeExecutor:
+            def __init__(self, *a, **k):
+                self.state = ExecutionState(request="r")
+                states["state"] = self.state
+
+            async def run(self, request):
+                raise ProviderFailure("engineering", "GMICloud", "no text")
+
+        original = runner_mod.GraphExecutor
+        runner_mod.GraphExecutor = FakeExecutor
+        try:
+            run = asyncio.run(runner_mod.run_scenario(
+                scenario=Scenario(id="s", request="r", expect={}),
+                spec=WorkflowSpec(name="w", nodes=[]),
+                client_factory=lambda: _StubClient(),
+                settings_lookup={},
+                timeout=5.0,
+            ))
+        finally:
+            runner_mod.GraphExecutor = original
+
+        state = states["state"]
+        assert state.status == "blocked"
+        assert state.stop_reason is not None
+        assert state.stop_reason.startswith("runner stopped the run: ")
+        assert state.reason != state.stop_reason, (
+            "the terminal and the stop-reason must never be the same field")
+        assert run.stop_reason == state.stop_reason
 
 
 class TestLoopExhaustionEndToEnd:

@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1005 · **Date of this snapshot:** 2026-09-25, counts re-derived against the tree under test
+**Tests:** 1013 · **Date of this snapshot:** 2026-09-25, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -268,7 +268,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      55 files, 1005 tests
+tests/                      55 files, 1013 tests
 
 ```
 
@@ -660,7 +660,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (1005 total)
+### 3.7 Test distribution (1013 total)
 
 
 | file | n | file | n |
@@ -684,13 +684,13 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_protocol_file.py | 20 | test_rate_limit_retry.py | 8 |
 | test_rejection_counter.py | 7 | test_repeat_and_fit_rule.py | 15 |
 | test_research.py | 37 | test_results_log.py | 10 |
-| test_retry_reconciliation.py | 8 | test_review_composition.py | 28 |
+| test_retry_reconciliation.py | 13 | test_review_composition.py | 28 |
 | test_rework_loop.py | 17 | test_routing.py | 62 |
 | test_runtime_dependencies.py | 1 | test_schema_wiring.py | 15 |
 | test_serving_ledger.py | 7 | test_settings.py | 22 |
 | test_shipped_examples.py | 15 | test_specialists.py | 11 |
 | test_structural_roles.py | 13 | test_sweep_budget.py | 21 |
-| test_terminal_on_bound.py | 18 | test_trace_durability.py | 7 |
+| test_terminal_on_bound.py | 21 | test_trace_durability.py | 7 |
 | test_triage.py | 10 | test_verdicts.py | 47 |
 | test_workflow.py | 4 |  |  |
 
@@ -736,7 +736,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1005/1005 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1013/1013 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
@@ -1679,6 +1679,46 @@ the path is proven but what a real independent tier would conclude is not
 measured. All six workflows share the same executor and node kinds — no
 construct is unique to one workflow, so there is no untested surface of
 that kind.
+
+### 6.19 A provider failure is a typed terminal naming the serving (ARCH-20260926-073)
+
+The -071 live run died at validate with `finish_reason=length`,
+`completion_tokens=8000 of max_tokens=8000`, content EMPTY — a reasoning
+model spending its whole budget before emitting, three attempts, zero
+verdicts, 12 calls, $0.0287 (`docs/traces/071-live-terminal-2.jsonl`).
+The unit record already carried `status: blocked` (the B18 terminal fires
+for any exception) — what was missing was a terminal that NAMES the
+failure: the reason read "stopped by the unhandled error: ValueError:
+model returned no text (...)", the generic bucket, not the class.
+
+Two corrections to the command's framing, both from the trace rather
+than the PR body: the content was empty, not truncated — nothing was
+emitted at all — and the failing tier was validate, after an earlier
+engineering call had already burned one 16384/16384 empty reply.
+
+Measured: an all-empty retry sequence now raises `ProviderFailure`
+carrying the tier and provider (`autornd/routing/openrouter.py`), the
+eval runner ends the run `blocked` with the reason naming the tier and
+serving while `stop_reason` keeps how the runner stopped it (Ruling D23
+— separate fields, asserted), and the unit record carries
+`provider_failures` beside `rejections_by_tier`, which stays empty
+because an empty reply is not a schema rejection. A mixed sequence
+(some empty, some malformed) raises the last error unchanged — no
+single class owns it (convention 26). The empty-reply branch already
+retried up to `max_retries=3`: this is a visibility fix, not a
+retry-path fix — no retry added, no budget, model, workflow, verdict
+semantics, gate or threshold changed. Proven by
+`tests/test_terminal_on_bound.py::TestAProviderFailureReachesATypedTerminal`
+(3 tests) and
+`tests/test_retry_reconciliation.py::TestAnExhaustedEmptySequenceIsAProviderFailure`
+(5 tests): 6 of the 8 fail against pre-fix source (the 2 survivors are
+the trace-quotation guard and the no-retry-added assertion, which pass
+by construction).
+
+The command's second question is answered by the ledger, not ruled
+here: GMICloud served validate on -071 and the failure is now counted
+per serving in `provider_failures`, so a future disqualification ruling
+has the reading it needs.
 
 ---
 

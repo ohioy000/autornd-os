@@ -4,7 +4,7 @@ Load when writing tests. Source: `tests/conftest.py` and the 55 test files besid
 
 ## What exists, honestly
 
-- **55 test files, 1005 tests, ~52 s, no network and no spend.** That is
+- **55 test files, 1013 tests, ~52 s, no network and no spend.** That is
 
   deliberate, not incidental: the shape of a workflow, its gates and loops, the
   deterministic checks, the condition language and the eval scoring are all
