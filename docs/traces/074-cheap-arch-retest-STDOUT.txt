@@ -1,0 +1,14 @@
+results: docs/traces/074-cheap-arch-retest.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/074-cheap-arch-retest.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_numeric_consistency     0/1     10  1138.7   run 1/1 — provider failure on tier 'architecture': ProviderFailure: model returned no te
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  10 calls  ·  1138.7s  ·  $0.1531
+spend by tier: architecture $0.1370, engineering $0.0073, search $0.0060, research $0.0023, triage $0.0004
+served by: architecture via Baidu, engineering via Xiaomi, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.1531 of $2.0000
+
