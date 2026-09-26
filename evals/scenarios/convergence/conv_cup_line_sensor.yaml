@@ -1,0 +1,25 @@
+id: conv_cup_line_sensor
+description: >
+  B7-family convergence probe: figures that must agree across sections of one
+  deliverable, with derived arithmetic shown, on a machine-wiring task with a
+  real NPN-vs-PNP trap. Written 2026-09-26 after the first COMPLETED run (084)
+  to test whether the loop generalizes beyond capacity planning.
+request: >
+  Specify the sensor, wiring, and verification for a registration-mark laser
+  sensor on a paper-cup forming machine. The sensor is a Keyence LV-N11N
+  (24 VDC supply, NPN open-collector output, 50 mA current consumption).
+  The cable run from the machine PCB to the sensor head is 3 feet of 22 AWG
+  stranded copper (16.1 ohm per 1000 ft). Cover three sections: a wiring
+  section (supply volts, wire gauge, voltage-drop arithmetic SHOWN as
+  2 x length x resistance x current, output type with NPN-vs-PNP matching
+  against the PCB input), a parts section (part number, supply volts,
+  output type, unit cost estimate), and a commissioning section
+  (powered voltage check at the sensor head, output switching check at
+  line speed, pass thresholds). Every figure that appears in more than one
+  section must agree — supply volts, drop volts, wire gauge, output type,
+  and part number identical everywhere. If the PCB input type (NPN vs PNP)
+  cannot be verified from the request, name it as an explicit unverified
+  assumption rather than asserting either.
+tags: [convergence, b7]
+expect:
+  max_calls: 40
