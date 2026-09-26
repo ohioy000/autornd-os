@@ -1,0 +1,14 @@
+results: docs/traces/073-live-retest-ceiling-wired.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/073-live-retest-ceiling-wired.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_numeric_consistency     0/1     12  1196.3   run 1/1 — stopped at $1.2701 (ceiling $1.0000). By tier: {'triage': 0.0002, 'research': 
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  12 calls  ·  1196.3s  ·  $1.2701
+spend by tier: architecture $1.2532, engineering $0.0082, search $0.0059, research $0.0025, triage $0.0002
+served by: architecture via Alibaba, engineering via Xiaomi, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $1.2701 of $1.0000
+

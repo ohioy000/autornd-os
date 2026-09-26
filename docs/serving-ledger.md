@@ -36,7 +36,7 @@ was never indexed.** This is that index.
 | `architecture` | `deepseek/deepseek-v4-pro` | **StreamLake** | rotated | 1 | 1 | — | 0 |
 | `architecture` | `deepseek/deepseek-v4-pro` | **StreamLake** | pinned | 346 | 285 | blocked 13, escalated 8 | 40 |
 | `architecture` | `z-ai/glm-5.3` | **StreamLake** | pinned | 1 | 0 | — | 1 |
-| `architecture` | `z-ai/glm-5.3-prime` | **Alibaba** | pinned | 1 | 0 | blocked 1 | 0 |
+| `architecture` | `z-ai/glm-5.3-prime` | **Alibaba** | pinned | 2 | 0 | blocked 2 | 0 |
 | `engineering` | `deepseek/deepseek-v4-flash` | **Alibaba** | rotated | 4 | 0 | blocked 2 | 2 |
 | `engineering` | `deepseek/deepseek-v4-flash` | **AtlasCloud** | rotated | 3 | 0 | — | 3 |
 | `engineering` | `deepseek/deepseek-v4-flash` | **Azure** | rotated | 2 | 0 | escalated 1 | 1 |
@@ -61,25 +61,25 @@ was never indexed.** This is that index.
 | `engineering` | `deepseek/deepseek-v4-flash` | **Venice** | rotated | 4 | 0 | blocked 2 | 2 |
 | `engineering` | `deepseek/deepseek-v4-flash` | **Wafer** | rotated | 2 | 0 | — | 2 |
 | `engineering` | `google/gemini-2.5-flash` | **GMICloud** | pinned | 1 | 0 | — | 1 |
-| `engineering` | `xiaomi/mimo-v2.6-flash` | **Xiaomi** | pinned | 1 | 0 | blocked 1 | 0 |
+| `engineering` | `xiaomi/mimo-v2.6-flash` | **Xiaomi** | pinned | 2 | 0 | blocked 2 | 0 |
 | `escalation` | `moonshotai/kimi-k3` | **Chutes** | rotated | 1 | 0 | escalated 1 | 0 |
 | `escalation` | `moonshotai/kimi-k3` | **DeepInfra** | rotated | 2 | 0 | — | 2 |
 | `escalation` | `moonshotai/kimi-k3` | **DigitalOcean** | rotated | 4 | 0 | escalated 1 | 3 |
 | `escalation` | `moonshotai/kimi-k3` | **InferenceNet** | rotated | 1 | 0 | — | 1 |
 | `escalation` | `moonshotai/kimi-k3` | **Modal** | rotated | 2 | 0 | blocked 1 | 1 |
-| `escalation` | `moonshotai/kimi-k3` | **Moonshot AI** | pinned | 6 | 0 | blocked 6 | 0 |
+| `escalation` | `moonshotai/kimi-k3` | **Moonshot AI** | pinned | 7 | 0 | blocked 7 | 0 |
 | `escalation` | `moonshotai/kimi-k3` | **Sail Research** | rotated | 4 | 0 | escalated 1 | 3 |
 | `escalation` | `moonshotai/kimi-k3` | **Together** | rotated | 3 | 0 | blocked 1 | 2 |
-| `premium` | `z-ai/glm-5.3` | **Friendli** | pinned | 6 | 0 | blocked 6 | 0 |
-| `ranker` | `qwen/qwen3-reranker-8b` | **Fireworks** | pinned | 6 | 0 | blocked 6 | 0 |
+| `premium` | `z-ai/glm-5.3` | **Friendli** | pinned | 7 | 0 | blocked 7 | 0 |
+| `ranker` | `qwen/qwen3-reranker-8b` | **Fireworks** | pinned | 7 | 0 | blocked 7 | 0 |
 | `research` | `google/gemini-2.5-flash` | **Google** | rotated | 126 | 68 | blocked 9, escalated 8 | 41 |
-| `research` | `google/gemini-2.5-flash` | **Google** | pinned | 6 | 0 | blocked 6 | 0 |
+| `research` | `google/gemini-2.5-flash` | **Google** | pinned | 7 | 0 | blocked 7 | 0 |
 | `research` | `moonshotai/kimi-k3` | **InferenceNet** | rotated | 1 | 0 | — | 1 |
 | `research` | `moonshotai/kimi-k3` | **Modal** | rotated | 1 | 0 | — | 1 |
 | `search` | `perplexity/sonar` | **Perplexity** | rotated | 54 | 22 | blocked 4, escalated 3 | 25 |
-| `search` | `perplexity/sonar` | **Perplexity** | pinned | 6 | 0 | blocked 6 | 0 |
+| `search` | `perplexity/sonar` | **Perplexity** | pinned | 7 | 0 | blocked 7 | 0 |
 | `search` | `perplexity/sonar-pro` | **Perplexity** | rotated | 30 | 24 | blocked 2, escalated 1 | 3 |
-| `triage` | `deepseek/deepseek-v4-flash` | **Alibaba** | pinned | 352 | 286 | blocked 15, escalated 8 | 43 |
+| `triage` | `deepseek/deepseek-v4-flash` | **Alibaba** | pinned | 353 | 286 | blocked 16, escalated 8 | 43 |
 
 ## How to read it, and how not to
 
