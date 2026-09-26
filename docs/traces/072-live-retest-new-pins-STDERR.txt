@@ -1,0 +1,13 @@
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+JSON parse failed (attempt 1/3) for architecture: Expecting property name enclosed in double quotes: line 1 column 2 (char 1) — raw: {
+
+JSON parse failed (attempt 2/3) for architecture: Expecting property name enclosed in double quotes: line 1 column 2 (char 1) — raw: {
+
+JSON parse failed (attempt 3/3) for architecture: Unterminated string starting at: line 3 column 11 (char 29) — raw: {
+  "ready": true,
+  "plan": "STEP 0 - Fix and publish assumptions. The capacity plan document opens with an assumptions section stating: technology = Oracle Message Queue, where a broker is one broker process (JVM) on one dedicated instance and the message server is the set of broker processes work
+EXIT=1

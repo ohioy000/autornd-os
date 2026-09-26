@@ -396,9 +396,11 @@ class TestEmptyReplyDiagnostics:
         return client
 
     async def test_length_explains_the_reasoning_budget(self, monkeypatch):
+        from autornd.routing.openrouter import ProviderFailure
+
         monkeypatch.setattr("asyncio.sleep", AsyncMock())
         client = self._client("length")
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(ProviderFailure) as exc:
             await client.chat_json(function="architecture", system_prompt="s",
                                    user_message="u", max_retries=2)
         msg = str(exc.value)
@@ -407,9 +409,11 @@ class TestEmptyReplyDiagnostics:
         assert "max_tokens" in msg
 
     async def test_other_empties_name_the_provider(self, monkeypatch):
+        from autornd.routing.openrouter import ProviderFailure
+
         monkeypatch.setattr("asyncio.sleep", AsyncMock())
         client = self._client("stop", provider="Flaky")
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(ProviderFailure) as exc:
             await client.chat_json(function="architecture", system_prompt="s",
                                    user_message="u", max_retries=2)
         assert "provider=Flaky" in str(exc.value)

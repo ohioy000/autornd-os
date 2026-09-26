@@ -216,3 +216,117 @@ class TestTheReportReconciles:
         client.reset_accounting()
         assert client.retry_reconciliation()["total"] == 0
         assert client.retries_by_kind == {}
+
+
+class TestAnExhaustedEmptySequenceIsAProviderFailure:
+    """ARCH-20260926-073 acceptance 2: a truncated-or-empty reply is a
+    distinct, counted, attributed failure class — demonstrated.
+
+    The -071 shape: every attempt consumes its full budget and emits
+    nothing (finish_reason=length, completion == max_tokens), three
+    attempts, zero verdicts. The call must raise ProviderFailure carrying
+    the serving — not the bare ValueError the record still shows — and
+    record one provider_failures entry beside rejections_by_tier, which
+    stays empty because an empty reply is not a schema rejection.
+
+    The command's question 1, answered: a truncated reply does NOT bypass
+    the retry path — the empty-reply branch already retries up to
+    max_retries. So this is a visibility fix (the class is named, counted
+    and attributed), not a retry-path fix — and per the constraint, NO
+    retry was added or changed.
+    """
+
+    async def test_all_empty_raises_provider_failure_naming_the_serving(
+        self, client, monkeypatch
+    ):
+        from autornd.routing.openrouter import ProviderFailure
+
+        _drive(client, monkeypatch, [
+            _reply("", finish_reason="length"),
+            _reply("", finish_reason="length"),
+            _reply("", finish_reason="length"),
+        ])
+        with pytest.raises(ProviderFailure) as exc:
+            await client.chat_json("engineering", "sys", "msg")
+
+        assert exc.value.function == "engineering"
+        assert exc.value.provider == "TestServing"
+        assert exc.value.serving("test-provider/test-model") == (
+            "TestServing/test-provider/test-model")
+        assert "finish_reason=length" in str(exc.value)
+
+    async def test_the_failure_is_recorded_beside_not_inside_rejections(
+        self, client, monkeypatch
+    ):
+        from autornd.routing.openrouter import ProviderFailure
+
+        _drive(client, monkeypatch, [
+            _reply("", finish_reason="length"),
+            _reply("", finish_reason="length"),
+            _reply("", finish_reason="length"),
+        ])
+        with pytest.raises(ProviderFailure):
+            await client.chat_json("engineering", "sys", "msg")
+
+        assert client.rejections_by_function == {}, (
+            "an empty reply is not a schema rejection — acceptance 2 keeps "
+            "the class distinct rather than widening the counter")
+        assert client.rejections_by_provider == {}
+        assert len(client.provider_failures) == 1
+        entry = client.provider_failures[0]
+        assert entry["function"] == "engineering"
+        assert entry["provider"] == "TestServing"
+        assert entry["finish_reason"] == "length"
+        assert entry["attempts"] == 3
+
+    async def test_a_mixed_sequence_raises_the_last_error_unchanged(
+        self, client, monkeypatch
+    ):
+        """No single class owns a mixed sequence (convention 26): one empty
+        reply then two parse failures is not a provider failure."""
+        from autornd.routing.openrouter import ProviderFailure
+
+        _drive(client, monkeypatch, [
+            _reply("", finish_reason="length"),
+            _reply("not json"),
+            _reply("not json either"),
+        ])
+        with pytest.raises(ValueError) as exc:
+            await client.chat_json("engineering", "sys", "msg")
+
+        assert not isinstance(exc.value, ProviderFailure)
+        assert client.provider_failures == []
+
+    async def test_a_recovered_call_records_no_failure(
+        self, client, monkeypatch
+    ):
+        """Per-call tracking (empty_attempts), not client history: a call
+        that parses after one empty reply leaves no provider_failures entry,
+        and a LATER exhausted call records exactly one — not two."""
+        from autornd.routing.openrouter import ProviderFailure
+
+        _drive(client, monkeypatch, [
+            _reply("", finish_reason="length"),
+            _reply(json.dumps({"ok": True})),
+            _reply("", finish_reason="length"),
+            _reply("", finish_reason="length"),
+            _reply("", finish_reason="length"),
+        ])
+        parsed, _ = await client.chat_json("engineering", "sys", "msg")
+        assert parsed == {"ok": True}
+        assert client.provider_failures == []
+
+        with pytest.raises(ProviderFailure):
+            await client.chat_json("engineering", "sys", "msg")
+        assert len(client.provider_failures) == 1
+
+    async def test_no_retry_added_or_changed(self, client, monkeypatch):
+        """Acceptance 5 (partial): the retry budget is untouched — the same
+        max_retries=3 path the schema rejections already used."""
+        import inspect
+
+        from autornd.routing import openrouter as or_mod
+
+        params = inspect.signature(or_mod.OpenRouterClient.chat_json).parameters
+        assert params["max_retries"].default == 3
+        assert or_mod.OpenRouterClient.RETRY_EMPTY_REPLY == "empty_reply"

@@ -91,7 +91,7 @@ class Node:
     specialist: str | None = None
     prompt: str | None = None
     schema: str | None = None
-    max_tokens: int | None = None
+    max_tokens: int | str | None = None
 
     # ── check ──
     check: str | None = None
