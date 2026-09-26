@@ -1,0 +1,10 @@
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Response did not match PlanVerdict (attempt 1/3) for architecture: 1 validation error for PlanVerdict
+cost_estimate
+  Input should be a valid number [type=float_type, input_value={'currency': 'USD', 'per_...(3x 4,200 msg/s peak).'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/float_type
+EXIT=1

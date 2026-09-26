@@ -1,0 +1,14 @@
+results: docs/traces/080-inkling-full.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/080-inkling-full.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_numeric_consistency     0/1      7   313.2   run 1/1 — HTTPStatusError: 404 from chat/completions: No endpoints found for xiaomi/mimo
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  7 calls  ·  313.2s  ·  $0.0331
+spend by tier: architecture $0.0242, search $0.0060, research $0.0026, triage $0.0004
+served by: architecture via DeepInfra, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.0331 of $2.0000
+
