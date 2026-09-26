@@ -1,0 +1,1 @@
+{"command_id": "ARCH-20260926-078", "delivery_state": null, "deviations": [], "executed": "2026-09-26", "head_after": null, "head_before": "a94ac41", "questions_for_advisor": [], "results": {"ruling": "OPTION B, ruled by the owner in-session before execution (recorded in command file transport_note)."}, "status": "IN_PROGRESS"}
