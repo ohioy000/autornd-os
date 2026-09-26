@@ -1,0 +1,14 @@
+results: docs/traces/078-alibaba-door.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/078-alibaba-door.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_numeric_consistency     0/1      4    25.0   run 1/1 — HTTPStatusError: 404 from chat/completions: No endpoints found for z-ai/glm-5.
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  4 calls  ·  25.0s  ·  $0.0087
+spend by tier: search $0.0061, research $0.0022, triage $0.0004
+served by: research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.0087 of $2.0000
+
