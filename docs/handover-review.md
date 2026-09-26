@@ -8825,3 +8825,41 @@ example+roster). (2) -078's ruling arrived in-session with the
 command text ("awe do option b"), recorded in transport_note rather
 than a separate ruling commit — the owner's words, not the
 executor's choice.
+
+## 79. ARCH-20260926-072 — D29/D30/D31 + credential disposition (executor, 2026-09-26)
+
+The batch's one process command (D30's own budget — no split, no new
+command for the third item). Documentation only, $0.00, no code/run/key.
+Preconditions: HEAD `7679feb` (matches, no divergence); §3.6 warning
+quoted verbatim (the only ACTION REQUIRED in the file); guard files
+present; suite 1018 green before.
+
+Ruling D29 — delete what cannot be verified, do not guard it. A fact about the tree you are on can be verified on that tree. A fact about a relationship to another ref cannot be verified before you merge, and a guard for it will either pass vacuously, fail on a correct value, or be unsatisfiable. Four rulings (D18, D19, D20, D27) and half a working day were spent guarding one such fact; deleting it took one commit. When a guard has failed twice for different reasons, the question is not how to guard it third, but whether the fact belongs in the document at all.
+
+Ruling D30 — the process budget. At most one instrument or process command per batch, and it must name what it prevents rather than what it enforces. A second process command in a batch requires stating why the first was insufficient. Product commands are unbounded. First exhibit: ARCH-20260925-064, -065 and -069 were issued in three consecutive turns, one of which existed only to correct the ruling before it.
+
+Ruling D31 — a security warning has a lifecycle or it has no value. HANDOVER.md section 3.6 carried an ACTION REQUIRED warning naming two GitHub PATs and three OpenRouter keys. The credentials were rotated several times; the warning read identically throughout, and was reported as an outstanding owner action for a week by a reader who had no way to tell it had been satisfied. A warning that outlives its exposure trains its readers to ignore warnings; a warning removed before the exposure is closed hides one. It must therefore state what was exposed, what was done, and when — so a reader can see it is closed — and it is superseded by a dated note rather than deleted.
+
+Recorded in HANDOVER.md (D29/D30/D31 where rulings live — placed
+alongside D27/D28's record; §3.6 disposition) and AGENTS.md (grant +
+no-stacking). Loop cost without blame: four rulings on one two-line
+block, two guards failing on correct input (`6057a193`: CI has no
+local main; `58138380`: CI has no committer identity — DID NOT
+RAISE), five PRs stacked behind a moving main, half a working day;
+the advisor authored the three consecutive process commands and the
+failed rulings. Credential staleness is the second exhibit of the
+same class: a note that could neither pass nor fail, only linger.
+
+Credential disposition (owner-stated 2026-09-26, written as stated):
+FALSE ALARM — the "three credentials" were an advisory-model
+misread; no live secret crossed, none reached git (history +
+dangling + tree sweep, §78). No rotation required, none claimed, no
+date asserted. Revocable: if any credential is shown exposed, the
+disposition is revoked and the warning re-opens with a date.
+Answers the command's Q1 (no date — unknown, asked, answered as
+false-alarm), Q2 (sole ACTION REQUIRED item), Q3 (transcript-only;
+history says otherwise nowhere — stated as the sweep's finding, not
+as assumption).
+
+No guard, no test file, no executable touched — asserted by diff
+below. Counts re-derived, suite before/after equal to stamped 1018.
