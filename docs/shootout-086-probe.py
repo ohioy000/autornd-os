@@ -108,15 +108,33 @@ async def ask(client, model, order, qid, question):
 async def main():
     client = OpenRouterClient()
     client.spend_ceiling = 1.00
-    records = []
     total = 0.0
-    # Alternate servings per question (K,G,K,G...) — no time-of-night bias.
-    order = ["kimi-k3", "gemini-3.8-flash"] * 3
-    calls = [(qid, s) for (qid, _), s in zip(QUESTIONS, order)]
+    # Full 3x2 matrix, alternating servings per question (K,G / G,K / K,G —
+    # no time-of-night bias). Missing-only mode: skips calls already in OUT.
+    have = set()
+    if os.path.exists(OUT):
+        for line in open(OUT):
+            line = line.strip()
+            if line:
+                try:
+                    d = json.loads(line)
+                    have.add((d["qid"], d["model"]))
+                except Exception:
+                    pass
+    calls = []
+    for i, (qid, _) in enumerate(QUESTIONS):
+        pair = ["kimi-k3", "gemini-3.8-flash"] if i % 2 == 0 else [
+            "gemini-3.8-flash", "kimi-k3"]
+        for side in pair:
+            calls.append((qid, side))
     qmap = dict(QUESTIONS)
-    with open(OUT, "w") as f:
+    with open(OUT, "a") as f:
         for qid, side in calls:
             model, pin = SERVINGS[side]
+            if (qid, model) in have:
+                print(f"skip {qid} -> {side} (already recorded)",
+                      flush=True)
+                continue
             print(f"asking {qid} -> {side} ...", flush=True)
             try:
                 rec, cost = await ask(client, model, pin, qid, qmap[qid])
