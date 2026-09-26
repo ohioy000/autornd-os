@@ -1,0 +1,14 @@
+results: docs/traces/087-backfill-migration.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/087-backfill-migration.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_backfill_migration      1/1     26  1088.9   
+--------------------------------------------------------------------------------------------
+1/1 scenarios passed every repetition  ·  26 calls  ·  1088.9s  ·  $0.3147
+spend by tier: engineering $0.1924, escalation $0.0748, architecture $0.0375, search $0.0060, research $0.0037, triage $0.0004
+served by: architecture via DeepInfra, engineering via StreamLake, escalation via Moonshot AI, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.3147 of $2.0000
+

@@ -1,0 +1,16 @@
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Response did not match ImplementVerdict (attempt 1/3) for engineering: 2 validation errors for ImplementVerdict
+blocked_on.0
+  Input should be a valid string [type=string_type, input_value={'criterion': 'The verifi...n cannot be satisfied.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_type
+blocked_on.1
+  Input should be a valid string [type=string_type, input_value={'criterion': 'Post-migra... validated in staging.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_type
+Response did not match ImplementVerdict (attempt 2/3) for engineering: 1 validation error for ImplementVerdict
+  Value error, a red verdict must name its cause in red_cause [type=value_error, input_value={'done': True, 'green': F...s\n- Total: ~12.6 days"}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/value_error
+EXIT=0
