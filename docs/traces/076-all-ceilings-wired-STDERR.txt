@@ -1,0 +1,7 @@
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Lookup failed for '1. The specific message queue technology to be used.\n2. The ': 400 from chat/completions: This endpoint's maximum context length is 127072 tokens. However, you requested about 200513 tokens (513 of text input, 200000 in the output). Please reduce the length of either one, or use the context-compression plugin to compress your prompt automatically.
+EXIT=1

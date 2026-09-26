@@ -1,0 +1,15 @@
+results: docs/traces/076-all-ceilings-wired.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/076-all-ceilings-wired.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_numeric_consistency     0/1      3    15.1   run 1/1 — HTTPStatusError: 404 from chat/completions: No endpoints found for z-ai/glm-5.
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  3 calls  ·  15.1s  ·  $0.0030
+spend by tier: research $0.0027, triage $0.0003
+!! 1 lookup(s) refused across 1 unit(s) — their scores are not a measurement of the model
+served by: research via Google, triage via Alibaba
+
+sweep budget: $0.0030 of $2.0000
+
