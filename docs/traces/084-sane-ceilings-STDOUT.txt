@@ -1,0 +1,14 @@
+results: docs/traces/084-sane-ceilings.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/084-sane-ceilings.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_numeric_consistency     1/1      9   204.9   
+--------------------------------------------------------------------------------------------
+1/1 scenarios passed every repetition  ·  9 calls  ·  204.9s  ·  $0.0573
+spend by tier: engineering $0.0283, architecture $0.0207, search $0.0060, research $0.0022, triage $0.0001
+served by: architecture via DeepInfra, engineering via StreamLake, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.0573 of $2.0000
+

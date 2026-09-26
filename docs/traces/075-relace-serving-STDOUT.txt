@@ -1,0 +1,14 @@
+results: docs/traces/075-relace-serving.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/075-relace-serving.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_numeric_consistency     0/1      8   279.2   run 1/1 — provider failure on tier 'architecture': ProviderFailure: model returned no te
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  8 calls  ·  279.2s  ·  $0.1609
+spend by tier: architecture $0.1521, search $0.0060, research $0.0025, triage $0.0003
+served by: architecture via Relace, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.1609 of $2.0000
+

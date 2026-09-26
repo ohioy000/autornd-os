@@ -48,6 +48,26 @@ class ModelResponse:
 
 
 
+def provider_fallbacks_allowed() -> bool:
+    """Whether a pinned tier may fail over beyond its pin.
+
+    Measured 2026-09-26 (probe, committed in the 082 record): the same
+    112768-token ask to `z-ai/glm-5` pinned to StreamLake 404s with
+    `allow_fallbacks: False` (Context Length filter strips the pin, zero
+    candidates remain) and serves first try with `allow_fallbacks: True`
+    — through StreamLake itself. The killer was never the ceiling, the
+    model, or the provider; it was fallback-off meeting the filter.
+
+    Hard pins stay the default (reproducibility — §6.1 measured why).
+    Setting this opens preferred-first failover: the pin is still tried
+    first, but the router may serve beyond it instead of 404ing. Who
+    answers is recorded per call (`providers_by_function`), so the
+    ledger keeps attribution and a failover run reads as one.
+    """
+    raw = (settings.openrouter_provider_fallbacks or "").strip().lower()
+    return raw in ("1", "true", "yes", "on")
+
+
 def provider_order_for(function: str) -> list[str]:
     """Which providers may serve this tier, highest preference first.
 
@@ -420,7 +440,10 @@ class OpenRouterClient:
         # reproducible or when quality has been measured.
         order = provider_order_for(function)
         if order:
-            payload["provider"] = {"order": order, "allow_fallbacks": False}
+            payload["provider"] = {
+                "order": order,
+                "allow_fallbacks": provider_fallbacks_allowed(),
+            }
 
         client = await self._get_client()
         resp = await client.post("/chat/completions", json=payload)

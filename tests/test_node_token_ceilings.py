@@ -137,3 +137,104 @@ class TestNodeCeilingsReachTheirCalls:
                      max_tokens="validate_max_tokens"),
                 _validate_state())
         assert run.await_args.kwargs["max_tokens"] == 28000
+
+    async def test_the_implement_node_ceiling_reaches_run_implement(
+            self, monkeypatch):
+        """074/075's defect: the rework implement died at 16k with 112k
+        configured — same unwired class as plan on 072, one phase later."""
+        from autornd import config
+
+        monkeypatch.setattr(config.settings, "plan_max_tokens", 112768)
+        runner = PhaseRunner(client=OpenRouterClient(api_key="test"))
+        verdict = ImplementVerdict(done=True, green=True, summary="s",
+                                   iteration=1)
+        with patch("autornd.engine.phases.run_implement",
+                   new=AsyncMock(return_value=(verdict, [_ok_response()]))) as run:
+            await runner._phase_implement(
+                Node(id="implement", kind=NodeKind.AI,
+                     max_tokens="plan_max_tokens"),
+                _validate_state())
+        assert run.await_args.kwargs["max_tokens"] == 112768
+
+    async def test_the_review_node_ceiling_reaches_run_review(
+            self, monkeypatch):
+        """073's defect: two reviewers truncated at 16k, tripping the $1.00
+        ceiling at $1.27 with a green build in hand."""
+        from autornd import config
+        from autornd.models.verdicts import ReviewVerdict
+
+        monkeypatch.setattr(config.settings, "plan_max_tokens", 112768)
+        runner = PhaseRunner(client=OpenRouterClient(api_key="test"))
+        verdict = ReviewVerdict(ship=True, findings=[], verdict="ok")
+        with patch("autornd.engine.phases.run_review",
+                   new=AsyncMock(return_value=(verdict, [_ok_response()]))) as run:
+            await runner._phase_review(
+                Node(id="review", kind=NodeKind.AI,
+                     max_tokens="plan_max_tokens"),
+                _validate_state())
+        assert run.await_args.kwargs["max_tokens"] == 112768
+
+    async def test_implement_resolves_to_the_setting_without_a_node_ceiling(
+            self, monkeypatch):
+        """A node without max_tokens still gets the phase default, not the
+        client default — same floor rule as plan."""
+        import json
+
+        from autornd import config
+        from autornd.engine import phases
+        from autornd.specialists.registry import get_specialist
+
+        monkeypatch.setattr(config.settings, "plan_max_tokens", 32768)
+        client = OpenRouterClient(api_key="test")
+        seen: dict = {}
+
+        async def chat_json(function, system_prompt, user_message, **kw):
+            seen.update(kw)
+            client._account(function, 0.001)
+            reply = {"done": True, "green": True, "red_cause": None,
+                     "summary": "s", "iteration": 1}
+            return dict(reply), ModelResponse(
+                content=json.dumps(reply), model="mock",
+                prompt_tokens=1, completion_tokens=1, cost=0.001)
+
+        client.chat_json = AsyncMock(side_effect=chat_json)
+        plan = PlanVerdict(ready=True, plan="p",
+                           success_criteria=["Backoff capped at 60s"])
+        await phases.run_implement(
+            client, "add retry", plan,
+            [get_specialist("backend_engineer")], iteration=1)
+        assert seen["max_tokens"] == 32768
+
+    async def test_review_resolves_to_the_setting_without_a_node_ceiling(
+            self, monkeypatch):
+        """Reviewers' Specialist.run calls carry the setting when the node
+        names none — the 073 truncation must not recur by default."""
+        import json
+
+        from autornd import config
+        from autornd.engine import phases
+        from autornd.specialists.registry import get_specialist
+
+        monkeypatch.setattr(config.settings, "plan_max_tokens", 32768)
+        client = OpenRouterClient(api_key="test")
+        seen: dict = {}
+
+        async def chat_json(function, system_prompt, user_message, **kw):
+            seen.update(kw)
+            client._account(function, 0.001)
+            reply = {"ship": True, "findings": [], "verdict": "ok"}
+            return dict(reply), ModelResponse(
+                content=json.dumps(reply), model="mock",
+                prompt_tokens=1, completion_tokens=1, cost=0.001)
+
+        client.chat_json = AsyncMock(side_effect=chat_json)
+        plan = PlanVerdict(ready=True, plan="p",
+                           success_criteria=["Backoff capped at 60s"])
+        impl = ImplementVerdict(done=True, green=True, summary="s",
+                                iteration=1)
+        triage = TriageVerdict(domains=["backend"], risk="medium",
+                               specialists=["backend_engineer"], summary="s")
+        await phases.run_review(
+            client, "add retry", triage, plan, impl,
+            [get_specialist("backend_engineer")], "")
+        assert seen["max_tokens"] == 32768

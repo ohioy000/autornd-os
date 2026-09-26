@@ -1,0 +1,12 @@
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Empty content from z-ai/glm-5.3 via Relace (finish_reason=length, completion_tokens=16384, max_tokens=16384)
+Empty reply (attempt 1/3) for architecture: model returned no text (provider=Relace, finish_reason=length, completion_tokens=16384 of max_tokens=16384 — a reasoning model can spend its whole budget before emitting an answer; raise max_tokens or use a non-reasoning model for this tier)
+Empty content from z-ai/glm-5.3 via Relace (finish_reason=length, completion_tokens=16384, max_tokens=16384)
+Empty reply (attempt 2/3) for architecture: model returned no text (provider=Relace, finish_reason=length, completion_tokens=16384 of max_tokens=16384 — a reasoning model can spend its whole budget before emitting an answer; raise max_tokens or use a non-reasoning model for this tier)
+Empty content from z-ai/glm-5.3 via Relace (finish_reason=length, completion_tokens=16384, max_tokens=16384)
+Empty reply (attempt 3/3) for architecture: model returned no text (provider=Relace, finish_reason=length, completion_tokens=16384 of max_tokens=16384 — a reasoning model can spend its whole budget before emitting an answer; raise max_tokens or use a non-reasoning model for this tier)
+EXIT=1

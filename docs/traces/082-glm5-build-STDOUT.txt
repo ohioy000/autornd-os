@@ -1,0 +1,14 @@
+results: docs/traces/082-glm5-build.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/082-glm5-build.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_numeric_consistency     0/1      6    89.9   run 1/1 — HTTPStatusError: 404 from chat/completions: No endpoints found for z-ai/glm-5.
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  6 calls  ·  89.9s  ·  $0.0239
+spend by tier: architecture $0.0154, search $0.0062, research $0.0021, triage $0.0003
+served by: architecture via DeepInfra, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.0239 of $2.0000
+

@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1013 · **Date of this snapshot:** 2026-09-25, counts re-derived against the tree under test
+**Tests:** 1018 · **Date of this snapshot:** 2026-09-25, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -268,7 +268,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      55 files, 1013 tests
+tests/                      55 files, 1018 tests
 
 ```
 
@@ -660,7 +660,7 @@ working conversation during development and **must be rotated**: two GitHub PATs
 (one read-only, one write) and **three** OpenRouter API keys (two expired, one
 live and currently in the untracked local `.env`). None are in git history.
 
-### 3.7 Test distribution (1013 total)
+### 3.7 Test distribution (1018 total)
 
 
 | file | n | file | n |
@@ -677,7 +677,7 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_guards_can_fail.py | 9 | test_handoff_scheduler.py | 4 |
 | test_handover_truth.py | 8 | test_iteration_dissent.py | 5 |
 | test_knowledge.py | 41 | test_lead_review.py | 9 |
-| test_live_wiring.py | 7 | test_node_token_ceilings.py | 4 |
+| test_live_wiring.py | 7 | test_node_token_ceilings.py | 8 |
 | test_phase_timing.py | 3 | test_preflight.py | 20 |
 | test_preregistration_precedence.py | 9 | test_profiles.py | 23 |
 | test_prohibition_phrasing.py | 20 | test_prohibition_scenario.py | 15 |
@@ -685,7 +685,7 @@ live and currently in the untracked local `.env`). None are in git history.
 | test_rejection_counter.py | 7 | test_repeat_and_fit_rule.py | 15 |
 | test_research.py | 37 | test_results_log.py | 10 |
 | test_retry_reconciliation.py | 13 | test_review_composition.py | 28 |
-| test_rework_loop.py | 17 | test_routing.py | 62 |
+| test_rework_loop.py | 17 | test_routing.py | 63 |
 | test_runtime_dependencies.py | 1 | test_schema_wiring.py | 15 |
 | test_serving_ledger.py | 7 | test_settings.py | 22 |
 | test_shipped_examples.py | 15 | test_specialists.py | 11 |
@@ -736,7 +736,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1013/1013 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1018/1018 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

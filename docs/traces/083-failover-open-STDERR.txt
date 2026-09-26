@@ -1,0 +1,7 @@
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+Knowledge collection not found — run ingestion first
+400 with response_format for z-ai/glm-5 — retrying without it. Body: {"error":{"message":"This endpoint's maximum context length is 202752 tokens. However, you requested about 256318 tokens (6318 of text input, 250000 in the output). Please reduce the length of either one, or use the context-compression plugin to compress your prompt automatically.","code":400,"metad
+EXIT=1
