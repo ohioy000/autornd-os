@@ -1,0 +1,14 @@
+results: docs/traces/079-inkling-probe.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/079-inkling-probe.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: plan-probe   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_numeric_consistency     1/1      5   175.2   
+--------------------------------------------------------------------------------------------
+1/1 scenarios passed every repetition  ·  5 calls  ·  175.2s  ·  $0.0198
+spend by tier: architecture $0.0113, search $0.0059, research $0.0024, triage $0.0002
+served by: architecture via DeepInfra, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.0198 of $0.5000
+
