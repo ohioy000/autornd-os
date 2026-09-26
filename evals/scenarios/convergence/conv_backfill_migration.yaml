@@ -1,0 +1,22 @@
+id: conv_backfill_migration
+description: >
+  Convergence probe: phased migration design with gates, derived batch
+  arithmetic, and a required verification query. Long-form deliverable
+  with a word band and a prohibition constraint.
+request: >
+  A 2.1-billion-row events table needs a region_code column backfilled
+  from a join against a 6M-row lookup, then made NOT NULL. The service
+  is read-write 24/7, batch windows do not exist, and the table has 14
+  indexes. Backfill at full scan speed would saturate input/output
+  operations for 9 hours. Design the migration in phases with explicit
+  gates between them: expand, backfill in bounded batches, verify,
+  contract. Give the batch size derivation from the input/output budget,
+  the dual-write or trigger strategy during backfill and its failure
+  mode, the verification query that proves completeness before the NOT
+  NULL constraint, and the abort criteria per phase. State the total
+  elapsed wall-clock at the chosen batch size. Between 1,000 and 1,350
+  words, and name no vendor product names — describe mechanisms
+  generically. The answer must contain a verification query.
+tags: [convergence]
+expect:
+  max_calls: 40

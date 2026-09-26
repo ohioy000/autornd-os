@@ -1,0 +1,14 @@
+results: docs/traces/087-pool-sizing.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/087-pool-sizing.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_pool_sizing             0/1     42  1501.4   run 1/1, max_calls 1/1 — stopped at 42 model calls (ceiling 41); raise max_calls on the 
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  42 calls  ·  1501.4s  ·  $0.4890
+spend by tier: engineering $0.2741, escalation $0.1138, architecture $0.0916, search $0.0063, research $0.0027, triage $0.0004
+served by: architecture via DeepInfra, engineering via StreamLake, escalation via Moonshot AI, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.4890 of $2.0000
+

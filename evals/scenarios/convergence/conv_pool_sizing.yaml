@@ -1,0 +1,23 @@
+id: conv_pool_sizing
+description: >
+  Convergence probe: figures that must agree across sections of one
+  deliverable, with derived arithmetic shown. Backend capacity sizing with
+  hard numeric constraints (workers, connections, memory, timeouts).
+request: >
+  A FastAPI service runs 24 Uvicorn workers behind a load balancer, each
+  with an async SQLAlchemy engine against PostgreSQL 16 (max_connections
+  400, connection pooler in transaction mode not yet deployed). Under load
+  testing at 3x projected peak the service saturates the pool and 11% of
+  requests hit a 30-second pool timeout. Container memory limit is 2 GiB
+  and current RSS is 780 MiB per worker. Determine the pool size per
+  worker, the overflow policy, the timeout values, and whether the pooler
+  should be introduced before or after the pool change, with the
+  arithmetic shown. Give the expected connection count at steady state
+  and at saturation, and the specific metric that would prove the sizing
+  wrong. Every figure that appears in more than one section must agree.
+  The answer must not exceed 900 words and must include at least three
+  distinct numeric derivations. The answer must name the pool timeout
+  and the pooler explicitly.
+tags: [convergence]
+expect:
+  max_calls: 40
