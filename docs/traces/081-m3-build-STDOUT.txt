@@ -1,0 +1,14 @@
+results: docs/traces/081-m3-build.jsonl
+mirrored: /home/jb/.local/state/autornd/traces/autornd-os/081-m3-build.jsonl  (outside the repo — no git operation here can reach it)
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_numeric_consistency     0/1      6    94.0   run 1/1 — HTTPStatusError: 429 from chat/completions: Provider returned error — minimax/
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  6 calls  ·  94.0s  ·  $0.0263
+spend by tier: architecture $0.0177, search $0.0060, research $0.0023, triage $0.0003
+served by: architecture via DeepInfra, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.0263 of $2.0000
+
