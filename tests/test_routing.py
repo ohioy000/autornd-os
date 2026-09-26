@@ -717,7 +717,15 @@ class TestProviderPinning:
 
     async def test_a_pin_disables_fallbacks_by_default(self, monkeypatch):
         """A pin that silently falls back to someone else is not a pin —
-        unless the owner says so. Default keeps the hard pin (reproducibility)."""
+        unless the owner says so. Default keeps the hard pin (reproducibility).
+
+        The flag is read from ambient settings, so the default is pinned
+        explicitly here — an owner .env with fallbacks open must not leak
+        into the hermetic default (measured 2026-09-26: exactly that).
+        """
+        from autornd.config import settings
+
+        monkeypatch.setattr(settings, "openrouter_provider_fallbacks", "")
         payload = await self._payload(monkeypatch, "OpenInference, StreamLake")
         assert payload["provider"] == {
             "order": ["OpenInference", "StreamLake"], "allow_fallbacks": False}
