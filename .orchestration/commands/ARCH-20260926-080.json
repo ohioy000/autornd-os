@@ -1,0 +1,74 @@
+{
+  "command_id": "ARCH-20260926-080",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Record Ruling D33 and make the implement node revise its own prior artifact on every iteration after the first, rather than regenerating from the plan.",
+  "evidence": [
+    "run_implement signature — request, plan, specialists, iteration, red_cause, resolution_directive, context, primary_domain, evidence, review_findings, unmet_criteria, max_tokens — no prior-artifact parameter",
+    "phases.py prompt construction — 'Produce the implementation for the following plan. This is iteration {iteration}.' with a feedback block of resolution_directive + red_cause + unmet_criteria + validate_evidence + review_findings",
+    "executor grep, 2026-09-26 — 'the previous iteration's summary — the actual artifact where kappa=17.99 lives — is never passed in'",
+    ".orchestration/responses/ARCH-20260925-049.response.json — iteration 1 build all green; iteration 2 rework not agreed with consistency dissenting — a green build went red after a blind re-implement, the same regeneration class",
+    "pull:#92 — pool BLOCKED at 42 calls / $0.80, plan defended 384-against-400; Fable solved the class for $1.35",
+    "Ruling D21 (as recorded) — recovery must carry the failure forward; the diagnosis fields are already present and are not the gap",
+    "AGENTS.md — the permission boundary: prompt text that steers judgment is a behaviour change and needs a ruling",
+    "AGENTS.md convention 21 — exhibits precede leniency; the exhibit is the kappa case and the -049 regression"
+  ],
+  "scope": {
+    "include": ["autornd/engine/phases.py", "tests/", "workflows/engineering-rnd.yaml"],
+    "exclude": ["autornd/graph/checks.py", "autornd/routing/", "evals/results/**"]
+  },
+  "constraints": [
+    "RULED BEHAVIOUR CHANGE (Ruling D33). The ruling is recorded in the notebook BEFORE the implementation, and precedes it in the commit order.",
+    "RULING D33, COMMITTED VERBATIM: 'Ruling D33 — the implement node revises its own prior artifact; it does not regenerate. On every iteration after the first, run_implement must receive the previous iteration implement.summary verbatim, and its instruction must change from producing an implementation to revising one: preserve what the criteria judged correct, and change only what the diagnosis and the unmet criteria require. Passing the artifact while leaving the instruction as produce is not this ruling and does not test it, because a model told to produce will regenerate regardless of what it is shown, and a failure under that condition would be a false negative that misdirects to the expensive remedy. Rationale: run_implement carries no prior-artifact parameter, so the fixer never sees the artifact containing the failure it is told to fix; the instruction to address a specific value is unactionable when the artifact containing that value is not in the prompt. The measured consequence is a fresh generation and a new roll of the consistency dice, which is the observed re-introduce-the-same-class behaviour. This is a behaviour change and it is ruled here.'",
+    "FIRST, VERIFY AVAILABILITY, not just the signature: confirm the previous iteration's implement.summary is still present in state.outputs when iteration 2's implement phase runs. If the loop clears or overwrites outputs between iterations, say so — the fix then needs state to carry the artifact forward, and that is a larger change than this command describes.",
+    "ITERATION 1 IS UNCHANGED. There is no prior artifact and no revision instruction on the first pass. Assert this.",
+    "THE REVISION INSTRUCTION MUST BE EXPLICIT about preserving what passed, not only about fixing what failed. A vague revise encourages a rewrite. State the instruction you implemented, verbatim, in the response.",
+    "The existing diagnosis fields are already correct and complete — red_cause, per-criterion validate_evidence, unmet_criteria, review_findings, resolution_directive. Do NOT change them. This ruling adds one input and changes one instruction; nothing else moves.",
+    "REPORT THE PROMPT-SIZE DELTA: the artifact is prose and is now added on every iteration after the first. Report the input-token increase per iteration at the observed artifact size. If the artifact can be large enough to threaten a context limit, say so and state the limit — do not silently truncate.",
+    "Do NOT change the model, the tier, any threshold, any bound, any gate, or any other phase. This is a prompt-shape change on one node.",
+    "Provider-free test: assert iteration 1's prompt carries no prior artifact, and iteration 2's prompt carries the prior artifact verbatim plus the revision instruction. Prove it by breaking it — remove the artifact and show the assertion fail (convention 22).",
+    "Do NOT run anything paid in this command. The discriminating run is its own command.",
+    "Keep the diff small. Suite reported before and after."
+  ],
+  "acceptance_criteria": [
+    "Ruling D33 appears verbatim in the notebook and precedes the implementation in the commit order.",
+    "The prior artifact's availability at iteration 2 is confirmed from state, not assumed from the signature.",
+    "Iteration 2's prompt contains the previous implement.summary verbatim and a revision instruction; both demonstrated by a provider-free test.",
+    "The revision instruction is quoted verbatim in the response and explicitly preserves what passed.",
+    "Iteration 1's prompt is unchanged — asserted.",
+    "The existing diagnosis fields are unchanged — asserted.",
+    "The prompt-size delta per iteration is reported with the observed artifact size.",
+    "No model, tier, threshold, bound, gate or other phase changed.",
+    "No paid call was made — asserted.",
+    "Suite count reported before and after."
+  ],
+  "verification": [
+    {"command": "grep -n 'Ruling D33' docs/handover-review.md HANDOVER.md", "expected": "Present in both."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q -k 'prior_artifact or revise or implement_prompt'", "expected": "The iteration-1 and iteration-2 assertions both pass."},
+    {"command": "git diff --stat -- workflows/ autornd/routing/", "expected": "Empty — no routing, tier or workflow change."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count reported before and after."}
+  ],
+  "rollback": "Revert the commit; implement returns to regenerating from the plan with no prior artifact, and the kappa class returns.",
+  "deliverable": {
+    "branch": "arch/20260926-080-implement-revises",
+    "branch_created_by": "executor",
+    "pr": true,
+    "merge": "merge-on-green, per the grant recorded by ARCH-20260926-072",
+    "commit_style": "conventional"
+  },
+  "transport": "Commit this command file verbatim as carriage before executing; commit the response IN_PROGRESS first, then update it in place. delivery_state must carry the PR number per Ruling D16.",
+  "assumptions": [
+    "The previous iteration's implement.summary is retained in state at iteration 2. If it is not, the finding is that the artifact must be carried, and this command stops and reports rather than widening."
+  ],
+  "questions": [
+    "Is the artifact available at iteration 2, or cleared between iterations? This is the precondition that decides whether D33 is a prompt change or a state change.",
+    "Should the revision instruction name the specific criterion and value, given the artifact is now present — 'line X states kappa=17.99 against your threshold 17' — or stay generic and let the model locate it? Naming it is more likely to produce a local edit, but it presumes the diagnosis identified the location, which validate may not have."
+  ],
+  "preconditions": [
+    {"command": "git rev-parse --short HEAD", "expected": "Record the sha; name any divergence rather than assuming."},
+    {"command": "grep -n 'def run_implement' -A 20 autornd/engine/phases.py", "expected": "The signature and the prompt construction, quoted verbatim."},
+    {"command": "grep -n 'implement.summary\\|outputs\\[' autornd/graph/executor.py | head -20", "expected": "Establish whether outputs persist across iterations; record what is found."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green before the change; record the count."}
+  ]
+}
