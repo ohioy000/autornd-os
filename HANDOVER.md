@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1021 · **Date of this snapshot:** 2026-09-26, counts re-derived against the tree under test
+**Tests:** 1024 · **Date of this snapshot:** 2026-09-26, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -12,6 +12,8 @@
 > **Ruling D31 (2026-09-26):** a security warning has a lifecycle or it has no value. HANDOVER.md section 3.6 carried an ACTION REQUIRED warning naming two GitHub PATs and three OpenRouter keys. The credentials were rotated several times; the warning read identically throughout, and was reported as an outstanding owner action for a week by a reader who had no way to tell it had been satisfied. A warning that outlives its exposure trains its readers to ignore warnings; a warning removed before the exposure is closed hides one. It must therefore state what was exposed, what was done, and when — so a reader can see it is closed — and it is superseded by a dated note rather than deleted.
 
 > **Ruling D33 (2026-09-26):** the implement node revises its own prior artifact; it does not regenerate. On every iteration after the first, run_implement must receive the previous iteration implement.summary verbatim, and its instruction must change from producing an implementation to revising one: preserve what the criteria judged correct, and change only what the diagnosis and the unmet criteria require. Passing the artifact while leaving the instruction as produce is not this ruling and does not test it, because a model told to produce will regenerate regardless of what it is shown, and a failure under that condition would be a false negative that misdirects to the expensive remedy. Rationale: run_implement carries no prior-artifact parameter, so the fixer never sees the artifact containing the failure it is told to fix; the instruction to address a specific value is unactionable when the artifact containing that value is not in the prompt. The measured consequence is a fresh generation and a new roll of the consistency dice, which is the observed re-introduce-the-same-class behaviour. This is a behaviour change and it is ruled here.
+
+> **Ruling D34 (2026-09-29):** the implement node reasons before it produces. run_implement's JSON contract requires a `reasoning` field emitted FIRST, in which the model narrates step by step how it will satisfy each success criterion and, on revision, the delta between the previous artifact's inconsistency and the constraint it must meet — before it writes the deliverable. The field is a scratchpad: the verdict ignores it (Pydantic extra='ignore'), so it changes the model's process, not the verdict's meaning. Rationale: a non-reasoning model called in json_object mode cannot emit a free `<think>` preamble, but JSON field order is autoregressive, so a reasoning field generated before `summary` gives the cognitive runway a reasoning model has natively — "synthetic reasoning" without changing the model, the tier, or the schema. Measured need: qwen3-235b escalated on conv_pool_sizing with the deterministic `consistency` check dissenting through eight iterations, and regressed green→red on robotics — both the non-reasoning failure to hold multi-step numeric consistency (ARCH-20260926-081 re-run, docs/traces/088). Behaviour change, ruled here; the free deterministic checks remain the model-independent backstop.
 
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
@@ -276,7 +278,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      56 files, 1021 tests
+tests/                      57 files, 1024 tests
 
 ```
 
@@ -681,7 +683,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1021 total)
+### 3.7 Test distribution (1024 total)
 
 
 | file | n | file | n |
@@ -757,7 +759,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1021/1021 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1024/1024 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
