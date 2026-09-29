@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1018 · **Date of this snapshot:** 2026-09-25, counts re-derived against the tree under test
+**Tests:** 1021 · **Date of this snapshot:** 2026-09-26, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -10,6 +10,8 @@
 > **Ruling D30 (2026-09-26):** the process budget. At most one instrument or process command per batch, and it must name what it prevents rather than what it enforces. A second process command in a batch requires stating why the first was insufficient. Product commands are unbounded. First exhibit: ARCH-20260925-064, -065 and -069 were issued in three consecutive turns, one of which existed only to correct the ruling before it.
 
 > **Ruling D31 (2026-09-26):** a security warning has a lifecycle or it has no value. HANDOVER.md section 3.6 carried an ACTION REQUIRED warning naming two GitHub PATs and three OpenRouter keys. The credentials were rotated several times; the warning read identically throughout, and was reported as an outstanding owner action for a week by a reader who had no way to tell it had been satisfied. A warning that outlives its exposure trains its readers to ignore warnings; a warning removed before the exposure is closed hides one. It must therefore state what was exposed, what was done, and when — so a reader can see it is closed — and it is superseded by a dated note rather than deleted.
+
+> **Ruling D33 (2026-09-26):** the implement node revises its own prior artifact; it does not regenerate. On every iteration after the first, run_implement must receive the previous iteration implement.summary verbatim, and its instruction must change from producing an implementation to revising one: preserve what the criteria judged correct, and change only what the diagnosis and the unmet criteria require. Passing the artifact while leaving the instruction as produce is not this ruling and does not test it, because a model told to produce will regenerate regardless of what it is shown, and a failure under that condition would be a false negative that misdirects to the expensive remedy. Rationale: run_implement carries no prior-artifact parameter, so the fixer never sees the artifact containing the failure it is told to fix; the instruction to address a specific value is unactionable when the artifact containing that value is not in the prompt. The measured consequence is a fresh generation and a new roll of the consistency dice, which is the observed re-introduce-the-same-class behaviour. This is a behaviour change and it is ruled here.
 
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
@@ -274,7 +276,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      55 files, 1018 tests
+tests/                      56 files, 1021 tests
 
 ```
 
@@ -679,7 +681,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1018 total)
+### 3.7 Test distribution (1021 total)
 
 
 | file | n | file | n |
@@ -755,7 +757,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1018/1018 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1021/1021 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

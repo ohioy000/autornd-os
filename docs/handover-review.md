@@ -8863,3 +8863,31 @@ as assumption).
 
 No guard, no test file, no executable touched — asserted by diff
 below. Counts re-derived, suite before/after equal to stamped 1018.
+
+## 80. ARCH-20260926-080 — Ruling D33: implement revises its prior artifact (executor, 2026-09-26)
+
+The blueprint protocol's own permission boundary applied: a prompt-shape
+change that alters what ships is a behaviour change and is ruled before it
+is implemented. The exhibit is the kappa case — validate caught κ=17.99
+against a stated threshold of 17, the diagnosis reached the implementer
+verbatim, and it still could not fix it — plus the -049 green-to-red on a
+blind re-implement. The executor grep confirmed the mechanism: run_implement
+carries no prior-artifact parameter, so the fixer is handed a diagnosis of an
+artifact it cannot see and regenerates from the plan, re-rolling the
+consistency dice each iteration.
+
+### Ruling D33 — implement revises its own prior artifact
+
+Ruling D33 — the implement node revises its own prior artifact; it does not regenerate. On every iteration after the first, run_implement must receive the previous iteration implement.summary verbatim, and its instruction must change from producing an implementation to revising one: preserve what the criteria judged correct, and change only what the diagnosis and the unmet criteria require. Passing the artifact while leaving the instruction as produce is not this ruling and does not test it, because a model told to produce will regenerate regardless of what it is shown, and a failure under that condition would be a false negative that misdirects to the expensive remedy. Rationale: run_implement carries no prior-artifact parameter, so the fixer never sees the artifact containing the failure it is told to fix; the instruction to address a specific value is unactionable when the artifact containing that value is not in the prompt. The measured consequence is a fresh generation and a new roll of the consistency dice, which is the observed re-introduce-the-same-class behaviour. This is a behaviour change and it is ruled here.
+
+Availability confirmed from state, not assumed from the signature: outputs are
+keyed by node id in the executor and never cleared between iterations, and the
+overwrite happens after the phase runs, so at iteration 2 state.outputs
+["implement"] still holds iteration 1's verdict with its summary. D33 is
+therefore a prompt/wiring change, not a state change. Iteration 1 is
+unchanged (no prior artifact, produce instruction). The diagnosis fields
+(red_cause, per-criterion validate_evidence, unmet_criteria, review_findings,
+resolution_directive) are unchanged; D33 adds one input and changes one
+instruction. Provider-free test proves iteration 1 carries no prior artifact
+and iteration 2 carries it verbatim plus the revision instruction, and fails
+when the artifact is withheld (convention 22).

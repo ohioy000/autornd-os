@@ -84,7 +84,7 @@ def _route_by_content(user_message: str) -> dict:
         return FEASIBILITY_RESP
     if "attempts all failed validation" in msg:
         return ESCALATION_RESP
-    if "produce the implementation for the following plan" in msg:
+    if "implementation for the following plan" in msg:  # produce (iter 1) or revise (D33, iter>1)
         return IMPLEMENT_RESP
     if "review this implementation from your domain perspective" in msg:
         return DOMAIN_REVIEW_RESP
@@ -162,7 +162,7 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
                     "red_cause": None,
                     "evidence": ["All topics parse correctly"],
                 }
-        elif "produce the implementation for the following plan" in msg:
+        elif "implementation for the following plan" in msg:  # produce or revise (D33)
             data = {
                 "done": True,
                 "green": True,

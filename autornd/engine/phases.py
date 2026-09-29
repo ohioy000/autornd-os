@@ -689,9 +689,25 @@ async def run_implement(
     evidence: list[str] | None = None,
     review_findings: list[Any] | None = None,
     unmet_criteria: list[str] | None = None,
+    prior_summary: str | None = None,
     max_tokens: int | None = None,
 ) -> tuple[ImplementVerdict, list[ModelResponse]]:
+    # Ruling D33: on every iteration after the first, implement REVISES its own
+    # prior artifact rather than regenerating from the plan. The fixer must see
+    # the artifact that contains the failure it is told to fix — the diagnosis
+    # ("kappa=17.99 against your threshold 17") is unactionable when the artifact
+    # holding that value is not in the prompt, and a blind regenerate re-rolls
+    # the consistency dice. The instruction changes from produce to revise, and
+    # is explicit about preserving what passed, not only fixing what failed —
+    # a model told to produce regenerates regardless of what it is shown.
     feedback = ""
+    if prior_summary:
+        feedback += f"""
+
+REVISION TASK — you are editing your previous implementation, not writing a new one. It is reproduced verbatim below. Preserve every part that the success criteria judged correct; change ONLY what the diagnosis and the unmet criteria require. Do not regenerate the work from the plan.
+
+YOUR PREVIOUS IMPLEMENTATION (revise this):
+{prior_summary}"""
     if resolution_directive:
         feedback += f"""
 
@@ -716,12 +732,20 @@ FEASIBILITY CONCERNS (from domain specialist review — address these):
 {chr(10).join(f'- {b}' for b in plan.blockers)}"""
 
     context_block = f"\n\nProject context:\n{context}" if context else ""
+    # Ruling D33: produce on the first pass, revise once a prior artifact exists.
+    # Iteration 1 has no prior_summary, so this line is byte-identical to the
+    # pre-ruling prompt.
+    task_line = (
+        "Revise your previous implementation for the following plan (reproduced below)."
+        if prior_summary
+        else "Produce the implementation for the following plan."
+    )
     # The blocked_on sentence below is RULED text (Blueprint 016 B2), carried
     # verbatim by instruction — it is the one judgment-steering sentence added
     # to this prompt, and it is not to be paraphrased. The blocked_on line in
     # the JSON contract is mechanical shape, like every other field's line.
     implement_prompt = f"""\
-Produce the implementation for the following plan. This is iteration {iteration}.
+{task_line} This is iteration {iteration}.
 
 {OUTPUT_CONTRACT}
 

@@ -374,9 +374,20 @@ class PhaseRunner:
                 rework_extra.append(str(findings).strip())
             if gate_reason.strip():
                 rework_extra.append(f"Gate: {gate_reason.strip()}")
+        # Ruling D33: hand implement its own prior artifact so it revises rather
+        # than regenerates. state.outputs["implement"] holds the previous
+        # iteration's verdict until this phase overwrites it (executor writes the
+        # node's output only after the phase returns), so it is present on every
+        # iteration after the first and absent on the first — which is exactly
+        # the produce-then-revise gate the ruling requires.
+        prior = state.outputs.get("implement")
+        prior_summary = getattr(prior, "summary", None)
+        if prior_summary is None and isinstance(prior, dict):
+            prior_summary = prior.get("summary")
         verdict, responses = await phases.run_implement(
             self.client, state.request, state.outputs["plan"], lead,
             iteration=state.iteration or 1,
+            prior_summary=prior_summary,
             red_cause=last.get("red_cause"),
             # Every criterion validate judged, and whatever review blocked on —
             # both recorded in the failure log already, neither previously read

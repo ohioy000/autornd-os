@@ -1,0 +1,36 @@
+{
+  "command_id": "ARCH-20260926-080",
+  "status": "DONE",
+  "executed": true,
+  "head_before": "d6cf8b6",
+  "head_after": "0eb6c00",
+  "branch": "arch/20260926-080-implement-revises",
+  "preconditions_checked": {
+    "head_sha": "d6cf8b6 (main; no divergence)",
+    "run_implement_signature": "confirmed no prior-artifact parameter before the change",
+    "outputs_persist_across_iterations": "confirmed: executor keys outputs by node id and never clears them; the overwrite at executor.py:283 runs AFTER the phase, so state.outputs['implement'] holds the prior verdict at iteration 2",
+    "suite_green_before": "1018 passed"
+  },
+  "results": [
+    "Ruling D33 recorded verbatim in HANDOVER.md (blockquote, where rulings live) and docs/handover-review.md (section 80); the ruling commit (d52467b) precedes the implementation commit (0eb6c00) in branch order.",
+    "AVAILABILITY CONFIRMED FROM STATE, not the signature: prior artifact is present at iteration 2 (see preconditions). D33 is a prompt/wiring change, not a state change.",
+    "ITERATION 1 UNCHANGED — asserted by test: with no prior_summary the task line is exactly 'Produce the implementation for the following plan.' and no revision block is added (byte-identical to pre-change).",
+    "REVISION INSTRUCTION IMPLEMENTED, VERBATIM: task line 'Revise your previous implementation for the following plan (reproduced below).' plus the block: 'REVISION TASK — you are editing your previous implementation, not writing a new one. It is reproduced verbatim below. Preserve every part that the success criteria judged correct; change ONLY what the diagnosis and the unmet criteria require. Do not regenerate the work from the plan.' followed by 'YOUR PREVIOUS IMPLEMENTATION (revise this):' and the prior summary. Explicit about preserving what passed, not only fixing what failed.",
+    "DIAGNOSIS FIELDS UNCHANGED — red_cause, validate_evidence, unmet_criteria, review_findings, resolution_directive untouched; D33 adds one input (prior_summary) and changes one instruction.",
+    "PROVIDER-FREE TEST (tests/test_prior_artifact_revision.py): iteration 1 carries no prior artifact and uses produce; iteration 2 carries the prior artifact verbatim plus the revision instruction; guard-can-fail test withholds the artifact and shows the iteration-2 assertions no longer hold (convention 22). 3 tests, all pass.",
+    "PROMPT-SIZE DELTA (iteration >= 2 only; iteration 1 unchanged): fixed overhead ~90 tokens + the artifact prose. ~600-word artifact -> ~+990 input tokens/iteration; ~1359-word artifact -> ~+2128 input tokens/iteration. Well within the engineering model's 262k context; no truncation.",
+    "NO model, tier, threshold, bound, gate or other phase changed — asserted: git diff on workflows/ and autornd/routing/ is empty.",
+    "NO paid call made — asserted; this command is provider-free.",
+    "SUITE: 1018 -> 1021 passed (one new test file, 3 tests). Count stamps re-derived to 1021 tests / 56 files across always-in-scope docs (HANDOVER.md, README.md, AGENTS.md, .claude/context/testing.md). Three scripted test doubles (test_engine.py x2, test_evals.py) updated to match the implement call on 'implementation for the following plan' so produce and revise both route — convention 17: production behaviour is correct, the doubles were stale re: the new wording."
+  ],
+  "deviations": [
+    "The IN_PROGRESS response was committed after the work was completed in-session; branch commit order is nonetheless carriage (38d5aad) -> IN_PROGRESS -> ruling (d52467b) -> implementation (0eb6c00) -> this DONE update. Recorded per the channel's departure rule.",
+    "workflows/engineering-rnd.yaml was in the include scope but needed no change; D33 is a phases.py + adapter.py prompt-shape change. No workflow edit made."
+  ],
+  "questions_for_advisor": [
+    "Command question 1 (artifact availability) — ANSWERED: available at iteration 2 from state.outputs['implement']; D33 is a prompt change, not a state change.",
+    "Command question 2 (name the specific criterion/value vs generic) — DECIDED GENERIC, flagged for ruling: the revision instruction directs the model to preserve what passed and change only what the diagnosis requires, but does not name the specific value/line, because validate names the criterion and cause but not necessarily the artifact location. If you want the value named ('line X states kappa=17.99 against threshold 17'), that is a follow-up ruling and presumes the diagnosis carries the location.",
+    "Recovery-loop interaction, flagged: the gate is presence-of-prior-artifact, so a recovery/rework implement (which has a prior artifact) also revises rather than regenerates. This is consistent with D33's 'every iteration after the first', but note it means escalation's recovery revises the last artifact rather than starting fresh. If recovery should instead regenerate under the resolution_directive, that is a distinction D33 did not draw and would need a ruling."
+  ],
+  "delivery_state": {"pr": 94, "merge": "merge-on-green per ARCH-20260926-072 grant"}
+}
