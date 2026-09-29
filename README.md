@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1024%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1031%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -217,11 +217,11 @@ The sequence of phases is data, not code. A workflow is a graph of nodes in YAML
 ```yaml
 - id: validate
   kind: ai
-  tier: engineering
+  tier: judge
   specialist: test_engineer
   prompt: validate
   schema: ValidateVerdict
-  max_tokens: validate_max_tokens
+  max_tokens: judge_max_tokens
   depends_on: [coverage, consistency, domain_review]
 
 - id: build_loop
@@ -280,7 +280,7 @@ AutoRnD routes each phase to a named tier and will not start until every require
 
 | Tier | Phases | Optimise for |
 |---|---|---|
-| **Engineering** | implement, validate, review, feasibility | Capability at volume. This tier dominates your bill. |
+| **Engineering** | implement, feasibility | Capability at volume. This tier dominates your bill. |
 | **Architecture** | plan, critical review | Reasoning quality. A weak plan wastes every token after it. |
 | **Triage** | triage | Price, and reliably valid JSON. |
 | **Escalation** | failure autopsy | Depth on long, messy input. Rarely called. |
@@ -293,6 +293,7 @@ AutoRnD routes each phase to a named tier and will not start until every require
 |---|---|
 | **Ranker** | orders retrieved documentation by usefulness. Without it, retrieval falls back to embedding distance |
 | **Premium** | the independent pass on work that cannot be recalled. Falls back to the architecture tier when empty |
+| **Judge** | reviews the implementation — domain review, validate, review — on a different model from the one that produced it, so a producer's blind spots do not grade themselves. Falls back to the engineering tier when empty. Capped by `JUDGE_MAX_TOKENS` |
 
 ### Choose non-reasoning models for the tiers that fill a schema
 
@@ -791,7 +792,7 @@ workflows/                # engineering-rnd, lean, triage-only, triage-classify
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 1024 tests
+tests/                    # 1031 tests
 
 ```
 
@@ -837,7 +838,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-1024 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
+1031 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
 
 
 The graph tests are the load-bearing ones: node shape, gate routing, loop bounds and the all-judges exit are all decidable without a provider. An earlier hardcoded sequencer was kept alongside the graph as an equivalence reference and has been retired — once gates could route on failure, a linear engine could no longer represent the pipeline it was supposed to be checking.

@@ -8919,3 +8919,33 @@ before `summary` and supplies the cognitive runway. The verdict ignores the fiel
 schema change, no parser change, no reliability loss. The 55k plan ceiling
 (engineering shares PLAN_MAX_TOKENS) accommodates the added scratchpad tokens.
 Behaviour change, ruled here.
+
+## 82. Heterogeneous judge — Ruling D35 (executor, 2026-09-29)
+
+The clean 090 run exhibited the echo chamber directly: on conv_pool_sizing the
+same qwen3-235b that produced the flaw went green at validate by iteration 2
+while only the deterministic `consistency` check kept dissenting — the producer
+rubber-stamped its own blind spot. Advisor Option 1: break the symmetry with a
+different-lineage judge.
+
+### Ruling D35 — a heterogeneous judge tier
+
+Ruling D35 — domain_review, validate, review and rework_review route to a `judge`
+tier when MODEL_JUDGE is set; a different pretraining lineage reviews the work
+rather than the producing model grading itself. Optional with engineering
+fallback (dropped from FUNCTION_MODELS when unset → resolve_model returns the
+engineering model → prior homogeneous behaviour, nothing breaks). Capped by
+JUDGE_MAX_TOKENS (default 8000) — a verdict with findings, not a second
+implementation — which also stops a premium judge's per-token rate running away
+across the high-frequency review nodes. implement and feasibility stay on
+engineering. Non-breaking: with MODEL_JUDGE empty the suite is unchanged.
+
+Deferred, folded in only after one decision (Option C, early escalation): a
+`critical_gate` that routes to escalation on a domain_review critical concern
+cannot be wired safely yet, because domain_review carries `when:
+implement.green == true` and MUTATES implement.green to false on a critical
+concern — so a gate guarded on implement.green skips exactly when it should
+fire, and a gate reading domain_review.critical raises when domain_review was
+skipped (implement red on iteration 1, missing path). Safe wiring needs either
+always-run domain_review (extra judge cost) or a skip-tolerant gate in the
+executor. Recorded, not decided.

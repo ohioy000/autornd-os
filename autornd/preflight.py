@@ -46,7 +46,7 @@ REQUIRED_TIERS = ("triage", "engineering", "architecture",
 # configuration. The instrument had observed "this tier is not in my list" and
 # reported "this tier has no model", which is a stronger and different claim
 # (convention 26).
-OPTIONAL_TIERS = ("ranker", "premium")
+OPTIONAL_TIERS = ("ranker", "premium", "judge")
 
 
 @dataclass

@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     # retrieval falls back to embedding distance. A degradation, not a break.
     model_ranker: str = ""
     model_premium: str = ""
+    # The heterogeneous judge (Ruling D35). When set, the implementation-judging
+    # nodes — domain_review, validate, review, rework_review — run on THIS model
+    # instead of the engineering tier, so a different pretraining lineage reviews
+    # the work rather than the model that produced it grading its own blind spots.
+    # Optional: unset means those nodes fall back to the engineering tier (the
+    # prior homogeneous behaviour), so nothing breaks when it is empty.
+    model_judge: str = ""
 
     # Pin which upstream serves requests, comma separated, highest first. Empty
     # means the provider decides, which favours availability over
@@ -91,6 +98,14 @@ class Settings(BaseSettings):
     # unbounded validator reached.
     validate_max_tokens: int = 8000
 
+    # Ceiling for the judge tier's nodes (domain_review, validate, review,
+    # rework_review) when a judge model is configured. A judge emits a verdict
+    # with findings, not a second implementation, so it is capped tight and
+    # separately from the plan/implement ceiling — this is the guard that keeps a
+    # premium judge model's per-token rate from running away across the
+    # high-frequency review nodes (Ruling D35).
+    judge_max_tokens: int = 8000
+
     # Budget for one lookup, which carries every blocking gap at once.
     #
     # Measured, not assumed. Sonar-pro bills $15.00 per million output tokens
@@ -132,7 +147,7 @@ class Settings(BaseSettings):
         "autornd_profile", "autornd_workflow", "log_level",
         "validate_max_tokens", "search_max_tokens",
         "search_max_tokens_consequential",
-        "review_rework_attempts", "plan_max_tokens",
+        "review_rework_attempts", "plan_max_tokens", "judge_max_tokens",
     }
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
@@ -147,6 +162,7 @@ class Settings(BaseSettings):
     @field_validator(
         "model_triage", "model_engineering", "model_architecture",
         "model_escalation", "model_research", "model_ranker", "model_search",
+        "model_judge",
     )
     @classmethod
     def validate_model_id(cls, v: str) -> str:
@@ -184,6 +200,8 @@ _TIER_HELP = {
 _OPTIONAL_TIERS = {
     "model_ranker": "ranks retrieved documentation by usefulness",
     "model_premium": "independent Double Check review",
+    "model_judge": "heterogeneous judge for domain_review/validate/review — "
+                   "falls back to the engineering tier when unset",
 }
 
 
