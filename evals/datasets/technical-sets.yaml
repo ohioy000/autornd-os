@@ -1,0 +1,1345 @@
+# technical-sets — a format-robustness question corpus for AutoRnD
+#
+# WHAT THIS IS
+#   A dataset of hard, cross-domain engineering R&D prompts, each paired with a
+#   structured grading rubric. It exists to test two things at once:
+#     1. whether the harness produces a correct, constraint-satisfying
+#        deliverable for a genuinely hard technical brief; and
+#     2. whether it does so REGARDLESS OF HOW THE BRIEF IS PRESENTED.
+#
+#   The same twenty domains appear in two "sets". `technical-set-v2` states every
+#   item in one shape: a prose brief with a trailing constraints tail — one
+#   template, twenty times. `technical-set-v3` states the SAME twenty domains in
+#   twenty different presentations (a fielded ticket, an email, WHEREAS clauses,
+#   a table, terse fragments, a memo, questions, numbers spelled as words, a
+#   reversed deliverable-first order, a trailing appendix, a dialogue, a
+#   checklist, a glossary, inequality notation, mid-sentence constraints, a
+#   deliberately under-specified brief, and negative imperatives). A harness that
+#   learned the v2 template would score well on it and learn nothing; v3 is the
+#   test that it met the constraints rather than the shape. v3 item 1 is the
+#   classic template again and is the control.
+#
+#   Each v2 item is cross-linked to its v3 counterpart with `pairs_with`, so the
+#   format-robustness comparison is a join on that field: same domain, same
+#   underlying grading rubric, different presentation.
+#
+# CRITICAL — the `request` field is the ONLY thing a scenario loads.
+#   The presentation is preserved inside `request` deliberately: the ticket, the
+#   email, the fragments, the inequalities ARE the stimulus under test. But the
+#   human/metadata around it is NOT part of the request and must never reach the
+#   model: the numbered "N · FORMAT-NAME" labels, the `format:`/`stresses:` tags,
+#   the `grading:` rubric and the global format index. If the planner sees
+#   "HEADER-BLOCK CONSTRAINTS" it learns the shape instead of meeting it. Those
+#   labels live in the metadata fields here and never in `request`.
+#
+# HOW TO USE IT
+#   * As runnable scenarios: each item maps to an eval Scenario — take `id`,
+#     `request`, and `workflow` (default engineering-rnd). The current
+#     `evals.scenario` schema cannot express the `grading` rubric (word bands,
+#     section counts, must-contain calculations, banned phrases, refusal traps),
+#     so those are graded by a separate rubric checker over the PRODUCED
+#     deliverable, not by `expect`. Keep the file out of `evals/scenarios/` for
+#     that reason — the scenario loader would reject the extra fields' intent,
+#     and these are not yet wired as pass/fail expectations.
+#   * As a corpus to expand: append items or whole sets under `sets:`. Keep the
+#     twenty-domain spine and the `pairs_with` links so cross-format joins hold.
+#
+# GRADING VOCABULARY (the `exercises` tags, normalised)
+#   form            structural constraints: word band, section/phase/figure count
+#   numeric         a stated quantitative derivation must be shown (e.g. ≥N
+#                   derivations, an explicit calculation)
+#   must-contain    a named artefact must appear (a table, a specific calculation)
+#   presence        named concepts/terms must be addressed
+#   prohibition     something must NOT appear; `lexical` = a literal banned word
+#                   or phrase; `conditional` = banned only without an accompanying
+#                   condition (e.g. "proven" without named evidence); `category` =
+#                   a class of thing banned (e.g. any manufacturer name)
+#   refusal-trap    the correct answer may be that the data cannot support a
+#                   conclusion, or that inputs are missing/approximate and must be
+#                   flagged rather than invented — inventing them fails the item
+
+schema_version: 1
+
+sets:
+  - id: technical-set-v2
+    date: 2026-09-19
+    presentation: uniform
+    description: >-
+      Twenty domains, each a prose brief with a trailing constraints tail. One
+      template repeated twenty times. This is the baseline the v3 set is
+      randomised against.
+    items:
+      - id: space-satellite-deorbit
+        domain: orbital
+        pairs_with: v3-deorbit
+        format: classic-prose-tail
+        request: |
+          A 1,240 kg satellite in a 780 km sun-synchronous orbit must be disposed
+          of under a post-mission disposal requirement. It has 38 kg of remaining
+          hydrazine and a delta-v budget of 148 m/s, with an estimated 11 m/s
+          reserved for attitude control during the disposal phase. Its
+          cross-sectional area is 6.8 m² and its ballistic coefficient is
+          78 kg/m². Earth's atmosphere at that altitude is highly variable and
+          current solar flux is rising. Produce a disposal plan that derives the
+          achievable orbit lowering from the available delta-v, states the
+          re-entry interval with its uncertainty, identifies whether a controlled
+          or uncontrolled re-entry is achievable, and quantifies the
+          casualty-risk driver if the disposal underperforms. State which
+          assumption dominates the uncertainty and how the plan changes if solar
+          activity falls rather than rises. Between 1,100 and 1,350 words, exactly
+          three sections, and must include a mass-and-delta-v budget table.
+        grading:
+          word_min: 1100
+          word_max: 1350
+          sections: 3
+          must_contain: ["mass-and-delta-v budget table"]
+          presence: ["ballistic coefficient", "casualty risk"]
+        exercises: ["form/numeric", "must-contain", "presence"]
+
+      - id: bio-variant-calling
+        domain: genomics
+        pairs_with: v3-variant-calling
+        format: classic-prose-tail
+        request: |
+          A 1.2 TB whole-genome tumour-normal pair at 85× tumour coverage and 42×
+          normal coverage must yield a somatic variant set for a clinical report.
+          Tumour purity is estimated at 34% with ±6% uncertainty; the sample has a
+          measured duplication rate of 18% and two sequencing batches with
+          different error profiles. A known artefact is that 0.4% of positions
+          show strand bias from a library-prep lot. Design the calling pipeline:
+          the minimum evidence thresholds that account for purity, the filtering
+          that removes the batch artefact without discarding true low-allele-
+          fraction variants, the orthogonal validation strategy and what fraction
+          of calls it must validate to be informative, and the reporting
+          thresholds that a clinician can act on. Give the expected number of
+          false positives at your chosen threshold and the arithmetic that
+          supports it. The plan must not cite a published pipeline as the
+          justification for a threshold. At most 1,400 words; must include ≥4
+          distinct numeric derivations.
+        grading:
+          word_max: 1400
+          derivations_min: 4
+          presence: ["tumour purity", "allele fraction", "orthogonal validation"]
+          prohibitions:
+            - rule: "must not cite a published pipeline as the justification for a threshold"
+              kind: category
+        exercises: ["prohibition", "form/numeric", "presence"]
+
+      - id: civil-seismic-retrofit
+        domain: seismic
+        pairs_with: v3-seismic-retrofit
+        format: classic-prose-tail
+        request: |
+          A four-storey reinforced-concrete moment frame built in 1962 holds a
+          hospital wing. It has non-ductile detailing, a fundamental period of
+          0.68 s, and a computed base shear that is 41% of the current code
+          demand. Floor-to-floor height is 3.6 m; the wing is 32 m × 18 m in plan.
+          A retrofit must keep the wing operational during construction. Evaluate
+          at least two retrofit strategies, derive the target performance level
+          and the drift limit you are designing to, and state how you would verify
+          the existing foundation can accept the increased overturning. Identify
+          the failure mode that no strengthening of the superstructure can fix.
+          Between 1,200 and 1,450 words, at least 1,250; must describe exactly two
+          figures and state that a drift check governs. Must not describe any
+          approach as "proven" without naming the evidence.
+        grading:
+          word_min: 1250
+          word_max: 1450
+          figures: 2
+          must_contain: ["explicit statement that a drift check governs"]
+          presence: ["fundamental period", "base shear", "foundation overturning"]
+          prohibitions:
+            - rule: 'must not describe any approach as "proven" without naming the evidence'
+              kind: conditional
+              phrase: proven
+        exercises: ["form", "prohibition", "presence"]
+
+      - id: power-ibr-interconnection
+        domain: power
+        pairs_with: v3-ibr-interconnection
+        format: classic-prose-tail
+        request: |
+          A 180 MW solar plant with 45 MW / 180 MWh of co-located battery storage
+          is interconnecting to a 230 kV transmission network with a short-circuit
+          ratio of 2.1 at the point of interconnection. The network has one
+          existing synchronous generator of 400 MVA. The utility has raised
+          concerns about weak-grid behaviour, subsynchronous oscillations, and
+          voltage ride-through during remote faults. Design the interconnection
+          study: the electromagnetic-transient modelling required, the control
+          settings that address the low short-circuit ratio, the ride-through
+          envelope you commit to and why it is achievable, and the protection that
+          detects an islanded condition the plant cannot see. Give the
+          short-circuit ratio arithmetic and the point at which the plant must
+          curtail. Present the three most likely study outcomes and what each
+          would require. Under 1,300 words; must not name a manufacturer or a
+          model number.
+        grading:
+          word_max: 1300
+          must_contain: ["short-circuit ratio arithmetic"]
+          presence: ["ride-through", "subsynchronous oscillation"]
+          prohibitions:
+            - rule: "must not name a manufacturer or a model number"
+              kind: category
+        exercises: ["prohibition", "form/numeric", "presence"]
+
+      - id: chem-exotherm-runaway
+        domain: process-safety
+        pairs_with: v3-exotherm-runaway
+        format: classic-prose-tail
+        request: |
+          A 12 m³ jacketed batch reactor runs a semi-batch nitration with a
+          reaction enthalpy of −340 kJ/mol, a feed rate of 180 kg/h of a reactant
+          with a molecular weight of 137 g/mol, and a measured accumulation of 22%
+          under normal cooling. The cooling system provides 480 kW at a 15 K
+          approach; the vessel's heat capacity is 3.1 kJ/kg·K and the charge mass
+          before feed is 6,800 kg. Design the safety case: the adiabatic
+          temperature rise derivation, the maximum temperature if cooling is lost
+          at the worst point in the feed, the time to that maximum, the onset
+          temperature of the decomposition you must stay below, and the
+          instrumentation and interlocks that prevent reaching it. Identify the
+          single parameter whose uncertainty most changes the verdict and state
+          how you would bound it. At most 1,250 words, exactly four sections, and
+          must contain the adiabatic-rise calculation explicitly.
+        grading:
+          word_max: 1250
+          sections: 4
+          must_contain: ["adiabatic temperature rise calculation"]
+          presence: ["accumulation", "onset temperature", "interlock"]
+        exercises: ["form", "must-contain", "presence"]
+
+      - id: materials-h2-embrittlement
+        domain: metallurgy
+        pairs_with: v3-h2-embrittlement
+        format: classic-prose-tail
+        request: |
+          A 42 mm wall-thickness carbon-manganese steel vessel operates at 100 bar
+          hydrogen and 320 °C with 1,400 thermal cycles to −20 °C over its design
+          life. The welds are single-pass submerged arc with a measured
+          heat-affected-zone hardness of 245 HV10, and the parent metal has a yield
+          of 355 MPa. A fitness-for-service review must establish whether the
+          vessel can continue for 15 more years. Evaluate the governing failure
+          mode, state the material properties you require and why the ones you have
+          are insufficient, give the fracture-mechanics calculation that bounds the
+          remaining life, and specify the inspection that would actually find the
+          damage mechanism you consider dominant. Name the two further tests you
+          would commission and what each would change about the verdict. Between
+          1,150 and 1,400 words; must state at least three material properties with
+          their units; must not dismiss a mechanism with "acceptable in practice."
+        grading:
+          word_min: 1150
+          word_max: 1400
+          properties_with_units_min: 3
+          must_contain: ["fracture-mechanics remaining-life calculation"]
+          presence: ["heat-affected zone", "fracture mechanics", "inspection"]
+          prohibitions:
+            - rule: 'must not dismiss a mechanism with "acceptable in practice"'
+              kind: lexical
+              phrase: acceptable in practice
+        exercises: ["form/numeric", "prohibition", "presence"]
+
+      - id: naval-damage-stability
+        domain: naval
+        pairs_with: v3-damage-stability
+        format: classic-prose-tail
+        request: |
+          A 118 m coastal RoRo ferry with a 2,900 t displacement carries vehicles
+          on two decks with a 6.2 m freeboard to the bulkhead deck. Damage is
+          assumed as a 12 m × 4 m breach at the waterline amidships on the
+          starboard side, with a permeability of 0.85 for the vehicle space and
+          0.95 for the machinery space. Cross-flooding arrangements exist but are
+          untested. Establish the survival condition using the deterministic
+          approach, then state whether the vessel would meet a probabilistic
+          assessment and why the two can disagree. Give the residual freeboard and
+          heel after flooding, the cross-flooding time and its effect on the worst
+          intermediate stage, and the operational restrictions that follow.
+          Identify the scenario in which the vessel survives the final condition
+          but capsizes in the intermediate one. At least 1,300 words, exactly three
+          scenarios, and must contain the damage-stability check explicitly.
+        grading:
+          word_min: 1300
+          scenarios: 3
+          must_contain: ["damage-stability check"]
+          presence: ["permeability", "cross-flooding", "intermediate stage"]
+        exercises: ["form", "must-contain", "presence"]
+
+      - id: battery-propagation
+        domain: battery
+        pairs_with: v3-battery-propagation
+        format: classic-prose-tail
+        request: |
+          A 78 kWh lithium-ion pack uses prismatic cells at 3.65 V and 280 Ah,
+          arranged 8s, in a sealed aluminium enclosure with no active cooling
+          between modules. A single-cell thermal runaway releases roughly 1.1 MJ
+          over 90 seconds with peak vent-gas temperatures above 600 °C. The pack
+          sits 120 mm below a passenger floor. Design the containment strategy:
+          whether propagation can be prevented or must be managed, the inter-cell
+          barrier material and thickness you would specify and the property that
+          governs the choice, the vent path that keeps combustible gas below its
+          lower flammability limit inside the enclosure, and the detection that
+          warns occupants before the enclosure breaches. Give the propagation time
+          estimate if no mitigation is added and the arithmetic behind it. The
+          design must not claim the pack is "inherently safe" under any condition.
+          Between 1,000 and 1,250 words.
+        grading:
+          word_min: 1000
+          word_max: 1250
+          must_contain: ["propagation time estimate"]
+          presence: ["lower flammability limit", "vent path", "detection"]
+          prohibitions:
+            - rule: 'must not claim the pack is "inherently safe" under any condition'
+              kind: lexical
+              phrase: inherently safe
+        exercises: ["prohibition", "form/numeric", "must-contain", "presence"]
+
+      - id: radiological-shielding
+        domain: radiological
+        pairs_with: v3-radiological-shielding
+        format: classic-prose-tail
+        request: |
+          A shielded cell will handle a 3.7 × 10¹³ Bq cobalt-60 source and a
+          1.85 × 10¹⁴ Bq iridium-192 source for non-destructive testing. The
+          occupied area outside the wall is a controlled corridor occupied 6 hours
+          per day; the design target is 7.5 µSv/h during occupancy. The wall is
+          currently 1.20 m of ordinary concrete at 2.35 g/cm³. Establish whether
+          the existing wall is adequate for each source, give the required
+          additional thickness if not, and state the tenth-value-layer arithmetic
+          for both. Address the scatter from the corridor's far wall and the
+          skyshine above the roof. Identify the occupational dose that the design
+          permits over a year at the target rate and state whether it is
+          acceptable. Under 1,200 words, exactly two sections, and must contain the
+          tenth-value-layer calculation explicitly.
+        grading:
+          word_max: 1200
+          sections: 2
+          must_contain: ["tenth-value-layer calculation"]
+          presence: ["scatter", "skyshine", "annual dose"]
+        exercises: ["form", "must-contain", "presence"]
+
+      - id: pharma-lyophilization
+        domain: pharma
+        pairs_with: v3-lyophilization
+        format: classic-prose-tail
+        request: |
+          A 4.2 mL fill of a 28 mg/mL protein formulation must be lyophilised at a
+          12,000-vial batch scale. The formulation has a measured collapse
+          temperature of −28 °C, a glass transition of −31 °C, a eutectic-free
+          amorphous matrix, and a vial heat-transfer coefficient of
+          2.1 × 10⁻³ cal/cm²·s·°C. The cake must reconstitute in under 90 seconds
+          and hold a residual moisture between 0.5% and 1.5%. Design the cycle: the
+          freezing protocol and its effect on ice morphology, the primary drying
+          shelf temperature and chamber pressure with the sublimation-rate
+          derivation, the secondary drying endpoint and how you verify it, and the
+          in-process controls that stop a batch before it is lost. Give the primary
+          drying duration and the arithmetic behind it. State what you would do if
+          the batch showed collapse at hour 6. Between 1,250 and 1,500 words; must
+          include ≥3 distinct numeric derivations; must not cite a platform cycle
+          as the reason for a parameter.
+        grading:
+          word_min: 1250
+          word_max: 1500
+          derivations_min: 3
+          presence: ["collapse temperature", "sublimation rate", "residual moisture"]
+          prohibitions:
+            - rule: "must not cite a platform cycle as the reason for a parameter"
+              kind: category
+        exercises: ["form/numeric", "prohibition", "presence"]
+
+      - id: agri-soil-salinity
+        domain: agriculture
+        pairs_with: v3-soil-salinity
+        format: classic-prose-tail
+        request: |
+          A 420-hectare block has a root-zone electrical conductivity of 9.4 dS/m,
+          a sodium adsorption ratio of 18, and a water table 1.1 m below the
+          surface with measured salinity of 22 dS/m. The profile is a silty clay
+          loam with a saturated hydraulic conductivity of 2.4 mm/h. Irrigation
+          water is available at 1.8 dS/m and 0.9 ML per hectare per season.
+          Establish whether the block can be returned to production, derive the
+          leaching requirement, state the amendment dose, and give the drainage
+          that the scheme requires and how you would dispose of it. Identify the
+          failure mode that would leave the block saltier than it started, and the
+          single measurement that would tell you the scheme was not working. Give
+          the time to reach the target salinity. Between 1,150 and 1,400 words,
+          exactly four phases, and must contain the leaching and sodicity balance.
+        grading:
+          word_min: 1150
+          word_max: 1400
+          phases: 4
+          must_contain: ["leaching and sodicity balance"]
+          presence: ["sodium adsorption ratio", "hydraulic conductivity", "drainage"]
+        exercises: ["form", "must-contain", "presence"]
+
+      - id: water-pfas-treatment
+        domain: water
+        pairs_with: v3-pfas-treatment
+        format: classic-prose-tail
+        request: |
+          A 42 ML/d municipal plant draws from a river with a measured sum of PFAS
+          at 240 ng/L, dominated by short-chain species. The regulatory limit is
+          4 ng/L for the sum of four named compounds and the plant must comply
+          within 18 months. Raw water quality varies: dissolved organic carbon
+          swings between 2 and 9 mg/L and turbidity spikes after rain. Design the
+          treatment train: the process you select and the species it does and does
+          not remove, the spent-media handling and its cost driver, the pilot
+          programme that would de-risk the full-scale design, and the monitoring
+          that proves compliance rather than assuming it. Give the mass balance for
+          the media changeout interval. Identify the failure mode that a
+          well-designed train will still exhibit after a heavy-rain event. At most
+          1,200 words; must contain the media mass balance; must not use the word
+          "simply."
+        grading:
+          word_max: 1200
+          must_contain: ["media mass balance"]
+          presence: ["dissolved organic carbon", "media changeout", "monitoring"]
+          prohibitions:
+            - rule: 'must not use the word "simply"'
+              kind: lexical
+              phrase: simply
+        exercises: ["prohibition", "form/numeric", "must-contain", "presence"]
+
+      - id: building-moisture
+        domain: building
+        pairs_with: v3-building-moisture
+        format: classic-prose-tail
+        request: |
+          A cold-climate building with an exterior wall of brick veneer, a drained
+          cavity, 100 mm of mineral wool, and an interior vapour barrier has shown
+          interstitial condensation in the sheathing during the second winter.
+          Interior conditions are 22 °C and 40% relative humidity; the 1% January
+          design temperature is −24 °C. The sheathing is oriented strand board and
+          the cladding has a measured air-leakage rate at the base of the cavity.
+          Determine whether the condensation is a vapour-diffusion or an
+          air-transport problem, give the psychrometric calculation that
+          distinguishes them, and design the repair. State the conservative
+          interior condition you would design to and the safety margin the
+          sheathing needs. Identify the intervention that would make the problem
+          worse and explain why it is commonly recommended. Between 1,100 and 1,350
+          words, exactly three sections, and must contain ≥2 psychrometric
+          calculations.
+        grading:
+          word_min: 1100
+          word_max: 1350
+          sections: 3
+          calculations_min: 2
+          presence: ["dew point", "vapour barrier", "air leakage"]
+        exercises: ["form", "presence"]
+
+      - id: geotech-tailings-dam
+        domain: geotechnical
+        pairs_with: v3-tailings-dam
+        format: classic-prose-tail
+        request: |
+          A 68 m raised tailings dam uses upstream construction, holds 24 Mt, and
+          sits above a community of 1,900 people 4.1 km downstream. The impoundment
+          has a phreatic surface 2.8 m below the crest, a measured residual
+          friction angle of 27°, and a design peak ground acceleration of 0.28 g.
+          Construction records for three of the nine raises are incomplete.
+          Establish the factor of safety under static and pseudo-static conditions,
+          state whether the facility meets a recognised standard, and design the
+          monitoring, surveillance and emergency response that the consequence
+          class requires. Give the failure mode you cannot rule out with the data
+          available, and state plainly whether a credible safety case can be made
+          at all on these records. There is a correct answer here that is not a
+          design. Between 1,150 and 1,400 words; must contain the factor-of-safety
+          derivation; must state explicitly if the available data cannot support a
+          conclusion.
+        grading:
+          word_min: 1150
+          word_max: 1400
+          must_contain: ["factor-of-safety derivation"]
+          presence: ["phreatic surface", "residual friction angle"]
+          refusal_trap: >-
+            The incomplete construction records for three of nine raises may make
+            a credible safety case impossible; the correct answer can be that the
+            data cannot support a conclusion, stated explicitly, rather than a
+            design.
+        exercises: ["form", "must-contain", "refusal-trap", "presence"]
+
+      - id: pipeline-crack-assessment
+        domain: pipeline
+        pairs_with: v3-pipeline-crack-assessment
+        format: classic-prose-tail
+        request: |
+          A 610 mm diameter, 9.5 mm wall natural-gas transmission line built in
+          1978 has had 41 crack-like features detected by in-line inspection, with
+          depths between 8% and 31% of wall thickness and lengths between 12 and
+          88 mm. The line operates at 68 bar with a maximum allowable operating
+          pressure of 74 bar, and pressure cycles 4 to 11 times daily with a 38%
+          cycle ratio. There is no in-line inspection history before 2019.
+          Establish the remaining life for the deepest feature, state whether the
+          line can stay at current pressure, and design the re-inspection interval
+          and the pressure restriction if one is required. Give the crack-growth
+          calculation and the inspection-technology qualification that the sizing
+          accuracy depends on. State the one input that would most change the
+          answer. Between 1,200 and 1,450 words; must contain the remaining-life
+          calculation; must not present a probabilistic result without naming the
+          method and its calibration.
+        grading:
+          word_min: 1200
+          word_max: 1450
+          must_contain: ["remaining-life calculation", "crack-growth calculation"]
+          presence: ["in-line inspection sizing accuracy", "maximum allowable operating pressure"]
+          prohibitions:
+            - rule: "must not present a probabilistic result without naming the method and its calibration"
+              kind: conditional
+          refusal_trap: >-
+            The remaining-life answer depends on ILI sizing accuracy with no
+            pre-2019 history; a good answer makes the verdict contingent on that
+            qualification rather than asserting a single number.
+        exercises: ["form/numeric", "must-contain", "prohibition", "refusal-trap"]
+
+      - id: robotics-manipulator
+        domain: robotics
+        pairs_with: v3-manipulator
+        format: classic-prose-tail
+        request: |
+          A six-axis industrial arm with 1.8 m reach performs a 900 mm
+          straight-line weld at 12 mm/s, with the tool passing within 140 mm of
+          the wrist singularity and the arm's condition number rising from 4 to
+          over 400 near the path's midpoint. The controller switches to joint
+          interpolation if the commanded Cartesian velocity exceeds what the joints
+          can deliver, which would break the weld geometry. Joint limits are ±170°
+          on the three primary axes. Design the trajectory: the condition-number
+          threshold you would maintain, the path offset or wrist reorientation that
+          avoids the singularity, the velocity profile that stays inside joint
+          limits through the entire path, and the detection that halts the move
+          before the controller switches modes. Give the condition number at the
+          worst point after your redesign and the joint velocities there. Under
+          1,150 words, exactly two sections, and must contain the condition-number
+          calculation.
+        grading:
+          word_max: 1150
+          sections: 2
+          must_contain: ["condition-number calculation"]
+          presence: ["singularity", "joint limits", "mode switch"]
+        exercises: ["form", "must-contain", "presence"]
+
+      - id: photonics-laser-damage
+        domain: photonics
+        pairs_with: v3-laser-damage
+        format: classic-prose-tail
+        request: |
+          A pulsed laser delivers 1064 nm, 12 ns pulses at 40 J/cm² to a
+          fused-silica window, followed by two lenses and a frequency-doubling
+          crystal. The window's measured laser-induced damage threshold is 28 J/cm²
+          for a 12 ns pulse at 1064 nm under uncompromised conditions, and the
+          manufacturer's specification is materially higher. Surface contamination
+          is present on one lens and the beam has a 3% spatial ripple that creates
+          local hot spots. Establish whether the train survives continuous
+          operation, give the fluence at each optic and the margin at the worst
+          point, and specify the cleaning, handling and beam-conditioning that
+          restores margin. State the mechanism that fails first and the evidence
+          you would need to distinguish it from a different one. Identify which
+          optic fails if the crystal's conversion efficiency drops 15%. Between
+          1,050 and 1,300 words; must contain the fluence calculation; must not
+          describe any component as "widely available" or "standard."
+        grading:
+          word_min: 1050
+          word_max: 1300
+          must_contain: ["fluence calculation"]
+          presence: ["laser-induced damage threshold", "hot spots", "conversion efficiency"]
+          prohibitions:
+            - rule: 'must not describe any component as "widely available"'
+              kind: lexical
+              phrase: widely available
+            - rule: 'must not describe any component as "standard"'
+              kind: lexical
+              phrase: standard
+        exercises: ["prohibition", "form/numeric", "must-contain", "presence"]
+
+      - id: acoustics-noise-control
+        domain: acoustics
+        pairs_with: v3-noise-control
+        format: classic-prose-tail
+        request: |
+          A compressor hall with eight machines produces 94 dB(A) at 3 m from the
+          nearest unit, and the boundary fence is 55 m away with a residential
+          receptor 18 m beyond it. The measured spectrum is dominated by 125 Hz and
+          250 Hz, with a strong 63 Hz component from the largest unit. The
+          applicable night limit at the receptor is 42 dB(A) and there is a 31.5 Hz
+          tone audible inside the nearest dwelling. Design the control scheme to
+          meet the limit, derive the attenuation required per octave band, and
+          specify the engineering measures with the attenuation each contributes.
+          State the measure that treats the tone and why tonal components need
+          separate treatment from the overall level. Give the sound-power-to-
+          pressure derivation that establishes how much must be removed at source.
+          At least 1,250 words; must contain an NR or NC curve target; must specify
+          ≥3 mitigation options each with its attenuation value.
+        grading:
+          word_min: 1250
+          must_contain: ["NR or NC curve target"]
+          mitigation_options_min: 3
+          options_with_values: true
+          presence: ["octave band", "tonal component", "sound power"]
+        exercises: ["form", "must-contain", "presence"]
+
+      - id: food-thermal-process
+        domain: food
+        pairs_with: v3-thermal-process
+        format: classic-prose-tail
+        request: |
+          A low-acid canned product in 400 g cans must receive a scheduled process
+          that achieves commercial sterility. The target organism has a D₁₂₁ of
+          0.55 minutes and a z-value of 9.4 °C. The retort comes up to temperature
+          in 6.5 minutes and the product's slowest-heating point lags the retort by
+          a measured fh of 34 minutes; j is 1.4. Establish the process time that
+          delivers an F₀ of 6 minutes at the cold point, the lethality that the
+          come-up contributes, and the critical factors that must be controlled and
+          recorded. State how you would validate the process in a retort rather
+          than in a laboratory, and what would invalidate the validation. Give the
+          F₀ calculation and the temperature distribution that must be
+          demonstrated. Identify the deviation that would require a recall rather
+          than a rework decision. Between 1,150 and 1,400 words; must contain the
+          F₀ calculation; must not use "commercially sterile" without stating the
+          lethality the term assumes.
+        grading:
+          word_min: 1150
+          word_max: 1400
+          must_contain: ["F₀ calculation"]
+          presence: ["D-value", "z-value", "cold point"]
+          prohibitions:
+            - rule: 'must not use "commercially sterile" without stating the lethality the term assumes'
+              kind: conditional
+              phrase: commercially sterile
+        exercises: ["prohibition", "form/numeric", "must-contain", "presence"]
+
+      - id: fire-smoke-atrium
+        domain: fire
+        pairs_with: v3-atrium-smoke
+        format: classic-prose-tail
+        request: |
+          A nine-storey office building has a 32 m atrium open to the full height,
+          with a 5.4 m² design fire on the ground floor at 1.8 MW and a growth time
+          constant of 420 seconds. The building is sprinklered but the atrium is
+          outside the sprinkler coverage. The egress route crosses the atrium floor
+          and the top floor has a 30 m travel distance to the exit. Design the smoke
+          management system: whether the design is a smoke-filling or a
+          smoke-clearance approach and why, the smoke layer descent calculation at
+          the moment egress completes, the exhaust rate required, and the makeup air
+          path. State the tenability criteria you are designing to for visibility
+          and temperature. Identify the condition under which the system fails
+          despite being correctly sized. At most 1,200 words, exactly three
+          sections, and must contain the smoke-layer descent calculation.
+        grading:
+          word_max: 1200
+          sections: 3
+          must_contain: ["smoke-layer descent calculation"]
+          presence: ["tenability criteria", "exhaust rate", "makeup air"]
+        exercises: ["form", "must-contain", "presence"]
+
+  - id: technical-set-v3
+    date: 2026-09-26
+    presentation: format-randomised
+    description: >-
+      The same twenty domains as technical-set-v2, each stated in a different
+      presentation. The `format`/`stresses` tags are human metadata and are
+      stripped before load — only `request` is the stimulus. Item 1 (v3-deorbit)
+      is the classic template again and is the control.
+    items:
+      - id: v3-deorbit
+        domain: orbital
+        pairs_with: space-satellite-deorbit
+        format: classic-prose-tail
+        stresses: "control — classic prose plus a trailing tail"
+        request: |
+          A 1,240 kg satellite in a 780 km sun-synchronous orbit requires disposal
+          under a post-mission disposal rule. Remaining hydrazine is 38 kg and the
+          delta-v budget is 148 m/s, of which 11 m/s is reserved for attitude
+          control during disposal. Cross-sectional area is 6.8 m² and the ballistic
+          coefficient is 78 kg/m². Atmospheric density at that altitude is highly
+          variable and solar flux is currently rising. Derive the achievable orbit
+          lowering, state the re-entry interval with its uncertainty, identify
+          whether a controlled or uncontrolled re-entry is achievable, and quantify
+          the casualty-risk driver if disposal underperforms. State which
+          assumption dominates the uncertainty and how the plan changes if solar
+          activity falls.
+
+          Deliverable: a written disposal plan, 1,100–1,350 words, exactly three
+          sections, including a mass-and-delta-v budget table.
+        grading:
+          word_min: 1100
+          word_max: 1350
+          sections: 3
+          must_contain: ["mass-and-delta-v budget table"]
+          presence: ["ballistic coefficient", "casualty risk"]
+        exercises: ["form/numeric", "must-contain", "presence"]
+
+      - id: v3-variant-calling
+        domain: genomics
+        pairs_with: bio-variant-calling
+        format: fielded-ticket
+        stresses: "field-parse; constraints in an UPPER-case block"
+        request: |
+          RISK:          HIGH
+          CLASS:         CLINICAL REPORTING
+          SUBMITTED:     2026-09-26
+          SAMPLE:        WGS tumour/normal pair
+          COVERAGE:      tumour 85x | normal 42x
+          PURITY:        34% +/- 6%
+          DUPLICATION:   18%
+          BATCHES:       2 (distinct error profiles)
+          KNOWN ISSUE:   strand bias at 0.4% of positions (library lot)
+
+          DESCRIPTION
+          Need a somatic variant set fit for a clinical report. The known
+          strand-bias artefact is in a library-prep lot and must not reach
+          the report, but low-allele-fraction true variants must survive.
+
+          ACCEPTANCE
+          - minimum evidence thresholds derived FROM PURITY, not assumed
+          - filtering that removes the artefact and keeps low-AF variants
+          - orthogonal validation strategy + the fraction it must validate
+          - reporting thresholds a clinician can act on
+          - expected false positives at the chosen threshold, with arithmetic
+
+          WHAT WE DO NOT WANT
+          A threshold justified by pointing at a published pipeline.
+
+          LIMIT: 1,400 words maximum. Show at least four separate derivations.
+        grading:
+          word_max: 1400
+          derivations_min: 4
+          presence: ["tumour purity", "low-allele-fraction variants", "orthogonal validation"]
+          prohibitions:
+            - rule: "a threshold must not be justified by pointing at a published pipeline"
+              kind: category
+        exercises: ["prohibition", "form/numeric", "presence"]
+
+      - id: v3-seismic-retrofit
+        domain: seismic
+        pairs_with: civil-seismic-retrofit
+        format: email
+        stresses: "informal register; constraints stated in prose"
+        request: |
+          From: Facilities Director, Regional Health Authority
+          To: Structural Engineering (commissioned)
+          Subject: Hospital wing — what can we actually do
+
+          We have a four-storey RC moment frame, 1962, hospital wing. It has to
+          stay operational while anything happens to it. Non-ductile detailing
+          throughout, fundamental period reads 0.68 s, and the base shear we
+          computed is 41% of what the current code asks for. Plan is 32 m by 18 m,
+          floor-to-floor 3.6 m.
+
+          I need to see at least two retrofit strategies compared. I need to know
+          what performance level and drift limit you are actually designing to, not
+          a generic one. And I need to know whether the existing foundation can
+          take the increased overturning — if it can't, say so early, because that
+          changes everything above it.
+
+          One thing I want from you specifically: tell me the failure mode that no
+          amount of strengthening the superstructure will fix. If there is one, I'd
+          rather hear it now.
+
+          Length: 1,200–1,450 words, and I want at least 1,250. Two figures
+          exactly. State plainly that a drift check governs the design.
+
+          And please don't hand me something described as "proven" unless you can
+          name the evidence for it.
+        grading:
+          word_min: 1250
+          word_max: 1450
+          figures: 2
+          must_contain: ["explicit statement that a drift check governs"]
+          presence: ["fundamental period", "base shear", "foundation overturning"]
+          prohibitions:
+            - rule: 'must not describe an approach as "proven" without naming the evidence'
+              kind: conditional
+              phrase: proven
+        exercises: ["form", "prohibition", "presence"]
+
+      - id: v3-ibr-interconnection
+        domain: power
+        pairs_with: power-ibr-interconnection
+        format: header-block
+        stresses: "constraints precede the problem statement"
+        request: |
+          CONSTRAINTS — read before the problem statement
+            * Maximum 1,300 words.
+            * No manufacturer name, no model number, anywhere.
+            * Include the short-circuit-ratio arithmetic explicitly.
+            * State the curtailment point.
+            * Three most likely study outcomes, each with what it would require.
+
+          PROBLEM STATEMENT
+          A 180 MW solar plant interconnects with 45 MW / 180 MWh of co-located
+          battery storage to a 230 kV network. Short-circuit ratio at the point
+          of interconnection is 2.1. One existing synchronous generator of 400 MVA
+          is on the network. The utility has raised weak-grid behaviour,
+          subsynchronous oscillation, and remote-fault voltage ride-through.
+
+          Deliverable: an interconnection study design covering the EMT modelling
+          required, the control settings for the low SCR, the ride-through envelope
+          you commit to and why it is achievable, and the protection that detects
+          an islanded condition the plant itself cannot see.
+        grading:
+          word_max: 1300
+          must_contain: ["short-circuit-ratio arithmetic"]
+          presence: ["ride-through", "subsynchronous oscillation", "curtailment point"]
+          prohibitions:
+            - rule: "no manufacturer name, no model number, anywhere"
+              kind: category
+        exercises: ["prohibition", "form/numeric", "presence"]
+
+      - id: v3-exotherm-runaway
+        domain: process-safety
+        pairs_with: chem-exotherm-runaway
+        format: dense-paragraph
+        stresses: "no line breaks; every figure inline"
+        request: |
+          A 12 m³ jacketed batch reactor runs a semi-batch nitration with a
+          reaction enthalpy of −340 kJ/mol at a feed rate of 180 kg/h of a reactant
+          of molecular weight 137 g/mol, with measured accumulation of 22% under
+          normal cooling, where the cooling system delivers 480 kW at a 15 K
+          approach, the vessel heat capacity is 3.1 kJ/kg·K, and charge mass before
+          feed is 6,800 kg; design the safety case, deriving the adiabatic
+          temperature rise, the maximum temperature if cooling is lost at the worst
+          point in the feed, the time to that maximum, the decomposition onset
+          temperature you must stay below and the instrumentation and interlocks
+          that prevent reaching it, identifying the single parameter whose
+          uncertainty most changes the verdict and stating how you would bound it;
+          the answer must not exceed 1,250 words, must contain exactly four
+          sections, and must contain the adiabatic-rise calculation explicitly.
+        grading:
+          word_max: 1250
+          sections: 4
+          must_contain: ["adiabatic temperature rise calculation"]
+          presence: ["accumulation", "onset temperature", "interlock"]
+        exercises: ["form", "must-contain", "presence"]
+
+      - id: v3-h2-embrittlement
+        domain: metallurgy
+        pairs_with: materials-h2-embrittlement
+        format: whereas-clauses
+        stresses: "legal register; a 'provided that' constraints tail"
+        request: |
+          WHEREAS a pressure vessel of 42 mm wall thickness in carbon-manganese
+          steel operates at 100 bar hydrogen and 320 °C; and
+
+          WHEREAS said vessel sustains 1,400 thermal cycles to −20 °C across its
+          design life; and
+
+          WHEREAS its welds are single-pass submerged arc with a measured
+          heat-affected-zone hardness of 245 HV10, and the parent metal yield is
+          355 MPa; and
+
+          WHEREAS a fitness-for-service review must establish whether the vessel may
+          continue fifteen further years;
+
+          NOW THEREFORE the engineer shall evaluate the governing failure mode;
+          state the material properties required and why those held are
+          insufficient; give the fracture-mechanics calculation bounding remaining
+          life; and specify the inspection that would actually find the damage
+          mechanism deemed dominant. The engineer shall name two further tests to
+          be commissioned and state what each would change about the verdict.
+
+          Provided that the response shall be between 1,150 and 1,400 words, shall
+          state at least three material properties with their units, and shall not
+          dismiss any mechanism by asserting it is acceptable in practice.
+        grading:
+          word_min: 1150
+          word_max: 1400
+          properties_with_units_min: 3
+          must_contain: ["fracture-mechanics remaining-life calculation"]
+          presence: ["heat-affected zone", "fracture mechanics", "inspection"]
+          prohibitions:
+            - rule: "shall not dismiss any mechanism by asserting it is acceptable in practice"
+              kind: lexical
+              phrase: acceptable in practice
+        exercises: ["form/numeric", "prohibition", "presence"]
+
+      - id: v3-damage-stability
+        domain: naval
+        pairs_with: naval-damage-stability
+        format: table-led
+        stresses: "tabular parameters; prose carries the asks"
+        request: |
+          Parameter    Value
+          Vessel type    Coastal RoRo ferry
+          Length    118 m
+          Displacement    2,900 t
+          Decks    2, vehicle
+          Freeboard to bulkhead deck    6.2 m
+          Assumed breach    12 m × 4 m, waterline, amidships, starboard
+          Permeability — vehicle space    0.85
+          Permeability — machinery space    0.95
+          Cross-flooding    arrangements fitted, untested
+
+          Establish the survival condition by the deterministic approach. Then
+          state whether the vessel would pass a probabilistic assessment, and why
+          the two approaches can disagree on the same hull.
+
+          Give residual freeboard and heel after flooding, the cross-flooding time
+          and its effect on the worst intermediate stage, and the operational
+          restrictions that follow.
+
+          Identify the scenario in which the vessel survives the final condition
+          but capsizes in the intermediate one.
+
+          At least 1,300 words. Exactly three scenarios. The damage-stability
+          check must appear explicitly.
+        grading:
+          word_min: 1300
+          scenarios: 3
+          must_contain: ["damage-stability check"]
+          presence: ["permeability", "cross-flooding", "intermediate stage"]
+        exercises: ["form", "must-contain", "presence"]
+
+      - id: v3-battery-propagation
+        domain: battery
+        pairs_with: battery-propagation
+        format: terse-fragments
+        stresses: "no verbs; terse fragments"
+        request: |
+          Pack. 78 kWh. Prismatic. 3.65 V, 280 Ah. 8s. Sealed aluminium enclosure.
+          No inter-module cooling.
+
+          Cell runaway: ~1.1 MJ over 90 s. Vent gas >600 °C peak. 120 mm below
+          passenger floor.
+
+          Need: containment strategy. Prevent propagation or manage it — decide.
+          Barrier material and thickness — name the governing property. Vent path
+          keeping combustible gas below LFL inside the enclosure. Detection that
+          warns occupants before enclosure breach.
+
+          Numbers: propagation time with no mitigation. Show the arithmetic.
+
+          Limits: 1,000–1,250 words. Never call the pack "inherently safe."
+        grading:
+          word_min: 1000
+          word_max: 1250
+          must_contain: ["propagation time estimate"]
+          presence: ["LFL", "vent path", "detection"]
+          prohibitions:
+            - rule: 'never call the pack "inherently safe"'
+              kind: lexical
+              phrase: inherently safe
+        exercises: ["prohibition", "form/numeric", "must-contain", "presence"]
+
+      - id: v3-radiological-shielding
+        domain: radiological
+        pairs_with: radiological-shielding
+        format: memo
+        stresses: "epistolary header; questions embedded in the body"
+        request: |
+          MEMORANDUM
+          TO:      Radiation Safety Committee
+          FROM:    Shielding Design
+          RE:      Hot cell — existing wall adequacy
+
+          Sources to be handled in the cell:
+            Co-60    3.7 x 10^13 Bq
+            Ir-192   1.85 x 10^14 Bq
+
+          Occupied space outside the wall is a controlled corridor, occupied
+          6 h/day. Design target 7.5 uSv/h during occupancy.
+
+          Existing wall: 1.20 m ordinary concrete, 2.35 g/cm3.
+
+          Questions:
+            adequate for each source? required additional thickness if not?
+            tenth-value-layer arithmetic for both sources?
+            scatter from the far corridor wall — addressed?
+            skyshine above the roof — addressed?
+            occupational dose permitted over a year at target rate — acceptable?
+
+          Limits: under 1,200 words. Exactly two sections. TVL calculation must
+          appear.
+        grading:
+          word_max: 1200
+          sections: 2
+          must_contain: ["tenth-value-layer calculation"]
+          presence: ["scatter", "skyshine", "annual dose"]
+        exercises: ["form", "must-contain", "presence"]
+
+      - id: v3-lyophilization
+        domain: pharma
+        pairs_with: pharma-lyophilization
+        format: interrogative
+        stresses: "posed as questions, not statements"
+        request: |
+          Answer the following for a 12,000-vial batch of a 4.2 mL fill at
+          28 mg/mL protein.
+
+          The formulation collapses at −28 °C and its glass transition is −31 °C,
+          with an amorphous matrix and no eutectic. What freezing protocol do you
+          specify, and why does ice morphology matter to the outcome?
+          The vial heat-transfer coefficient is 2.1 × 10⁻³ cal/cm²·s·°C. What
+          primary drying shelf temperature and chamber pressure, and what is the
+          sublimation rate that justifies them?
+          How long does primary drying take? Show it.
+          How do you decide secondary drying is finished rather than assuming a
+          fixed time?
+          Residual moisture must land between 0.5% and 1.5%, and reconstitution
+          must complete in under 90 seconds. What in-process control stops the
+          batch before it is lost?
+          What do you do if the batch shows collapse at hour six?
+          Constraints: 1,250–1,500 words. At least three distinct numeric
+          derivations. Do not justify any parameter by citing a platform cycle.
+        grading:
+          word_min: 1250
+          word_max: 1500
+          derivations_min: 3
+          presence: ["collapse temperature", "sublimation rate", "residual moisture"]
+          prohibitions:
+            - rule: "do not justify any parameter by citing a platform cycle"
+              kind: category
+        exercises: ["form/numeric", "prohibition", "presence"]
+
+      - id: v3-soil-salinity
+        domain: agriculture
+        pairs_with: agri-soil-salinity
+        format: numbers-as-words
+        stresses: "numeric thresholds spelled as words, not digits"
+        request: |
+          A four hundred and twenty hectare block carries root-zone electrical
+          conductivity of nine point four decisiemens per metre and a sodium
+          adsorption ratio of eighteen. The water table sits one point one metres
+          below the surface and measures twenty-two decisiemens per metre. The
+          profile is a silty clay loam with saturated hydraulic conductivity of two
+          point four millimetres per hour. Irrigation water is available at one
+          point eight decisiemens per metre, at nine tenths of a megalitre per
+          hectare per season.
+
+          Establish whether the block can be returned to production, derive the
+          leaching requirement, state the amendment dose, give the drainage the
+          scheme requires and how it is disposed of.
+
+          Identify the failure mode that leaves the block saltier than it began,
+          and the single measurement that shows the scheme is not working. Give the
+          time to reach target salinity.
+
+          Write between one thousand one hundred and fifty and one thousand four
+          hundred words. Exactly four phases. The leaching and sodicity balance
+          must appear.
+        grading:
+          word_min: 1150
+          word_max: 1400
+          phases: 4
+          must_contain: ["leaching and sodicity balance"]
+          presence: ["sodium adsorption ratio", "hydraulic conductivity", "drainage"]
+        exercises: ["form", "must-contain", "presence"]
+
+      - id: v3-pfas-treatment
+        domain: water
+        pairs_with: water-pfas-treatment
+        format: reverse-order
+        stresses: "deliverable stated first, context after"
+        request: |
+          Produce: a treatment train design, at most 1,200 words, containing the
+          media mass balance, and never using the word "simply."
+
+          Then, the situation you are designing for. A municipal plant at 42 ML/d
+          draws river water carrying a total PFAS of 240 ng/L, dominated by
+          short-chain species. Compliance with a limit of 4 ng/L across four named
+          compounds is required inside 18 months. Dissolved organic carbon in the
+          raw water moves between 2 and 9 mg/L and turbidity spikes after rain.
+
+          What the design must settle. The process selected, and which species it
+          does and does not remove. Spent-media handling and its principal cost
+          driver. The pilot programme that de-risks full scale. The monitoring that
+          proves compliance rather than assuming it.
+
+          Give: the mass balance that fixes media changeout interval.
+
+          And identify: the failure mode a well-designed train will still exhibit
+          after a heavy-rain event.
+        grading:
+          word_max: 1200
+          must_contain: ["media mass balance"]
+          presence: ["dissolved organic carbon", "media changeout", "monitoring"]
+          prohibitions:
+            - rule: 'never use the word "simply"'
+              kind: lexical
+              phrase: simply
+        exercises: ["prohibition", "form/numeric", "must-contain", "presence"]
+
+      - id: v3-building-moisture
+        domain: building
+        pairs_with: building-moisture
+        format: trailing-appendix
+        stresses: "constraints placed far from the ask, in an appendix"
+        request: |
+          A cold-climate building has an exterior wall of brick veneer, a drained
+          cavity, 100 mm mineral wool, and an interior vapour barrier. Interstitial
+          condensation has appeared in the sheathing during the second winter.
+          Indoor conditions are 22 °C at 40% relative humidity. The 1% January
+          design temperature is −24 °C. Sheathing is oriented strand board. The
+          cladding has a measured air-leakage rate at the cavity base.
+
+          Determine whether the condensation is vapour diffusion or air transport.
+          Give the psychrometric calculation that distinguishes them, and design
+          the repair. State the conservative interior condition to design to, and
+          the safety margin the sheathing needs. Identify the intervention that
+          would make the problem worse, and explain why it is commonly recommended.
+
+          Appendix A — constraints
+          Item    Requirement
+          Length    1,100 to 1,350 words
+          Structure    exactly three sections
+          Calculations    at least two psychrometric
+        grading:
+          word_min: 1100
+          word_max: 1350
+          sections: 3
+          calculations_min: 2
+          presence: ["dew point", "vapour barrier", "air leakage"]
+        exercises: ["form", "presence"]
+
+      - id: v3-tailings-dam
+        domain: geotechnical
+        pairs_with: geotech-tailings-dam
+        format: dialogue
+        stresses: "constraints emerge from spoken exchange"
+        request: |
+          A: The raise is upstream, nine lifts, 68 m now, 24 million tonnes. There
+          are 1,900 people at 4.1 km.
+
+          B: Construction records?
+
+          A: Complete for six of the nine.
+
+          B: Phreatic surface?
+
+          A: 2.8 m below crest. Residual friction angle comes back at 27°. Design
+          PGA is 0.28 g.
+
+          B: So what do you want from me — a factor of safety, or an answer?
+
+          A: Both. Static and pseudo-static. Whether it meets a recognised
+          standard. And the monitoring, surveillance and emergency response the
+          consequence class demands.
+
+          B: You know there's a failure mode I can't rule out with those records.
+
+          A: I know. Say it plainly. And tell me whether a credible safety case can
+          be made at all on what we have. If it can't, that's the answer, and I'd
+          rather have it now than in a report nobody reads.
+
+          B: Length?
+
+          A: 1,150 to 1,400 words. Show the factor-of-safety derivation. And if the
+          data can't support a conclusion, say so in those words.
+        grading:
+          word_min: 1150
+          word_max: 1400
+          must_contain: ["factor-of-safety derivation"]
+          presence: ["phreatic surface", "residual friction angle"]
+          refusal_trap: >-
+            Records complete for only six of nine raises may make a credible safety
+            case impossible; the correct answer can be that the data cannot support
+            a conclusion, stated in those words, rather than a design.
+        exercises: ["form", "must-contain", "refusal-trap", "presence"]
+
+      - id: v3-pipeline-crack-assessment
+        domain: pipeline
+        pairs_with: pipeline-crack-assessment
+        format: checklist
+        stresses: "box/checklist syntax; imperatives as list items"
+        request: |
+          Line: 610 mm OD, 9.5 mm WT, natural gas, built 1978
+          ILI found 41 crack-like features, depths 8–31% WT, lengths 12–88 mm
+          Operating pressure 68 bar; MAOP 74 bar
+          Pressure cycles 4–11 per day, cycle ratio 38%
+          No ILI history before 2019
+
+          Required
+          - Remaining life for the deepest feature — show the calculation
+          - Can the line remain at current pressure? State yes or no and why
+          - Re-inspection interval
+          - Pressure restriction if required
+          - Crack-growth calculation
+          - Inspection-technology qualification the sizing accuracy depends on
+          - The one input that most changes the answer
+
+          Do not present a probabilistic result without naming the method and its
+          calibration.
+
+          Length 1,200–1,450 words.
+        grading:
+          word_min: 1200
+          word_max: 1450
+          must_contain: ["remaining-life calculation", "crack-growth calculation"]
+          presence: ["inspection-technology qualification", "MAOP"]
+          prohibitions:
+            - rule: "do not present a probabilistic result without naming the method and its calibration"
+              kind: conditional
+          refusal_trap: >-
+            The verdict depends on ILI sizing accuracy with no pre-2019 history; a
+            good answer makes remaining life contingent on that qualification
+            rather than asserting a single number.
+        exercises: ["form/numeric", "must-contain", "prohibition", "refusal-trap"]
+
+      - id: v3-manipulator
+        domain: robotics
+        pairs_with: robotics-manipulator
+        format: glossary-first
+        stresses: "definitions precede the problem"
+        request: |
+          Terms as used here
+
+          Condition number — the ratio expressing how close the Jacobian is to
+          singular at a posture.
+          Wrist singularity — a configuration where two joint axes align and a
+          Cartesian degree of freedom is lost.
+          Joint interpolation — motion commanded in joint space; the tool path is
+          not controlled.
+          Mode switch — the controller's change from Cartesian to joint
+          interpolation when demanded velocity exceeds joint capability.
+
+          Situation. A six-axis arm of 1.8 m reach performs a 900 mm straight-line
+          weld at 12 mm/s. The tool passes within 140 mm of the wrist singularity.
+          Condition number rises from 4 to above 400 near the path midpoint. Joint
+          limits are ±170° on the three primary axes. A mode switch would break the
+          weld geometry.
+
+          Required. The condition-number threshold to maintain. The path offset or
+          wrist reorientation that avoids the singularity. The velocity profile
+          that stays inside joint limits throughout. The detection that halts the
+          move before the controller switches modes. The condition number at the
+          worst point after redesign, and the joint velocities there. Under 1,150
+          words, exactly two sections, condition-number calculation included.
+        grading:
+          word_max: 1150
+          sections: 2
+          must_contain: ["condition-number calculation"]
+          presence: ["singularity", "joint limits", "mode switch"]
+        exercises: ["form", "must-contain", "presence"]
+
+      - id: v3-laser-damage
+        domain: photonics
+        pairs_with: photonics-laser-damage
+        format: inequality-notation
+        stresses: "≤/≥ notation and a code-block Required table"
+        request: |
+          System. 1064 nm, 12 ns pulses, 40 J/cm² incident. Fused-silica window,
+          then two lenses, then a frequency-doubling crystal.
+
+          Window LIDT = 28 J/cm² @ 12 ns, 1064 nm, uncompromised conditions.
+          Manufacturer spec is higher.
+
+          Complicating factors. Surface contamination on one lens. Beam spatial
+          ripple = 3%, producing local hot spots.
+
+          Required
+
+          fluence at each optic        must be stated per element
+          margin at worst point        must be stated
+          survival under continuous operation   YES/NO with reasoning
+          mechanism that fails first   must be named
+          evidence to distinguish it from an alternative mechanism   must be stated
+          Also: which optic fails if crystal conversion efficiency drops 15%.
+
+          Limits: 1,050 ≤ words ≤ 1,300. Fluence calculation required. No component
+          may be described as "widely available" or "standard."
+        grading:
+          word_min: 1050
+          word_max: 1300
+          must_contain: ["fluence calculation"]
+          presence: ["LIDT", "hot spots", "conversion efficiency"]
+          prohibitions:
+            - rule: 'no component may be described as "widely available"'
+              kind: lexical
+              phrase: widely available
+            - rule: 'no component may be described as "standard"'
+              kind: lexical
+              phrase: standard
+        exercises: ["prohibition", "form/numeric", "must-contain", "presence"]
+
+      - id: v3-noise-control
+        domain: acoustics
+        pairs_with: acoustics-noise-control
+        format: constraints-mid-sentence
+        stresses: "constraints buried inside clauses of one run-on sentence"
+        request: |
+          A compressor hall holding eight machines measures 94 dB(A) at 3 m from
+          the nearest unit, and while the boundary fence sits 55 m away the
+          residential receptor is 18 m beyond the fence — and you should write at
+          least 1,250 words — with the measured spectrum dominated by 125 Hz and
+          250 Hz, plus a strong 63 Hz component from the largest unit, though note
+          that the applicable night limit at the receptor is 42 dB(A) and there is
+          an audible 31.5 Hz tone inside the nearest dwelling, so design the control
+          scheme to meet the limit, deriving the attenuation required per octave
+          band, and because the requirement is that you specify at least three
+          mitigation options each with its attenuation value, do so, while also
+          stating the measure that treats the tone and why tonal components need
+          separate treatment from the overall level, and give the
+          sound-power-to-pressure derivation establishing how much must be removed
+          at source — and include an NR or NC curve target.
+        grading:
+          word_min: 1250
+          must_contain: ["NR or NC curve target"]
+          mitigation_options_min: 3
+          options_with_values: true
+          presence: ["octave band", "tonal component", "sound power"]
+        exercises: ["form", "must-contain", "presence"]
+
+      - id: v3-thermal-process
+        domain: food
+        pairs_with: food-thermal-process
+        format: badly-specified
+        stresses: "deliberately under-specified — missing/approximate values are a refusal test"
+        request: |
+          we need the process sorted for the 400g cans. low acid. got the D value
+          and z somewhere, think its around 0.55 and 9ish. retort comes up in about
+          6 min, product lags, fh is 34, j is 1.4. need commercial sterility,
+          target F0 6.
+
+          also need to know what to control and record, and how to validate it in
+          the retort not the lab. and what would invalidate the validation. and the
+          come-up contribution.
+
+          what deviation forces a recall instead of rework.
+
+          keep it reasonable length, 1150-1400.
+        grading:
+          word_min: 1150
+          word_max: 1400
+          must_contain: ["F₀ calculation"]
+          presence: ["D-value", "z-value", "cold point"]
+          refusal_trap: >-
+            The brief is under-specified on purpose: D₁₂₁ and z are given only
+            approximately ("around 0.55 and 9ish") and the retort temperature is
+            not stated. A good answer flags these missing/approximate inputs and
+            states what it assumed and why, rather than silently inventing exact
+            values.
+        exercises: ["form/numeric", "must-contain", "refusal-trap", "presence"]
+
+      - id: v3-atrium-smoke
+        domain: fire
+        pairs_with: fire-smoke-atrium
+        format: negative-imperatives
+        stresses: "every constraint phrased as a prohibition"
+        request: |
+          Do not begin until you have read all constraints.
+
+          A nine-storey office building has a 32 m atrium open to full height. Do
+          not assume the atrium is sprinklered — it is not.
+
+          Do not use the design fire without stating it: 5.4 m², 1.8 MW, growth
+          time constant 420 s.
+
+          Do not treat this as a smoke-filling problem without first deciding
+          whether it is one, and do not fail to say which approach you chose or why.
+
+          Do not omit the smoke-layer descent calculation at the moment egress
+          completes.
+
+          Do not forget the top floor has a 30 m travel distance, and do not forget
+          the egress route crosses the atrium floor.
+
+          Do not omit the exhaust rate required, and do not omit the makeup air
+          path.
+
+          Do not leave out the tenability criteria for visibility and temperature.
+
+          Do not fail to identify the condition under which the system fails despite
+          being correctly sized.
+
+          Do not exceed 1,200 words. Do not use more or fewer than three sections.
+        grading:
+          word_max: 1200
+          sections: 3
+          must_contain: ["smoke-layer descent calculation"]
+          presence: ["tenability criteria", "exhaust rate", "makeup air"]
+        exercises: ["form", "must-contain", "presence"]
