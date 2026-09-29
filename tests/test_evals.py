@@ -197,7 +197,7 @@ def scripted(risk="medium", green=True):
                     "success_criteria": ["Backoff is capped at 60s with jitter"]}
         if "review this implementation plan" in m:
             return {"feasible": True, "concerns": [], "blockers": []}
-        if "produce the implementation for the following plan" in m:
+        if "implementation for the following plan" in m:  # produce (iter 1) or revise (D33, iter>1)
             return {"done": True, "green": True, "red_cause": None, "iteration": 1,
                     "summary": "Backoff is capped at 60s with jitter applied."}
         if "review this implementation from your domain perspective" in m:
