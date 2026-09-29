@@ -1,0 +1,21 @@
+{
+  "command_id": "ARCH-20260926-081",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "dccc48e",
+  "head_after": null,
+  "preconditions_checked": {
+    "d33_in_tree": "present (grep 'Ruling D33' docs/handover-review.md)",
+    "080_merged": "PR #94 merged to main at dccc48e",
+    "clean_tree": "clean before setup",
+    "key_present": "true via .env (settings.openrouter_api_key len 73); the shell $OPENROUTER_API_KEY check reads absent because the harness loads from .env, not the shell — capability confirmed by the app's own path and by every paid run this session"
+  },
+  "results": [],
+  "deviations": [
+    "ROSTER CONFOUND NAMED (081 assumption clause): the $0.80 baseline ran on the OLD roster (GLM-5 engineering, Inkling-small plan). The current roster is qwen3-235b/glm-5.3/gpt-5.4. A straight D33-on vs $0.80 comparison would confound D33 with the roster swap, so it is not run. Instead the discriminator is an un-confounded same-roster same-item A/B: robotics-manipulator (blocked D33-off on the current roster this session) re-run D33-on, plus the command's kappa item conv_pool_sizing D33-on. Within the robotics A/B the model is identical; only D33 changed.",
+    "conv_backfill_migration deferred: 4 convergence units cannot fit $1.20 without a treatment unit hitting its per-unit cap and reporting a budget-cut false block. Recommended as a follow-up.",
+    "triage rerouted to DigitalOcean (US) for this run to dodge the DeepInfra 429 on deepseek-v4-flash seen twice this session; triage serving does not affect the convergence behaviour under test."
+  ],
+  "questions_for_advisor": [],
+  "delivery_state": {"pr": null}
+}
