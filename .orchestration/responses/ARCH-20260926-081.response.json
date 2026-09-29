@@ -37,7 +37,7 @@
     "Given gpt-5.4 escalation dominates cost and the reasoning tiers make runs slow enough to time out, is the escalation/architecture roster the right one for a convergence TEST, or should the test use a faster roster and isolate D33 there?"
   ],
   "delivery_state": {
-    "pr": null,
+    "pr": 95,
     "trace": "docs/traces/088-v1-discriminator.jsonl (mirror in scratchpad run-081-results.jsonl)"
   }
 }
