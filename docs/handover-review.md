@@ -8891,3 +8891,31 @@ resolution_directive) are unchanged; D33 adds one input and changes one
 instruction. Provider-free test proves iteration 1 carries no prior artifact
 and iteration 2 carries it verbatim plus the revision instruction, and fails
 when the artifact is withheld (convention 22).
+
+## 81. Forced reasoning at implement — Ruling D34 (executor, 2026-09-29)
+
+The clean ARCH-20260926-081 re-run (engineering qwen3-235b on Nebius, 0 × 429,
+docs/traces/088) gave the first un-apparatus-confounded read: D33 alone did not
+converge the hard class. conv_pool_sizing escalated after eight iterations with
+implement and the LLM validate both going green while the free deterministic
+`consistency` check dissented every iteration; robotics escalated after
+regressing green→red. The diagnosis (advisor): a non-reasoning model in an
+iterative loop rubber-stamps its own blind spots and cannot hold multi-step
+numeric consistency. Option 3 — "synthetic reasoning" — is the free, prompt-level
+first move; Option 1 (heterogeneous judge tier) and Option 2 (real reasoning at
+implement) follow if it does not converge.
+
+### Ruling D34 — the implement node reasons before it produces
+
+Ruling D34 — run_implement's JSON contract requires a `reasoning` field emitted
+FIRST, before every other field, in which the model reasons step by step about
+satisfying each success criterion and verifying numeric consistency (and, on
+revision, the delta that made the previous artifact inconsistent) before it
+writes the deliverable. Implemented json_object-safe: the model cannot emit a
+free `<think>` preamble in json_object mode, but JSON field order is
+autoregressive, so a `reasoning` field placed first in the contract is generated
+before `summary` and supplies the cognitive runway. The verdict ignores the field
+(Pydantic extra='ignore'), so the process changes, not the verdict's meaning — no
+schema change, no parser change, no reliability loss. The 55k plan ceiling
+(engineering shares PLAN_MAX_TOKENS) accommodates the added scratchpad tokens.
+Behaviour change, ruled here.
