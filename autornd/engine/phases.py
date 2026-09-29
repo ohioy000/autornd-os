@@ -761,6 +761,7 @@ If a criterion cannot be honestly satisfied with the grounding available, name i
 {context_block}
 
 Return JSON with:
+- reasoning: fill this FIRST, before every other field. Think step by step here — how you will satisfy each success criterion, and, critically, verify that every numeric value you will state agrees with every threshold, bound and other value in the deliverable (the failure this guards against is a value that violates a limit the same deliverable sets, e.g. a computed figure exceeding a stated threshold). If a previous implementation is shown above, state exactly what was inconsistent, why its logic was wrong, and the specific change you will make to fix it WITHOUT breaking what already passed. This field is a private scratchpad: it is not the deliverable and is not read downstream.
 - done: true if the implementation is complete
 - green: true if you believe it satisfies the success criteria
 - red_cause: null if green, otherwise a short string describing what is wrong
