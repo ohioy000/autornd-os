@@ -1,0 +1,13 @@
+{
+  "command_id": "ARCH-20260926-080",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "d6cf8b6",
+  "head_after": null,
+  "results": [],
+  "deviations": [
+    "IN_PROGRESS commit written after the work was completed in-session rather than strictly before it; the branch commit order is nonetheless carriage -> IN_PROGRESS -> ruling -> implementation -> DONE. Recorded per the channel's departure rule."
+  ],
+  "questions_for_advisor": [],
+  "delivery_state": {"pr": null}
+}
