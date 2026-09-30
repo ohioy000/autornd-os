@@ -102,6 +102,26 @@ def _base_model(model: str) -> str:
     return model.split(":", 1)[0]
 
 
+def _provider_names(entry: dict) -> set[str]:
+    """Every provider identity an endpoint entry carries, normalized.
+
+    Measured 2026-09-30: the endpoints route has (at least) two shapes. Some
+    models return a bare `provider_name` (`InferenceNet`); others (Gemini
+    3.8 Flash) carry no `provider_name` at all and embed the provider in
+    `name` as `"Google AI Studio | google/gemini-3.8-flash-20260902"`.
+    Reading only the first shape reported "does not serve" for a pin that
+    served live twenty minutes later. Generic rule: collect both, normalize
+    both, match on either.
+    """
+    names: set[str] = set()
+    if entry.get("provider_name"):
+        names.add(_base_provider(str(entry["provider_name"])))
+    name = str(entry.get("name") or "")
+    if "|" in name:
+        names.add(_base_provider(name.split("|", 1)[0].strip()))
+    return {n for n in names if n}
+
+
 def _base_provider(pin: str) -> str:
     """The provider name behind a call-time specifier.
 
@@ -109,10 +129,12 @@ def _base_provider(pin: str) -> str:
     endpoint names (`InferenceNet`) the endpoints route returns, so every
     quant-suffixed pin FAILed preflight while serving live. The `/fp4` is a
     call-time routing specifier, not part of the name; comparison is on the
-    bare name with separators and case normalized (the route returns
-    `InferenceNet`, configs write `inference-net`).
+    bare name with separators, case and whitespace normalized (the route
+    returns `InferenceNet` or `Google AI Studio`, configs write
+    `inference-net` or `google-ai-studio`).
     """
-    return pin.split("/", 1)[0].lower().replace("-", "").replace("_", "")
+    return (pin.split("/", 1)[0].lower().replace("-", "").replace("_", "")
+            .replace(" ", ""))
 
 
 def check(models: dict[str, str], pins: dict[str, str],
@@ -176,8 +198,10 @@ async def run() -> list[Finding]:
             data = (await _fetch(f"/models/{model}/endpoints")).get("data", {})
         except Exception:
             continue                      # left unresolved, and reported as such
-        endpoints[model] = {e.get("provider_name")
-                            for e in data.get("endpoints", [])}
+        names: set[str] = set()
+        for e in data.get("endpoints", []):
+            names |= _provider_names(e)
+        endpoints[model] = names
     return check(models, pins, known, endpoints)
 
 

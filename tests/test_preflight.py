@@ -233,6 +233,51 @@ class TestPerRequestSpecifiers:
         assert not _fail_subjects(check(models, pins, KNOWN, eps))
 
 
+class TestEndpointRouteShapes:
+    """Measured 2026-09-30: the endpoints route has (at least) two shapes.
+    Kimi's entries carry a bare `provider_name`; Gemini 3.8 Flash's carry
+    none and embed the provider in `name` as `"Google AI Studio | ..."`.
+    `run()` read only the first shape, so a pin that served live twenty
+    minutes earlier reported "does not serve". Generic rule: `run()` collects
+    every identity an entry carries; `check()` matches on any of them.
+    """
+
+    def test_run_reads_provider_from_name_pipe_shape(self, monkeypatch):
+        """The Gemini shape, at its actual site in run()."""
+        asked: list[str] = []
+
+        async def fake_fetch(path: str) -> dict:
+            asked.append(path)
+            if path == "/models":
+                return {"data": [{"id": "vendor/chat"}]}
+            return {"data": {"endpoints": [
+                {"name": "Google AI Studio | vendor/chat-20260902"},
+                {"name": "Google | vendor/chat-20260902"},
+            ]}}
+
+        from autornd.config import settings
+        for tier in REQUIRED_TIERS:
+            monkeypatch.setattr(settings, f"model_{tier}",
+                                "vendor/chat", raising=False)
+        monkeypatch.setattr(preflight, "_pins", lambda: {})
+        monkeypatch.setattr(preflight, "_fetch", fake_fetch)
+
+        findings = asyncio.run(preflight.run())
+        assert not _fail_subjects(findings)
+
+    def test_name_pipe_entries_cover_a_matching_pin(self):
+        from autornd.preflight import _provider_names
+        entry = {"name": "Google AI Studio | vendor/chat-20260902"}
+        assert "googleaistudio" in _provider_names(entry)
+
+    def test_entries_with_neither_shape_resolve_to_nothing(self):
+        """The bound: an entry carrying no identity anywhere must not match
+        everything — it matches nothing, and the pin fails loudly."""
+        from autornd.preflight import _provider_names
+        assert _provider_names({}) == set()
+        assert _provider_names({"name": "no-pipe-here"}) == set()
+
+
 class TestTheWiringBeneathCheck:
     """`check()` is pure, which is what makes it testable — and is also why
     testing it alone missed both of 2026-09-22's bugs entirely.
