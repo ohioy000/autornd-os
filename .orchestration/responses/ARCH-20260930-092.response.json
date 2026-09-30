@@ -1,0 +1,29 @@
+{
+ "command_id": "ARCH-20260930-092",
+ "executed": true,
+ "head_before": "860d6c2",
+ "head_after": "9cbf3da",
+ "status": "DONE",
+ "results": {
+  "acceptance": {
+   "thirteen_files": "13 docs/traces/091-night-20260930T*.jsonl, sha256 equal to evals/results sources, no MISMATCH output",
+   "key_scan": "clean on the literal pattern class (sk-or-v1, sk-ant-, xox, ghp_, gsk_, AIza all zero hits; bare OPENROUTER_API_KEY token with no secret attached is not key material)",
+   "section_83": "both handover notes VERBATIM by fence-span diff, 13-row generated table, 25 zero-unit names",
+   "ledger": "regenerated via derive/render, test_serving_ledger 7/7. Night rows quoted: escalation kimi-k3:exacto/inference-net-fp4 9 blocked + 1 escalated; judge kimi-k2.5:exacto/siliconflow-int4 5 blocked + 1 escalated; judge deepseek-flash/DigitalOcean 2 blocked; triage gemini-flash/google-ai-studio 4 blocked + 1 escalated; arch mimo-exacto xiaomi/fp8 2 blocked + 1 escalated, deepinfra/fp8 1 blocked",
+   "code_diff": "git diff origin/main -- autornd/ tests/ workflows/ profiles/ empty",
+   "suite": "1043 passed, 2 failed \u2014 both are test_docs workflow-comparison-table guards reading a README row my 089-branch edit moved to 6/6 on a tree whose harness reports 10/17; I discarded that edit per 093's precondition (README back to origin state), so the failure is the pre-existing table-vs-harness drift on THIS branch, not my doing. Count reported before and after: unchanged by this command (no test added)."
+  },
+  "questions": {
+   "same_session": "both notes are the same session (2026-09-29/30 night, same branch, cross-referencing). Single section 83, no 83.x split.",
+   "suite_paths": "headers name no suite path; robotics scenario confirmed as robotics-manipulator per advisor pointer to evals/datasets/technical-sets.yaml (recorded in 83.2, not asserted as header content)."
+  },
+  "deviations": [
+   "Table stop_reason column uses shorthands (404 escalation pin, judge asphyxiation, 402 credits) compressing unit error/stop_reason strings; full text is in the traces. Scenario column marks the eleven robotics files robotics-manipulator with a trailing ? since headers carry no scenario field \u2014 the advisor's pointer is recorded beside it, not asserted as header content.",
+   "The key scan's literal pattern class includes a bare OPENROUTER_API_KEY alternative that can match a variable name with no secret; I treated zero secret-pattern hits as clean and recorded the distinction. A stricter reading would BLOCK on any match of the class as written."
+  ]
+ },
+ "deviations": [
+  "see results.deviations"
+ ],
+ "questions_for_advisor": []
+}

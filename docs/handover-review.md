@@ -8957,3 +8957,303 @@ executor. Recorded, not decided.
 > **Ruling D37 (owner-supplied, ruled by the advisor, 2026-09-30) — the re-grounding edge: answer the blockers that surface, once, if novel. A plan that is not ready and names blocking unknowns gets one re-grounding round. A free, deterministic check compares the plan's blockers with the questions this run's grounding actually asked, read from the run's own state. Only the novel ones are looked up, in one bundled request at the standard budget, under the existing risk policy; at low risk nothing is looked up. When findings come back, the plan runs once more with them in its context. There is never a second round and never a third plan pass. A plan whose blockers were all already asked, that names none, or whose round found nothing new does not re-plan: it goes to plan_ready, which blocks and names them. A plan that proceeds while still naming blockers proceeds on assumptions, and each is recorded with its basis (whether it was asked, and what the lookup returned) and counted. Nothing is recorded as unanswered before its lookup has been read. This supersedes the Ruling D34 (owner-supplied, 2026-09-30) text in 2a45d61, which collided with D34. Falsifier: across the pre-registered live sample, if the lookup answers none of the blockers it is sent, the paid half is not earning and the edge becomes label-only; if any run re-plans without new information in its context, the novelty check is broken.**
 
 Execution record: implementation follows in the commits after this section's ruling commit, per the command's commit order.
+
+## 83. The night of 2026-09-29/30: judge wiring, exacto pins, golden lineup (executor record, carried by ARCH-20260930-092, merged from main)
+
+### 83.0 Executor note handover-judge-robotics.md (verbatim)
+
+```
+# Handover — judge wiring + robotics re-run (2026-09-29)
+
+## Session state
+
+Branch: `arch/20260929-091-judge-and-early-escalation`, 1 commit ahead of origin
+(`d47ca4e` committed, NOT pushed). Working tree: clean except gitignored
+`evals/results/*robotics-only.jsonl` (two run-only files, do not commit).
+
+PR #98 (D35 judge tier, 1031 tests) is open against this branch's earlier
+commit `b92bb8c`. The new commit `d47ca4e` supersedes it — push will update
+the PR; suite is now 1035 green. Do NOT open a second PR.
+
+## What changed and why
+
+1. **D35 wiring fix (committed, `d47ca4e`).** The judge tier was YAML-only:
+   `tier: judge` on domain_review/validate/review/rework_review, but every
+   judging phase called `spec.run()` with no function override, so
+   `Specialist.router_function` (engineering) served the call and the judge
+   tier billed zero. Proven by the first robotics live run (judge configured,
+   preflight-green, zero judge calls). Fix: `Specialist.run()` accepts
+   `function=` override; `run_domain_review`/`run_validate`/`run_review`
+   accept and forward it; adapter passes `self._tier(node, state)`.
+   Tests: `tests/test_judge_tier.py` +4 wiring tests (11 total). Count stamps
+   updated README/HANDOVER/testing.md 1031→1035. Full suite 1035 green.
+2. **Owner's `.env` (NOT in git, owner-edited):** `MODEL_ESCALATION=
+   moonshotai/kimi-k3`, `MODEL_JUDGE=openai/gpt-6.1-sol-pro`,
+   `JUDGE_MAX_TOKENS=8000`, pins `escalation:relace` (Moonshot AI down),
+   `judge:openai` (was `judge:Azure` + gpt-5.2-chat). Typo in pin names was
+   the preflight failure; owner fixed it, owner-side preflight is green.
+
+## The blocker: stale exported env vars in THIS session
+
+This session's shell has the OLD roster exported (`MODEL_ESCALATION=openai/
+gpt-6.1-sol-pro`, `MODEL_JUDGE=openai/gpt-5.2-chat`,
+`OPENROUTER_PROVIDER_ORDER=...escalation:OpenAI...judge:Azure...`), which
+beat `.env`. Proof: the 19:09 run's result header records the old roster.
+`unset` inside this session cannot fix it for a new agent (exports live in
+the session process, and the owner already unset them in their own terminal
+— owner-side preflight is green). **Do not run paid commands until
+`env | grep -E "^(MODEL_|OPENROUTER_|JUDGE_)"` is empty in YOUR shell.**
+If it is not empty, stop and ask the owner — do not `unset` blindly; the
+exports may be load-bearing for something else.
+
+## Next steps (in order)
+
+1. Verify clean env: `env | grep -E "^(MODEL_|OPENROUTER_|JUDGE_)"` → empty.
+   Then `.venv/bin/python3 -m autornd.preflight` → expect 15 ok: kimi-k3,
+   `Relace serves`, sol-pro, `OpenAI serves` on judge.
+2. Push: `git push origin arch/20260929-091-judge-and-early-escalation`
+   (updates PR #98; no force, no new PR). Tree is clean — safe.
+3. Paid run (owner authorized $0.55/item, $1.20 sweep; $0.10 already spent
+   this session on the stale-roster run, $1.10 remains):
+   `.venv/bin/python3 -m autornd.evals.cli --scenarios /tmp/robotics-only.yaml
+   --workflow engineering-rnd --repeat 1 --timeout 1500 --max-spend 0.55
+   --max-spend-sweep 1.20`
+   If /tmp/robotics-only.yaml is gone, rebuild it: single scenario
+   `robotics-manipulator` with the request text from
+   `evals/datasets/technical-sets.yaml` line ~491.
+4. Verify the header FIRST: result JSONL `models.judge` must be sol-pro and
+   `models.escalation` kimi-k3. If old roster → env still poisoned, stop.
+5. Report: expect blocked (robotics blocks on missing inputs before any
+   judging — implement never goes green, so judge may again bill zero; that
+   is the item's shape, not a wiring failure). The item that exercises the
+   judge is conv_pool_sizing (090's echo-chamber case) — propose it, do not
+   run it (needs fresh owner spend authorization).
+
+## Standing constraints (do not break)
+
+- Run-only instruction: nothing committed except the fix; results stay in
+  gitignored `evals/results/`. No handover-review section, no trace commit.
+- No git ops while a paid run is in flight. Clean tree before paid runs
+  (currently clean — keep it so).
+- G-3: never edit `.env`. G-2: pins are owner-ratified; report, don't change.
+- Suite: `.venv/bin/python3 -m pytest tests/ -q` before/after any code change.
+```
+
+### 83.1 Executor note handover-night-20260930.md (verbatim)
+
+```
+# Handover — night of 2026-09-29/30: judge wiring, exacto pins, golden lineup
+# (executor's record; branch arch/20260929-091-judge-and-early-escalation)
+
+## 1. Session state at write-up
+
+Branch: `arch/20260929-091-judge-and-early-escalation`, 1 commit ahead of
+origin (`d47ca4e`, the D35 wiring fix). Working tree at write-up: the
+preflight fix (`autornd/preflight.py`, `tests/test_preflight.py`) plus count
+stamps (README/HANDOVER/testing.md 1042→1045) uncommitted. Full suite:
+**1045 green**. PR #98 open against `b92bb8c`; push updates it, no second PR.
+
+Paid runs tonight: ~10 scenario-runs (7 robotics, 1 credit-402, 1 prime
+65-min, 1 medium 80-min), ~$1.90 trace-billed on the owner key. Sweep
+authorizations were per-run ($0.55→$1.20→$2→$4→$5); the medium run had
+$5 cap, spent $0.34. Key-day total per OpenRouter activity log
+(`openrouter_activity_2026-09-30.csv`, owner-supplied, 580 rows): $7.07
+including daytime activity outside this session.
+
+Run-only instruction held all night: nothing committed except code;
+results stay in gitignored `evals/results/`, no trace commit, no
+handover-review section (this file is the record instead).
+
+## 2. What changed in code (uncommitted at write-up)
+
+**D35 wiring fix (committed, `d47ca4e`).** Judge tier was YAML-only:
+`Specialist.run()` never took a function override, so judging nodes were
+served by engineering and judge billed zero. Fix: `function=` override
+threaded through `run_domain_review`/`run_validate`/`run_review` via the
+adapter's `self._tier(node, state)`. Tests +4 (`tests/test_judge_tier.py`,
+11 total). Proven live: judge billed 9 calls/$0.50 (sol-pro) on the next
+run — the wiring works.
+
+**Preflight generic-specifier fix (uncommitted).** Three rounds, all
+convention-22 instrument repair (reported failure where apparatus was
+fine):
+1. `:exacto` ids absent from bulk `/models` (plain id only) → compare base
+   id; endpoints decide.
+2. Quant-suffixed pins (`inference-net/fp4`) never match bare endpoint
+   names (`InferenceNet`) → compare bare names, separators/case/
+   whitespace normalized.
+3. Endpoints route has two shapes: bare `provider_name` (Kimi) vs provider
+   embedded in `name` as `"Google AI Studio | ..."` (Gemini, no
+   `provider_name` field) → collect every identity an entry carries.
+Tests: `TestPerRequestSpecifiers` (6) + `TestEndpointRouteShapes` (3).
+Live preflight on the golden lineup: 15/15 green. Suite 1045 green
+after count-stamp updates (README/HANDOVER/testing.md 1042→1045).
+
+## 3. Lineup evolution (owner-edited `.env`, G-3)
+
+Start (handover): triage deepseek-flash, engineering qwen, arch GLM-5.3,
+escalation kimi-k3 (Relace), judge gpt-5.2-chat (Azure), premium unset.
+End (golden): triage **gemini-3.8-flash** (google-ai-studio), engineering
+qwen (Nebius), architecture **mimo-v2.6-pro:exacto** (xiaomi/fp8),
+escalation **kimi-k3:exacto** (inference-net/fp4), research gemini-3.8-flash
+(google-ai-studio), search sonar (Perplexity), judge **kimi-k2.5:exacto**
+(siliconflow/int4), premium sol-pro:exacto (Azure), ranker unchanged.
+Fallbacks off throughout. Caps at write-up: all code defaults (the
+90k/150k excursion 402'd and was reverted).
+
+Waypoints: judge sol-pro (proved wiring, $0.50/pass — too dear) →
+judge V4-Pro-0813-exacto (asphyxiated 3× at 8k, $0.19/nothing) → flip
+(Pro→triage, Flash→judge: Flash judged for $0.0027) → triage Gemini
+(exacto 404'd on tier-rows; plain id serves) → judge K2.5 → arch Mimo
+(DeepInfra 429'd; first-party Xiaomi serves).
+
+## 4. Measured findings
+
+- **D35 proven.** Judge billed on first run after fix; heterogeneous judge
+  (sol-pro, then K2.5, then Flash) catches what qwen-producer is blind to.
+- **Exacto thesis (owner) holds.** Kimi-exacto via InferenceNet 6/6,
+  K2.5-exacto via SiliconFlow 16/16, Mimo via Xiaomi 9/9 (one length).
+  Only `length` failures all night: Mimo/DeepInfra 16k, V4-Pro/Relace 8k×3
+  — both retired pins. Cheap quant tiers absorb contention (activity log).
+- **Answer-inside-budget, not reasoning-vs-not.** Sol-pro emits in 8k;
+  Flash emits; K2.5 emits after 30k deliberation; V4-Pro-0813-exacto
+  asphyxiates at 8k. Slot selects for emission, not brilliance.
+- **Judge cost collapsed.** $0.50 (sol-pro) → $0.19/zero (V4-Pro) →
+  $0.0027 (Flash) → $0.07–0.15 (K2.5). Full-loop cost $0.56 → $0.09.
+- **Mimo emits on first-party at 78k** (19k completion, $0.028, fixed the
+  200-pose arithmetic with 201-poses/worst-finite-sample framing). GLM
+  wrote fast plans (~40s); Mimo slow (~10–15 min). GLM-vs-Mimo quality
+  still open (DeepInfra 429'd before Mimo showed anything).
+- **K3/K2.5 sibling split.** K3-escalation orders assume-affirmatively;
+  K2.5-judge blocks on provenance. Same lineage, opposite philosophies —
+  accelerator vs brake. B13 with live exhibits (advisor ruling needed).
+- **No-escalation pattern.** Prime run: 65 min review-driven rework, K3
+  never fired. Healthy-harness shape.
+- **Harness has no verdict for "test is wrong."** Medium run: K2.5 RED'd
+  criterion 1 ("every figure derived") over AWS prices/heuristic
+  thresholds — literally unsatisfiable, admitted in evidence. Only
+  green/red/blocked exist; "criterion needs erratum" isn't one.
+- **Judging eats the clock.** Prime: 27 min domain_review + 7 min
+  validate of 65. Medium: 48 + 18 of 80. Both died mid-deliberation
+  with money unspent ($4.75, $4.66). Time, not spend, binds deliberative
+  lineups.
+
+## 5. Per-run log (spend trace-billed, roster abbreviated)
+
+1. 002529Z robotics $0.019 — ReadTimeout feasibility (apparatus). No
+   verdict. Correct roster, zero judge (blocks before judging — item's
+   shape, predicted in handover).
+2. 003221Z robotics $0.022 — full path, implement red → escalation 404
+   (Relace parameter-filtered, DeepInfra context-filtered, fallbacks off).
+   Proved pin dead; prompted re-pin.
+3. 004628Z robotics $0.07 (OpenRouter only) — header-only file; foreground
+   tool timeout killed process post-Kimi-autopsy. Lesson: background all
+   paid runs (memory saved).
+4. 010754Z robotics $0.562 — recovery + sol-pro judging (9 calls/$0.50,
+   5 criteria failed with arithmetic evidence). Ceiling cut it mid-review.
+   D35 live proof.
+5. 012249Z robotics $0.245 — V4-Pro judge asphyxiation 3× at 8k.
+   ProviderFailure at validate. Fit finding.
+6. 014948Z robotics $0.053 — 402 at escalation (90k hold > balance).
+   Caps reverted to defaults.
+7. 020902Z robotics $0.087 — flipped lineup complete run: Flash judged
+   4 calls/$0.0027, red-with-evidence. Blocked honest.
+8. 023940Z robotics $0.00 — triage 404 (exacto vs tier-rows). Exacto
+   poison on tier-row models; plain id + hyphen pin serve.
+9. 024306Z robotics $0.174 — K2.5 provenance block (critical) → rework →
+   timed out 1500s in rework_review.
+10. 032041Z robotics (prime) $0.253 — Mimo emits (fix), K2.5 deliberates,
+    timed out 3900s in 2nd domain_review. Fix never judged.
+11. 045435Z conv_numeric_consistency (medium) $0.336 — 3 iterations,
+    K2.5 RED criterion 1 (wording), then 4 fresh criticals (symmetric/
+    asymmetric burst, retention.bytes, 4.5 contradiction, D7 10x).
+    Timed out 4800s in 3rd validate.
+
+## 6. Open questions / proposals (advisor + owner)
+
+- B13 for robotics: is declare-and-label-assumptions passing or
+  fabrication? Escalation orders it, judging punishes it; loop burns
+  money between. Needs ruling.
+- Intent-vs-text judging: may a judge pass work against a criterion it
+  believes misworded? K2.5 says no (false pass worse). Needs ruling.
+- Erratum for conv criterion 1 ("every figure" → "every capacity
+  figure")? One word, owner/advisor call.
+- Robotics grounding fixtures (reference DH table, limits, switch
+  criterion) as eval fixtures — committed follow-up (owner asked).
+- Next-question selection must pre-check criteria satisfiability —
+  committed follow-up (owner asked; my miss on the medium pick).
+- Controlled judge comparison (same artifact through Flash/K2.5/sol-pro)
+  — cents now, prices strictness directly.
+- Mimo-vs-GLM architecture question still open; K2.5-on-exacto
+  calibration owed (all pre-exacto figures measure other servings).
+
+## 7. Departures
+
+- Preflight fix written in same session as the runs it gates (no
+  independent run of its own yet — convention 22 noted; the 15/15 live
+  green plus 30 unit tests are its evidence).
+- Medium scenario picked on max_calls, not criteria review — wrong call,
+  owned; follow-ups committed above.
+- Iteration-3 implement misremembered verdicts (claimed 1/5/6 failed;
+  record was 1 RED only) and fixed unbroken things — loop-integrity
+  note, no code impact.
+- Stray files `.env1`, `\.env` (deleted) appeared in root from owner-side
+  edits; `.env1` still untracked at write-up — owner to check for key
+  material and remove.
+```
+
+### 83.2 Thirteen committed traces (generated from the files)
+
+| file | scenario | status | stop_reason | seconds | calls | cost | top phases |
+|---|---|---|---|---|---|---|---|
+| 20260930T000917Z-robotics-only | robotics-manipulator? | blocked | (none recorded) | 161.108 | 10 | 0.0964 | plan=51.147; implement=37.462 |
+| 20260930T002529Z-robotics-only | robotics-manipulator? | blocked | ReadTimeout | 179.188 | 6 | 0.0188 | feasibility=120.305; plan=36.821 |
+| 20260930T003221Z-robotics-only | robotics-manipulator? | blocked | 404 escalation pin | 87.019 | 8 | 0.0223 | plan=38.67; context=16.822 |
+| 20260930T010754Z-robotics-only | robotics-manipulator? | blocked | spend ceiling | 400.479 | 21 | 0.5621 | escalation=120.577; implement=86.025 |
+| 20260930T012249Z-robotics-only | robotics-manipulator? | blocked | judge asphyxiation | 942.989 | 17 | 0.2448 | domain_review=613.791; validate=169.525 |
+| 20260930T014948Z-robotics-only | robotics-manipulator? | blocked | 402 credits | 189.074 | 8 | 0.0527 | implement=60.286; triage=58.29 |
+| 20260930T020902Z-robotics-only | robotics-manipulator? | blocked | (terminal, no error) | 509.386 | 15 | 0.0869 | rework_review=185.803; implement=98.973 |
+| 20260930T023940Z-robotics-only | robotics-manipulator? | blocked | 404 triage pin | 1.181 | 0 | 0.0 | triage=1.179 |
+| 20260930T024306Z-robotics-only | robotics-manipulator? | blocked | 1500s timeout | 1500.009 | 14 | 0.1736 | validate=402.259; domain_review=374.823 |
+| 20260930T032041Z-robotics-only | robotics-manipulator? | blocked | 429 Mimo/DeepInfra | 675.516 | 5 | 0.0351 | plan=646.759; context=22.646 |
+| 20260930T034051Z-robotics-only | robotics-manipulator? | blocked | 3900s timeout | 3900.006 | 14 | 0.2529 | domain_review=1606.129; implement=1102.679 |
+| 20260930T045435Z-conv_numeric_consistency | conv_numeric_consistency | blocked | 4800s timeout | 4800.005 | 14 | 0.3355 | domain_review=2879.915; validate=1085.385 |
+| 20260930T063556Z-conv_pool_sizing | conv_pool_sizing | escalated | (terminal, no error) | 4517.246 | 26 | 0.5083 | rework_review=2123.129; domain_review=987.333 |
+
+Scenario column: the eleven robotics files carry scenario robotics-manipulator
+(the advisor confirmed robotics-manipulator in
+evals/datasets/technical-sets.yaml); the conv files carry their own names.
+Stop-reason shorthands above compress the unit error/stop_reason strings;
+full text is in the traces.
+
+### 83.3 Twenty-five zero-unit files (named, not committed)
+
+25 files written before 12:00Z hold a header and zero units:
+
+```
+20260930T000851Z-gen_marketing_claims.jsonl
+20260930T015442Z-gen_marketing_claims.jsonl
+20260930T015939Z-gen_marketing_claims.jsonl
+20260930T020221Z-gen_marketing_claims.jsonl
+20260930T033533Z-robotics-only.jsonl
+20260930T061625Z-gen_marketing_claims.jsonl
+20260930T062404Z-gen_marketing_claims.jsonl
+20260930T071214Z-gen_marketing_claims.jsonl
+20260930T074140Z-gen_marketing_claims.jsonl
+20260930T074255Z-gen_marketing_claims.jsonl
+20260930T074544Z-gen_marketing_claims.jsonl
+20260930T075442Z-gen_marketing_claims.jsonl
+20260930T075536Z-gen_marketing_claims.jsonl
+20260930T075900Z-gen_marketing_claims.jsonl
+20260930T075958Z-gen_marketing_claims.jsonl
+20260930T080458Z-gen_marketing_claims.jsonl
+20260930T080557Z-gen_marketing_claims.jsonl
+20260930T081446Z-gen_marketing_claims.jsonl
+20260930T081555Z-gen_marketing_claims.jsonl
+20260930T082530Z-gen_marketing_claims.jsonl
+20260930T082624Z-gen_marketing_claims.jsonl
+20260930T084433Z-gen_marketing_claims.jsonl
+20260930T084523Z-gen_marketing_claims.jsonl
+20260930T085857Z-gen_marketing_claims.jsonl
+20260930T090051Z-gen_marketing_claims.jsonl
+```
