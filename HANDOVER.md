@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1045 · **Date of this snapshot:** 2026-09-26, counts re-derived against the tree under test
+**Tests:** 1061 · **Date of this snapshot:** 2026-09-26, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -270,7 +270,7 @@ autornd/
     templates/dashboard.html  single-file chat + workflows + settings UI
 
 workflows/
-  engineering-rnd.yaml   ★★ the flagship pipeline, 25 nodes, 3 loops (§3.1)
+  engineering-rnd.yaml   ★★ the flagship pipeline, 28 nodes, 4 loops (§3.1)
   lean.yaml                 10 nodes — cheaper variant, one loop
   triage-only.yaml          2 nodes — triage + grounding (research measurement)
   triage-classify.yaml   ★  1 node — triage alone. Exists so calibration costs
@@ -284,7 +284,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      58 files, 1045 tests
+tests/                      59 files, 1061 tests
 
 ```
 
@@ -426,7 +426,7 @@ idempotent across phases.
 
 ## 3. CURRENT STATE & SOURCE OF TRUTH
 
-### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (25 nodes)
+### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (28 nodes)
 
 **The file is the source of truth; this table is generated from it.** A
 hand-copied YAML lived here for twelve blueprints and drifted — it still
@@ -689,7 +689,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1045 total)
+### 3.7 Test distribution (1061 total)
 
 
 | file | n | file | n |
@@ -765,7 +765,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1045/1045 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1061/1061 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

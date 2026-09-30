@@ -495,9 +495,15 @@ class ScenarioRun:
     # it; providers_by_tier already carries the serving, this carries the
     # failure.
     provider_failures: list[dict[str, Any]] = field(default_factory=list)
-    # Ruling D34 (owner-supplied, 2026-09-30): re-grounding rounds run, and
-    # blocking unknowns answered by assumption with their basis. Defaults
-    # are the honest zero: a run that never re-grounded reports none.
+    # Ruling D37 (owner-supplied, recorded by the advisor, 2026-09-30): the
+    # re-grounding block. rounds is 0 or 1 (once is ruled); blockers_first_
+    # pass names what the first plan could not answer; novel/asked/findings
+    # describe the one lookup; blockers_second_pass names what the second
+    # plan still could not answer; assumptions lists only blockers named by
+    # a plan that went on to proceed, each with its basis. Defaults are the
+    # honest zero: a run that never re-grounded reports the block present
+    # with zeros (convention 28 — an absent block and a measured zero are
+    # different claims).
     regrounding_rounds: int = 0
     assumptions_declared: list[dict[str, Any]] = field(default_factory=list)
 
@@ -800,13 +806,8 @@ async def run_scenario(
         provider_failures=list(getattr(client, "provider_failures", []) or []),
         retries=runner.client.retry_reconciliation(),
         seconds_by_phase=_phase_seconds(state),
-        # Ruling D34 (owner-supplied, 2026-09-30): the re-grounding count.
-        # How many blocking unknowns the plan named across grounding rounds
-        # that were answered by assumption rather than lookup — the rate of
-        # assuming, visible in the record instead of buried in a plan text.
-        # Counted from the runner's grounding history, not parsed from
-        # prose: a count that reads English for control flow is
-        # non-negotiable 3's exact shape.
+        # Ruling D37: the re-grounding block, read off the runner the
+        # adapter counted on — never parsed from prose (non-negotiable 3).
         regrounding_rounds=int(getattr(runner, "regrounding_rounds", 0) or 0),
         assumptions_declared=list(getattr(runner, "assumptions_declared", []) or []),
     )

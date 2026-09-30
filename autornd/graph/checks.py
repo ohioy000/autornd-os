@@ -746,32 +746,43 @@ def numbers_consistent(plan: str, implementation: str) -> Result:
 
 
 @check("reground_context")
-def reground_context(unknowns: list[str]) -> Result:
-    """Did the plan name a blocking unknown the first grounding never asked?
+def reground_context(ready: bool = False, risk: str | None = None,
+                     blockers: list[str] | None = None,
+                     asked: list[str] | None = None,
+                     rounds: int = 0) -> Result:
+    """Should the plan get one more grounding round before it is judged?
 
-    Ruling D34 (owner-supplied, 2026-09-30). The plan's `blockers` are the
-    blocking unknowns; the grounding already asked whatever produced the
-    current context. A blocker that restates an already-asked question is
-    not new work — re-asking it is the spin this harness has died on
-    before, so novelty is decided here, deterministically, before any paid
-    lookup is spent. Comparison is on normalized question text (case,
-    whitespace and trailing punctuation stripped): a re-grounding round
-    that emits nothing new terminates the loop at `regrounding_novel`
-    rather than spending the round.
+    Ruling D37 (owner-supplied, recorded by the advisor, 2026-09-30). Pure
+    registered check, driven exactly like build_loop's fold: all inputs
+    arrive as resolved args, no adapter import, no module state. The loop
+    exits when this returns False, so every stay-out reason is False here:
 
-    This check reads no store and spends nothing. It reports which blockers
-    are novel; the paid lookup itself is the existing research path, run
-    through the adapter's grounding on the next loop pass. An empty or
-    missing blockers list is not novel — a plan with nothing to re-ask
-    proceeds on what it has.
+    - plan already ready: nothing to re-ground;
+    - low risk: the risk policy buys no search calls there;
+    - no blocker novel against the asked history: re-asking is the spin
+      this harness has died on before (normalized compare);
+    - a round already ran: once is ruled, whatever the blockers say.
+
+    Free, deterministic, no store, no spend. Reports which blockers are
+    novel; the paid lookup is the separate node that runs only after this
+    check passed, and it sends only the novel ones.
     """
-    asked = {_normalize_question(q) for q in (_asked_questions() or []) if q}
+    if ready:
+        return Result(False, "plan ready — no re-grounding needed",
+                      novel=False, fresh=[])
+    if str(risk or "").strip().lower() == "low":
+        return Result(False, "low risk — no paid re-grounding",
+                      novel=False, fresh=[])
+    if (rounds or 0) >= 1:
+        return Result(False, "re-grounding round already ran — once is ruled",
+                      novel=False, fresh=[])
+    asked_set = {_normalize_question(q) for q in (asked or []) if q}
     fresh = []
-    for raw in unknowns or []:
+    for raw in blockers or []:
         text = str(raw or "").strip()
         if not text:
             continue
-        if _normalize_question(text) not in asked:
+        if _normalize_question(text) not in asked_set:
             fresh.append(text)
     if not fresh:
         return Result(False, "no novel blocking unknown — planning on current grounding",
@@ -782,26 +793,6 @@ def reground_context(unknowns: list[str]) -> Result:
 
 def _normalize_question(text: str) -> str:
     return " ".join(str(text).lower().strip().rstrip("?.!").split())
-
-
-def _asked_questions() -> list[str]:
-    """Questions the first grounding round already asked, if recorded.
-
-    The adapter records each round's questions on itself
-    (`grounding_questions`, appended per round); absent the adapter — in
-    unit tests, or on workflows that never grounded — there is nothing to
-    compare against, and every blocker reads as novel. That default is
-    deliberate: failing open routes to re-grounding, which is bounded and
-    observable, while failing closed would skip the edge this ruling adds.
-    """
-    try:
-        from autornd.graph import adapter as _adapter_module
-        asked: list[str] = []
-        for runner in getattr(_adapter_module, "_runners", []):
-            asked.extend(getattr(runner, "grounding_questions", []) or [])
-        return [_normalize_question(q) for q in asked]
-    except Exception:
-        return []
 
 
 @check("totals_reconcile")

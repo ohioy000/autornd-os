@@ -48,6 +48,22 @@ class SlowScriptedRunner:
         return out(state) if callable(out) else (out or {})
 
     async def run_check(self, node, state):
+        if node.check == "build_context":
+            # Same seed as ScriptedRunner: the novelty check resolves
+            # asked/rounds off the context output.
+            return Result(True, "context assembled", asked=[], rounds=0)
+        if node.check == "reground_context_lookup":
+            # Mirror the paid lookup's state evolution (no billing here —
+            # this runner times, it does not price): pass two's check reads
+            # rounds == 1 and exits.
+            from autornd.graph.executor import resolve_args as _ra
+            novel = [b for b in list(_ra(node, state).get("blockers") or []) if b]
+            ctx = state.outputs.get("context")
+            if isinstance(ctx, dict):
+                ctx["asked"] = list(ctx.get("asked") or []) + list(novel)
+                ctx["rounds"] = 1
+            return Result(True, "re-grounding round 1", rounds=1,
+                          asked=len(novel), found=len(novel))
         if node.check not in registry:
             return Result(True, "context assembled")
         return get_check(node.check)(**resolve_args(node, state))

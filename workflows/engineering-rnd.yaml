@@ -43,24 +43,21 @@ nodes:
     tier: engineering
     specialist: assigned        # every assigned specialist, in parallel
     prompt: feasibility
-    depends_on: [plan]
+    depends_on: [regrounding_loop]
     when: plan.ready == true
 
-  # Ruling D34 (owner-supplied, 2026-09-30): a plan that names a blocking
-  # unknown routes back to grounding instead of assuming it. The three
-  # observed blockers (container topology, current pool settings, app
-  # compatibility) are repo/config/code lookups the first grounding round
-  # never asked, so a second round that asks nothing new is the spin this
-  # harness has died on before — hence the novelty condition in
-  # regrounding_novel. Bound: regrounding_attempts (provisional N=2, see
-  # config); exhaustion hands to plan_ready, which blocks honestly on the
-  # still-unnamed unknowns rather than planning on assumptions.
-  #
-  # Ordering note: the loop sits between plan and feasibility in file order
-  # but depends_on context, not plan — the loop OWNS plan (a body member),
-  # so depending on plan would be a cycle the spec rejects. The first plan
-  # pass runs inside the loop body; later passes re-run it after
-  # re-grounding.
+  # Ruling D37 (owner-supplied, recorded by the advisor, 2026-09-30,
+  # superseding the D34 text this file carried at 2a45d61): a plan that is
+  # not ready and names blocking unknowns gets ONE re-grounding round. The
+  # shape is a loop declared exactly like build_loop, because a linear chain
+  # runs each node id once — plan would run once and no second node id would
+  # do either, since downstream reads plan.*. The loop body re-runs plan on
+  # the re-grounded context; the pure check exits it (passed == false) when
+  # the plan is ready, risk is low, no blocker is novel, or a round ran.
+  # No gate in the body, so nothing routes out of the loop. Downstream
+  # depends on the loop, not on plan (a loop owns its body): feasibility
+  # re-runs on the final plan, and plan_ready still blocks outside it. No
+  # bound setting, no new tier.
   - id: reground_context
     kind: check
     check: reground_context
@@ -70,27 +67,24 @@ nodes:
       # down with one ConditionError. The real verdict defaults blockers
       # to [] (verdicts.py); fixtures must too — see the convention-22 note
       # on the IMPL double in tests/test_graph.py.
-      unknowns: plan.blockers
-    depends_on: [plan, regrounding_loop]
+      ready: plan.ready
+      risk: triage.risk
+      blockers: plan.blockers
+      asked: context.asked
+      rounds: context.rounds
 
-  - id: regrounding_novel
-    kind: gate
-    condition: reground_context.passed == true
-    depends_on: [reground_context]
-    on_fail: plan_ready
-    on_fail_reason: "Re-grounding asked nothing new — planning on current grounding"
+  - id: reground_lookup
+    kind: check
+    check: reground_context_lookup
+    args:
+      blockers: reground_context.fresh
+    when: reground_context.passed == true
 
   - id: regrounding_loop
     kind: ai
-    tier: architecture
-    specialist: systems_architect
-    prompt: plan
-    schema: PlanVerdict
-    max_tokens: plan_max_tokens
-    body: [plan, feasibility, reground_context, regrounding_novel]
-    until: plan.ready == true
-    max_iterations: regrounding_attempts
-    on_exhausted: plan_ready
+    body: [plan, reground_context, reground_lookup]
+    until: reground_context.passed == false
+    max_iterations: 2
     depends_on: [context]
 
   - id: plan_ready
@@ -106,13 +100,12 @@ nodes:
   # iterations of it. This node re-reads the criteria for free and, when they
   # demand verifiability, fires the one bundled lookup the risk gate declined,
   # at the medium-risk budget. $0 where no criterion demands citation.
-  # Depends on the loop, not plan_ready: the loop OWNS plan (a body member),
-  # so depending on plan_ready would be a cycle (spec rejects it). The loop
-  # always runs at least its first pass, so verify reads grounded context.
+  # Depends on plan_ready: the single chain through the loop and feasibility
+  # always resolves there before build starts.
   - id: verify_grounding
     kind: check
     check: verify_grounding
-    depends_on: [regrounding_loop]
+    depends_on: [plan_ready]
 
   # ── build ───────────────────────────────────────────────────────────────
   # The lead implements alone; the others review without redesigning.

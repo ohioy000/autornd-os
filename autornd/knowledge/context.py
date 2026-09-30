@@ -475,9 +475,16 @@ async def rerank_chunks(
 
 async def load_retrieval_context(query: str, n_results: int = 5, client=None,
                                  risk: object = None,
-                                 deferred_gaps: list[str] | None = None) -> str:
+                                 deferred_gaps: list[str] | None = None,
+                                 asked_questions: list[str] | None = None) -> str:
     """Research the project docs for a request: expand, retrieve, rank, brief."""
     queries = await expand_queries(client, query)
+    if asked_questions is not None:
+        # The questions this round asked — expansion queries, asked whether
+        # or not retrieval found anything to brief. Recorded before any
+        # early return below, so a round that asked and found nothing still
+        # counts as having asked (Ruling D37's history).
+        asked_questions.extend(q for q in queries if q not in asked_questions)
 
     seen: dict[str, dict] = {}
     for q in queries:
@@ -600,6 +607,7 @@ async def build_phase_context(
     client=None,
     risk: object = None,
     deferred_gaps: list[str] | None = None,
+    asked_questions: list[str] | None = None,
 ) -> str:
     """Build full context string for a workflow phase.
 
@@ -608,6 +616,11 @@ async def build_phase_context(
     `deferred_gaps`, when given, collects the blocking gaps the risk gate
     declined to look up — the override node reads them back if the plan's
     criteria turn out to demand verifiability (Blueprint 016 B1).
+
+    `asked_questions`, when given, collects the questions this round actually
+    looked up (Ruling D37: the novelty check compares round two against what
+    round one asked, and the asked record is what was asked — not what was
+    declined. Deferred gaps were never asked).
     """
     parts: list[str] = []
 
@@ -618,7 +631,8 @@ async def build_phase_context(
     if include_retrieval:
         retrieval_ctx = await load_retrieval_context(request, client=client,
                                                      risk=risk,
-                                                     deferred_gaps=deferred_gaps)
+                                                     deferred_gaps=deferred_gaps,
+                                                     asked_questions=asked_questions)
         if retrieval_ctx:
             parts.append("=== RELEVANT KNOWLEDGE ===\n" + retrieval_ctx)
         else:
