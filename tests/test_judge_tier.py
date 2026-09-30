@@ -63,7 +63,11 @@ class TestJudgeConfig:
         assert "model_judge" not in _TIER_HELP  # _TIER_HELP holds the required tiers
 
     def test_judge_max_tokens_defaults_tight_and_is_mutable(self):
-        assert settings.judge_max_tokens == 8000
+        # The CONFIG default is tight (a judge emits a verdict, not an
+        # implementation); the live value is owner-tunable via .env, so assert
+        # the class default, not settings.judge_max_tokens which .env overrides.
+        from autornd.config import Settings
+        assert Settings.model_fields["judge_max_tokens"].default == 8000
         assert "judge_max_tokens" in settings.RUNTIME_MUTABLE
 
 
