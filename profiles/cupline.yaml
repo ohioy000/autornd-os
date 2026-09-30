@@ -1,0 +1,10 @@
+# Cupline — fictional test profile for ARCH-20260930-094.
+
+# Select with AUTORND_PROFILE=cupline. Changes nothing but the docs
+# directory: no domains, roles, checks, constraints or structural roles,
+# so the shipped engineering vocabulary applies exactly as without a
+# profile. The docs directory resolves from the name (profiles.py:
+# get_docs_dir lower-cases the name, spaces to underscores) to
+# docs/cupline/.
+name: "Cupline"
+description: "Fictional test profile: the Line 4 cup-former corpus only. Describes no real machine."
