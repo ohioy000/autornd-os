@@ -1,0 +1,107 @@
+{
+  "command_id": "ARCH-20260930-094",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Give the new setup (D36 plan rules, D37 re-grounding) its first live reading on a medium question whose answer is fully defined and checkable line by line: the cup-line sensor request, grounded in a small fictional corpus that supplies every value the request leaves open.",
+
+  "evidence": [
+    "commit:7dc26e9 (main): D36 and D37 merged via PR #100. Neither has run live.",
+    "evals/scenarios/convergence/conv_cup_line_sensor.yaml: the request leaves the PCB input type and the unit cost open, and tells the model to name them as unverified assumptions, so its answer cannot be judged cleanly. That is why this command adds a corpus rather than reusing it as is.",
+    "docs/traces/085-cup-sensor.jsonl: the same request without a corpus. Triage read medium, the run completed in 196 s with 11 calls and $0.068, and the plan had no blockers (n=1). It is a second sample, not a baseline to confirm, because the corpus changes the input (convention 27).",
+    "autornd/knowledge/context.py:36-86: the first grounding loads every file in the active profile's docs manifest, deterministically and at no cost. autornd/profiles.py:152: the docs directory is the profile name, lower-cased with spaces as underscores. config.py: the profile is selected by AUTORND_PROFILE.",
+    "Precedents for fictional corpora: docs/smartfactory/ and docs/meridian_studio/, guarded by tests/test_doc_corpora.py (every manifest path must exist).",
+    "docs/traces/091-night-20260930T045435Z-conv_numeric_consistency.jsonl: last night's medium run was stopped from outside at 4,800 s mid-judging. The watchdog is not built yet, so a deadline stop is a possible outcome here too.",
+    "Owner, 2026-09-30: test the new setup first with a medium question, made verifiable by giving it the values it needs through fictional docs in docs/. No trap."
+  ],
+
+  "scope": {
+    "include": [
+      "docs/cupline/ (new: exactly the three files specified below)",
+      "profiles/cupline.yaml (new)",
+      "evals/scenarios/convergence/conv_cup_line_sensor_grounded.yaml (new)",
+      "docs/preregistration-094-cup-grounded.md (new, committed BEFORE the run)",
+      "docs/traces/094-cup-grounded.jsonl, -STDOUT.txt and -STDERR.txt (new, after the run)",
+      "docs/serving-ledger.md (regenerate only if the new trace changes it)",
+      "tests/ (only if an existing guard requires it for the new corpus or profile; no new behaviour tests)",
+      "docs/handover-review.md (section 85, the execution record)",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "autornd/ and workflows/: no code or pipeline change. This is a measurement.",
+      "evals/scenarios/convergence/conv_cup_line_sensor.yaml: the original stays unchanged, so its history stays comparable.",
+      "docs/manifest.json: the fictional corpus must never load for runs that don't select the cupline profile.",
+      ".env and any .env* file: never open, print or commit (G-1)."
+    ]
+  },
+
+  "constraints": [
+    "NO TRAP. The corpus is consistent with the request and only supplies what the request leaves open. Do not add, change or embellish any fact beyond the text below.",
+    "CORPUS FILE 1, VERBATIM, docs/cupline/manifest.json: {\"description\": \"FICTIONAL test corpus for eval scenario conv_cup_line_sensor_grounded (ARCH-20260930-094). Describes no real machine; prices are invented.\", \"global\": [\"cupline/line4-machine.md\", \"cupline/approved-parts.md\"]}",
+    "CORPUS FILE 2, VERBATIM, docs/cupline/line4-machine.md: '# Line 4 cup former: electrical interface (FICTIONAL)\\n\\n> Fictional test corpus for eval scenario conv_cup_line_sensor_grounded (ARCH-20260930-094). It describes no real machine.\\n\\n- Controller PCB: CF-IO8.\\n- Sensor supply rail: 24 VDC, plus or minus 5% at the PCB terminals (22.8 V minimum, 25.2 V maximum), up to 150 mA per sensor channel.\\n- Digital inputs DI0 to DI7 are designed for NPN open-collector sensor outputs: an NPN output switching the input to 0 V reads as ON. They are compatible with the Keyence LV-N11N.\\n- The registration-mark sensor connects to input DI3.\\n- Line speed: 150 cups per minute maximum, one registration mark per cup.\\n- Commissioning pass thresholds:\\n  - Supply voltage measured at the sensor head, powered: pass if between 21.6 V and 26.4 V (24 V plus or minus 10%).\\n  - Output switching at maximum line speed: pass if DI3 counts 150 of 150 marks in 60 seconds. Any missed mark fails.\\n'",
+    "CORPUS FILE 3, VERBATIM, docs/cupline/approved-parts.md: '# Line 4 approved parts (FICTIONAL)\\n\\n> Fictional test corpus for eval scenario conv_cup_line_sensor_grounded (ARCH-20260930-094). Prices are invented for the test.\\n\\n| part number | description | supply | output | current consumption | unit cost |\\n|---|---|---|---|---|---|\\n| Keyence LV-N11N | registration-mark laser sensor | 24 VDC | NPN open-collector | 50 mA | $214.00 |\\n'",
+    "PROFILE: profiles/cupline.yaml with name 'Cupline' (so the docs directory resolves to cupline) and a description labelling it a fictional test profile. It changes NOTHING but the docs directory: declare no domains, roles, checks, constraints or structural roles, so the shipped engineering vocabulary applies exactly as it does without a profile. Verify this and record how. If a profile cannot be that minimal, stop and report.",
+    "SCENARIO: evals/scenarios/convergence/conv_cup_line_sensor_grounded.yaml. Copy the request from conv_cup_line_sensor.yaml byte for byte. timeout: 3600. expect.max_calls: 40. Encode as many answer-key items as the existing expectation vocabulary can express (figures_present, status, max_calls, risk_at_least); add no new assertion type. Items it cannot express are scored by reading, one per line, in the response.",
+    "ANSWER KEY (the advisor's; copy it verbatim into the pre-registration): (1) supply 24 VDC, identical in every section; (2) 22 AWG, identical in every section; (3) voltage drop = 2 x 3 ft x 16.1 ohm/1000 ft x 0.05 A = 0.00483 V (4.83 mV), with the arithmetic shown; (4) voltage at the sensor head 24 - 0.00483 = 23.995 V nominal, and 22.795 V at the 22.8 V rail minimum, both passing the 21.6-26.4 V threshold; (5) output NPN open-collector, matching the CF-IO8 inputs, with the match cited from the docs rather than labelled an unverified assumption; (6) part number Keyence LV-N11N and unit cost $214.00, identical everywhere; (7) commissioning thresholds exactly as the docs state: 21.6-26.4 V at the head, and 150 of 150 marks in 60 s at 150 cups per minute.",
+    "PREDICTIONS (the advisor's; copy them verbatim into the pre-registration): P1: triage reads medium risk (085 read medium, n=1). P2: the first grounding carries the cupline docs, the plan names no blockers, and D37 does not fire (regrounding rounds 0), so this run is D37's control, not a test of it firing. P3: all seven answer-key items are correct in the final implementation. P4: the deterministic consistency check passes on the final iteration. P5: status is completed within 40 calls and $1.00. P6: no prediction that it finishes inside 3,600 s on the current judge serving; a deadline stop is possible and would be recorded as a stop, not as a verdict on the answer. Falsifiers: a key item wrong while the docs were in context means grounding or judging failed on a closed-world question; D37 firing (rounds 1) means the plan named a blocker the docs already answer, so record which one.",
+    "ORDER: (a) the corpus, profile and scenario commit, free; (b) the pre-registration commit, BEFORE any spend; (c) run `.venv/bin/python3 -m autornd.preflight` with the cupline profile, free, and record its full output (it must be green); (d) the paid run, only after (e); (f) commit the trace and the output files.",
+    "(e) SPEND GATE: the paid run needs the owner's one-line authorisation, stating the cap, before the first paid call. If it has not been given, stop after (c), set the response to BLOCKED naming the missing authorisation, and ask. Quote the authorisation verbatim in the response.",
+    "RUN SHAPE: one repetition (n=1, stated as such); AUTORND_PROFILE=cupline passed as an environment prefix; workflow engineering-rnd; --max-spend 1.00 and --max-spend-sweep 1.00; the lineup is the owner's current .env, recorded by the results header as usual. A clean working tree on main-plus-this-branch before the run (AGENTS.md), and NO git operation while the run is in flight.",
+    "No code change, no prompt change, no tier or pin change, and no retry after a failure without a new authorisation."
+  ],
+
+  "acceptance_criteria": [
+    "The three corpus files match the verbatim text above byte for byte (the response shows sha256 for each).",
+    "A test or recorded check shows the cupline profile changes only the docs directory.",
+    "The pre-registration commit precedes the trace commit, and it contains the answer key and predictions verbatim.",
+    "The preflight output is recorded and green before the run.",
+    "The owner's authorisation is quoted verbatim, with its cap.",
+    "The trace is committed. The response scores P1 to P6 and answer-key items 1 to 7 individually (held, refuted, or not reached), quoting the final implementation's lines for each key item.",
+    "The response records regrounding rounds, the plan's blockers on each pass, status, stop_reason, calls, cost, and seconds by phase.",
+    "`git diff --stat origin/main -- autornd/ workflows/` is empty.",
+    "Suite green before and after, with counts. The PR is opened and delivery_state carries its number (D16)."
+  ],
+
+  "verification": [
+    {"command": "sha256sum docs/cupline/*", "expected": "Three files, matching the hashes the response reports."},
+    {"command": "git diff --stat origin/main -- autornd/ workflows/ evals/scenarios/convergence/conv_cup_line_sensor.yaml docs/manifest.json", "expected": "Empty."},
+    {"command": "git log --format='%h %s' origin/main..HEAD", "expected": "The pre-registration commit is older than the trace commit."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count reported before and after."}
+  ],
+
+  "rollback": "Not applicable: a measurement, bounded by the $1.00 cap and the 3,600 s timeout. The corpus, profile and scenario are additive; reverting the merge removes them.",
+
+  "deliverable": {
+    "branch": "arch/20260930-094-cup-grounded-test",
+    "branch_created_by": "advisor (this command is its first commit)",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+
+  "transport": "Pushed by the advisor under the owner's grant of 2026-09-30. Commit the response IN_PROGRESS first, then update it in place. The watchdog and preflight-gate commands follow this one and take the next IDs.",
+
+  "assumptions": [
+    "The eval CLI honours AUTORND_PROFILE from the environment prefix. If it doesn't, stop before spend and report how the profile can be selected.",
+    "The current .env lineup passes preflight. If it doesn't, stop, since the pins are the owner's (G-2/G-3), and report the findings."
+  ],
+
+  "questions": [
+    "Did the plan cite the docs for the NPN match and the $214.00 price, or state them without attribution? Quote the lines.",
+    "Which phases took the time (seconds_by_phase), and what share went to judging? That is 095's (watchdog) first data point with a known-correct answer."
+  ],
+
+  "preconditions": [
+    {"command": "ps aux | grep -E 'autornd|evals' | grep -v grep", "expected": "No output. If there is output, a paid run is in flight: stop, with no git operation."},
+    {"command": "git fetch origin && git rev-parse --short origin/main", "expected": "7dc26e9. If it differs, record it and continue."},
+    {"command": "ls docs/cupline profiles/cupline.yaml evals/scenarios/convergence/conv_cup_line_sensor_grounded.yaml 2>&1", "expected": "All three absent. If any exists, BLOCKED: name it."},
+    {"command": "grep -n 'def get_docs_dir' -A 2 autornd/profiles.py; grep -n 'autornd_profile' autornd/config.py", "expected": "The docs directory is derived from the profile name, and the profile comes from settings.autornd_profile. If either differs, record it and adapt only the profile name."},
+    {"command": ".venv/bin/python3 -c \"import json; r=[json.loads(l) for l in open('docs/traces/085-cup-sensor.jsonl') if l.strip()][1]; print(r['status'], round(r['seconds']), r['calls'], round(r['cost'],3), r['verdicts']['triage']['risk'])\"", "expected": "completed 196 11 0.068 medium"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green on main before the change; record the count."}
+  ]
+}
