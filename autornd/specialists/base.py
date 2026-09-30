@@ -24,9 +24,14 @@ class Specialist:
         temperature: float = 0.3,
         max_tokens: int = 16384,
         schema: type | None = None,
+        function: str | None = None,
     ) -> tuple[dict[str, Any], ModelResponse]:
+        # Ruling D35: the graph resolves which tier serves a node (node.tier,
+        # honouring tier_when); the specialist only names its default. An
+        # explicit function overrides the default — how the judge tier serves
+        # nodes whose reviewers are still engineering specialists.
         return await client.chat_json(
-            function=self.router_function,
+            function=function or self.router_function,
             system_prompt=self.system_prompt,
             user_message=user_message,
             temperature=temperature,

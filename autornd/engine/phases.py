@@ -535,6 +535,7 @@ async def run_domain_review(
     summary: str,
     reviewers: list[Specialist],
     context: str = "",
+    function: str | None = None,
 ) -> tuple[list[str], bool, list[ModelResponse]]:
     """Reviewers examine one implementation in parallel.
 
@@ -549,7 +550,7 @@ async def run_domain_review(
     responses: list[ModelResponse] = []
 
     async def _review(spec: Specialist) -> dict[str, Any]:
-        data, resp = await spec.run(client, prompt)
+        data, resp = await spec.run(client, prompt, function=function)
         responses.append(resp)
         return data
 
@@ -829,6 +830,7 @@ async def run_validate(
     context: str = "",
     domains: list[Domain] | None = None,
     max_tokens: int | None = None,
+    function: str | None = None,
 ) -> tuple[ValidateVerdict, ModelResponse]:
     test_eng = get_specialist(SpecialistRole.TEST_ENGINEER)
     context_block = f"\n\nProject context:\n{context}" if context else ""
@@ -879,6 +881,7 @@ Original request:
     data, response = await test_eng.run(
         client, prompt, schema=ValidateVerdict,
         max_tokens=max_tokens or settings.validate_max_tokens,
+        function=function,
     )
     verdict = ValidateVerdict(**data)
     return verdict, response
@@ -893,6 +896,7 @@ async def run_review(
     specialists: list[Specialist],
     context: str = "",
     max_tokens: int | None = None,
+    function: str | None = None,
 ) -> tuple[ReviewVerdict, list[ModelResponse]]:
     adversarial = triage.risk in (RiskLevel.CRITICAL, RiskLevel.HIGH)
     review_mode = "ADVERSARIAL — actively search for failure modes" if adversarial else "COLLABORATIVE"
@@ -936,6 +940,7 @@ Original request:
             data, resp = await spec.run(
                 client, prompt,
                 max_tokens=max_tokens or settings.plan_max_tokens,
+                function=function,
             )
             responses.append(resp)
             return data

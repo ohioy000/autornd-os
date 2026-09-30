@@ -65,3 +65,61 @@ class TestJudgeConfig:
     def test_judge_max_tokens_defaults_tight_and_is_mutable(self):
         assert settings.judge_max_tokens == 8000
         assert "judge_max_tokens" in settings.RUNTIME_MUTABLE
+
+
+class TestJudgeWiring:
+    """The tier a node names must be the tier that serves it.
+
+    D35's first cut moved the YAML to `tier: judge` but every judging phase
+    called spec.run() with no function override, so Specialist.router_function
+    (engineering) served the call and the judge tier billed nothing — the
+    robotics live run proved it: judge configured and preflight-green, zero
+    judge calls. These tests pin the override end to end.
+    """
+
+    def test_specialist_run_defaults_to_its_router_function(self):
+        from autornd.specialists.registry import get_specialist
+        from autornd.models.verdicts import SpecialistRole
+        spec = get_specialist(SpecialistRole.TEST_ENGINEER)
+        assert spec.router_function == "engineering"
+
+    def test_specialist_run_accepts_a_function_override(self):
+        import asyncio
+        import inspect
+        from autornd.specialists.base import Specialist
+        sig = inspect.signature(Specialist.run)
+        assert "function" in sig.parameters
+
+        from autornd.models.verdicts import SpecialistRole
+        from autornd.specialists.registry import get_specialist
+        from tests.conftest import make_mock_client
+
+        spec = get_specialist(SpecialistRole.TEST_ENGINEER)
+        client = make_mock_client({"judge": {"concerns": [], "critical": False}})
+
+        async def go():
+            return await spec.run(client, "hi", function="judge")
+
+        data, resp = asyncio.run(go())
+        assert data == {"concerns": [], "critical": False}
+        assert client.calls_by_function.get("judge", 0) == 1
+        assert client.calls_by_function.get("engineering", 0) == 0
+
+    def test_judge_phases_accept_a_function_override(self):
+        import inspect
+        from autornd.engine import phases
+        for fn in (phases.run_domain_review, phases.run_validate, phases.run_review):
+            assert "function" in inspect.signature(fn).parameters, (
+                f"{fn.__name__} must accept function= so the adapter can route "
+                "the node's tier through the specialist"
+            )
+
+    def test_adapter_routes_node_tier_to_judge_phases(self):
+        import inspect
+        from autornd.graph import adapter
+        src = inspect.getsource(adapter.PhaseRunner._phase_domain_review)
+        assert "self._tier(node, state)" in src
+        src = inspect.getsource(adapter.PhaseRunner._phase_validate)
+        assert "self._tier(node, state)" in src
+        src = inspect.getsource(adapter.PhaseRunner._phase_review)
+        assert "self._tier(node, state)" in src

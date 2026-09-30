@@ -409,6 +409,7 @@ class PhaseRunner:
         concerns, critical, responses = await phases.run_domain_review(
             self.client, state.request, state.outputs["plan"],
             implement.summary, reviewers, self.context,
+            function=self._tier(node, state),
         )
         # A critical concern flips the implementation red, exactly as it did
         # when the two steps lived in one function.
@@ -430,6 +431,7 @@ class PhaseRunner:
             self.client, state.request, state.outputs["plan"], implement,
             context=self.context, domains=triage.domains,
             max_tokens=self._max_tokens(node),
+            function=self._tier(node, state),
         )
         # Record any iteration that failed, for any judge's reason. This used
         # to fire only on a red validate, which was sufficient while the loop
@@ -508,6 +510,7 @@ class PhaseRunner:
             self.client, state.request, self._triage(state), state.outputs["plan"],
             state.outputs["implement"], self._resolve_who(node, state), self.context,
             max_tokens=self._max_tokens(node),
+            function=self._tier(node, state),
         )
         # A blocking review is a failed attempt like any other, and the rework
         # loop downstream reads the failure log. Without this it would rework
