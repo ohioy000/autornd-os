@@ -89,15 +89,42 @@ async def _fetch(path: str) -> dict:
         return resp.json()
 
 
+def _base_model(model: str) -> str:
+    """The catalogue id behind a per-request specifier.
+
+    Measured 2026-09-30: `:exacto`-suffixed ids (e.g.
+    `moonshotai/kimi-k3:exacto`) are absent from the bulk `/models` listing,
+    which carries the plain id only — yet `/models/<exacto-id>/endpoints`
+    returns 200 with the same serving list, and InferenceNet served
+    kimi-k3-exacto twice that night. The bulk catalogue's silence about a
+    suffixed id is not the id not existing; endpoints decide.
+    """
+    return model.split(":", 1)[0]
+
+
+def _base_provider(pin: str) -> str:
+    """The provider name behind a call-time specifier.
+
+    Measured 2026-09-30: pins like `inference-net/fp4` never match the bare
+    endpoint names (`InferenceNet`) the endpoints route returns, so every
+    quant-suffixed pin FAILed preflight while serving live. The `/fp4` is a
+    call-time routing specifier, not part of the name; comparison is on the
+    bare name with separators and case normalized (the route returns
+    `InferenceNet`, configs write `inference-net`).
+    """
+    return pin.split("/", 1)[0].lower().replace("-", "").replace("_", "")
+
+
 def check(models: dict[str, str], pins: dict[str, str],
           known: set[str], endpoints: dict[str, set[str]]) -> list[Finding]:
     """Pure, so the failure modes above can be simulated in a test."""
+    known_base = {_base_model(m) for m in known}
     out: list[Finding] = []
     for tier in REQUIRED_TIERS:
         model = models.get(tier, "")
         if not model:
             out.append(Finding(False, f"model_{tier}", "unset — the harness will refuse to start"))
-        elif model not in known:
+        elif _base_model(model) not in known_base and model not in endpoints:
             out.append(Finding(False, f"model_{tier}", f"{model} is not in the provider catalogue"))
         else:
             out.append(Finding(True, f"model_{tier}", model))
@@ -114,8 +141,13 @@ def check(models: dict[str, str], pins: dict[str, str],
             continue
         serving = endpoints.get(model)
         if serving is None:
+            # Endpoints are keyed by exact id; a suffixed id resolves to the
+            # same serving list as its base, so fall back to the base before
+            # reporting unresolvable.
+            serving = endpoints.get(_base_model(model))
+        if serving is None:
             out.append(Finding(False, f"pin {tier}", f"cannot resolve endpoints for {model}"))
-        elif provider not in serving:
+        elif _base_provider(provider) not in {_base_provider(s) for s in serving}:
             out.append(Finding(
                 False, f"pin {tier}",
                 f"{provider} does not serve {model} — with fallbacks disabled this is a 404"))
