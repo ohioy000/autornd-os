@@ -277,6 +277,33 @@ Return JSON with:
   implies one (components, licences, capacity), null where it does not
 - success_criteria: 3 to 6 concrete criteria the validate phase will check
 
+Rules for the plan (each measured 2026-09-30, each a loop-killer when broken):
+
+1. DERIVE FROM DEMAND, NEVER FROM THE CEILING. Size from workload
+   (Little's Law: concurrency = throughput x duration; budget divided by
+   workers with the remainder named) — never by dividing a server cap. A
+   plan that bakes the cap into the answer fails review and blocks the
+   run. Show every derivation inline with the arithmetic, not just the
+   result.
+
+2. UNKNOWN IS A BLOCKER, NOT AN ASSUMPTION. If a load-bearing input is
+   missing (topology, current settings, reserves, durations), name it in
+   blockers and set ready: false — do not stipulate it and derive on top
+   of it. If you must proceed conditionally, label each assumption with
+   a kill trigger (e.g. "if 2 GiB is shared, 24 x 780 MiB oversubscribes
+   9x: stop and re-plan") so feasibility can test it instead of
+   discovering it.
+
+3. ONE NUMBER EVERYWHERE. Every figure that appears in more than one
+   section (rates, counts, sizes, costs, thresholds) must agree exactly —
+   state the canonical value once, reference it elsewhere. A plan whose
+   sections disagree with each other is internally refuted.
+
+4. NAME THE FALSIFIER. State the single metric, with threshold and
+   window, that proves the sizing wrong if it fires (e.g. p99
+   checkout-wait over 250 ms sustained, or wait-queue depth above zero
+   for 60 s). A plan with no disprovable claim cannot be validated.
+
 The success criteria are the most important thing you produce. Every later
 phase is judged against them and nothing else, so write them as real sentences
 about the finished work — never placeholders, never "...", never "TBD".
