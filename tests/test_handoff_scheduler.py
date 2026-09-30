@@ -103,8 +103,11 @@ class TestTheShippedFlagshipIsUnchanged:
             "escalation": {"requires_human": True}})
 
         assert state.status == "blocked"
+        # D37: plan runs inside regrounding_loop, so the loop's own nodes
+        # appear where plan/feasibility used to; the rest of the path every
+        # live run takes is unchanged.
         assert state.path == [
-            "triage", "context", "plan", "feasibility", "plan_ready",
+            "triage", "context", "plan", "reground_context", "feasibility", "plan_ready",
             "verify_grounding",
             "implement", "blocked_check", "blocked_gate",
             "domain_review", "coverage", "consistency",

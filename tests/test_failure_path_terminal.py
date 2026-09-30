@@ -19,6 +19,7 @@ from tests.test_graph import _run, BASE, IMPL, SETTINGS
 
 PLAN_ABSTAINED = {
     "ready": True,
+                     "blockers": [],
     "plan": "Cap backoff at 60s, handle 100 connections.",
     "success_criteria": [
         "Reconnect loop applies exponential backoff capped at 60s",
@@ -28,6 +29,7 @@ PLAN_ABSTAINED = {
 
 PLAN_UNMET = {
     "ready": True,
+                     "blockers": [],
     "plan": "Implement a caching layer with Redis.",
     "success_criteria": [
         "Caching layer stores computed results in Redis",
@@ -479,6 +481,7 @@ class TestReworkCarriesFindings:
                        "unrecallable": False},
             "context": {},
             "plan": {"ready": True,
+                     "blockers": [],
                      "plan": "Provision gp3 with 5000 IOPS.",
                      "success_criteria": ["gp3 provisioned at 5000 IOPS"]},
             "feasibility": {"feasible": True},

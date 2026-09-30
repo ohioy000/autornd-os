@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1045 · **Date of this snapshot:** 2026-09-26, counts re-derived against the tree under test
+**Tests:** 1063 · **Date of this snapshot:** 2026-09-26, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -16,6 +16,10 @@
 > **Ruling D34 (2026-09-29):** the implement node reasons before it produces. run_implement's JSON contract requires a `reasoning` field emitted FIRST, in which the model narrates step by step how it will satisfy each success criterion and, on revision, the delta between the previous artifact's inconsistency and the constraint it must meet — before it writes the deliverable. The field is a scratchpad: the verdict ignores it (Pydantic extra='ignore'), so it changes the model's process, not the verdict's meaning. Rationale: a non-reasoning model called in json_object mode cannot emit a free `<think>` preamble, but JSON field order is autoregressive, so a reasoning field generated before `summary` gives the cognitive runway a reasoning model has natively — "synthetic reasoning" without changing the model, the tier, or the schema. Measured need: qwen3-235b escalated on conv_pool_sizing with the deterministic `consistency` check dissenting through eight iterations, and regressed green→red on robotics — both the non-reasoning failure to hold multi-step numeric consistency (ARCH-20260926-081 re-run, docs/traces/088). Behaviour change, ruled here; the free deterministic checks remain the model-independent backstop.
 
 > **Ruling D35 (2026-09-29):** a heterogeneous judge. The nodes that judge the implementation — domain_review, validate, review, rework_review — route to a `judge` tier when MODEL_JUDGE is set, so a different pretraining lineage reviews the work rather than the model that produced it grading its own blind spots (the echo chamber). Optional with engineering fallback: an unset MODEL_JUDGE drops `judge` from the routing map and those nodes resolve to the engineering tier — the prior homogeneous behaviour, so nothing breaks when it is empty. Capped separately by JUDGE_MAX_TOKENS (default 8000): a judge emits a verdict with findings, not a second implementation, and a tight cap keeps a premium judge model's per-token rate from running away across the high-frequency review nodes. Rationale: the clean 090 run showed the same model produce a flaw and then rubber-stamp it green at validate while only the deterministic `consistency` check dissented — a different brain catches what the producer is blind to. implement and feasibility stay on engineering (production, and plan-review which is already heterogeneous against the architecture plan). Behaviour change, ruled here.
+
+> **Ruling D36 (owner-supplied, recorded by the advisor, 2026-09-30) — the architect's plan rules. The plan phase's prompt carries four rules, each measured on 2026-09-30 as a loop-killer when broken: (1) derive from demand, never from the ceiling, with every derivation shown inline; (2) an unknown is a blocker, not an assumption — a missing load-bearing input is named in blockers with ready: false, and any conditional assumption carries a kill trigger; (3) one number everywhere — a figure that appears in more than one section agrees exactly; (4) name the falsifier — one metric, with threshold and window, that proves the plan wrong if it fires. The text is as committed in bd61d98 (autornd/engine/phases.py) and is kept verbatim. Behaviour change: prompt text that steers judgment. Measurement note: the rules draw their worked examples from conv_pool_sizing, so a reading on that scenario after bd61d98 is not comparable with one before it, and the rules are measured on scenarios they were not written from.**
+
+> **Ruling D37 (owner-supplied, ruled by the advisor, 2026-09-30) — the re-grounding edge: answer the blockers that surface, once, if novel. A plan that is not ready and names blocking unknowns gets one re-grounding round. A free, deterministic check compares the plan's blockers with the questions this run's grounding actually asked, read from the run's own state. Only the novel ones are looked up, in one bundled request at the standard budget, under the existing risk policy; at low risk nothing is looked up. When findings come back, the plan runs once more with them in its context. There is never a second round and never a third plan pass. A plan whose blockers were all already asked, that names none, or whose round found nothing new does not re-plan: it goes to plan_ready, which blocks and names them. A plan that proceeds while still naming blockers proceeds on assumptions, and each is recorded with its basis (whether it was asked, and what the lookup returned) and counted. Nothing is recorded as unanswered before its lookup has been read. This supersedes the Ruling D34 (owner-supplied, 2026-09-30) text in 2a45d61, which collided with D34. Falsifier: across the pre-registered live sample, if the lookup answers none of the blockers it is sent, the paid half is not earning and the edge becomes label-only; if any run re-plans without new information in its context, the novelty check is broken.**
 
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
@@ -266,7 +270,7 @@ autornd/
     templates/dashboard.html  single-file chat + workflows + settings UI
 
 workflows/
-  engineering-rnd.yaml   ★★ the flagship pipeline, 25 nodes, 3 loops (§3.1)
+  engineering-rnd.yaml   ★★ the flagship pipeline, 28 nodes, 4 loops (§3.1)
   lean.yaml                 10 nodes — cheaper variant, one loop
   triage-only.yaml          2 nodes — triage + grounding (research measurement)
   triage-classify.yaml   ★  1 node — triage alone. Exists so calibration costs
@@ -280,7 +284,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      58 files, 1045 tests
+tests/                      59 files, 1063 tests
 
 ```
 
@@ -422,7 +426,7 @@ idempotent across phases.
 
 ## 3. CURRENT STATE & SOURCE OF TRUTH
 
-### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (25 nodes)
+### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (28 nodes)
 
 **The file is the source of truth; this table is generated from it.** A
 hand-copied YAML lived here for twelve blueprints and drifted — it still
@@ -685,7 +689,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1045 total)
+### 3.7 Test distribution (1063 total)
 
 
 | file | n | file | n |
@@ -761,7 +765,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1045/1045 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1063/1063 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

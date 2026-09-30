@@ -43,13 +43,54 @@ nodes:
     tier: engineering
     specialist: assigned        # every assigned specialist, in parallel
     prompt: feasibility
-    depends_on: [plan]
+    depends_on: [regrounding_loop]
     when: plan.ready == true
+
+  # Ruling D37 (owner-supplied, recorded by the advisor, 2026-09-30,
+  # superseding the D34 text this file carried at 2a45d61): a plan that is
+  # not ready and names blocking unknowns gets ONE re-grounding round. The
+  # shape is a loop declared exactly like build_loop, because a linear chain
+  # runs each node id once — plan would run once and no second node id would
+  # do either, since downstream reads plan.*. The loop body re-runs plan on
+  # the re-grounded context; the pure check exits it (passed == false) when
+  # the plan is ready, risk is low, no blocker is novel, or a round ran.
+  # No gate in the body, so nothing routes out of the loop. Downstream
+  # depends on the loop, not on plan (a loop owns its body): feasibility
+  # re-runs on the final plan, and plan_ready still blocks outside it. No
+  # bound setting, no new tier.
+  - id: reground_context
+    kind: check
+    check: reground_context
+    args:
+      # A missing field resolves loudly (conditions fail on absent paths),
+      # so a fixture verdict without blockers would take the whole suite
+      # down with one ConditionError. The real verdict defaults blockers
+      # to [] (verdicts.py); fixtures must too — see the convention-22 note
+      # on the IMPL double in tests/test_graph.py.
+      ready: plan.ready
+      risk: triage.risk
+      blockers: plan.blockers
+      asked: context.asked
+      rounds: context.rounds
+
+  - id: reground_lookup
+    kind: check
+    check: reground_context_lookup
+    args:
+      blockers: reground_context.fresh
+    when: reground_context.passed == true
+
+  - id: regrounding_loop
+    kind: ai
+    body: [plan, reground_context, reground_lookup]
+    until: reground_context.passed == false
+    max_iterations: 2
+    depends_on: [context]
 
   - id: plan_ready
     kind: gate
     condition: plan.ready == true
-    depends_on: [feasibility]
+    depends_on: [regrounding_loop]
     on_fail: blocked
     on_fail_reason: "Plan not ready"
 
@@ -59,6 +100,8 @@ nodes:
   # iterations of it. This node re-reads the criteria for free and, when they
   # demand verifiability, fires the one bundled lookup the risk gate declined,
   # at the medium-risk budget. $0 where no criterion demands citation.
+  # Depends on plan_ready: the single chain through the loop and feasibility
+  # always resolves there before build starts.
   - id: verify_grounding
     kind: check
     check: verify_grounding

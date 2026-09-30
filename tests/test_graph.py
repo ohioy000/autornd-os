@@ -161,8 +161,11 @@ class TestShippedWorkflow:
 
     def test_top_level_order_is_the_documented_pipeline(self):
         spec = load("workflows/engineering-rnd.yaml")
+        # D37: plan runs inside regrounding_loop (a loop owns its body, so
+        # plan/feasibility no longer sit on the top-level schedule); the
+        # rest of the pipeline order is unchanged.
         assert [n.id for n in spec.execution_order()] == [
-            "triage", "context", "plan", "feasibility",
+            "triage", "context", "regrounding_loop", "feasibility",
             "plan_ready", "verify_grounding", "build_loop", "review", "review_clean",
             "independent_check",
         ]
@@ -205,14 +208,14 @@ class TestShippedWorkflow:
             assert "blocked_gate" not in spec.get(loop).body, loop
 
     def test_every_check_named_is_registered(self):
-        """Two checks are adapter-owned rather than registry entries — they need
-        the client or the runner's state, which a pure registry function has no
-        access to. Both are special-cased in PhaseRunner.run_check beside each
-        other, so both are excluded here by name."""
+        """Three checks are adapter-owned rather than registry entries — they
+        need the client or the runner's state, which a pure registry function
+        has no access to. All three are special-cased in PhaseRunner.run_check
+        beside each other, so all three are excluded here by name."""
         spec = load("workflows/engineering-rnd.yaml")
         for node in spec.nodes:
             if node.kind is NodeKind.CHECK and node.check not in (
-                    "build_context", "verify_grounding"):
+                    "build_context", "verify_grounding", "reground_context_lookup"):
                 assert node.check in registry, f"{node.id} names unknown check"
 
 
@@ -294,7 +297,9 @@ SETTINGS = {"max_iterations": 5, "escalation_recovery_attempts": 3,
 
 PLAN = {
     "ready": True,
+                     "blockers": [],
     "plan": "Cap backoff at 60s, add jitter.",
+    "blockers": [],
     "success_criteria": [
         "Reconnect loop applies exponential backoff capped at 60s",
         "Jitter is applied to every retry attempt",
@@ -336,10 +341,93 @@ class ScriptedRunner:
             # schedule. Same prompt, so a script that answers `review` answers
             # `rework_review` too unless a test scripts it separately.
             out = self.verdicts.get(node.prompt)
-        return out(state) if callable(out) else (out or {})
+        got = out(state) if callable(out) else (out or {})
+        if isinstance(got, dict):
+            got = dict(got)
+        state.outputs[node.id] = got
+        self._record_regrounding(node, got, state)
+        return got
+
+    def _record_regrounding(self, node, got, state):
+        """The adapter's assumption/first-pass record, mirrored for doubles.
+
+        Production records these in PhaseRunner._phase_plan; the scripted
+        double answers plan from the canned map, so it keeps the same
+        counters here — the unit-record builder reads them off whichever
+        runner drove the run. Only plan verdicts; only blockers named by a
+        plan that went on to proceed (ready) become assumptions with basis.
+        """
+        if node.id != "plan" or not isinstance(got, dict):
+            return
+        from autornd.graph.checks import _normalize_question
+        blockers = [str(b) for b in (got.get("blockers") or [])]
+        if state.iteration <= 1 and not getattr(self, "regrounding_first_pass_blockers", None):
+            self.regrounding_first_pass_blockers = list(blockers)
+        if got.get("ready") and blockers:
+            asked = set()
+            ctx = state.outputs.get("context")
+            if isinstance(ctx, dict):
+                asked = {_normalize_question(q) for q in (ctx.get("asked") or []) if q}
+            lookup = state.outputs.get("reground_lookup") or {}
+            found = lookup.get("found", 0) if isinstance(lookup, dict) else 0
+            if not hasattr(self, "assumptions_declared"):
+                self.assumptions_declared: list[dict] = []
+            for b in blockers:
+                self.assumptions_declared.append({
+                    "blocker": b,
+                    "basis": (f"asked: {str(_normalize_question(b) in asked).lower()}; "
+                              f"lookup returned {found} finding(s) this round"),
+                })
+
+    def _regrounding_block(self, state):
+        """The typed record, read off this runner and the run's own state."""
+        outputs = state.outputs or {}
+        lookup = outputs.get("reground_lookup") or {}
+        plan = outputs.get("plan") or {}
+        second = list(plan.get("blockers") or []) if isinstance(plan, dict) else []
+        if isinstance(lookup, dict):
+            asked_n, found_n = lookup.get("asked", 0), lookup.get("found", 0)
+        else:
+            asked_n = getattr(lookup, "asked", 0) or 0
+            found_n = getattr(lookup, "found", 0) or 0
+        rounds = 1 if lookup else 0
+        novel = list(getattr(self, "regrounding_novel", None) or [])
+        return {
+            "rounds": rounds,
+            "blockers_first_pass": list(getattr(self, "regrounding_first_pass_blockers", None) or []),
+            "novel": novel,
+            "asked": int(asked_n),
+            "findings": int(found_n),
+            "blockers_second_pass": list(second),
+            "assumptions": list(getattr(self, "assumptions_declared", None) or []),
+        }
 
     async def run_check(self, node, state):
         self.check_calls.append(node.id)
+        if node.check == "build_context":
+            # The adapter's context node seeds the asked history the novelty
+            # check compares against; the double carries the same output keys
+            # (asked, rounds) with the honest zero, so resolves off them.
+            # The executor writes the check output into state AFTER this
+            # returns, so seed here rather than assigning outputs directly.
+            from autornd.graph.checks import Result as _R
+            return _R(True, "context assembled", asked=[], rounds=0)
+        if node.check == "reground_context_lookup":
+            # The paid lookup bills (convention 9) and mutates the context
+            # output in place, exactly like the adapter: pass two's check
+            # reads rounds == 1 off it and exits — once is ruled.
+            from autornd.graph.executor import resolve_args as _ra
+            novel = [b for b in list(_ra(node, state).get("blockers") or []) if b]
+            ctx = state.outputs.get("context")
+            if isinstance(ctx, dict):
+                ctx["asked"] = list(ctx.get("asked") or []) + list(novel)
+                ctx["rounds"] = 1
+            if not hasattr(self, "regrounding_novel"):
+                self.regrounding_novel: list[str] = []
+            self.regrounding_novel = list(novel)
+            from autornd.graph.checks import Result as _R
+            return _R(True, "re-grounding round 1", rounds=1,
+                      asked=len(novel), found=len(novel), novel=list(novel))
         if node.check not in registry:      # infrastructure step, runner-owned
             return Result(True, "context assembled")
         return get_check(node.check)(**resolve_args(node, state))
@@ -360,8 +448,12 @@ class TestExecutorReproducesThePipeline:
     async def test_happy_path_matches_the_measured_shape(self):
         state, runner = await _run({**BASE, "validate": {"green": True}})
         assert state.status == "completed"
+        # D37: plan runs inside regrounding_loop (ready first pass exits on
+        # the check), then feasibility on the final plan, then the rest of
+        # the pipeline unchanged.
         assert state.path == [
-            "triage", "context", "plan", "feasibility", "plan_ready",
+            "triage", "context", "plan", "reground_context",
+            "feasibility", "plan_ready",
             "verify_grounding",
             "implement", "blocked_check", "blocked_gate",
             "domain_review", "coverage", "consistency",
@@ -370,6 +462,8 @@ class TestExecutorReproducesThePipeline:
         assert len(runner.ai_calls) == 7
 
     async def test_blocked_plan_surfaces_the_blocker(self):
+        # D37 legitimately changes the PATH (one lookup plus one re-plan at
+        # medium risk); the STATUS assertion is unchanged — still blocked.
         state, _ = await _run({**BASE, "plan": {
             "ready": False, "plan": "x", "blockers": ["missing datasheet"],
             "success_criteria": []}})

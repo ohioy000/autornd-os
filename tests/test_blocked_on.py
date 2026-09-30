@@ -167,7 +167,7 @@ class TestEscalationReadsTheBlock:
             done=True, green=True, summary="s", iteration=1,
             blocked_on=blocked_on)
         state.outputs["plan"] = PlanVerdict(
-            ready=True, plan="p",
+            ready=True, plan="p", blockers=[],
             success_criteria=["Every claim carries a citable source"])
         return state
 

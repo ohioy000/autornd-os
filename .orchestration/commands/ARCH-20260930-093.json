@@ -1,0 +1,126 @@
+{
+  "command_id": "ARCH-20260930-093",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Make the re-grounding edge do what Ruling D37 says, with a free novelty check that actually decides on live runs, and land it together with the D36 plan rules: green, and both rulings recorded.",
+
+  "evidence": [
+    "commit:2a45d61 on arch/20260929-089-regrounding-edge says 'Suite 1041 green with 13 shape-stamp failures pending'. Measured by the advisor on a clean worktree at 2a45d61: 11 failed, 1043 passed. Five of those failures are behavioural: test_lean_completes, test_happy_path_matches_the_measured_shape, both test_handoff_scheduler pins, and test_the_table_sums_to_no_more_than_the_run. The other six are count or shape stamps. The working tree adds two more, from an uncommitted README edit that writes engineering-rnd 6/6 where the harness reports 10/17.",
+    "autornd/graph/adapter.py:194: run_check returns self._reground(state) for reground_context before the registry is consulted. The pure @check('reground_context') at autornd/graph/checks.py:748 therefore never runs on a live path, and _reground always returns passed, so the regrounding_novel gate cannot fail.",
+    "autornd/graph/checks.py:800: _asked_questions() iterates adapter._runners. `grep -rn _runners autornd/ tests/` finds that line and no definition, so the asked history is always empty and every blocker reads as novel.",
+    "tests/test_regrounding.py:72 and :122: both novelty tests monkeypatch checks._asked_questions. They certify a path production never takes (conventions 22 and 28).",
+    "autornd/graph/adapter.py:228: grounding_questions is seeded from deferred, which holds the gaps the risk gate DECLINED to ask. Questions never asked are recorded as asked.",
+    "autornd/graph/adapter.py:396: each blocker is labelled 'no lookup answered it' in the same step that asks it, before any finding is read (convention 26).",
+    "autornd/graph/executor.py:273 special-cases 'regrounding_attempts' for old fixtures (convention 17). autornd/graph/executor.py:416 now dispatches loops inside the StepRecord and the timer, so loop ids enter state.path and each loop is timed on top of its body. test_phase_timing reads 1.512 against a floor of 0.8. This is the gate double-count (HANDOVER §4.4 convention 22 table) in a new place.",
+    "autornd/graph/adapter.py:341-367 (_reground docstring): web research cannot reach repo, config or code blockers, which are the three that motivated the edge.",
+    "commit:bd61d98: the four plan rules, owner-supplied, with no ruling number.",
+    "HANDOVER.md: D34 is 'the implement node reasons before it produces'. The edge's code calls itself 'Ruling D34 (owner-supplied, 2026-09-30)' at 8 sites, which is a collision. D32 is unused and D36 is the next free number.",
+    "Owner, 2026-09-30, in the advisor session: 'answer the ones that surface, once, if novel', with 'once' confirmed as one round."
+  ],
+
+  "scope": {
+    "include": [
+      "autornd/graph/adapter.py",
+      "autornd/graph/checks.py",
+      "autornd/graph/executor.py (restore to d266961 only)",
+      "autornd/config.py",
+      "autornd/engine/workflow.py",
+      "autornd/evals/runner.py",
+      "autornd/evals/assertions.py",
+      "autornd/knowledge/context.py (only to expose which gaps grounding actually looked up)",
+      "workflows/engineering-rnd.yaml",
+      "evals/scenarios/ (max_calls or timeout only, only where convention 18's arithmetic requires it)",
+      "tests/",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "autornd/engine/phases.py: bd61d98 stays exactly as committed.",
+      "autornd/knowledge/research.py and autornd/routing/: the lookup is the existing research path at the existing budget, with no new pricing, tier or retry.",
+      ".env, .env1, .qwen/: never open or commit.",
+      "Every workflow other than engineering-rnd: the edge is the flagship's."
+    ]
+  },
+
+  "constraints": [
+    "RULINGS FIRST, VERBATIM, BEFORE THE IMPLEMENTATION IN COMMIT ORDER. Record both rulings in HANDOVER.md (as blockquotes with the others) and in docs/handover-review.md (as their own section, at the next free number when you write it; if ARCH-20260930-092 has merged, that is 84).",
+    "RULING D36, COMMITTED VERBATIM: 'Ruling D36 (owner-supplied, recorded by the advisor, 2026-09-30) — the architect's plan rules. The plan phase's prompt carries four rules, each measured on 2026-09-30 as a loop-killer when broken: (1) derive from demand, never from the ceiling, with every derivation shown inline; (2) an unknown is a blocker, not an assumption — a missing load-bearing input is named in blockers with ready: false, and any conditional assumption carries a kill trigger; (3) one number everywhere — a figure that appears in more than one section agrees exactly; (4) name the falsifier — one metric, with threshold and window, that proves the plan wrong if it fires. The text is as committed in bd61d98 (autornd/engine/phases.py) and is kept verbatim. Behaviour change: prompt text that steers judgment. Measurement note: the rules draw their worked examples from conv_pool_sizing, so a reading on that scenario after bd61d98 is not comparable with one before it, and the rules are measured on scenarios they were not written from.'",
+    "RULING D37, COMMITTED VERBATIM: 'Ruling D37 (owner-supplied, ruled by the advisor, 2026-09-30) — the re-grounding edge: answer the blockers that surface, once, if novel. A plan that is not ready and names blocking unknowns gets one re-grounding round. A free, deterministic check compares the plan's blockers with the questions this run's grounding actually asked, read from the run's own state. Only the novel ones are looked up, in one bundled request at the standard budget, under the existing risk policy; at low risk nothing is looked up. When findings come back, the plan runs once more with them in its context. There is never a second round and never a third plan pass. A plan whose blockers were all already asked, that names none, or whose round found nothing new does not re-plan: it goes to plan_ready, which blocks and names them. A plan that proceeds while still naming blockers proceeds on assumptions, and each is recorded with its basis (whether it was asked, and what the lookup returned) and counted. Nothing is recorded as unanswered before its lookup has been read. This supersedes the Ruling D34 (owner-supplied, 2026-09-30) text in 2a45d61, which collided with D34. Falsifier: across the pre-registered live sample, if the lookup answers none of the blockers it is sent, the paid half is not earning and the edge becomes label-only; if any run re-plans without new information in its context, the novelty check is broken.'",
+    "RENAME: all 8 sites saying 'Ruling D34 (owner-supplied, 2026-09-30)' in autornd/, workflows/ and tests/ become D37. The final grep for 'D34 (owner-supplied' returns nothing.",
+    "THE EXECUTOR IS NOT CHANGED: `git diff d266961 -- autornd/graph/executor.py` is empty at the end. That reverts both the loop-dispatch move and the _budget special case. If the ruled behaviour cannot be wired on the existing executor and the existing condition grammar (graph/conditions.py, one comparison per condition, no 'and'), STOP and report exactly which behaviour needs which executor change. That is a finding, not a failure. Do not widen.",
+    "NO TUNABLE: 'once' is ruled, not configured. Remove regrounding_attempts from config.py (the field, its bounded-int entry and its validator) and from engine/workflow.py's settings_lookup. Revert workflow.py's max() iteration change, whose comment contradicts its code. The run's iteration count stays the build loop's, and re-grounding is reported in its own typed block. A loop is not required; if one is used, declare it like build_loop (kind, body, until, literal max_iterations: 2, on_exhausted, depends_on) with no tier, specialist, prompt, schema or max_tokens.",
+    "NOVELTY IS A PURE REGISTERED CHECK, AND IT RUNS ON LIVE PATHS. It receives the plan's blockers, this run's asked questions, and whether a round has already run, all as args resolved from state. There is no module-level registry, checks.py does not import the adapter, and the adapter does not intercept it. The paid lookup is a separate node that runs only after the novelty check passed, and it sends only the novel blockers.",
+    "HISTORY IS WHAT WAS ASKED. Seed the asked record from the gaps grounding actually looked up, not from deferred_gaps. If build_phase_context does not expose them, add an output parameter next to deferred_gaps in autornd/knowledge/context.py. Nothing else in that module changes.",
+    "RISK POLICY UNCHANGED (HANDOVER §4.3): at low risk no search call is made on this path. Assert it.",
+    "HONEST RECORD (conventions 26 and 28): replace the ask-time labelling at adapter.py:396. The unit record carries a typed regrounding block: rounds (0 or 1), blockers_first_pass, novel, asked, findings, blockers_second_pass, and assumptions. assumptions lists only blockers named by a plan that went on to proceed, each with its basis. When the edge does not fire, the block is present with zeros: an absent block and a measured zero are different claims.",
+    "HAPPY PATH UNCHANGED: a plan that is ready on the first pass makes exactly the calls it made before this edge. README's workflow table stays at engineering-rnd 10/17. Discard the uncommitted working-tree README edit that wrote 6/6: the guard is right and the edit is wrong (convention 17).",
+    "BUDGETS RE-DERIVED IN THE SAME CHANGE (convention 18): report the worst-case extra calls on the re-grounding path, computed from the harness the way the README table is. Raise max_calls or timeout only on scenarios whose declared headroom that worst case exceeds, and show the arithmetic. For time, cite the committed traces used. Change nothing else.",
+    "TESTS DRIVE THE REAL PATH (convention 22): run through the real adapter and executor with a scripted client that bills (convention 9), and monkeypatch no module function. One test for each case: (a) ready on the first pass: no lookup, one plan pass, unchanged call count; (b) not ready, novel blockers, medium risk: exactly one lookup carrying only the novel blockers, then exactly one more plan pass; (c) blockers all already asked: zero lookups, no second pass, and plan_ready blocks naming them; (d) the second pass is still not ready and names new blockers: no second lookup, and the run blocks naming them; (e) low risk: zero search calls; (f) a plan that proceeds while naming blockers records them as assumptions with their basis. PROVE BY BREAKING: invert the novelty decision and show (c) fail, then remove 'once' and show (d) fail. Quote both failures in the response.",
+    "The five behavioural tests that fail at 2a45d61 must pass with their assertions untouched. The only allowed edits to them are the fixture additions of blockers: [] that 2a45d61 already made.",
+    "bd61d98 stays exactly as committed.",
+    "Fix forward: new commits on this branch, no rebase, no force-push, no history rewrite. If ARCH-20260930-092 merges first, merge main into this branch and re-derive the counts after the merge.",
+    "Free. No provider call."
+  ],
+
+  "acceptance_criteria": [
+    "D36 and D37 appear verbatim in HANDOVER.md and the notebook, and the ruling commit precedes the implementation commits.",
+    "`grep -rn 'D34 (owner-supplied' .` returns nothing.",
+    "`git diff d266961 -- autornd/graph/executor.py` is empty.",
+    "`grep -rn regrounding_attempts autornd/ workflows/` returns nothing.",
+    "`grep -n '_runners\\|_asked_questions' autornd/graph/checks.py` returns nothing, and tests/test_regrounding.py contains no monkeypatch.",
+    "Tests (a) to (f) pass, and both break demonstrations are quoted in the response.",
+    "The five previously failing behavioural tests pass, with no assertion edited.",
+    "README's workflow table reads engineering-rnd 10/17 and tests/test_docs.py passes.",
+    "The unit-record regrounding block is present with zeros on a run where the edge did not fire; a test asserts this.",
+    "Suite green, with the count reported before (11 failed / 1043 passed at 2a45d61) and after.",
+    "The PR is opened from this branch and delivery_state carries its number (D16)."
+  ],
+
+  "verification": [
+    {"command": "grep -n 'Ruling D36\\|Ruling D37' HANDOVER.md docs/handover-review.md", "expected": "Both present in both files."},
+    {"command": "git diff d266961 -- autornd/graph/executor.py | wc -l", "expected": "0"},
+    {"command": "grep -rn \"D34 (owner-supplied\\|regrounding_attempts\\|_runners\" autornd/ workflows/ tests/", "expected": "No output."},
+    {"command": ".venv/bin/python3 -m pytest tests/test_regrounding.py tests/test_all_workflows_terminate.py tests/test_handoff_scheduler.py tests/test_phase_timing.py tests/test_graph.py tests/test_docs.py -q", "expected": "All pass."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count reported before and after."}
+  ],
+
+  "rollback": "Close the PR unmerged. main never had the edge, and the branch keeps its history.",
+
+  "deliverable": {
+    "branch": "arch/20260929-089-regrounding-edge",
+    "branch_created_by": "executor (2026-09-29); this command is pushed on top of 2a45d61",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+
+  "transport": "Pushed by the advisor (the third architect) under the owner's grant of 2026-09-30, as one commit touching only this file, on top of 2a45d61. The local branch is one commit behind, so run `git pull --ff-only` before starting. Commit the response IN_PROGRESS first, then update it in place. Process ARCH-20260930-092 first (command_id order); it touches no file this command touches except the notebook and the counts.",
+
+  "assumptions": [
+    "The existing executor can express the ruled behaviour, with gates carrying `when` and checks reading resolved args. If it cannot, the constraint above says stop and report.",
+    "The research path returns findings the adapter can fold into the context the second plan pass reads, as 2a45d61 already does."
+  ],
+
+  "questions": [
+    "Are research_gaps findings attributable to the blocker that asked for them? If yes, report answered-per-blocker. If not, say so: the D37 falsifier then counts findings per round and states that it cannot attribute them.",
+    "Which wiring did you choose (a loop, or linear nodes with gates), and why? Quote the YAML in the response.",
+    "Does any scenario's max_calls or timeout change? List each change with its arithmetic, or state that none was needed and why."
+  ],
+
+  "preconditions": [
+    {"command": "ps aux | grep -E 'autornd|evals' | grep -v grep", "expected": "No output. If there is output, a paid run is in flight: stop, with no git operation."},
+    {"command": "git fetch origin && git log --oneline -2 origin/arch/20260929-089-regrounding-edge", "expected": "HEAD is the carriage commit naming ARCH-20260930-093, and its parent is 2a45d61."},
+    {"command": "git show --stat --format= origin/arch/20260929-089-regrounding-edge", "expected": "Exactly one file: .orchestration/commands/ARCH-20260930-093.json."},
+    {"command": "git status --short README.md && git diff README.md | grep engineering-rnd", "expected": "Record the uncommitted edit (engineering-rnd 6/6) in the response, then discard it with `git checkout -- README.md`."},
+    {"command": "grep -n 'node.check == \"reground_context\"\\|self.grounding_questions = list(deferred)\\|no lookup answered it' autornd/graph/adapter.py; grep -n 'if raw == \"regrounding_attempts\"\\|if node.is_loop:' autornd/graph/executor.py; grep -n '_runners' autornd/graph/checks.py; grep -n '_asked_questions\\\"' tests/test_regrounding.py", "expected": "adapter.py 194, 228 and 396; executor.py 273, 296 (the _run_ai loop guard 2a45d61 added) and 416; checks.py 800; test_regrounding.py 72 and 122. Name any divergence rather than assuming."},
+    {"command": "grep -rn 'Ruling D34 (owner-supplied' autornd/ workflows/ tests/ | wc -l; grep -c 'Ruling D34 (2026-09-29)' HANDOVER.md", "expected": "8, then 1, which confirms the collision."},
+    {"command": "grep -n 'deferred_gaps' autornd/knowledge/context.py", "expected": "Record whether the gaps that were looked up are exposed alongside the deferred ones."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "With the README edit discarded: 11 failed / 1043 passed, naming the five behavioural and six stamp failures above. Any other result: record it and continue if it is only counts; BLOCKED if a behavioural test outside that list fails."}
+  ]
+}

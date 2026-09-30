@@ -745,6 +745,56 @@ def numbers_consistent(plan: str, implementation: str) -> Result:
                   conflicts=[])
 
 
+@check("reground_context")
+def reground_context(ready: bool = False, risk: str | None = None,
+                     blockers: list[str] | None = None,
+                     asked: list[str] | None = None,
+                     rounds: int = 0) -> Result:
+    """Should the plan get one more grounding round before it is judged?
+
+    Ruling D37 (owner-supplied, recorded by the advisor, 2026-09-30). Pure
+    registered check, driven exactly like build_loop's fold: all inputs
+    arrive as resolved args, no adapter import, no module state. The loop
+    exits when this returns False, so every stay-out reason is False here:
+
+    - plan already ready: nothing to re-ground;
+    - low risk: the risk policy buys no search calls there;
+    - no blocker novel against the asked history: re-asking is the spin
+      this harness has died on before (normalized compare);
+    - a round already ran: once is ruled, whatever the blockers say.
+
+    Free, deterministic, no store, no spend. Reports which blockers are
+    novel; the paid lookup is the separate node that runs only after this
+    check passed, and it sends only the novel ones.
+    """
+    if ready:
+        return Result(False, "plan ready — no re-grounding needed",
+                      novel=False, fresh=[])
+    if str(risk or "").strip().lower() == "low":
+        return Result(False, "low risk — no paid re-grounding",
+                      novel=False, fresh=[])
+    if (rounds or 0) >= 1:
+        return Result(False, "re-grounding round already ran — once is ruled",
+                      novel=False, fresh=[])
+    asked_set = {_normalize_question(q) for q in (asked or []) if q}
+    fresh = []
+    for raw in blockers or []:
+        text = str(raw or "").strip()
+        if not text:
+            continue
+        if _normalize_question(text) not in asked_set:
+            fresh.append(text)
+    if not fresh:
+        return Result(False, "no novel blocking unknown — planning on current grounding",
+                      novel=False, fresh=[])
+    return Result(True, f"{len(fresh)} novel blocking unknown(s) to re-ground",
+                  novel=True, fresh=fresh)
+
+
+def _normalize_question(text: str) -> str:
+    return " ".join(str(text).lower().strip().rstrip("?.!").split())
+
+
 @check("totals_reconcile")
 def totals_reconcile(text: str, tolerance: float = 0.01) -> Result:
     """Does a stated total match the numbers said to add up to it?

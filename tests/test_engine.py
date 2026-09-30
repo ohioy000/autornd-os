@@ -20,6 +20,7 @@ TRIAGE_RESP = {
 
 PLAN_RESP = {
     "ready": True,
+                     "blockers": [],
     "plan": "Step 1: Refactor sleep state machine. Step 2: Add wake sources.",
     "blockers": [],
     "cost_estimate": None,
@@ -125,6 +126,7 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
     }
     plan_resp = {
         "ready": True,
+                     "blockers": [],
         "plan": "Refactor MQTT topic structure.",
         "blockers": [],
         "cost_estimate": None,
