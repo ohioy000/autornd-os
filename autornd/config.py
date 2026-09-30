@@ -66,6 +66,18 @@ class Settings(BaseSettings):
 
     max_iterations: int = 5
 
+    # How many times the plan may send blocking unknowns back to grounding
+    # before it must either plan on what it has or refuse. Ruling D34
+    # (owner-supplied, 2026-09-30): a plan that names a blocking unknown
+    # routes back to grounding instead of assuming it. Provisional N=2:
+    # nothing measures the right number yet — one round answers the
+    # question the first round missed or it does not, and the novelty
+    # condition below stops a second round that asks nothing new, so the
+    # binding constraint in practice is novelty, not N. The follow-on
+    # pre-registered run measures whether N=2 resolves unknowns that N=1
+    # leaves; adjust on that evidence.
+    regrounding_attempts: int = 2
+
     # How many times review may send work back before the run escalates.
     # Measured §15.1: three of four traces ended blocked at review (n=1 each),
     # with the findings unread by anything downstream. A round costs about one
@@ -148,6 +160,7 @@ class Settings(BaseSettings):
         "validate_max_tokens", "search_max_tokens",
         "search_max_tokens_consequential",
         "review_rework_attempts", "plan_max_tokens", "judge_max_tokens",
+        "regrounding_attempts",
     }
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
@@ -157,6 +170,13 @@ class Settings(BaseSettings):
     def validate_max_iterations(cls, v: int) -> int:
         if not 1 <= v <= 20:
             raise ValueError("max_iterations must be between 1 and 20")
+        return v
+
+    @field_validator("regrounding_attempts")
+    @classmethod
+    def validate_regrounding_attempts(cls, v: int) -> int:
+        if not 1 <= v <= 5:
+            raise ValueError("regrounding_attempts must be between 1 and 5")
         return v
 
     @field_validator(

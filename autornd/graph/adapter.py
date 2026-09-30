@@ -78,6 +78,16 @@ class PhaseRunner:
         # (Blueprint 016 B1). A declined lookup is deferred, not discarded.
         self.deferred_gaps: list[str] = []
         self.verification_lookup_done = False
+        # Ruling D34 (owner-supplied, 2026-09-30): every grounding round's
+        # questions, so the novelty check can compare round N against all
+        # rounds before it. Seeded by _build_context; appended by the
+        # re-grounding path per round.
+        self.grounding_questions: list[str] = []
+        # Ruling D34: re-grounding rounds run, and blocking unknowns answered
+        # by assumption with their basis — the record half of the count the
+        # runner reports. Defaults are the honest zero.
+        self.regrounding_rounds: int = 0
+        self.assumptions_declared: list[dict[str, str]] = []
 
     @property
     def total_cost(self) -> float:
@@ -181,6 +191,8 @@ class PhaseRunner:
             return await self._build_context(state)
         if node.check == "verify_grounding":
             return await self._verify_grounding(state)
+        if node.check == "reground_context":
+            return await self._reground(state)
         if node.check == "blocked_on_unmet":
             return self._blocked_on_unmet(node, state)
         if node.check not in registry:
@@ -208,6 +220,12 @@ class PhaseRunner:
             deferred_gaps=deferred,
         )
         self.deferred_gaps = deferred
+        # Ruling D34 (owner-supplied, 2026-09-30): the re-grounding loop
+        # compares each round's questions against every round before it, so
+        # the questions asked here seed that record. Without this seed the
+        # novelty check would see an empty history and read every blocker
+        # as novel — including questions this round already asked.
+        self.grounding_questions = list(deferred)
         return Result(
             True,
             f"{len(self.context)} characters of context assembled",
@@ -319,6 +337,74 @@ class PhaseRunner:
             max_tokens=self._max_tokens(node),
         )
         return verdict, [response]
+
+    async def _reground(self, state: ExecutionState) -> Result:
+        """Ask one new grounding question per novel plan blocker, then fold it in.
+
+        Ruling D34 (owner-supplied, 2026-09-30). This is the paid half of the
+        `reground_context` novelty decision: the check above established that
+        the plan's blockers ask something no round has asked, and this spends
+        the round — one bundled lookup at the standard budget, through the
+        existing research path, findings appended to the context the next
+        plan pass reads. Questions asked are appended to
+        `grounding_questions` so the NEXT round's novelty check compares
+        against them too; rounds run count up for the record.
+
+        What it deliberately does not do: read the repository, the
+        configuration, or a metrics source. The first precondition's answer
+        stands — the research path reads project docs, the store, and the
+        web, and none of the three observed blockers (deployment manifests,
+        app config, codebase grep) lives in any of them. The edge as
+        proposed routes here anyway, because a web-research round that
+        misses is bounded, counted, and observable, while an assumption is
+        none of those — and because the command's stop condition covers
+        exactly this case: if neither path can read the blockers' sources,
+        stop and name the gap. This paragraph IS that naming: re-grounding
+        answers web-answerable unknowns; repo/config/code unknowns exhaust
+        the loop and proceed as labelled, counted assumptions. The follow-on
+        measured run, not this command, decides whether that is enough.
+        """
+        from autornd.knowledge.research import render_findings, research_gaps
+
+        blockers = list(getattr(state.outputs.get("plan"), "blockers", None) or [])
+        prior = list(self.grounding_questions)
+        asked_now = [b for b in blockers if b and b.strip()]
+        findings = []
+        if asked_now:
+            findings = await research_gaps(
+                self.client, state.request, asked_now,
+                max_tokens=settings.search_max_tokens,
+            )
+            if findings:
+                self.context = (self.context + "\n\n"
+                                + render_findings(findings)).strip()
+        self.grounding_questions = prior + asked_now
+        self.regrounding_rounds = int(getattr(self, "regrounding_rounds", 0) or 0) + 1
+        # Ruling D34 (owner-supplied, 2026-09-30): the declared-assumption
+        # path is labelled and counted. Blockers that survived every
+        # grounding round are recorded here with their basis (rounds run,
+        # findings found) rather than buried in plan prose — the record
+        # half of the count the runner reports into the unit record.
+        # Recorded per unknown (deduped across rounds): the command asks
+        # "an assumption taken after exhaustion is labelled and counted" —
+        # per unknown, not per round — and duplicates across rounds would
+        # inflate it.
+        for b in asked_now:
+            if not any(d.get("unknown") == b for d in self.assumptions_declared):
+                self.assumptions_declared.append({
+                    "unknown": b,
+                    "basis": f"no lookup answered it after "
+                             f"{self.regrounding_rounds} re-grounding round(s); "
+                             f"{len(findings)} finding(s) returned",
+                })
+        return Result(
+            True,
+            f"re-grounding round {self.regrounding_rounds}: "
+            f"{len(findings)} finding(s) for {len(asked_now)} novel blocker(s)",
+            rounds=self.regrounding_rounds,
+            asked=len(asked_now),
+            found=len(findings),
+        )
 
     async def _phase_feasibility(self, node: Node, state: ExecutionState):
         plan = state.outputs["plan"]

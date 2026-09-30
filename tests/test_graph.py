@@ -294,7 +294,9 @@ SETTINGS = {"max_iterations": 5, "escalation_recovery_attempts": 3,
 
 PLAN = {
     "ready": True,
+                     "blockers": [],
     "plan": "Cap backoff at 60s, add jitter.",
+    "blockers": [],
     "success_criteria": [
         "Reconnect loop applies exponential backoff capped at 60s",
         "Jitter is applied to every retry attempt",

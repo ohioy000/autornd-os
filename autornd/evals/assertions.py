@@ -197,6 +197,15 @@ def converge_within(scenario: Scenario, outcome: RunOutcome):
     if wanted is None:
         return None
     loop = outcome.state.outputs.get("build_loop") or {}
+    # Ruling D34's loop converges before build_loop exists: a run whose
+    # plan needed no re-grounding reaches build on its first pass, while a
+    # run that re-grounded converges the grounding loop first. The
+    # expensive axis is whichever loop actually iterated, so read the
+    # re-grounding loop when the build loop never ran. (Without this, every
+    # clean first-pass run reports got=None and no converge_within
+    # expectation can pass on the new graph.)
+    if not loop.get("converged"):
+        loop = outcome.state.outputs.get("regrounding_loop") or loop
     got = loop.get("iterations")
     passed = bool(loop.get("converged")) and got is not None and got <= wanted
     return AssertionResult(

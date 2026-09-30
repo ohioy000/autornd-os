@@ -26,7 +26,7 @@ def _satisfying_verdicts(**overrides):
         "triage": {"risk": "medium", "domains": ["backend"],
                    "unrecallable": False},
         "context": {},
-        "plan": {"ready": True, "plan": "Do the thing.",
+        "plan": {"ready": True, "plan": "Do the thing.", "blockers": [],
                  "success_criteria": ["The thing is done"]},
         "feasibility": {"feasible": True},
         "implement": {"done": True, "green": True, "iteration": 1,

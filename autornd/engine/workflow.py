@@ -88,6 +88,7 @@ class WorkflowEngine:
             "max_iterations": settings.max_iterations,
             "escalation_recovery_attempts": settings.escalation_recovery_attempts,
             "escalation_max_tokens": settings.escalation_max_tokens,
+            "regrounding_attempts": settings.regrounding_attempts,
         })
 
         try:
@@ -106,8 +107,17 @@ class WorkflowEngine:
         triage = state.outputs.get("triage")
         if triage is not None:
             workflow.risk_level = triage.risk.value
-        loop = state.outputs.get("build_loop") or {}
-        workflow.iteration = loop.get("iterations", 0)
+        # Iteration is the expensive axis, and two loops now spend it: the
+        # re-grounding loop (plan passes) and the build loop (build passes
+        # converge the run). Report the deepest count — a run that
+        # re-grounded twice then built three times iterated five, not
+        # three. Either loop absent reports none, and max() over the
+        # present ones is the honest total.
+        counts = [
+            (state.outputs.get(name) or {}).get("iterations", 0)
+            for name in ("build_loop", "regrounding_loop")
+        ]
+        workflow.iteration = max([0, *counts])
         workflow.status = WorkflowStatus(state.status)
         workflow.error = state.reason if state.status != "completed" else None
         workflow.updated_at = datetime.now(timezone.utc)

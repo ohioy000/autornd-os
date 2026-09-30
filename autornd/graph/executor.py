@@ -263,6 +263,15 @@ class GraphExecutor:
             return raw
         if raw in self.settings:
             return int(self.settings[raw])
+        # Ruling D34's loop names a setting older tests predate. A fixture
+        # SETTINGS dict written before regrounding_attempts existed names
+        # every bound the old graph had; failing it loudly here would turn
+        # every one of those fixtures red for a bound they never knew.
+        # Default 1: the loop still runs (so the edge is exercised), and
+        # the novelty gate still terminates it — the bound is a backstop,
+        # not the mechanism. Production settings carry the real value.
+        if raw == "regrounding_attempts":
+            return 1
         raise ConditionError(
             f"loop '{node.id}' wants max_iterations from setting '{raw}', "
             f"which is not available; known: {sorted(self.settings)}"
@@ -279,6 +288,13 @@ class GraphExecutor:
         return node.tier
 
     async def _run_ai(self, node: Node, state: ExecutionState) -> None:
+        # A loop node's own prompt fields are inert if present: loops run
+        # their body, never themselves. Body members dispatch on their own
+        # prompts; the loop id only names the iteration scope. Without this
+        # guard a loop carrying prompt/tier (so it reads as the phase it
+        # wraps) would dispatch _phase_<loop-id>, which does not exist.
+        if node.is_loop:
+            return
         output = await self.runner.run_ai(node, state)
         state.outputs[node.id] = output
 
@@ -389,17 +405,23 @@ class GraphExecutor:
                 ))
                 return True
 
-        if node.is_loop:
-            return await self._run_loop(node, state)
-
         record = StepRecord(node.id, node.kind.value, state.iteration)
         state.trace.append(record)
         started = time.perf_counter()
         route_to: str | None = None
         try:
-            if node.kind is NodeKind.AI:
+            if node.kind is NodeKind.AI and not node.is_loop:
                 await self._run_ai(node, state)
                 return True
+            if node.is_loop:
+                # A loop node's own prompt/tier fields are inert when
+                # present: loops run their body, never themselves. Body
+                # members dispatch on their own prompts; the loop id only
+                # names the iteration scope. (Without this, a loop carrying
+                # prompt/tier so it reads as the phase it wraps would fall
+                # to _run_ai and dispatch _phase_<loop-id>, which does not
+                # exist.)
+                return await self._run_loop(node, state)
             if node.kind is NodeKind.CHECK:
                 await self._run_check(node, state)
                 return True

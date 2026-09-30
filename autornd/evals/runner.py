@@ -495,6 +495,11 @@ class ScenarioRun:
     # it; providers_by_tier already carries the serving, this carries the
     # failure.
     provider_failures: list[dict[str, Any]] = field(default_factory=list)
+    # Ruling D34 (owner-supplied, 2026-09-30): re-grounding rounds run, and
+    # blocking unknowns answered by assumption with their basis. Defaults
+    # are the honest zero: a run that never re-grounded reports none.
+    regrounding_rounds: int = 0
+    assumptions_declared: list[dict[str, Any]] = field(default_factory=list)
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -795,6 +800,15 @@ async def run_scenario(
         provider_failures=list(getattr(client, "provider_failures", []) or []),
         retries=runner.client.retry_reconciliation(),
         seconds_by_phase=_phase_seconds(state),
+        # Ruling D34 (owner-supplied, 2026-09-30): the re-grounding count.
+        # How many blocking unknowns the plan named across grounding rounds
+        # that were answered by assumption rather than lookup — the rate of
+        # assuming, visible in the record instead of buried in a plan text.
+        # Counted from the runner's grounding history, not parsed from
+        # prose: a count that reads English for control flow is
+        # non-negotiable 3's exact shape.
+        regrounding_rounds=int(getattr(runner, "regrounding_rounds", 0) or 0),
+        assumptions_declared=list(getattr(runner, "assumptions_declared", []) or []),
     )
 
 
