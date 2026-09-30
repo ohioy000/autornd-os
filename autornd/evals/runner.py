@@ -506,6 +506,10 @@ class ScenarioRun:
     # different claims).
     regrounding_rounds: int = 0
     assumptions_declared: list[dict[str, Any]] = field(default_factory=list)
+    # The full typed block, read off the runner like rounds/assumptions
+    # above. Flat fields stay for back-compat with readers that already
+    # consume them; this carries the whole round on its own keys.
+    regrounding: dict[str, Any] = field(default_factory=dict)
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -619,6 +623,37 @@ def _phase_seconds(state) -> dict[str, float]:
         totals[step.node_id] = round(
             totals.get(step.node_id, 0.0) + (getattr(step, "seconds", 0.0) or 0.0), 3)
     return dict(sorted(totals.items(), key=lambda kv: -kv[1]))
+
+
+def _regrounding_block(runner, state) -> dict[str, Any]:
+    """The typed re-grounding record for one run (Ruling D37, HONEST RECORD).
+
+    Rounds is 0 or 1; blockers_first_pass names what the first plan could
+    not answer; novel/asked/findings describe the one lookup;
+    blockers_second_pass names what the second plan still could not answer;
+    assumptions lists only blockers named by a plan that went on to proceed,
+    each with its basis. When the edge did not fire the block is present
+    with zeros — an absent block and a measured zero are different claims
+    (convention 28). Read off the runner and the run's own state, never
+    parsed from prose (non-negotiable 3).
+    """
+    outputs = getattr(state, "outputs", None) or {}
+    lookup = outputs.get("reground_lookup") or {}
+    first = getattr(runner, "regrounding_first_pass_blockers", None) or []
+    second_out = outputs.get("plan") or {}
+    if isinstance(second_out, dict):
+        second = list(second_out.get("blockers") or [])
+    else:
+        second = list(getattr(second_out, "blockers", None) or [])
+    return {
+        "rounds": int(getattr(runner, "regrounding_rounds", 0) or 0),
+        "blockers_first_pass": list(first),
+        "novel": list(getattr(runner, "regrounding_novel", None) or []),
+        "asked": int(lookup.get("asked", 0) if isinstance(lookup, dict) else 0),
+        "findings": int(lookup.get("found", 0) if isinstance(lookup, dict) else 0),
+        "blockers_second_pass": list(second),
+        "assumptions": list(getattr(runner, "assumptions_declared", []) or []),
+    }
 
 
 def _partial_state(executor: GraphExecutor, request: str):
@@ -810,6 +845,8 @@ async def run_scenario(
         # adapter counted on — never parsed from prose (non-negotiable 3).
         regrounding_rounds=int(getattr(runner, "regrounding_rounds", 0) or 0),
         assumptions_declared=list(getattr(runner, "assumptions_declared", []) or []),
+        regrounding=dict(getattr(runner, "regrounding_block", None)
+                         or _regrounding_block(runner, state) or {}),
     )
 
 

@@ -8,6 +8,12 @@ and rounds, and the paid lookup mutates them in place -- so pass two's check
 reads what pass one plus the lookup left behind. No network, no module
 patching of production code.
 
+One test (b) drives the real PhaseRunner's own lookup handler with a
+scripted billing client, so the code that ships is the code that is
+tested; the rest drive a double that mirrors the adapter's state evolution
+step for step (seeding asked/rounds off context, mutating them in the
+lookup, recording first-pass blockers and assumptions with basis).
+
 The six cases, each with its exhibit:
 
 (a) Ready on the first pass: no lookup, one plan pass, unchanged call
@@ -20,11 +26,17 @@ The six cases, each with its exhibit:
     and the run blocks naming them -- once is ruled.
 (e) Low risk: zero search calls (risk policy unchanged).
 (f) A plan that proceeds while naming blockers records them as
-    assumptions with their basis.
+    assumptions with their basis -- in the adapter, driven through the
+    real PhaseRunner.
 
 Breaking proofs: the novelty decision inverted turns (c) into a lookup,
 and 'once' removed turns (d) into a second lookup. A gate whose branches
 cannot be told apart is not a gate.
+
+Known limitation (fix belongs to 097): the lookup mutates the context
+node's output in place, so the persisted context record shows the
+lookup's questions and rounds=1 -- a later write visibly rewriting an
+earlier phase's record.
 """
 
 from __future__ import annotations
@@ -82,16 +94,6 @@ class BillingScriptedRunner(ScriptedRunner):
 
     async def run_ai(self, node, state):
         out = await super().run_ai(node, state)
-        # (f): a plan that proceeds while naming blockers records them as
-        # assumptions with their basis -- mirroring what the adapter does in
-        # production, where the record is read off the runner.
-        if node.id == "plan" and isinstance(out, dict):
-            if out.get("ready") and out.get("blockers"):
-                if not hasattr(self, "assumptions_declared"):
-                    self.assumptions_declared: list[dict] = []
-                for b in out["blockers"]:
-                    self.assumptions_declared.append(
-                        {"blocker": b, "basis": "plan proceeded naming it"})
         return out
 
 
@@ -281,18 +283,66 @@ class TestRegroundingEdge:
         assert state.status == "blocked", (state.status, state.reason)
 
     async def test_proceeding_with_blockers_records_assumptions(self):
-        # A ready plan that still names blockers proceeds -- and records them
-        # as assumptions with their basis on the runner, where the unit
-        # record reads them.
-        def plan(state):
-            return {"ready": True, "plan": "Do the thing, assuming the topology.",
-                    "blockers": ["container topology: shared or per-worker?"],
-                    "success_criteria": ["The thing is done"]}
-        state, runner = await _run(_base({"plan": plan}))
-        assert runner.search_calls == [], runner.search_calls
-        assert state.status == "completed", (state.status, state.reason)
-        assert {"blocker": "container topology: shared or per-worker?",
-                "basis": "plan proceeded naming it"} in runner.assumptions_declared
+        # (f), through the real PhaseRunner: a ready plan that still names
+        # blockers proceeds -- and the ADAPTER records them as assumptions
+        # with their basis (asked or not, findings from the round). The
+        # scripted client bills every call (convention 9); the plan verdict
+        # is canned, but the recording code is production's.
+        from autornd.graph.adapter import PhaseRunner
+        from autornd.graph.executor import ExecutionState
+        from autornd.models.verdicts import TriageVerdict
+        from tests.conftest import make_mock_client
+
+        client = make_mock_client({
+            "architecture": {"ready": True,
+                             "plan": "Do the thing, assuming the topology.",
+                             "blockers": ["container topology: shared or per-worker?"],
+                             "success_criteria": ["The thing is done"]},
+        })
+        runner = PhaseRunner(client)
+        state = ExecutionState(request="D37 probe (f)")
+        state.outputs["triage"] = TriageVerdict(
+            risk="medium", domains=["backend"], specialists=["systems_architect"],
+            unrecallable=False, summary="backend change, recallable")
+        state.iteration = 1
+        from autornd.graph.spec import load as _load
+        node = _load("workflows/engineering-rnd.yaml").get("plan")
+        verdict = await runner.run_ai(node, state)
+        assert verdict.ready is True
+        assert runner.assumptions_declared == [{
+            "blocker": "container topology: shared or per-worker?",
+            "basis": "asked: false; lookup returned 0 finding(s) this round"}]
+
+    async def test_adapter_lookup_handler_bills_and_evolves_state(self):
+        # (b), through the real PhaseRunner: the adapter's own lookup
+        # handler sends only the novel blockers, bills the search call, and
+        # mutates context asked/rounds in place -- the code that ships is
+        # the code that is tested.
+        from autornd.graph.adapter import PhaseRunner
+        from autornd.graph.executor import ExecutionState
+        from tests.conftest import make_mock_client
+
+        client = make_mock_client({
+            "search": {"answer": "dedicated per-worker sidecars",
+                       "citations": ["runbook p.3"]},
+        })
+        runner = PhaseRunner(client)
+        state = ExecutionState(request="D37 probe (b)")
+        state.outputs["triage"] = {"risk": "medium"}
+        state.outputs["reground_context"] = {
+            "passed": True, "fresh": ["container topology: shared or per-worker?"]}
+        state.outputs["context"] = {"asked": [], "rounds": 0}
+        from autornd.graph.spec import load as _load
+        node = _load("workflows/engineering-rnd.yaml").get("reground_lookup")
+        before = client.calls
+        result = await runner.run_check(node, state)
+        assert result.passed is True
+        assert result.data["asked"] == 1 and result.data["found"] == 1
+        assert client.calls == before + 1  # billed (convention 9)
+        assert runner.regrounding_rounds == 1
+        assert runner.regrounding_novel == ["container topology: shared or per-worker?"]
+        assert state.outputs["context"] == {
+            "asked": ["container topology: shared or per-worker?"], "rounds": 1}
 
 
 class TestBreakingProofs:
@@ -381,15 +431,41 @@ class TestBreakingProofs:
 
 
 class TestAssumptionCounting:
-    """The record block is present with zeros when the edge did not fire."""
+    """The typed block is present with zeros when the edge did not fire.
 
-    def test_runner_defaults_are_the_honest_zero(self):
-        import dataclasses
-        by_name = {f.name: f for f in dataclasses.fields(ScenarioRun)}
-        assert "regrounding_rounds" in by_name, "no re-grounding count field"
-        assert "assumptions_declared" in by_name, "no assumption record field"
-        rr = by_name["regrounding_rounds"]
-        assert (rr.default == 0
-                or getattr(rr.default_factory, "__call__", None) and rr.default_factory() == 0)
-        ad = by_name["assumptions_declared"]
-        assert list(ad.default_factory()) == []
+    This drives a real run (ready first pass, no lookup) and asserts the
+    block the unit-record builder produces — not dataclass defaults, which
+    cannot fail on behaviour (convention 28: no evidence is not no
+    problem).
+    """
+
+    async def test_quiet_run_reports_the_block_with_zeros(self):
+        from autornd.evals.runner import _regrounding_block
+        state, runner = await _run(_base())
+        assert state.status == "completed", state.reason
+        block = _regrounding_block(runner, state)
+        assert block == {
+            "rounds": 0,
+            "blockers_first_pass": [],
+            "novel": [],
+            "asked": 0,
+            "findings": 0,
+            "blockers_second_pass": [],
+            "assumptions": [],
+        }
+
+    async def test_fired_run_reports_the_full_block(self):
+        from autornd.evals.runner import _regrounding_block
+
+        def plan(state):
+            return {"ready": True, "plan": "Do the thing, assuming the topology.",
+                    "blockers": ["container topology: shared or per-worker?"],
+                    "success_criteria": ["The thing is done"]}
+        state, runner = await _run(_base({"plan": plan}))
+        assert state.status == "completed", (state.status, state.reason)
+        block = _regrounding_block(runner, state)
+        assert block["rounds"] == 0  # ready first pass: the check exits, no lookup
+        assert block["blockers_first_pass"] == ["container topology: shared or per-worker?"]
+        assert block["assumptions"] == [{
+            "blocker": "container topology: shared or per-worker?",
+            "basis": "asked: false; lookup returned 0 finding(s) this round"}]

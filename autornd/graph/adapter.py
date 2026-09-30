@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 from autornd.config import settings
 from autornd.engine import phases
-from autornd.graph.checks import Result, get_check, registry
+from autornd.graph.checks import Result, _normalize_question, get_check, registry
 from autornd.graph.executor import ExecutionState, resolve_args
 from autornd.graph.spec import (
     FANOUT_ASSIGNED,
@@ -86,6 +86,13 @@ class PhaseRunner:
         # regrounding_rounds is 0 or 1 — once is ruled, not configured.
         self.grounding_questions: list[str] = []
         self.regrounding_rounds: int = 0
+        # Ruling D37, HONEST RECORD: what the first plan pass could not
+        # answer, what of it was novel, and what a proceeding plan assumed
+        # with its basis. The unit record reads these back; zeros when the
+        # edge did not fire.
+        self.regrounding_first_pass_blockers: list[str] = []
+        self.regrounding_novel: list[str] = []
+        self.assumptions_declared: list[dict[str, str]] = []
 
     @property
     def total_cost(self) -> float:
@@ -338,6 +345,26 @@ class PhaseRunner:
             tier=self._tier(node, state), context=self.context,
             max_tokens=self._max_tokens(node),
         )
+        blockers = [str(b) for b in (getattr(verdict, "blockers", None) or [])]
+        # The first plan pass names what it cannot answer; the record keeps
+        # it even after the second pass overwrites `plan` in state.
+        if state.iteration <= 1 and not self.regrounding_first_pass_blockers:
+            self.regrounding_first_pass_blockers = list(blockers)
+        # Ruling D37 (f): a plan that proceeds (ready) while still naming
+        # blockers proceeds on assumptions, each recorded with its basis —
+        # whether it was asked, and what the lookup returned. Only blockers
+        # named by a proceeding plan; a not-ready plan's blockers are
+        # answered by the loop or by plan_ready, never by assumption.
+        if getattr(verdict, "ready", False) and blockers:
+            asked_set = {_normalize_question(q) for q in self.grounding_questions if q}
+            lookup = state.outputs.get("reground_lookup") or {}
+            found = lookup.get("found", 0) if isinstance(lookup, dict) else 0
+            for b in blockers:
+                self.assumptions_declared.append({
+                    "blocker": b,
+                    "basis": (f"asked: {str(_normalize_question(b) in asked_set).lower()}; "
+                              f"lookup returned {found} finding(s) this round"),
+                })
         return verdict, [response]
 
     async def _phase_plan_second_pass(self, node: Node, state: ExecutionState):
@@ -391,9 +418,15 @@ class PhaseRunner:
                                 + render_findings(findings)).strip()
         self.grounding_questions = list(self.grounding_questions) + list(novel)
         self.regrounding_rounds = 1
+        self.regrounding_novel = list(novel)
         # The check's `rounds` arg resolves off the context node's output,
         # so the lookup mutates it in place: pass two's check sees the round
         # this pass ran and returns False — once is ruled. Same for `asked`.
+        # KNOWN LIMITATION (093 note 2 item 5, fix belongs to 097): the
+        # persisted context record therefore shows the lookup's questions
+        # and rounds=1 — a later write visibly rewrites an earlier phase's
+        # record. Same pre-existing shape as domain_review flipping
+        # implement.green in place.
         ctx = state.outputs.get("context")
         if isinstance(ctx, dict):
             ctx["asked"] = list(ctx.get("asked") or []) + list(novel)

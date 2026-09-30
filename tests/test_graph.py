@@ -342,8 +342,65 @@ class ScriptedRunner:
             # `rework_review` too unless a test scripts it separately.
             out = self.verdicts.get(node.prompt)
         got = out(state) if callable(out) else (out or {})
+        if isinstance(got, dict):
+            got = dict(got)
         state.outputs[node.id] = got
+        self._record_regrounding(node, got, state)
         return got
+
+    def _record_regrounding(self, node, got, state):
+        """The adapter's assumption/first-pass record, mirrored for doubles.
+
+        Production records these in PhaseRunner._phase_plan; the scripted
+        double answers plan from the canned map, so it keeps the same
+        counters here — the unit-record builder reads them off whichever
+        runner drove the run. Only plan verdicts; only blockers named by a
+        plan that went on to proceed (ready) become assumptions with basis.
+        """
+        if node.id != "plan" or not isinstance(got, dict):
+            return
+        from autornd.graph.checks import _normalize_question
+        blockers = [str(b) for b in (got.get("blockers") or [])]
+        if state.iteration <= 1 and not getattr(self, "regrounding_first_pass_blockers", None):
+            self.regrounding_first_pass_blockers = list(blockers)
+        if got.get("ready") and blockers:
+            asked = set()
+            ctx = state.outputs.get("context")
+            if isinstance(ctx, dict):
+                asked = {_normalize_question(q) for q in (ctx.get("asked") or []) if q}
+            lookup = state.outputs.get("reground_lookup") or {}
+            found = lookup.get("found", 0) if isinstance(lookup, dict) else 0
+            if not hasattr(self, "assumptions_declared"):
+                self.assumptions_declared: list[dict] = []
+            for b in blockers:
+                self.assumptions_declared.append({
+                    "blocker": b,
+                    "basis": (f"asked: {str(_normalize_question(b) in asked).lower()}; "
+                              f"lookup returned {found} finding(s) this round"),
+                })
+
+    def _regrounding_block(self, state):
+        """The typed record, read off this runner and the run's own state."""
+        outputs = state.outputs or {}
+        lookup = outputs.get("reground_lookup") or {}
+        plan = outputs.get("plan") or {}
+        second = list(plan.get("blockers") or []) if isinstance(plan, dict) else []
+        if isinstance(lookup, dict):
+            asked_n, found_n = lookup.get("asked", 0), lookup.get("found", 0)
+        else:
+            asked_n = getattr(lookup, "asked", 0) or 0
+            found_n = getattr(lookup, "found", 0) or 0
+        rounds = 1 if lookup else 0
+        novel = list(getattr(self, "regrounding_novel", None) or [])
+        return {
+            "rounds": rounds,
+            "blockers_first_pass": list(getattr(self, "regrounding_first_pass_blockers", None) or []),
+            "novel": novel,
+            "asked": int(asked_n),
+            "findings": int(found_n),
+            "blockers_second_pass": list(second),
+            "assumptions": list(getattr(self, "assumptions_declared", None) or []),
+        }
 
     async def run_check(self, node, state):
         self.check_calls.append(node.id)
@@ -365,9 +422,12 @@ class ScriptedRunner:
             if isinstance(ctx, dict):
                 ctx["asked"] = list(ctx.get("asked") or []) + list(novel)
                 ctx["rounds"] = 1
+            if not hasattr(self, "regrounding_novel"):
+                self.regrounding_novel: list[str] = []
+            self.regrounding_novel = list(novel)
             from autornd.graph.checks import Result as _R
             return _R(True, "re-grounding round 1", rounds=1,
-                      asked=len(novel), found=len(novel))
+                      asked=len(novel), found=len(novel), novel=list(novel))
         if node.check not in registry:      # infrastructure step, runner-owned
             return Result(True, "context assembled")
         return get_check(node.check)(**resolve_args(node, state))
