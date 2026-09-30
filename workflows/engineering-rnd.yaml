@@ -129,9 +129,10 @@ nodes:
 
   - id: domain_review
     kind: ai
-    tier: engineering
+    tier: judge                # Ruling D35: a different pretraining lineage judges
     specialist: peers          # the other builders, never the validator
     prompt: domain_review
+    max_tokens: judge_max_tokens
     depends_on: [implement]
     when: implement.green == true
 
@@ -155,11 +156,11 @@ nodes:
 
   - id: validate
     kind: ai
-    tier: engineering
+    tier: judge                # Ruling D35: a different pretraining lineage judges
     specialist: test_engineer
     prompt: validate
     schema: ValidateVerdict
-    max_tokens: validate_max_tokens    # a verdict, not a second implementation
+    max_tokens: judge_max_tokens    # a verdict, not a second implementation
     depends_on: [coverage, consistency, domain_review]
 
   # Every judge this body produced, folded into one signal. The loop used to
@@ -213,11 +214,11 @@ nodes:
   # Team size scales with risk; the verdict gates, and a block routes to rework.
   - id: review
     kind: ai
-    tier: engineering
+    tier: judge                # Ruling D35: a different pretraining lineage judges
     specialist: reviewers
     prompt: review
     schema: ReviewVerdict
-    max_tokens: plan_max_tokens    # findings must fit beside the work they judge; 16k truncated two reviewers (073)
+    max_tokens: judge_max_tokens    # findings must fit beside the work they judge; a verdict, not an implementation
     depends_on: [build_loop]
 
   # ── review gate ─────────────────────────────────────────────────────────
@@ -242,11 +243,11 @@ nodes:
   # second call site, because the scheduler distinguishes nodes and not phases.
   - id: rework_review
     kind: ai
-    tier: engineering
+    tier: judge                # Ruling D35: a different pretraining lineage judges
     specialist: reviewers
     prompt: review
     schema: ReviewVerdict
-    max_tokens: plan_max_tokens    # same ceiling as review: same prompt, same tier, second call site
+    max_tokens: judge_max_tokens    # same ceiling as review: same prompt, same tier, second call site
     depends_on: [validate]
 
   # Folds the build judges and the re-review together: work ships when everyone

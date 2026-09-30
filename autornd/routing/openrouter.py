@@ -210,6 +210,10 @@ class OpenRouterClient:
         "search": settings.model_search,
         **({"ranker": settings.model_ranker} if settings.model_ranker else {}),
         **({"premium": settings.model_premium} if settings.model_premium else {}),
+        # Ruling D35: when set, the judge tier serves domain_review/validate/
+        # review/rework_review. Dropped when unset so resolve_model falls back to
+        # the engineering tier — the prior homogeneous behaviour.
+        **({"judge": settings.model_judge} if settings.model_judge else {}),
     }
 
     def __init__(self, api_key: str | None = None, base_url: str | None = None):
@@ -776,6 +780,7 @@ async def check_models() -> dict[str, dict]:
     for tier, model_id in (
         ("ranker", settings.model_ranker),
         ("premium", settings.model_premium),
+        ("judge", settings.model_judge),
     ):
         if model_id:
             configured[tier] = model_id
@@ -865,4 +870,7 @@ def rebuild_function_models() -> None:
         "search": settings.model_search,
         **({"ranker": settings.model_ranker} if settings.model_ranker else {}),
         **({"premium": settings.model_premium} if settings.model_premium else {}),
+        # Ruling D35: same optional-tier contract as FUNCTION_MODELS above —
+        # unset drops `judge` so judging nodes fall back to engineering.
+        **({"judge": settings.model_judge} if settings.model_judge else {}),
     }

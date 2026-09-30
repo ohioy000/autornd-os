@@ -46,7 +46,7 @@ REQUIRED_TIERS = ("triage", "engineering", "architecture",
 # configuration. The instrument had observed "this tier is not in my list" and
 # reported "this tier has no model", which is a stronger and different claim
 # (convention 26).
-OPTIONAL_TIERS = ("ranker", "premium")
+OPTIONAL_TIERS = ("ranker", "premium", "judge")
 
 
 @dataclass
@@ -89,15 +89,64 @@ async def _fetch(path: str) -> dict:
         return resp.json()
 
 
+def _base_model(model: str) -> str:
+    """The catalogue id behind a per-request specifier.
+
+    Measured 2026-09-30: `:exacto`-suffixed ids (e.g.
+    `moonshotai/kimi-k3:exacto`) are absent from the bulk `/models` listing,
+    which carries the plain id only — yet `/models/<exacto-id>/endpoints`
+    returns 200 with the same serving list, and InferenceNet served
+    kimi-k3-exacto twice that night. The bulk catalogue's silence about a
+    suffixed id is not the id not existing; endpoints decide.
+    """
+    return model.split(":", 1)[0]
+
+
+def _provider_names(entry: dict) -> set[str]:
+    """Every provider identity an endpoint entry carries, normalized.
+
+    Measured 2026-09-30: the endpoints route has (at least) two shapes. Some
+    models return a bare `provider_name` (`InferenceNet`); others (Gemini
+    3.8 Flash) carry no `provider_name` at all and embed the provider in
+    `name` as `"Google AI Studio | google/gemini-3.8-flash-20260902"`.
+    Reading only the first shape reported "does not serve" for a pin that
+    served live twenty minutes later. Generic rule: collect both, normalize
+    both, match on either.
+    """
+    names: set[str] = set()
+    if entry.get("provider_name"):
+        names.add(_base_provider(str(entry["provider_name"])))
+    name = str(entry.get("name") or "")
+    if "|" in name:
+        names.add(_base_provider(name.split("|", 1)[0].strip()))
+    return {n for n in names if n}
+
+
+def _base_provider(pin: str) -> str:
+    """The provider name behind a call-time specifier.
+
+    Measured 2026-09-30: pins like `inference-net/fp4` never match the bare
+    endpoint names (`InferenceNet`) the endpoints route returns, so every
+    quant-suffixed pin FAILed preflight while serving live. The `/fp4` is a
+    call-time routing specifier, not part of the name; comparison is on the
+    bare name with separators, case and whitespace normalized (the route
+    returns `InferenceNet` or `Google AI Studio`, configs write
+    `inference-net` or `google-ai-studio`).
+    """
+    return (pin.split("/", 1)[0].lower().replace("-", "").replace("_", "")
+            .replace(" ", ""))
+
+
 def check(models: dict[str, str], pins: dict[str, str],
           known: set[str], endpoints: dict[str, set[str]]) -> list[Finding]:
     """Pure, so the failure modes above can be simulated in a test."""
+    known_base = {_base_model(m) for m in known}
     out: list[Finding] = []
     for tier in REQUIRED_TIERS:
         model = models.get(tier, "")
         if not model:
             out.append(Finding(False, f"model_{tier}", "unset — the harness will refuse to start"))
-        elif model not in known:
+        elif _base_model(model) not in known_base and model not in endpoints:
             out.append(Finding(False, f"model_{tier}", f"{model} is not in the provider catalogue"))
         else:
             out.append(Finding(True, f"model_{tier}", model))
@@ -114,8 +163,13 @@ def check(models: dict[str, str], pins: dict[str, str],
             continue
         serving = endpoints.get(model)
         if serving is None:
+            # Endpoints are keyed by exact id; a suffixed id resolves to the
+            # same serving list as its base, so fall back to the base before
+            # reporting unresolvable.
+            serving = endpoints.get(_base_model(model))
+        if serving is None:
             out.append(Finding(False, f"pin {tier}", f"cannot resolve endpoints for {model}"))
-        elif provider not in serving:
+        elif _base_provider(provider) not in {_base_provider(s) for s in serving}:
             out.append(Finding(
                 False, f"pin {tier}",
                 f"{provider} does not serve {model} — with fallbacks disabled this is a 404"))
@@ -144,8 +198,10 @@ async def run() -> list[Finding]:
             data = (await _fetch(f"/models/{model}/endpoints")).get("data", {})
         except Exception:
             continue                      # left unresolved, and reported as such
-        endpoints[model] = {e.get("provider_name")
-                            for e in data.get("endpoints", [])}
+        names: set[str] = set()
+        for e in data.get("endpoints", []):
+            names |= _provider_names(e)
+        endpoints[model] = names
     return check(models, pins, known, endpoints)
 
 

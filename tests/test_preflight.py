@@ -170,6 +170,114 @@ class TestAModelAbsentFromTheChatCatalogue:
                    for f in out if not f.ok)
 
 
+class TestPerRequestSpecifiers:
+    """Measured 2026-09-30. Two suffixes the live call accepts broke the
+    instrument three ways in one night:
+
+    1. `:exacto` model ids are absent from the bulk `/models` listing (plain
+       id only), yet `/models/<exacto-id>/endpoints` returns 200 with the
+       same serving list — and InferenceNet served kimi-k3-exacto twice.
+    2. Quant-suffixed pins (`inference-net/fp4`) never match the bare
+       endpoint names (`InferenceNet`) the endpoints route returns, so every
+       such pin FAILed while serving live.
+
+    Convention 22's shape: the instrument reported failure where the
+    apparatus was fine. Endpoints decide; the bulk list is advisory.
+    """
+
+    def test_an_exacto_id_whose_base_is_catalogued_passes(self):
+        models = {**GOOD, "escalation": "vendor/model-escalation:exacto"}
+        out = check(models, NO_PINS, KNOWN, {})
+        assert "model_escalation" not in _fail_subjects(out)
+
+    def test_an_exacto_id_absent_from_both_catalogue_and_endpoints_still_fails(self):
+        """The bound: the leniency above must not pass a ghost id."""
+        models = {**GOOD, "escalation": "vendor/ghost:exacto"}
+        out = check(models, NO_PINS, KNOWN, {})
+        assert "model_escalation" in _fail_subjects(out)
+
+    def test_a_quant_suffixed_pin_matching_the_bare_provider_name_passes(self):
+        pins = {"escalation": "inference-net/fp4"}
+        eps = {GOOD["escalation"]: {"InferenceNet", "OtherHost"}}
+        assert not _fail_subjects(check(GOOD, pins, KNOWN, eps))
+
+    def test_pin_matching_ignores_case(self):
+        """`inferencenet` and `InferenceNet` are the same provider once
+        separators and case are normalized — this must pass, not fail."""
+        pins = {"escalation": "inferencenet/fp4"}
+        eps = {GOOD["escalation"]: {"InferenceNet"}}
+        assert not _fail_subjects(check(GOOD, pins, KNOWN, eps))
+
+    def test_a_pin_on_a_provider_absent_from_endpoints_still_fails(self):
+        """The bound on the other side: normalization must not pass a pin
+        whose provider genuinely does not serve the model."""
+        pins = {"escalation": "ghosthost/fp4"}
+        eps = {GOOD["escalation"]: {"InferenceNet"}}
+        out = check(GOOD, pins, KNOWN, eps)
+        assert "pin escalation" in _fail_subjects(out)
+        assert any("404" in f.detail for f in out if not f.ok)
+
+    def test_pin_matching_ignores_separator_and_case(self):
+        """The route returns `InferenceNet`; configs write `inference-net`.
+        The bare names match once separators and case are normalized."""
+        pins = {"escalation": "inference-net/fp4"}
+        eps = {GOOD["escalation"]: {"InferenceNet"}}
+        assert not _fail_subjects(check(GOOD, pins, KNOWN, eps))
+
+    def test_endpoints_keyed_by_base_id_cover_a_suffixed_pin(self):
+        """Endpoint sets arrive keyed by whatever id was queried; a suffixed
+        pin must match against its base id's serving list."""
+        models = {**GOOD, "escalation": "vendor/model-escalation:exacto"}
+        pins = {"escalation": "inference-net/fp4"}
+        eps = {"vendor/model-escalation": {"InferenceNet"}}
+        assert not _fail_subjects(check(models, pins, KNOWN, eps))
+
+
+class TestEndpointRouteShapes:
+    """Measured 2026-09-30: the endpoints route has (at least) two shapes.
+    Kimi's entries carry a bare `provider_name`; Gemini 3.8 Flash's carry
+    none and embed the provider in `name` as `"Google AI Studio | ..."`.
+    `run()` read only the first shape, so a pin that served live twenty
+    minutes earlier reported "does not serve". Generic rule: `run()` collects
+    every identity an entry carries; `check()` matches on any of them.
+    """
+
+    def test_run_reads_provider_from_name_pipe_shape(self, monkeypatch):
+        """The Gemini shape, at its actual site in run()."""
+        asked: list[str] = []
+
+        async def fake_fetch(path: str) -> dict:
+            asked.append(path)
+            if path == "/models":
+                return {"data": [{"id": "vendor/chat"}]}
+            return {"data": {"endpoints": [
+                {"name": "Google AI Studio | vendor/chat-20260902"},
+                {"name": "Google | vendor/chat-20260902"},
+            ]}}
+
+        from autornd.config import settings
+        for tier in REQUIRED_TIERS:
+            monkeypatch.setattr(settings, f"model_{tier}",
+                                "vendor/chat", raising=False)
+        monkeypatch.setattr(preflight, "_pins", lambda: {})
+        monkeypatch.setattr(preflight, "_fetch", fake_fetch)
+
+        findings = asyncio.run(preflight.run())
+        assert not _fail_subjects(findings)
+
+    def test_name_pipe_entries_cover_a_matching_pin(self):
+        from autornd.preflight import _provider_names
+        entry = {"name": "Google AI Studio | vendor/chat-20260902"}
+        assert "googleaistudio" in _provider_names(entry)
+
+    def test_entries_with_neither_shape_resolve_to_nothing(self):
+        """The bound: an entry carrying no identity anywhere must not match
+        everything — it matches nothing, and the pin fails loudly."""
+        from autornd.preflight import _provider_names
+        assert _provider_names({}) == set()
+        assert _provider_names({"name": "no-pipe-here"}) == set()
+
+
 class TestTheWiringBeneathCheck:
     """`check()` is pure, which is what makes it testable — and is also why
     testing it alone missed both of 2026-09-22's bugs entirely.
