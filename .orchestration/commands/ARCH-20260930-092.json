@@ -1,0 +1,97 @@
+{
+  "command_id": "ARCH-20260930-092",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Put the night of 2026-09-29/30 on the record: the thirteen unit-bearing run files and the executor's two handover notes become committed evidence, so later commands can cite them.",
+
+  "evidence": [
+    "evals/results/ is gitignored (.gitignore), so the night's run records are not in the tree. Thirteen files named evals/results/20260930T0*Z-*.jsonl hold at least one unit record each (enumerated in preconditions); twenty-five more written before 12:00Z hold a header and zero units.",
+    ".qwen/tmp/handover-night-20260930.md §1: 'Run-only instruction held all night: nothing committed except code; results stay in gitignored evals/results/, no trace commit, no handover-review section (this file is the record instead).' That file is untracked, so the only written record of about 11 paid scenario-runs is one cleanup away from gone.",
+    ".qwen/tmp/handover-judge-robotics.md: untracked, the second executor note from the same session.",
+    "AGENTS.md, Orchestration: 'A command whose evidence cannot be checked against the tree is not evidence.' The deliberation-watchdog command that follows this one derives its budgets from these runs, so they must be in the tree first.",
+    "Owner, 2026-09-30, in the advisor session: run records, scenarios and questions may be public; the only thing that may not is .env."
+  ],
+
+  "scope": {
+    "include": [
+      "docs/traces/",
+      "docs/serving-ledger.md",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      ".env, .env1 and .qwen/tmp/env-golden-20260930.sample: never open, read, print or commit them (G-1). They are the one class the owner has excluded from the public record.",
+      "evals/results/ itself: files are COPIED out, and the directory stays ignored. Do not un-ignore it or move files out of it.",
+      "autornd/, tests/, workflows/, profiles/: this command changes no code and no test.",
+      "The twenty-five zero-unit files are named in the notebook, not committed. A trace with no unit would add serving rows with no measurement behind them to the generated ledger (convention 26).",
+      "Branch arch/20260929-089-regrounding-edge: another command owns it."
+    ]
+  },
+
+  "constraints": [
+    "Free. No provider call of any kind.",
+    "Before any git operation, confirm no paid run is in flight (AGENTS.md invariant: the -010 trace loss).",
+    "Copies are byte-identical. Name each docs/traces/091-night-<original filename>, since the night ran on branch arch/20260929-091-judge-and-early-escalation. Do not reformat, re-serialise or trim any JSONL line.",
+    "The notebook section is the next free one, section 83, titled '83. The night of 2026-09-29/30: judge wiring, exacto pins, golden lineup (executor record, carried by ARCH-20260930-092)'. It contains: (a) both .qwen/tmp handover notes, VERBATIM, each labelled as the executor's record; (b) a table of the thirteen committed files GENERATED from the files themselves, with columns file, scenario, status, stop_reason, seconds, calls, cost, and the top two entries of seconds_by_phase; (c) the twenty-five zero-unit filenames, with the count stated first. Nothing else: no commentary, no correction of the notes. If a note is wrong, say so in the response, not in the notebook.",
+    "docs/serving-ledger.md is generated, not written. Regenerate it from tests.serving_ledger.derive/render over docs/traces. Do not hand-edit a row.",
+    "If the key-material scan in the preconditions matches anything, commit NOTHING and return BLOCKED naming the file and the pattern that matched (never the matched text itself).",
+    "Do not create, edit or delete anything under .qwen/. It is the executor's workspace; this command reads two files from it.",
+    "One objective. PR #95's missing trace 088, the 089 branch and the protocol amendment are separate commands. Report anything related you find; do not fix it here."
+  ],
+
+  "acceptance_criteria": [
+    "Exactly thirteen new files docs/traces/091-night-20260930T*.jsonl, each with a sha256 equal to its evals/results source. All thirteen pairs are listed in the response.",
+    "No committed file matches the key-material scan.",
+    "docs/handover-review.md section 83 contains both handover notes verbatim (a diff of each note against its section block is empty), the generated thirteen-row table, and the twenty-five zero-unit names.",
+    "docs/serving-ledger.md is regenerated and tests/test_serving_ledger.py passes. The rows the night added are quoted in the response.",
+    "git diff --stat origin/main -- autornd/ tests/ workflows/ profiles/ is empty.",
+    "Suite green. Count reported before and after; it should not change, because no test is added.",
+    "The PR is opened and delivery_state carries its number (D16)."
+  ],
+
+  "verification": [
+    {"command": "ls docs/traces/ | grep -c '^091-night-20260930T'", "expected": "13"},
+    {"command": "for f in docs/traces/091-night-*.jsonl; do s=evals/results/${f#docs/traces/091-night-}; [ \"$(sha256sum < $f)\" = \"$(sha256sum < $s)\" ] || echo MISMATCH $f; done", "expected": "No output."},
+    {"command": "git diff --stat origin/main -- autornd/ tests/ workflows/ profiles/", "expected": "Empty."},
+    {"command": ".venv/bin/python3 -m pytest tests/test_serving_ledger.py -q", "expected": "All pass."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count reported before and after."}
+  ],
+
+  "rollback": "Revert the merge commit. The copies and the notebook section go; the sources in evals/results/ and .qwen/tmp/ were never touched.",
+
+  "deliverable": {
+    "branch": "arch/20260930-092-night-record",
+    "branch_created_by": "advisor (this command is its first commit)",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+
+  "transport": "Pushed by the advisor (the third architect) under the owner's grant of 2026-09-30 to push commands directly. The executor does not carry this file; it is already the branch's first commit. AGENTS.md still says the advisor has no commit capability, and amending it is the next batch's process command (D30 allows one per batch, and this is it). Commit the response IN_PROGRESS first, then update it in place.",
+
+  "assumptions": [
+    "The thirteen files are the whole night. If you know of results written elsewhere, such as a --results-file path under /tmp, report the path and do not copy it. Do not go looking anywhere that could hold key material.",
+    "Both handover notes are free of key material. The scan decides; this assumption only says what is expected."
+  ],
+
+  "questions": [
+    "Is handover-judge-robotics.md from the same session as handover-night-20260930.md? If not, say which session, and give it its own subsection 83.x rather than merging them.",
+    "Do any of the thirteen headers name a suite path that no longer exists (for example /tmp/robotics-only.yaml)? If so, name the tracked source its request came from. The advisor found robotics-manipulator in evals/datasets/technical-sets.yaml; confirm or refute."
+  ],
+
+  "preconditions": [
+    {"command": "ps aux | grep -E 'autornd|evals' | grep -v grep", "expected": "No output, meaning no paid run is in flight. If there is output, stop; no git operation may run now."},
+    {"command": "git rev-parse --short origin/main", "expected": "d266961. If it differs, record it and continue: this command appends only, and the counts are re-derived on your tree."},
+    {"command": ".venv/bin/python3 -c \"import glob,os,json; k=[f for f in sorted(glob.glob('evals/results/20260930T*.jsonl')) if os.path.basename(f)[9:15]<'120000']; u=[f for f in k if sum(1 for l in open(f) if l.strip())>1]; print(len(k),len(u)); [print(os.path.basename(f)) for f in u]\"", "expected": "'38 13', then the thirteen names: 000917Z, 002529Z, 003221Z, 010754Z, 012249Z, 014948Z, 020902Z, 023940Z, 024306Z, 032041Z and 034051Z robotics-only, plus 045435Z conv_numeric_consistency and 063556Z conv_pool_sizing. The enumeration is complete (no head or tail). Any other count means BLOCKED, with the list you found."},
+    {"command": "grep -lE 'sk-or-v1-|sk-ant-|sk-[A-Za-z0-9]{32,}|Bearer [A-Za-z0-9]' .qwen/tmp/handover-night-20260930.md .qwen/tmp/handover-judge-robotics.md $(ls evals/results/20260930T0*Z-*.jsonl)", "expected": "No output. Any filename printed means BLOCKED, naming the file only."},
+    {"command": "test -f .qwen/tmp/handover-night-20260930.md && test -f .qwen/tmp/handover-judge-robotics.md && echo present", "expected": "present. If either is missing, that is BLOCKED: the sources are absent, and this is not a search problem."},
+    {"command": "grep -n '^## 8[2-4]\\.' docs/handover-review.md", "expected": "Section 82 exists and 83 does not, so 83 is free. If 83 exists, use the next free number and say so."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green on main before the change; record the count."}
+  ]
+}
