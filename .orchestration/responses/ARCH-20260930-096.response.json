@@ -1,0 +1,36 @@
+{
+  "command_id": "ARCH-20260930-096",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "2c2c11b",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "null \u2014 no parent response required (protocol: repair/standalone commands carry null)",
+    "preconditions_present": 3,
+    "transport": "ARCH-20260930-095 merged as 5a05bdd (PR #102); origin/main merged into this branch as ea15dbb before any work, per the transport rule (no stacking, no rebase)."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "check": "grep -rin 'preflight' autornd/evals/ autornd/cli.py | wc -l",
+      "result": "PASS: 0"
+    },
+    {
+      "n": 2,
+      "check": "grep -n 'async def run\\|class Finding' autornd/preflight.py",
+      "result": "PASS: class Finding at line 53, async def run at line 184"
+    },
+    {
+      "n": 3,
+      "check": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS: 1082 passed in 60.57s (on ea15dbb, main 5a05bdd merged in)"
+    }
+  ],
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20260930-096-preflight-gate",
+    "pr": null
+  }
+}
