@@ -48,6 +48,38 @@ REQUIRED_TIERS = ("triage", "engineering", "architecture",
 # (convention 26).
 OPTIONAL_TIERS = ("ranker", "premium", "judge")
 
+# The parameters the harness sends, by call path. OpenRouter strips a pinned
+# endpoint that does not accept a parameter in the request: "Filter by
+# Parameters removed ..." in traces 076, 077, 078 and 082, and on 2026-09-30
+# (091 run 2) it removed the escalation pin relace/fp4 and the run died on a
+# 404 after paying for eight calls. The endpoints route lists each endpoint's
+# supported_parameters, so the check is free.
+#
+# A hand list, guarded: tests/test_preflight_gate.py builds the real payloads
+# through OpenRouterClient.chat_json, .chat and the search lookup and fails
+# if these drift from what is actually sent.
+CHAT_JSON_PARAMETERS = ("response_format", "max_tokens", "temperature")
+CHAT_PARAMETERS = ("max_tokens", "temperature")
+# Payload keys that are routing or accounting, not model parameters.
+NON_PARAMETER_KEYS = frozenset({"model", "messages", "usage", "provider"})
+
+# Every function name the client is called with, which is what a pin is
+# matched on (provider_order_for), not the tier's name in .env. The
+# independent pass calls "independent", not "premium" (phases.py).
+CALL_FUNCTIONS = ("triage", "engineering", "architecture", "escalation",
+                  "research", "search", "judge", "independent", "ranker")
+
+
+def sent_parameters(function: str) -> tuple[str, ...]:
+    """What a call on this function sends. Search is a plain chat (no JSON
+    mode); the ranker uses the rerank API, which takes no chat parameters
+    (its listwise fallback is best-effort and never fails a run)."""
+    if function == "search":
+        return CHAT_PARAMETERS
+    if function == "ranker":
+        return ()
+    return CHAT_JSON_PARAMETERS
+
 
 @dataclass
 class Finding:
@@ -181,11 +213,127 @@ def check(models: dict[str, str], pins: dict[str, str],
     return out
 
 
+def _call_targets() -> dict[str, tuple[str, list[str]]]:
+    """function -> (model, provider order), resolved exactly as a call is.
+
+    The model comes from the client's own lookup (so an unset judge tier
+    resolves to the engineering model, as the judging nodes do), and the
+    order from provider_order_for, which reads tier-scoped AND general pins.
+    A function the harness cannot reach is left out: the ranker with no
+    ranker model, the independent pass with no independent model.
+    """
+    from autornd.config import settings
+    from autornd.routing.openrouter import OpenRouterClient, provider_order_for
+
+    client = OpenRouterClient(api_key="preflight")
+    targets: dict[str, tuple[str, list[str]]] = {}
+    for function in CALL_FUNCTIONS:
+        if function == "ranker":
+            model = settings.model_ranker or ""
+        elif function == "independent":
+            model = client.independent_model() or ""
+        else:
+            model = client.get_model(function)
+        if model:
+            targets[function] = (model, provider_order_for(function))
+    return targets
+
+
+def _select(listing: list[dict], pin: str) -> list[dict] | None:
+    """The endpoints a pin selects, matched the way the router matches.
+
+    Measured 2026-09-30 (091 run 8): the pin `google` matched no endpoint
+    of a model whose endpoint tags were google-ai-studio[/flex|/priority]
+    and google-vertex/global[...], and the router removed all of them. It
+    matches slugs, not display names (Vertex's provider_name is "Google").
+    So: an endpoint whose tag equals the pin; failing that, those whose
+    tag's first segment equals it. Case is ignored: pins written Nebius and
+    DigitalOcean served live against nebius/fp8 and digitalocean. None when
+    the listing carries no tags at all, which leaves the match blind.
+    """
+    wanted = pin.strip().lower()
+    tagged = [(e, str(e.get("tag") or "").strip().lower()) for e in listing]
+    if not any(tag for _, tag in tagged):
+        return None
+    exact = [e for e, tag in tagged if tag == wanted]
+    if exact:
+        return exact
+    return [e for e, tag in tagged if tag.split("/", 1)[0] == wanted]
+
+
+def check_parameters(targets: dict[str, tuple[str, list[str]]],
+                     listings: dict[str, list[dict]]) -> list[Finding]:
+    """Pure: does every pinned endpoint accept what the harness sends?
+
+    One finding per (function, pinned provider). An unpinned function is
+    reported and does not fail. A listing that cannot say (no listing, no
+    tags, no supported_parameters field) is BLIND and fails: no evidence
+    must never be reported as no problem (convention 28).
+    """
+    out: list[Finding] = []
+    for function, (model, order) in targets.items():
+        sent = sent_parameters(function)
+        if not order:
+            out.append(Finding(True, f"params {function}",
+                               "unpinned — parameter support depends on the "
+                               "router's choice"))
+            continue
+        for provider in order:
+            subject = f"params {function} via {provider}"
+            if not sent:
+                out.append(Finding(True, subject,
+                                   "rerank API — sends no chat parameters"))
+                continue
+            listing = listings.get(model)
+            if listing is None:
+                out.append(Finding(False, subject, (
+                    f"blind — no endpoint listing for {model}, so whether "
+                    f"{provider} accepts {', '.join(sent)} is unknown")))
+                continue
+            selected = _select(listing, provider)
+            if selected is None:
+                out.append(Finding(False, subject, (
+                    f"blind — the listing for {model} carries no endpoint "
+                    f"tags to match {provider} against")))
+                continue
+            if not selected:
+                tags = sorted({str(e.get("tag")) for e in listing})
+                out.append(Finding(False, subject, (
+                    f"{provider} selects no endpoint of {model} (tags: "
+                    f"{', '.join(tags)}) — the router removes every candidate")))
+                continue
+            listed = [e for e in selected if "supported_parameters" in e]
+            tags = ", ".join(str(e.get("tag")) for e in selected)
+            if not listed:
+                out.append(Finding(False, subject, (
+                    f"blind — {tags} carries no supported_parameters, so "
+                    f"whether it accepts {', '.join(sent)} is unknown")))
+                continue
+            accepting = [e for e in listed
+                         if set(sent) <= set(e.get("supported_parameters") or [])]
+            if accepting:
+                out.append(Finding(True, subject, (
+                    f"{', '.join(str(e.get('tag')) for e in accepting)} "
+                    f"accepts {', '.join(sent)}")))
+                continue
+            missing = sorted(set(sent) - set().union(
+                *(set(e.get("supported_parameters") or []) for e in listed)))
+            out.append(Finding(False, subject, (
+                f"{tags} for {model} does not list {', '.join(missing)}; the "
+                f"harness sends {', '.join(sent)} on '{function}' and the "
+                f"router strips an endpoint it filters by parameters")))
+    return out
+
+
 async def run() -> list[Finding]:
     models, pins = _configured(), _pins()
+    targets = _call_targets()
     known = {m["id"] for m in (await _fetch("/models")).get("data", [])}
     endpoints: dict[str, set[str]] = {}
-    for model in {models.get(t, "") for t in pins} - {""}:
+    listings: dict[str, list[dict]] = {}
+    pinned_models = {models.get(t, "") for t in pins} - {""}
+    targeted = {model for model, order in targets.values() if order}
+    for model in pinned_models | targeted:
         # Ask the endpoints route for every pinned model, INCLUDING ones absent
         # from /models. Measured 2026-09-22: `qwen/qwen3-reranker-8b` is not in
         # /models at all — that route lists chat models, and a reranker is not
@@ -198,11 +346,14 @@ async def run() -> list[Finding]:
             data = (await _fetch(f"/models/{model}/endpoints")).get("data", {})
         except Exception:
             continue                      # left unresolved, and reported as such
-        names: set[str] = set()
-        for e in data.get("endpoints", []):
-            names |= _provider_names(e)
-        endpoints[model] = names
-    return check(models, pins, known, endpoints)
+        listings[model] = list(data.get("endpoints", []))
+        if model in pinned_models:
+            names: set[str] = set()
+            for e in listings[model]:
+                names |= _provider_names(e)
+            endpoints[model] = names
+    return (check(models, pins, known, endpoints)
+            + check_parameters(targets, listings))
 
 
 def main() -> int:
