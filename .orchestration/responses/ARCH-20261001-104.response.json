@@ -1,0 +1,38 @@
+{
+  "command_id": "ARCH-20261001-104",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "c62b68b",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20261001-103: response present",
+    "preconditions_present": 4,
+    "transport": "Branch at c62b68b on main f353574; merging main was a no-op."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "PASS: no harness run (the owner's xed on the other checkout's .env aside)"
+    },
+    {
+      "n": 2,
+      "result": "PASS: phases.py:1001-1008 is the failed-reviewer high finding; checks.py:78 is the _NUMBER regex, as quoted"
+    },
+    {
+      "n": 3,
+      "result": "PASS, reproduced: \"values disagree between plan and implementation — pa: plan says ['9'], implementation says ['800']\""
+    },
+    {
+      "n": 4,
+      "result": "PASS: 1145 passed in 66.79s"
+    }
+  ],
+  "baseline_suite": "1145 passed",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20261001-104-apparatus-repairs",
+    "pr": null
+  }
+}
