@@ -10193,3 +10193,9 @@ and should be rerun.
    the process outlived nothing.
 6. **The research tier's pin was rate-limited upstream during this run.**
    Whether to re-pin is G-2, the owner's.
+
+## 94. Ruling D41 — a freeze on mechanisms until the harness ships (advisor, 2026-10-01, carried by ARCH-20261001-102)
+
+> **Ruling D41 (advisor, 2026-10-01; confirmed by the owner) — a freeze on mechanisms until the harness ships. Until the golden set (evals/scenarios/golden/, keys in evals/golden/keys.json) passes at least 5 of its 6 questions on one lineup, no new node, loop, gate, verdict field, run-record field or process ruling is added to the harness. Two kinds of change remain allowed: repairs of silent failures that change outcomes, and the measurement needed to score the golden set. Rationale: 2 of 2 recorded runs shipped an answer on 09-26 (084 and 085, about 3 minutes and 6 cents each), and 0 of 7 have shipped since 09-29, while 8 of the advisor's 10 commands in that period were instrument or process work. The freeze lifts on the golden condition. If the best measured arm passes fewer than 3 of 6, the freeze turns into a redesign of the default path (a fast path, and research-first answers for lookup questions), which then comes before any other work.**
+
+Execution record: the golden-set measurement follows, per the command's commit order.
