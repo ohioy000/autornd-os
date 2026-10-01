@@ -1,0 +1,32 @@
+{
+  "command_id": "ARCH-20260930-097",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "3462aec",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "null: no parent response required",
+    "preconditions_present": 2,
+    "transport": "ARCH-20260930-096 merged as d1f4e3f (PR #103); origin/main merged into this branch as 7cd8b95 before any work."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "check": "git ls-files | grep -E '^\\.env'",
+      "result": "PASS: exactly .env.example"
+    },
+    {
+      "n": 2,
+      "check": "grep -n '^\\.env' .gitignore",
+      "result": "PASS: only '.env' at line 12"
+    }
+  ],
+  "baseline_suite": "1101 passed in 67.93s",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20260930-097-gitignore-env",
+    "pr": null
+  }
+}
