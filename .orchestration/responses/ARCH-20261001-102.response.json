@@ -1,0 +1,18 @@
+{
+  "command_id": "ARCH-20261001-102",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "f385eb3",
+  "head_after": null,
+  "arrival": {"parent_id": "null", "preconditions_present": 5, "transport": "Branch cut by the advisor at f385eb3 on main f508193; merging origin/main was a no-op."},
+  "preconditions": [
+    {"n": 1, "check": "ps aux | grep -E 'autornd|evals' | grep -v grep", "result": "PASS with a note: one line, 'xed /home/jb/autornd-os/.env', the owner's text editor on the other checkout's .env. It is not a harness or eval process. Not touched (G-3)."},
+    {"n": 2, "check": "git log --oneline -2 origin/arch/20261001-102-golden-arm-b", "result": "PASS: f385eb3 (golden files), 243ce6d (command)"},
+    {"n": 3, "check": "python3 evals/golden/score.py", "result": "PASS: SELF-TEST PASSED"},
+    {"n": 4, "check": "grep -n figures_present conv_cup_line_sensor_grounded.yaml", "result": "PASS: line 29"},
+    {"n": 5, "check": ".venv/bin/python3 -m pytest tests/ -q", "result": "PASS: 1140 passed in 72.88s"}
+  ],
+  "baseline_suite": "1140 passed in 72.88s",
+  "results": {}, "deviations": [], "questions_for_advisor": [],
+  "delivery_state": {"branch": "arch/20261001-102-golden-arm-b", "pr": null}
+}
