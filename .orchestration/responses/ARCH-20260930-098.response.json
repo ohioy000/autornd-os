@@ -1,0 +1,42 @@
+{
+  "command_id": "ARCH-20260930-098",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "8f6fdc6",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20260930-095: .orchestration/responses/ARCH-20260930-095.response.json present",
+    "preconditions_present": 4,
+    "transport": "Branch cut by the advisor at 8f6fdc6 on main fe5b170; no merge needed."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "check": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "result": "PASS: no output"
+    },
+    {
+      "n": 2,
+      "check": "git fetch origin && git merge-base --is-ancestor 5a05bdd origin/main && git merge-base --is-ancestor d1f4e3f origin/main && echo merged",
+      "result": "PASS: merged"
+    },
+    {
+      "n": 3,
+      "check": "ls docs/cupline/ profiles/cupline.yaml",
+      "result": "PASS: approved-parts.md, line4-machine.md, manifest.json; profiles/cupline.yaml"
+    },
+    {
+      "n": 4,
+      "check": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS: 1107 passed in 73.49s"
+    }
+  ],
+  "baseline_suite": "1107 passed in 73.49s",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20260930-098-d37-firing",
+    "pr": null
+  }
+}
