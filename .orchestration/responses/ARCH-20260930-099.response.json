@@ -1,0 +1,37 @@
+{
+  "command_id": "ARCH-20260930-099",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "43cd4a7",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20260930-095: .orchestration/responses/ARCH-20260930-095.response.json present",
+    "preconditions_present": 3,
+    "transport": "ARCH-20260930-098 merged as edd3bba (PR #106); origin/main merged into this branch as 43cd4a7 before any work."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "check": "sed -n '92,96p' autornd/engine/workflow.py; sed -n '112,118p' autornd/evals/cli.py",
+      "result": "PASS, quoted. API path (workflow.py:92-96): settings_lookup={max_iterations, escalation_recovery_attempts, escalation_max_tokens}. Eval CLI (cli.py:112-118): _settings() returns {max_iterations, escalation_recovery_attempts, review_rework_attempts, plan_max_tokens, escalation_max_tokens}. Divergence exactly as the evidence states: the API map lacks review_rework_attempts and plan_max_tokens."
+    },
+    {
+      "n": 2,
+      "check": "grep -n 'max_iterations: review_rework_attempts' workflows/engineering-rnd.yaml",
+      "result": "PASS: line 312"
+    },
+    {
+      "n": 3,
+      "check": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS: 1107 passed in 67.94s"
+    }
+  ],
+  "baseline_suite": "1107 passed in 67.94s",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20260930-099-one-settings-map",
+    "pr": null
+  }
+}
