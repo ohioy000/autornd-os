@@ -40,7 +40,7 @@
   "questions_for_advisor": [],
   "delivery_state": {
     "branch": "arch/20261001-105-request-sets-scope",
-    "pr": null
+    "pr": 117
   },
   "commits": {
     "in_progress": "71b37bc",
