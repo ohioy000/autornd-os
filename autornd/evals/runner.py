@@ -245,6 +245,7 @@ class ResultsLog:
             "rejections_by_tier": run.rejections_by_tier,
             "rejections_by_provider": run.rejections_by_provider,
             "provider_failures": run.provider_failures,
+            "spend_guard_blind": run.spend_guard_blind,
             "retries": run.retries,
             "seconds_by_phase": run.seconds_by_phase,
             # Ruling D38: one entry per executed node, in path order, so pace
@@ -532,6 +533,9 @@ class ScenarioRun:
     # for every terminal, the watchdog's included. 098's records carried
     # error null and no sentence, though each run ended on its own terminal.
     reason: str | None = None
+    # F3 (ARCH-20261001-104): calls the pre-call spend guard could not bound
+    # (no catalogue rate), so convention 28's "no evidence" is visible.
+    spend_guard_blind: list[dict[str, Any]] = field(default_factory=list)
     # Ruling D38: every executed node as {node, iteration, kind, tier,
     # seconds, cancelled}, in path order. Empty for a unit that never ran.
     steps: list[dict[str, Any]] = field(default_factory=list)
@@ -896,6 +900,7 @@ async def run_scenario(
         rejections_by_tier=dict(runner.client.rejections_by_function),
         rejections_by_provider=dict(runner.client.rejections_by_provider),
         provider_failures=list(getattr(client, "provider_failures", []) or []),
+        spend_guard_blind=list(getattr(client, "spend_guard_blind", []) or []),
         retries=runner.client.retry_reconciliation(),
         seconds_by_phase=_phase_seconds(state),
         # Ruling D37: the re-grounding block, read off the runner the
