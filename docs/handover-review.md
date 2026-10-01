@@ -9916,3 +9916,71 @@ workflows/ autornd/graph/` is empty, and no setting value changed.
 
 Execution record: the repairs R1 to R4 follow in the commits after this
 section's answers commit, per the command's commit order.
+### 91.1 What was built (executor, 2026-10-01)
+
+- **R1 (A1).** The runner answers `makes_call(node, state)`. domain_review
+  makes no call when its peer roster is empty, and every other phase calls.
+  The pre-start rule judges only nodes that call, so the record names the
+  node whose call would overrun. The command's assumption held: the roster
+  is resolved from state before the node runs, so no fallback to "the first
+  call inside the node" was needed. A no-call node with no time left passes
+  through uncut, because it never yields.
+- **R2 (A2).** Both 'dissented' and 'unjudged' read "not approved
+  (<label>)" in the terminal sentence, including when nothing was agreed.
+- **R3 (A5).** Deleted CLAUDE.md's "215 such classes across 55 files", and
+  testing.md's "58 test files" (twice), "1045 tests" and a third copy,
+  "(215 such classes)", at testing.md:15. The examples stay.
+- **R4 (A6, A7).** `check()` resolves each pin to the model the client
+  applies it to (`_pin_target`, held to `get_model` and
+  `independent_model`). It checks general pins per function, and reports a
+  pin no call reads as 'unused', ok and informational. Temperature is
+  reported by `check_temperature`, as present, absent or blind, and never
+  decides the gate.
+
+### 91.2 Measurements (free)
+
+**Tests, each proved by breaking:**
+- R1: `test_a_rework_after_agreement_leaves_the_latest_unjudged` now
+  asserts validate, not domain_review, and that the last step run was the
+  free consistency check. It had pinned the misattribution (convention 17).
+- R2: four label cases in `TestANotApprovedArtifactSaysNotApproved`.
+- R3: `TestUnguardedCountsStayDeleted`. Against the old files it names
+  "['215 such classes']" in CLAUDE.md, and "['58 test files', '58 test
+  files', '1045 tests', '215 such classes']" in testing.md.
+- R4: `TestTheGateReadsPinsAsTheClientDoes` and
+  `TestTemperatureIsInformational`, 13 tests.
+  - Break A: the judge pin made unread when MODEL_JUDGE is unset. A
+    'Friendli' pin the client would 404 on then reads ok: "unused — pinned
+    to Friendli, but MODEL_JUDGE is unset".
+  - Break B: temperature required again. "nebius for vendor/fast does not
+    list temperature ..." fails the gate.
+
+**The live configuration** (catalogue reads only): 31 ok, 0 failing. It
+shows `pin premium: unused — pinned to Azure, but the independent pass
+calls function 'independent'`.
+
+Suite 1112 to 1131, test files unchanged at 64.
+
+### 91.3 Departures
+
+1. **A judge pin with MODEL_JUDGE unset is checked, not reported unused.**
+   A6 and the R4 test name it "unused", but the client still calls function
+   'judge', and `get_model('judge')` falls back to the engineering model
+   with the judge pin applied. "Unused" would pass a pin the client 404s on
+   (break A). Following A6's own rule (refuse exactly what the client would
+   fail on), it is checked on the engineering model. The pins that really
+   are unused, 'premium:' and a tier with no model, are reported unused.
+2. **A third copy of the class count** at testing.md:15 was deleted under
+   A5's reasoning.
+3. **Temperature has its own check** (`check_temperature`), so
+   `check_parameters` keeps one deciding finding per (function, provider).
+4. **General pins are now checked**, as part of "read pins as the client
+   reads them". 096 found them unchecked.
+
+### 91.4 Findings
+
+- **The owner's `premium:Azure` pin is read by no call.** The independent
+  pass runs unpinned. A change waits on the owner (G-3): `.env` is not
+  touched.
+- 101's A14 (refused-by-final-review wording) is left to 101, which carries
+  its text. 100's R2 covers A2 only.
