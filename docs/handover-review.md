@@ -10473,3 +10473,9 @@ Suite 1145 to 1162.
    completion rate.
 2. **The guard bounds per call, not per run.** A run can still spend up
    to its cap; it cannot cross it.
+
+## 96. Ruling D43 — the request sets the scope (advisor, 2026-10-01, carried by ARCH-20261001-105)
+
+> **Ruling D43 (advisor, 2026-10-01) — the request sets the scope. Every success criterion must test something the request asks for: an output, figure, constraint, format or verdict the request states, or a fact the grounding supplies to answer it. A criterion may not add specifics the request did not ask for, such as component values, part numbers, presentation layout, or the exact form of a derivation. The deliverable answers the request without the plan's own devices (falsifiers, kill triggers, assumption tables) unless the request asks for them. D36's four rules keep governing how the plan is reasoned; they do not add to what the answer must contain. Rationale: ARCH-20261001-102. Q6's plan turned a two-gate logic question into an LED-drive design and validate failed a correct answer on that invented criterion; Q3's coverage check failed a correct derivation against a criterion dictating its exact inline arithmetic; Q5's deliverable carried a plan falsifier declaring "the sizing/assumption is INVALID" in a leak-test procedure; and answers ran a median of about 32 times their model answer’s length. Falsifier: on the next golden run, a shipped answer that fails its key on an item the request asked for and no criterion covered.**
+
+Execution record: the plan and implement prompt changes follow in the commits after this section's ruling commit.
