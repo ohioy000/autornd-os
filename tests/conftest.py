@@ -10,6 +10,7 @@ for _tier in ("TRIAGE", "ENGINEERING", "ARCHITECTURE", "ESCALATION",
               "RESEARCH", "SEARCH"):
     os.environ.setdefault(f"MODEL_{_tier}", f"test-provider/test-{_tier.lower()}")
 
+import asyncio
 import json
 from typing import Any
 from unittest.mock import AsyncMock
@@ -67,15 +68,27 @@ def make_mock_response(content: dict[str, Any], model: str = "test-model") -> Mo
     )
 
 
-def make_mock_client(responses: dict[str, dict[str, Any]]) -> OpenRouterClient:
+def make_mock_client(responses: dict[str, dict[str, Any]],
+                     delays: dict[str, float] | None = None) -> OpenRouterClient:
     """A client that returns preset responses per function, and bills for them.
 
     The double accounts exactly as the real client does. Spend and call counts
     live on the client precisely so no call path can avoid them, and a test
     double that answered for free would hide the bug this guards against —
     including from the tests that assert one workflow is cheaper than another.
+
+    `delays` makes a function's calls take that long, in seconds ("default"
+    applies to any function not named). The sleep comes before the bill, as a
+    real call's cost arrives with its response, so a call cancelled mid-sleep
+    bills nothing. Ruling D38's watchdog tests need calls with a duration.
     """
     client = OpenRouterClient(api_key="test-key")
+    delays = delays or {}
+
+    async def _wait(function: str) -> None:
+        seconds = delays.get(function, delays.get("default", 0.0))
+        if seconds:
+            await asyncio.sleep(seconds)
 
     async def _mock_chat_json(
         function: str,
@@ -85,6 +98,7 @@ def make_mock_client(responses: dict[str, dict[str, Any]]) -> OpenRouterClient:
         max_tokens: int = 4096,
         **kwargs: Any,
     ) -> tuple[dict[str, Any], ModelResponse]:
+        await _wait(function)
         data = responses.get(function, responses.get("default", {}))
         response = make_mock_response(data, f"mock-{function}")
         client._account(function, response.cost)
@@ -93,6 +107,7 @@ def make_mock_client(responses: dict[str, dict[str, Any]]) -> OpenRouterClient:
     async def _mock_chat(
         function: str, system_prompt: str, user_message: str, **kwargs: Any,
     ) -> ModelResponse:
+        await _wait(function)
         data = responses.get(function, responses.get("default", {}))
         response = make_mock_response(data, f"mock-{function}")
         client._account(function, response.cost)

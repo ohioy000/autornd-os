@@ -247,6 +247,19 @@ class ResultsLog:
             "provider_failures": run.provider_failures,
             "retries": run.retries,
             "seconds_by_phase": run.seconds_by_phase,
+            # Ruling D38: one entry per executed node, in path order, so pace
+            # and the judging share are read off the record instead of
+            # estimated (094's eleven minutes were an estimate, bounds 4-22).
+            "steps": run.steps,
+            # Ruling D38's typed record. Null only for a unit that never ran.
+            "watchdog": run.watchdog,
+            # Ruling D37's block. Instrument repair found by 094: ScenarioRun
+            # carried these three since 093, and this writer dropped all of
+            # them. 093's tests read the in-memory block and never the file
+            # (convention 22).
+            "regrounding": run.regrounding,
+            "regrounding_rounds": run.regrounding_rounds,
+            "assumptions_declared": run.assumptions_declared,
             "assertions": [
                 {"name": r.name, "passed": r.passed,
                  "wanted": r.wanted, "got": r.got, "detail": r.detail}
@@ -510,6 +523,12 @@ class ScenarioRun:
     # above. Flat fields stay for back-compat with readers that already
     # consume them; this carries the whole round on its own keys.
     regrounding: dict[str, Any] = field(default_factory=dict)
+    # Ruling D38: every executed node as {node, iteration, kind, tier,
+    # seconds, cancelled}, in path order. Empty for a unit that never ran.
+    steps: list[dict[str, Any]] = field(default_factory=list)
+    # Ruling D38: the watchdog's typed record (WatchdogRecord.as_dict()).
+    # None only for a unit that never ran, which had no clock to watch.
+    watchdog: dict[str, Any] | None = None
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -623,6 +642,20 @@ def _phase_seconds(state) -> dict[str, float]:
         totals[step.node_id] = round(
             totals.get(step.node_id, 0.0) + (getattr(step, "seconds", 0.0) or 0.0), 3)
     return dict(sorted(totals.items(), key=lambda kv: -kv[1]))
+
+
+def _steps(state) -> list[dict[str, Any]]:
+    """Every executed node, in order, with its tier and whether it was cut.
+
+    Skips are excluded, so the list lines up with `path` one for one.
+    """
+    return [
+        {"node": step.node_id, "iteration": step.iteration, "kind": step.kind,
+         "tier": getattr(step, "tier", None), "seconds": step.seconds,
+         "cancelled": bool(getattr(step, "cancelled", False))}
+        for step in (getattr(state, "trace", []) or [])
+        if not getattr(step, "skipped", False)
+    ]
 
 
 def _regrounding_block(runner, state) -> dict[str, Any]:
@@ -739,16 +772,23 @@ async def run_scenario(
     # One call of headroom, so exceeding the expectation is reported by the
     # max_calls assertion rather than as an opaque abort.
     runner = BoundedRunner(client_factory(), ceiling + 1, spend_ceiling=spend_ceiling)
-    executor = GraphExecutor(spec, runner, settings_lookup)
 
     # A scenario's own timeout wins: it knows what it is measuring.
     deadline = scenario.timeout or timeout
+    # Ruling D38: the deadline is the run's declared time budget, so the
+    # executor's watchdog ends the run by its own terminal, the reserve
+    # before the wait_for below would kill it. This is the second clause of
+    # D25, which until now existed only as the comment beside that wait_for.
+    executor = GraphExecutor(spec, runner, settings_lookup, time_budget=deadline)
 
     started = time.perf_counter()
     error: str | None = None
     stopped_by_budget = False
     try:
         with _isolated_store():
+            # The outer backstop. With the watchdog armed this fires only if
+            # the watchdog failed, and D38 names that as its falsifier: a
+            # budgeted run whose stop_reason says the runner killed it.
             state = await asyncio.wait_for(executor.run(scenario.request), deadline)
     except asyncio.TimeoutError:
         state = _partial_state(executor, scenario.request)
@@ -847,6 +887,9 @@ async def run_scenario(
         assumptions_declared=list(getattr(runner, "assumptions_declared", []) or []),
         regrounding=dict(getattr(runner, "regrounding_block", None)
                          or _regrounding_block(runner, state) or {}),
+        steps=_steps(state),
+        watchdog=(state.watchdog.as_dict()
+                  if getattr(state, "watchdog", None) is not None else None),
     )
 
 

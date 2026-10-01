@@ -245,12 +245,21 @@ class TestRunner:
         assert run.calls > 3, "the ceiling should not fire before it is reached"
 
     async def test_timeout_is_recorded_not_raised(self):
+        # Ruling D38 changed WHO ends a run that runs out of time, not
+        # whether it is recorded. This asserted the runner's kill ("timed
+        # out" in run.error); since D38 the declared deadline is the
+        # watchdog's budget, the workflow ends by its own terminal, and a
+        # runner kill on a budgeted run is the ruling's falsifier. The
+        # runner's backstop is proved in tests/test_watchdog.py by disabling
+        # the watchdog.
         scenario = parse({"id": "s", "request": "Add retry", "expect": {"risk": "medium"}})
         run = await run_scenario(
             scenario, load("workflows/engineering-rnd.yaml"),
             lambda: make_client(scripted(), delay=0.05), SETTINGS, timeout=0.01)
         assert not run.passed
-        assert "timed out" in run.error
+        assert run.status == "blocked"
+        assert run.stop_reason is None and run.error is None
+        assert run.watchdog["fired"] is True
 
     async def test_a_crashing_run_is_a_result_not_an_exception(self):
         def explode(_message):
@@ -355,14 +364,19 @@ class TestTimeoutPrecedence:
         run = await run_scenario(
             scenario, load("workflows/triage-only.yaml"),
             lambda: make_client(scripted(), delay=0.2), SETTINGS, timeout=60)
-        assert "timed out after 0s" in run.error
+        # Read from the budget the run was given, not from the runner's kill
+        # text: since Ruling D38 the deadline is the watchdog's budget, and
+        # the run ends by the watchdog before the runner's wait_for fires.
+        assert run.watchdog["budget_seconds"] == 0.01
+        assert run.watchdog["fired"] is True and run.stop_reason is None
 
     async def test_the_suite_default_applies_when_a_scenario_is_silent(self):
         scenario = parse({"id": "quiet", "request": "r", "expect": {"risk": "medium"}})
         run = await run_scenario(
             scenario, load("workflows/triage-only.yaml"),
             lambda: make_client(scripted(), delay=0.2), SETTINGS, timeout=0.01)
-        assert "timed out" in run.error
+        assert run.watchdog["budget_seconds"] == 0.01
+        assert run.watchdog["fired"] is True and run.stop_reason is None
 
 
 class TestFiguresPresent:
