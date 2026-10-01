@@ -265,3 +265,26 @@ def _build_settings() -> "Settings":
 
 
 settings = _build_settings()
+
+
+# Ruling D39: the loop bounds a workflow names by setting, read from this one
+# place by every path that runs a workflow. The API path (engine/workflow.py)
+# and the eval CLI (evals/cli.py) each kept a hand-written map, and they
+# drifted: the API path's had no review_rework_attempts, so any blocking review
+# there ended BLOCKED with a ConditionError instead of running the rework loop
+# (reproduced in ARCH-20260930-095's response). tests/test_settings_map.py
+# loads every workflows/*.yaml and fails if one names a bound missing here.
+# Token ceilings are not in this map: adapter._max_tokens reads them straight
+# from `settings`, and the executor reads its lookup only for loop bounds.
+LOOP_BOUND_SETTINGS = (
+    "max_iterations", "escalation_recovery_attempts", "review_rework_attempts",
+)
+
+
+def settings_lookup() -> dict[str, int]:
+    """The graph executor's settings_lookup: each loop bound by its name.
+
+    Read when called, so a runtime settings change (RUNTIME_MUTABLE) reaches
+    the next run on every path alike.
+    """
+    return {name: getattr(settings, name) for name in LOOP_BOUND_SETTINGS}

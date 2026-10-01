@@ -1,0 +1,60 @@
+{
+  "command_id": "ARCH-20260930-099",
+  "parent_id": "ARCH-20260930-095",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Every path that runs a workflow resolves the same configured loop bounds from one shared map, so an API run reaches the review rework loop instead of raising ConditionError (Ruling D39).",
+
+  "evidence": [
+    "workflows/engineering-rnd.yaml:312: review_rework_loop takes max_iterations from the setting review_rework_attempts.",
+    "autornd/engine/workflow.py:92-96: the API path's settings_lookup carries max_iterations, escalation_recovery_attempts and escalation_max_tokens only.",
+    "autornd/evals/cli.py:112-118: the eval CLI's _settings() carries review_rework_attempts and plan_max_tokens as well. Two hand-kept copies have drifted (convention 24).",
+    "autornd/graph/executor.py (_budget) raises ConditionError for a loop whose named setting is absent from the lookup.",
+    ".orchestration/responses/ARCH-20260930-095.response.json, questions_for_advisor: 'on the API path any blocking review ends BLOCKED with ConditionError: loop review_rework_loop wants max_iterations from setting review_rework_attempts, which is not available'. Reproduced by the executor with the billing double. The executor correctly asked for a ruling instead of supplying the setting.",
+    "Token ceilings are NOT affected: adapter._max_tokens resolves a named ceiling straight from the settings module (autornd/graph/adapter.py:170) on both paths.",
+    "tests/test_live_wiring.py pins that the API drives WorkflowEngine, but no test drives the API path into review_rework_loop."
+  ],
+
+  "scope": {
+    "include": ["autornd/config.py", "autornd/engine/workflow.py", "autornd/evals/cli.py", "tests/", "docs/handover-review.md", ".orchestration/responses/", "HANDOVER.md", "README.md", "AGENTS.md", "CLAUDE.md", ".claude/context/testing.md"],
+    "exclude": ["workflows/: no bound or node change.", "autornd/graph/: the executor's resolution is correct; its input is not.", "Every setting's VALUE: unchanged."]
+  },
+
+  "constraints": [
+    "RULING FIRST, VERBATIM, in HANDOVER.md and the notebook, before the code in commit order.",
+    "RULING D39, COMMITTED VERBATIM: 'Ruling D39 (advisor, 2026-09-30) — one settings map for every path that runs a workflow. Every loop bound a shipped workflow names by setting is resolved from a single function shared by the API path and the eval CLI; no path keeps its own hand-written copy. Rationale: two hand-kept maps drifted. The eval CLI's carries review_rework_attempts and the API path's does not, so the API path ends any blocking review with a ConditionError (reported and reproduced in ARCH-20260930-095's response), while the eval path runs the designed rework loop. The configured bound is the design; a crash is not a conclusion the harness was built to reach. Falsifier: a shipped workflow that names a setting the shared map does not carry. A guard enumerates them.'",
+    "ONE SOURCE: a single function, in autornd/config.py beside the settings it reads, returns the lookup. engine/workflow.py and evals/cli.py both call it, and both hand copies are deleted after a reference check recorded in the response (convention 19).",
+    "GUARD (free, deterministic): load every workflows/*.yaml through graph.spec.load and assert that every loop whose max_iterations is a string names a key in the shared map. Enumerate from the loaded specs, not by regex. Assert the set of workflows checked is non-empty (convention 28).",
+    "API-PATH TEST (convention 22): drive WorkflowEngine (engine/workflow.py) through engineering-rnd with the billing mock client and a review that blocks once. Assert review_rework_loop runs, the status is not a ConditionError, and the configured review_rework_attempts bounds it. PROVE BY BREAKING: remove review_rework_attempts from the shared map and show the guard name review_rework_loop in engineering-rnd. Quote it.",
+    "No setting value changes. No workflow change. Free."
+  ],
+
+  "acceptance_criteria": [
+    "D39 is verbatim in HANDOVER.md and the notebook, with the ruling commit first.",
+    "`grep -n 'review_rework_attempts' autornd/engine/workflow.py autornd/evals/cli.py` shows no hand-written map entries (both call the shared function).",
+    "The guard and the API-path test pass; the break demonstration is quoted.",
+    "Suite green, with counts before and after. The PR is opened and delivery_state carries its number."
+  ],
+
+  "verification": [
+    {"command": "grep -n 'Ruling D39' HANDOVER.md docs/handover-review.md", "expected": "Present in both."},
+    {"command": "git diff --stat origin/main -- workflows/ autornd/graph/", "expected": "Empty."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count before and after."}
+  ],
+
+  "rollback": "Revert the merge. The API path returns to its own map and to the crash.",
+
+  "deliverable": {"branch": "arch/20260930-099-one-settings-map", "branch_created_by": "advisor", "pr": true, "merge": "by the advisor-custodian on green, after checking acceptance against the tree", "commit_style": "conventional"},
+
+  "transport": "Pushed by the advisor under the owner's grant of 2026-09-30. Start only after ARCH-20260930-098's traces are committed and it has merged; merge origin/main into this branch first. Commit the response IN_PROGRESS first.",
+
+  "assumptions": ["No other caller builds its own lookup. If one does, it moves to the shared function as well. Report it."],
+
+  "questions": [],
+
+  "preconditions": [
+    {"command": "sed -n '92,96p' autornd/engine/workflow.py; sed -n '112,118p' autornd/evals/cli.py", "expected": "The two hand-kept maps, quoted. Name any divergence from the evidence."},
+    {"command": "grep -n 'max_iterations: review_rework_attempts' workflows/engineering-rnd.yaml", "expected": "Line 312, or wherever it now sits."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green; record the count."}
+  ]
+}
