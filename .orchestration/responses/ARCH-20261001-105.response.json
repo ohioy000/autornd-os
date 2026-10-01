@@ -1,0 +1,30 @@
+{
+  "command_id": "ARCH-20261001-105",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "81da1e0",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20261001-104: response present",
+    "preconditions_present": 2,
+    "transport": "CARRIED: PR #115 merged the command file only (413baf3), with no response and no D43. Executed now on a fresh branch from main 81da1e0, because 106's precondition needs D43 on main."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "PASS: the success-criteria instruction, D36's rules block, and 'The success criteria are the most important thing you produce' are present (now at phases.py:279-316)"
+    },
+    {
+      "n": 2,
+      "result": "PASS: 1162 passed"
+    }
+  ],
+  "baseline_suite": "1162 passed",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20261001-105-request-sets-scope",
+    "pr": null
+  }
+}
