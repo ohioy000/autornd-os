@@ -10199,3 +10199,65 @@ and should be rerun.
 > **Ruling D41 (advisor, 2026-10-01; confirmed by the owner) — a freeze on mechanisms until the harness ships. Until the golden set (evals/scenarios/golden/, keys in evals/golden/keys.json) passes at least 5 of its 6 questions on one lineup, no new node, loop, gate, verdict field, run-record field or process ruling is added to the harness. Two kinds of change remain allowed: repairs of silent failures that change outcomes, and the measurement needed to score the golden set. Rationale: 2 of 2 recorded runs shipped an answer on 09-26 (084 and 085, about 3 minutes and 6 cents each), and 0 of 7 have shipped since 09-29, while 8 of the advisor's 10 commands in that period were instrument or process work. The freeze lifts on the golden condition. If the best measured arm passes fewer than 3 of 6, the freeze turns into a redesign of the default path (a fast path, and research-first answers for lookup questions), which then comes before any other work.**
 
 Execution record: the golden-set measurement follows, per the command's commit order.
+
+### 94.1 Execution record (executor, 2026-10-01): BLOCKED at preflight, no spend
+
+**Done before the gate (free):**
+- D41, verbatim (`544d19c`).
+- Seven scenarios whose requests are byte-identical to `keys.json`, checked
+  by loading both. Q1-Q6 are in `evals/scenarios/golden/`. The IA side test
+  is in `golden/side/`, because the loader does not recurse, so each
+  invocation loads exactly its own set.
+- `evals/golden/score_trace.py`, and the guard `tests/test_golden_keys.py`.
+  The break, on a corrupted copy of `keys.json`: "Q1 model answer: FAILS
+  ['Q1.1']", "SELF-TEST FAILED (1)".
+- The figure-presence assertion is removed from the grounded cup-line
+  scenario.
+- Suite 1140 to 1145 (`321ec33`).
+
+**Arm B's effective settings, read from `settings` under the prefix:**
+- Models: triage deepseek/deepseek-v4-flash, engineering z-ai/glm-5,
+  architecture thinkingmachines/inkling-small, escalation
+  moonshotai/kimi-k3, research google/gemini-2.5-flash, search
+  perplexity/sonar, ranker qwen/qwen3-reranker-8b, premium
+  z-ai/glm-5.3-prime. judge is empty, and `get_model('judge')` returns
+  z-ai/glm-5.
+- Pins as commanded. Fallbacks '0'.
+- Token ceilings from the owner's `.env`: plan 78000, escalation 32000,
+  validate 16000, judge 70000, search 8000/16000.
+- Loop bounds: max_iterations 5, escalation_recovery_attempts 3,
+  review_rework_attempts 2. Run budget None.
+
+**Preflight under the arm B prefix: 26 ok, 3 failing.**
+- `params architecture via DeepInfra`: "deepinfra/fp8 for
+  thinkingmachines/inkling-small does not list response_format".
+- `params escalation via Moonshot AI`: "Moonshot AI selects no endpoint of
+  moonshotai/kimi-k3 (tags: ... moonshotai/mxfp4 ...)".
+- `params research via Google`: "Google selects no endpoint of
+  google/gemini-2.5-flash (tags: google-ai-studio, ..., google-vertex,
+  ...)".
+
+Per the command ("If any 09-26 pin no longer serves, STOP and report
+BLOCKED. Do NOT substitute a pin"), the run did not start. P1 is refuted
+on arrival. No pre-registration was committed, because no spend followed.
+
+**What the 09-26 record says about the same pins** (084 and 085 headers,
+pin string identical):
+- Both runs completed. research was served by `Google`, and architecture
+  by `DeepInfra` on JSON-mode calls (response_format sent), with no
+  rejections or provider failures.
+- So two of the three failures refuse pins that served live five days ago.
+  Either the catalogue changed since, or the gate is stricter than the
+  router: `_select` matches the pin against endpoint tags only, while the
+  router accepted 'Google'.
+- 091 run 8's exhibit (the pin `google` removed) is the evidence the tag
+  rule was written from.
+- The escalation pin was never exercised on 09-26 (no escalation calls), so
+  it is unproven either way.
+
+**Ruling needed:** run arm B with `--skip-preflight` and the override
+recorded (the 09-26 evidence says these pins served); or repair the gate's
+pin matching first (instrument repair, but D41 allows only repairs of
+silent failures that change outcomes); or re-pin, which is a different arm
+and needs a new authorisation. The owner's go-ahead for the paid step
+stands, unspent.

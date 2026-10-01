@@ -1,18 +1,78 @@
 {
   "command_id": "ARCH-20261001-102",
-  "status": "IN_PROGRESS",
+  "status": "BLOCKED",
   "executed": false,
   "head_before": "f385eb3",
   "head_after": null,
-  "arrival": {"parent_id": "null", "preconditions_present": 5, "transport": "Branch cut by the advisor at f385eb3 on main f508193; merging origin/main was a no-op."},
+  "arrival": {
+    "parent_id": "null",
+    "preconditions_present": 5,
+    "transport": "Branch cut by the advisor at f385eb3 on main f508193; merging origin/main was a no-op."
+  },
   "preconditions": [
-    {"n": 1, "check": "ps aux | grep -E 'autornd|evals' | grep -v grep", "result": "PASS with a note: one line, 'xed /home/jb/autornd-os/.env', the owner's text editor on the other checkout's .env. It is not a harness or eval process. Not touched (G-3)."},
-    {"n": 2, "check": "git log --oneline -2 origin/arch/20261001-102-golden-arm-b", "result": "PASS: f385eb3 (golden files), 243ce6d (command)"},
-    {"n": 3, "check": "python3 evals/golden/score.py", "result": "PASS: SELF-TEST PASSED"},
-    {"n": 4, "check": "grep -n figures_present conv_cup_line_sensor_grounded.yaml", "result": "PASS: line 29"},
-    {"n": 5, "check": ".venv/bin/python3 -m pytest tests/ -q", "result": "PASS: 1140 passed in 72.88s"}
+    {
+      "n": 1,
+      "check": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "result": "PASS with a note: one line, 'xed /home/jb/autornd-os/.env', the owner's text editor on the other checkout's .env. It is not a harness or eval process. Not touched (G-3)."
+    },
+    {
+      "n": 2,
+      "check": "git log --oneline -2 origin/arch/20261001-102-golden-arm-b",
+      "result": "PASS: f385eb3 (golden files), 243ce6d (command)"
+    },
+    {
+      "n": 3,
+      "check": "python3 evals/golden/score.py",
+      "result": "PASS: SELF-TEST PASSED"
+    },
+    {
+      "n": 4,
+      "check": "grep -n figures_present conv_cup_line_sensor_grounded.yaml",
+      "result": "PASS: line 29"
+    },
+    {
+      "n": 5,
+      "check": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS: 1140 passed in 72.88s"
+    }
   ],
   "baseline_suite": "1140 passed in 72.88s",
-  "results": {}, "deviations": [], "questions_for_advisor": [],
-  "delivery_state": {"branch": "arch/20261001-102-golden-arm-b", "pr": null}
+  "results": {
+    "done_free": "D41 verbatim; 7 scenarios byte-identical to keys.json (loaded and compared: Q1-Q6 and IA all True; timeouts 300/300/300/600/600/300/600); score_trace.py; tests/test_golden_keys.py (break: \"Q1 model answer: FAILS ['Q1.1']\", \"SELF-TEST FAILED (1)\"); the figure-presence assertion removed; suite 1140 -> 1145.",
+    "verification": {
+      "self_test": "SELF-TEST PASSED",
+      "d41_grep": "present in HANDOVER.md and the notebook",
+      "figure_assertion_grep": "grep -rn figures_present evals/scenarios/ -> no output",
+      "autornd_workflows_diff": "empty"
+    },
+    "arm_b_effective": "models as commanded; judge '' -> get_model('judge') = z-ai/glm-5; pins as commanded; fallbacks '0'; ceilings plan 78000, escalation 32000, validate 16000, judge 70000, search 8000/16000 (owner .env); loop bounds 5/3/2; run budget None.",
+    "preflight": "26 ok, 3 failing: architecture via DeepInfra (no response_format listed); escalation via 'Moonshot AI' (selects no tag); research via 'Google' (selects no tag).",
+    "predictions": {
+      "P1": "REFUTED on arrival (3 pins fail preflight)",
+      "P2-P8": "NOT RUN"
+    },
+    "contradiction": "084 and 085 (09-26, identical pin string) completed with research served by Google and architecture by DeepInfra on JSON-mode calls, with no rejections. Two of the three failures refuse pins that served live; either the catalogue changed, or the gate's tag-only _select is stricter than the router. The escalation pin was never exercised on 09-26."
+  },
+  "deviations": [
+    {
+      "what": "The cup-line comment points at SOURCE.md's section without quoting its title",
+      "reason": "The title contains the literal string the command's verification grep must not find in evals/scenarios/."
+    },
+    {
+      "what": "The IA side test lives in evals/scenarios/golden/side/",
+      "reason": "The loader globs one directory without recursing, so the golden sweep and the side test each load exactly their own set."
+    }
+  ],
+  "questions_for_advisor": [
+    "Arm B is blocked by preflight on 3 pins, two of which served live on 09-26 (084/085). Run arm B with --skip-preflight (override recorded), repair the gate's pin matching first, or re-pin (a different arm, new authorisation)?"
+  ],
+  "delivery_state": {
+    "branch": "arch/20261001-102-golden-arm-b",
+    "pr": null
+  },
+  "commits": {
+    "in_progress": "(see git log)",
+    "ruling_d41": "544d19c",
+    "golden_setup": "321ec33"
+  }
 }
