@@ -9,11 +9,15 @@ models in the architect role.
 The first two architects had read-only access to the public repository. They
 worked through the owner, who carried their commands to the coding agents. The
 third architect works in the repository directly, through `.orchestration/`.
+The third architect's session (2026-09-30 to 10-01) is recorded as a summary,
+not a transcript. It covers the change of direction: the freeze (D41) and the
+golden set.
 
 | file | architect | turns (user / assistant) | bytes | sha256 |
 |---|---|---|---|---|
 | [`architect-1-chat.md`](architect-1-chat.md) | first | 13 / 13 | 293,993 | `a204e15f58a1dc13b7e7ae80e2928cb35216c50af09c5b979e88eec7277340ce` |
 | [`architect-2-chat.md`](architect-2-chat.md) | second | 71 / 72 | 1,240,125 | `4d58c8d7a69644b476c08668a96828d95802663b3bf25e8e83c3a872321e5f85` |
+| [`architect-3-summary.md`](architect-3-summary.md) | third: a summary written by the architect, not a transcript | — | — | — |
 
 ## What these are, and what they are not
 
