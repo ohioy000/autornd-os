@@ -9257,3 +9257,41 @@ full text is in the traces.
 20260930T085857Z-gen_marketing_claims.jsonl
 20260930T090051Z-gen_marketing_claims.jsonl
 ```
+
+## 85. 094 fix-up: the response parses, item 4 is PARTIAL, the record gap is named (executor, 2026-09-30, no history rewrite)
+
+(1) The 094 response shipped with its status appended twice — one
+`json.dumps` of the dict plus a hand-written `,"status":"DONE"}` tail — so
+`json.loads` failed with `Extra data` and the file was not a response in
+any sense a reader could use. Rewritten as one valid JSON object with
+status DONE. Guard: `tests/test_response_files.py` requires every file in
+`.orchestration/responses/` to parse as a single object with a status in
+the channel vocabulary (IN_PROGRESS, DONE, PARTIAL, BLOCKED, FAILED,
+REJECTED, NO_ACTION), proves itself by breaking on the exact shape 094
+shipped, and passes with the older files untouched — no older file fails,
+so there was nothing to silently fix and nothing was.
+
+(2) Re-scored against the final implementation's lines: item 4 is PARTIAL.
+22.79517 V (rail-minimum head) and the 21.6–26.4 V thresholds are stated;
+the 23.995 V nominal head figure is not stated anywhere in the final
+implementation (grep count 0). P3 is therefore refuted in part — six of
+seven held, not all seven. The earlier HELD on item 4 was scored from the
+canonical values, not the implementation's lines; that was the error.
+
+(3) The re-grounding block is ABSENT from the 094 unit record — not zeros,
+absent. `ResultsLog.record` (`autornd/evals/runner.py`) serialises the
+ScenarioRun field by field and has no entry for `regrounding`,
+`regrounding_rounds` or `assumptions_declared`: a serializer gap, not a
+measurement. The fields exist on the dataclass and `_regrounding_block`
+builds them, but the writer never writes them. Derived after the fact from
+the run's own verdicts and path — labelled DERIVED, not measured:
+reground_context passed false (`plan ready — no re-grounding needed`),
+plan ready with no blockers, no reground_lookup in the path, so
+{rounds: 0, blockers_first_pass: [], novel: [], asked: 0, findings: 0,
+blockers_second_pass: [], assumptions: []}.
+
+Correction dated 2026-09-30: commit ee03bf0's message reads `bash.51`
+where it means `$0.51` — a shell expanded `$0` to its own name through
+`bash -c` (convention 26, measured again). The spend figure is $0.51 of
+$1.50; the commit message is wrong, the trace is right. Left in history
+per the no-rewrite rule; corrected here.
