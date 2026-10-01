@@ -1,0 +1,61 @@
+{
+  "command_id": "ARCH-20261001-105",
+  "parent_id": "ARCH-20261001-104",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "The request sets the scope (D43). Success criteria test only what the request asks for, and the answer leaves out the plan's own devices unless the request asks for them.",
+
+  "evidence": [
+    "docs/traces/102-golden-arm-b.jsonl, golden_q6: the plan turned 'describe a logic circuit … include logic, polarity, and gates' into an LED-drive design. Validate's red cause was 'Criterion 2 fails: the 150 Ω resistor placement does not match the specified location', and feasibility added hard blockers about 74HC08 source current. The answer holds all four of the owner's key items (positive logic, OR of the doors, AND with the brake, the output lights the indicator), and it never shipped.",
+    "golden_q3: coverage failed a correct derivation against a criterion dictating its exact inline arithmetic ('states J = π(0.0500 m)^4/32 and shows the inline arithmetic (0.0500^4 = 6.25e-6; J = 6.136e-7 m^4)').",
+    "golden_q5 (shipped and correct): the deliverable carried a plan falsifier declaring 'the sizing/assumption is INVALID', plus kill triggers and a gauge-resolution assumption, none of which a leak-test procedure asked for. Most of its review findings were about that content.",
+    "Sprawl: shipped and unshipped answers ran 3,042 to 7,072 characters against model answers of 75 to 545, a median of about 32 times.",
+    "autornd/engine/phases.py:278 and :307-315: the success criteria are 'the most important thing you produce. Every later phase is judged against them and nothing else.' :280-305: D36's four rules, whose worked examples are about sizing (Little's Law, pool workers, p99 checkout-wait). D36 is owner-supplied and stays verbatim.",
+    "D41: the freeze forbids new mechanisms. This is prompt text that steers judgment, a behaviour change, so it is ruled here and adds no node, gate or field."
+  ],
+
+  "scope": {
+    "include": ["autornd/engine/phases.py (the plan prompt and the implement prompt only)", "tests/", "docs/handover-review.md", ".orchestration/responses/", "HANDOVER.md", "README.md", "AGENTS.md", "CLAUDE.md", ".claude/context/testing.md"],
+    "exclude": [
+      "D36's four rules (phases.py:280-305): owner-supplied; do not edit a word of them.",
+      "Verdict schemas, gates, workflows/, checks: prompt text only.",
+      "evals/golden/: advisor-written."
+    ]
+  },
+
+  "constraints": [
+    "RULING FIRST, VERBATIM, in HANDOVER.md and the notebook, before the code in commit order.",
+    "RULING D43, COMMITTED VERBATIM: 'Ruling D43 (advisor, 2026-10-01) — the request sets the scope. Every success criterion must test something the request asks for: an output, figure, constraint, format or verdict the request states, or a fact the grounding supplies to answer it. A criterion may not add specifics the request did not ask for, such as component values, part numbers, presentation layout, or the exact form of a derivation. The deliverable answers the request without the plan's own devices (falsifiers, kill triggers, assumption tables) unless the request asks for them. D36's four rules keep governing how the plan is reasoned; they do not add to what the answer must contain. Rationale: ARCH-20261001-102. Q6's plan turned a two-gate logic question into an LED-drive design and validate failed a correct answer on that invented criterion; Q3's coverage check failed a correct derivation against a criterion dictating its exact inline arithmetic; Q5's deliverable carried a plan falsifier declaring \"the sizing/assumption is INVALID\" in a leak-test procedure; and answers ran a median of about 32 times their model answer’s length. Falsifier: on the next golden run, a shipped answer that fails its key on an item the request asked for and no criterion covered.'",
+    "IMPLEMENTATION: add the scope rule to the plan prompt, beside the success-criteria instruction and after D36's block, without editing D36. Add one sentence to the implement prompt: answer the request, and include the plan's falsifiers, kill triggers or assumption tables only if the request asks for them. Quote both texts verbatim in the response.",
+    "TESTS (provider-free, through the real prompt builders): assert the plan prompt carries the scope rule and D36's block byte-identical to before; assert the implement prompt carries the new sentence; prove by breaking (remove the rule and show the assertion fail). No live run here: the golden re-run (106) is the measurement.",
+    "Free. No provider call."
+  ],
+
+  "acceptance_criteria": [
+    "D43 is verbatim in HANDOVER.md and the notebook, before the code in commit order.",
+    "D36's block in phases.py is byte-identical to before (diff shown).",
+    "The prompt tests pass, and the break is quoted.",
+    "Suite green before and after. The PR is opened and delivery_state carries its number."
+  ],
+
+  "verification": [
+    {"command": "grep -n 'Ruling D43' HANDOVER.md docs/handover-review.md", "expected": "Present in both."},
+    {"command": "git diff origin/main -- autornd/engine/phases.py | grep -E '^-' | grep -v '^---'", "expected": "No removed lines inside D36's block."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass."}
+  ],
+
+  "rollback": "Revert the merge. The prompts return to their present text.",
+
+  "deliverable": {"branch": "arch/20261001-105-request-sets-scope", "branch_created_by": "advisor", "pr": true, "merge": "by the advisor-custodian on green, after checking acceptance against the tree", "commit_style": "conventional"},
+
+  "transport": "Pushed by the advisor. This is the second of the owner's ordered steps. Start only after ARCH-20261001-104 has merged, and merge origin/main into this branch first. Commit the response IN_PROGRESS first.",
+
+  "assumptions": ["The plan and implement prompts are built in autornd/engine/phases.py as at main. If either has moved, follow it and say where."],
+
+  "questions": [],
+
+  "preconditions": [
+    {"command": "sed -n 278,281p autornd/engine/phases.py; sed -n 307,309p autornd/engine/phases.py", "expected": "The success-criteria instruction, the start of D36's block, and 'The success criteria are the most important thing you produce'."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green; record the count."}
+  ]
+}
