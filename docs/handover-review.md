@@ -9434,3 +9434,102 @@ asserted to land in flight), 20 file runs under 2x concurrency: 0 failures.
   classes across 55 files" (the tree has 240 across 61) and
   `.claude/context/testing.md` states "58 test files, 1045 tests". No guard
   reads either.
+
+## 87. No paid sweep without a passing preflight (executor, 2026-09-30, ARCH-20260930-096)
+
+### 87.1 What was built
+
+`autornd/evals/cli.py` runs `preflight.run()` before the results file and
+before any client exists. A failing finding, or a preflight that cannot run,
+prints every finding and returns exit 3 (`PREFLIGHT_REFUSED_EXIT`), distinct
+from 0, 1 and argparse's 2, with no results file written. `--skip-preflight`
+proceeds and records `{ran: false, override: true}`. When the gate runs, the
+header records `{ran, override, passed, findings: [{ok, name, detail}]}`.
+
+`autornd/preflight.py` gains `check_parameters`. For every function the
+client calls with (triage, engineering, architecture, escalation, research,
+search, judge, independent, ranker), it resolves the model and pin exactly
+as `OpenRouterClient.chat` does (`get_model`, `provider_order_for`). For
+each pinned provider it selects the endpoints the pin matches, and requires
+one of them to list every parameter sent on that call path:
+`response_format, max_tokens, temperature` through `chat_json`;
+`max_tokens, temperature` for search, a plain chat; none for the ranker's
+rerank API. No listing, no tags, or no `supported_parameters` field is
+reported **blind**, and blind fails. An unpinned function is reported and
+does not fail. The parameter lists are a hand list, guarded by tests that
+build the real payloads through `chat_json`, the search lookup and `rerank`.
+
+### 87.2 Measurements (free; catalogue reads only, no model call)
+
+**Pins match slugs, not display names.** 091 run 8's router error lists the
+six endpoint tags it removed for the pin `google`
+(google-ai-studio[/flex|/priority], google-vertex/global[...]); none has
+`google` as its slug. Today's catalogue gives the Vertex rows
+provider_name "Google", so the old pin check, which matches display names,
+passes that pin. Selection is therefore by tag: an exact tag, else the tag's
+first segment, case ignored. Pins written `Nebius` and `DigitalOcean` served
+live against `nebius/fp8` and `digitalocean`, and an exact tag
+(`google-ai-studio`) excludes its /flex and /priority rows, which the router
+removed in run 8 as rows the request had not opted into.
+
+**The sent set differs by call path.** On 094's configuration (every chat
+tier served live through its pin), all chat_json pins list the three
+parameters. The search pin (Perplexity) lists max_tokens and temperature but
+not response_format, and search never sends it; the ranker pin (Fireworks)
+lists none, and the rerank API sends none. A blanket "at least
+response_format" would have failed a pin that served.
+
+**Your configuration passes.** `python -m autornd.preflight` against the live
+configuration: 24 ok, 0 failing, all nine parameter findings ok.
+
+**Dry run** (the real `python -m autornd.evals.cli` against a local fake
+catalogue, placeholder models and pins, the API key blanked): the escalation
+pin's endpoint lacks response_format, and the CLI printed every finding and
+`refused: ... (exit 3)`. Exit code 3; 3 catalogue GETs, 0 chat or rerank
+POSTs, 0 Authorization headers received, no results file written.
+
+**Break.** The gate made to return proceed regardless of findings: test (a)
+fails with `assert 0 == 3`, because the sweep ran.
+
+### 87.3 Departures
+
+1. The required parameter set is derived per call path, not "at least
+   response_format and max_tokens" for every tier: search is a plain chat
+   and sends no response_format, and the ranker sends no chat parameters.
+   temperature is included, because the client sends it on every chat.
+2. Findings are per (function, pinned provider), and a pin passes if any
+   endpoint it selects lists every sent parameter: the router can serve
+   through any of them.
+3. tests/test_preflight.py gains an autouse fixture that blanks the owner's
+   OPENROUTER_PROVIDER_ORDER. config.py loads .env inside the suite, and two
+   tests that patch `_pins()` failed on the owner's real pins once `run()`
+   also read `provider_order_for`. Their subject was right; they had stopped
+   being hermetic.
+
+### 87.4 Findings for the advisor
+
+- **The old pin check reads a different configuration from the client's**
+  (the command's assumption):
+  - `_pins()` reads only tier-scoped entries, so general pins, which the
+    client applies to every tier, go unchecked.
+  - A `premium:` pin is checked, but the independent pass calls function
+    `independent`, so the client never applies it. The owner says premium
+    is not used, so nothing is affected today.
+  - With MODEL_JUDGE unset, a `judge:` pin fails as "no model is set", while
+    the client applies it to the engineering model. The gate would refuse
+    that configuration.
+
+  The new check reads what the client reads, so it sees all three
+  correctly. The old check is unchanged.
+- **Runs 2 and 8, answered offline from their own traces.**
+  - **Run 8:** refused. The pin `google` selects none of the six tags in
+    the router's error; the gate exits 3 before any call (the run made 0
+    calls and spent nothing).
+  - **Run 2:** refused, by inference. The pin `Relace` selects `relace/fp4`,
+    which the router's error says was removed "by Parameters". The trace
+    does not carry that endpoint's parameter list, so this cannot be shown
+    directly. But the payload's only model parameters are the three the
+    guard test pins, so a parameter filter removing the endpoint means its
+    listing lacked one of them. Refusing would have saved 8 calls and
+    $0.0223.
+
