@@ -14,12 +14,30 @@ from __future__ import annotations
 
 import asyncio
 
+import pytest
+
 import autornd.preflight as preflight
 from autornd.preflight import OPTIONAL_TIERS, REQUIRED_TIERS, check
 
 GOOD = {t: f"vendor/model-{t}" for t in REQUIRED_TIERS}
 KNOWN = set(GOOD.values())
 NO_PINS: dict[str, str] = {}
+
+
+@pytest.fixture(autouse=True)
+def _no_owner_pins(monkeypatch):
+    """These tests never read the owner's pins.
+
+    config.py loads .env, so settings carries the live
+    OPENROUTER_PROVIDER_ORDER inside the suite. The parameter check
+    (ARCH-20260930-096) reads it through provider_order_for, which is how the
+    client reads it. Measured 2026-09-30: two tests below that patch _pins()
+    to a controlled configuration failed on 'params engineering via Nebius'
+    and five more, all from the owner's real order string. Blank it here; a
+    test that wants pins sets them itself.
+    """
+    from autornd.config import settings
+    monkeypatch.setattr(settings, "openrouter_provider_order", "")
 
 
 def _fail_subjects(findings):
