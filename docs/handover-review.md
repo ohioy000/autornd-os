@@ -9533,3 +9533,26 @@ fails with `assert 0 == 3`, because the sweep ran.
     listing lacked one of them. Refusing would have saved 8 calls and
     $0.0223.
 
+## 88. Every env-named file but the template is ignored (executor, 2026-09-30, ARCH-20260930-097)
+
+`.gitignore` gains `.env*` and the exception `!.env.example`, beside the
+existing `.env`. The comment names 093's commit 1f7823e (`.env1`, an old
+key, swept into history and blocked by secret scanning) as the exhibit.
+`tests/test_env_ignore.py` probes `.env`, `.env1`, `.env.bak` and
+`.env.local` one at a time as ignored and `.env.example` as not ignored.
+It also checks that `git ls-files` holds no env-named basename at any depth
+other than `.env.example`, and that git actually answered before reading
+anything into it. No env file was opened, listed or moved; purging 1f7823e
+from the local object store remains the owner's decision.
+
+**The trap the test avoids.** Plain `git check-ignore` reports a tracked
+path as not ignored whatever the rules say. With `!.env.example` deleted,
+`git check-ignore -q .env.example` still exits 1 ("not ignored"), so a test
+built on it passes vacuously. `--no-index` judges the rule: the same probe
+exits 0, and the template test fails, as it should.
+
+**Prove by breaking.** `.env*` removed: `AssertionError: .env1 could be
+staged by git add` (and the same for `.env.bak` and `.env.local`; `.env`
+still passes on the original line). `!.env.example` removed: the template
+test fails. Both restored: 6 passed.
+
