@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from autornd.config import settings
+from autornd.config import settings, settings_lookup
 from autornd.engine.phases import (
     run_escalation_autopsy, run_implement, run_plan,
     run_plan_feasibility, run_review, run_triage, run_validate,
@@ -89,11 +89,11 @@ class WorkflowEngine:
         # run behaves as it did before. A watchdog end is the workflow's own
         # terminal: it lands below as status blocked with the reason in
         # `error`, the existing fields. No DB schema change (hard rule 11).
-        executor = GraphExecutor(spec, runner, settings_lookup={
-            "max_iterations": settings.max_iterations,
-            "escalation_recovery_attempts": settings.escalation_recovery_attempts,
-            "escalation_max_tokens": settings.escalation_max_tokens,
-        }, time_budget=settings.run_time_budget_seconds)
+        # Ruling D39: loop bounds come from the one shared map. This path kept
+        # its own copy, which lacked the rework bound, so any blocking review
+        # here crashed with a ConditionError instead of reaching rework.
+        executor = GraphExecutor(spec, runner, settings_lookup=settings_lookup(),
+                                 time_budget=settings.run_time_budget_seconds)
 
         try:
             state = await executor.run(request)

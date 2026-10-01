@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 from autornd import preflight
-from autornd.config import settings
+from autornd.config import settings, settings_lookup
 from autornd.evals.runner import (
     _BUDGET_EPSILON,
     ResultsLog,
@@ -107,16 +107,6 @@ def _spec(name: str):
     if candidate.suffix and candidate.exists():
         return load_spec(candidate)
     return load_spec(Path("workflows") / f"{candidate.stem}.yaml")
-
-
-def _settings() -> dict[str, int]:
-    return {
-        "max_iterations": settings.max_iterations,
-        "escalation_recovery_attempts": settings.escalation_recovery_attempts,
-        "review_rework_attempts": settings.review_rework_attempts,
-        "plan_max_tokens": settings.plan_max_tokens,
-        "escalation_max_tokens": settings.escalation_max_tokens,
-    }
 
 
 async def main() -> int:
@@ -240,7 +230,7 @@ async def main() -> int:
         pinned = [s for s in scenarios if s.workflow and s.workflow != name]
         report = await run_repeated(
             chosen, _spec(name), lambda: OpenRouterClient(),
-            _settings(), repeat=args.repeat, timeout=args.timeout,
+            settings_lookup(), repeat=args.repeat, timeout=args.timeout,
             max_spend=args.max_spend, budget=budget, results_log=results,
         )
         for scenario in pinned:
@@ -249,7 +239,7 @@ async def main() -> int:
             # compared workflow, spend the whole cap again.
             extra = await run_repeated(
                 [scenario], _spec(scenario.workflow), lambda: OpenRouterClient(),
-                _settings(), repeat=args.repeat, timeout=args.timeout,
+                settings_lookup(), repeat=args.repeat, timeout=args.timeout,
                 max_spend=args.max_spend, budget=budget, results_log=results,
             )
             report.results.extend(extra.results)
