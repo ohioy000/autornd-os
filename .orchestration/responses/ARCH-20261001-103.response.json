@@ -1,0 +1,79 @@
+{
+  "command_id": "ARCH-20261001-103",
+  "status": "DONE",
+  "executed": true,
+  "head_before": "26c7519",
+  "head_after": "e1766cf",
+  "arrival": {
+    "parent_id": "null",
+    "transport": "26c7519 arrived on the 102 branch at 21:47Z or later. The runs it orders had already been made from 21:20:14Z to 21:47:12Z, on the owner's choice of option 1 in 102's BLOCKED report, with the same flags and caps. Merged as 8fb6560."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "check": "ps aux | grep -E 'autornd|evals'",
+      "result": "PASS: no run in flight after 21:47:12Z (the owner's xed on the other checkout's .env aside)"
+    },
+    {
+      "n": 2,
+      "check": "git log origin/arch/20261001-102-golden-arm-b",
+      "result": "PASS: 26c7519 on the branch"
+    },
+    {
+      "n": 3,
+      "check": "python3 evals/golden/score.py",
+      "result": "PASS: SELF-TEST PASSED"
+    },
+    {
+      "n": 4,
+      "check": "pytest",
+      "result": "PASS: 1145 passed"
+    }
+  ],
+  "results": {
+    "authorisation": "Owner, verbatim: 'The paid step has my go ahead' (the command's caps: 0.07/0.42 golden, 0.08/0.08 IA), then '1' (run arm B with --skip-preflight, the override recorded).",
+    "override_in_headers": "Both headers: preflight {ran: false, override: true}.",
+    "gate_findings_verbatim": "26 ok, 3 failing: 'deepinfra/fp8 for thinkingmachines/inkling-small does not list response_format'; 'Moonshot AI selects no endpoint of moonshotai/kimi-k3'; 'Google selects no endpoint of google/gemini-2.5-flash'.",
+    "preregistration_ancestry": "68b6c82 is an ancestor of 94aefa4 (golden trace) and e1766cf (IA trace).",
+    "golden_table": "Q1   PASS               completed  shipped                items[++] 90.673s/300s $0.0264/0.07 risk=low sprawl=52.3 scope_out=2\nQ2   FAIL               blocked    approved, not shipped  items[++] 299.607s/300s $0.0844/0.07 risk=high sprawl=77.3 scope_out=1\nQ3   FAIL (no answer)   blocked    no answer              items[] 243.148s/300s $0.0719/0.07 risk=medium sprawl=None scope_out=None\nQ4   PASS               completed  shipped                items[+++++++] 148.72s/600s $0.0532/0.07 risk=high sprawl=10.5 scope_out=1\nQ5   FAIL               completed  shipped                items[+++++-+++-] 235.194s/600s $0.0595/0.07 risk=low sprawl=11.7 scope_out=0\n     items not held: ['Q5.6', 'ORDER']\nQ6   FAIL (no answer)   blocked    no answer              items[] 248.411s/300s $0.06/0.07 risk=low sprawl=None scope_out=None\n\n2/6 PASS · 3/6 shipped · median sprawl 32.0 · total $0.3554\n",
+    "ia_table": "IA FAIL (no answer) blocked 349.256s/600s $0.157/0.08 risk=low",
+    "reading_agreement": "Agrees on Q1, Q2, Q3, Q4, Q6 and IA. Disagrees on Q5: the answer holds Q5.6 ('zero visible leakage') and ORDER (its numbered steps are correctly ordered; a preamble table defeats first-match). On the reading Q5 passes.",
+    "predictions": {
+      "P1": "REFUTED as written; finding: the 09-26 record and these runs dispute the refusal",
+      "P2": "REFUTED, 3 of 6 shipped",
+      "P3": "REFUTED, 2 of 6 by script (3 on the reading)",
+      "P4": "HELD, every shipped run within target",
+      "P5": "REFUTED in part: sweep $0.3554 <= $0.42, but Q2 $0.0844 and Q3 $0.0719 exceeded $0.07",
+      "P6": "HELD: Q1 low, Q3 medium, Q6 low",
+      "P7": "HELD: median sprawl 32.0",
+      "P8": "REFUTED: the IA run did not ship (spend ceiling at $0.1570 of $0.08)"
+    },
+    "decision_rule": "Script: 2 of 6, the redesign branch (D41 -> redesign of the default path). Executor's reading of Q5: 3 of 6, arm C on the failed questions after a new authorisation. The advisor's ruling on the Q5 key decides.",
+    "routing_of_refused_pins": "providers_by_function: architecture DeepInfra in 7 of 7 runs; research Google in 7 of 7; escalation Moonshot AI in the IA run's one escalation call. Zero provider failures. All three refusals were false.",
+    "gate_repair_reported_not_made": "Match provider names as the router does (display names as well as tags); report a missing response_format as a warning, since the client falls back. Whether D41 allows it is the advisor's call.",
+    "spend": "$0.3554 golden + $0.1570 IA = $0.5124: $0.0124 over the owner's $0.50. The ceiling is checked after the call, so one IA escalation call ($0.1142) crossed $0.08."
+  },
+  "deviations": [
+    {
+      "what": "No IN_PROGRESS commit before the work",
+      "reason": "The command arrived after the runs it orders had been made on the owner's direct choice; the IN_PROGRESS evidence is impossible by construction."
+    },
+    {
+      "what": "Pushes of tracked docs while the IA run was in flight",
+      "reason": "Owner's explicit instruction ('report ... to the git while second set runs'). No stash, checkout or merge until both runs finished at 21:47:12Z."
+    },
+    {
+      "what": "Spend $0.0124 over the owner's $0.50",
+      "reason": "The spend ceiling is enforced after a call returns; one escalation call cost $0.1142 against an $0.08 cap. A finding, not a choice."
+    }
+  ],
+  "questions_for_advisor": [
+    "Q5's key: should Q5.6 accept 'zero visible leakage' / 'leakage: None', and should ORDER be read over the numbered steps rather than first matches anywhere? The ruling decides between redesign (2/6) and arm C (3/6).",
+    "The spend ceiling crosses its cap by the size of one call (IA: $0.1142 against $0.08). Should a pre-call estimate or a per-call max-cost guard bound it, under D41's outcome-changing-repair exception?",
+    "The gate repair as reported: allowed under D41?"
+  ],
+  "delivery_state": {
+    "branch": "arch/20261001-102-golden-arm-b",
+    "pr": 111
+  }
+}

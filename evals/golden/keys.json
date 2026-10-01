@@ -1,0 +1,565 @@
+{
+ "version": 1,
+ "written_by": "advisor (ARCH-20261001-102), 2026-10-01",
+ "normalize": [
+  "lowercase",
+  "unicode minus/dash -> '-'",
+  "'×' -> 'x'",
+  "superscripts ⁰-⁹ and ⁻ -> '^' digits",
+  "'²'->'^2', '³'->'^3', '⁴'->'^4'",
+  "remove '**' and backticks",
+  "commas between digits removed",
+  "whitespace collapsed"
+ ],
+ "pass_rule": "An item holds when every 'all' pattern matches and no 'none' pattern matches the normalized answer. A question passes when it SHIPPED (status completed), every item holds (and, for Q5, the 'order' patterns' first matches are strictly increasing), and seconds <= time_target_s.",
+ "golden": [
+  {
+   "id": "Q1",
+   "shape": "SANITY",
+   "domain": "electrical",
+   "time_target_s": 300,
+   "request": "An ideal voltage divider has a 2.00 kΩ resistor from a +12.0 V supply to its output and a 4.00 kΩ resistor from the output to ground. The output is unloaded. What are the output voltage relative to ground and the current flowing from the supply through the resistors?",
+   "items": [
+    {
+     "id": "Q1.1",
+     "item": "output voltage 8.00 V",
+     "all": [
+      "\\b8(?:\\.0+)?\\s*(?:v\\b|volts?\\b)|\\b8000\\s*mv\\b"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q1.2",
+     "item": "divider current 2.00 mA",
+     "all": [
+      "\\b2(?:\\.0+)?\\s*(?:ma\\b|milliamps?\\b|milliamperes?\\b)|\\b0\\.002(?:0+)?\\s*(?:a\\b|amps?\\b|amperes?\\b)|\\b2(?:\\.0+)?\\s*(?:x\\s*10\\s*(?:\\^|\\*\\*)?\\s*\\(?\\s*-\\s*3\\s*\\)?|e\\s*-\\s*0?3)\\s*a\\b"
+     ],
+     "none": []
+    }
+   ],
+   "scope_out": [
+    "power rating",
+    "tolerance",
+    "loading"
+   ],
+   "model_answer": "Output: +8.00 V relative to ground.\nCurrent: 2.00 mA from supply to ground.",
+   "wrong": [
+    {
+     "text": "Output: +4.00 V relative to ground.\nCurrent: 2.00 mA from supply to ground.",
+     "fails": "Q1.1"
+    },
+    {
+     "text": "Output: +8.00 V relative to ground.\nCurrent: 6.00 mA from supply to ground.",
+     "fails": "Q1.2"
+    }
+   ],
+   "variants_must_pass": [
+    "The output sits at 8 volts above ground, and 2 milliamps flow from the supply through both resistors."
+   ]
+  },
+  {
+   "id": "Q2",
+   "shape": "LOOKUP",
+   "domain": "regulation",
+   "time_target_s": 300,
+   "request": "Under the definitions in 29 CFR § 1910.146(b), July 1, 2014 edition, what oxygen concentration defines an oxygen-deficient atmosphere, and what concentration defines an oxygen-enriched atmosphere? Include the comparison operators and the concentration basis.",
+   "source": "29 CFR 1910.146(b), checked by the advisor 2026-10-01 against the LII text: 'less than 19.5 percent oxygen by volume'; 'more than 23.5 percent oxygen by volume'.",
+   "items": [
+    {
+     "id": "Q2.1",
+     "item": "deficient: less than 19.5% by volume",
+     "all": [
+      "(?:less than|below|under|<)\\s*19\\.5\\s*(?:%|percent|vol)",
+      "(?:volume|v/v|vol\\s*%|%\\s*vol)"
+     ],
+     "none": [
+      "(?:≤|<=|at or below|less than or equal to|no more than)\\s*19\\.5",
+      "19\\.5\\s*(?:%|percent)\\s*(?:oxygen\\s*)?or (?:less|below)"
+     ]
+    },
+    {
+     "id": "Q2.2",
+     "item": "enriched: more than 23.5% by volume",
+     "all": [
+      "(?:more than|greater than|above|over|exceeding|in excess of|>)\\s*23\\.5\\s*(?:%|percent|vol)",
+      "(?:volume|v/v|vol\\s*%|%\\s*vol)"
+     ],
+     "none": [
+      "(?:≥|>=|at or above|greater than or equal to|no less than)\\s*23\\.5",
+      "23\\.5\\s*(?:%|percent)\\s*(?:oxygen\\s*)?or (?:more|above|greater)"
+     ]
+    }
+   ],
+   "scope_out": [
+    "entry procedure",
+    "permit",
+    "atmospheric testing order"
+   ],
+   "model_answer": "Oxygen deficient: <19.5% oxygen by volume.\nOxygen enriched: >23.5% oxygen by volume.",
+   "wrong": [
+    {
+     "text": "Oxygen deficient: at or below 19.5% oxygen by volume.\nOxygen enriched: >23.5% oxygen by volume.",
+     "fails": "Q2.1"
+    },
+    {
+     "text": "Oxygen deficient: <19.5% oxygen by volume.\nOxygen enriched: at or above 23.5% oxygen by volume.",
+     "fails": "Q2.2"
+    },
+    {
+     "text": "Oxygen deficient: <19.5% oxygen by mass.\nOxygen enriched: >23.5% oxygen by mass.",
+     "fails": "Q2.1"
+    }
+   ],
+   "variants_must_pass": [
+    "An oxygen-deficient atmosphere has below 19.5 percent oxygen by volume; an oxygen-enriched atmosphere has greater than 23.5 percent oxygen by volume (both % v/v)."
+   ]
+  },
+  {
+   "id": "Q3",
+   "shape": "DERIVATION",
+   "domain": "mechanical",
+   "time_target_s": 300,
+   "request": "A uniform solid circular shaft has diameter 50.0 mm, length 1.00 m, and shear modulus 80.0 GPa. It carries a constant torque of 500 N·m. Assume linear-elastic Saint-Venant torsion and ignore end effects. Calculate the polar second moment of area in m^4, the maximum shear-stress magnitude in MPa, and the end-to-end twist magnitude in radians.",
+   "items": [
+    {
+     "id": "Q3.1",
+     "item": "J = 6.136e-7 m^4 (±0.2%)",
+     "all": [
+      "\\b6\\.1(?:2[4-9]|3\\d|4[0-8]?)\\d*\\s*(?:x\\s*10\\s*(?:\\^|\\*\\*)?\\s*\\(?\\s*-\\s*7\\s*\\)?|e\\s*-\\s*0?7)"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q3.2",
+     "item": "tau_max = 20.37 MPa (±0.2%)",
+     "all": [
+      "\\b20\\.(?:3[3-9]|4[01]?)\\d*\\s*(?:mpa|n/mm\\^?2)|\\b2\\.0(?:3[3-9]|4[01]?)\\d*\\s*(?:x\\s*10\\s*(?:\\^|\\*\\*)?\\s*\\(?\\+?7\\)?|e\\s*\\+?0?7)\\s*pa"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q3.3",
+     "item": "theta = 0.010186 rad (±0.2%)",
+     "all": [
+      "\\b0\\.010(?:1[7-9]|20?)\\d*\\s*(?:rad|radian)|\\b10\\.(?:1[7-9]|20?)\\d*\\s*mrad|\\b1\\.0(?:1[7-9]|20?)\\d*\\s*(?:x\\s*10\\s*(?:\\^|\\*\\*)?\\s*\\(?\\s*-\\s*2\\s*\\)?|e\\s*-\\s*0?2)\\s*(?:rad|radian)"
+     ],
+     "none": []
+    }
+   ],
+   "scope_out": [
+    "factor of safety",
+    "stress concentration",
+    "finite element",
+    "fatigue"
+   ],
+   "model_answer": "J = π(0.0500)^4/32 = 6.14 × 10^-7 m^4.\nτmax = 500(0.0250)/J = 20.4 MPa.\nθ = 500(1.00)/(80.0 × 10^9 J) = 0.0102 rad.",
+   "wrong": [
+    {
+     "text": "J = π(0.0500)^4/64 = 3.07 × 10^-7 m^4.\nτmax = 20.4 MPa.\nθ = 0.0102 rad.",
+     "fails": "Q3.1"
+    },
+    {
+     "text": "J = 6.14 × 10^-7 m^4.\nτmax = 500(0.0500)/J = 40.7 MPa.\nθ = 0.0102 rad.",
+     "fails": "Q3.2"
+    },
+    {
+     "text": "J = 6.14 × 10^-7 m^4.\nτmax = 20.4 MPa.\nθ = 0.0102 degrees.",
+     "fails": "Q3.3"
+    }
+   ],
+   "variants_must_pass": [
+    "J = 6.136e-7 m^4; maximum shear stress 20.37 MPa; twist 1.0186 × 10⁻² rad (about 0.584°)."
+   ]
+  },
+  {
+   "id": "Q4",
+   "shape": "SPECIFICATION",
+   "domain": "materials",
+   "time_target_s": 600,
+   "request": "Specify a uniform steel tie strip carrying a centered static tensile load of 6.00 kN. Its width is fixed at 20.0 mm and its length at 500 mm. Available thicknesses are 2.00, 3.00, and 4.00 mm. The allowable axial stress is 100 MPa, with equality permitted, and the steel density is 7850 kg/m^3. Select the smallest available thickness that passes. Use gross-section axial stress only; ignore holes, connections, self-weight loading, corrosion, and dimensional tolerances. Give three short sections: selected dimensions; strength check, including the stress in the next thinner available strip; and volume and mass of the selected strip.",
+   "items": [
+    {
+     "id": "Q4.1",
+     "item": "selected 20.0 x 3.00 x 500 mm",
+     "all": [
+      "\\b3(?:\\.0+)?\\s*mm",
+      "\\b20(?:\\.0+)?\\s*mm",
+      "\\b500\\s*mm|\\b0\\.50?0?\\s*m\\b"
+     ],
+     "none": [
+      "(?:select|selected|choose|chosen|specify|specified|adopt|use)\\w*[^.\\n]{0,30}\\b4(?:\\.0+)?\\s*mm"
+     ]
+    },
+    {
+     "id": "Q4.2",
+     "item": "area 60.0 mm^2",
+     "all": [
+      "\\b60(?:\\.0+)?\\s*(?:mm\\^?2|sq\\.?\\s*mm|square\\s+millimet)|\\b6(?:\\.0+)?\\s*(?:x\\s*10\\s*(?:\\^|\\*\\*)?\\s*\\(?\\s*-\\s*5\\s*\\)?|e\\s*-\\s*0?5)\\s*m\\^?2"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q4.3",
+     "item": "stress 100 MPa, passes at the limit",
+     "all": [
+      "\\b100(?:\\.0+)?\\s*(?:mpa|n/mm\\^?2)",
+      "pass|acceptable|satisf|meets|at the limit|equal|≤\\s*100|<=\\s*100|does not exceed|ok\\b"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q4.4",
+     "item": "2.00 mm gives 150 MPa and fails",
+     "all": [
+      "\\b150(?:\\.0+)?\\s*(?:mpa|n/mm\\^?2)",
+      "\\b2(?:\\.0+)?\\s*mm",
+      "fail|exceed|not acceptable|unacceptable|insufficient|overstress|>\\s*100|rejected|too thin"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q4.5",
+     "item": "volume 3.00e-5 m^3",
+     "all": [
+      "\\b3(?:\\.0+)?\\s*(?:x\\s*10\\s*(?:\\^|\\*\\*)?\\s*\\(?\\s*-\\s*5\\s*\\)?|e\\s*-\\s*0?5)\\s*m\\^?3|\\b30,?000\\s*mm\\^?3|\\b30(?:\\.0+)?\\s*cm\\^?3|\\b0\\.00003\\s*m\\^?3"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q4.6",
+     "item": "mass 0.2355 kg (±0.0005)",
+     "all": [
+      "\\b0\\.2(?:35\\d*|360*)\\s*kg|\\b23[56](?:\\.\\d+)?\\s*g\\b"
+     ],
+     "none": [
+      "\\b235(?:\\.\\d+)?\\s*kg"
+     ]
+    },
+    {
+     "id": "Q4.7",
+     "item": "three sections",
+     "all": [
+      "dimension",
+      "strength",
+      "volume|mass"
+     ],
+     "none": []
+    }
+   ],
+   "scope_out": [
+    "connection design",
+    "buckling",
+    "fatigue",
+    "corrosion allowance",
+    "safety factor",
+    "grade selection",
+    "procurement"
+   ],
+   "model_answer": "### Selected dimensions\nWidth 20.0 mm; thickness 3.00 mm; length 500 mm.\n\n### Strength check\nArea 60.0 mm^2; stress 6000/60.0 = 100 MPa: passes at the limit. The 2.00 mm strip gives 150 MPa: fails.\n\n### Volume and mass\nV = 60.0 × 500 = 30000 mm^3 = 3.00 × 10^-5 m^3.\nm = 7850V = 0.2355 kg.",
+   "wrong": [
+    {
+     "text": "### Selected dimensions\nWidth 20.0 mm; select thickness 4.00 mm; length 500 mm.\n\n### Strength check\nArea 80.0 mm^2; stress 75 MPa: passes. The 3.00 mm strip gives 100 MPa, at the limit, so reject it.\n\n### Volume and mass\nV = 4.00 × 10^-5 m^3.\nm = 0.314 kg.",
+     "fails": "Q4.1"
+    },
+    {
+     "text": "### Selected dimensions\nWidth 20.0 mm; thickness 3.00 mm; length 500 mm.\n\n### Strength check\nArea 60.0 mm^2; stress 100 MPa: passes at the limit. The 2.00 mm strip gives 150 MPa: fails.\n\n### Volume and mass\nV = 3.00 × 10^-5 m^3.\nm = 235.5 kg.",
+     "fails": "Q4.6"
+    }
+   ],
+   "variants_must_pass": [
+    "Selected dimensions: 20.0 mm wide, 3.00 mm thick, 500 mm long.\nStrength check: area 60 square millimetres, stress 100 N/mm² which meets the allowable (equality permitted); the 2.00 mm strip would see 150 MPa, which exceeds 100 MPa.\nVolume and mass: 30,000 mm³; mass 235.5 g."
+   ]
+  },
+  {
+   "id": "Q5",
+   "shape": "PROCEDURE",
+   "domain": "fluids",
+   "time_target_s": 600,
+   "request": "Write the ordered hydrostatic leak-test procedure for an already connected, initially unpressurized water manifold on a guarded bench. All test components are rated for 10.0 bar gauge. The bench instruction requires filling with water while the high-point vent is open until bubble-free water exits, then closing the vent before pressurization. Raise the pressure to 6.00 bar gauge, isolate the hand pump, and start the hold timer only after isolation. Do not add water during the 300 s hold. A test passes only if the pressure drop is no more than 0.20 bar and there is no visible water leakage during the hold. After assessing the result, use the release valve to depressurize and confirm 0 bar gauge before disconnecting. The completed test log shows 6.00 bar at the start of the isolated hold, 5.90 bar after 300 s, and no visible leakage throughout. Include the acceptance criteria and the verdict for this log.",
+   "items": [
+    {
+     "id": "Q5.1",
+     "item": "fill with vent open until bubble-free",
+     "all": [
+      "fill",
+      "vent",
+      "bubble[- ]?free|free of (?:air )?bubbles|no (?:air )?bubbles|without (?:air )?bubbles|air[- ]free"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q5.2",
+     "item": "close the vent before pressurizing",
+     "all": [
+      "clos\\w*\\s+(?:the\\s+)?(?:high[- ]point\\s+)?vent"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q5.3",
+     "item": "pressurize to 6.00 bar gauge",
+     "all": [
+      "\\b6(?:\\.0+)?\\s*bar|\\b600\\s*kpa"
+     ],
+     "none": [
+      "(?:raise|pressuri[sz]e|increase|pump)\\w*[^.\\n]{0,25}\\bto\\s*10(?:\\.0+)?\\s*bar"
+     ]
+    },
+    {
+     "id": "Q5.4",
+     "item": "isolate the pump, then start the timer",
+     "all": [
+      "isolat",
+      "(?:start|begin)\\w*[^.\\n]{0,30}(?:timer|timing|clock|hold)"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q5.5",
+     "item": "300 s hold, no water added, watch for leakage",
+     "all": [
+      "\\b300\\s*s|\\b5\\s*min|five minutes",
+      "(?:do not|don't|no|without|must not|never)\\s[^.\\n]{0,30}(?:add|top[- ]?up|pump|repressuri)",
+      "leak"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q5.6",
+     "item": "pass only if drop <= 0.20 bar and no visible leakage",
+     "all": [
+      "(?:≤|<=|no more than|not more than|not exceed\\w*|at most|maximum of|up to)\\s*0\\.20?\\s*bar|0\\.20?\\s*bar\\s*(?:or less|max)",
+      "no (?:visible )?(?:water )?leak"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q5.7",
+     "item": "logged drop 0.10 bar",
+     "all": [
+      "\\b0\\.10?\\s*bar|\\b10\\s*kpa|\\b100\\s*mbar"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q5.8",
+     "item": "verdict PASS",
+     "all": [
+      "\\bpass(?:es|ed)?\\b|\\bacceptable\\b"
+     ],
+     "none": [
+      "(?:verdict|result)\\s*(?:for this log)?\\s*[:=–-]?\\s*\\**\\s*fail"
+     ]
+    },
+    {
+     "id": "Q5.9",
+     "item": "release, confirm 0 bar, then disconnect",
+     "all": [
+      "release valve|depressuri[sz]|bleed",
+      "\\b0(?:\\.0+)?\\s*bar",
+      "disconnect"
+     ],
+     "none": []
+    }
+   ],
+   "order": [
+    "fill",
+    "clos\\w*\\s+(?:the\\s+)?(?:high[- ]point\\s+)?vent",
+    "isolat",
+    "(?:start|begin)\\w*[^.\\n]{0,30}(?:timer|timing|clock|hold)",
+    "release valve|depressuri[sz]",
+    "disconnect"
+   ],
+   "scope_out": [
+    "test at 10 bar",
+    "gas test",
+    "external standard",
+    "structural design"
+   ],
+   "model_answer": "1. Fill with water through the open high-point vent until bubble-free water exits.\n2. Close the vent; pressurize to 6.00 bar gauge.\n3. Isolate the hand pump, then start the timer.\n4. Hold for 300 s without adding water; observe for leakage.\n5. Pass only with pressure drop ≤ 0.20 bar and no visible leakage; otherwise fail. Logged drop: 6.00 − 5.90 = 0.10 bar, with no leakage: PASS.\n6. Open the release valve, confirm 0 bar gauge, then disconnect.",
+   "wrong": [
+    {
+     "text": "1. Fill with water through the open high-point vent until bubble-free water exits.\n2. Close the vent; pressurize to 10.0 bar gauge.\n3. Isolate the hand pump, then start the timer.\n4. Hold for 300 s without adding water; observe for leakage.\n5. Pass only with pressure drop ≤ 0.20 bar and no visible leakage. Logged drop 0.10 bar: PASS.\n6. Open the release valve, confirm 0 bar gauge, then disconnect.",
+     "fails": "Q5.3"
+    },
+    {
+     "text": "1. Fill with water through the open high-point vent until bubble-free water exits.\n2. Close the vent; pressurize to 6.00 bar gauge.\n3. Start the timer, then isolate the hand pump.\n4. Hold for 300 s without adding water; observe for leakage.\n5. Pass only with pressure drop ≤ 0.20 bar and no visible leakage. Logged drop 0.10 bar: PASS.\n6. Open the release valve, confirm 0 bar gauge, then disconnect.",
+     "fails": "ORDER"
+    },
+    {
+     "text": "1. Fill with water through the open high-point vent until bubble-free water exits.\n2. Close the vent; pressurize to 6.00 bar gauge.\n3. Isolate the hand pump, then start the timer.\n4. Hold for 300 s without adding water; observe for leakage.\n5. Pass only with pressure drop ≤ 0.20 bar and no visible leakage. Logged drop 0.10 bar. Verdict: FAIL, because the final pressure is below 6.00 bar.\n6. Open the release valve, confirm 0 bar gauge, then disconnect.",
+     "fails": "Q5.8"
+    },
+    {
+     "text": "1. Fill with water through the open high-point vent until bubble-free water exits.\n2. Close the vent; pressurize to 6.00 bar gauge.\n3. Isolate the hand pump, then start the timer.\n4. Hold for 300 s without adding water; observe for leakage.\n5. Pass only with pressure drop ≤ 0.20 bar and no visible leakage. Logged drop 0.10 bar: PASS.\n6. Disconnect the manifold, then open the release valve and confirm 0 bar gauge.",
+     "fails": "ORDER"
+    }
+   ],
+   "variants_must_pass": [
+    "Step 1: with the high-point vent open, fill the manifold with water until it runs air-free. Step 2: close the high-point vent. Step 3: pressurise to 6.00 bar(g). Step 4: isolate the hand pump, then begin the 300 s hold timer; do not top up during the hold and watch for leaks. Acceptance: drop no more than 0.20 bar AND no visible leak. Log: 6.00 to 5.90 bar is a 100 mbar drop with no leakage, so the test passes. Step 5: open the release valve, confirm 0 bar gauge, then disconnect."
+   ]
+  },
+  {
+   "id": "Q6",
+   "shape": "SANITY",
+   "domain": "electrical (owner)",
+   "time_target_s": 300,
+   "request": "Describe a logic circuit where an indicator light would be lit when either the forward or aft cabin door is open and the braking system is engaged. Include: logic, polarity, and gates in the response.",
+   "source": "The owner's question, sent verbatim. The key is the owner's answer (2026-10-01): positive logic; doors into an OR gate; the OR output and brake-engaged into an AND gate; the AND output lights the indicator.",
+   "items": [
+    {
+     "id": "Q6.1",
+     "item": "positive-logic polarity stated",
+     "all": [
+      "positive[- ]logic|active[- ]high|(?:logic\\s*)?(?:1|high|true)\\s*(?:=|means|represents|indicates|corresponds to)\\s*\\w+"
+     ],
+     "none": []
+    },
+    {
+     "id": "Q6.2",
+     "item": "forward and aft doors into an OR gate",
+     "all": [
+      "\\bor[- ]gate|\\bor\\s*\\(|input\\s+or\\b|∨|\\(\\s*\\w+\\s*\\+\\s*\\w+\\s*\\)",
+      "forward|fwd",
+      "\\baft\\b"
+     ],
+     "none": [
+      "\\bxor\\b|exclusive[- ]or"
+     ]
+    },
+    {
+     "id": "Q6.3",
+     "item": "OR output and brake-engaged into an AND gate",
+     "all": [
+      "\\band[- ]gate|\\band\\s*\\(|input\\s+and\\b|∧|·",
+      "brak"
+     ],
+     "none": [
+      "(?:three|3)[- ]input\\s+and"
+     ]
+    },
+    {
+     "id": "Q6.4",
+     "item": "the AND output lights the indicator",
+     "all": [
+      "illuminat|\\blit\\b|turns? on|energi[sz]|lights? (?:up|the)",
+      "indicator|lamp|light"
+     ],
+     "none": []
+    }
+   ],
+   "scope_out": [
+    "transistor-level design",
+    "specific IC part numbers",
+    "power supply design"
+   ],
+   "model_answer": "This logic circuit would use positive logic polarity where a 1, true, or high means voltage is present and the condition is active. The forward and aft cabin doors would be inputs to an OR gate because a true output is made if either door is open or both are open. The OR gate output would then be an input into an AND gate. The braking system engaged/disengaged would be the other input to the AND gate. The AND gate would only send an output to illuminate the indicator light if either or both doors are open and the braking system is engaged.",
+   "wrong": [
+    {
+     "text": "Use positive logic: 1 means active. The forward and aft door signals feed an XOR gate, whose output and the brake-engaged signal feed an AND gate that illuminates the indicator light.",
+     "fails": "Q6.2"
+    },
+    {
+     "text": "Use positive logic: 1 means active. The forward door, aft door and brake-engaged signals all feed one three-input AND gate, which illuminates the indicator light.",
+     "fails": "Q6.3"
+    }
+   ],
+   "variants_must_pass": [
+    "Assume active-high logic (HIGH = condition true). A 2-input OR gate combines FWD_DOOR_OPEN and AFT_DOOR_OPEN; its output and BRAKE_ENGAGED drive a 2-input AND gate whose output turns on the indicator lamp: LAMP = (FWD + AFT)·BRAKE."
+   ]
+  }
+ ],
+ "side_test": {
+  "id": "IA",
+  "shape": "SIDE-LOOKUP",
+  "domain": "aviation regulation (owner)",
+  "time_target_s": 600,
+  "request": "what are the qualifaications for inspection auth regaurding major alterations, (FAA-AMT),https://www.ecfr.gov/ is a good source",
+  "source": "The owner's question, sent verbatim, typos included. Key checked by the advisor 2026-10-01 against 14 CFR 65.91, 65.92, 65.93 (govinfo 2024 XML) and 65.95 (LII).",
+  "core_items": [
+   {
+    "id": "IA.1",
+    "item": "A&P, both ratings, in effect at least 3 years (65.91(c)(1))",
+    "all": [
+     "airframe",
+     "powerplant",
+     "\\b3\\s*years|three years"
+    ],
+    "none": []
+   },
+   {
+    "id": "IA.2",
+    "item": "actively engaged for the 2-year period before applying (65.91(c)(2))",
+    "all": [
+     "\\b(?:2|two)[- ]years?",
+     "activ"
+    ],
+    "none": []
+   },
+   {
+    "id": "IA.3",
+    "item": "fixed base of operations (65.91(c)(3))",
+    "all": [
+     "fixed base"
+    ],
+    "none": []
+   },
+   {
+    "id": "IA.4",
+    "item": "equipment, facilities and inspection data (65.91(c)(4))",
+    "all": [
+     "equipment|facilit",
+     "data"
+    ],
+    "none": []
+   },
+   {
+    "id": "IA.5",
+    "item": "pass a written test (65.91(c)(5))",
+    "all": [
+     "written (?:test|exam|knowledge)"
+    ],
+    "none": []
+   },
+   {
+    "id": "IA.6",
+    "item": "return to service after a major alteration only with technical data approved by the Administrator (65.95(a)(1))",
+    "all": [
+     "return to service",
+     "approved (?:technical )?data|technical data approved|data approved by the administrator|faa[- ]approved (?:technical )?data"
+    ],
+    "none": []
+   }
+  ],
+  "supplementary_items": [
+   {
+    "id": "IA.7",
+    "item": "expires March 31 of each odd-numbered year (65.92)",
+    "all": [
+     "march 31",
+     "odd"
+    ],
+    "none": []
+   },
+   {
+    "id": "IA.8",
+    "item": "renewal activity per year: 1 annual or 2 major repairs/alterations per 90 days, progressive, 8-hour refresher, or oral test (65.93)",
+    "all": [
+     "90 days",
+     "\\b8[- ]hours?|eight[- ]hours?"
+    ],
+    "none": []
+   },
+   {
+    "id": "IA.9",
+    "item": "retest no sooner than 90 days after failing (65.91(d))",
+    "all": [
+     "retest|re-?test|after (?:failing|failure)"
+    ],
+    "none": []
+   }
+  ],
+  "model_answer": "Under 14 CFR 65.91, to be eligible for an inspection authorization you must hold a currently effective mechanic certificate with both airframe and powerplant ratings, each in effect for at least 3 years; have been actively engaged for at least the 2-year period before applying in maintaining certificated aircraft; have a fixed base of operations; have the equipment, facilities and inspection data needed; and pass a written test on inspecting for return to service after major repairs and major alterations. An applicant who fails may not retest until 90 days after failing. Under 14 CFR 65.95(a)(1), an IA may inspect and approve for return to service an aircraft after a major repair or major alteration only if the work was done in accordance with technical data approved by the Administrator (not aircraft on a part 121 continuous airworthiness program). The IA expires March 31 of each odd-numbered year (65.92). Renewal (65.93) needs, in each year, one activity such as one annual inspection per 90 days, two major repairs or major alterations per 90 days, a progressive inspection, an 8-hour refresher course, or an oral test.",
+  "wrong": []
+ }
+}

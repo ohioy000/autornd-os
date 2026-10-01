@@ -1,0 +1,10 @@
+id: golden_q5
+description: ARCH-20261001-102 golden Q5 (PROCEDURE, fluids). Request byte-identical to evals/golden/keys.json; scored by evals/golden/score_trace.py, which reads the answer itself.
+request: Write the ordered hydrostatic leak-test procedure for an already connected, initially unpressurized water manifold on a guarded bench. All test components are rated for 10.0 bar gauge. The bench instruction requires filling with water while the high-point vent is open until bubble-free water exits, then closing the vent before pressurization. Raise the pressure to 6.00 bar gauge, isolate the hand pump, and start the hold timer only after isolation. Do not add water during the 300 s hold. A test passes only if the pressure drop is no more than 0.20 bar and there is no visible water leakage during the hold. After assessing the result, use the release valve to depressurize and confirm 0 bar gauge before disconnecting. The completed test log shows 6.00 bar at the start of the isolated hold, 5.90 bar after 300 s, and no visible leakage throughout. Include the acceptance criteria and the verdict for this log.
+tags:
+- golden
+- q5
+timeout: 600
+expect:
+  status: completed
+  max_calls: 40

@@ -1,0 +1,10 @@
+id: golden_q1
+description: ARCH-20261001-102 golden Q1 (SANITY, electrical). Request byte-identical to evals/golden/keys.json; scored by evals/golden/score_trace.py, which reads the answer itself.
+request: An ideal voltage divider has a 2.00 kΩ resistor from a +12.0 V supply to its output and a 4.00 kΩ resistor from the output to ground. The output is unloaded. What are the output voltage relative to ground and the current flowing from the supply through the resistors?
+tags:
+- golden
+- q1
+timeout: 300
+expect:
+  status: completed
+  max_calls: 40

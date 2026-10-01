@@ -1,0 +1,10 @@
+id: golden_q4
+description: ARCH-20261001-102 golden Q4 (SPECIFICATION, materials). Request byte-identical to evals/golden/keys.json; scored by evals/golden/score_trace.py, which reads the answer itself.
+request: 'Specify a uniform steel tie strip carrying a centered static tensile load of 6.00 kN. Its width is fixed at 20.0 mm and its length at 500 mm. Available thicknesses are 2.00, 3.00, and 4.00 mm. The allowable axial stress is 100 MPa, with equality permitted, and the steel density is 7850 kg/m^3. Select the smallest available thickness that passes. Use gross-section axial stress only; ignore holes, connections, self-weight loading, corrosion, and dimensional tolerances. Give three short sections: selected dimensions; strength check, including the stress in the next thinner available strip; and volume and mass of the selected strip.'
+tags:
+- golden
+- q4
+timeout: 600
+expect:
+  status: completed
+  max_calls: 40

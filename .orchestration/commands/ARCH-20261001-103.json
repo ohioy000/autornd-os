@@ -1,0 +1,78 @@
+{
+  "command_id": "ARCH-20261001-103",
+  "parent_id": "ARCH-20261001-102",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Unblock ARCH-20261001-102: run arm B on its 09-26 pins with --skip-preflight, recording the override. Two of the gate's three refusals reject pins that served live on 09-26, and the measurement comes before any repair of the gate.",
+
+  "evidence": [
+    ".orchestration/responses/ARCH-20261001-102.response.json: BLOCKED. Preflight reported 26 ok and 3 failing: architecture via DeepInfra ('no response_format listed'), escalation via 'Moonshot AI' ('selects no tag'), research via 'Google' ('selects no tag'). The executor's own note: two of the three refuse pins that served live, so either the catalogue changed or the gate's matching is wrong.",
+    "docs/traces/084-sane-ceilings.jsonl and docs/traces/085-cup-sensor.jsonl: the identical pin string served live on 09-26, with research on Google and architecture on DeepInfra in JSON mode, and both runs completed with no rejections.",
+    "autornd/routing/openrouter.py:454-459: on a 400 with response_format, the client retries without it. An endpoint that does not list response_format is therefore not fatal to the client.",
+    "Convention 26, and A6 in ARCH-20260930-100: the gate must refuse exactly what the client would fail on. A gate that refuses what the client runs is an instrument reporting a failure that did not happen.",
+    "D41: the measurement goes first. Repairing the gate is instrument work and waits."
+  ],
+
+  "scope": {
+    "include": [
+      "docs/traces/102-golden-arm-b.jsonl, docs/traces/102-ia-side-arm-b.jsonl, and their -STDOUT.txt and -STDERR.txt",
+      "docs/serving-ledger.md (regenerate if the traces change it)",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "autornd/preflight.py: do NOT repair the gate in this command.",
+      "autornd/, workflows/, evals/golden/: no change (D41; the keys are advisor-written).",
+      "Any pin substitution: a substitute is a different arm."
+    ]
+  },
+
+  "constraints": [
+    "RUN ARM B EXACTLY AS ARCH-20261001-102 SPECIFIES, adding --skip-preflight to both invocations (the golden sweep, then the IA side test). The results header records the override (096's field). Quote the gate's findings (26 ok, 3 failing) verbatim in the response.",
+    "A pin that really does no longer serve will end its run as a typed provider failure, at little or no cost. Score that as not shipped. It is a reading, not a reason to substitute. Do NOT substitute any pin.",
+    "Everything else in 102 stands: D41, the requests sent verbatim, runs detached and sequential, no git operation during a run, the caps (--max-spend 0.07 --max-spend-sweep 0.42 for the golden sweep; 0.08 and 0.08 for the IA side test), scoring with evals/golden/score_trace.py plus your reading agreement, and the decision rule.",
+    "SPEND GATE: the owner's one-line authorisation, stating the caps, before the first paid call. 102 asked for it; if it has not been given, ask again and stop.",
+    "PRE-REGISTRATION: 68b6c82 (102's) is the pre-registration. Confirm it is an ancestor of every trace commit, and do not edit it. Score P1 as REFUTED as written (the gate refused), and add, as a recorded finding, that the 09-26 live record disputes the refusal. Score P2 to P8 from the runs.",
+    "After the result, report (do not make) the gate repair: match provider names the way the router does, and report a missing response_format as a warning, since the client falls back. Whether it may be done under D41 is the advisor's call."
+  ],
+
+  "acceptance_criteria": [
+    "Both invocations ran with --skip-preflight, the override is recorded in the headers, and the owner's authorisation is quoted with its caps.",
+    "The traces are committed after the pre-registration (ancestry shown).",
+    "The response gives score_trace.py's tables for both traces, the reading agreement for every item, P1 to P8, and the decision rule applied with its outcome.",
+    "`git diff --stat origin/main -- autornd/ workflows/ evals/golden/` is empty on this branch beyond what 102 added (no gate repair).",
+    "Suite green. The PR (#111) carries 102 and 103 together, and delivery_state carries its number."
+  ],
+
+  "verification": [
+    {"command": "head -1 docs/traces/102-golden-arm-b.jsonl | python3 -c \"import json,sys; h=json.loads(sys.stdin.read()); print(h.get('preflight'))\"", "expected": "The override is recorded."},
+    {"command": "git merge-base --is-ancestor 68b6c82 HEAD && echo prereg-precedes", "expected": "prereg-precedes"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass."}
+  ],
+
+  "rollback": "Not applicable: a measurement bounded by $0.50.",
+
+  "deliverable": {"branch": "arch/20261001-102-golden-arm-b", "branch_created_by": "advisor (102); this command is pushed onto it so the runs sit next to their pre-registration", "pr": true, "merge": "PR #111, by the advisor-custodian on green, after checking acceptance against the tree", "commit_style": "conventional"},
+
+  "transport": "Pushed by the advisor onto the 102 branch. Pull with --ff-only before starting. Commit this command's response IN_PROGRESS first. 102's response stays as written (BLOCKED, with its free work done); this command carries the paid part.",
+
+  "assumptions": [
+    "The router still accepts the 09-26 provider display names, as it did on 09-26. If it does not, the runs end as typed provider failures, and that is the finding."
+  ],
+
+  "questions": [
+    "For each pin the gate refused, did the run actually route there? Read serving_observed or providers_by_function from the record."
+  ],
+
+  "preconditions": [
+    {"command": "ps aux | grep -E 'autornd|evals' | grep -v grep", "expected": "No output."},
+    {"command": "git fetch --prune origin && git log --oneline -3 origin/arch/20261001-102-golden-arm-b", "expected": "This command's carriage commit on top of 68b6c82 (102's pre-registration)."},
+    {"command": "python3 evals/golden/score.py", "expected": "SELF-TEST PASSED"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green; record the count."}
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "command_id": "ARCH-20261001-102",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Record the freeze (Ruling D41) and measure whether the harness gives correct answers quickly on the 09-26 lineup: run the golden set (six questions plus one side test) once on the current code with that lineup (arm B), and score every answer with the advisor's keys.",
+
+  "evidence": [
+    "Since 09-29, 0 of 7 recorded live runs have shipped an answer: 090 x2, 094, 098 x3, and the owner's IA run (docs/traces/090-d34-live.jsonl, 094-cup-grounded.jsonl, 098-d37-firing.jsonl, adhoc-20261001-ia-major-alterations.jsonl). On 09-26, 2 of 2 shipped: 084 in 205 s for $0.057, and 085 in 196 s for $0.068 (docs/traces/084-sane-ceilings.jsonl, 085-cup-sensor.jsonl).",
+    "The 09-26 lineup, from those headers: triage deepseek/deepseek-v4-flash (Alibaba), engineering z-ai/glm-5 (StreamLake), architecture thinkingmachines/inkling-small (DeepInfra), escalation moonshotai/kimi-k3 (Moonshot AI), research google/gemini-2.5-flash (Google), search perplexity/sonar (Perplexity), ranker qwen/qwen3-reranker-8b (Fireworks), premium z-ai/glm-5.3-prime (Alibaba). There was no judge tier, so judging ran on engineering.",
+    "From 09-30, with mimo-v2.6-pro as architect and kimi-k2.5 as judge, every run spent 85-97% of its wall time in plan and judge calls. A single plan call took 409-1,097 s (098, IA) against 23-47 s on 09-26, and judging took 972-3,078 s against 92-121 s.",
+    "The owner confirmed the freeze, and chose to test only arm B (the 09-26 lineup on current code), and arm C (the 09-26 code) only if needed, within $0.50 (advisor session, 2026-10-01).",
+    "The golden set, its keys and its scorer are advisor-written and committed on this branch, in the commit after this command: evals/golden/keys.json, score.py, SOURCE.md and generator-output-20261001.json. The self-test passes: every model answer holds every item, every listed wrong answer is caught, and every alternative phrasing holds. SOURCE.md records what the advisor checked, including the regulation texts.",
+    "autornd/evals/assertions.py figures_present searches the grounding, not the answer (_researched_text), so it cannot score an answer. It is in evals/scenarios/convergence/conv_cup_line_sensor_grounded.yaml because of the advisor's 094 command, which was an error."
+  ],
+
+  "scope": {
+    "include": [
+      "evals/scenarios/golden/ (new: six scenario files and one side-test file)",
+      "evals/golden/score_trace.py (new: reads a results JSONL and calls score.py)",
+      "tests/test_golden_keys.py (new: the self-test as a guard)",
+      "evals/scenarios/convergence/conv_cup_line_sensor_grounded.yaml (remove figures_present only)",
+      "docs/preregistration-102-golden-arm-b.md (new, committed BEFORE any spend)",
+      "docs/traces/102-golden-arm-b.jsonl, docs/traces/102-ia-side-arm-b.jsonl, and their -STDOUT.txt and -STDERR.txt",
+      "docs/serving-ledger.md (regenerate if the traces change it)",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "evals/golden/keys.json, score.py, SOURCE.md and generator-output-20261001.json: advisor-written ground truth. Do not edit them; report any defect.",
+      "autornd/ and workflows/: no harness change of any kind (D41).",
+      ".env and every .env* file: the lineup is applied ONLY as an environment prefix (G-3)."
+    ]
+  },
+
+  "constraints": [
+    "RULING FIRST, VERBATIM, in HANDOVER.md and the notebook, before anything else in commit order.",
+    "RULING D41, COMMITTED VERBATIM: 'Ruling D41 (advisor, 2026-10-01; confirmed by the owner) — a freeze on mechanisms until the harness ships. Until the golden set (evals/scenarios/golden/, keys in evals/golden/keys.json) passes at least 5 of its 6 questions on one lineup, no new node, loop, gate, verdict field, run-record field or process ruling is added to the harness. Two kinds of change remain allowed: repairs of silent failures that change outcomes, and the measurement needed to score the golden set. Rationale: 2 of 2 recorded runs shipped an answer on 09-26 (084 and 085, about 3 minutes and 6 cents each), and 0 of 7 have shipped since 09-29, while 8 of the advisor's 10 commands in that period were instrument or process work. The freeze lifts on the golden condition. If the best measured arm passes fewer than 3 of 6, the freeze turns into a redesign of the default path (a fast path, and research-first answers for lookup questions), which then comes before any other work.'",
+    "SEND REQUESTS VERBATIM. Each scenario's request is the exact 'request' string from evals/golden/keys.json, byte for byte. Add NO instruction, clause, context or verification request of any kind. The IA side test keeps the owner's typos. (The IA run's executor-added clause is the exhibit.)",
+    "SCENARIOS: one file per golden question (Q1-Q6) and one for the IA side test, in evals/scenarios/golden/. Use the default profile. timeout = that question's time_target_s (300 or 600). expect: status completed and max_calls 40. Do NOT use figures_present.",
+    "SCORING: evals/golden/score_trace.py reads a results JSONL. The answer text is verdicts.implement.summary for a completed run. For a blocked run with watchdog.approved.index set, it is iterations[index].implement_summary, scored as 'approved, not shipped' (diagnostic only). Otherwise there is no answer. It scores with evals/golden/score.py and prints, per question: shipped, each item held or not, order (Q5), seconds against target, cost against cap, triage risk, sprawl (answer characters / model-answer characters, and how many scope_out terms appear), and pass or fail under keys.json's pass_rule. Then, by reading, record in the response whether you agree with every script verdict. A disagreement is a finding about the key; report it rather than adjust anything.",
+    "GUARD (D41's measurement exception): tests/test_golden_keys.py runs the self-test (model answers hold, wrong answers are caught, variants hold, the IA model answer holds its core items) and proves it can fail by corrupting one pattern in a copy of keys.json.",
+    "RECORD CORRECTION: remove figures_present from conv_cup_line_sensor_grounded.yaml, with a one-line comment pointing at evals/golden/SOURCE.md ('Why not figures_present').",
+    "ARM B, AS AN ENVIRONMENT PREFIX ONLY (never written to .env): MODEL_TRIAGE=deepseek/deepseek-v4-flash MODEL_ENGINEERING=z-ai/glm-5 MODEL_ARCHITECTURE=thinkingmachines/inkling-small MODEL_ESCALATION=moonshotai/kimi-k3 MODEL_RESEARCH=google/gemini-2.5-flash MODEL_SEARCH=perplexity/sonar MODEL_RANKER=qwen/qwen3-reranker-8b MODEL_PREMIUM=z-ai/glm-5.3-prime MODEL_JUDGE= OPENROUTER_PROVIDER_ORDER='triage:Alibaba,architecture:DeepInfra,engineering:StreamLake,search:Perplexity,research:Google,escalation:Moonshot AI,ranker:Fireworks,premium:Alibaba'. MODEL_JUDGE is deliberately empty, so judging falls back to engineering as on 09-26. Record in the response every effective non-secret setting the run used: models, pins, token ceilings and loop bounds.",
+    "PREFLIGHT: the automatic gate (096) must pass with the arm B prefix. If any 09-26 pin no longer serves, STOP and report BLOCKED with the findings. Do NOT substitute a pin: a substitute is a different arm.",
+    "PRE-REGISTRATION (commit before spend; copy verbatim): P1, preflight passes on every 09-26 pin. P2, at least 5 of 6 golden questions SHIP (status completed). P3, at least 5 of 6 golden questions PASS (shipped, every item, within target). P4, every shipped golden run is within its time target. P5, the golden sweep costs at most $0.42 and each run at most $0.07. P6, triage reads low or medium on at least 2 of the 3 simplest questions (Q1, Q3, Q6). P7, sprawl persists on this lineup: the median ratio of answer to model-answer length is above 10. P8 (side test), the IA run ships with all six core items. DECISION RULE: 5 or 6 golden passes means the 09-30 lineup was the regression, D41's condition is met, and the next work is the owner's standing re-pin (G-2) and the fast-path question. 3 or 4 passes means arm C (the 09-26 code at f94e62d, its own virtualenv, the same prefix) runs on the failed questions only, after a NEW owner authorisation. Fewer than 3 means a design problem, and D41 turns into the redesign of the default path.",
+    "SPEND GATE: the owner's one-line authorisation, stating the caps, before the first paid call. Proposed: the golden sweep with --max-spend 0.07 --max-spend-sweep 0.42 (exactly six runs fit the fit rule), then the IA side test with --max-spend 0.08 --max-spend-sweep 0.08. Total at most $0.50. At $0.08 the IA run may stop on spend if it buys a high-risk lookup; that would be a reading, not an error.",
+    "RUN DETACHED: run with setsid or nohup, never in a foreground session (the lost logic run is the exhibit). Run sequentially: the golden sweep, then the IA side test. No git operation while a run is in flight.",
+    "No re-run, no retry and no arm C without a new owner authorisation."
+  ],
+
+  "acceptance_criteria": [
+    "D41 is verbatim in HANDOVER.md and the notebook, first in commit order.",
+    "Seven scenario files whose requests are byte-identical to keys.json (the response shows a script comparing them).",
+    "tests/test_golden_keys.py passes, and its break is quoted.",
+    "The pre-registration precedes the traces. The owner's authorisation is quoted with its caps.",
+    "The response gives score_trace.py's table for both traces, the executor's reading agreement for every item, P1-P8 scored, and the decision rule applied.",
+    "`git diff --stat origin/main -- autornd/ workflows/` is empty.",
+    "Suite green before and after. The PR is opened and delivery_state carries its number."
+  ],
+
+  "verification": [
+    {"command": "python3 evals/golden/score.py", "expected": "SELF-TEST PASSED"},
+    {"command": "grep -n 'Ruling D41' HANDOVER.md docs/handover-review.md", "expected": "Present in both."},
+    {"command": "grep -rn figures_present evals/scenarios/", "expected": "No output."},
+    {"command": "git diff --stat origin/main -- autornd/ workflows/", "expected": "Empty."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count before and after."}
+  ],
+
+  "rollback": "Not applicable: a measurement bounded by $0.50. The scenarios, scorer and guard are additive.",
+
+  "deliverable": {"branch": "arch/20261001-102-golden-arm-b", "branch_created_by": "advisor (the command, then the advisor-written golden files, are its first two commits)", "pr": true, "merge": "by the advisor-custodian on green, after checking acceptance against the tree", "commit_style": "conventional"},
+
+  "transport": "Pushed by the advisor. D41 is in force from this command. Commit the response IN_PROGRESS first. Setup note: if the executor's clone still imports autornd from another checkout, give it its own virtualenv before running.",
+
+  "assumptions": [
+    "The 09-26 pins may no longer serve. Preflight decides that, and a dead pin is a BLOCKED report, not a substitution."
+  ],
+
+  "questions": [
+    "Where a script verdict and your reading disagree, quote the answer lines and say which one the key should follow.",
+    "For any golden question that fails, which node took the time, and did the answer already exist in an approved iteration?"
+  ],
+
+  "preconditions": [
+    {"command": "ps aux | grep -E 'autornd|evals' | grep -v grep", "expected": "No output."},
+    {"command": "git fetch --prune origin && git log --oneline -2 origin/arch/20261001-102-golden-arm-b", "expected": "The advisor's two commits: this command, then the golden files."},
+    {"command": "python3 evals/golden/score.py", "expected": "SELF-TEST PASSED"},
+    {"command": "grep -n 'figures_present' evals/scenarios/convergence/conv_cup_line_sensor_grounded.yaml", "expected": "Present before the correction."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green; record the count."}
+  ]
+}

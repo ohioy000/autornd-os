@@ -1,0 +1,10 @@
+id: golden_q6
+description: ARCH-20261001-102 golden Q6 (SANITY, electrical (owner)). Request byte-identical to evals/golden/keys.json; scored by evals/golden/score_trace.py, which reads the answer itself.
+request: 'Describe a logic circuit where an indicator light would be lit when either the forward or aft cabin door is open and the braking system is engaged. Include: logic, polarity, and gates in the response.'
+tags:
+- golden
+- q6
+timeout: 300
+expect:
+  status: completed
+  max_calls: 40

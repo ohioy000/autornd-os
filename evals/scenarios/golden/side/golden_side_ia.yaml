@@ -1,0 +1,10 @@
+id: golden_side_ia
+description: ARCH-20261001-102 golden IA (SIDE-LOOKUP, aviation regulation (owner)). Request byte-identical to evals/golden/keys.json; scored by evals/golden/score_trace.py, which reads the answer itself.
+request: what are the qualifaications for inspection auth regaurding major alterations, (FAA-AMT),https://www.ecfr.gov/ is a good source
+tags:
+- golden
+- ia
+timeout: 600
+expect:
+  status: completed
+  max_calls: 40

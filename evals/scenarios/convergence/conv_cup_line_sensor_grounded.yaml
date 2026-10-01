@@ -26,8 +26,5 @@ expect:
   max_calls: 40
   status: completed
   risk_at_least: medium
-  figures_present:
-    - "23.995"
-    - "0.00483"
-    - "LV-N11N"
-    - "214"
+  # The figure-presence assertion was removed (ARCH-20261001-102): it searches the grounding, not
+  # the answer; see evals/golden/SOURCE.md, the section on why it is not used.
