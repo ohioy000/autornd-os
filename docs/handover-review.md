@@ -9822,3 +9822,78 @@ at 1.0 stands until the ruling.
 
 Execution record: implementation follows in the commits after this
 section's ruling commit, per the command's commit order.
+
+### 90.1 What was built (executor, 2026-10-01)
+
+`autornd.config.settings_lookup()` returns the loop bounds a workflow names
+by setting, `LOOP_BOUND_SETTINGS = (max_iterations,
+escalation_recovery_attempts, review_rework_attempts)`, read from `settings`
+when called, so a runtime settings change reaches the next run on both
+paths. `engine/workflow.py` (the API path) and `evals/cli.py` (both
+`run_repeated` call sites) call it. The API path's inline map and the
+CLI's `_settings()` are deleted.
+
+**Reference check (convention 19).** Every `GraphExecutor(` outside the
+executor: `engine/workflow.py:92` and `evals/runner.py:782`. The runner
+receives its lookup as a parameter from `evals/cli.py`, whose `_settings()`
+had two callers (lines 243 and 252), both now `settings_lookup()`. No other
+production code builds a lookup. Tests construct their own, for their own
+graphs. The command's assumption holds.
+
+**Two entries were not carried over.** The CLI map also held
+`plan_max_tokens` and `escalation_max_tokens`, and the API map held
+`escalation_max_tokens`. Nothing read them from the lookup:
+`GraphExecutor` reads `self.settings` only in `_budget`, and
+`adapter._max_tokens` resolves named ceilings from the settings module (as
+the command's evidence says). Carrying them would have made the map look
+like it governed token ceilings.
+
+### 90.2 Measurements (free, no provider call)
+
+`tests/test_settings_map.py`, 5 tests:
+
+- **The guard** loads every `workflows/*.yaml` through `graph.spec.load` and
+  collects each node whose `max_iterations` is a string. It asserts the set
+  is non-empty and contains `(engineering-rnd.yaml, review_rework_loop,
+  review_rework_attempts)`, then that every named setting is in the map. A
+  third test shows the map reads live settings.
+- **The API path** drives `WorkflowEngine.execute` through engineering-rnd
+  with the billing double. The loop bounds are set distinct (5, 1, 4),
+  because the suite reads the owner's `.env`. Review that blocks once:
+  `completed`, error None, phase records `{(review, 1), (rework_review,
+  1)}`. Review that always blocks: `rework_review` iterations `[1, 2, 3, 4]`,
+  the configured review_rework_attempts, then one escalation record. The
+  double's escalation requires a human, so the run ends `blocked` at the
+  recoverable gate, not in a crash.
+
+**Prove by breaking.**
+- `review_rework_attempts` removed from `LOOP_BOUND_SETTINGS`: "a shipped
+  workflow names a loop bound the shared settings map does not carry (Ruling
+  D39's falsifier): [('engineering-rnd.yaml', 'review_rework_loop',
+  'review_rework_attempts')]". The API tests fail with "ConditionError: loop
+  'review_rework_loop' wants max_iterations from setting
+  'review_rework_attempts', which is not available; known:
+  ['escalation_recovery_attempts', 'max_iterations']".
+- The pre-fix `engine/workflow.py` restored, with the shared map intact:
+  both API tests fail with the same ConditionError and the known list
+  `['escalation_max_tokens', 'escalation_recovery_attempts',
+  'max_iterations']`, which is 095's report verbatim. The guard passes in
+  that state, because the guard reads the map and the API tests read the
+  path.
+
+Suite 1107 to 1112, test files 63 to 64. `git diff --stat origin/main --
+workflows/ autornd/graph/` is empty, and no setting value changed.
+
+### 90.3 Departures
+
+1. **The shared map carries loop bounds only** (90.1): the two token
+   entries were read by nothing.
+2. **The test drives the API path with `requires_human` escalation.**
+   recovery_loop also contains `rework_review`, so a recoverable escalation
+   would mix recovery iterations into the count the test reads.
+
+### 90.4 Findings for the advisor
+
+- **HANDOVER §3.7's per-file table lists 55 of the 64 test files**, and no
+  guard reads its rows (only the total). It is a hand list of the kind D29
+  deletes.
