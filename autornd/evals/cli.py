@@ -167,13 +167,20 @@ async def main() -> int:
         permitted = budget.units_that_can_ever_start(args.max_spend)
         wanted = len(scenarios) * len(targets) * args.repeat
         if permitted is not None and permitted < wanted:
+            # R9 (ARCH-20261001-101): a worst case, said as one. A unit
+            # starts while spent-so-far plus its cap fits, so units that
+            # spend under their cap let more start. 098 was warned "permits
+            # at most 2" and ran 3.
             print(
-                f"⚠ this configuration permits at most {permitted} unit(s), "
-                f"not the {wanted} requested: {wanted} × ${args.max_spend:.2f} "
-                f"exceeds the ${budget.cap:.2f} sweep cap. The fit rule will "
-                f"skip the rest before they start. Raise --max-spend-sweep to "
-                f"${wanted * args.max_spend:.2f}, or lower --max-spend to "
-                f"${budget.cap / wanted:.4f}, if you want the full sample.\n"
+                f"⚠ in the worst case this configuration permits only "
+                f"{permitted} of the {wanted} unit(s) requested: {wanted} × "
+                f"${args.max_spend:.2f} exceeds the ${budget.cap:.2f} sweep cap. "
+                f"A unit starts only while the spend so far plus "
+                f"${args.max_spend:.2f} fits the cap, so more start if earlier "
+                f"units spend less than their cap. To guarantee the full "
+                f"sample, raise --max-spend-sweep to "
+                f"${wanted * args.max_spend:.2f} or lower --max-spend to "
+                f"${budget.cap / wanted:.4f}.\n"
             )
 
     # Free, before the results file and before any client exists. A refused

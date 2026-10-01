@@ -1,0 +1,70 @@
+{
+  "command_id": "ARCH-20261001-101",
+  "parent_id": "ARCH-20260930-098",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Answer the seven questions ARCH-20260930-098 raised, rule that the watchdog keys pace by node (D40), and make the run record state exactly what happened in the five places 098 found it did not.",
+
+  "evidence": [
+    ".orchestration/responses/ARCH-20260930-098.response.json: questions_for_advisor (seven) and findings (nine). The answers below follow its numbering.",
+    "docs/traces/098-d37-firing.jsonl, run 1: regrounding.blockers_second_pass lists two blockers with rounds 0. They are feasibility's 'hard blockers', which autornd/engine/phases.py:388 appends to plan.blockers in place (plan.blockers.extend(all_blockers)).",
+    "docs/traces/098-d37-firing.jsonl: every unit record has error null and no terminal sentence, though every run ended on its own watchdog terminal. The context verdict carries asked, chars, detail, grounded, passed and rounds, but not what the grounding's lookup returned, so a path-A reading is blind.",
+    "docs/traces/098-d37-firing-STDOUT.txt:12 reads '1/1 scenarios passed every repetition' although all three runs ended blocked; the scenario's only assertion was max_calls. Line 1 warns the configuration 'permits at most 2 unit(s)' as a certainty, and three ran.",
+    "098's response, Q2 block: same-node call ratios reach at most 1.624 (engineering, n=4) and 1.118 (judge, n=3). Tier-keyed ratios reach 5.733 and 3.030 only because they compare implement with feasibility, and review with validate.",
+    "098's findings: the plan step took 409-448 s against 094's 102 s, on the same serving at the same throughput, because it wrote 20,851-22,244 completion tokens against 094's 5,348 under the same plan rules.",
+    "D30: this is the batch's second process command. ARCH-20260930-100 was issued before 098's questions existed and cannot answer them."
+  ],
+
+  "scope": {
+    "include": ["autornd/graph/executor.py (pace keying and slow-call flags only)", "autornd/graph/adapter.py (record fields only)", "autornd/knowledge/context.py (expose what the grounding lookup returned)", "autornd/evals/runner.py", "autornd/evals/cli.py (warning and summary wording only)", "tests/", "docs/handover-review.md", ".orchestration/responses/", "HANDOVER.md", "README.md", "AGENTS.md", "CLAUDE.md", ".claude/context/testing.md"],
+    "exclude": ["autornd/engine/phases.py: the in-place extend at :388 stays. What the implement phase reads is an open ruling, not this command's business.", "Prompts, workflows/, autornd/routing/: unchanged.", "Every gate and judge conclusion: unchanged, except D40's pre-start keying."]
+  },
+
+  "constraints": [
+    "ANSWERS AND THE RULING, VERBATIM IN THE NOTEBOOK (and D40 in HANDOVER.md), BEFORE THE REPAIRS IN COMMIT ORDER:",
+    "A8 (098 Q1, paths): classify all three runs as path K, 'the planner supplied the figure from its own knowledge, with a basis', a path the pre-registration did not name. The omission is the advisor's design error: the removed figure was textbook knowledge, so it never became an unknown. A live D37 firing needs a gap that is not textbook knowledge, decides feasibility (so D36 rule 2 names it as a blocker), and can be found by a lookup. That combination is contrived, so no further live D37 attempt is ordered. D37's live record stands at quiet on 4 of 4 grounded runs, with its firing path proved provider-free.",
+    "A9 (Q2, sourcing): yes, as a scoring rule. A figure that sets a deliverable's numbers must state its basis (a cited standard, a shown derivation, or a document); without one it scores PARTIAL. This is convention 13 applied to scoring. It is NOT added to the prompts: prompt text that steers judgment is a behaviour change, and 098's plans already ran four times longer than 094's under the same rules.",
+    "A10 (Q3): a derivation shown from stated constants is a stated source (convention 13: derived, with the method). Run 1's item 3 stays HELD.",
+    "A11 (Q4): not path E. A two-significant-figure rounding of an in-band value, stated beside the full value, is not a wrong figure. It is a lapse of D36 rule 3 (one number everywhere) and is recorded as that. Run 2's item 3 stays PARTIAL for its missing source.",
+    "A12 (Q5): PARTIAL stands. The key asked for the computed minimum (22.795 V). A deliberate conservative bound is a different figure, and its derivation carries the service-loop unit error the final review caught.",
+    "A13 (Q6): ruled as D40 below.",
+    "A14 (Q7): yes, within 100's R2. A terminal that points at a build-approved implementation which a later gate refused must say so in the same sentence: 'agreed by the build judges, refused by the final review: not approved'. 'Judge-approved' never appears unqualified for a refused artifact (D22). If 100 merged without this, make the change here.",
+    "RULING D40, COMMITTED VERBATIM: 'Ruling D40 (advisor, 2026-10-01) — the watchdog keys pace by node. A call's pace is the slowest completed call of the same node, in the same tier, in this run; when that node has no completed call yet, the tier's slowest completed call is used, and the record says which. Slow-call flags compare a call with its own node's earlier calls, at a multiple of 2.0, and stay flag-only. Rationale: ARCH-20260930-098 measured same-node ratios up to 1.624 (engineering, n=4) and 1.118 (judge, n=3), while tier-keyed ratios reached 5.733 and 3.030 only because they compared implement with feasibility, and review with validate. A flag that compares different work flags nothing real (convention 26). The multiple is provisional at 3 to 4 observations per node and is revisited at 10. Amends D38’s “pace for that call’s tier”. Falsifier: a node-keyed pre-start decision that ends a run where a tier-keyed one would have continued, and the call not started is shown by later runs to fit.'",
+    "R5 (D40): key pace and slow-call flags as D40 rules, and record pace_basis ('node' or 'tier') in the watchdog record.",
+    "R6 (098 finding 1): the context record carries what the first grounding's lookup asked AND what it returned (findings, or at least the figures in them), with any truncation bound stated, so a path-A reading is no longer blind.",
+    "R7 (finding 2): the regrounding block's blockers_second_pass is [] unless rounds is 1. Feasibility's hard blockers are recorded under their own key (feasibility_blockers) in the unit record. Do NOT remove the extend at phases.py:388.",
+    "R8 (finding 4): the unit record carries the workflow's terminal sentence (state.reason) for every terminal, the watchdog's included.",
+    "R9 (findings 6 and 7): the sweep warning states the fit rule's worst case as a worst case, not a certainty. The summary line shows each scenario's terminal statuses beside its assertion results, so 'passed' never stands alone when every run ended blocked.",
+    "TESTS (convention 22, and 094's lesson): drive real paths and read every new field back FROM THE WRITTEN RECORD, not from memory. Prove each by breaking it, and quote the breaks.",
+    "Free. No provider call."
+  ],
+
+  "acceptance_criteria": [
+    "A8 to A14 and D40 are verbatim, with the ruling commit before the repairs.",
+    "R5 to R9 tests pass, read the written record, and their breaks are quoted.",
+    "A replay of 098's three runs through the new record code is not required. State whether each finding's field would now be present.",
+    "Suite green, with counts before and after. The PR is opened and delivery_state carries its number."
+  ],
+
+  "verification": [
+    {"command": "grep -n 'Ruling D40' HANDOVER.md docs/handover-review.md", "expected": "Present in both."},
+    {"command": "git diff --stat origin/main -- autornd/engine/phases.py workflows/ autornd/routing/", "expected": "Empty."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count before and after."}
+  ],
+
+  "rollback": "Revert the merge.",
+
+  "deliverable": {"branch": "arch/20261001-101-record-and-d40", "branch_created_by": "advisor", "pr": true, "merge": "by the advisor-custodian on green, after checking acceptance against the tree", "commit_style": "conventional"},
+
+  "transport": "Pushed by the advisor. Process after ARCH-20260930-100 has merged, and merge origin/main into this branch first. Commit the response IN_PROGRESS first. Setup note for the executor's clone: give it its own virtualenv (`pip install -e '.[dev]'` inside the clone), so its editable install cannot resolve to another checkout.",
+
+  "assumptions": ["The grounding's findings can be recorded without changing what the plan reads. If exposing them requires a context-assembly change, report it rather than make it."],
+
+  "questions": [],
+
+  "preconditions": [
+    {"command": "grep -n 'plan.blockers.extend(all_blockers)' autornd/engine/phases.py", "expected": "Line 388, or wherever it now sits."},
+    {"command": "grep -n 'passed every repetition' docs/traces/098-d37-firing-STDOUT.txt", "expected": "Line 12 (the exhibit)."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green; record the count."}
+  ]
+}

@@ -314,9 +314,33 @@ async def expand_queries(client, request: str) -> list[str]:
         return [request]
 
 
+# R6 (ARCH-20261001-101): what the first grounding's paid lookup asked and
+# returned, kept in the run record so a reading of where a figure came from
+# is not blind. 098 could not say whether its lookup returned the wire
+# resistance, because the record kept only a character count. Bounded so a
+# long answer cannot swell every unit record; the bound is stated in the
+# record, with whether it cut.
+GROUNDING_LOOKUP_RECORD_CHARS = 6000
+
+
+def _record_lookup(record: dict | None, asked: list[str], findings: list,
+                   rendered: str) -> None:
+    if record is None:
+        return
+    record.update({
+        "asked": list(asked),
+        "found": len(findings),
+        "findings": rendered[:GROUNDING_LOOKUP_RECORD_CHARS],
+        "findings_chars": len(rendered),
+        "bound_chars": GROUNDING_LOOKUP_RECORD_CHARS,
+        "truncated": len(rendered) > GROUNDING_LOOKUP_RECORD_CHARS,
+    })
+
+
 async def synthesize_briefing(client, request: str, chunks: list[dict],
                               risk: object = None,
-                              deferred_gaps: list[str] | None = None) -> str:
+                              deferred_gaps: list[str] | None = None,
+                              grounding_lookup: dict | None = None) -> str:
     """Read the ranked excerpts and write a grounded briefing (research tier).
 
     Falls back to handing the excerpts through verbatim, which is what every
@@ -361,8 +385,10 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
 
             findings = await research_gaps(client, request, blocking,
                                            max_tokens=search_budget(risk))
+            rendered = render_findings(findings) if findings else ""
+            _record_lookup(grounding_lookup, blocking, findings or [], rendered)
             if findings:
-                out += "\n\n" + render_findings(findings)
+                out += "\n\n" + rendered
         elif blocking and settings.model_search and deferred_gaps is not None:
             # The risk gate declined this lookup. Keep the gaps rather than
             # dropping them: if the plan then writes a criterion demanding
@@ -476,7 +502,8 @@ async def rerank_chunks(
 async def load_retrieval_context(query: str, n_results: int = 5, client=None,
                                  risk: object = None,
                                  deferred_gaps: list[str] | None = None,
-                                 asked_questions: list[str] | None = None) -> str:
+                                 asked_questions: list[str] | None = None,
+                                 grounding_lookup: dict | None = None) -> str:
     """Research the project docs for a request: expand, retrieve, rank, brief."""
     queries = await expand_queries(client, query)
     if asked_questions is not None:
@@ -496,7 +523,8 @@ async def load_retrieval_context(query: str, n_results: int = 5, client=None,
 
     ranked = await rerank_chunks(client, query, candidates, n_results)
     return await synthesize_briefing(client, query, ranked, risk=risk,
-                                     deferred_gaps=deferred_gaps)
+                                     deferred_gaps=deferred_gaps,
+                                     grounding_lookup=grounding_lookup)
 
 
 SCOPING_PROMPT = """\
@@ -608,6 +636,7 @@ async def build_phase_context(
     risk: object = None,
     deferred_gaps: list[str] | None = None,
     asked_questions: list[str] | None = None,
+    grounding_lookup: dict | None = None,
 ) -> str:
     """Build full context string for a workflow phase.
 
@@ -632,7 +661,8 @@ async def build_phase_context(
         retrieval_ctx = await load_retrieval_context(request, client=client,
                                                      risk=risk,
                                                      deferred_gaps=deferred_gaps,
-                                                     asked_questions=asked_questions)
+                                                     asked_questions=asked_questions,
+                                                     grounding_lookup=grounding_lookup)
         if retrieval_ctx:
             parts.append("=== RELEVANT KNOWLEDGE ===\n" + retrieval_ctx)
         else:
@@ -652,8 +682,10 @@ async def build_phase_context(
 
                 findings = await research_gaps(client, request, unknowns,
                                                max_tokens=search_budget(risk))
+                rendered = render_findings(findings) if findings else ""
+                _record_lookup(grounding_lookup, unknowns, findings or [], rendered)
                 if findings:
-                    parts.append(render_findings(findings))
+                    parts.append(rendered)
             elif unknowns and settings.model_search and deferred_gaps is not None:
                 # The risk gate declined. Defer, don't discard — the override
                 # node may still fire on a plan-side verifiability demand.

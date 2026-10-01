@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1131 · **Date of this snapshot:** 2026-09-26, counts re-derived against the tree under test
+**Tests:** 1140 · **Date of this snapshot:** 2026-09-26, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -24,6 +24,8 @@
 > **Ruling D38 (advisor, 2026-09-30; default chosen by the owner) — the deliberation watchdog finishes cleanly. A run with a declared time budget ends by its own terminal, never by being killed from outside mid-call. Slow deliberation is not itself a fault: no call is cancelled for being slow while the budget holds. Before each model call, if this run's own measured pace for that call's tier says the call cannot finish inside the remaining budget less a reserve for writing the terminal, the call is not started; during each call, when that point arrives, the call is cancelled. Either way the run ends at once with status blocked and a typed watchdog record naming the rule that fired, the node, iteration, tier, configured serving, elapsed time, budget and pace. Everything produced so far is kept. The terminal points at the last implementation the build judges agreed on and names which later gates it did or did not pass; the latest implementation, if it differs, is labelled unjudged (D22). A call that runs far past its tier's pace in this run is flagged in the record, not cancelled, until measured runs set the multiple. A run with no declared budget behaves exactly as today; the production budget is standing configuration and the owner's (G-3). The watchdog stops the wait; whether the provider stops billing an abandoned call is unknown, and the record says so. This implements the second clause of D25. Exhibit: ARCH-20260930-094, where the build judges agreed at $0.070 and the run was killed at 3,600 s having spent $0.51 and returned no answer. Falsifier: a watchdog-ended run whose terminal is written after its budget, or a budgeted run whose stop_reason says the runner killed it, means the watchdog failed; a trip on a fast-judge control run means the pace rule is wrong.**
 
 > **Ruling D39 (advisor, 2026-09-30) — one settings map for every path that runs a workflow. Every loop bound a shipped workflow names by setting is resolved from a single function shared by the API path and the eval CLI; no path keeps its own hand-written copy. Rationale: two hand-kept maps drifted. The eval CLI's carries review_rework_attempts and the API path's does not, so the API path ends any blocking review with a ConditionError (reported and reproduced in ARCH-20260930-095's response), while the eval path runs the designed rework loop. The configured bound is the design; a crash is not a conclusion the harness was built to reach. Falsifier: a shipped workflow that names a setting the shared map does not carry. A guard enumerates them.**
+
+> **Ruling D40 (advisor, 2026-10-01) — the watchdog keys pace by node. A call's pace is the slowest completed call of the same node, in the same tier, in this run; when that node has no completed call yet, the tier's slowest completed call is used, and the record says which. Slow-call flags compare a call with its own node's earlier calls, at a multiple of 2.0, and stay flag-only. Rationale: ARCH-20260930-098 measured same-node ratios up to 1.624 (engineering, n=4) and 1.118 (judge, n=3), while tier-keyed ratios reached 5.733 and 3.030 only because they compared implement with feasibility, and review with validate. A flag that compares different work flags nothing real (convention 26). The multiple is provisional at 3 to 4 observations per node and is revisited at 10. Amends D38’s “pace for that call’s tier”. Falsifier: a node-keyed pre-start decision that ends a run where a tier-keyed one would have continued, and the call not started is shown by later runs to fit.**
 
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
@@ -288,7 +290,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      64 files, 1131 tests
+tests/                      65 files, 1140 tests
 
 ```
 
@@ -693,7 +695,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1131 total)
+### 3.7 Test distribution (1140 total)
 
 
 | file | n | file | n |
@@ -769,7 +771,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1131/1131 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1140/1140 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

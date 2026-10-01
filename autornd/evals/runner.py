@@ -258,6 +258,8 @@ class ResultsLog:
             # them. 093's tests read the in-memory block and never the file
             # (convention 22).
             "regrounding": run.regrounding,
+            "feasibility_blockers": run.feasibility_blockers,
+            "reason": run.reason,
             "regrounding_rounds": run.regrounding_rounds,
             "assumptions_declared": run.assumptions_declared,
             "assertions": [
@@ -523,6 +525,13 @@ class ScenarioRun:
     # above. Flat fields stay for back-compat with readers that already
     # consume them; this carries the whole round on its own keys.
     regrounding: dict[str, Any] = field(default_factory=dict)
+    # R7 (ARCH-20261001-101): the hard blockers feasibility's reviewers added
+    # to the plan, under their own key rather than mistaken for a plan pass.
+    feasibility_blockers: list[str] = field(default_factory=list)
+    # R8 (ARCH-20261001-101): the workflow's terminal sentence (state.reason)
+    # for every terminal, the watchdog's included. 098's records carried
+    # error null and no sentence, though each run ended on its own terminal.
+    reason: str | None = None
     # Ruling D38: every executed node as {node, iteration, kind, tier,
     # seconds, cancelled}, in path order. Empty for a unit that never ran.
     steps: list[dict[str, Any]] = field(default_factory=list)
@@ -673,13 +682,21 @@ def _regrounding_block(runner, state) -> dict[str, Any]:
     outputs = getattr(state, "outputs", None) or {}
     lookup = outputs.get("reground_lookup") or {}
     first = getattr(runner, "regrounding_first_pass_blockers", None) or []
-    second_out = outputs.get("plan") or {}
-    if isinstance(second_out, dict):
-        second = list(second_out.get("blockers") or [])
-    else:
-        second = list(getattr(second_out, "blockers", None) or [])
+    rounds = int(getattr(runner, "regrounding_rounds", 0) or 0)
+    # R7 (ARCH-20261001-101): only a run that re-planned has a second pass.
+    # The final plan.blockers also carries feasibility's hard blockers,
+    # appended in place (phases.py), so on a rounds-0 run it read as a second
+    # pass no plan made: 098 run 1 showed two. Feasibility's own blockers are
+    # recorded under feasibility_blockers instead.
+    second: list = []
+    if rounds == 1:
+        second_out = outputs.get("plan") or {}
+        if isinstance(second_out, dict):
+            second = list(second_out.get("blockers") or [])
+        else:
+            second = list(getattr(second_out, "blockers", None) or [])
     return {
-        "rounds": int(getattr(runner, "regrounding_rounds", 0) or 0),
+        "rounds": rounds,
         "blockers_first_pass": list(first),
         "novel": list(getattr(runner, "regrounding_novel", None) or []),
         "asked": int(lookup.get("asked", 0) if isinstance(lookup, dict) else 0),
@@ -888,6 +905,10 @@ async def run_scenario(
         regrounding=dict(getattr(runner, "regrounding_block", None)
                          or _regrounding_block(runner, state) or {}),
         steps=_steps(state),
+        feasibility_blockers=list(
+            ((getattr(state, "outputs", None) or {}).get("feasibility") or {})
+            .get("feasibility_blockers") or []),
+        reason=getattr(state, "reason", None) or None,
         watchdog=(state.watchdog.as_dict()
                   if getattr(state, "watchdog", None) is not None else None),
     )
@@ -1003,13 +1024,21 @@ class RepeatedReport:
                        if f.detail]
             if details:
                 flaky = f"{flaky} — {details[0]}"
+            ended = _terminals(result.runs)
             lines.append(
                 f"{result.scenario.id:<24}{rate:>8}{result.calls:>7}"
-                f"{result.seconds:>8.1f}   {flaky[:88]}"
+                f"{result.seconds:>8.1f}   ended {ended}"
+                + (f"; {flaky}" if flaky else "")
             )
         lines.append("-" * 92)
+        # R9 (ARCH-20261001-101): 'passed' is the scenario's assertions, and
+        # it never stands alone. 098 printed "1/1 scenarios passed every
+        # repetition" with all three runs blocked, its only assertion being
+        # max_calls. The terminals are printed beside it.
+        all_ran = [run for r in self.results if not r.skipped for run in r.runs]
         lines.append(
-            f"{self.passed}/{self.applicable} scenarios passed every repetition"
+            f"{self.passed}/{self.applicable} scenarios passed their assertions "
+            f"every repetition (runs ended {_terminals(all_ran)})"
             f"  ·  {self.calls} calls  ·  {self.seconds:.1f}s  ·  ${self.cost:.4f}"
         )
         lines.append(_tier_line(self.cost_by_tier))
@@ -1021,6 +1050,17 @@ class RepeatedReport:
         if provider_line:
             lines.append(provider_line)
         return "\n".join(lines)
+
+
+def _terminals(runs: list["ScenarioRun"]) -> str:
+    """How the runs ended, by workflow status: 'blocked 3', 'completed 2,
+    blocked 1'. Read off each run's typed status, never its prose."""
+    counts: dict[str, int] = {}
+    for run in runs:
+        key = run.status or "unknown"
+        counts[key] = counts.get(key, 0) + 1
+    return ", ".join(f"{k} {v}" for k, v in
+                     sorted(counts.items(), key=lambda i: (-i[1], i[0]))) or "none"
 
 
 async def run_suite(

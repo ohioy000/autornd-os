@@ -39,7 +39,7 @@ from autornd.graph import executor as executor_module
 from autornd.graph.adapter import PhaseRunner
 from autornd.graph.executor import (
     ABANDONED_CALL_BILLING, WATCHDOG_RESERVE_SECONDS, GraphExecutor,
-    WatchdogRecord, _watchdog_reason,
+    SLOW_CALL_MULTIPLE, WatchdogRecord, _watchdog_reason,
 )
 from autornd.graph.spec import load
 from autornd.routing.openrouter import OpenRouterClient
@@ -454,11 +454,14 @@ class TestTheRecordIsWrittenToDisk:
 
 
 class TestASlowCallIsFlaggedNotCancelled:
-    """D38: a call far past its tier's pace is flagged in the record, not
-    cancelled. The multiple is unset by the ruling, so every excess is
-    flagged with its measured ratio."""
+    """Ruling D40: a call is flagged, not cancelled, when it runs past
+    SLOW_CALL_MULTIPLE of its OWN node's slowest earlier call in this run.
+    Until D40 the comparison was the tier's pace at 1.0, which flagged a
+    review for being slower than validate: different work (098: tier-keyed
+    ratios 5.733 and 3.030, same-node at most 1.624 and 1.118)."""
 
-    async def test_a_review_slower_than_validate_is_flagged_and_completes(self):
+    async def test_a_review_slower_than_validate_is_not_flagged(self):
+        # This test asserted the opposite until D40 (convention 17).
         async def slow_review(function, message):
             if function == "judge" and REVIEW_PROMPT in message:
                 await asyncio.sleep(0.2)
@@ -469,13 +472,29 @@ class TestASlowCallIsFlaggedNotCancelled:
         _reshape(client, before=slow_review)
         state, _, _ = await _run(client)                  # no budget at all
         assert state.status == "completed"
-        # Other tiers can cross their own pace by scheduling noise (feasibility
-        # then implement on the engineering tier, both ~1 ms), and that is a
-        # correct flag too. The one this double made slow must be there.
-        review = [f for f in state.watchdog.slow_calls if f["node"] == "review"]
-        assert len(review) == 1
-        assert review[0]["tier"] == "judge" and review[0]["ratio"] > 1.5
-        assert review[0]["cancelled"] is False
+        assert not [f for f in state.watchdog.slow_calls if f["node"] == "review"]
+
+    async def test_a_node_past_twice_its_own_earlier_call_is_flagged(self):
+        implements = {"n": 0}
+
+        async def slower_each_time(function, message):
+            if IMPLEMENT_PROMPT in message:
+                implements["n"] += 1
+                await asyncio.sleep(0.02 if implements["n"] == 1 else 0.2)
+
+        responses = _responses(judge={"ship": False})
+        responses["escalation"] = {"root_cause_analysis": "x",
+                                   "resolution_directive": "y",
+                                   "requires_human": True}
+        client = make_mock_client(responses)
+        _reshape(client, before=slower_each_time)
+        state, _, _ = await _run(client)                  # no budget at all
+        assert implements["n"] >= 2
+        flags = [f for f in state.watchdog.slow_calls if f["node"] == "implement"]
+        assert flags, state.watchdog.slow_calls
+        assert flags[0]["pace_basis"] == "node"
+        assert flags[0]["ratio"] > SLOW_CALL_MULTIPLE
+        assert all(f["cancelled"] is False for f in flags)
 
 
 class TestTheReserveIsMeasured:
@@ -563,3 +582,30 @@ class TestANotApprovedArtifactSaysNotApproved:
             latest_differs=None, latest=label))
         assert "no implementation was agreed by the build judges" in reason
         assert f"the latest implementation is not approved ({label})" in reason
+
+
+class TestARefusedBuildApprovalSaysSo:
+    """A14 (ARCH-20261001-101): 'agreed by the build judges, refused by the
+    final review: not approved', in the same sentence, and never
+    'judge-approved' unqualified for a refused artifact."""
+
+    @staticmethod
+    def _reason(gates) -> str:
+        return _watchdog_reason(WatchdogRecord(
+            armed=True, budget_seconds=60.0, reserve_seconds=0.4, fired=True,
+            rule="not_started", node="implement", iteration=1,
+            tier="engineering", elapsed_seconds=59.0, available_seconds=0.6,
+            pace_seconds=5.0, approved={
+                "history": "present", "agreed": True, "index": 1,
+                "loop": "build_loop", "iteration": 2, "gates": gates,
+                "latest_differs": False, "latest": "approved"}))
+
+    def test_the_098_run_2_shape(self):
+        reason = self._reason({"review": "failed", "rework_review": "not_reached"})
+        assert ("agreed by the build judges, refused by the final review: "
+                "not approved") in reason
+        assert "judge-approved" not in reason
+
+    def test_an_unrefused_agreement_keeps_its_label(self):
+        reason = self._reason({"review": "not_reached", "rework_review": "not_reached"})
+        assert "last judge-approved implementation" in reason
