@@ -1,0 +1,10 @@
+id: golden_q3
+description: ARCH-20261001-102 golden Q3 (DERIVATION, mechanical). Request byte-identical to evals/golden/keys.json; scored by evals/golden/score_trace.py, which reads the answer itself.
+request: A uniform solid circular shaft has diameter 50.0 mm, length 1.00 m, and shear modulus 80.0 GPa. It carries a constant torque of 500 N·m. Assume linear-elastic Saint-Venant torsion and ignore end effects. Calculate the polar second moment of area in m^4, the maximum shear-stress magnitude in MPa, and the end-to-end twist magnitude in radians.
+tags:
+- golden
+- q3
+timeout: 300
+expect:
+  status: completed
+  max_calls: 40

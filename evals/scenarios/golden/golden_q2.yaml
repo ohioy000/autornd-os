@@ -1,0 +1,10 @@
+id: golden_q2
+description: ARCH-20261001-102 golden Q2 (LOOKUP, regulation). Request byte-identical to evals/golden/keys.json; scored by evals/golden/score_trace.py, which reads the answer itself.
+request: Under the definitions in 29 CFR § 1910.146(b), July 1, 2014 edition, what oxygen concentration defines an oxygen-deficient atmosphere, and what concentration defines an oxygen-enriched atmosphere? Include the comparison operators and the concentration basis.
+tags:
+- golden
+- q2
+timeout: 300
+expect:
+  status: completed
+  max_calls: 40
