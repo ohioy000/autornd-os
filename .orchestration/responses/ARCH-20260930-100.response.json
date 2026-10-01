@@ -1,21 +1,74 @@
 {
   "command_id": "ARCH-20260930-100",
-  "status": "IN_PROGRESS",
-  "executed": false,
+  "status": "DONE",
+  "executed": true,
   "head_before": "34a2461",
-  "head_after": null,
+  "head_after": "25f04bc",
   "arrival": {
     "parent_id": "ARCH-20260930-096: .orchestration/responses/ARCH-20260930-096.response.json present",
     "preconditions_present": 2,
     "transport": "ARCH-20260930-099 merged as 60b5d00 (PR #107); origin/main merged into this branch as 34a2461 before any work."
   },
   "preconditions": [
-    {"n": 1, "check": "grep -n '215 such classes' CLAUDE.md; grep -n '58 test files' .claude/context/testing.md", "result": "PASS: CLAUDE.md:82; .claude/context/testing.md:3 and :7"},
-    {"n": 2, "check": ".venv/bin/python3 -m pytest tests/ -q", "result": "PASS: 1112 passed in 64.80s"}
+    {
+      "n": 1,
+      "check": "grep -n '215 such classes' CLAUDE.md; grep -n '58 test files' .claude/context/testing.md",
+      "result": "PASS: CLAUDE.md:82; .claude/context/testing.md:3 and :7"
+    },
+    {
+      "n": 2,
+      "check": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS: 1112 passed in 64.80s"
+    }
   ],
   "baseline_suite": "1112 passed in 64.80s",
-  "results": {},
-  "deviations": [],
-  "questions_for_advisor": [],
-  "delivery_state": {"branch": "arch/20260930-100-close-questions", "pr": null}
+  "results": {
+    "answers_first": "A1-A7 appended verbatim to notebook section 91 at 2a94a45, extracted from the command file and string-matched, before any repair.",
+    "R1": "PhaseRunner.makes_call(node, state): domain_review makes no call on an empty peer roster. The pre-start rule judges only calling nodes. tests/test_watchdog.py::test_a_rework_after_agreement_leaves_the_latest_unjudged now asserts the record names validate (it had asserted domain_review) and that the last step was the free consistency check. Break: that test asserted ('domain_review', 1, 'judge') before the change and failed on ('validate', 1, 'judge') after it. Assumption held: no fallback to the first call inside the node was needed.",
+    "R2": "Terminal reads 'not approved (dissented|unjudged)', with nothing agreed included; TestANotApprovedArtifactSaysNotApproved, 4 cases.",
+    "R3": "Deleted from CLAUDE.md:82 and testing.md:3, :7, :15. Guard TestUnguardedCountsStayDeleted. Breaks: CLAUDE.md -> \"states an unguarded test count again: ['215 such classes']\"; testing.md -> \"['58 test files', '58 test files', '1045 tests', '215 such classes']\".",
+    "R4": "check() resolves pins as the client does (_pin_target, mirror-tested against get_model/independent_model over 5 configurations), checks general pins per function, and reports pins no call reads as 'unused' (ok, informational). check_temperature reports temperature as present/absent/blind and never fails. Break A (judge pin unread when MODEL_JUDGE unset): a Friendli pin the client would 404 on reads ok, 'unused — pinned to Friendli, but MODEL_JUDGE is unset'. Break B (temperature required again): 'nebius for vendor/fast does not list temperature ...' fails the gate.",
+    "live_preflight": "31 ok, 0 failing, catalogue reads only; 'pin premium: unused — pinned to Azure, but the independent pass calls function independent'.",
+    "verification": {
+      "stale_counts_grep": "grep -n \"215 such classes\\|58 test files\" CLAUDE.md .claude/context/testing.md -> no output",
+      "suite": "1112 passed before; 1131 passed after"
+    }
+  },
+  "deviations": [
+    {
+      "what": "A judge pin with MODEL_JUDGE unset is checked on the engineering model, not reported 'unused'",
+      "reason": "The client still calls function 'judge'; get_model('judge') falls back to the engineering model and provider_order_for('judge') applies the pin. 'Unused' would pass a pin the client 404s on (break A). A6's rule, refuse exactly what the client would fail on, decides it."
+    },
+    {
+      "what": "A third copy of the class count (testing.md:15) deleted",
+      "reason": "Same unguarded number, under A5's reasoning."
+    },
+    {
+      "what": "Temperature reported by a separate check_temperature",
+      "reason": "check_parameters keeps one deciding finding per (function, provider)."
+    },
+    {
+      "what": "General pins now checked per function",
+      "reason": "Part of A6's 'read pins as the client reads them'; 096 found them unchecked."
+    }
+  ],
+  "questions_for_advisor": [
+    "Confirm the judge-pin reading: with MODEL_JUDGE unset the pin is applied to the engineering model, so the gate checks it there rather than reporting it unused (deviation 1)."
+  ],
+  "delivery_state": {
+    "branch": "arch/20260930-100-close-questions",
+    "pr": 108
+  },
+  "commits": {
+    "in_progress": "0296875",
+    "answers": "2a94a45",
+    "r1_r2": "18efbb7",
+    "r3": "886b366",
+    "r4": "930e242",
+    "record_and_counts": "25f04bc"
+  },
+  "findings": [
+    "The owner's premium:Azure pin is read by no call; the independent pass runs unpinned. A change waits on the owner (G-3).",
+    "101's A14 wording is left to 101, which carries its text."
+  ]
 }
