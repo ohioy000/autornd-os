@@ -10261,3 +10261,71 @@ pin matching first (instrument repair, but D41 allows only repairs of
 silent failures that change outcomes); or re-pin, which is a different arm
 and needs a new authorisation. The owner's go-ahead for the paid step
 stands, unspent.
+
+### 94.2 The golden sweep on arm B: scores and test rulings (executor, 2026-10-01)
+
+Run detached at 21:20:14Z on the owner's option 1 (preflight override,
+recorded in the header as `{ran: false, override: true}`). Caps $0.07 per
+run, $0.42 for the sweep. Trace `docs/traces/102-golden-arm-b.jsonl`.
+`score_trace.py`'s output, verbatim:
+
+```
+Q1   PASS               completed  shipped                items[++] 90.673s/300s $0.0264/0.07 risk=low sprawl=52.3 scope_out=2
+Q2   FAIL               blocked    approved, not shipped  items[++] 299.607s/300s $0.0844/0.07 risk=high sprawl=77.3 scope_out=1
+Q3   FAIL (no answer)   blocked    no answer              items[] 243.148s/300s $0.0719/0.07 risk=medium sprawl=None scope_out=None
+Q4   PASS               completed  shipped                items[+++++++] 148.72s/600s $0.0532/0.07 risk=high sprawl=10.5 scope_out=1
+Q5   FAIL               completed  shipped                items[+++++-+++-] 235.194s/600s $0.0595/0.07 risk=low sprawl=11.7 scope_out=0
+     items not held: ['Q5.6', 'ORDER']
+Q6   FAIL (no answer)   blocked    no answer              items[] 248.411s/300s $0.06/0.07 risk=low sprawl=None scope_out=None
+
+2/6 PASS · 3/6 shipped · median sprawl 32.0 · total $0.3554
+```
+
+**Script verdicts: 2 of 6 PASS (Q1, Q4); 3 of 6 shipped; $0.3554.**
+
+**The executor's reading, item by item:**
+
+| Q | script | reading | agrees? |
+|---|---|---|---|
+| Q1 | PASS (Q1.1+, Q1.2+) | 8.00 V and 2.00 mA, stated | yes |
+| Q2 | FAIL: approved, not shipped, 299.6 s | the approved answer holds both limits (<19.5%, >23.5% by volume), but it never shipped | yes |
+| Q3 | FAIL: no answer (spend ceiling) | nothing to read | yes |
+| Q4 | PASS (all 7) | 3.00 mm selected, 100 MPa at the limit, 150 MPa for 2.00 mm, 0.2355 kg | yes |
+| Q5 | FAIL: Q5.6 and ORDER not held | **disagree on both**, see below | **no** |
+| Q6 | FAIL: no answer (watchdog) | nothing to read | yes |
+
+**Q5, where the key should follow the answer.**
+- **Q5.6.** The answer says "Pass ONLY IF drop ≤ 0.20 bar AND zero visible
+  leakage observed during entire hold", and the verdict section says
+  "Visible water leakage during 300 s hold: None." The item's second
+  pattern, `no (?:visible )?(?:water )?leak`, does not accept "zero visible
+  leakage" or "leakage ...: None". The substance holds, so the key's
+  phrasing is too narrow.
+- **ORDER.** First matches are taken over the whole answer, and the answer
+  opens with a pre-check table that names the "isolation point" (character
+  781) and the "release valve" (681) before Step 3, Fill (1956). The
+  numbered steps are in the correct order: fill, close vent, isolate, start
+  timer, assess, release, disconnect. The first-match rule is defeated by
+  any preamble that names an equipment item.
+- The key was not edited (it is advisor-written). **On the executor's
+  reading Q5 passes, which makes 3 of 6.**
+
+**The decision rule, applied:**
+- **As scored by the script: 2 of 6, under 3.** D41 turns into the
+  redesign of the default path.
+- **On the executor's reading of Q5: 3 of 6.** Arm C (the 09-26 code) runs
+  on the failed questions only, after a new owner authorisation.
+- **The advisor's ruling on the Q5 key decides which branch applies.**
+
+**P2 to P7, golden sweep:**
+- **P2** (at least 5 of 6 ship): REFUTED, 3 of 6.
+- **P3** (at least 5 of 6 pass): REFUTED, 2 of 6 (3 on the reading).
+- **P4** (every shipped run within target): HELD. Q1 91 s of 300, Q4 149 s
+  of 600, Q5 235 s of 600.
+- **P5** (sweep at most $0.42, each run at most $0.07): REFUTED in part.
+  The sweep was $0.3554, but Q2 $0.0844 and Q3 $0.0719 crossed $0.07. The
+  ceiling stops only after the call that crosses it.
+- **P6** (triage low or medium on at least 2 of Q1, Q3, Q6): HELD. low,
+  medium, low.
+- **P7** (median sprawl above 10): HELD, 32.0.
+- **P8** (the IA side test): pending; it is in flight.
