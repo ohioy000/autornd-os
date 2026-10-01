@@ -10005,3 +10005,76 @@ Suite 1112 to 1131, test files unchanged at 64.
 
 Execution record: repairs R5 to R9 follow in the commits after this
 section's ruling commit, per the command's commit order.
+### 92.1 What was built (executor, 2026-10-01)
+
+- **R5 (D40).** The executor keeps the slowest completed call per (node,
+  tier) beside the per-tier figure. The pre-start rule uses the node's own
+  pace, and the tier's when the node has none yet. The watchdog record
+  writes `pace_basis` ('node' or 'tier'), and the sentence says "this node's
+  pace" or "this run's <tier> pace". Slow-call flags compare a call only
+  with its own node's earlier calls, at `SLOW_CALL_MULTIPLE = 2.0`, and
+  carry `pace_basis: node`.
+- **R6.** `build_phase_context` takes a `grounding_lookup` out-parameter,
+  filled at both paid-lookup sites (the briefing's documentation gaps, and
+  the empty-store branch's blocking unknowns, which is the branch 098 used).
+  It records the questions sent, the number found, the rendered findings up
+  to 6,000 characters with their full length, and whether the bound cut.
+  It sits on the context node as `lookup`, and is None when nothing was
+  looked up. No context-assembly change: what the plan reads is unchanged.
+- **R7.** `blockers_second_pass` is [] unless rounds is 1. Feasibility
+  records the tail it appended (`feasibility_blockers`), and the unit record
+  carries it. `phases.py:388` is untouched.
+- **R8.** `ScenarioRun.reason` holds `state.reason` and is written for
+  every terminal.
+- **R9.** The worst-case warning, and the summary's "passed their
+  assertions every repetition (runs ended blocked 3)" with how each row's
+  runs ended.
+- **A14.** "last implementation agreed by the build judges, refused by the
+  final review: not approved: build_loop iteration 2 (review: failed, ...)".
+- **Setup note.** `pip install -e '.[dev]'` in the clone. The editable
+  finder now maps `autornd` to the clone, verified by importing from /tmp.
+
+### 92.2 Measurements (free)
+
+`tests/test_run_record.py` (6 tests) drives `run_repeated` with the billing
+double and reads each field back from the written JSONL. Each break was
+made, quoted and restored:
+
+- R5, `pace_basis` not written: "assert None == 'node'". Before the
+  assertion was made strict, the scenario was observed 3 of 3 refusing
+  validate on its own 0.501 s pace with about 0.1 s available.
+- R6, lookup not recorded: "TypeError: 'NoneType' object is not
+  subscriptable".
+- R7, second pass read on every run: "assert ['Solid wire ...r vibration.']
+  == []".
+- R8, reason not written: "KeyError: 'reason'".
+- R9, terminals dropped: "assert 'runs ended blocked 1' in ...".
+- A14, the condition disabled: the sentence reads "last judge-approved
+  implementation: build_loop iteration 2 (review: failed, rework_review:
+  not reached)".
+
+Three tests pinned the old behaviour and were rewritten (convention 17):
+the cross-node slow-call flag, and the warning's certainty. Suite 1131 to
+1140, test files 64 to 65. `git diff --stat origin/main --
+autornd/engine/phases.py workflows/ autornd/routing/` is empty.
+
+**Would each 098 finding's field now be present?**
+
+| finding | field | present now |
+|---|---|---|
+| pace mixes jobs | `watchdog.pace_basis`, node-keyed flags | yes |
+| lookup blind | `verdicts.context.lookup` (asked, findings) | yes |
+| feasibility as a second pass | `blockers_second_pass` [] at rounds 0; `feasibility_blockers` | yes |
+| no terminal sentence | `reason` | yes |
+| 'passed' alone; warning certain | summary 'runs ended ...'; worst-case warning | yes |
+
+### 92.3 Departures and findings
+
+1. **A correction to 098's record.** 098's response quoted
+   `verdicts.context.asked` as "what the grounding asked". That list is the
+   retrieval queries. The paid lookup's questions are the blocking unknowns,
+   which were never recorded until R6. So 098's Q1 answer named the wrong
+   list, though its conclusion (the lookup's content was blind) stands.
+2. **Feasibility blockers repeat once per reviewer** (each reviewer appends
+   its own). The record keeps them as appended, without deduplicating.
+3. **A14 was made here,** as 101 directs, because 100 merged without it.
