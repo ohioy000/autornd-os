@@ -1,0 +1,92 @@
+{
+  "command_id": "ARCH-20261002-106",
+  "parent_id": "ARCH-20261001-105",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Re-run the golden set on arm B once, with the apparatus repairs (104: D42, the consistency parser, the spend guard) and the scope rule (105: D43) in place, to find whether the harness now ships the correct answers it already produces. The watchdog gets twice each question's time target, and the pass rule is unchanged.",
+  "evidence": [
+    "docs/traces/102-golden-arm-b.jsonl: all six answers were correct on their keys, and three shipped (Q1, Q4, Q5). Q2 was lost to a failed reviewer counted as a finding (fixed by D42); Q3 to the consistency parser reading an exponent and a digit group as values (fixed by 104's F2), plus a criterion dictating its arithmetic layout (D43); Q6 to invented LED-drive criteria (D43). Re-scored with the fixed key (PR #113): 3 of 6.",
+    "In 102 the watchdog's budget was each question's time target, so a derailed run had no room to recover, and 'too slow' could not be told from 'broken' (owner, 2026-10-02).",
+    "Measured arm-B demand: the largest output per call was architecture 4,905, engineering 7,030, judge 10,226 and escalation 6,591 tokens (n=7). At the owner's .env ceilings at the time of 102, the worst-case calls were engineering $0.15, judge $0.14, architecture $0.09 and escalation $0.32, which 104's guard checks before every call.",
+    "ARCH-20261001-104's response: Q2's reviewer failure class was BudgetExceeded inside the review, not a schema rejection. D42's exhibit is corrected by this command, and the rule stands."
+  ],
+  "scope": {
+    "include": [
+      "evals/scenarios/golden/*.yaml (timeout only: 2x each question's time_target_s)",
+      "docs/preregistration-106-golden-rerun.md (new, committed BEFORE any spend)",
+      "docs/traces/106-golden-arm-b.jsonl, docs/traces/106-ia-side-arm-b.jsonl, and their -STDOUT.txt and -STDERR.txt",
+      "docs/serving-ledger.md (regenerate if the traces change it)",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "autornd/, workflows/: no code change in a measurement.",
+      "evals/golden/keys.json and score.py: advisor-written; time_target_s stays the pass rule.",
+      ".env and every .env* file: the lineup goes only in the environment prefix."
+    ]
+  },
+  "constraints": [
+    "RECORD THE ADVISOR'S CORRECTION FIRST (a dated note in the notebook and beside D42 in HANDOVER.md; do NOT edit D42's text): 'Correction, 2026-10-02, by the advisor: D42's exhibit misnamed Q2's failure class. ARCH-20261001-104's execution found it: the Test Engineer reviewer was stopped by the run's spend ceiling (BudgetExceeded at $0.0844 against the advisor's $0.07 cap), and the bare except in run_review turned that stop into a high finding. It was not a schema rejection; the run's one schema rejection was on the architecture tier. D42's rule stands. Its exhibit is the spend stop recorded as a finding, and 104 now re-raises BudgetExceeded inside reviewers.'",
+    "THE SAME ARM B AS 102/103: the identical environment prefix (09-26 models and pins, MODEL_JUDGE empty), with --skip-preflight recorded. The gate's false refusals of those pins are unrepaired under D41 and disputed by the 09-26 live record. The requests are byte-identical to keys.json, with nothing added. Run detached and sequential, with no git operation during a run.",
+    "WATCHDOG ROOM: set each golden scenario's timeout to 2x its time_target_s (600 or 1200 s). The pass rule stays keys.json's: shipped, every item, and seconds <= time_target_s. Report a run that ships after its target as 'shipped late', separately from 'not shipped'.",
+    "CAPS FROM 104's WARNING: before spend, run the CLI's pre-spend warning with the arm-B prefix and the owner's current ceilings, and quote the worst-case call per tier. Propose a per-run cap equal to the largest worst case among the tiers a golden run uses, plus $0.09 (above 102's costliest run, $0.084), rounded up to the cent. Propose the golden sweep cap as six times that, and an IA side-test cap that also covers the escalation worst case. The owner authorises in one line before the first paid call.",
+    "PRE-REGISTRATION (commit before spend; copy verbatim): P1, at least 5 of 6 golden questions PASS. P2, Q2, Q3 and Q6 each ship, the questions 102 lost to the apparatus and to scope. P3, Q1, Q4 and Q5 still pass. P4, no run's spend exceeds its cap (104's guard). P5, the median sprawl ratio (answer characters to model-answer characters) falls below 10 (D43). P6, every shipped answer is within its time target. P7 (side test), the IA run ships with all six core items. DECISION RULE: 5 or 6 passes lifts D41's freeze; the next work is the owner's standing lineup and ceilings (G-2, G-3) and the fast-path design. 3 or 4 passes means each failure is diagnosed by question, with no new arm. Fewer than 3 means a redesign of the default path.",
+    "SCORING: evals/golden/score_trace.py and score.py, plus your reading agreement item by item. A disagreement is a finding about the key, reported and not adjusted.",
+    "No re-run, no retry and no extra arm without a new owner authorisation."
+  ],
+  "acceptance_criteria": [
+    "The pre-registration precedes the traces. The preflight override and the owner's authorisation, with its caps, are quoted.",
+    "The 104 warning output for the arm-B prefix is quoted, and the caps used match the authorisation.",
+    "The response gives score_trace.py's tables for both traces, the reading agreement, P1 to P7, and the decision rule applied.",
+    "`git diff --stat origin/main -- autornd/ workflows/ evals/golden/` is empty.",
+    "Suite green. The PR is opened and delivery_state carries its number."
+  ],
+  "verification": [
+    {
+      "command": "python3 evals/golden/score.py",
+      "expected": "SELF-TEST PASSED"
+    },
+    {
+      "command": "git diff --stat origin/main -- autornd/ workflows/ evals/golden/",
+      "expected": "Empty."
+    }
+  ],
+  "rollback": "Not applicable: a measurement bounded by the owner's authorised caps.",
+  "deliverable": {
+    "branch": "arch/20261002-106-golden-rerun",
+    "branch_created_by": "advisor",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+  "transport": "Pushed by the advisor. Process after ARCH-20261001-105 (D43) has merged; its precondition below blocks otherwise. This is the last of the owner's ordered steps (104, then 105, then 106). Commit the response IN_PROGRESS first. Caps follow the .env ceilings in force at the spend gate; the owner decides between lower ceilings (PLAN 14000, JUDGE 20000, ESCALATION 13000) and higher caps (at least $0.35 per run).",
+  "assumptions": [
+    "The owner has set (or deliberately kept) the .env token ceilings before this runs. The caps follow from whatever ceilings are in force."
+  ],
+  "questions": [
+    "For any question that does not pass, which node took the time, and did a correct answer exist in an approved iteration?"
+  ],
+  "preconditions": [
+    {
+      "command": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "expected": "No output."
+    },
+    {
+      "command": "git fetch --prune origin && grep -n 'Ruling D42\\|Ruling D43' HANDOVER.md",
+      "expected": "Both present on main (104 and 105 merged). Otherwise BLOCKED."
+    },
+    {
+      "command": "python3 evals/golden/score.py",
+      "expected": "SELF-TEST PASSED"
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green; record the count."
+    }
+  ]
+}
