@@ -52,13 +52,14 @@ __all__ = ["ExecutionState", "GraphExecutor", "NodeRunner", "StepRecord",
 # 3,600 s deadline (0.011%).
 WATCHDOG_RESERVE_SECONDS = 0.4
 
-# D38: "A call that runs far past its tier's pace in this run is flagged in
-# the record, not cancelled, until measured runs set the multiple." No run has
-# set it yet. So the flag fires at ANY excess over the pace (a multiple of
-# 1.0), and each flag carries its measured ratio. The multiple can then be
-# read off the data rather than guessed before there is any. Raise this only
-# with the run that measured it.
-SLOW_CALL_MULTIPLE = 1.0
+# Ruling D40: a call is flagged, never cancelled, when it runs past this
+# multiple of its own node's slowest earlier call in this run. Measured by
+# ARCH-20260930-098's three runs: same-node ratios reached 1.624 (engineering,
+# n=4) and 1.118 (judge, n=3); the tier-keyed 5.733 and 3.030 compared
+# implement with feasibility and review with validate, different work.
+# Provisional at 3 to 4 observations per node; revisit at 10. Until D40 this
+# was 1.0 against the tier's pace, so every first implement was flagged.
+SLOW_CALL_MULTIPLE = 2.0
 
 # The node whose output is the deliverable. The adapter reads it under this
 # id throughout (state.outputs["implement"]); the watchdog's pointer compares
@@ -142,6 +143,10 @@ class WatchdogRecord:
     # model-calling step of that tier in this run. None means no such step
     # had completed, so only the mid-flight rule guarded the call.
     pace_seconds: float | None = None
+    # Ruling D40: 'node' when pace_seconds is this node's own slowest
+    # completed call in this run, 'tier' when the node had none yet and the
+    # tier's slowest completed call stood in. None with no pace.
+    pace_basis: str | None = None
     # Seconds since the run started, when the terminal was written. A
     # watchdog end whose terminal lands after its budget falsifies D38.
     terminal_seconds: float | None = None
@@ -338,8 +343,10 @@ def _watchdog_reason(record: "WatchdogRecord") -> str:
     budget = f"the {record.budget_seconds:g}s budget"
     if record.rule == "not_started":
         if record.pace_seconds is not None and record.available_seconds > 0:
-            what = (f"the {tier}call at {where} was not started: this run's "
-                    f"{tier}pace is {record.pace_seconds:.3f}s and only "
+            whose = ("this node's " if record.pace_basis == "node"
+                     else f"this run's {tier}")
+            what = (f"the {tier}call at {where} was not started: {whose}"
+                    f"pace is {record.pace_seconds:.3f}s and only "
                     f"{record.available_seconds:.3f}s of {budget} remain "
                     f"before the {record.reserve_seconds:g}s reserve")
         else:
@@ -426,6 +433,8 @@ class GraphExecutor:
                                 else reserve_seconds)
         self._started = 0.0
         self._pace: dict[str | None, float] = {}
+        # Ruling D40: the slowest completed call per (node, tier).
+        self._node_pace: dict[tuple[str, str | None], float] = {}
         self._history_base = 0
         self._history_tags: list[dict[str, Any]] = []
         self._loops: list[str] = []
@@ -538,12 +547,24 @@ class GraphExecutor:
         if self.time_budget is None:
             return False
         available = self._available()
-        pace = self._pace.get(tier)
+        pace, basis = self._pace_for(node.id, tier)
         if available > 0 and (pace is None or pace <= available):
             return False
         self._cut(state, "not_started", node, tier,
-                  available=available, pace=pace)
+                  available=available, pace=pace, basis=basis)
         return True
+
+    def _pace_for(self, node_id: str, tier: str | None
+                  ) -> tuple[float | None, str | None]:
+        """Ruling D40: this node's slowest completed call in this tier and
+        run; failing that, the tier's; and which of the two it is."""
+        own = self._node_pace.get((node_id, tier))
+        if own is not None:
+            return own, "node"
+        shared = self._pace.get(tier)
+        if shared is not None:
+            return shared, "tier"
+        return None, None
 
     async def _watched(self, work, node: Node, state: ExecutionState,
                        record: StepRecord) -> bool:
@@ -565,8 +586,9 @@ class GraphExecutor:
             if not guard.expired():
                 raise
             record.cancelled = True
+            pace, basis = self._pace_for(node.id, record.tier)
             self._cut(state, "cancelled", node, record.tier,
-                      available=granted, pace=self._pace.get(record.tier))
+                      available=granted, pace=pace, basis=basis)
             return False
         return True
 
@@ -602,21 +624,25 @@ class GraphExecutor:
                   or calls_after > calls_before)
         if not called and not record.cancelled:
             return
-        pace = self._pace.get(record.tier)
-        # A pace of 0 s (a step that finished inside the record's millisecond
-        # rounding) has no ratio to report, so it flags nothing.
-        if pace and record.seconds > pace * SLOW_CALL_MULTIPLE:
+        key = (node.id, record.tier)
+        # Ruling D40: a call is compared with its own node's earlier calls
+        # only. A node's first call has none and flags nothing. A pace of
+        # 0 s (inside the record's millisecond rounding) has no ratio.
+        own = self._node_pace.get(key)
+        if own and record.seconds > own * SLOW_CALL_MULTIPLE:
             watchdog = state.watchdog
             if watchdog is not None:
                 watchdog.slow_calls.append({
                     "node": node.id, "iteration": record.iteration,
                     "tier": record.tier, "seconds": record.seconds,
-                    "pace_seconds": pace,
-                    "ratio": round(record.seconds / pace, 3),
+                    "pace_seconds": own, "pace_basis": "node",
+                    "ratio": round(record.seconds / own, 3),
                     "cancelled": record.cancelled,
                 })
         if not record.cancelled:
-            self._pace[record.tier] = max(pace or 0.0, record.seconds)
+            self._node_pace[key] = max(own or 0.0, record.seconds)
+            self._pace[record.tier] = max(self._pace.get(record.tier) or 0.0,
+                                          record.seconds)
 
     def _approved_pointer(self, state: ExecutionState) -> dict[str, Any]:
         """D38: the last implementation the build judges agreed on.
@@ -702,7 +728,8 @@ class GraphExecutor:
         return gates
 
     def _cut(self, state: ExecutionState, rule: str, node: Node,
-             tier: str | None, available: float, pace: float | None) -> None:
+             tier: str | None, available: float, pace: float | None,
+             basis: str | None = None) -> None:
         """End the run now: status blocked, typed record, everything kept."""
         watchdog = state.watchdog
         watchdog.fired = True
@@ -715,6 +742,7 @@ class GraphExecutor:
         watchdog.elapsed_seconds = round(self._elapsed(), 4)
         watchdog.available_seconds = round(available, 4)
         watchdog.pace_seconds = pace
+        watchdog.pace_basis = basis
         watchdog.billing = ABANDONED_CALL_BILLING if rule == "cancelled" else None
         watchdog.approved = self._approved_pointer(state)
         state.end("blocked", _watchdog_reason(watchdog))
@@ -956,6 +984,7 @@ class GraphExecutor:
         # Ruling D38: the run's clock starts here, and so does its record.
         self._started = time.perf_counter()
         self._pace = {}
+        self._node_pace = {}
         self._ships = {}
         self._history_tags = []
         self._loops = []
