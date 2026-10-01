@@ -1,9 +1,9 @@
 {
   "command_id": "ARCH-20261001-104",
-  "status": "IN_PROGRESS",
-  "executed": false,
+  "status": "DONE",
+  "executed": true,
   "head_before": "c62b68b",
-  "head_after": null,
+  "head_after": "b661ae4",
   "arrival": {
     "parent_id": "ARCH-20261001-103: response present",
     "preconditions_present": 4,
@@ -28,11 +28,40 @@
     }
   ],
   "baseline_suite": "1145 passed",
-  "results": {},
-  "deviations": [],
-  "questions_for_advisor": [],
+  "results": {
+    "F1": "D42 in run_review: retry once, then not_reviewed with failure_class; quorum ceil(n/2); below quorum the verdict says the review did not complete, naming who and why. BudgetExceeded propagates unretried. tests/test_review_quorum.py (3), read back from the written record. Break (old run_review): the one-of-three test fails on the workflow_engine finding, 'assert not True'.",
+    "F2": "_FIGURE reads digit groups, decimals and exponents whole; agreement at the less precise figure's precision; _NUMBER untouched (totals_reconcile). 102 Q3 texts: passed=True, 'no contradicting values between plan and implementation'. 80.0 vs 70.0 GPa still fails. Break (old reading): \"pa: plan says ['9'], implementation says ['800']\". tests/test_figure_parsing.py (10).",
+    "F3": "Pre-call guard in chat(): worst = prompt chars/4 x prompt rate + max_tokens x completion rate; refused before the request as SpendGuardRefused (BudgetExceeded) naming tier, model, worst case and remaining; no rate -> made and recorded in spend_guard_blind. tests/test_spend_guard.py (4) over MockTransport (request count proves no call). Break (guard disabled): 3 of 4 fail.",
+    "warning_arm_b": "worst-case single call (completion side, max_tokens x rate): triage $0.0014, research $0.0410, search $0.0160, architecture $0.0936, engineering $0.1498, judge $0.1344, escalation $0.3200 | ⚠ --max-spend $0.07 is below the largest, escalation $0.3200 ...",
+    "Q2_failure_class": "BudgetExceeded: stderr 'Specialist Test Engineer failed during review' then 'BudgetExceeded: stopped at $0.0844 (ceiling $0.0700)'. Not a schema rejection; Q2's one schema_rejection was on the architecture tier (DeepInfra).",
+    "verification": {
+      "d42_grep": "present in both",
+      "workflows_golden_diff": "empty",
+      "suite": "1145 before, 1162 after"
+    }
+  },
+  "deviations": [
+    {
+      "what": "F1 also re-raises BudgetExceeded inside a reviewer",
+      "reason": "Q2's reviewer failure was a spend stop, swallowed by the bare except and turned into a high finding. A spend stop is the run's terminal; retrying it would spend past the cap."
+    },
+    {
+      "what": "The eval CLI loads catalogue rates (check_models) after the preflight gate",
+      "reason": "Rates were only loaded at API startup, so under the CLI F3 would have been blind on every call (convention 28)."
+    }
+  ],
+  "questions_for_advisor": [
+    "Under F3, arm B with the owner's ceilings (plan 78000, judge 70000) cannot run under a $0.07 cap: the first plan call's worst case is $0.0936. For 106: lower the ceilings (owner, G-3), raise the caps, or both?"
+  ],
   "delivery_state": {
     "branch": "arch/20261001-104-apparatus-repairs",
     "pr": null
+  },
+  "commits": {
+    "in_progress": "63837a3",
+    "ruling_d42": "2f09011",
+    "f1": "40202b9",
+    "f2": "517a1ec",
+    "f3": "b661ae4"
   }
 }
