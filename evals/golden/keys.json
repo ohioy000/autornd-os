@@ -329,7 +329,7 @@
      "item": "pass only if drop <= 0.20 bar and no visible leakage",
      "all": [
       "(?:≤|<=|no more than|not more than|not exceed\\w*|at most|maximum of|up to)\\s*0\\.20?\\s*bar|0\\.20?\\s*bar\\s*(?:or less|max)",
-      "no (?:visible )?(?:water )?leak"
+      "(?:no|zero|without|nil)\\s+(?:visible\\s+)?(?:water\\s+)?leak|leak\\w*[^.\\n]{0,30}(?::|=|\\|)\\s*none"
      ],
      "none": []
     },
@@ -397,7 +397,8 @@
    ],
    "variants_must_pass": [
     "Step 1: with the high-point vent open, fill the manifold with water until it runs air-free. Step 2: close the high-point vent. Step 3: pressurise to 6.00 bar(g). Step 4: isolate the hand pump, then begin the 300 s hold timer; do not top up during the hold and watch for leaks. Acceptance: drop no more than 0.20 bar AND no visible leak. Log: 6.00 to 5.90 bar is a 100 mbar drop with no leakage, so the test passes. Step 5: open the release valve, confirm 0 bar gauge, then disconnect."
-   ]
+   ],
+   "order_semantics": "sequence: each pattern must match AFTER the previous pattern's match (a mention in a preamble or table does not count against the order)"
   },
   {
    "id": "Q6",
@@ -561,5 +562,14 @@
   ],
   "model_answer": "Under 14 CFR 65.91, to be eligible for an inspection authorization you must hold a currently effective mechanic certificate with both airframe and powerplant ratings, each in effect for at least 3 years; have been actively engaged for at least the 2-year period before applying in maintaining certificated aircraft; have a fixed base of operations; have the equipment, facilities and inspection data needed; and pass a written test on inspecting for return to service after major repairs and major alterations. An applicant who fails may not retest until 90 days after failing. Under 14 CFR 65.95(a)(1), an IA may inspect and approve for return to service an aircraft after a major repair or major alteration only if the work was done in accordance with technical data approved by the Administrator (not aircraft on a part 121 continuous airworthiness program). The IA expires March 31 of each odd-numbered year (65.92). Renewal (65.93) needs, in each year, one activity such as one annual inspection per 90 days, two major repairs or major alterations per 90 days, a progressive inspection, an 8-hour refresher course, or an oral test.",
   "wrong": []
- }
+ },
+ "regression_vectors": [
+  {
+   "trace": "docs/traces/102-golden-arm-b.jsonl",
+   "scenario": "golden_q5",
+   "answer": "verdicts.implement.summary",
+   "must_hold_all": true,
+   "why": "102's shipped Q5 answer is correct, and the first version of this key failed it twice: 'zero visible leakage', and a first-mention order check fooled by an equipment table above the steps. The coder's reading caught both."
+  }
+ ]
 }
