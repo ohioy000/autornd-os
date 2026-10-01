@@ -1,0 +1,22 @@
+{
+  "command_id": "ARCH-20261001-101",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "50407cf",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20260930-098: .orchestration/responses/ARCH-20260930-098.response.json present",
+    "preconditions_present": 3,
+    "transport": "ARCH-20260930-100 merged as 847dbe4 (PR #108); origin/main merged into this branch as 50407cf before any work. Setup note done: pip install -e '.[dev]' in the clone; the editable finder now maps autornd to /home/jb/autornd-os_clone/autornd, and import from /tmp resolves there."
+  },
+  "preconditions": [
+    {"n": 1, "check": "grep -n 'plan.blockers.extend(all_blockers)' autornd/engine/phases.py", "result": "PASS: line 388"},
+    {"n": 2, "check": "grep -n 'passed every repetition' docs/traces/098-d37-firing-STDOUT.txt", "result": "PASS: line 12"},
+    {"n": 3, "check": ".venv/bin/python3 -m pytest tests/ -q", "result": "PASS: 1131 passed in 65.33s"}
+  ],
+  "baseline_suite": "1131 passed in 65.33s",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {"branch": "arch/20261001-101-record-and-d40", "pr": null}
+}
