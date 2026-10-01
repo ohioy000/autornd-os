@@ -1,11 +1,11 @@
 {
   "command_id": "ARCH-20260930-096",
-  "status": "IN_PROGRESS",
-  "executed": false,
+  "status": "DONE",
+  "executed": true,
   "head_before": "2c2c11b",
-  "head_after": null,
+  "head_after": "0f95188",
   "arrival": {
-    "parent_id": "null \u2014 no parent response required (protocol: repair/standalone commands carry null)",
+    "parent_id": "null — no parent response required (protocol: repair/standalone commands carry null)",
     "preconditions_present": 3,
     "transport": "ARCH-20260930-095 merged as 5a05bdd (PR #102); origin/main merged into this branch as ea15dbb before any work, per the transport rule (no stacking, no rebase)."
   },
@@ -26,11 +26,47 @@
       "result": "PASS: 1082 passed in 60.57s (on ea15dbb, main 5a05bdd merged in)"
     }
   ],
-  "results": {},
-  "deviations": [],
-  "questions_for_advisor": [],
+  "results": {
+    "acceptance": {
+      "1_tests_a_to_f": "PASS. tests/test_preflight_gate.py, 19 tests, provider-free, through cli.main and the real gate with the catalogue fetch mocked and the sweep stubbed. (a) TestTheGateRefusesBeforeAnyPaidCall: exit 3, 0 sweeps, 0 OpenRouterClient instances, no results file; a preflight that cannot run is also refused. (b)+(f) TestTheGateLetsAPassingConfigurationThrough: exit 0, the sweep ran, and the header read back from disk carries every finding as {ok, name, detail}. (c) TestTheOverrideIsRecorded: preflight.run is not called and the header is {ran: false, override: true}. (d)+(e) TestThePinnedEndpointMustAcceptWhatIsSent: a missing response_format names function, model and pin; no supported_parameters, no listing and no tags are each 'blind' and fail. Plus slug matching, call-target resolution, and the payload guard.",
+      "1b_break_quoted": "Gate changed to `return record, True` (ignores findings). Test (a): \"E  assert 0 == 3  +  where 3 = cli.PREFLIGHT_REFUSED_EXIT\"; the sweep ran ('preflight: 15 checks passed'). Restored: 19 passed.",
+      "2_dry_run": "The real `python -m autornd.evals.cli` against a local fake catalogue (OPENROUTER_BASE_URL pointed at it; placeholder models; OPENROUTER_PROVIDER_ORDER=triage:placeholder-a,escalation:placeholder-b/fp4; API key blanked in the subprocess env). Output: 15 [ok] lines and \"[FAIL] params escalation via placeholder-b/fp4  placeholder-b/fp4 for placeholder-vendor/model-escalation does not list response_format; the harness sends response_format, max_tokens, temperature on 'escalation' and the router strips an endpoint it filters by parameters\", then \"refused: the preflight did not pass, so no paid call was made (exit 3). Fix the configuration, or pass --skip-preflight to run anyway with the override recorded.\" Exit code: 3. The fake server saw 3 catalogue GETs, 0 chat/rerank POSTs and 0 Authorization headers, and no results file was written.",
+      "3_suite_and_pr": "Before: 1082 passed in 60.57s. After: 1101 passed in 65.53s. PR #103."
+    },
+    "verification": {
+      "grep_preflight_cli": "Gate at cli.py:45 (preflight_gate), the override flag at :149, the call at :192.",
+      "grep_supported_parameters": "preflight.py reads the field at :305, :313 and :320.",
+      "suite": "1082 before, 1101 after, all pass.",
+      "excluded_paths": "No diff in autornd/routing/, autornd/engine/, autornd/graph/ or workflows/."
+    },
+    "measurements": {
+      "live_configuration": "`python -m autornd.preflight` against the owner's live configuration (catalogue GETs only): 24 ok, 0 failing. Every pinned chat path accepts response_format, max_tokens and temperature; search via Perplexity accepts max_tokens and temperature; the ranker via Fireworks sends no chat parameters; independent is unpinned. The gate passes the configuration as it stands.",
+      "per_path_sets": "On 094's configuration, read from today's public catalogue: every chat_json pin lists all three parameters. The search pin lists max_tokens and temperature but not response_format, which search never sends. The ranker pin lists none, and the rerank API sends none. A blanket 'response_format on every tier' would have failed a pin that served.",
+      "slug_matching": "091 run 8's router error names the six endpoint tags it removed for the pin `google`; none has `google` as its slug. Today's catalogue gives the Vertex rows provider_name 'Google', so the old display-name pin check passes that pin."
+    },
+    "answers": {
+      "q_runs_2_and_8": "Answered offline from the traces' own router errors. RUN 8 (023940Z, 0 calls, $0.00): REFUSED. The pin `google` selects none of the six endpoint tags in the error (google-ai-studio[/flex|/priority], google-vertex/global[/flex|/priority]), so check_parameters fails with 'selects no endpoint' and the gate exits 3 before any call. The old pin check alone would probably have passed it, because Vertex's provider_name is 'Google' in today's catalogue; the night's catalogue is not in the record. RUN 2 (003221Z, 8 calls, $0.0223): REFUSED, BY INFERENCE. The escalation pin `Relace` selects `relace/fp4`, which the error says was removed by 'Filter by Parameters'. The trace does not carry relace/fp4's supported_parameters, so the finding cannot be reproduced offline; with tags alone it reads 'blind', which also fails. The payload's only model parameters are the three the guard test pins (model, messages, usage and provider are not parameters), so a parameter filter removing the endpoint means its listing lacked one of them, and the gate would have refused before the first call."
+    },
+    "assumption_report": "preflight.run() and the CLI read the same settings object in the same process, and the CLI's client builds FUNCTION_MODELS from it at import, so the models agree. The pins do not, in three ways. The existing pin check reads them differently from the client. (1) `_pins()` reads only tier-scoped entries; the client also applies general pins, so the old check never sees them. (2) A `premium:` pin is checked, but the independent pass calls function 'independent', so the client never applies it. The owner reports premium is not used. (3) With MODEL_JUDGE unset, a `judge:` pin fails as 'pinned but no model is set', while the client applies it to the engineering model, so the gate would refuse a configuration the client can run. The new parameter check resolves (model, pin) through get_model and provider_order_for, as chat() does, so it reads all three correctly. The old check was left as it was."
+  },
+  "deviations": [
+    "The required parameter set is derived per call path. The command says 'at least response_format and max_tokens', but search is a plain chat and never sends response_format (its live pin does not list it and served), and the ranker uses the rerank API, which sends no chat parameter. temperature is included, because the client sends it on every chat.",
+    "One finding per (function, pinned provider). A pin passes if any endpoint it selects lists every sent parameter, because the router can serve through any of them. An exact tag match takes precedence over first-segment matches, as the router excluded /flex and /priority rows the request had not opted into (run 8).",
+    "tests/test_preflight.py gains an autouse fixture blanking settings.openrouter_provider_order. config.py loads .env in the suite, and two existing tests that patch _pins() failed on the owner's real pins once run() also read provider_order_for. The tests' subject was right (convention 17); they had stopped being hermetic.",
+    "A refused sweep writes no results file. The command does not say either way; a header with no units is not a record of a run, and notebook 83.3 names 25 of them from one night."
+  ],
+  "questions_for_advisor": [
+    "Should the old pin check be brought in line with the client (read general pins, check function 'independent' rather than tier 'premium', accept a judge pin with MODEL_JUDGE unset)? As it stands, the gate would refuse a judge pin with MODEL_JUDGE unset, a configuration the client can run. That is instrument repair, but it changes what the gate refuses, so it is asked rather than done.",
+    "Is temperature right to require? The client sends it on every chat, and every pin that served live lists it. But some endpoints do not list it (Google Vertex rows for one triage model, Azure rows for one premium model), and no run has shown whether the router strips an endpoint for temperature alone, as opposed to ignoring it."
+  ],
   "delivery_state": {
     "branch": "arch/20260930-096-preflight-gate",
-    "pr": null
+    "pr": 103
+  },
+  "commits": {
+    "in_progress": "145c367",
+    "main_merged_in": "ea15dbb",
+    "implementation": "15cbd80",
+    "execution_record": "0f95188"
   }
 }
