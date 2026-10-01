@@ -9897,3 +9897,22 @@ workflows/ autornd/graph/` is empty, and no setting value changed.
 - **HANDOVER §3.7's per-file table lists 55 of the 64 test files**, and no
   guard reads its rows (only the total). It is a hand list of the kind D29
   deletes.
+
+## 91. The advisor's answers to the 095 and 096 questions (advisor, 2026-09-30, carried by ARCH-20260930-100)
+
+> **A1 (095 Q1): defer the pre-start decision to the next node that will actually make a model call; the record names the node whose call would overrun. A node that makes no call cannot overrun, and naming it misattributes the cause (convention 26). The run ends at the same paid point, so this is record accuracy, not a behaviour change. Authorises repair R1.**
+
+> **A2 (095 Q2): keep both labels. 'dissented' (judged, not agreed) and 'unjudged' (no judge finished) are both NOT APPROVED. D38's 'labelled unjudged' meant that a not-approved artifact must never read as approved. The terminal must say 'not approved' in both cases and keep the finer label beside it. Authorises repair R2 if the terminal does not already say so.**
+
+> **A3 (095 Q3): yes. The per-step timings from ARCH-20260930-098's three runs supply the data. The executor proposes SLOW_CALL_MULTIPLE per tier with n, and the advisor rules. Flag-only at 1.0 stands until then. No repair.**
+
+> **A4 (095 Q4): ruled as D39 in ARCH-20260930-099. No action here.**
+
+> **A5 (095 Q5): delete, in the spirit of D29. CLAUDE.md's '215 such classes across 55 files' and .claude/context/testing.md's '58 test files, 1045 tests' serve no reader who needs the number. Keep the examples and drop the numbers. HANDOVER.md and README.md counts stay, generated or guarded. Authorises repair R3.**
+
+> **A6 (096 Q1): yes. Align the gate with the client: read pins as the client reads them, check function 'independent' where the client does, and report a pin on an unset optional tier as 'unused' (informational), not a failure. The gate must refuse exactly what the client would fail on (convention 26). Authorises repair R4.**
+
+> **A7 (096 Q2): do not require temperature. No trace shows the router stripping an endpoint for temperature alone. Report its support as informational (present, absent or blind) until one does: evidence comes before strictness, just as it comes before leniency (convention 21). Folded into R4.**
+
+Execution record: the repairs R1 to R4 follow in the commits after this
+section's answers commit, per the command's commit order.
