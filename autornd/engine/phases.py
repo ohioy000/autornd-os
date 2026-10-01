@@ -313,6 +313,14 @@ Each one must be settleable by reading the implementation rather than by
 running it: "reconnect loop applies exponential backoff capped at 60s with
 jitter", not "reconnects within 30s in production".
 
+Scope (Ruling D43): the request sets the scope. Every success criterion must
+test something the request asks for: an output, figure, constraint, format or
+verdict the request states, or a fact the grounding supplies to answer it. A
+criterion may not add specifics the request did not ask for, such as component
+values, part numbers, presentation layout, or the exact form of a derivation.
+The four rules above govern how you reason the plan; they do not add to what
+the answer must contain.
+
 If you cannot state real criteria, return ready: false and say why in blockers.
 
 Request:
@@ -785,6 +793,7 @@ Success criteria:
 {json.dumps(plan.success_criteria)}
 
 If a criterion cannot be honestly satisfied with the grounding available, name it in blocked_on rather than producing something that satisfies it on paper.
+Answer the request, and include the plan's falsifiers, kill triggers or assumption tables only if the request asks for them.
 {feasibility_block}
 {feedback}
 {context_block}
