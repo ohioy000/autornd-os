@@ -9556,3 +9556,262 @@ staged by git add` (and the same for `.env.bak` and `.env.local`; `.env`
 still passes on the original line). `!.env.example` removed: the template
 test fails. Both restored: 6 passed.
 
+
+## 89. Which layer catches a missing real figure: neither, because the plan supplies it (executor, 2026-10-01, ARCH-20260930-098)
+
+Pre-registered in `docs/preregistration-098-d37-firing.md` (`972d12e`) before
+any spend. Trace `docs/traces/098-d37-firing.jsonl`, with `-STDOUT.txt` and
+`-STDERR.txt` beside it.
+
+### 89.1 What ran
+
+Three repetitions of `conv_cup_line_sensor_regrounding` under
+`AUTORND_PROFILE=cupline`, workflow engineering-rnd, one invocation,
+2026-10-01 04:15:10Z to 05:38:39Z. The request is the cup-line request with
+`'stranded copper (16.1 ohm per 1000 ft)'` replaced by `'solid copper'` and
+the "cannot be verified" sentence removed. Neither the request nor the corpus
+carries the resistance. The owner's caps applied: $0.50 per run inside a $1.20
+envelope ("i allow 1.20 envelope for first test"; ".50 1.20 the runs dont
+usually go higher than 30 cents"). The preflight gate ran before any client
+existed: 24 ok, 0 failing, no override, recorded in the header. The roster
+and pins equal 094's header exactly. Spend $0.5721, 41 calls, 5,002.4 s.
+
+### 89.2 Per run, from the record
+
+| run | status | stop_reason | watchdog rule, node, tier | pace vs available | terminal at | calls | cost | rounds | search calls | findings | triage risk |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | blocked | None | not_started, domain_review, judge | 590.649 s > 186.829 s | 1,612.772 s | 15 | $0.2143 | 0 | 1 | 0 | high |
+| 2 | blocked | None | not_started, implement, engineering | 56.234 s > 7.036 s | 1,792.565 s | 14 | $0.2295 | 0 | 1 | 0 | high |
+| 3 | blocked | None | not_started, validate, judge | 388.104 s > 202.575 s | 1,597.025 s | 12 | $0.1283 | 0 | 1 | 0 | high |
+
+Seconds by phase, summed from `steps` (which equal `seconds_by_phase`, and sum
+to within 4 ms of each run's wall clock):
+
+| phase | run 1 | run 2 | run 3 |
+|---|---|---|---|
+| triage | 5.688 | 7.698 | 11.984 |
+| context | 20.302 | 20.558 | 22.806 |
+| plan | 408.700 | 410.890 | 447.786 |
+| feasibility | 24.324 | 9.783 | 7.585 |
+| implement | 181.710 (3 steps) | 112.324 (2) | 54.436 (2) |
+| domain_review | 0 (no call, 2 specialists) | 0 (no call) | 735.323 (2 steps, 3 specialists) |
+| validate | 381.371 (2) | 681.941 (2) | 317.089 (1) |
+| review | 590.649 | 549.338 | not reached |
+
+The watchdog pointer: in runs 1 and 2 the build judges agreed at index 1
+(build_loop iteration 2), review then failed it, and rework_review was not
+reached. Run 1's latest implementation differs (the rework's, unjudged); run
+2's latest is the agreed one. Run 3 never reached agreement.
+
+The workflow's own terminal sentence is not in the unit record (89.6, finding
+5). Rebuilt from each typed record with `_watchdog_reason`:
+
+- Run 1: "the judge call at 'domain_review' (iteration 1) was not started: this
+  run's judge pace is 590.649s and only 186.829s of the 1800s budget remain
+  before the 0.4s reserve; last judge-approved implementation: build_loop
+  iteration 2 (review: failed, rework_review: not reached); the latest
+  implementation differs and is unjudged"
+- Run 2: "the engineering call at 'implement' (iteration 1) was not started:
+  ... only 7.036s ... remain ...; last judge-approved implementation:
+  build_loop iteration 2 (review: failed, rework_review: not reached)"
+- Run 3: "the judge call at 'validate' (iteration 2) was not started: ... only
+  202.575s ... remain ...; no implementation was agreed by the build judges"
+
+### 89.3 Paths: none of A to E as written
+
+D37 did not fire in any run. `regrounding` reads rounds 0, blockers_first_pass
+[], asked 0, findings 0 in all three. `path` has no `reground_lookup`, and
+`calls_by_tier.search` is 1, the first grounding's bundled lookup. That rules
+out B and D.
+
+A needs the resistance to enter "through grounding's own lookup". The
+grounding's questions are in the record:
+
+- Run 1: "paper cup machine PCB registration mark digital input schematic NPN
+  PNP"; "paper cup forming machine line speed registration mark timing
+  commissioning"; "24VDC sensor wiring standards voltage drop tolerance
+  verification".
+- Run 2: "cup forming machine PCB registration sensor digital input
+  schematic"; "paper cup machine line speed registration mark sensor timing";
+  "optical sensor commissioning verification procedure test thresholds";
+  **"22 AWG wire resistance voltage drop standard specification"**.
+- Run 3: "paper cup machine registration sensor schematic PCB digital input
+  NPN"; "paper cup machine line speed registration sensor timing pass
+  criteria"; "24VDC sensor wiring standard terminal block pinout".
+
+Only run 2's grounding asked for the resistance. What any lookup returned is
+not in the record. The context verdict keeps the questions and a character
+count (9,453 / 9,124 / 9,077), not the text. So A cannot be shown for run 2
+(blind), and runs 1 and 3 never asked.
+
+C needs "no lookup anywhere". Every run made the grounding lookup, so C does
+not hold as written for any run. E is a question of reading (89.4, run 2).
+
+**What happened instead, in all three runs:** the first plan, on the
+architecture tier, supplied 0.01614 ohm/ft (16.14 ohm/1000 ft) itself, and
+argued that the figure is not load-bearing:
+
+- Run 1 derives it ("22 AWG solid copper area A = 642.4 cmil; copper
+  resistivity rho = 10.371 ohm-cmil/ft at 20 degC; R/ft = 10.371 / 642.4 =
+  0.01614 ohm/ft"), and bounds it: "even doubling the conductor resistance
+  moves the drop only from 4.84 mV to 9.68 mV, about 0.8% of the 1.19 V
+  margin".
+- Run 2 states it as a "basis" with no source, and bounds it at 75 degC:
+  "this reference choice cannot change feasibility — no kill trigger
+  required".
+- Run 3 names its source in a sentence and dismisses it: "K1 Conductor
+  resistance 0.01614 ohm/ft at 20 deg C (C8) is the standard AWG table value
+  for 22 AWG solid copper. Not load-bearing for feasibility".
+
+The planner is right on the engineering. A few millivolts against about
+1.19 V of margin cannot move feasibility, so no plan named the resistance as
+a blocker. D37 acts only on named blockers, so it had nothing to act on. The
+command treats the figure as load-bearing because it sets the answer's
+numbers. The planner judges load-bearing by whether it threatens
+feasibility. On this request the two meanings part, and that is what
+execution found that the design missed.
+
+### 89.4 Answer key, against the last agreed implementation
+
+Scored from the implementation the pointer names (`iterations[1]` in runs 1
+and 2). Figure counts are by grep on that text, not by eye.
+
+| item | run 1 | run 2 |
+|---|---|---|
+| 1. 24 VDC everywhere | HELD | HELD |
+| 2. 22 AWG everywhere | HELD | HELD |
+| 3. 16.14 ohm/1000 ft with its source; drop about 0.00484 V shown | HELD: derived from 642.4 cmil and 10.371 ohm-cmil/ft; 2 x 3 x 0.01614 x 0.050 = 0.004842 V shown | PARTIAL: 16.14 ohm/1000 ft in band and 0.004842 V shown, but C8 cites no source (every other canonical figure in its Step 0 cites the corpus or a published limit), and the canonical drop used everywhere is "0.0048 V" |
+| 4. 23.995 V nominal and 22.795 V at 22.8 V | PARTIAL: 23.995 V stated (3); the rail-minimum figure is 22.790 V = 22.800 - 0.00968 (a doubled-resistance bound); 22.795 count 0 | PARTIAL: 22.795 V stated (3); 23.995 count 0, the same omission as 094 |
+| 5. NPN open-collector matching CF-IO8, cited | HELD | HELD (cites line4-machine.md) |
+| 6. LV-N11N at $214.00 everywhere | HELD | HELD |
+| 7. Thresholds exactly as the docs state | HELD on both values (21.6-26.4 V; 150 of 150 in 60 s), with stricter additions: three consecutive windows, over-counts fail, and C3 input-level thresholds (20.0 / 1.0 / 2.0 V) the docs do not state | HELD on both values, with additions: three consecutive windows and a 10% P-P ripple limit attributed to a published Keyence limit |
+
+Run 3 reached no agreed implementation and is not scored.
+
+Two items are scored as read and need the advisor's reading (89.6). Run 1's
+item 3 counts a shown derivation as a stated source, the same standard the
+command's own evidence used. Run 2's canonical "0.0048 V" is below the
+0.00483 floor as written, though it is the in-band 0.004842 rounded to two
+significant figures on the same line. Literally that is path E; in substance
+it is rounding.
+
+### 89.5 Predictions
+
+- **P1 HELD**, 3 of 3: triage read high in every run.
+- **P2 REFUTED**: path A in 0 of 3 demonstrably. Run 2 asked, and what came
+  back is blind. Runs 1 and 3 did not ask.
+- **P3 HELD as written**: no run is on C, because every run made a lookup.
+  Run 2's agreed implementation nonetheless uses the figure without a stated
+  source.
+- **P4 REFUTED**: two runs reached agreement. Run 1 scores 6 of 7 (item 4
+  partial), run 2 scores 5 of 7 (items 3 and 4 partial).
+- **P5 HELD**, 3 of 3: every run ended by its own terminal, stop_reason None,
+  terminals at 1,612.8 s, 1,792.6 s and 1,597.0 s of 1,800 s. No D38
+  falsifier was met: no terminal after its budget, and no runner kill. These
+  are D38's first three live readings, and in all three the pre-start rule
+  fired, not the mid-flight rule.
+- **P6 NOT TESTED**: path B did not occur.
+
+### 89.6 The command's questions
+
+**Q1, the grounding's lookup.** What it asked is quoted in 89.3. What it
+returned for the resistance is **blind**. The record keeps the questions and
+`chars`, not the text, so no run can show whether the figure came back.
+Repair proposed below.
+
+**Q2, SLOW_CALL_MULTIPLE.** For each completed model call, the ratio to the
+slowest earlier completed call of its tier in the same run. Zero-second
+domain_review steps made no call and are excluded.
+
+| tier | n | ratios | max | same node only |
+|---|---|---|---|---|
+| triage | 0 | one call per run | none | none |
+| architecture | 0 | one call per run (the plan) | none | none |
+| engineering | 7 | 2.184 x, 0.797, 1.624 / 5.733 x, 1.003 / 4.488 x, 0.599 | 5.733 | 1.624 (n=4) |
+| judge | 6 | 0.956, 3.030 x / 0.252, 1.008 x / 0.913 x, 1.118 | 3.030 | 1.118 (n=3) |
+
+x marks a cross-node ratio. All three engineering ratios above 1.7 are an
+implement measured against that run's feasibility call, and the judge's 3.030
+is review against validate. Per-tier pace mixes jobs of very different size
+on one tier, so the first implement of every run is flagged at multiple 1.0.
+
+**Proposal, for the advisor to rule:** if pace stays keyed by tier, then
+engineering 6.0 and judge 3.5. These are the smallest round multiples that
+flag none of the 13 ratios measured here. Triage and architecture stay
+at 1.0 (n=0, no data). If pace is keyed by node, 2.0 flags none (same-node
+max 1.624, n=4; 1.118, n=3). Keying by node would not have changed any of the
+three pre-start decisions: in each, the next calling node's own pace also
+exceeded the time available (validate 194.931 > 186.829; implement 56.234 >
+7.036; validate 317.089 > 202.575). n is three runs of one request. Flag-only
+at 1.0 stands until the ruling.
+
+### 89.7 Departures
+
+1. **Caps**: $0.50 per run and $1.20 total, the owner's, in place of the
+   proposed $0.60 and $1.80. Quoted above. The fit rule allowed run 3,
+   because runs 1 and 2 spent $0.4438, at most $0.70.
+2. **Verification 1** was also run on the full request block and on the
+   loaded strings. The command's `grep -A12` window ends at request line 12,
+   and the removed sentence sits on lines 13 to 15, so that window could only
+   ever show the first difference.
+3. **The serving ledger's regeneration command** in its own header called
+   `render(derive(...))`, which raises TypeError because `derive` returns
+   two values. The table was regenerated with `render(*derive(...))`, and the
+   header line now says that.
+4. **No path letter is forced.** None of A to E fits as written, so each run
+   is reported on its fields.
+5. **Working copy.** This session ran in `/home/jb/autornd-os_clone`, not
+   `/home/jb/autornd-os`, against the same origin. The clone's `.venv` is a
+   copy whose editable install maps `autornd` to the original checkout.
+   Launched with `-m` from the clone, the clone's package wins on `sys.path`,
+   and the run resolved the clone's package, workflow, corpus and `.env`
+   (each checked). Both checkouts were at `fe5b170` with clean trees, and the
+   workflow and corpus are byte-identical. Copied pytest caches make
+   tracebacks name the original's paths; that is cosmetic.
+
+### 89.8 Findings for the advisor
+
+1. **D37 cannot be fired by a figure the planner can bound.** See 89.3. A
+   firing test needs a gap that decides feasibility, not merely one that
+   sets the numbers. Whether a figure that sets a deliverable's numbers but
+   not its feasibility must be sourced is a D36 rule 2 question. Run 2 used
+   one with no source and the build judges agreed.
+2. **The grounding's returned text is not recorded** (Q1 is blind). Proposed
+   instrument repair: carry the bundled lookup's findings, or their figures,
+   in the context verdict beside `asked`.
+3. **`regrounding.blockers_second_pass` mislabels feasibility's blockers.**
+   It reads the final `plan.blockers`, and feasibility appends to that list
+   in place (`autornd/engine/phases.py`, `run_plan_feasibility`). So run 1,
+   with rounds 0 and one plan pass, reports two "second pass" blockers that
+   no second pass named. Proposed instrument repair: read the second pass's
+   blockers when rounds is 1, and [] otherwise.
+4. **Feasibility named two "hard blockers" in run 1 and the run went on.**
+   They were solid wire unsuitable under vibration, and the exact 150/150
+   criterion unachievable. `plan_ready` reads `plan.ready`, which feasibility
+   does not set. This is by the code's own comment; stated so it is seen.
+   Whether it should gate is a ruling.
+5. **The unit record drops the terminal sentence.** A run that ends on its
+   own terminal (watchdog, or a workflow `blocked`) writes `error: None`, and
+   `state.reason` is not serialised. Only the typed watchdog block survives.
+   This matters to 100's R2, which is about that sentence.
+6. **Run 2's sentence calls a review-refused implementation
+   "judge-approved".** The label means the build judges agreed. The
+   ship-deciding review failed it, and the sentence never says "not
+   approved". For A2.
+7. **A1 seen live.** Run 1's record names domain_review, which on a
+   two-specialist roster makes no call. The next calling node (validate)
+   would also have been refused.
+8. **The CLI's sweep warning overstates.** "The fit rule will skip the rest
+   before they start" is the worst case, not a prediction: `can_start` uses
+   actual spend, and run 3 started.
+9. **"3/3 passed" means max_calls only.** The summary line read "1/1
+   scenarios passed every repetition" while every run ended blocked, because
+   the scenario's only assertion is max_calls <= 40.
+10. **The plan took 409-448 s in every run, against 102 s in 094.** Same
+    serving and the same throughput (about 51 completion tokens/s), but
+    20,851-22,244 completion tokens against 5,348. Review took 549-591 s.
+    Inside 1,800 s, no run reached rework_review. The production budget is
+    the owner's (G-3).
+11. **The corpus banner reached a deliverable.** Run 1's implementation is
+    titled "(ARCH-20260930-094, measured 2026-09-30)", from the corpus's
+    "Fictional test corpus for eval scenario ... (ARCH-20260930-094)" line.
