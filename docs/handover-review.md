@@ -9815,3 +9815,10 @@ at 1.0 stands until the ruling.
 11. **The corpus banner reached a deliverable.** Run 1's implementation is
     titled "(ARCH-20260930-094, measured 2026-09-30)", from the corpus's
     "Fictional test corpus for eval scenario ... (ARCH-20260930-094)" line.
+
+## 90. Ruling D39 — one settings map for every path that runs a workflow (advisor, 2026-09-30, carried by ARCH-20260930-099)
+
+> **Ruling D39 (advisor, 2026-09-30) — one settings map for every path that runs a workflow. Every loop bound a shipped workflow names by setting is resolved from a single function shared by the API path and the eval CLI; no path keeps its own hand-written copy. Rationale: two hand-kept maps drifted. The eval CLI's carries review_rework_attempts and the API path's does not, so the API path ends any blocking review with a ConditionError (reported and reproduced in ARCH-20260930-095's response), while the eval path runs the designed rework loop. The configured bound is the design; a crash is not a conclusion the harness was built to reach. Falsifier: a shipped workflow that names a setting the shared map does not carry. A guard enumerates them.**
+
+Execution record: implementation follows in the commits after this
+section's ruling commit, per the command's commit order.
