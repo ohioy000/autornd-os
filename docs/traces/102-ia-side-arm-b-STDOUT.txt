@@ -1,0 +1,16 @@
+preflight: SKIPPED (--skip-preflight; recorded in the header)
+
+results: evals/results/102-ia-side-arm-b.jsonl
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+golden_side_ia               0/1     10   349.3   ended blocked 1; run 1/1, status 1/1 — stopped at $0.1570 (ceiling $0.0800). By tier: {'triage': 0.0003, 'research': 0.0017, 'architecture': 0.0114, 'engineering': 0.0234, 'search': 0.006, 'escalation': 0.1142}
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed their assertions every repetition (runs ended blocked 1)  ·  10 calls  ·  349.3s  ·  $0.1570
+spend by tier: escalation $0.1142, engineering $0.0234, architecture $0.0114, search $0.0060, research $0.0017, triage $0.0003
+served by: architecture via DeepInfra, engineering via StreamLake, escalation via Moonshot AI, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.1570 of $0.0800
+
+exit 1

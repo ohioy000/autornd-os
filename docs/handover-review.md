@@ -10329,3 +10329,71 @@ Q6   FAIL (no answer)   blocked    no answer              items[] 248.411s/300s 
   medium, low.
 - **P7** (median sprawl above 10): HELD, 32.0.
 - **P8** (the IA side test): pending; it is in flight.
+
+### 94.3 The IA side test, and the overall findings (executor, 2026-10-01)
+
+**The IA side test** (`docs/traces/102-ia-side-arm-b.jsonl`; the owner's
+request verbatim, typos kept): `IA FAIL (no answer) blocked 349.256s/600s
+$0.157/0.08 risk=low`.
+- The path: triage, context, plan, re-grounding round 1 (D37 fired, and
+  its second plan pass ran and came back ready), feasibility, then
+  verify_grounding (10.9 s), and implement (76.0 s), which the blocked
+  gate routed to escalation (191.1 s, one call, $0.1142). That one call
+  crossed the $0.08 ceiling: "stopped by the spend ceiling: stopped at
+  $0.1570 (ceiling $0.0800)".
+- **P8 is REFUTED:** it did not ship. Triage read the regulatory lookup
+  as low risk, so the first grounding made no paid lookup
+  (`context.lookup` null).
+
+**P1** stays REFUTED as written (the gate refused). Finding: the live
+record disputes the refusal (below).
+
+**The decision rule, applied:** on the script's verdicts, **2 of 6** pass,
+which is the redesign branch (D41 turns into the redesign of the default
+path). On the executor's reading of Q5 (94.2), it is 3 of 6, and arm C on
+the failed questions, after a new owner authorisation. The Q5 key ruling
+decides between them.
+
+**Findings:**
+
+1. **Every pin the gate refused served live.**
+   `providers_by_function`: architecture DeepInfra (7 of 7 runs), research
+   Google (7 of 7), escalation Moonshot AI (the IA run's one escalation
+   call). Zero provider failures. All three refusals were false, the
+   instrument rather than the pins. Proposed gate repair (reported, not
+   made, per 103): match provider names the way the router does (display
+   names as well as tags), and report a missing `response_format` as a
+   warning, since the client falls back. Whether D41 allows it is the
+   advisor's call.
+2. **The spend ceiling is checked after a call, so one expensive call can
+   cross it by any amount.** Q2 reached $0.0844 and Q3 $0.0719 against
+   $0.07. The IA run reached $0.1570 against $0.08: one escalation call
+   cost $0.1142. The sweep line read "$0.1570 of $0.0800", against the
+   fit rule's stated "hard guarantee". **Total spend $0.5124, which is
+   $0.0124 over the owner's $0.50 authorisation.** It is recorded here as
+   an overrun.
+3. **Time, not correctness, failed most questions.**
+   - Q2's approved answer was right, and the run was cancelled in
+     rework at 299.6 s of 300 s. Review took 104.5 s.
+   - Q6 stopped at its second implementation: implement 98.0 s and
+     validate 87.0 s, with a 51.2 s cut point.
+   - Q3 hit spend: two implement and validate rounds, with the second
+     implement at 60.1 s and validate at 82.6 s.
+   - The 300 s targets leave about one build iteration and one review on
+     this lineup.
+4. **Sprawl is real** (median 32x the model answer's length).
+   Q4 passed at 10.5x, while Q2's approved answer was 77x.
+5. **Q5's key has two defects** (94.2): "zero visible leakage" is not
+   matched, and first-match ordering is defeated by a preamble.
+6. **Triage read a regulatory lookup (IA) as low risk,** so no paid
+   grounding lookup ran. Q2 (also a lookup) read high and did look up, and
+   its answer was right.
+7. **D37 fired twice live** (Q2 and IA), and both times the second plan ran
+   and was ready. The re-grounding lookup's text is still not recorded
+   (93.3).
+
+**The git operations during the run** were an add, commit and push of
+tracked docs only, while the IA run was in flight, at the owner's explicit
+instruction. A departure from "no git operation while a run is in flight":
+no stash, checkout or merge was made until both runs had finished
+(21:47:12Z).
