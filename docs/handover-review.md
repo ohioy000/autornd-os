@@ -10397,3 +10397,9 @@ tracked docs only, while the IA run was in flight, at the owner's explicit
 instruction. A departure from "no git operation while a run is in flight":
 no stash, checkout or merge was made until both runs had finished
 (21:47:12Z).
+
+## 95. Ruling D42 — a reviewer that fails is not a finding (advisor, 2026-10-01, carried by ARCH-20261001-104)
+
+> **Ruling D42 (advisor, 2026-10-01) — a reviewer that fails is not a finding. When a review specialist fails to produce a usable verdict (an exception, or a reply the schema still rejects after the client's retries), it is retried once. If it fails again, it is recorded as not reviewed, with its failure class, and it never enters the findings or the blocking decision. The review ships only if no completed reviewer blocks AND a quorum completed: at least half of the assigned reviewers, rounded up. Below quorum the review does not ship, and the terminal says the review did not complete, naming who failed and why. Rationale: ARCH-20261001-102 Q2. The build judges agreed on a correct answer; one final-review specialist failed on a schema rejection and was recorded as a high finding (autornd/engine/phases.py:1001-1008), so the review refused the answer and the watchdog ended the run at its 300 s target. An apparatus failure is a fact about the apparatus, not a verdict on the work (convention 18). Falsifier: a run in which an excluded reviewer would have raised a blocking finding that later proves correct.**
+
+Execution record: F1-F3 follow in the commits after this section's ruling commit.
