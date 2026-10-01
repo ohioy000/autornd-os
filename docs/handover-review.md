@@ -10078,3 +10078,118 @@ autornd/engine/phases.py workflows/ autornd/routing/` is empty.
 2. **Feasibility blockers repeat once per reviewer** (each reviewer appends
    its own). The record keeps them as appended, without deduplicating.
 3. **A14 was made here,** as 101 directs, because 100 merged without it.
+
+## 93. Two owner ad-hoc runs: the IA question blocked before implementing, and the logic run was lost (executor, 2026-10-01, no command)
+
+Owner-ruled runs, as in 6.20: the owner asked for each question to be put to
+the harness, and authorised one run at $0.50 (`--repeat 1 --max-spend 0.50
+--max-spend-sweep 0.50`, timeout 1800 s, default profile, engineering-rnd,
+main at `0d783d5`, preflight 31 ok and 0 failing). No pre-registration was
+committed; the answer keys below were stated in the session before the
+results were read. The scenario files lived in the session's scratchpad
+and are gone. Their requests are quoted here verbatim.
+
+### 93.1 Run 1, the IA question: blocked by the watchdog, no implementation
+
+Trace `docs/traces/adhoc-20261001-ia-major-alterations.jsonl`.
+
+The request, as the executor wrote it: "What are the qualifications for an
+FAA Inspection Authorization (IA) held by an aviation maintenance technician
+(A&P mechanic), with respect to approving major repairs and major
+alterations for return to service? List every eligibility requirement for
+issuing the IA, the privileges and limitations that concern major repairs
+and major alterations, and what is required to keep the IA current (renewal
+and activity requirements). Cite the governing section of 14 CFR for every
+requirement, using the current text published on the eCFR
+(https://www.ecfr.gov/), and say which items you could not verify against
+that text."
+
+**The record:** status blocked, stop_reason None, 4 calls, $0.0545,
+1,125.7 s. Triage read critical. Steps: triage 7.7 s, context 9.1 s, plan
+1,096.7 s, reground_context 0 s, reground_lookup 12.3 s.
+
+**The failure, in four links, each read from the record or the run's stderr:**
+
+1. **Grounding returned nothing, and the cause is outside the record.** The
+   knowledge store was empty ("Knowledge collection not found" x5), so the
+   context node fell back to scoping the request on the research tier.
+   That call drew two 429s and failed. stderr, quoted in the session before
+   the scratchpad was lost:
+
+   > 429 for google/gemini-3.8-flash (attempt 1/3) — upstream capacity, retrying in 2.0s
+   > 429 for google/gemini-3.8-flash (attempt 2/3) — upstream capacity, retrying in 4.0s
+   > Request scoping failed (429 from chat/completions: Provider returned error — google/gemini-3.8-flash is temporarily rate-limited upstream. ...) — phases run on the request alone
+
+   So no blocking unknowns, no first-grounding lookup (`context.lookup`
+   null), `chars: 0`, `grounded: false`. The unit record shows
+   `retries.total: 0` and `calls_by_tier.research: 1`. The two retries and
+   the failed scoping call are not in it.
+2. **The plan ran ungrounded at critical risk and used 61% of the budget.**
+   One architecture call ran 1,096.7 s, with 43,485 completion tokens and a
+   48,954-character plan. It is a 28-row compliance matrix with every row
+   UNVERIFIED. It ended `ready: false` with five blockers. The first is "No
+   eCFR access from the drafting environment: 0 of the 28 rows could be
+   confirmed ...". The others: the Subpart D section map was recalled, not
+   verified; the renewal content was unverified; whether an IA may approve
+   its own major repair was open; and amendment currency.
+3. **D37 fired: its first live firing.** rounds 1, all five blockers novel,
+   one bundled lookup (`asked: 5, found: 1`), one search call. The
+   blockers were sent as paragraphs, not questions. **What the lookup
+   returned is not recorded**: R6 covers the first grounding's lookup only.
+4. **The watchdog refused the second plan pass,** correctly under
+   D38/D40: "the architecture call at 'plan' (iteration 2) was not started:
+   this node's pace is 1096.651s and only 673.898s of the 1800s budget
+   remain before the 0.4s reserve; no implementation was agreed by the
+   build judges". `pace_basis: node`, terminal at 1,125.7 s. The run never
+   implemented.
+
+**Scored against the answer key** (14 CFR 65.91, 65.93 and 65.95, read
+through the Cornell LII mirror; ecfr.gov redirected the executor's fetch to
+unblock.federalregister.gov): no implementation exists, so there is nothing
+to score. The plan text carries none of "3 years", "2-year", "90 days", "8
+hours" or "March". It cites 65.93 eight times, 65.95 three times, 65.91 once
+and 65.92 never.
+
+**The executor's own contribution:** the clause "say which items you could
+not verify against that text" was the executor's, not the owner's. It is
+the 094 pattern the advisor named as its own error: it invites the planner
+to block on verification.
+
+### 93.2 Run 2, the logic question: no record, killed with the session
+
+Trace `docs/traces/adhoc-20261001-logic-door-brake-HEADER-ONLY.jsonl`
+(header only). The request, verbatim from the owner: "describe a logic
+circuit where an indicator light would be lit when either the forward or aft
+cabin door is open and the braking system is engaged, include: logic,
+polarity, and gates in the response".
+
+The owner's answer key: positive-logic polarity (1, true or high means
+voltage present and the condition active); both door inputs to an OR gate;
+the OR output and the brake-engaged signal to an AND gate; the AND output
+lights the indicator.
+
+The run started at 18:38:02Z, queued behind run 1 by a shell script in the
+executor's session. The session ended while it was in flight, and the
+process ended with it. **No unit record was written and no mirror exists,
+so what it spent is unknown, bounded by the $0.50 cap.** It is not scored
+and should be rerun.
+
+### 93.3 Findings for the advisor
+
+1. **A failed scoping call is invisible in the run record.** A 429 there
+   silently zeroes the grounding (`chars 0`, no lookup), and only stderr
+   says why. The record's `retries` (0) and `calls_by_tier.research` (1) do
+   not count the two retried attempts or the failure.
+2. **The re-grounding lookup's findings are not recorded** (`asked: 5,
+   found: 1`, no text). Path B is as blind as path A was before R6.
+3. **One plan pass can spend more than half the budget,** after which D40's
+   own-node pace makes D37's second pass unaffordable by construction. On a
+   1,800 s budget, a 1,096 s first plan means D37 cannot finish here.
+4. **The context record's `asked` was rewritten after the fact** to include
+   the five blockers (the in-place mutation named in 093 note 2, still
+   open).
+5. **A run whose process dies writes no unit record and no spend.** The
+   accounting of a killed run is lost. 098-era runs were safe only because
+   the process outlived nothing.
+6. **The research tier's pin was rate-limited upstream during this run.**
+   Whether to re-pin is G-2, the owner's.
