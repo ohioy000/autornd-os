@@ -1,9 +1,9 @@
 {
   "command_id": "ARCH-20260930-099",
-  "status": "IN_PROGRESS",
-  "executed": false,
+  "status": "DONE",
+  "executed": true,
   "head_before": "43cd4a7",
-  "head_after": null,
+  "head_after": "b425a2f",
   "arrival": {
     "parent_id": "ARCH-20260930-095: .orchestration/responses/ARCH-20260930-095.response.json present",
     "preconditions_present": 3,
@@ -15,23 +15,42 @@
       "check": "sed -n '92,96p' autornd/engine/workflow.py; sed -n '112,118p' autornd/evals/cli.py",
       "result": "PASS, quoted. API path (workflow.py:92-96): settings_lookup={max_iterations, escalation_recovery_attempts, escalation_max_tokens}. Eval CLI (cli.py:112-118): _settings() returns {max_iterations, escalation_recovery_attempts, review_rework_attempts, plan_max_tokens, escalation_max_tokens}. Divergence exactly as the evidence states: the API map lacks review_rework_attempts and plan_max_tokens."
     },
-    {
-      "n": 2,
-      "check": "grep -n 'max_iterations: review_rework_attempts' workflows/engineering-rnd.yaml",
-      "result": "PASS: line 312"
-    },
-    {
-      "n": 3,
-      "check": ".venv/bin/python3 -m pytest tests/ -q",
-      "result": "PASS: 1107 passed in 67.94s"
-    }
+    {"n": 2, "check": "grep -n 'max_iterations: review_rework_attempts' workflows/engineering-rnd.yaml", "result": "PASS: line 312"},
+    {"n": 3, "check": ".venv/bin/python3 -m pytest tests/ -q", "result": "PASS: 1107 passed in 67.94s"}
   ],
   "baseline_suite": "1107 passed in 67.94s",
-  "results": {},
-  "deviations": [],
+  "commits": {
+    "in_progress": "60030a2",
+    "ruling": "328066e",
+    "implementation_tests_counts": "40a2621",
+    "notebook": "b425a2f"
+  },
+  "results": {
+    "ruling_first": "D39 is committed verbatim in HANDOVER.md (after D38) and in notebook section 90 at 328066e, before the code at 40a2621. Both copies were checked character for character against the command's constraint text.",
+    "one_source": "autornd/config.py: LOOP_BOUND_SETTINGS = (max_iterations, escalation_recovery_attempts, review_rework_attempts) and settings_lookup(), read from settings when called. engine/workflow.py and evals/cli.py (both run_repeated call sites) call it; the API path's inline map and the CLI's _settings() are deleted.",
+    "reference_check": "Every GraphExecutor( outside the executor: autornd/engine/workflow.py:92 and autornd/evals/runner.py:782. The runner receives its lookup from evals/cli.py, whose _settings() had two callers (lines 243 and 252), both replaced. No other production builder; tests construct their own lookups for their own graphs. The command's assumption holds.",
+    "acceptance_grep": "grep -n 'review_rework_attempts' autornd/engine/workflow.py autornd/evals/cli.py -> no output (exit 1).",
+    "guard": "tests/test_settings_map.py::TestEveryNamedLoopBoundIsInTheSharedMap. Loads every workflows/*.yaml through graph.spec.load, collects each node whose max_iterations is a string, asserts that set is non-empty and contains (engineering-rnd.yaml, review_rework_loop, review_rework_attempts), and asserts every named setting is in settings_lookup(). Also asserts the map reads live settings.",
+    "api_path_test": "tests/test_settings_map.py::TestTheAPIPathReachesTheReworkLoop drives WorkflowEngine.execute through engineering-rnd with the billing double; loop bounds set distinct (max_iterations 5, escalation_recovery_attempts 1, review_rework_attempts 4). A review that blocks once: status completed, error None, phase records {(review, 1), (rework_review, 1)}. A review that always blocks: rework_review iterations [1, 2, 3, 4] (the configured bound), then one escalation record, ending blocked at the recoverable gate, not in a ConditionError.",
+    "break_1_map": "review_rework_attempts removed from LOOP_BOUND_SETTINGS: \"AssertionError: a shipped workflow names a loop bound the shared settings map does not carry (Ruling D39's falsifier): [('engineering-rnd.yaml', 'review_rework_loop', 'review_rework_attempts')]. The map carries ['escalation_recovery_attempts', 'max_iterations']\"; the API tests fail with \"ConditionError: loop 'review_rework_loop' wants max_iterations from setting 'review_rework_attempts', which is not available; known: ['escalation_recovery_attempts', 'max_iterations']\". Restored.",
+    "break_2_pre_fix_engine": "The pre-fix engine/workflow.py restored, with the shared map intact: both API tests fail with \"ConditionError: loop 'review_rework_loop' wants max_iterations from setting 'review_rework_attempts', which is not available; known: ['escalation_max_tokens', 'escalation_recovery_attempts', 'max_iterations']\", 095's report verbatim. The guard passes in that state, because the guard reads the map and the API tests read the path. Restored.",
+    "verification": {
+      "1": "grep -n 'Ruling D39' HANDOVER.md docs/handover-review.md -> HANDOVER.md:26; docs/handover-review.md:9819 (section heading) and :9821 (ruling).",
+      "2": "git diff --stat origin/main -- workflows/ autornd/graph/ -> empty.",
+      "3": "1107 passed before; 1112 passed after (70.33s)."
+    },
+    "counts": "Tests 1107 -> 1112, test files 63 -> 64, re-derived by the guards and written in README.md (badge, structure, Testing), HANDOVER.md (header, tree, 3.7 total, 4.2) and AGENTS.md (Current shape). No setting value changed."
+  },
+  "deviations": [
+    {"what": "The shared map carries the three loop bounds only, not plan_max_tokens or escalation_max_tokens", "reason": "Nothing read them from the lookup. GraphExecutor reads self.settings only in _budget, and adapter._max_tokens resolves named ceilings from the settings module (as the command's evidence says). Carrying them would make the map look like it governs token ceilings."},
+    {"what": "The always-blocking API test uses an escalation that requires a human", "reason": "recovery_loop also contains rework_review, so a recoverable escalation would mix recovery iterations into the count the test reads."}
+  ],
   "questions_for_advisor": [],
+  "findings": [
+    "HANDOVER.md section 3.7's per-file table lists 55 of the 64 test files, and no guard reads its rows (only the total). It is a hand list of the kind D29 deletes."
+  ],
   "delivery_state": {
     "branch": "arch/20260930-099-one-settings-map",
-    "pr": null
+    "pr": 107
   }
 }
