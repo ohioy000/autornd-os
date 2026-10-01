@@ -499,6 +499,12 @@ class ReviewVerdict(BaseModel):
     ship: bool
     findings: list[ReviewFinding] = Field(default_factory=list)
     verdict: str = Field(description="Final synthesis statement")
+    # Ruling D42: reviewers that failed twice, with their failure class. They
+    # are not findings and never block; the quorum below decides whether the
+    # review completed. Set by the aggregation, never by a model.
+    not_reviewed: list[dict[str, str]] = Field(default_factory=list)
+    reviewers_assigned: int | None = None
+    reviewers_completed: int | None = None
 
     @field_validator("findings", mode="before")
     @classmethod
