@@ -1,0 +1,91 @@
+{
+  "command_id": "ARCH-20260930-096",
+  "parent_id": null,
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "No paid eval sweep starts until the free preflight has passed on the configuration it will use, including a check that every pinned endpoint accepts the parameters the harness sends. The result is written into the results header.",
+  "evidence": [
+    "autornd/preflight.py docstring: four apparatus deaths on 2026-09-20, every one detectable for free. It is run by hand ('Run it with python -m autornd.preflight').",
+    "`grep -rin preflight autornd/evals/ autornd/cli.py` finds nothing, so no sweep runs it.",
+    "docs/traces/091-night-20260930T003221Z-robotics-only.jsonl: '404 ... No endpoints found' for the escalation pin after $0.022 was spent. docs/traces/091-night-20260930T023940Z-robotics-only.jsonl: the same 404 for the triage pin. Both are the class of failure preflight checks for.",
+    "docs/traces/076, 077, 078 and 082: 'Filter by Parameters removed ...', meaning OpenRouter stripped pinned endpoints that did not accept a sent parameter. autornd/routing/openrouter.py:595 sends response_format (json_object), and :454-459 retries without it on a 400.",
+    "OpenRouter's public endpoints route reports supported_parameters per endpoint (checked by the advisor on 2026-09-30: present, including response_format, on every endpoint sampled). preflight.py already calls that route and does not read the field.",
+    "autornd/evals/cli.py:86 (main) and :152 (ResultsLog with config, whose header is written at runner.py:207) are where the gate and its record go.",
+    "D30: this is the batch's process command. What it prevents: paying for a run on a configuration that free checks would reject."
+  ],
+  "scope": {
+    "include": [
+      "autornd/evals/cli.py",
+      "autornd/preflight.py",
+      "autornd/evals/runner.py (header field only)",
+      "tests/",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "autornd/routing/: no routing, pin or retry change.",
+      "autornd/engine/, autornd/graph/, workflows/: the API path is out of scope; whether production runs preflight at startup is a separate decision.",
+      ".env and any .env* file: the pins are the owner's (G-2, G-3)."
+    ]
+  },
+  "constraints": [
+    "GATE: in autornd/evals/cli.py, before the first scenario and before any client call, run preflight.run(). If any finding is not ok, print every finding, make no paid call, and exit with a distinct non-zero code.",
+    "OVERRIDE: --skip-preflight is allowed. The results header then records preflight {ran: false, override: true}. When the gate runs, the header records every finding (ok, name, detail), so the record shows what was verified before the spend.",
+    "NEW CHECK: for each pinned tier (model plus provider pin), the endpoint the pin selects must list, in supported_parameters, every parameter the harness sends on that tier: at least response_format and max_tokens. Derive the sent set from the client's payload construction, or guard a hand list with a test that builds a real payload and compares. A listing with no supported_parameters field is BLIND: report it as not ok, with that word, because no evidence must never be reported as no problem (convention 28). An unpinned tier is reported as 'unpinned — parameter support depends on the router's choice' and does not fail.",
+    "TESTS (provider-free, through the real gate function or cli main, with the catalogue fetch mocked): (a) a failing finding refuses the sweep with zero billed client calls; (b) all ok, so it proceeds; (c) --skip-preflight proceeds and the header records the override; (d) a pinned endpoint lacking response_format gives a failing finding naming tier, model and pin; (e) a listing without supported_parameters gives a blind finding; (f) the header carries the findings, read back from disk. PROVE BY BREAKING: make the gate ignore findings and show (a) fail.",
+    "Free. No model name in code. No change to any pin."
+  ],
+  "acceptance_criteria": [
+    "Tests (a) to (f) pass, and the break demonstration is quoted.",
+    "A dry run (`python -m autornd.evals.cli` with a placeholder-pinned config and a mocked catalogue) shows the refusal and the exit code in the response.",
+    "Suite green, with counts before and after. The PR is opened and delivery_state carries its number."
+  ],
+  "verification": [
+    {
+      "command": "grep -n 'preflight' autornd/evals/cli.py",
+      "expected": "The gate and the override flag."
+    },
+    {
+      "command": "grep -n 'supported_parameters' autornd/preflight.py",
+      "expected": "The new check reads the field."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass; count before and after."
+    }
+  ],
+  "rollback": "Revert the merge. The gate is additive, and --skip-preflight bypasses it without a revert.",
+  "deliverable": {
+    "branch": "arch/20260930-096-preflight-gate",
+    "branch_created_by": "advisor",
+    "pr": true,
+    "merge": "by the advisor-custodian on green",
+    "commit_style": "conventional"
+  },
+  "transport": "Process in command_id order: start only after ARCH-20260930-095 has merged, and merge origin/main into this branch first so counts are re-derived on a current tree (never stack). Pushed by the advisor under the owner's grant of 2026-09-30. Commit the response IN_PROGRESS first.",
+  "assumptions": [
+    "preflight.run() uses the configured pins from settings, as its docstring says. If the eval CLI can run with a different configuration from what preflight reads, report how."
+  ],
+  "questions": [
+    "Would the gate have refused last night's runs 2 and 8 (traces 003221Z and 023940Z)? Answer from preflight's logic against those headers' models and pins, without network access if possible."
+  ],
+  "preconditions": [
+    {
+      "command": "grep -rin 'preflight' autornd/evals/ autornd/cli.py | wc -l",
+      "expected": "0"
+    },
+    {
+      "command": "grep -n 'async def run\\|class Finding' autornd/preflight.py",
+      "expected": "run() and Finding exist; record the line numbers."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green; record the count."
+    }
+  ]
+}

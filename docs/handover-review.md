@@ -9295,3 +9295,241 @@ where it means `$0.51` — a shell expanded `$0` to its own name through
 `bash -c` (convention 26, measured again). The spend figure is $0.51 of
 $1.50; the commit message is wrong, the trace is right. Left in history
 per the no-rewrite rule; corrected here.
+
+## 86. Ruling D38 — the deliberation watchdog finishes cleanly (advisor, 2026-09-30, carried by ARCH-20260930-095)
+
+> **Ruling D38 (advisor, 2026-09-30; default chosen by the owner) — the deliberation watchdog finishes cleanly. A run with a declared time budget ends by its own terminal, never by being killed from outside mid-call. Slow deliberation is not itself a fault: no call is cancelled for being slow while the budget holds. Before each model call, if this run's own measured pace for that call's tier says the call cannot finish inside the remaining budget less a reserve for writing the terminal, the call is not started; during each call, when that point arrives, the call is cancelled. Either way the run ends at once with status blocked and a typed watchdog record naming the rule that fired, the node, iteration, tier, configured serving, elapsed time, budget and pace. Everything produced so far is kept. The terminal points at the last implementation the build judges agreed on and names which later gates it did or did not pass; the latest implementation, if it differs, is labelled unjudged (D22). A call that runs far past its tier's pace in this run is flagged in the record, not cancelled, until measured runs set the multiple. A run with no declared budget behaves exactly as today; the production budget is standing configuration and the owner's (G-3). The watchdog stops the wait; whether the provider stops billing an abandoned call is unknown, and the record says so. This implements the second clause of D25. Exhibit: ARCH-20260930-094, where the build judges agreed at $0.070 and the run was killed at 3,600 s having spent $0.51 and returned no answer. Falsifier: a watchdog-ended run whose terminal is written after its budget, or a budgeted run whose stop_reason says the runner killed it, means the watchdog failed; a trip on a fast-judge control run means the pace rule is wrong.**
+
+Execution record: implementation follows in the commits after this
+section's ruling commit, per the command's commit order.
+
+### 86.1 What was built (executor, 2026-09-30)
+
+`GraphExecutor` takes an optional `time_budget` and `reserve_seconds`. With
+no budget, every node is a bare await, as before. With one, two rules run
+around each node in `_execute`. Before an AI node, if this run's pace for its
+tier (the longest completed model-calling step of that tier) exceeds the
+budget less elapsed less the reserve, the node is not started. During every
+AI or check node, an `asyncio.timeout` granted up to the cut point cancels
+it when that point arrives. Either way `state.end("blocked", ...)` writes a
+plain sentence, and `state.watchdog` carries the typed `WatchdogRecord`:
+rule, node, iteration, tier, serving (configured, never observed), elapsed,
+available, pace, terminal time, billing note, and a pointer to the last
+agreed iteration. The pointer gives the index into the unit record's
+`iterations` list, the loop, review/rework_review as passed, failed, cut or
+not_reached, and whether the latest implementation differs. `stop_reason`
+stays None. `StepRecord` gains `tier` and `cancelled`.
+
+The eval runner passes the scenario deadline as the budget, and its
+`wait_for` stays as the outer backstop. The unit record gains `steps` and
+`watchdog`, and `ResultsLog.record` now writes `regrounding`,
+`regrounding_rounds` and `assumptions_declared`, which it had dropped since
+093. `engine/workflow.py` passes `RUN_TIME_BUDGET_SECONDS` (`None` by
+default); `.env.example` carries it commented, with no value, because the
+production budget is the owner's (G-3). `make_mock_client` takes per-function
+delays that sleep before billing.
+
+### 86.2 Measurements (free, no provider call)
+
+**Today's behaviour, read on today's code.** The same request and double run
+on c444c51 (the ruling commit, executor untouched) and on the new code with
+no budget: both `completed`, the same 17-node path, 10 calls
+`{triage 1, research 2, architecture 1, engineering 3, judge 3}`. Test (a)
+pins those figures and makes entering the timer an error.
+
+**The reserve.** Real path, billing double, two passes of 30 cuts: cut point
+to terminal written max 0.0027 s (median 0.0012-0.0015 s); to `run()`
+returning max 0.0031 s. Real `OpenRouterClient` against a local socket that
+never answers, two passes of 20: expiry to the await raising max 0.0039 s
+(median 0.0019-0.0027 s). 0.0039 x 100 = 0.39, rounded up to
+`WATCHDOG_RESERVE_SECONDS = 0.4`; 0.07% of the 600 s default, 0.011% of
+094's 3,600 s.
+
+**Question 1: does cancellation close the connection?** Locally, yes. The
+server saw EOF after 40 of 40 cuts, and a suite test now asserts it.
+Through TLS to a remote provider it is not observable from here, so the
+billing note stands as ruled.
+
+**Prove by breaking.** Watchdog disabled in source, test (b) unchanged:
+`AssertionError: assert ('runner stopped the run: timed out after 1s' is
+None)`; the run read `status: blocked`, `stop_reason: runner stopped the
+run: timed out after 1s`, `watchdog fired: False`, 1.203 s. Restored: no
+stop_reason, `fired: True`, 0.803 s. `assumptions_declared` dropped from the
+writer, test (g): `assert ['assumptions_declared'] == []`.
+
+**Flakiness, found and fixed before commit.** Two copies of
+`tests/test_watchdog.py` running at once flipped test (c) in 2 rounds of 12,
+the HTTP observation in 1 of 4, and the reserve test once. The causes were
+measured: reaching the first judge call is almost all `context`, at
+0.10-0.25 s with a fresh store per run and past 0.35 s under load, while my
+margins had assumed 0.02 s. The HTTP cut sometimes landed before the
+request was fully sent. After the fixes (one warm isolated store per
+module, margins derived for a 0.4 s pre-judge phase, the HTTP cut at 0.5 s,
+asserted to land in flight), 20 file runs under 2x concurrency: 0 failures.
+
+### 86.3 Departures
+
+1. **Check nodes are watched mid-flight as well as model calls.** The
+   command said "around _run_ai". Three checks make paid lookups, and 094's
+   context took 22.5 s. Leaving them unguarded would let the runner kill a
+   budgeted run mid-call, which D38 names as its falsifier. Checks get no
+   pre-start rule, because they have no tier pace.
+2. **No time left means not started, even with no pace.** When the cut point
+   has already passed, a call is not started (rule `not_started`, pace None)
+   rather than started and cancelled at once. The record makes the case
+   readable: `available_seconds <= 0`.
+3. **Pace counts only steps that made a call.** domain_review with no peers
+   makes none and takes 0 s (094's did); counting it would set a 0 s pace.
+4. **The latest implementation gets one of three labels.** `approved` when it
+   is the agreed one; `unjudged` when no judge finished reading it, as
+   ruled; `dissented` when the build judges read it and dissented. In that
+   last case "unjudged" would be false. Asked below.
+5. **Slow-call flag at a multiple of 1.0, with the ratio.** The ruling leaves
+   the multiple unset until measured runs set it, so every excess over the
+   pace is flagged and carries its ratio. A 0 s pace flags nothing.
+6. **Three tests in `tests/test_evals.py` were rewritten (convention 17).**
+   `test_timeout_is_recorded_not_raised` and the two `TestTimeoutPrecedence`
+   tests asserted the runner's kill text on budgeted runs. Their subjects
+   (recorded, not raised; which deadline governs) are right. Their reading
+   is D38's falsifier. They now read the watchdog record and its
+   `budget_seconds`, and still fail if precedence breaks.
+7. **Suite time.** About 49 s before, about 61 s after; test_watchdog.py is
+   about 12 s of real waiting, each wait being the condition its test watches.
+
+### 86.4 Findings and questions for the advisor
+
+- **The pre-start rule names the first judge-tier NODE, which may make no
+  call.** On a two-specialist roster, domain_review has no peers. The rule
+  fires there, not at validate, and the run ends at the same paid point,
+  since only free checks sit between them. Should the record defer the name
+  to the next node that calls, or is the node the right unit?
+- **Question 3, answered with bounds.** 094's record has per-node totals,
+  not per-step times, so whether the pre-start rule would have fired cannot
+  be measured, and a provider-free replay reproduces the logic but not the
+  latencies. What the record does settle: review was one step at 653.673 s,
+  so the judge pace from then on was at least that. The third
+  rework_review, in flight at the kill, was refused at its start if and only
+  if the first two summed to more than 680.234 s; otherwise the mid-flight
+  rule cancels it at 3,599.6 s. **Either way 094 ends by its own terminal,
+  blocked, stop_reason None.** The pointer, replayed from 094's own history:
+  agreed at index 1 (build_loop iteration 2, then review failed it) and
+  index 4 (recovery_loop iteration 1). Last agreed is index 4, whose
+  rework_review was the cut call, and it is the latest implementation. Both
+  carry the same four literal key figures (0.00483, 22.795, 214.00,
+  LV-N11N), and neither carries 23.995 (section 85). If the pre-start rule
+  had instead fired before the recovery iteration's judges ran, the pointer
+  would be index 1, with the recovery implementation unjudged.
+- **Question 2.** The serving of an in-flight call is not knowable before its
+  response; `provider` arrives in the response body. The record carries the
+  configured model, provider order and fallback flag, labelled configured,
+  and `serving_observed` is always None for a cut call.
+- **A pre-existing API-path defect, found while reading
+  engine/workflow.py.** Its `settings_lookup` has no
+  `review_rework_attempts`, so a blocking review on the API path ends
+  `BLOCKED` with `ConditionError: loop 'review_rework_loop' wants
+  max_iterations from setting 'review_rework_attempts', which is not
+  available`. Reproduced with the billing double. Not fixed: supplying it
+  changes what the API path concludes.
+- **Unguarded count drift (not touched).** CLAUDE.md states "215 such
+  classes across 55 files" (the tree has 240 across 61) and
+  `.claude/context/testing.md` states "58 test files, 1045 tests". No guard
+  reads either.
+
+## 87. No paid sweep without a passing preflight (executor, 2026-09-30, ARCH-20260930-096)
+
+### 87.1 What was built
+
+`autornd/evals/cli.py` runs `preflight.run()` before the results file and
+before any client exists. A failing finding, or a preflight that cannot run,
+prints every finding and returns exit 3 (`PREFLIGHT_REFUSED_EXIT`), distinct
+from 0, 1 and argparse's 2, with no results file written. `--skip-preflight`
+proceeds and records `{ran: false, override: true}`. When the gate runs, the
+header records `{ran, override, passed, findings: [{ok, name, detail}]}`.
+
+`autornd/preflight.py` gains `check_parameters`. For every function the
+client calls with (triage, engineering, architecture, escalation, research,
+search, judge, independent, ranker), it resolves the model and pin exactly
+as `OpenRouterClient.chat` does (`get_model`, `provider_order_for`). For
+each pinned provider it selects the endpoints the pin matches, and requires
+one of them to list every parameter sent on that call path:
+`response_format, max_tokens, temperature` through `chat_json`;
+`max_tokens, temperature` for search, a plain chat; none for the ranker's
+rerank API. No listing, no tags, or no `supported_parameters` field is
+reported **blind**, and blind fails. An unpinned function is reported and
+does not fail. The parameter lists are a hand list, guarded by tests that
+build the real payloads through `chat_json`, the search lookup and `rerank`.
+
+### 87.2 Measurements (free; catalogue reads only, no model call)
+
+**Pins match slugs, not display names.** 091 run 8's router error lists the
+six endpoint tags it removed for the pin `google`
+(google-ai-studio[/flex|/priority], google-vertex/global[...]); none has
+`google` as its slug. Today's catalogue gives the Vertex rows
+provider_name "Google", so the old pin check, which matches display names,
+passes that pin. Selection is therefore by tag: an exact tag, else the tag's
+first segment, case ignored. Pins written `Nebius` and `DigitalOcean` served
+live against `nebius/fp8` and `digitalocean`, and an exact tag
+(`google-ai-studio`) excludes its /flex and /priority rows, which the router
+removed in run 8 as rows the request had not opted into.
+
+**The sent set differs by call path.** On 094's configuration (every chat
+tier served live through its pin), all chat_json pins list the three
+parameters. The search pin (Perplexity) lists max_tokens and temperature but
+not response_format, and search never sends it; the ranker pin (Fireworks)
+lists none, and the rerank API sends none. A blanket "at least
+response_format" would have failed a pin that served.
+
+**Your configuration passes.** `python -m autornd.preflight` against the live
+configuration: 24 ok, 0 failing, all nine parameter findings ok.
+
+**Dry run** (the real `python -m autornd.evals.cli` against a local fake
+catalogue, placeholder models and pins, the API key blanked): the escalation
+pin's endpoint lacks response_format, and the CLI printed every finding and
+`refused: ... (exit 3)`. Exit code 3; 3 catalogue GETs, 0 chat or rerank
+POSTs, 0 Authorization headers received, no results file written.
+
+**Break.** The gate made to return proceed regardless of findings: test (a)
+fails with `assert 0 == 3`, because the sweep ran.
+
+### 87.3 Departures
+
+1. The required parameter set is derived per call path, not "at least
+   response_format and max_tokens" for every tier: search is a plain chat
+   and sends no response_format, and the ranker sends no chat parameters.
+   temperature is included, because the client sends it on every chat.
+2. Findings are per (function, pinned provider), and a pin passes if any
+   endpoint it selects lists every sent parameter: the router can serve
+   through any of them.
+3. tests/test_preflight.py gains an autouse fixture that blanks the owner's
+   OPENROUTER_PROVIDER_ORDER. config.py loads .env inside the suite, and two
+   tests that patch `_pins()` failed on the owner's real pins once `run()`
+   also read `provider_order_for`. Their subject was right; they had stopped
+   being hermetic.
+
+### 87.4 Findings for the advisor
+
+- **The old pin check reads a different configuration from the client's**
+  (the command's assumption):
+  - `_pins()` reads only tier-scoped entries, so general pins, which the
+    client applies to every tier, go unchecked.
+  - A `premium:` pin is checked, but the independent pass calls function
+    `independent`, so the client never applies it. The owner says premium
+    is not used, so nothing is affected today.
+  - With MODEL_JUDGE unset, a `judge:` pin fails as "no model is set", while
+    the client applies it to the engineering model. The gate would refuse
+    that configuration.
+
+  The new check reads what the client reads, so it sees all three
+  correctly. The old check is unchanged.
+- **Runs 2 and 8, answered offline from their own traces.**
+  - **Run 8:** refused. The pin `google` selects none of the six tags in
+    the router's error; the gate exits 3 before any call (the run made 0
+    calls and spent nothing).
+  - **Run 2:** refused, by inference. The pin `Relace` selects `relace/fp4`,
+    which the router's error says was removed "by Parameters". The trace
+    does not carry that endpoint's parameter list, so this cannot be shown
+    directly. But the payload's only model parameters are the three the
+    guard test pins, so a parameter filter removing the endpoint means its
+    listing lacked one of them. Refusing would have saved 8 calls and
+    $0.0223.
+

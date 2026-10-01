@@ -15,6 +15,7 @@ import asyncio
 import sys
 from pathlib import Path
 
+from autornd import preflight
 from autornd.config import settings
 from autornd.evals.runner import (
     _BUDGET_EPSILON,
@@ -34,6 +35,41 @@ from autornd.routing.openrouter import OpenRouterClient
 # it exists for: a full workflow over the wide suite is 108 units at ~$0.1454,
 # about $15.70. That stops here and needs a deliberate override to proceed.
 SWEEP_CAP_DEFAULT = "1.00"
+
+# The exit code of a sweep the preflight gate refused. Distinct from 0 (every
+# scenario passed), 1 (a scenario failed) and 2 (argparse's usage error), so
+# a script driving a sweep can tell "nothing was run" from "it ran and failed".
+PREFLIGHT_REFUSED_EXIT = 3
+
+
+async def preflight_gate(skip: bool) -> tuple[dict, bool]:
+    """Run the free preflight before any paid call. (header record, proceed).
+
+    ARCH-20260930-096. The checks in autornd/preflight.py catch, for nothing,
+    the apparatus deaths that otherwise cost a paid call to discover: a pin
+    that serves no endpoint of its model (091 run 8, a 404 before the first
+    call), and a pin the router strips by parameters (091 run 2, a 404 after
+    eight paid calls). They ran only when someone remembered to run them.
+
+    A preflight that cannot run is a refusal, not a pass: no evidence must
+    never be reported as no problem (convention 28). The override is
+    recorded, so a results file says whether its configuration was checked.
+    """
+    if skip:
+        return {"ran": False, "override": True}, True
+    try:
+        findings = await preflight.run()
+    except Exception as exc:
+        return {"ran": False, "override": False, "passed": False,
+                "error": f"{type(exc).__name__}: {exc}"}, False
+    record = {
+        "ran": True,
+        "override": False,
+        "passed": all(f.ok for f in findings),
+        "findings": [{"ok": f.ok, "name": f.subject, "detail": f.detail}
+                     for f in findings],
+    }
+    return record, record["passed"]
 
 
 def parse_sweep_cap(value: str) -> SweepBudget | None:
@@ -110,6 +146,11 @@ async def main() -> int:
                              f"'none' to disable. With --max-spend also set this "
                              f"is a hard guarantee: a unit that might not fit is "
                              f"never started")
+    parser.add_argument("--skip-preflight", action="store_true",
+                        help="start without the free preflight. The results "
+                             "header records the override. Without this flag a "
+                             "failing preflight refuses the sweep before any "
+                             f"paid call, exit code {PREFLIGHT_REFUSED_EXIT}")
     parser.add_argument("--results-file", default=None, metavar="PATH",
                         help="where to append per-unit JSONL results. Defaults "
                              "to evals/results/<utc-timestamp>-<suite>.jsonl. "
@@ -145,6 +186,25 @@ async def main() -> int:
                 f"${budget.cap / wanted:.4f}, if you want the full sample.\n"
             )
 
+    # Free, before the results file and before any client exists. A refused
+    # sweep writes no results file: a header with no units is not a record of
+    # a run, and 25 of them from one night are named in notebook section 83.3.
+    preflight_record, proceed = await preflight_gate(args.skip_preflight)
+    if args.skip_preflight:
+        print("preflight: SKIPPED (--skip-preflight; recorded in the header)\n")
+    elif not proceed:
+        if "error" in preflight_record:
+            print(f"preflight could not run: {preflight_record['error']}")
+        for finding in preflight_record.get("findings", []):
+            mark = "ok " if finding["ok"] else "FAIL"
+            print(f"[{mark}] {finding['name']:34} {finding['detail']}")
+        print(f"\nrefused: the preflight did not pass, so no paid call was made "
+              f"(exit {PREFLIGHT_REFUSED_EXIT}). Fix the configuration, or pass "
+              f"--skip-preflight to run anyway with the override recorded.")
+        return PREFLIGHT_REFUSED_EXIT
+    else:
+        print(f"preflight: {len(preflight_record['findings'])} checks passed\n")
+
     # The header makes a results file self-describing: which model ran at each
     # tier, who was pinned to serve it, and what the run was allowed to spend.
     # Without it a stored result cannot be priced against its serving later,
@@ -160,6 +220,8 @@ async def main() -> int:
             "timeout": args.timeout,
             "models": OpenRouterClient.FUNCTION_MODELS,
             "provider_order": settings.openrouter_provider_order,
+            # What was verified before the spend, or that it was skipped.
+            "preflight": preflight_record,
         },
     )
     print(f"results: {results.path}")
