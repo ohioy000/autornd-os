@@ -77,6 +77,47 @@ _STOPWORDS = {
 # between a plan and its implementation.
 _NUMBER = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)\s*([a-zA-Z%$µΩ°]*)")
 
+# F2 (ARCH-20261001-104): numbers_consistent reads a figure whole. _NUMBER's
+# lookbehind admits a number straight after '^' or ',', so 102's Q3 plan
+# '80.0 × 10^9 Pa' was read as 9 Pa, and the implementation's '20,371,800 Pa'
+# as 800 Pa: a false conflict that dissented on a correct answer. This
+# pattern takes digit groups, decimals and an exponent (x10^n, ×10ⁿ, e±n) as
+# one figure, and never starts inside one. _NUMBER is kept for
+# totals_reconcile, which F2 does not touch.
+_SUPERSCRIPT = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻", "0123456789-")
+_FIGURE = re.compile(
+    r"(?<![\w.,^⁰¹²³⁴⁵⁶⁷⁸⁹])"
+    r"(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?"
+    r"(?:\s*[×xX*]\s*10\s*(?:\^\s*([-−]?\d+)|([⁻]?[⁰¹²³⁴⁵⁶⁷⁸⁹]+))"
+    r"|[eE]([-+]?\d+)(?![a-zA-Z]))?"
+    r"\s*([a-zA-Z%$µΩ°]*)")
+
+
+def _figures(text: str) -> list[tuple[float, int, str]]:
+    """Every (value, significant figures, raw unit) written in the text."""
+    out = []
+    for whole, frac, caret, sup, e_exp, unit in _FIGURE.findall(text or ""):
+        digits = whole.replace(",", "") + (frac or "")
+        mantissa = float(digits)
+        exp = caret.replace("−", "-") if caret else (
+            sup.translate(_SUPERSCRIPT) if sup else e_exp)
+        value = mantissa * (10 ** int(exp)) if exp else mantissa
+        significant = len(digits.replace(".", "").lstrip("0")) or 1
+        out.append((value, significant, unit))
+    return out
+
+
+def _agree(a: tuple[float, int], b: tuple[float, int]) -> bool:
+    """Equal at the precision of the less precise figure: 20.4 and 20.3718
+    agree; 80.0 and 70.0 do not."""
+    (x, sx), (y, sy) = a, b
+    if x == y:
+        return True
+    if x == 0 or y == 0:
+        return False
+    figures = min(sx, sy)
+    return float(f"{x:.{figures}g}") == float(f"{y:.{figures}g}")
+
 # Written forms of the same unit must compare equal, or a check that exists to
 # catch "the plan says 60s and the code says 5 seconds" never fires.
 _UNIT_ALIASES = {
@@ -719,20 +760,26 @@ def numbers_consistent(plan: str, implementation: str) -> Result:
     reports contradictions, never absence: a plan value the implementation
     simply does not mention is not a conflict.
     """
-    def indexed(text: str) -> dict[str, set[str]]:
-        found: dict[str, set[str]] = {}
-        for value, raw_unit in _NUMBER.findall(text or ""):
+    def indexed(text: str) -> dict[str, list[tuple[float, int]]]:
+        found: dict[str, list[tuple[float, int]]] = {}
+        for value, significant, raw_unit in _figures(text):
             unit = _canonical_unit(raw_unit)
             if not unit:
                 continue
-            found.setdefault(unit, set()).add(_normalize(value))
+            found.setdefault(unit, []).append((value, significant))
         return found
 
+    def shown(values: list[tuple[float, int]]) -> list[str]:
+        return sorted({_normalize(f"{v:.{s}g}") for v, s in values})
+
     planned, built = indexed(plan), indexed(implementation)
+    # A conflict is a shared unit whose plan and implementation figures have
+    # no value in common, as before; "in common" now means equal at the
+    # precision of the less precise figure.
     conflicts = [
-        f"{unit}: plan says {sorted(planned[unit])}, implementation says {sorted(built[unit])}"
+        f"{unit}: plan says {shown(planned[unit])}, implementation says {shown(built[unit])}"
         for unit in planned.keys() & built.keys()
-        if planned[unit] != built[unit] and not (planned[unit] & built[unit])
+        if not any(_agree(p, b) for p in planned[unit] for b in built[unit])
     ]
 
     if conflicts:

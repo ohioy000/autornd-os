@@ -10397,3 +10397,79 @@ tracked docs only, while the IA run was in flight, at the owner's explicit
 instruction. A departure from "no git operation while a run is in flight":
 no stash, checkout or merge was made until both runs had finished
 (21:47:12Z).
+
+## 95. Ruling D42 — a reviewer that fails is not a finding (advisor, 2026-10-01, carried by ARCH-20261001-104)
+
+> **Ruling D42 (advisor, 2026-10-01) — a reviewer that fails is not a finding. When a review specialist fails to produce a usable verdict (an exception, or a reply the schema still rejects after the client's retries), it is retried once. If it fails again, it is recorded as not reviewed, with its failure class, and it never enters the findings or the blocking decision. The review ships only if no completed reviewer blocks AND a quorum completed: at least half of the assigned reviewers, rounded up. Below quorum the review does not ship, and the terminal says the review did not complete, naming who failed and why. Rationale: ARCH-20261001-102 Q2. The build judges agreed on a correct answer; one final-review specialist failed on a schema rejection and was recorded as a high finding (autornd/engine/phases.py:1001-1008), so the review refused the answer and the watchdog ended the run at its 300 s target. An apparatus failure is a fact about the apparatus, not a verdict on the work (convention 18). Falsifier: a run in which an excluded reviewer would have raised a blocking finding that later proves correct.**
+
+Execution record: F1-F3 follow in the commits after this section's ruling commit.
+
+### 95.1 Execution record (executor, 2026-10-01): F1 to F3 built, each broken
+
+**F1 (D42), `40202b9`.**
+- `run_review` retries a failed reviewer once. A second failure goes to
+  `ReviewVerdict.not_reviewed` with its class, and never into the findings
+  or the blocking decision. The review ships only if a quorum of
+  ceil(n/2) completed and no completed reviewer blocks. Below quorum, the
+  verdict reads "The review did not complete: k of n reviewers completed,
+  below the quorum of q; not reviewed: <who (class)>".
+- **A BudgetExceeded propagates and is not retried.**
+- `tests/test_review_quorum.py` (3), read back from the written record.
+  The break, with the old `run_review`: the one-of-three test fails on the
+  `workflow_engine` finding ("assert not True").
+
+**F2, `517a1ec`.**
+- `numbers_consistent` reads figures with `_FIGURE`: digit groups,
+  decimals, and an exponent ×10^n, ×10ⁿ or e±n as one value. Two figures
+  agree at the precision of the less precise one.
+- `_NUMBER` is untouched, because `totals_reconcile` uses it.
+- 102's Q3 texts, from the trace: "no contradicting values between plan
+  and implementation" (passed=True). 80.0 GPa against 70.0 GPa still
+  fails.
+- The break, with the old reading restored: "pa: plan says ['9'],
+  implementation says ['800']". `tests/test_figure_parsing.py` (10).
+
+**F3, `b661ae4`.**
+- `chat()` refuses a call whose worst case (prompt characters/4 × prompt
+  rate + max_tokens × completion rate) exceeds what remains, before sending
+  it: `SpendGuardRefused`, a `BudgetExceeded`. With no rate it is blind:
+  the call is made, and the unit record's `spend_guard_blind` names it.
+- `tests/test_spend_guard.py` (4), over an httpx MockTransport, so the
+  request count proves no call went out. With the guard disabled, 3 of 4
+  fail.
+
+**The per-tier warning under the arm B prefix**, quoted:
+
+```
+worst-case single call (completion side, max_tokens x rate): triage $0.0014, research $0.0410, search $0.0160, architecture $0.0936, engineering $0.1498, judge $0.1344, escalation $0.3200
+⚠ --max-spend $0.07 is below the largest, escalation $0.3200: a call that could cost more than what remains is refused before it starts, and ends the run on the spend ceiling.
+```
+
+Suite 1145 to 1162.
+
+### 95.2 Departures
+
+1. **The premise of D42's exhibit was corrected by the record.** Q2's
+   reviewer failed on `BudgetExceeded` ("stopped at $0.0844 (ceiling
+   $0.0700)", stderr under "Specialist Test Engineer failed during
+   review"), not on a schema rejection. Q2's one schema rejection was on
+   the architecture tier (DeepInfra). So F1 also stops the bare `except
+   Exception` swallowing a spend stop: it propagates, unretried. D42's
+   rule is unchanged.
+2. **The CLI now loads the catalogue's rates** (`check_models`, a free
+   GET) after the preflight gate. Rates were loaded only at the API's
+   startup, so under the CLI the guard would have been blind on every
+   call. The command's evidence assumed they were known.
+
+### 95.3 Findings for the advisor and the owner
+
+1. **Under F3, arm B's ceilings cannot run under 102's caps.** The
+   owner's `.env` sets plan_max_tokens 78000 and judge_max_tokens 70000.
+   So the worst case of a single architecture call ($0.0936), engineering
+   call ($0.1498) or judge call ($0.1344) already exceeds a $0.07 run cap,
+   and the guard refuses the first plan call of every golden run. **A 106
+   re-run at 102's caps would ship nothing.** Either the ceilings come down
+   (G-3, the owner's `.env`) or the caps go up. The arithmetic: ceiling ×
+   completion rate.
+2. **The guard bounds per call, not per run.** A run can still spend up
+   to its cap; it cannot cross it.

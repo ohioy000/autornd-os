@@ -1,0 +1,80 @@
+{
+  "command_id": "ARCH-20261001-104",
+  "parent_id": "ARCH-20261001-103",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Stop the harness discarding correct answers for apparatus reasons, and stop a run overrunning its cap. A reviewer that fails is not a finding (D42); the consistency check reads scientific notation and digit groups; and no call starts that could take a run past its cap.",
+
+  "evidence": [
+    "docs/traces/102-golden-arm-b.jsonl, golden_q2: the build judges agreed (iteration 1, no dissent), and the final review refused, with its only blocking finding being 'Specialist Test Engineer failed to complete review — manual review required'. The run's retries show one schema_rejection. The watchdog then ended the run at its 300 s target. The answer holds every key item.",
+    "autornd/engine/phases.py:963-1008: a reviewer that raises (for example on a schema rejection after the client's retries) is added to failed_specialists, which sets any_blocking = True and appends a 'high' finding with lens workflow_engine.",
+    "golden_q3: numbers_consistent dissented with 'values disagree between plan and implementation — pa: plan says [\"9\"], implementation says [\"800\"]'. The advisor reproduced this for free on the committed texts: the plan's '80.0 × 10^9 Pa' was read as 9 Pa, and the implementation's '20,371,800 Pa' as 800 Pa. The answer holds every key item.",
+    "autornd/graph/checks.py:78: _NUMBER = re.compile(r\"(?<![\\w.])(\\d+(?:\\.\\d+)?)\\s*([a-zA-Z%$µΩ°]*)\"). The lookbehind admits a number straight after '^' or ',', which is how an exponent or a digit group becomes a value.",
+    "docs/traces/102-ia-side-arm-b.jsonl: one escalation call cost $0.1142 against an $0.08 run cap, so the run ended at $0.1570. The 102/103 total was $0.512 against $0.50 authorised.",
+    "autornd/routing/openrouter.py:288-326 (_account) checks spend after the call is paid; its docstring says 'a run that exceeds one has already paid for the request in hand'. Rates are known before every call (openrouter.py:752-756, from the catalogue).",
+    "D41 allows repairs of silent failures that change outcomes. All three here turn a correct answer, or the owner's authorisation, into a loss."
+  ],
+
+  "scope": {
+    "include": [
+      "autornd/engine/phases.py (the review aggregation at :963-1008 only)",
+      "autornd/models/verdicts.py (one typed field on the review verdict recording reviewers who did not complete, only if needed; D41's exception covers it)",
+      "autornd/graph/checks.py (_NUMBER and numbers_consistent's comparison only)",
+      "autornd/routing/openrouter.py (a pre-call spend guard only)",
+      "autornd/evals/cli.py (the pre-spend warning only)",
+      "tests/",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "Prompts, plan criteria, workflows/: scope is ARCH-20261001-105's, not this command's.",
+      "evals/golden/: advisor-written.",
+      ".env and every .env* file."
+    ]
+  },
+
+  "constraints": [
+    "RULING FIRST, VERBATIM, in HANDOVER.md and the notebook, before the code in commit order.",
+    "RULING D42, COMMITTED VERBATIM: 'Ruling D42 (advisor, 2026-10-01) — a reviewer that fails is not a finding. When a review specialist fails to produce a usable verdict (an exception, or a reply the schema still rejects after the client's retries), it is retried once. If it fails again, it is recorded as not reviewed, with its failure class, and it never enters the findings or the blocking decision. The review ships only if no completed reviewer blocks AND a quorum completed: at least half of the assigned reviewers, rounded up. Below quorum the review does not ship, and the terminal says the review did not complete, naming who failed and why. Rationale: ARCH-20261001-102 Q2. The build judges agreed on a correct answer; one final-review specialist failed on a schema rejection and was recorded as a high finding (autornd/engine/phases.py:1001-1008), so the review refused the answer and the watchdog ended the run at its 300 s target. An apparatus failure is a fact about the apparatus, not a verdict on the work (convention 18). Falsifier: a run in which an excluded reviewer would have raised a blocking finding that later proves correct.'",
+    "F2, CONSISTENCY PARSER (instrument repair): read a figure whole, including digit groups, decimals and exponents written ×10^n, ×10ⁿ or e±n. Never read an exponent or a digit group as a value of its own. Two figures are equal when they agree at the precision of the less precise one (20.4 and 20.3718 MPa agree; 80.0 and 70.0 GPa do not). Change nothing else about what the check compares.",
+    "F3, PRE-CALL SPEND GUARD (accounting repair under the owner's authorisation): before each request, compute the worst case as the estimated prompt tokens (characters ÷ 4, stated in the code) × prompt rate, plus max_tokens × completion rate, using the catalogue rates. If spend plus the worst case would exceed the spend ceiling, raise BudgetExceeded BEFORE the request, with a typed terminal naming tier, model, worst case and remaining budget. If a model's rate is unknown, do not guess: use today's after-the-call check for that call and record that the guard was blind (convention 28). In the CLI's pre-spend warning, also report the worst-case single-call cost per tier under the current max_tokens settings, and warn when a per-run cap is below the largest, so caps can be set knowingly.",
+    "TESTS, on real paths, each proved by breaking it, with every new field read back from the written record. F1: a review in which one of three reviewers fails twice ships on the other two when they don't block; one in which two of three fail does not ship, and says why; the old behaviour (a failure counted as a high finding) is shown failing the new test. F2: 102's Q3 plan and implementation texts, loaded from docs/traces/102-golden-arm-b.jsonl, pass; a real conflict (80.0 GPa against 70.0 GPa) still fails; restoring the old regex makes Q3 fail again. F3: with a scripted client at known rates, a call whose worst case exceeds what remains is never made (the call count proves it); one that fits is made; with no rate, the call is made and the record says the guard was blind.",
+    "No change to prompts, criteria, gates, loop bounds or tiers. Free. No provider call."
+  ],
+
+  "acceptance_criteria": [
+    "D42 is verbatim in HANDOVER.md and the notebook, before the code in commit order.",
+    "The F1, F2 and F3 tests pass, and their breaks are quoted.",
+    "Re-running numbers_consistent on 102's Q3 texts gives passed=True, and the response quotes the output.",
+    "The pre-spend warning prints the per-tier worst-case call cost for the configuration it is given, quoted for the arm-B prefix.",
+    "Suite green before and after. The PR is opened and delivery_state carries its number."
+  ],
+
+  "verification": [
+    {"command": "grep -n 'Ruling D42' HANDOVER.md docs/handover-review.md", "expected": "Present in both."},
+    {"command": "git diff --stat origin/main -- workflows/ evals/golden/", "expected": "Empty."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count before and after."}
+  ],
+
+  "rollback": "Revert the merge.",
+
+  "deliverable": {"branch": "arch/20261001-104-apparatus-repairs", "branch_created_by": "advisor", "pr": true, "merge": "by the advisor-custodian on green, after checking acceptance against the tree", "commit_style": "conventional"},
+
+  "transport": "Pushed by the advisor. This is the first of the owner's ordered steps: instruments, then scope (105), then the golden re-run (106). Commit the response IN_PROGRESS first.",
+
+  "assumptions": ["The review's assigned roster size is known when the review runs. If it is not, report that and use the number of reviewers launched."],
+
+  "questions": ["Did Q2's failed reviewer return a reply the schema rejected, or nothing at all? Quote the class from the record or stderr."],
+
+  "preconditions": [
+    {"command": "ps aux | grep -E 'autornd|evals' | grep -v grep", "expected": "No output."},
+    {"command": "sed -n 1001,1008p autornd/engine/phases.py; sed -n 78p autornd/graph/checks.py", "expected": "The failed-reviewer finding and the _NUMBER regex, as quoted in the evidence."},
+    {"command": ".venv/bin/python3 -c \"import json; from autornd.graph.checks import get_check; r=[x for x in (json.loads(l) for l in open('docs/traces/102-golden-arm-b.jsonl') if l.strip()) if x.get('scenario')=='golden_q3'][0]; print(get_check('numbers_consistent')(plan=r['verdicts']['plan']['plan'], implementation=r['iterations'][0]['implement_summary']).detail)\"", "expected": "The false conflict, reproduced before the repair: pa, 9 against 800."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green; record the count."}
+  ]
+}

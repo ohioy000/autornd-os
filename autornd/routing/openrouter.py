@@ -154,6 +154,29 @@ class BudgetExceeded(RuntimeError):
     """A run asked for more calls or more money than it was allowed."""
 
 
+# F3 (ARCH-20261001-104): characters per prompt token for the pre-call worst
+# case. A deliberate round figure: the guard bounds a call before its usage
+# exists, so it needs an estimate, and the completion side (max_tokens x the
+# completion rate) dominates every worst case this harness sends.
+CHARS_PER_TOKEN = 4
+
+
+class SpendGuardRefused(BudgetExceeded):
+    """F3: a call whose worst case could not fit the remaining budget was not
+    made. Typed, so the record names the tier, model, worst case and what
+    remained. The message starts 'stopped at $', the spend-ceiling form the
+    eval runner already routes on."""
+
+    def __init__(self, function: str, model: str, worst_case: float,
+                 remaining: float, spend: float, ceiling: float) -> None:
+        self.function, self.model = function, model
+        self.worst_case, self.remaining = worst_case, remaining
+        super().__init__(
+            f"stopped at ${spend:.4f} before a call (ceiling ${ceiling:.4f}): "
+            f"the {function} call to {model} could cost up to "
+            f"${worst_case:.4f}, and ${remaining:.4f} remained")
+
+
 class ProviderFailure(RuntimeError):
     """A provider ended the run without producing usable output.
 
@@ -283,6 +306,10 @@ class OpenRouterClient:
         self.provider_failures: list[dict[str, Any]] = []
         self.call_ceiling: int | None = None
         self.spend_ceiling: float | None = None
+        # F3: calls the pre-call guard could not bound, because the model's
+        # rate was not in the loaded catalogue. They were made, and are
+        # bounded only by the after-the-call check (convention 28).
+        self.spend_guard_blind: list[dict[str, Any]] = []
 
     def _account(self, function: str, cost: float,
                  provider: str | None = None,
@@ -324,8 +351,29 @@ class OpenRouterClient:
                 f"{ {k: round(v, 4) for k, v in self.spend_by_function.items()} }"
             )
 
+    def _guard_spend(self, function: str, model: str, prompt_chars: int,
+                     max_tokens: int) -> None:
+        """F3: refuse, before it is made, a call whose worst case could take
+        the run past its spend ceiling. 102's IA run ended at $0.1570 against
+        $0.08 because one escalation call cost $0.1142, and the ceiling was
+        only checked after the call. With no catalogue rate the guard is
+        blind: the call is made and the blindness recorded, never guessed."""
+        if self.spend_ceiling is None:
+            return
+        rates = _model_pricing.get(model)
+        if not rates:
+            self.spend_guard_blind.append({"function": function, "model": model})
+            return
+        prompt_rate, completion_rate = rates
+        worst = (prompt_chars / CHARS_PER_TOKEN) * prompt_rate + max_tokens * completion_rate
+        remaining = self.spend_ceiling - self.spend
+        if worst > remaining:
+            raise SpendGuardRefused(function, model, worst, remaining,
+                                    self.spend, self.spend_ceiling)
+
     def reset_accounting(self) -> None:
         self.spend = 0.0
+        self.spend_guard_blind = []
         self.calls = 0
         self.tokens_by_function = {}
         self.spend_by_function = {}
@@ -420,6 +468,8 @@ class OpenRouterClient:
         max_tokens: int = 16384,
     ) -> ModelResponse:
         model = self.get_model(function)
+        self._guard_spend(function, model, len(system_prompt) + len(user_message),
+                          max_tokens)
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message},

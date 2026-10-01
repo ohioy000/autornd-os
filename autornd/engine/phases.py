@@ -7,6 +7,7 @@ specialist(s), and returns a typed verdict.
 from __future__ import annotations
 
 import asyncio
+import math
 import json
 import logging
 from typing import Any
@@ -30,7 +31,7 @@ from autornd.models.verdicts import (
     ValidateVerdict,
 )
 from autornd.knowledge.context import build_phase_context
-from autornd.routing.openrouter import ModelResponse, OpenRouterClient
+from autornd.routing.openrouter import BudgetExceeded, ModelResponse, OpenRouterClient
 from autornd.specialists.base import Specialist
 from autornd.specialists.registry import get_specialist, get_specialists
 
@@ -960,24 +961,41 @@ Original request:
     responses: list[ModelResponse] = []
     all_findings: list[dict[str, Any]] = []
     any_blocking = False
-    failed_specialists: list[str] = []
+    # Ruling D42: a reviewer that fails is not a finding. It is retried once;
+    # a second failure is recorded here, with its class, and never enters the
+    # findings or the blocking decision.
+    not_reviewed: list[dict[str, str]] = []
 
     async def _review(spec: Specialist) -> dict[str, Any] | None:
-        try:
-            data, resp = await spec.run(
-                client, prompt,
-                max_tokens=max_tokens or settings.plan_max_tokens,
-                function=function,
-            )
-            responses.append(resp)
-            return data
-        except Exception:
-            logger.exception("Specialist %s failed during review", spec.name)
-            failed_specialists.append(spec.name)
-            return None
+        for attempt in (1, 2):
+            try:
+                data, resp = await spec.run(
+                    client, prompt,
+                    max_tokens=max_tokens or settings.plan_max_tokens,
+                    function=function,
+                )
+                responses.append(resp)
+                return data
+            except BudgetExceeded:
+                # A spend stop is the run's terminal, not a reviewer failure,
+                # and a retry would spend past the cap. 102's Q2: the run
+                # crossed its ceiling mid-review, and this handler's former
+                # `except Exception` turned that into a 'high' finding that
+                # refused a correct answer.
+                raise
+            except Exception as exc:
+                logger.exception("Specialist %s failed during review (attempt %d)",
+                                 spec.name, attempt)
+                if attempt == 2:
+                    not_reviewed.append({"specialist": spec.name,
+                                         "failure_class": type(exc).__name__})
+        return None
 
     results = await asyncio.gather(*[_review(s) for s in specialists])
     successful = [r for r in results if r is not None]
+    # D42's quorum: at least half the assigned reviewers, rounded up.
+    quorum = math.ceil(len(specialists) / 2)
+    quorate = len(successful) >= quorum
 
     for result in successful:
         for f in result.get("findings", []):
@@ -998,27 +1016,27 @@ Original request:
             if finding.severity in ("critical", "high"):
                 any_blocking = True
 
-    if failed_specialists:
-        any_blocking = True
-        for name in failed_specialists:
-            all_findings.append({
-                "lens": "workflow_engine",
-                "severity": "high",
-                "detail": f"Specialist {name} failed to complete review — manual review required",
-            })
-
-    ship = not any_blocking and all(r.get("ship", True) for r in successful)
+    ship = (quorate and not any_blocking
+            and all(r.get("ship", True) for r in successful))
 
     verdicts_text = " | ".join(r.get("verdict", "") for r in successful)
-    if failed_specialists:
-        verdicts_text += f" | {len(failed_specialists)} specialist(s) failed"
-    if ship:
+    who = ", ".join(f"{n['specialist']} ({n['failure_class']})" for n in not_reviewed)
+    if not quorate:
+        synthesis = (f"Blocked. The review did not complete: {len(successful)} of "
+                     f"{len(specialists)} reviewers completed, below the quorum of "
+                     f"{quorum}; not reviewed: {who}. {verdicts_text}").strip()
+    elif ship:
         synthesis = f"Ship. {verdicts_text}"
     else:
         synthesis = f"Blocked. {verdicts_text}"
+    if not_reviewed and quorate:
+        synthesis += f" | not reviewed: {who}"
 
     findings = [ReviewFinding(**f) for f in all_findings]
-    verdict = ReviewVerdict(ship=ship, findings=findings, verdict=synthesis)
+    verdict = ReviewVerdict(ship=ship, findings=findings, verdict=synthesis,
+                            not_reviewed=not_reviewed,
+                            reviewers_assigned=len(specialists),
+                            reviewers_completed=len(successful))
     return verdict, responses
 
 

@@ -26,7 +26,7 @@ from autornd.evals.runner import (
 )
 from autornd.evals.scenario import load_scenarios
 from autornd.graph.spec import load as load_spec
-from autornd.routing.openrouter import OpenRouterClient
+from autornd.routing.openrouter import OpenRouterClient, check_models
 
 
 # Every figure here is post-b4cd89f; anything earlier understates by 2.6x-295x.
@@ -100,6 +100,54 @@ def sweep_summary(budget: SweepBudget) -> str:
         line += (f" · {budget.started} of {total} units ran, "
                  f"{budget.skipped} skipped — {why}")
     return line
+
+
+# The largest output ceiling a call on each tier can be sent with under the
+# current settings, from the workflows' node ceilings (plan and implement use
+# plan_max_tokens; the judging nodes judge_max_tokens; escalation its own;
+# search the consequential lookup budget). Tiers with no node ceiling are sent
+# chat_json's default of 16384.
+_CHAT_DEFAULT_MAX_TOKENS = 16384
+
+
+def _tier_ceilings() -> dict[str, int]:
+    return {
+        "triage": _CHAT_DEFAULT_MAX_TOKENS,
+        "research": _CHAT_DEFAULT_MAX_TOKENS,
+        "search": settings.search_max_tokens_consequential,
+        "architecture": settings.plan_max_tokens,
+        "engineering": settings.plan_max_tokens,
+        "judge": settings.judge_max_tokens,
+        "escalation": settings.escalation_max_tokens,
+    }
+
+
+def worst_case_lines(per_run_cap: float | None) -> list[str]:
+    """F3: each tier's worst-case single call, completion side only
+    (max_tokens x the catalogue completion rate), and a warning when the
+    per-run cap is below the largest. A tier with no rate is said to be
+    unknown, never guessed."""
+    from autornd.routing.openrouter import _model_pricing
+
+    client = OpenRouterClient(api_key="worst-case")
+    costs: dict[str, float | None] = {}
+    for tier, ceiling in _tier_ceilings().items():
+        rates = _model_pricing.get(client.get_model(tier))
+        costs[tier] = ceiling * rates[1] if rates else None
+    parts = [f"{t} ${c:.4f}" if c is not None else f"{t} unknown (no rate)"
+             for t, c in costs.items()]
+    lines = ["worst-case single call (completion side, max_tokens x rate): "
+             + ", ".join(parts)]
+    known = {t: c for t, c in costs.items() if c is not None}
+    if per_run_cap is not None and known:
+        top = max(known, key=known.get)
+        if known[top] > per_run_cap:
+            lines.append(
+                f"⚠ --max-spend ${per_run_cap:.2f} is below the largest, {top} "
+                f"${known[top]:.4f}: a call that could cost more than what "
+                f"remains is refused before it starts, and ends the run on the "
+                f"spend ceiling.")
+    return lines
 
 
 def _spec(name: str):
@@ -201,6 +249,18 @@ async def main() -> int:
         return PREFLIGHT_REFUSED_EXIT
     else:
         print(f"preflight: {len(preflight_record['findings'])} checks passed\n")
+
+    # F3 (ARCH-20261001-104), after the gate so a refused sweep builds no
+    # client: load the catalogue's rates (free) so the
+    # client's pre-call spend guard can bound each call. The CLI never loaded
+    # them; only the API's startup did, so under the CLI the guard would have
+    # been blind on every call. Then say what one call can cost per tier, so
+    # a cap can be set knowingly.
+    await check_models()
+    for line in worst_case_lines(args.max_spend):
+        print(line)
+    print()
+
 
     # The header makes a results file self-describing: which model ran at each
     # tier, who was pinned to serve it, and what the run was allowed to spend.
