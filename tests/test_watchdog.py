@@ -39,6 +39,7 @@ from autornd.graph import executor as executor_module
 from autornd.graph.adapter import PhaseRunner
 from autornd.graph.executor import (
     ABANDONED_CALL_BILLING, WATCHDOG_RESERVE_SECONDS, GraphExecutor,
+    WatchdogRecord, _watchdog_reason,
 )
 from autornd.graph.spec import load
 from autornd.routing.openrouter import OpenRouterClient
@@ -335,11 +336,12 @@ class TestThePointerNamesTheLastAgreedImplementation:
         # validate: review starts if 1.4 - pre - 0.5 >= 0.5 (pre up to 0.4 s),
         # and the next judge-tier node then has 0.4 - pre against a 0.5 s
         # pace, so it is not started.
-        # That node is domain_review: the pre-start rule is decided per node,
-        # and the executor cannot know that domain_review has no peers to
-        # ask on this roster (094's took 0.0 s for the same reason). Only
-        # free checks sit between it and validate, so the run ends at the
-        # same paid point either way.
+        # That node is validate. domain_review comes first but has no peers to
+        # ask on this two-specialist roster and makes no call, so under A1
+        # (ARCH-20260930-100) the pre-start rule passes it by and names the
+        # node whose call would overrun. Until A1 this test asserted
+        # domain_review, the misattribution 095 asked about and 098 run 1
+        # showed live. The run ends at the same paid point either way.
         client = make_mock_client(_responses(judge={"ship": False}),
                                   delays={"judge": 0.5})
         _reshape(client, summary_by_call=True)
@@ -347,7 +349,8 @@ class TestThePointerNamesTheLastAgreedImplementation:
         watchdog = state.watchdog
         assert watchdog.rule == "not_started"
         assert (watchdog.node, watchdog.iteration, watchdog.tier) == (
-            "domain_review", 1, "judge")
+            "validate", 1, "judge")
+        assert [s.node_id for s in state.trace][-1] == "consistency"
         approved = watchdog.approved
         assert approved["agreed"] is True
         assert (approved["index"], approved["loop"], approved["iteration"]) == (
@@ -358,7 +361,7 @@ class TestThePointerNamesTheLastAgreedImplementation:
         assert approved["latest"] == "unjudged"
         assert state.outputs["implement"].summary.endswith("Revision 2.")
         assert runner.iterations[0]["implement_summary"].endswith("Revision 1.")
-        assert "unjudged" in state.reason
+        assert "not approved (unjudged)" in state.reason
 
     async def test_the_094_shape_cut_while_rework_review_is_in_flight(self):
         """094 itself: a rework iteration the build judges agreed on, cut
@@ -531,3 +534,32 @@ class TestTheReserveIsMeasured:
             server.close()
             await server.wait_closed()
         assert lag < WATCHDOG_RESERVE_SECONDS / 4, lag
+
+
+class TestANotApprovedArtifactSaysNotApproved:
+    """A2 (ARCH-20260930-100): 'dissented' (judged, not agreed) and
+    'unjudged' (no judge finished) are both NOT APPROVED. The terminal says
+    'not approved' in both, with the finer label beside it."""
+
+    @staticmethod
+    def _record(**approved) -> WatchdogRecord:
+        return WatchdogRecord(
+            armed=True, budget_seconds=60.0, reserve_seconds=0.4, fired=True,
+            rule="not_started", node="validate", iteration=2, tier="judge",
+            elapsed_seconds=50.0, available_seconds=9.6, pace_seconds=20.0,
+            approved={"history": "present", **approved})
+
+    @pytest.mark.parametrize("label", ["dissented", "unjudged"])
+    def test_a_differing_latest_reads_not_approved(self, label):
+        reason = _watchdog_reason(self._record(
+            agreed=True, index=0, loop="build_loop", iteration=1,
+            gates={"review": "failed"}, latest_differs=True, latest=label))
+        assert f"is not approved ({label})" in reason
+
+    @pytest.mark.parametrize("label", ["dissented", "unjudged"])
+    def test_with_nothing_agreed_the_latest_still_reads_not_approved(self, label):
+        reason = _watchdog_reason(self._record(
+            agreed=False, index=None, loop=None, iteration=None, gates=None,
+            latest_differs=None, latest=label))
+        assert "no implementation was agreed by the build judges" in reason
+        assert f"the latest implementation is not approved ({label})" in reason

@@ -70,6 +70,20 @@ CALL_FUNCTIONS = ("triage", "engineering", "architecture", "escalation",
                   "research", "search", "judge", "independent", "ranker")
 
 
+# A7 (ARCH-20260930-100): temperature is sent on every chat but not required
+# of an endpoint. No trace shows the router stripping an endpoint for
+# temperature alone, so its support is reported, not enforced, until one
+# does: evidence comes before strictness, as it comes before leniency.
+INFORMATIONAL_PARAMETERS = frozenset({"temperature"})
+
+
+def required_parameters(function: str) -> tuple[str, ...]:
+    """What an endpoint must list to pass: the sent set less the
+    informational parameters."""
+    return tuple(p for p in sent_parameters(function)
+                 if p not in INFORMATIONAL_PARAMETERS)
+
+
 def sent_parameters(function: str) -> tuple[str, ...]:
     """What a call on this function sends. Search is a plain chat (no JSON
     mode); the ranker uses the rerank API, which takes no chat parameters
@@ -102,6 +116,53 @@ def _pins() -> dict[str, str]:
     order = settings.openrouter_provider_order or ""
     return {k: v for k, v in
             (p.split(":", 1) for p in order.split(",") if ":" in p) if v}
+
+
+def _general_pins() -> list[str]:
+    """Entries with no tier, which the client applies to every function
+    that has no tier-scoped entry of its own (provider_order_for)."""
+    from autornd.config import settings
+    order = settings.openrouter_provider_order or ""
+    return [p.strip() for p in order.split(",") if p.strip() and ":" not in p]
+
+
+# Every name a pin can be written under, and the function the client reads it
+# for. A pin is matched on the function a call names (provider_order_for), so
+# 'premium:' is read by no call at all: the independent pass calls
+# 'independent' (phases.py). Measured 2026-09-30 (096): the old check failed a
+# 'judge:' pin with MODEL_JUDGE unset as "no model is set", while the client
+# applies that pin to the engineering model, and passed a 'premium:' pin the
+# client never applies. A6: the gate refuses exactly what the client would
+# fail on.
+PIN_FUNCTIONS = ("triage", "engineering", "architecture", "escalation",
+                 "research", "search", "judge", "independent", "ranker")
+
+
+def _pin_target(name: str, models: dict[str, str]) -> tuple[str | None, str]:
+    """(the model a call reading this pin asks for, a note). None when no
+    call reads the pin. Mirrors OpenRouterClient.get_model and
+    independent_model; tests/test_preflight.py holds the mirror to them."""
+    if name in REQUIRED_TIERS:
+        return models.get(name) or None, ""
+    if name == "judge":
+        if models.get("judge"):
+            return models["judge"], ""
+        return (models.get("engineering") or None,
+                "MODEL_JUDGE is unset, so the judge calls use the engineering model")
+    if name == "independent":
+        candidate = models.get("premium") or models.get("architecture") or ""
+        if not candidate or candidate == models.get("engineering"):
+            return None, ("no independent model (MODEL_PREMIUM and "
+                          "MODEL_ARCHITECTURE unset or equal to engineering)")
+        return candidate, ""
+    if name == "ranker":
+        if models.get("ranker"):
+            return models["ranker"], ""
+        return None, "MODEL_RANKER is unset, so no ranker call is made"
+    if name == "premium":
+        return None, ("the independent pass calls function 'independent'; "
+                      "write the pin as independent:<provider>")
+    return None, ""
 
 
 async def _fetch(path: str) -> dict:
@@ -170,8 +231,10 @@ def _base_provider(pin: str) -> str:
 
 
 def check(models: dict[str, str], pins: dict[str, str],
-          known: set[str], endpoints: dict[str, set[str]]) -> list[Finding]:
-    """Pure, so the failure modes above can be simulated in a test."""
+          known: set[str], endpoints: dict[str, set[str]],
+          general: list[str] | tuple[str, ...] = ()) -> list[Finding]:
+    """Pure, so the failure modes above can be simulated in a test. `pins`
+    are the tier-scoped entries, `general` the untiered ones."""
     known_base = {_base_model(m) for m in known}
     out: list[Finding] = []
     for tier in REQUIRED_TIERS:
@@ -182,31 +245,69 @@ def check(models: dict[str, str], pins: dict[str, str],
             out.append(Finding(False, f"model_{tier}", f"{model} is not in the provider catalogue"))
         else:
             out.append(Finding(True, f"model_{tier}", model))
-    for tier, provider in pins.items():
-        model = models.get(tier, "")
-        if not model:
-            known_tier = tier in REQUIRED_TIERS + OPTIONAL_TIERS
-            out.append(Finding(False, f"pin {tier}", (
-                f"pinned to {provider} but no model is set"
-                if known_tier else
-                f"pinned to {provider} but '{tier}' is not a tier this harness "
-                f"runs — check the spelling against "
-                f"{', '.join(REQUIRED_TIERS + OPTIONAL_TIERS)}")))
-            continue
+    def serves(model: str, provider: str) -> bool | None:
+        # Endpoints are keyed by exact id; a suffixed id resolves to the
+        # same serving list as its base, so fall back to the base before
+        # reporting unresolvable. None: the endpoints could not be read.
         serving = endpoints.get(model)
         if serving is None:
-            # Endpoints are keyed by exact id; a suffixed id resolves to the
-            # same serving list as its base, so fall back to the base before
-            # reporting unresolvable.
             serving = endpoints.get(_base_model(model))
         if serving is None:
-            out.append(Finding(False, f"pin {tier}", f"cannot resolve endpoints for {model}"))
-        elif _base_provider(provider) not in {_base_provider(s) for s in serving}:
-            out.append(Finding(
-                False, f"pin {tier}",
-                f"{provider} does not serve {model} — with fallbacks disabled this is a 404"))
+            return None
+        return _base_provider(provider) in {_base_provider(s) for s in serving}
+
+    for name, provider in pins.items():
+        subject = f"pin {name}"
+        if name not in PIN_FUNCTIONS + OPTIONAL_TIERS:
+            out.append(Finding(False, subject, (
+                f"pinned to {provider} but '{name}' is not a tier this harness "
+                f"runs — check the spelling against "
+                f"{', '.join(PIN_FUNCTIONS)}")))
+            continue
+        model, note = _pin_target(name, models)
+        if model is None:
+            if name in REQUIRED_TIERS:
+                out.append(Finding(False, subject,
+                                   f"pinned to {provider} but no model is set"))
+            else:
+                # Informational: no call reads this pin, so nothing can fail
+                # on it (A6). Said so, rather than passed silently.
+                out.append(Finding(True, subject,
+                                   f"unused — pinned to {provider}, but {note}"))
+            continue
+        why = f" ({note})" if note else ""
+        served = serves(model, provider)
+        if served is None:
+            out.append(Finding(False, subject,
+                               f"cannot resolve endpoints for {model}{why}"))
+        elif not served:
+            out.append(Finding(False, subject, (
+                f"{provider} does not serve {model} — with fallbacks disabled "
+                f"this is a 404{why}")))
         else:
-            out.append(Finding(True, f"pin {tier}", f"{provider} serves {model}"))
+            out.append(Finding(True, subject, f"{provider} serves {model}{why}"))
+    # General entries apply to every function with no tier entry of its own,
+    # as provider_order_for reads them. The router tries them in order, so a
+    # call fails only when none of them serves its model.
+    for function in PIN_FUNCTIONS if general else ():
+        if function in pins:
+            continue
+        model, note = _pin_target(function, models)
+        if model is None:
+            continue
+        subject = f"pin {function} (general)"
+        verdicts = {p: serves(model, p) for p in general}
+        serving = [p for p, v in verdicts.items() if v]
+        why = f" ({note})" if note else ""
+        if serving:
+            out.append(Finding(True, subject, f"{serving[0]} serves {model}{why}"))
+        elif any(v is None for v in verdicts.values()):
+            out.append(Finding(False, subject,
+                               f"cannot resolve endpoints for {model}{why}"))
+        else:
+            out.append(Finding(False, subject, (
+                f"none of {', '.join(general)} serves {model} — with fallbacks "
+                f"disabled this is a 404{why}")))
     from autornd.routing.openrouter import provider_fallbacks_allowed
     if provider_fallbacks_allowed():
         out.append(Finding(True, "fallbacks", "preferred-first failover open (OPENROUTER_PROVIDER_FALLBACKS)"))
@@ -261,6 +362,35 @@ def _select(listing: list[dict], pin: str) -> list[dict] | None:
     return [e for e, tag in tagged if tag.split("/", 1)[0] == wanted]
 
 
+def _temperature_finding(function: str, provider: str, model: str,
+                         listings: dict[str, list[dict]]) -> Finding:
+    """A7: whether the pinned endpoint lists temperature. Informational, so
+    always ok; present, absent or blind, never silent."""
+    listing = listings.get(model)
+    selected = _select(listing, provider) if listing is not None else None
+    listed = [e for e in (selected or []) if "supported_parameters" in e]
+    if not listed:
+        state = "blind — the endpoint listing cannot say"
+    elif any("temperature" in (e.get("supported_parameters") or []) for e in listed):
+        state = "present"
+    else:
+        state = "absent"
+    return Finding(True, f"temperature {function} via {provider}",
+                   f"{state} (informational, A7: not required until a trace "
+                   f"shows the router stripping an endpoint for it)")
+
+
+def check_temperature(targets: dict[str, tuple[str, list[str]]],
+                      listings: dict[str, list[dict]]) -> list[Finding]:
+    """Pure, A7: one informational finding per (function, pinned provider)
+    whose call sends temperature. Kept apart from check_parameters, whose
+    findings decide the gate."""
+    return [_temperature_finding(function, provider, model, listings)
+            for function, (model, order) in targets.items()
+            if INFORMATIONAL_PARAMETERS & set(sent_parameters(function))
+            for provider in order]
+
+
 def check_parameters(targets: dict[str, tuple[str, list[str]]],
                      listings: dict[str, list[dict]]) -> list[Finding]:
     """Pure: does every pinned endpoint accept what the harness sends?
@@ -272,7 +402,7 @@ def check_parameters(targets: dict[str, tuple[str, list[str]]],
     """
     out: list[Finding] = []
     for function, (model, order) in targets.items():
-        sent = sent_parameters(function)
+        sent = required_parameters(function)
         if not order:
             out.append(Finding(True, f"params {function}",
                                "unpinned — parameter support depends on the "
@@ -326,12 +456,15 @@ def check_parameters(targets: dict[str, tuple[str, list[str]]],
 
 
 async def run() -> list[Finding]:
-    models, pins = _configured(), _pins()
+    models, pins, general = _configured(), _pins(), _general_pins()
     targets = _call_targets()
     known = {m["id"] for m in (await _fetch("/models")).get("data", [])}
     endpoints: dict[str, set[str]] = {}
     listings: dict[str, list[dict]] = {}
-    pinned_models = {models.get(t, "") for t in pins} - {""}
+    # The model each pin lands on, as the client resolves it (A6): a 'judge:'
+    # pin with MODEL_JUDGE unset lands on the engineering model.
+    named = list(pins) + (list(PIN_FUNCTIONS) if general else [])
+    pinned_models = {_pin_target(n, models)[0] for n in named} - {None, ""}
     targeted = {model for model, order in targets.values() if order}
     for model in pinned_models | targeted:
         # Ask the endpoints route for every pinned model, INCLUDING ones absent
@@ -352,8 +485,9 @@ async def run() -> list[Finding]:
             for e in listings[model]:
                 names |= _provider_names(e)
             endpoints[model] = names
-    return (check(models, pins, known, endpoints)
-            + check_parameters(targets, listings))
+    return (check(models, pins, known, endpoints, general)
+            + check_parameters(targets, listings)
+            + check_temperature(targets, listings))
 
 
 def main() -> int:

@@ -357,10 +357,18 @@ def _watchdog_reason(record: "WatchdogRecord") -> str:
         pointer = (f"last judge-approved implementation: {approved.get('loop')} "
                    f"iteration {approved.get('iteration')}"
                    + (f" ({gates})" if gates else ""))
+        # A2 (ARCH-20260930-100): 'dissented' and 'unjudged' are both NOT
+        # APPROVED, and the sentence says so, with the finer label beside it.
+        # D38's "labelled unjudged" meant a not-approved artifact must never
+        # read as approved.
         if approved.get("latest_differs"):
-            pointer += f"; the latest implementation differs and is {approved.get('latest')}"
+            pointer += (f"; the latest implementation differs and is not "
+                        f"approved ({approved.get('latest')})")
     elif approved.get("agreed") is False:
         pointer = "no implementation was agreed by the build judges"
+        if approved.get("latest"):
+            pointer += (f"; the latest implementation is not approved "
+                        f"({approved.get('latest')})")
     else:
         pointer = "this runner keeps no iteration history to point at"
     return f"stopped by the deliberation watchdog (Ruling D38): {what}; {pointer}"
@@ -503,6 +511,18 @@ class GraphExecutor:
         return {"model": client.get_model(tier),
                 "provider_order": provider_order_for(tier),
                 "allow_fallbacks": provider_fallbacks_allowed()}
+
+    def _makes_call(self, node: Node, state: ExecutionState) -> bool:
+        """Whether this AI node will make a model call, when the runner can
+        say. A runner that cannot is assumed to call, which is the pre-start
+        rule's behaviour before A1."""
+        probe = getattr(self.runner, "makes_call", None)
+        if probe is None:
+            return True
+        try:
+            return bool(probe(node, state))
+        except Exception:
+            return True
 
     def _refuse_to_start(self, node: Node, state: ExecutionState,
                          tier: str | None) -> bool:
@@ -815,7 +835,11 @@ class GraphExecutor:
         tier = self._step_tier(node, state) if node.kind is NodeKind.AI else None
         # Ruling D38, before the call: a call this run's own pace says cannot
         # finish is never started, so it is not in the trace. It did not run.
-        if node.kind is NodeKind.AI and self._refuse_to_start(node, state, tier):
+        # A1 (ARCH-20260930-100): only a node that will make a call is judged.
+        # A node that makes none cannot overrun, and naming it misattributes
+        # the cause: 098 run 1 named domain_review, which had no peers to ask.
+        if (node.kind is NodeKind.AI and self._makes_call(node, state)
+                and self._refuse_to_start(node, state, tier)):
             return False
 
         record = StepRecord(node.id, node.kind.value, state.iteration, tier=tier)

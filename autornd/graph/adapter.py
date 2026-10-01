@@ -162,6 +162,19 @@ class PhaseRunner:
         # SpecialistRole(who) raised for everything outside the shipped enum.
         return get_specialists([who])
 
+    def makes_call(self, node: Node, state: ExecutionState) -> bool:
+        """Whether running this AI node will make a model call.
+
+        Read by the watchdog's pre-start rule (A1, ARCH-20260930-100), which
+        judges only nodes that call. domain_review is the one phase that can
+        make none: run_domain_review returns at once when its roster is empty,
+        which a two-specialist triage produces (098 run 1). Every other phase
+        calls at least once.
+        """
+        if node.prompt == "domain_review":
+            return bool(self._resolve_who(node, state))
+        return True
+
     def _max_tokens(self, node: Node) -> int | None:
         """A node's output ceiling. An int is literal; a string names a setting."""
         raw = node.max_tokens

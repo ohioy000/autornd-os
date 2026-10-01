@@ -33,7 +33,7 @@ from autornd.config import settings
 from autornd.evals.runner import RepeatedReport
 from autornd.preflight import (
     CHAT_JSON_PARAMETERS, CHAT_PARAMETERS, NON_PARAMETER_KEYS,
-    check_parameters, sent_parameters,
+    _pin_target, check, check_parameters, check_temperature, sent_parameters,
 )
 from autornd.routing.openrouter import OpenRouterClient
 
@@ -317,3 +317,94 @@ class TestTheSentListIsWhatTheClientSends:
         assert path == "/rerank"
         assert not set(payload) & set(CHAT_JSON_PARAMETERS)
         assert sent_parameters("ranker") == ()
+
+
+class TestTheGateReadsPinsAsTheClientDoes:
+    """A6 (ARCH-20260930-100): the gate refuses exactly what the client
+    would fail on. 096 found three readings that differed from the client's:
+    a 'judge:' pin with MODEL_JUDGE unset failed as "no model is set" though
+    the client applies it to the engineering model; a 'premium:' pin was
+    checked though no call reads it; general pins were not checked at all."""
+
+    def test_a_judge_pin_with_model_judge_unset_is_checked_on_engineering(self):
+        engineering = MODELS["engineering"]
+        out = check(MODELS, {"judge": "Nebius"}, set(MODELS.values()),
+                    {engineering: {"Nebius"}})
+        (finding,) = [f for f in out if f.subject == "pin judge"]
+        assert finding.ok
+        assert f"Nebius serves {engineering}" in finding.detail
+        assert "MODEL_JUDGE is unset" in finding.detail
+
+    def test_and_fails_where_the_client_would_404(self):
+        engineering = MODELS["engineering"]
+        out = check(MODELS, {"judge": "Friendli"}, set(MODELS.values()),
+                    {engineering: {"Nebius"}})
+        (finding,) = [f for f in out if f.subject == "pin judge"]
+        assert not finding.ok and "404" in finding.detail
+
+    def test_an_independent_pin_is_checked_on_the_independent_model(self):
+        # MODEL_PREMIUM unset: the independent pass runs on architecture.
+        architecture = MODELS["architecture"]
+        out = check(MODELS, {"independent": "Azure"}, set(MODELS.values()),
+                    {architecture: {"Xiaomi"}})
+        (finding,) = [f for f in out if f.subject == "pin independent"]
+        assert not finding.ok and architecture in finding.detail
+
+    def test_general_pins_are_checked_per_function(self):
+        endpoints = {m: {"Together"} for m in MODELS.values()}
+        endpoints[MODELS["search"]] = {"Perplexity"}
+        out = check(MODELS, {}, set(MODELS.values()), endpoints,
+                    general=["Together"])
+        failing = {f.subject for f in out if not f.ok}
+        assert failing == {"pin search (general)"}
+        # judge and independent read the general order too, on the models
+        # the client resolves for them.
+        assert {"pin judge (general)", "pin independent (general)"} <= {
+            f.subject for f in out if f.ok}
+
+    @pytest.mark.parametrize("judge,premium,architecture", [
+        ("", "", "vendor/arch"), ("vendor/judge", "", "vendor/arch"),
+        ("", "vendor/premium", "vendor/arch"), ("", "", "vendor/eng"),
+        ("", "", ""),
+    ])
+    def test_the_pin_target_mirrors_the_client(self, monkeypatch, judge,
+                                               premium, architecture):
+        """_pin_target is a mirror of get_model and independent_model, so it
+        is held to them, case by case."""
+        monkeypatch.setattr(settings, "model_judge", judge)
+        monkeypatch.setattr(settings, "model_premium", premium)
+        monkeypatch.setattr(settings, "model_architecture", architecture)
+        monkeypatch.setattr(settings, "model_engineering", "vendor/eng")
+        monkeypatch.setattr(OpenRouterClient, "FUNCTION_MODELS", {
+            "engineering": "vendor/eng",
+            **({"judge": judge} if judge else {})})
+        client = OpenRouterClient(api_key="mirror")
+        models = {"engineering": "vendor/eng", "judge": judge,
+                  "premium": premium, "architecture": architecture}
+        assert _pin_target("judge", models)[0] == client.get_model("judge")
+        assert _pin_target("independent", models)[0] == client.independent_model()
+
+
+class TestTemperatureIsInformational:
+    """A7 (ARCH-20260930-100): no trace shows the router stripping an
+    endpoint for temperature alone, so its support is reported (present,
+    absent or blind) and never fails the gate."""
+
+    TARGETS = {"triage": ("vendor/fast", ["Nebius"])}
+
+    def test_an_endpoint_without_temperature_passes_the_gate(self):
+        listings = {"vendor/fast": [_endpoint("nebius", ["response_format",
+                                                          "max_tokens"])]}
+        (finding,) = check_parameters(self.TARGETS, listings)
+        assert finding.ok, finding.detail
+
+    @pytest.mark.parametrize("params,state", [
+        (["response_format", "max_tokens"], "absent"),
+        (EVERYTHING, "present"),
+        (None, "blind"),
+    ])
+    def test_its_support_is_reported_either_way(self, params, state):
+        listings = {"vendor/fast": [_endpoint("nebius", params)]}
+        (finding,) = check_temperature(self.TARGETS, listings)
+        assert finding.ok and finding.detail.startswith(state)
+        assert finding.subject == "temperature triage via Nebius"

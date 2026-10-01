@@ -138,17 +138,28 @@ class TestOptionalTiers:
         out = check({**GOOD, "ranker": "", "premium": ""}, NO_PINS, KNOWN, {})
         assert not _fail_subjects(out)
 
-    def test_a_pin_on_an_optional_tier_with_no_model_still_fails(self):
-        """The leniency is bounded: a pin naming a tier that holds no model is
-        still a real misconfiguration, optional or not."""
+    def test_a_pin_on_an_optional_tier_with_no_model_is_reported_unused(self):
+        """A6 (ARCH-20260930-100) reverses the earlier leniency bound. With
+        MODEL_RANKER unset no ranker call is made, so nothing can fail on the
+        pin: the client never reads it. This test asserted a failure until
+        A6; the gate must refuse exactly what the client would fail on, and
+        a pin no call reads is reported, not refused."""
         out = check({**GOOD, "ranker": ""}, {"ranker": "Fireworks"}, KNOWN, {})
-        assert "pin ranker" in _fail_subjects(out)
+        assert "pin ranker" not in _fail_subjects(out)
+        (finding,) = [f for f in out if f.subject == "pin ranker"]
+        assert finding.ok and finding.detail.startswith("unused")
+        assert "MODEL_RANKER is unset" in finding.detail
 
-    def test_a_pin_on_an_optional_tier_whose_provider_does_not_serve_it_fails(self):
+    def test_a_premium_pin_is_unused_because_no_call_reads_it(self):
+        """The independent pass calls function 'independent' (phases.py), so
+        the client never applies a 'premium:' pin, whether or not its
+        provider serves the model. Until A6 this test failed the pin as a
+        404 the client could never hit."""
         out = check({**GOOD, "premium": "vendor/big"}, {"premium": "Friendli"},
                     KNOWN, {"vendor/big": {"Together"}})
-        assert "pin premium" in _fail_subjects(out)
-        assert any("404" in f.detail for f in out if not f.ok)
+        assert "pin premium" not in _fail_subjects(out)
+        (finding,) = [f for f in out if f.subject == "pin premium"]
+        assert finding.ok and "independent:<provider>" in finding.detail
 
     def test_a_pin_on_a_misspelled_tier_says_so_instead_of_blaming_the_model(self):
         """A tier the harness does not run reads exactly like an unset model

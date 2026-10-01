@@ -294,3 +294,23 @@ class TestCIAsksAboutStateNotOnlyEvents:
         scheduled run must be the same workflow, not a second file."""
         workflows = sorted(p.name for p in (ROOT / ".github" / "workflows").glob("*.yml"))
         assert workflows == ["ci.yml"], workflows
+
+
+class TestUnguardedCountsStayDeleted:
+    """A5 (ARCH-20260930-100), in the spirit of D29: CLAUDE.md and
+    .claude/context/testing.md stated test and class counts no guard read,
+    and they drifted (215 classes across 55 files against 240 across 61;
+    58 files and 1045 tests). The examples stay; the numbers are deleted,
+    and the counts that remain are generated or guarded elsewhere."""
+
+    FILES = ("CLAUDE.md", ".claude/context/testing.md")
+    # A stated count of tests, test files or test classes, in any wording.
+    COUNT = re.compile(r"\b\d+\s+(?:such\s+classes|test\s+files|tests\b|"
+                       r"test\s+classes|classes\s+across)", re.I)
+
+    @pytest.mark.parametrize("name", FILES)
+    def test_no_test_count_is_stated(self, name):
+        text = (ROOT / name).read_text(encoding="utf-8")
+        assert text.strip(), f"{name} read empty; the check saw nothing"
+        found = self.COUNT.findall(text)
+        assert not found, f"{name} states an unguarded test count again: {found}"
