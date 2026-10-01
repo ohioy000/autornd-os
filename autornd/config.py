@@ -131,6 +131,15 @@ class Settings(BaseSettings):
     search_max_tokens_consequential: int = 4000
     escalation_recovery_attempts: int = 3
 
+    # Ruling D38: the API path's declared time budget, in seconds. A budgeted
+    # run that is running out of time ends by its own terminal (status
+    # blocked, a typed watchdog record) rather than running unbounded.
+    # Measured need: 094 was killed at 3,600 s mid-review after its build
+    # judges had agreed at $0.070, and returned nothing. None, the default,
+    # is the behaviour before D38. The production value is standing
+    # configuration and the owner's (G-3), so no number ships here.
+    run_time_budget_seconds: float | None = None
+
     chromadb_path: str = "./chromadb_data"
 
     api_key: str = ""
@@ -151,6 +160,17 @@ class Settings(BaseSettings):
     }
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+
+    @field_validator("run_time_budget_seconds", mode="before")
+    @classmethod
+    def validate_run_time_budget(cls, v):
+        # `RUN_TIME_BUDGET_SECONDS=` with no value reads as unset, not as a
+        # parse failure that stops the server from starting.
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+        if float(v) <= 0:
+            raise ValueError("run_time_budget_seconds must be positive")
+        return float(v)
 
     @field_validator("max_iterations")
     @classmethod

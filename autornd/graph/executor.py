@@ -12,9 +12,10 @@ hardcoded pipeline" a question you can answer for free.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any, Protocol
 
 from autornd.graph.conditions import ConditionError, evaluate, resolve_path
@@ -23,7 +24,60 @@ from autornd.graph.spec import TERMINAL_STATUSES, Node, NodeKind, WorkflowSpec
 logger = logging.getLogger(__name__)
 
 __all__ = ["ExecutionState", "GraphExecutor", "NodeRunner", "StepRecord",
+           "WatchdogRecord", "WATCHDOG_RESERVE_SECONDS",
            "_advisory_review_suffix", "_assessment_suffix", "_criteria_suffix"]
+
+
+# Ruling D38: the time the watchdog leaves between cutting a call and the
+# budget's end, for writing the terminal. Derived from a measurement, not a
+# guess (convention 1).
+#
+# Measured 2026-09-30 on the real path (real GraphExecutor, real
+# engineering-rnd.yaml, real PhaseRunner, a billing double whose judge call
+# sleeps past the cut), in two passes of 30 cuts each:
+#   cut point to the terminal written: max 0.0027 s, median 0.0012-0.0015 s
+#   cut point to executor.run() returning: max 0.0031 s
+# And through the real OpenRouterClient against a local socket that never
+# answers (the part of a live cut the double cannot reach: httpx abandoning
+# an in-flight request), in two passes of 20 cuts each:
+#   timer expiry to the client's await raising: max 0.0039 s, median
+#   0.0019-0.0027 s; the server saw the connection closed after 40 of 40.
+# tests/test_watchdog.py::TestTheReserveIsMeasured re-measures the first on
+# every suite run and fails if a cut ever takes a quarter of the reserve.
+#
+# Arithmetic: the largest reading is 0.0039 s; 0.0039 x 100 = 0.39 s, rounded
+# up to 0.4 s. The 100x margin is a choice, made for what neither
+# measurement sees: a TLS close to a remote provider on a loaded machine. It
+# costs 0.4 s of the 600 s DEFAULT_TIMEOUT_SECONDS (0.07%) and of 094's
+# 3,600 s deadline (0.011%).
+WATCHDOG_RESERVE_SECONDS = 0.4
+
+# D38: "A call that runs far past its tier's pace in this run is flagged in
+# the record, not cancelled, until measured runs set the multiple." No run has
+# set it yet. So the flag fires at ANY excess over the pace (a multiple of
+# 1.0), and each flag carries its measured ratio. The multiple can then be
+# read off the data rather than guessed before there is any. Raise this only
+# with the run that measured it.
+SLOW_CALL_MULTIPLE = 1.0
+
+# The node whose output is the deliverable. The adapter reads it under this
+# id throughout (state.outputs["implement"]); the watchdog's pointer compares
+# the latest one with the one the build judges agreed on.
+ARTIFACT_NODE = "implement"
+
+# The ship-deciding judges an agreed implementation can meet after its build
+# judges agreed: the main flow's review, and the rework_review inside each
+# rework or recovery iteration (D38: "names which later gates it did or did
+# not pass"). Both are workflow node ids. A workflow without them reports
+# neither.
+LATER_GATES = ("review", "rework_review")
+
+# D38: "The watchdog stops the wait; whether the provider stops billing an
+# abandoned call is unknown, and the record says so." Carried by every
+# cancelled cut, verbatim.
+ABANDONED_CALL_BILLING = (
+    "unknown — the watchdog stopped the wait; whether the provider stops "
+    "billing an abandoned call is not observable from the harness")
 
 
 @dataclass
@@ -40,6 +94,65 @@ class StepRecord:
     # for B7 costs about half a dollar, and "it timed out" is a reading, not a
     # diagnosis. Zero for a skipped node, which costs nothing.
     seconds: float = 0.0
+    # The tier a model-calling node routed to on this run, as resolve_tier
+    # gave it; None for checks and gates. Measured need: 094's record could
+    # only ESTIMATE the judges' pace (3,078 s over 14 calls, split evenly),
+    # because per-phase totals cannot say which call took how long.
+    tier: str | None = None
+    # True when the D38 watchdog cut this node mid-flight. Its `seconds` are
+    # then the time it ran before the cut, not a completed call's duration.
+    cancelled: bool = False
+
+
+@dataclass
+class WatchdogRecord:
+    """Ruling D38's typed record: how a budgeted run's clock was spent.
+
+    Present on every run, so an absent block and a quiet watchdog cannot be
+    confused (convention 28). `armed` says whether a budget was declared, and
+    `fired` whether the watchdog ended the run. The cut fields are None until
+    it fires. `slow_calls` is filled on any run, budgeted or not, because a
+    flag changes nothing about what the run does.
+    """
+
+    armed: bool = False
+    budget_seconds: float | None = None
+    reserve_seconds: float | None = None
+    fired: bool = False
+    # "not_started": the pre-start rule; this run's pace for the tier said the
+    # call could not finish inside budget less reserve, or no time was left.
+    # "cancelled": the mid-flight rule; the call was running when the cut
+    # point arrived.
+    rule: str | None = None
+    node: str | None = None
+    iteration: int | None = None
+    tier: str | None = None
+    # The serving the call was configured to use. The serving that actually
+    # answers is known only from a response, and a cut call has none, so it
+    # is labelled configured and never observed.
+    serving_configured: dict[str, Any] | None = None
+    serving_observed: str | None = None
+    # Seconds since the run started, when the rule decided.
+    elapsed_seconds: float | None = None
+    # What the rule compared against. For not_started, budget less elapsed
+    # less reserve at the decision. For cancelled, the time the call was
+    # granted at its start.
+    available_seconds: float | None = None
+    # The tier's pace when the rule decided: the longest completed
+    # model-calling step of that tier in this run. None means no such step
+    # had completed, so only the mid-flight rule guarded the call.
+    pace_seconds: float | None = None
+    # Seconds since the run started, when the terminal was written. A
+    # watchdog end whose terminal lands after its budget falsifies D38.
+    terminal_seconds: float | None = None
+    billing: str | None = None
+    # The last implementation the build judges agreed on. Computed when the
+    # watchdog fires; None otherwise, because nothing was cut.
+    approved: dict[str, Any] | None = None
+    slow_calls: list[dict[str, Any]] = field(default_factory=list)
+
+    def as_dict(self) -> dict[str, Any]:
+        return asdict(self)
 
 
 @dataclass
@@ -58,6 +171,9 @@ class ExecutionState:
     # that never concluded. Set alongside status by _end_on_bound, never by
     # the workflow itself.
     stop_reason: str | None = None
+    # Ruling D38: the watchdog's typed record. Set at the start of every run
+    # by GraphExecutor.run, armed or not.
+    watchdog: WatchdogRecord | None = None
 
     @property
     def finished(self) -> bool:
@@ -203,6 +319,53 @@ def _assessment_suffix(state: "ExecutionState") -> str:
     return f" — assessment: {text}"
 
 
+def _summary(verdict: object) -> str | None:
+    """An implementation's deliverable text, from a verdict or a plain dict."""
+    if verdict is None:
+        return None
+    if isinstance(verdict, dict):
+        return verdict.get("summary")
+    return getattr(verdict, "summary", None)
+
+
+def _watchdog_reason(record: "WatchdogRecord") -> str:
+    """The watchdog's terminal in a plain sentence. The typed record is
+    the source of truth; nothing reads this for control flow."""
+    where = f"'{record.node}'"
+    if record.iteration:
+        where += f" (iteration {record.iteration})"
+    tier = f"{record.tier} " if record.tier else ""
+    budget = f"the {record.budget_seconds:g}s budget"
+    if record.rule == "not_started":
+        if record.pace_seconds is not None and record.available_seconds > 0:
+            what = (f"the {tier}call at {where} was not started: this run's "
+                    f"{tier}pace is {record.pace_seconds:.3f}s and only "
+                    f"{record.available_seconds:.3f}s of {budget} remain "
+                    f"before the {record.reserve_seconds:g}s reserve")
+        else:
+            what = (f"the {tier}call at {where} was not started: no time of "
+                    f"{budget} remains before the {record.reserve_seconds:g}s "
+                    f"reserve")
+    else:
+        what = (f"the {tier}call at {where} was cancelled at "
+                f"{record.elapsed_seconds:.3f}s of {budget}, leaving the "
+                f"{record.reserve_seconds:g}s reserve to write this terminal")
+    approved = record.approved or {}
+    if approved.get("agreed"):
+        gates = ", ".join(f"{g}: {v.replace('_', ' ')}"
+                          for g, v in (approved.get("gates") or {}).items())
+        pointer = (f"last judge-approved implementation: {approved.get('loop')} "
+                   f"iteration {approved.get('iteration')}"
+                   + (f" ({gates})" if gates else ""))
+        if approved.get("latest_differs"):
+            pointer += f"; the latest implementation differs and is {approved.get('latest')}"
+    elif approved.get("agreed") is False:
+        pointer = "no implementation was agreed by the build judges"
+    else:
+        pointer = "this runner keeps no iteration history to point at"
+    return f"stopped by the deliberation watchdog (Ruling D38): {what}; {pointer}"
+
+
 def _render_item(value: object) -> str:
     """One entry of a gate's reason list, readable whatever shape it arrived in.
 
@@ -231,6 +394,8 @@ class GraphExecutor:
         spec: WorkflowSpec,
         runner: NodeRunner,
         settings_lookup: dict[str, Any] | None = None,
+        time_budget: float | None = None,
+        reserve_seconds: float | None = None,
     ) -> None:
         self.spec = spec
         self.runner = runner
@@ -243,6 +408,20 @@ class GraphExecutor:
         # Loop budgets may name a setting rather than hardcode a number, so the
         # same workflow file works across deployments with different limits.
         self.settings = settings_lookup or {}
+        # Ruling D38: a run with a declared time budget ends by its own
+        # terminal. None means no budget, and then nothing below is consulted:
+        # the run behaves exactly as it did before the watchdog existed.
+        self.time_budget = time_budget
+        # Read from the module at construction, not frozen into a default
+        # argument, so a test can set the constant the runner path uses.
+        self.reserve_seconds = (WATCHDOG_RESERVE_SECONDS if reserve_seconds is None
+                                else reserve_seconds)
+        self._started = 0.0
+        self._pace: dict[str | None, float] = {}
+        self._history_base = 0
+        self._history_tags: list[dict[str, Any]] = []
+        self._loops: list[str] = []
+        self._ships: dict[int, bool] = {}
 
     # ── conditions ────────────────────────────────────────────────────────
 
@@ -281,6 +460,247 @@ class GraphExecutor:
     async def _run_ai(self, node: Node, state: ExecutionState) -> None:
         output = await self.runner.run_ai(node, state)
         state.outputs[node.id] = output
+
+    # ── the deliberation watchdog (Ruling D38) ────────────────────────────
+
+    def _elapsed(self) -> float:
+        return time.perf_counter() - self._started
+
+    def _available(self) -> float:
+        """Budget less elapsed less reserve: how long a call may still run."""
+        return float(self.time_budget) - self._elapsed() - self.reserve_seconds
+
+    def _step_tier(self, node: Node, state: ExecutionState) -> str | None:
+        """The tier for the record, without changing what the run does.
+
+        resolve_tier is the adapter's own answer. A condition that cannot be
+        evaluated yet would raise here, where nothing raised before the
+        watchdog existed; the record says None instead, and the adapter
+        still raises on the real path exactly as it always did.
+        """
+        try:
+            return self.resolve_tier(node, state)
+        except ConditionError:
+            return None
+
+    def _calls(self) -> int | None:
+        """The client's call counter, when the runner exposes one."""
+        calls = getattr(getattr(self.runner, "client", None), "calls", None)
+        return calls if isinstance(calls, int) else None
+
+    def _configured_serving(self, tier: str | None) -> dict[str, Any] | None:
+        """Which model and pin a call on this tier is configured to use.
+
+        The same two lookups OpenRouterClient.chat makes when it builds the
+        request, so the record names what the request would have asked for.
+        """
+        client = getattr(self.runner, "client", None)
+        if tier is None or client is None or not hasattr(client, "get_model"):
+            return None
+        from autornd.routing.openrouter import (
+            provider_fallbacks_allowed, provider_order_for,
+        )
+        return {"model": client.get_model(tier),
+                "provider_order": provider_order_for(tier),
+                "allow_fallbacks": provider_fallbacks_allowed()}
+
+    def _refuse_to_start(self, node: Node, state: ExecutionState,
+                         tier: str | None) -> bool:
+        """D38's pre-start rule. True when the call is not started.
+
+        A call is not started when this run's own pace for its tier says it
+        cannot finish inside the budget less the reserve. With no completed
+        step of that tier yet, there is no pace, so the call starts and only
+        the mid-flight rule guards it. When the cut point has already passed,
+        no call can finish, and starting one only to cancel it at once would
+        bill a request for nothing.
+        """
+        if self.time_budget is None:
+            return False
+        available = self._available()
+        pace = self._pace.get(tier)
+        if available > 0 and (pace is None or pace <= available):
+            return False
+        self._cut(state, "not_started", node, tier,
+                  available=available, pace=pace)
+        return True
+
+    async def _watched(self, work, node: Node, state: ExecutionState,
+                       record: StepRecord) -> bool:
+        """Run one node's work. Under a budget, cut it at the reserve.
+
+        False when the watchdog ended the run. With no budget this is a bare
+        await: no timer is entered, so an unbudgeted run behaves as before.
+        """
+        if self.time_budget is None:
+            await work(node, state)
+            return True
+        granted = self._available()
+        try:
+            async with asyncio.timeout(max(granted, 0.0)) as guard:
+                await work(node, state)
+        except TimeoutError:
+            # Only the watchdog's own expiry is a cut. A TimeoutError raised
+            # inside the phase is the phase's, and travels on unchanged.
+            if not guard.expired():
+                raise
+            record.cancelled = True
+            self._cut(state, "cancelled", node, record.tier,
+                      available=granted, pace=self._pace.get(record.tier))
+            return False
+        return True
+
+    def _after_step(self, node: Node, record: StepRecord, completed: bool,
+                    calls_before: int | None, state: ExecutionState,
+                    trace_index: int) -> None:
+        """Bookkeeping after a node: pace, slow-call flags, history tags.
+
+        Read-only with respect to the run: nothing here changes a decision
+        already taken. Only a completed node's output is read, because a node
+        that raised or was cut leaves the PREVIOUS iteration's verdict under
+        its id. Pace counts only steps that made a model call, when the
+        counter can say so: a domain_review with no peers to ask takes 0 s
+        and calls nothing, and a pace of 0 s from it would misstate the tier.
+        """
+        if completed and node.kind is NodeKind.AI:
+            output = state.outputs.get(node.id)
+            ship = (output.get("ship") if isinstance(output, dict)
+                    else getattr(output, "ship", None))
+            if isinstance(ship, bool):
+                self._ships[trace_index] = ship
+
+        history = getattr(self.runner, "iterations", None)
+        if isinstance(history, list):
+            loop = self._loops[-1] if self._loops else None
+            while self._history_base + len(self._history_tags) < len(history):
+                self._history_tags.append({"loop": loop, "trace_index": trace_index})
+
+        if node.kind is not NodeKind.AI or not (completed or record.cancelled):
+            return
+        calls_after = self._calls()
+        called = (calls_before is None or calls_after is None
+                  or calls_after > calls_before)
+        if not called and not record.cancelled:
+            return
+        pace = self._pace.get(record.tier)
+        # A pace of 0 s (a step that finished inside the record's millisecond
+        # rounding) has no ratio to report, so it flags nothing.
+        if pace and record.seconds > pace * SLOW_CALL_MULTIPLE:
+            watchdog = state.watchdog
+            if watchdog is not None:
+                watchdog.slow_calls.append({
+                    "node": node.id, "iteration": record.iteration,
+                    "tier": record.tier, "seconds": record.seconds,
+                    "pace_seconds": pace,
+                    "ratio": round(record.seconds / pace, 3),
+                    "cancelled": record.cancelled,
+                })
+        if not record.cancelled:
+            self._pace[record.tier] = max(pace or 0.0, record.seconds)
+
+    def _approved_pointer(self, state: ExecutionState) -> dict[str, Any]:
+        """D38: the last implementation the build judges agreed on.
+
+        'Agreed' is an iteration whose dissent list is empty, as the adapter's
+        iteration history records it. A runner that keeps no history makes
+        the pointer BLIND, not empty: `history` says which. No agreed
+        iteration is stated as agreed: false, never left absent
+        (convention 28).
+        """
+        history = getattr(self.runner, "iterations", None)
+        latest = _summary(state.outputs.get(ARTIFACT_NODE))
+        if not isinstance(history, list):
+            return {"history": "absent", "agreed": None, "index": None,
+                    "loop": None, "iteration": None, "gates": None,
+                    "latest_differs": None, "latest": None}
+        entries = history[self._history_base:]
+        agreed_at = None
+        for position in range(len(entries) - 1, -1, -1):
+            if entries[position].get("dissenting") == []:
+                agreed_at = position
+                break
+
+        # What the latest implementation is, judged against the record: the
+        # one the judges agreed on, one they judged and dissented from, or
+        # one no judge finished reading.
+        latest_label = None
+        if latest is not None:
+            if agreed_at is not None and latest == entries[agreed_at].get("implement_summary"):
+                latest_label = "approved"
+            elif entries and latest == entries[-1].get("implement_summary"):
+                latest_label = "dissented"
+            else:
+                latest_label = "unjudged"
+
+        if agreed_at is None:
+            # Nothing was agreed, so there is nothing for the latest to differ
+            # from; its label still says whether a judge finished reading it.
+            return {"history": "present", "agreed": False, "index": None,
+                    "loop": None, "iteration": None, "gates": None,
+                    "latest_differs": None, "latest": latest_label}
+
+        entry = entries[agreed_at]
+        tag = (self._history_tags[agreed_at]
+               if agreed_at < len(self._history_tags) else {})
+        return {
+            "history": "present",
+            "agreed": True,
+            # Into the unit record's `iterations` list, which is this history.
+            "index": self._history_base + agreed_at,
+            "loop": tag.get("loop"),
+            "iteration": entry.get("iteration"),
+            "gates": self._later_gates(state, tag.get("trace_index")),
+            "latest_differs": (None if latest is None
+                               else latest != entry.get("implement_summary")),
+            "latest": latest_label,
+        }
+
+    def _later_gates(self, state: ExecutionState,
+                     after: int | None) -> dict[str, str]:
+        """For each LATER_GATES node, what it said about the agreed work.
+
+        The window runs from the step whose judging appended the agreed
+        iteration up to the next implementation. A later implement produces
+        a different artifact, and a gate after it judged that one, not this.
+        Values: passed, failed, cut (the watchdog stopped it mid-call),
+        not_reached.
+        """
+        gates = {g: "not_reached" for g in LATER_GATES if g in self.spec.ids}
+        if after is None:
+            return gates
+        for index in range(after + 1, len(state.trace)):
+            step = state.trace[index]
+            if step.skipped:
+                continue
+            if step.node_id == ARTIFACT_NODE:
+                break
+            if step.node_id in gates and gates[step.node_id] == "not_reached":
+                if step.cancelled:
+                    gates[step.node_id] = "cut"
+                elif index in self._ships:
+                    gates[step.node_id] = "passed" if self._ships[index] else "failed"
+        return gates
+
+    def _cut(self, state: ExecutionState, rule: str, node: Node,
+             tier: str | None, available: float, pace: float | None) -> None:
+        """End the run now: status blocked, typed record, everything kept."""
+        watchdog = state.watchdog
+        watchdog.fired = True
+        watchdog.rule = rule
+        watchdog.node = node.id
+        watchdog.iteration = state.iteration
+        watchdog.tier = tier
+        watchdog.serving_configured = self._configured_serving(tier)
+        watchdog.serving_observed = None
+        watchdog.elapsed_seconds = round(self._elapsed(), 4)
+        watchdog.available_seconds = round(available, 4)
+        watchdog.pace_seconds = pace
+        watchdog.billing = ABANDONED_CALL_BILLING if rule == "cancelled" else None
+        watchdog.approved = self._approved_pointer(state)
+        state.end("blocked", _watchdog_reason(watchdog))
+        watchdog.terminal_seconds = round(self._elapsed(), 4)
+        logger.info("watchdog: %s at %s (%.3fs of %.3fs)", rule, node.id,
+                    watchdog.elapsed_seconds, watchdog.budget_seconds)
 
     async def _run_check(self, node: Node, state: ExecutionState) -> None:
         result = await self.runner.run_check(node, state)
@@ -392,17 +812,31 @@ class GraphExecutor:
         if node.is_loop:
             return await self._run_loop(node, state)
 
-        record = StepRecord(node.id, node.kind.value, state.iteration)
+        tier = self._step_tier(node, state) if node.kind is NodeKind.AI else None
+        # Ruling D38, before the call: a call this run's own pace says cannot
+        # finish is never started, so it is not in the trace. It did not run.
+        if node.kind is NodeKind.AI and self._refuse_to_start(node, state, tier):
+            return False
+
+        record = StepRecord(node.id, node.kind.value, state.iteration, tier=tier)
         state.trace.append(record)
+        trace_index = len(state.trace) - 1
+        calls_before = self._calls()
         started = time.perf_counter()
         route_to: str | None = None
+        completed = False
         try:
+            # Checks are watched as well as model calls. Three of them make
+            # paid lookups (build_context, verify_grounding, the re-grounding
+            # lookup); 094's context took 22.5 s. D38 says a budgeted run is
+            # never killed from outside mid-call.
             if node.kind is NodeKind.AI:
-                await self._run_ai(node, state)
-                return True
+                completed = await self._watched(self._run_ai, node, state, record)
+                return completed
             if node.kind is NodeKind.CHECK:
-                await self._run_check(node, state)
-                return True
+                completed = await self._watched(self._run_check, node, state, record)
+                return completed
+            completed = True
             proceed, route_to = self._decide_gate(node, state)
             if route_to is None:
                 return proceed
@@ -410,6 +844,8 @@ class GraphExecutor:
             # In a finally so a node that raises still reports what it cost —
             # the expensive failures are the ones worth timing.
             record.seconds = round(time.perf_counter() - started, 3)
+            self._after_step(node, record, completed, calls_before, state,
+                             trace_index)
 
         # Deliberately outside the timer. A gate's own work is one condition
         # test; the sub-graph it routes to is timed by its own nodes, and
@@ -420,6 +856,16 @@ class GraphExecutor:
         return await self._run_from(route_to, state)
 
     async def _run_loop(self, node: Node, state: ExecutionState) -> bool:
+        # Which loop is running, so the watchdog's pointer can say which loop
+        # an agreed iteration belonged to. A stack because a loop's
+        # on_exhausted hands off to a sub-graph that holds loops of its own.
+        self._loops.append(node.id)
+        try:
+            return await self._run_loop_body(node, state)
+        finally:
+            self._loops.pop()
+
+    async def _run_loop_body(self, node: Node, state: ExecutionState) -> bool:
         budget = self._budget(node)
         body = [self.spec.get(b) for b in node.body]
 
@@ -483,6 +929,19 @@ class GraphExecutor:
         # already paid for, which is the failure the results log exists to stop
         # — and the runs worth diagnosing are exactly the ones that broke.
         self.state = state
+        # Ruling D38: the run's clock starts here, and so does its record.
+        self._started = time.perf_counter()
+        self._pace = {}
+        self._ships = {}
+        self._history_tags = []
+        self._loops = []
+        history = getattr(self.runner, "iterations", None)
+        self._history_base = len(history) if isinstance(history, list) else 0
+        armed = self.time_budget is not None
+        state.watchdog = WatchdogRecord(
+            armed=armed,
+            budget_seconds=float(self.time_budget) if armed else None,
+            reserve_seconds=self.reserve_seconds if armed else None)
         for node in self.spec.execution_order():
             if not await self._execute(node, state):
                 break

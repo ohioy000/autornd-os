@@ -1,0 +1,109 @@
+{
+  "command_id": "ARCH-20260930-095",
+  "parent_id": "ARCH-20260930-094",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "A run with a declared time budget ends by its own terminal before the budget runs out, returning the last judge-approved implementation, instead of being killed from outside mid-call with nothing to show (Ruling D38). The run record writes what it measures, to disk.",
+
+  "evidence": [
+    "docs/traces/094-cup-grounded.jsonl: the per-iteration history shows the build judges agreed on the second implementation pass at a cumulative $0.0702 (iteration records 1 and 2). The run then spent $0.4422 more in review, rework, escalation and recovery, and the runner killed it at 3,600 s mid-rework_review (stop_reason 'runner stopped the run: timed out after 3600s', total $0.5124). The user received no answer. Judging took 86% of wall time across 14 judge calls.",
+    "Time to that agreement is an ESTIMATE of about 11 minutes, with bounds of 4 to 22 minutes, made by splitting each phase's seconds_by_phase total evenly over its occurrences in path. The record carries no per-step timings, so it cannot be measured, and this command adds them.",
+    "docs/traces/091-night-20260930T024306Z, T034051Z and T045435Z: three more runs killed by the runner at 1,500, 3,900 and 4,800 s mid-judging.",
+    "autornd/evals/runner.py:752: asyncio.wait_for(executor.run(...), deadline) kills from outside. :756: _end_on_bound(state, 'deadline', ...) writes the stop. D25's second clause, that the loop emits its own terminal at its deadline, exists only as a comment (runner.py:757).",
+    "autornd/engine/workflow.py: the production path has no time bound at all (grep for wait_for, timeout or deadline finds nothing).",
+    "autornd/graph/executor.py:281 (_run_ai) and :379 (_execute): the single path every model-calling node takes.",
+    "autornd/evals/runner.py:221-256 (ResultsLog.record) writes the unit record field by field and omits regrounding, regrounding_rounds and assumptions_declared, which ScenarioRun carries at :507-512. Measured: docs/traces/094-cup-grounded.jsonl has none of the three keys. 093's tests asserted the in-memory _regrounding_block(), never the written record (convention 22).",
+    "Ruling D22: a review that cannot block must not read as passed. The owner chose 'finish cleanly' over fail-fast on 2026-09-30."
+  ],
+
+  "scope": {
+    "include": [
+      "autornd/graph/executor.py",
+      "autornd/evals/runner.py",
+      "autornd/engine/workflow.py",
+      "autornd/config.py (one optional setting)",
+      ".env.example (one commented placeholder line)",
+      "autornd/graph/adapter.py (read-only accessors over its existing iteration history, only if needed)",
+      "tests/ (a new test_watchdog.py; tests/conftest.py, adding an optional per-call delay to make_mock_client that still bills)",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "autornd/engine/phases.py: no prompt change.",
+      "workflows/: no node, gate or loop change.",
+      "autornd/routing/: the transport timeout is unchanged. Cancellation is at the asyncio level.",
+      "autornd/models/ and autornd/database.py: no verdict or DB schema change. A DB schema change is destructive here (hard rule 11), so the API path records the watchdog in its existing status and error fields only.",
+      ".env and any .env* file other than .env.example."
+    ]
+  },
+
+  "constraints": [
+    "RULING FIRST, VERBATIM, BEFORE THE IMPLEMENTATION IN COMMIT ORDER: record it in HANDOVER.md (as a blockquote with the others) and in the notebook, at the next free section.",
+    "RULING D38, COMMITTED VERBATIM: 'Ruling D38 (advisor, 2026-09-30; default chosen by the owner) — the deliberation watchdog finishes cleanly. A run with a declared time budget ends by its own terminal, never by being killed from outside mid-call. Slow deliberation is not itself a fault: no call is cancelled for being slow while the budget holds. Before each model call, if this run's own measured pace for that call's tier says the call cannot finish inside the remaining budget less a reserve for writing the terminal, the call is not started; during each call, when that point arrives, the call is cancelled. Either way the run ends at once with status blocked and a typed watchdog record naming the rule that fired, the node, iteration, tier, configured serving, elapsed time, budget and pace. Everything produced so far is kept. The terminal points at the last implementation the build judges agreed on and names which later gates it did or did not pass; the latest implementation, if it differs, is labelled unjudged (D22). A call that runs far past its tier's pace in this run is flagged in the record, not cancelled, until measured runs set the multiple. A run with no declared budget behaves exactly as today; the production budget is standing configuration and the owner's (G-3). The watchdog stops the wait; whether the provider stops billing an abandoned call is unknown, and the record says so. This implements the second clause of D25. Exhibit: ARCH-20260930-094, where the build judges agreed at $0.070 and the run was killed at 3,600 s having spent $0.51 and returned no answer. Falsifier: a watchdog-ended run whose terminal is written after its budget, or a budgeted run whose stop_reason says the runner killed it, means the watchdog failed; a trip on a fast-judge control run means the pace rule is wrong.'",
+    "WHERE: in GraphExecutor, around _run_ai in _execute, so the API path and the eval runner get it identically. The executor takes an optional time budget. The eval runner passes the scenario's declared deadline. engine/workflow.py passes the new optional setting run_time_budget_seconds (default None, meaning today's behaviour), and .env.example gets one commented placeholder line for it. The eval runner's wait_for stays as the outer backstop.",
+    "PACE: a tier's pace is the longest completed model-calling step of that tier in THIS run. With no completed step of that tier yet, the call starts and only the mid-flight rule guards it. Record the pace used.",
+    "RESERVE: derive it from a measurement, not a guess. Measure, in a test, the time from cancellation to the terminal being written, and set the reserve as a named constant whose comment carries that measurement and the margin, with the arithmetic shown (convention 1). The watchdog must fire before the runner's wait_for, by at least that reserve.",
+    "THE APPROVED-ARTIFACT POINTER: 'agreed' means an iteration whose judges agreed (the fold's dissent list is empty, as the adapter's iteration history already records). The watchdog record carries the index of the last agreed iteration, which loop it belonged to, which later gates it passed or did not reach (review, rework_review), and whether the latest implementation differs from it. If there is no agreed iteration, say so explicitly: an absent field and a measured none are different claims (convention 28).",
+    "STEP RECORD: the unit record gains steps, a list of {node, iteration, kind, tier, seconds, cancelled} for every executed node, so pace and judging share can be read from the record instead of estimated. Tier as resolve_tier gives it, null for non-model nodes.",
+    "SERIALISER REPAIR (instrument repair, found by 094): ResultsLog.record writes regrounding, regrounding_rounds and assumptions_declared, plus the new steps and watchdog blocks. A test writes a unit record through ResultsLog to a temporary file, reads it back as JSON, and asserts every block is present, with zeros or an explicit none when quiet. Prove by breaking: drop one field from the writer and show the test fail.",
+    "STATUS SEMANTICS (D23): a watchdog end is the workflow's own terminal. Status is blocked, the reason names the watchdog in a plain sentence, the typed record is on state, and stop_reason stays None. The runner's stop_reason is only for when the runner had to kill the run.",
+    "TESTS DRIVE THE REAL PATH (convention 22): use the real GraphExecutor, the real workflows/engineering-rnd.yaml and the real PhaseRunner, with make_mock_client given per-function delays that still bill. Millisecond delays and budgets, with margins wide enough that the suite cannot flake. Cases: (a) no budget gives a path, calls and status identical to today; (b) a judge call longer than the remaining budget is cancelled mid-flight, status is blocked, the rule is 'cancelled', stop_reason is None, and the terminal is written before the budget; (c) after one slow judge call, the next judge call is not started when the remaining time is under the pace, and the client call count proves it; (d) through run_scenario with a scenario timeout, the watchdog fires before the runner's wait_for (stop_reason None); (e) engine/workflow.py with the setting unset behaves as today, and with it set the watchdog is active; (f) a cut after an agreed iteration points at that iteration and labels a differing latest implementation unjudged; (g) the serialiser round trip above. PROVE BY BREAKING: disable the watchdog and show (b) end with the runner's kill (stop_reason deadline). Quote it.",
+    "MECHANICAL ANTI-STAND-IN CHECKS, which must hold: `grep -n 'def run_check\\|def run_ai' tests/test_watchdog.py` returns nothing; `grep -n 'watchdog' autornd/graph/executor.py` finds the implementation; `grep -c regrounding autornd/evals/runner.py` increases inside ResultsLog.record.",
+    "No change to what any judge concludes, to any gate, loop bound, prompt, tier or max_tokens. The only behaviour change is how a budgeted run ends.",
+    "Free. No provider call. The live demonstration is its own command."
+  ],
+
+  "acceptance_criteria": [
+    "D38 is verbatim in HANDOVER.md and the notebook, with the ruling commit before the implementation.",
+    "Tests (a) to (g) pass and drive the real path; the break demonstration is quoted.",
+    "The anti-stand-in checks hold, quoted in the response.",
+    "The reserve constant's comment carries its measurement and arithmetic.",
+    "A unit record read back from disk carries steps, watchdog, regrounding, regrounding_rounds and assumptions_declared.",
+    "With no budget declared, every existing test passes unchanged.",
+    "Suite green, with counts before and after. The PR is opened and delivery_state carries its number (D16)."
+  ],
+
+  "verification": [
+    {"command": "grep -n 'Ruling D38' HANDOVER.md docs/handover-review.md", "expected": "Present in both."},
+    {"command": ".venv/bin/python3 -m pytest tests/test_watchdog.py -q", "expected": "All pass."},
+    {"command": "grep -n 'def run_check\\|def run_ai' tests/test_watchdog.py", "expected": "No output."},
+    {"command": "git diff --stat origin/main -- autornd/engine/phases.py workflows/ autornd/routing/ autornd/models/ autornd/database.py", "expected": "Empty."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count reported before and after."}
+  ],
+
+  "rollback": "Revert the merge. Note that every eval run declares a budget (the scenario timeout, or DEFAULT_TIMEOUT_SECONDS 600), so after this merge the watchdog governs every eval run's end. That is intended by D25.",
+
+  "deliverable": {
+    "branch": "arch/20260930-095-deliberation-watchdog",
+    "branch_created_by": "advisor (this command is its first commit)",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+
+  "transport": "Pushed by the advisor under the owner's grant of 2026-09-30, only after ARCH-20260930-094 has merged (its trace is this command's exhibit). Commit the response IN_PROGRESS first.",
+
+  "assumptions": [
+    "Cancelling the coroutine awaiting the provider call stops the harness's wait promptly. If it doesn't, for example because a retry swallows CancelledError, report where. That is a finding, and a cancellation that does not cancel is the watchdog failing."
+  ],
+
+  "questions": [
+    "Does cancellation close the HTTP connection, or only abandon the await? Report what is observable. Either way the record's billing note stands.",
+    "Is the serving of an in-flight call knowable before its response? If not, record the configured pin and label it 'configured', not 'observed'.",
+    "On 094's numbers, the judge's pace was about 220 s per call on average (3,078 judging seconds over 14 calls). Using the new steps record, would the pre-start rule have ended 094 cleanly, and at which node? Answer from the per-step data of a provider-free replay if one is possible, otherwise state that it cannot be answered without a live run."
+  ],
+
+  "preconditions": [
+    {"command": "ps aux | grep -E 'autornd|evals' | grep -v grep", "expected": "No output. If there is output, stop."},
+    {"command": "git fetch origin && git ls-tree --name-only origin/main docs/traces/094-cup-grounded.jsonl", "expected": "Present. If absent, 094 has not merged: BLOCKED (the parent rule)."},
+    {"command": "grep -n 'asyncio.wait_for(executor.run\\|_end_on_bound(state, \"deadline\"' autornd/evals/runner.py; grep -n 'async def _run_ai\\|async def _execute' autornd/graph/executor.py", "expected": "runner.py 752 and 756; executor.py 281 and 379. Name any divergence."},
+    {"command": "grep -c 'wait_for\\|timeout\\|deadline' autornd/engine/workflow.py", "expected": "0"},
+    {"command": "sed -n '/def record(self, run/,/^    def /p' autornd/evals/runner.py | grep -c regrounding", "expected": "0. This confirms the serialiser gap before repairing it."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green on main; record the count."}
+  ]
+}

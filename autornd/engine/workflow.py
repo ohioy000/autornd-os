@@ -84,11 +84,16 @@ class WorkflowEngine:
 
         runner = PhaseRunner(self.client, on_phase=on_phase)
         spec = load_spec(workflow_path())
+        # Ruling D38: the API path gets the watchdog through the same executor
+        # the eval runner uses. Unset (the default) means no budget, and the
+        # run behaves as it did before. A watchdog end is the workflow's own
+        # terminal: it lands below as status blocked with the reason in
+        # `error`, the existing fields. No DB schema change (hard rule 11).
         executor = GraphExecutor(spec, runner, settings_lookup={
             "max_iterations": settings.max_iterations,
             "escalation_recovery_attempts": settings.escalation_recovery_attempts,
             "escalation_max_tokens": settings.escalation_max_tokens,
-        })
+        }, time_budget=settings.run_time_budget_seconds)
 
         try:
             state = await executor.run(request)
