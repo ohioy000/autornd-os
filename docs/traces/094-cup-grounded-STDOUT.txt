@@ -1,0 +1,14 @@
+results: evals/results/094-cup-grounded.jsonl
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_cup_line_sensor_grounded     0/1     27  3600.0   run 1/1 — timed out after 3600s
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed every repetition  ·  27 calls  ·  3600.0s  ·  $0.5124
+spend by tier: judge $0.3842, escalation $0.0802, engineering $0.0224, research $0.0068, search $0.0066, triage $0.0062, architecture $0.0060
+served by: architecture via Xiaomi, engineering via Nebius, escalation via InferenceNet, judge via SiliconFlow, research via Google AI Studio, search via Perplexity, triage via Google AI Studio
+
+sweep budget: $0.5124 of $1.5000
+
+exit=1
