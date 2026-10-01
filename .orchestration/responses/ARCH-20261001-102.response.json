@@ -68,7 +68,7 @@
   ],
   "delivery_state": {
     "branch": "arch/20261001-102-golden-arm-b",
-    "pr": null
+    "pr": 111
   },
   "commits": {
     "in_progress": "(see git log)",
