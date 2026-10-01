@@ -17,12 +17,15 @@ def normalize(t):
 def item_holds(item, text):
     return all(re.search(p, text) for p in item["all"]) and not any(re.search(p, text) for p in item["none"])
 def order_holds(patterns, text):
-    pos = []
+    # Sequence semantics: each pattern must match after the previous match.
+    # A mention in a preamble or an equipment table must not count against the
+    # order (102's Q5 exhibit: 'release valve' listed in a table above step 1).
+    pos = 0
     for p in patterns:
-        m = re.search(p, text)
+        m = re.compile(p).search(text, pos)
         if not m: return False
-        pos.append(m.start())
-    return all(a < b for a, b in zip(pos, pos[1:]))
+        pos = m.end()
+    return True
 def score(q, answer, items_key="items"):
     t = normalize(answer)
     res = {it["id"]: item_holds(it, t) for it in q[items_key]}
@@ -43,4 +46,16 @@ if __name__ == "__main__":
     s = k["side_test"]; t = normalize(s["model_answer"])
     core = {it["id"]: item_holds(it, t) for it in s["core_items"]}; sup = {it["id"]: item_holds(it, t) for it in s["supplementary_items"]}
     print("IA model answer core:", core, "| supplementary:", sup); bad += not all(core.values())
+    root = KEYS.parent.parent.parent
+    for v in k.get("regression_vectors", []):
+        trace = root / v["trace"]
+        if not trace.exists():
+            # No evidence is never reported as no problem (convention 28): a
+            # regression vector whose trace cannot be read fails the self-test.
+            bad += 1; print(f"regression {v['scenario']}: BLIND (trace not found at {trace})"); continue
+        recs = [json.loads(l) for l in open(trace, encoding="utf-8") if l.strip()]
+        r = next(x for x in recs if x.get("scenario") == v["scenario"])
+        q = next(q for q in k["golden"] if v["scenario"].endswith(q["id"].lower()[1:]) and q["id"] == "Q" + v["scenario"].split("_q")[-1])
+        res = score(q, r["verdicts"]["implement"]["summary"]); ok = all(res.values()); bad += not ok
+        print(f"regression {v['scenario']}: {'ALL HOLD' if ok else 'FAILS ' + str([i for i, x in res.items() if not x])}")
     print("SELF-TEST", "PASSED" if bad == 0 else f"FAILED ({bad})"); sys.exit(1 if bad else 0)
