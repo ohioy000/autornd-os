@@ -9984,3 +9984,24 @@ Suite 1112 to 1131, test files unchanged at 64.
   touched.
 - 101's A14 (refused-by-final-review wording) is left to 101, which carries
   its text. 100's R2 covers A2 only.
+
+## 92. Answers to 098's questions, and Ruling D40 (advisor, 2026-10-01, carried by ARCH-20261001-101)
+
+> **A8 (098 Q1, paths): classify all three runs as path K, 'the planner supplied the figure from its own knowledge, with a basis', a path the pre-registration did not name. The omission is the advisor's design error: the removed figure was textbook knowledge, so it never became an unknown. A live D37 firing needs a gap that is not textbook knowledge, decides feasibility (so D36 rule 2 names it as a blocker), and can be found by a lookup. That combination is contrived, so no further live D37 attempt is ordered. D37's live record stands at quiet on 4 of 4 grounded runs, with its firing path proved provider-free.**
+
+> **A9 (Q2, sourcing): yes, as a scoring rule. A figure that sets a deliverable's numbers must state its basis (a cited standard, a shown derivation, or a document); without one it scores PARTIAL. This is convention 13 applied to scoring. It is NOT added to the prompts: prompt text that steers judgment is a behaviour change, and 098's plans already ran four times longer than 094's under the same rules.**
+
+> **A10 (Q3): a derivation shown from stated constants is a stated source (convention 13: derived, with the method). Run 1's item 3 stays HELD.**
+
+> **A11 (Q4): not path E. A two-significant-figure rounding of an in-band value, stated beside the full value, is not a wrong figure. It is a lapse of D36 rule 3 (one number everywhere) and is recorded as that. Run 2's item 3 stays PARTIAL for its missing source.**
+
+> **A12 (Q5): PARTIAL stands. The key asked for the computed minimum (22.795 V). A deliberate conservative bound is a different figure, and its derivation carries the service-loop unit error the final review caught.**
+
+> **A13 (Q6): ruled as D40 below.**
+
+> **A14 (Q7): yes, within 100's R2. A terminal that points at a build-approved implementation which a later gate refused must say so in the same sentence: 'agreed by the build judges, refused by the final review: not approved'. 'Judge-approved' never appears unqualified for a refused artifact (D22). If 100 merged without this, make the change here.**
+
+> **Ruling D40 (advisor, 2026-10-01) — the watchdog keys pace by node. A call's pace is the slowest completed call of the same node, in the same tier, in this run; when that node has no completed call yet, the tier's slowest completed call is used, and the record says which. Slow-call flags compare a call with its own node's earlier calls, at a multiple of 2.0, and stay flag-only. Rationale: ARCH-20260930-098 measured same-node ratios up to 1.624 (engineering, n=4) and 1.118 (judge, n=3), while tier-keyed ratios reached 5.733 and 3.030 only because they compared implement with feasibility, and review with validate. A flag that compares different work flags nothing real (convention 26). The multiple is provisional at 3 to 4 observations per node and is revisited at 10. Amends D38’s “pace for that call’s tier”. Falsifier: a node-keyed pre-start decision that ends a run where a tier-keyed one would have continued, and the call not started is shown by later runs to fit.**
+
+Execution record: repairs R5 to R9 follow in the commits after this
+section's ruling commit, per the command's commit order.
