@@ -10,6 +10,14 @@ build/
 venv/
 env/
 .env
+# Every env-named file, not only .env (ARCH-20260930-097). Exhibit: 093's
+# commit 1f7823e swept .env1, an untracked and unignored file holding an old
+# provider key, into history; GitHub secret scanning blocked the push. Keys
+# move only through the terminal and .env (G-1). The template is the one
+# env-named file that belongs in the repo, and the exception must follow the
+# rule it excepts.
+.env*
+!.env.example
 *.db
 *.sqlite3
 .pytest_cache/

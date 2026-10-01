@@ -1,0 +1,71 @@
+{
+  "command_id": "ARCH-20260930-097",
+  "parent_id": null,
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "No env-named file other than .env.example can be staged by `git add`: .gitignore ignores every .env* name, and a test fails if one is ever tracked.",
+  "evidence": [
+    ".gitignore:12 ignores exactly '.env' and nothing else in that family. .env1, which held an old provider key, was untracked and unignored.",
+    ".orchestration/responses/ARCH-20260930-093.response.json, deviations: 'Commit 1f7823e swept .env1 (old OpenRouter key) ... into history; secret-scanning blocked the push.' The owner authorised rewriting the unpushed local commits. 1f7823e is on no branch (checked by the advisor, 2026-09-30).",
+    "AGENTS.md G-1: keys move only through the terminal and .env.",
+    "D30, a second process command in the batch: the preflight gate governs paid runs, and it cannot stop `git add -A` from staging an env-named file. The 093 spill happened with no paid run involved."
+  ],
+  "scope": {
+    "include": [
+      ".gitignore",
+      "tests/",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "Any .env* file: never open, list contents of, or commit (G-1). This command changes ignore rules only."
+    ]
+  },
+  "constraints": [
+    "Add '.env*' and the exception '!.env.example' to .gitignore, beside the existing '.env' line, with a comment naming the 093 spill as the exhibit (convention 1).",
+    "A test that cannot pass vacuously: (a) `git check-ignore` reports .env, .env1, .env.bak and .env.local as ignored and .env.example as not ignored, with each probe asserted individually; (b) `git ls-files` contains no path matching ^\\.env other than .env.example. PROVE BY BREAKING: remove the new line and show (a) fail on .env1.",
+    "Do not touch, move or inspect any existing .env* file. Whether to purge 1f7823e from the local object store is the owner's decision, and this command does not do it.",
+    "Free."
+  ],
+  "acceptance_criteria": [
+    "The test passes and the break demonstration is quoted.",
+    "Suite green, with counts before and after. The PR is opened."
+  ],
+  "verification": [
+    {
+      "command": "git check-ignore -v .env1 .env.bak; git check-ignore .env.example; echo exit=$?",
+      "expected": "Both probes are ignored by the new rule; .env.example is not ignored (exit=1 on the last call)."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass."
+    }
+  ],
+  "rollback": "Revert the merge.",
+  "deliverable": {
+    "branch": "arch/20260930-097-gitignore-env",
+    "branch_created_by": "advisor",
+    "pr": true,
+    "merge": "by the advisor-custodian on green",
+    "commit_style": "conventional"
+  },
+  "transport": "Process in command_id order: start only after ARCH-20260930-096 has merged, and merge origin/main into this branch first so counts are re-derived on a current tree (never stack). Pushed by the advisor under the owner's grant of 2026-09-30. Commit the response IN_PROGRESS first.",
+  "assumptions": [
+    "No tracked file besides .env.example matches .env*. If one does, BLOCKED: name the path only, never the contents."
+  ],
+  "questions": [],
+  "preconditions": [
+    {
+      "command": "git ls-files | grep -E '^\\.env'",
+      "expected": "Exactly .env.example."
+    },
+    {
+      "command": "grep -n '^\\.env' .gitignore",
+      "expected": "Only '.env' at line 12."
+    }
+  ]
+}
