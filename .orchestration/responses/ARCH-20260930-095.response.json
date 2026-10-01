@@ -1,9 +1,9 @@
 {
   "command_id": "ARCH-20260930-095",
-  "status": "IN_PROGRESS",
-  "executed": false,
+  "status": "DONE",
+  "executed": true,
   "head_before": "012cf91",
-  "head_after": null,
+  "head_after": "05f6380",
   "preconditions": [
     {
       "n": 0,
@@ -41,11 +41,63 @@
       "result": "PASS: 1066 passed in 49.40s"
     }
   ],
-  "results": {},
-  "deviations": [],
-  "questions_for_advisor": [],
+  "results": {
+    "acceptance": {
+      "1_d38_verbatim_ruling_first": "PASS. grep -cF of the exact ruling text: HANDOVER.md 1, docs/handover-review.md 1. c444c51 precedes 837cc7c.",
+      "2_tests_a_to_g_real_path": "PASS. tests/test_watchdog.py, 16 tests, real GraphExecutor + workflows/engineering-rnd.yaml + PhaseRunner + make_mock_client with per-function delays that bill. (a) TestNoBudgetIsToday; (b) TestAJudgeCallIsCancelledMidFlight; (c) TestThePaceRuleDoesNotStartACallThatCannotFinish; (d) TestTheRunnerPathFiresBeforeItsBackstop; (e) TestTheAPIPathGetsTheWatchdog; (f) TestThePointerNamesTheLastAgreedImplementation (including the 094 shape: cut while rework_review is in flight); (g) TestTheRecordIsWrittenToDisk. Also TestASlowCallIsFlaggedNotCancelled and TestTheReserveIsMeasured.",
+      "2b_break_watchdog_quoted": "Watchdog disabled in source (both rules forced off), test (b) unchanged: \"AssertionError: assert ('runner stopped the run: timed out after 1s' is None)\". The run read: status: blocked | stop_reason: runner stopped the run: timed out after 1s | error: timed out after 1s | watchdog fired: False | seconds: 1.203. Restored: stop_reason: None | error: None | watchdog fired: True | seconds: 0.803. The same break is kept in the suite as test_disabling_the_watchdog_hands_the_run_to_the_runners_kill.",
+      "2c_break_serialiser_quoted": "assumptions_declared deleted from ResultsLog.record, test (g): \"assert ['assumptions_declared'] == []  Left contains one more item: 'assumptions_declared'\". Restored: 2 passed. The suite also keeps test_a_writer_that_drops_a_block_fails_the_check.",
+      "3_anti_stand_in": "grep -n 'def run_check\\|def run_ai' tests/test_watchdog.py -> no output (exit 1). grep -c watchdog autornd/graph/executor.py -> 43. regrounding lines inside ResultsLog.record: 0 before (precondition 5), 2 after.",
+      "4_reserve_comment": "WATCHDOG_RESERVE_SECONDS = 0.4 (autornd/graph/executor.py). The comment carries both measurements and the arithmetic (0.0039 x 100 = 0.39, rounded up to 0.4; 0.07% of 600 s, 0.011% of 3,600 s). TestTheReserveIsMeasured re-measures on every suite run and fails if a cut takes a quarter of the reserve.",
+      "5_record_from_disk": "PASS. A unit record written through ResultsLog and read back as JSON carries steps (aligned 1:1 with path), watchdog, regrounding (rounds 0), regrounding_rounds 0 and assumptions_declared [] on a quiet run, and fired: true with the cancelled step on a cut run.",
+      "6_no_budget_unchanged": "PASS, with one rule-7 exception recorded in deviations: every existing unbudgeted test passes unchanged. Three tests in tests/test_evals.py declared a budget and asserted the runner's kill text; they were repointed at the watchdog record.",
+      "7_suite_and_pr": "Suite before: 1066 passed in 49.40s. After: 1082 passed in 60.58s. PR #102."
+    },
+    "verification": {
+      "grep_ruling": "Present in both.",
+      "test_watchdog": "16 passed.",
+      "no_stand_ins": "No output.",
+      "protected_paths_diff": "git diff --stat origin/main -- autornd/engine/phases.py workflows/ autornd/routing/ autornd/models/ autornd/database.py -> empty.",
+      "suite": "1066 before, 1082 after, all pass."
+    },
+    "measurements": {
+      "today_equivalence": "Same request and double on c444c51 (old executor; its StepRecord has no tier) and on this branch with no budget: completed, identical 17-node path, 10 calls {triage 1, research 2, architecture 1, engineering 3, judge 3}.",
+      "reserve_real_path": "Two passes of 30 cuts: cut point to terminal written max 0.0027 s, median 0.0012-0.0015 s; to executor.run() returning max 0.0031 s.",
+      "reserve_real_httpx": "Real OpenRouterClient against a local socket that never answers, two passes of 20 cuts: timer expiry to the await raising max 0.0039 s, median 0.0019-0.0027 s.",
+      "stress": "Before the fixes, two concurrent copies of test_watchdog.py flipped (c) in 2 rounds of 12, the HTTP test in 1 of 4 runs and the reserve test once. Measured cause: reaching the first judge call is almost all `context`, 0.10-0.25 s with a fresh store per run and over 0.35 s under load, against the 0.02 s my first margins assumed. After the fixes: 20 file runs under 2x concurrency, 0 failures."
+    },
+    "answers": {
+      "q1_does_cancellation_close_the_connection": "Locally, observably yes. With the real OpenRouterClient against a local server that never replies, the server saw EOF after 40 of 40 cuts; test_cancelling_a_real_http_call_closes_its_connection asserts it. Through TLS to a remote provider it is not observable from here, and whether the provider stops billing is unknown. Every cancelled cut carries the billing note verbatim.",
+      "q2_serving_of_an_in_flight_call": "Not knowable before the response: OpenRouterClient.chat reads `provider` from the response body (openrouter.py:483). The record carries serving_configured = {model: client.get_model(tier), provider_order: provider_order_for(tier), allow_fallbacks}, which are the same lookups chat() makes, and serving_observed is always null for a cut call.",
+      "q3_would_the_pre_start_rule_have_ended_094_cleanly": "Not answerable exactly from 094's record: it carries per-node totals, not per-step times. rework_review's 1,334.307 s over 3 occurrences and validate's 1,090.242 s over 5 cannot be split, and a provider-free replay reproduces the logic but not the latencies. What the record does settle: review was one step at 653.673 s, so the judge pace was at least that from then on. The third rework_review, in flight at the kill, would have been refused at its start iff the first two summed to more than 680.234 s; otherwise the mid-flight rule cancels it at 3,599.6 s. EITHER WAY 094 ENDS BY ITS OWN TERMINAL, blocked, stop_reason null. The pointer, replayed from 094's own iteration history: agreed at index 1 (build_loop iteration 2, then review failed it) and index 4 (recovery_loop iteration 1). Last agreed is index 4, whose rework_review was the cut call (cut, or not_reached if refused at start), and the latest implementation equals it. A literal check finds the same four key figures in both index 1 and index 4 (0.00483, 22.795, 214.00, LV-N11N) and 23.995 in neither, as section 85 recorded. If the pre-start rule had fired before the recovery iteration's judges ran, the pointer would be index 1 and the recovery implementation unjudged."
+    }
+  },
+  "deviations": [
+    "Check nodes are guarded mid-flight too, not only _run_ai. Three checks make paid lookups (build_context, verify_grounding, the re-grounding lookup; 094's context took 22.5 s). Leaving them unguarded lets the runner kill a budgeted run mid-call, which is D38's own falsifier. Checks get no pre-start rule, because they have no tier pace.",
+    "When the cut point has already passed, an AI node is not started (rule not_started, pace null, available_seconds <= 0) even with no pace, rather than started and cancelled at once.",
+    "Pace counts only steps during which the client's call counter moved. domain_review with no peers makes no call and takes 0 s (094's did too); counting it would record a 0 s judge pace.",
+    "The latest-implementation label has three values: approved (it is the agreed one), unjudged (no judge finished reading it; the ruled label), and dissented (the build judges read it and dissented; 'unjudged' would be false there). See question 2.",
+    "The slow-call flag uses SLOW_CALL_MULTIPLE = 1.0: every excess over the tier pace is flagged with its measured ratio, because D38 leaves the multiple unset. A 0 s pace flags nothing.",
+    "Convention 17 / hard rule 7: tests/test_evals.py test_timeout_is_recorded_not_raised and TestTimeoutPrecedence (2 tests) asserted the runner's kill text ('timed out') on budgeted runs. Their subject (recorded not raised; which deadline governs) is right; their reading is D38's falsifier. They now assert the watchdog fired, stop_reason is None, and budget_seconds equals the governing deadline, so they still fail if precedence breaks. The file is outside scope.include's tests/ parenthetical; the edit is forced by the ruled change.",
+    "tests/test_watchdog.py runs its direct-executor tests inside one module-scoped isolated knowledge store, warmed once. A fresh store per run made the pre-judge time variable enough to flip timing margins under load. Isolation is kept.",
+    "The suite grew from about 49 s to about 61 s. test_watchdog.py is about 12 s of real waiting; each wait is the condition its test watches.",
+    "The watchdog record's `approved` pointer is computed only when the watchdog fires; it is null on runs it did not cut."
+  ],
+  "questions_for_advisor": [
+    "The pre-start rule decides per node, and on a two-specialist roster the first judge-tier node after a rework is domain_review, which has no peers and makes no call. The record names domain_review; the run ends at the same paid point it would have at validate. Should the named node be deferred to the next node that actually calls, or is the node the right unit?",
+    "The latest implementation is labelled 'dissented' when the build judges read it and dissented, and 'unjudged' only when no judge finished reading it. Does D38's 'labelled unjudged' intend both cases (not approved), or only the second?",
+    "SLOW_CALL_MULTIPLE is 1.0 until a measured run sets it. 098's live run will produce per-step timings: is that the run that sets it?",
+    "Pre-existing, found while reading engine/workflow.py, not fixed: its settings_lookup lacks review_rework_attempts, so on the API path any blocking review ends BLOCKED with 'ConditionError: loop review_rework_loop wants max_iterations from setting review_rework_attempts, which is not available'. Reproduced with the billing double. Supplying it changes what the API path concludes, so it needs a ruling (it looks like the 072/073 one-line wiring class).",
+    "Unguarded count drift, not touched: CLAUDE.md states '215 such classes across 55 files' (the tree has 240 across 61), and .claude/context/testing.md states '58 test files, 1045 tests'. Delete per D29 or guard?"
+  ],
   "delivery_state": {
     "branch": "arch/20260930-095-deliberation-watchdog",
-    "pr": null
+    "pr": 102
+  },
+  "commits": {
+    "in_progress": "37629a6",
+    "ruling_verbatim": "c444c51 (HANDOVER.md blockquote beside D36/D37; notebook section 86), before any implementation commit",
+    "implementation": "837cc7c",
+    "execution_record": "05f6380"
   }
 }
