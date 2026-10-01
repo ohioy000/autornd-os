@@ -1,22 +1,78 @@
 {
   "command_id": "ARCH-20261001-101",
-  "status": "IN_PROGRESS",
-  "executed": false,
+  "status": "DONE",
+  "executed": true,
   "head_before": "50407cf",
-  "head_after": null,
+  "head_after": "529d83b",
   "arrival": {
     "parent_id": "ARCH-20260930-098: .orchestration/responses/ARCH-20260930-098.response.json present",
     "preconditions_present": 3,
     "transport": "ARCH-20260930-100 merged as 847dbe4 (PR #108); origin/main merged into this branch as 50407cf before any work. Setup note done: pip install -e '.[dev]' in the clone; the editable finder now maps autornd to /home/jb/autornd-os_clone/autornd, and import from /tmp resolves there."
   },
   "preconditions": [
-    {"n": 1, "check": "grep -n 'plan.blockers.extend(all_blockers)' autornd/engine/phases.py", "result": "PASS: line 388"},
-    {"n": 2, "check": "grep -n 'passed every repetition' docs/traces/098-d37-firing-STDOUT.txt", "result": "PASS: line 12"},
-    {"n": 3, "check": ".venv/bin/python3 -m pytest tests/ -q", "result": "PASS: 1131 passed in 65.33s"}
+    {
+      "n": 1,
+      "check": "grep -n 'plan.blockers.extend(all_blockers)' autornd/engine/phases.py",
+      "result": "PASS: line 388"
+    },
+    {
+      "n": 2,
+      "check": "grep -n 'passed every repetition' docs/traces/098-d37-firing-STDOUT.txt",
+      "result": "PASS: line 12"
+    },
+    {
+      "n": 3,
+      "check": ".venv/bin/python3 -m pytest tests/ -q",
+      "result": "PASS: 1131 passed in 65.33s"
+    }
   ],
   "baseline_suite": "1131 passed in 65.33s",
-  "results": {},
-  "deviations": [],
+  "results": {
+    "ruling_first": "A8-A14 and D40 verbatim in notebook section 92, D40 in HANDOVER.md after D39, at 17ef6d8, before every repair; string-matched against the command file.",
+    "R5": "Pace keyed per (node, tier), with tier fallback; watchdog.pace_basis written; flags node-only at SLOW_CALL_MULTIPLE 2.0. Written-record test: not_started at validate, pace_basis 'node', pace 0.501 s (3 of 3 observed). Break: 'assert None == \\'node\\''.",
+    "R6": "verdicts.context.lookup = {asked, found, findings (<=6000 chars), findings_chars, bound_chars, truncated}, None when no lookup; both lookup sites. Break: \"TypeError: 'NoneType' object is not subscriptable\". No context-assembly change.",
+    "R7": "blockers_second_pass [] unless rounds == 1; feasibility_blockers in the unit record (one per reviewer that named it). Break: \"assert ['Solid wire ...r vibration.'] == []\". phases.py:388 untouched.",
+    "R8": "unit record 'reason' for every terminal (watchdog and workflow). Break: \"KeyError: 'reason'\".",
+    "R9": "Warning: 'in the worst case this configuration permits only N of the M unit(s)...'; summary: 'passed their assertions every repetition (runs ended blocked 3)' and per-row 'ended ...'. Break: \"assert 'runs ended blocked 1' in ...\".",
+    "A14": "'last implementation agreed by the build judges, refused by the final review: not approved: ...'; break shows 'last judge-approved implementation: ... (review: failed ...)'.",
+    "field_presence_for_098_findings": {
+      "pace_mixes_jobs": "present (pace_basis, node flags)",
+      "lookup_blind": "present (context.lookup)",
+      "feasibility_as_second_pass": "present (second pass [] at rounds 0; feasibility_blockers)",
+      "no_terminal_sentence": "present (reason)",
+      "passed_alone_and_certain_warning": "present (runs ended ...; worst-case wording)"
+    },
+    "verification": {
+      "d40_grep": "HANDOVER.md and docs/handover-review.md both carry 'Ruling D40'",
+      "excluded_paths": "git diff --stat origin/main -- autornd/engine/phases.py workflows/ autornd/routing/ -> empty",
+      "suite": "1131 passed before; 1140 passed after"
+    },
+    "setup_note": "pip install -e '.[dev]' in the clone; editable finder maps autornd to /home/jb/autornd-os_clone/autornd."
+  },
+  "deviations": [
+    {
+      "what": "Correction to ARCH-20260930-098's record",
+      "reason": "098 quoted verdicts.context.asked as the grounding lookup's questions; that list is the retrieval queries. The lookup's questions are the blocking unknowns, recorded only from R6. 098's conclusion (lookup content blind) stands."
+    },
+    {
+      "what": "Three existing tests rewritten (convention 17)",
+      "reason": "test_watchdog's cross-node slow-call flag (D40 rules it out) and test_repeat_and_fit_rule's certain-wording warning (R9) pinned the defects being repaired."
+    },
+    {
+      "what": "feasibility_blockers keep repeats",
+      "reason": "Each feasibility reviewer appends its own; recorded as appended, not deduplicated."
+    }
+  ],
   "questions_for_advisor": [],
-  "delivery_state": {"branch": "arch/20261001-101-record-and-d40", "pr": null}
+  "delivery_state": {
+    "branch": "arch/20261001-101-record-and-d40",
+    "pr": 109
+  },
+  "commits": {
+    "in_progress": "7628cb1",
+    "answers_and_d40": "17ef6d8",
+    "r5_d40": "eddefa1",
+    "r6_r9_a14": "36e46e7",
+    "notebook": "529d83b"
+  }
 }
