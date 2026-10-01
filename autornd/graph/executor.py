@@ -361,9 +361,19 @@ def _watchdog_reason(record: "WatchdogRecord") -> str:
     if approved.get("agreed"):
         gates = ", ".join(f"{g}: {v.replace('_', ' ')}"
                           for g, v in (approved.get("gates") or {}).items())
-        pointer = (f"last judge-approved implementation: {approved.get('loop')} "
-                   f"iteration {approved.get('iteration')}"
-                   + (f" ({gates})" if gates else ""))
+        where_agreed = (f"{approved.get('loop')} iteration "
+                        f"{approved.get('iteration')}"
+                        + (f" ({gates})" if gates else ""))
+        # A14 (ARCH-20261001-101): a build-approved implementation a later
+        # gate refused says so in the same sentence, and 'judge-approved'
+        # never stands unqualified for it (D22). 098 run 2 read "last
+        # judge-approved implementation ... (review: failed ...)".
+        if "failed" in (approved.get("gates") or {}).values():
+            pointer = ("last implementation agreed by the build judges, "
+                       "refused by the final review: not approved: "
+                       + where_agreed)
+        else:
+            pointer = f"last judge-approved implementation: {where_agreed}"
         # A2 (ARCH-20260930-100): 'dissented' and 'unjudged' are both NOT
         # APPROVED, and the sentence says so, with the finer label beside it.
         # D38's "labelled unjudged" meant a not-approved artifact must never

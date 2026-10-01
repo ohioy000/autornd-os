@@ -135,8 +135,10 @@ class TestTheWarningReachesTheOperator:
             pass
 
         out = capsys.readouterr().out
-        assert "permits at most 1 unit(s), not the 2 requested" in out
-        assert "Raise --max-spend-sweep to $1.00" in out
+        # R9 (ARCH-20261001-101): stated as a worst case, not a certainty;
+        # this asserted "permits at most 1 unit(s), not the 2 requested".
+        assert "in the worst case this configuration permits only 1 of the 2 unit(s)" in out
+        assert "raise --max-spend-sweep to $1.00" in out
 
 
 class TestSkippedIsNotDecidedByReadingEnglish:

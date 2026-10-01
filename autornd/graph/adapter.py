@@ -233,10 +233,12 @@ class PhaseRunner:
         # bought the same paid lookups as a reactor monitoring spec.
         deferred: list[str] = []
         asked: list[str] = []
+        lookup: dict = {}
         self.context = await build_phase_context(
             state.request, triage.domains, triage.specialists,
             client=self.client, risk=triage.risk,
             deferred_gaps=deferred, asked_questions=asked,
+            grounding_lookup=lookup,
         )
         self.deferred_gaps = deferred
         # HISTORY IS WHAT WAS ASKED (Ruling D37): the novelty check compares
@@ -253,6 +255,10 @@ class PhaseRunner:
             grounded=bool(self.context),
             asked=list(asked),
             rounds=0,
+            # R6 (ARCH-20261001-101): the paid lookup's own questions and
+            # what came back. `asked` above is the retrieval queries, which
+            # 098's record could be mistaken for. None when no lookup ran.
+            lookup=lookup or None,
         )
 
     async def _verify_grounding(self, state: ExecutionState) -> Result:
@@ -453,13 +459,17 @@ class PhaseRunner:
 
     async def _phase_feasibility(self, node: Node, state: ExecutionState):
         plan = state.outputs["plan"]
+        before = len(plan.blockers)
         responses = await phases.run_plan_feasibility(
             self.client, state.request, self._triage(state), plan,
             self._specialists(state), self.context,
         )
         # Feasibility mutates the plan's blockers rather than producing a
-        # verdict of its own; the gate downstream reads plan.ready.
-        return {"reviewed": len(responses), "blockers": list(plan.blockers)}, responses
+        # verdict of its own; the gate downstream reads plan.ready. What it
+        # appended is recorded apart (R7, ARCH-20261001-101): the extend
+        # adds at the end, so its own blockers are the tail.
+        return {"reviewed": len(responses), "blockers": list(plan.blockers),
+                "feasibility_blockers": list(plan.blockers[before:])}, responses
 
     async def _phase_implement(self, node: Node, state: ExecutionState):
         lead = self._resolve_who(node, state)

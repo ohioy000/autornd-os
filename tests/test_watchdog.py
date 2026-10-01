@@ -582,3 +582,30 @@ class TestANotApprovedArtifactSaysNotApproved:
             latest_differs=None, latest=label))
         assert "no implementation was agreed by the build judges" in reason
         assert f"the latest implementation is not approved ({label})" in reason
+
+
+class TestARefusedBuildApprovalSaysSo:
+    """A14 (ARCH-20261001-101): 'agreed by the build judges, refused by the
+    final review: not approved', in the same sentence, and never
+    'judge-approved' unqualified for a refused artifact."""
+
+    @staticmethod
+    def _reason(gates) -> str:
+        return _watchdog_reason(WatchdogRecord(
+            armed=True, budget_seconds=60.0, reserve_seconds=0.4, fired=True,
+            rule="not_started", node="implement", iteration=1,
+            tier="engineering", elapsed_seconds=59.0, available_seconds=0.6,
+            pace_seconds=5.0, approved={
+                "history": "present", "agreed": True, "index": 1,
+                "loop": "build_loop", "iteration": 2, "gates": gates,
+                "latest_differs": False, "latest": "approved"}))
+
+    def test_the_098_run_2_shape(self):
+        reason = self._reason({"review": "failed", "rework_review": "not_reached"})
+        assert ("agreed by the build judges, refused by the final review: "
+                "not approved") in reason
+        assert "judge-approved" not in reason
+
+    def test_an_unrefused_agreement_keeps_its_label(self):
+        reason = self._reason({"review": "not_reached", "rework_review": "not_reached"})
+        assert "last judge-approved implementation" in reason
