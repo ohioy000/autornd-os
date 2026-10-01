@@ -1,0 +1,153 @@
+{
+  "command_id": "ARCH-20260930-098",
+  "status": "DONE",
+  "executed": true,
+  "head_before": "8f6fdc6",
+  "head_after": "eb3b017",
+  "arrival": {
+    "parent_id": "ARCH-20260930-095: .orchestration/responses/ARCH-20260930-095.response.json present",
+    "preconditions_present": 4,
+    "transport": "Branch cut by the advisor at 8f6fdc6 on main fe5b170; no merge needed."
+  },
+  "preconditions": [
+    {"n": 1, "check": "ps aux | grep -E 'autornd|evals' | grep -v grep", "result": "PASS: no output"},
+    {"n": 2, "check": "git fetch origin && git merge-base --is-ancestor 5a05bdd origin/main && git merge-base --is-ancestor d1f4e3f origin/main && echo merged", "result": "PASS: merged"},
+    {"n": 3, "check": "ls docs/cupline/ profiles/cupline.yaml", "result": "PASS: approved-parts.md, line4-machine.md, manifest.json; profiles/cupline.yaml"},
+    {"n": 4, "check": ".venv/bin/python3 -m pytest tests/ -q", "result": "PASS: 1107 passed in 73.49s"}
+  ],
+  "baseline_suite": "1107 passed in 73.49s",
+  "commits": {
+    "in_progress": "ce128fb",
+    "scenario": "768740d",
+    "preregistration": "972d12e",
+    "traces_and_ledger": "001c2d3",
+    "notebook": "eb3b017"
+  },
+  "results": {
+    "verification": {
+      "1_request_diff": "As written (grep -A12) it shows only line 6: 'stranded copper (16.1 ohm per 1000 ft). Cover three sections: a wiring' -> 'solid copper. Cover three sections: a wiring'. That window ends at request line 12 and is blind to the second difference on lines 13-15. Full request block: the same line 6, plus lines 14-16 'and part number identical everywhere. If the PCB input type (NPN vs PNP) / cannot be verified from the request, name it as an explicit unverified / assumption rather than asserting either.' -> 'and part number identical everywhere.'. On the loaded strings: exactly the two stated changes, 1031 -> 858 characters.",
+      "2_corpus_grep": "grep -rn '16\\.1\\|16\\.14\\|ohm' docs/cupline/ -> no output (exit 1).",
+      "3_suite": "1107 passed before (73.49s) and 1107 passed after (65.33s)."
+    },
+    "spend_gate": {
+      "authorisation": "Owner, verbatim: 'i allow 1.20 envelope for first test'; then, asked how to cap the runs inside it: '.50 1.20 the runs dont usually go higher than 30 cents'.",
+      "flags": "--max-spend 0.50 --max-spend-sweep 1.20, no --skip-preflight",
+      "spend": "$0.5721 of $1.20 (run 1 $0.2143, run 2 $0.2295, run 3 $0.1283); judge $0.4032, architecture $0.0611, engineering $0.0443, research $0.0262, search $0.0200, triage $0.0173",
+      "fit_rule": "Run 3 started because runs 1+2 spent $0.4438 <= $0.70."
+    },
+    "preflight": "Ran before any client: 24 ok, 0 failing, override false, in the results header. Roster and pins equal 094's header.",
+    "runs": [
+      {
+        "run": 1,
+        "status": "blocked",
+        "stop_reason": null,
+        "calls": 15,
+        "cost": 0.2143,
+        "seconds": 1612.773,
+        "rounds": 0,
+        "search_calls": 1,
+        "findings": 0,
+        "triage_risk": "high",
+        "grounding_asked": ["paper cup machine PCB registration mark digital input schematic NPN PNP", "paper cup forming machine line speed registration mark timing commissioning", "24VDC sensor wiring standards voltage drop tolerance verification"],
+        "watchdog": "fired: not_started at domain_review, tier judge, pace 590.649 s > available 186.829 s, terminal at 1612.7715 s of 1800",
+        "pointer": "agreed index 1 (build_loop iteration 2); review failed; rework_review not_reached; latest differs, unjudged",
+        "seconds_by_phase_from_steps": {"triage": 5.688, "context": 20.302, "plan": 408.7, "feasibility": 24.324, "implement": 181.71, "validate": 381.371, "review": 590.649, "domain_review": 0.0, "coverage": 0.013, "consistency": 0.012},
+        "path": "None of A-E as written. Not B/D: regrounding {rounds: 0, blockers_first_pass: [], asked: 0, findings: 0}, no reground_lookup in path, calls_by_tier.search 1. Not A: the grounding never asked for the resistance, and its returned text is not recorded. Not C: a lookup was made. The plan derived the figure: 'A = 642.4 cmil; copper resistivity rho = 10.371 ohm-cmil/ft at 20 degC; R/ft = 10.371 / 642.4 = 0.01614 ohm/ft'."
+      },
+      {
+        "run": 2,
+        "status": "blocked",
+        "stop_reason": null,
+        "calls": 14,
+        "cost": 0.2295,
+        "seconds": 1792.566,
+        "rounds": 0,
+        "search_calls": 1,
+        "findings": 0,
+        "triage_risk": "high",
+        "grounding_asked": ["cup forming machine PCB registration sensor digital input schematic", "paper cup machine line speed registration mark sensor timing", "optical sensor commissioning verification procedure test thresholds", "22 AWG wire resistance voltage drop standard specification"],
+        "watchdog": "fired: not_started at implement, tier engineering, pace 56.234 s > available 7.036 s, terminal at 1792.5646 s of 1800",
+        "pointer": "agreed index 1 (build_loop iteration 2); review failed; rework_review not_reached; latest is the agreed one",
+        "seconds_by_phase_from_steps": {"triage": 7.698, "context": 20.558, "plan": 410.89, "feasibility": 9.783, "implement": 112.324, "validate": 681.941, "review": 549.338, "domain_review": 0.0, "coverage": 0.015, "consistency": 0.014},
+        "path": "None of A-E as written. Not B/D: rounds 0, no reground_lookup, search 1. A not shown: the grounding asked '22 AWG wire resistance voltage drop standard specification', but what it returned is not recorded (blind). Not C: a lookup was made. The plan states 'C8 Conductor resistance basis: r = 0.01614 ohm/ft at 20 degC solid copper (16.14 ohm/1000 ft)' with no source."
+      },
+      {
+        "run": 3,
+        "status": "blocked",
+        "stop_reason": null,
+        "calls": 12,
+        "cost": 0.1283,
+        "seconds": 1597.026,
+        "rounds": 0,
+        "search_calls": 1,
+        "findings": 0,
+        "triage_risk": "high",
+        "grounding_asked": ["paper cup machine registration sensor schematic PCB digital input NPN", "paper cup machine line speed registration sensor timing pass criteria", "24VDC sensor wiring standard terminal block pinout"],
+        "watchdog": "fired: not_started at validate, tier judge, pace 388.104 s > available 202.575 s, terminal at 1597.0251 s of 1800",
+        "pointer": "agreed false: no implementation was agreed by the build judges",
+        "seconds_by_phase_from_steps": {"triage": 11.984, "context": 22.806, "plan": 447.786, "feasibility": 7.585, "implement": 54.436, "domain_review": 735.323, "validate": 317.089, "coverage": 0.008, "consistency": 0.006},
+        "path": "None of A-E as written. Not B/D: rounds 0, no reground_lookup, search 1. Not A: the grounding never asked. Not C: a lookup was made. The plan: 'K1 Conductor resistance 0.01614 ohm/ft at 20 deg C (C8) is the standard AWG table value for 22 AWG solid copper. Not load-bearing for feasibility'."
+      }
+    ],
+    "answer_key": {
+      "scored_against": "iterations[1] (the watchdog pointer's index) in runs 1 and 2. Run 3 reached no agreement and is not scored. Figure counts are by grep on that text.",
+      "1_24VDC": {"run1": "HELD", "run2": "HELD"},
+      "2_22AWG": {"run1": "HELD", "run2": "HELD"},
+      "3_resistance_with_source_and_drop": {"run1": "HELD: derived from 642.4 cmil and 10.371 ohm-cmil/ft (a derivation counted as a stated source; reading asked); drop 2 x 3 ft x 0.01614 ohm/ft x 0.050 A = 0.004842 V shown", "run2": "PARTIAL: 16.14 ohm/1000 ft in band and 0.004842 V shown, but C8 cites no source, and the canonical drop used everywhere is '0.0048 V', below the 0.00483 floor as written (path-E reading asked)"},
+      "4_head_23.995_and_22.795": {"run1": "PARTIAL: 23.995 V stated (count 3); the rail-minimum figure is 22.790 V = 22.800 - 0.00968, a doubled-resistance bound; 22.795 count 0", "run2": "PARTIAL: 22.795 V stated (count 3); 23.995 count 0, the same omission as 094"},
+      "5_NPN_cited_from_docs": {"run1": "HELD", "run2": "HELD (cites line4-machine.md)"},
+      "6_LV-N11N_214.00": {"run1": "HELD", "run2": "HELD"},
+      "7_thresholds_as_docs_state": {"run1": "HELD on both values (21.6-26.4 V; 150 of 150 in 60 s), with stricter additions: three windows, over-counts fail, and C3 input-level thresholds not in the docs", "run2": "HELD on both values, with additions: three windows and a 10% P-P ripple limit attributed to a published Keyence limit"}
+    },
+    "predictions": {
+      "P1_triage_not_low": "HELD 3/3: verdicts.triage.risk high, high, high",
+      "P2_path_A_in_2_of_3": "REFUTED: 0 of 3 demonstrably on A. Only run 2's grounding asked for the resistance, and what came back is blind; runs 1 and 3 never asked",
+      "P3_zero_on_C": "HELD as written: every run made a lookup (calls_by_tier.search 1), so 'no lookup anywhere' holds for none. Run 2's agreed implementation nonetheless uses the figure without a stated source",
+      "P4_all_seven_on_last_agreed": "REFUTED: run 1 is 6 of 7 (item 4 partial), run 2 is 5 of 7 (items 3 and 4 partial); run 3 never reached agreement",
+      "P5_own_terminal_stop_reason_None": "HELD 3/3: stop_reason null; watchdog.terminal_seconds 1612.7715, 1792.5646 and 1597.0251, all under 1800; every watchdog end was the pre-start rule. No D38 falsifier met",
+      "P6_path_B_finding_and_citation": "NOT TESTED: path B did not occur"
+    },
+    "command_questions": {
+      "Q1_grounding_lookup": "What it asked is quoted per run above. What it returned for the resistance is BLIND in all three runs: verdicts.context keeps 'asked' and 'chars' (9453, 9124, 9077), not the text.",
+      "Q2_SLOW_CALL_MULTIPLE": {
+        "method": "Each completed, uncut model call over the slowest earlier completed call of its tier in the same run, from steps; zero-second no-call domain_review steps excluded.",
+        "triage": "n=0 (one call per run)",
+        "architecture": "n=0 (one call per run)",
+        "engineering": "n=7: 2.184*, 0.797, 1.624 | 5.733*, 1.003 | 4.488*, 0.599 (* = implement over feasibility); max 5.733; same-node max 1.624 (n=4)",
+        "judge": "n=6: 0.956, 3.030* | 0.252, 1.008* | 0.913*, 1.118 (* = cross-node); max 3.030; same-node max 1.118 (n=3)",
+        "proposal": "Keyed by tier: engineering 6.0 and judge 3.5, the smallest round multiples that flag none of the 13 ratios; triage and architecture stay 1.0 for want of data. Keyed by node: 2.0 flags none. Keying by node would not have changed any of the three pre-start decisions here. Three runs of one request; the advisor rules, and flag-only at 1.0 stands until then."
+      }
+    }
+  },
+  "deviations": [
+    {"what": "--max-spend 0.50 and --max-spend-sweep 1.20 instead of the proposed 0.60 and 1.80", "reason": "The owner's caps, quoted in spend_gate. Run 3 still started under the fit rule."},
+    {"what": "Verification 1 was also run on the full request block and on the loaded strings", "reason": "The command's grep -A12 window cannot see the removed sentence on request lines 13-15."},
+    {"what": "The serving ledger header's regeneration command changed from render(derive(...)) to render(*derive(...))", "reason": "As documented it raises TypeError, because derive returns (combos, tiers). The table itself is generated."},
+    {"what": "No path letter assigned", "reason": "None of A-E fits any run as written; each run is reported on its record fields."},
+    {"what": "Executed in /home/jb/autornd-os_clone, not /home/jb/autornd-os", "reason": "This session's working copy, on the same origin. Its copied .venv maps the editable install to the original checkout. With -m from the clone root, the run resolved the clone's package, workflow, corpus and .env (each checked). Both checkouts were at fe5b170, clean, with byte-identical workflow and corpus."}
+  ],
+  "questions_for_advisor": [
+    "Paths: no run fits A-E. In all three the first plan supplied 0.01614 ohm/ft itself and bounded it as not load-bearing for feasibility, so D37 had no named blocker to act on. How should these runs be classified? And does a D37 firing test need a gap that decides feasibility rather than one that only sets the numbers?",
+    "D36 rule 2: run 2's agreed implementation uses the resistance with no stated source, and the build judges agreed. Does a figure that sets a deliverable's numbers but not its feasibility need a source?",
+    "Item 3: is a shown derivation (run 1: 642.4 cmil and 10.371 ohm-cmil/ft) a stated source? Run 3's plan names 'the standard AWG table value', uncited.",
+    "Path E: run 2's canonical drop '0.0048 V' is below the 0.00483 floor as written, but it is the in-band 0.004842 rounded to two significant figures on the same line. Is that E?",
+    "Item 4: run 1 states 22.790 V at the rail minimum, a deliberate doubled-resistance bound, not 22.795 V. PARTIAL as scored, or HELD?",
+    "SLOW_CALL_MULTIPLE: rule the value (proposal engineering 6.0, judge 3.5, triage and architecture 1.0 for want of data), and whether pace should key by tier or by node.",
+    "For 100's A2: run 2's terminal sentence calls a review-refused implementation 'last judge-approved implementation ... (review: failed ...)' and never says 'not approved'. Is that in R2's scope?"
+  ],
+  "findings": [
+    "Q1 is blind: the context verdict does not record what the grounding's lookup returned. Proposed instrument repair: carry its findings, or their figures, beside 'asked'.",
+    "regrounding.blockers_second_pass reads the final plan.blockers, which feasibility appends to in place. So run 1 (rounds 0, one plan pass) reports two 'second pass' blockers that no second pass named. Proposed repair: [] unless rounds is 1.",
+    "Run 1's feasibility review named two 'hard blockers' (solid wire unsuitable under vibration; the exact 150/150 criterion unachievable) and the run went on, because plan_ready reads plan.ready, which feasibility does not set. By design per the code comment; whether it should gate is a ruling.",
+    "The unit record drops the terminal sentence: a run that ends on its own terminal writes error null, and state.reason is not serialised. Relevant to 100's R2.",
+    "A1 seen live: run 1's watchdog record names domain_review, which makes no call on a two-specialist roster.",
+    "The CLI sweep warning says 'The fit rule will skip the rest before they start' as a certainty; it is the worst case, and run 3 started.",
+    "The CLI summary read '1/1 scenarios passed every repetition' while every run ended blocked; the scenario's only assertion is max_calls <= 40.",
+    "The plan step took 408.7-447.8 s against 094's 102.4 s, on the same serving at the same throughput (about 51 completion tokens/s): 20,851-22,244 completion tokens against 5,348. Review took 549-591 s. No run reached rework_review inside 1,800 s.",
+    "Run 1's deliverable is titled '(ARCH-20260930-094, measured 2026-09-30)', lifted from the corpus banner line."
+  ],
+  "delivery_state": {
+    "branch": "arch/20260930-098-d37-firing",
+    "pr": 106
+  }
+}

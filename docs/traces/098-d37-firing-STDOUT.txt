@@ -1,0 +1,18 @@
+⚠ this configuration permits at most 2 unit(s), not the 3 requested: 3 × $0.50 exceeds the $1.20 sweep cap. The fit rule will skip the rest before they start. Raise --max-spend-sweep to $1.50, or lower --max-spend to $0.4000, if you want the full sample.
+
+preflight: 24 checks passed
+
+results: evals/results/098-d37-firing.jsonl
+
+workflow: engineering-rnd   repetitions: 3
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+conv_cup_line_sensor_regrounding     3/3     41  5002.4   
+--------------------------------------------------------------------------------------------
+1/1 scenarios passed every repetition  ·  41 calls  ·  5002.4s  ·  $0.5721
+spend by tier: judge $0.4032, architecture $0.0611, engineering $0.0443, research $0.0262, search $0.0200, triage $0.0173
+served by: architecture via Xiaomi, engineering via Nebius, judge via SiliconFlow, research via Google AI Studio, search via Perplexity, triage via Google AI Studio
+
+sweep budget: $0.5721 of $1.2000
+
+exit 0
