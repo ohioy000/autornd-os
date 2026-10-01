@@ -1,9 +1,9 @@
 {
   "command_id": "ARCH-20260930-097",
-  "status": "IN_PROGRESS",
-  "executed": false,
+  "status": "DONE",
+  "executed": true,
   "head_before": "3462aec",
-  "head_after": null,
+  "head_after": "3eaac4f",
   "arrival": {
     "parent_id": "null: no parent response required",
     "preconditions_present": 2,
@@ -22,11 +22,28 @@
     }
   ],
   "baseline_suite": "1101 passed in 67.93s",
-  "results": {},
-  "deviations": [],
+  "results": {
+    "acceptance": {
+      "1_test_and_break": "PASS. tests/test_env_ignore.py, 6 tests: (a) .env, .env1, .env.bak and .env.local are each ignored, and .env.example is not, all via `git check-ignore --no-index`; (b) git ls-files holds no env-named basename at any depth other than .env.example, with a guard that git answered and listed the tree. Break 1, '.env*' removed: \"AssertionError: .env1 could be staged by git add\", and the same for .env.bak and .env.local (.env still passes on the original line). Break 2, '!.env.example' removed: test_the_template_is_not_ignored fails. Both restored: 6 passed.",
+      "2_suite_and_pr": "Before: 1101 passed in 67.93s. After: 1107 passed in 66.37s. PR #104."
+    },
+    "verification": {
+      "check_ignore": "git check-ignore -v .env1 .env.bak -> '.gitignore:19:.env*  .env1' and '.gitignore:19:.env*  .env.bak'; git check-ignore .env.example -> exit=1.",
+      "suite": "1107 passed."
+    },
+    "measurement": "The --no-index trap. With '!.env.example' deleted, `git check-ignore -q .env.example` exits 1 ('not ignored') because the file is tracked, so a test without --no-index passes vacuously. With --no-index it exits 0, and the template test fails, as it should."
+  },
+  "deviations": [
+    "Check (b) matches env-named basenames at any depth, not only paths starting with .env at the repo root, because a nested .env would leak the same way. The tree has none, so the result is the same."
+  ],
   "questions_for_advisor": [],
   "delivery_state": {
     "branch": "arch/20260930-097-gitignore-env",
-    "pr": null
+    "pr": 104
+  },
+  "commits": {
+    "in_progress": "539dbd0",
+    "main_merged_in": "7cd8b95",
+    "change_and_record": "3eaac4f"
   }
 }
