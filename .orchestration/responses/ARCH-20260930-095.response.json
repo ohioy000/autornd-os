@@ -1,0 +1,51 @@
+{
+  "command_id": "ARCH-20260930-095",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "012cf91",
+  "head_after": null,
+  "preconditions": [
+    {
+      "n": 0,
+      "check": "parent response .orchestration/responses/ARCH-20260930-094.response.json",
+      "result": "present"
+    },
+    {
+      "n": 1,
+      "check": "ps aux | grep -E 'autornd|evals'",
+      "result": "PASS: no output on the retake. The first take matched only this executor's own baseline pytest (the pattern matches the repo path autornd-os); retaken after the suite exited, empty."
+    },
+    {
+      "n": 2,
+      "check": "docs/traces/094-cup-grounded.jsonl on origin/main",
+      "result": "PASS: present"
+    },
+    {
+      "n": 3,
+      "check": "runner.py wait_for/_end_on_bound and executor.py _run_ai/_execute lines",
+      "result": "PASS: runner.py 752 and 756; executor.py 281 and 379. No divergence."
+    },
+    {
+      "n": 4,
+      "check": "grep -c 'wait_for|timeout|deadline' autornd/engine/workflow.py",
+      "result": "PASS: 0"
+    },
+    {
+      "n": 5,
+      "check": "regrounding inside ResultsLog.record",
+      "result": "PASS: 0 (serialiser gap confirmed before repair)"
+    },
+    {
+      "n": 6,
+      "check": "suite on the command branch (main c23b433 + command file)",
+      "result": "PASS: 1066 passed in 49.40s"
+    }
+  ],
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20260930-095-deliberation-watchdog",
+    "pr": null
+  }
+}
