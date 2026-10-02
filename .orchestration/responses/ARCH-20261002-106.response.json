@@ -3,7 +3,7 @@
   "status": "DONE",
   "executed": true,
   "head_before": "504b576",
-  "head_after": null,
+  "head_after": "e24fd65",
   "arrival": {
     "parent_id": "ARCH-20261001-105: response present",
     "preconditions_present": 4,
@@ -54,7 +54,7 @@
   ],
   "delivery_state": {
     "branch": "arch/20261002-106-golden-rerun",
-    "pr": null
+    "pr": 118
   },
   "commits": {
     "in_progress": "1c578e0",
