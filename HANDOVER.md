@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1191 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
+**Tests:** 1198 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -290,7 +290,7 @@ autornd/
     templates/dashboard.html  single-file chat + workflows + settings UI
 
 workflows/
-  engineering-rnd.yaml   ★★ the flagship pipeline, 28 nodes, 4 loops (§3.1)
+  engineering-rnd.yaml   ★★ the flagship pipeline, 29 nodes, 4 loops (§3.1)
   lean.yaml                 10 nodes — cheaper variant, one loop
   triage-only.yaml          2 nodes — triage + grounding (research measurement)
   triage-classify.yaml   ★  1 node — triage alone. Exists so calibration costs
@@ -304,7 +304,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      71 files, 1191 tests
+tests/                      71 files, 1198 tests
 
 ```
 
@@ -446,7 +446,7 @@ idempotent across phases.
 
 ## 3. CURRENT STATE & SOURCE OF TRUTH
 
-### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (28 nodes)
+### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (29 nodes)
 
 **The file is the source of truth; this table is generated from it.** A
 hand-copied YAML lived here for twelve blueprints and drifted — it still
@@ -709,7 +709,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1191 total)
+### 3.7 Test distribution (1198 total)
 
 
 | file | n | file | n |
@@ -724,10 +724,10 @@ is revoked and the warning re-opens with a date.
 | test_env_ignore.py | 6 | test_evals.py | 73 |
 | test_evidence_shape.py | 14 | test_failure_path_terminal.py | 18 |
 | test_figure_parsing.py | 10 | test_forced_reasoning.py | 3 |
-| test_golden_keys.py | 9 | test_graph.py | 83 |
+| test_golden_keys.py | 9 | test_graph.py | 85 |
 | test_green_resolution.py | 16 | test_guards_can_fail.py | 9 |
 | test_handoff_scheduler.py | 4 | test_handover_truth.py | 8 |
-| test_iteration_dissent.py | 5 | test_judge_tier.py | 11 |
+| test_iteration_dissent.py | 8 | test_judge_tier.py | 11 |
 | test_knowledge.py | 41 | test_lead_review.py | 9 |
 | test_live_wiring.py | 7 | test_node_token_ceilings.py | 8 |
 | test_phase_timing.py | 3 | test_preflight.py | 30 |
@@ -739,7 +739,7 @@ is revoked and the warning re-opens with a date.
 | test_repeat_and_fit_rule.py | 15 | test_research.py | 37 |
 | test_response_files.py | 2 | test_results_log.py | 10 |
 | test_retry_reconciliation.py | 13 | test_review_composition.py | 28 |
-| test_review_quorum.py | 3 | test_rework_loop.py | 17 |
+| test_review_quorum.py | 3 | test_rework_loop.py | 19 |
 | test_routing.py | 63 | test_run_record.py | 6 |
 | test_runtime_dependencies.py | 1 | test_schema_wiring.py | 15 |
 | test_scope_rule.py | 3 | test_serving_ledger.py | 7 |
@@ -793,7 +793,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1191/1191 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1198/1198 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

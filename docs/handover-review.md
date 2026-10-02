@@ -11028,4 +11028,135 @@ feasibility's concerns move to their own output under a considerations
 heading; the check Result gains a `checked` flag; and the judges fold writes
 its refusals into the failure log.
 
-Execution record: §102.1–§102.4 below.
+Execution record: §102.1–§102.5 below.
+
+### 102.1 The four clauses, and where each landed
+
+1. **Green needs substance** (`models/verdicts.py`): `_resolve_green` gains a
+   final check — an approval with nothing behind it resolves red with a cause
+   that names what was missing ("the validator returned no assessment" /
+   "the implementation returned no deliverable"), counted under the new kind
+   `green_refused_no_substance`. The D011 truth table is otherwise untouched.
+2. **Every blocking verdict has a consumer**: `independent_verdict`, a
+   terminal gate after `independent_check` in both workflows, `on_fail:
+   blocked` — a do-not-ship is not an iteration — carrying the node's own
+   `when: triage.unrecallable`; `_gate_detail` (already in the executor) reads
+   the verdict's `critical_issues` into the reason. Feasibility no longer
+   writes `plan.blockers` (`phases.run_plan_feasibility` returns its concerns
+   instead of mutating the plan); they reach the implementer through
+   feasibility's own output under the heading
+   `CONSIDERATIONS A REVIEWER RAISED (not requirements — weigh them; nothing
+   is judged against them):` where the old heading read
+   `FEASIBILITY CONCERNS (from domain specialist review — address these):`.
+   R7's record key (`feasibility_blockers`) is preserved — runner.py reads it
+   and is outside this command's scope.
+3. **A check that compared nothing says so** (`graph/checks.py`): `Result`
+   gains `checked` (default true, also carried in `data`, where
+   `totals_reconcile` has always read it). `numbers_consistent` sets it false
+   when plan and implementation share no unit (passing exactly as before);
+   `criteria_addressed` sets it false when there are no criteria (failing
+   exactly as before). `judges_agree` treats an unchecked judge as
+   non-blocking and lists every one in its `unchecked` data; the adapter's
+   per-iteration record carries the run-wide list. The fold had to receive
+   the whole check outputs (`judges` node args) to see the flag at all.
+4. **Every judge that keeps a loop going writes its reason** (`adapter.py`):
+   `_phase_validate` now fires on any of the four judges refusing —
+   implement, validate, coverage, consistency — naming each with its cause,
+   conflict or miss in one `red_cause`. `_log_failure` merges a second write
+   in the same iteration into the entry the iteration already has: one entry
+   per iteration, at every write site.
+
+### 102.2 The tests, and each break quoted
+
+Tests (a)–(e) live in `test_green_resolution.py` (a), `test_graph.py` (b, d),
+`test_rework_loop.py` (c) and `test_iteration_dissent.py` (d, e), through the
+real builders, the real executor and the provider-free doubles. Each proved
+by one line broken and reverted:
+
+```
+(a) assert True is False          — the substance check removed; the empty
+                                    deliverable approving itself again
+(b) assert 'completed' == 'blocked' — the gate condition inverted; the
+                                    do-not-ship sails past
+(c) Left contains 2 more items, first extra item:
+    'Solid wire is unsuitable under vibration.'
+                                  — the mutation restored; feasibility's
+                                    concern lands in plan.blockers again
+(d) assert True is False … Result(passed=True, checked=True …).checked
+                                  — the flag set true; the check claims it
+                                    checked
+(e) assert 0 == 1 … len([]) .failure_log
+                                  — the consistency refusal not logged;
+                                    the loop goes round with nothing written
+                                    (review B finding 9, live)
+```
+
+D36's block and D43's text in phases.py are **byte-identical** to
+origin/main (sha256 of both blocks unchanged, checked at delivery).
+
+### 102.3 The command's question — the 102 and 106 traces, counted
+
+Read from the committed traces (rows keyed `record`: `header` / `unit`; no
+`answer` rows in these three — that is 107's shape):
+
+```json
+{
+  "docs/traces/102-ia-side-arm-b.jsonl":  {"header": 1, "unit": 1},
+  "docs/traces/106-golden-arm-b.jsonl":   {"header": 1, "unit": 6},
+  "docs/traces/106-ia-side-arm-b.jsonl":  {"header": 1, "unit": 1}
+}
+```
+
+So 102 ran **1 unit** (golden_side_ia, blocked, $0.157) and 106 ran **7
+units** (golden_q1–q6 — three completed, three blocked — plus golden_side_ia,
+blocked, $0.134). Every file proves what it shows and no more.
+
+### 102.4 Tests that asserted retired behaviour (rule 7 / convention 17)
+
+- `test_green_resolution.py`'s `test_absent_green_with_no_cause_is_green`
+  parametrized `ValidateVerdict(**{}).green is True` — literally the bug the
+  ruling names (verdicts.py:351), written down as the truth table (rule 7).
+  Replaced by `test_an_empty_approval_cannot_be_green`.
+- **Eight test doubles carried `"evidence": []` on green replies** — the
+  empty approval, encoded as a fixture, in `test_watchdog.py`'s judge union,
+  `test_settings_map.py`, `test_review_quorum.py`, `test_run_record.py`,
+  `test_evals.py` and `test_rework_loop.py`. Every run they drove silently
+  approved work with no assessment. All now carry a real one; the runs they
+  drive reach exactly the same terminals.
+- `test_graph.py`'s node-order list and `test_shipped_examples.py`'s probe
+  `ids` list asserted the pre-gate graph; both name `independent_verdict` now
+  (the gate is the ruling). HANDOVER's node counts: engineering-rnd 28 → 29.
+
+### 102.5 Departures, and what execution found
+
+1. **The skip is phase-level, not the `when:`** — the command assumed
+   `independent_check`'s skip lived in its `when: triage.unrecallable`. It
+   lives in `_phase_doublecheck`: with no independent model configured the
+   node RUNS and returns `{"skipped": true, "reason": …}` with no `ship`, so
+   the gate raised on the path (`'independent_check.ship' is not available`).
+   The skip record now carries `ship: True` **as a routing value** — a
+   skipped pass is no veto — while `skipped` and `reason` say plainly that no
+   check happened. Nothing there claims an approval.
+2. **The judges node's args pass whole check outputs** (`coverage`,
+   `consistency`, not `coverage.passed`) — the only way the fold can see
+   `checked` without touching `graph/conditions.py`'s grammar or the
+   executor, both outside this command's scope. `resolve_args` resolves bare
+   node ids as output lookups (verified against its source).
+3. **`checked` lives in `Result.data` as well as on the object** — not
+   decoration: the executor stores `dict(result.data)` as a check's output,
+   so without it the flag never reaches the fold or the record, and
+   `totals_reconcile` has read `data["checked"]` since it was written.
+4. **The scripted test doubles return `{}` for unscripted nodes**
+   (`test_graph.ScriptedRunner`), which is why the new gate's condition
+   failed inside tests that never scripted `independent_check` while the
+   production path worked. The doubles now answer for the node their runs
+   reach; production guarantees the path in both branches.
+5. **R7's record key survives** (`feasibility_blockers` in the feasibility
+   output, read by runner.py): D46 changes the channel's meaning and the
+   prompt's heading, not the record's shape — `evals/runner.py` is outside
+   the include list.
+6. **Counts re-derived** (convention 24): 1198 collected — 1191 before, +7
+   (test_graph 83→85, test_iteration_dissent 5→8, test_rework_loop 17→19;
+   test_green_resolution stays 16). README badge, Testing section and
+   Project Structure comment; HANDOVER's header, §2.2 tree line, §3.7 and
+   §4.2. Suite 1198 passed scrubbed, before 1191.
