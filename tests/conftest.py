@@ -1,14 +1,75 @@
-"""Shared test fixtures — in-memory SQLite, mock OpenRouter client."""
+"""Shared test fixtures — in-memory SQLite, mock OpenRouter client.
+
+The suite is hermetic by construction (ARCH-20261002-112): its configuration
+is the suite's, and nothing it runs reaches the network. Both are enforced
+rather than assumed — the placeholders below are forced, the guard further
+down refuses every non-loopback socket, and tests/test_hermetic_suite.py
+proves both end to end.
+"""
 
 from __future__ import annotations
 
 import os
 
-# AutoRnD ships no default models, so the test suite names its own before any
-# autornd module imports config. These are placeholders — nothing is called.
-for _tier in ("TRIAGE", "ENGINEERING", "ARCHITECTURE", "ESCALATION",
-              "RESEARCH", "SEARCH"):
-    os.environ.setdefault(f"MODEL_{_tier}", f"test-provider/test-{_tier.lower()}")
+# ── 1. The suite's configuration belongs to the suite ───────────────────────
+# Both halves, because each covers the other's hole. AUTORND_TESTING keeps
+# Settings from reading any dotenv file at all (a checkout holding the owner's
+# .env is then the same configuration as one that does not), and the fields
+# below are FORCED — not setdefault — so nothing exported in the shell can
+# displace them either. The owner's exported pins used to beat the old
+# placeholders silently, and two tests judged the owner's models instead of
+# the suite's. Required tiers carry named placeholders; optional tiers, the
+# credentials and the provider order are empty, which is the suite's
+# configuration (an empty ranker never reranks, an empty premium never runs an
+# independent pass); everything else takes its declared default.
+# tests/test_hermetic_suite.py guards both lists against drift.
+os.environ["AUTORND_TESTING"] = "1"
+
+PLACEHOLDERS: dict[str, str] = {
+    # credentials and transport — empty, and nothing can fill them here
+    "OPENROUTER_API_KEY": "",
+    "API_KEY": "",
+    "JWT_SECRET": "",
+    "OPENROUTER_BASE_URL": "https://openrouter.ai/api/v1",
+    "OPENROUTER_PROVIDER_ORDER": "",
+    "OPENROUTER_PROVIDER_FALLBACKS": "",
+    # required tiers — named placeholders
+    "MODEL_TRIAGE": "test-provider/test-triage",
+    "MODEL_ENGINEERING": "test-provider/test-engineering",
+    "MODEL_ARCHITECTURE": "test-provider/test-architecture",
+    "MODEL_ESCALATION": "test-provider/test-escalation",
+    "MODEL_RESEARCH": "test-provider/test-research",
+    "MODEL_SEARCH": "test-provider/test-search",
+    # optional tiers — empty: the features are off, exactly as on a machine
+    # that never configured them
+    "MODEL_RANKER": "",
+    "MODEL_PREMIUM": "",
+    "MODEL_JUDGE": "",
+    # everything else — the declared defaults
+    "DATABASE_URL": "sqlite+aiosqlite:///./autornd.db",
+    "API_HOST": "127.0.0.1",
+    "API_PORT": "8100",
+    "LOG_LEVEL": "INFO",
+    "MAX_ITERATIONS": "5",
+    "REVIEW_REWORK_ATTEMPTS": "2",
+    "PLAN_MAX_TOKENS": "32768",
+    "ESCALATION_MAX_TOKENS": "16384",
+    "VALIDATE_MAX_TOKENS": "8000",
+    "JUDGE_MAX_TOKENS": "8000",
+    "SEARCH_MAX_TOKENS": "1500",
+    "SEARCH_MAX_TOKENS_CONSEQUENTIAL": "4000",
+    "ESCALATION_RECOVERY_ATTEMPTS": "3",
+    "RUN_TIME_BUDGET_SECONDS": "1800",
+    "RUN_SPEND_CEILING_USD": "0.50",
+    "MAX_CONCURRENT_RUNS": "2",
+    "ALLOW_UNAUTHENTICATED_REMOTE": "false",
+    "CHROMADB_PATH": "./chromadb_data",
+    "REGISTRATION_ENABLED": "true",
+    "AUTORND_PROFILE": "",
+    "AUTORND_WORKFLOW": "engineering-rnd",
+}
+for _name, _value in PLACEHOLDERS.items():
+    os.environ[_name] = _value
 
 import asyncio
 import json
@@ -25,6 +86,106 @@ from autornd.main import app
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
 import autornd.knowledge.episodic  # noqa: F401 — register Episode model
 import autornd.models.user  # noqa: F401 — register User model
+
+# ── 2. Nothing the suite runs reaches the network ───────────────────────────
+# One guard for the whole session: name resolution and connect to any
+# non-loopback address are refused and recorded. A test that trips it fails
+# BY NAME in teardown even when the code under test caught the error and the
+# test itself passed — which is exactly how the five leaks this command
+# repaired survived. Loopback is allowed (ASGI and the API's own binds),
+# and httpx.MockTransport / ASGITransport never touch a socket.
+# tests/test_hermetic_suite.py proves the guard end to end and breaks it.
+import ipaddress
+import socket
+
+
+class _NetworkGuard:
+    def __init__(self) -> None:
+        self.attempts: list[str] = []
+
+    @staticmethod
+    def _is_loopback(host: Any) -> bool:
+        if host is None:
+            return True          # passive bind / wildcard resolution
+        if isinstance(host, (bytes, bytearray)):
+            host = host.decode("ascii", "replace")
+        if not isinstance(host, str):
+            return False
+        text = host.strip("[]")
+        if text == "localhost":
+            return True
+        try:
+            return ipaddress.ip_address(text).is_loopback
+        except ValueError:
+            return False         # a hostname: not loopback until proven
+
+    def refuse(self, kind: str, target: str) -> None:
+        self.attempts.append(f"{kind} {target}")
+        raise OSError(
+            f"the suite may not reach {target!r} — no network "
+            f"(ARCH-20261002-112)")
+
+
+_network_guard = _NetworkGuard()
+
+_real_getaddrinfo = socket.getaddrinfo
+_real_gethostbyname = socket.gethostbyname
+_real_connect = socket.socket.connect
+_real_connect_ex = socket.socket.connect_ex
+
+
+def _guarded_getaddrinfo(host, *args, **kwargs):
+    if not _NetworkGuard._is_loopback(host):
+        _network_guard.refuse("resolve", str(host))
+    return _real_getaddrinfo(host, *args, **kwargs)
+
+
+def _guarded_gethostbyname(host):
+    if not _NetworkGuard._is_loopback(host):
+        _network_guard.refuse("resolve", str(host))
+    return _real_gethostbyname(host)
+
+
+def _guarded_connect(sock, address):
+    target = address[0] if isinstance(address, tuple) and address else address
+    if not _NetworkGuard._is_loopback(target):
+        _network_guard.refuse("connect", repr(address))
+    return _real_connect(sock, address)
+
+
+def _guarded_connect_ex(sock, address):
+    target = address[0] if isinstance(address, tuple) and address else address
+    if not _NetworkGuard._is_loopback(target):
+        _network_guard.refuse("connect", repr(address))
+    return _real_connect_ex(sock, address)
+
+
+socket.getaddrinfo = _guarded_getaddrinfo
+socket.gethostbyname = _guarded_gethostbyname
+socket.socket.connect = _guarded_connect
+socket.socket.connect_ex = _guarded_connect_ex
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    # What the guard measured, on the record (convention 26).
+    terminalreporter.write_line(
+        f"network guard: {len(_network_guard.attempts)} non-loopback "
+        f"attempt(s) recorded"
+        + (f" — {_network_guard.attempts}" if _network_guard.attempts else ""))
+
+
+@pytest.fixture(autouse=True)
+def _no_network_attempts(request):
+    before = len(_network_guard.attempts)
+    yield
+    fresh = _network_guard.attempts[before:]
+    if fresh:
+        pytest.fail(
+            f"{request.node.nodeid} attempted network access: {fresh}",
+            pytrace=False)
+
+
+# ── 3. The test database: one in-memory engine shared per test ──────────────
 
 test_engine = create_async_engine("sqlite+aiosqlite://", echo=False)
 test_session_factory = async_sessionmaker(
@@ -56,6 +217,27 @@ async def api_client(db_session):
         yield client
 
     app.dependency_overrides.clear()
+
+
+def seal_double(client: OpenRouterClient) -> OpenRouterClient:
+    """Complete a hand-built double: stub every network method it leaves live.
+
+    ARCH-20261002-112: a double that patches `chat_json` but leaves `chat` or
+    `rerank` real can reach the provider — the context builder's research
+    lookup uses `chat`, and rerank's native path uses `rerank`. A transport
+    double (`client._client` replaced by a local fake) is already provider-free
+    and needs nothing; this is for the half-patched kind. Methods already
+    stubbed are left alone, so it is safe to call on any double.
+    """
+    for name in ("chat", "chat_json", "rerank"):
+        method = getattr(client, name)
+        if isinstance(method, AsyncMock):
+            continue
+        setattr(client, name, AsyncMock(
+            side_effect=RuntimeError(
+                f"{name} is not part of this test double "
+                f"(ARCH-20261002-112)")))
+    return client
 
 
 def make_mock_response(content: dict[str, Any], model: str = "test-model") -> ModelResponse:
@@ -115,6 +297,13 @@ def make_mock_client(responses: dict[str, dict[str, Any]],
 
     client.chat_json = AsyncMock(side_effect=_mock_chat_json)
     client.chat = AsyncMock(side_effect=_mock_chat)
+    # The double is provider-free (ARCH-20261002-112): rerank was the one
+    # method left real, and a run that ingests its findings later probes the
+    # provider's rerank API from inside a test. Raising is the honest stub —
+    # the double does not serve rerank, and rerank_chunks falls back to
+    # retrieval order exactly as it does when the provider refuses.
+    client.rerank = AsyncMock(
+        side_effect=RuntimeError("rerank is not part of the test double"))
     client.close = AsyncMock()
     return client
 
