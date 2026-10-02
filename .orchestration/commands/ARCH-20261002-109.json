@@ -1,0 +1,81 @@
+{
+  "command_id": "ARCH-20261002-109",
+  "parent_id": "ARCH-20261002-108",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "The workflow a caller submits is the workflow that runs. Each submission gets one record, owned by its caller; progress is written as each node completes; and a status cast can never lose the result.",
+  "evidence": [
+    "autornd/api/routes.py:152-166: POST /api/workflows creates a Workflow row with the caller's user_id, commits it, and returns its id. routes.py:168-181: the background task loads that row and calls engine.execute(workflow.request). autornd/engine/workflow.py:73: execute creates a second Workflow row, with no user_id. The row the caller polls stays PENDING forever, and the run's phases and cost land on an unowned row that the caller's filtered list (routes.py:212, :236) cannot show. The advisor verified this against main 4fda54f (review A F7, review B finding 2).",
+    "routes.py:184-198: the synchronous path calls engine.execute(body.request), which also creates the row without the caller's user_id.",
+    "workflow.py:78-109 buffers completed phases in pending_saves and writes them after the run ends; the first commit comes at workflow.py:106 or :119. workflow.py:49 defines _NODE_STATUS, and nothing reads it. A poll cannot see progress, and a crash mid-run discards every completed, paid-for node (review B finding 3).",
+    "workflow.py:116: WorkflowStatus(state.status) runs after the try that guards the executor. A terminal string that is not a member raises after the run and before the commit, and the result is lost (review A F12)."
+  ],
+  "scope": {
+    "include": [
+      "autornd/engine/workflow.py",
+      "autornd/api/routes.py",
+      "tests/",
+      "README.md (only where it describes the async path's behaviour)",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "workflows/ and the graph executor's semantics.",
+      "Any DB schema change (hard rule 11). If the repair needs one, stop and report BLOCKED with the proposal.",
+      "evals/golden/."
+    ]
+  },
+  "constraints": [
+    "INSTRUMENT REPAIR, NOT A RULING: the harness concludes exactly what it did before. It now writes the conclusion where the caller looks, in time to be seen.",
+    "ONE ROW PER SUBMISSION: execute accepts the existing Workflow row. execute(request) keeps working for callers that pass none; it creates the row with the caller's user_id when one is known. Both submit paths create the row with _get_user_id(request) and pass it in. Nothing in the API path creates a second row for one submission.",
+    "PROGRESS AS IT HAPPENS: commit the row before the run starts. As each node completes, write its phase record and the row's status in a transaction of its own. Use _NODE_STATUS, or delete it if an honest mapping cannot be made, and say which. A poll then sees progress, no other writer is blocked for the length of a run, and a crash keeps every completed node. The end-of-run flush must not write any phase twice.",
+    "THE TERMINAL CAST CANNOT LOSE A RESULT: move the WorkflowStatus conversion inside the guarded region. A terminal string that is not a member ends the row BLOCKED, with the raw terminal in error, and the row is committed.",
+    "TESTS, through the real routes, with httpx ASGITransport and the existing provider-free test double: (a) POST /api/workflows returns an id; after the background task, GET on that id shows a terminal status and its phases, and exactly one Workflow row exists. (b) With authentication configured, both submit paths keep the caller's user_id, and the caller can list and read the result. (c) A phase written mid-run is visible from a second session before the run ends. (d) An unknown terminal string ends the row BLOCKED, committed. Prove each test by breaking one line, and quote the failure.",
+    "Free. No provider call."
+  ],
+  "acceptance_criteria": [
+    "Tests (a)-(d) pass, and each break is quoted.",
+    "`grep -n 'Workflow(request' autornd/engine/workflow.py autornd/api/routes.py` shows no path that creates a second row for one submission, and the response explains each construction that remains.",
+    "`git diff --stat origin/main -- workflows/ evals/golden/` is empty, and no change touches the DB schema.",
+    "Suite green before and after. The PR is opened and delivery_state carries its number."
+  ],
+  "verification": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass."
+    }
+  ],
+  "rollback": "Revert the merge. The API returns to two rows per async submission.",
+  "deliverable": {
+    "branch": "arch/20261002-109-workflow-identity",
+    "branch_created_by": "advisor",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+  "transport": "Pushed by the advisor: the second of the four free Phase 0-1 commands. Process after 108 merges. Commit the response IN_PROGRESS first.",
+  "assumptions": [
+    "The Workflow model already carries user_id and status columns (routes.py:155 sets user_id). If progress needs a column that does not exist, report it instead of adding one."
+  ],
+  "questions": [
+    "Did any existing test assert the two-row behaviour or the end-of-run flush? For each, say whether the test was the bug written down (rule 7)."
+  ],
+  "preconditions": [
+    {
+      "command": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "expected": "No output."
+    },
+    {
+      "command": "git fetch --prune origin && grep -n 'Ruling D44' HANDOVER.md",
+      "expected": "Present (108 merged). Otherwise BLOCKED."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green; record the count."
+    }
+  ]
+}
