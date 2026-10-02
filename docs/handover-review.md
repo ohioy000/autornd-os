@@ -10875,3 +10875,16 @@ flush.
    HANDOVER's header, §2.2 tree line, §3.7 (test_api.py 21→25) and §4.2.
    The three count guards failed on the intermediate tree exactly as
    designed and are green on this one.
+
+## 101. Ruling D45 — no open, unbounded spend (advisor, 2026-10-02, carried by ARCH-20261002-110)
+
+> **Ruling D45 (advisor, 2026-10-02) — no open, unbounded spend. (1) With neither API_KEY nor JWT_SECRET configured, the API serves loopback callers only. Any other caller is refused with a sentence that names the fix, unless the operator sets ALLOW_UNAUTHENTICATED_REMOTE=1, which is logged at startup and reported by /api/health. /api/health stays open to everyone. (2) Every API run carries a wall-clock budget and a spend ceiling: run_time_budget_seconds defaults to 1800 and run_spend_ceiling_usd to 0.50, and the owner may change either in .env (G-3). (3) Settings changed at runtime can only tighten: PUT /api/settings and POST /api/profiles/{name} serve loopback callers only, and no token ceiling or budget can be raised above its startup value while the server runs. (4) /api/episodes shows a caller only their own runs. (5) The spend guard holds across concurrent calls, failed calls and reranking. Each call's worst case is reserved before dispatch and released on reconciliation, and a call that fails after dispatch keeps its worst case as unreconciled liability for the rest of the run. (6) No caller can multiply those bounds: at most max_concurrent_runs API runs are in flight at once (default 2; the owner may change it in .env), a submission beyond the cap is refused with 429 and a sentence, and a request identical to one the same caller already has in flight is refused as a duplicate. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md, F6, F9 and review B's finding 4), verified by the advisor: the documented Docker quick start published an unauthenticated endpoint that spends the owner's credits on every interface; API runs had neither the D38 watchdog nor a spend ceiling; /api/episodes exposed every run; PUT /api/settings could raise a token ceiling for every run in flight; concurrent calls each passed one balance check; and nothing capped how many runs a caller could start at once (review A F6: no rate limiting, no queue depth cap, no dedupe). The owner approved default bounds and the end of the open quick start on 2026-10-02; the values are the advisor's, set from the measurements cited beside them, and the owner's to change. Falsifier: an API run that exceeds its spend ceiling or its wall-clock budget, a money-spending request served to an unauthenticated non-loopback caller without the override, a runtime settings change that raises a ceiling, or more API runs in flight than the cap.**
+
+Carried verbatim to HANDOVER.md's rulings block in the same commit. The
+command's two amendments are part of what is executed: the docker job's
+live 403 check against the running container, the byte-bound prompt
+estimate (prompt's UTF-8 byte length plus a named chat-template allowance)
+and the pre-dispatch call ceiling; and clause (6)'s `max_concurrent_runs`
+cap with its 429 and duplicate 409.
+
+Execution record: follows in the commits after this section's ruling commit.
