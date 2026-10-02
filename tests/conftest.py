@@ -165,6 +165,32 @@ socket.gethostbyname = _guarded_gethostbyname
 socket.socket.connect = _guarded_connect
 socket.socket.connect_ex = _guarded_connect_ex
 
+# Chroma's default embedding function downloads a ~80 MB ONNX model from S3
+# the first time it embeds. Locally the cache hides that; in CI every
+# store-touching test fetched it — a sixth network surface the audit's five
+# did not count, caught here by the guard (ARCH-20261002-112). A deterministic
+# local embedder keeps the retrieval tests testing retrieval and the suite
+# offline: same shape every input, different across inputs.
+import hashlib
+
+import chromadb.utils.embedding_functions as _chroma_ef
+
+
+class _LocalEmbeddings:
+    @staticmethod
+    def name() -> str:
+        return "local-deterministic-tests"
+
+    def __call__(self, texts):
+        vectors = []
+        for text in texts:
+            digest = hashlib.sha256(text.encode("utf-8")).digest()
+            vectors.append([b / 255.0 for b in digest[:16]])
+        return vectors
+
+
+_chroma_ef.ONNXMiniLM_L6_V2 = _LocalEmbeddings
+
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     # What the guard measured, on the record (convention 26).

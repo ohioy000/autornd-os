@@ -11280,3 +11280,18 @@ where it read 2 failed, 1196 passed on arrival.
    Testing section and Project Structure comment; HANDOVER's header, §2.2 tree
    line, §3.7 (the table re-paired from the insertion point) and §4.2;
    AGENTS.md's file count 71 → 72.
+6. **CI found a sixth network surface the audit's five did not count:**
+   Chroma's default embedding function downloads a ~80 MB ONNX model from
+   `chroma-onnx-models.s3.amazonaws.com` the first time it embeds. Locally the
+   cache hides it; in CI every store-touching test fetched it — the suite was
+   green in CI *by downloading a model at test time*. The guard named it on the
+   first CI run (six tests, `resolve chroma-onnx-models.s3.amazonaws.com`).
+   `tests/conftest.py` now substitutes a deterministic local embedder at
+   Chroma's own seam, so the retrieval tests test retrieval and the suite is
+   offline everywhere.
+7. **One more order-dependent half-patched double, visible only in isolation:**
+   `tests/test_schema_wiring.py`'s `capturing_client` left `rerank` live, and
+   its `test_plan` reaches it through context building — masked in a full run
+   because an earlier test had latched the rerank fallback mode (the §6.8
+   latch). Sealed with `seal_double`, and every suspect file was then run in
+   isolation reading the guard's count: all zero.
