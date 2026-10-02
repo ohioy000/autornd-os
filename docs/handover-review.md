@@ -10509,3 +10509,7 @@ the sentence test fail, and the D36 hash test passes.
 The plan text is D43's own sentences, plus one that restates "D36's four
 rules keep governing how the plan is reasoned; they do not add to what the
 answer must contain" for the prompt's reader.
+
+## 97. ARCH-20261002-106: the golden set re-run after 104 and 105 (executor, 2026-10-02)
+
+> Correction, 2026-10-02, by the advisor: D42's exhibit misnamed Q2's failure class. ARCH-20261001-104's execution found it: the Test Engineer reviewer was stopped by the run's spend ceiling (BudgetExceeded at $0.0844 against the advisor's $0.07 cap), and the bare except in run_review turned that stop into a high finding. It was not a schema rejection; the run's one schema rejection was on the architecture tier. D42's rule stands. Its exhibit is the spend stop recorded as a finding, and 104 now re-raises BudgetExceeded inside reviewers.
