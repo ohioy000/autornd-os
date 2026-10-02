@@ -52,7 +52,7 @@
   ],
   "delivery_state": {
     "branch": "arch/20261002-110-no-open-spend",
-    "pr": null
+    "pr": 131
   },
   "commits": {
     "in_progress": "6e12635",
