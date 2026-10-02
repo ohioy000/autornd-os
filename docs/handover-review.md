@@ -10603,3 +10603,71 @@ answers for lookup questions).
 4. **Q5.8's key** catches a rule statement as the verdict (above).
 5. **Judge time is still the cost driver:** Q5 review 592 s, IA validate
    346 s.
+
+## 98. ARCH-20261002-107: the direct-call baseline (executor, 2026-10-02)
+
+Pre-registration `d05d5f2`, committed before spend. The owner's
+authorisation, verbatim (the option chosen when asked): "Go: $0.02/call,
+$0.10 total". Run detached at 01:15:21Z. Trace
+`docs/traces/107-direct-baseline.jsonl`: one call per question to
+z-ai/glm-5 via StreamLake (arm B's engineering tier), with the advisor's
+system message, byte-identical requests, and max_tokens 4000.
+
+### 98.1 The script's table (baseline.py, verbatim)
+
+```
+Q1  ALL HOLD  items[++] 15.875s $0.0030 sprawl=7.2 finish=stop
+Q2  ALL HOLD  items[++] 10.533s $0.0020 sprawl=2.9 finish=stop
+Q3  FAIL      items[---] 18.848s $0.0049 sprawl=3.8 finish=stop
+Q4  FAIL      items[+-++-++] 15.926s $0.0042 sprawl=2.1 finish=stop
+Q5  FAIL      items[+++++++-++] 10.045s $0.0026 sprawl=2.0 finish=stop
+Q6  ALL HOLD  items[++++] 15.121s $0.0025 sprawl=1.5 finish=stop
+IA  FAIL      items[+-+-+-] 10.22s $0.0027 sprawl=0.9 finish=stop
+3/6 golden hold every item · median sprawl 2.5 · total $0.0220
+```
+
+### 98.2 The executor's reading, item by item
+
+| Q | script | reading | the lines |
+|---|---|---|---|
+| Q1 | all hold | agree | |
+| Q2 | all hold | agree | |
+| Q3 | Q3.1, Q3.2, Q3.3 fail | **all hold, a key defect** | `J = ... = 6.14 \times 10^{-7} \text{ m}^4`; `= 20.4 \text{ MPa}`; `= 0.0102 \text{ rad}`. The answer is in LaTeX; `normalize` does not strip `\times`, braces or `\text{...}`. |
+| Q4 | Q4.2, Q4.5 fail | **all hold, a key defect** | `60.0 \text{ mm}^2`; `30,000 \text{ mm}^3` (the same LaTeX). |
+| Q5 | Q5.8 fails | **holds, a key defect** | "**Test Log Verdict: PASS**", then "Pressure Drop: 0.10 bar". Q5.8 needs the figure before "pass" within 160 characters; the verdict line comes first. |
+| Q6 | all hold | agree | |
+| IA | IA.2, IA.4, IA.6 fail | **agree: genuinely wrong** | "actively engaged ... at least 2 of the last 5 years" (the rule is the 2-year period before applying); an invented "1 year (or 2,000 hours) under the supervision of an IA holder"; "equipment and facilities", with no inspection data; nothing on approved technical data. |
+
+**Counts:** by script 3 of 6 hold every item; **on the reading, 6 of 6.**
+
+### 98.3 Predictions and the decision rule
+
+- **P1** (at least 5 of 6 hold): REFUTED by script (3); HELD on the
+  reading (6). The key defects decide.
+- **P2** (every call at most 60 s and $0.01): HELD. 10.0-18.8 s, and
+  $0.0020-0.0049 each. Total $0.0220.
+- **P3** (median sprawl below 5): HELD, 2.5.
+- **P4** (the IA answer holds at least 5 of 6 core items): REFUTED, 3 of
+  6, on both readings. The model's own knowledge gets the IA wrong in
+  ways that look plausible.
+- **The decision rule:** by script, 3 (a fast path for the questions that
+  held, and the planner examined on the rest); on the reading, 6 (D44: a
+  fast path, answer directly then one cheap check, escalating to the full
+  pipeline only when the check fails).
+
+**Against the pipeline:** the same six questions passed 2 of 6 in 106, at
+$0.3864 and up to 740 s each. Directly they hold 6 of 6 on the reading, at
+$0.022 and at most 19 s each. On these questions the pipeline adds time
+and failure points, not correctness. The one lookup-shaped question it
+cannot do from memory, the IA, is the case for research-first answers.
+
+### 98.4 Findings for the advisor
+
+1. **The scorer does not read LaTeX** (Q3, Q4): `\times`, `^{-7}`,
+   `\text{ m}^4`. Three correct answers fail on format. Normalize LaTeX,
+   or rule that the format fails.
+2. **Q5.8 depends on order**: a verdict line stated before its figures
+   is missed.
+3. **The IA answer from memory is confidently wrong** (an invented IA
+   supervision requirement; "2 of the last 5 years"). A lookup, or a
+   corpus, is needed there.
