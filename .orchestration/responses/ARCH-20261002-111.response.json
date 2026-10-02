@@ -1,0 +1,35 @@
+{
+  "command_id": "ARCH-20261002-111",
+  "status": "IN_PROGRESS",
+  "executed": true,
+  "head_before": "89a3da5",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20261002-110: response present at .orchestration/responses/ARCH-20261002-110.response.json on main (merged 89a3da5, PR #131)",
+    "preconditions_present": 3,
+    "transport": "Branch arch/20261002-111-approval-means-checked cut from origin/main 89a3da5, the name taken from the command's deliverable block."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "PASS: no output — no run in flight."
+    },
+    {
+      "n": 2,
+      "result": "PASS: 'Ruling D45' at HANDOVER.md:41 on the merged main — 110 merged as 89a3da5."
+    },
+    {
+      "n": 3,
+      "result": "COUNT, scrubbed green: 1191 passed on the merged main before the work."
+    }
+  ],
+  "baseline_suite": "1191 passed before (scrubbed)",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20261002-111-approval-means-checked",
+    "pr": null
+  },
+  "commits": {}
+}
