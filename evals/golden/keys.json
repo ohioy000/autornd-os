@@ -2,6 +2,7 @@
  "version": 1,
  "written_by": "advisor (ARCH-20261001-102), 2026-10-01",
  "normalize": [
+  "LaTeX first: \\text{}/\\mathrm{} unwrapped, \\frac{a}{b} -> (a)/(b), \\times -> '×', \\cdot -> '·', \\le/\\ge -> '≤'/'≥', \\% -> '%', thin spaces -> ' ', '$' and \\( \\) \\[ \\] dropped, braces dropped",
   "lowercase",
   "unicode minus/dash -> '-'",
   "'×' -> 'x'",
@@ -108,10 +109,15 @@
     {
      "text": "Oxygen deficient: <19.5% oxygen by mass.\nOxygen enriched: >23.5% oxygen by mass.",
      "fails": "Q2.1"
+    },
+    {
+     "text": "Oxygen deficient: $\\leq 19.5\\%$ oxygen by volume.\nOxygen enriched: $> 23.5\\%$ oxygen by volume.",
+     "fails": "Q2.1"
     }
    ],
    "variants_must_pass": [
-    "An oxygen-deficient atmosphere has below 19.5 percent oxygen by volume; an oxygen-enriched atmosphere has greater than 23.5 percent oxygen by volume (both % v/v)."
+    "An oxygen-deficient atmosphere has below 19.5 percent oxygen by volume; an oxygen-enriched atmosphere has greater than 23.5 percent oxygen by volume (both % v/v).",
+    "Oxygen-deficient: $< 19.5\\%$ oxygen by volume. Oxygen-enriched: $> 23.5\\%$ oxygen by volume."
    ]
   },
   {
@@ -165,10 +171,15 @@
     {
      "text": "J = 6.14 × 10^-7 m^4.\nτmax = 20.4 MPa.\nθ = 0.0102 degrees.",
      "fails": "Q3.3"
+    },
+    {
+     "text": "$J = \\frac{\\pi d^4}{64} = 3.07 \\times 10^{-7}\\,\\text{m}^4$; $\\tau_{max} = 20.4\\,\\text{MPa}$; $\\theta = 0.0102\\,\\text{rad}$.",
+     "fails": "Q3.1"
     }
    ],
    "variants_must_pass": [
-    "J = 6.136e-7 m^4; maximum shear stress 20.37 MPa; twist 1.0186 × 10⁻² rad (about 0.584°)."
+    "J = 6.136e-7 m^4; maximum shear stress 20.37 MPa; twist 1.0186 × 10⁻² rad (about 0.584°).",
+    "$J = \\frac{\\pi d^4}{32} = 6.136 \\times 10^{-7}\\,\\text{m}^4$; $\\tau_{max} = 20.37\\,\\mathrm{MPa}$; $\\theta = 1.0186 \\times 10^{-2}\\,\\text{rad}$."
    ]
   },
   {
@@ -264,10 +275,15 @@
     {
      "text": "### Selected dimensions\nWidth 20.0 mm; thickness 3.00 mm; length 500 mm.\n\n### Strength check\nArea 60.0 mm^2; stress 100 MPa: passes at the limit. The 2.00 mm strip gives 150 MPa: fails.\n\n### Volume and mass\nV = 3.00 × 10^-5 m^3.\nm = 235.5 kg.",
      "fails": "Q4.6"
+    },
+    {
+     "text": "Selected dimensions: width $20.0\\,\\text{mm}$, thickness $3.00\\,\\text{mm}$, length $500\\,\\text{mm}$.\nStrength check: $A = 60.0\\,\\text{mm}^2$; $\\sigma = 100\\,\\text{MPa}$, passes; the 2.00 mm strip gives $150\\,\\text{MPa}$, which fails.\nVolume and mass: $V = 3.00 \\times 10^{-5}\\,\\text{m}^3$; $m = 235.5\\,\\text{kg}$.",
+     "fails": "Q4.6"
     }
    ],
    "variants_must_pass": [
-    "Selected dimensions: 20.0 mm wide, 3.00 mm thick, 500 mm long.\nStrength check: area 60 square millimetres, stress 100 N/mm² which meets the allowable (equality permitted); the 2.00 mm strip would see 150 MPa, which exceeds 100 MPa.\nVolume and mass: 30,000 mm³; mass 235.5 g."
+    "Selected dimensions: 20.0 mm wide, 3.00 mm thick, 500 mm long.\nStrength check: area 60 square millimetres, stress 100 N/mm² which meets the allowable (equality permitted); the 2.00 mm strip would see 150 MPa, which exceeds 100 MPa.\nVolume and mass: 30,000 mm³; mass 235.5 g.",
+    "Selected dimensions: width $20.0\\,\\text{mm}$, thickness $3.00\\,\\text{mm}$, length $500\\,\\text{mm}$.\nStrength check: $A = 60.0\\,\\text{mm}^2$; $\\sigma = 6000/60.0 = 100\\,\\text{MPa} \\le 100\\,\\text{MPa}$, passes; the 2.00 mm strip gives $150\\,\\text{MPa}$, which fails.\nVolume and mass: $V = 30{,}000\\,\\text{mm}^3 = 3.00 \\times 10^{-5}\\,\\text{m}^3$; $m = 0.2355\\,\\text{kg}$."
    ]
   },
   {
@@ -345,12 +361,16 @@
      "id": "Q5.8",
      "item": "verdict for THIS log is PASS (read beside the logged figures, not from the general rule lines)",
      "all": [
-      "(?:5\\.90|0\\.10?\\s*bar).{0,160}?\\bpass(?:es|ed)?\\b"
+      "(?:5\\.90|0\\.10?\\s*bar).{0,160}?\\bpass(?:es|ed)?\\b(?!\\s*(?:or|/)\\s*fail)|(?:verdict|result|outcome)\\s*(?:is\\s*)?[:=-]?\\s*pass(?:es|ed)?\\b(?!\\s*(?:or|/)\\s*fail).{0,160}?(?:5\\.90|0\\.10?\\s*bar)"
      ],
      "none": [
-      "(?:5\\.90|0\\.10?\\s*bar).{0,60}?(?:verdict|result|test)\\s*(?:is\\s*)?[:=–-]?\\s*fail(?:s|ed)?\\b"
+      "(?:5\\.90|0\\.10?\\s*bar).{0,60}?(?:verdict|result|test)\\s*(?:is\\s*)?[:=–-]?\\s*fail(?:s|ed)?\\b",
+      "(?:verdict|result|outcome)\\s*(?:is\\s*)?[:=-]?\\s*fail(?:s|ed)?\\b.{0,60}?(?:5\\.90|0\\.10?\\s*bar)"
      ],
-     "why_changed": "2026-10-02, the advisor's key defect, found by the executor in 106 (notebook §97): the old none-pattern matched the answer's general rule line 'if either c1 or c2 fails -> verdict = fail' ahead of the log's 'verdict: pass'. Normalisation folds newlines, so the verdict is read by proximity to the logged figures."
+     "why_changed": [
+      "2026-10-02, the advisor's key defect, found by the executor in 106 (notebook §97): the old none-pattern matched the answer's general rule line 'if either c1 or c2 fails -> verdict = fail' ahead of the log's 'verdict: pass'. Normalisation folds newlines, so the verdict is read by proximity to the logged figures.",
+      "2026-10-02, the advisor's key defect, found by the executor in 107 (notebook §98): the direct answer stated 'Test Log Verdict: PASS' BEFORE its figures ('Pressure Drop: 0.10 bar'), and the key read only figure-then-verdict. Both orders are now read, each with its own FAIL guard; 'pass or fail' and 'pass/fail' template words never count as a verdict."
+     ]
     },
     {
      "id": "Q5.9",
@@ -394,10 +414,15 @@
     {
      "text": "1. Fill with water through the open high-point vent until bubble-free water exits.\n2. Close the vent; pressurize to 6.00 bar gauge.\n3. Isolate the hand pump, then start the timer.\n4. Hold for 300 s without adding water; observe for leakage.\n5. Pass only with pressure drop ≤ 0.20 bar and no visible leakage. Logged drop 0.10 bar: PASS.\n6. Disconnect the manifold, then open the release valve and confirm 0 bar gauge.",
      "fails": "ORDER"
+    },
+    {
+     "text": "1. Fill with water through the open high-point vent until bubble-free water exits.\n2. Close the vent; pressurize to 6.00 bar gauge.\n3. Isolate the hand pump, then start the timer.\n4. Hold for 300 s without adding water; observe for leakage.\n5. Acceptance: pass only if the pressure drop is no more than 0.20 bar and there is no visible leakage.\nTest log verdict: FAIL. Pressure drop: 0.10 bar (6.00 - 5.90); leakage: none.\n6. Open the release valve, confirm 0 bar gauge, then disconnect.",
+     "fails": "Q5.8"
     }
    ],
    "variants_must_pass": [
-    "Step 1: with the high-point vent open, fill the manifold with water until it runs air-free. Step 2: close the high-point vent. Step 3: pressurise to 6.00 bar(g). Step 4: isolate the hand pump, then begin the 300 s hold timer; do not top up during the hold and watch for leaks. Acceptance: drop no more than 0.20 bar AND no visible leak. Log: 6.00 to 5.90 bar is a 100 mbar drop with no leakage, so the test passes. Step 5: open the release valve, confirm 0 bar gauge, then disconnect."
+    "Step 1: with the high-point vent open, fill the manifold with water until it runs air-free. Step 2: close the high-point vent. Step 3: pressurise to 6.00 bar(g). Step 4: isolate the hand pump, then begin the 300 s hold timer; do not top up during the hold and watch for leaks. Acceptance: drop no more than 0.20 bar AND no visible leak. Log: 6.00 to 5.90 bar is a 100 mbar drop with no leakage, so the test passes. Step 5: open the release valve, confirm 0 bar gauge, then disconnect.",
+    "Step 1: open the high-point vent and fill with water until bubble-free water exits. Step 2: close the high-point vent, then pressurize to 6.00 bar gauge. Step 3: isolate the hand pump, then start the 300 s hold timer; do not add water, and watch for leakage. Acceptance: a pressure drop of no more than 0.20 bar and no visible leakage. Test log verdict: PASS. Pressure drop: 0.10 bar (6.00 to 5.90 bar); leakage: none. Step 4: open the release valve, confirm 0 bar gauge, then disconnect."
    ],
    "order_semantics": "sequence: each pattern must match AFTER the previous pattern's match (a mention in a preamble or table does not count against the order)"
   },
@@ -493,10 +518,12 @@
     "id": "IA.2",
     "item": "actively engaged for the 2-year period before applying (65.91(c)(2))",
     "all": [
-     "\\b(?:2|two)[- ]years?",
-     "activ"
+     "activ\\w*\\s+engaged[^.]{0,80}?\\b(?:2|two)[- ]year\\s+period|\\b(?:2|two)[- ]year\\s+period[^.]{0,80}?activ\\w*\\s+engaged|activ\\w*\\s+engaged[^.]{0,80}?\\b(?:2|two)\\s+years?\\s+(?:before|preceding|prior|immediately)"
     ],
-    "none": []
+    "none": [
+     "\\b(?:2|two)\\s+(?:of|out of)\\s+(?:the\\s+)?(?:last\\s+|past\\s+|preceding\\s+)?(?:5|five)\\s+years"
+    ],
+    "why_changed": "2026-10-02, the advisor's key defect, found by reading 106's IA draft (docs/traces/106-ia-side-arm-b.jsonl, iteration 0): the old pattern wanted '2 years' and 'activ' ANYWHERE, so it passed a fabricated 'direct quote' ('actively engaged, for at least 2 of the 5 years before the date of application') on '2 years' taken from a wrong expiry line. The 2-year period is now read beside 'actively engaged', and '2 of the (last) 5 years', the error both 106 and 107 made, fails."
    },
    {
     "id": "IA.3",
@@ -562,7 +589,26 @@
    }
   ],
   "model_answer": "Under 14 CFR 65.91, to be eligible for an inspection authorization you must hold a currently effective mechanic certificate with both airframe and powerplant ratings, each in effect for at least 3 years; have been actively engaged for at least the 2-year period before applying in maintaining certificated aircraft; have a fixed base of operations; have the equipment, facilities and inspection data needed; and pass a written test on inspecting for return to service after major repairs and major alterations. An applicant who fails may not retest until 90 days after failing. Under 14 CFR 65.95(a)(1), an IA may inspect and approve for return to service an aircraft after a major repair or major alteration only if the work was done in accordance with technical data approved by the Administrator (not aircraft on a part 121 continuous airworthiness program). The IA expires March 31 of each odd-numbered year (65.92). Renewal (65.93) needs, in each year, one activity such as one annual inspection per 90 days, two major repairs or major alterations per 90 days, a progressive inspection, an 8-hour refresher course, or an oral test.",
-  "wrong": []
+  "wrong": [
+   {
+    "text": "Hold a mechanic certificate with both airframe and powerplant ratings for at least 3 years, and have been actively engaged in maintaining aircraft for at least 2 of the last 5 years.",
+    "fails": "IA.2",
+    "source": "107's direct answer (docs/traces/107-direct-baseline.jsonl), item 3"
+   },
+   {
+    "text": "Direct quote from §65.91(b): \"Has been actively engaged, for at least 2 of the 5 years before the date of application, in maintaining aircraft certificated in the United States.\" Direct quote from §65.93(a): \"An inspection authorization expires 2 years after the date of issuance.\"",
+    "fails": "IA.2",
+    "source": "106's IA draft (docs/traces/106-ia-side-arm-b.jsonl, iteration 0): fabricated quotations that the first IA.2 pattern passed"
+   },
+   {
+    "text": "Have the equipment and facilities necessary to perform the inspections, and pass a written knowledge test. Once issued, the IA may approve major repairs and major alterations for return to service on FAA Form 337.",
+    "fails": "IA.6",
+    "source": "107's direct answer: return to service with no approved-data condition"
+   }
+  ],
+  "variants_must_pass": [
+   "Under 14 CFR 65.91(c) an applicant needs a mechanic certificate with airframe and powerplant ratings, each in effect for at least three years; must have been actively engaged in maintaining certificated aircraft for the two years before applying; needs a fixed base of operations; must have the equipment, facilities and inspection data needed to inspect; and must pass a written test. Under 65.95(a)(1) the holder may approve a major alteration for return to service only if the work followed technical data approved by the Administrator."
+  ]
  },
  "regression_vectors": [
   {
@@ -578,6 +624,27 @@
    "answer": "verdicts.implement.summary",
    "must_hold_all": true,
    "why": "106's shipped Q5 answer is correct on every item (it failed on time, not content). The first Q5.8 key failed it on a general rule line."
+  },
+  {
+   "trace": "docs/traces/107-direct-baseline.jsonl",
+   "id": "Q3",
+   "answer": "answer",
+   "must_hold_all": true,
+   "why": "107's direct answer is correct (6.14 × 10^-7 m^4, 20.4 MPa, 0.0102 rad) and failed the first key on LaTeX notation alone ('\\times 10^{-7}', '\\text{ MPa}')."
+  },
+  {
+   "trace": "docs/traces/107-direct-baseline.jsonl",
+   "id": "Q4",
+   "answer": "answer",
+   "must_hold_all": true,
+   "why": "107's direct answer is correct and failed Q4.2 and Q4.5 on LaTeX notation alone ('60.0 \\text{ mm}^2', '30,000 \\text{ mm}^3')."
+  },
+  {
+   "trace": "docs/traces/107-direct-baseline.jsonl",
+   "id": "Q5",
+   "answer": "answer",
+   "must_hold_all": true,
+   "why": "107's direct answer is correct and failed Q5.8 because its verdict line ('Test Log Verdict: PASS') came before its figures."
   }
  ]
 }

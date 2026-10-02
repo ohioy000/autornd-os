@@ -56,7 +56,28 @@ Q5, the ordered steps appear in order), and it finished within its
 model answer holds every item; every listed wrong answer fails the item it was
 written to break; and every alternative phrasing in `variants_must_pass` holds.
 These are the "prove by breaking" cases, and they come from the generator's own
-list of common mistakes.
+list of common mistakes. The side test's observed wrong forms are caught too.
+Until 2026-10-02 the self-test did not run `variants_must_pass`, although this
+paragraph said it did; every variant held when it was first run.
+
+## Key repairs
+
+Each repair is the advisor's, driven by a reading of a real answer, and is
+applied to every recorded run at once. A correct answer that fails the key, or
+a wrong one that passes it, is a defect in the key; it is never fixed by
+adjusting a run's result.
+
+| Date | What the key got wrong | Exhibit | Repair |
+| --- | --- | --- | --- |
+| 2026-10-01 | Q5.6 missed "zero visible leakage"; Q5's order check was fooled by an equipment table above step 1 | 102's shipped Q5 (PR #113) | Wider leakage wording; order read as a sequence |
+| 2026-10-02 | Q5.8 matched a general rule line, "verdict = fail", ahead of the log's "verdict: pass" | 106's shipped Q5 (PR #119) | The verdict is read beside the logged figures |
+| 2026-10-02 | LaTeX markup failed correct figures: `6.14 \times 10^{-7} \text{ m}^4`, `60.0 \text{ mm}^2` | 107's direct Q3 and Q4 | LaTeX is reduced to plain text before matching |
+| 2026-10-02 | Q5.8 read the verdict only after its figures, and missed "Test Log Verdict: PASS" stated first | 107's direct Q5 | Both orders, each with its own FAIL guard |
+| 2026-10-02 | IA.2 passed a fabricated quotation, "2 of the 5 years", on "2 years" from an unrelated expiry line (a false positive) | 106's IA draft, iteration 0 | The 2-year period is read beside "actively engaged"; "2 of the (last) 5 years" fails |
+
+Re-scored with the repaired key: 102 stays 3 of 6 and 106 stays 2 of 6. 107's
+direct answers hold 6 of 6 (3 of 6 before the repair), and its IA answer holds
+3 of 6 core items. 106's IA draft goes from 6 of 6 to 5 of 6.
 
 ## Why not `figures_present`
 
