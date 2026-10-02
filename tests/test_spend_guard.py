@@ -301,3 +301,133 @@ class TestTheCallCeilingIsCheckedBeforeDispatch:
             await client.chat("escalation", "sys", "user", max_tokens=10)
         assert len(requests) == 2           # the third was never sent
         assert "ceiling 2" in str(exceeded.value)
+
+
+# ── Ruling D47 (ARCH-20261002-113): a reservation is identified ─────────────
+#
+# (b) the advisor's out-of-order case, (c) a blind call releases nothing,
+# (d) a failed call keeps its OWN worst case. The old guard held reservations
+# in a FIFO deque and released whatever was oldest when a call accounted.
+
+
+def _sequenced_client(handler) -> OpenRouterClient:
+    client = OpenRouterClient(api_key="k",
+                              base_url="https://router.test/api/v1")
+    client._client = httpx.AsyncClient(
+        base_url=client.base_url, transport=httpx.MockTransport(handler))
+    return client
+
+
+class TestReservationsAreIdentifiedNotCounted:
+    """(b) With A ($0.06) in flight, B ($0.01) completing released A's
+    reservation under the FIFO guard, and C ($0.05) then dispatched — the
+    advisor's $0.111 booked against a $0.10 ceiling."""
+
+    async def test_the_advisors_out_of_order_case(self, rates):
+        costs = {"A": 0.06, "B": 0.01, "C": 0.041}
+        sent: list[str] = []
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            body = json.loads(request.content)
+            tag = body["messages"][1]["content"]
+            sent.append(tag)
+            if tag == "A":
+                await asyncio.sleep(0.3)        # A stays in flight
+            return httpx.Response(200, json={
+                "choices": [{"message": {"content": json.dumps(UNION)},
+                             "finish_reason": "stop"}],
+                "usage": {"prompt_tokens": 1, "completion_tokens": 1,
+                          "cost": costs[tag]}})
+
+        client = _sequenced_client(handler)
+        model = client.get_model("escalation")
+        rates[model] = (0.0, 1e-5)              # worst = max_tokens / 100000
+        client.spend_ceiling = 0.10
+
+        a = asyncio.create_task(
+            client.chat("escalation", "sys", "A", max_tokens=6_000))  # worst 0.06
+        await asyncio.sleep(0.05)               # A is in flight
+        await client.chat("escalation", "sys", "B", max_tokens=1_000)  # 0.01
+        assert client.reserved == pytest.approx(0.06, abs=1e-6), (
+            "B's completion must not release A's reservation")
+
+        with pytest.raises(SpendGuardRefused) as refused:
+            await client.chat("escalation", "sys", "C", max_tokens=5_000)
+        assert refused.value.remaining == pytest.approx(0.03, abs=1e-6)
+        await a
+        # Booked is A + B and can never exceed the ceiling. Under the FIFO
+        # guard this is $0.111 against $0.10 — the advisor's number.
+        assert client.spend == pytest.approx(0.07, abs=1e-6)
+        assert client.spend <= 0.10
+
+
+class TestABlindCallReleasesNothing:
+    """(c) A blind call reserved nothing, so it releases nothing — the old
+    FIFO release let a blind booking consume a priced call's reservation."""
+
+    async def test_a_completing_blind_call_leaves_the_priced_reservation(self, rates):
+        mid_flight = asyncio.Event()
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            body = json.loads(request.content)
+            tag = body["messages"][1]["content"]
+            if tag == "priced":
+                mid_flight.set()
+                await asyncio.sleep(0.3)
+            return httpx.Response(200, json={
+                "choices": [{"message": {"content": json.dumps(UNION)},
+                             "finish_reason": "stop"}],
+                "usage": {"prompt_tokens": 1, "completion_tokens": 1,
+                          "cost": 0.05 if tag == "priced" else 0.001}})
+
+        client = _sequenced_client(handler)
+        priced_model = client.get_model("escalation")
+        rates[priced_model] = (0.0, 1e-5)       # worst 0.05
+        blind_model = client.get_model("engineering")   # no rate: blind
+        client.spend_ceiling = 0.10
+
+        priced = asyncio.create_task(
+            client.chat("escalation", "sys", "priced", max_tokens=5_000))
+        await mid_flight.wait()
+        await client.chat("engineering", "sys", "blind", max_tokens=5_000)
+        assert client.reserved == pytest.approx(0.05, abs=1e-6), (
+            "the blind call must not release the priced reservation")
+        await priced
+        assert client.reserved == 0.0
+
+
+class TestAFailedCallBooksItsOwnWorstCase:
+    """(d) Two calls in flight, the SMALL one fails: the liability is its own
+    worst case, not the other call's."""
+
+    async def test_the_failed_call_keeps_its_own_not_the_others(self, rates):
+        mid_flight = asyncio.Event()
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            body = json.loads(request.content)
+            tag = body["messages"][1]["content"]
+            if tag == "big":
+                mid_flight.set()
+                await asyncio.sleep(0.3)
+                return httpx.Response(200, json={
+                    "choices": [{"message": {"content": json.dumps(UNION)},
+                                 "finish_reason": "stop"}],
+                    "usage": {"prompt_tokens": 1, "completion_tokens": 1,
+                              "cost": 0.06}})
+            return httpx.Response(500, json={"error": {"message": "boom"}})
+
+        client = _sequenced_client(handler)
+        model = client.get_model("escalation")
+        rates[model] = (0.0, 1e-5)
+        client.spend_ceiling = 0.10
+
+        big = asyncio.create_task(
+            client.chat("escalation", "sys", "big", max_tokens=6_000))
+        await mid_flight.wait()
+        with pytest.raises(httpx.HTTPStatusError):
+            await client.chat("escalation", "sys", "small", max_tokens=1_000)
+        assert client.unreconciled_liability == pytest.approx(0.01, abs=1e-6), (
+            "the failure booked its own worst case, not the in-flight call's")
+        assert client.reserved == pytest.approx(0.06, abs=1e-6)
+        await big
+        assert client.spend == pytest.approx(0.06, abs=1e-6)
