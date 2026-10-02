@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1207%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1218%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -725,6 +725,10 @@ API_KEY=                 # optional static bearer token for programmatic access
 
 **Auth priority:** a valid JWT scopes workflows to that user; otherwise an `API_KEY` match grants anonymous access; otherwise the caller must be on loopback. With neither `API_KEY` nor `JWT_SECRET` configured the API serves loopback callers only — remote requests are refused with 403 and a sentence naming the fix — unless `ALLOW_UNAUTHENTICATED_REMOTE=1` is set, which is logged at startup and reported by `/api/health`. `/api/health` is served to everyone either way.
 
+**Accounts are created from this machine only** (Ruling D47): `POST /api/auth/register` serves loopback callers under every authentication setting. A remote caller is served with a credential the owner issued — the `API_KEY`, or a token for an account created from this machine — or under the override; configuring `JWT_SECRET` lets existing accounts log in, it does not open registration to anyone. `REGISTRATION_ENABLED=false` turns registration off entirely.
+
+**The run cap is per process.** `MAX_CONCURRENT_RUNS` bounds the runs one uvicorn process has in flight (the documented command and the Docker image run one). A multi-worker deployment would need a shared store, which nothing here builds.
+
 ## Settings Dashboard
 
 The Settings tab explains what each tier is for, shows a live verified / not-found / not-set badge per model from `/api/health`, and lets you change what can safely change at runtime.
@@ -810,7 +814,7 @@ workflows/                # engineering-rnd, lean, triage-only, triage-classify
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 1207 tests
+tests/                    # 1218 tests
 
 ```
 
@@ -856,7 +860,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-1207 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider. The suite is hermetic wherever it runs — its settings are forced to placeholders and a session guard refuses every non-loopback connection — so it reads the same green on a machine that holds your .env and in CI.
+1218 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider. The suite is hermetic wherever it runs — its settings are forced to placeholders and a session guard refuses every non-loopback connection — so it reads the same green on a machine that holds your .env and in CI.
 
 
 The graph tests are the load-bearing ones: node shape, gate routing, loop bounds and the all-judges exit are all decidable without a provider. An earlier hardcoded sequencer was kept alongside the graph as an equivalence reference and has been retired — once gates could route on failure, a linear engine could no longer represent the pipeline it was supposed to be checking.

@@ -1,0 +1,54 @@
+{
+  "command_id": "ARCH-20261002-113",
+  "status": "DONE",
+  "executed": true,
+  "head_before": "b58b3de",
+  "head_after": "a3bf73d",
+  "arrival": {
+    "parent_id": "ARCH-20261002-112: response present at .orchestration/responses/ARCH-20261002-112.response.json on main (merged b58b3de, PR #137)",
+    "preconditions_present": 3,
+    "transport": "Branch arch/20261002-113-credentials-and-guard cut from origin/main b58b3de, the name taken from the command's deliverable block."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "READING: 'xed /home/jb/autornd-os_clone/.env' — the owner's editor on the file path in its argv. Not a run (convention 26)."
+    },
+    {
+      "n": 2,
+      "result": "PASS: 112's response is on main — b0affc8, merged in b58b3de."
+    },
+    {
+      "n": 3,
+      "result": "COUNT, literal: 1207 passed, 0 failed, network guard 0 attempts."
+    }
+  ],
+  "baseline_suite": "1207 passed before (literal, guard 0); 1218 passed after",
+  "results": {
+    "ruling_first": "D47 committed verbatim in HANDOVER.md's rulings block (after D46's) and notebook §104 BEFORE the code in commit order (3139dc5). grep -n 'Ruling D47' HANDOVER.md docs/handover-review.md shows both.",
+    "clause_1_credentials": "auth.py: POST /api/auth/register refuses every non-loopback peer 403 with a sentence naming how an account comes to exist — under EVERY authentication setting (API_KEY only, JWT_SECRET only, both — test (a) parametrized over all three). /api/auth/login stays public for owner-created accounts; REGISTRATION_ENABLED=false still disables registration entirely. D45's refusal sentence reworded (it named one fix, which the exhibit read as 'setting JWT_SECRET opens the door') and the README's Auth section says the same. Break quoted: 'assert 201 == 403' — the remote stranger registers again.",
+    "clause_2_every_spending_route_passes_the_gate": "The inventory, from grep OpenRouterClient( autornd/api/ — three constructions: routes.py:95 inside _bound_client() (used by _run_workflow_bg, submit_workflow_sync and run_doublecheck_endpoint — all three admitted through _admit_run now); routes.py:414 in estimate_doublecheck, which calls _estimate_cost — local arithmetic, NO call — not gated, and says so in place; and _run_workflow, DELETED per the instruction (reference check recorded: grep -rn '_run_workflow\\b' matched only its own definition). Doublecheck counts against max_concurrent_runs (429 past the cap, nothing spent — the refused request builds no client) and its duplicate is refused 409 (dedupe key: the workflow's own request text). Breaks quoted: 'assert 200 == 429' and 'assert 200 == 409'.",
+    "no_leaked_slot": "Admission is released on every path: if the row's commit or the background scheduling raises, the gate is restored before the error reaches the caller (both submit paths), and doublecheck releases in its finally. Break quoted: 'the failed submission leaked a slot / assert 1 == 0'.",
+    "the_guard_call_by_call": "openrouter.py (instrument repair of D45 (5), no new ruling): a _Reservation token travels with its dispatch and only that call releases it, on reconciliation or on failure. A call that reserved nothing (blind, no ceiling) releases nothing — and a test double that books cost without guarding releases nothing (_account releases nothing at all now). A failed call books its OWN worst case as unreconciled liability. The call ceiling counts every in-flight call, blind included. One reservation per call holds across that call's retries (answered below). Breaks quoted: 'assert 0.0 == 0.06', 'assert 0.0 == 0.05', 'assert 0.06 == 0.01'.",
+    "the_out_of_order_case_both_ways": "The advisor's numbers, the same scenario (ceiling $0.10; A worst $0.06 in flight; B worst $0.01 completes; C worst $0.05 costing $0.041): OLD code (FIFO release restored) — 'C dispatched (not refused)' then 'BudgetExceeded: stopped at $0.1110 (ceiling $0.1000)'. NEW code — C refused before dispatch, booked $0.07, never over the ceiling. $0.111 booked against $0.10, reproduced exactly and refused on the new.",
+    "answers_to_110": "(1) The cap does not need to hold across uvicorn workers: the documented command and the Dockerfile run one process, D45 (6) is read per process, and the README now says so in one sentence ('The run cap is per process'). A multi-worker deployment would need a shared store, which nothing here builds. (2) One reservation per call stands: the provider bills completed generations, and a 400 refused for its response_format and a 429 are refused before any generation — one dispatch's worst case covers what one call can cost, held across the backoff and released by the call's own reconciliation. Falsifier: a record of a refused attempt that was billed; that would make the attempt, not the call, the unit.",
+    "acceptance": "D47 verbatim in HANDOVER.md and the notebook before the code; tests (a)-(f) pass with every break quoted (notebook §104.2); the out-of-order numbers reproduce on the old code and are refused on the new (quoted both ways); every OpenRouterClient in autornd/api/ either passes the gate or is explained (the estimate route makes no call); git diff --stat origin/main -- workflows/ evals/golden/ is empty; no .env* file other than .env.example changed (comments only); no DB schema change; suite green before (1207) and after (1218 — 1217 + 1 count guard red between the tests and the docs commits, the guard naming the new total as designed); verification commands as specified: grep 'Ruling D47' present in both, grep 'OpenRouterClient()' shows only _bound_client and the estimate route, and the suite passes."
+  },
+  "deviations": [
+    "None beyond the ruling's own instruction to delete _run_workflow (the reference check is recorded) and the command's instruction to reword D45's sentence and the README. The reservation-identity change is the command's own instrument repair of D45 (5), explicitly needing no new ruling."
+  ],
+  "questions_for_advisor": [
+    "The doublecheck's dedupe key is the workflow's request text (the gate's unit), so two doublechecks of the same workflow by the same caller are duplicates while different workflows are distinct. If the unit should instead be the workflow id, say so — the gate's key is the request text everywhere else and this keeps one shape."
+  ],
+  "delivery_state": {
+    "branch": "arch/20261002-113-credentials-and-guard",
+    "pr": 138
+  },
+  "commits": {
+    "in_progress": "dc9e59b",
+    "ruling_first": "3139dc5",
+    "behaviour": "48f6534",
+    "tests": "198fd12",
+    "docs_and_counts": "a3bf73d"
+  }
+}

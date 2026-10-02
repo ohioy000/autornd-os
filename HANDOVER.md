@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1207 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
+**Tests:** 1218 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -41,6 +41,8 @@
 > **Ruling D45 (advisor, 2026-10-02) — no open, unbounded spend. (1) With neither API_KEY nor JWT_SECRET configured, the API serves loopback callers only. Any other caller is refused with a sentence that names the fix, unless the operator sets ALLOW_UNAUTHENTICATED_REMOTE=1, which is logged at startup and reported by /api/health. /api/health stays open to everyone. (2) Every API run carries a wall-clock budget and a spend ceiling: run_time_budget_seconds defaults to 1800 and run_spend_ceiling_usd to 0.50, and the owner may change either in .env (G-3). (3) Settings changed at runtime can only tighten: PUT /api/settings and POST /api/profiles/{name} serve loopback callers only, and no token ceiling or budget can be raised above its startup value while the server runs. (4) /api/episodes shows a caller only their own runs. (5) The spend guard holds across concurrent calls, failed calls and reranking. Each call's worst case is reserved before dispatch and released on reconciliation, and a call that fails after dispatch keeps its worst case as unreconciled liability for the rest of the run. (6) No caller can multiply those bounds: at most max_concurrent_runs API runs are in flight at once (default 2; the owner may change it in .env), a submission beyond the cap is refused with 429 and a sentence, and a request identical to one the same caller already has in flight is refused as a duplicate. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md, F6, F9 and review B's finding 4), verified by the advisor: the documented Docker quick start published an unauthenticated endpoint that spends the owner's credits on every interface; API runs had neither the D38 watchdog nor a spend ceiling; /api/episodes exposed every run; PUT /api/settings could raise a token ceiling for every run in flight; concurrent calls each passed one balance check; and nothing capped how many runs a caller could start at once (review A F6: no rate limiting, no queue depth cap, no dedupe). The owner approved default bounds and the end of the open quick start on 2026-10-02; the values are the advisor's, set from the measurements cited beside them, and the owner's to change. Falsifier: an API run that exceeds its spend ceiling or its wall-clock budget, a money-spending request served to an unauthenticated non-loopback caller without the override, a runtime settings change that raises a ceiling, or more API runs in flight than the cap.**
 
 > **Ruling D46 (advisor, 2026-10-02) — an approval means something was checked. (1) A validation verdict with no evidence cannot be green, and an implementation with no deliverable cannot be green; either resolves red, with a cause that names what was missing, and is counted. The resolution of green from red_cause otherwise stands. (2) Every verdict that can block has a consumer. The independent check's do-not-ship ends the run blocked, with its findings. The feasibility review runs after the plan gate and cannot stop a run, so it no longer writes plan blockers; its concerns reach the implementer as considerations a reviewer raised, not as requirements. (3) A check that compared nothing says so: it passes as before, but it is recorded as not checked, and the terminal record lists every check that did not check. (4) Every judge that keeps a loop going writes its reason into the failure log, so the next attempt is told why. D36's plan rules and D43's scope rule are untouched. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md), verified by the advisor: an empty validation object passed (verdicts.py:351); the independent check's verdict had no consumer; feasibility blockers were recorded as plan blockers and handed to the implementer as 'address these' after D43 closed the plan's scope; numbers_consistent reported 'no contradicting values' when it had compared none; and a consistency-only failure looped with no failure-log entry (adapter.py:583). Falsifier: a green verdict with no evidence or no deliverable, a blocking verdict with no consumer, or a loop iteration whose cause is missing from the failure log.**
+
+> **Ruling D47 (advisor, 2026-10-02) — credentials are the owner's to issue. (1) An account is created only from this machine. POST /api/auth/register serves loopback callers only, under every authentication setting, and REGISTRATION_ENABLED=false still turns it off entirely. A remote caller is served only with a credential the owner issued, or under ALLOW_UNAUTHENTICATED_REMOTE=1. A credential the owner issued is the API_KEY, or a token for an account created from this machine. (2) Every API route that can spend is admitted through D45's run gate. No caller can multiply the per-run bounds by calling such a route many times at once. Rationale: the advisor's post-merge review of 110 (2026-10-02), with provider-free probes at main 535a9e0. D45's refusal sentence names one fix: configure API_KEY or JWT_SECRET. Under that fix, /api/auth/register was a public path and was enabled by default. A remote stranger registered (201) and was then served (200) on protected routes, so the server was open to anyone who asked for an account. Separately, POST /api/workflows/{id}/doublecheck built a bounded client per request outside the gate, so concurrent requests multiplied the ceiling. Falsifier: a remote caller without an owner-issued credential or the override who obtains a token or is served a protected route; or more spending API requests in flight than max_concurrent_runs.**
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -304,7 +306,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      72 files, 1207 tests
+tests/                      72 files, 1218 tests
 
 ```
 
@@ -709,13 +711,13 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1207 total)
+### 3.7 Test distribution (1218 total)
 
 
 | file | n | file | n |
 |---|---|---|---|
 | test_all_judges_exit.py | 18 | test_all_workflows_terminate.py | 7 |
-| test_api.py | 33 | test_auth.py | 16 |
+| test_api.py | 41 | test_auth.py | 16 |
 | test_blocked_on.py | 26 | test_budget_stop_scoring.py | 5 |
 | test_budget_transparency.py | 11 | test_citation_demand.py | 11 |
 | test_command_template.py | 38 | test_coverage_shapes.py | 46 |
@@ -745,7 +747,7 @@ is revoked and the warning re-opens with a date.
 | test_schema_wiring.py | 15 | test_scope_rule.py | 3 |
 | test_serving_ledger.py | 7 | test_settings.py | 23 |
 | test_settings_map.py | 5 | test_shipped_examples.py | 15 |
-| test_specialists.py | 11 | test_spend_guard.py | 10 |
+| test_specialists.py | 11 | test_spend_guard.py | 13 |
 | test_structural_roles.py | 13 | test_sweep_budget.py | 21 |
 | test_terminal_on_bound.py | 21 | test_trace_durability.py | 7 |
 | test_triage.py | 10 | test_verdicts.py | 47 |
@@ -793,7 +795,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1207/1207 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1218/1218 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

@@ -11295,3 +11295,111 @@ where it read 2 failed, 1196 passed on arrival.
    because an earlier test had latched the rerank fallback mode (the §6.8
    latch). Sealed with `seal_double`, and every suspect file was then run in
    isolation reading the guard's count: all zero.
+
+## 104. Ruling D47 — credentials are the owner's to issue (advisor, 2026-10-02, carried by ARCH-20261002-113)
+
+> **Ruling D47 (advisor, 2026-10-02) — credentials are the owner's to issue. (1) An account is created only from this machine. POST /api/auth/register serves loopback callers only, under every authentication setting, and REGISTRATION_ENABLED=false still turns it off entirely. A remote caller is served only with a credential the owner issued, or under ALLOW_UNAUTHENTICATED_REMOTE=1. A credential the owner issued is the API_KEY, or a token for an account created from this machine. (2) Every API route that can spend is admitted through D45's run gate. No caller can multiply the per-run bounds by calling such a route many times at once. Rationale: the advisor's post-merge review of 110 (2026-10-02), with provider-free probes at main 535a9e0. D45's refusal sentence names one fix: configure API_KEY or JWT_SECRET. Under that fix, /api/auth/register was a public path and was enabled by default. A remote stranger registered (201) and was then served (200) on protected routes, so the server was open to anyone who asked for an account. Separately, POST /api/workflows/{id}/doublecheck built a bounded client per request outside the gate, so concurrent requests multiplied the ceiling. Falsifier: a remote caller without an owner-issued credential or the override who obtains a token or is served a protected route; or more spending API requests in flight than max_concurrent_runs.**
+
+Carried verbatim to HANDOVER.md's rulings block in the same commit. The
+command's constraints are part of what is executed: registration loopback-only
+under every authentication setting with the refusal sentence naming how the
+owner creates an account; D45's refusal sentence and the README's Auth wording
+re-read so neither implies JWT_SECRET opens registration; every spending route
+through the run gate (the estimate route makes no call and says so); admission
+released on every path; the reservation identified per dispatch (the advisor's
+out-of-order case, $0.111 booked against $0.10, reproduces on the old code and
+is refused on the new); `_run_workflow` deleted with its reference check; and
+110's two questions answered in the response.
+
+Execution record: §104.1–§104.3 below.
+
+### 104.1 What landed
+
+1. **Registration is loopback-only under every authentication setting**
+   (`autornd/api/auth.py`): `POST /api/auth/register` refused 403 for any
+   non-loopback peer with a sentence naming how an account comes to exist;
+   `/api/auth/login` stays public; `REGISTRATION_ENABLED=false` still disables
+   registration entirely. D45's refusal sentence reworded (it named one fix —
+   configure API_KEY or JWT_SECRET — which the exhibit read as "setting
+   JWT_SECRET opens the door") and the README's Auth section now says the same.
+2. **Every spending route passes the run gate** (`autornd/api/routes.py`).
+   The inventory the command asked for, from `grep OpenRouterClient(
+   autornd/api/` — three constructions:
+   - `routes.py:95` — inside `_bound_client()`, the shared bounded factory:
+     used by `_run_workflow_bg` (async submit), `submit_workflow_sync` and
+     `run_doublecheck_endpoint`. All three now pass `_admit_run`;
+     doublecheck's dedupe key is the workflow's own request text (409 for a
+     duplicate the caller already has in flight, 429 past the cap).
+   - `routes.py` `estimate_doublecheck` — the one the command names: it calls
+     `client._estimate_cost`, local arithmetic over the catalogue rate. It
+     makes NO call, so it is not gated, and says so in place.
+   - `_run_workflow` — **deleted** (the command's instruction). Reference
+     check recorded: `grep -rn '_run_workflow\b' --include=*.py` matched only
+     its own definition; no importers, no callers.
+3. **No leaked slot**: admission is released on every path — if the row's
+   commit or the background scheduling raises, the gate is restored before the
+   error reaches the caller (both submit paths), and doublecheck releases in
+   its `finally`.
+4. **The guard holds call by call** (`openrouter.py`, instrument repair of
+   D45 (5), no new ruling): a `_Reservation` token travels with its dispatch
+   and only that call releases it. The old FIFO deque released whatever was
+   oldest — see §104.2 for the number that produced. A call that reserved
+   nothing (blind, no ceiling) releases nothing, and a double that books cost
+   without guarding releases nothing (`_account` no longer releases at all);
+   a failed call books its OWN worst case as liability; the call ceiling
+   counts every in-flight call, blind ones included.
+
+### 104.2 The tests, and each break quoted
+
+Tests (a) in `test_api.py`, (b)–(d) in `test_spend_guard.py`, (e)–(f) in
+`test_api.py` — through the real app and the real client, provider-free.
+
+```
+(a) assert 201 == 403          — the registration gate removed; the remote
+                                 stranger registers again, under all three
+                                 auth settings
+(b) assert 0.0 == 0.06         — the FIFO release restored in _account; B's
+                                 completion released A's reservation
+(c) assert 0.0 == 0.05         — the blind call's release falls through to
+                                 the oldest reservation; the priced one gone
+(d) assert 0.06 == 0.01        — the failure books the in-flight call's worst
+                                 case instead of its own
+(e) assert 200 == 429 / 200 == 409 — the doublecheck gate removed; every
+                                 concurrent check runs and spends
+(f) assert 1 == 0              — the failed submission's slot is never
+                                 released ("the failed submission leaked a
+                                 slot")
+```
+
+**The advisor's out-of-order case, quoted both ways** — the same scenario
+(ceiling $0.10; A worst $0.06 in flight; B worst $0.01 completes; C worst
+$0.05, costing $0.041) on the old code and the new:
+
+```
+old (FIFO release):  C dispatched (not refused)
+                     BudgetExceeded: stopped at $0.1110 (ceiling $0.1000)
+new (identity):      C refused before dispatch; booked $0.07 ≤ $0.10
+```
+
+$0.111 booked against $0.10, reproduced exactly on the old code and refused
+on the new.
+
+### 104.3 110's questions, answered
+
+1. **The cap does not need to hold across uvicorn workers.** The documented
+   uvicorn command and the Dockerfile run one process, and D45 (6) is read per
+   process. The README says so in one sentence ("The run cap is per process").
+   A multi-worker deployment would need a shared store, which nothing here
+   builds.
+2. **One reservation per call stands.** The provider bills completed
+   generations; a 400 refused for its response_format and a 429 are refused
+   before any generation, so one dispatch's worst case covers what one call
+   can cost, and the reservation is held across the backoff and released by
+   the call's own reconciliation. Falsifier: a record showing a refused
+   attempt that was billed — that would make the attempt, not the call, the
+   unit.
+
+Departures: none beyond the ruling's own instruction to delete `_run_workflow`
+(the reference check is in §104.1). Counts re-derived (convention 24): 1218
+collected — 1207 before, +11 (test_api 33→41, test_spend_guard 10→13); README
+badge/Testing/Project Structure and HANDOVER's header/§2.2/§3.7/§4.2.
