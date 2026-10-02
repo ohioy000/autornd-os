@@ -47,11 +47,13 @@
     "EPISODES BY OWNER: GET /api/episodes filters by the caller's user_id whenever one is identified, as /api/workflows does.",
     "THE GUARD HOLDS: _guard_spend reserves each call's worst case before dispatch (spend + reserved + worst <= ceiling, or else SpendGuardRefused), and _account releases the reservation when it records the actual cost. A call can fail after dispatch: an error status that is not retried, a transport error, a timeout, or a cancellation. Such a call keeps its worst case as unreconciled liability for the rest of the run, counted against the ceiling and recorded with its kind. Add no new retries. rerank passes the same guard. No DB schema change: the new accounting fields go into the client's per-run record and into the eval record's field-by-field writer.",
     "TESTS, provider-free: (a) without auth, a non-loopback request is refused and a loopback request is served; /api/health is open; the override serves a remote caller and shows in health. (b) /api/episodes returns only the caller's runs. (c) PUT /api/settings from a non-loopback client is refused. From loopback, raising a ceiling above its startup value is refused and lowering it is accepted. (d) An API run's client and executor carry the default spend ceiling and time budget. (e) With two concurrent calls whose combined worst case exceeds the remaining budget, the second is refused before dispatch. (f) A call that fails after dispatch keeps its worst case against the ceiling and is recorded. (g) rerank is refused when its worst case does not fit. Prove each by breaking, and quote the failures. CI's docker job stays green.",
+    "AMENDMENT (advisor, 2026-10-02, before pickup), from review B's closing scope note and the two parts of its finding 4 this command had not carried. (a) LIVE PROOF: CI's docker job already boots the real container and reads /api/health from the host, which the container sees as a non-loopback caller. It must also POST to /api/workflows with no credentials and assert 403, while /api/health stays 200. That is the one check of D45 against the running server, and it spends nothing. (b) A TRUE WORST CASE: the guard estimates prompt tokens as prompt_chars / CHARS_PER_TOKEN (openrouter.py:368), which is a mean, not a bound. Count them instead as the prompt's UTF-8 byte length plus a fixed chat-template allowance, because a byte-level tokenizer never emits more tokens than bytes. Name the allowance and the measurement behind it. (c) Where a call ceiling is set, check it before dispatch, not after the response (openrouter.py:341).",
     "Free. No provider call."
   ],
   "acceptance_criteria": [
     "D45 is verbatim in HANDOVER.md and the notebook, before the code in commit order.",
     "Tests (a)-(g) pass, each break is quoted, and the docker job is green.",
+    "The docker job's 403 check passes against the running container, and removing the loopback rule makes the job fail (quoted). The byte-bound prompt estimate and the pre-dispatch call ceiling each have a provider-free test.",
     "The README quick start no longer publishes an unauthenticated server. It sets API_KEY in .env, or it names the override and what the override exposes.",
     "`git diff --stat origin/main -- workflows/ evals/golden/` is empty, and no .env* file other than .env.example changed.",
     "Suite green before and after. The PR is opened and delivery_state carries its number."
@@ -74,7 +76,7 @@
     "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
     "commit_style": "conventional"
   },
-  "transport": "Pushed by the advisor: the third of the four free Phase 0-1 commands. Process after 109 merges, since both touch routes.py. The owner approved the default bounds and the end of the open quick start on 2026-10-02 ('2 yes'). Commit the response IN_PROGRESS first.",
+  "transport": "Pushed by the advisor: the third of the four free Phase 0-1 commands. Process after 109 merges, since both touch routes.py. The owner approved the default bounds and the end of the open quick start on 2026-10-02 ('2 yes'). Commit the response IN_PROGRESS first. Amended on 2026-10-02 before pickup: see the AMENDMENT constraint (review B's closing scope note).",
   "assumptions": [
     "The ranker's price is in the provider catalogue that the CLI and the API load (104). If it is not, guard rerank with the existing unpriced-call record and report that; do not change the unpriced-call policy here."
   ],
