@@ -1,0 +1,9 @@
+Q1  ALL HOLD  items[++] 15.875s $0.0030 sprawl=7.2 finish=stop
+Q2  ALL HOLD  items[++] 10.533s $0.0020 sprawl=2.9 finish=stop
+Q3  FAIL      items[---] 18.848s $0.0049 sprawl=3.8 finish=stop
+Q4  FAIL      items[+-++-++] 15.926s $0.0042 sprawl=2.1 finish=stop
+Q5  FAIL      items[+++++++-++] 10.045s $0.0026 sprawl=2.0 finish=stop
+Q6  ALL HOLD  items[++++] 15.121s $0.0025 sprawl=1.5 finish=stop
+IA  FAIL      items[+-+-+-] 10.22s $0.0027 sprawl=0.9 finish=stop
+3/6 golden hold every item · median sprawl 2.5 · total $0.0220
+exit 0
