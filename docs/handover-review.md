@@ -10754,3 +10754,124 @@ unchanged and still true — no test file was added.
    nothing over it. Reported as an empty match set, not as a score
    (convention 28); the baseline's own report is the instrument for that
    record, and it is the one quoted above.
+
+## 100. ARCH-20261002-109: one row per submission, progress as it happens (executor, 2026-10-02)
+
+Instrument repair, not a ruling: the harness concludes exactly what it did
+before. It now writes the conclusion where the caller looks, in time to be
+seen. No verdict semantics, gate routing, loop wiring or prompt text moved;
+no DB schema change (hard rule 11); `workflows/` and `evals/golden/`
+untouched (`git diff --stat origin/main -- workflows/ evals/golden/` empty).
+
+### 100.1 The repair
+
+**One row per submission.** `WorkflowEngine.execute` takes the caller's row —
+`execute(request, workflow=None, user_id=None)`. Passing no row keeps working
+and creates one, with `user_id` when one is known; both submit paths create
+the row with `_get_user_id(request)` and pass it in, so the id returned by
+`POST /api/workflows` and `POST /api/workflows/sync` is the id the run writes.
+`_run_workflow_bg` loads that row and hands it back to the engine. Three
+`Workflow(request=…)` constructions remain and each is first-and-only for its
+submission: `engine/workflow.py:94` (the no-row fallback), `routes.py:152`
+(async submit) and `routes.py:193` (sync submit). `_run_workflow`
+(`routes.py:136`) is unreferenced — recorded reference check: only its
+definition matched — and creates nothing of its own.
+
+**Progress as it happens.** The row is committed before the run starts. Each
+completed node writes its phase record and the row's visible status in a
+transaction of its own, from a chain of tasks the synchronous `on_phase`
+callback schedules — one writer at a time, in node order, so a poll sees
+progress, no writer is blocked for a run's length, and a crash keeps every
+node already paid for. `_NODE_STATUS` is now read: `triage→TRIAGE`,
+`plan/feasibility→PLAN`, `implement/domain_review→IMPLEMENT`,
+`validate→VALIDATE`, `review→REVIEW`; nodes outside that map (context,
+regrounding, checks, build_loop, escalation) leave the status where it is.
+The end-of-run flush writes nothing twice — a `written` flag per save, and a
+retried write never repaints a terminal row.
+
+**The terminal cast cannot lose a result.** `WorkflowStatus(state.status)`
+moved inside the guarded region. A terminal string that is not a member ends
+the row BLOCKED with the raw terminal in `error`, committed.
+
+### 100.2 The tests, and each break quoted
+
+Four tests through the real routes (httpx ASGITransport) against the real
+engine, the real graph and the provider-free double that still bills; the
+database is file-backed, so a "second session" is a second connection and
+what it sees was committed. Each proved by one line broken:
+
+(a) `TestOneRowPerSubmission` — POST returns an id; after the background task
+the GET shows a terminal status and its phases, one Workflow row, and phase
+rows never outnumber the paid calls that produced them. Break: `_run_workflow_bg`
+calls `engine.execute(workflow.request)` without the row —
+
+```
+E       AssertionError: None
+E       assert 'pending' == 'completed'
+```
+
+(b) `TestSubmissionsBelongToTheirCaller` — with `jwt_secret` set, both submit
+paths keep the caller's `user_id` and the caller can list and read the result.
+Break: `submit_workflow` creates its row with `user_id=None` —
+
+```
+E       AssertionError: the async path lost the caller
+E       assert None == 1
+```
+
+(c) `TestProgressIsVisibleMidRun` — a phase written mid-run is visible from a
+second connection before the run ends. Break: the per-node write flushes
+instead of committing —
+
+```
+E       AssertionError: the run had already ended (completed) when the phase was first seen
+E       assert 'completed' not in ('completed', 'blocked', 'escalated')
+```
+
+(d) `TestAnUnknownTerminalKeepsTheResult` — a tmp workflow whose loop exhausts
+into `on_exhausted_status: frobnicate` (which `spec.parse` does not check
+against `TERMINAL_STATUSES`, so it reaches `state.end` unvalidated) ends the
+row BLOCKED, raw terminal in `error`, phases kept, committed on a second
+connection. Break: the guard catches only `OSError`, so the cast's ValueError
+escapes as it did before the repair —
+
+```
+E                   ValueError: 'frobnicate' is not a valid WorkflowStatus
+```
+
+### 100.3 The command's question (rule 7)
+
+No existing test asserted the two-row behaviour or the end-of-run flush —
+the bug was unobserved, not written down. Two nearby tests were checked and
+neither is the bug: `tests/test_workflow.py::test_create_workflow` asserts
+the model's PENDING default on construction (unchanged, green), and
+`tests/test_settings_map.py`'s `count("escalation") == 1` asserts exactly-once
+phase writing across the escalation path (green; it watched one phase's
+count, not the buffer's timing). Nothing asserted `pending_saves` or the
+flush.
+
+### 100.4 Departures, and what execution found
+
+1. **The test double is not fully provider-free — found by these tests.**
+   `make_mock_client` stubs `chat`/`chat_json` and bills, but leaves `rerank`
+   real. A run ingests what it looks up (`research._remember` →
+   `ingest_text`), so a later retrieval in the same run had candidates and
+   probed the provider's rerank API from inside a test — unbilled, 401,
+   caught and falling back, but a provider call. Tests (a)–(d) stub `rerank`
+   locally and make no provider call at all (verified: no `openrouter.ai`
+   line in the run output). The shared double is left as it is and the gap
+   is reported to the advisor: `tests/test_watchdog.py`'s runs, which warm a
+   store, still make that probe.
+2. **The end-of-run drain must precede the terminal, or node status
+   overwrites it.** First implementation drained after the cast and the
+   suite failed 9: the last node's write repainted `completed` as `review`.
+   Fixed by draining before the cast and by making a node's status advance
+   refuse to move a terminal row (`_TERMINAL`).
+3. **`_run_workflow` (`routes.py:136`) left in place**, unreferenced and
+   creating nothing; deleting it is not needed for the acceptance and
+   convention 19 wants the reference check recorded rather than assumed.
+4. **Counts re-derived** (convention 24): 1176 collected, four of them new
+   here. README badge, Testing section and Project Structure comment;
+   HANDOVER's header, §2.2 tree line, §3.7 (test_api.py 21→25) and §4.2.
+   The three count guards failed on the intermediate tree exactly as
+   designed and are green on this one.
