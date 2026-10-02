@@ -3,7 +3,7 @@
   "status": "DONE",
   "executed": true,
   "head_before": "e4b2137",
-  "head_after": null,
+  "head_after": "59372d0",
   "arrival": {
     "parent_id": "ARCH-20261002-106: response present",
     "preconditions_present": 3,
@@ -46,7 +46,7 @@
   ],
   "delivery_state": {
     "branch": "arch/20261002-107-direct-baseline",
-    "pr": null
+    "pr": 121
   },
   "commits": {
     "in_progress": "f85654a",
