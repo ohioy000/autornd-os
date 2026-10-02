@@ -266,3 +266,102 @@ class TestWorkflowEngine:
         workflow = await engine.execute("Task that K3 can fix")
 
         assert workflow.status == WorkflowStatus.COMPLETED
+
+
+@pytest.mark.asyncio
+class TestASkippedIndependentCheckRecordsNoShip:
+    """(c) Ruling D48 (3): a check that did not run carries no approval-shaped
+    value. The skip output records that it was skipped and why, and records NO
+    ship; the gate reads the typed veto — false on a skip, true only when the
+    check ran and said do not ship — and passes. With the check run and ship
+    false, the gate still ends the run blocked with the findings in the reason.
+
+    Driven through GraphExecutor and the real PhaseRunner, and the skip output
+    read off `state.outputs` — the skip makes no model call and returns no
+    responses, so the output is the record it leaves (convention 28: an empty
+    response list writes no phase row, which is why the row cannot be where
+    this is asserted)."""
+
+    @staticmethod
+    def _probe_client(doublecheck: dict) -> OpenRouterClient:
+        client = OpenRouterClient(api_key="test")
+
+        async def _mock(function, system_prompt, user_message, **kwargs):
+            msg = user_message.lower()
+            if "classify" in msg:
+                data = {"domains": ["firmware"], "risk": "high",
+                        "specialists": ["firmware_engineer", "test_engineer"],
+                        "unrecallable": True, "summary": "Signed rollout"}
+            elif function == "independent":
+                data = doublecheck
+            elif "create an implementation plan" in msg:
+                data = PLAN_RESP
+            elif "review this implementation plan" in msg:
+                data = FEASIBILITY_RESP
+            elif "implementation for the following plan" in msg:
+                data = IMPLEMENT_RESP
+            elif "domain perspective" in msg:
+                data = DOMAIN_REVIEW_RESP
+            elif "validate this implementation" in msg:
+                data = VALIDATE_RESP
+            else:
+                data = REVIEW_RESP
+            response = make_mock_response(data, f"mock-{function}")
+            client._account(function, response.cost)
+            return data, response
+
+        client.chat_json = AsyncMock(side_effect=_mock)
+        seal_double(client)
+        client.close = AsyncMock()
+        return client
+
+    async def _drive_probe(self, monkeypatch, doublecheck):
+        from autornd.evals.runner import _isolated_store
+        from autornd.graph.adapter import PhaseRunner
+        from autornd.graph.executor import GraphExecutor
+        from autornd.graph.spec import load
+
+        client = self._probe_client(doublecheck)
+        runner = PhaseRunner(client)
+        spec = load("workflows/independent-check-probe.yaml")
+        with _isolated_store():
+            return await GraphExecutor(
+                spec, runner,
+                {"max_iterations": 5, "escalation_recovery_attempts": 1,
+                 "review_rework_attempts": 1},
+            ).run("Roll signed firmware to 40,000 devices")
+
+    async def test_a_skipped_check_records_no_ship_and_the_gate_passes(
+            self, monkeypatch):
+        from autornd.config import settings
+
+        # The honest condition for a skip: no model distinct from the one
+        # under review. premium unset falls back to the architecture tier, so
+        # that must land on engineering too — then independent_model() is None
+        # and the pass refuses to fake independence.
+        monkeypatch.setattr(settings, "model_premium", "")
+        monkeypatch.setattr(settings, "model_architecture",
+                            "test-provider/test-engineering")
+        state = await self._drive_probe(monkeypatch, {})
+
+        assert state.status == "completed", state.reason
+        skip = state.outputs["independent_check"]
+        assert "ship" not in skip, (
+            "a check that did not run recorded a ship value")
+        assert skip["skipped"] is True
+        assert skip["vetoed"] is False
+        assert "no model available" in skip["reason"]
+        assert "independent_verdict" in state.path, "the gate ran and passed"
+
+    async def test_a_run_that_vetoes_blocks_with_its_findings(self, monkeypatch):
+        from autornd.config import settings
+
+        monkeypatch.setattr(settings, "model_premium", "test/premium-model")
+        state = await self._drive_probe(monkeypatch, {
+            "ship": False, "confidence": "high",
+            "critical_issues": ["R7 value contradicts the schematic"],
+            "recommendations": [], "verdict": "Do not ship."})
+
+        assert state.status == "blocked"
+        assert "Independent check: do not ship" in state.reason
+        assert "R7 value contradicts the schematic" in state.reason

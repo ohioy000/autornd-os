@@ -221,6 +221,41 @@ class TestShippedWorkflow:
                 assert node.check in registry, f"{node.id} names unknown check"
 
 
+class TestAnUncheckedFailureStillDissents:
+    """(a) Ruling D48 (1): a check that compared nothing never turns a fail
+    into a pass. An unchecked PASS is not a dissent; an unchecked FAILURE is,
+    exactly as it was before D46 — 111's constraint [4] made every unchecked
+    check non-blocking, which let a failing check that compared nothing vote
+    the work through."""
+
+    def test_a_failing_unchecked_judge_dissents_and_a_passing_one_does_not(self):
+        r = get_check("judges_agree")(
+            implement=True, validate=True,
+            coverage={"passed": False, "checked": False},
+            consistency={"passed": True, "checked": False},
+        )
+        assert not r.passed
+        assert r.data["dissenting"] == ["coverage"]
+        assert r.data["unchecked"] == ["consistency", "coverage"]
+        assert "coverage is red" in r.detail
+        assert "unchecked: consistency, coverage" in r.detail, (
+            "the detail names both lists")
+
+    async def test_a_run_whose_coverage_fails_unchecked_does_not_converge(self):
+        # No criteria: criteria_addressed compares nothing (checked false)
+        # and fails — and a failing unchecked judge must still hold the loop.
+        plan = {**PLAN, "success_criteria": []}
+        state, runner = await _run({
+            **BASE, "plan": plan,
+            "validate": {"green": True},
+            "escalation": {"requires_human": True}})
+        assert runner.ai_calls.count("implement") > 1, "the loop iterated"
+        judges = state.outputs["judges"]
+        assert "coverage" in judges["dissenting"]
+        assert "coverage" in judges["unchecked"]
+        assert state.status == "blocked", state.reason
+
+
 class TestCriteriaAddressed:
     CRITERIA = [
         "Reconnect loop applies exponential backoff capped at 60s",
@@ -530,7 +565,7 @@ class TestExecutorReproducesThePipeline:
                        "unrecallable": True},
             "review": {"ship": True},
             "independent_check": {
-                "ship": False, "confidence": "high",
+                "ship": False, "vetoed": True, "confidence": "high",
                 "critical_issues": ["Resistor R7 value contradicts the schematic"],
                 "recommendations": [], "verdict": "Do not ship."}})
         assert state.status == "blocked"
@@ -567,7 +602,7 @@ class TestExecutorReproducesThePipeline:
                        "specialists": ["firmware_engineer"],
                        "unrecallable": True},
             "review": {"ship": True},
-            "independent_check": {"ship": True, "confidence": "high",
+            "independent_check": {"ship": True, "vetoed": False, "confidence": "high",
                                   "critical_issues": [],
                                   "verdict": "Independently sound."},
         })

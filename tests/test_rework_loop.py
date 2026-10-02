@@ -124,9 +124,11 @@ class TestTheReworkLoopIsBoundedAndRoutes:
                                  "evidence": ["every criterion is satisfied"]},
             "review": review, "rework_review": review,
             # The ship path runs the independent pass (unrecallable triage)
-            # and its gate — Ruling D46 (2) gave the verdict a consumer, so
-            # the double answers for the node the run reaches.
-            "independent_check": {"ship": True, "confidence": "high",
+            # and its gate — Ruling D46 (2) gave the verdict a consumer, and
+            # D48 (3) made the gate read `vetoed`, which production carries on
+            # both branches — so the double answers for the node it reaches.
+            "independent_check": {"ship": True, "vetoed": False,
+                                  "confidence": "high",
                                   "critical_issues": [], "recommendations": [],
                                   "verdict": "Ship."},
             "triage": {"risk": "high", "domains": ["backend"], "unrecallable": True}})
@@ -215,6 +217,63 @@ class TestFeasibilityConcernsAreConsiderationsNotRequirements:
         assert "not requirements" in prompt
         assert "FEASIBILITY CONCERNS" not in prompt
         assert "address these" not in prompt.lower()
+
+    async def test_the_plans_own_blockers_get_their_own_heading(self):
+        """(b) Ruling D48 (2): a ready plan's own blockers did not stop the
+        plan gate, so they are not requirements — but 111 dropped them from
+        the prompt entirely (106's IA unit carried five). They arrive under
+        their own heading, before the reviewers' considerations and framed the
+        same way. Quote: 'OPEN POINTS THE PLAN ITSELF NAMED (the plan passed
+        its gate with these; not requirements — weigh them; nothing is judged
+        against them):' beside 'CONSIDERATIONS A REVIEWER RAISED (not
+        requirements — weigh them; nothing is judged against them):'."""
+        from unittest.mock import AsyncMock
+
+        from autornd.engine import phases
+        from autornd.models.verdicts import PlanVerdict
+        from autornd.specialists.registry import get_specialists
+        from tests.conftest import make_mock_client
+
+        captured: dict = {}
+        client = make_mock_client({"engineering": {
+            "done": True, "green": True, "red_cause": None,
+            "summary": "Show the drop.", "iteration": 1}})
+        original = client.chat_json.side_effect
+
+        async def capture(*args, **kw):
+            captured.setdefault("prompt", kw.get("user_message") or "")
+            return await original(*args, **kw)
+
+        client.chat_json = AsyncMock(side_effect=capture)
+        plan = PlanVerdict(
+            ready=True, plan="p",
+            blockers=["R7 is provisional until the vibration data lands"],
+            success_criteria=["The drop is shown"])
+        await phases.run_implement(
+            client, "r", plan, get_specialists(["hardware_engineer"]),
+            iteration=1,
+            considerations=["Solid wire is unsuitable under vibration."])
+        prompt = captured["prompt"]
+
+        open_points = ("OPEN POINTS THE PLAN ITSELF NAMED (the plan passed "
+                       "its gate with these; not requirements — weigh them; "
+                       "nothing is judged against them):")
+        considerations = ("CONSIDERATIONS A REVIEWER RAISED (not requirements"
+                          " — weigh them; nothing is judged against them):")
+        assert open_points in prompt
+        assert considerations in prompt
+        assert "R7 is provisional until the vibration data lands" in prompt
+        assert "Solid wire is unsuitable under vibration." in prompt
+        # Each only where it belongs, and the plan's own come first.
+        assert prompt.index(open_points) < prompt.index(considerations)
+        assert prompt.index("R7 is provisional") < prompt.index(considerations)
+        assert prompt.index("Solid wire") > prompt.index(open_points)
+        # The ruled texts this prompt carries are untouched (D36, D43).
+        assert ("If a criterion cannot be honestly satisfied with the "
+                "grounding available, name it in blocked_on") in prompt
+        assert ("Answer the request, and include the plan's falsifiers, kill "
+                "triggers or assumption tables only if the request asks for "
+                "them.") in prompt
 
 
 class TestTheGraphCannotLoopForever:
