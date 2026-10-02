@@ -144,3 +144,23 @@ class TestR5ThePaceBasisIsWritten:
         assert watchdog["pace_basis"] == "node"
         assert watchdog["pace_seconds"] == pytest.approx(0.5, abs=0.15)
         assert "this node's pace" in unit["reason"]
+
+
+class TestChecksNotCheckedOnTheUnitRecord:
+    """(e) Ruling D48 (and 111's first question, answered): the unit record
+    carries checks_not_checked, written field by field from the run's
+    unchecked list. The per-iteration record keeps its own."""
+
+    async def test_the_unit_record_carries_the_run_wide_unchecked_list(
+            self, tmp_path):
+        # No figures on either side: numbers_consistent compares nothing and
+        # says so, and the record must list it rather than lose it.
+        _, (unit,) = await _units(tmp_path, lambda: make_mock_client(_responses(
+            architecture={"plan": "Do the thing plainly."},
+            engineering={"summary": "The drop arithmetic is shown plainly."},
+            judge={"summary": "The drop arithmetic is shown plainly."},
+        )))
+        assert unit["status"] == "completed", unit["reason"]
+        assert unit["checks_not_checked"] == ["consistency"]
+        # The per-iteration record keeps its own list beside it.
+        assert unit["iterations"][-1]["unchecked"] == ["consistency"]

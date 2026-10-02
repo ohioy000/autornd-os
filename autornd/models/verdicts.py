@@ -565,6 +565,19 @@ class DoubleCheckVerdict(BaseModel):
     recommendations: list[str] = Field(default_factory=list)
     verdict: str
 
+    @property
+    def vetoed(self) -> bool:
+        """Ruling D48 (3): the gate's typed veto.
+
+        True only when the check RAN and said do not ship — a computed
+        property, not a field, so the schema and the model's output are
+        unchanged. A skip records no ship at all and vetoes nothing; the gate
+        reads this same path on both branches (`not independent_check.vetoed`),
+        so a skipped check and a shipped one pass, and only a real do-not-ship
+        blocks the run.
+        """
+        return not self.ship
+
 
 class EscalationVerdict(BaseModel):
     root_cause_analysis: str = Field(

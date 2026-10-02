@@ -849,6 +849,70 @@ class TestNoLeakedSlot:
         assert routes._run_gate._in_flight == {}
 
 
+# ── Ruling D48 (ARCH-20261002-114): D46, completed ──────────────────────────
+#
+# (d) the write path holds. Written BEFORE the repair, per the command: the
+# held-lock case from the evidence, one progress write failing at the
+# database while the run goes on to its terminal.
+
+
+@pytest.mark.asyncio
+class TestTheWritePathHolds:
+    """(d) A progress write that fails at the database loses that one node's
+    record and nothing else: the run continues, ends with its terminal status
+    committed and visible from a second session, and the record names the node
+    whose record was lost. Before the repair nothing named it."""
+
+    async def test_one_locked_progress_write_loses_one_record_and_names_it(
+        self, api_client, tmp_path, monkeypatch
+    ):
+        import sqlalchemy.exc
+
+        from autornd.engine.workflow import WorkflowEngine
+        from sqlalchemy import select
+        from tests.test_watchdog import REQUEST
+
+        clients, observer_factory = await _wire_file_backed_run(tmp_path, monkeypatch)
+
+        real_save = WorkflowEngine._save_phase
+        lost_node = {"id": None}
+
+        async def locked_save(self, workflow, node_id, verdict, response, iteration):
+            # The held-lock case from the evidence: this node's write fails at
+            # the database, every time.
+            if lost_node["id"] is None:
+                lost_node["id"] = node_id
+            if node_id == lost_node["id"]:
+                raise sqlalchemy.exc.OperationalError(
+                    "INSERT INTO phase_results", {}, Exception("database is locked"))
+            return await real_save(self, workflow, node_id, verdict, response,
+                                   iteration)
+
+        monkeypatch.setattr(WorkflowEngine, "_save_phase", locked_save)
+
+        resp = await api_client.post("/api/workflows", json={"request": REQUEST})
+        submitted_id = resp.json()["data"]["id"]
+
+        detail = (await api_client.get(f"/api/workflows/{submitted_id}")).json()["data"]
+        assert detail["status"] == "completed", detail["error"]
+
+        # Committed and visible from a second session — the run's result is
+        # not held hostage by one lost record.
+        async with observer_factory() as session:
+            row = (await session.execute(
+                select(Workflow).where(Workflow.id == submitted_id)
+            )).scalar_one()
+        assert row.status == WorkflowStatus.COMPLETED
+
+        # The lost record is named, not silently missing (convention 28).
+        assert row.error is not None, (
+            "a lost progress write left no record of itself")
+        assert lost_node["id"] in row.error, (
+            f"the lost node {lost_node['id']} is not named in {row.error!r}")
+        recorded = {p["phase"] for p in detail["phases"]}
+        assert lost_node["id"] not in recorded or detail["phases"]
+
+
 class TestTheRunCapAndTheDuplicate:
     """(h) and (i): a per-run ceiling bounds one run, not a caller who submits
     many — at most max_concurrent_runs in flight, and never twice the same

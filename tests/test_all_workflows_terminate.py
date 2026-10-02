@@ -35,10 +35,10 @@ def _satisfying_verdicts(**overrides):
         "validate": {"green": True},
         "review": {"ship": True},
         "rework_review": {"ship": True},
-        # Ruling D46 (2): the do-not-ship has a consumer now — the gate after
-        # this node reads `ship`, so a run that reaches the independent pass
-        # answers for it.
-        "independent_check": {"ship": True, "confidence": "high",
+        # Ruling D48 (3): the gate reads `vetoed` — production carries it on
+        # both branches (the verdict's computed property, the skip's record),
+        # so the double must too (convention 22).
+        "independent_check": {"ship": True, "vetoed": False, "confidence": "high",
                               "critical_issues": [], "recommendations": [],
                               "verdict": "Ship."},
     }

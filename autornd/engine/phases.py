@@ -766,6 +766,19 @@ Address this specific failure in your implementation."""
     feedback += render_validate_evidence(evidence or [])
     feedback += render_review_findings(review_findings or [])
 
+    # Ruling D48 (2): the plan's own blockers did not stop the plan gate, so
+    # they are not requirements either — but 111 dropped them from the prompt
+    # entirely (106's IA unit carried five of them). They arrive under their
+    # own heading, before the reviewers' considerations and framed the same
+    # way: weigh them; nothing is judged against them. Feasibility's concerns
+    # never appear here, and these never appear there.
+    open_points_block = ""
+    if plan.blockers:
+        open_points_block = f"""
+
+OPEN POINTS THE PLAN ITSELF NAMED (the plan passed its gate with these; not requirements — weigh them; nothing is judged against them):
+{chr(10).join(f'- {b}' for b in plan.blockers)}"""
+
     # Ruling D46 (2): feasibility's concerns are a reviewer's considerations
     # now. The old heading — "FEASIBILITY CONCERNS (from domain specialist
     # review — address these):" — was a requirements channel opening after
@@ -804,7 +817,7 @@ Success criteria:
 
 If a criterion cannot be honestly satisfied with the grounding available, name it in blocked_on rather than producing something that satisfies it on paper.
 Answer the request, and include the plan's falsifiers, kill triggers or assumption tables only if the request asks for them.
-{feasibility_block}
+{open_points_block}{feasibility_block}
 {feedback}
 {context_block}
 

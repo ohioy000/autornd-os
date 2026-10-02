@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1218 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
+**Tests:** 1225 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -43,6 +43,8 @@
 > **Ruling D46 (advisor, 2026-10-02) — an approval means something was checked. (1) A validation verdict with no evidence cannot be green, and an implementation with no deliverable cannot be green; either resolves red, with a cause that names what was missing, and is counted. The resolution of green from red_cause otherwise stands. (2) Every verdict that can block has a consumer. The independent check's do-not-ship ends the run blocked, with its findings. The feasibility review runs after the plan gate and cannot stop a run, so it no longer writes plan blockers; its concerns reach the implementer as considerations a reviewer raised, not as requirements. (3) A check that compared nothing says so: it passes as before, but it is recorded as not checked, and the terminal record lists every check that did not check. (4) Every judge that keeps a loop going writes its reason into the failure log, so the next attempt is told why. D36's plan rules and D43's scope rule are untouched. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md), verified by the advisor: an empty validation object passed (verdicts.py:351); the independent check's verdict had no consumer; feasibility blockers were recorded as plan blockers and handed to the implementer as 'address these' after D43 closed the plan's scope; numbers_consistent reported 'no contradicting values' when it had compared none; and a consistency-only failure looped with no failure-log entry (adapter.py:583). Falsifier: a green verdict with no evidence or no deliverable, a blocking verdict with no consumer, or a loop iteration whose cause is missing from the failure log.**
 
 > **Ruling D47 (advisor, 2026-10-02) — credentials are the owner's to issue. (1) An account is created only from this machine. POST /api/auth/register serves loopback callers only, under every authentication setting, and REGISTRATION_ENABLED=false still turns it off entirely. A remote caller is served only with a credential the owner issued, or under ALLOW_UNAUTHENTICATED_REMOTE=1. A credential the owner issued is the API_KEY, or a token for an account created from this machine. (2) Every API route that can spend is admitted through D45's run gate. No caller can multiply the per-run bounds by calling such a route many times at once. Rationale: the advisor's post-merge review of 110 (2026-10-02), with provider-free probes at main 535a9e0. D45's refusal sentence names one fix: configure API_KEY or JWT_SECRET. Under that fix, /api/auth/register was a public path and was enabled by default. A remote stranger registered (201) and was then served (200) on protected routes, so the server was open to anyone who asked for an account. Separately, POST /api/workflows/{id}/doublecheck built a bounded client per request outside the gate, so concurrent requests multiplied the ceiling. Falsifier: a remote caller without an owner-issued credential or the override who obtains a token or is served a protected route; or more spending API requests in flight than max_concurrent_runs.**
+
+> **Ruling D48 (advisor, 2026-10-02) — D46, completed. (1) A check that compared nothing never turns a fail into a pass. The judges fold lists every unchecked check. An unchecked check that passed is not a dissent; an unchecked check that failed is a dissent, as it was before D46. This corrects the advisor's command 111, whose constraint [4] made every unchecked check non-blocking. D46 (3) says such a check 'passes as before', and never let a failure through. (2) A ready plan's own blockers did not stop the plan gate, so they are not requirements either. They reach the implementer under a heading that names them as the plan's own, beside the reviewers' considerations and framed the same way: weigh them; nothing is judged against them. D46 (2) moved feasibility's concerns out of plan.blockers but did not decide what the implementer sees of the plan's own blockers, and 111 dropped them without a ruling. (3) A check that did not run carries no approval-shaped value. A skipped independent check records that it was skipped and why, and records no ship. The gate after it reads a typed veto, which is true only when the check ran and said do not ship. D36's plan rules and D43's scope rule are untouched. Rationale: the advisor's post-merge review of 111 (2026-10-02). By the advisor's own command, a failing check that compared nothing had become non-blocking in the fold. 106's IA unit carried 5 blockers of the plan's own, which 111 stopped showing the implementer. The skipped independent check wrote ship: true. Falsifier: a run that converges with a failing check in the fold; a ready plan's own blocker missing from the implement prompt; or a ship value recorded by a check that did not run.**
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -306,7 +308,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      72 files, 1218 tests
+tests/                      72 files, 1225 tests
 
 ```
 
@@ -711,22 +713,22 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1218 total)
+### 3.7 Test distribution (1225 total)
 
 
 | file | n | file | n |
 |---|---|---|---|
 | test_all_judges_exit.py | 18 | test_all_workflows_terminate.py | 7 |
-| test_api.py | 41 | test_auth.py | 16 |
+| test_api.py | 42 | test_auth.py | 16 |
 | test_blocked_on.py | 26 | test_budget_stop_scoring.py | 5 |
 | test_budget_transparency.py | 11 | test_citation_demand.py | 11 |
 | test_command_template.py | 38 | test_coverage_shapes.py | 46 |
 | test_direct_baseline.py | 3 | test_doc_corpora.py | 8 |
-| test_docs.py | 11 | test_engine.py | 6 |
+| test_docs.py | 11 | test_engine.py | 8 |
 | test_env_ignore.py | 6 | test_evals.py | 73 |
 | test_evidence_shape.py | 14 | test_failure_path_terminal.py | 18 |
 | test_figure_parsing.py | 10 | test_forced_reasoning.py | 3 |
-| test_golden_keys.py | 9 | test_graph.py | 85 |
+| test_golden_keys.py | 9 | test_graph.py | 87 |
 | test_green_resolution.py | 16 | test_guards_can_fail.py | 9 |
 | test_handoff_scheduler.py | 4 | test_handover_truth.py | 8 |
 | test_hermetic_suite.py | 9 | test_iteration_dissent.py | 8 |
@@ -742,8 +744,8 @@ is revoked and the warning re-opens with a date.
 | test_research.py | 37 | test_response_files.py | 2 |
 | test_results_log.py | 10 | test_retry_reconciliation.py | 13 |
 | test_review_composition.py | 28 | test_review_quorum.py | 3 |
-| test_rework_loop.py | 19 | test_routing.py | 63 |
-| test_run_record.py | 6 | test_runtime_dependencies.py | 1 |
+| test_rework_loop.py | 20 | test_routing.py | 63 |
+| test_run_record.py | 7 | test_runtime_dependencies.py | 1 |
 | test_schema_wiring.py | 15 | test_scope_rule.py | 3 |
 | test_serving_ledger.py | 7 | test_settings.py | 23 |
 | test_settings_map.py | 5 | test_shipped_examples.py | 15 |
@@ -795,7 +797,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1218/1218 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1225/1225 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
