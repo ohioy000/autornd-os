@@ -216,10 +216,11 @@ def judges_agree(**judges: Any) -> Result:
         return Result(False, "no judges to fold — refusing to call that agreement")
 
     def checked(value: Any) -> bool:
-        """Ruling D46 (3): a judge that compared nothing is not a dissent.
+        """Ruling D46 (3): did this judge compare anything?
 
-        Its own record says checked false; counting it red would loop the
-        work forever on a comparison that never happened.
+        Its record says checked false. Ruling D48 (1): that keeps it out of
+        the "judges that checked" count and lists it, but a false verdict is a
+        dissent however it was reached — only a pass needs to have checked.
         """
         if isinstance(value, dict):
             return bool(value.get("checked", True))
@@ -233,13 +234,18 @@ def judges_agree(**judges: Any) -> Result:
         return bool(passed if passed is not None else value)
 
     not_checked = sorted(name for name, value in judges.items() if not checked(value))
+    # Ruling D48 (1): a judge dissents when its verdict is false, WHETHER OR
+    # NOT it checked. An unchecked pass is not a dissent (its verdict is
+    # true); an unchecked failure is, exactly as it was before D46 — the
+    # correction to 111's constraint [4], which let a failing check that
+    # compared nothing vote the work through.
     dissenting = sorted(
-        name for name, value in judges.items()
-        if checked(value) and not verdict(value))
+        name for name, value in judges.items() if not verdict(value))
     if dissenting:
         return Result(
             False,
-            "not agreed — " + ", ".join(f"{n} is red" for n in dissenting),
+            "not agreed — " + ", ".join(f"{n} is red" for n in dissenting)
+            + (f"; unchecked: {', '.join(not_checked)}" if not_checked else ""),
             green=False, dissenting=dissenting, judges=sorted(judges),
             unchecked=not_checked,
         )

@@ -741,15 +741,17 @@ class PhaseRunner:
         classified request fail for want of configuration.
         """
         if self.client.independent_model() is None:
-            # `ship` is the gate's routing value, not an approval: a skipped
-            # pass is no veto, and `skipped` plus `reason` say plainly that no
-            # check happened. The gate after this node reads `ship`, so the
-            # skip record carries the path — a gate that read a path this
-            # branch never wrote would raise (hard rule 3). The command
-            # assumed the skip lived in the node's `when:`; it lives here.
+            # Ruling D48 (3): a check that did not run carries no
+            # approval-shaped value — there is no `ship` here at all. The gate
+            # reads the typed veto, false on a skip and true only when the
+            # check ran and said do not ship; `skipped` and `reason` say
+            # plainly that no check happened. (111's skip wrote ship: true —
+            # an approval recorded by a check that did not run.) The command
+            # 111 evidence assumed the skip lived in the node's `when:`; it
+            # lives here.
             return {
                 "skipped": True,
-                "ship": True,
+                "vetoed": False,
                 "reason": ("no model available for an independent pass that is "
                            "not the engineering model itself"),
             }, []

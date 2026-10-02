@@ -275,6 +275,10 @@ class ResultsLog:
             ],
             "path": run.path,
             "iterations": run.iterations,
+            # Ruling D48 (and 111's first question, answered): every check
+            # that did not check, on the unit record beside the per-iteration
+            # list that keeps its own. Written field by field like the rest.
+            "checks_not_checked": run.checks_not_checked,
             "verdicts": run.verdicts,
         })
 
@@ -473,6 +477,10 @@ class ScenarioRun:
     stop_reason: str | None = None
     # One entry per build-loop iteration; see PhaseRunner.iterations.
     iterations: list[dict[str, Any]] = field(default_factory=list)
+    # Ruling D48 (111's first question, answered): every check that did not
+    # check, run-wide. The per-iteration record keeps its own list; this is
+    # the unit's. A measured empty list, not an absent field (convention 28).
+    checks_not_checked: list[str] = field(default_factory=list)
     # Lookups the provider refused during this unit. A unit that scored zero
     # with refusals is a poisoned reading, not a bad model.
     refused_lookups: int = 0
@@ -903,6 +911,13 @@ async def run_scenario(
         status=str(getattr(state, "status", "") or ""),
         stop_reason=getattr(state, "stop_reason", None),
         iterations=list(getattr(runner, "iterations", []) or []),
+        # Ruling D48: the run-wide unchecked list — the union across the
+        # iteration records, which each carry their own (111's first answer).
+        checks_not_checked=sorted({
+            name
+            for entry in (getattr(runner, "iterations", []) or [])
+            for name in (entry.get("unchecked") or [])
+        }),
         refused_lookups=_research.refused_lookups(),
         normalised_verdicts=_verdicts.normalisations(),
         normalised_by_kind=_verdicts.normalisations_by_kind(),

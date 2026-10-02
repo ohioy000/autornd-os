@@ -340,7 +340,10 @@ nodes:
   - id: independent_verdict
     kind: gate
     when: triage.unrecallable
-    condition: independent_check.ship == true
+    # Ruling D48 (3): the gate reads a typed veto, true only when the check
+    # ran and said do not ship — so a skip (which records no ship at all)
+    # passes, and a real do-not-ship blocks. The same path on both branches.
+    condition: not independent_check.vetoed
     depends_on: [independent_check]
     on_fail: blocked
     on_fail_reason: "Independent check: do not ship"
