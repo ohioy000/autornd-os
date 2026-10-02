@@ -64,7 +64,13 @@ RESPONSES = {
                     "done": True, "green": True, "red_cause": None,
                     "summary": "Backoff is capped at 60s with jitter applied."},
     "judge": {"concerns": [], "critical": False, "green": True,
-              "red_cause": None, "evidence": [], "ship": True, "findings": [],
+              "red_cause": None,
+              # Ruling D46 (1): an empty assessment cannot be green — this
+              # reply used to carry "evidence": [], which is the bug the
+              # ruling names. A real assessment has something behind it.
+              "evidence": ["Backoff is capped at 60s with jitter, the one "
+                           "criterion the plan declares"],
+              "ship": True, "findings": [],
               "verdict": "Ship."},
 }
 

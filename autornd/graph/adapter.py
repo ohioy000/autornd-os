@@ -190,6 +190,28 @@ class PhaseRunner:
         if self.on_phase:
             self.on_phase(node.id, verdict, responses, state.iteration)
 
+    def _log_failure(self, entry: dict[str, Any]) -> None:
+        """One failure-log entry per iteration (Ruling D46 (4)).
+
+        A blocking review, a blocked criterion and a red fold are one failed
+        attempt, not three: a later write in the same iteration folds its
+        cause into the entry the iteration already has, so the next attempt
+        reads one account of why it is going round again.
+        """
+        if (self.failure_log
+                and self.failure_log[-1].get("iteration")
+                == entry.get("iteration")):
+            current = self.failure_log[-1]
+            causes = [c for c in (current.get("red_cause"),
+                                  entry.get("red_cause")) if c]
+            current["red_cause"] = "; ".join(causes)
+            for key in ("evidence", "blocked_on", "review_findings"):
+                extra = entry.get(key) or []
+                if extra:
+                    current[key] = list(current.get(key) or []) + list(extra)
+            return
+        self.failure_log.append(entry)
+
     # ── node kinds ────────────────────────────────────────────────────────
 
     async def run_ai(self, node: Node, state: ExecutionState) -> Any:
@@ -337,7 +359,7 @@ class PhaseRunner:
             summary = getattr(implement, "summary", None)
             if summary is None and isinstance(implement, dict):
                 summary = implement.get("summary", "")
-            self.failure_log.append({
+            self._log_failure({
                 "iteration": state.iteration,
                 "implement_summary": str(summary or ""),
                 "red_cause": (
@@ -397,13 +419,14 @@ class PhaseRunner:
 
     async def _phase_feasibility_second_pass(self, node: Node, state: ExecutionState):
         # Same: dead under the loop, kept for variant workflows only.
-        verdict, responses = await phases.run_plan_feasibility(
+        responses, considerations = await phases.run_plan_feasibility(
             self.client, state.request, self._triage(state),
             state.outputs.get("plan_second_pass"),
             self._specialists(state), self.context,
         )
         plan2 = state.outputs.get("plan_second_pass")
         return {"reviewed": len(responses),
+                "feasibility_blockers": list(considerations),
                 "blockers": list(getattr(plan2, "blockers", None) or [])}, responses
 
     async def _reground_lookup(self, state: ExecutionState) -> Result:
@@ -459,17 +482,19 @@ class PhaseRunner:
 
     async def _phase_feasibility(self, node: Node, state: ExecutionState):
         plan = state.outputs["plan"]
-        before = len(plan.blockers)
-        responses = await phases.run_plan_feasibility(
+        responses, considerations = await phases.run_plan_feasibility(
             self.client, state.request, self._triage(state), plan,
             self._specialists(state), self.context,
         )
-        # Feasibility mutates the plan's blockers rather than producing a
-        # verdict of its own; the gate downstream reads plan.ready. What it
-        # appended is recorded apart (R7, ARCH-20261001-101): the extend
-        # adds at the end, so its own blockers are the tail.
-        return {"reviewed": len(responses), "blockers": list(plan.blockers),
-                "feasibility_blockers": list(plan.blockers[before:])}, responses
+        # Ruling D46 (2): feasibility runs after the plan gate and cannot stop
+        # a run, so its concerns are its OWN output now — never plan blockers,
+        # where they were misrecorded as the architect's and handed to the
+        # implementer as requirements. The key keeps R7's record shape
+        # (the run record reads feasibility_blockers); the channel's meaning
+        # is the prompt heading, which calls them considerations.
+        return {"reviewed": len(responses),
+                "feasibility_blockers": list(considerations),
+                "blockers": list(plan.blockers)}, responses
 
     async def _phase_implement(self, node: Node, state: ExecutionState):
         lead = self._resolve_who(node, state)
@@ -521,6 +546,15 @@ class PhaseRunner:
         # node's output only after the phase returns), so it is present on every
         # iteration after the first and absent on the first — which is exactly
         # the produce-then-revise gate the ruling requires.
+        # Ruling D46 (2): the domain specialists' concerns reach implement as
+        # considerations a reviewer raised — feasibility's own output, never
+        # plan blockers and never requirements.
+        feasibility = state.outputs.get("feasibility") or {}
+        considerations: list[str] = []
+        if isinstance(feasibility, dict):
+            raw = (feasibility.get("feasibility_blockers")
+                   or feasibility.get("considerations") or [])
+            considerations = [str(c) for c in raw]
         prior = state.outputs.get("implement")
         prior_summary = getattr(prior, "summary", None)
         if prior_summary is None and isinstance(prior, dict):
@@ -540,6 +574,7 @@ class PhaseRunner:
             resolution_directive=self.resolution_directive,
             context=self.context,
             primary_domain=None,      # the lead is already resolved
+            considerations=considerations,
             max_tokens=self._max_tokens(node),
         )
         return verdict, responses
@@ -574,26 +609,14 @@ class PhaseRunner:
             max_tokens=self._max_tokens(node),
             function=self._tier(node, state),
         )
-        # Record any iteration that failed, for any judge's reason. This used
-        # to fire only on a red validate, which was sufficient while the loop
-        # exited on validate alone. It is not now: the fold keeps iterating when
-        # the implementation is red and the validator is green, and in that case
-        # nothing was written here — so the next attempt read a stale entry, or
-        # none, and was told nothing about why it was going round again.
-        if not verdict.green or not implement.green:
-            self.failure_log.append({
-                "iteration": state.iteration,
-                "implement_summary": implement.summary,
-                "red_cause": verdict.red_cause or implement.red_cause,
-                "evidence": verdict.evidence,
-                # B3's invariant: the autopsy reads the failure log, so an
-                # honest refusal travels with it — escalation must be able to
-                # see what the implementer said it could not satisfy.
-                "blocked_on": list(getattr(implement, "blocked_on", None) or []),
-            })
-
-        # Validate closes an iteration, so this is where one is complete enough
-        # to record. Cost is a delta on the client's running total, which counts
+        # Ruling D46 (4): whenever the judges fold refuses convergence, the
+        # next attempt is told why — naming EVERY judge that refused, with its
+        # conflicts or misses, whether or not validate and implement are red.
+        # Before this the entry fired only on a red validate or a red
+        # implement, so a consistency-only or coverage-only failure looped
+        # with no failure-log entry at all (review B finding 9). Validate
+        # closes an iteration, so this is where one is complete enough to
+        # record; cost is a delta on the client's running total, which counts
         # every path including research and rerank.
         spend = self.client.spend
         # Which judge blocked the exit. Two things were wrong with the first
@@ -610,6 +633,34 @@ class PhaseRunner:
         coverage_passed = coverage.get("passed")
         consistency_passed = consistency.get("passed")
         coverage_abstained = coverage.get("abstained", [])
+
+        def _judge_line(name: str, out: dict) -> str:
+            detail = str(out.get("detail") or "").strip()
+            return f"{name}: {detail}" if detail else name
+
+        refusals: list[str] = []
+        if not implement.green:
+            refusals.append(
+                f"implement: {implement.red_cause or 'red'}")
+        if not verdict.green:
+            refusals.append(
+                f"validate: {verdict.red_cause or 'red'}")
+        if coverage_passed is False:
+            refusals.append(_judge_line("coverage", coverage))
+        if consistency_passed is False:
+            refusals.append(_judge_line("consistency", consistency))
+        if refusals:
+            self._log_failure({
+                "iteration": state.iteration,
+                "implement_summary": implement.summary,
+                "red_cause": "; ".join(refusals),
+                "evidence": list(verdict.evidence or []),
+                # B3's invariant: the autopsy reads the failure log, so an
+                # honest refusal travels with it — escalation must be able to
+                # see what the implementer said it could not satisfy.
+                "blocked_on": list(getattr(implement, "blocked_on", None) or []),
+            })
+
         judged = {
             "implement": implement.green,
             "validate": verdict.green,
@@ -620,6 +671,11 @@ class PhaseRunner:
             "iteration": state.iteration,
             "dissenting": sorted(name for name, green in judged.items()
                                  if green is False),
+            # Ruling D46 (3): every check that compared nothing, run-wide —
+            # the terminal iteration's record lists them.
+            "unchecked": sorted(
+                name for name, out in state.outputs.items()
+                if isinstance(out, dict) and out.get("checked") is False),
             "coverage_passed": coverage_passed,
             "coverage_abstained_count": len(coverage_abstained),
             "consistency_passed": consistency_passed,
@@ -659,7 +715,7 @@ class PhaseRunner:
         # blocked the run sat unread — the same defect as §15.1's evidence, one
         # phase later.
         if not verdict.ship:
-            self.failure_log.append({
+            self._log_failure({
                 "iteration": state.iteration,
                 "implement_summary": state.outputs["implement"].summary,
                 "red_cause": f"Review blocked: {verdict.verdict}".strip(),
@@ -685,8 +741,15 @@ class PhaseRunner:
         classified request fail for want of configuration.
         """
         if self.client.independent_model() is None:
+            # `ship` is the gate's routing value, not an approval: a skipped
+            # pass is no veto, and `skipped` plus `reason` say plainly that no
+            # check happened. The gate after this node reads `ship`, so the
+            # skip record carries the path — a gate that read a path this
+            # branch never wrote would raise (hard rule 3). The command
+            # assumed the skip lived in the node's `when:`; it lives here.
             return {
                 "skipped": True,
+                "ship": True,
                 "reason": ("no model available for an independent pass that is "
                            "not the engineering model itself"),
             }, []

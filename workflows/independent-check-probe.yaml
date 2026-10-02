@@ -63,3 +63,11 @@ nodes:
   - {id: independent_check, kind: ai, when: "triage.unrecallable",
      tier: independent, prompt: doublecheck, schema: DoubleCheckVerdict,
      depends_on: [review_clean]}
+
+  # Ruling D46 (2): the do-not-ship above used to end here unread. It now
+  # ends the run blocked with its findings in the reason (_gate_detail reads
+  # the verdict) — a terminal, not a route — and carries the node's own
+  # `when:` so a skipped check cannot raise on a path it never wrote.
+  - {id: independent_verdict, kind: gate, when: "triage.unrecallable",
+     condition: "independent_check.ship == true", depends_on: [independent_check],
+     on_fail: blocked, on_fail_reason: "Independent check: do not ship"}

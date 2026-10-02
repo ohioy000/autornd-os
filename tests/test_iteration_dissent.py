@@ -57,7 +57,11 @@ async def _run_validate(state, *, validate_green):
     runner = PhaseRunner(client=OpenRouterClient(api_key="test"))
     verdict = ValidateVerdict(
         green=validate_green,
-        red_cause=None if validate_green else "criterion 4 fails")
+        red_cause=None if validate_green else "criterion 4 fails",
+        # Ruling D46 (1): a green with nothing behind it is the bug the
+        # ruling names, so the fixture carries the assessment it claims.
+        evidence=(["criterion 1: PASS — the check ran"] if validate_green
+                  else ["criterion 4: FAIL — the totals disagree"]))
     response = ModelResponse(content="{}", model="m", prompt_tokens=1,
                              completion_tokens=1, cost=0.0)
     with patch("autornd.engine.phases.run_validate",
@@ -117,3 +121,66 @@ async def test_the_stale_fold_is_not_consulted():
                                "dissenting": ["validate"], "detail": "stale"}
     record = await _run_validate(state, validate_green=True)
     assert record["dissenting"] == []
+
+
+# ── Ruling D46 (ARCH-20261002-111) ──────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_a_check_that_compared_nothing_is_listed_in_the_record():
+    """(d) Ruling D46 (3): the run's record lists every check that did not
+    check — a reader sees the comparison that never happened."""
+    state = _state(coverage_passed=True, consistency_passed=True,
+                   implement_green=True)
+    state.outputs["consistency"] = {"conflicts": [], "passed": True,
+                                    "detail": "", "checked": False}
+    record = await _run_validate(state, validate_green=True)
+    assert record["unchecked"] == ["consistency"]
+    assert record["dissenting"] == []
+
+
+@pytest.mark.asyncio
+async def test_a_consistency_only_failure_is_logged_naming_the_judge():
+    """(e) Ruling D46 (4): the fold refuses convergence on a coverage miss or
+    a consistency conflict too, and the next attempt is told why — whether or
+    not validate and implement are red (review B finding 9)."""
+    state = _state(coverage_passed=True, consistency_passed=False,
+                   implement_green=True)
+    runner = PhaseRunner(client=OpenRouterClient(api_key="test"))
+    verdict = ValidateVerdict(
+        green=True, red_cause=None,
+        evidence=["criterion 1: PASS — the check ran"])
+    response = ModelResponse(content="{}", model="m", prompt_tokens=1,
+                             completion_tokens=1, cost=0.0)
+    with patch("autornd.engine.phases.run_validate",
+               new=AsyncMock(return_value=(verdict, response))):
+        await runner._phase_validate(Node(id="validate", kind="ai"), state)
+    assert len(runner.failure_log) == 1
+    entry = runner.failure_log[0]
+    assert "consistency" in entry["red_cause"], entry["red_cause"]
+    assert "validate" not in entry["red_cause"]
+    assert "implement" not in entry["red_cause"]
+
+
+@pytest.mark.asyncio
+async def test_one_entry_per_iteration_not_two():
+    """(e) A failed attempt is one failure: a second write in the same
+    iteration folds its cause in rather than appending the dissent twice."""
+    state = _state(coverage_passed=False, consistency_passed=False,
+                   implement_green=False)
+    runner = PhaseRunner(client=OpenRouterClient(api_key="test"))
+    verdict = ValidateVerdict(
+        green=True, red_cause=None,
+        evidence=["criterion 1: PASS — the check ran"])
+    response = ModelResponse(content="{}", model="m", prompt_tokens=1,
+                             completion_tokens=1, cost=0.0)
+    node = Node(id="validate", kind="ai")
+    with patch("autornd.engine.phases.run_validate",
+               new=AsyncMock(return_value=(verdict, response))):
+        await runner._phase_validate(node, state)
+        await runner._phase_validate(node, state)
+    assert len(runner.failure_log) == 1
+    entry = runner.failure_log[0]
+    assert "coverage" in entry["red_cause"]
+    assert "consistency" in entry["red_cause"]
+    assert "implement" in entry["red_cause"]

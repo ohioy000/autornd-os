@@ -115,6 +115,8 @@ class TestTheIndependentCheckProbe:
         assert spec.ids == [
             "triage", "context", "plan", "implement", "validate",
             "review", "review_clean", "independent_check",
+            # Ruling D46 (2): the verdict's gate — a consumer at last.
+            "independent_verdict",
         ]
 
     def test_there_is_no_loop_and_no_escalation(self, spec):

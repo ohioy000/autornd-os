@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1191 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
+**Tests:** 1198 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -39,6 +39,8 @@
 
 
 > **Ruling D45 (advisor, 2026-10-02) — no open, unbounded spend. (1) With neither API_KEY nor JWT_SECRET configured, the API serves loopback callers only. Any other caller is refused with a sentence that names the fix, unless the operator sets ALLOW_UNAUTHENTICATED_REMOTE=1, which is logged at startup and reported by /api/health. /api/health stays open to everyone. (2) Every API run carries a wall-clock budget and a spend ceiling: run_time_budget_seconds defaults to 1800 and run_spend_ceiling_usd to 0.50, and the owner may change either in .env (G-3). (3) Settings changed at runtime can only tighten: PUT /api/settings and POST /api/profiles/{name} serve loopback callers only, and no token ceiling or budget can be raised above its startup value while the server runs. (4) /api/episodes shows a caller only their own runs. (5) The spend guard holds across concurrent calls, failed calls and reranking. Each call's worst case is reserved before dispatch and released on reconciliation, and a call that fails after dispatch keeps its worst case as unreconciled liability for the rest of the run. (6) No caller can multiply those bounds: at most max_concurrent_runs API runs are in flight at once (default 2; the owner may change it in .env), a submission beyond the cap is refused with 429 and a sentence, and a request identical to one the same caller already has in flight is refused as a duplicate. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md, F6, F9 and review B's finding 4), verified by the advisor: the documented Docker quick start published an unauthenticated endpoint that spends the owner's credits on every interface; API runs had neither the D38 watchdog nor a spend ceiling; /api/episodes exposed every run; PUT /api/settings could raise a token ceiling for every run in flight; concurrent calls each passed one balance check; and nothing capped how many runs a caller could start at once (review A F6: no rate limiting, no queue depth cap, no dedupe). The owner approved default bounds and the end of the open quick start on 2026-10-02; the values are the advisor's, set from the measurements cited beside them, and the owner's to change. Falsifier: an API run that exceeds its spend ceiling or its wall-clock budget, a money-spending request served to an unauthenticated non-loopback caller without the override, a runtime settings change that raises a ceiling, or more API runs in flight than the cap.**
+
+> **Ruling D46 (advisor, 2026-10-02) — an approval means something was checked. (1) A validation verdict with no evidence cannot be green, and an implementation with no deliverable cannot be green; either resolves red, with a cause that names what was missing, and is counted. The resolution of green from red_cause otherwise stands. (2) Every verdict that can block has a consumer. The independent check's do-not-ship ends the run blocked, with its findings. The feasibility review runs after the plan gate and cannot stop a run, so it no longer writes plan blockers; its concerns reach the implementer as considerations a reviewer raised, not as requirements. (3) A check that compared nothing says so: it passes as before, but it is recorded as not checked, and the terminal record lists every check that did not check. (4) Every judge that keeps a loop going writes its reason into the failure log, so the next attempt is told why. D36's plan rules and D43's scope rule are untouched. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md), verified by the advisor: an empty validation object passed (verdicts.py:351); the independent check's verdict had no consumer; feasibility blockers were recorded as plan blockers and handed to the implementer as 'address these' after D43 closed the plan's scope; numbers_consistent reported 'no contradicting values' when it had compared none; and a consistency-only failure looped with no failure-log entry (adapter.py:583). Falsifier: a green verdict with no evidence or no deliverable, a blocking verdict with no consumer, or a loop iteration whose cause is missing from the failure log.**
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -288,7 +290,7 @@ autornd/
     templates/dashboard.html  single-file chat + workflows + settings UI
 
 workflows/
-  engineering-rnd.yaml   ★★ the flagship pipeline, 28 nodes, 4 loops (§3.1)
+  engineering-rnd.yaml   ★★ the flagship pipeline, 29 nodes, 4 loops (§3.1)
   lean.yaml                 10 nodes — cheaper variant, one loop
   triage-only.yaml          2 nodes — triage + grounding (research measurement)
   triage-classify.yaml   ★  1 node — triage alone. Exists so calibration costs
@@ -302,7 +304,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      71 files, 1191 tests
+tests/                      71 files, 1198 tests
 
 ```
 
@@ -444,7 +446,7 @@ idempotent across phases.
 
 ## 3. CURRENT STATE & SOURCE OF TRUTH
 
-### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (28 nodes)
+### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (29 nodes)
 
 **The file is the source of truth; this table is generated from it.** A
 hand-copied YAML lived here for twelve blueprints and drifted — it still
@@ -707,7 +709,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1191 total)
+### 3.7 Test distribution (1198 total)
 
 
 | file | n | file | n |
@@ -722,10 +724,10 @@ is revoked and the warning re-opens with a date.
 | test_env_ignore.py | 6 | test_evals.py | 73 |
 | test_evidence_shape.py | 14 | test_failure_path_terminal.py | 18 |
 | test_figure_parsing.py | 10 | test_forced_reasoning.py | 3 |
-| test_golden_keys.py | 9 | test_graph.py | 83 |
+| test_golden_keys.py | 9 | test_graph.py | 85 |
 | test_green_resolution.py | 16 | test_guards_can_fail.py | 9 |
 | test_handoff_scheduler.py | 4 | test_handover_truth.py | 8 |
-| test_iteration_dissent.py | 5 | test_judge_tier.py | 11 |
+| test_iteration_dissent.py | 8 | test_judge_tier.py | 11 |
 | test_knowledge.py | 41 | test_lead_review.py | 9 |
 | test_live_wiring.py | 7 | test_node_token_ceilings.py | 8 |
 | test_phase_timing.py | 3 | test_preflight.py | 30 |
@@ -737,7 +739,7 @@ is revoked and the warning re-opens with a date.
 | test_repeat_and_fit_rule.py | 15 | test_research.py | 37 |
 | test_response_files.py | 2 | test_results_log.py | 10 |
 | test_retry_reconciliation.py | 13 | test_review_composition.py | 28 |
-| test_review_quorum.py | 3 | test_rework_loop.py | 17 |
+| test_review_quorum.py | 3 | test_rework_loop.py | 19 |
 | test_routing.py | 63 | test_run_record.py | 6 |
 | test_runtime_dependencies.py | 1 | test_schema_wiring.py | 15 |
 | test_scope_rule.py | 3 | test_serving_ledger.py | 7 |
@@ -791,7 +793,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1191/1191 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1198/1198 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

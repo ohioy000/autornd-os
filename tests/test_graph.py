@@ -167,7 +167,9 @@ class TestShippedWorkflow:
         assert [n.id for n in spec.execution_order()] == [
             "triage", "context", "regrounding_loop", "feasibility",
             "plan_ready", "verify_grounding", "build_loop", "review", "review_clean",
-            "independent_check",
+            # Ruling D46 (2): the independent verdict's gate follows the
+            # check that produces it — the verdict finally has a consumer.
+            "independent_check", "independent_verdict",
         ]
 
     def test_the_independent_pass_is_conditional_and_last(self):
@@ -247,7 +249,12 @@ class TestCriteriaAddressed:
 
     def test_no_criteria_is_a_failure_not_a_pass(self):
         """An empty criteria list must never read as 'everything passed'."""
-        assert not get_check("criteria_addressed")([], "anything").passed
+        r = get_check("criteria_addressed")([], "anything")
+        assert not r.passed
+        # Ruling D46 (3): with no criteria there is nothing to check against —
+        # unchanged verdict, recorded as NOT CHECKED so the fold does not loop
+        # the work for a comparison that could not happen.
+        assert r.checked is False
 
 
 class TestNumbersConsistent:
@@ -270,6 +277,17 @@ class TestNumbersConsistent:
         r = get_check("numbers_consistent")("cap at 60s, use 4 workers",
                                             "sets max_interval to 60s")
         assert r.passed
+
+    def test_no_shared_unit_passes_but_says_it_compared_nothing(self):
+        """Ruling D46 (3): a check that compared nothing says so. It passes
+        exactly as before — reporting absence as conflict would be a different
+        check — but it is recorded as NOT CHECKED, and the fold treats it as
+        non-blocking."""
+        r = get_check("numbers_consistent")("no figures at all",
+                                            "nothing numeric here either")
+        assert r.passed
+        assert r.checked is False
+        assert "compared nothing" in r.detail
 
 
 class TestTotalsReconcile:
@@ -499,6 +517,27 @@ class TestExecutorReproducesThePipeline:
         assert state.outputs["review_clean"]["passed"] is False
         assert "Heatsink undersized for 45 W" in state.outputs["review_clean"]["reason"]
         assert "Review found blocking issues" in state.outputs["review_clean"]["reason"]
+
+    async def test_a_do_not_ship_ends_the_run_blocked_with_its_findings(self):
+        """Ruling D46 (2): the independent check's verdict had no consumer —
+        the run could complete after the one reviewer that sees unrecallable
+        work said not to ship. It blocks now, findings and all, and it is a
+        terminal, not a route: a do-not-ship is not an iteration."""
+        state, runner = await _run({
+            **BASE, "validate": {"green": True},
+            "triage": {"risk": "high", "domains": ["firmware"],
+                       "specialists": ["firmware_engineer"],
+                       "unrecallable": True},
+            "review": {"ship": True},
+            "independent_check": {
+                "ship": False, "confidence": "high",
+                "critical_issues": ["Resistor R7 value contradicts the schematic"],
+                "recommendations": [], "verdict": "Do not ship."}})
+        assert state.status == "blocked"
+        assert "Independent check: do not ship" in state.reason
+        assert "Resistor R7 value contradicts the schematic" in state.reason
+        assert "build_loop" not in runner.ai_calls, (
+            "the gate must not route a do-not-ship into a loop")
 
     async def test_the_gate_costs_nothing(self):
         """It is a gate, not a call. Free checks exist to avoid paid ones."""

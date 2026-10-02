@@ -103,7 +103,8 @@ class TestReviewFindingsReachTheNextAttempt:
 class TestTheReworkLoopIsBoundedAndRoutes:
     async def test_a_blocked_review_reworks_rather_than_ending(self):
         state, runner = await _run({
-            **BASE, "validate": {"green": True},
+            **BASE, "validate": {"green": True,
+                                 "evidence": ["every criterion is satisfied"]},
             "review": {"ship": False, "verdict": "Do not ship.",
                        "findings": [{"lens": "test", "severity": "critical",
                                      "detail": "Test 4 false-passes"}]},
@@ -119,15 +120,23 @@ class TestTheReworkLoopIsBoundedAndRoutes:
             return {"ship": calls["n"] > 1, "verdict": "ok", "findings": []}
 
         state, runner = await _run({
-            **BASE, "validate": {"green": True},
+            **BASE, "validate": {"green": True,
+                                 "evidence": ["every criterion is satisfied"]},
             "review": review, "rework_review": review,
+            # The ship path runs the independent pass (unrecallable triage)
+            # and its gate — Ruling D46 (2) gave the verdict a consumer, so
+            # the double answers for the node the run reaches.
+            "independent_check": {"ship": True, "confidence": "high",
+                                  "critical_issues": [], "recommendations": [],
+                                  "verdict": "Ship."},
             "triage": {"risk": "high", "domains": ["backend"], "unrecallable": True}})
         assert state.status == "completed"
         assert "independent_check" in state.path, "the ship path resumed"
 
     async def test_rework_that_exhausts_reaches_escalation(self):
         state, runner = await _run({
-            **BASE, "validate": {"green": True},
+            **BASE, "validate": {"green": True,
+                                 "evidence": ["every criterion is satisfied"]},
             "review": {"ship": False, "verdict": "no", "findings": []},
             "escalation": {"requires_human": True}})
         assert "escalation" in state.path
@@ -136,13 +145,76 @@ class TestTheReworkLoopIsBoundedAndRoutes:
     async def test_review_calls_are_bounded(self):
         """No unbounded cycle exists: one review plus the rework budget."""
         state, runner = await _run({
-            **BASE, "validate": {"green": True},
+            **BASE, "validate": {"green": True,
+                                 "evidence": ["every criterion is satisfied"]},
             "review": {"ship": False, "verdict": "no", "findings": []},
             "escalation": {"requires_human": True}},
             settings={"max_iterations": 5, "escalation_recovery_attempts": 3,
                       "review_rework_attempts": 2})
         reviews = runner.ai_calls.count("review") + runner.ai_calls.count("rework_review")
         assert reviews <= 1 + 2 + 3, f"review ran {reviews} times, unbounded?"
+
+
+class TestFeasibilityConcernsAreConsiderationsNotRequirements:
+    """(c) Ruling D46 (2): feasibility runs after the plan gate and cannot
+    stop a run, so its concerns no longer write plan blockers — where they
+    were misrecorded as the architect's and reached the implementer as
+    'address these' after D43 closed the plan's scope. They travel in
+    feasibility's own output and arrive as considerations a reviewer raised."""
+
+    async def test_they_never_write_plan_blockers(self):
+        from autornd.engine import phases
+        from autornd.models.verdicts import PlanVerdict, TriageVerdict
+        from autornd.specialists.registry import get_specialists
+        from tests.conftest import make_mock_client
+
+        hard = "Solid wire is unsuitable under vibration."
+        client = make_mock_client({"engineering": {
+            "feasible": True, "concerns": ["flex fatigue"], "blockers": [hard]}})
+        plan = PlanVerdict(ready=True, plan="Show the drop.",
+                           blockers=["the architect's own"],
+                           success_criteria=["The drop is shown"])
+        triage = TriageVerdict(domains=["hardware"], risk="medium",
+                               specialists=["hardware_engineer", "test_engineer"],
+                               summary="s")
+        _responses, concerns = await phases.run_plan_feasibility(
+            client, "r", triage, plan,
+            get_specialists(["hardware_engineer", "test_engineer"]), "")
+        assert concerns == [hard, hard]              # one per reviewer
+        assert plan.blockers == ["the architect's own"], (
+            "the architect's blockers are the architect's")
+
+    async def test_the_implement_prompt_calls_them_considerations(self):
+        from unittest.mock import AsyncMock
+
+        from autornd.engine import phases
+        from autornd.models.verdicts import PlanVerdict
+        from autornd.specialists.registry import get_specialists
+        from tests.conftest import make_mock_client
+
+        captured: dict = {}
+        client = make_mock_client({"engineering": {
+            "done": True, "green": True, "red_cause": None,
+            "summary": "Show the drop.", "iteration": 1}})
+        original = client.chat_json.side_effect
+
+        async def capture(*args, **kw):
+            captured.setdefault("prompt", kw.get("user_message") or "")
+            return await original(*args, **kw)
+
+        client.chat_json = AsyncMock(side_effect=capture)
+        plan = PlanVerdict(ready=True, plan="p", blockers=[],
+                           success_criteria=["The drop is shown"])
+        await phases.run_implement(
+            client, "r", plan, get_specialists(["hardware_engineer"]),
+            iteration=1,
+            considerations=["Solid wire is unsuitable under vibration."])
+        prompt = captured["prompt"]
+        assert "Solid wire is unsuitable under vibration." in prompt
+        assert "CONSIDERATIONS A REVIEWER RAISED" in prompt
+        assert "not requirements" in prompt
+        assert "FEASIBILITY CONCERNS" not in prompt
+        assert "address these" not in prompt.lower()
 
 
 class TestTheGraphCannotLoopForever:
