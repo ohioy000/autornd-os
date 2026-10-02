@@ -1,0 +1,92 @@
+{
+  "command_id": "ARCH-20261002-108",
+  "parent_id": "ARCH-20261002-107",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Put the 2026-10-02 outside review on the record and freeze the scoreboard (Ruling D44). The golden keys are versioned, every key change is scored against every run side by side, and two independent hand readings are the primary measure of correctness.",
+  "evidence": [
+    "docs/reviews/2026-10-02-consultant-reviews.md (advisor-written, on this branch) records two outside reviews of the architect's status report, verbatim, with the advisor's verification of every code claim against main at 4fda54f. The owner's go for Phases 0 and 1, 2026-10-02: 'give the command to start phase 0-1'.",
+    "evals/golden/SOURCE.md, 'Key repairs', lists five repairs, each driven by reading the answers being scored and applied to every run: four fixed false negatives, one a false positive. The 107 headline (6 of 6) was computed under a key widened after reading those answers (review A, F1).",
+    "README.md lines 112-156 report research economics for per-sector lookups: '~4800 (4 separate lookups) | 7/8 | $0.72' and 'roughly one sector per 800 tokens'. autornd/knowledge/research.py:76 sets MAX_LOOKUPS = 1, which bundles every blocking gap into one lookup. That is stale measurement presented as current (review A, F3; convention 24)."
+  ],
+  "scope": {
+    "include": [
+      "tests/test_golden_keys.py",
+      "evals/golden/score_trace.py (print the key version only)",
+      "evals/golden/baseline.py (print and record the key version only)",
+      "README.md (the research-economics passage only)",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "evals/golden/keys.json, score.py, versions.json and SOURCE.md: advisor-written.",
+      "docs/reviews/: advisor-written.",
+      "autornd/ and workflows/: no harness change."
+    ]
+  },
+  "constraints": [
+    "RULING FIRST, VERBATIM, in HANDOVER.md and the notebook, before the code in commit order.",
+    "RULING D44, COMMITTED VERBATIM: 'Ruling D44 (advisor, 2026-10-02) — the scoreboard is frozen and versioned. The golden keys (evals/golden/keys.json, scored by evals/golden/score.py) are frozen at version 1, commit 4fda54f, and evals/golden/versions.json records each version's file hashes. Any change to either file is a new version: it gets a versions.json entry naming the change and what triggered it, and every recorded run is re-scored under it and reported beside its scores under the earlier versions. A defect that a reading finds in a key is fixed only as a new version, after the run that found it has been reported under the old one. Two independent hand readings are the primary measure of correctness; the keys are a screen that flags disagreements, and a disagreement between a reading and a key is reported, never settled by editing the key inside the run that found it. Every report states the key version beside each score, and places each caveat beside the claim it qualifies. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md, finding F1): five key repairs were driven by the answers being scored, and 107's headline was computed under a key widened after reading those answers. The pipeline scores did not move and two readers confirmed the direct answers, but the procedure could not tell a better answer from a drifting key. Falsifier: a score reported without its key version, or a key change without a versions.json entry and a side-by-side re-score.'",
+    "THE VERSION GUARD (tests/test_golden_keys.py): the sha256 of evals/golden/keys.json and evals/golden/score.py must equal the hashes evals/golden/versions.json records for keys.json's \"version\". A missing entry or a mismatch fails, with a sentence that names D44. Prove it by breaking: change one byte of keys.json in a copy and quote the failure.",
+    "THE KEY VERSION IN EVERY SCORE: score_trace.py's summary line, and baseline.py's report and trace header, carry the key version read from keys.json ('key v1'). Quote both outputs on the 106 and 107 traces.",
+    "README: date the per-sector research figures as measured under a per-sector lookup design the code no longer runs. Name the commit or ruling that bundled lookups (MAX_LOOKUPS = 1), and state the current design in one sentence. Do not re-measure (no spend). Keep tests/test_docs.py green; if a README guard pins those numbers, say how it reads them.",
+    "Free. No provider call."
+  ],
+  "acceptance_criteria": [
+    "D44 is verbatim in HANDOVER.md and the notebook, before the code in commit order.",
+    "The version guard passes on the tree and fails on a one-byte change in a copy; the failure is quoted.",
+    "score_trace.py and baseline.py print 'key v1', and the outputs are quoted.",
+    "The README passage names its design and its date, and tests/test_docs.py stays green.",
+    "`git diff --stat origin/main -- autornd/ workflows/ evals/golden/keys.json evals/golden/score.py evals/golden/versions.json evals/golden/SOURCE.md docs/reviews/` is empty.",
+    "Suite green before and after. The PR is opened and delivery_state carries its number."
+  ],
+  "verification": [
+    {
+      "command": "grep -n 'Ruling D44' HANDOVER.md docs/handover-review.md",
+      "expected": "Present in both."
+    },
+    {
+      "command": "python3 evals/golden/score.py | tail -1",
+      "expected": "SELF-TEST PASSED"
+    },
+    {
+      "command": "python3 evals/golden/score_trace.py docs/traces/106-golden-arm-b.jsonl | tail -1",
+      "expected": "A summary line that names key v1."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass."
+    }
+  ],
+  "rollback": "Revert the merge. The keys themselves do not change in this command.",
+  "deliverable": {
+    "branch": "arch/20261002-108-review-and-d44",
+    "branch_created_by": "advisor",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+  "transport": "Pushed by the advisor with its advisor-written files (docs/reviews/2026-10-02-consultant-reviews.md, evals/golden/versions.json) and carried to main. This is the first of four free commands (108-111): Phases 0 and 1 of the plan the owner authorised on 2026-10-02. Process 108, 109, 110 and 111 in order, each after the previous one merges. Commit the response IN_PROGRESS first.",
+  "assumptions": [
+    "keys.json and score.py on main still hash to versions.json's version-1 entry, the state frozen at 4fda54f. If they do not, report BLOCKED: the advisor reconciles before anything is scored."
+  ],
+  "questions": [],
+  "preconditions": [
+    {
+      "command": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "expected": "No output."
+    },
+    {
+      "command": "git fetch --prune origin && sha256sum evals/golden/keys.json evals/golden/score.py",
+      "expected": "17b66368... and 95a9dfc1..., the hashes in evals/golden/versions.json."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green; record the count."
+    }
+  ]
+}
