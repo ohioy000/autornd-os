@@ -1,9 +1,9 @@
 {
   "command_id": "ARCH-20261002-114",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "executed": true,
   "head_before": "778f75a",
-  "head_after": null,
+  "head_after": "5a088f1",
   "arrival": {
     "parent_id": "ARCH-20261002-113: response present at .orchestration/responses/ARCH-20261002-113.response.json on main (merged 778f75a, PR #138)",
     "preconditions_present": 3,
@@ -12,7 +12,7 @@
   "preconditions": [
     {
       "n": 1,
-      "result": "READINGS, no run in flight: two argv matches — 'xed /home/jb/autornd-os_clone/.env' (the owner's editor, the same reading as 108-113) and '/usr/share/kiro/kiro /tmp/claude-1000/-home-jb-autornd-os/.../ARCHITECT-HANDOFF.md' (an IDE holding a scratchpad under /tmp; the path contains the project name, which is what the pattern matched). Neither is an autornd or evals run; the pattern cannot tell a run from a path (convention 26)."
+      "result": "READINGS, no run in flight: two argv matches — the owner's editor on the .env path, and '/usr/share/kiro/kiro /tmp/claude-1000/-home-jb-autornd-os/.../ARCHITECT-HANDOFF.md' (an IDE session whose scratchpad path contains the project name). Neither is an autornd or evals run. That same outside session later pasted its global AGENTS.md template over the protocol mid-work — see deviations."
     },
     {
       "n": 2,
@@ -23,13 +23,35 @@
       "result": "COUNT, literal: 1218 passed, 0 failed, network guard 0 attempts."
     }
   ],
-  "baseline_suite": "1218 passed before (literal, guard 0)",
-  "results": {},
-  "deviations": [],
-  "questions_for_advisor": [],
+  "baseline_suite": "1218 passed before (literal, guard 0); 1225 passed after",
+  "results": {
+    "ruling_first": "D48 committed verbatim in HANDOVER.md's rulings block (after D47's) and notebook §105 BEFORE the code in commit order (00d04be).",
+    "the_fold": "judges_agree: a judge dissents when its verdict is false, WHETHER OR NOT it checked; an unchecked pass is not a dissent; the unchecked list is listed and the fail detail names both lists ('not agreed — coverage is red; unchecked: consistency, coverage'). Test (a) proves it at the check and through a real run whose coverage fails unchecked — the run iterates and does not converge. Break quoted: 'assert not True' — 111's rule restored reads 'all 2 judges that checked agree' and the run converges ('AssertionError: the loop iterated').",
+    "the_plans_own_blockers": "The implement prompt renders them under the ruling's heading verbatim — 'OPEN POINTS THE PLAN ITSELF NAMED (the plan passed its gate with these; not requirements — weigh them; nothing is judged against them):' — before the reviewers' considerations ('CONSIDERATIONS A REVIEWER RAISED (not requirements — weigh them; nothing is judged against them):'), each text only under its own. Test (b); break quoted: 'assert OPEN POINTS THE PLAN ITSELF NAMED … in Produce the implementation …' (111's drop again). D36's block and D43's text byte-identical — sha256 of both exact lines matches origin/main (dda69b69…, eb5fdda1…).",
+    "the_skip": "The skip output is {'skipped': true, 'vetoed': false, 'reason': …} with NO ship; DoubleCheckVerdict.vetoed is a computed property (not ship) — no schema field; and independent_verdict reads 'not independent_check.vetoed' in both workflow files (the grammar's own unary form), so the gate sees the same path on both branches. Test (c) drives the probe through the real adapter twice: no model distinct from the one under review → the skip carries no ship and the run completes; the check run and ship false → blocked with the findings in the reason. Break quoted: 'assert 'blocked' == 'completed'' (the skip vetoes what it never checked).",
+    "the_write_path": "A progress write that fails at the database rolls the session back, re-reads the row (the handler reads nothing from the expired instance — workflow.id is captured before the try), records which node's record was lost in the terminal error, and lets the run continue; the item is consumed so the drain never retries or re-raises it, and the terminal commits in every case. Test (d) was WRITTEN BEFORE THE REPAIR and quoted failing on the code before it (the command's requirement): 'AssertionError: a lost progress write left no record of itself / assert None is not None' — the run completed and committed its terminal, the lost triage write named nowhere. Its break reproduces that failure exactly.",
+    "the_record": "The unit record gains checks_not_checked, written field by field from the run's unchecked list (union across the iteration records, which keep their own) — 111's first question, answered. Test (e): a run whose plan and implementation share no unit writes ['consistency'] beside the per-iteration list. Break quoted: 'assert [] == ['consistency']'.",
+    "acceptance": "D48 verbatim in HANDOVER.md and the notebook before the code (commit order: IN_PROGRESS 2d51d71, ruling 00d04be, then the code). Tests (a)-(e) pass, every break quoted, and (d) is quoted failing on the code before the repair. D36's block and D43's text byte-identical (sha256 of both exact lines equals origin/main's). Excluded: no verdict schema field added, removed or renamed (the veto is a computed property); no loop wiring or other gate touched; no DB schema change. Verification as specified: grep 'Ruling D48' present in HANDOVER.md and docs/handover-review.md; D36/D43 hashes equal. Suite green before (1218) and after (1225), network guard 0."
+  },
+  "deviations": [
+    "AGENTS.md WAS OVERWRITTEN MID-SESSION (17:53:57) BY AN OUTSIDE SESSION'S TOOLING — the kiro IDE seen in precondition 1 pasted its GLOBAL rules template over the protocol: ~105 lines referencing rules/workflow.md and rules/verification.md (neither exists here), deleting the protocol and turning five guard tests red (none of them this work's). Per the owner's direction — 'fix the guards within the agent file to reflect how we have and had been doing things but keep some of the new context as well as long as it doesn't conflict with our SOP' — the protocol was restored as the spine and the paste's non-conflicting discipline (read before search; parallel reads yes/writes no; stop when a call starts repeating; match the owner's shell; a tool call is never prose) was folded in under a new '## Operating discipline' heading that names where it came from. The paste's precedence line (a project-level file overriding 'this global file') was dropped as a direct conflict with the protocol's own rule. Protocol guards: 20 passed on the merged file.",
+    "FOUR SCRIPTED DOUBLES CARRIED ship WHERE PRODUCTION NOW CARRIES vetoed (test_graph x2, test_all_workflows_terminate, test_rework_loop) — the ruling moved the gate's path and the fixtures were stale (convention 22). Rule 7: the rule was right, the fixtures wrong. No test asserted 'a failing unchecked check is non-blocking': 111 tested only the unchecked-PASS case and the listing, which is exactly where the advisor's correction had untested room to land.",
+    "THE SKIP WRITES NO PHASE ROW — it returns zero responses, and a phase row is written per response (109). Its record is the output in state.outputs; test (c) reads it there. The engine-level version of the test found nothing at all (StopIteration, measured). Whether the API path should persist a row for a zero-response node is left open.",
+    "Counts re-derived (convention 24): 1225 collected — 1218 before, +7 (test_api 41→42, test_engine 6→8, test_graph 85→87, test_rework_loop 19→20, test_run_record 6→7)."
+  ],
+  "questions_for_advisor": [
+    "The skip's record exists only in state.outputs: a zero-response node writes no phase row (109's per-response write), so an API caller cannot see why the independent pass skipped. Should a zero-response node persist one row carrying its output, or is the eval record's verdicts block the record of record?",
+    "The AGENTS.md paste-over came from tooling outside this repo's channel (an IDE global template). If that session is the advisor's, its writes should probably be fenced to its own scratchpad — one instruction of this command would have been undone silently had the guards not existed."
+  ],
   "delivery_state": {
     "branch": "arch/20261002-114-d46-completed",
     "pr": null
   },
-  "commits": {}
+  "commits": {
+    "in_progress": "2d51d71",
+    "ruling_first": "00d04be",
+    "behaviour": "336212f",
+    "tests": "9874c2d",
+    "docs_counts_protocol": "5a088f1"
+  }
 }
