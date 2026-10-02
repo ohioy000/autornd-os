@@ -1,0 +1,35 @@
+{
+  "command_id": "ARCH-20261002-112",
+  "status": "IN_PROGRESS",
+  "executed": true,
+  "head_before": "ef4e266",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20261002-111: response present at .orchestration/responses/ARCH-20261002-111.response.json on main (merged 535a9e0; delivery_state commit ba03c79 carried in ef4e266)",
+    "preconditions_present": 3,
+    "transport": "Branch arch/20261002-112-hermetic-suite cut from origin/main ef4e266, the name taken from the command's deliverable block."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "READING: one line matched — 'xed /home/jb/autornd-os_clone/.env', the owner's text editor, matched on the file path in its argv. Not a run; the same instrument limit recorded in 108, 109 and 110 (the pattern cannot tell a run from a path, convention 26)."
+    },
+    {
+      "n": 2,
+      "result": "PASS: 111's response is on main — git log origin/main -- .orchestration/responses/ARCH-20261002-111.response.json returns ba03c79."
+    },
+    {
+      "n": 3,
+      "result": "COUNT, literal, in the executor's own shell (which exports the owner's pins): 2 failed, 1196 passed — tests/test_preflight_gate.py::TestTheGateLetsAPassingConfigurationThrough::test_all_ok_proceeds_and_the_header_records_every_finding and ::TestTheTargetsAreWhatTheClientCalls::test_judge_falls_back_and_independent_ignores_a_premium_pin. This is exactly the finding the command repairs."
+    }
+  ],
+  "baseline_suite": "2 failed, 1196 passed literally (the finding); 1198 passed scrubbed (the CI-equivalent reading)",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20261002-112-hermetic-suite",
+    "pr": null
+  },
+  "commits": {}
+}
