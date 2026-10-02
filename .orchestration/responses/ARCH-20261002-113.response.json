@@ -42,7 +42,7 @@
   ],
   "delivery_state": {
     "branch": "arch/20261002-113-credentials-and-guard",
-    "pr": null
+    "pr": 138
   },
   "commits": {
     "in_progress": "dc9e59b",
