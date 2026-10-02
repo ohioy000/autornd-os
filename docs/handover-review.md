@@ -10473,3 +10473,39 @@ Suite 1145 to 1162.
    completion rate.
 2. **The guard bounds per call, not per run.** A run can still spend up
    to its cap; it cannot cross it.
+
+## 96. Ruling D43 — the request sets the scope (advisor, 2026-10-01, carried by ARCH-20261001-105)
+
+> **Ruling D43 (advisor, 2026-10-01) — the request sets the scope. Every success criterion must test something the request asks for: an output, figure, constraint, format or verdict the request states, or a fact the grounding supplies to answer it. A criterion may not add specifics the request did not ask for, such as component values, part numbers, presentation layout, or the exact form of a derivation. The deliverable answers the request without the plan's own devices (falsifiers, kill triggers, assumption tables) unless the request asks for them. D36's four rules keep governing how the plan is reasoned; they do not add to what the answer must contain. Rationale: ARCH-20261001-102. Q6's plan turned a two-gate logic question into an LED-drive design and validate failed a correct answer on that invented criterion; Q3's coverage check failed a correct derivation against a criterion dictating its exact inline arithmetic; Q5's deliverable carried a plan falsifier declaring "the sizing/assumption is INVALID" in a leak-test procedure; and answers ran a median of about 32 times their model answer’s length. Falsifier: on the next golden run, a shipped answer that fails its key on an item the request asked for and no criterion covered.**
+
+Execution record: the plan and implement prompt changes follow in the commits after this section's ruling commit.
+
+### 96.1 Execution record (executor, 2026-10-02)
+
+**Found CARRIED.** PR #115 merged 105's command file only (413baf3): no
+response, no D43, no prompt change. 106's precondition needs D43 on main,
+so 105 was executed then, in command order, on a fresh branch from main
+81da1e0.
+
+**The plan prompt's new text, after the success-criteria paragraphs (which
+follow D36's rules):**
+
+> Scope (Ruling D43): the request sets the scope. Every success criterion must test something the request asks for: an output, figure, constraint, format or verdict the request states, or a fact the grounding supplies to answer it. A criterion may not add specifics the request did not ask for, such as component values, part numbers, presentation layout, or the exact form of a derivation. The four rules above govern how you reason the plan; they do not add to what the answer must contain.
+
+**The implement prompt's new sentence, after the ruled blocked_on line:**
+
+> Answer the request, and include the plan's falsifiers, kill triggers or assumption tables only if the request asks for them.
+
+**D36 is byte-identical.** The block from "Rules for the plan ..." to "The
+success criteria are the most important thing you produce." hashes to
+sha256 5bd19bc0cfb39888b969bd65d10134fb0638446ecb8140b2aa114929dceb0928,
+before and after. The diff is 9 added lines and nothing removed.
+
+**Tests:** `tests/test_scope_rule.py` (3), through the real `run_plan` and
+`run_implement`. Break: with the old prompts restored, the rule test and
+the sentence test fail, and the D36 hash test passes.
+
+**Departure:** the command gave D43's ruling but not the prompt's wording.
+The plan text is D43's own sentences, plus one that restates "D36's four
+rules keep governing how the plan is reasoned; they do not add to what the
+answer must contain" for the prompt's reader.

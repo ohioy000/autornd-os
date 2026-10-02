@@ -1,0 +1,50 @@
+{
+  "command_id": "ARCH-20261001-105",
+  "status": "DONE",
+  "executed": true,
+  "head_before": "81da1e0",
+  "head_after": "de9725c",
+  "arrival": {
+    "parent_id": "ARCH-20261001-104: response present",
+    "preconditions_present": 2,
+    "transport": "CARRIED: PR #115 merged the command file only (413baf3), with no response and no D43. Executed now on a fresh branch from main 81da1e0, because 106's precondition needs D43 on main."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "PASS: the success-criteria instruction, D36's rules block, and 'The success criteria are the most important thing you produce' are present (now at phases.py:279-316)"
+    },
+    {
+      "n": 2,
+      "result": "PASS: 1162 passed"
+    }
+  ],
+  "baseline_suite": "1162 passed",
+  "results": {
+    "plan_prompt_text": "Scope (Ruling D43): the request sets the scope. Every success criterion must test something the request asks for: an output, figure, constraint, format or verdict the request states, or a fact the grounding supplies to answer it. A criterion may not add specifics the request did not ask for, such as component values, part numbers, presentation layout, or the exact form of a derivation. The four rules above govern how you reason the plan; they do not add to what the answer must contain.",
+    "implement_prompt_sentence": "Answer the request, and include the plan's falsifiers, kill triggers or assumption tables only if the request asks for them.",
+    "d36_identical": "sha256 5bd19bc0cfb39888b969bd65d10134fb0638446ecb8140b2aa114929dceb0928 before and after; diff is +9 lines, 0 removed",
+    "tests": "tests/test_scope_rule.py (3) via run_plan/run_implement; break: old prompts restored -> both presence tests fail, the D36 hash test passes",
+    "suite": "1162 before; 1165 after"
+  },
+  "deviations": [
+    {
+      "what": "Executed after the command was CARRIED to main by PR #115",
+      "reason": "The command file was merged without execution; 106 needs D43 on main."
+    },
+    {
+      "what": "The plan prompt's wording is drafted from D43's own sentences",
+      "reason": "The command gave the ruling, not the prompt text; one sentence restates D43's 'D36's four rules ... do not add to what the answer must contain'."
+    }
+  ],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20261001-105-request-sets-scope",
+    "pr": 117
+  },
+  "commits": {
+    "in_progress": "71b37bc",
+    "ruling_d43": "43891b5",
+    "prompts": "de9725c"
+  }
+}

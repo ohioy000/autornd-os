@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1162 · **Date of this snapshot:** 2026-09-26, counts re-derived against the tree under test
+**Tests:** 1165 · **Date of this snapshot:** 2026-09-26, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -30,6 +30,8 @@
 > **Ruling D41 (advisor, 2026-10-01; confirmed by the owner) — a freeze on mechanisms until the harness ships. Until the golden set (evals/scenarios/golden/, keys in evals/golden/keys.json) passes at least 5 of its 6 questions on one lineup, no new node, loop, gate, verdict field, run-record field or process ruling is added to the harness. Two kinds of change remain allowed: repairs of silent failures that change outcomes, and the measurement needed to score the golden set. Rationale: 2 of 2 recorded runs shipped an answer on 09-26 (084 and 085, about 3 minutes and 6 cents each), and 0 of 7 have shipped since 09-29, while 8 of the advisor's 10 commands in that period were instrument or process work. The freeze lifts on the golden condition. If the best measured arm passes fewer than 3 of 6, the freeze turns into a redesign of the default path (a fast path, and research-first answers for lookup questions), which then comes before any other work.**
 
 > **Ruling D42 (advisor, 2026-10-01) — a reviewer that fails is not a finding. When a review specialist fails to produce a usable verdict (an exception, or a reply the schema still rejects after the client's retries), it is retried once. If it fails again, it is recorded as not reviewed, with its failure class, and it never enters the findings or the blocking decision. The review ships only if no completed reviewer blocks AND a quorum completed: at least half of the assigned reviewers, rounded up. Below quorum the review does not ship, and the terminal says the review did not complete, naming who failed and why. Rationale: ARCH-20261001-102 Q2. The build judges agreed on a correct answer; one final-review specialist failed on a schema rejection and was recorded as a high finding (autornd/engine/phases.py:1001-1008), so the review refused the answer and the watchdog ended the run at its 300 s target. An apparatus failure is a fact about the apparatus, not a verdict on the work (convention 18). Falsifier: a run in which an excluded reviewer would have raised a blocking finding that later proves correct.**
+
+> **Ruling D43 (advisor, 2026-10-01) — the request sets the scope. Every success criterion must test something the request asks for: an output, figure, constraint, format or verdict the request states, or a fact the grounding supplies to answer it. A criterion may not add specifics the request did not ask for, such as component values, part numbers, presentation layout, or the exact form of a derivation. The deliverable answers the request without the plan's own devices (falsifiers, kill triggers, assumption tables) unless the request asks for them. D36's four rules keep governing how the plan is reasoned; they do not add to what the answer must contain. Rationale: ARCH-20261001-102. Q6's plan turned a two-gate logic question into an LED-drive design and validate failed a correct answer on that invented criterion; Q3's coverage check failed a correct derivation against a criterion dictating its exact inline arithmetic; Q5's deliverable carried a plan falsifier declaring "the sizing/assumption is INVALID" in a leak-test procedure; and answers ran a median of about 32 times their model answer’s length. Falsifier: on the next golden run, a shipped answer that fails its key on an item the request asked for and no criterion covered.**
 
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
@@ -294,7 +296,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      69 files, 1162 tests
+tests/                      70 files, 1165 tests
 
 ```
 
@@ -699,7 +701,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1162 total)
+### 3.7 Test distribution (1165 total)
 
 
 | file | n | file | n |
@@ -775,7 +777,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1162/1162 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1165/1165 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
