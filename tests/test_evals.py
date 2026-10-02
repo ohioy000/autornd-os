@@ -203,7 +203,10 @@ def scripted(risk="medium", green=True):
         if "review this implementation from your domain perspective" in m:
             return {"concerns": [], "critical": False}
         if "validate this implementation" in m:
-            return {"green": green, "red_cause": None if green else "red", "evidence": []}
+            return {"green": green, "red_cause": None if green else "red",
+                    # Ruling D46 (1): a green with nothing behind it is the
+                    # bug the rule names — the double carries its assessment.
+                    "evidence": ["criterion 1: PASS"] if green else []}
         return {"ship": True, "findings": [], "verdict": "Ship."}
     return reply
 

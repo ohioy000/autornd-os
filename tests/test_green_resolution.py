@@ -42,10 +42,27 @@ class TestTheTruthTable:
         extra = {"done": True, "summary": "s"} if model is ImplementVerdict else {}
         assert model(red_cause="criterion 4 fails", **extra).green is False
 
-    @pytest.mark.parametrize("model", [ImplementVerdict, ValidateVerdict])
-    def test_absent_green_with_no_cause_is_green(self, model):
-        extra = {"done": True, "summary": "s"} if model is ImplementVerdict else {}
-        assert model(**extra).green is True
+    def test_absent_green_with_no_cause_is_green(self):
+        """An implementation with a deliverable and no cause is green."""
+        assert ImplementVerdict(done=True, summary="s").green is True
+
+    def test_an_empty_approval_cannot_be_green(self):
+        """Ruling D46 (1). The parametrized row this replaces asserted
+        `ValidateVerdict(**{}).green is True` — literally the bug the ruling
+        names (verdicts.py:351), written down here as the truth (rule 7). An
+        approval needs substance; the cause names what was missing, and each
+        refusal is counted."""
+        reset_normalisations()
+        empty = implement(green=True, summary="   ")
+        assert empty.green is False
+        assert empty.red_cause == "the implementation returned no deliverable"
+        assert normalisations() == 1, "the refusal is counted"
+        reset_normalisations()
+        v = ValidateVerdict()
+        assert v.green is False
+        assert v.red_cause == "the validator returned no assessment"
+        # The derivation of green is counted as always, then its refusal.
+        assert normalisations() == 2
 
     def test_green_false_with_a_cause_passes_through(self):
         v = implement(green=False, red_cause="criterion 4 fails")

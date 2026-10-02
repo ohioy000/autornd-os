@@ -31,7 +31,10 @@ SETTINGS = {"max_iterations": 5, "escalation_recovery_attempts": 1,
 REQUEST = "Specify the wiring for a 24 VDC sensor on a 3 ft 22 AWG run"
 
 _WORK = {"feasible": True, "concerns": [], "blockers": [], "critical": False,
-         "done": True, "green": True, "red_cause": None, "evidence": [],
+         "done": True, "green": True, "red_cause": None,
+         # Ruling D46 (1): a green with nothing behind it is the bug the rule
+         # names — the double carries the assessment it claims.
+         "evidence": ["The drop arithmetic is shown, the plan's one criterion"],
          "summary": "Drop is 2 x 3 ft x 0.01614 ohm/ft x 0.050 A = 0.004842 V.",
          "ship": True, "findings": [], "verdict": "Ship."}
 LOOKUP_ANSWER = "22 AWG solid copper is 16.14 ohm per 1000 ft at 20 C."

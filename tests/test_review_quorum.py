@@ -39,7 +39,11 @@ REVIEW_PROMPT = "ship: true if safe to ship"
 # review team is three: the two staffed roles plus the architect.
 REQUEST = "Add retry with exponential backoff to the MQTT client"
 _WORK = {"feasible": True, "concerns": [], "blockers": [], "critical": False,
-         "done": True, "green": True, "red_cause": None, "evidence": [],
+         "done": True, "green": True, "red_cause": None,
+         # Ruling D46 (1): a green with nothing behind it is the bug the rule
+         # names — the double carries the assessment it claims.
+         "evidence": ["Backoff is capped at 60s with jitter, the plan's one "
+                      "criterion"],
          "summary": "Backoff is capped at 60s with jitter applied.",
          "ship": True, "findings": [], "verdict": "Ship."}
 RESPONSES = {
