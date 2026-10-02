@@ -26,6 +26,8 @@ import score as golden  # noqa: E402  (the advisor's scorer, unchanged)
 SYSTEM = "You are an expert engineer. Answer the question directly, correctly and concisely."
 MAX_TOKENS = 4000
 KEYS = json.loads(Path(golden.KEYS).read_text(encoding="utf-8"))
+# Ruling D44: every report states the key version beside each score.
+KEY_LABEL = f"key v{KEYS['version']}"
 
 
 def questions() -> list[dict]:
@@ -44,6 +46,7 @@ async def run(client_factory, out: Path, per_call: float, total: float) -> list[
 
     probe = client_factory()
     header = {"record": "header", "command": "ARCH-20261002-107",
+              "key_version": KEY_LABEL,
               "model": probe.get_model("engineering"),
               "pin": provider_order_for("engineering"), "system": SYSTEM,
               "max_tokens": MAX_TOKENS, "max_spend_call": per_call,
@@ -91,7 +94,7 @@ def report(rows: list[dict]) -> str:
     sprawls = [r["sprawl"] for r in golden_rows if r.get("sprawl") is not None]
     lines.append(f"{sum(bool(r.get('all_hold')) for r in golden_rows)}/6 golden hold every item · "
                  f"median sprawl {statistics.median(sprawls) if sprawls else None} · "
-                 f"total ${sum(r.get('cost', 0) or 0 for r in rows):.4f}")
+                 f"total ${sum(r.get('cost', 0) or 0 for r in rows):.4f} · {KEY_LABEL}")
     return "\n".join(lines)
 
 

@@ -64,3 +64,11 @@ class TestTheBaselineSendsVerbatimAndScores:
         assert all(r["all_hold"] for r in rows)
         bad = baseline.score_answer(KEYS["golden"][0], "Output 6 V; current 3 mA.")
         assert not all(bad.values())
+
+    async def test_the_trace_header_and_report_name_the_key_version(self, tmp_path):
+        # Ruling D44: every report states the key version beside each score.
+        rows = await baseline.run(_factory([]), tmp_path / "b.jsonl", 0.02, 0.10)
+        written = [json.loads(l) for l in (tmp_path / "b.jsonl").read_text().splitlines()]
+        label = f"key v{KEYS['version']}"
+        assert written[0]["key_version"] == label
+        assert baseline.report(rows).splitlines()[-1].endswith(label)
