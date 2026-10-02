@@ -1,0 +1,35 @@
+{
+  "command_id": "ARCH-20261002-108",
+  "status": "IN_PROGRESS",
+  "executed": true,
+  "head_before": "e2b2828",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20261002-107: response present",
+    "preconditions_present": 3,
+    "transport": "Command carried to main by PR #123; branch cut from e2b2828 (origin/main)."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "READING, no run in flight: the grep matched one line, 'xed /home/jb/autornd-os/.env' — the owner's text editor, matched on the file path in its argv, not an autornd or evals run. Output recorded verbatim; the pattern cannot tell a run from a path (convention 26)."
+    },
+    {
+      "n": 2,
+      "result": "PASS: sha256 keys.json 17b6636884c944ea2719a34fbdc791593784c924fad96e10b0949b5fc35438d3, score.py 95a9dfc1480f23620818c1edc176519c2110591f927a565db250f01a45f60649 — both equal versions.json's version-1 entry."
+    },
+    {
+      "n": 3,
+      "result": "PASS: 1167 passed (71 files). Caveat recorded in deviations: in the inherited shell environment the same suite reads 2 failed / 1165 passed, because the shell exports the owner's MODEL_* pins and tests/conftest.py's os.environ.setdefault cannot place its placeholders. Scrubbed-environment run is the green reading; CI is clean-environment."
+    }
+  ],
+  "baseline_suite": "1167 passed (scrubbed environment); 1165 passed / 2 failed under the inherited shell environment",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20261002-108-review-and-d44",
+    "pr": null
+  },
+  "commits": {}
+}
