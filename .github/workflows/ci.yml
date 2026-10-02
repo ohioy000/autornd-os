@@ -182,15 +182,52 @@ jobs:
           print('health is degraded and names all six tiers, as it should be')
           "
 
+      # Ruling D45's live proof (amendment (a)): the host is a non-loopback
+      # caller to the container — no credentials, no key configured. A
+      # money-spending request must be refused with the sentence that names
+      # the fix, while /api/health above stays 200 for everyone. Removing the
+      # loopback rule in auth.py turns the 403 below into a 202 and fails this
+      # job.
+      - name: Unauthenticated remote callers are refused
+        run: |
+          code=$(curl -s -o /tmp/refusal.json -w '%{http_code}' \
+            -X POST http://127.0.0.1:8100/api/workflows \
+            -H 'Content-Type: application/json' \
+            -d '{"request": "ci probe"}')
+          [ "$code" = "403" ] || { echo "POST /api/workflows -> $code"; \
+            cat /tmp/refusal.json; docker logs autornd-ci; exit 1; }
+          grep -q 'API_KEY' /tmp/refusal.json || {
+            echo "403 but the sentence does not name the fix:"; \
+            cat /tmp/refusal.json; exit 1; }
+          grep -q 'ALLOW_UNAUTHENTICATED_REMOTE' /tmp/refusal.json || {
+            echo "403 but the sentence does not name the override:"; \
+            cat /tmp/refusal.json; exit 1; }
+          echo "refused with the fix named: $(cat /tmp/refusal.json)"
+          curl -sf http://127.0.0.1:8100/api/health | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          assert d['allow_unauthenticated_remote'] is False, d
+          assert d['authentication_configured'] is False, d
+          print('health reports the override off and no key configured')
+          "
+
       # The wheel-data fault in its deployment shape: dashboard.html is read
       # off disk at request time, and no built wheel carried it until 001.
+      # Read from INSIDE the container now, because D45 (1) refuses the same
+      # read from the host — a loopback caller is the one that can show the
+      # template. The host's 403 for / is asserted too: it is the gate doing
+      # its job, and it is what makes the quick start honest.
       - name: The dashboard resolves inside the container
         run: |
           code=$(curl -s -o /tmp/dash.html -w '%{http_code}' http://127.0.0.1:8100/)
-          [ "$code" = "200" ] || { echo "GET / -> $code"; docker logs autornd-ci; exit 1; }
-          grep -qi '<html' /tmp/dash.html || {
-            echo "200 but not a page"; head -c 400 /tmp/dash.html; exit 1; }
-          echo "dashboard served, $(wc -c < /tmp/dash.html) bytes"
+          [ "$code" = "403" ] || { echo "GET / from the host -> $code (want the gate)"; \
+            docker logs autornd-ci; exit 1; }
+          docker exec autornd-ci python3 -c "
+          import urllib.request
+          body = urllib.request.urlopen('http://127.0.0.1:8100/').read().decode()
+          assert '<html' in body.lower(), body[:400]
+          print('dashboard served inside the container,', len(body), 'bytes')
+          " || { docker logs autornd-ci; exit 1; }
 
       - name: Container logs
         if: always()
