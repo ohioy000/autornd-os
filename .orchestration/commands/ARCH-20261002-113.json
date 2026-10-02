@@ -1,0 +1,99 @@
+{
+  "command_id": "ARCH-20261002-113",
+  "parent_id": "ARCH-20261002-112",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Credentials are the owner's to issue (Ruling D47), and the spend guard holds call by call. A remote caller is served only with a credential the owner issued. Every API route that can spend passes D45's run gate. A reservation is released only by the call that made it.",
+  "evidence": [
+    "The advisor's provider-free probe of registration, 2026-10-02, at main 535a9e0. It used the real app over httpx ASGITransport with a non-loopback client address, an in-memory database and the network blocked:\n- API_KEY set, JWT_SECRET unset: a remote stranger's POST /api/auth/register returned 201, and its token was served 200 on GET /api/workflows.\n- JWT_SECRET set: 201, then 200.\n- API_KEY set with REGISTRATION_ENABLED=false: 403, then 401.\n- Neither set: 403 and 403. That is D45 (1) holding.\nSo the configuration D45's refusal sentence prescribes ('Set API_KEY or JWT_SECRET in .env to serve remote callers', autornd/api/auth.py) serves anyone who registers. /api/auth/register is a public path (auth.py:17), and registration_enabled defaults to true (config.py:170). With JWT_SECRET unset, tokens are signed with a per-process random secret (auth.py:44-47), and the middleware honours such a token before it checks the API key.",
+    "The advisor's provider-free probe of the 110 guard. It used the real OpenRouterClient over httpx.MockTransport, a $0.10 ceiling and a completion rate of 1e-5.\n- Call A (worst case $0.06) went into flight, then call B (worst case $0.01) completed first.\n- B's reconciliation released A's reservation, because _reconcile pops the oldest reservation, not B's own (openrouter.py:420-424). _fail_call does the same (openrouter.py:436-440).\n- After B, $0.010 was reserved while A was still in flight.\n- Call C (worst case $0.05) was then admitted and dispatched, though only $0.039 truly remained.\n- The run booked $0.111 against its $0.10 ceiling, and the after-the-call backstop discarded the paid responses of both C and A.\nTwo other paths release another call's reservation the same way: a blind call (no catalogue rate, so no reservation), and every test double that calls _account directly. Calls with unequal worst cases completing out of order is exactly what reviewer fan-out produces. That meets D45 (5)'s falsifier: an API run that exceeds its spend ceiling.",
+    "routes.py:417-448: POST /api/workflows/{id}/doublecheck builds a bounded client per request, outside the run gate. _admit_run (routes.py:247 and :293) covers only the two submit paths. N requests at once can spend up to N × run_spend_ceiling_usd, which is the multiplication D45 (6) forbids.",
+    "routes.py:247-257 and :293-301: a slot in the gate is admitted before the row is committed, and released only when the run ends. If the commit raises, or the scheduling of the background task raises, the slot is never released. At the default cap of 2, two such failures refuse every API run until the server restarts.",
+    "routes.py:229-235: _run_workflow is unreferenced (109's reference check) and builds an unbounded OpenRouterClient. Wiring it back would bypass D45 (2).",
+    "110's response asked two questions, answered in the ANSWERS constraint below."
+  ],
+  "scope": {
+    "include": [
+      "autornd/api/auth.py",
+      "autornd/api/routes.py",
+      "autornd/routing/openrouter.py (reservation identity only)",
+      "README.md (the Auth section and the quick start's wording on API_KEY and JWT_SECRET; one sentence on the per-process cap)",
+      ".env.example (comments only)",
+      "tests/",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      ".env and every .env* file except .env.example: the owner's (G-3).",
+      "workflows/ and the verdict schemas.",
+      "Any DB schema change (hard rule 11).",
+      "evals/golden/."
+    ]
+  },
+  "constraints": [
+    "RULING FIRST, VERBATIM, in HANDOVER.md and the notebook, before the code in commit order.",
+    "RULING D47, COMMITTED VERBATIM: 'Ruling D47 (advisor, 2026-10-02) — credentials are the owner's to issue. (1) An account is created only from this machine. POST /api/auth/register serves loopback callers only, under every authentication setting, and REGISTRATION_ENABLED=false still turns it off entirely. A remote caller is served only with a credential the owner issued, or under ALLOW_UNAUTHENTICATED_REMOTE=1. A credential the owner issued is the API_KEY, or a token for an account created from this machine. (2) Every API route that can spend is admitted through D45's run gate. No caller can multiply the per-run bounds by calling such a route many times at once. Rationale: the advisor's post-merge review of 110 (2026-10-02), with provider-free probes at main 535a9e0. D45's refusal sentence names one fix: configure API_KEY or JWT_SECRET. Under that fix, /api/auth/register was a public path and was enabled by default. A remote stranger registered (201) and was then served (200) on protected routes, so the server was open to anyone who asked for an account. Separately, POST /api/workflows/{id}/doublecheck built a bounded client per request outside the gate, so concurrent requests multiplied the ceiling. Falsifier: a remote caller without an owner-issued credential or the override who obtains a token or is served a protected route; or more spending API requests in flight than max_concurrent_runs.'",
+    "REGISTRATION: POST /api/auth/register serves loopback callers only, whatever authentication is configured. REGISTRATION_ENABLED=false still disables it entirely. A remote caller is refused with 403 and a sentence that says how the owner creates an account (from this machine). /api/auth/login stays public: it needs the password of an account that already exists. Reword D45's refusal sentence and the README's Auth section so that neither implies that setting JWT_SECRET opens registration to anyone.",
+    "EVERY SPENDING ROUTE PASSES THE GATE: list every route in autornd/api/ that can make a provider call (grep for OpenRouterClient construction and for _bound_client), and quote the list.\n- Each one is admitted through the same gate as the submit paths and counted against max_concurrent_runs.\n- Beyond the cap it is refused with 429, and a refused request spends nothing.\n- A doublecheck of a workflow that the same caller already has in flight is refused with 409.\n- The doublecheck estimate route makes no call; say so, rather than gating it.",
+    "NO LEAKED SLOT: admission is released on every path. If the row's commit or the scheduling of the background task raises, the slot is released before the error reaches the caller.",
+    "THE GUARD HOLDS CALL BY CALL. This is an instrument repair of D45 (5) and needs no new ruling.\n- Each dispatch's reservation is identified, and only the call that made a reservation releases it, on reconciliation or on failure.\n- A call that reserved nothing (blind, or no ceiling set) releases nothing. So does a test double that books cost without guarding.\n- A failed call keeps its OWN worst case as unreconciled liability.\n- The call ceiling counts every call in flight, blind ones included.\n- One reservation per call holds across that call's retries (see ANSWERS).",
+    "Delete _run_workflow (routes.py:229) and record the reference check.",
+    "ANSWERS TO 110's QUESTIONS.\n(1) The cap does not need to hold across uvicorn workers. The documented uvicorn command and the Dockerfile run one process, and D45 (6) is read per process. The README says so in one sentence. A multi-worker deployment would need a shared store, which nothing here builds.\n(2) One reservation per call stands. The provider bills completed generations. A 400 refused for its response_format, and a 429, are refused before any generation, so one dispatch's worst case covers what one call can cost. The reservation is held across the backoff and released by the call's own reconciliation. Falsifier: a record showing a refused attempt that was billed. That would make the attempt, not the call, the unit.",
+    "TESTS, provider-free, through the real app and the real client:\n(a) Under each authentication setting (API_KEY only, JWT_SECRET only, both), a remote register is refused with 403, and a loopback register is served. A remote stranger cannot obtain a token by any public route. Login still works, remotely, for an account created from loopback.\n(b) The advisor's out-of-order case: A (worst $0.06) is in flight and B (worst $0.01) completes. Afterwards reserved equals A's worst case. C (worst $0.05) is then refused before dispatch, and booked spend never exceeds the ceiling.\n(c) A blind call that completes while a priced call is in flight leaves the priced call's reservation intact.\n(d) A failed call books its own worst case as liability, not another call's.\n(e) Concurrent doublechecks beyond the cap get 429 and spend nothing. The same caller's duplicate gets 409.\n(f) A row commit that raises after admission leaves the gate's count where it was.\nProve each test by breaking one line, and quote the failures.",
+    "Free. No provider call."
+  ],
+  "acceptance_criteria": [
+    "D47 is verbatim in HANDOVER.md and the notebook, before the code in commit order.",
+    "Tests (a)-(f) pass and each break is quoted. The advisor's out-of-order numbers ($0.111 booked against $0.10) reproduce on the old code and are refused on the new; quote both.",
+    "Every OpenRouterClient that autornd/api/ constructs either passes the gate or is explained in the response (the estimate route makes no call).",
+    "`git diff --stat origin/main -- workflows/ evals/golden/` is empty. No .env* file other than .env.example changed. No DB schema change.",
+    "Suite green before and after. The PR is opened and delivery_state carries its number."
+  ],
+  "verification": [
+    {
+      "command": "grep -n 'Ruling D47' HANDOVER.md docs/handover-review.md",
+      "expected": "Present in both."
+    },
+    {
+      "command": "grep -n 'OpenRouterClient()' autornd/api/routes.py",
+      "expected": "Only inside _bound_client, plus the estimate route, explained."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass."
+    }
+  ],
+  "rollback": "Revert the merge. Registration is public again under API_KEY or JWT_SECRET, and reservations are released in arrival order.",
+  "deliverable": {
+    "branch": "arch/20261002-113-credentials-and-guard",
+    "branch_created_by": "advisor",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+  "transport": "Pushed by the advisor after the post-merge review of 108-111 (2026-10-02). Process after 112 merges, so that this work's suite runs are hermetic. Commit the response IN_PROGRESS first. It must land before any paid Phase 2 run: the per-run ceiling is only a ceiling once the guard holds call by call.",
+  "assumptions": [
+    "The owner's standing server listens on loopback (the documented uvicorn command). If it is reachable from other machines with API_KEY or JWT_SECRET set, the advisor has advised the owner to set REGISTRATION_ENABLED=false in .env until this merges. That is the owner's edit (G-3), not this command's."
+  ],
+  "questions": [
+    "Did any existing test assert open registration under API_KEY or JWT_SECRET, or the release order of reservations? For each, say whether the test was the bug written down (rule 7)."
+  ],
+  "preconditions": [
+    {
+      "command": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "expected": "No run in flight."
+    },
+    {
+      "command": "git fetch --prune origin && git log --oneline -1 origin/main -- .orchestration/responses/ARCH-20261002-112.response.json",
+      "expected": "112's response on main (merged). Otherwise BLOCKED."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green; record the count."
+    }
+  ]
+}
