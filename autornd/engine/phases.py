@@ -345,16 +345,18 @@ async def run_plan_feasibility(
     plan: PlanVerdict,
     specialists: list[Specialist],
     context: str = "",
-) -> list[ModelResponse]:
+) -> tuple[list[ModelResponse], list[str]]:
     """Domain specialists review the architect's plan for feasibility.
 
-    Each specialist checks the plan against the constraints of their own domain.
-    Returns responses for cost tracking; side-effects update the plan's blockers.
+    Each specialist checks the plan against the constraints of their own
+    domain. Returns (responses for cost tracking, the hard blockers the
+    reviewers named) — Ruling D46 (2): the concerns are this phase's own
+    output now; the plan's blockers stay the architect's.
     """
     architect_role = SpecialistRole.SYSTEMS_ARCHITECT
     reviewers = [s for s in specialists if s.role != architect_role]
     if not reviewers:
-        return []
+        return [], []
 
     context_block = f"\n\nProject context:\n{context}" if context else ""
     bom_block = (
@@ -393,10 +395,12 @@ Original request:
         for b in result.get("blockers", []):
             all_blockers.append(b)
 
-    if all_blockers:
-        plan.blockers.extend(all_blockers)
-
-    return responses
+    # Ruling D46 (2): feasibility runs after the plan gate and cannot stop a
+    # run, so its concerns no longer write plan.blockers — where they were
+    # misrecorded as the architect's and could never gate anything. They
+    # travel in feasibility's own output and reach the implementer as
+    # considerations a reviewer raised, not requirements.
+    return responses, all_blockers
 
 
 # Checks a reviewer can actually settle by reading a written implementation:
@@ -727,6 +731,7 @@ async def run_implement(
     review_findings: list[Any] | None = None,
     unmet_criteria: list[str] | None = None,
     prior_summary: str | None = None,
+    considerations: list[str] | None = None,
     max_tokens: int | None = None,
 ) -> tuple[ImplementVerdict, list[ModelResponse]]:
     # Ruling D33: on every iteration after the first, implement REVISES its own
@@ -761,12 +766,17 @@ Address this specific failure in your implementation."""
     feedback += render_validate_evidence(evidence or [])
     feedback += render_review_findings(review_findings or [])
 
+    # Ruling D46 (2): feasibility's concerns are a reviewer's considerations
+    # now. The old heading — "FEASIBILITY CONCERNS (from domain specialist
+    # review — address these):" — was a requirements channel opening after
+    # D43 closed the plan's scope: "address these" made them demands. This
+    # heading says what they are and what they are not.
     feasibility_block = ""
-    if plan.blockers:
+    if considerations:
         feasibility_block = f"""
 
-FEASIBILITY CONCERNS (from domain specialist review — address these):
-{chr(10).join(f'- {b}' for b in plan.blockers)}"""
+CONSIDERATIONS A REVIEWER RAISED (not requirements — weigh them; nothing is judged against them):
+{chr(10).join(f'- {b}' for b in considerations)}"""
 
     context_block = f"\n\nProject context:\n{context}" if context else ""
     # Ruling D33: produce on the first pass, revise once a prior artifact exists.

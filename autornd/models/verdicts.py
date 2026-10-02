@@ -324,6 +324,10 @@ _normalisations: dict[str, int] = {}
 
 GREEN_DERIVED = "green_derived_from_red_cause"
 GREEN_COERCED = "green_coerced_false_against_its_cause"
+# Ruling D46 (1): an approval with nothing behind it — an empty validation
+# assessment or an empty deliverable. The red_cause names which; this counts
+# that it happened at all.
+GREEN_REFUSED_NO_SUBSTANCE = "green_refused_no_substance"
 EVIDENCE_FOLDED = "evidence_object_folded_to_lines"
 COST_ESTIMATE_COERCED = "cost_estimate_string_coerced_to_float"
 
@@ -344,6 +348,22 @@ def reset_normalisations() -> None:
     _normalisations.clear()
 
 
+def _missing_substance(verdict: Any) -> str | None:
+    """What an approval needs and did not get (Ruling D46 (1)), or None.
+
+    The two verdicts that can approve carry their substance in different
+    fields — a validation has `evidence`, an implementation has `summary` —
+    and each gap names itself.
+    """
+    summary = getattr(verdict, "summary", None)
+    if isinstance(summary, str) and not summary.strip():
+        return "the implementation returned no deliverable"
+    evidence = getattr(verdict, "evidence", None)
+    if isinstance(evidence, list) and not evidence:
+        return "the validator returned no assessment"
+    return None
+
+
 def _resolve_green(verdict: Any) -> Any:
     """The ruled truth table, applied after construction."""
     has_cause = bool((verdict.red_cause or "").strip())
@@ -351,21 +371,28 @@ def _resolve_green(verdict: Any) -> Any:
     if verdict.green is None:
         verdict.green = not has_cause
         _count(GREEN_DERIVED)
-        return verdict
-
-    if verdict.green and has_cause:
+    elif verdict.green and has_cause:
         # The conservative side. A false red costs an iteration; a false green
         # ships work nobody checked.
         verdict.green = False
         _count(GREEN_COERCED)
-        return verdict
-
-    if not verdict.green and not has_cause:
+    elif not verdict.green and not has_cause:
         # The one case that loses information: something is wrong and the
         # verdict does not say what. The retry machinery exists to ask.
         raise ValueError(
             "a red verdict must name its cause in red_cause"
         )
+
+    # Ruling D46 (1): green needs substance. An empty assessment approving
+    # work and an empty deliverable approving itself are the same failure —
+    # an approval that means nothing — and either resolves red with a cause
+    # that names what was missing, counted under its own kind.
+    if verdict.green:
+        missing = _missing_substance(verdict)
+        if missing:
+            verdict.green = False
+            verdict.red_cause = missing
+            _count(GREEN_REFUSED_NO_SUBSTANCE)
     return verdict
 
 

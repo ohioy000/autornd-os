@@ -24,20 +24,32 @@ __all__ = ["CheckResult", "get_check", "registry", "check"]
 
 class CheckResult(Protocol):
     passed: bool
+    checked: bool
     detail: str
     data: dict[str, Any]
 
 
 class Result:
-    __slots__ = ("passed", "detail", "data")
+    __slots__ = ("passed", "detail", "data", "checked")
 
-    def __init__(self, passed: bool, detail: str = "", **data: Any) -> None:
+    def __init__(self, passed: bool, detail: str = "", *,
+                 checked: bool = True, **data: Any) -> None:
         self.passed = passed
         self.detail = detail
+        # Ruling D46 (3): did this check actually compare anything? A check
+        # whose inputs were empty says so — it still reports its pass or fail
+        # exactly as before, but it is recorded as NOT CHECKED, the fold
+        # treats it as non-blocking, and the run's record lists it.
+        # Also kept in `data`, which is how check outputs reach later
+        # conditions and the run record (totals_reconcile has read it there
+        # since it was written).
+        self.checked = checked
         self.data = data
+        self.data.setdefault("checked", checked)
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
-        return f"Result(passed={self.passed}, detail={self.detail!r}, data={self.data!r})"
+        return (f"Result(passed={self.passed}, checked={self.checked}, "
+                f"detail={self.detail!r}, data={self.data!r})")
 
 
 registry: dict[str, Callable[..., Result]] = {}
@@ -203,20 +215,47 @@ def judges_agree(**judges: Any) -> Result:
     if not judges:
         return Result(False, "no judges to fold — refusing to call that agreement")
 
+    def checked(value: Any) -> bool:
+        """Ruling D46 (3): a judge that compared nothing is not a dissent.
+
+        Its own record says checked false; counting it red would loop the
+        work forever on a comparison that never happened.
+        """
+        if isinstance(value, dict):
+            return bool(value.get("checked", True))
+        return bool(getattr(value, "checked", True))
+
     def verdict(value: Any) -> bool:
+        if isinstance(value, dict):
+            passed = value.get("passed")
+            return bool(passed if passed is not None else value)
         passed = getattr(value, "passed", None)
         return bool(passed if passed is not None else value)
 
-    dissenting = sorted(name for name, value in judges.items() if not verdict(value))
+    not_checked = sorted(name for name, value in judges.items() if not checked(value))
+    dissenting = sorted(
+        name for name, value in judges.items()
+        if checked(value) and not verdict(value))
     if dissenting:
         return Result(
             False,
             "not agreed — " + ", ".join(f"{n} is red" for n in dissenting),
             green=False, dissenting=dissenting, judges=sorted(judges),
+            unchecked=not_checked,
+        )
+    agree = [n for n in judges if checked(judges[n])]
+    if not not_checked:
+        return Result(
+            True, f"all {len(judges)} judges agree",
+            green=True, dissenting=[], judges=sorted(judges),
+            unchecked=not_checked,
         )
     return Result(
-        True, f"all {len(judges)} judges agree",
+        True,
+        f"all {len(agree)} judges that checked agree"
+        f" ({', '.join(not_checked)} did not check)",
         green=True, dissenting=[], judges=sorted(judges),
+        unchecked=not_checked,
     )
 
 
@@ -625,7 +664,13 @@ def criteria_addressed(
     noticing until a model reads it three phases later.
     """
     if not criteria:
-        return Result(False, "no success criteria to check against")
+        # Ruling D46 (3): with no criteria there is nothing to check against.
+        # The verdict is unchanged — it fails exactly as it always has — but
+        # it is recorded as NOT CHECKED, and the fold treats it as
+        # non-blocking rather than looping the work for a comparison that
+        # could not happen.
+        return Result(False, "no success criteria to check against",
+                      checked=False)
 
     artifact = text or ""
     body = _terms(artifact)
@@ -773,6 +818,16 @@ def numbers_consistent(plan: str, implementation: str) -> Result:
         return sorted({_normalize(f"{v:.{s}g}") for v, s in values})
 
     planned, built = indexed(plan), indexed(implementation)
+    # Ruling D46 (3): with no shared unit there is nothing to compare. It
+    # passes exactly as it did — reporting absence as conflict would be a
+    # different check — but it is recorded as NOT CHECKED, the fold treats it
+    # as non-blocking, and the run's record lists it.
+    if not (planned.keys() & built.keys()):
+        return Result(
+            True,
+            "no shared unit between plan and implementation — compared nothing",
+            checked=False, conflicts=[],
+        )
     # A conflict is a shared unit whose plan and implementation figures have
     # no value in common, as before; "in common" now means equal at the
     # precision of the less precise figure.
