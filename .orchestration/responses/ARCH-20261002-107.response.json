@@ -1,7 +1,7 @@
 {
   "command_id": "ARCH-20261002-107",
-  "status": "IN_PROGRESS",
-  "executed": false,
+  "status": "DONE",
+  "executed": true,
   "head_before": "e4b2137",
   "head_after": null,
   "arrival": {
@@ -24,11 +24,33 @@
     }
   ],
   "baseline_suite": "1165 passed",
-  "results": {},
+  "results": {
+    "authorisation": "Owner, verbatim (the option chosen): 'Go: $0.02/call, $0.10 total'.",
+    "table": "Q1  ALL HOLD  items[++] 15.875s $0.0030 sprawl=7.2 finish=stop\nQ2  ALL HOLD  items[++] 10.533s $0.0020 sprawl=2.9 finish=stop\nQ3  FAIL      items[---] 18.848s $0.0049 sprawl=3.8 finish=stop\nQ4  FAIL      items[+-++-++] 15.926s $0.0042 sprawl=2.1 finish=stop\nQ5  FAIL      items[+++++++-++] 10.045s $0.0026 sprawl=2.0 finish=stop\nQ6  ALL HOLD  items[++++] 15.121s $0.0025 sprawl=1.5 finish=stop\nIA  FAIL      items[+-+-+-] 10.22s $0.0027 sprawl=0.9 finish=stop\n3/6 golden hold every item · median sprawl 2.5 · total $0.0220\nexit 0\n",
+    "test_break": "Appending ' Show your work.' to the request fails tests/test_direct_baseline.py: \"assert 'An ideal vol...ow your work.' == 'An ideal vol...he resistors?'\"",
+    "reading": "Q1, Q2, Q6 agree. Q3: all three values correct (6.14e-7 m^4, 20.4 MPa, 0.0102 rad) but written in LaTeX ('6.14 \\times 10^{-7} \\text{ m}^4'), which the normalizer does not read; a key defect. Q4: correct ('60.0 \\text{ mm}^2', '30,000 \\text{ mm}^3'); the same defect. Q5: 'Test Log Verdict: PASS' precedes 'Pressure Drop: 0.10 bar'; Q5.8 needs the figure first, a key defect. IA: genuinely wrong ('2 of the last 5 years'; an invented '1 year ... under the supervision of an IA holder'; no inspection data; no approved technical data).",
+    "counts": "Script: 3 of 6. Reading: 6 of 6.",
+    "predictions": {
+      "P1": "REFUTED by script (3/6); HELD on reading (6/6)",
+      "P2": "HELD: 10.0-18.8 s, $0.0020-0.0049 per call, $0.0220 total",
+      "P3": "HELD: median sprawl 2.5",
+      "P4": "REFUTED: IA 3 of 6 core, on both readings"
+    },
+    "decision_rule": "Script 3: a fast path for the held questions, and the planner examined on the rest. Reading 6: D44, a fast path (answer directly, one cheap check, escalate on failure). The key ruling on LaTeX and Q5.8's order decides.",
+    "excluded_paths_diff": "empty"
+  },
   "deviations": [],
-  "questions_for_advisor": [],
+  "questions_for_advisor": [
+    "score.py's normalize does not read LaTeX (\\times, ^{-7}, \\text{...}), so correct Q3 and Q4 answers fail. Normalize it, or rule that the format fails?",
+    "Q5.8 misses a verdict line stated before its figures ('Test Log Verdict: PASS' then 'Pressure Drop: 0.10 bar'). Relax the order?"
+  ],
   "delivery_state": {
     "branch": "arch/20261002-107-direct-baseline",
     "pr": null
+  },
+  "commits": {
+    "in_progress": "f85654a",
+    "runner_and_test": "40502d2",
+    "preregistration": "d05d5f2"
   }
 }
