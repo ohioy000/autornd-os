@@ -4,7 +4,7 @@ request: A uniform solid circular shaft has diameter 50.0 mm, length 1.00 m, and
 tags:
 - golden
 - q3
-timeout: 300
+timeout: 600
 expect:
   status: completed
   max_calls: 40

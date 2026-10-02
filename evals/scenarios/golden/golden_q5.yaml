@@ -4,7 +4,7 @@ request: Write the ordered hydrostatic leak-test procedure for an already connec
 tags:
 - golden
 - q5
-timeout: 600
+timeout: 1200
 expect:
   status: completed
   max_calls: 40

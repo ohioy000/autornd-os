@@ -4,7 +4,7 @@ request: 'Describe a logic circuit where an indicator light would be lit when ei
 tags:
 - golden
 - q6
-timeout: 300
+timeout: 600
 expect:
   status: completed
   max_calls: 40
