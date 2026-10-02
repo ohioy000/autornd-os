@@ -1,9 +1,9 @@
 {
   "command_id": "ARCH-20261002-109",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "executed": true,
   "head_before": "ce61d85",
-  "head_after": null,
+  "head_after": "5f7770d",
   "arrival": {
     "parent_id": "ARCH-20261002-108: response present at .orchestration/responses/ARCH-20261002-108.response.json (merged ce61d85)",
     "preconditions_present": 3,
@@ -23,13 +23,37 @@
       "result": "COUNT, scrubbed green: 1172 passed. The literal invocation reads 2 failed / 1170 passed (tests/test_preflight_gate.py) in this shell because it exports the owner's MODEL_* pins and tests/conftest.py's os.environ.setdefault cannot place its placeholders — the same instrument finding carried in 108's response, still open as a question_for_advisor. Scrubbed (the clean-environment reading CI takes), 1172 passed."
     }
   ],
-  "baseline_suite": "1172 passed before (scrubbed)",
-  "results": {},
-  "deviations": [],
-  "questions_for_advisor": [],
+  "baseline_suite": "1172 passed before (scrubbed); 1176 passed after (scrubbed), the four new tests in tests/test_api.py",
+  "results": {
+    "one_row_per_submission": "execute now takes the caller's row — execute(request, workflow=None, user_id=None). Both submit paths create the row with _get_user_id(request) and pass it in; _run_workflow_bg loads that row and hands it back, so the id POST /api/workflows returns is the id the run writes. execute(request) still works for callers that pass none and creates the row with the user_id when one is known. Test (a) proves it through the real routes and its break is quoted: '_run_workflow_bg' calling execute(workflow.request) fails with \"assert 'pending' == 'completed'\" — the pre-fix behaviour.",
+    "progress_as_it_happens": "The row is committed before the run starts. Each node's phase record and the row's visible status are written in a transaction of its own, from a chain of tasks the synchronous on_phase callback schedules (one writer at a time, in node order). _NODE_STATUS is read: triage→TRIAGE, plan/feasibility→PLAN, implement/domain_review→IMPLEMENT, validate→VALIDATE, review→REVIEW; nodes outside the map (context, regrounding, checks, build_loop, escalation) leave the status where it is. The end-of-run flush writes nothing twice: a written flag per save, and a retried write never moves a terminal row. Test (c) proves the mid-run visibility from a second connection and its break is quoted: flushing instead of committing fails with \"the run had already ended (completed) when the phase was first seen\".",
+    "terminal_cast_cannot_lose_a_result": "WorkflowStatus(state.status) moved inside the guarded region. An unknown terminal ends the row BLOCKED with the raw terminal in error, committed. Test (d) drives it end to end: a tmp workflow whose loop exhausts into on_exhausted_status 'frobnicate' — which spec.parse does not check against TERMINAL_STATUSES (spec.py:381-384 check only mutual exclusion with on_exhausted), so it reaches state.end unvalidated (executor.py:951) and the cast as a non-member. Its break is quoted: narrowing the guard to OSError lets 'ValueError: \\'frobnicate\\' is not a valid WorkflowStatus' escape the request, exactly the pre-fix loss.",
+    "tests_a_to_d": "tests/test_api.py: TestOneRowPerSubmission, TestSubmissionsBelongToTheirCaller (auth configured via jwt_secret; both paths keep the caller's user_id; the caller can list and read), TestProgressIsVisibleMidRun, TestAnUnknownTerminalKeepsTheResult. All through httpx ASGITransport against the real routes, real engine, real graph and the existing provider-free double, which still bills. Each test proved by breaking one line and reverting; all four failure texts are quoted in docs/handover-review.md §100.2. The database is file-backed so a second session is a second connection and what it sees was committed — on the shared in-memory connection an uncommitted row would be visible too and (c) would prove nothing.",
+    "rule_7_answer": "No existing test asserted the two-row behaviour or the end-of-run flush: the bug was unobserved, not written down. Checked and named: tests/test_workflow.py::test_create_workflow asserts the model's PENDING default on construction — unchanged and green, not the bug; tests/test_settings_map.py's count('escalation') == 1 asserts exactly-once phase writing across the escalation path — green, and it watched one phase's count rather than the buffer's timing, so it is not the bug written down either. Nothing in tests/ references pending_saves or the flush.",
+    "acceptance_greps": {
+      "grep_Workflow_request": "The command's literal grep is empty — all three constructions are multi-line and 'Workflow(request' does not match them, which is worth knowing about the check itself (convention 26). Enumerated honestly instead: engine/workflow.py:94 (execute's no-row fallback, creates the one row for a caller that passes none), routes.py:152 (async submit: the submission's one row, with _get_user_id, passed into the run) and routes.py:193 (sync submit: same). No path creates a second row for one submission. _run_workflow (routes.py:136) is unreferenced — recorded reference check: only its definition matched — and constructs nothing.",
+      "excluded_paths": "git diff --stat origin/main -- workflows/ evals/golden/ is empty. No DB schema change; the additive-migration surface (autornd/database.py) is untouched."
+    },
+    "suite": "1176 passed, 0 failed, scrubbed of the owner's exported MODEL_* pins (the CI-equivalent reading). 1172 passed before (recorded at arrival), 1176 after — four new tests. The literal invocation in this shell still reads the two pre-existing test_preflight_gate.py failures from the exported-pin leak, unchanged by this work and already reported in 108's response."
+  },
+  "deviations": [
+    "THE DRAIN ORDER WAS WRONG ON THE FIRST IMPLEMENTATION, found by the suite, not by the tests: the end-of-run drain ran after the terminal cast, so the last node's progress write repainted 'completed' as 'review' and 9 tests failed. Fixed by draining before the cast and by making a node's status advance refuse to move a terminal row (_TERMINAL in engine/workflow.py). The tests (a)-(d) were written after the green, per the command's order.",
+    "TESTS (A)-(D) STUB client.rerank LOCALLY — a departure from 'the existing provider-free test double' as written, because the double is not fully provider-free: make_mock_client stubs chat/chat_json but leaves rerank real, and a run ingests what it looks up (research._remember → ingest_text), so a later retrieval in the same run had candidates and probed the provider's rerank API from inside a test (unbilled, 401, caught, but a provider call). With the stub these four tests make no provider call at all (verified: no openrouter.ai line in the run output). The shared double is left as it is; the gap is a question_for_advisor.",
+    "_run_workflow (routes.py:136) left in place rather than deleted: it is unreferenced and creates nothing, the acceptance does not require its removal, and convention 19 wants the reference check recorded rather than assumed (it is recorded above and in notebook §100.4).",
+    "Counts re-derived to 1176 and the three count guards were red on the intermediate tree before the docs commit — expected and by design (convention 24); they are green in the delivered tree."
+  ],
+  "questions_for_advisor": [
+    "The provider-free double is not provider-free: make_mock_client leaves OpenRouterClient.rerank real, so any test whose run retrieves over ingested findings makes a real (unbilled, failing) call to the provider's rerank API. tests/test_watchdog.py's runs warm a store and therefore probe it today. Should the double stub rerank (and any other non-chat transport method) as a standing repair, or is the probe acceptable in the suite? These four tests stub it locally either way.",
+    "Carried open from 108: tests/conftest.py's os.environ.setdefault placeholders lose to this shell's exported MODEL_* pins, so the literal pytest invocation reads 2 failed while the scrubbed (CI-equivalent) invocation is green. Force the placeholders over exported values, or is the scrubbed invocation the reading of record?"
+  ],
   "delivery_state": {
     "branch": "arch/20261002-109-workflow-identity",
     "pr": null
   },
-  "commits": {}
+  "commits": {
+    "in_progress": "6c904b1",
+    "repair": "741cab9",
+    "tests": "7b0d4c8",
+    "counts_and_record": "5f7770d"
+  }
 }
