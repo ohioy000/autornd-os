@@ -26,6 +26,8 @@ import score as golden  # noqa: E402  (the advisor's scorer, unchanged)
 KEYS = json.loads(Path(golden.KEYS).read_text(encoding="utf-8"))
 BY_ID = {q["id"]: q for q in KEYS["golden"]}
 BY_ID["IA"] = KEYS["side_test"]
+# Ruling D44: every report states the key version beside each score.
+KEY_LABEL = f"key v{KEYS['version']}"
 
 
 def key_for(scenario_id: str) -> dict | None:
@@ -98,7 +100,7 @@ def main(path: str) -> list[dict]:
     sprawls = [r["sprawl"] for r in rows if r.get("sprawl") is not None]
     print(f"\n{passes}/{len(rows)} PASS · {shipped}/{len(rows)} shipped · "
           f"median sprawl {statistics.median(sprawls) if sprawls else None} · "
-          f"total ${round(sum(r['cost'] for r in rows), 4)}")
+          f"total ${round(sum(r['cost'] for r in rows), 4)} · {KEY_LABEL}")
     return rows
 
 

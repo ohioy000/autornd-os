@@ -8,10 +8,15 @@ that self-test, and proves it can fail by corrupting one pattern in a copy of
 keys.json. It also drives score_trace.py over a written record, because the
 scorer that reads a trace is the executor's and gets no other run to prove
 it on (convention 22).
+
+Ruling D44 (ARCH-20261002-108): the scoreboard is frozen and versioned.
+keys.json and score.py must hash to the entry evals/golden/versions.json keeps
+for the version keys.json names; a score names its key version.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -100,3 +105,78 @@ class TestTheTraceScorerReadsTheWrittenRecord:
         (row,) = self._rows(tmp_path, units)
         assert all(row["items"].values()) and row["within_target"] is False
         assert row["verdict"] == "FAIL"
+
+
+class TestTheScoreboardIsFrozenAndVersioned:
+    """Ruling D44: keys.json and score.py hash to the entry versions.json keeps
+    for the version keys.json names. A missing entry and a hash mismatch both
+    fail, each naming D44."""
+
+    @staticmethod
+    def _assert_frozen(directory: Path) -> None:
+        keys = json.loads((directory / "keys.json").read_text(encoding="utf-8"))
+        versions = json.loads((directory / "versions.json").read_text(encoding="utf-8"))
+        entry = next((e for e in versions["versions"]
+                      if e["version"] == keys["version"]), None)
+        assert entry is not None, (
+            f"Ruling D44: keys.json names key version {keys['version']} and "
+            f"versions.json has no entry for it. A key change is a new version: "
+            f"an entry naming the change and what triggered it.")
+        for name in ("keys.json", "score.py"):
+            actual = hashlib.sha256((directory / name).read_bytes()).hexdigest()
+            assert actual == entry["sha256"][name], (
+                f"Ruling D44: {name} no longer hashes to the key version "
+                f"{keys['version']} entry in versions.json (recorded "
+                f"{entry['sha256'][name]}, found {actual}). A defect a reading "
+                f"finds in a key is fixed only as a new version, after the run "
+                f"that found it has been reported under the old one.")
+
+    def test_the_tree_matches_the_recorded_version(self):
+        self._assert_frozen(GOLDEN)
+
+    def test_a_one_byte_change_in_a_copy_fails_naming_d44(self, tmp_path):
+        for name in ("keys.json", "score.py", "versions.json"):
+            shutil.copy(GOLDEN / name, tmp_path / name)
+        text = (tmp_path / "keys.json").read_text(encoding="utf-8")
+        # One digit, past the "version" field, so the drift is in key content
+        # and the copy stays parseable JSON.
+        start = text.index('"golden"')
+        i = next(j for j in range(start, len(text)) if text[j].isdigit())
+        (tmp_path / "keys.json").write_text(
+            text[:i] + str((int(text[i]) + 1) % 10) + text[i + 1:], encoding="utf-8")
+        with pytest.raises(AssertionError) as exc:
+            self._assert_frozen(tmp_path)
+        assert "Ruling D44" in str(exc.value)
+        assert "no longer hashes" in str(exc.value)
+
+    def test_a_missing_versions_entry_fails_naming_d44(self, tmp_path):
+        for name in ("keys.json", "score.py", "versions.json"):
+            shutil.copy(GOLDEN / name, tmp_path / name)
+        versions = json.loads((tmp_path / "versions.json").read_text(encoding="utf-8"))
+        versions["versions"] = [e for e in versions["versions"]
+                                if e["version"] != KEYS["version"]]
+        (tmp_path / "versions.json").write_text(json.dumps(versions), encoding="utf-8")
+        with pytest.raises(AssertionError) as exc:
+            self._assert_frozen(tmp_path)
+        assert "Ruling D44" in str(exc.value)
+        assert "no entry" in str(exc.value)
+
+
+class TestEveryScoreNamesItsKeyVersion:
+    """D44: every report states the key version beside each score — the
+    trace scorer's summary line and the baseline's report and trace header."""
+
+    def test_the_trace_summary_names_the_key_version(self, tmp_path, capsys):
+        q1 = KEYS["golden"][0]
+        units = [{"record": "unit", "scenario": "golden_q1", "status": "completed",
+                  "seconds": 120.0, "cost": 0.02,
+                  "verdicts": {"implement": {"summary": q1["model_answer"]}}}]
+        sys.path.insert(0, str(GOLDEN))
+        try:
+            import score_trace
+        finally:
+            sys.path.remove(str(GOLDEN))
+        score_trace.main(str(TestTheTraceScorerReadsTheWrittenRecord._trace(
+            tmp_path, units)))
+        summary = capsys.readouterr().out.splitlines()[-1]
+        assert f"key v{KEYS['version']}" in summary

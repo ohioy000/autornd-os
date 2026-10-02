@@ -10671,3 +10671,86 @@ cannot do from memory, the IA, is the case for research-first answers.
 3. **The IA answer from memory is confidently wrong** (an invented IA
    supervision requirement; "2 of the last 5 years"). A lookup, or a
    corpus, is needed there.
+
+## 99. Ruling D44 — the scoreboard is frozen and versioned (advisor, 2026-10-02, carried by ARCH-20261002-108)
+
+> **Ruling D44 (advisor, 2026-10-02) — the scoreboard is frozen and versioned. The golden keys (evals/golden/keys.json, scored by evals/golden/score.py) are frozen at version 1, commit 4fda54f, and evals/golden/versions.json records each version's file hashes. Any change to either file is a new version: it gets a versions.json entry naming the change and what triggered it, and every recorded run is re-scored under it and reported beside its scores under the earlier versions. A defect that a reading finds in a key is fixed only as a new version, after the run that found it has been reported under the old one. Two independent hand readings are the primary measure of correctness; the keys are a screen that flags disagreements, and a disagreement between a reading and a key is reported, never settled by editing the key inside the run that found it. Every report states the key version beside each score, and places each caveat beside the claim it qualifies. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md, finding F1): five key repairs were driven by the answers being scored, and 107's headline was computed under a key widened after reading those answers. The pipeline scores did not move and two readers confirmed the direct answers, but the procedure could not tell a better answer from a drifting key. Falsifier: a score reported without its key version, or a key change without a versions.json entry and a side-by-side re-score.**
+
+Execution record: follows in the commits after this section's ruling commit.
+
+### 99.1 Execution record (executor, 2026-10-02): the guard, the stamps, the dated figures
+
+**The version guard** (`tests/test_golden_keys.py`,
+`TestTheScoreboardIsFrozenAndVersioned`), three tests:
+- the tree hashes to the version-1 entry (`17b66368…` keys.json,
+  `95a9dfc1…` score.py — equal to `versions.json`, checked on arrival),
+- a one-byte change in a copy fails naming D44,
+- a missing `versions.json` entry fails naming D44.
+
+The break, one digit flipped past the `"golden"` key so the copy stays
+parseable JSON, quoted:
+
+```
+Ruling D44: keys.json no longer hashes to the key version 1 entry in
+versions.json (recorded 17b6636884c944ea2719a34fbdc791593784c924fad96e10b0949b5fc35438d3,
+found 2b343a8623b9154cf88f97149116253020e5f285e0c48e27b78248e9e4afde0d). A defect a
+reading finds in a key is fixed only as a new version, after the run that found
+it has been reported under the old one.
+```
+
+**The key version in every score**, `'key v1'` read from `keys.json`'s own
+`version` field — `score_trace.py`'s summary line, `baseline.py`'s report and
+its trace header (`"key_version": "key v1"`). On the recorded traces:
+
+```
+106-golden-arm-b:   2/6 PASS · 3/6 shipped · median sprawl 22.9 · total $0.2527 · key v1
+106-ia-side-arm-b:  0/1 PASS · 0/1 shipped · median sprawl None · total $0.1337 · key v1
+107 (baseline report re-rendered from the record, free):
+                    3/6 golden hold every item · median sprawl 2.5 · total $0.0220 · key v1
+```
+
+Each stamp has a test that watches it
+(`TestEveryScoreNamesItsKeyVersion`, and the baseline's header/report test in
+`tests/test_direct_baseline.py`), per convention 22.
+
+**README, the research figures dated.** The per-sector table is now labelled
+as recorded 2026-09-13 (`1be3293`) under the per-sector lookup design, with
+`36b1bf8` (2026-09-13) named as the commit that bundled every blocking gap
+into one request per workflow (`MAX_LOOKUPS = 1`) — the design the code runs
+today. Not re-measured: no spend. No README guard pins those figures; the
+guards in `tests/test_docs.py` read the badge count, the workflow yaml block
+and the workflow comparison table, not this passage.
+
+**Counts re-derived** (convention 24): 1172 collected, five of them new here.
+README badge, Testing section and Project Structure comment; HANDOVER's
+header, §2.2 tree line, §3.7 and §4.2. `AGENTS.md`'s "71 test files" is
+unchanged and still true — no test file was added.
+
+### 99.2 Departures
+
+1. **§3.7's table was regenerated, not patched.** It had gone stale by
+   seventeen files and several row counts (`test_docs.py` 9 vs 11,
+   `test_preflight.py` 20 vs 30); the guard reads only the total, so the
+   drift was invisible to it. The section's own instruction is "regenerate
+   with `pytest tests/ --collect-only -q`"; that is what was done.
+2. **The suite is not green in every environment, and that is an instrument
+   finding, not a regression.** In the inherited shell environment — which
+   exports the owner's `MODEL_*` pins and `OPENROUTER_PROVIDER_ORDER` — the
+   suite reads 2 failed / 1165 passed in `tests/test_preflight_gate.py`:
+   `tests/conftest.py`'s `os.environ.setdefault` placeholders cannot displace
+   exported values, so the gate's tests read live configuration
+   (`google/gemini-3.8-flash is not in the provider catalogue`). Scrubbed of
+   those variables, the same tree is 1172 passed. CI runs clean-environment
+   and was green throughout. Both readings are recorded; the green reading is
+   the scrubbed one. The suite's verdict depends on how it is invoked, which
+   is worth an advisor ruling (convention 26: a reading that can be mistaken
+   for a stronger claim).
+3. **Precondition 1's grep cannot tell a run from a file path.** It matched
+   one line, `xed /home/jb/autornd-os/.env` — the owner's editor, matched on
+   the path in its argv. No run was in flight; the reading is recorded
+   verbatim rather than reported as "no output".
+4. **`score_trace.py` on the 107 trace reads 0/0** — that trace carries the
+   baseline's `"answer"` rows, not `"unit"` rows, so the scorer computes
+   nothing over it. Reported as an empty match set, not as a score
+   (convention 28); the baseline's own report is the instrument for that
+   record, and it is the one quoted above.

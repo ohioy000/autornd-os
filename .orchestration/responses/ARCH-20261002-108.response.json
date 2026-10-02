@@ -1,0 +1,56 @@
+{
+  "command_id": "ARCH-20261002-108",
+  "status": "DONE",
+  "executed": true,
+  "head_before": "e2b2828",
+  "head_after": "878e322",
+  "arrival": {
+    "parent_id": "ARCH-20261002-107: response present",
+    "preconditions_present": 3,
+    "transport": "Command carried to main by PR #123; branch cut from e2b2828 (origin/main)."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "READING, no run in flight: the grep matched one line, 'xed /home/jb/autornd-os/.env' — the owner's text editor, matched on the file path in its argv, not an autornd or evals run. Output recorded verbatim; the pattern cannot tell a run from a path (convention 26)."
+    },
+    {
+      "n": 2,
+      "result": "PASS: sha256 keys.json 17b6636884c944ea2719a34fbdc791593784c924fad96e10b0949b5fc35438d3, score.py 95a9dfc1480f23620818c1edc176519c2110591f927a565db250f01a45f60649 — both equal versions.json's version-1 entry."
+    },
+    {
+      "n": 3,
+      "result": "PASS: 1167 passed before (71 files), in a scrubbed environment. The inherited shell environment reads 2 failed / 1165 passed (tests/test_preflight_gate.py), because it exports the owner's MODEL_* pins and tests/conftest.py's os.environ.setdefault cannot place its placeholders; see deviations."
+    }
+  ],
+  "baseline_suite": "1167 passed before; 1172 passed after (1167 + five new tests)",
+  "results": {
+    "ruling_order": "D44 verbatim in HANDOVER.md:38 and docs/handover-review.md:10677 (new section 99), committed a809005, before the code commits 19c7416 and 878e322.",
+    "version_guard": "tests/test_golden_keys.py TestTheScoreboardIsFrozenAndVersioned (3 tests): the tree hashes to the version-1 entry; a one-byte change in a copy and a missing versions.json entry each fail naming D44. The break, quoted: 'Ruling D44: keys.json no longer hashes to the key version 1 entry in versions.json (recorded 17b6636884c944ea2719a34fbdc791593784c924fad96e10b0949b5fc35438d3, found 2b343a8623b9154cf88f97149116253020e5f285e0c48e27b78248e9e4afde0d). A defect a reading finds in a key is fixed only as a new version, after the run that found it has been reported under the old one.'",
+    "key_version_outputs": "106-golden-arm-b: '2/6 PASS · 3/6 shipped · median sprawl 22.9 · total $0.2527 · key v1'; 106-ia-side-arm-b: '0/1 PASS · 0/1 shipped · median sprawl None · total $0.1337 · key v1'; 107 (baseline report re-rendered from the recorded answers, free): '3/6 golden hold every item · median sprawl 2.5 · total $0.0220 · key v1'. baseline's trace header records \"key_version\": \"key v1\". Each stamp has a provider-free test (convention 22).",
+    "readme": "The per-sector table now names its design and its date: recorded 2026-09-13 (1be3293) under the per-sector lookup design, superseded the same day by 36b1bf8, which bundled every blocking gap into one request (MAX_LOOKUPS = 1) — the design the code runs today. Not re-measured; no spend. No README guard pins those figures: tests/test_docs.py reads the badge count, the workflow yaml block and the workflow comparison table, not this passage (stated because the command asked how a guard would read them).",
+    "counts_re_derived": "1172 collected. README badge, Testing and Project Structure passages; HANDOVER header (snapshot date moved to 2026-10-02, since that is when the counts were re-derived), section 2.2 tree line, section 3.7 and section 4.2. AGENTS.md's '71 test files' unchanged and still true.",
+    "excluded_paths_diff": "empty: git diff --stat origin/main -- autornd/ workflows/ evals/golden/keys.json evals/golden/score.py evals/golden/versions.json evals/golden/SOURCE.md docs/reviews/",
+    "verification": "grep -n 'Ruling D44' -> HANDOVER.md:38, notebook 10675/10677; evals/golden/score.py | tail -1 -> SELF-TEST PASSED; score_trace.py on the 106 trace -> a summary line naming key v1; pytest -> 1172 passed."
+  },
+  "deviations": [
+    "Section 3.7's test-distribution table was regenerated, not patched: it had gone stale by seventeen files and several row counts (test_docs.py 9 vs 11, test_preflight.py 20 vs 30) while the guard read only the total. The section's own instruction is to regenerate from pytest --collect-only.",
+    "Suite green is environment-dependent here, recorded as an instrument finding: with the shell's exported MODEL_* pins and OPENROUTER_PROVIDER_ORDER, 2 failed / 1165 passed (tests/test_preflight_gate.py reads live configuration because conftest's os.environ.setdefault cannot displace exported values); scrubbed, 1172 passed. CI is clean-environment and green. A fix (forcing the placeholders) is instrument repair but outside 108's scope; asked below.",
+    "Precondition 1's grep cannot tell a run from a file path: it matched the owner's editor ('xed /home/jb/autornd-os/.env'). Recorded verbatim as a reading, not reported as 'no output'.",
+    "score_trace.py over docs/traces/107-direct-baseline.jsonl reads 0/0 — that trace carries baseline's 'answer' rows, not 'unit' rows. Reported as an empty match set (convention 28), not as a score; the baseline's own report is the instrument for that record and is the output quoted."
+  ],
+  "questions_for_advisor": [
+    "The suite's verdict depends on how it is invoked: tests/conftest.py's os.environ.setdefault placeholders lose to exported MODEL_*/OPENROUTER_* values, so a developer shell with pins reads 2 failed while CI reads green. Force the placeholders in conftest (instrument repair), or is a shell-scrubbed invocation the intended reading? Not done here: 108's scope excludes autornd/ and the question is about the suite's own harness.",
+    "The 107 trace's header predates D44 and records no key_version; its 'answer' rows are invisible to score_trace.py (0/0). D44 says every recorded run is re-scored and reported beside its key version — should a small reader bridge baseline rows into score_trace, or is baseline.report the reporter of record for direct-baseline traces?"
+  ],
+  "delivery_state": {
+    "branch": "arch/20261002-108-review-and-d44",
+    "pr": 129
+  },
+  "commits": {
+    "in_progress": "20639b2",
+    "ruling_first": "a809005",
+    "guard_and_stamps": "19c7416",
+    "readme_counts_record": "878e322"
+  }
+}
