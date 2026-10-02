@@ -1,0 +1,23 @@
+{
+  "ruling": "D44 (ARCH-20261002-108): the scoreboard is frozen and versioned",
+  "how": "keys.json's \"version\" names the current entry. tests/test_golden_keys.py checks that keys.json and score.py hash to that entry. A new version adds an entry naming its change and trigger, and re-scores every recorded run beside the earlier versions.",
+  "versions": [
+    {
+      "version": 1,
+      "frozen_at": "4fda54f",
+      "date": "2026-10-02",
+      "sha256": {
+        "keys.json": "17b6636884c944ea2719a34fbdc791593784c924fad96e10b0949b5fc35438d3",
+        "score.py": "95a9dfc1480f23620818c1edc176519c2110591f927a565db250f01a45f60649"
+      },
+      "change": "The keys after the five repairs in SOURCE.md, 'Key repairs' (PRs #113, #119, #122). Frozen by D44.",
+      "scores": {
+        "102-golden-arm-b": "3/6 pass (score_trace.py); all six drafts correct by two readings",
+        "106-golden-arm-b": "2/6 pass (score_trace.py)",
+        "107-direct-baseline": "6/6 hold every item; IA side test 3/6 core",
+        "102-ia-side-arm-b": "no answer (stopped by the spend ceiling)",
+        "106-ia-side-arm-b": "no shipped answer; the draft holds 5/6 core and carries fabricated quotations"
+      }
+    }
+  ]
+}
