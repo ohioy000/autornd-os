@@ -11015,3 +11015,17 @@ open server or the after-the-fact ceiling check.
    (test_api.py 25→33), +6 (test_spend_guard.py 4→10), +1 (test_settings.py
    22→23). README badge, Testing section and Project Structure comment;
    HANDOVER's header, §2.2 tree line, §3.7 and §4.2.
+
+## 102. Ruling D46 — an approval means something was checked (advisor, 2026-10-02, carried by ARCH-20261002-111)
+
+> **Ruling D46 (advisor, 2026-10-02) — an approval means something was checked. (1) A validation verdict with no evidence cannot be green, and an implementation with no deliverable cannot be green; either resolves red, with a cause that names what was missing, and is counted. The resolution of green from red_cause otherwise stands. (2) Every verdict that can block has a consumer. The independent check's do-not-ship ends the run blocked, with its findings. The feasibility review runs after the plan gate and cannot stop a run, so it no longer writes plan blockers; its concerns reach the implementer as considerations a reviewer raised, not as requirements. (3) A check that compared nothing says so: it passes as before, but it is recorded as not checked, and the terminal record lists every check that did not check. (4) Every judge that keeps a loop going writes its reason into the failure log, so the next attempt is told why. D36's plan rules and D43's scope rule are untouched. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md), verified by the advisor: an empty validation object passed (verdicts.py:351); the independent check's verdict had no consumer; feasibility blockers were recorded as plan blockers and handed to the implementer as 'address these' after D43 closed the plan's scope; numbers_consistent reported 'no contradicting values' when it had compared none; and a consistency-only failure looped with no failure-log entry (adapter.py:583). Falsifier: a green verdict with no evidence or no deliverable, a blocking verdict with no consumer, or a loop iteration whose cause is missing from the failure log.**
+
+Carried verbatim to HANDOVER.md's rulings block in the same commit. The
+command's constraints are part of what is executed: green needs substance
+(with the two named causes and a new normalisation kind); a terminal gate
+consumes independent_check's do-not-ship (carrying the node's own `when:`);
+feasibility's concerns move to their own output under a considerations
+heading; the check Result gains a `checked` flag; and the judges fold writes
+its refusals into the failure log.
+
+Execution record: §102.1–§102.4 below.
