@@ -48,12 +48,13 @@
   ],
   "delivery_state": {
     "branch": "arch/20261002-109-workflow-identity",
-    "pr": null
+    "pr": 130
   },
   "commits": {
     "in_progress": "6c904b1",
     "repair": "741cab9",
     "tests": "7b0d4c8",
-    "counts_and_record": "5f7770d"
+    "counts_and_record": "5f7770d",
+    "done": "46ed859"
   }
 }
