@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1167 · **Date of this snapshot:** 2026-09-26, counts re-derived against the tree under test
+**Tests:** 1172 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -300,7 +300,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      71 files, 1167 tests
+tests/                      71 files, 1172 tests
 
 ```
 
@@ -705,7 +705,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1167 total)
+### 3.7 Test distribution (1172 total)
 
 
 | file | n | file | n |
@@ -715,28 +715,36 @@ is revoked and the warning re-opens with a date.
 | test_blocked_on.py | 26 | test_budget_stop_scoring.py | 5 |
 | test_budget_transparency.py | 11 | test_citation_demand.py | 11 |
 | test_command_template.py | 38 | test_coverage_shapes.py | 46 |
-| test_doc_corpora.py | 7 | test_docs.py | 9 |
-| test_engine.py | 6 | test_evals.py | 73 |
+| test_direct_baseline.py | 3 | test_doc_corpora.py | 8 |
+| test_docs.py | 11 | test_engine.py | 6 |
+| test_env_ignore.py | 6 | test_evals.py | 73 |
 | test_evidence_shape.py | 14 | test_failure_path_terminal.py | 18 |
-| test_graph.py | 83 | test_green_resolution.py | 16 |
-| test_guards_can_fail.py | 9 | test_handoff_scheduler.py | 4 |
-| test_handover_truth.py | 8 | test_iteration_dissent.py | 5 |
+| test_figure_parsing.py | 10 | test_forced_reasoning.py | 3 |
+| test_golden_keys.py | 9 | test_graph.py | 83 |
+| test_green_resolution.py | 16 | test_guards_can_fail.py | 9 |
+| test_handoff_scheduler.py | 4 | test_handover_truth.py | 8 |
+| test_iteration_dissent.py | 5 | test_judge_tier.py | 11 |
 | test_knowledge.py | 41 | test_lead_review.py | 9 |
 | test_live_wiring.py | 7 | test_node_token_ceilings.py | 8 |
-| test_phase_timing.py | 3 | test_preflight.py | 20 |
-| test_preregistration_precedence.py | 9 | test_profiles.py | 23 |
+| test_phase_timing.py | 3 | test_preflight.py | 30 |
+| test_preflight_gate.py | 32 | test_preregistration_precedence.py | 9 |
+| test_prior_artifact_revision.py | 3 | test_profiles.py | 23 |
 | test_prohibition_phrasing.py | 20 | test_prohibition_scenario.py | 15 |
 | test_protocol_file.py | 20 | test_rate_limit_retry.py | 8 |
-| test_rejection_counter.py | 7 | test_repeat_and_fit_rule.py | 15 |
-| test_research.py | 37 | test_results_log.py | 10 |
+| test_regrounding.py | 18 | test_rejection_counter.py | 7 |
+| test_repeat_and_fit_rule.py | 15 | test_research.py | 37 |
+| test_response_files.py | 2 | test_results_log.py | 10 |
 | test_retry_reconciliation.py | 13 | test_review_composition.py | 28 |
-| test_rework_loop.py | 17 | test_routing.py | 63 |
+| test_review_quorum.py | 3 | test_rework_loop.py | 17 |
+| test_routing.py | 63 | test_run_record.py | 6 |
 | test_runtime_dependencies.py | 1 | test_schema_wiring.py | 15 |
-| test_serving_ledger.py | 7 | test_settings.py | 22 |
+| test_scope_rule.py | 3 | test_serving_ledger.py | 7 |
+| test_settings.py | 22 | test_settings_map.py | 5 |
 | test_shipped_examples.py | 15 | test_specialists.py | 11 |
-| test_structural_roles.py | 13 | test_sweep_budget.py | 21 |
-| test_terminal_on_bound.py | 21 | test_trace_durability.py | 7 |
-| test_triage.py | 10 | test_verdicts.py | 47 |
+| test_spend_guard.py | 4 | test_structural_roles.py | 13 |
+| test_sweep_budget.py | 21 | test_terminal_on_bound.py | 21 |
+| test_trace_durability.py | 7 | test_triage.py | 10 |
+| test_verdicts.py | 47 | test_watchdog.py | 23 |
 | test_workflow.py | 4 |  |  |
 
 Regenerate with `pytest tests/ --collect-only -q`; the total is the part that
@@ -781,7 +789,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1167/1167 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1172/1172 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

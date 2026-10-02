@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1167%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1172%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -153,8 +153,16 @@ across the eight `evals/grounding` sectors:
 | ~2900 | 5/8 | $0.32 |
 | ~1400 | 3/8 | $0.17 |
 
-Roughly one sector per 800 tokens. Tokens buy figures, so the budget is a dial
-rather than waste to trim — which is why it scales with consequence:
+**Dated figures — read the design with them.** They were recorded 2026-09-13
+(`1be3293`), under the per-sector lookup design in which a workflow could make
+up to four separate lookups. `36b1bf8`, the same day, bundled every blocking
+gap into one request per workflow (`MAX_LOOKUPS = 1`) — one request carrying
+every gap, the design the code runs today. So the lookup counts and the cost
+column belong to the older design; what transfers is the shape of the curve.
+Roughly one sector per 800 tokens in those measurements.
+
+Tokens buy figures, so the budget is a dial rather than waste to trim — which
+is why it scales with consequence:
 
 | risk | lookup | budget | cost |
 |---|---|---|---|
@@ -792,7 +800,7 @@ workflows/                # engineering-rnd, lean, triage-only, triage-classify
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 1167 tests
+tests/                    # 1172 tests
 
 ```
 
@@ -838,7 +846,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-1167 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
+1172 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
 
 
 The graph tests are the load-bearing ones: node shape, gate routing, loop bounds and the all-judges exit are all decidable without a provider. An earlier hardcoded sequencer was kept alongside the graph as an equivalence reference and has been retired — once gates could route on failure, a linear engine could no longer represent the pipeline it was supposed to be checking.
