@@ -1,0 +1,57 @@
+{
+  "command_id": "ARCH-20261002-107",
+  "parent_id": "ARCH-20261002-106",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Measure the simplest possible baseline, the redesign's first question. Put each golden question, and the IA side test, to the engineering model in ONE direct call, with no harness pipeline, and score the answers with the advisor's keys. Does the pipeline add correctness these questions need, or only time and failure points?",
+
+  "evidence": [
+    "D41 (ARCH-20261001-102): fewer than 3 of 6 golden passes on the best measured arm turns the freeze into a redesign of the default path (a fast path, and research-first answers for lookup questions). 106 (notebook §97): 2 of 6 pass, re-scored with the fixed key (PR #119).",
+    "docs/traces/102-golden-arm-b.jsonl: all six answers the pipeline produced were correct on their keys, and three shipped. docs/traces/106-golden-arm-b.jsonl: Q2 and Q6 were blocked at the PLAN stage (critical triage; D36 rule 2 blockers such as 'source text not available' and invented LED and gate-family unknowns); Q3's build judges never agreed; Q5 shipped late after a 592 s review.",
+    "The same questions were read at different risks in different runs (Q2 high then critical; Q6 low then critical), and risk drives the blocker posture and the review team.",
+    "The harness has never been measured against one direct call of its own model (AI Agents That Matter, Kapoor et al. 2024: complex agents often fail to beat simple baselines; report cost beside accuracy)."
+  ],
+
+  "scope": {
+    "include": ["evals/golden/baseline.py (new: the direct-call runner; measurement, allowed under D41)", "tests/ (a provider-free test of baseline.py with a billing mock client)", "docs/preregistration-107-direct-baseline.md (new, committed BEFORE any spend)", "docs/traces/107-direct-baseline.jsonl", "docs/handover-review.md", ".orchestration/responses/", "HANDOVER.md", "README.md", "AGENTS.md", "CLAUDE.md", ".claude/context/testing.md"],
+    "exclude": ["autornd/ and workflows/: no harness change; the baseline uses the existing client to call and bill.", "evals/golden/keys.json and score.py: advisor-written.", ".env and every .env* file: models and pins only as an environment prefix."]
+  },
+
+  "constraints": [
+    "THE BASELINE: for each of Q1-Q6 and the IA side test, one call to the engineering tier, with arm B's model and pin (z-ai/glm-5 via StreamLake, the same prefix as 102, 103 and 106), made through the harness's own OpenRouterClient so it is priced and recorded. The user message is the request, byte-identical to keys.json. The system message is EXACTLY: 'You are an expert engineer. Answer the question directly, correctly and concisely.' Nothing else: no plan, no grounding, no criteria, no review, no retry on content. Use max_tokens 4000 and temperature at the client default.",
+    "THE RECORD: docs/traces/107-direct-baseline.jsonl, one header (model, pin, system message, max_tokens) and one record per question: question id, answer text, seconds, prompt and completion tokens, cost, finish_reason. Score each answer with evals/golden/score.py (items, plus order for Q5). Report per question: every item held, seconds, cost, and the sprawl ratio. Then give your reading agreement item by item, with a disagreement reported as a finding about the key.",
+    "PRE-REGISTRATION (commit before spend; copy verbatim): P1, at least 5 of 6 direct answers hold every item of their key. P2, every direct call takes at most 60 s and costs at most $0.01. P3, the median sprawl ratio is below 5. P4 (side test), the direct IA answer holds at least 5 of its 6 core items, from the model's own knowledge with no lookup. DECISION RULE: 5 or 6 means the pipeline is not what makes these answers correct; the redesign's first ruling (D44) is a fast path (answer directly, then one cheap check, and escalate to the full pipeline only when the check fails), with D36's plan rules kept for the full pipeline's design work. 3 or 4 means a fast path for the questions that held, and the planner is examined on the rest. Fewer than 3 means the planner adds real correctness, so the redesign targets the planner's blocker posture instead.",
+    "SPEND GATE: the owner's one-line authorisation before the first paid call. Proposed caps: --max-spend 0.02 per call, $0.10 in total. Seven calls at 4,000 output tokens on glm-5 have a worst case of about $0.0077 output plus prompt each, so the 104 guard will not refuse them.",
+    "Run detached. No git operation while it runs. No re-run without a new authorisation."
+  ],
+
+  "acceptance_criteria": [
+    "The pre-registration precedes the trace. The owner's authorisation is quoted with its caps.",
+    "baseline.py has a provider-free test with a billing mock client that proves the request is sent byte-identical and the answer is scored. Its break is quoted.",
+    "The response gives a per-question table (items, seconds, cost, sprawl), the reading agreement, P1 to P4, and the decision rule applied.",
+    "`git diff --stat origin/main -- autornd/ workflows/ evals/golden/keys.json evals/golden/score.py` is empty.",
+    "Suite green. The PR is opened and delivery_state carries its number."
+  ],
+
+  "verification": [
+    {"command": "python3 evals/golden/score.py", "expected": "SELF-TEST PASSED"},
+    {"command": "git diff --stat origin/main -- autornd/ workflows/ evals/golden/keys.json evals/golden/score.py", "expected": "Empty."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass."}
+  ],
+
+  "rollback": "Not applicable: a measurement bounded by $0.10.",
+
+  "deliverable": {"branch": "arch/20261002-107-direct-baseline", "branch_created_by": "advisor", "pr": true, "merge": "by the advisor-custodian on green, after checking acceptance against the tree", "commit_style": "conventional"},
+
+  "transport": "Pushed by the advisor as the first step of D41's redesign. Commit the response IN_PROGRESS first.",
+
+  "assumptions": ["StreamLake still serves z-ai/glm-5, as it did in 106. If not, report BLOCKED and do not substitute."],
+
+  "questions": ["For any direct answer that fails an item, quote the lines: is it the answer, or the key?"],
+
+  "preconditions": [
+    {"command": "ps aux | grep -E 'autornd|evals' | grep -v grep", "expected": "No output."},
+    {"command": "git fetch --prune origin && python3 evals/golden/score.py | tail -1", "expected": "SELF-TEST PASSED (including the 102 and 106 Q5 regressions)."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "Green; record the count."}
+  ]
+}
