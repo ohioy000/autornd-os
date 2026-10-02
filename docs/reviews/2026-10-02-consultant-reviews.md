@@ -510,3 +510,31 @@ Test complementary-model cooperation against equal-budget alternatives.
 Remove stages that do not improve held-out delivered correctness.
 The project should be generalized at the execution and evidence layers, but specialized at the verification layer. A generalized committee is not a generalized expert.
 ```
+
+## Review B's closing scope note, from the owner's second paste
+
+The owner later pasted a "secondary consultant". It was review B again, word
+for word, with this closing note, which the first paste had cut off. It adds no
+finding. It says the review was static, unpinned and never ran the code, so its
+agreement with the report's numbers is not an independent confirmation of them.
+It also shows that no one had tested the running application. In response the
+advisor amended ARCH-20261002-110 before pickup with three additions:
+- a live 403 check in CI's docker job;
+- a byte-bound prompt-token worst case;
+- a call ceiling checked before dispatch.
+
+The note, verbatim:
+
+```text
+I reviewed the supplied report and retrieved public source covering the default workflow, graph specification/executor/adapter, phase prompts, verdict schemas, provider client, research/context/store, API/auth/dashboard, persistence/configuration/profiles, packaging, selected tests, and direct-baseline record.
+
+This is a source-based architectural and application review, not a completed full-repository or live-app audit:
+
+Repository cloning and direct shell downloads failed because network connections timed out.
+I did not run the test suite or application.
+I did not make paid provider calls.
+I reviewed public main files without independently pinning a commit SHA.
+I did not inspect every commit, PR, test, or archived architect session.
+No live application URL, deployment configuration, or sanitized standing model configuration was supplied.
+To close those gaps, I need a pinned repository archive, a runnable sanitized configuration, and an authorized application test environment. Findings above labeled source observations are static code-path findings; the pipeline outcome figures are attributed to the supplied report except where explicitly checked against the direct trace.
+```
