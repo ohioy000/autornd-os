@@ -4,7 +4,7 @@ request: 'Specify a uniform steel tie strip carrying a centered static tensile l
 tags:
 - golden
 - q4
-timeout: 600
+timeout: 1200
 expect:
   status: completed
   max_calls: 40

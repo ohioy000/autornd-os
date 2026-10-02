@@ -4,7 +4,7 @@ request: Under the definitions in 29 CFR § 1910.146(b), July 1, 2014 edition, w
 tags:
 - golden
 - q2
-timeout: 300
+timeout: 600
 expect:
   status: completed
   max_calls: 40

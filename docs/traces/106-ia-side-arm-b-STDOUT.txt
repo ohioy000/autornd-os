@@ -1,0 +1,18 @@
+preflight: SKIPPED (--skip-preflight; recorded in the header)
+
+worst-case single call (completion side, max_tokens x rate): triage $0.0014, research $0.0410, search $0.0160, architecture $0.0936, engineering $0.1498, judge $0.1344, escalation $0.3200
+
+results: evals/results/106-ia-side-arm-b.jsonl
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+golden_side_ia               0/1     10   548.5   ended blocked 1; status 1/1 — stopped by the deliberation watchdog (Ruling D38): the judge call at 'validate' (iteration 2) was not started: this node's pace is 346.203s and only 51.066s of the 600s budget remain before the 0.4s reserve; no implementation was agreed by the build judges; the latest implementation is not approved (unjudged)
+--------------------------------------------------------------------------------------------
+0/1 scenarios passed their assertions every repetition (runs ended blocked 1)  ·  10 calls  ·  548.5s  ·  $0.1337
+spend by tier: judge $0.0739, engineering $0.0441, architecture $0.0079, search $0.0059, research $0.0017, triage $0.0002
+served by: architecture via DeepInfra, engineering via StreamLake, judge via GMICloud, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.1337 of $0.5000
+
+exit 1

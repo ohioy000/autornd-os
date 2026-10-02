@@ -1,0 +1,23 @@
+preflight: SKIPPED (--skip-preflight; recorded in the header)
+
+worst-case single call (completion side, max_tokens x rate): triage $0.0014, research $0.0410, search $0.0160, architecture $0.0936, engineering $0.1498, judge $0.1344, escalation $0.3200
+
+results: evals/results/106-golden-arm-b.jsonl
+
+workflow: engineering-rnd   repetitions: 1
+scenario                    rate  calls    secs   flaky assertions
+--------------------------------------------------------------------------------------------
+golden_q1                    1/1      8   107.3   ended completed 1
+golden_q2                    0/1      6    74.7   ended blocked 1; status 1/1 — Plan not ready: Load-bearing source missing: Direct authoritative 29 CFR § 1910.146(b), July 1, 2014 edition GPO/eCFR text not available in environment; reconstructed comparison operators (< and >) and absence/presence of any qualifier are unverified.; Critical-risk verification gap: Without direct citation confirmation, regulatory misstatement could affect confined-space safety procedures; release blocked until Safety Engineer and Test Engineer confirm against GPO text.; Kill-trigger condition: If retrieval of CFR-2014-title29-vol5-sec1910-146.pdf (or equivalent 2014 snapshot) fails to confirm the exact threshold-operator pairs and concentration basis, stop and withhold deliverable.
+golden_q3                    0/1      9   599.6   ended blocked 1; status 1/1 — stopped by the deliberation watchdog (Ruling D38): the engineering call at 'implement' (iteration 3) was cancelled at 599.603s of the 600s budget, leaving the 0.4s reserve to write this terminal; no implementation was agreed by the build judges; the latest implementation is not approved (dissented)
+golden_q4                    1/1      9   115.2   ended completed 1
+golden_q5                    1/1     10   739.8   ended completed 1
+golden_q6                    0/1      6    83.5   ended blocked 1; status 1/1 — Plan not ready: Input polarity unverified for both cabin doors (open/close active-high vs active-low) and braking system (engaged active-high vs active-low): only unrelated source suggests active-low for a different brake control; authoritative datasheet not found.; Specific voltage levels unverified: door inputs respond to 12-250 V AC/DC per one manual, not logic-level 5.00 VDC; exact logic-high/low thresholds for door/open and brake/engaged not confirmed.; Indicator light drive polarity and current unverified: LED (<20 mA) vs lamp (>50 mA) and active-high vs active-low drive not specified; direct gate vs transistor driver selection blocked.; Power supply voltage and current budget unverified: assumed 5.00 VDC; if bus is 12 VDC or 28 VDC, LDO/regulator and resistor values must change (kill trigger: if rail ≠ 5.00 VDC, redesign).; Mechanical vs solid-state input nature unverified: if mechanical switches, 10 ms RC + Schmitt debouncing is required; if omitted and switches bounce, false illumination occurs (falsifier fires).; Gate family / environmental / SIL / physical constraints unverified: 74HC selected conditionally; if EMI, vibration, temperature, or SIL requirements apply, component selection is invalid.; Because these are load-bearing inputs to logic equation, polarity, gate choice, and voltage, ready is false; proceed only after measurement of door/brake terminal voltages and indicator load specification.
+--------------------------------------------------------------------------------------------
+3/6 scenarios passed their assertions every repetition (runs ended blocked 3, completed 3)  ·  48 calls  ·  1720.1s  ·  $0.2526
+spend by tier: judge $0.0856, engineering $0.0826, architecture $0.0536, search $0.0184, research $0.0101, triage $0.0022
+served by: architecture via DeepInfra, engineering via StreamLake, judge via Baidu/GMICloud, research via Google, search via Perplexity, triage via Alibaba
+
+sweep budget: $0.2526 of $3.0000
+
+exit 1

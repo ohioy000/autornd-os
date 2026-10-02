@@ -10509,3 +10509,97 @@ the sentence test fail, and the D36 hash test passes.
 The plan text is D43's own sentences, plus one that restates "D36's four
 rules keep governing how the plan is reasoned; they do not add to what the
 answer must contain" for the prompt's reader.
+
+## 97. ARCH-20261002-106: the golden set re-run after 104 and 105 (executor, 2026-10-02)
+
+> Correction, 2026-10-02, by the advisor: D42's exhibit misnamed Q2's failure class. ARCH-20261001-104's execution found it: the Test Engineer reviewer was stopped by the run's spend ceiling (BudgetExceeded at $0.0844 against the advisor's $0.07 cap), and the bare except in run_review turned that stop into a high finding. It was not a schema rejection; the run's one schema rejection was on the architecture tier. D42's rule stands. Its exhibit is the spend stop recorded as a finding, and 104 now re-raises BudgetExceeded inside reviewers.
+
+### 97.1 Scores (score_trace.py, verbatim)
+
+Run detached 2026-10-02 00:16:18Z to 00:54:11Z. Caps $0.50 per run, sweep $3.00, IA $0.50, with the preflight override recorded in both headers.
+
+```
+Q1   PASS               completed  shipped                items[++] 107.315s/300s $0.0285/0.5 risk=low sprawl=26.2 scope_out=0
+Q2   FAIL (no answer)   blocked    no answer              items[] 74.653s/300s $0.0195/0.5 risk=critical sprawl=None scope_out=None
+Q3   FAIL (no answer)   blocked    no answer              items[] 599.604s/300s $0.0686/0.5 risk=low sprawl=None scope_out=None
+Q4   PASS               completed  shipped                items[+++++++] 115.248s/600s $0.0321/0.5 risk=medium sprawl=5.0 scope_out=0
+Q5   FAIL               completed  shipped                items[+++++++-++] 739.821s/600s $0.0819/0.5 risk=medium sprawl=22.9 scope_out=0
+     items not held: ['Q5.8']
+Q6   FAIL (no answer)   blocked    no answer              items[] 83.463s/300s $0.0221/0.5 risk=critical sprawl=None scope_out=None
+
+2/6 PASS · 3/6 shipped · median sprawl 22.9 · total $0.2527
+
+IA   FAIL (no answer)   blocked    no answer              items[] 548.535s/600s $0.1337/0.5 risk=high sprawl=None scope_out=None
+
+0/1 PASS · 0/1 shipped · median sprawl None · total $0.1337
+```
+
+**The executor's reading:**
+- Q1, Q4: PASS, agreed.
+- Q2, Q3, Q6, IA: no answer, agreed.
+- **Q5: disagree on Q5.8, but the verdict stands on time.** The answer's
+  log verdict is "**Verdict: PASS**" (0.10 bar ≤ 0.20 bar, no leakage),
+  which is correct. Q5.8's `none` pattern matches the answer's general
+  rule line "If EITHER C1 OR C2 fails → Verdict = **FAIL**", not the
+  log's verdict. That is a key defect, reported and not adjusted. Q5
+  fails anyway: it shipped at 739.8 s against a 600 s target ("shipped
+  late").
+
+**P1-P7:**
+- **P1** (at least 5 of 6 pass): REFUTED, 2 of 6.
+- **P2** (Q2, Q3 and Q6 ship): REFUTED, none shipped.
+- **P3** (Q1, Q4, Q5 still pass): REFUTED in part. Q1 and Q4 pass; Q5
+  shipped late.
+- **P4** (no run exceeds its cap): HELD. The largest was $0.1337 (IA)
+  against $0.50; 104's guard. Total $0.3864.
+- **P5** (median sprawl below 10): REFUTED, 22.9 over the shipped
+  answers (Q1 26.2, Q4 5.0, Q5 22.9).
+- **P6** (every shipped answer within target): REFUTED. Q5, 739.8 s
+  against 600 s.
+- **P7** (the IA run ships): REFUTED.
+
+**The decision rule:** 2 of 6, under 3, means **a redesign of the default
+path** (D41 turns into the redesign: a fast path, and research-first
+answers for lookup questions).
+
+### 97.2 Where each failure went (the command's question)
+
+- **Q2 and Q6: the plan refused to start.** `plan_ready` blocked:
+  - Q2: "Load-bearing source missing: Direct authoritative 29 CFR §
+    1910.146(b), July 1, 2014 edition GPO/eCFR text not available".
+  - Q6: "Input polarity unverified for both cabin doors ...", plus six
+    more blockers about voltages, LED current, supply rail, debouncing
+    and the gate family.
+  - Both read **critical** at triage, where 102 read high and low.
+  - D37 re-grounded Q2 (one lookup), and its second plan still blocked.
+  - D36 rule 2 ("an unknown is a blocker") operates on the plan's
+    blockers, and D43 constrains only the success criteria. So D43 could
+    not reach this failure, and Q6's blockers are the same invented
+    hardware design D43 was written to stop.
+  - No implementation ran, and no approved answer exists.
+- **Q3: the build judges never agreed.** implement took 25.5 s, then
+  134.1 s, then 354.6 s; the third was cancelled at 599.6 s. No agreed
+  iteration (`latest: dissented`).
+- **Q5: shipped late.** review alone took 592.2 s, and the deliverable
+  still carries "SECTION 7 — FALSIFIER / VALIDATION METRIC" despite D43's
+  implement sentence.
+- **IA: blocked.** validate took 346.2 s, so the second validate was
+  refused on its own node pace with 51 s left. The plan proceeded on
+  five "assumed ... Kill trigger" items, the plan's own devices again.
+  Triage read high.
+
+### 97.3 Findings for the advisor
+
+1. **The dominant failure moved from apparatus to planning.** 104's
+   repairs held: no reviewer failure counted as a finding, no false
+   consistency conflict, and no run over its cap. The plan now blocks
+   lookup and textbook questions as "unverified", at critical risk.
+2. **D43 does not reach the plan's blockers or the deliverable's
+   devices.** Q6's blockers re-introduce the invented design, and Q5's
+   answer still carries a falsifier section.
+3. **Triage risk is unstable across runs** on identical requests: Q2
+   high, then critical; Q6 low, then critical. Risk drives adversarial
+   review and the blocker posture.
+4. **Q5.8's key** catches a rule statement as the verdict (above).
+5. **Judge time is still the cost driver:** Q5 review 592 s, IA validate
+   346 s.
