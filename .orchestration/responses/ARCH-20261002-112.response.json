@@ -50,7 +50,7 @@
   ],
   "delivery_state": {
     "branch": "arch/20261002-112-hermetic-suite",
-    "pr": null
+    "pr": 137
   },
   "commits": {
     "in_progress": "ccfbefe",
