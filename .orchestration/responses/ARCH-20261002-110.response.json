@@ -1,0 +1,35 @@
+{
+  "command_id": "ARCH-20261002-110",
+  "status": "IN_PROGRESS",
+  "executed": true,
+  "head_before": "627e730",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20261002-109: response present at .orchestration/responses/ARCH-20261002-109.response.json on main (merged 627e730, PR #130)",
+    "preconditions_present": 3,
+    "transport": "Branch arch/20261002-110-no-open-spend cut from origin/main 627e730, the name taken from the command's deliverable block."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "PASS: no output — no run in flight (cleaner than 108 and 109's readings, which matched the owner's editor argv)."
+    },
+    {
+      "n": 2,
+      "result": "PASS: 109's response is on main — git log origin/main -- .orchestration/responses/ARCH-20261002-109.response.json returns fcc1806 (the delivery_state commit), an ancestor of 627e730."
+    },
+    {
+      "n": 3,
+      "result": "COUNT, scrubbed green: 1176 passed on the merged main (the same reading CI takes; the exported-pin leak in this shell is unchanged and carried as a question in 108 and 109's responses)."
+    }
+  ],
+  "baseline_suite": "1176 passed before (scrubbed)",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20261002-110-no-open-spend",
+    "pr": null
+  },
+  "commits": {}
+}
