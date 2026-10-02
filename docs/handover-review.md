@@ -11403,3 +11403,18 @@ Departures: none beyond the ruling's own instruction to delete `_run_workflow`
 (the reference check is in §104.1). Counts re-derived (convention 24): 1218
 collected — 1207 before, +11 (test_api 33→41, test_spend_guard 10→13); README
 badge/Testing/Project Structure and HANDOVER's header/§2.2/§3.7/§4.2.
+
+## 105. Ruling D48 — D46, completed (advisor, 2026-10-02, carried by ARCH-20261002-114)
+
+> **Ruling D48 (advisor, 2026-10-02) — D46, completed. (1) A check that compared nothing never turns a fail into a pass. The judges fold lists every unchecked check. An unchecked check that passed is not a dissent; an unchecked check that failed is a dissent, as it was before D46. This corrects the advisor's command 111, whose constraint [4] made every unchecked check non-blocking. D46 (3) says such a check 'passes as before', and never let a failure through. (2) A ready plan's own blockers did not stop the plan gate, so they are not requirements either. They reach the implementer under a heading that names them as the plan's own, beside the reviewers' considerations and framed the same way: weigh them; nothing is judged against them. D46 (2) moved feasibility's concerns out of plan.blockers but did not decide what the implementer sees of the plan's own blockers, and 111 dropped them without a ruling. (3) A check that did not run carries no approval-shaped value. A skipped independent check records that it was skipped and why, and records no ship. The gate after it reads a typed veto, which is true only when the check ran and said do not ship. D36's plan rules and D43's scope rule are untouched. Rationale: the advisor's post-merge review of 111 (2026-10-02). By the advisor's own command, a failing check that compared nothing had become non-blocking in the fold. 106's IA unit carried 5 blockers of the plan's own, which 111 stopped showing the implementer. The skipped independent check wrote ship: true. Falsifier: a run that converges with a failing check in the fold; a ready plan's own blocker missing from the implement prompt; or a ship value recorded by a check that did not run.**
+
+Carried verbatim to HANDOVER.md's rulings block in the same commit. The
+command's constraints are part of what is executed: the fold's dissent rule;
+the plan's-own-blockers heading verbatim; the skip's `{"skipped": true,
+"vetoed": false}` output with `DoubleCheckVerdict.vetoed` as a computed
+property (no schema field); `independent_verdict` reading `not
+independent_check.vetoed` in both workflow files; the write path holding
+(test written before the repair); and the unit record's `checks_not_checked`
+field — 111's first question, answered.
+
+Execution record: §105.1–§105.3 below.
