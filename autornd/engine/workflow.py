@@ -26,6 +26,14 @@ from autornd.specialists.registry import get_specialists
 
 logger = logging.getLogger(__name__)
 
+# Statuses that end a run. A progress write advances the row's visible status
+# as nodes complete; it must never move a row that has already ended.
+_TERMINAL = (
+    WorkflowStatus.COMPLETED,
+    WorkflowStatus.BLOCKED,
+    WorkflowStatus.ESCALATED,
+)
+
 
 def workflow_path() -> str:
     """The graph to run. A name resolves inside workflows/; a path is used as-is."""
@@ -56,7 +64,12 @@ class WorkflowEngine:
         "review": WorkflowStatus.REVIEW,
     }
 
-    async def execute(self, request: str) -> Workflow:
+    async def execute(
+        self,
+        request: str,
+        workflow: Workflow | None = None,
+        user_id: int | None = None,
+    ) -> Workflow:
         """Run the configured workflow graph.
 
         The sequence used to live in a hardcoded method here. It now lives in a
@@ -65,22 +78,54 @@ class WorkflowEngine:
         is proven to reproduce the old behaviour call-for-call — see
         tests/test_graph_equivalence.py — and the old sequencer is kept beside
         it as the reference those tests compare against.
+
+        One row per submission: the API paths create the caller's row and pass
+        it in, so the id the caller polls is the id the run writes. Passing no
+        row keeps working — the row is created here, with `user_id` when one is
+        known (ARCH-20261002-109).
         """
+        import asyncio
+
         from autornd.graph.adapter import PhaseRunner
         from autornd.graph.executor import GraphExecutor
         from autornd.graph.spec import load as load_spec
 
-        workflow = Workflow(request=request, status=WorkflowStatus.PENDING)
-        self.session.add(workflow)
-        await self.session.flush()
-        logger.info("Workflow %d created for: %s", workflow.id, request[:80])
+        if workflow is None:
+            workflow = Workflow(
+                request=request, status=WorkflowStatus.PENDING, user_id=user_id
+            )
+            self.session.add(workflow)
+        # Committed before the run starts: a poll sees the submission at once,
+        # and a crash mid-run keeps every node completed before it.
+        await self.session.commit()
+        logger.info("Workflow %d running: %s", workflow.id, request[:80])
 
-        pending_saves: list[tuple] = []
+        # Each completed node is written in a transaction of its own, from a
+        # chain of tasks the synchronous on_phase callback schedules. The
+        # executor is not async-aware about our session and should not be; the
+        # chain keeps one writer at a time, in node order, so a poll sees
+        # progress and a crash keeps what was paid for. The `written` flag is
+        # what stops the end-of-run flush writing any phase twice.
+        pending_saves: list[dict] = []
+        chain: list = [None]
 
         def on_phase(node_id, verdict, responses, iteration):
-            # Collected synchronously, written after the run — the executor is
-            # not async-aware about our session and should not be.
-            pending_saves.append((node_id, verdict, responses, iteration))
+            item = {
+                "node_id": node_id,
+                "verdict": verdict,
+                "responses": responses,
+                "iteration": iteration,
+                "written": False,
+            }
+            pending_saves.append(item)
+            previous = chain[0]
+
+            async def _write_in_order():
+                if previous is not None:
+                    await previous
+                await self._write_progress(workflow, item)
+
+            chain[0] = asyncio.create_task(_write_in_order())
 
         runner = PhaseRunner(self.client, on_phase=on_phase)
         spec = load_spec(workflow_path())
@@ -97,24 +142,31 @@ class WorkflowEngine:
 
         try:
             state = await executor.run(request)
+            # Drain the progress writers first: the node writes are what
+            # advance the row's status while the run is in flight, and none of
+            # them may land after the terminal below.
+            await self._flush_phases(workflow, pending_saves, chain)
+            triage = state.outputs.get("triage")
+            if triage is not None:
+                workflow.risk_level = triage.risk.value
+            loop = state.outputs.get("build_loop") or {}
+            workflow.iteration = loop.get("iterations", 0)
+            # Inside the guarded region: a terminal string that is not a
+            # member raises here, and lands as the row's BLOCKED with the raw
+            # terminal in `error`, committed — the result is kept
+            # (ARCH-20261002-109).
+            workflow.status = WorkflowStatus(state.status)
+            workflow.error = state.reason if state.status != "completed" else None
         except Exception as exc:
             logger.exception("Workflow %d failed", workflow.id)
-            await self._flush_phases(workflow, pending_saves)
+            await self._flush_phases(workflow, pending_saves, chain)
             workflow.status = WorkflowStatus.BLOCKED
             workflow.error = f"{type(exc).__name__}: {exc}"[:2000]
             workflow.updated_at = datetime.now(timezone.utc)
             await self.session.commit()
             return workflow
 
-        await self._flush_phases(workflow, pending_saves)
-
-        triage = state.outputs.get("triage")
-        if triage is not None:
-            workflow.risk_level = triage.risk.value
-        loop = state.outputs.get("build_loop") or {}
-        workflow.iteration = loop.get("iterations", 0)
-        workflow.status = WorkflowStatus(state.status)
-        workflow.error = state.reason if state.status != "completed" else None
+        await self._flush_phases(workflow, pending_saves, chain)
         workflow.updated_at = datetime.now(timezone.utc)
         await self.session.commit()
 
@@ -128,12 +180,51 @@ class WorkflowEngine:
 
         return workflow
 
-    async def _flush_phases(self, workflow: Workflow, saves: list[tuple]) -> None:
-        for node_id, verdict, responses, iteration in saves:
-            data = verdict.model_dump() if hasattr(verdict, "model_dump") else dict(verdict)
-            for response in responses:
+    async def _flush_phases(
+        self, workflow: Workflow, saves: list[dict], chain: list | None = None
+    ) -> None:
+        """Wait for the progress writers, then write whatever they did not.
+
+        The `written` flag is what keeps a phase from being recorded twice:
+        a node's record is written once, by the writer that got there first.
+        """
+        if chain and chain[0] is not None:
+            await chain[0]
+        for item in saves:
+            await self._write_progress(workflow, item)
+
+    async def _write_progress(self, workflow: Workflow, item: dict) -> None:
+        if item["written"]:
+            return
+        try:
+            data = (
+                item["verdict"].model_dump()
+                if hasattr(item["verdict"], "model_dump")
+                else dict(item["verdict"])
+            )
+            for response in item["responses"]:
                 await self._save_phase(
-                    workflow, node_id, data, response, max(iteration, 1))
+                    workflow, item["node_id"], data, response,
+                    max(item["iteration"], 1),
+                )
+            # The row's visible status moves with the node that just finished —
+            # but never over a terminal: a retried write landing after the run
+            # ended must not repaint `completed` with `review`.
+            status = self._NODE_STATUS.get(item["node_id"])
+            if status is not None and workflow.status not in _TERMINAL:
+                workflow.status = status
+            # One transaction of its own: a poll sees this node before the
+            # next one starts, and a crash keeps it.
+            await self.session.commit()
+            item["written"] = True
+        except Exception:
+            # Kept out of the run's way and out of silence both: the run's
+            # result survives, and the record says which node was lost.
+            logger.exception(
+                "Progress write failed for node %s on workflow %d",
+                item["node_id"], workflow.id,
+            )
+
     @staticmethod
     def _enforce_triage_composition(verdict: TriageVerdict) -> None:
         """Enforce doc-specified rules the LLM might omit."""
