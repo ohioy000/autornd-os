@@ -11295,3 +11295,20 @@ where it read 2 failed, 1196 passed on arrival.
    because an earlier test had latched the rerank fallback mode (the §6.8
    latch). Sealed with `seal_double`, and every suspect file was then run in
    isolation reading the guard's count: all zero.
+
+## 104. Ruling D47 — credentials are the owner's to issue (advisor, 2026-10-02, carried by ARCH-20261002-113)
+
+> **Ruling D47 (advisor, 2026-10-02) — credentials are the owner's to issue. (1) An account is created only from this machine. POST /api/auth/register serves loopback callers only, under every authentication setting, and REGISTRATION_ENABLED=false still turns it off entirely. A remote caller is served only with a credential the owner issued, or under ALLOW_UNAUTHENTICATED_REMOTE=1. A credential the owner issued is the API_KEY, or a token for an account created from this machine. (2) Every API route that can spend is admitted through D45's run gate. No caller can multiply the per-run bounds by calling such a route many times at once. Rationale: the advisor's post-merge review of 110 (2026-10-02), with provider-free probes at main 535a9e0. D45's refusal sentence names one fix: configure API_KEY or JWT_SECRET. Under that fix, /api/auth/register was a public path and was enabled by default. A remote stranger registered (201) and was then served (200) on protected routes, so the server was open to anyone who asked for an account. Separately, POST /api/workflows/{id}/doublecheck built a bounded client per request outside the gate, so concurrent requests multiplied the ceiling. Falsifier: a remote caller without an owner-issued credential or the override who obtains a token or is served a protected route; or more spending API requests in flight than max_concurrent_runs.**
+
+Carried verbatim to HANDOVER.md's rulings block in the same commit. The
+command's constraints are part of what is executed: registration loopback-only
+under every authentication setting with the refusal sentence naming how the
+owner creates an account; D45's refusal sentence and the README's Auth wording
+re-read so neither implies JWT_SECRET opens registration; every spending route
+through the run gate (the estimate route makes no call and says so); admission
+released on every path; the reservation identified per dispatch (the advisor's
+out-of-order case, $0.111 booked against $0.10, reproduces on the old code and
+is refused on the new); `_run_workflow` deleted with its reference check; and
+110's two questions answered in the response.
+
+Execution record: §104.1–§104.3 below.
