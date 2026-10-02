@@ -157,7 +157,7 @@ async def submit_workflow(
     session.add(workflow)
     await session.commit()
 
-    background.add_task(_run_workflow_bg, workflow.id, body.request)
+    background.add_task(_run_workflow_bg, workflow.id)
 
     return {
         "data": _summarize(workflow),
@@ -165,7 +165,7 @@ async def submit_workflow(
     }
 
 
-async def _run_workflow_bg(workflow_id: int, request: str):
+async def _run_workflow_bg(workflow_id: int):
     from autornd.database import async_session
 
     async with async_session() as session:
@@ -176,7 +176,9 @@ async def _run_workflow_bg(workflow_id: int, request: str):
         client = OpenRouterClient()
         engine = WorkflowEngine(client, session)
         try:
-            await engine.execute(workflow.request)
+            # The row the caller was handed is the row the run writes —
+            # one submission, one record (ARCH-20261002-109).
+            await engine.execute(workflow.request, workflow=workflow)
         finally:
             await client.close()
 
@@ -188,10 +190,18 @@ async def submit_workflow_sync(
     session: AsyncSession = Depends(get_session),
 ):
     """Execute a workflow synchronously and return the full result."""
+    workflow = Workflow(
+        request=body.request,
+        status=WorkflowStatus.PENDING,
+        user_id=_get_user_id(request),
+    )
+    session.add(workflow)
+    await session.commit()
+
     client = OpenRouterClient()
     engine = WorkflowEngine(client, session)
     try:
-        workflow = await engine.execute(body.request)
+        workflow = await engine.execute(body.request, workflow=workflow)
     finally:
         await client.close()
 
