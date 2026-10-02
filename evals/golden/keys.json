@@ -343,13 +343,14 @@
     },
     {
      "id": "Q5.8",
-     "item": "verdict PASS",
+     "item": "verdict for THIS log is PASS (read beside the logged figures, not from the general rule lines)",
      "all": [
-      "\\bpass(?:es|ed)?\\b|\\bacceptable\\b"
+      "(?:5\\.90|0\\.10?\\s*bar).{0,160}?\\bpass(?:es|ed)?\\b"
      ],
      "none": [
-      "(?:verdict|result)\\s*(?:for this log)?\\s*[:=–-]?\\s*\\**\\s*fail"
-     ]
+      "(?:5\\.90|0\\.10?\\s*bar).{0,60}?(?:verdict|result|test)\\s*(?:is\\s*)?[:=–-]?\\s*fail(?:s|ed)?\\b"
+     ],
+     "why_changed": "2026-10-02, the advisor's key defect, found by the executor in 106 (notebook §97): the old none-pattern matched the answer's general rule line 'if either c1 or c2 fails -> verdict = fail' ahead of the log's 'verdict: pass'. Normalisation folds newlines, so the verdict is read by proximity to the logged figures."
     },
     {
      "id": "Q5.9",
@@ -570,6 +571,13 @@
    "answer": "verdicts.implement.summary",
    "must_hold_all": true,
    "why": "102's shipped Q5 answer is correct, and the first version of this key failed it twice: 'zero visible leakage', and a first-mention order check fooled by an equipment table above the steps. The coder's reading caught both."
+  },
+  {
+   "trace": "docs/traces/106-golden-arm-b.jsonl",
+   "scenario": "golden_q5",
+   "answer": "verdicts.implement.summary",
+   "must_hold_all": true,
+   "why": "106's shipped Q5 answer is correct on every item (it failed on time, not content). The first Q5.8 key failed it on a general rule line."
   }
  ]
 }
