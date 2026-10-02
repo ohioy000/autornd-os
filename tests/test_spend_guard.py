@@ -8,6 +8,7 @@ so the request counter proves whether a call was made.
 
 from __future__ import annotations
 
+import asyncio
 import json
 
 import httpx
@@ -18,7 +19,8 @@ from autornd.evals.scenario import parse
 from autornd.graph.spec import load
 from autornd.routing import openrouter
 from autornd.routing.openrouter import (
-    CHARS_PER_TOKEN, OpenRouterClient, SpendGuardRefused,
+    CHAT_TEMPLATE_ALLOWANCE_BYTES, BudgetExceeded, OpenRouterClient,
+    SpendGuardRefused,
 )
 
 # One reply that satisfies every phase's schema; keys a verdict does not
@@ -77,10 +79,10 @@ class TestTheGuardDecidesBeforeTheCall:
         model = client.get_model("escalation")
         rates[model] = (1e-6, 1e-6)
         client.spend_ceiling = 0.08
-        prompt = "x" * 4000                       # ~1000 prompt tokens
+        prompt = "x" * 4000                       # 4,000 bytes: the bound is bytes
         await client.chat("escalation", "", prompt, max_tokens=1000)
         assert requests == [model]
-        worst = (4000 / CHARS_PER_TOKEN) * 1e-6 + 1000 * 1e-6
+        worst = (4000 + CHAT_TEMPLATE_ALLOWANCE_BYTES) * 1e-6 + 1000 * 1e-6
         assert worst < 0.08
         assert client.spend_guard_blind == []
 
@@ -126,3 +128,176 @@ class TestTheGuardOnARealRun:
         assert engineering not in requests       # the refused call was never sent
         assert unit["spend_guard_blind"], "unrated tiers must be recorded as blind"
         assert all(b["model"] != engineering for b in unit["spend_guard_blind"])
+
+
+# ── Ruling D45 (ARCH-20261002-110): the guard holds ─────────────────────────
+#
+# (e) concurrent calls, (f) failed calls, (g) reranking — the three ways the
+# F3 guard could be walked past. Each drives the real client over
+# httpx.MockTransport, so the request list proves whether a call was made.
+
+
+class TestTheReservationHoldsAcrossConcurrentCalls:
+    """(e) The guard read completed spend, which _account updates only after a
+    response — so reviewer fan-out ran calls that each passed against the same
+    remaining balance. The worst case is now reserved before dispatch."""
+
+    async def test_the_second_concurrent_call_is_refused_before_dispatch(self, rates):
+        requests: list = []
+        mid_flight = asyncio.Event()
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            body = json.loads(request.content)
+            requests.append(body["model"])
+            mid_flight.set()
+            await asyncio.sleep(0.2)
+            return httpx.Response(200, json={
+                "choices": [{"message": {"content": json.dumps(UNION)},
+                             "finish_reason": "stop"}],
+                "usage": {"prompt_tokens": 1, "completion_tokens": 1,
+                          "cost": 0.001}})
+
+        client = OpenRouterClient(api_key="k",
+                                  base_url="https://router.test/api/v1")
+        client._client = httpx.AsyncClient(
+            base_url=client.base_url, transport=httpx.MockTransport(handler))
+        model = client.get_model("escalation")
+        rates[model] = (0.0, 1e-5)          # 5,000 completion tokens -> $0.05
+        client.spend_ceiling = 0.08
+
+        first = asyncio.create_task(
+            client.chat("escalation", "sys", "user", max_tokens=5_000))
+        await mid_flight.wait()             # the first call is in flight
+        with pytest.raises(SpendGuardRefused) as refused:
+            await client.chat("escalation", "sys", "user", max_tokens=5_000)
+        # $0.05 reserved leaves $0.03, and the second call could cost $0.05.
+        assert refused.value.worst_case == pytest.approx(0.05, abs=1e-6)
+        assert refused.value.remaining == pytest.approx(0.03, abs=1e-6)
+        assert len(requests) == 1           # the refused call was never sent
+        await first
+        assert len(requests) == 1
+
+
+class TestAFailedCallKeepsItsWorstCase:
+    """(f) A call can fail after dispatch — error status, transport error,
+    timeout, cancellation. No actual cost will ever arrive to replace the
+    estimate, so the worst case stays as unreconciled liability and is
+    recorded with its kind."""
+
+    def _client_failing(self, requests: list, response) -> OpenRouterClient:
+        def handler(request: httpx.Request) -> httpx.Response:
+            requests.append(json.loads(request.content)["model"])
+            return response
+        client = OpenRouterClient(api_key="k",
+                                  base_url="https://router.test/api/v1")
+        client._client = httpx.AsyncClient(
+            base_url=client.base_url, transport=httpx.MockTransport(handler))
+        return client
+
+    async def test_an_error_status_keeps_the_worst_case_counted_and_recorded(
+            self, rates):
+        requests: list = []
+        client = self._client_failing(
+            requests, httpx.Response(500, json={"error": {"message": "boom"}}))
+        model = client.get_model("escalation")
+        rates[model] = (0.0, 1e-5)          # 5,000 completion tokens -> $0.05
+        client.spend_ceiling = 0.08
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await client.chat("escalation", "sys", "user", max_tokens=5_000)
+
+        assert client.spend == 0.0          # nothing was booked
+        assert client.reserved == 0.0
+        assert client.unreconciled_liability == pytest.approx(0.05, abs=1e-6)
+        assert client.failed_after_dispatch == [{
+            "function": "escalation", "model": model, "kind": "error_status",
+            "worst_case": 0.05}]
+        # Counted for the rest of the run: a call that would fit the raw
+        # budget no longer fits once the liability is kept.
+        with pytest.raises(SpendGuardRefused):
+            await client.chat("escalation", "sys", "user", max_tokens=5_000)
+        assert len(requests) == 1           # only the failed call was sent
+
+    async def test_a_timeout_is_kept_under_its_own_kind(self, rates):
+        requests: list = []
+
+        def timed_out(request: httpx.Request) -> httpx.Response:
+            raise httpx.ReadTimeout("slow")
+
+        client = OpenRouterClient(api_key="k",
+                                  base_url="https://router.test/api/v1")
+        client._client = httpx.AsyncClient(
+            base_url=client.base_url, transport=httpx.MockTransport(timed_out))
+        model = client.get_model("escalation")
+        rates[model] = (0.0, 1e-5)
+        client.spend_ceiling = 0.08
+
+        with pytest.raises(httpx.ReadTimeout):
+            await client.chat("escalation", "sys", "user", max_tokens=5_000)
+
+        assert client.failed_after_dispatch[0]["kind"] == "timeout"
+        assert client.unreconciled_liability == pytest.approx(0.05, abs=1e-6)
+
+
+class TestRerankPassesTheGuard:
+    """(g) rerank was the one dispatch in the client with no pre-call check at
+    all — it posted and spent whatever the documents cost."""
+
+    async def test_rerank_is_refused_when_its_worst_case_does_not_fit(self, rates):
+        requests: list = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            requests.append(request.url.path)
+            return httpx.Response(200, json={"results": [],
+                                             "usage": {"cost": 0.0}})
+        client = OpenRouterClient(api_key="k",
+                                  base_url="https://router.test/api/v1")
+        client._client = httpx.AsyncClient(
+            base_url=client.base_url, transport=httpx.MockTransport(handler))
+        rates["test/reranker"] = (1e-4, 0.0)
+        client.spend_ceiling = 0.0001
+
+        with pytest.raises(SpendGuardRefused) as refused:
+            await client.rerank("test/reranker", "q", ["x" * 10_000], top_n=3)
+        assert requests == []               # never posted
+        assert refused.value.worst_case > 0.0001
+
+
+class TestThePromptEstimateIsABoundNotAMean:
+    """D45 amendment (b): prompt tokens are bounded by the prompt's UTF-8
+    bytes plus the template allowance. The mean (chars / 4) under-counts any
+    prompt a tokenizer finds expensive, so it was never a worst case."""
+
+    async def test_the_worst_case_counts_utf8_bytes_plus_the_allowance(self, rates):
+        requests: list = []
+        client = _client(requests)
+        model = client.get_model("escalation")
+        rates[model] = (1e-3, 0.0)
+        prompt = "é" * 1_000                # 1,000 characters, 2,000 bytes
+        bound = (2_000 + CHAT_TEMPLATE_ALLOWANCE_BYTES) * 1e-3   # $2.512
+        mean = (1_000 / 4) * 1e-3                              # $0.25
+        client.spend_ceiling = (mean + bound) / 2   # the mean fits, the bound does not
+
+        with pytest.raises(SpendGuardRefused) as refused:
+            await client.chat("escalation", "", prompt, max_tokens=0)
+        assert requests == []
+        assert refused.value.worst_case == pytest.approx(bound, abs=1e-6)
+
+
+class TestTheCallCeilingIsCheckedBeforeDispatch:
+    """D45 amendment (c): a call past the ceiling must not be sent, and
+    in-flight calls count against it."""
+
+    async def test_the_call_past_the_ceiling_is_refused_before_it_is_sent(
+            self, rates):
+        requests: list = []
+        client = _client(requests)
+        client.call_ceiling = 2
+        for _ in range(2):
+            await client.chat("escalation", "sys", "user", max_tokens=10)
+        assert len(requests) == 2
+
+        with pytest.raises(BudgetExceeded) as exceeded:
+            await client.chat("escalation", "sys", "user", max_tokens=10)
+        assert len(requests) == 2           # the third was never sent
+        assert "ceiling 2" in str(exceeded.value)

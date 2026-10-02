@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
@@ -10,6 +11,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from autornd.api.auth import _is_loopback
+from autornd.config import settings
 from autornd.database import get_session
 from autornd.engine.workflow import WorkflowEngine
 from autornd.models.workflow import PhaseResult, Workflow, WorkflowStatus
@@ -20,6 +23,96 @@ router = APIRouter(prefix="/api")
 
 def _get_user_id(request: Request) -> int | None:
     return getattr(request.state, "user_id", None)
+
+
+def _caller_key(request: Request) -> tuple:
+    """Who is asking: their account when they have one, else their address."""
+    user_id = _get_user_id(request)
+    if user_id is not None:
+        return ("user", user_id)
+    return ("host", (request.client.host if request.client else "") or "")
+
+
+class _RunGate:
+    """Ruling D45 (6): a per-run ceiling bounds one run, not a caller who
+    submits many. At most `settings.max_concurrent_runs` API runs in flight at
+    once, and never twice the same request text from the same caller.
+
+    Admission is refused BEFORE a Workflow row exists — a refused submission
+    must leave nothing behind — and released when the run it admitted ends,
+    whatever way it ends."""
+
+    def __init__(self) -> None:
+        self._in_flight: dict[tuple, set[str]] = {}
+
+    def count(self) -> int:
+        return sum(len(texts) for texts in self._in_flight.values())
+
+    def admit(self, caller: tuple, request_text: str) -> str | None:
+        """None when admitted (and registered); else 'duplicate' or 'cap'."""
+        mine = self._in_flight.setdefault(caller, set())
+        if request_text in mine:
+            return "duplicate"
+        if self.count() >= settings.max_concurrent_runs:
+            return "cap"
+        mine.add(request_text)
+        return None
+
+    def release(self, caller: tuple, request_text: str) -> None:
+        mine = self._in_flight.get(caller)
+        if mine:
+            mine.discard(request_text)
+            if not mine:
+                self._in_flight.pop(caller, None)
+
+
+_run_gate = _RunGate()
+
+
+def _admit_run(request: Request, request_text: str) -> tuple:
+    """Register an API run with the gate or refuse it with a sentence."""
+    caller = _caller_key(request)
+    verdict = _run_gate.admit(caller, request_text)
+    if verdict == "duplicate":
+        raise HTTPException(
+            409,
+            "This request is already running for this caller; wait for it to "
+            "finish or submit different work.")
+    if verdict == "cap":
+        raise HTTPException(
+            429,
+            f"At most {settings.max_concurrent_runs} runs are in flight at "
+            f"once (Ruling D45); wait for one to finish and submit again.")
+    return caller
+
+
+def _bound_client() -> OpenRouterClient:
+    """A client for an API run, carrying the run's spend ceiling.
+
+    Every client the API creates — both submit paths and doublecheck — is
+    bounded (Ruling D45 (2)), so no call on this endpoint spends past the
+    run's ceiling."""
+    client = OpenRouterClient()
+    client.spend_ceiling = settings.run_spend_ceiling_usd
+    return client
+
+
+# Ruling D45 (3): runtime settings can only tighten. A ceiling raised at
+# runtime raises it for every run in flight, and any caller the middleware
+# admits could do it — which is review A's F8. These are the values the
+# process started with: a numeric ceiling may be lowered below them and never
+# raised above them while the server runs. Non-numeric fields (profiles,
+# workflow names, log level) steer nothing spend-shaped and are unchanged.
+_STARTUP_VALUES = {
+    name: getattr(settings, name) for name in settings.RUNTIME_MUTABLE
+}
+
+
+def _only_tightens(name: str, value) -> bool:
+    startup = _STARTUP_VALUES.get(name)
+    if isinstance(startup, bool) or not isinstance(startup, (int, float)):
+        return True
+    return value <= startup
 
 
 # ── Auth endpoints ──
@@ -149,6 +242,10 @@ async def submit_workflow(
     background: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
 ):
+    # Ruling D45 (6): refused here, before the row exists — a submission that
+    # is not admitted must leave nothing behind.
+    caller = _admit_run(request, body.request)
+
     workflow = Workflow(
         request=body.request,
         status=WorkflowStatus.PENDING,
@@ -157,7 +254,7 @@ async def submit_workflow(
     session.add(workflow)
     await session.commit()
 
-    background.add_task(_run_workflow_bg, workflow.id)
+    background.add_task(_run_workflow_bg, workflow.id, caller, body.request)
 
     return {
         "data": _summarize(workflow),
@@ -165,22 +262,25 @@ async def submit_workflow(
     }
 
 
-async def _run_workflow_bg(workflow_id: int):
+async def _run_workflow_bg(workflow_id: int, caller: tuple, request_text: str):
     from autornd.database import async_session
 
-    async with async_session() as session:
-        stmt = select(Workflow).where(Workflow.id == workflow_id)
-        result = await session.execute(stmt)
-        workflow = result.scalar_one()
+    try:
+        async with async_session() as session:
+            stmt = select(Workflow).where(Workflow.id == workflow_id)
+            result = await session.execute(stmt)
+            workflow = result.scalar_one()
 
-        client = OpenRouterClient()
-        engine = WorkflowEngine(client, session)
-        try:
-            # The row the caller was handed is the row the run writes —
-            # one submission, one record (ARCH-20261002-109).
-            await engine.execute(workflow.request, workflow=workflow)
-        finally:
-            await client.close()
+            client = _bound_client()
+            engine = WorkflowEngine(client, session)
+            try:
+                # The row the caller was handed is the row the run writes —
+                # one submission, one record (ARCH-20261002-109).
+                await engine.execute(workflow.request, workflow=workflow)
+            finally:
+                await client.close()
+    finally:
+        _run_gate.release(caller, request_text)
 
 
 @router.post("/workflows/sync")
@@ -190,6 +290,8 @@ async def submit_workflow_sync(
     session: AsyncSession = Depends(get_session),
 ):
     """Execute a workflow synchronously and return the full result."""
+    caller = _admit_run(request, body.request)
+
     workflow = Workflow(
         request=body.request,
         status=WorkflowStatus.PENDING,
@@ -198,12 +300,13 @@ async def submit_workflow_sync(
     session.add(workflow)
     await session.commit()
 
-    client = OpenRouterClient()
+    client = _bound_client()
     engine = WorkflowEngine(client, session)
     try:
         workflow = await engine.execute(body.request, workflow=workflow)
     finally:
         await client.close()
+        _run_gate.release(caller, body.request)
 
     await session.refresh(workflow, ["phases"])
     return {"data": _detail(workflow)}
@@ -342,7 +445,7 @@ async def run_doublecheck_endpoint(
     plan = PlanVerdict(**plan_data)
     implement = ImplementVerdict(**impl_data)
 
-    client = OpenRouterClient()
+    client = _bound_client()
     try:
         verdict, response = await run_doublecheck(
             client, workflow.request, plan, implement,
@@ -403,10 +506,17 @@ class SettingsUpdate(BaseModel):
 
 
 @router.put("/settings")
-async def update_settings(body: SettingsUpdate):
+async def update_settings(body: SettingsUpdate, request: Request):
     import logging
 
     from autornd.config import settings
+
+    # Ruling D45 (3): loopback only. A runtime change applies to every run in
+    # flight, so it is not a remote caller's to make.
+    if not _is_loopback(request):
+        raise HTTPException(
+            403, "Runtime settings are for loopback callers only (Ruling "
+                 "D45); change them in .env or from this machine.")
 
     updates = body.model_dump(exclude_none=True)
     if not updates:
@@ -426,6 +536,19 @@ async def update_settings(body: SettingsUpdate):
         if updates["log_level"].upper() not in valid:
             raise HTTPException(422, f"log_level must be one of {sorted(valid)}")
         updates["log_level"] = updates["log_level"].upper()
+
+    # After the validators: an invalid value is still 422. This is the rule
+    # itself — Ruling D45 (3): a ceiling may be lowered at runtime and never
+    # raised above its startup value, because a raise applies to every run in
+    # flight and any caller the middleware admits could make it (review F8).
+    raised = [name for name, value in updates.items()
+              if not _only_tightens(name, value)]
+    if raised:
+        raise HTTPException(
+            400,
+            "Runtime settings can only tighten (Ruling D45); "
+            f"{', '.join(sorted(raised))} would be raised above its startup "
+            f"value. Change it in .env and restart.")
 
     profile_changed = False
     for key, val in updates.items():
@@ -462,6 +585,10 @@ async def health():
         "unverified_models": unverified,
         "service": "autornd",
         "premium_model": settings.model_premium or None,
+        # Ruling D45 (1): the override is reported here and logged at
+        # startup, so an open server cannot be mistaken for a closed one.
+        "authentication_configured": bool(settings.api_key or settings.jwt_secret),
+        "allow_unauthenticated_remote": settings.allow_unauthenticated_remote,
         "models": model_status,
     }
 
@@ -479,9 +606,16 @@ async def get_profiles():
 
 
 @router.post("/profiles/{name}")
-async def switch_profile(name: str):
+async def switch_profile(name: str, request: Request):
     from autornd.profiles import load_profile, set_profile
     from autornd.specialists.registry import reload_specialists
+
+    # Ruling D45 (3): swapping the profile rewrites every specialist prompt
+    # for every run in flight — loopback only, like the settings it shadows.
+    if not _is_loopback(request):
+        raise HTTPException(
+            403, "Switching profiles is for loopback callers only (Ruling "
+                 "D45); set AUTORND_PROFILE in .env or use this machine.")
     profile = load_profile(name)
     set_profile(profile)
     reload_specialists()
@@ -496,11 +630,15 @@ async def knowledge_stats():
 
 @router.get("/episodes")
 async def list_episodes(
+    request: Request,
     limit: int = 10,
     session: AsyncSession = Depends(get_session),
 ):
     from autornd.knowledge.episodic import get_recent_episodes
-    episodes = await get_recent_episodes(session, limit=limit)
+
+    # Ruling D45 (4): a caller sees their own runs, as /api/workflows does.
+    episodes = await get_recent_episodes(
+        session, limit=limit, user_id=_get_user_id(request))
     return {
         "data": [
             {

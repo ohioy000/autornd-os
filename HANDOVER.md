@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1176 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
+**Tests:** 1191 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -37,6 +37,8 @@
 
 > **Ruling D44 (advisor, 2026-10-02) — the scoreboard is frozen and versioned. The golden keys (evals/golden/keys.json, scored by evals/golden/score.py) are frozen at version 1, commit 4fda54f, and evals/golden/versions.json records each version's file hashes. Any change to either file is a new version: it gets a versions.json entry naming the change and what triggered it, and every recorded run is re-scored under it and reported beside its scores under the earlier versions. A defect that a reading finds in a key is fixed only as a new version, after the run that found it has been reported under the old one. Two independent hand readings are the primary measure of correctness; the keys are a screen that flags disagreements, and a disagreement between a reading and a key is reported, never settled by editing the key inside the run that found it. Every report states the key version beside each score, and places each caveat beside the claim it qualifies. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md, finding F1): five key repairs were driven by the answers being scored, and 107's headline was computed under a key widened after reading those answers. The pipeline scores did not move and two readers confirmed the direct answers, but the procedure could not tell a better answer from a drifting key. Falsifier: a score reported without its key version, or a key change without a versions.json entry and a side-by-side re-score.**
 
+
+> **Ruling D45 (advisor, 2026-10-02) — no open, unbounded spend. (1) With neither API_KEY nor JWT_SECRET configured, the API serves loopback callers only. Any other caller is refused with a sentence that names the fix, unless the operator sets ALLOW_UNAUTHENTICATED_REMOTE=1, which is logged at startup and reported by /api/health. /api/health stays open to everyone. (2) Every API run carries a wall-clock budget and a spend ceiling: run_time_budget_seconds defaults to 1800 and run_spend_ceiling_usd to 0.50, and the owner may change either in .env (G-3). (3) Settings changed at runtime can only tighten: PUT /api/settings and POST /api/profiles/{name} serve loopback callers only, and no token ceiling or budget can be raised above its startup value while the server runs. (4) /api/episodes shows a caller only their own runs. (5) The spend guard holds across concurrent calls, failed calls and reranking. Each call's worst case is reserved before dispatch and released on reconciliation, and a call that fails after dispatch keeps its worst case as unreconciled liability for the rest of the run. (6) No caller can multiply those bounds: at most max_concurrent_runs API runs are in flight at once (default 2; the owner may change it in .env), a submission beyond the cap is refused with 429 and a sentence, and a request identical to one the same caller already has in flight is refused as a duplicate. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md, F6, F9 and review B's finding 4), verified by the advisor: the documented Docker quick start published an unauthenticated endpoint that spends the owner's credits on every interface; API runs had neither the D38 watchdog nor a spend ceiling; /api/episodes exposed every run; PUT /api/settings could raise a token ceiling for every run in flight; concurrent calls each passed one balance check; and nothing capped how many runs a caller could start at once (review A F6: no rate limiting, no queue depth cap, no dedupe). The owner approved default bounds and the end of the open quick start on 2026-10-02; the values are the advisor's, set from the measurements cited beside them, and the owner's to change. Falsifier: an API run that exceeds its spend ceiling or its wall-clock budget, a money-spending request served to an unauthenticated non-loopback caller without the override, a runtime settings change that raises a ceiling, or more API runs in flight than the cap.**
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -300,7 +302,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      71 files, 1176 tests
+tests/                      71 files, 1191 tests
 
 ```
 
@@ -705,13 +707,13 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1176 total)
+### 3.7 Test distribution (1191 total)
 
 
 | file | n | file | n |
 |---|---|---|---|
 | test_all_judges_exit.py | 18 | test_all_workflows_terminate.py | 7 |
-| test_api.py | 25 | test_auth.py | 16 |
+| test_api.py | 33 | test_auth.py | 16 |
 | test_blocked_on.py | 26 | test_budget_stop_scoring.py | 5 |
 | test_budget_transparency.py | 11 | test_citation_demand.py | 11 |
 | test_command_template.py | 38 | test_coverage_shapes.py | 46 |
@@ -739,9 +741,9 @@ is revoked and the warning re-opens with a date.
 | test_routing.py | 63 | test_run_record.py | 6 |
 | test_runtime_dependencies.py | 1 | test_schema_wiring.py | 15 |
 | test_scope_rule.py | 3 | test_serving_ledger.py | 7 |
-| test_settings.py | 22 | test_settings_map.py | 5 |
+| test_settings.py | 23 | test_settings_map.py | 5 |
 | test_shipped_examples.py | 15 | test_specialists.py | 11 |
-| test_spend_guard.py | 4 | test_structural_roles.py | 13 |
+| test_spend_guard.py | 10 | test_structural_roles.py | 13 |
 | test_sweep_budget.py | 21 | test_terminal_on_bound.py | 21 |
 | test_trace_durability.py | 7 | test_triage.py | 10 |
 | test_verdicts.py | 47 | test_watchdog.py | 23 |
@@ -789,7 +791,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1176/1176 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1191/1191 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

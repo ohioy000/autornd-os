@@ -47,13 +47,29 @@ class TestGetSettings:
 
 
 class TestUpdateSettings:
-    async def test_update_max_iterations(self, api_client, monkeypatch):
+    async def test_lowering_a_ceiling_is_accepted(self, api_client, monkeypatch):
         from autornd import config
+        from autornd.api import routes
         monkeypatch.setattr(config.settings, "max_iterations", 5)
-        resp = await api_client.put("/api/settings", json={"max_iterations": 10})
+        monkeypatch.setitem(routes._STARTUP_VALUES, "max_iterations", 5)
+        resp = await api_client.put("/api/settings", json={"max_iterations": 3})
         assert resp.status_code == 200
         assert "max_iterations" in resp.json()["data"]["updated"]
-        assert config.settings.max_iterations == 10
+        assert config.settings.max_iterations == 3
+
+    async def test_raising_a_ceiling_above_startup_is_refused(
+            self, api_client, monkeypatch):
+        """Ruling D45 (3): a ceiling raised at runtime raises it for every run
+        in flight — review A's F8. The test this replaces PUT 10 over a
+        startup of 5 and asserted 200: the bug written down (rule 7)."""
+        from autornd import config
+        from autornd.api import routes
+        monkeypatch.setattr(config.settings, "max_iterations", 5)
+        monkeypatch.setitem(routes._STARTUP_VALUES, "max_iterations", 5)
+        resp = await api_client.put("/api/settings", json={"max_iterations": 10})
+        assert resp.status_code == 400
+        assert "only tighten" in resp.json()["detail"]
+        assert config.settings.max_iterations == 5
 
     async def test_update_log_level(self, api_client, monkeypatch):
         from autornd import config

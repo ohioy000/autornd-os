@@ -27,6 +27,19 @@ async def lifespan(app: FastAPI):
 
     from autornd.routing.openrouter import check_models
     logger = logging.getLogger("autornd")
+
+    # Ruling D45 (1): an open server is logged at startup and reported by
+    # /api/health, so it cannot be mistaken for a closed one.
+    if settings.allow_unauthenticated_remote:
+        logger.warning(
+            "ALLOW_UNAUTHENTICATED_REMOTE=1: this server serves remote "
+            "callers WITHOUT authentication — anyone who can reach this port "
+            "can start runs and spend the owner's credits")
+    elif not settings.api_key and not settings.jwt_secret:
+        logger.info(
+            "No API_KEY or JWT_SECRET configured: serving loopback callers "
+            "only (Ruling D45). Set one in .env to serve remote callers.")
+
     try:
         status = await check_models()
         available = sum(1 for s in status.values() if s.get("available") is True)

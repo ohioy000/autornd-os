@@ -13,5 +13,9 @@ COPY . .
 # from the old requirements.txt put pytest and pytest-asyncio in production.
 RUN pip install --no-cache-dir -e .
 
+# Published on every interface, so the loopback rule is what stands between
+# this port and a caller spending the owner's credits: with neither API_KEY
+# nor JWT_SECRET in the environment, remote requests are refused with 403
+# and a sentence naming the fix, and only /api/health is served (Ruling D45).
 EXPOSE 8100
 CMD ["uvicorn", "autornd.main:app", "--host", "0.0.0.0", "--port", "8100"]

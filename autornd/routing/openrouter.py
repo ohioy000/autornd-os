@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from collections import deque
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -154,11 +155,45 @@ class BudgetExceeded(RuntimeError):
     """A run asked for more calls or more money than it was allowed."""
 
 
-# F3 (ARCH-20261001-104): characters per prompt token for the pre-call worst
-# case. A deliberate round figure: the guard bounds a call before its usage
-# exists, so it needs an estimate, and the completion side (max_tokens x the
-# completion rate) dominates every worst case this harness sends.
-CHARS_PER_TOKEN = 4
+# D45 amendment (b): a bound, not a mean. The prompt's worst-case tokens used
+# to be estimated as prompt_chars / 4 — a mean, which under-counts on any
+# prompt a tokenizer finds expensive and is therefore not a worst case at all.
+# A byte-level tokenizer never emits more tokens than bytes, so the prompt's
+# UTF-8 byte length IS an upper bound on its tokens.
+#
+# The allowance covers what the chat template adds around the content strings.
+# Measured 2026-10-02 on the wire shape this client sends: the JSON message
+# envelope (roles and scaffolding) is 96 bytes for the two-message chat every
+# phase sends, 33 bytes per additional message (json.dumps of the messages
+# array with content strings excluded). The three chat-template families in
+# circulation (ChatML, Llama-3, Mistral) wrap turns in under 64 bytes of
+# markers each. 512 bytes is those figures rounded up to a power of two:
+# headroom above a bound, and bytes rather than tokens so the bound holds.
+CHAT_TEMPLATE_ALLOWANCE_BYTES = 512
+
+
+def _prompt_bytes(*parts: str) -> int:
+    """UTF-8 byte length of a prompt — the token bound described above."""
+    return sum(len(p.encode("utf-8")) for p in parts)
+
+
+def _failure_kind(exc: BaseException) -> str:
+    """The kind of failure that made a dispatched call unreconcilable.
+
+    D45 (5) names four: an error status that is not retried, a transport
+    error, a timeout, a cancellation. Anything else is recorded under its own
+    class name rather than folded into a class it does not belong to
+    (convention 26).
+    """
+    if isinstance(exc, asyncio.CancelledError):
+        return "cancelled"
+    if isinstance(exc, httpx.TimeoutException):
+        return "timeout"
+    if isinstance(exc, httpx.HTTPStatusError):
+        return "error_status"
+    if isinstance(exc, httpx.TransportError):
+        return "transport_error"
+    return type(exc).__name__
 
 
 class SpendGuardRefused(BudgetExceeded):
@@ -310,6 +345,21 @@ class OpenRouterClient:
         # rate was not in the loaded catalogue. They were made, and are
         # bounded only by the after-the-call check (convention 28).
         self.spend_guard_blind: list[dict[str, Any]] = []
+        # D45 (5): the guard HOLDS across concurrent calls, failed calls and
+        # reranking. Every call's worst case is reserved before dispatch and
+        # released when _account reconciles it, so concurrent calls cannot
+        # each pass against the same remaining balance — which is exactly what
+        # they did: _guard_spend checked completed spend, which _account
+        # updates only after a response, and reviewer fan-out runs calls at
+        # the same time. A call that fails after dispatch keeps its worst case
+        # as unreconciled liability for the rest of the run: the money may
+        # have been spent (a request that errored server-side can still be
+        # billed), so the worst case is counted against the ceiling and
+        # recorded with the kind of failure that prevented reconciliation.
+        self._reservations: deque[float] = deque()
+        self.reserved: float = 0.0
+        self.unreconciled_liability: float = 0.0
+        self.failed_after_dispatch: list[dict[str, Any]] = []
 
     def _account(self, function: str, cost: float,
                  provider: str | None = None,
@@ -319,7 +369,14 @@ class OpenRouterClient:
         Budgets are enforced here rather than by the caller, so a ceiling covers
         research lookups and reranking too. A run that exceeds one has already
         paid for the request in hand — this stops the next one.
+
+        D45: reconciling a call releases the worst case it reserved before
+        dispatch and books what it actually cost. Released first, so the
+        ceiling check below sees this call already moved from reservation to
+        spend. A call that never reaches this point failed after dispatch and
+        keeps its reservation as unreconciled liability (_fail_call).
         """
+        self._reconcile()
         self.calls += 1
         self.calls_by_function[function] = self.calls_by_function.get(function, 0) + 1
         if provider:
@@ -344,20 +401,70 @@ class OpenRouterClient:
                 f"raise max_calls on the scenario if this is expected. "
                 f"By tier: {self.calls_by_function}"
             )
-        if self.spend_ceiling is not None and self.spend > self.spend_ceiling:
+        if self.spend_ceiling is not None and self._committed() > self.spend_ceiling:
             raise BudgetExceeded(
-                f"stopped at ${self.spend:.4f} (ceiling ${self.spend_ceiling:.4f}). "
-                f"By tier: "
+                f"stopped at ${self._committed():.4f} (ceiling "
+                f"${self.spend_ceiling:.4f}). By tier: "
                 f"{ {k: round(v, 4) for k, v in self.spend_by_function.items()} }"
+                + (f". Unreconciled liability kept from failed calls: "
+                   f"${self.unreconciled_liability:.4f}"
+                   if self.unreconciled_liability else "")
             )
 
-    def _guard_spend(self, function: str, model: str, prompt_chars: int,
+    def _committed(self) -> float:
+        """What this run is on the hook for: booked spend, plus the worst case
+        of every call still in flight, plus the worst case of every call that
+        failed after dispatch and could not be reconciled."""
+        return self.spend + self.reserved + self.unreconciled_liability
+
+    def _reconcile(self) -> None:
+        """Release one outstanding reservation — the call being accounted."""
+        if self._reservations:
+            worst = self._reservations.popleft()
+            self.reserved -= worst
+
+    def _fail_call(self, function: str, model: str, kind: str) -> None:
+        """D45 (5): a call that failed after dispatch keeps its worst case.
+
+        The request left this process, so the money may have been spent — a
+        call that errored server-side can still be billed — and no actual cost
+        will ever arrive to replace the estimate. The reservation becomes
+        unreconciled liability: counted against the ceiling for the rest of the
+        run, and recorded with the kind of failure that made reconciliation
+        impossible (error_status, timeout, transport_error, cancelled).
+        """
+        worst = 0.0
+        if self._reservations:
+            worst = self._reservations.popleft()
+            self.reserved -= worst
+            self.unreconciled_liability += worst
+        self.failed_after_dispatch.append({
+            "function": function, "model": model, "kind": kind,
+            "worst_case": round(worst, 6),
+        })
+
+    def _guard_spend(self, function: str, model: str, prompt_bytes: int,
                      max_tokens: int) -> None:
-        """F3: refuse, before it is made, a call whose worst case could take
-        the run past its spend ceiling. 102's IA run ended at $0.1570 against
-        $0.08 because one escalation call cost $0.1142, and the ceiling was
-        only checked after the call. With no catalogue rate the guard is
-        blind: the call is made and the blindness recorded, never guessed."""
+        """Refuse, before it is made, a call that cannot fit — and reserve it.
+
+        F3 (ARCH-20261001-104): 102's IA run ended at $0.1570 against $0.08
+        because one escalation call cost $0.1142 and the ceiling was only
+        checked after the call. D45 amendment (b): the prompt side is now a
+        bound (UTF-8 bytes plus the template allowance) rather than a mean.
+        D45 (5): the worst case is RESERVED until the call is reconciled, so
+        concurrent calls cannot each pass against the same remaining balance.
+        With no catalogue rate the guard is blind: the call is made and the
+        blindness recorded, never guessed."""
+        if self.call_ceiling is not None and (
+                self.calls + len(self._reservations) + 1 > self.call_ceiling):
+            # Amendment (c): checked before dispatch, and in-flight calls
+            # count, or a fan-out could start ten calls at the ninth call.
+            raise BudgetExceeded(
+                f"stopped at {self.calls} model calls with "
+                f"{len(self._reservations)} in flight (ceiling "
+                f"{self.call_ceiling}); raise max_calls on the scenario if "
+                f"this is expected. By tier: {self.calls_by_function}"
+            )
         if self.spend_ceiling is None:
             return
         rates = _model_pricing.get(model)
@@ -365,15 +472,22 @@ class OpenRouterClient:
             self.spend_guard_blind.append({"function": function, "model": model})
             return
         prompt_rate, completion_rate = rates
-        worst = (prompt_chars / CHARS_PER_TOKEN) * prompt_rate + max_tokens * completion_rate
-        remaining = self.spend_ceiling - self.spend
+        worst = ((prompt_bytes + CHAT_TEMPLATE_ALLOWANCE_BYTES) * prompt_rate
+                 + max_tokens * completion_rate)
+        remaining = self.spend_ceiling - self._committed()
         if worst > remaining:
             raise SpendGuardRefused(function, model, worst, remaining,
-                                    self.spend, self.spend_ceiling)
+                                    self._committed(), self.spend_ceiling)
+        self._reservations.append(worst)
+        self.reserved += worst
 
     def reset_accounting(self) -> None:
         self.spend = 0.0
         self.spend_guard_blind = []
+        self._reservations.clear()
+        self.reserved = 0.0
+        self.unreconciled_liability = 0.0
+        self.failed_after_dispatch = []
         self.calls = 0
         self.tokens_by_function = {}
         self.spend_by_function = {}
@@ -468,7 +582,8 @@ class OpenRouterClient:
         max_tokens: int = 16384,
     ) -> ModelResponse:
         model = self.get_model(function)
-        self._guard_spend(function, model, len(system_prompt) + len(user_message),
+        self._guard_spend(function, model,
+                          _prompt_bytes(system_prompt, user_message),
                           max_tokens)
         messages = [
             {"role": "system", "content": system_prompt},
@@ -499,61 +614,73 @@ class OpenRouterClient:
                 "allow_fallbacks": provider_fallbacks_allowed(),
             }
 
-        client = await self._get_client()
-        resp = await client.post("/chat/completions", json=payload)
-        if resp.status_code == 400 and response_format:
-            logger.warning(
-                "400 with response_format for %s — retrying without it. Body: %s",
-                model, resp.text[:300],
-            )
-            payload.pop("response_format", None)
+        # D45 (5): a call that fails after dispatch keeps its worst case. The
+        # request left this process, so no actual cost will ever arrive to
+        # replace the reservation — it becomes unreconciled liability with the
+        # kind of failure recorded. `reconciled` is set before _account books
+        # the outcome: accounting happened, so there is nothing to fail.
+        reconciled = False
+        try:
+            client = await self._get_client()
             resp = await client.post("/chat/completions", json=payload)
-        for attempt in range(1, _RATE_LIMIT_ATTEMPTS):
-            if resp.status_code != 429:
-                break
-            delay = _RATE_LIMIT_BACKOFF_S * (2 ** (attempt - 1))
-            logger.warning(
-                "429 for %s (attempt %d/%d) — upstream capacity, retrying in "
-                "%.1fs. Body: %s",
-                model, attempt, _RATE_LIMIT_ATTEMPTS, delay, resp.text[:200],
-            )
-            await asyncio.sleep(delay)
-            resp = await client.post("/chat/completions", json=payload)
-        _raise_for_status(resp, "chat/completions")
-        data = resp.json()
+            if resp.status_code == 400 and response_format:
+                logger.warning(
+                    "400 with response_format for %s — retrying without it. Body: %s",
+                    model, resp.text[:300],
+                )
+                payload.pop("response_format", None)
+                resp = await client.post("/chat/completions", json=payload)
+            for attempt in range(1, _RATE_LIMIT_ATTEMPTS):
+                if resp.status_code != 429:
+                    break
+                delay = _RATE_LIMIT_BACKOFF_S * (2 ** (attempt - 1))
+                logger.warning(
+                    "429 for %s (attempt %d/%d) — upstream capacity, retrying in "
+                    "%.1fs. Body: %s",
+                    model, attempt, _RATE_LIMIT_ATTEMPTS, delay, resp.text[:200],
+                )
+                await asyncio.sleep(delay)
+                resp = await client.post("/chat/completions", json=payload)
+            _raise_for_status(resp, "chat/completions")
+            data = resp.json()
 
-        choice = data["choices"][0]
-        content = choice["message"]["content"] or ""
-        finish_reason = choice.get("finish_reason")
-        citations = [
-            (a.get("url_citation") or {}).get("url", "")
-            for a in (choice.get("message", {}).get("annotations") or [])
-        ]
-        citations = [c for c in citations if c]
-        provider = data.get("provider")
-        usage = data.get("usage", {})
+            choice = data["choices"][0]
+            content = choice["message"]["content"] or ""
+            finish_reason = choice.get("finish_reason")
+            citations = [
+                (a.get("url_citation") or {}).get("url", "")
+                for a in (choice.get("message", {}).get("annotations") or [])
+            ]
+            citations = [c for c in citations if c]
+            provider = data.get("provider")
+            usage = data.get("usage", {})
 
-        if not content.strip():
-            logger.warning(
-                "Empty content from %s via %s (finish_reason=%s, "
-                "completion_tokens=%s, max_tokens=%s)",
-                model, provider, finish_reason,
-                usage.get("completion_tokens"), max_tokens,
-            )
-        prompt_tokens = usage.get("prompt_tokens", 0)
-        completion_tokens = usage.get("completion_tokens", 0)
+            if not content.strip():
+                logger.warning(
+                    "Empty content from %s via %s (finish_reason=%s, "
+                    "completion_tokens=%s, max_tokens=%s)",
+                    model, provider, finish_reason,
+                    usage.get("completion_tokens"), max_tokens,
+                )
+            prompt_tokens = usage.get("prompt_tokens", 0)
+            completion_tokens = usage.get("completion_tokens", 0)
 
-        reported = (data.get("usage") or {}).get("cost")
-        if reported is not None:
-            cost = float(reported)
-        else:
-            cost = self._estimate_cost(model, prompt_tokens, completion_tokens)
+            reported = (data.get("usage") or {}).get("cost")
+            if reported is not None:
+                cost = float(reported)
+            else:
+                cost = self._estimate_cost(model, prompt_tokens, completion_tokens)
 
-        # Every attempt counts, retries included. A retry storm that costs real
-        # money should look expensive rather than free.
-        self._account(function, cost, provider,
-                      prompt_tokens=prompt_tokens,
-                      completion_tokens=completion_tokens)
+            # Every attempt counts, retries included. A retry storm that costs real
+            # money should look expensive rather than free.
+            reconciled = True
+            self._account(function, cost, provider,
+                          prompt_tokens=prompt_tokens,
+                          completion_tokens=completion_tokens)
+        except BaseException as exc:
+            if not reconciled:
+                self._fail_call(function, model, _failure_kind(exc))
+            raise
 
         return ModelResponse(
             content=content,
@@ -576,18 +703,33 @@ class OpenRouterClient:
         caller learns to fall back.
         """
         client = await self._get_client()
-        resp = await client.post("/rerank", json={
-            "model": model,
-            "query": query,
-            "documents": documents,
-            "top_n": top_n,
-        })
-        _raise_for_status(resp, "rerank")
-        data = resp.json()
-        usage = data.get("usage", {}) or {}
-        # This cost used to reach a debug log and go no further, so reranking
-        # was the one tier that never appeared in any total.
-        self._account("ranker", float(usage.get("cost") or 0.0))
+        # D45 (5): reranking passes the same guard. Before this it posted with
+        # no pre-call check at all — the one dispatch in the client that could
+        # spend without asking. Rerank responses carry no completion side, so
+        # the worst case is the document bytes bounded as prompt.
+        self._guard_spend(
+            "ranker", model,
+            _prompt_bytes(query, *documents), max_tokens=0)
+        reconciled = False
+        try:
+            resp = await client.post("/rerank", json={
+                "model": model,
+                "query": query,
+                "documents": documents,
+                "top_n": top_n,
+            })
+            _raise_for_status(resp, "rerank")
+            data = resp.json()
+            usage = data.get("usage", {}) or {}
+            # This cost used to reach a debug log and go no further, so reranking
+            # was the one tier that never appeared in any total.
+            reconciled = True
+            self._account("ranker", float(usage.get("cost") or 0.0),
+                          prompt_tokens=int(usage.get("total_tokens") or 0))
+        except BaseException as exc:
+            if not reconciled:
+                self._fail_call("ranker", model, _failure_kind(exc))
+            raise
         logger.debug(
             "rerank %s: %s docs, %s tokens, cost %s",
             model, len(documents), usage.get("total_tokens"), usage.get("cost"),

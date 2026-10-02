@@ -135,10 +135,33 @@ class Settings(BaseSettings):
     # run that is running out of time ends by its own terminal (status
     # blocked, a typed watchdog record) rather than running unbounded.
     # Measured need: 094 was killed at 3,600 s mid-review after its build
-    # judges had agreed at $0.070, and returned nothing. None, the default,
-    # is the behaviour before D38. The production value is standing
-    # configuration and the owner's (G-3), so no number ships here.
-    run_time_budget_seconds: float | None = None
+    # judges had agreed at $0.070, and returned nothing.
+    #
+    # Ruling D45 (2): every API run carries one now, so the default is a
+    # bound rather than None. 1800 measured 2026-10-02: 098's three runs had
+    # 1,800 s budgets and reached judge-approved answers at 15.6 and 20.7
+    # minutes. The owner may change it in .env (G-3).
+    run_time_budget_seconds: float | None = 1800.0
+
+    # Ruling D45 (2): the API run's spend ceiling, in USD. Runs measured
+    # since 102 cost $0.02 to $0.19 end to end, so 0.50 is several whole runs
+    # of headroom and still a bound on an unwatched endpoint. The owner may
+    # change it in .env (G-3).
+    run_spend_ceiling_usd: float = 0.50
+
+    # Ruling D45 (6): how many API runs may be in flight at once. A per-run
+    # ceiling bounds one run, not a caller who submits many. Measured
+    # 2026-10-02: the owner runs one workflow at a time, and two leave room
+    # for one synchronous call beside one asynchronous run. A submission
+    # beyond the cap is refused with 429 and creates no row. The owner may
+    # change it in .env (G-3).
+    max_concurrent_runs: int = 2
+
+    # Ruling D45 (1): with neither API_KEY nor JWT_SECRET configured, the API
+    # serves loopback callers only. This override serves remote callers
+    # anyway — unauthenticated, spending the owner's credits — so it is off
+    # by default, logged at startup and reported by /api/health.
+    allow_unauthenticated_remote: bool = False
 
     chromadb_path: str = "./chromadb_data"
 
@@ -171,6 +194,22 @@ class Settings(BaseSettings):
         if float(v) <= 0:
             raise ValueError("run_time_budget_seconds must be positive")
         return float(v)
+
+    @field_validator("run_spend_ceiling_usd", mode="before")
+    @classmethod
+    def validate_run_spend_ceiling(cls, v):
+        if isinstance(v, str) and not v.strip():
+            raise ValueError("run_spend_ceiling_usd must be a positive number")
+        if float(v) <= 0:
+            raise ValueError("run_spend_ceiling_usd must be positive")
+        return float(v)
+
+    @field_validator("max_concurrent_runs", mode="before")
+    @classmethod
+    def validate_max_concurrent_runs(cls, v):
+        if int(v) < 1:
+            raise ValueError("max_concurrent_runs must be at least 1")
+        return int(v)
 
     @field_validator("max_iterations")
     @classmethod

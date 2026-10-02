@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1176%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1191%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -562,7 +562,9 @@ git clone https://github.com/ohioy000/autornd-os.git
 cd autornd-os
 
 cp .env.example .env
-# Add your API key and choose a model for each required tier
+# Add your API key and choose a model for each required tier.
+# Set API_KEY (or JWT_SECRET) as well: with neither configured, the server
+# serves loopback callers only and refuses remote ones — see Auth below.
 
 pip install -e .
 uvicorn autornd.main:app --port 8100
@@ -585,6 +587,14 @@ AutoRnD is not configured — no model is set for 4 of 6 tiers.
 docker build -t autornd .
 docker run -p 8100:8100 --env-file .env autornd
 ```
+
+The published port is reachable from other machines, so `.env` should carry
+`API_KEY` (or `JWT_SECRET`) before you run it: with neither, every request
+from outside this machine is refused with 403 and a sentence naming the fix,
+and only `/api/health` is served. `ALLOW_UNAUTHENTICATED_REMOTE=1` opens the
+server to everyone **without authentication** — anyone who can reach the port
+can then start runs and spend your credits. It is logged at startup and
+reported by `/api/health`.
 
 ## Configuration
 
@@ -713,7 +723,7 @@ REGISTRATION_ENABLED=true
 API_KEY=                 # optional static bearer token for programmatic access
 ```
 
-**Auth priority:** a valid JWT scopes workflows to that user; otherwise an `API_KEY` match grants anonymous access; otherwise everything is open. With no auth configured, any caller can see every workflow and spend your credits.
+**Auth priority:** a valid JWT scopes workflows to that user; otherwise an `API_KEY` match grants anonymous access; otherwise the caller must be on loopback. With neither `API_KEY` nor `JWT_SECRET` configured the API serves loopback callers only — remote requests are refused with 403 and a sentence naming the fix — unless `ALLOW_UNAUTHENTICATED_REMOTE=1` is set, which is logged at startup and reported by `/api/health`. `/api/health` is served to everyone either way.
 
 ## Settings Dashboard
 
@@ -800,7 +810,7 @@ workflows/                # engineering-rnd, lean, triage-only, triage-classify
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 1176 tests
+tests/                    # 1191 tests
 
 ```
 
@@ -846,7 +856,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-1176 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
+1191 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds.
 
 
 The graph tests are the load-bearing ones: node shape, gate routing, loop bounds and the all-judges exit are all decidable without a provider. An earlier hardcoded sequencer was kept alongside the graph as an equivalence reference and has been retired — once gates could route on failure, a linear engine could no longer represent the pipeline it was supposed to be checking.
