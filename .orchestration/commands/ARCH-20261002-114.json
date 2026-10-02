@@ -1,0 +1,100 @@
+{
+  "command_id": "ARCH-20261002-114",
+  "parent_id": "ARCH-20261002-113",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Finish D46 (Ruling D48) and make 109's write path hold. A check that compared nothing never turns a fail into a pass. A ready plan's own blockers reach the implementer as the plan's own, not as requirements. A check that did not run carries no approval-shaped value. One failed progress write cannot lose a run's result. The run record lists the checks that did not check.",
+  "evidence": [
+    "checks.py:664-673 (111): criteria_addressed with no criteria still fails, but is now checked=false. judges_agree (checks.py:193-260) treats every unchecked judge as non-blocking. Since 111, engineering-rnd.yaml passes the fold the whole coverage output, so a failing coverage that compared nothing no longer blocks convergence.\n- The cause is the advisor's command 111. Its constraint [4] said 'the fold treats an unchecked check as non-blocking', and that was wrong. D46 (3) says a check that compared nothing 'passes as before'. That covers numbers_consistent and lets no failure through.\n- Today the case is unreachable in engineering-rnd.yaml: a ready plan must provide success_criteria (verdicts.py:212, ready_plans_need_criteria), and plan_ready gates the build. lean.yaml still folds coverage.passed.\n- The rule is wrong anyway: a workflow without that gate would ship work checked against nothing.",
+    "Before 111, the implement prompt rendered plan.blockers under 'FEASIBILITY CONCERNS (from domain specialist review — address these):'. That list held the architect's own blockers plus whatever feasibility appended. 111 renders only feasibility's concerns (phases.py:775-779), so a ready plan's own blockers no longer reach the implementer at all, and D46 did not rule on them. The case is live in the traces:\n- In 106's IA unit (docs/traces/106-ia-side-arm-b.jsonl), the ready plan carried 5 blockers of its own and feasibility added none. They are assumptions with kill triggers, such as 'Audience/format unspecified: assumed structured compliance memo ... Kill trigger — ...'.\n- In 102's golden_q6, both of the plan's 2 blockers were feasibility's (R7's feasibility_blockers).",
+    "adapter.py:741-755 (111): with no independent model configured, independent_check returns {'skipped': true, 'ship': true, ...}. ship: true is an approval-shaped value written by a check that did not run, which is the thing D46 exists to stop. 111's executor flagged it and asked for a ruling.",
+    "The advisor's provider-free probe of 109's write path: a file-backed SQLite database, a second connection holding an exclusive lock during one progress write, and a busy timeout of 0.2 s.\n- The write failed with 'database is locked', and the exception escaped _write_progress.\n- The escape comes from the handler itself (workflow.py:221-226). It reads workflow.id on an instance that the failed flush had expired, which raises PendingRollbackError. No rollback is issued, so the session stays poisoned.\n- In the engine, the escaped exception fails the chain task, and every later chained write re-raises it. execute()'s drain (workflow.py:148) re-raises, and so does the drain inside its own except block (workflow.py:162).\n- The terminal is never written, and the row stays at its last progress status.\nSo one transient lock loses a finished run's result, which is what 109's constraints [2] and [3] exist to prevent. Two API runs may now be in flight at once (D45 (6)), so two writers can contend.",
+    "111's first question: D46 (3) says the terminal record lists every check that did not check. The list lives in the adapter's per-iteration record, and the eval unit record has no field for it."
+  ],
+  "scope": {
+    "include": [
+      "autornd/graph/checks.py (judges_agree only)",
+      "autornd/engine/phases.py (the implement prompt's rendering of the plan's own blockers only)",
+      "autornd/graph/adapter.py (the doublecheck skip, and what the implement phase passes for the plan's own blockers)",
+      "autornd/models/verdicts.py (DoubleCheckVerdict: a computed property only; no field added, removed or renamed)",
+      "workflows/engineering-rnd.yaml and workflows/independent-check-probe.yaml (independent_verdict's condition only)",
+      "autornd/engine/workflow.py (_write_progress and the drain)",
+      "autornd/evals/runner.py (the unit record's checks_not_checked field only)",
+      "tests/",
+      "README.md and HANDOVER.md (counts)",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "D36's four plan rules and D43's scope text: byte-identical.",
+      "Verdict schema fields: none added, removed or renamed. The veto is a computed property.",
+      "Loop wiring, loop bounds and the other gates. workflows/lean.yaml.",
+      "Any DB schema change (hard rule 11).",
+      "evals/golden/."
+    ]
+  },
+  "constraints": [
+    "RULING FIRST, VERBATIM, in HANDOVER.md and the notebook, before the code in commit order.",
+    "RULING D48, COMMITTED VERBATIM: 'Ruling D48 (advisor, 2026-10-02) — D46, completed. (1) A check that compared nothing never turns a fail into a pass. The judges fold lists every unchecked check. An unchecked check that passed is not a dissent; an unchecked check that failed is a dissent, as it was before D46. This corrects the advisor's command 111, whose constraint [4] made every unchecked check non-blocking. D46 (3) says such a check 'passes as before', and never let a failure through. (2) A ready plan's own blockers did not stop the plan gate, so they are not requirements either. They reach the implementer under a heading that names them as the plan's own, beside the reviewers' considerations and framed the same way: weigh them; nothing is judged against them. D46 (2) moved feasibility's concerns out of plan.blockers but did not decide what the implementer sees of the plan's own blockers, and 111 dropped them without a ruling. (3) A check that did not run carries no approval-shaped value. A skipped independent check records that it was skipped and why, and records no ship. The gate after it reads a typed veto, which is true only when the check ran and said do not ship. D36's plan rules and D43's scope rule are untouched. Rationale: the advisor's post-merge review of 111 (2026-10-02). By the advisor's own command, a failing check that compared nothing had become non-blocking in the fold. 106's IA unit carried 5 blockers of the plan's own, which 111 stopped showing the implementer. The skipped independent check wrote ship: true. Falsifier: a run that converges with a failing check in the fold; a ready plan's own blocker missing from the implement prompt; or a ship value recorded by a check that did not run.'",
+    "THE FOLD (D48 (1)): in judges_agree, a judge dissents when its verdict is false, whether or not it checked. Every unchecked judge is listed, and the detail names both lists. An unchecked pass is not a dissent, as now.",
+    "THE PLAN'S OWN BLOCKERS (D48 (2)): when the plan's own blockers are non-empty, the implement prompt renders them under exactly this heading:\n'OPEN POINTS THE PLAN ITSELF NAMED (the plan passed its gate with these; not requirements — weigh them; nothing is judged against them):'\nThey come before the reviewers' considerations, whose heading stays as 111 wrote it. Feasibility's concerns never appear in the plan's own list, and the plan's own blockers never appear in the considerations. Quote both headings in the response.",
+    "THE SKIP (D48 (3)): the skip output is {'skipped': true, 'vetoed': false, 'reason': ...}, with no ship.\n- DoubleCheckVerdict gains a computed property `vetoed`, equal to not ship. It is not a field, so the schema and the model's output are unchanged.\n- independent_verdict's condition becomes `not independent_check.vetoed` in both workflow files, so the gate reads the same path on both branches and passes a skip.\n- With the check run and ship false, the gate still ends the run blocked with the findings.",
+    "THE WRITE PATH HOLDS:\n- A progress write that fails at the database rolls the session back, restores what the run still needs from the row, records which node's record was lost, and lets the run continue.\n- Its handler reads nothing from an expired instance.\n- The drain never re-raises a progress write's failure. The terminal status and error are committed in every case, after any number of failed progress writes.\nWrite the test before the repair, and quote it failing on the current code.",
+    "THE RECORD (111's first question): the eval unit record gains checks_not_checked, written field by field like the record's other fields, from the run's unchecked list. The per-iteration record keeps its own list.",
+    "TESTS, through the real builders, the real executor and the provider-free doubles:\n(a) judges_agree with a failing, unchecked coverage dissents, and a passing, unchecked consistency does not; both are listed. A real run whose coverage fails unchecked does not converge.\n(b) The implement prompt carries a ready plan's own blockers under the new heading and feasibility's concerns under the considerations heading, each only where it belongs. D36 and D43 are byte-identical.\n(c) With no independent model, the skip output has no ship and vetoed false, the gate passes and the run completes. With the check run and ship false, the gate blocks with the findings in the reason.\n(d) The held-lock case from the evidence: one progress write fails with 'database is locked', and the run still ends with its terminal status committed and visible from a second session. The lost node is named.\n(e) checks_not_checked appears in the unit record.\nProve each test by breaking one line, and quote the failures. Rule 7: for every existing test this changes, say which of the two was wrong.",
+    "Free. No provider call."
+  ],
+  "acceptance_criteria": [
+    "D48 is verbatim in HANDOVER.md and the notebook, before the code in commit order.",
+    "Tests (a)-(e) pass and each break is quoted. Test (d) is quoted failing on the code before the repair.",
+    "D36's block and D43's text in phases.py are byte-identical (diff shown).",
+    "The diff of verdicts.py adds a property and no field. `git diff --stat origin/main -- evals/golden/ workflows/lean.yaml` is empty. No DB schema change.",
+    "Suite green before and after. The PR is opened and delivery_state carries its number."
+  ],
+  "verification": [
+    {
+      "command": "grep -n 'Ruling D48' HANDOVER.md docs/handover-review.md",
+      "expected": "Present in both."
+    },
+    {
+      "command": "grep -n 'independent_check.vetoed' workflows/engineering-rnd.yaml workflows/independent-check-probe.yaml",
+      "expected": "One condition in each."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass."
+    }
+  ],
+  "rollback": "Revert the merge. Unchecked failures are non-blocking again, the plan's own blockers are dropped, the skip writes ship: true, and one failed progress write can lose a run's result.",
+  "deliverable": {
+    "branch": "arch/20261002-114-d46-completed",
+    "branch_created_by": "advisor",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+  "transport": "Pushed by the advisor after the post-merge review of 108-111 (2026-10-02). Process after 113 merges. Commit the response IN_PROGRESS first. This answers 111's second question (the skip's shape, D48 (3)) and its first (checks_not_checked).",
+  "assumptions": [
+    "resolve_path in graph/conditions.py reads attributes with getattr (conditions.py:57), so a gate can read a computed property on a verdict. If it cannot, stop and report BLOCKED rather than widen the condition grammar (hard rule 3)."
+  ],
+  "questions": [
+    "In the 102 and 106 traces, how many units had a ready plan with blockers of its own? D48 (2) changes what those units' implementers would have been shown."
+  ],
+  "preconditions": [
+    {
+      "command": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "expected": "No run in flight."
+    },
+    {
+      "command": "git fetch --prune origin && git log --oneline -1 origin/main -- .orchestration/responses/ARCH-20261002-113.response.json",
+      "expected": "113's response on main (merged). Otherwise BLOCKED."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green; record the count."
+    }
+  ]
+}
