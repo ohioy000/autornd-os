@@ -299,3 +299,26 @@ by 2.6×–295×. Never cite one.** Re-measure instead.
   persists phases. The hardcoded sequencer it used to carry as the graph's
   equivalence reference is gone — the graph outgrew what a linear engine can
   represent.
+
+## Operating discipline
+
+Carried in 2026-10-02 from a global rules file an IDE pasted over this one
+(repaired the same day: the protocol above was restored — it is the SOP and it
+wins — and this is the part of the paste that did not conflict with it). These
+describe how the executor works, not what the harness concludes.
+
+- **Read before search.** When a file path is known or inferable, read it;
+  reserve grep and glob for discovery when the path is genuinely unknown. One
+  discovery pass, then read the likeliest file — not a second search with
+  different terms. No more than three discovery calls per subtask without
+  opening a file in full.
+- **Parallel reads are fine. Parallel writes, edits and side-effecting calls
+  are not** — sequence those.
+- **When a call starts repeating, stop.** A tool call that has failed several
+  times with the same arguments is a diagnosis, not a queue: report what was
+  attempted and ask for new direction rather than retrying with cosmetic
+  changes. This repo has paid for the opposite twice — the -010 trace loss
+  began as a repeated git operation against the tree, and one executor session
+  burned an hour re-issuing identical greps.
+- **Match the owner's shell and platform** in every command you write.
+- **A tool call is a structured call, never prose** pretending to be one.

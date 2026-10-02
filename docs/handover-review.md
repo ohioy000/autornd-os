@@ -11418,3 +11418,111 @@ independent_check.vetoed` in both workflow files; the write path holding
 field — 111's first question, answered.
 
 Execution record: §105.1–§105.3 below.
+
+### 105.1 The corrections, and where each landed
+
+1. **The fold** (`checks.py`, judges_agree): a judge dissents when its verdict
+   is false, whether or not it checked; every unchecked judge is listed and the
+   fail detail names both lists ("not agreed — coverage is red; unchecked:
+   consistency, coverage"). An unchecked pass is not a dissent, as before.
+2. **The plan's own blockers** (`phases.py`, the implement prompt only): a new
+   block ahead of the considerations, under the ruling's heading verbatim —
+   `OPEN POINTS THE PLAN ITSELF NAMED (the plan passed its gate with these; not
+   requirements — weigh them; nothing is judged against them):` — while the
+   reviewers' heading stays as 111 wrote it (`CONSIDERATIONS A REVIEWER RAISED
+   (not requirements — weigh them; nothing is judged against them):`). The two
+   lists never mix. D36's block and D43's text are byte-identical (sha256 of
+   both lines matches origin/main exactly, checked at delivery).
+3. **The skip** (`adapter.py`, `verdicts.py`, both workflow files): the skip
+   output is `{"skipped": true, "vetoed": false, "reason": …}` with **no ship**;
+   `DoubleCheckVerdict.vetoed` is a computed property (`not ship`) — no schema
+   field added; and `independent_verdict`'s condition reads `not
+   independent_check.vetoed` in both files, so the gate sees the same path on
+   both branches. `not <path>` is the grammar's own unary form (conditions.py:12).
+4. **The write path** (`engine/workflow.py`, instrument repair of 109): a
+   progress write that fails at the database rolls the session back, re-reads
+   the row so the run keeps what it needs (nothing touches the expired
+   instance — `workflow.id` is captured before the try), records which node's
+   record was lost in the terminal `error`, and lets the run continue. The item
+   is consumed — the drain never retries or re-raises a failed write — and the
+   terminal commits in every case.
+5. **The record** (`evals/runner.py`): the unit record gains
+   `checks_not_checked`, written field by field from the run's unchecked list
+   (the union across the iteration records, which keep their own) — 111's first
+   question, answered.
+
+### 105.2 The tests, and each break quoted
+
+(a) `TestAnUncheckedFailureStillDissents` (test_graph): a failing unchecked
+coverage dissents and a passing unchecked consistency does not, both listed;
+and a real run whose coverage fails unchecked does not converge (it iterates,
+and the judges output names coverage in both lists). Break — 111's fold rule
+restored —
+`assert not True` (the fold reads "all 2 judges that checked agree" and the run
+converges: `AssertionError: the loop iterated`).
+
+(b) `test_the_plans_own_blockers_get_their_own_heading` (test_rework_loop):
+both headings present, each text only under its own, the plan's own first, and
+D36/D43's sentences still in the prompt. Break —
+`assert 'OPEN POINTS THE PLAN ITSELF NAMED …' in 'Produce the implementation …'`
+(the plan's own blockers dropped again).
+
+(c) `TestASkippedIndependentCheckRecordsNoShip` (test_engine): with no model
+distinct from the one under review the skip output carries **no ship**,
+`vetoed` false, the gate runs and the run completes; with the check run and
+ship false the run blocks with the findings in the reason. Break —
+`assert 'blocked' == 'completed'` (the skip vetoes what it never checked).
+
+(d) `TestTheWritePathHolds` (test_api) — **written before the repair and quoted
+failing on the code before it** (the command's requirement):
+
+```
+E  AssertionError: a lost progress write left no record of itself
+E  assert None is not None
+   (the run completed and committed its terminal; the lost triage write is
+    named nowhere)
+```
+
+and after the repair it passes; its break (the naming removed) reproduces the
+pre-repair failure exactly.
+
+(e) `TestChecksNotCheckedOnTheUnitRecord` (test_run_record): a run whose plan
+and implementation share no unit writes `checks_not_checked: ["consistency"]`
+in the unit record, with the per-iteration list beside it. Break —
+`assert [] == ['consistency']` (the record drops the list).
+
+### 105.3 Departures, events, and rule 7
+
+1. **AGENTS.md was overwritten mid-session (17:53:57) by an outside session's
+   tooling** — the `kiro` IDE seen in precondition 1's reading pasted its
+   *global* rules template over the protocol: a ~105-line file referencing
+   `rules/workflow.md` and `rules/verification.md`, neither of which exists
+   here, and deleting the protocol the guard tests protect (five tests red,
+   none of them mine). Per the owner's direction — "fix the guards within the
+   agent file to reflect how we have and had been doing things but keep some of
+   the new context as well as long as it doesn't conflict with our SOP" — the
+   protocol was restored as the spine and the paste's genuinely useful,
+   non-conflicting discipline (read before search; parallel reads yes, writes
+   no; stop when a call starts repeating; match the owner's shell; a tool call
+   is never prose) was folded in under a new `## Operating discipline` heading
+   that says where it came from. The paste's precedence line (that a
+   project-level file overrides "this global file") was dropped as a direct
+   conflict: this file is the protocol and wins.
+2. **The doubles carried `ship` where production now carries `vetoed`** — four
+   scripted doubles (test_graph ×2, test_all_workflows_terminate,
+   test_rework_loop) returned plain dicts without the key the gate reads. The
+   ruling moved the gate's path; the doubles were stale fixtures (convention
+   22: a double must simulate what the thing it stands for produces), not the
+   bug. Rule 7: the rule was right, the fixtures were wrong. No test asserted
+   "a failing unchecked check is non-blocking" — 111 tested only the
+   unchecked-PASS case and the listing, which is why the advisor's correction
+   had untested room to land in.
+3. **The skip writes no phase row.** It returns zero responses, and a phase row
+   is written per response (109), so the skip's record is its output in
+   `state.outputs` — test (c) is written to read it there, and the engine-level
+   version of the test reads nothing at all (StopIteration, measured). Whether
+   the API path should persist a row for a zero-response node is left open.
+4. **Counts re-derived** (convention 24): 1225 collected — 1218 before, +7
+   (test_api 41→42, test_engine 6→8, test_graph 85→87, test_rework_loop 19→20,
+   test_run_record 6→7). README badge/Testing/Project Structure and HANDOVER's
+   header/§2.2/§3.7/§4.2.
