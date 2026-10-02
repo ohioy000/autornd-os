@@ -1,9 +1,9 @@
 {
   "command_id": "ARCH-20261002-111",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "executed": true,
   "head_before": "89a3da5",
-  "head_after": null,
+  "head_after": "aae2704",
   "arrival": {
     "parent_id": "ARCH-20261002-110: response present at .orchestration/responses/ARCH-20261002-110.response.json on main (merged 89a3da5, PR #131)",
     "preconditions_present": 3,
@@ -23,13 +23,40 @@
       "result": "COUNT, scrubbed green: 1191 passed on the merged main before the work."
     }
   ],
-  "baseline_suite": "1191 passed before (scrubbed)",
-  "results": {},
-  "deviations": [],
-  "questions_for_advisor": [],
+  "baseline_suite": "1191 passed before (scrubbed); 1198 passed after (scrubbed)",
+  "results": {
+    "ruling_first": "D46 committed verbatim in HANDOVER.md's rulings block (after D45's) and notebook §102 BEFORE the code in commit order (499b548), with the two constraints named beside it. grep -n 'Ruling D46' HANDOVER.md docs/handover-review.md shows both.",
+    "clause_1_green_needs_substance": "verdicts.py: _resolve_green ends with the substance rule — a validation with no evidence and an implementation with an empty deliverable each resolve red with a cause that names what was missing ('the validator returned no assessment' / 'the implementation returned no deliverable'), counted under the new kind green_refused_no_substance. The D011 truth table is otherwise untouched. Test (a); break quoted: 'assert True is False' with the empty deliverable approving itself again.",
+    "clause_2_every_blocker_has_a_consumer": "independent_verdict, a terminal gate after independent_check in engineering-rnd.yaml and independent-check-probe.yaml, on_fail blocked with the verdict's critical_issues carried into the reason by the executor's existing _gate_detail — a do-not-ship is not an iteration. The gate carries the node's own when: triage.unrecallable. Feasibility no longer writes plan blockers (run_plan_feasibility returns its concerns instead of mutating the plan); the implement prompt renders them under 'CONSIDERATIONS A REVIEWER RAISED (not requirements — weigh them; nothing is judged against them):' where the old heading was 'FEASIBILITY CONCERNS (from domain specialist review — address these):'. Test (b) asserts blocked + findings in the reason + no loop call; test (c) asserts plan.blockers untouched and the new heading present and the old absent. Breaks quoted: 'assert completed == blocked' and 'Left contains 2 more items ... Solid wire is unsuitable under vibration.'",
+    "clause_3_checked_says_so": "graph/checks.py: Result gains checked (default true, also carried in data — where totals_reconcile has read it since it was written, and how check outputs reach the fold). numbers_consistent with no shared unit passes exactly as before with checked false and a detail that says it compared nothing; criteria_addressed with no criteria fails exactly as before with checked false. judges_agree treats an unchecked judge as non-blocking and lists every one in its unchecked data; the adapter's per-iteration record carries the run-wide list. Tests (d); break quoted: 'assert True is False ... Result(passed=True, checked=True ...).checked'.",
+    "clause_4_the_next_attempt_is_told_why": "adapter.py: _phase_validate fires whenever ANY of the four judges refuses — implement, validate, coverage, consistency — one red_cause naming each with its cause, conflict or miss. _log_failure merges a second write in the same iteration into the entry the iteration already has, at all three write sites: one entry per iteration. Test (e); break quoted: 'assert 0 == 1 ... len([]) .failure_log'.",
+    "the_command_question_traces": "Counted from the committed traces, rows keyed record (header/unit; no answer rows in these three — that is 107's shape): 102-ia-side-arm-b.jsonl = 1 header + 1 unit (golden_side_ia, blocked, $0.157); 106-golden-arm-b.jsonl = 1 header + 6 units (golden_q1-q6: three completed, three blocked); 106-ia-side-arm-b.jsonl = 1 header + 1 unit (golden_side_ia, blocked, $0.134). So 102 ran 1 unit and 106 ran 7 units across its two traces. Full JSON in notebook §102.3.",
+    "d36_d43_byte_identical": "git diff over autornd/engine/phases.py touches neither ruled block: sha256 of 'If a criterion cannot be honestly satisfied...' and 'Answer the request, and include the plan's falsifiers...' both match origin/main exactly (checked at delivery).",
+    "rule_7": "The truth-table row test_absent_green_with_no_cause_is_green parametrized ValidateVerdict(**{}).green is True — literally the bug the ruling names (verdicts.py:351), written down as the truth (rule 7); replaced. EIGHT test doubles carried empty approvals ('evidence': [] on green replies) in test_watchdog's judge union, test_settings_map, test_review_quorum, test_run_record, test_evals and test_rework_loop — the same bug encoded in fixtures; all now carry real evidence and the runs reach the same terminals. The node-order and probe-ids lists asserted the pre-gate graph and name the gate now (the gate is the ruled change).",
+    "acceptance": "Ruling D46 in HANDOVER.md and the notebook before the code. GREEN NEEDS SUBSTANCE demonstrated (a); the independent verdict's do-not-ship ends the run with findings (b); feasibility's channel demonstrated with both headings quoted (c); a check that compared nothing passes with checked false and the record lists it (d); the failure log names every judge and writes once per iteration (e). Each proved by breaking one line, quoted in notebook §102.2. D36/D43 byte-identical (above). Counts re-derived (convention 24): 1198 collected, 1191 before — test_graph 83→85, test_iteration_dissent 5→8, test_rework_loop 17→19; README badge/Testing/Project Structure and HANDOVER's header/§2.2/§3.7/§4.2; engineering-rnd's node count 28→29. Suite green before (1191) and after (1198), scrubbed of the owner's exported pins."
+  },
+  "deviations": [
+    "THE COMMAND MISSED THE SHAPE OF THE SKIP: it assumed independent_check's skip lived in its when: triage.unrecallable (hard rule 3's warning). It lives one level down — _phase_doublecheck runs and returns {'skipped': true, 'reason': ...} with no ship when no independent model is configured, so the gate raised on the path ('independent_check.ship is not available'). The skip record now carries ship: True AS A ROUTING VALUE (a skipped pass is no veto) while skipped and reason say plainly that no check happened; nothing there claims an approval.",
+    "THE JUDGES NODE'S ARGS NOW PASS WHOLE CHECK OUTPUTS (coverage, consistency instead of coverage.passed): the fold cannot honour D46 (3) — unchecked is non-blocking — unless it can see checked, and the args are the only wiring in scope (graph/conditions.py's grammar and the executor are both excluded). resolve_args resolves bare node ids as output lookups, verified against its source before the change.",
+    "checked lives in Result.data as well as on the object — not decoration: the executor stores dict(result.data) as a check's output dict, so without it the flag reaches neither the fold nor the record, and totals_reconcile reads data['checked'].",
+    "R7's record key feasibility_blockers is preserved (the adapter's feasibility output keeps the key runner.py reads): D46 changes the channel's meaning and the prompt heading, not the record's shape — evals/runner.py is outside the include list. The old and new prompt headings are quoted verbatim in the results and in notebook §102.1.",
+    "THE SCRIPTED TEST DOUBLES (test_graph.ScriptedRunner) return {} for unscripted nodes, which is not what production writes in either branch — tests whose runs reached independent_check without scripting it failed on the gate while production worked. The doubles now answer for the node their runs reach; this is fixture repair, recorded under rule 7.",
+    "Counts moved twice during the work (the fixture repairs landed after the first re-derivation); the final reading is 1198 collected and the guards are green on the delivered tree."
+  ],
+  "questions_for_advisor": [
+    "D46 (3) says 'the terminal record lists every check that did not check'. The run-wide unchecked list is carried in the adapter's per-iteration record (runner.iterations), which is what the eval record's iterative_decisions writes — but evals/runner.py's unit record has no dedicated field for it and is outside this command's scope. Should the run record gain a checks_not_checked field (a runner.py change), or is the iteration record the terminal record of record?",
+    "The skip record's ship: True is a routing value, not an approval, and says so in its comment. If D46 (1) is read to forbid even that, the alternative is a disjunction in the gate's condition, which needs graph/conditions.py's grammar — outside this scope. Ruling requested on which shape the skip should take.",
+    "Carried open from 108-110: tests/conftest.py's os.environ.setdefault placeholders lose to exported MODEL_* pins, so the literal pytest invocation reads 2 failed while the scrubbed (CI-equivalent) invocation is green."
+  ],
   "delivery_state": {
     "branch": "arch/20261002-111-approval-means-checked",
     "pr": null
   },
-  "commits": {}
+  "commits": {
+    "in_progress": "5c7e836",
+    "ruling_first": "499b548",
+    "behaviour": "d2b1516",
+    "tests": "38ba3cc",
+    "counts_and_record": "aae2704"
+  }
 }
