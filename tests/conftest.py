@@ -25,6 +25,14 @@ import os
 # tests/test_hermetic_suite.py guards both lists against drift.
 os.environ["AUTORND_TESTING"] = "1"
 
+# The knowledge store is a fresh directory per suite run: the default is
+# cwd-relative ./chromadb_data, where a leftover collection from an earlier
+# run (or an earlier embedder) breaks the store tests on a dimension mismatch.
+# The suite's store is the suite's, like everything else here.
+import tempfile
+
+_CHROMA_TMP = tempfile.mkdtemp(prefix="autornd-tests-chroma-")
+
 PLACEHOLDERS: dict[str, str] = {
     # credentials and transport — empty, and nothing can fill them here
     "OPENROUTER_API_KEY": "",
@@ -63,7 +71,7 @@ PLACEHOLDERS: dict[str, str] = {
     "RUN_SPEND_CEILING_USD": "0.50",
     "MAX_CONCURRENT_RUNS": "2",
     "ALLOW_UNAUTHENTICATED_REMOTE": "false",
-    "CHROMADB_PATH": "./chromadb_data",
+    "CHROMADB_PATH": _CHROMA_TMP,
     "REGISTRATION_ENABLED": "true",
     "AUTORND_PROFILE": "",
     "AUTORND_WORKFLOW": "engineering-rnd",
@@ -189,7 +197,18 @@ class _LocalEmbeddings:
         return vectors
 
 
+# Both seams: the package export and the submodule the default delegate
+# imports from — and the delegate's own __call__, which is the one every
+# instantiation path shares. The first attempt patched only the package
+# export and looked green locally purely because the ONNX model was already
+# cached; CI disproved it (convention 18: the reading was the cache).
+import chromadb.api.types as _chroma_types
+import chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 as _chroma_onnx
+
 _chroma_ef.ONNXMiniLM_L6_V2 = _LocalEmbeddings
+_chroma_onnx.ONNXMiniLM_L6_V2 = _LocalEmbeddings
+_chroma_types.DefaultEmbeddingFunction.__call__ = (
+    lambda self, input: _LocalEmbeddings()(input))
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):

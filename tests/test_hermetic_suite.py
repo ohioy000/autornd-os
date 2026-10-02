@@ -24,10 +24,13 @@ import pytest
 
 from autornd.config import Settings, settings
 
-# The tiers whose placeholders are suite-chosen rather than declared defaults.
+# The tiers whose placeholders are suite-chosen rather than declared defaults,
+# plus the store path: a fresh directory per run, so a leftover collection
+# from an earlier run cannot break the store tests on a dimension mismatch.
 SUITE_CHOSEN = {
     "model_triage", "model_engineering", "model_architecture",
     "model_escalation", "model_research", "model_search",
+    "chromadb_path",
 }
 
 # Not a setting: the class-annotated set of runtime-mutable names, which
@@ -38,8 +41,10 @@ _PROBE = (
     "import json; "
     "import tests.conftest as c; "
     "from autornd.config import settings; "
+    # RUNTIME_MUTABLE's stringified set is unordered, and chromadb_path is a
+    # fresh temp directory per process — both differ run to run by design.
     "print(json.dumps({k: v for k, v in settings.model_dump().items() "
-    "if k != 'RUNTIME_MUTABLE'}, default=str))"
+    "if k not in ('RUNTIME_MUTABLE', 'chromadb_path')}, default=str))"
 )
 
 
