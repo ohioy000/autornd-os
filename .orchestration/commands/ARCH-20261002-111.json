@@ -1,0 +1,92 @@
+{
+  "command_id": "ARCH-20261002-111",
+  "parent_id": "ARCH-20261002-110",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "An approval means something was checked (Ruling D46). An empty assessment cannot pass. Every verdict that can block has a consumer. A check that compared nothing says so. Every judge that keeps a loop going tells the next attempt why.",
+  "evidence": [
+    "autornd/models/verdicts.py:347-354: when green is unset, _resolve_green derives green = not has_cause. ValidateVerdict defaults green and red_cause to None and evidence to [], so an empty JSON object validates green. ImplementVerdict's summary may be empty, and judges read implement.green, which is resolved the same way (review B finding 1; verified by the advisor against main 4fda54f).",
+    "workflows/engineering-rnd.yaml:322 and workflows/independent-check-probe.yaml:63: independent_check returns a DoubleCheckVerdict whose ship field no gate reads. The run can complete after the one reviewer that sees unrecallable work says not to ship.",
+    "autornd/engine/phases.py:397: feasibility appends its hard blockers to plan.blockers after plan_ready has already passed. They can never stop a run, and they are misrecorded as plan blockers (open since 098). phases.py:768 then hands them to implement as 'FEASIBILITY CONCERNS (from domain specialist review — address these)'. That opens a second criteria channel after D43 closed the plan's scope (review A F5).",
+    "autornd/graph/checks.py:755-790: numbers_consistent reports 'no contradicting values' when the plan and the implementation share no unit, so 'compared nothing' reads as 'consistent'. It also passes a unit when any one plan value agrees with any one implementation value (review B finding 10). That second point is recorded here, not changed: the checks' fate waits for the tier-2 data.",
+    "autornd/graph/adapter.py:583 writes a failure-log entry only when validate or implement is red. The judges fold also refuses convergence on a coverage miss or a consistency conflict, so the loop can go round again without telling the implementer why (review B finding 9)."
+  ],
+  "scope": {
+    "include": [
+      "autornd/models/verdicts.py (green resolution only)",
+      "autornd/graph/checks.py (the Result's checked flag; no change to what passes)",
+      "autornd/graph/adapter.py (failure-log entries)",
+      "autornd/engine/phases.py (feasibility's channel, and the implement prompt's heading for it)",
+      "workflows/engineering-rnd.yaml and workflows/independent-check-probe.yaml (independent_check's terminal gate only)",
+      "tests/",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "D36's four plan rules and D43's scope text: byte-identical.",
+      "Verdict schema fields: none removed or renamed; no DB schema change.",
+      "Loop wiring, loop bounds and the other gates.",
+      "evals/golden/."
+    ]
+  },
+  "constraints": [
+    "RULING FIRST, VERBATIM, in HANDOVER.md and the notebook, before the code in commit order.",
+    "RULING D46, COMMITTED VERBATIM: 'Ruling D46 (advisor, 2026-10-02) — an approval means something was checked. (1) A validation verdict with no evidence cannot be green, and an implementation with no deliverable cannot be green; either resolves red, with a cause that names what was missing, and is counted. The resolution of green from red_cause otherwise stands. (2) Every verdict that can block has a consumer. The independent check's do-not-ship ends the run blocked, with its findings. The feasibility review runs after the plan gate and cannot stop a run, so it no longer writes plan blockers; its concerns reach the implementer as considerations a reviewer raised, not as requirements. (3) A check that compared nothing says so: it passes as before, but it is recorded as not checked, and the terminal record lists every check that did not check. (4) Every judge that keeps a loop going writes its reason into the failure log, so the next attempt is told why. D36's plan rules and D43's scope rule are untouched. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md), verified by the advisor: an empty validation object passed (verdicts.py:351); the independent check's verdict had no consumer; feasibility blockers were recorded as plan blockers and handed to the implementer as 'address these' after D43 closed the plan's scope; numbers_consistent reported 'no contradicting values' when it had compared none; and a consistency-only failure looped with no failure-log entry (adapter.py:583). Falsifier: a green verdict with no evidence or no deliverable, a blocking verdict with no consumer, or a loop iteration whose cause is missing from the failure log.'",
+    "GREEN NEEDS SUBSTANCE: in _resolve_green, a ValidateVerdict with no evidence cannot be green, and neither can an ImplementVerdict whose summary is empty or whitespace. Either resolves red, with a red_cause that names what was missing ('the validator returned no assessment'; 'the implementation returned no deliverable'), and is counted under a new normalisation kind. The rest of the ruled truth table stands.",
+    "A CONSUMER FOR EVERY BLOCKING VERDICT: add a terminal gate after independent_check in both workflow files. A do-not-ship ends the run blocked, with the verdict's findings in the reason; the gate must not route into a loop. Feasibility no longer writes plan.blockers. Its concerns travel in feasibility's own output, and the implement prompt renders them under a heading that calls them considerations a reviewer raised, not requirements. Quote the new heading and the old one. The gate carries independent_check's own `when: triage.unrecallable`, because a gate that reads a path the skipped node never wrote raises (hard rule 3; graph/conditions.py).",
+    "NOT CHECKED IS NOT CONSISTENT: the check Result gains a checked flag, default true. numbers_consistent sets it false when the plan and the implementation share no unit; criteria_addressed sets it false when there are no criteria. Pass and fail do not change, and the fold treats an unchecked check as non-blocking. The run's terminal record lists every check that did not check.",
+    "THE NEXT ATTEMPT IS TOLD WHY: whenever the judges fold refuses convergence, the adapter writes a failure-log entry naming every judge that refused, with its conflicts or misses, whether or not validate and implement are red. No entry is written twice for one iteration.",
+    "TESTS, through the real builders, the real executor and the provider-free test doubles: (a) {} as a validate verdict resolves red and is counted, and so does an empty implement summary. (b) independent_check with ship false ends the run blocked, with its findings. (c) Feasibility concerns are absent from plan.blockers; the implement prompt carries them under the considerations heading; D36 and D43 are byte-identical. (d) numbers_consistent with no shared unit passes with checked false, and the terminal record lists it. (e) A consistency-only failure writes a failure-log entry naming consistency, and the next implement prompt carries it. Prove each by breaking. Rule 7: for every existing test this changes, say which of the two was wrong.",
+    "Free. No provider call."
+  ],
+  "acceptance_criteria": [
+    "D46 is verbatim in HANDOVER.md and the notebook, before the code in commit order.",
+    "Tests (a)-(e) pass, and each break is quoted.",
+    "D36's block and D43's text in phases.py are byte-identical (diff shown).",
+    "`git diff --stat origin/main -- evals/golden/` is empty, and no verdict field was removed or renamed.",
+    "Suite green before and after. The PR is opened and delivery_state carries its number."
+  ],
+  "verification": [
+    {
+      "command": "grep -n 'Ruling D46' HANDOVER.md docs/handover-review.md",
+      "expected": "Present in both."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass."
+    }
+  ],
+  "rollback": "Revert the merge.",
+  "deliverable": {
+    "branch": "arch/20261002-111-approval-means-checked",
+    "branch_created_by": "advisor",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+  "transport": "Pushed by the advisor: the last of the four free Phase 0-1 commands. Process after 110 merges. Phase 2 follows from the advisor: the tier-2 question set and the arms experiment, general engineering, with the budget authorised when it arises. Commit the response IN_PROGRESS first.",
+  "assumptions": [
+    "The judges fold's inputs are the four signals in engineering-rnd.yaml's judges node. If the fold reads others, follow it and say where."
+  ],
+  "questions": [
+    "How many units in 102 and 106 would D46 have changed? Count each kind: a green from an empty assessment, a feasibility concern recorded as a plan blocker, an unchecked consistency pass, and an iteration whose cause was missing from the failure log. Count them from the traces; no spend."
+  ],
+  "preconditions": [
+    {
+      "command": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "expected": "No output."
+    },
+    {
+      "command": "git fetch --prune origin && grep -n 'Ruling D45' HANDOVER.md",
+      "expected": "Present (110 merged). Otherwise BLOCKED."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green; record the count."
+    }
+  ]
+}
