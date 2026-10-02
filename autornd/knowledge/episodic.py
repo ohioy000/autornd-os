@@ -66,9 +66,25 @@ async def save_episode(
 
 
 async def get_recent_episodes(
-    session: AsyncSession, limit: int = 10
+    session: AsyncSession, limit: int = 10, user_id: int | None = None
 ) -> list[Episode]:
+    """The most recent episodes, scoped to one caller's runs when identified.
+
+    Ruling D45 (4): /api/episodes showed every run's request, verdict and
+    cost to any caller. Ownership lives on the workflow row, so the filter
+    joins it rather than duplicating the column (hard rule 11).
+    """
     stmt = select(Episode).order_by(Episode.created_at.desc()).limit(limit)
+    if user_id is not None:
+        from autornd.models.workflow import Workflow
+
+        stmt = (
+            select(Episode)
+            .join(Workflow, Episode.workflow_id == Workflow.id)
+            .where(Workflow.user_id == user_id)
+            .order_by(Episode.created_at.desc())
+            .limit(limit)
+        )
     result = await session.execute(stmt)
     return list(result.scalars().all())
 
