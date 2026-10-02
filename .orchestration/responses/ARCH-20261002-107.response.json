@@ -1,0 +1,34 @@
+{
+  "command_id": "ARCH-20261002-107",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "e4b2137",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20261002-106: response present",
+    "preconditions_present": 3,
+    "transport": "Command carried to main by PR #120; branch cut from e4b2137."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "PASS: no run in flight"
+    },
+    {
+      "n": 2,
+      "result": "PASS: SELF-TEST PASSED"
+    },
+    {
+      "n": 3,
+      "result": "PASS: 1165 passed"
+    }
+  ],
+  "baseline_suite": "1165 passed",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20261002-107-direct-baseline",
+    "pr": null
+  }
+}
