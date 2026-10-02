@@ -503,3 +503,243 @@ nodes:
         assert row.status == WorkflowStatus.BLOCKED
         assert "frobnicate" in row.error
         assert phases
+
+
+# ── Ruling D45 (ARCH-20261002-110): no open, unbounded spend ────────────────
+#
+# (a) the server is not open by default, (b) episodes by owner, (c) settings
+# are not a remote lever, (d) every API run carries its bounds, (h) the
+# concurrent-run cap, (i) the duplicate refusal. All provider-free; the run
+# tests drive the real routes on the billing double.
+
+
+@pytest.fixture(autouse=True)
+def _clean_run_gate():
+    """The gate is process state; a run admitted by one test must not count
+    against the next."""
+    from autornd.api import routes
+    routes._run_gate._in_flight.clear()
+    yield
+    routes._run_gate._in_flight.clear()
+
+
+def _remote_client():
+    from httpx import ASGITransport, AsyncClient
+
+    from autornd.main import app
+
+    transport = ASGITransport(app=app, client=("203.0.113.5", 5000))
+    return AsyncClient(transport=transport, base_url="http://test")
+
+
+def _unauthenticated(monkeypatch, allow_remote: bool = False):
+    from autornd.config import settings
+
+    monkeypatch.setattr(settings, "api_key", "")
+    monkeypatch.setattr(settings, "jwt_secret", "")
+    monkeypatch.setattr(settings, "allow_unauthenticated_remote", allow_remote)
+
+
+class TestTheServerIsNotOpenByDefault:
+    """(a) The documented Docker quick start published this endpoint on every
+    interface with no key (review A F6). With neither API_KEY nor JWT_SECRET
+    configured the API now serves loopback callers only."""
+
+    async def test_a_remote_caller_is_refused_and_the_sentence_names_the_fix(
+            self, api_client, monkeypatch):
+        _unauthenticated(monkeypatch)
+        async with _remote_client() as remote:
+            refused = await remote.get("/api/workflows")
+            assert refused.status_code == 403
+            detail = refused.json()["detail"]
+            assert "API_KEY" in detail
+            assert "ALLOW_UNAUTHENTICATED_REMOTE" in detail
+
+            health = await remote.get("/api/health")
+            assert health.status_code == 200     # open to everyone
+
+    async def test_a_loopback_caller_is_served(self, api_client, monkeypatch):
+        _unauthenticated(monkeypatch)
+        resp = await api_client.get("/api/workflows")
+        assert resp.status_code == 200
+
+    async def test_the_override_serves_remote_and_health_says_so(
+            self, api_client, monkeypatch):
+        _unauthenticated(monkeypatch, allow_remote=True)
+        async with _remote_client() as remote:
+            resp = await remote.get("/api/workflows")
+            assert resp.status_code == 200
+            body = (await remote.get("/api/health")).json()
+            assert body["allow_unauthenticated_remote"] is True
+            assert body["authentication_configured"] is False
+
+
+class TestEpisodesAreScopedToTheirCaller:
+    """(b) /api/episodes showed every run's request, verdict and cost to any
+    caller. Ownership lives on the workflow row; the filter joins it."""
+
+    async def test_a_caller_sees_only_their_own_runs(
+            self, api_client, db_session, monkeypatch):
+        from autornd.config import settings
+        from autornd.knowledge.episodic import Episode
+
+        monkeypatch.setattr(
+            settings, "jwt_secret",
+            "test-secret-0123456789abcdef0123456789abcdef")
+
+        tokens = {}
+        owners = {}
+        for name in ("alice", "bob"):
+            registered = await api_client.post(
+                "/api/auth/register",
+                json={"username": f"{name}-episodes",
+                      "email": f"{name}-episodes@example.com",
+                      "password": "correct-horse-battery-staple"})
+            assert registered.status_code == 201
+            tokens[name] = registered.json()["data"]["token"]
+            owners[name] = registered.json()["data"]["id"]
+
+        for name in ("alice", "bob"):
+            row = Workflow(request=f"{name}'s run",
+                           status=WorkflowStatus.COMPLETED,
+                           user_id=owners[name])
+            db_session.add(row)
+            await db_session.flush()
+            db_session.add(Episode(
+                workflow_id=row.id, request=f"{name}'s run",
+                domains='["backend"]', risk="medium", shipped=True,
+                verdict=f"{name}'s verdict", findings_count=0, total_cost=0.01))
+        await db_session.commit()
+
+        alice = await api_client.get(
+            "/api/episodes", headers={"Authorization": f"Bearer {tokens['alice']}"})
+        bob = await api_client.get(
+            "/api/episodes", headers={"Authorization": f"Bearer {tokens['bob']}"})
+        assert {e["request"] for e in alice.json()["data"]} == {"alice's run"}
+        assert {e["request"] for e in bob.json()["data"]} == {"bob's run"}
+
+
+class TestSettingsAreNotARemoteLever:
+    """(c) A runtime ceiling raise applied to every run in flight (review F8).
+    The endpoint is loopback-only and can only tighten; the tighten half lives
+    beside its validator tests in tests/test_settings.py."""
+
+    async def test_put_settings_from_a_remote_caller_is_refused(
+            self, api_client, monkeypatch):
+        _unauthenticated(monkeypatch, allow_remote=True)
+        async with _remote_client() as remote:
+            resp = await remote.put("/api/settings", json={"max_iterations": 3})
+            assert resp.status_code == 403
+            assert "loopback" in resp.json()["detail"]
+
+            profiles = await remote.post("/api/profiles/example")
+            assert profiles.status_code == 403
+
+
+class TestTheApiRunCarriesItsBounds:
+    """(d) run_time_budget_seconds and run_spend_ceiling_usd default to bounds
+    now (1800 s, $0.50): every client the API creates carries the ceiling and
+    every executor carries the budget."""
+
+    async def test_the_client_and_executor_carry_the_default_bounds(
+            self, api_client, monkeypatch):
+        from autornd.api import routes
+        from autornd.config import settings
+        from autornd.graph import executor as executor_module
+
+        from tests.conftest import make_mock_client
+        from tests.test_watchdog import REQUEST, _responses
+
+        assert settings.run_time_budget_seconds == 1800.0
+        assert settings.run_spend_ceiling_usd == 0.50
+
+        made: list = []
+
+        def _make():
+            client = make_mock_client(_responses())
+            made.append(client)
+            return client
+
+        monkeypatch.setattr(routes, "OpenRouterClient", _make)
+
+        seen: dict = {}
+        real = executor_module.GraphExecutor
+
+        class Recording(real):
+            def __init__(self, spec, runner, **kwargs):
+                seen["time_budget"] = kwargs.get("time_budget")
+                super().__init__(spec, runner, **kwargs)
+
+        monkeypatch.setattr(executor_module, "GraphExecutor", Recording)
+
+        resp = await api_client.post("/api/workflows/sync",
+                                     json={"request": REQUEST})
+        assert resp.status_code == 200
+        assert made[0].spend_ceiling == 0.50
+        assert seen["time_budget"] == 1800.0
+
+
+class TestTheRunCapAndTheDuplicate:
+    """(h) and (i): a per-run ceiling bounds one run, not a caller who submits
+    many — at most max_concurrent_runs in flight, and never twice the same
+    request from the same caller (review A F6: no rate limiting, no queue
+    depth cap, no dedupe)."""
+
+    async def test_a_submission_beyond_the_cap_gets_429_and_leaves_no_row(
+            self, api_client, db_session, tmp_path, monkeypatch):
+        import asyncio
+
+        from autornd.config import settings
+        from sqlalchemy import func, select
+
+        from tests.test_watchdog import REQUEST
+
+        monkeypatch.setattr(settings, "max_concurrent_runs", 1)
+        monkeypatch.setattr(settings, "allow_unauthenticated_remote", True)
+        clients, _observer = await _wire_file_backed_run(
+            tmp_path, monkeypatch, delays={"default": 0.3})
+
+        async with _remote_client() as remote:
+            first = asyncio.create_task(
+                remote.post("/api/workflows", json={"request": REQUEST}))
+            await asyncio.sleep(0.1)            # the first is admitted, in flight
+            second = await remote.post(
+                "/api/workflows", json={"request": "some other work"})
+            assert second.status_code == 429
+            assert "in flight" in second.json()["detail"]
+            await first
+
+        async with _observer() as session:
+            rows = (await session.execute(
+                select(func.count()).select_from(Workflow))).scalar_one()
+        assert rows == 1, f"the refused submission left {rows - 1} row(s) behind"
+
+    async def test_an_identical_request_is_a_duplicate_but_another_caller_is_served(
+            self, api_client, db_session, tmp_path, monkeypatch):
+        import asyncio
+
+        from httpx import ASGITransport, AsyncClient
+
+        from autornd.config import settings
+        from autornd.main import app
+
+        from tests.test_watchdog import REQUEST
+
+        monkeypatch.setattr(settings, "max_concurrent_runs", 4)
+        monkeypatch.setattr(settings, "allow_unauthenticated_remote", True)
+        clients, _observer = await _wire_file_backed_run(
+            tmp_path, monkeypatch, delays={"default": 0.3})
+
+        same = ASGITransport(app, client=("203.0.113.5", 5000))
+        other = ASGITransport(app, client=("203.0.113.6", 5000))
+        async with AsyncClient(transport=same, base_url="http://test") as a, \
+                AsyncClient(transport=other, base_url="http://test") as b:
+            first = asyncio.create_task(
+                a.post("/api/workflows", json={"request": REQUEST}))
+            await asyncio.sleep(0.1)
+            duplicate = await a.post("/api/workflows", json={"request": REQUEST})
+            assert duplicate.status_code == 409
+            assert "already running" in duplicate.json()["detail"]
+            stranger = await b.post("/api/workflows", json={"request": REQUEST})
+            assert stranger.status_code == 202
+            await first
