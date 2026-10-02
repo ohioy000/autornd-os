@@ -1,9 +1,9 @@
 {
   "command_id": "ARCH-20261002-110",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "executed": true,
   "head_before": "627e730",
-  "head_after": null,
+  "head_after": "ae7dbfe",
   "arrival": {
     "parent_id": "ARCH-20261002-109: response present at .orchestration/responses/ARCH-20261002-109.response.json on main (merged 627e730, PR #130)",
     "preconditions_present": 3,
@@ -12,24 +12,55 @@
   "preconditions": [
     {
       "n": 1,
-      "result": "PASS: no output — no run in flight (cleaner than 108 and 109's readings, which matched the owner's editor argv)."
+      "result": "PASS: no output — no run in flight."
     },
     {
       "n": 2,
-      "result": "PASS: 109's response is on main — git log origin/main -- .orchestration/responses/ARCH-20261002-109.response.json returns fcc1806 (the delivery_state commit), an ancestor of 627e730."
+      "result": "PASS: 109's response is on main — git log origin/main -- .orchestration/responses/ARCH-20261002-109.response.json returns fcc1806, an ancestor of 627e730."
     },
     {
       "n": 3,
-      "result": "COUNT, scrubbed green: 1176 passed on the merged main (the same reading CI takes; the exported-pin leak in this shell is unchanged and carried as a question in 108 and 109's responses)."
+      "result": "COUNT, scrubbed green: 1176 passed on the merged main before the work."
     }
   ],
-  "baseline_suite": "1176 passed before (scrubbed)",
-  "results": {},
-  "deviations": [],
-  "questions_for_advisor": [],
+  "baseline_suite": "1176 passed before (scrubbed); 1191 passed after (scrubbed)",
+  "results": {
+    "ruling_first": "D45 committed verbatim in HANDOVER.md's rulings block (line 41) and notebook §101 BEFORE the code in commit order (8d7de5c), with both amendments named beside it. grep -n 'Ruling D45' HANDOVER.md docs/handover-review.md shows both.",
+    "clause_1_loopback": "auth.py: with neither API_KEY nor JWT_SECRET set, every request whose socket peer is not loopback is refused 403 with a sentence naming both fixes; /api/health stays open to everyone. ALLOW_UNAUTHENTICATED_REMOTE=1 overrides — logged at startup (main.py) and reported by /api/health alongside authentication_configured. Test (a) covers refused / served / override-and-reported.",
+    "clause_2_bounds": "run_time_budget_seconds now defaults to 1800 (098's runs reached judge-approved answers at 15.6 and 20.7 min) and run_spend_ceiling_usd to 0.50 (whole runs since 102 cost $0.02 to $0.19), each with its measurement comment. _bound_client() arms every client the API creates — both submit paths and doublecheck; the engine passes the time budget to every executor. Test (d) reads both off a real submission.",
+    "clause_3_tighten_only": "PUT /api/settings and POST /api/profiles/{name} serve loopback callers only. A numeric ceiling is checked against the startup snapshot after the validators: lowered is accepted, raised above startup is refused 400 naming the fields, and an invalid value is still 422. Tests: test_settings.py's lowering/raising pair and test_api.py's remote-refusal test (c).",
+    "clause_4_episodes": "GET /api/episodes filters by the caller's user_id whenever one is identified, joining Workflow.user_id (no DB schema change — hard rule 11). Test (b): two callers each see only their own runs.",
+    "clause_5_the_guard_holds": "openrouter.py: _guard_spend computes a TRUE worst case — prompt UTF-8 bytes plus CHAT_TEMPLATE_ALLOWANCE_BYTES (512; measured 2026-10-02 on this client's wire envelope: 96 bytes of scaffolding for the two-message chat every phase sends, 33 per extra message; the three chat-template families' markers run under 64 bytes a turn) — and RESERVES it before dispatch. _account releases the reservation and books the actual cost; a call that fails after dispatch keeps its worst case as unreconciled_liability for the rest of the run, recorded with its kind (error_status, timeout, transport_error, cancelled). rerank passes the same guard. The call ceiling is checked before dispatch with in-flight calls counted (amendment c). Tests (e) two concurrent calls cannot pass one balance, (f) the failed call's worst case stays counted and recorded under both an error status and a timeout, (g) rerank refused when its worst case does not fit; the byte bound and the pre-dispatch ceiling each have their own test (TestThePromptEstimateIsABoundNotAMean, TestTheCallCeilingIsCheckedBeforeDispatch). The per-run record carries unreconciled_liability and failed_after_dispatch (runner.py, field by field).",
+    "clause_6_the_cap": "max_concurrent_runs (default 2, measurement comment: the owner runs one at a time and two leave room for a sync call beside an async run) caps API runs in flight across both submit paths; a submission beyond it gets 429 with a sentence naming the cap and creates NO Workflow row; a request identical to one the same caller already has in flight is refused 409. Tests (h) and (i) — (i) also proves the same text from another caller is served.",
+    "tests_a_to_i": "tests/test_api.py (a-d, h, i) and tests/test_spend_guard.py (e-g), all provider-free through the real routes/real client on httpx.MockTransport and the billing double. Each proved by breaking one line and reverting; all nine failures quoted in docs/handover-review.md §101.2.",
+    "live_proof": "Amendment (a) measured against a running server (placeholder tiers, no keys) before the unit tests: loopback GET /api/health 200, remote GET /api/health 200 (stays open), remote POST /api/workflows 403 with the full sentence naming API_KEY/JWT_SECRET and ALLOW_UNAUTHENTICATED_REMOTE, loopback GET /api/workflows 200. The break — _is_loopback returning True — turns the remote POST into '202 ... Workflow queued for execution', the run it queued deleted from the local dev database afterwards and no provider call made. The docker job's new 'Unauthenticated remote callers are refused' step asserts the same 403 against the running container and fails the same way (POST /api/workflows -> 202) with the rule removed; its dashboard step now asserts the host's 403 and reads the template from inside the container where the loopback rule serves it.",
+    "docker_job_green": "The job keeps its health honesty check (degraded naming all six placeholder tiers) and its package-data check, adds the 403 proof, and stays free of credentials. The PR's CI is the running-container evidence; the local live run above is the same check against the same code without docker, because the container's bridge-gateway peer and this host's LAN peer are the same kind of caller to the rule.",
+    "acceptance": "D45 verbatim in HANDOVER.md and the notebook before the code (commit order: 6e12635 response IN_PROGRESS, 8d7de5c ruling, then the code). git diff --stat origin/main -- workflows/ evals/golden/ is empty; no .env* file other than .env.example changed. The README quick start no longer publishes an unauthenticated server — it names API_KEY/JWT_SECRET and exactly what the override exposes. Suite green before (1176) and after (1191), scrubbed of the owner's exported pins."
+  },
+  "deviations": [
+    "TWO TESTS ASSERTED RETIRED BEHAVIOUR (convention 17, both ruled rather than found): tests/test_settings.py::test_update_max_iterations PUT 10 over a startup of 5 and asserted 200 — the F8 bug written down (rule 7); replaced by a lowering/raising pair. tests/test_spend_guard.py computed its worst case with CHARS_PER_TOKEN, the mean amendment (b) retires; the constant is deleted (reference check: only that formula and that test used it) and the test reads the byte bound.",
+    "THE TIGHTEN-ONLY CHECK SITS AFTER THE PER-FIELD VALIDATORS, not before: placed first it answered 400 (would raise) where the suite expects 422 (invalid) for max_iterations 50, and test_reject_bad_max_iterations caught the ordering. An invalid value is still 422; a valid-but-raising value is 400.",
+    "SCOPE EXTENSION: .github/workflows/ci.yml is not in the command's include list, but amendment (a) requires the docker job to POST /api/workflows and assert 403, and the job's dashboard step read / from outside the container — which D45 now refuses. The step asserts the host's 403 and reads the template in-container (loopback), preserving its purpose (the template resolves at request time).",
+    "THE DOCKER JOB'S 403 CHECK IS PROVEN HERE BY A LOCAL LIVE RUN against a running server rather than a local docker build (the container's peer address is the bridge gateway, which the LAN-address curl reproduces exactly). The PR's CI docker job is the running-container evidence and must be green before merge, per the deliverable's merge clause.",
+    "_account's after-the-call ceiling check is KEPT beside the new pre-dispatch check as a backstop: the test doubles account without guarding (they call _account directly) and the after-check is what bounds them.",
+    "STARLETTE'S 'testclient' HOST IS DELIBERATELY NOT LOOPBACK (the constraint asked for a decision and a statement): the rule is never widened to make a test pass, and no test in this repo uses Starlette's TestClient — httpx's ASGITransport presents 127.0.0.1 (honest loopback) and takes a client= override, which the remote-caller tests use. A future TestClient test must authenticate or set a client host."
+  ],
+  "questions_for_advisor": [
+    "The run gate (_RunGate) is process state: with more than one uvicorn worker the cap would be per-worker rather than global. Single-process is the documented deployment; is a cross-worker cap worth a real store, or does the ruling's 'at most max_concurrent_runs' stand as per-process with the README saying so?",
+    "A retried chat call (429 backoff, or the response_format retry) reserves ONE worst case for the whole call although each attempt is dispatched. Actual cost of every attempt is booked on success; the reservation covers one dispatch's worst case. Should a retried call reserve per attempt, or is one-call-one-reservation the intended unit?",
+    "Carried open from 108 and 109: tests/conftest.py's os.environ.setdefault placeholders lose to this shell's exported MODEL_* pins, so the literal pytest invocation reads 2 failed while the scrubbed (CI-equivalent) invocation is green."
+  ],
   "delivery_state": {
     "branch": "arch/20261002-110-no-open-spend",
     "pr": null
   },
-  "commits": {}
+  "commits": {
+    "in_progress": "6e12635",
+    "ruling_first": "8d7de5c",
+    "guard_and_defaults": "31affad",
+    "api_surface": "2424dcb",
+    "tests": "fc79697",
+    "docs_and_ci": "1a945a8",
+    "counts_and_record": "ae7dbfe"
+  }
 }
