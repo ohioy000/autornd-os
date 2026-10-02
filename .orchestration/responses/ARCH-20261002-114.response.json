@@ -1,0 +1,35 @@
+{
+  "command_id": "ARCH-20261002-114",
+  "status": "IN_PROGRESS",
+  "executed": true,
+  "head_before": "778f75a",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20261002-113: response present at .orchestration/responses/ARCH-20261002-113.response.json on main (merged 778f75a, PR #138)",
+    "preconditions_present": 3,
+    "transport": "Branch arch/20261002-114-d46-completed cut from origin/main 778f75a, the name taken from the command's deliverable block."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "READINGS, no run in flight: two argv matches — 'xed /home/jb/autornd-os_clone/.env' (the owner's editor, the same reading as 108-113) and '/usr/share/kiro/kiro /tmp/claude-1000/-home-jb-autornd-os/.../ARCHITECT-HANDOFF.md' (an IDE holding a scratchpad under /tmp; the path contains the project name, which is what the pattern matched). Neither is an autornd or evals run; the pattern cannot tell a run from a path (convention 26)."
+    },
+    {
+      "n": 2,
+      "result": "PASS: 113's response is on main — 1f2afd1, merged in 778f75a."
+    },
+    {
+      "n": 3,
+      "result": "COUNT, literal: 1218 passed, 0 failed, network guard 0 attempts."
+    }
+  ],
+  "baseline_suite": "1218 passed before (literal, guard 0)",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20261002-114-d46-completed",
+    "pr": null
+  },
+  "commits": {}
+}
