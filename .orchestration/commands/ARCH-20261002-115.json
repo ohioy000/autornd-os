@@ -1,0 +1,89 @@
+{
+  "command_id": "ARCH-20261002-115",
+  "parent_id": "ARCH-20261002-114",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Put the record right:\n- every score is computed under the key version it names;\n- one tool re-scores every recorded run;\n- the questions 110 and 111 asked are answered;\n- the 111 response cites commits that exist.",
+  "evidence": [
+    "baseline.report (evals/golden/baseline.py:86-97) prints each row's stored all_hold, scored when the run was made, and stamps it with the current key version. As a result, 108's response and notebook §99 (docs/handover-review.md:10709) record 107 as '3/6 golden hold every item · median sprawl 2.5 · total $0.0220 · key v1'. That 3/6 was scored under the key before version 1.\n- The advisor re-scored 107's recorded answers under version 1 on 2026-10-02: they hold 6/6, Q1 to Q6.\n- This is D44's falsifier: a score reported under a key version it was not computed under.\n- The stamp's test checks that the label is present, not that the score was computed under it.",
+    "score_trace.py reads unit rows only, so it reads 107's answer rows as 0/0 (108's response). D44 requires every recorded run to be re-scored under each key version, and the tool that does the re-scoring cannot read the direct-baseline shape. 108's second question asked exactly this.",
+    "111's question asked how many units D46 would have changed, counted by kind. 111's response and notebook §102.3 answer with a count of rows instead ('So 102 ran 1 unit'), so no kind was counted. They also missed docs/traces/102-golden-arm-b.jsonl, which holds 102's six golden units, so 102 actually ran 7 units across two traces. The advisor's partial reading, for the executor to reproduce or refute: of the second kind (a feasibility concern recorded as a plan blocker), 102's golden_q6 had 2 and 106's units had none. 106's IA unit carried 5 blockers of the plan's own.",
+    "110 asked whether a call with no catalogue price should be refused while a spend ceiling is set, and asked for the unpriced calls in the 102, 106 and 107 records to be counted with a recommendation. Neither 110's response nor notebook §101 answers it. The 106 golden unit records carry spend_guard_blind; the 102 and 107 records predate the field.",
+    "111's response cites ruling_first 499b548 and in_progress 5c7e836. Neither commit exists. The commits on main are ccc9b6f (Ruling D46) and ea0b75d (IN_PROGRESS)."
+  ],
+  "scope": {
+    "include": [
+      "evals/golden/baseline.py (the report only)",
+      "evals/golden/score_trace.py",
+      "tests/test_direct_baseline.py and tests/test_golden_keys.py",
+      "docs/handover-review.md (§99 and §102.3 corrections, appended; the new section)",
+      ".orchestration/responses/ (this response; corrections appended to 108's and 111's)",
+      "HANDOVER.md and README.md (counts only)"
+    ],
+    "exclude": [
+      "evals/golden/keys.json, score.py, versions.json and SOURCE.md: advisor-written.",
+      "autornd/ and workflows/: no harness change.",
+      "docs/traces/: the records are read, never edited."
+    ]
+  },
+  "constraints": [
+    "MEASUREMENT AND RECORD REPAIR. No ruling is needed, and it is free.",
+    "A REPORT SCORES WHAT IT LABELS: baseline.report re-scores every recorded answer under the current keys and prints that score, labelled with the current version. Where a row carries a score from the run, it is shown beside the new one under its own label: 'as recorded', with the version the row names, or 'pre-D44' when the row names none. Test it with a row whose stored all_hold disagrees with the current key. The report must print the current key's verdict under the current label and the stored verdict under its own. Break it by restoring the stored read, and quote the failure.",
+    "ONE RE-SCORE TOOL: score_trace.py reads answer rows as well as unit rows, so one command re-scores every recorded run under a key version. The regression vectors in score.py already read both shapes: 'scenario' or 'id'. Run it on 102, 106 and 107 under key v1, and quote the three summary lines. The advisor reads them as 102 3/6, 106 2/6 and 107 6/6. Report what the tool prints, whatever it prints.",
+    "CORRECTIONS ARE ADDITIONS:\n- Append a correction to 108's response and to notebook §99. It states that '3/6 · key v1' was scored under the key before version 1, and that 107 under version 1 holds 6/6 as the repaired report prints it.\n- Append a corrections entry to 111's response that names the two wrong hashes and the commits they should have been.\n- Append a correction to notebook §102.3 for the missed 102 golden trace.\nDelete nothing and rewrite nothing silently: each correction names what it corrects.",
+    "111's QUESTION, ANSWERED. Read docs/traces/102-golden-arm-b.jsonl, 102-ia-side-arm-b.jsonl, 106-golden-arm-b.jsonl and 106-ia-side-arm-b.jsonl. Count each kind per unit and in total:\n(i) a validate or implement verdict that was green with no evidence or an empty summary;\n(ii) a feasibility concern recorded as a plan blocker (R7's feasibility_blockers);\n(iii) a consistency check that passed with no shared unit. Re-run numbers_consistent on the recorded plan and implementation text where the record holds them, and say where it does not;\n(iv) an iteration whose cause was missing from the failure log: one whose fold refused while neither validate nor implement was red.\nFor each count, say what the record can and cannot show.",
+    "110's QUESTION, ANSWERED. Count the calls with no catalogue price in the 102, 106 and 107 records. Use spend_guard_blind where a record has it. For the records that predate it, say what can be derived and how. Then recommend whether a call with no price should be refused while a spend ceiling is set. The advisor rules separately.",
+    "Free. No provider call."
+  ],
+  "acceptance_criteria": [
+    "The repaired report prints 107 under key v1 as 6/6, with the as-recorded 3/6 beside it under its own label. The break is quoted.",
+    "score_trace.py prints a key-v1 summary line for 102, 106 and 107, and the three outputs are quoted.",
+    "Corrections are appended to 108's and 111's responses and to notebook §99 and §102.3. Nothing is deleted.",
+    "111's four counts and 110's unpriced count are reported, each with what the record cannot show.",
+    "`git diff --stat origin/main -- autornd/ workflows/ docs/traces/ evals/golden/keys.json evals/golden/score.py evals/golden/versions.json evals/golden/SOURCE.md` is empty.",
+    "Suite green before and after. The PR is opened and delivery_state carries its number."
+  ],
+  "verification": [
+    {
+      "command": "python3 evals/golden/score_trace.py docs/traces/107-direct-baseline.jsonl | tail -1",
+      "expected": "A summary line naming key v1, not 0/0."
+    },
+    {
+      "command": "python3 evals/golden/score.py | tail -1",
+      "expected": "SELF-TEST PASSED"
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass."
+    }
+  ],
+  "rollback": "Revert the merge. The report again labels run-time scores with the current key, and the corrections are gone.",
+  "deliverable": {
+    "branch": "arch/20261002-115-the-record",
+    "branch_created_by": "advisor",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+  "transport": "Pushed by the advisor after the post-merge review of 108-111 (2026-10-02). Process after 114 merges. It touches nothing in the harness and could run earlier, but sequential keeps the record linear. Commit the response IN_PROGRESS first.",
+  "assumptions": [
+    "The four 102 and 106 traces and the 107 trace are complete as committed. If a count needs data that only the uncommitted evals/results/ copies hold, say so and count from the committed traces only."
+  ],
+  "questions": [
+    "Does any other report in evals/ or autornd/evals/ print a stored score next to a current label? List each one."
+  ],
+  "preconditions": [
+    {
+      "command": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "expected": "No run in flight."
+    },
+    {
+      "command": "git fetch --prune origin && git log --oneline -1 origin/main -- .orchestration/responses/ARCH-20261002-114.response.json",
+      "expected": "114's response on main (merged). Otherwise BLOCKED."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green; record the count."
+    }
+  ]
+}
