@@ -1,0 +1,83 @@
+{
+  "command_id": "ARCH-20261002-112",
+  "parent_id": "ARCH-20261002-111",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "The suite cannot reach the provider and cannot read the owner's configuration. Wherever it runs, it reads the same placeholders, makes no network call and reaches the same verdict. That holds in a checkout that holds the owner's .env, in a shell that exports the owner's pins, and in CI.",
+  "evidence": [
+    "autornd/config.py:185 reads .env from the working directory (model_config env_file). tests/conftest.py:9-11 places only the six required MODEL_* placeholders, and only with os.environ.setdefault. An exported value therefore beats them, and every other setting in the owner's .env reaches the suite untouched: the provider key, the optional tiers and provider order.",
+    "The advisor's audit, 2026-10-02, at main 535a9e0. The full suite ran from the main checkout, which holds the owner's .env. A pytest plugin blocked and logged every non-loopback name lookup, connect and httpx request. 1198 tests passed, and the suite attempted 5 requests, each carrying an Authorization header built from the owner's key:\n- GET /api/v1/models, three times: tests/test_preflight_gate.py::TestTheGateLetsAPassingConfigurationThrough::test_all_ok_proceeds_and_the_header_records_every_finding, tests/test_preflight_gate.py::TestTheOverrideIsRecorded::test_skip_proceeds_and_the_header_records_the_override, and tests/test_repeat_and_fit_rule.py::TestTheWarningReachesTheOperator::test_an_impossible_sample_warns_before_any_call.\n- POST /api/v1/rerank, once, to the owner's ranker pin from .env: tests/test_node_token_ceilings.py::TestNodeCeilingsReachTheirCalls::test_no_ceiling_falls_back_to_the_setting.\n- POST /api/v1/chat/completions, once, for a placeholder model: tests/test_engine.py::TestWorkflowEngine::test_blocked_plan.\nUnblocked, the rerank is a real call on the owner's account. The advisor's own unblocked run of the suite that day made it once.",
+    "The executor's responses to 108, 109, 110 and 111 each report that the literal invocation reads 2 failed (tests/test_preflight_gate.py) in a shell that exports the owner's pins, and ask whether to force the placeholders. 109's response adds that make_mock_client stubs chat and chat_json but leaves rerank real."
+  ],
+  "scope": {
+    "include": [
+      "tests/conftest.py, and the five tests the audit names",
+      "autornd/config.py: only if the chosen mechanism needs a way to keep the settings from reading the dotenv file under test. Say so if it does.",
+      "CONTRIBUTING.md and .claude/context/testing.md: one paragraph on how the suite is isolated",
+      "README.md and HANDOVER.md: the test counts only",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "AGENTS.md",
+      "CLAUDE.md"
+    ],
+    "exclude": [
+      ".env and every .env* file. Neither this work nor any test may read, write, move or create one inside the repo (G-3).",
+      "autornd/ beyond config.py: no change to harness behaviour.",
+      "workflows/ and evals/golden/."
+    ]
+  },
+  "constraints": [
+    "INSTRUMENT REPAIR, NOT A RULING: the harness concludes exactly what it did before. This repairs the suite's own isolation, so that CONTRIBUTING.md's and CLAUDE.md's statement that the suite is free and makes no network call is true wherever it runs.",
+    "PLACEHOLDERS WIN: from before the first autornd import, the suite's configuration belongs to the suite. These settings take a placeholder or an empty value that nothing in the shell, and nothing in a .env file in the working directory, can displace:\n- the provider key;\n- every model tier the settings read, required and optional;\n- provider order;\n- every credential setting.\nChoose the mechanism, and say which and why. Two options are forcing every field, or a setting that keeps the settings from reading the dotenv file under test. A test that needs a different value sets it itself.",
+    "NO NETWORK: install a guard for the whole session that refuses every connection to a non-loopback address, covering both name resolution and connect. The guard records each attempt and fails the test that made it, by name, even when the code under test catches the error. Loopback, httpx.MockTransport and ASGITransport stay available.",
+    "THE DOUBLE IS PROVIDER-FREE: make_mock_client, and any other test double that builds an OpenRouterClient, stubs every method that reaches the network. That means chat, chat_json, rerank and the catalogue fetch. Repair the five tests the audit names so that none of them reaches the provider. For each one, say what it was proving and whether it relied on the network by accident (rule 7).",
+    "PROVE IT:\n(a) A test shows the suite's settings equal its placeholders in two conditions. First, while sentinel values are exported, for example MODEL_TRIAGE=sentinel/x, MODEL_RANKER=sentinel/r and OPENROUTER_API_KEY=sentinel-key. Second, while a .env holding sentinels sits in the working directory of a subprocess. Build that .env under tmp_path, never in the repo.\n(b) The guard fails a test that opens a non-loopback connection; quote the failure. Then break the guard by one line, and quote the attempt getting through.\n(c) Run the full suite in the shell the executor reported, the one that exports the owner's pins. It reads green where it read 2 failed.\n(d) The full suite records zero non-loopback attempts. Quote the count before (5, the audit's) and after (0).",
+    "Free. No provider call. The point of the command is that none can happen."
+  ],
+  "acceptance_criteria": [
+    "A full suite run records zero non-loopback connection attempts, against the audit's 5, and the guard's break is quoted.",
+    "With sentinels exported, and with a sentinel .env in a subprocess's working directory, the suite's settings equal its placeholders (test (a)).",
+    "The literal `.venv/bin/python3 -m pytest tests/ -q` reads green in the executor's own shell, which exports the owner's pins.",
+    "No test and no step of this work reads, writes, creates or moves any .env* file in the repo. `git diff --stat origin/main -- workflows/ evals/golden/ .env.example` is empty.",
+    "Suite green before and after. The PR is opened and delivery_state carries its number."
+  ],
+  "verification": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass, invoked literally in the executor's own shell."
+    },
+    {
+      "command": "grep -n 'setdefault' tests/conftest.py",
+      "expected": "No placeholder for a setting the suite reads is placed with setdefault; or the response explains each line that remains."
+    }
+  ],
+  "rollback": "Revert the merge. The suite again reads the owner's .env and can reach the provider.",
+  "deliverable": {
+    "branch": "arch/20261002-112-hermetic-suite",
+    "branch_created_by": "advisor",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+  "transport": "Pushed by the advisor after the post-merge review of 108-111 (2026-10-02). Process it first. Every later command runs the suite, and until this lands, a suite run from a checkout that holds the owner's .env makes a real call on the owner's account. Commit the response IN_PROGRESS first. It answers the conftest question that 108-111 asked: yes, force the placeholders.",
+  "assumptions": [
+    "The executor's clone may hold no .env. The audit was taken in the advisor's checkout, which does. The guard makes the result independent of that."
+  ],
+  "questions": [
+    "Besides the five tests the audit names, did the guard surface any other test that relied on the network, or on the developer's configuration, without anyone noticing? List each one with what it relied on."
+  ],
+  "preconditions": [
+    {
+      "command": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "expected": "No run in flight. Record what matches and why it is not a run."
+    },
+    {
+      "command": "git fetch --prune origin && git log --oneline -1 origin/main -- .orchestration/responses/ARCH-20261002-111.response.json",
+      "expected": "111's response on main (merged). Otherwise BLOCKED."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Record the count, invoked literally. It may read 2 failed in a shell that exports the owner's pins; that is the finding this command repairs."
+    }
+  ]
+}
