@@ -10887,4 +10887,131 @@ estimate (prompt's UTF-8 byte length plus a named chat-template allowance)
 and the pre-dispatch call ceiling; and clause (6)'s `max_concurrent_runs`
 cap with its 429 and duplicate 409.
 
-Execution record: follows in the commits after this section's ruling commit.
+Execution record: §101.1–§101.4 below.
+
+### 101.1 The six clauses, and where each landed
+
+1. **Loopback-only when unauthenticated** (`autornd/api/auth.py`): with
+   neither `API_KEY` nor `JWT_SECRET` set, every request whose socket peer is
+   not loopback is refused 403 with a sentence naming both fixes; `/api/health`
+   stays open to everyone (CI's docker job reads it from outside the
+   container). `ALLOW_UNAUTHENTICATED_REMOTE=1` overrides, logged at startup
+   (`main.py`) and reported by `/api/health`
+   (`allow_unauthenticated_remote`, `authentication_configured`).
+2. **Every API run bounded** (`config.py`): `run_time_budget_seconds` 1800
+   (098's runs reached judge-approved answers at 15.6 and 20.7 min),
+   `run_spend_ceiling_usd` 0.50 (whole runs since 102 cost $0.02–$0.19).
+   `_bound_client()` arms every client the API creates — both submit paths
+   and doublecheck — and the engine already passes the time budget to every
+   executor.
+3. **Runtime settings only tighten** (`routes.py`): `PUT /api/settings` and
+   `POST /api/profiles/{name}` serve loopback callers only, and a numeric
+   ceiling is checked against the startup snapshot (`_STARTUP_VALUES`) after
+   the validators — an invalid value is still 422, a raise is 400.
+4. **Episodes by owner** (`episodic.py`): `get_recent_episodes` takes
+   `user_id` and joins `Workflow.user_id` — ownership lives on the workflow
+   row, so no schema change (hard rule 11).
+5. **The guard holds** (`openrouter.py`): `_guard_spend` computes a true
+   worst case — prompt **UTF-8 bytes** plus `CHAT_TEMPLATE_ALLOWANCE_BYTES`
+   (512; measured 2026-10-02: the wire envelope is 96 bytes for the
+   two-message shape every phase sends, 33 per extra message, and the three
+   template families' markers run under 64 bytes a turn) — then **reserves**
+   it. `_account` releases the reservation and books the actual cost;
+   `_fail_call` turns it into `unreconciled_liability` recorded with its kind
+   (error_status / timeout / transport_error / cancelled) when a call fails
+   after dispatch. `rerank` passes the same guard; the call ceiling is
+   checked **before** dispatch with in-flight calls counted. The per-run
+   record carries `unreconciled_liability` and `failed_after_dispatch`
+   (`runner.py`, field by field).
+6. **The cap and the duplicate** (`routes.py`): `_RunGate` admits at most
+   `max_concurrent_runs` (2 — the owner runs one at a time and two leave room
+   for a sync call beside an async run) API runs at once, and refuses a
+   request text the same caller already has in flight. Refusal happens before
+   a Workflow row exists: 429 for the cap, 409 for the duplicate.
+
+### 101.2 The tests, and each break quoted
+
+Tests (e)–(g) live in `tests/test_spend_guard.py`, (a)–(d), (h), (i) in
+`tests/test_api.py`; each proved by one line broken and reverted:
+
+```
+(a) assert 200 == 403            — _is_loopback returned True
+(b) {"alice's run", "bob's run"} == {"alice's run"}  — episodes unfiltered
+(c) assert 200 == 403            — the settings loopback check was False
+(d) assert None == 0.5           — the API client carried no spend ceiling
+(e) DID NOT RAISE SpendGuardRefused — the reservation was never counted
+(f) assert 0.0 == 0.05           — the failed call's worst case dropped
+(g) DID NOT RAISE SpendGuardRefused — rerank skipped the guard
+(h) assert 202 == 429            — the cap never refused
+(i) assert 202 == 409            — the duplicate never refused
+```
+
+**The live proof** (amendment (a)), against a running server with placeholder
+tiers and no keys — the host's LAN address is a non-loopback peer exactly as
+the container's bridge gateway is:
+
+```
+loopback GET /api/health        -> 200
+remote   GET /api/health        -> 200      (stays open)
+remote   POST /api/workflows    -> 403 {"detail":"This server has no
+    authentication configured and serves loopback callers only. Set API_KEY
+    or JWT_SECRET in .env to serve remote callers, or set
+    ALLOW_UNAUTHENTICATED_REMOTE=1 to serve everyone without authentication
+    (anyone who can reach this port can then spend the owner's credits)."}
+loopback GET /api/workflows     -> 200
+```
+
+and the break, the same one line (`_is_loopback` → `return True`):
+
+```
+POST /api/workflows (unauthenticated, remote) -> 202
+{"data":{"id":1,"request":"live proof","status":"pending",...
+"meta":{"message":"Workflow queued for execution"}}
+```
+
+— the docker job's new `Unauthenticated remote callers are refused` step fails
+on exactly that (`POST /api/workflows -> 202`), and the run it queued was
+deleted from the local dev database afterwards; no provider call was made.
+
+### 101.3 Two tests asserted retired behaviour (convention 17)
+
+- `tests/test_settings.py::test_update_max_iterations` PUT 10 over a startup
+  of 5 and asserted 200: **the bug written down** (review F8 — any admitted
+  caller raising a ceiling for every run in flight). Replaced by
+  `test_lowering_a_ceiling_is_accepted` /
+  `test_raising_a_ceiling_above_startup_is_refused`.
+- `tests/test_spend_guard.py`'s `test_a_call_that_fits_is_made` computed its
+  worst case with `CHARS_PER_TOKEN` — the mean D45 amendment (b) retires.
+  The constant is deleted (reference check: only that formula and that test
+  used it) and the test reads the byte bound.
+
+Nothing else asserted the two-row behaviour, the unfiltered episodes, the
+open server or the after-the-fact ceiling check.
+
+### 101.4 Departures, and what execution found
+
+1. **The docker job's dashboard step read `/` from outside the container** —
+   under D45 that is the gate's business, and the step's purpose (the
+   template resolves at request time) is a loopback read. It now asserts the
+   host's 403 *and* reads the template inside the container. The job's
+   package-data check survives unchanged in intent.
+2. **`testclient` is not loopback.** Starlette's in-process test client
+   reports `testclient` as its host; it is deliberately not in the loopback
+   set — the rule is never widened to make a test pass. No test uses
+   Starlette's client: httpx's ASGITransport presents `127.0.0.1` (honest
+   loopback) and takes a `client=` override, which is what the remote-caller
+   tests use. Recorded as the command asked.
+3. **The tighten-only check was placed after the validators**, not before:
+   with it first, `PUT max_iterations 50` answered 400 (would raise) instead
+   of 422 (invalid), and `test_reject_bad_max_iterations` caught the
+   ordering.
+4. **Scope note:** amendment (a) requires editing the docker job, so
+   `.github/workflows/ci.yml` is touched although the command's `include`
+   list does not name it. The amendment is the authority; recorded here.
+5. **`_account`'s call-ceiling check stays** as a backstop beside the new
+   pre-dispatch check: test doubles account without guarding, and the
+   after-check is what bounds them.
+6. **Counts re-derived** (convention 24): 1191 collected — 1176 before, +8
+   (test_api.py 25→33), +6 (test_spend_guard.py 4→10), +1 (test_settings.py
+   22→23). README badge, Testing section and Project Structure comment;
+   HANDOVER's header, §2.2 tree line, §3.7 and §4.2.
