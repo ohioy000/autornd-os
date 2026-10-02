@@ -50,7 +50,7 @@
   ],
   "delivery_state": {
     "branch": "arch/20261002-111-approval-means-checked",
-    "pr": null
+    "pr": 132
   },
   "commits": {
     "in_progress": "5c7e836",
