@@ -1,0 +1,98 @@
+{
+  "command_id": "ARCH-20261002-110",
+  "parent_id": "ARCH-20261002-109",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "No open, unbounded spend (Ruling D45). With no authentication configured, the API serves only loopback callers. Every API run carries a wall-clock budget and a spend ceiling by default. Runtime settings can only tighten. /episodes shows a caller only their own runs. The spend guard holds across concurrent calls, failed calls and reranking.",
+  "evidence": [
+    "README.md:578 documents `docker run -p 8100:8100 --env-file .env autornd`, which publishes on every host interface, and the Dockerfile serves on 0.0.0.0. autornd/api/auth.py:86-90 lets every request through when neither api_key nor jwt_secret is set, and autornd/config.py:145-146 defaults both to empty. The documented quick start is therefore an unauthenticated endpoint that spends the owner's credits (review A F6; verified by the advisor against main 4fda54f).",
+    "autornd/api/routes.py:395-424: PUT /api/settings setattr's the process-global settings. SettingsUpdate (routes.py:389) leaves escalation_max_tokens and the other ceilings unbounded, so any caller the middleware admits can raise a token ceiling for every run in flight. POST /api/profiles/{name} (routes.py:471) swaps the global profile the same way (review A F6, F8).",
+    "routes.py:487-493: GET /api/episodes returns every run's request, verdict and cost, with no owner filter. /api/workflows has one (routes.py:212, :236).",
+    "config.py:141: run_time_budget_seconds defaults to None, so the D38 watchdog never arms on the API path (workflow.py:96). autornd/routing/openrouter.py:307-308 default spend_ceiling and call_ceiling to None, and nothing on the API path sets them; the eval runner does (runner.py:429). An API run has no wall-clock bound and no spend bound (review A F6, review B finding 4).",
+    "openrouter.py:354: _guard_spend checks completed spend, which _account updates only after a response (openrouter.py:314, :554). Reviewer fan-out runs calls concurrently, so each in-flight call passes against the same remaining balance. rerank (openrouter.py:569-590) posts with no pre-call guard. A call that fails after dispatch is not accounted (review B finding 4; review A F9). Review A attributes 102's $0.012 overrun to the retry path, which is wrong: that overrun predates the guard, and 104 added the guard because of it."
+  ],
+  "scope": {
+    "include": [
+      "autornd/api/auth.py",
+      "autornd/api/routes.py",
+      "autornd/main.py",
+      "autornd/config.py (the two defaults and the override setting, each with its measurement comment)",
+      "autornd/engine/workflow.py (arming the client and the executor)",
+      "autornd/routing/openrouter.py (reservation, failure accounting, the rerank guard)",
+      "autornd/knowledge/episodic.py (the owner filter)",
+      "autornd/evals/runner.py (only to write the new accounting fields into the record)",
+      ".env.example (placeholders and comments only)",
+      "Dockerfile and README.md (the quick start)",
+      "tests/",
+      "docs/handover-review.md",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      ".env and every .env* file except .env.example: the owner's (G-3).",
+      "workflows/ and the verdict schemas.",
+      "Any DB schema change (hard rule 11).",
+      "evals/golden/."
+    ]
+  },
+  "constraints": [
+    "RULING FIRST, VERBATIM, in HANDOVER.md and the notebook, before the code in commit order.",
+    "RULING D45, COMMITTED VERBATIM: 'Ruling D45 (advisor, 2026-10-02) — no open, unbounded spend. (1) With neither API_KEY nor JWT_SECRET configured, the API serves loopback callers only. Any other caller is refused with a sentence that names the fix, unless the operator sets ALLOW_UNAUTHENTICATED_REMOTE=1, which is logged at startup and reported by /api/health. /api/health stays open to everyone. (2) Every API run carries a wall-clock budget and a spend ceiling: run_time_budget_seconds defaults to 1800 and run_spend_ceiling_usd to 0.50, and the owner may change either in .env (G-3). (3) Settings changed at runtime can only tighten: PUT /api/settings and POST /api/profiles/{name} serve loopback callers only, and no token ceiling or budget can be raised above its startup value while the server runs. (4) /api/episodes shows a caller only their own runs. (5) The spend guard holds across concurrent calls, failed calls and reranking. Each call's worst case is reserved before dispatch and released on reconciliation, and a call that fails after dispatch keeps its worst case as unreconciled liability for the rest of the run. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md, F6, F9 and review B's finding 4), verified by the advisor: the documented Docker quick start published an unauthenticated endpoint that spends the owner's credits on every interface; API runs had neither the D38 watchdog nor a spend ceiling; /api/episodes exposed every run; PUT /api/settings could raise a token ceiling for every run in flight; and concurrent calls each passed one balance check. The owner approved default bounds and the end of the open quick start on 2026-10-02; the values are the advisor's, set from the measurements cited beside them, and the owner's to change. Falsifier: an API run that exceeds its spend ceiling or its wall-clock budget, a money-spending request served to an unauthenticated non-loopback caller without the override, or a runtime settings change that raises a ceiling.'",
+    "THE LOOPBACK RULE belongs in the middleware: refuse with 403 and a plain sentence that names the fix (set API_KEY or JWT_SECRET, or ALLOW_UNAUTHENTICATED_REMOTE=1). GET /api/health stays open, because CI's docker job reads it from outside the container and must stay green. The override is a settings field that defaults to false; startup logs a warning when it is on, and /api/health reports it. Starlette's TestClient reports its client host as 'testclient', not a loopback address. Decide how the existing tests reach the API, and say so. Never widen the rule for production callers to make a test pass.",
+    "DEFAULT BUDGETS: run_time_budget_seconds defaults to 1800, and a new run_spend_ceiling_usd defaults to 0.50. Each constant carries the measurement that set it (hard rule 6). 098's three runs had 1,800 s budgets and reached judge-approved answers at 15.6 and 20.7 min; whole runs measured since 102 cost $0.02 to $0.19. Every client the API creates carries the spend ceiling: both submit paths and doublecheck. Every API executor carries the time budget. The owner may change either in .env (G-3): the response says so in one line, and .env.example documents both with placeholders.",
+    "SETTINGS ONLY TIGHTEN: PUT /api/settings and POST /api/profiles/{name} serve loopback clients only. A token ceiling or a budget may be lowered at runtime, never raised above its startup value, and every numeric field keeps the startup validators' bounds.",
+    "EPISODES BY OWNER: GET /api/episodes filters by the caller's user_id whenever one is identified, as /api/workflows does.",
+    "THE GUARD HOLDS: _guard_spend reserves each call's worst case before dispatch (spend + reserved + worst <= ceiling, or else SpendGuardRefused), and _account releases the reservation when it records the actual cost. A call can fail after dispatch: an error status that is not retried, a transport error, a timeout, or a cancellation. Such a call keeps its worst case as unreconciled liability for the rest of the run, counted against the ceiling and recorded with its kind. Add no new retries. rerank passes the same guard. No DB schema change: the new accounting fields go into the client's per-run record and into the eval record's field-by-field writer.",
+    "TESTS, provider-free: (a) without auth, a non-loopback request is refused and a loopback request is served; /api/health is open; the override serves a remote caller and shows in health. (b) /api/episodes returns only the caller's runs. (c) PUT /api/settings from a non-loopback client is refused. From loopback, raising a ceiling above its startup value is refused and lowering it is accepted. (d) An API run's client and executor carry the default spend ceiling and time budget. (e) With two concurrent calls whose combined worst case exceeds the remaining budget, the second is refused before dispatch. (f) A call that fails after dispatch keeps its worst case against the ceiling and is recorded. (g) rerank is refused when its worst case does not fit. Prove each by breaking, and quote the failures. CI's docker job stays green.",
+    "Free. No provider call."
+  ],
+  "acceptance_criteria": [
+    "D45 is verbatim in HANDOVER.md and the notebook, before the code in commit order.",
+    "Tests (a)-(g) pass, each break is quoted, and the docker job is green.",
+    "The README quick start no longer publishes an unauthenticated server. It sets API_KEY in .env, or it names the override and what the override exposes.",
+    "`git diff --stat origin/main -- workflows/ evals/golden/` is empty, and no .env* file other than .env.example changed.",
+    "Suite green before and after. The PR is opened and delivery_state carries its number."
+  ],
+  "verification": [
+    {
+      "command": "grep -n 'Ruling D45' HANDOVER.md docs/handover-review.md",
+      "expected": "Present in both."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass."
+    }
+  ],
+  "rollback": "Revert the merge. The API returns to open by default, with no run bounds.",
+  "deliverable": {
+    "branch": "arch/20261002-110-no-open-spend",
+    "branch_created_by": "advisor",
+    "pr": true,
+    "merge": "by the advisor-custodian on green, after checking acceptance against the tree",
+    "commit_style": "conventional"
+  },
+  "transport": "Pushed by the advisor: the third of the four free Phase 0-1 commands. Process after 109 merges, since both touch routes.py. The owner approved the default bounds and the end of the open quick start on 2026-10-02 ('2 yes'). Commit the response IN_PROGRESS first.",
+  "assumptions": [
+    "The ranker's price is in the provider catalogue that the CLI and the API load (104). If it is not, guard rerank with the existing unpriced-call record and report that; do not change the unpriced-call policy here."
+  ],
+  "questions": [
+    "Should a call whose price is unknown be refused while a spend ceiling is set, instead of recorded as blind? Count the unpriced calls in the 102, 106 and 107 records and recommend; the advisor will rule separately."
+  ],
+  "preconditions": [
+    {
+      "command": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "expected": "No output."
+    },
+    {
+      "command": "git fetch --prune origin && git log --oneline -1 origin/main -- .orchestration/responses/ARCH-20261002-109.response.json",
+      "expected": "109's response on main (merged). Otherwise BLOCKED."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green; record the count."
+    }
+  ]
+}
