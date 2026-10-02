@@ -45,7 +45,7 @@
   ],
   "delivery_state": {
     "branch": "arch/20261002-114-d46-completed",
-    "pr": null
+    "pr": 139
   },
   "commits": {
     "in_progress": "2d51d71",
