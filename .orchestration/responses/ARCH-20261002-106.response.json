@@ -1,0 +1,38 @@
+{
+  "command_id": "ARCH-20261002-106",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "504b576",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20261001-105: response present",
+    "preconditions_present": 4,
+    "transport": "105 merged as 504b576 (PR #117); this branch is cut from it."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "PASS: no run in flight"
+    },
+    {
+      "n": 2,
+      "result": "PASS: Ruling D42 and Ruling D43 present in HANDOVER.md on main"
+    },
+    {
+      "n": 3,
+      "result": "PASS: SELF-TEST PASSED"
+    },
+    {
+      "n": 4,
+      "result": "PASS: 1165 passed"
+    }
+  ],
+  "baseline_suite": "1165 passed",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20261002-106-golden-rerun",
+    "pr": null
+  }
+}
