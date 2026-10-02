@@ -10671,3 +10671,9 @@ cannot do from memory, the IA, is the case for research-first answers.
 3. **The IA answer from memory is confidently wrong** (an invented IA
    supervision requirement; "2 of the last 5 years"). A lookup, or a
    corpus, is needed there.
+
+## 99. Ruling D44 — the scoreboard is frozen and versioned (advisor, 2026-10-02, carried by ARCH-20261002-108)
+
+> **Ruling D44 (advisor, 2026-10-02) — the scoreboard is frozen and versioned. The golden keys (evals/golden/keys.json, scored by evals/golden/score.py) are frozen at version 1, commit 4fda54f, and evals/golden/versions.json records each version's file hashes. Any change to either file is a new version: it gets a versions.json entry naming the change and what triggered it, and every recorded run is re-scored under it and reported beside its scores under the earlier versions. A defect that a reading finds in a key is fixed only as a new version, after the run that found it has been reported under the old one. Two independent hand readings are the primary measure of correctness; the keys are a screen that flags disagreements, and a disagreement between a reading and a key is reported, never settled by editing the key inside the run that found it. Every report states the key version beside each score, and places each caveat beside the claim it qualifies. Rationale: the 2026-10-02 outside review (docs/reviews/2026-10-02-consultant-reviews.md, finding F1): five key repairs were driven by the answers being scored, and 107's headline was computed under a key widened after reading those answers. The pipeline scores did not move and two readers confirmed the direct answers, but the procedure could not tell a better answer from a drifting key. Falsifier: a score reported without its key version, or a key change without a versions.json entry and a side-by-side re-score.**
+
+Execution record: follows in the commits after this section's ruling commit.
