@@ -1,0 +1,63 @@
+{
+  "command_id": "ARCH-20261002-112",
+  "status": "DONE",
+  "executed": true,
+  "head_before": "ef4e266",
+  "head_after": "18af424",
+  "arrival": {
+    "parent_id": "ARCH-20261002-111: response present at .orchestration/responses/ARCH-20261002-111.response.json on main (merged 535a9e0; delivery_state commit ba03c79 carried in ef4e266)",
+    "preconditions_present": 3,
+    "transport": "Branch arch/20261002-112-hermetic-suite cut from origin/main ef4e266, the name taken from the command's deliverable block."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "READING: one line matched — 'xed /home/jb/autornd-os_clone/.env', the owner's text editor on the file path in its argv. Not a run; the same instrument limit recorded in 108-110 (convention 26)."
+    },
+    {
+      "n": 2,
+      "result": "PASS: 111's response is on main — ba03c79."
+    },
+    {
+      "n": 3,
+      "result": "COUNT, literal, in the executor's own shell: 2 failed, 1196 passed — the finding this command repairs."
+    }
+  ],
+  "baseline_suite": "2 failed, 1196 passed literally on arrival; 1207 passed, 0 failed at delivery",
+  "results": {
+    "mechanism_both_halves": "tests/conftest.py forces every settings field to a placeholder before the first autornd import — os.environ[name] = value, never setdefault: six required tiers at test-provider/test-*, optional tiers/credentials/provider order empty (the suite's own configuration), everything else its declared default. And autornd/config.py (the one autornd/ line this command touches) resolves env_file to None under AUTORND_TESTING, so no .env is read at all. Each half covers the other's hole: forcing alone leaves unforced fields (the budgets the owner changed this week) reading the owner's .env; dotenv-off alone leaves exported values displacing placeholders. Chosen deliberately as both, and said so.",
+    "no_network": "One session guard refuses name resolution and connect to any non-loopback address (getaddrinfo, gethostbyname, connect, connect_ex), records each attempt, and fails the test that made it BY NAME in teardown even when the code under test swallowed the error. Loopback, MockTransport and ASGITransport stay available. Every run ends with the guard's own count in the terminal summary (convention 26: the instrument reports what it measured).",
+    "the_double_is_provider_free": "make_mock_client stubs chat, chat_json and rerank (rerank raising — the double does not serve it, and rerank_chunks falls back exactly as it does when the provider refuses). seal_double(client) completes a hand-built half-patched double. The catalogue probes (check_models, verify_model) are module-level rather than client methods, so they are stubbed at the seams of the tests that trigger them — cli.check_models, autornd.preflight._fetch, or openrouter.httpx.AsyncClient, the last being how test_routing has always done it.",
+    "the_five_tests_rule_7": "All five reached the provider accidentally and none asserted it (notebook §103.2 has the table): test_all_ok_proceeds_and_the_header_records_every_finding and test_skip_proceeds_and_the_header_records_the_override — cli.main's catalogue probe, while the tests believed themselves hermetic behind the gate's own stub; test_an_impossible_sample_warns_before_any_call — the exhibit: the instrument's own probes (catalogue AND preflight fetch) sat outside the 'any call' it claimed, which counted paid calls only; test_no_ceiling_falls_back_to_the_setting — a hand-built double with chat/rerank live, and the audit's POST went to the OWNER'S RANKER PIN from .env; test_blocked_plan — the same half-patched shape, the context builder's lookup calling chat.",
+    "proof_a": "TestThePlaceholdersWin: exported sentinels (MODEL_TRIAGE=sentinel/x, MODEL_RANKER=sentinel/r, OPENROUTER_API_KEY=sentinel-key) cannot displace the placeholders, and neither can a sentinel .env in a subprocess's working directory built under tmp_path (no step touches a .env in the repo — G-3). Both print settings equal to the suite's, plus map-coverage (a new field must be classified) and declared-defaults guards. RUNTIME_MUTABLE is excluded as NOT_SETTINGS — pydantic reports the class-annotated set as a field.",
+    "proof_b": "The guard fails a test that opens a non-loopback connection, proved in a CHILD pytest so this suite's own record stays empty. Guard intact, the child's body swallows the error and still fails by name: '1 passed, 1 error ... test_reaches_out_and_survives attempted network access: [\"resolve \\'guard-proof.invalid\\'\"]'. Broken by one line (if not _NetworkGuard._is_loopback(host): -> if False:), the attempt gets through and nothing fails it: 'network guard: 0 non-loopback attempt(s) recorded / 1 passed in 0.07s / assert 0 != 0'.",
+    "proof_c": "The literal .venv/bin/python3 -m pytest tests/ -q, invoked in the executor's own shell — the shell the finding came from — reads 1207 passed, 0 failed, where it read 2 failed, 1196 passed at arrival.",
+    "proof_d": "The guard's count: 5 (the audit's) to 0. Quoted from the terminal summaries: 'network guard: 0 non-loopback attempt(s) recorded' on the delivered tree.",
+    "verification_commands": "grep -n 'setdefault' tests/conftest.py: the only hit is the comment saying the map is FORCED, not setdefault (explained here as the verification allows). git diff --stat origin/main -- workflows/ evals/golden/ .env.example: empty. No .env* file read, written, created or moved anywhere in the work (the sentinel .env is built under tmp_path by the test itself).",
+    "acceptance": "Zero non-loopback attempts on a full run against the audit's 5; test (a) in both conditions; the literal invocation green in the executor's shell; excluded paths untouched; suite green before (1198 passed scrubbed as the CI-equivalent of the 2-failed literal) and after (1207 passed, 0 failed — 1203 passed + 4 count guards red between the tests and the docs commits, the guards naming the new totals as designed)."
+  },
+  "deviations": [
+    "A BLANKET SESSION STUB OF check_models WAS WRONG AND WAS REVERTED: tests/test_routing.py's TestCheckModels exists to verify the probe itself and stubs httpx.AsyncClient around it; the blanket stub broke eight of them. Convention 17 — the stub was wrong, the tests right. The probes are now stubbed at each triggering test's own seam.",
+    "MECHANISM CHOSEN AS BOTH HALVES although the constraint offered two options: forcing every field and disabling the dotenv read. Each covers the other's hole (forcing alone leaves unforced fields — the owner's freshly changed budgets — reading .env; dotenv-off alone leaves exports displacing placeholders). Stated in tests/conftest.py and §103.1.",
+    "THE GUARD'S PROOF RUNS IN A CHILD PYTEST, not in this suite: the acceptance says a full run records ZERO attempts, and a guard self-test that reached out would put one in the record — the counter would then be hiding what it measured (conventions 26/28). The child's attempt is refused by the same guard and quoted from the child's output.",
+    "The empty ranker does not keep rerank at home: with MODEL_RANKER='' a hand-built client's live chat/rerank still resolved openrouter.ai from the token-ceiling test (the guard named the attempt; which method fired first is not distinguishable from the record). Both are closed by seal_double.",
+    "CI FOUND A SIXTH NETWORK SURFACE THE AUDIT'S FIVE DID NOT COUNT: Chroma's default embedding function downloads a ~80 MB ONNX model from chroma-onnx-models.s3.amazonaws.com the first time it embeds. Locally the cache hides it; in CI every store-touching test fetched it — the suite was green in CI by downloading a model at test time. The guard named it on the branch's first CI run (six tests: 'resolve chroma-onnx-models.s3.amazonaws.com'); conftest now substitutes a deterministic local embedder at Chroma's own seam. The follow-up commit carries the fix and the notebook note (§103.4.6).",
+    "ONE MORE ORDER-DEPENDENT HALF-PATCHED DOUBLE, visible only in isolation: tests/test_schema_wiring.py's capturing_client left rerank live and its test_plan reaches it through context building — masked in a full run because an earlier test had latched the rerank fallback mode (the §6.8 latch). Sealed with seal_double (§103.4.7); every suspect file was then run in isolation and each read zero on the guard's count.",
+    "The verification's setdefault grep hits one comment line — the comment that says the map is FORCED rather than setdefault. No placeholder is placed with setdefault; the line that remains explains exactly that."
+  ],
+  "questions_for_advisor": [
+    "The catalogue fetch (check_models/verify_model) is module-level, not a client method, so no client double can own it; tests that trigger it stub it at their seam and the guard proves no test forgets. If the ruling wants the double to own it, that needs a seam in autornd/routing/openrouter.py — outside this command's autornd/ limit (config.py only).",
+    "The literal-green claim (c) is measured in the executor's shell, which exports the owner's pins and holds the owner's .env — the exact condition of the finding. CI exports nothing and holds no .env and was already green; the two readings now converge on the same tree.",
+    "Carried open from 108-111: none outstanding beyond the above — the exported-pin leak this command repairs closes the question those four responses carried."
+  ],
+  "delivery_state": {
+    "branch": "arch/20261002-112-hermetic-suite",
+    "pr": 137
+  },
+  "commits": {
+    "in_progress": "ccfbefe",
+    "mechanism": "fb48751",
+    "five_repairs": "d682f40",
+    "proofs_docs_counts": "18af424"
+  }
+}

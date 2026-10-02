@@ -45,6 +45,7 @@ from autornd.models.verdicts import (
     ValidateVerdict,
 )
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
+from tests.conftest import seal_double
 
 
 def capturing_client(reply: dict):
@@ -61,6 +62,10 @@ def capturing_client(reply: dict):
 
     client.chat_json = AsyncMock(side_effect=chat_json)
     client.chat = AsyncMock()
+    # ARCH-20261002-112: rerank was still live on this double, and a plan
+    # builds context that reaches it — visible only in isolation, because an
+    # earlier test elsewhere had latched the rerank fallback mode.
+    seal_double(client)
     client.close = AsyncMock()
     client.captured_schemas = seen
     return client

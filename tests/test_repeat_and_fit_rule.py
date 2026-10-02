@@ -121,6 +121,30 @@ class TestTheWarningReachesTheOperator:
             raise AssertionError("a paid path was entered after the warning")
 
         monkeypatch.setattr(cli, "run_repeated", no_runs)
+        # ARCH-20261002-112: this test asserts a warning that fires "before
+        # any call" — and the CLI made two provider calls before it: the
+        # catalogue probe and the preflight gate's own fetch, both on the
+        # owner's key. The instrument's own probes sat outside the count it
+        # claimed (rule 7). Both stubbed at their seams; the gate still runs
+        # and still passes, so the flow under test is unchanged.
+        async def no_catalogue(*a, **k):
+            return {}
+
+        monkeypatch.setattr(cli, "check_models", no_catalogue)
+
+        import autornd.preflight as preflight
+
+        async def fake_fetch(path: str) -> dict:
+            if path == "/models":
+                return {"data": [{"id": f"test-provider/test-{t}"} for t in
+                                 ("triage", "engineering", "architecture",
+                                  "escalation", "research", "search")]}
+            return {"data": {"endpoints": [{
+                "tag": "nebius/fp8", "provider_name": "Nebius",
+                "supported_parameters": ["response_format", "max_tokens",
+                                         "temperature", "top_p"]}]}}
+
+        monkeypatch.setattr(preflight, "_fetch", fake_fetch)
         monkeypatch.setattr(
             "sys.argv",
             ["prog", "--scenarios", "evals/scenarios/generalization/gen_marketing_claims.yaml",

@@ -8,7 +8,7 @@ import pytest
 from autornd.engine.workflow import WorkflowEngine
 from autornd.models.workflow import WorkflowStatus
 from autornd.routing.openrouter import OpenRouterClient
-from tests.conftest import make_mock_response
+from tests.conftest import make_mock_response, seal_double
 
 
 TRIAGE_RESP = {
@@ -108,6 +108,7 @@ def _make_mock_client():
         return data, response
 
     client.chat_json = AsyncMock(side_effect=_mock_chat_json)
+    seal_double(client)
     client.close = AsyncMock()
     return client
 
@@ -185,6 +186,7 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
         return data, response
 
     client.chat_json = AsyncMock(side_effect=_mock_chat_json)
+    seal_double(client)
     client.close = AsyncMock()
     return client
 
@@ -225,6 +227,7 @@ class TestWorkflowEngine:
             return data, make_mock_response(data)
 
         client.chat_json = AsyncMock(side_effect=_mock)
+        seal_double(client)
         client.close = AsyncMock()
 
         engine = WorkflowEngine(client, db_session)

@@ -11160,3 +11160,138 @@ blocked, $0.134). Every file proves what it shows and no more.
    test_green_resolution stays 16). README badge, Testing section and
    Project Structure comment; HANDOVER's header, §2.2 tree line, §3.7 and
    §4.2. Suite 1198 passed scrubbed, before 1191.
+
+## 103. ARCH-20261002-112: the hermetic suite (executor, 2026-10-02)
+
+Instrument repair, not a ruling: the harness concludes exactly what it did
+before. This repairs the SUITE's isolation, so the claim CONTRIBUTING.md and
+`.claude/context/testing.md` make — free, no network — is true wherever the
+suite runs: a checkout holding the owner's .env, a shell exporting the owner's
+pins, or CI. The advisor's audit found five provider calls in one green run,
+each carrying the owner's key.
+
+### 103.1 The mechanism, and why both halves
+
+**Forcing beats exports; killing the dotenv read beats the checkout.** Each
+half covers the other's hole, so both are installed in `tests/conftest.py`
+before the first autornd import:
+
+1. `AUTORND_TESTING=1` — `Settings.model_config` resolves `env_file` to `None`
+   under it (`autornd/config.py`, the one `autornd/` line this command
+   touches): no `.env` is read at all, so no setting can arrive from one.
+2. `PLACEHOLDERS` — **every** settings field, forced with `os.environ[name] =
+   value` (never `setdefault`): the six required tiers carry
+   `test-provider/test-*`, the optional tiers, the credentials and the provider
+   order are empty (the suite's own configuration — an empty ranker never
+   reranks), everything else its declared default. `tests/test_hermetic_suite.py`
+   guards the map against drift in both directions: a new field must be
+   classified, and a non-security field must equal its declared default.
+
+Forcing alone would leave every unforced field reading the owner's `.env` — the
+budgets the owner changed this week. Dotenv-off alone leaves exported values
+displacing placeholders. A test that needs a different value sets it itself.
+
+**The guard** refuses name resolution and connect to any non-loopback address
+(`socket.getaddrinfo`, `gethostbyname`, `connect`, `connect_ex`), records each
+attempt, and fails the test that made it **by name in teardown even when the
+code under test swallowed the error**. Every run ends with the guard's own
+count in the terminal summary.
+
+**The double is provider-free**: `make_mock_client` stubs `chat`, `chat_json`
+and `rerank`; `seal_double(client)` completes a hand-built half-patched one.
+
+### 103.2 The five leaks the audit named, and rule 7
+
+| test | what it was proving | how it reached the provider |
+|---|---|---|
+| `test_all_ok_proceeds_and_the_header_records_every_finding` | the gate passes and the header records every finding | **accidental** — `cli.main` probes the catalogue (`check_models`) before the sweep; the test stubbed the gate's own fetch and the sweep and believed itself hermetic |
+| `test_skip_proceeds_and_the_header_records_the_override` | `--skip-preflight` proceeds and records the override | **accidental** — the same CLI probe |
+| `test_an_impossible_sample_warns_before_any_call` | the sample warning reaches the operator before any call | **accidental, and the exhibit** — the instrument's own probes (the catalogue AND the preflight fetch) sat outside the "any call" it claimed: the claim counted paid calls only (rule 7) |
+| `test_no_ceiling_falls_back_to_the_setting` | a node without `max_tokens` gets the phase default | **accidental** — its hand-built double patched `chat_json` and left `chat`/`rerank` live; the audit's POST went to the **owner's ranker pin from .env** |
+| `test_blocked_plan` | a blocked plan ends BLOCKED | **accidental** — same half-patched shape; the context builder's lookup calls `chat` |
+
+None of the five asserted the network; all five reached it through machinery
+they never stubbed. The repair stubs each at its seam (the CLI probe, the
+preflight fetch, `seal_double`), and the guard now makes the same class of
+mistake fail by name instead of billing.
+
+### 103.3 Proofs
+
+(a) `TestThePlaceholdersWin`: exported sentinels (`MODEL_TRIAGE=sentinel/x`,
+`MODEL_RANKER=sentinel/r`, `OPENROUTER_API_KEY=sentinel-key`) cannot displace
+the placeholders, and neither can a sentinel `.env` in a subprocess's working
+directory (built under `tmp_path` — no step touches a `.env` in the repo).
+Both conditions print settings equal to the suite's, and the map-coverage and
+defaults guards hold.
+
+(b) The guard fails a test that reaches out — and the proof runs in a **child
+pytest** so this suite's own record stays empty. Quoted, guard intact (the
+child's body swallows the error and still fails, by name):
+
+```
+1 passed, 1 error in 0.01s
+  test_zz_guard_probe.py::test_reaches_out_and_survives
+  E  test_zz_guard_probe.py::test_reaches_out_and_survives attempted
+     network access: ["resolve 'guard-proof.invalid'"]
+```
+
+Broken by one line (`if not _NetworkGuard._is_loopback(host):` → `if False:`),
+the attempt gets through and nothing fails it:
+
+```
+network guard: 0 non-loopback attempt(s) recorded
+1 passed in 0.07s
+E  assert 0 != 0
+```
+
+(c) The literal `.venv/bin/python3 -m pytest tests/ -q` in the executor's own
+shell — the shell the finding came from — reads **1207 passed, 0 failed**
+where it read 2 failed, 1196 passed on arrival.
+
+(d) The guard's count: **5 → 0** (the audit's five attempts, then none).
+
+### 103.4 Departures, and what execution found
+
+1. **A blanket session stub of `check_models` was wrong and was reverted.**
+   `tests/test_routing.py`'s `TestCheckModels` exists to verify the probe
+   itself and stubs `httpx.AsyncClient` around it; the blanket stub broke
+   eight of them (convention 17: the stub was wrong, the tests right). The
+   catalogue probes are stubbed at the seams of the tests that trigger them —
+   `cli.check_models`, `autornd.preflight._fetch`, or
+   `openrouter.httpx.AsyncClient` — which is exactly how `test_routing` has
+   always done it.
+2. **The empty ranker does not keep rerank at home.** With `MODEL_RANKER=""`
+   a live `rerank`/`chat` on a hand-built client still resolved
+   `openrouter.ai` from the token-ceiling test — the guard named the attempt,
+   and both live methods are now stubbed by `seal_double` (which method fired
+   first is not distinguishable from the record; both are closed).
+3. **`RUNTIME_MUTABLE` reports itself as a settings field** (pydantic treats
+   the class-annotated set as one). It is excluded from the map-coverage guard
+   as `NOT_SETTINGS`, and from the probe's JSON (its stringified set is
+   unordered).
+4. **The guard's proof lives in a child pytest** rather than in this suite:
+   the acceptance says the full run records **zero** attempts, and a guard
+   self-test that reached out would put one in the record — the counter would
+   then be hiding what it measured (conventions 26/28). The child's attempt is
+   refused by the same guard; the outer record stays zero by construction and
+   says so.
+5. **Counts re-derived** (convention 24): 1207 collected — 1198 before, +9
+   (`tests/test_hermetic_suite.py`, new: 72 test files now). README badge,
+   Testing section and Project Structure comment; HANDOVER's header, §2.2 tree
+   line, §3.7 (the table re-paired from the insertion point) and §4.2;
+   AGENTS.md's file count 71 → 72.
+6. **CI found a sixth network surface the audit's five did not count:**
+   Chroma's default embedding function downloads a ~80 MB ONNX model from
+   `chroma-onnx-models.s3.amazonaws.com` the first time it embeds. Locally the
+   cache hides it; in CI every store-touching test fetched it — the suite was
+   green in CI *by downloading a model at test time*. The guard named it on the
+   first CI run (six tests, `resolve chroma-onnx-models.s3.amazonaws.com`).
+   `tests/conftest.py` now substitutes a deterministic local embedder at
+   Chroma's own seam, so the retrieval tests test retrieval and the suite is
+   offline everywhere.
+7. **One more order-dependent half-patched double, visible only in isolation:**
+   `tests/test_schema_wiring.py`'s `capturing_client` left `rerank` live, and
+   its `test_plan` reaches it through context building — masked in a full run
+   because an earlier test had latched the rerank fallback mode (the §6.8
+   latch). Sealed with `seal_double`, and every suspect file was then run in
+   isolation reading the guard's count: all zero.
