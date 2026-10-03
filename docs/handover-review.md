@@ -11194,3 +11194,288 @@ stood), its repair, and its break-the-line proof.
 | 7 | a nonempty implementation with `done=false` cannot ship as completed | **defect** — `GraphExecutor.run` ended every unstopped run `completed`, never reading the implement verdict's `done` |
 | 8 | negative independent review blocks shipping; a skipped review does not fabricate approval | **half held** — a real `ship: false` ends the run blocked (D46 (2)); the skip fabricated `ship: true`, reading exactly like an approval |
 | 9 | every terminal path reconciles the client's booked spend into the workflow record, including paid retries followed by failure; outstanding liability kept separate | **defect** — the API path's exception terminal committed the row without ever assigning `total_cost`; no liability column exists on the API path (the eval path already carries both, `evals/runner.py`) |
+
+Execution record, 2026-10-02/03. Every repair below was reproduced
+against the code as it stood, then repaired, then proved by a test
+that fails on the old behaviour (the break-the-line proof is quoted
+per section). Suite state: main is 1198 passing; the branch's
+after-state is **1219 passing in 92.71s** (§103.10 has the protected
+run and its network-attempt evidence).
+
+### 103.1 Property 1 — an unpriced component is unknown, not free (repaired, 94b4e71)
+
+**Reproduction.** The catalogue parse read
+`float(pricing.get("prompt") or 0.0)` — an absent component became
+`0.0`, so a model whose price the provider had not published entered
+`_model_pricing` at `(0.0, 0.0)` and the spend guard bounded its
+calls as free. A bounded client would dispatch to a model whose price
+is *unknown* under a bound of *zero*: the worst case the guard
+reserved was nothing, and the ceiling never saw the call.
+
+**Repair.** The parse skips a model whose prompt or completion
+component is absent, or whose additional charges the estimate cannot
+bound (`_prices_what_the_guard_cannot_bound` in
+`autornd/routing/openrouter.py`). Such a model is unrated — absent
+from the table — and its calls dispatch blind (no reservation), which
+is the pre-existing D45 blind-call policy; whether blind dispatch
+should be refused outright is question 1 in the response. The
+2-tuple shape is preserved, so every existing fixture and test keeps
+working.
+
+**Break-the-line proof.** `test_an_absent_component_leaves_the_model_unrated`
+asserts the model is *not* in `_model_pricing`; on the old parse it
+was present at `(0.0, 0.0)`. `test_a_charge_the_estimate_cannot_bound_is_unrated`
+same for an extra charge with no boundable rate.
+
+### 103.2 Property 2 — explicit zero is a price, not a gap (repaired, 94b4e71)
+
+**Reproduction.** Absent and explicit zero both became `(0.0, 0.0)`
+— indistinguishable by construction, so a provider that publishes a
+genuinely free model and a provider that publishes nothing were the
+same row in the table.
+
+**Repair.** The same parse change, read from the other side: an
+explicit `"0"` stays priced at `(0.0, 0.0)` and the guard bounds it
+(normally — a zero worst case is a bound); an absent component means
+the model is not in the table at all. The two states are now
+distinguishable by construction: one is a row, the other is the
+absence of a row.
+
+**Break-the-line proof.**
+`test_an_explicit_zero_is_a_price_not_a_gap` (routing) asserts
+the zero-priced model *is* in the table and bounded, not blind;
+`test_a_zero_charge_beside_the_token_rates_stays_priced` asserts a
+zero extra charge beside real token rates does not make the model
+unrated. On the old parse the first test's assertion of "in the table
+and bounded" passed for the wrong reason (absent models were there
+too) — the distinguishing test is the absent-component one in §103.1,
+which fails on the old parse.
+
+### 103.3 Property 3 — concurrent calls reserve liabilities atomically (already held, D45 (5))
+
+Verified, not repaired. The reserve is synchronous:
+`_guard_spend` computes the worst case and executes
+`self.reserved += worst` with no `await` between the ceiling check
+and the reservation, so on the single-threaded event loop no second
+coroutine can interleave between "can I afford this" and "this is
+now held". The observable proof is the property-4 pair in §103.4:
+two calls are in flight *concurrently* through a gated transport that
+controls which completes first, and each call's reservation is
+accounted exactly once, in both completion orders.
+
+### 103.4 Property 4 — out-of-order completion releases only the owning reservation (repaired, dd787db)
+
+**Reproduction, defect A (out-of-order failure kept the wrong worst
+case).** The release was first-in-first-out (`popleft`), not by the
+call that made it. A ($0.06, 6000 tokens) and B ($0.01, 1000 tokens)
+in flight, B completing first: the old release took B's completion to
+mean A's reservation was gone, so `reserved` read $0.01 while A was
+still in flight, and when A then failed after dispatch the failure
+kept **B's** $0.01 as unreconciled liability — understating what the
+run may still owe by $0.05. Break-proof: on the old code the new
+test's assertion `unreconciled_liability == 0.06` read `0.01 == 0.06`.
+
+**Reproduction, defect B (a call that never reserved released the
+oldest reservation at all).** An unrated model's call — blind, no
+worst case computed — ran its accounting, which popped the rated call
+in flight beside it: `reserved` read $0.00 while $0.05 was still
+held, and the ceiling, seeing $0.001 committed, admitted a second
+$0.05 call against a $0.08 ceiling while $0.10 was in fact committed.
+Break-proof: on the old code `reserved == 0.05` read `0.0 == 0.05`,
+and the second call was admitted where the repaired client raises
+`SpendGuardRefused` with `remaining == 0.029`.
+
+**Repair.** `_guard_spend` returns a `_Reservation` object
+(`__slots__ = ("worst",)`) created before dispatch; `_account` and
+`_fail_call` release it **by identity** (`deque.remove`), and a
+call with no reservation of its own (blind) releases nothing.
+Concurrent, out-of-order and blind calls each reconcile exactly their
+own worst case; the committed total (booked + held + unreconciled) is
+unchanged. Tests: `TestReservationsAreOwnedByTheirCall` in
+`tests/test_spend_guard.py`, both cases driven through
+`_GatedTransport`, an `httpx.AsyncBaseTransport` that holds the first
+request in flight until the test opens the gate — the transport makes
+completion order a controlled input, not a race.
+
+### 103.5 Property 5 — API execution uses the submitted workflow ID and preserves its owner (already held, ARCH-20261002-109)
+
+Verified by reading the path the probe names, no change.
+`POST /api/workflows` creates the row with `user_id=_get_user_id(request)`
+(`autornd/api/routes.py:258`) — the owner rides the row — and
+`background.add_task(_run_workflow_bg, workflow.id, caller, body.request)`
+(:263) passes the *submitted* workflow's ID. `_run_workflow_bg`
+(:271) re-loads `select(Workflow).where(Workflow.id == workflow_id)`
+and runs that row; every read path goes through
+`_load_owned_workflow` (:342), which scopes by `Workflow.id == id`
+**and** `Workflow.user_id == user_id` when a caller is present. The
+ID the API executes is the ID it returned, and the row it touches is
+the caller's.
+
+### 103.6 Property 6 — whitespace-only validator evidence is no assessment (repaired, 8196387; Ruling D49 (1))
+
+**Reproduction.** `_missing_substance` in `autornd/models/verdicts.py`
+tested only `not evidence`, so a validator that returned `["   "]` —
+three spaces, no assessment — shipped as **green**. Break-proof: on
+the old parse the new test's `green is False` read `True`.
+
+**Repair.** The check now requires an entry with non-whitespace
+content:
+`isinstance(evidence, list) and not any(isinstance(item, str) and item.strip() for item in evidence)`
+resolves red with the cause *"the validator returned no assessment"*,
+and the resolution is counted in `normalisations()` like every other
+(D46 (1), extended from empty to whitespace-only). Tests:
+`test_whitespace_only_evidence_is_no_assessment` in
+`tests/test_green_resolution.py`, parametrized over `[""]`, `["   "]`
+and `["  ", "\t"]` — all resolve red with the cause and
+`normalisations() == 3`; the padded case `["   ", "cte cited to
+ISO 286-2"]` still resolves green with zero normalisations, which is
+the distinction the ruling preserves.
+
+### 103.7 Property 7 — a nonempty implementation with `done=false` cannot ship as completed (repaired, 8196387; Ruling D49 (2))
+
+**Reproduction.** `GraphExecutor.run` ended every run no node stopped
+as `completed`, never reading the implement verdict's typed `done`
+field — a nonempty implementation explicitly marked incomplete
+qualified as completed delivery. Break-proof: on the old terminal the
+new test's `state.status == "blocked"` read `completed`.
+
+**Repair.** The completed terminal now reverse-scans `state.trace`
+for the latest step whose node has `prompt == "implement"` — the
+trace, not `spec.execution_order()`, is where the loop-body step is
+recorded, because `execution_order()` lists only top-level nodes and
+the implement node lives inside `build_loop`'s body — reads `done`
+dual-form (`implement.get("done")` for a scripted double's dict,
+`getattr(implement, "done")` for production's Pydantic object), and
+when it is `False` ends the run **blocked**, naming the verdict's
+summary: *"the implementation verdict says the work is not done
+(done: false) — <summary>"*. A run whose graph produced no implement
+verdict is not "explicitly incomplete" and keeps its terminal (the
+ruling's narrowness). Tests:
+`test_an_implementation_marked_incomplete_cannot_complete` in
+`tests/test_graph.py` — the scripted summary genuinely covers both
+success criteria (so the loop's coverage check converges: the
+`ai_calls.count("implement") == 1` assertion proves this is the
+terminal's refusal, not a rework), carries `done: False` with
+`green: True`, and the run ends blocked with `done: false` and the
+summary in the reason.
+
+### 103.8 Property 8 — a negative review blocks; a skipped review is not an approval (negative half already held; skip half repaired, 8196387; Ruling D49 (3))
+
+**The negative half already held** (D46 (2)): a real `ship: False`
+ends the run blocked — `tests/test_graph.py`'s do-not-ship test
+predates this command and still passes unchanged.
+
+**Reproduction, the skip half.** `PhaseRunner._phase_doublecheck`
+returned `{"skipped": True, "ship": True, "reason": ...}` when no
+model can serve the independent pass — `ship` is an approval field,
+so a check that never ran read exactly like one that passed, and both
+workflow gates routed on `independent_check.ship`. Break-proofs, both
+directions: the old gate cannot even consume the new record
+(`ConditionError: independent_check.ship is not available; known at
+this level: ['reason', 'skipped', 'vetoed']`), and the new gate
+against the old record raises `KeyError: 'vetoed'` — hard rule 3,
+gates test typed fields, working as designed in both directions.
+
+**Repair.** The skip record carries `skipped` and `vetoed: false` and
+**no `ship` at all**; both workflow gates
+(`workflows/engineering-rnd.yaml`, `workflows/independent-check-probe.yaml`)
+route on `independent_check.vetoed == false`, which a skip satisfies
+without claiming an approval. A real verdict's `vetoed` is the
+computed complement of `ship` — a pydantic `@computed_field` on
+`DoubleCheckVerdict`: present in `model_dump()` (so the persisted
+record keeps a pass, a refusal and a skip three ways apart), absent
+from `model_json_schema()` (so the provider contract is unchanged and
+the model is never asked for a field the harness computes). Tests:
+`test_a_skipped_independent_pass_is_not_an_approval` (the scripted
+skip record ends the run `completed` — a skip continues — while
+`"ship" not in record`); `TestIndependentPassSkips` in
+`tests/test_routing.py` asserts `verdict["vetoed"] is False` and
+`"ship" not in verdict` and that a skip costs no call;
+`TestDoubleCheckVerdict` in `tests/test_verdicts.py` proves the
+complement and the schema/dump split.
+
+### 103.9 Property 9 — every terminal path reconciles booked spend, and liability is its own column (repaired, 33351ff)
+
+**Reproduction.** A run that dies after dispatch with one call booked
+($0.002) and one failed after reservation ($0.05 worst case): the old
+terminal committed `total_cost` never assigned — `0.0` — and there
+was nowhere for the $0.05 to land at all; no liability column exists
+on the API path (the eval path already carried both, `evals/runner.py`).
+Break-proof: on the old code the new test's `total_cost == 0.002`
+read `0.0 == 0.002`.
+
+**Repair.** `workflows.unreconciled_liability` — additive, `FLOAT NOT
+NULL DEFAULT 0.0`, backfilled into existing rows by the
+`_add_missing_columns` migration in `autornd/database.py` — is what
+a call that failed after dispatch may still owe, kept apart from
+`total_cost`, which is what the run was charged. Both engine
+terminals (the exception path and the normal path) in
+`autornd/engine/workflow.py` reconcile `workflow.total_cost =
+self.client.spend` and `workflow.unreconciled_liability =
+self.client.unreconciled_liability` before their respective commits —
+deliberately rather than incidentally, so a retry sequence that
+exhausts or a handler that raises after its request was made cannot
+erase a billed call. The API's workflow summary and detail carry the
+field beside `total_cost`; it is additive to the response, and a
+consumer that does not read it is unchanged. Test:
+`test_a_failed_run_reconciles_spend_and_liability` in
+`tests/test_engine.py` — the monkeypatched `GraphExecutor.run` books
+$0.002, reserves and fails a $0.05 worst case, then raises; the run
+ends BLOCKED with `total_cost == 0.002` and
+`unreconciled_liability == 0.05`.
+
+### 103.10 The suite, the network it did not use, and what was left undone
+
+**Protected suite, before and after.** The before-state (branch with
+all repairs applied, counts not yet re-derived) ran **4 failed, 1215
+passed** — the four failures were exactly the count guards (README
+badge, HANDOVER's stated total, §4.2's pass count, the test-file
+count), the expected failure mode of adding tests without re-deriving
+counts (convention 24); the count re-derivation commit (d6f5014) is
+the repair. The after-state: **1219 passed in 92.71s**, zero
+failures. Main's own suite is the 1198 the repo stated, green.
+
+**Network-attempt evidence** (the command's requirement: attempted
+connections reported separately from completed ones, under an
+independently enforced denial — the hermetic guard is installed
+before any `autornd` import and refuses every non-loopback name
+resolution and connection at the socket, failing the test that made
+the attempt at teardown whatever the code under test did with the
+error). `AUTORND_HERMETIC_LOG` for the after-run, 4 records total:
+**2 attempted non-loopback, both refused** (`example.com` →
+`93.184.216.34`, a `getaddrinfo` probe) and **2 loopback connections
+completed** (`127.0.0.1:43647`, `127.0.0.1:44747`, local test
+servers). All four were made by `tests/test_hermeticity.py`'s
+`hermetic_probe`-marked tests, which deliberately attempt a
+refused name and a permitted loopback to prove the guard does both —
+the attempts are the tests' subject, not violations by it. **Zero
+non-loopback connection attempts came from any of the other 1219
+tests**, including every test touched by this command. No paid call
+was possible: the suite forces every tier to a placeholder and every
+credential to empty before any import, and `AUTORND_HERMETIC=1`
+keeps the settings from reading a `.env`.
+
+**Hermetic test-double repairs** (1e1b200 and 8196387). The
+module-level `_rerank_mode` cache in `autornd/knowledge/context.py`
+makes an isolated file run probe the real rerank API when the cache
+is cold; the full suite never sees it because an earlier file flips
+the mode to `distance` first. The order-dependence was invisible
+until the guard's per-test attribution made it a failure: the guard
+fails the test that made the attempt, so a probe that "worked" in
+the full-suite order fails the file run alone. `_make_mock_client`
+(`tests/test_engine.py`) and `capturing_client`
+(`tests/test_schema_wiring.py`) now carry the rerank stub conftest's
+double carries — a double that raises rather than posts, the honest
+answer for a provider-free run.
+
+**Surfaced, not repaired** (question 3 in the response): the
+doublecheck endpoint (`autornd/api/routes.py:423` onward) books
+`workflow.total_cost += response.cost` manually with a per-request
+client; a failed call's worst case there is nowhere recorded. Where
+a failed independent-check call's liability should live is a
+behaviour question — the advisor's, not an instrument repair.
+
+**Deliberately left undone**, per the command: no queue, no recovery
+framework, no general plugin system, no new paid stage; no model-pin
+changes, no `.env` edits, no secrets, no production redesign; no paid
+measurement of any kind.
