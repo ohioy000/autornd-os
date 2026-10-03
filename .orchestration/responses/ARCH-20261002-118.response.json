@@ -4,7 +4,7 @@
   "status": "NO_ACTION",
   "executed": "2026-10-03",
   "head_before": "5dd9aa6",
-  "head_after": "pending - recorded in the follow-up commit (the ARCH-20261002-116 pattern)",
+  "head_after": "cd4aeb0",
 
   "settled_by": "ARCH-20261002-117 (BLOCKED): the 25-question JSON array - the candidate data the tier-2 set is built from - was never supplied in the conversation, and the tier-2 command's own clause stops the work and requests it. No dataset exists, so no dataset PR exists to merge.",
 
@@ -64,5 +64,7 @@
     "settled_by": "ARCH-20261002-117 (BLOCKED)"
   },
 
-  "commits": {}
+  "commits": {
+    "response_files": "cd4aeb0"
+  }
 }

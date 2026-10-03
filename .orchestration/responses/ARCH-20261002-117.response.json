@@ -4,7 +4,7 @@
   "status": "BLOCKED",
   "executed": false,
   "head_before": "5dd9aa6",
-  "head_after": "pending - recorded in the follow-up commit (the ARCH-20261002-116 pattern)",
+  "head_after": "cd4aeb0",
 
   "arrival": {
     "source": "The owner's three-tier instruction of 2026-10-02, given in chat (session ef7f8231-f61c-423a-b00e-61301e8dfb23, prompt ...########0). Tier 2 is 'Register and independently verify the 25-question set'.",
@@ -85,5 +85,7 @@
     "blocked_on": "the 25-question JSON array (candidate data named by the owner's instruction, never supplied in the conversation)"
   },
 
-  "commits": {}
+  "commits": {
+    "response_files": "cd4aeb0"
+  }
 }
