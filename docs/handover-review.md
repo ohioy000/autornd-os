@@ -12322,3 +12322,117 @@ checklist is `evals/tier2/REVIEW.md`; the channel report is
 `.orchestration/responses/ARCH-20261002-117.response.json`
 (PARTIAL).
 
+### 108.8 Completion: the owner supplies the remaining 20
+
+Later the same day the owner supplied the remaining 20
+questions ("i added them to the json") by adding them to
+the same export file — its final assistant message now
+carries the full 25-question array (204,068 bytes, SHA-256
+`66af3e5a…`). The file arrived malformed and the owner
+authorized a repair ("fix the json while your at it"); the
+repair restored JSON syntax only — no question content was
+altered, added or removed — and the repaired export is
+registered verbatim. The executor generated, screened and
+selected nothing at any point; every question registered is
+the owner's own supply.
+
+The complete set was then registered, separated, and
+independently verified:
+
+- **Separation** (unchanged mechanism, extended to 25):
+  `questions.json` carries exactly id/shape/domain/question;
+  `keys.json` carries the scorer-only required items (each
+  with tolerance or accepted variants and a derivation or
+  source), the worked model answers and the wrong-answer
+  examples with reasons.
+- **Verification**: `verify_keys.py` extended to all 25
+  questions — **268 checks hold, exit 0** (6 global
+  G1–G6, 195 per-question Q1.1…Q25.7, 67 cross-checks
+  X1–X67 that parse `keys.json`'s own value strings and
+  require agreement with the first-principles recomputation).
+  Every numerical key recomputed; dimensions, boundary
+  operators (inclusive "no more than", equality-permitted
+  discrete selections, strict regulatory thresholds),
+  discrete selections and tolerance boundaries checked; all
+  56 claimed wrong answers falsified under the stated
+  assumptions.
+- **Lookup questions** — five of the 25 (Q2, Q7, Q12, Q17,
+  Q22) across four regulations, each fetched and archived
+  with retrieval date, URL and content hash, every claimed
+  verbatim quotation matched against the archive:
+  29 CFR 1910.146(b) (both oxygen definitions);
+  29 CFR 1910.95 (Table G-16's 90/95/100 dBA rows — 8, 4
+  and 2 hours, slow response — and paragraph (g)'s
+  audiometric provisions: baseline within 6 months of first
+  exposure at or above the action level, at least 14 hours
+  workplace-noise-free, retest within 30 days);
+  40 CFR 141.62(b) (fluoride 4.0 mg/L, nitrate 10 mg/L as
+  nitrogen, arsenic 0.010 mg/L); 29 CFR 1910.147
+  (attachment means no less than 50 pounds; inspection at
+  least annually). Editions are the govinfo July 1, 2014
+  annual editions (packages `CFR-2014-title29-vol5` and
+  `CFR-2014-title40-vol23`), identified by package
+  identifier and GPO typesetting footer, not inferred from
+  a current webpage; each regulation is stability-checked
+  against the 2026-10-01 eCFR (versioner API) — a 12-year
+  span, satisfying the command's "unchanged for at least
+  three years" requirement. Eight manifest archive records
+  (four PDFs, four extractions, four eCFR XMLs) are
+  committed under `sources/`.
+- **Scorer**: `_score_q6`–`_score_q25` added — **248
+  self-test fixtures hold, exit 0** (25 model answers, 47
+  equivalent notations, 100 tolerance boundaries just
+  inside and just past, 56 wrong answers caught, 20
+  discrete selections in both directions). The scorer scores
+  unit conversion and tolerance comparison, not regex
+  presence.
+- **Version record**: `versions.json` gains
+  `candidate-2026-10-03.3` naming the trigger (the owner's
+  supply of the remaining 20 questions; four lookup sources
+  archived and verified; both instruments extended); the
+  manifest and the four versioned files hash to it.
+- **The count discrepancy that blocked §108.7 is resolved**
+  by the owner's supply — not by the executor. The
+  remaining freeze blocker is the signoff the command
+  requires: `manifest.json` records
+  `freeze_blocked_by: review-pending …` and
+  `frozen: false`. Deterministic arithmetic verification is
+  not independent subject-matter approval; the set stays
+  unfrozen until the owner or a qualified reviewer signs
+  off the verification and the source review, before any
+  paid use.
+- **The suite guard** (`tests/test_tier2_keys.py`, 17
+  tests, updated in place — no new test files, no count
+  change) runs both instruments on the tree, proves each
+  can fail on corrupted copies (convention 22), guards the
+  three-way separation with 42 Q6–Q25 leak probes (stated
+  inputs a question itself carries — 8.00 and 12.0 N/mm,
+  0.100 m, 35.0 °C, 240 mm, 500 rpm, 3.04 V — are
+  deliberately absent from the probe list), and verifies
+  all eight archives against their manifest records.
+
+Two fixture-design errors were found and fixed in the
+guard's own probe list, not in the instruments: "0.010"
+appeared legitimately in Q15's question text (the
+return-zero limit is a stated input), so the probe was
+dropped in favour of the signed-error probes ("+0.010",
+"−0.030"); likewise "8.00"/"8.0" (Q9's stated available
+stiffnesses) and "0.10" (Q8's stated 0.100 m thickness).
+A probe that a question itself answers is not a leak test —
+it is a false positive, and the probes were checked against
+the actual `questions.json` text before being committed.
+
+Execution record, 2026-10-03 (completion phase). Suite
+before (clean main 86a58b2, the merged tree at the branch
+point — PR 144 touched no tests): **1258 passed**, network
+guard 0 non-loopback attempts. Suite after: **1258 passed
+in 94.18s**, network guard 0 non-loopback attempts — the
+completion adds no test files and no tests (the 17 guard
+tests are updated in place), so the collected count is
+unchanged and the count guards hold without re-derivation.
+No paid calls, no standing configuration changes, `.env`
+untouched. The channel report
+(`.orchestration/responses/ARCH-20261002-117.response.json`)
+carries the outcome and the two-commit `head_after`
+record; the checklist is `evals/tier2/REVIEW.md`.
+

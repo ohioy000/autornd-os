@@ -28,5 +28,125 @@
     "shape": "PROCEDURE",
     "domain": "Fluids or thermal",
     "question": "Write the ordered hydrostatic leak-test procedure for an already connected, initially unpressurized water manifold on a guarded bench. All test components are rated for $10.0\\,\\mathrm{bar}$ gauge. The bench instruction requires filling with water while the high-point vent is open until bubble-free water exits, then closing the vent before pressurization. Raise the pressure to $6.00\\,\\mathrm{bar}$ gauge, isolate the hand pump, and start the hold timer only after isolation. Do not add water during the $300\\,\\mathrm{s}$ hold. A test passes only if the pressure drop is no more than $0.20\\,\\mathrm{bar}$ and there is no visible water leakage during the hold. After assessing the result, use the release valve to depressurize and confirm $0\\,\\mathrm{bar}$ gauge before disconnecting. The completed test log shows $6.00\\,\\mathrm{bar}$ at the start of the isolated hold, $5.90\\,\\mathrm{bar}$ after $300\\,\\mathrm{s}$, and no visible leakage throughout. Include the acceptance criteria and the verdict for this log."
+  },
+  {
+    "id": "Q6",
+    "shape": "SANITY",
+    "domain": "Electrical or electronics",
+    "question": "Two active-high digital inputs, A and B, indicate whether two pumps are running. An active-high alarm must be on when exactly one pump is running and off otherwise. What Boolean function should drive the alarm, and what are its outputs for input pairs $00$, $01$, $10$, and $11$, in that order?"
+  },
+  {
+    "id": "Q7",
+    "shape": "LOOKUP",
+    "domain": "Regulation or standards",
+    "question": "In Table G\u201316 of $29$ CFR \u00a7 $1910.95$, July 1, 2014 edition, what permissible daily exposure durations correspond to constant sound levels of $90$, $95$, and $100\\,\\mathrm{dBA}$, measured with slow response? Give the three durations in hours."
+  },
+  {
+    "id": "Q8",
+    "shape": "DERIVATION",
+    "domain": "Fluids or thermal",
+    "question": "A plane wall has two layers in series, each with area $2.00\\,\\mathrm{m^2}$. From hot to cold, layer A is $0.100\\,\\mathrm{m}$ thick with conductivity $0.200\\,\\mathrm{W/(m\\,K)}$, and layer B is $0.0500\\,\\mathrm{m}$ thick with conductivity $0.500\\,\\mathrm{W/(m\\,K)}$. The outer face temperatures are $60.0$ and $20.0\\,^{\\circ}\\mathrm{C}$. Assume steady one-dimensional conduction, perfect contact, and no heat generation. Find each layer's thermal resistance, the heat-transfer rate from hot to cold, and the interface temperature."
+  },
+  {
+    "id": "Q9",
+    "shape": "SPECIFICATION",
+    "domain": "Mechanical",
+    "question": "Select a zero-preload linear tension spring for a $120\\,\\mathrm{N}$ static load. Available spring stiffnesses are $8.00$, $10.0$, and $12.0\\,\\mathrm{N/mm}$. Extension must not exceed $12.0\\,\\mathrm{mm}$, with equality allowed. All three springs have sufficient load capacity and travel. Choose the lowest stiffness that passes. Give three short sections: selected spring; extension check, including the next lower stiffness; and elastic energy stored at the operating load."
+  },
+  {
+    "id": "Q10",
+    "shape": "PROCEDURE",
+    "domain": "Materials",
+    "question": "Write the cure-check sequence for an adhesive coupon in a guarded laboratory oven. The coupon and its temperature probe are already installed. The work instruction requires setting the oven to $120\\,^{\\circ}\\mathrm{C}$, waiting until the coupon temperature enters the inclusive band $118$\u2013$122\\,^{\\circ}\\mathrm{C}$, then starting a $600\\,\\mathrm{s}$ timer. The coupon must remain inside that band throughout the timed hold; any excursion fails the run and no restart is permitted. At the end, assess the run, switch off heating, and leave the coupon inside until its probe reads $\\leq40\\,^{\\circ}\\mathrm{C}$ before removal. A completed log records an uninterrupted $600\\,\\mathrm{s}$ hold with minimum $119\\,^{\\circ}\\mathrm{C}$ and maximum $121\\,^{\\circ}\\mathrm{C}$. Include the acceptance criteria and this log's verdict."
+  },
+  {
+    "id": "Q11",
+    "shape": "SANITY",
+    "domain": "Mechanical",
+    "question": "A $20$-tooth external spur gear drives a $60$-tooth external spur gear directly. The input turns clockwise at $900\\,\\mathrm{rpm}$ and transmits $3.00\\,\\mathrm{N\\,m}$. Assume an ideal lossless gear pair. Viewed from the same side of both parallel shafts, what are the output speed, rotation direction, and transmitted torque magnitude?"
+  },
+  {
+    "id": "Q12",
+    "shape": "LOOKUP",
+    "domain": "Regulation or standards",
+    "question": "For a community drinking-water system, what maximum contaminant levels does $40$ CFR \u00a7 $141.62(b)$, July 1, 2014 edition, list for arsenic, fluoride, and nitrate? Give concentrations in $\\mathrm{mg/L}$ and state the chemical reporting basis specified for nitrate."
+  },
+  {
+    "id": "Q13",
+    "shape": "DERIVATION",
+    "domain": "Electrical or electronics",
+    "question": "An initially uncharged ideal $100\\,\\mathrm{\\mu F}$ capacitor is connected through a $10.0\\,\\mathrm{k\\Omega}$ resistor to an ideal $10.0\\,\\mathrm{V}$ DC source at time $t=0$. Find the time constant, capacitor voltage at $t=2.00\\,\\mathrm{s}$, and resistor current at that instant. Define positive current as flowing from the source toward the capacitor."
+  },
+  {
+    "id": "Q14",
+    "shape": "SPECIFICATION",
+    "domain": "Fluids or thermal",
+    "question": "Select a constant-power heater to raise $2.00\\,\\mathrm{kg}$ of liquid from $20.0$ to $35.0\\,^{\\circ}\\mathrm{C}$ in no more than $120\\,\\mathrm{s}$. The liquid's constant specific heat is $4000\\,\\mathrm{J/(kg\\,K)}$. Available heater powers are $750$, $1000$, and $1250\\,\\mathrm{W}$. Assume perfect mixing, all heater power enters the liquid, no heat loss, and negligible vessel heat capacity. Equality with the time limit is allowed. Choose the smallest passing power and switch it off when the target temperature is reached. Give three sections: energy requirement; selected heater and heating time, including the next smaller heater's time; and energy delivered by the selected heater."
+  },
+  {
+    "id": "Q15",
+    "shape": "PROCEDURE",
+    "domain": "Materials",
+    "question": "Write the displacement-channel check for a tensile-test extensometer already mounted on an unloaded calibration fixture. The fixture instruction requires zeroing the readout at zero displacement, applying a $1.000\\,\\mathrm{mm}$ reference displacement and recording the reading, then increasing to $2.000\\,\\mathrm{mm}$ and recording again, then returning to zero and recording without re-zeroing. Each nonzero reading must be within $\\pm0.020\\,\\mathrm{mm}$ of its reference, and the final zero reading must have magnitude no greater than $0.010\\,\\mathrm{mm}$; limits are inclusive. Do not adjust the instrument between readings. The log gives $1.010$, $1.970$, and $0.005\\,\\mathrm{mm}$ for those three readings. State each signed error as reading minus reference and the overall verdict."
+  },
+  {
+    "id": "Q16",
+    "shape": "SANITY",
+    "domain": "Materials",
+    "question": "A freely expanding steel bar is $0.800\\,\\mathrm{m}$ long at $20.0\\,^{\\circ}\\mathrm{C}$. Its constant linear expansion coefficient is $12.0\\times10^{-6}\\,\\mathrm{K^{-1}}$. It is heated uniformly to $70.0\\,^{\\circ}\\mathrm{C}$. Using the original length in the linear thermal-expansion formula, what are its length increase in millimetres and final length in metres?"
+  },
+  {
+    "id": "Q17",
+    "shape": "LOOKUP",
+    "domain": "Regulation or standards",
+    "question": "Under $29$ CFR \u00a7 $1910.147$, July 1, 2014 edition, what minimum unlocking strength is required for tagout-device attachment means, and how frequently must the employer inspect the energy-control procedure? Give the strength in the regulation's pounds unit and the inspection interval."
+  },
+  {
+    "id": "Q18",
+    "shape": "DERIVATION",
+    "domain": "Mechanical",
+    "question": "A simply supported beam of span $2.00\\,\\mathrm{m}$ carries a downward point load of $1000\\,\\mathrm{N}$ at midspan. Its rectangular cross-section is $40.0\\,\\mathrm{mm}$ wide and $60.0\\,\\mathrm{mm}$ deep vertically, and Young's modulus is $200\\,\\mathrm{GPa}$. Ignore self-weight and shear deformation; use linear Euler\u2013Bernoulli beam theory. Find the maximum bending-moment magnitude, second moment of area about the bending axis, maximum bending-stress magnitude, and downward midspan deflection magnitude."
+  },
+  {
+    "id": "Q19",
+    "shape": "SPECIFICATION",
+    "domain": "Electrical or electronics",
+    "question": "Specify one series resistor for an LED on an ideal $9.00\\,\\mathrm{V}$ DC supply. Treat the LED's forward drop as exactly $2.40\\,\\mathrm{V}$. The current must be between $18.0$ and $22.0\\,\\mathrm{mA}$ inclusive. Available resistances are $270$, $330$, and $390\\,\\Omega$, with negligible tolerance. Available resistor power ratings are $0.125$, $0.250$, and $0.500\\,\\mathrm{W}$. Require a rating at least twice the actual resistor dissipation, with equality allowed, and choose the smallest passing rating. Give three sections: resistance selection and current; checks of the other resistance choices; and dissipation and power-rating selection."
+  },
+  {
+    "id": "Q20",
+    "shape": "PROCEDURE",
+    "domain": "Fluids or thermal",
+    "question": "Write the collection check for a water flowmeter on an already assembled atmospheric-discharge bench. The bench instruction requires starting the pump with flow diverted to the return tank, adjusting the meter indication to $12.0\\,\\mathrm{L/min}$, and holding that indication steady for $30\\,\\mathrm{s}$. Then zero the collection-volume reading, divert flow into the collection vessel while starting the timer, collect for $60.0\\,\\mathrm{s}$ without adjusting flow, and simultaneously divert back to the return tank and stop timing. Read the collected volume before stopping the pump. Define signed indication error as $100$ times indicated flow minus reference flow, divided by reference flow. Pass if the error magnitude is $\\leq3.0\\%$. The log records $11.76\\,\\mathrm{L}$ collected in $60.0\\,\\mathrm{s}$ at a steady indication of $12.0\\,\\mathrm{L/min}$. Include the reference flow, signed error, and verdict."
+  },
+  {
+    "id": "Q21",
+    "shape": "SANITY",
+    "domain": "Fluids or thermal",
+    "question": "In an insulated vessel of negligible heat capacity, mix $1.00\\,\\mathrm{kg}$ of water at $80.0\\,^{\\circ}\\mathrm{C}$ with $3.00\\,\\mathrm{kg}$ of water at $20.0\\,^{\\circ}\\mathrm{C}$. Both portions have constant specific heat $4200\\,\\mathrm{J/(kg\\,K)}$. Assume no phase change or heat loss. What is the final uniform temperature?"
+  },
+  {
+    "id": "Q22",
+    "shape": "LOOKUP",
+    "domain": "Regulation or standards",
+    "question": "Under $29$ CFR \u00a7 $1910.95(g)$, July 1, 2014 edition, what is the deadline for establishing a baseline audiogram after an employee's first exposure at or above the action level when the mobile-test-van exception is not used? Also give the minimum workplace-noise-free period preceding a baseline audiogram when hearing protectors are not used as a substitute, and the allowed retest window after an annual audiogram shows a standard threshold shift."
+  },
+  {
+    "id": "Q23",
+    "shape": "DERIVATION",
+    "domain": "Materials",
+    "question": "An aluminum bar and a steel bar are mounted side by side between rigid end plates. Both bars are initially unstressed, have length $1.00\\,\\mathrm{m}$, and undergo the same axial extension. Aluminum area is $200\\,\\mathrm{mm^2}$ and Young's modulus is $70.0\\,\\mathrm{GPa}$; steel area is $100\\,\\mathrm{mm^2}$ and modulus is $200\\,\\mathrm{GPa}$. A total tensile load of $30.0\\,\\mathrm{kN}$ is applied to the end plates. Assume linear elasticity and no temperature change. Find the common extension, tensile stress in each bar, and force carried by each bar."
+  },
+  {
+    "id": "Q24",
+    "shape": "SPECIFICATION",
+    "domain": "Mechanical",
+    "question": "An ideal open-belt drive has a fixed driver pitch diameter of $80.0\\,\\mathrm{mm}$, driver speed $1500\\,\\mathrm{rpm}$, and transmitted input torque $4.00\\,\\mathrm{N\\,m}$. Available driven pitch diameters are $160$, $200$, and $240\\,\\mathrm{mm}$. Select the smallest driven pulley giving an output speed no greater than $500\\,\\mathrm{rpm}$; equality is allowed. Assume no slip or power loss and adequate belt capacity. Give three sections: pulley selection and diameter ratio; output speed, rotation direction viewed from the same side of both shafts, and torque; and belt linear speed."
+  },
+  {
+    "id": "Q25",
+    "shape": "PROCEDURE",
+    "domain": "Electrical or electronics",
+    "question": "Write the hysteresis check for a comparator module on an already connected low-voltage bench. The module has a $5.00\\,\\mathrm{V}$ supply and an adjustable input restricted to $0$\u2013$5.00\\,\\mathrm{V}$. The bench instruction requires setting the input to $0\\,\\mathrm{V}$ before enabling the supply, confirming the output is LOW, then increasing the input monotonically and recording the LOW-to-HIGH transition voltage. Continue to $5.00\\,\\mathrm{V}$ and confirm HIGH, then decrease monotonically and record the HIGH-to-LOW transition voltage. Return the input to zero before disabling the supply. Pass only if the rising transition is within $2.90$\u2013$3.10\\,\\mathrm{V}$, the falling transition is within $1.90$\u2013$2.10\\,\\mathrm{V}$, both endpoint states are correct, and exactly one transition occurs on each sweep. All voltage limits are inclusive. The log records correct endpoint states, exactly one transition per sweep, rising transition $3.04\\,\\mathrm{V}$, and falling transition $1.96\\,\\mathrm{V}$. Include the verdict and hysteresis width, defined as rising minus falling transition voltage."
   }
 ]

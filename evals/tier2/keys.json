@@ -324,5 +324,1065 @@
       }
     ],
     "model_answer": "1. Fill with water through the open high-point vent until bubble-free water exits.\n2. Close the vent; pressurize to $6.00\\,\\mathrm{bar}$ gauge.\n3. Isolate the hand pump, then start the timer.\n4. Hold for $300\\,\\mathrm{s}$ without adding water; observe for leakage.\n5. Pass only with pressure drop $\\leq0.20\\,\\mathrm{bar}$ and no visible leakage; otherwise fail. Logged drop: $6.00-5.90=0.10\\,\\mathrm{bar}$, with no leakage: PASS.\n6. Open the release valve, confirm $0\\,\\mathrm{bar}$ gauge, then disconnect."
+  },
+  {
+    "id": "Q6",
+    "required_items": [
+      {
+        "item": "Alarm function",
+        "value": "$Y=A\\oplus B$",
+        "tolerance_or_variants": "Accept XOR, exclusive OR, or $Y=A\\overline{B}+\\overline{A}B$. Exact logical equivalence required.",
+        "derivation_or_source": "Exactly one asserted input is the definition of exclusive OR."
+      },
+      {
+        "item": "Ordered outputs",
+        "value": "$0,1,1,0$",
+        "tolerance_or_variants": "Accept an explicitly labeled truth table or the ordered sequence. Exact values required.",
+        "derivation_or_source": "Neither or both pumps running gives no alarm; either single pump running gives an alarm."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Given alarm requirement",
+        "reference": "Question inputs and the definition of exclusive OR."
+      }
+    ],
+    "scope_in": [
+      "Boolean function and the four requested outputs."
+    ],
+    "scope_out": [
+      "Gate technology, propagation delays, pump controls, and fault detection."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "OR",
+        "why_wrong": "OR also asserts the alarm when both pumps run."
+      },
+      {
+        "answer": "XNOR",
+        "why_wrong": "XNOR asserts the alarm when the inputs are equal."
+      }
+    ],
+    "model_answer": "$Y=A\\oplus B$ \u2014 XOR.\nFor $00,01,10,11$: $0,1,1,0$."
+  },
+  {
+    "id": "Q7",
+    "required_items": [
+      {
+        "item": "Duration at $90\\,\\mathrm{dBA}$",
+        "value": "$8\\,\\mathrm{h}$ per day",
+        "tolerance_or_variants": "Accept 8 hours, 8 hr, or eight hours. Exact table value required.",
+        "derivation_or_source": "Table G\u201316, row pairing duration 8 hours with sound level 90 dBA slow response."
+      },
+      {
+        "item": "Duration at $95\\,\\mathrm{dBA}$",
+        "value": "$4\\,\\mathrm{h}$ per day",
+        "tolerance_or_variants": "Accept 4 hours, 4 hr, or four hours. Exact table value required.",
+        "derivation_or_source": "Table G\u201316, row pairing duration 4 hours with sound level 95 dBA slow response."
+      },
+      {
+        "item": "Duration at $100\\,\\mathrm{dBA}$",
+        "value": "$2\\,\\mathrm{h}$ per day",
+        "tolerance_or_variants": "Accept 2 hours, 2 hr, or two hours. Exact table value required.",
+        "derivation_or_source": "Table G\u201316, row pairing duration 2 hours with sound level 100 dBA slow response."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Official historical CFR: Occupational noise exposure",
+        "url": "https://www.govinfo.gov/content/pkg/CFR-2014-title29-vol5/pdf/CFR-2014-title29-vol5-sec1910-95.pdf",
+        "section": "Table G\u201316\u2014Permissible Noise Exposures.",
+        "stability": "Freely readable, fixed 2014 government edition."
+      }
+    ],
+    "scope_in": [
+      "The three sound-level-to-duration mappings."
+    ],
+    "scope_out": [
+      "Mixed exposures, hearing-conservation action levels, and other noise standards."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$90\\,\\mathrm{dBA}$ permits $2.5\\,\\mathrm{h}$",
+        "why_wrong": "This is not the value in the specified OSHA table."
+      },
+      {
+        "answer": "$95\\,\\mathrm{dBA}$ permits $8\\,\\mathrm{h}$",
+        "why_wrong": "The specified table pairs that sound level with 4 hours."
+      }
+    ],
+    "model_answer": "$90\\,\\mathrm{dBA}$: $8\\,\\mathrm{h/day}$.\n$95\\,\\mathrm{dBA}$: $4\\,\\mathrm{h/day}$.\n$100\\,\\mathrm{dBA}$: $2\\,\\mathrm{h/day}$."
+  },
+  {
+    "id": "Q8",
+    "required_items": [
+      {
+        "item": "Layer A resistance",
+        "value": "$0.250\\,\\mathrm{K/W}$",
+        "tolerance_or_variants": "Accept kelvin per watt or degrees Celsius per watt; tolerance $\\pm0.001\\,\\mathrm{K/W}$.",
+        "derivation_or_source": "$R_A=L_A/(k_A A)=0.100/(0.200\\times2.00)=0.250\\,\\mathrm{K/W}$."
+      },
+      {
+        "item": "Layer B resistance",
+        "value": "$0.0500\\,\\mathrm{K/W}$",
+        "tolerance_or_variants": "Accept equivalent unit spellings; tolerance $\\pm0.0001\\,\\mathrm{K/W}$.",
+        "derivation_or_source": "$R_B=0.0500/(0.500\\times2.00)=0.0500\\,\\mathrm{K/W}$."
+      },
+      {
+        "item": "Heat-transfer rate",
+        "value": "$133.333\\,\\mathrm{W}$ from hot to cold",
+        "tolerance_or_variants": "Accept $133$ or $133.3\\,\\mathrm{W}$; tolerance $\\pm0.5\\,\\mathrm{W}$. Positive magnitude with the stated direction is acceptable.",
+        "derivation_or_source": "$\\dot Q=(60.0-20.0)/(0.250+0.0500)=133.333\\,\\mathrm{W}$."
+      },
+      {
+        "item": "Interface temperature",
+        "value": "$26.6667\\,^{\\circ}\\mathrm{C}$",
+        "tolerance_or_variants": "Accept $26.7\\,^{\\circ}\\mathrm{C}$; tolerance $\\pm0.1\\,^{\\circ}\\mathrm{C}$.",
+        "derivation_or_source": "$T_i=60.0-133.333\\times0.250=26.6667\\,^{\\circ}\\mathrm{C}$; independently, $20.0+133.333\\times0.0500=26.6667\\,^{\\circ}\\mathrm{C}$."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Steady plane-wall conduction",
+        "reference": "Given inputs; $R=L/(kA)$ and series thermal-resistance relations."
+      }
+    ],
+    "scope_in": [
+      "Both resistances, heat-transfer rate and direction, and interface temperature."
+    ],
+    "scope_out": [
+      "Convection, radiation, contact resistance, and transient behavior."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$200\\,\\mathrm{W}$",
+        "why_wrong": "This omits the resistance of layer B or otherwise uses the wrong total resistance."
+      },
+      {
+        "answer": "$40\\,^{\\circ}\\mathrm{C}$ interface",
+        "why_wrong": "The two layers have unequal thermal resistances, so the temperature drops are unequal."
+      }
+    ],
+    "model_answer": "$R_A=0.250\\,\\mathrm{K/W}$; $R_B=0.0500\\,\\mathrm{K/W}$.\n$\\dot Q=40.0/0.300=133.3\\,\\mathrm{W}$, hot to cold.\n$T_i=60.0-133.3\\times0.250=26.7\\,^{\\circ}\\mathrm{C}$."
+  },
+  {
+    "id": "Q9",
+    "required_items": [
+      {
+        "item": "Selected stiffness",
+        "value": "$10.0\\,\\mathrm{N/mm}$",
+        "tolerance_or_variants": "Accept $10000\\,\\mathrm{N/m}$ or $10\\,\\mathrm{kN/m}$. Exact available selection required.",
+        "derivation_or_source": "$k_{\\min}=F/x_{\\max}=120/12.0=10.0\\,\\mathrm{N/mm}$."
+      },
+      {
+        "item": "Selected extension and verdict",
+        "value": "$12.0\\,\\mathrm{mm}$; passes at the limit",
+        "tolerance_or_variants": "Accept $0.0120\\,\\mathrm{m}$; tolerance $\\pm0.01\\,\\mathrm{mm}$. Equality must be accepted.",
+        "derivation_or_source": "$x=F/k=120/10.0=12.0\\,\\mathrm{mm}$."
+      },
+      {
+        "item": "Next lower stiffness check",
+        "value": "$8.00\\,\\mathrm{N/mm}$ gives $15.0\\,\\mathrm{mm}$ and fails",
+        "tolerance_or_variants": "Accept $0.0150\\,\\mathrm{m}$; extension tolerance $\\pm0.01\\,\\mathrm{mm}$. Stiffness and failure verdict must be explicit.",
+        "derivation_or_source": "$x_8=120/8.00=15.0\\,\\mathrm{mm}>12.0\\,\\mathrm{mm}$."
+      },
+      {
+        "item": "Stored elastic energy",
+        "value": "$0.720\\,\\mathrm{J}$",
+        "tolerance_or_variants": "Accept $720\\,\\mathrm{mJ}$ or $720\\,\\mathrm{N\\,mm}$; tolerance $\\pm0.001\\,\\mathrm{J}$.",
+        "derivation_or_source": "$U=Fx/2=120\\times0.0120/2=0.720\\,\\mathrm{J}$."
+      },
+      {
+        "item": "Organization",
+        "value": "Three sections: selected spring; extension check; stored energy",
+        "tolerance_or_variants": "Equivalent headings accepted; all selected-spring figures must use the same stiffness.",
+        "derivation_or_source": "Explicit answer format requested in the question."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Given spring data",
+        "reference": "Hooke's law $F=kx$ and zero-preload spring energy $U=kx^2/2$."
+      }
+    ],
+    "scope_in": [
+      "Smallest passing stiffness, selected and rejected extensions, energy, and three consistent sections."
+    ],
+    "scope_out": [
+      "Coil geometry, fatigue, preload, and additional safety factors."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "Select $12\\,\\mathrm{N/mm}$",
+        "why_wrong": "It passes but is not the lowest passing stiffness."
+      },
+      {
+        "answer": "$1.44\\,\\mathrm{J}$ stored energy",
+        "why_wrong": "This omits the factor of one-half for a linear spring loaded from zero."
+      }
+    ],
+    "model_answer": "### Selected spring\n$k=10.0\\,\\mathrm{N/mm}$.\n### Extension check\n$120/10.0=12.0\\,\\mathrm{mm}$: passes. The $8.00\\,\\mathrm{N/mm}$ spring extends $15.0\\,\\mathrm{mm}$: fails.\n### Stored energy\n$U=120\\times0.0120/2=0.720\\,\\mathrm{J}$."
+  },
+  {
+    "id": "Q10",
+    "required_items": [
+      {
+        "item": "Setpoint and timer-start order",
+        "value": "Set $120\\,^{\\circ}\\mathrm{C}$; wait for coupon temperature $118$\u2013$122\\,^{\\circ}\\mathrm{C}$ inclusive; then start timer",
+        "tolerance_or_variants": "Equivalent wording accepted. Coupon temperature, not merely oven-air temperature, controls the start.",
+        "derivation_or_source": "Given work instruction specifies the setpoint, qualifying temperature band, and order."
+      },
+      {
+        "item": "Hold criterion",
+        "value": "Remain within $118$\u2013$122\\,^{\\circ}\\mathrm{C}$ inclusive for $600\\,\\mathrm{s}$; any excursion fails, without restart",
+        "tolerance_or_variants": "Accept 10 minutes. Both inclusive limits and uninterrupted hold must be stated.",
+        "derivation_or_source": "Given cure acceptance requirement."
+      },
+      {
+        "item": "Logged verdict",
+        "value": "PASS",
+        "tolerance_or_variants": "Accept passes or acceptable, with the log's $119$\u2013$121\\,^{\\circ}\\mathrm{C}$ range and $600\\,\\mathrm{s}$ duration identified.",
+        "derivation_or_source": "$119\\geq118$ and $121\\leq122$; the logged hold meets the full required duration without interruption."
+      },
+      {
+        "item": "Shutdown and removal order",
+        "value": "Assess run, switch off heating, cool inside oven to $\\leq40\\,^{\\circ}\\mathrm{C}$ at the coupon probe, then remove",
+        "tolerance_or_variants": "Accept at most 40 degrees Celsius. Zero numerical tolerance on the stated removal threshold.",
+        "derivation_or_source": "Given work instruction prescribes this order and removal threshold."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Given cure instruction and log",
+        "reference": "All procedural criteria are supplied in the question."
+      }
+    ],
+    "scope_in": [
+      "Ordered setpoint, qualification, hold, assessment, shutdown, cooldown, removal, and PASS verdict."
+    ],
+    "scope_out": [
+      "Adhesive chemistry, oven tuning, and claims about final bond strength."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "Start the timer when the oven is switched on",
+        "why_wrong": "The coupon must first enter the specified temperature band."
+      },
+      {
+        "answer": "Restart the timer after an excursion",
+        "why_wrong": "The instruction explicitly forbids restarting a failed run."
+      }
+    ],
+    "model_answer": "1. Set the oven to $120\\,^{\\circ}\\mathrm{C}$.\n2. Wait for the coupon probe to enter $118$\u2013$122\\,^{\\circ}\\mathrm{C}$ inclusive; then start timing.\n3. Hold inside that band for $600\\,\\mathrm{s}$; any excursion fails without restart.\n4. Logged $119$\u2013$121\\,^{\\circ}\\mathrm{C}$ throughout $600\\,\\mathrm{s}$: PASS.\n5. Switch off heating; cool inside to $\\leq40\\,^{\\circ}\\mathrm{C}$ at the coupon probe, then remove."
+  },
+  {
+    "id": "Q11",
+    "required_items": [
+      {
+        "item": "Output speed",
+        "value": "$300\\,\\mathrm{rpm}$",
+        "tolerance_or_variants": "Accept $5\\,\\mathrm{rev/s}$; tolerance $\\pm0.1\\,\\mathrm{rpm}$.",
+        "derivation_or_source": "$n_o=n_iN_i/N_o=900\\times20/60=300\\,\\mathrm{rpm}$."
+      },
+      {
+        "item": "Output direction",
+        "value": "Counterclockwise",
+        "tolerance_or_variants": "Accept anticlockwise or CCW. Exact direction required.",
+        "derivation_or_source": "Directly meshing external gears rotate in opposite directions."
+      },
+      {
+        "item": "Output torque magnitude",
+        "value": "$9.00\\,\\mathrm{N\\,m}$",
+        "tolerance_or_variants": "Accept 9 newton-metres or equivalent; tolerance $\\pm0.01\\,\\mathrm{N\\,m}$.",
+        "derivation_or_source": "Lossless power conservation gives $T_o=T_iN_o/N_i=3.00\\times60/20=9.00\\,\\mathrm{N\\,m}$."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Ideal external gear pair",
+        "reference": "Given tooth counts, input speed and torque; gear kinematics and power conservation."
+      }
+    ],
+    "scope_in": [
+      "Output speed, direction, and torque magnitude."
+    ],
+    "scope_out": [
+      "Tooth stresses, efficiency corrections, backlash, and lubrication."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$2700\\,\\mathrm{rpm}$",
+        "why_wrong": "The larger driven gear turns more slowly, not faster."
+      },
+      {
+        "answer": "Clockwise output",
+        "why_wrong": "A directly meshing external gear pair reverses rotation direction."
+      }
+    ],
+    "model_answer": "Output: $300\\,\\mathrm{rpm}$, counterclockwise, $9.00\\,\\mathrm{N\\,m}$."
+  },
+  {
+    "id": "Q12",
+    "required_items": [
+      {
+        "item": "Arsenic MCL",
+        "value": "$0.010\\,\\mathrm{mg/L}$",
+        "tolerance_or_variants": "Accept $0.01\\,\\mathrm{mg/L}$ or $10\\,\\mathrm{\\mu g/L}$. Exact concentration required.",
+        "derivation_or_source": "Section 141.62(b)(16), Arsenic, MCL 0.010 mg/l."
+      },
+      {
+        "item": "Fluoride MCL",
+        "value": "$4.0\\,\\mathrm{mg/L}$",
+        "tolerance_or_variants": "Accept $4\\,\\mathrm{mg/L}$ or $4000\\,\\mathrm{\\mu g/L}$. Exact concentration required.",
+        "derivation_or_source": "Section 141.62(b)(1), Fluoride, MCL 4.0 mg/l."
+      },
+      {
+        "item": "Nitrate MCL and reporting basis",
+        "value": "$10\\,\\mathrm{mg/L}$ as nitrogen",
+        "tolerance_or_variants": "Accept $10\\,\\mathrm{mg\\,N/L}$ or nitrate-N at $10\\,\\mathrm{mg/L}$. Exact concentration and nitrogen basis required.",
+        "derivation_or_source": "Section 141.62(b)(7), Nitrate, MCL 10 mg/l, explicitly 'as Nitrogen'."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Official historical CFR: Maximum contaminant levels for inorganic contaminants",
+        "url": "https://www.govinfo.gov/content/pkg/CFR-2014-title40-vol23/pdf/CFR-2014-title40-vol23-sec141-62.pdf",
+        "section": "Paragraphs (b)(1), (b)(7), and (b)(16).",
+        "stability": "Freely readable, fixed 2014 government edition."
+      }
+    ],
+    "scope_in": [
+      "Three MCL values and nitrate's nitrogen reporting basis."
+    ],
+    "scope_out": [
+      "Sampling schedules, treatment technologies, health advice, and secondary standards."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$2\\,\\mathrm{mg/L}$ fluoride",
+        "why_wrong": "This is not the primary MCL in the requested section."
+      },
+      {
+        "answer": "$10\\,\\mathrm{mg/L}$ as nitrate ion",
+        "why_wrong": "The table reports nitrate as nitrogen, not as nitrate-ion mass."
+      },
+      {
+        "answer": "$0.050\\,\\mathrm{mg/L}$ arsenic",
+        "why_wrong": "The specified 2014 edition lists 0.010 mg/L."
+      }
+    ],
+    "model_answer": "Arsenic: $0.010\\,\\mathrm{mg/L}$.\nFluoride: $4.0\\,\\mathrm{mg/L}$.\nNitrate: $10\\,\\mathrm{mg/L}$ as nitrogen."
+  },
+  {
+    "id": "Q13",
+    "required_items": [
+      {
+        "item": "Time constant",
+        "value": "$1.00\\,\\mathrm{s}$",
+        "tolerance_or_variants": "Accept $1000\\,\\mathrm{ms}$; tolerance $\\pm0.001\\,\\mathrm{s}$.",
+        "derivation_or_source": "$\\tau=RC=10000\\times100\\times10^{-6}=1.00\\,\\mathrm{s}$."
+      },
+      {
+        "item": "Capacitor voltage",
+        "value": "$8.64665\\,\\mathrm{V}$",
+        "tolerance_or_variants": "Accept $8.65\\,\\mathrm{V}$; tolerance $\\pm0.01\\,\\mathrm{V}$.",
+        "derivation_or_source": "$V_C=10.0(1-e^{-2.00/1.00})=8.646647\\,\\mathrm{V}$."
+      },
+      {
+        "item": "Resistor current",
+        "value": "$+0.135335\\,\\mathrm{mA}$",
+        "tolerance_or_variants": "Accept $135.335\\,\\mathrm{\\mu A}$ or rounded $0.135\\,\\mathrm{mA}$; tolerance $\\pm0.001\\,\\mathrm{mA}$. Positive sign may be implicit.",
+        "derivation_or_source": "$I=(10.0/10000)e^{-2}=0.0001353353\\,\\mathrm{A}$."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Ideal RC step response",
+        "reference": "Given inputs; capacitor charging solution and Ohm's law."
+      }
+    ],
+    "scope_in": [
+      "Time constant and the two values at the specified instant."
+    ],
+    "scope_out": [
+      "Leakage, dielectric absorption, resistor tolerances, and switching transients."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$1.353\\,\\mathrm{V}$ capacitor voltage",
+        "why_wrong": "This is the remaining voltage across the resistor, not the charging capacitor."
+      },
+      {
+        "answer": "$1\\,\\mathrm{mA}$ current at $2\\,\\mathrm{s}$",
+        "why_wrong": "That is the initial current; current decays during charging."
+      }
+    ],
+    "model_answer": "$\\tau=RC=1.00\\,\\mathrm{s}$.\n$V_C(2.00)=10.0(1-e^{-2})=8.65\\,\\mathrm{V}$.\n$I(2.00)=(10.0/10000)e^{-2}=+0.135\\,\\mathrm{mA}$."
+  },
+  {
+    "id": "Q14",
+    "required_items": [
+      {
+        "item": "Required heat",
+        "value": "$120000\\,\\mathrm{J}$",
+        "tolerance_or_variants": "Accept $120\\,\\mathrm{kJ}$; tolerance $\\pm100\\,\\mathrm{J}$.",
+        "derivation_or_source": "$Q=mc_p\\Delta T=2.00\\times4000\\times(35.0-20.0)=120000\\,\\mathrm{J}$."
+      },
+      {
+        "item": "Selected heater",
+        "value": "$1000\\,\\mathrm{W}$",
+        "tolerance_or_variants": "Accept $1.00\\,\\mathrm{kW}$. Exact available selection required.",
+        "derivation_or_source": "$P_{\\min}=Q/t_{\\max}=120000/120=1000\\,\\mathrm{W}$."
+      },
+      {
+        "item": "Selected heating time and verdict",
+        "value": "$120\\,\\mathrm{s}$; passes",
+        "tolerance_or_variants": "Accept $2\\,\\mathrm{min}$; tolerance $\\pm0.1\\,\\mathrm{s}$. Equality must be accepted.",
+        "derivation_or_source": "$t=Q/P=120000/1000=120\\,\\mathrm{s}$."
+      },
+      {
+        "item": "Next smaller heater check",
+        "value": "$750\\,\\mathrm{W}$ takes $160\\,\\mathrm{s}$ and fails",
+        "tolerance_or_variants": "Time tolerance $\\pm0.1\\,\\mathrm{s}$; heater power and failure verdict must be explicit.",
+        "derivation_or_source": "$t_{750}=120000/750=160\\,\\mathrm{s}>120\\,\\mathrm{s}$."
+      },
+      {
+        "item": "Delivered energy",
+        "value": "$120\\,\\mathrm{kJ}$",
+        "tolerance_or_variants": "Accept $120000\\,\\mathrm{J}$; tolerance $\\pm0.1\\,\\mathrm{kJ}$.",
+        "derivation_or_source": "$E=Pt=1000\\times120=120000\\,\\mathrm{J}$."
+      },
+      {
+        "item": "Organization",
+        "value": "Three sections: energy requirement; heater and times; delivered energy",
+        "tolerance_or_variants": "Equivalent headings accepted; power, time, and delivered energy must agree.",
+        "derivation_or_source": "Explicit answer format requested in the question."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Given thermal design data",
+        "reference": "Sensible heat $Q=mc_p\\Delta T$ and constant-power heating $t=Q/P$."
+      }
+    ],
+    "scope_in": [
+      "Required heat, minimum available passing heater, both heating times, delivered energy, and three sections."
+    ],
+    "scope_out": [
+      "Electrical supply design, vessel losses, heater placement, and real-world margins."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "Select $1250\\,\\mathrm{W}$",
+        "why_wrong": "The 1000 W heater already passes and is the smallest passing option."
+      },
+      {
+        "answer": "$280\\,\\mathrm{kJ}$ required heat",
+        "why_wrong": "Heating energy depends on the temperature rise, not the final Celsius temperature."
+      }
+    ],
+    "model_answer": "### Energy requirement\n$Q=2.00\\times4000\\times15.0=120\\,\\mathrm{kJ}$.\n### Heater and times\nSelect $1000\\,\\mathrm{W}$: $t=120\\,\\mathrm{s}$, passes. The $750\\,\\mathrm{W}$ heater takes $160\\,\\mathrm{s}$, fails.\n### Delivered energy\n$E=1000\\times120=120\\,\\mathrm{kJ}$."
+  },
+  {
+    "id": "Q15",
+    "required_items": [
+      {
+        "item": "Ordered check sequence",
+        "value": "Zero at unloaded zero; apply and record $1.000\\,\\mathrm{mm}$; apply and record $2.000\\,\\mathrm{mm}$; return to zero and record without re-zeroing",
+        "tolerance_or_variants": "Equivalent ordered steps accepted. No adjustment between recorded readings.",
+        "derivation_or_source": "Given fixture instruction prescribes this sequence."
+      },
+      {
+        "item": "Acceptance criteria",
+        "value": "Nonzero absolute errors $\\leq0.020\\,\\mathrm{mm}$; final zero magnitude $\\leq0.010\\,\\mathrm{mm}$; all must pass",
+        "tolerance_or_variants": "Accept $20\\,\\mathrm{\\mu m}$ and $10\\,\\mathrm{\\mu m}$, respectively. Inclusive limits required.",
+        "derivation_or_source": "Given channel acceptance requirements."
+      },
+      {
+        "item": "First signed error and verdict",
+        "value": "$+0.010\\,\\mathrm{mm}$; passes",
+        "tolerance_or_variants": "Accept $+10\\,\\mathrm{\\mu m}$; error tolerance $\\pm0.0005\\,\\mathrm{mm}$.",
+        "derivation_or_source": "$e_1=1.010-1.000=+0.010\\,\\mathrm{mm}$."
+      },
+      {
+        "item": "Second signed error and verdict",
+        "value": "$-0.030\\,\\mathrm{mm}$; fails",
+        "tolerance_or_variants": "Accept $-30\\,\\mathrm{\\mu m}$; error tolerance $\\pm0.0005\\,\\mathrm{mm}$. Negative sign required.",
+        "derivation_or_source": "$e_2=1.970-2.000=-0.030\\,\\mathrm{mm}$; its magnitude exceeds $0.020\\,\\mathrm{mm}$."
+      },
+      {
+        "item": "Return-zero error and verdict",
+        "value": "$+0.005\\,\\mathrm{mm}$; passes",
+        "tolerance_or_variants": "Accept $+5\\,\\mathrm{\\mu m}$; error tolerance $\\pm0.0005\\,\\mathrm{mm}$.",
+        "derivation_or_source": "$e_0=0.005-0=+0.005\\,\\mathrm{mm}$."
+      },
+      {
+        "item": "Overall verdict",
+        "value": "FAIL",
+        "tolerance_or_variants": "Accept fails or unacceptable; identify the second reading as the cause.",
+        "derivation_or_source": "All checks must pass, but the error at the second reference exceeds its limit."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Given extensometer check instruction and log",
+        "reference": "Question inputs; signed error is reading minus reference."
+      }
+    ],
+    "scope_in": [
+      "Ordered operations, no intermediate adjustment, acceptance limits, three errors, individual verdicts, and overall FAIL."
+    ],
+    "scope_out": [
+      "Tensile specimen preparation, modulus calculations, and calibration adjustments."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "PASS because the final zero is acceptable",
+        "why_wrong": "An acceptable return zero does not excuse the failed second displacement check."
+      },
+      {
+        "answer": "Re-zero before the final reading",
+        "why_wrong": "That would mask return-zero error and violates the instruction."
+      }
+    ],
+    "model_answer": "1. Zero at unloaded zero.\n2. Apply $1.000\\,\\mathrm{mm}$ and record: error $+0.010\\,\\mathrm{mm}$, pass.\n3. Increase to $2.000\\,\\mathrm{mm}$ and record: error $-0.030\\,\\mathrm{mm}$, fail.\n4. Return to zero without adjustment: error $+0.005\\,\\mathrm{mm}$, pass.\nLimits: nonzero errors $\\leq0.020\\,\\mathrm{mm}$ in magnitude; return zero $\\leq0.010\\,\\mathrm{mm}$ in magnitude. Overall: FAIL."
+  },
+  {
+    "id": "Q16",
+    "required_items": [
+      {
+        "item": "Length increase",
+        "value": "$+0.480\\,\\mathrm{mm}$",
+        "tolerance_or_variants": "Accept $0.000480\\,\\mathrm{m}$; tolerance $\\pm0.001\\,\\mathrm{mm}$.",
+        "derivation_or_source": "$\\Delta L=\\alpha L_0\\Delta T=12.0\\times10^{-6}\\times0.800\\times50.0=0.000480\\,\\mathrm{m}$."
+      },
+      {
+        "item": "Final length",
+        "value": "$0.800480\\,\\mathrm{m}$",
+        "tolerance_or_variants": "Accept $0.80048\\,\\mathrm{m}$; tolerance $\\pm0.000001\\,\\mathrm{m}$.",
+        "derivation_or_source": "$L_f=L_0+\\Delta L=0.800+0.000480=0.800480\\,\\mathrm{m}$."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Linear thermal expansion",
+        "reference": "Question inputs and $\\Delta L=\\alpha L_0\\Delta T$."
+      }
+    ],
+    "scope_in": [
+      "Length increase and final length in the requested units."
+    ],
+    "scope_out": [
+      "Thermal stress, temperature-dependent coefficients, and restraint design."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$0.672\\,\\mathrm{mm}$ increase",
+        "why_wrong": "This uses the final Celsius temperature instead of the temperature change."
+      },
+      {
+        "answer": "A compressive thermal stress develops",
+        "why_wrong": "The question specifies free expansion, not restraint."
+      }
+    ],
+    "model_answer": "$\\Delta L=12.0\\times10^{-6}\\times0.800\\times50.0=0.480\\,\\mathrm{mm}$.\n$L_f=0.800480\\,\\mathrm{m}$."
+  },
+  {
+    "id": "Q17",
+    "required_items": [
+      {
+        "item": "Minimum unlocking strength",
+        "value": "No less than $50\\,\\mathrm{lb}$",
+        "tolerance_or_variants": "Accept at least 50 pounds or $\\geq50\\,\\mathrm{lb}$. Exact threshold and inclusive lower bound required.",
+        "derivation_or_source": "Section 1910.147(c)(5)(ii)(C)(2): attachment means have 'a minimum unlocking strength of no less than 50 pounds'."
+      },
+      {
+        "item": "Inspection frequency",
+        "value": "At least annually",
+        "tolerance_or_variants": "Accept at least once per year. Must state a minimum frequency, not an optional inspection.",
+        "derivation_or_source": "Section 1910.147(c)(6)(i): employer shall conduct a periodic inspection of the energy-control procedure 'at least annually'."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Official historical CFR: Control of hazardous energy",
+        "url": "https://www.govinfo.gov/content/pkg/CFR-2014-title29-vol5/pdf/CFR-2014-title29-vol5-sec1910-147.pdf",
+        "section": "Paragraphs (c)(5)(ii)(C)(2) and (c)(6)(i).",
+        "stability": "Freely readable, fixed 2014 government edition."
+      }
+    ],
+    "scope_in": [
+      "Minimum attachment unlocking strength and minimum inspection frequency."
+    ],
+    "scope_out": [
+      "A complete lockout procedure, training requirements, and other attachment properties."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$50\\,\\mathrm{kg}$",
+        "why_wrong": "The source specifies pounds, not kilograms."
+      },
+      {
+        "answer": "Every two years",
+        "why_wrong": "The specified minimum inspection frequency is annual."
+      }
+    ],
+    "model_answer": "Attachment unlocking strength: at least $50\\,\\mathrm{lb}$.\nEnergy-control procedure inspection: at least annually."
+  },
+  {
+    "id": "Q18",
+    "required_items": [
+      {
+        "item": "Maximum bending moment",
+        "value": "$500\\,\\mathrm{N\\,m}$",
+        "tolerance_or_variants": "Accept $0.500\\,\\mathrm{kN\\,m}$; tolerance $\\pm0.5\\,\\mathrm{N\\,m}$.",
+        "derivation_or_source": "$M_{\\max}=PL/4=1000\\times2.00/4=500\\,\\mathrm{N\\,m}$."
+      },
+      {
+        "item": "Second moment of area",
+        "value": "$7.20\\times10^{-7}\\,\\mathrm{m^4}$",
+        "tolerance_or_variants": "Accept $720000\\,\\mathrm{mm^4}$; relative tolerance $0.1\\%$.",
+        "derivation_or_source": "$I=bh^3/12=0.0400\\times0.0600^3/12=7.20\\times10^{-7}\\,\\mathrm{m^4}$."
+      },
+      {
+        "item": "Maximum bending stress",
+        "value": "$20.8333\\,\\mathrm{MPa}$",
+        "tolerance_or_variants": "Accept $20.8\\,\\mathrm{MPa}$; tolerance $\\pm0.05\\,\\mathrm{MPa}$.",
+        "derivation_or_source": "$\\sigma_{\\max}=M_{\\max}(h/2)/I=500\\times0.0300/(7.20\\times10^{-7})=20.8333\\,\\mathrm{MPa}$."
+      },
+      {
+        "item": "Midspan deflection",
+        "value": "$1.15741\\,\\mathrm{mm}$ downward",
+        "tolerance_or_variants": "Accept $1.16\\,\\mathrm{mm}$ or $0.00115741\\,\\mathrm{m}$; tolerance $\\pm0.005\\,\\mathrm{mm}$.",
+        "derivation_or_source": "$\\delta=PL^3/(48EI)=1000\\times2.00^3/(48\\times200\\times10^9\\times7.20\\times10^{-7})=0.001157407\\,\\mathrm{m}$."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Simply supported beam with central point load",
+        "reference": "Given inputs; standard Euler\u2013Bernoulli moment, stress, and deflection formulas."
+      }
+    ],
+    "scope_in": [
+      "Four requested quantities with units and downward deflection direction."
+    ],
+    "scope_out": [
+      "Yield assessment, support design, shear deformation, and finite-element modeling."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$I=hb^3/12$",
+        "why_wrong": "The vertically oriented depth, not the width, is cubed for this bending axis."
+      },
+      {
+        "answer": "Use the cantilever deflection formula",
+        "why_wrong": "The stated beam is simply supported."
+      }
+    ],
+    "model_answer": "$M_{\\max}=PL/4=500\\,\\mathrm{N\\,m}$.\n$I=bh^3/12=7.20\\times10^{-7}\\,\\mathrm{m^4}$.\n$\\sigma_{\\max}=M_{\\max}h/(2I)=20.8\\,\\mathrm{MPa}$.\n$\\delta=PL^3/(48EI)=1.16\\,\\mathrm{mm}$ downward."
+  },
+  {
+    "id": "Q19",
+    "required_items": [
+      {
+        "item": "Selected resistance and current",
+        "value": "$330\\,\\Omega$; $20.0\\,\\mathrm{mA}$",
+        "tolerance_or_variants": "Exact available resistance required; current tolerance $\\pm0.05\\,\\mathrm{mA}$. Accept $0.0200\\,\\mathrm{A}$.",
+        "derivation_or_source": "$V_R=9.00-2.40=6.60\\,\\mathrm{V}$; $I=6.60/330=0.0200\\,\\mathrm{A}$."
+      },
+      {
+        "item": "Lower resistance rejection",
+        "value": "$270\\,\\Omega$ gives $24.4444\\,\\mathrm{mA}$; fails high",
+        "tolerance_or_variants": "Accept $24.4\\,\\mathrm{mA}$; tolerance $\\pm0.05\\,\\mathrm{mA}$.",
+        "derivation_or_source": "$I_{270}=6.60/270=0.0244444\\,\\mathrm{A}>0.0220\\,\\mathrm{A}$."
+      },
+      {
+        "item": "Higher resistance rejection",
+        "value": "$390\\,\\Omega$ gives $16.9231\\,\\mathrm{mA}$; fails low",
+        "tolerance_or_variants": "Accept $16.9\\,\\mathrm{mA}$; tolerance $\\pm0.05\\,\\mathrm{mA}$.",
+        "derivation_or_source": "$I_{390}=6.60/390=0.0169231\\,\\mathrm{A}<0.0180\\,\\mathrm{A}$."
+      },
+      {
+        "item": "Resistor dissipation",
+        "value": "$0.132\\,\\mathrm{W}$",
+        "tolerance_or_variants": "Accept $132\\,\\mathrm{mW}$; tolerance $\\pm0.001\\,\\mathrm{W}$.",
+        "derivation_or_source": "$P_R=V_RI=6.60\\times0.0200=0.132\\,\\mathrm{W}$."
+      },
+      {
+        "item": "Minimum required and selected power ratings",
+        "value": "Required rating $\\geq0.264\\,\\mathrm{W}$; select $0.500\\,\\mathrm{W}$",
+        "tolerance_or_variants": "Accept 264 mW minimum and a half-watt resistor. Minimum tolerance $\\pm0.001\\,\\mathrm{W}$; available selection exact.",
+        "derivation_or_source": "$P_{\\mathrm{rated,min}}=2P_R=0.264\\,\\mathrm{W}$; the available $0.250\\,\\mathrm{W}$ rating is insufficient, leaving $0.500\\,\\mathrm{W}$."
+      },
+      {
+        "item": "Organization",
+        "value": "Three sections: selection and current; alternative checks; dissipation and rating",
+        "tolerance_or_variants": "Equivalent headings accepted; dissipation must use the selected resistance.",
+        "derivation_or_source": "Explicit answer format requested in the question."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Given LED and resistor data",
+        "reference": "Ohm's law and resistor power $P=VI$."
+      }
+    ],
+    "scope_in": [
+      "Unique resistance, all three currents and verdicts, dissipation, minimum rating, selected rating, and three sections."
+    ],
+    "scope_out": [
+      "LED nonlinear modeling, supply tolerances, thermal mounting, and alternative driver circuits."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "Select a $0.250\\,\\mathrm{W}$ resistor",
+        "why_wrong": "It exceeds actual dissipation but does not satisfy the required two-times rating margin."
+      },
+      {
+        "answer": "Use $9.00/R$ for LED current",
+        "why_wrong": "The LED forward drop must be subtracted from the supply voltage."
+      }
+    ],
+    "model_answer": "### Selection and current\n$330\\,\\Omega$: $I=(9.00-2.40)/330=20.0\\,\\mathrm{mA}$, passes.\n### Other choices\n$270\\,\\Omega$: $24.4\\,\\mathrm{mA}$, too high.\n$390\\,\\Omega$: $16.9\\,\\mathrm{mA}$, too low.\n### Dissipation and rating\n$P_R=6.60\\times0.0200=0.132\\,\\mathrm{W}$. Required rating $\\geq0.264\\,\\mathrm{W}$; select $0.500\\,\\mathrm{W}$."
+  },
+  {
+    "id": "Q20",
+    "required_items": [
+      {
+        "item": "Start and stabilization",
+        "value": "Start with discharge to return tank; set $12.0\\,\\mathrm{L/min}$; hold steady for $30\\,\\mathrm{s}$",
+        "tolerance_or_variants": "Equivalent ordered wording accepted; stabilization must precede collection.",
+        "derivation_or_source": "Given bench instruction."
+      },
+      {
+        "item": "Collection sequence",
+        "value": "Zero collection-volume reading; divert into vessel and start timer together; collect $60.0\\,\\mathrm{s}$ without adjustment",
+        "tolerance_or_variants": "Accept 1 minute. Zeroing must precede collection, and flow adjustment during collection is forbidden.",
+        "derivation_or_source": "Given bench instruction."
+      },
+      {
+        "item": "End sequence",
+        "value": "Divert back and stop timing together; read volume; then stop pump",
+        "tolerance_or_variants": "Equivalent wording accepted; volume reading must precede pump shutdown.",
+        "derivation_or_source": "Given bench instruction."
+      },
+      {
+        "item": "Reference flow",
+        "value": "$11.76\\,\\mathrm{L/min}$",
+        "tolerance_or_variants": "Accept $0.196\\,\\mathrm{L/s}$; tolerance $\\pm0.005\\,\\mathrm{L/min}$.",
+        "derivation_or_source": "$Q_{\\mathrm{ref}}=11.76/(60.0/60)=11.76\\,\\mathrm{L/min}$."
+      },
+      {
+        "item": "Signed indication error",
+        "value": "$+2.04082\\%$",
+        "tolerance_or_variants": "Accept $+2.04\\%$; tolerance $\\pm0.01$ percentage points. Positive sign or an explicit over-reading statement required.",
+        "derivation_or_source": "$e=100(12.0-11.76)/11.76=+2.040816\\%$."
+      },
+      {
+        "item": "Acceptance and verdict",
+        "value": "Pass if $|e|\\leq3.0\\%$; logged test PASS",
+        "tolerance_or_variants": "Accept at most 3 percent in magnitude. Inclusive limit and passing verdict required.",
+        "derivation_or_source": "$2.040816\\%<3.0\\%$."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Given flowmeter check and log",
+        "reference": "Question inputs, collected-volume flow calculation, and specified error definition."
+      }
+    ],
+    "scope_in": [
+      "Ordered bench sequence, reference flow, specified signed error, acceptance condition, and PASS."
+    ],
+    "scope_out": [
+      "Pump curves, uncertainty budgets, meter adjustment, and alternative calibration methods."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$-2.0\\%$ error",
+        "why_wrong": "This reverses the numerator and uses the indicated flow as denominator rather than the stipulated reference flow."
+      },
+      {
+        "answer": "Stop the pump to end collection",
+        "why_wrong": "The stipulated endpoint uses diversion and timer stop; the pump is stopped after reading volume."
+      }
+    ],
+    "model_answer": "1. Start with flow to return; set $12.0\\,\\mathrm{L/min}$ and stabilize for $30\\,\\mathrm{s}$.\n2. Zero volume; divert into the vessel and start timing together.\n3. Collect $60.0\\,\\mathrm{s}$ without adjustment.\n4. Divert back and stop timing together; read volume, then stop the pump.\n5. Reference: $11.76\\,\\mathrm{L/min}$. Error: $100(12.0-11.76)/11.76=+2.04\\%$. Limit: $|e|\\leq3.0\\%$. PASS."
+  },
+  {
+    "id": "Q21",
+    "required_items": [
+      {
+        "item": "Final temperature",
+        "value": "$35.0\\,^{\\circ}\\mathrm{C}$",
+        "tolerance_or_variants": "Accept $308.15\\,\\mathrm{K}$; tolerance $\\pm0.05\\,^{\\circ}\\mathrm{C}$.",
+        "derivation_or_source": "Energy conservation gives $T_f=(m_hc_pT_h+m_cc_pT_c)/(m_hc_p+m_cc_p)=(1.00\\times80.0+3.00\\times20.0)/4.00=35.0\\,^{\\circ}\\mathrm{C}$."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Insulated mixing energy balance",
+        "reference": "Given masses, temperatures, and equal specific heats."
+      }
+    ],
+    "scope_in": [
+      "Final uniform temperature, optionally with a one-line energy balance."
+    ],
+    "scope_out": [
+      "Mixing time, heat-transfer coefficients, and vessel heat capacity."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$50\\,^{\\circ}\\mathrm{C}$",
+        "why_wrong": "An unweighted average ignores the unequal masses."
+      },
+      {
+        "answer": "$65\\,^{\\circ}\\mathrm{C}$",
+        "why_wrong": "This assigns the larger mass to the hot portion instead of the cold portion."
+      }
+    ],
+    "model_answer": "$T_f=(1.00\\times80.0+3.00\\times20.0)/4.00=35.0\\,^{\\circ}\\mathrm{C}$."
+  },
+  {
+    "id": "Q22",
+    "required_items": [
+      {
+        "item": "Baseline deadline",
+        "value": "Within $6$ months of first exposure at or above the action level",
+        "tolerance_or_variants": "Accept within six months. Do not replace calendar months with a fixed day count.",
+        "derivation_or_source": "Section 1910.95(g)(5)(i): valid baseline audiogram established within 6 months of first exposure at or above the action level."
+      },
+      {
+        "item": "Pre-baseline workplace-noise-free period",
+        "value": "At least $14\\,\\mathrm{h}$",
+        "tolerance_or_variants": "Accept fourteen hours or $\\geq14\\,\\mathrm{h}$. Minimum duration and workplace-noise qualification required.",
+        "derivation_or_source": "Section 1910.95(g)(5)(iii): baseline testing preceded by at least 14 hours without exposure to workplace noise; hearing protectors may substitute, excluded here."
+      },
+      {
+        "item": "Retest window",
+        "value": "Within $30$ days",
+        "tolerance_or_variants": "Accept thirty days. The retest is permitted, not universally mandatory.",
+        "derivation_or_source": "Section 1910.95(g)(7)(ii): employer may obtain a retest within 30 days and consider it the annual audiogram."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Official historical CFR: Occupational noise exposure",
+        "url": "https://www.govinfo.gov/content/pkg/CFR-2014-title29-vol5/pdf/CFR-2014-title29-vol5-sec1910-95.pdf",
+        "section": "Paragraphs (g)(5)(i), (g)(5)(iii), and (g)(7)(ii).",
+        "stability": "Freely readable, fixed 2014 government edition."
+      }
+    ],
+    "scope_in": [
+      "Three time requirements with their applicable events and qualifiers."
+    ],
+    "scope_out": [
+      "Audiogram interpretation, age correction, medical advice, and mobile-van exceptions."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "Baseline within one year",
+        "why_wrong": "That is the mobile-test-van exception, expressly excluded."
+      },
+      {
+        "answer": "Retest within 21 days",
+        "why_wrong": "The 21-day figure concerns written notification of a threshold-shift determination, not the retest window."
+      }
+    ],
+    "model_answer": "Baseline: within $6$ months of first exposure at or above the action level.\nBefore baseline: at least $14\\,\\mathrm{h}$ without workplace-noise exposure.\nOptional threshold-shift retest: within $30$ days."
+  },
+  {
+    "id": "Q23",
+    "required_items": [
+      {
+        "item": "Common extension",
+        "value": "$0.882353\\,\\mathrm{mm}$",
+        "tolerance_or_variants": "Accept $0.882\\,\\mathrm{mm}$; tolerance $\\pm0.001\\,\\mathrm{mm}$.",
+        "derivation_or_source": "$\\epsilon=F/(E_aA_a+E_sA_s)=30000/(70\\times10^9\\times200\\times10^{-6}+200\\times10^9\\times100\\times10^{-6})=0.00088235294$; $\\delta=\\epsilon L=0.88235294\\,\\mathrm{mm}$."
+      },
+      {
+        "item": "Aluminum tensile stress",
+        "value": "$61.7647\\,\\mathrm{MPa}$",
+        "tolerance_or_variants": "Accept $61.8\\,\\mathrm{MPa}$; tolerance $\\pm0.1\\,\\mathrm{MPa}$.",
+        "derivation_or_source": "$\\sigma_a=E_a\\epsilon=70\\times10^9\\times0.00088235294=61.764706\\,\\mathrm{MPa}$."
+      },
+      {
+        "item": "Steel tensile stress",
+        "value": "$176.471\\,\\mathrm{MPa}$",
+        "tolerance_or_variants": "Accept $176.5\\,\\mathrm{MPa}$ or $176\\,\\mathrm{MPa}$; tolerance $\\pm0.5\\,\\mathrm{MPa}$.",
+        "derivation_or_source": "$\\sigma_s=E_s\\epsilon=200\\times10^9\\times0.00088235294=176.470588\\,\\mathrm{MPa}$."
+      },
+      {
+        "item": "Aluminum force",
+        "value": "$12.3529\\,\\mathrm{kN}$",
+        "tolerance_or_variants": "Accept $12.35\\,\\mathrm{kN}$; tolerance $\\pm0.01\\,\\mathrm{kN}$.",
+        "derivation_or_source": "$F_a=\\sigma_aA_a=61.764706\\times200=12352.941\\,\\mathrm{N}$."
+      },
+      {
+        "item": "Steel force",
+        "value": "$17.6471\\,\\mathrm{kN}$",
+        "tolerance_or_variants": "Accept $17.65\\,\\mathrm{kN}$; tolerance $\\pm0.01\\,\\mathrm{kN}$.",
+        "derivation_or_source": "$F_s=\\sigma_sA_s=176.470588\\times100=17647.059\\,\\mathrm{N}$; independently, $F_s=30000-F_a$."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Equal-strain parallel axial members",
+        "reference": "Given inputs; compatibility, Hooke's law, and total-force equilibrium."
+      }
+    ],
+    "scope_in": [
+      "Common extension, two tensile stresses, and two member forces."
+    ],
+    "scope_out": [
+      "Yielding, plate flexibility, connection stresses, and thermal mismatch."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "Each bar carries $15\\,\\mathrm{kN}$",
+        "why_wrong": "Load shares depend on axial stiffness, which differs between the two bars."
+      },
+      {
+        "answer": "Both bars have the same stress",
+        "why_wrong": "Equal strain with different moduli produces different stresses."
+      }
+    ],
+    "model_answer": "$\\epsilon=30000/(70\\times10^9\\times200\\times10^{-6}+200\\times10^9\\times100\\times10^{-6})=0.000882353$.\nExtension: $0.882353\\,\\mathrm{mm}$.\nAluminum: $61.8\\,\\mathrm{MPa}$ tension, $12.35\\,\\mathrm{kN}$.\nSteel: $176.5\\,\\mathrm{MPa}$ tension, $17.65\\,\\mathrm{kN}$."
+  },
+  {
+    "id": "Q24",
+    "required_items": [
+      {
+        "item": "Selected driven diameter and ratio",
+        "value": "$240\\,\\mathrm{mm}$; driven-to-driver diameter ratio $3:1$",
+        "tolerance_or_variants": "Accept $0.240\\,\\mathrm{m}$ and ratio $3$. Exact available selection required.",
+        "derivation_or_source": "$D_o\\geq D_i n_i/n_{o,\\max}=80.0\\times1500/500=240\\,\\mathrm{mm}$; $D_o/D_i=240/80.0=3$."
+      },
+      {
+        "item": "Output speed",
+        "value": "$500\\,\\mathrm{rpm}$",
+        "tolerance_or_variants": "Accept equivalent revolution-frequency units; tolerance $\\pm0.5\\,\\mathrm{rpm}$.",
+        "derivation_or_source": "$n_o=n_iD_i/D_o=1500\\times80.0/240=500\\,\\mathrm{rpm}$."
+      },
+      {
+        "item": "Output direction",
+        "value": "Same rotation direction as driver",
+        "tolerance_or_variants": "Accept same sense of rotation. Exact relationship required.",
+        "derivation_or_source": "An open, uncrossed belt drive preserves rotation direction."
+      },
+      {
+        "item": "Output torque",
+        "value": "$12.0\\,\\mathrm{N\\,m}$",
+        "tolerance_or_variants": "Accept 12 newton-metres; tolerance $\\pm0.01\\,\\mathrm{N\\,m}$.",
+        "derivation_or_source": "$T_o=T_i n_i/n_o=4.00\\times1500/500=12.0\\,\\mathrm{N\\,m}$."
+      },
+      {
+        "item": "Belt linear speed",
+        "value": "$6.28319\\,\\mathrm{m/s}$",
+        "tolerance_or_variants": "Accept $6.28\\,\\mathrm{m/s}$; tolerance $\\pm0.01\\,\\mathrm{m/s}$.",
+        "derivation_or_source": "$v=\\pi D_i n_i/60=\\pi\\times0.0800\\times1500/60=6.283185\\,\\mathrm{m/s}$; driven-pulley calculation gives the same value."
+      },
+      {
+        "item": "Organization",
+        "value": "Three sections: selection and ratio; output quantities; belt speed",
+        "tolerance_or_variants": "Equivalent headings accepted; all output calculations must use the selected pulley.",
+        "derivation_or_source": "Explicit answer format requested in the question."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Ideal open-belt drive",
+        "reference": "Given inputs; equal belt speed at both pulleys and lossless power conservation."
+      }
+    ],
+    "scope_in": [
+      "Selected pitch diameter, ratio, output speed and direction, output torque, belt speed, and three sections."
+    ],
+    "scope_out": [
+      "Belt length, center distance, tension, wrap angle, and service factors."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "Select $200\\,\\mathrm{mm}$",
+        "why_wrong": "That diameter gives 600 rpm, exceeding the limit."
+      },
+      {
+        "answer": "Output rotates oppositely",
+        "why_wrong": "That describes a crossed belt, not the specified open belt."
+      },
+      {
+        "answer": "$1.33\\,\\mathrm{N\\,m}$ output torque",
+        "why_wrong": "A lossless speed reduction increases output torque."
+      }
+    ],
+    "model_answer": "### Selection and ratio\nDriven pitch diameter $240\\,\\mathrm{mm}$; ratio $240/80.0=3:1$.\n### Output\n$500\\,\\mathrm{rpm}$, same direction as driver; torque $12.0\\,\\mathrm{N\\,m}$.\n### Belt speed\n$v=\\pi\\times0.0800\\times1500/60=6.28\\,\\mathrm{m/s}$."
+  },
+  {
+    "id": "Q25",
+    "required_items": [
+      {
+        "item": "Initialization order and state",
+        "value": "Set input to $0\\,\\mathrm{V}$, enable $5.00\\,\\mathrm{V}$ supply, confirm LOW",
+        "tolerance_or_variants": "Equivalent ordered wording accepted. Input zero must precede supply enable.",
+        "derivation_or_source": "Given bench instruction."
+      },
+      {
+        "item": "Rising sweep",
+        "value": "Increase monotonically; record LOW-to-HIGH voltage; continue to $5.00\\,\\mathrm{V}$ and confirm HIGH",
+        "tolerance_or_variants": "Accept upward sweep or increasing ramp; endpoint and transition polarity must be explicit.",
+        "derivation_or_source": "Given bench instruction."
+      },
+      {
+        "item": "Falling sweep and shutdown",
+        "value": "Decrease monotonically; record HIGH-to-LOW voltage; return input to zero before disabling supply",
+        "tolerance_or_variants": "Accept downward sweep or decreasing ramp; zero-input-before-shutdown order required.",
+        "derivation_or_source": "Given bench instruction."
+      },
+      {
+        "item": "Acceptance criteria",
+        "value": "Rising $2.90$\u2013$3.10\\,\\mathrm{V}$ inclusive; falling $1.90$\u2013$2.10\\,\\mathrm{V}$ inclusive; correct endpoint states; exactly one transition per sweep",
+        "tolerance_or_variants": "Accept equivalent inclusive inequalities. All four conditions must be required.",
+        "derivation_or_source": "Given module acceptance limits."
+      },
+      {
+        "item": "Hysteresis width",
+        "value": "$1.08\\,\\mathrm{V}$",
+        "tolerance_or_variants": "Accept $1080\\,\\mathrm{mV}$; tolerance $\\pm0.005\\,\\mathrm{V}$.",
+        "derivation_or_source": "$V_H=V_{\\uparrow}-V_{\\downarrow}=3.04-1.96=1.08\\,\\mathrm{V}$."
+      },
+      {
+        "item": "Logged verdict",
+        "value": "PASS",
+        "tolerance_or_variants": "Accept passes or acceptable; both logged transition voltages and the state/count checks satisfy their limits.",
+        "derivation_or_source": "$2.90\\leq3.04\\leq3.10$ and $1.90\\leq1.96\\leq2.10$; log states correct endpoints and one transition per sweep."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Given comparator bench instruction and log",
+        "reference": "All sequence requirements and criteria are supplied in the question."
+      }
+    ],
+    "scope_in": [
+      "Ordered initialization, both monotonic sweeps, endpoint checks, transition recording, shutdown, acceptance criteria, width, and PASS."
+    ],
+    "scope_out": [
+      "Comparator circuit design, resistor selection, noise analysis, and propagation-delay testing."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$-1.08\\,\\mathrm{V}$ hysteresis width",
+        "why_wrong": "The question defines width as rising minus falling, not falling minus rising."
+      },
+      {
+        "answer": "Pass based only on hysteresis width",
+        "why_wrong": "No width acceptance limit is given; passing requires the two transition bands, endpoint states, and transition counts."
+      },
+      {
+        "answer": "Disable supply before returning input to zero",
+        "why_wrong": "This reverses the specified shutdown order."
+      }
+    ],
+    "model_answer": "1. Set input to $0\\,\\mathrm{V}$; enable $5.00\\,\\mathrm{V}$ supply; confirm LOW.\n2. Sweep upward monotonically and record LOW-to-HIGH; continue to $5.00\\,\\mathrm{V}$ and confirm HIGH.\n3. Sweep downward monotonically and record HIGH-to-LOW; return input to zero, then disable supply.\n4. Require rising $2.90$\u2013$3.10\\,\\mathrm{V}$ and falling $1.90$\u2013$2.10\\,\\mathrm{V}$ inclusive, correct endpoints, and one transition per sweep.\n5. Logged $3.04$ and $1.96\\,\\mathrm{V}$ satisfy all checks: PASS. Width $=3.04-1.96=1.08\\,\\mathrm{V}$."
   }
 ]
