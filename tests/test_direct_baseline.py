@@ -67,8 +67,60 @@ class TestTheBaselineSendsVerbatimAndScores:
 
     async def test_the_trace_header_and_report_name_the_key_version(self, tmp_path):
         # Ruling D44: every report states the key version beside each score.
+        # (ARCH-20261002-115's format puts the as-recorded label after the
+        # current one, so the assertion is the claim D44 makes — the label is
+        # named — not its position in the line.)
         rows = await baseline.run(_factory([]), tmp_path / "b.jsonl", 0.02, 0.10)
         written = [json.loads(l) for l in (tmp_path / "b.jsonl").read_text().splitlines()]
         label = f"key v{KEYS['version']}"
         assert written[0]["key_version"] == label
-        assert baseline.report(rows).splitlines()[-1].endswith(label)
+        summary = baseline.report(rows).splitlines()[-1]
+        assert label in summary, summary
+
+
+class TestTheReportScoresWhatItLabels:
+    """ARCH-20261002-115: a report scores what it labels. The report read the
+    STORED scores and labelled them with the current version — 107's report
+    printed '3/6 · key v1' while its answers had been scored under the key
+    before version 1."""
+
+    @staticmethod
+    def _row(q, stored_hold: bool) -> dict:
+        return {
+            "record": "answer", "id": q["id"],
+            "answer": q["model_answer"],          # holds under the CURRENT key
+            "items": {it["id"]: stored_hold for it in q["items"]},
+            "all_hold": stored_hold,              # the verdict from its run
+            "seconds": 1.0, "cost": 0.001, "sprawl": 1.0,
+            "finish_reason": "stop",
+        }
+
+    def test_a_stored_verdict_that_disagrees_shows_under_its_own_label(self):
+        q = KEYS["golden"][0]
+        out = baseline.report([self._row(q, stored_hold=False)])
+        first = out.splitlines()[0]
+
+        # The current key's verdict, under the current label.
+        assert "ALL HOLD" in first, first
+        assert baseline.KEY_LABEL in first
+        # The stored verdict, under its own label — rows naming no key version
+        # are pre-D44, and calling them anything else launders their date.
+        assert "as recorded:" in out and "FAIL" in out.split("as recorded:")[1]
+        assert "pre-D44" in out
+        # The summary carries both numbers and both labels.
+        assert "1/6 golden hold every item" in out
+        assert "as recorded 0/1 · pre-D44" in out
+
+    def test_a_stored_verdict_that_agrees_still_travels_under_its_own_label(self):
+        q = KEYS["golden"][0]
+        out = baseline.report([self._row(q, stored_hold=True)])
+        assert "1/6 golden hold every item" in out
+        assert "as recorded 1/1 · pre-D44" in out
+
+    def test_a_row_naming_a_version_shows_that_version(self):
+        q = KEYS["golden"][0]
+        row = {**self._row(q, stored_hold=False), "key_version": "key v0"}
+        out = baseline.report([row])
+        assert "as recorded: FAIL" in out.replace("        ", " ").replace("    ", " ")
+        assert "key v0" in out
+        assert out.splitlines()[-1].endswith("key v1 (as recorded 0/1 · key v0)")

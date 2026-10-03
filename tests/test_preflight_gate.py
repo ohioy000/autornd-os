@@ -99,14 +99,15 @@ def sweep(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "run_repeated", fake_run_repeated)
     monkeypatch.setattr(cli, "OpenRouterClient", CountingClient)
 
-    async def catalogue_already_loaded() -> None:
-        # The CLI refreshes the model catalogue (a free GET, but a
-        # network one) between the preflight and the sweep. The sweep
-        # itself is stubbed here, so the refresh has nothing to load
-        # and may not reach the provider (ARCH-20261002-112).
-        return None
+    # ARCH-20261002-112: cli.main probes the provider's catalogue before the
+    # sweep (cli.py:259) — one real GET /models on the owner's key per test
+    # that drove the CLI. The gate's own fetch was stubbed and the run looked
+    # hermetic; the CLI's probe slipped through both, and the session guard
+    # is what named it.
+    async def fake_check_models() -> dict:
+        return {}
 
-    monkeypatch.setattr(cli, "check_models", catalogue_already_loaded)
+    monkeypatch.setattr(cli, "check_models", fake_check_models)
 
     async def run(*extra: str) -> int:
         monkeypatch.setattr(sys, "argv", [

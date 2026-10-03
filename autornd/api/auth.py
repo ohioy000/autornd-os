@@ -33,9 +33,21 @@ def _is_loopback(request: Request) -> bool:
 
 _UNAUTHENTICATED_REMOTE_FIX = (
     "This server has no authentication configured and serves loopback callers "
-    "only. Set API_KEY or JWT_SECRET in .env to serve remote callers, or set "
+    "only. Set API_KEY or JWT_SECRET in .env to serve remote callers — accounts "
+    "are created from this machine, never remotely (Ruling D47) — or set "
     "ALLOW_UNAUTHENTICATED_REMOTE=1 to serve everyone without authentication "
     "(anyone who can reach this port can then spend the owner's credits)."
+)
+
+# Ruling D47 (1): a credential is the owner's to issue. An account is created
+# only from this machine, under every authentication setting — the exhibit was
+# a remote stranger registering (201) and being served (200) the moment
+# JWT_SECRET was configured. The refusal names how an account comes to exist.
+_REGISTRATION_FIX = (
+    "Accounts are created from this machine only (Ruling D47): ask the owner "
+    "to run the registration on the server itself. A remote caller is served "
+    "with a credential the owner issued — the API_KEY, or a token for an "
+    "account created from this machine — or under ALLOW_UNAUTHENTICATED_REMOTE=1."
 )
 
 _jwt_secret: str = ""
@@ -89,6 +101,14 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         # job reads it from outside the container and must stay green.
         if request.url.path == "/api/health":
             return await call_next(request)
+
+        # Ruling D47 (1): accounts are created from this machine, under every
+        # authentication setting. Login stays public — it needs the password of
+        # an account that already exists, which only the owner could have
+        # created.
+        if request.url.path == "/api/auth/register" and not _is_loopback(request):
+            return JSONResponse(status_code=403,
+                                content={"detail": _REGISTRATION_FIX})
 
         # No authentication configured: loopback only, unless the operator
         # deliberately opened it (logged at startup, reported by /api/health).

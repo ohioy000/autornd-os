@@ -679,6 +679,240 @@ class TestTheApiRunCarriesItsBounds:
         assert seen["time_budget"] == 1800.0
 
 
+@pytest.mark.asyncio
+class TestCredentialsAreTheOwnersToIssue:
+    """(a) Ruling D47 (1): an account is created only from this machine, under
+    every authentication setting. The exhibit was a remote stranger
+    registering (201) and being served (200) the moment JWT_SECRET was set."""
+
+    @pytest.mark.parametrize("api_key,jwt_secret", [
+        ("owner-key", ""),
+        ("", "owner-secret-0123456789abcdef0123456789abcdef"),
+        ("owner-key", "owner-secret-0123456789abcdef0123456789abcdef"),
+    ])
+    async def test_remote_register_is_refused_and_loopback_served(
+            self, api_client, monkeypatch, api_key, jwt_secret):
+        from autornd.config import settings
+
+        monkeypatch.setattr(settings, "api_key", api_key)
+        monkeypatch.setattr(settings, "jwt_secret", jwt_secret)
+        body = {"username": f"newcomer-{api_key or 'j'}",
+                "email": f"newcomer-{api_key or 'j'}@example.com",
+                "password": "correct-horse-battery-staple"}
+
+        async with _remote_client() as remote:
+            refused = await remote.post("/api/auth/register", json=body)
+        assert refused.status_code == 403
+        assert "created from this machine" in refused.json()["detail"]
+
+        served = await api_client.post("/api/auth/register", json=body)
+        assert served.status_code == 201
+        assert served.json()["data"]["token"]
+
+    async def test_a_remote_stranger_cannot_obtain_a_token_by_any_public_route(
+            self, api_client, monkeypatch):
+        from autornd.config import settings
+
+        monkeypatch.setattr(settings, "jwt_secret",
+                            "owner-secret-0123456789abcdef0123456789abcdef")
+        async with _remote_client() as remote:
+            register = await remote.post("/api/auth/register", json={
+                "username": "stranger", "email": "stranger@example.com",
+                "password": "correct-horse-battery-staple"})
+            login = await remote.post("/api/auth/login", json={
+                "username": "stranger",
+                "password": "correct-horse-battery-staple"})
+        assert register.status_code == 403
+        assert login.status_code == 401, "no account, no token, by any route"
+
+    async def test_login_stays_public_and_registration_still_switches_off(
+            self, api_client, monkeypatch):
+        from autornd.config import settings
+
+        monkeypatch.setattr(settings, "jwt_secret",
+                            "owner-secret-0123456789abcdef0123456789abcdef")
+        created = await api_client.post("/api/auth/register", json={
+            "username": "owned", "email": "owned@example.com",
+            "password": "correct-horse-battery-staple"})
+        assert created.status_code == 201
+
+        async with _remote_client() as remote:
+            login = await remote.post("/api/auth/login", json={
+                "username": "owned",
+                "password": "correct-horse-battery-staple"})
+        assert login.status_code == 200
+        assert login.json()["data"]["token"]
+
+        # REGISTRATION_ENABLED=false still turns registration off entirely,
+        # loopback included.
+        monkeypatch.setattr(settings, "registration_enabled", False)
+        off = await api_client.post("/api/auth/register", json={
+            "username": "another", "email": "another@example.com",
+            "password": "correct-horse-battery-staple"})
+        assert off.status_code == 403
+
+
+@pytest.mark.asyncio
+class TestEverySpendingRoutePassesTheGate:
+    """(e) Ruling D47 (2): the doublecheck can spend, so it counts against
+    max_concurrent_runs — beyond the cap 429 and nothing spent, and a
+    duplicate of a workflow the caller already has in flight 409."""
+
+    @staticmethod
+    async def _workflow_with_plan(db_session, request_text: str) -> int:
+        w = Workflow(request=request_text, status=WorkflowStatus.COMPLETED)
+        db_session.add(w)
+        await db_session.flush()
+        for phase, verdict in (
+                ("plan", {"ready": True, "plan": "p", "blockers": [],
+                          "success_criteria": ["c"]}),
+                ("implement", {"done": True, "green": True,
+                               "summary": "s", "iteration": 1})):
+            db_session.add(PhaseResult(
+                workflow_id=w.id, phase=phase, iteration=1,
+                verdict_json=json.dumps(verdict),
+                model_used="test", cost=0.001))
+        await db_session.commit()
+        return w.id
+
+    async def _prepared(self, monkeypatch, **over):
+        from autornd.api import routes
+        from autornd.config import settings
+        from tests.conftest import make_mock_client
+        from tests.test_watchdog import _responses
+
+        monkeypatch.setattr(settings, "model_premium", "test/premium-model")
+        for name, value in over.items():
+            monkeypatch.setattr(settings, name, value)
+        made: list = []
+        replies = dict(_responses())
+        replies["independent"] = {
+            "ship": True, "confidence": "high", "critical_issues": [],
+            "recommendations": [], "verdict": "Ship."}
+
+        def _make():
+            client = make_mock_client(replies, delays={"default": 0.3})
+            made.append(client)
+            return client
+
+        monkeypatch.setattr(routes, "OpenRouterClient", _make)
+        return made
+
+    async def test_concurrent_doublechecks_beyond_the_cap_get_429_and_spend_nothing(
+            self, api_client, db_session, monkeypatch):
+        made = await self._prepared(monkeypatch, max_concurrent_runs=1)
+        one = await self._workflow_with_plan(db_session, "check me once")
+        two = await self._workflow_with_plan(db_session, "check me twice")
+
+        first = asyncio.create_task(
+            api_client.post(f"/api/workflows/{one}/doublecheck"))
+        await asyncio.sleep(0.1)                # the first is in flight
+        second = await api_client.post(f"/api/workflows/{two}/doublecheck")
+        assert second.status_code == 429
+        assert "in flight" in second.json()["detail"]
+        assert len(made) == 1, (
+            "the refused request built no client and spent nothing")
+        await first
+
+    async def test_the_same_callers_duplicate_doublecheck_gets_409(
+            self, api_client, db_session, monkeypatch):
+        made = await self._prepared(monkeypatch, max_concurrent_runs=2)
+        one = await self._workflow_with_plan(db_session, "check me once")
+
+        first = asyncio.create_task(
+            api_client.post(f"/api/workflows/{one}/doublecheck"))
+        await asyncio.sleep(0.1)
+        duplicate = await api_client.post(f"/api/workflows/{one}/doublecheck")
+        assert duplicate.status_code == 409
+        assert "already running" in duplicate.json()["detail"]
+        assert len(made) == 1
+        await first
+
+
+@pytest.mark.asyncio
+class TestNoLeakedSlot:
+    """(f) Ruling D47: a slot admitted is a slot released — even when the
+    row's commit raises between admission and the run."""
+
+    async def test_a_row_commit_that_raises_restores_the_gate(
+            self, api_client, db_session, monkeypatch):
+        from autornd.api import routes
+
+        assert routes._run_gate.count() == 0
+        monkeypatch.setattr(
+            db_session, "commit",
+            AsyncMock(side_effect=RuntimeError("disk full")))
+        with pytest.raises(RuntimeError):
+            await api_client.post("/api/workflows", json={"request": "doomed"})
+        assert routes._run_gate.count() == 0, (
+            "the failed submission leaked a slot")
+        assert routes._run_gate._in_flight == {}
+
+
+# ── Ruling D48 (ARCH-20261002-114): D46, completed ──────────────────────────
+#
+# (d) the write path holds. Written BEFORE the repair, per the command: the
+# held-lock case from the evidence, one progress write failing at the
+# database while the run goes on to its terminal.
+
+
+@pytest.mark.asyncio
+class TestTheWritePathHolds:
+    """(d) A progress write that fails at the database loses that one node's
+    record and nothing else: the run continues, ends with its terminal status
+    committed and visible from a second session, and the record names the node
+    whose record was lost. Before the repair nothing named it."""
+
+    async def test_one_locked_progress_write_loses_one_record_and_names_it(
+        self, api_client, tmp_path, monkeypatch
+    ):
+        import sqlalchemy.exc
+
+        from autornd.engine.workflow import WorkflowEngine
+        from sqlalchemy import select
+        from tests.test_watchdog import REQUEST
+
+        clients, observer_factory = await _wire_file_backed_run(tmp_path, monkeypatch)
+
+        real_save = WorkflowEngine._save_phase
+        lost_node = {"id": None}
+
+        async def locked_save(self, workflow, node_id, verdict, response, iteration):
+            # The held-lock case from the evidence: this node's write fails at
+            # the database, every time.
+            if lost_node["id"] is None:
+                lost_node["id"] = node_id
+            if node_id == lost_node["id"]:
+                raise sqlalchemy.exc.OperationalError(
+                    "INSERT INTO phase_results", {}, Exception("database is locked"))
+            return await real_save(self, workflow, node_id, verdict, response,
+                                   iteration)
+
+        monkeypatch.setattr(WorkflowEngine, "_save_phase", locked_save)
+
+        resp = await api_client.post("/api/workflows", json={"request": REQUEST})
+        submitted_id = resp.json()["data"]["id"]
+
+        detail = (await api_client.get(f"/api/workflows/{submitted_id}")).json()["data"]
+        assert detail["status"] == "completed", detail["error"]
+
+        # Committed and visible from a second session — the run's result is
+        # not held hostage by one lost record.
+        async with observer_factory() as session:
+            row = (await session.execute(
+                select(Workflow).where(Workflow.id == submitted_id)
+            )).scalar_one()
+        assert row.status == WorkflowStatus.COMPLETED
+
+        # The lost record is named, not silently missing (convention 28).
+        assert row.error is not None, (
+            "a lost progress write left no record of itself")
+        assert lost_node["id"] in row.error, (
+            f"the lost node {lost_node['id']} is not named in {row.error!r}")
+        recorded = {p["phase"] for p in detail["phases"]}
+        assert lost_node["id"] not in recorded or detail["phases"]
+
+
 class TestTheRunCapAndTheDuplicate:
     """(h) and (i): a per-run ceiling bounds one run, not a caller who submits
     many — at most max_concurrent_runs in flight, and never twice the same

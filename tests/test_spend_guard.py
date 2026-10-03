@@ -346,126 +346,131 @@ class TestUnratedIsNotFree:
         assert client.reserved == 0.0      # a $0.00 worst case, reserved
 
 
-class _GatedTransport(httpx.AsyncBaseTransport):
-    """A transport whose first request waits on a gate, so a test
-    controls which of two in-flight calls finishes first — the shape
-    reviewer fan-out produces, and the shape the old first-in-first-
-    out release got wrong."""
-
-    def __init__(self, first: httpx.Response):
-        self.first = first
-        self.arrived = asyncio.Event()
-        self.gate = asyncio.Event()
-        self.requests: list[str] = []
-
-    async def handle_async_request(
-            self, request: httpx.Request) -> httpx.Response:
-        model = json.loads(request.content)["model"]
-        self.requests.append(model)
-        if len(self.requests) == 1:
-            self.arrived.set()
-            await self.gate.wait()
-            return self.first
-        return httpx.Response(200, json={
-            "choices": [{"message": {"content": "{}"},
-                         "finish_reason": "stop"}],
-            "usage": {"prompt_tokens": 1, "completion_tokens": 1,
-                      "cost": 0.001},
-            "provider": "Test", "model": model})
+# ── Ruling D47 (ARCH-20261002-113): a reservation is identified ─────────────
+#
+# (b) the advisor's out-of-order case, (c) a blind call releases nothing,
+# (d) a failed call keeps its OWN worst case. The old guard held reservations
+# in a FIFO deque and released whatever was oldest when a call accounted.
 
 
-def _gated_client(first: httpx.Response) -> tuple[OpenRouterClient,
-                                                  _GatedTransport]:
-    transport = _GatedTransport(first)
+def _sequenced_client(handler) -> OpenRouterClient:
     client = OpenRouterClient(api_key="k",
                               base_url="https://router.test/api/v1")
     client._client = httpx.AsyncClient(
-        base_url=client.base_url, transport=transport)
-    return client, transport
+        base_url=client.base_url, transport=httpx.MockTransport(handler))
+    return client
 
 
-class TestReservationsAreOwnedByTheirCall:
-    """D45 (5), repaired (ARCH-20261002-116, property 4): the
-    reservation a call releases is its own — identified by the call
-    that made it — not whichever was oldest.
+class TestReservationsAreIdentifiedNotCounted:
+    """(b) With A ($0.06) in flight, B ($0.01) completing released A's
+    reservation under the FIFO guard, and C ($0.05) then dispatched — the
+    advisor's $0.111 booked against a $0.10 ceiling."""
 
-    The old release was first-in-first-out, which got two things
-    wrong, both reproduced here end to end: a call that finished out
-    of order released another in-flight call's worst case (so a
-    failed call kept the wrong worst case as liability), and a call
-    that never reserved — an unrated model — released the oldest
-    reservation at all (so the guard was walked past while a rated
-    call was still in flight)."""
+    async def test_the_advisors_out_of_order_case(self, rates):
+        costs = {"A": 0.06, "B": 0.01, "C": 0.041}
+        sent: list[str] = []
 
-    async def test_an_out_of_order_failure_keeps_its_own_worst_case(
-            self, rates):
-        """A ($0.06) and B ($0.01) are in flight. B completes first;
-        A then fails after dispatch. The liability kept must be A's
-        $0.06. The old release took B's completion to mean A's
-        reservation was gone, and kept B's $0.01 for A's failure —
-        understating what the run may still owe by $0.05."""
-        client, transport = _gated_client(
-            httpx.Response(500, json={"error": {"message": "boom"}}))
-        model = client.get_model("escalation")
-        rates[model] = (0.0, 1e-5)         # 1,000 tokens -> $0.01
-        client.spend_ceiling = 0.08
-
-        expensive = asyncio.create_task(
-            client.chat("escalation", "sys", "user", max_tokens=6_000))
-        await transport.arrived.wait()     # A is in flight, held
-        cheap = await client.chat("escalation", "sys", "user",
-                                  max_tokens=1_000)   # B finishes first
-        assert cheap is not None
-        # B's completion released B's own $0.01 — A's $0.06 is still
-        # held, because A is still in flight.
-        assert client.reserved == pytest.approx(0.06, abs=1e-6)
-
-        transport.gate.set()               # A fails after dispatch
-        with pytest.raises(httpx.HTTPStatusError):
-            await expensive
-        assert client.reserved == 0.0
-        assert client.unreconciled_liability == pytest.approx(0.06, abs=1e-6)
-        assert client.failed_after_dispatch == [{
-            "function": "escalation", "model": model,
-            "kind": "error_status", "worst_case": 0.06}]
-
-    async def test_a_call_that_never_reserved_releases_nothing(
-            self, rates):
-        """A rated call ($0.05) is in flight; an unrated model's call
-        completes beside it. The blind call reserved nothing, so it
-        releases nothing — the rated call's worst case stays held, and
-        the ceiling still refuses a second $0.05 call. The old release
-        popped the rated call's reservation on the blind call's
-        completion, which let the second $0.05 call through against a
-        $0.08 ceiling while $0.10 was in fact committed."""
-        client, transport = _gated_client(
-            httpx.Response(200, json={
-                "choices": [{"message": {"content": "{}"},
+        async def handler(request: httpx.Request) -> httpx.Response:
+            body = json.loads(request.content)
+            tag = body["messages"][1]["content"]
+            sent.append(tag)
+            if tag == "A":
+                await asyncio.sleep(0.3)        # A stays in flight
+            return httpx.Response(200, json={
+                "choices": [{"message": {"content": json.dumps(UNION)},
                              "finish_reason": "stop"}],
                 "usage": {"prompt_tokens": 1, "completion_tokens": 1,
-                          "cost": 0.001},
-                "provider": "Test"}))
+                          "cost": costs[tag]}})
+
+        client = _sequenced_client(handler)
         model = client.get_model("escalation")
-        rates[model] = (0.0, 1e-5)         # 5,000 tokens -> $0.05
-        # The research tier is unrated: its calls are blind (F3).
-        client.spend_ceiling = 0.08
+        rates[model] = (0.0, 1e-5)              # worst = max_tokens / 100000
+        client.spend_ceiling = 0.10
 
-        rated = asyncio.create_task(
-            client.chat("escalation", "sys", "user", max_tokens=5_000))
-        await transport.arrived.wait()     # the rated call is in flight
-        await client.chat("research", "sys", "user", max_tokens=5_000)
-        assert client.spend_guard_blind == [
-            {"function": "research",
-             "model": client.get_model("research")}]
-        # The blind call completed and booked its $0.001, but the
-        # rated call's $0.05 is still held — it is still in flight.
-        assert client.reserved == pytest.approx(0.05, abs=1e-6)
-        # And the ceiling still sees it: a second $0.05 call cannot
-        # fit ($0.001 booked + $0.05 held + $0.05 asked > $0.08).
+        a = asyncio.create_task(
+            client.chat("escalation", "sys", "A", max_tokens=6_000))  # worst 0.06
+        await asyncio.sleep(0.05)               # A is in flight
+        await client.chat("escalation", "sys", "B", max_tokens=1_000)  # 0.01
+        assert client.reserved == pytest.approx(0.06, abs=1e-6), (
+            "B's completion must not release A's reservation")
+
         with pytest.raises(SpendGuardRefused) as refused:
-            await client.chat("escalation", "sys", "user", max_tokens=5_000)
-        assert refused.value.remaining == pytest.approx(0.029, abs=1e-6)
+            await client.chat("escalation", "sys", "C", max_tokens=5_000)
+        assert refused.value.remaining == pytest.approx(0.03, abs=1e-6)
+        await a
+        # Booked is A + B and can never exceed the ceiling. Under the FIFO
+        # guard this is $0.111 against $0.10 — the advisor's number.
+        assert client.spend == pytest.approx(0.07, abs=1e-6)
+        assert client.spend <= 0.10
 
-        transport.gate.set()               # the rated call completes
-        await rated
+
+class TestABlindCallReleasesNothing:
+    """(c) A blind call reserved nothing, so it releases nothing — the old
+    FIFO release let a blind booking consume a priced call's reservation."""
+
+    async def test_a_completing_blind_call_leaves_the_priced_reservation(self, rates):
+        mid_flight = asyncio.Event()
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            body = json.loads(request.content)
+            tag = body["messages"][1]["content"]
+            if tag == "priced":
+                mid_flight.set()
+                await asyncio.sleep(0.3)
+            return httpx.Response(200, json={
+                "choices": [{"message": {"content": json.dumps(UNION)},
+                             "finish_reason": "stop"}],
+                "usage": {"prompt_tokens": 1, "completion_tokens": 1,
+                          "cost": 0.05 if tag == "priced" else 0.001}})
+
+        client = _sequenced_client(handler)
+        priced_model = client.get_model("escalation")
+        rates[priced_model] = (0.0, 1e-5)       # worst 0.05
+        blind_model = client.get_model("engineering")   # no rate: blind
+        client.spend_ceiling = 0.10
+
+        priced = asyncio.create_task(
+            client.chat("escalation", "sys", "priced", max_tokens=5_000))
+        await mid_flight.wait()
+        await client.chat("engineering", "sys", "blind", max_tokens=5_000)
+        assert client.reserved == pytest.approx(0.05, abs=1e-6), (
+            "the blind call must not release the priced reservation")
+        await priced
         assert client.reserved == 0.0
+
+
+class TestAFailedCallBooksItsOwnWorstCase:
+    """(d) Two calls in flight, the SMALL one fails: the liability is its own
+    worst case, not the other call's."""
+
+    async def test_the_failed_call_keeps_its_own_not_the_others(self, rates):
+        mid_flight = asyncio.Event()
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            body = json.loads(request.content)
+            tag = body["messages"][1]["content"]
+            if tag == "big":
+                mid_flight.set()
+                await asyncio.sleep(0.3)
+                return httpx.Response(200, json={
+                    "choices": [{"message": {"content": json.dumps(UNION)},
+                                 "finish_reason": "stop"}],
+                    "usage": {"prompt_tokens": 1, "completion_tokens": 1,
+                              "cost": 0.06}})
+            return httpx.Response(500, json={"error": {"message": "boom"}})
+
+        client = _sequenced_client(handler)
+        model = client.get_model("escalation")
+        rates[model] = (0.0, 1e-5)
+        client.spend_ceiling = 0.10
+
+        big = asyncio.create_task(
+            client.chat("escalation", "sys", "big", max_tokens=6_000))
+        await mid_flight.wait()
+        with pytest.raises(httpx.HTTPStatusError):
+            await client.chat("escalation", "sys", "small", max_tokens=1_000)
+        assert client.unreconciled_liability == pytest.approx(0.01, abs=1e-6), (
+            "the failure booked its own worst case, not the in-flight call's")
+        assert client.reserved == pytest.approx(0.06, abs=1e-6)
+        await big
+        assert client.spend == pytest.approx(0.06, abs=1e-6)

@@ -10755,6 +10755,20 @@ unchanged and still true — no test file was added.
    (convention 28); the baseline's own report is the instrument for that
    record, and it is the one quoted above.
 
+### 99.x Correction (appended 2026-10-02 by ARCH-20261002-115)
+
+The 107 figure quoted in this section and in 108's response —
+`3/6 golden hold every item · median sprawl 2.5 · total $0.0220 · key v1` —
+was **scored under the key before version 1**: `baseline.report` read the
+stored verdicts from the run and printed the current key's label beside them,
+so the label claimed a version the number was not computed under. Under
+version 1, 107's direct answers hold **6/6**, as the repaired report prints
+it: `6/6 golden hold every item · median sprawl 2.5 · total $0.0220 · key v1
+(as recorded 3/6 · pre-D44)`. The same deviation item quoted above
+(`score_trace.py ... reads 0/0`) is also closed by the same repair — the
+reader now takes answer rows. Nothing above is deleted: the wrong figure
+stands where it was written and this names it.
+
 ## 100. ARCH-20261002-109: one row per submission, progress as it happens (executor, 2026-10-02)
 
 Instrument repair, not a ruling: the harness concludes exactly what it did
@@ -11111,6 +11125,12 @@ So 102 ran **1 unit** (golden_side_ia, blocked, $0.157) and 106 ran **7
 units** (golden_q1–q6 — three completed, three blocked — plus golden_side_ia,
 blocked, $0.134). Every file proves what it shows and no more.
 
+**Correction (appended 2026-10-02 by ARCH-20261002-115):** this inventory
+missed `docs/traces/102-golden-arm-b.jsonl` — 1 header + 6 units — which
+exists beside the two 102-ia-side files listed above. Corrected counts:
+**102 ran 7 units** (6 golden + 1 ia-side) and **106 ran 7** (6 golden +
+1 ia-side). The per-kind question over all four traces is answered in §106.
+
 ### 102.4 Tests that asserted retired behaviour (rule 7 / convention 17)
 
 - `test_green_resolution.py`'s `test_absent_green_with_no_cause_is_green`
@@ -11161,7 +11181,515 @@ blocked, $0.134). Every file proves what it shows and no more.
    Project Structure comment; HANDOVER's header, §2.2 tree line, §3.7 and
    §4.2. Suite 1198 passed scrubbed, before 1191.
 
-## 103. Ruling D49 — verification is typed, and the completed terminal means finished (advisor, 2026-10-02, ruled on the owner's command, carried by ARCH-20261002-116)
+## 103. ARCH-20261002-112: the hermetic suite (executor, 2026-10-02)
+
+Instrument repair, not a ruling: the harness concludes exactly what it did
+before. This repairs the SUITE's isolation, so the claim CONTRIBUTING.md and
+`.claude/context/testing.md` make — free, no network — is true wherever the
+suite runs: a checkout holding the owner's .env, a shell exporting the owner's
+pins, or CI. The advisor's audit found five provider calls in one green run,
+each carrying the owner's key.
+
+### 103.1 The mechanism, and why both halves
+
+**Forcing beats exports; killing the dotenv read beats the checkout.** Each
+half covers the other's hole, so both are installed in `tests/conftest.py`
+before the first autornd import:
+
+1. `AUTORND_TESTING=1` — `Settings.model_config` resolves `env_file` to `None`
+   under it (`autornd/config.py`, the one `autornd/` line this command
+   touches): no `.env` is read at all, so no setting can arrive from one.
+2. `PLACEHOLDERS` — **every** settings field, forced with `os.environ[name] =
+   value` (never `setdefault`): the six required tiers carry
+   `test-provider/test-*`, the optional tiers, the credentials and the provider
+   order are empty (the suite's own configuration — an empty ranker never
+   reranks), everything else its declared default. `tests/test_hermetic_suite.py`
+   guards the map against drift in both directions: a new field must be
+   classified, and a non-security field must equal its declared default.
+
+Forcing alone would leave every unforced field reading the owner's `.env` — the
+budgets the owner changed this week. Dotenv-off alone leaves exported values
+displacing placeholders. A test that needs a different value sets it itself.
+
+**The guard** refuses name resolution and connect to any non-loopback address
+(`socket.getaddrinfo`, `gethostbyname`, `connect`, `connect_ex`), records each
+attempt, and fails the test that made it **by name in teardown even when the
+code under test swallowed the error**. Every run ends with the guard's own
+count in the terminal summary.
+
+**The double is provider-free**: `make_mock_client` stubs `chat`, `chat_json`
+and `rerank`; `seal_double(client)` completes a hand-built half-patched one.
+
+### 103.2 The five leaks the audit named, and rule 7
+
+| test | what it was proving | how it reached the provider |
+|---|---|---|
+| `test_all_ok_proceeds_and_the_header_records_every_finding` | the gate passes and the header records every finding | **accidental** — `cli.main` probes the catalogue (`check_models`) before the sweep; the test stubbed the gate's own fetch and the sweep and believed itself hermetic |
+| `test_skip_proceeds_and_the_header_records_the_override` | `--skip-preflight` proceeds and records the override | **accidental** — the same CLI probe |
+| `test_an_impossible_sample_warns_before_any_call` | the sample warning reaches the operator before any call | **accidental, and the exhibit** — the instrument's own probes (the catalogue AND the preflight fetch) sat outside the "any call" it claimed: the claim counted paid calls only (rule 7) |
+| `test_no_ceiling_falls_back_to_the_setting` | a node without `max_tokens` gets the phase default | **accidental** — its hand-built double patched `chat_json` and left `chat`/`rerank` live; the audit's POST went to the **owner's ranker pin from .env** |
+| `test_blocked_plan` | a blocked plan ends BLOCKED | **accidental** — same half-patched shape; the context builder's lookup calls `chat` |
+
+None of the five asserted the network; all five reached it through machinery
+they never stubbed. The repair stubs each at its seam (the CLI probe, the
+preflight fetch, `seal_double`), and the guard now makes the same class of
+mistake fail by name instead of billing.
+
+### 103.3 Proofs
+
+(a) `TestThePlaceholdersWin`: exported sentinels (`MODEL_TRIAGE=sentinel/x`,
+`MODEL_RANKER=sentinel/r`, `OPENROUTER_API_KEY=sentinel-key`) cannot displace
+the placeholders, and neither can a sentinel `.env` in a subprocess's working
+directory (built under `tmp_path` — no step touches a `.env` in the repo).
+Both conditions print settings equal to the suite's, and the map-coverage and
+defaults guards hold.
+
+(b) The guard fails a test that reaches out — and the proof runs in a **child
+pytest** so this suite's own record stays empty. Quoted, guard intact (the
+child's body swallows the error and still fails, by name):
+
+```
+1 passed, 1 error in 0.01s
+  test_zz_guard_probe.py::test_reaches_out_and_survives
+  E  test_zz_guard_probe.py::test_reaches_out_and_survives attempted
+     network access: ["resolve 'guard-proof.invalid'"]
+```
+
+Broken by one line (`if not _NetworkGuard._is_loopback(host):` → `if False:`),
+the attempt gets through and nothing fails it:
+
+```
+network guard: 0 non-loopback attempt(s) recorded
+1 passed in 0.07s
+E  assert 0 != 0
+```
+
+(c) The literal `.venv/bin/python3 -m pytest tests/ -q` in the executor's own
+shell — the shell the finding came from — reads **1207 passed, 0 failed**
+where it read 2 failed, 1196 passed on arrival.
+
+(d) The guard's count: **5 → 0** (the audit's five attempts, then none).
+
+### 103.4 Departures, and what execution found
+
+1. **A blanket session stub of `check_models` was wrong and was reverted.**
+   `tests/test_routing.py`'s `TestCheckModels` exists to verify the probe
+   itself and stubs `httpx.AsyncClient` around it; the blanket stub broke
+   eight of them (convention 17: the stub was wrong, the tests right). The
+   catalogue probes are stubbed at the seams of the tests that trigger them —
+   `cli.check_models`, `autornd.preflight._fetch`, or
+   `openrouter.httpx.AsyncClient` — which is exactly how `test_routing` has
+   always done it.
+2. **The empty ranker does not keep rerank at home.** With `MODEL_RANKER=""`
+   a live `rerank`/`chat` on a hand-built client still resolved
+   `openrouter.ai` from the token-ceiling test — the guard named the attempt,
+   and both live methods are now stubbed by `seal_double` (which method fired
+   first is not distinguishable from the record; both are closed).
+3. **`RUNTIME_MUTABLE` reports itself as a settings field** (pydantic treats
+   the class-annotated set as one). It is excluded from the map-coverage guard
+   as `NOT_SETTINGS`, and from the probe's JSON (its stringified set is
+   unordered).
+4. **The guard's proof lives in a child pytest** rather than in this suite:
+   the acceptance says the full run records **zero** attempts, and a guard
+   self-test that reached out would put one in the record — the counter would
+   then be hiding what it measured (conventions 26/28). The child's attempt is
+   refused by the same guard; the outer record stays zero by construction and
+   says so.
+5. **Counts re-derived** (convention 24): 1207 collected — 1198 before, +9
+   (`tests/test_hermetic_suite.py`, new: 72 test files now). README badge,
+   Testing section and Project Structure comment; HANDOVER's header, §2.2 tree
+   line, §3.7 (the table re-paired from the insertion point) and §4.2;
+   AGENTS.md's file count 71 → 72.
+6. **CI found a sixth network surface the audit's five did not count:**
+   Chroma's default embedding function downloads a ~80 MB ONNX model from
+   `chroma-onnx-models.s3.amazonaws.com` the first time it embeds. Locally the
+   cache hides it; in CI every store-touching test fetched it — the suite was
+   green in CI *by downloading a model at test time*. The guard named it on the
+   first CI run (six tests, `resolve chroma-onnx-models.s3.amazonaws.com`).
+   `tests/conftest.py` now substitutes a deterministic local embedder at
+   Chroma's own seam, so the retrieval tests test retrieval and the suite is
+   offline everywhere.
+7. **One more order-dependent half-patched double, visible only in isolation:**
+   `tests/test_schema_wiring.py`'s `capturing_client` left `rerank` live, and
+   its `test_plan` reaches it through context building — masked in a full run
+   because an earlier test had latched the rerank fallback mode (the §6.8
+   latch). Sealed with `seal_double`, and every suspect file was then run in
+   isolation reading the guard's count: all zero.
+
+## 104. Ruling D47 — credentials are the owner's to issue (advisor, 2026-10-02, carried by ARCH-20261002-113)
+
+> **Ruling D47 (advisor, 2026-10-02) — credentials are the owner's to issue. (1) An account is created only from this machine. POST /api/auth/register serves loopback callers only, under every authentication setting, and REGISTRATION_ENABLED=false still turns it off entirely. A remote caller is served only with a credential the owner issued, or under ALLOW_UNAUTHENTICATED_REMOTE=1. A credential the owner issued is the API_KEY, or a token for an account created from this machine. (2) Every API route that can spend is admitted through D45's run gate. No caller can multiply the per-run bounds by calling such a route many times at once. Rationale: the advisor's post-merge review of 110 (2026-10-02), with provider-free probes at main 535a9e0. D45's refusal sentence names one fix: configure API_KEY or JWT_SECRET. Under that fix, /api/auth/register was a public path and was enabled by default. A remote stranger registered (201) and was then served (200) on protected routes, so the server was open to anyone who asked for an account. Separately, POST /api/workflows/{id}/doublecheck built a bounded client per request outside the gate, so concurrent requests multiplied the ceiling. Falsifier: a remote caller without an owner-issued credential or the override who obtains a token or is served a protected route; or more spending API requests in flight than max_concurrent_runs.**
+
+Carried verbatim to HANDOVER.md's rulings block in the same commit. The
+command's constraints are part of what is executed: registration loopback-only
+under every authentication setting with the refusal sentence naming how the
+owner creates an account; D45's refusal sentence and the README's Auth wording
+re-read so neither implies JWT_SECRET opens registration; every spending route
+through the run gate (the estimate route makes no call and says so); admission
+released on every path; the reservation identified per dispatch (the advisor's
+out-of-order case, $0.111 booked against $0.10, reproduces on the old code and
+is refused on the new); `_run_workflow` deleted with its reference check; and
+110's two questions answered in the response.
+
+Execution record: §104.1–§104.3 below.
+
+### 104.1 What landed
+
+1. **Registration is loopback-only under every authentication setting**
+   (`autornd/api/auth.py`): `POST /api/auth/register` refused 403 for any
+   non-loopback peer with a sentence naming how an account comes to exist;
+   `/api/auth/login` stays public; `REGISTRATION_ENABLED=false` still disables
+   registration entirely. D45's refusal sentence reworded (it named one fix —
+   configure API_KEY or JWT_SECRET — which the exhibit read as "setting
+   JWT_SECRET opens the door") and the README's Auth section now says the same.
+2. **Every spending route passes the run gate** (`autornd/api/routes.py`).
+   The inventory the command asked for, from `grep OpenRouterClient(
+   autornd/api/` — three constructions:
+   - `routes.py:95` — inside `_bound_client()`, the shared bounded factory:
+     used by `_run_workflow_bg` (async submit), `submit_workflow_sync` and
+     `run_doublecheck_endpoint`. All three now pass `_admit_run`;
+     doublecheck's dedupe key is the workflow's own request text (409 for a
+     duplicate the caller already has in flight, 429 past the cap).
+   - `routes.py` `estimate_doublecheck` — the one the command names: it calls
+     `client._estimate_cost`, local arithmetic over the catalogue rate. It
+     makes NO call, so it is not gated, and says so in place.
+   - `_run_workflow` — **deleted** (the command's instruction). Reference
+     check recorded: `grep -rn '_run_workflow\b' --include=*.py` matched only
+     its own definition; no importers, no callers.
+3. **No leaked slot**: admission is released on every path — if the row's
+   commit or the background scheduling raises, the gate is restored before the
+   error reaches the caller (both submit paths), and doublecheck releases in
+   its `finally`.
+4. **The guard holds call by call** (`openrouter.py`, instrument repair of
+   D45 (5), no new ruling): a `_Reservation` token travels with its dispatch
+   and only that call releases it. The old FIFO deque released whatever was
+   oldest — see §104.2 for the number that produced. A call that reserved
+   nothing (blind, no ceiling) releases nothing, and a double that books cost
+   without guarding releases nothing (`_account` no longer releases at all);
+   a failed call books its OWN worst case as liability; the call ceiling
+   counts every in-flight call, blind ones included.
+
+### 104.2 The tests, and each break quoted
+
+Tests (a) in `test_api.py`, (b)–(d) in `test_spend_guard.py`, (e)–(f) in
+`test_api.py` — through the real app and the real client, provider-free.
+
+```
+(a) assert 201 == 403          — the registration gate removed; the remote
+                                 stranger registers again, under all three
+                                 auth settings
+(b) assert 0.0 == 0.06         — the FIFO release restored in _account; B's
+                                 completion released A's reservation
+(c) assert 0.0 == 0.05         — the blind call's release falls through to
+                                 the oldest reservation; the priced one gone
+(d) assert 0.06 == 0.01        — the failure books the in-flight call's worst
+                                 case instead of its own
+(e) assert 200 == 429 / 200 == 409 — the doublecheck gate removed; every
+                                 concurrent check runs and spends
+(f) assert 1 == 0              — the failed submission's slot is never
+                                 released ("the failed submission leaked a
+                                 slot")
+```
+
+**The advisor's out-of-order case, quoted both ways** — the same scenario
+(ceiling $0.10; A worst $0.06 in flight; B worst $0.01 completes; C worst
+$0.05, costing $0.041) on the old code and the new:
+
+```
+old (FIFO release):  C dispatched (not refused)
+                     BudgetExceeded: stopped at $0.1110 (ceiling $0.1000)
+new (identity):      C refused before dispatch; booked $0.07 ≤ $0.10
+```
+
+$0.111 booked against $0.10, reproduced exactly on the old code and refused
+on the new.
+
+### 104.3 110's questions, answered
+
+1. **The cap does not need to hold across uvicorn workers.** The documented
+   uvicorn command and the Dockerfile run one process, and D45 (6) is read per
+   process. The README says so in one sentence ("The run cap is per process").
+   A multi-worker deployment would need a shared store, which nothing here
+   builds.
+2. **One reservation per call stands.** The provider bills completed
+   generations; a 400 refused for its response_format and a 429 are refused
+   before any generation, so one dispatch's worst case covers what one call
+   can cost, and the reservation is held across the backoff and released by
+   the call's own reconciliation. Falsifier: a record showing a refused
+   attempt that was billed — that would make the attempt, not the call, the
+   unit.
+
+Departures: none beyond the ruling's own instruction to delete `_run_workflow`
+(the reference check is in §104.1). Counts re-derived (convention 24): 1218
+collected — 1207 before, +11 (test_api 33→41, test_spend_guard 10→13); README
+badge/Testing/Project Structure and HANDOVER's header/§2.2/§3.7/§4.2.
+
+## 105. Ruling D48 — D46, completed (advisor, 2026-10-02, carried by ARCH-20261002-114)
+
+> **Ruling D48 (advisor, 2026-10-02) — D46, completed. (1) A check that compared nothing never turns a fail into a pass. The judges fold lists every unchecked check. An unchecked check that passed is not a dissent; an unchecked check that failed is a dissent, as it was before D46. This corrects the advisor's command 111, whose constraint [4] made every unchecked check non-blocking. D46 (3) says such a check 'passes as before', and never let a failure through. (2) A ready plan's own blockers did not stop the plan gate, so they are not requirements either. They reach the implementer under a heading that names them as the plan's own, beside the reviewers' considerations and framed the same way: weigh them; nothing is judged against them. D46 (2) moved feasibility's concerns out of plan.blockers but did not decide what the implementer sees of the plan's own blockers, and 111 dropped them without a ruling. (3) A check that did not run carries no approval-shaped value. A skipped independent check records that it was skipped and why, and records no ship. The gate after it reads a typed veto, which is true only when the check ran and said do not ship. D36's plan rules and D43's scope rule are untouched. Rationale: the advisor's post-merge review of 111 (2026-10-02). By the advisor's own command, a failing check that compared nothing had become non-blocking in the fold. 106's IA unit carried 5 blockers of the plan's own, which 111 stopped showing the implementer. The skipped independent check wrote ship: true. Falsifier: a run that converges with a failing check in the fold; a ready plan's own blocker missing from the implement prompt; or a ship value recorded by a check that did not run.**
+
+Carried verbatim to HANDOVER.md's rulings block in the same commit. The
+command's constraints are part of what is executed: the fold's dissent rule;
+the plan's-own-blockers heading verbatim; the skip's `{"skipped": true,
+"vetoed": false}` output with `DoubleCheckVerdict.vetoed` as a computed
+property (no schema field); `independent_verdict` reading `not
+independent_check.vetoed` in both workflow files; the write path holding
+(test written before the repair); and the unit record's `checks_not_checked`
+field — 111's first question, answered.
+
+Execution record: §105.1–§105.3 below.
+
+### 105.1 The corrections, and where each landed
+
+1. **The fold** (`checks.py`, judges_agree): a judge dissents when its verdict
+   is false, whether or not it checked; every unchecked judge is listed and the
+   fail detail names both lists ("not agreed — coverage is red; unchecked:
+   consistency, coverage"). An unchecked pass is not a dissent, as before.
+2. **The plan's own blockers** (`phases.py`, the implement prompt only): a new
+   block ahead of the considerations, under the ruling's heading verbatim —
+   `OPEN POINTS THE PLAN ITSELF NAMED (the plan passed its gate with these; not
+   requirements — weigh them; nothing is judged against them):` — while the
+   reviewers' heading stays as 111 wrote it (`CONSIDERATIONS A REVIEWER RAISED
+   (not requirements — weigh them; nothing is judged against them):`). The two
+   lists never mix. D36's block and D43's text are byte-identical (sha256 of
+   both lines matches origin/main exactly, checked at delivery).
+3. **The skip** (`adapter.py`, `verdicts.py`, both workflow files): the skip
+   output is `{"skipped": true, "vetoed": false, "reason": …}` with **no ship**;
+   `DoubleCheckVerdict.vetoed` is a computed property (`not ship`) — no schema
+   field added; and `independent_verdict`'s condition reads `not
+   independent_check.vetoed` in both files, so the gate sees the same path on
+   both branches. `not <path>` is the grammar's own unary form (conditions.py:12).
+4. **The write path** (`engine/workflow.py`, instrument repair of 109): a
+   progress write that fails at the database rolls the session back, re-reads
+   the row so the run keeps what it needs (nothing touches the expired
+   instance — `workflow.id` is captured before the try), records which node's
+   record was lost in the terminal `error`, and lets the run continue. The item
+   is consumed — the drain never retries or re-raises a failed write — and the
+   terminal commits in every case.
+5. **The record** (`evals/runner.py`): the unit record gains
+   `checks_not_checked`, written field by field from the run's unchecked list
+   (the union across the iteration records, which keep their own) — 111's first
+   question, answered.
+
+### 105.2 The tests, and each break quoted
+
+(a) `TestAnUncheckedFailureStillDissents` (test_graph): a failing unchecked
+coverage dissents and a passing unchecked consistency does not, both listed;
+and a real run whose coverage fails unchecked does not converge (it iterates,
+and the judges output names coverage in both lists). Break — 111's fold rule
+restored —
+`assert not True` (the fold reads "all 2 judges that checked agree" and the run
+converges: `AssertionError: the loop iterated`).
+
+(b) `test_the_plans_own_blockers_get_their_own_heading` (test_rework_loop):
+both headings present, each text only under its own, the plan's own first, and
+D36/D43's sentences still in the prompt. Break —
+`assert 'OPEN POINTS THE PLAN ITSELF NAMED …' in 'Produce the implementation …'`
+(the plan's own blockers dropped again).
+
+(c) `TestASkippedIndependentCheckRecordsNoShip` (test_engine): with no model
+distinct from the one under review the skip output carries **no ship**,
+`vetoed` false, the gate runs and the run completes; with the check run and
+ship false the run blocks with the findings in the reason. Break —
+`assert 'blocked' == 'completed'` (the skip vetoes what it never checked).
+
+(d) `TestTheWritePathHolds` (test_api) — **written before the repair and quoted
+failing on the code before it** (the command's requirement):
+
+```
+E  AssertionError: a lost progress write left no record of itself
+E  assert None is not None
+   (the run completed and committed its terminal; the lost triage write is
+    named nowhere)
+```
+
+and after the repair it passes; its break (the naming removed) reproduces the
+pre-repair failure exactly.
+
+(e) `TestChecksNotCheckedOnTheUnitRecord` (test_run_record): a run whose plan
+and implementation share no unit writes `checks_not_checked: ["consistency"]`
+in the unit record, with the per-iteration list beside it. Break —
+`assert [] == ['consistency']` (the record drops the list).
+
+### 105.3 Departures, events, and rule 7
+
+1. **AGENTS.md was overwritten mid-session (17:53:57) by an outside session's
+   tooling** — the `kiro` IDE seen in precondition 1's reading pasted its
+   *global* rules template over the protocol: a ~105-line file referencing
+   `rules/workflow.md` and `rules/verification.md`, neither of which exists
+   here, and deleting the protocol the guard tests protect (five tests red,
+   none of them mine). Per the owner's direction — "fix the guards within the
+   agent file to reflect how we have and had been doing things but keep some of
+   the new context as well as long as it doesn't conflict with our SOP" — the
+   protocol was restored as the spine and the paste's genuinely useful,
+   non-conflicting discipline (read before search; parallel reads yes, writes
+   no; stop when a call starts repeating; match the owner's shell; a tool call
+   is never prose) was folded in under a new `## Operating discipline` heading
+   that says where it came from. The paste's precedence line (that a
+   project-level file overrides "this global file") was dropped as a direct
+   conflict: this file is the protocol and wins.
+2. **The doubles carried `ship` where production now carries `vetoed`** — four
+   scripted doubles (test_graph ×2, test_all_workflows_terminate,
+   test_rework_loop) returned plain dicts without the key the gate reads. The
+   ruling moved the gate's path; the doubles were stale fixtures (convention
+   22: a double must simulate what the thing it stands for produces), not the
+   bug. Rule 7: the rule was right, the fixtures were wrong. No test asserted
+   "a failing unchecked check is non-blocking" — 111 tested only the
+   unchecked-PASS case and the listing, which is why the advisor's correction
+   had untested room to land in.
+3. **The skip writes no phase row.** It returns zero responses, and a phase row
+   is written per response (109), so the skip's record is its output in
+   `state.outputs` — test (c) is written to read it there, and the engine-level
+   version of the test reads nothing at all (StopIteration, measured). Whether
+   the API path should persist a row for a zero-response node is left open.
+4. **Counts re-derived** (convention 24): 1225 collected — 1218 before, +7
+   (test_api 41→42, test_engine 6→8, test_graph 85→87, test_rework_loop 19→20,
+   test_run_record 6→7). README badge/Testing/Project Structure and HANDOVER's
+   header/§2.2/§3.7/§4.2.
+
+## 106. ARCH-20261002-115: put the record right (executor, 2026-10-02)
+
+Measurement and record repair — no ruling, no spend. Two tools repaired, four
+corrections appended (nothing deleted), and the questions 110 and 111 asked
+answered from the committed traces.
+
+### 106.1 A report scores what it labels
+
+`baseline.report` read the **stored** verdicts and printed the **current**
+key's label beside them: 107's report said `3/6 · key v1` having scored under
+the key before version 1. It now re-scores every recorded answer under the
+keys as they stand and prints that under the current version, with the run's
+own verdict beside it under the version its row names (or `pre-D44`).
+Repaired report over 107's recorded answers, quoted in full summary:
+
+```
+6/6 golden hold every item · median sprawl 2.5 · total $0.0220 · key v1 (as recorded 3/6 · pre-D44)
+```
+
+and per row, the flip the old key hid (Q3 shown; Q4 and Q5 the same shape):
+
+```
+Q3  ALL HOLD  items[+++] 18.848s $0.0049 sprawl=3.8 finish=stop · key v1
+     as recorded: FAIL      items[---] · pre-D44
+```
+
+Break — restoring the stored read (`items = r.get("items") or {}`) —
+
+```
+E  AssertionError: Q1  FAIL      items[--] 1.0s $0.0010 sprawl=1.0 finish=stop · key v1
+E  assert 'ALL HOLD' in 'Q1  FAIL ... · key v1'
+```
+
+`score_trace.py` read unit rows only, so 107's direct-call baseline scored
+0/0 with its answers sitting in the file (convention 28). It reads
+`record: "answer"` rows now — one tool re-scores every recorded run. The
+three summary lines the command asked for, quoted as the tool prints them:
+
+```
+102-golden-arm-b       3/6 PASS · 3/6 shipped · median sprawl 32.0 · total $0.3554 · key v1
+106-golden-arm-b       2/6 PASS · 3/6 shipped · median sprawl 22.9 · total $0.2527 · key v1
+107-direct-baseline    6/7 PASS · 7/7 shipped · median sprawl 2.1 · total $0.0219 · key v1
+```
+
+The advisor read 102 3/6 and 106 2/6 — both match exactly. 107 prints **6/7**
+where the advisor read 6/6: the seventh row is the IA side test, which fails
+on IA.2, IA.4 and IA.6; the golden six all hold (Q1–Q6), which is the 6/6
+baseline.report prints (its summary counts golden rows only). Break —
+dropping the answer rows — reproduces the old reading exactly
+(`0/0 PASS · 0/0 shipped · … · key v1`; the test fails with
+`IndexError: list index out of range`).
+
+### 106.2 111's question, answered (four counts over the four traces)
+
+14 units (102: 6 golden + 1 ia-side; 106: 6 golden + 1 ia-side).
+
+- **(i) green with nothing behind it: 0.** No validate verdict is green with
+  an empty evidence list, and no implement verdict is green with an empty
+  summary. *What the record cannot show:* whether the reply that was
+  normalized into such a verdict came back empty — the record holds the
+  post-normalization verdict, and `normalised_by_kind` counts resolutions,
+  not refusals (D46 (1)'s counter did not exist yet).
+- **(ii) feasibility concerns recorded as plan blockers: 1 unit.**
+  102-golden Q6 carries 2 distinct feasibility blockers, and **both also sit
+  in that unit's `plan.blockers`** — the pre-R7 contamination exactly as it
+  happened: the reviewers' concerns written into the architect's list. 106's
+  runs recorded none (its reviewers named no blockers). *The record shows*
+  both lists (`feasibility_blockers` and `verdicts.plan.blockers`) and their
+  overlap; it cannot show which was written first.
+- **(iii) consistency passed with no shared unit: 0 by re-run.** Re-running
+  `numbers_consistent` on the recorded plan and implementation text: 8 of 10
+  holdable units share units and **check** (checked true); none passes
+  unchecked. Two verdicts, both failing on re-run — 102-golden Q6 and
+  106-ia-side (a real conflict, which the recorded runs also refused: both
+  recorded `consistency: passed=false`). *What the record cannot show:* the
+  recorded `consistency` outputs predate the `checked` flag — every one reads
+  `<absent>` — so the run's own view of whether it compared anything is
+  underivable from the record; the re-run is the only reading. Two 106-golden
+  units (blocked runs) hold no implementation summary and cannot be re-run at
+  all.
+- **(iv) iterations whose fold refused while neither validate nor implement
+  was red: 3.** 102-golden Q3 iteration 1 (dissenting: consistency, coverage)
+  and 106-golden Q3 iterations 1 and 2 (dissenting: coverage) — each with
+  `validate_green` and `implement_green` both true. *What the record cannot
+  show:* **the failure log is not in the unit record** — nothing in these
+  files can say whether an entry was written, which is precisely 111's
+  clause [4] defect; the record shows the refusals and the two greens, and
+  pre-111 an iteration in exactly this shape wrote nothing.
+
+### 106.3 110's question, answered (calls with no catalogue price)
+
+- **106 (both traces): the field exists and reads 0** — `spend_guard_blind`
+  is empty on all 7 units: every call that run made had a catalogue rate.
+- **102 (both traces): the field does not exist** — the record predates the
+  F3 guard (ARCH-20261001-104), so blind-ness is **underivable** from it.
+  What can be derived: the per-tier call and cost totals and the header's
+  model and pin, and nothing finer — the record does not carry the catalogue
+  that the guard consulted. The absence of the field is no evidence either
+  way (convention 28).
+- **107: 7 answer rows, no field** — `baseline.run` never wrote it; the
+  guard's blind list lives on the client and the writer does not read it.
+  Underivable from the record.
+
+**Recommendation (the advisor rules separately): refuse a call with no
+catalogue price while a spend ceiling is set.** Under a ceiling the guard's
+contract is to bound the run's spend, and an unpriced call has no computable
+worst case — it is unbounded by construction, which is exactly the thing the
+ceiling exists to prevent. The blind *record* was the right repair for its
+era (make the gap visible), but D45's "no open, unbounded spend" closes the
+door it left open. With **no** ceiling set, blind calls may continue and be
+recorded — there is no bound to violate. The refusal should name the model
+and the fix (pin a priced model, or drop the ceiling), in the same shape as
+D45's other refusals. Falsifier: a blind call that took a ceiling'd run past
+its ceiling unnoticed — which is the shape of 102's IA run ($0.1570 against
+$0.08, the F3 exhibit itself).
+
+### 106.4 Corrections, departures and counts
+
+Corrections appended, nothing deleted or rewritten silently (each names what
+it corrects): 108's response and §99 above (the `3/6 · key v1` figure and its
+true reading); 111's response (the two hashes that do not exist —
+`5c7e836` should be `ea0b75d`, `499b548` should be `ccc9b6f` — and the
+missed 102 golden trace); §102.3 above (same miss, corrected counts).
+
+Departures and rule 7:
+1. `test_the_trace_header_and_report_name_the_key_version` asserted the
+   summary *ended* with the key label. 115's ruled format puts the as-recorded
+   label after the current one; the assertion is now the claim D44 makes (the
+   label is named) rather than its position in the line. The rule is right;
+   the assertion was over-specific.
+2. The score_trace summary's `shipped` bucket counts direct answers too — a
+   direct call's answer IS its deliverable, and the alternative was a summary
+   that read `6/7 PASS · 0/7 shipped` while every row carried an answer.
+3. Counts re-derived (convention 24): 1229 collected — 1225 before, +4
+   (test_direct_baseline 3→6, test_golden_keys 9→10). README badge/Testing/
+   Project Structure and HANDOVER's header/§2.2/§3.7/§4.2.
+
+The excluded diff is empty by the command's own verification: no harness
+change (`autornd/`, `workflows/`), no trace edit (`docs/traces/` read-only),
+and no advisor-owned file touched (`keys.json`, `score.py`, `versions.json`,
+`SOURCE.md`).
+
+## 107. Ruling D49 — verification is typed, and the completed terminal means finished (advisor, 2026-10-02, ruled on the owner's command, carried by ARCH-20261002-116)
 
 > **Ruling D49 (advisor, 2026-10-02; ruled on the owner's 2026-10-02 command, carried by ARCH-20261002-116) — verification is typed, and the completed terminal means finished. (1) Missing or whitespace-only assessment is not completed verification: a validation whose evidence is empty, or holds no entry with non-whitespace content, resolves red with a cause that names what was missing, counted like every normalization (D46 (1), extended from empty to whitespace-only). (2) An implementation explicitly marked incomplete cannot qualify for completed delivery: the executor's completed terminal reads the implement verdict's typed `done` field, and `done is false` ends the run blocked, naming the incomplete implementation; a run whose graph produced no implement verdict is not "explicitly incomplete" and keeps its terminal. (3) Unavailable verification is distinct from passing verification: the independent pass's skip record carries no `ship` at all — neither an approval nor a veto — it carries `skipped` and `vetoed: false`, and the gate after it routes on `independent_check.vetoed == false`, which a skip satisfies without claiming an approval the pass never made; a real verdict's `vetoed` is its computed `not ship`. Applied narrowly, on typed fields, never by parsing prose: the distinctions among failed, unchecked, unavailable and passed checks are preserved, not flattened. Rationale: the owner's three-tier command of 2026-10-02, probing nine properties provider-free under ARCH-20261002-116: a validator could return `["   "]` and ship as green (`_missing_substance` in models/verdicts.py tested only `not evidence`); the executor ended every run no node stopped as `completed`, never reading the implement verdict's `done` (GraphExecutor.run); and the independent pass's skip record claimed `ship: true` — an approval field — so a check that never ran read exactly like one that passed (PhaseRunner._phase_doublecheck; both workflow gates routed on `independent_check.ship`). The ruling ID is D49, not D47 or D48: those numbers are claimed by commands ARCH-20261002-113 and -114, which are unexecuted on main, and one ID must not name two rulings. Falsifier: a green validation whose evidence is whitespace-only, a completed run whose latest implement verdict says `done: false`, or a gate that routes a skipped independent check as an approval.**
 
@@ -11169,19 +11697,26 @@ Carried verbatim to HANDOVER.md's rulings block in the same commit.
 The owner's command dictates the ruling text; the exhibits beneath it
 are the executor's measurements against the tree. The command also
 ordered the verification of commands 112–115 against the actual
-implementation before any repair: **all four are unexecuted on main**
-— `git diff 535a9e0..main --stat` shows only the four command JSONs
-(371 insertions, no code), no response files exist under
-`.orchestration/responses/`, and neither Ruling D47 nor D48 appears
-in HANDOVER.md or this notebook. Their repairs are therefore this
-command's work where the owner's probe properties overlap them, and
-their fate is question 2 in the response.
+implementation before any repair. **That verification ran against a
+stale local `main` ref** (ef4e266, unmoved since before this session)
+while `origin/main` had advanced through PRs #137–#140: all four
+commands were in fact executed there — Ruling D47 (113's reservation
+identity) and Ruling D48 (111's completion, the skip shape) were
+committed, the hermetic suite (112) and the record repairs (115) had
+landed, and their response files were written. The stale reading —
+"all four unexecuted, no response files exist" — was an artifact of
+the ref, the exact failure mode the command's preamble warned about
+("inspect current main; do not assume the handoff's commit"). The
+merge below integrates those executions; where this command's probes
+overlap them, the merged tree carries the ruling that merged first,
+and the convergence notes in each section say which. The corrected
+verification is in the response file.
 
-Execution record: §103.1–§103.9 below, one section per probe
+Execution record: §107.1–§107.9 below, one section per probe
 property, each with its reproduction (failing on the code as it
 stood), its repair, and its break-the-line proof.
 
-### 103.0 The nine properties against the tree, before any repair
+### 107.0 The nine properties against the tree, before any repair
 
 | # | property (the owner's probe) | verdict against main |
 |---|---|---|
@@ -11199,10 +11734,25 @@ Execution record, 2026-10-02/03. Every repair below was reproduced
 against the code as it stood, then repaired, then proved by a test
 that fails on the old behaviour (the break-the-line proof is quoted
 per section). Suite state: main is 1198 passing; the branch's
-after-state is **1219 passing in 92.71s** (§103.10 has the protected
+after-state is **1219 passing in 92.71s** (§107.10 has the protected
 run and its network-attempt evidence).
 
-### 103.1 Property 1 — an unpriced component is unknown, not free (repaired, 94b4e71)
+**Post-merge addendum** (the integration the owner approved — main
+into the branch; see §107.10's merged-tree state). Against the merged
+tree, two of the nine properties' repairs are the rulings that merged
+first, not this command's commits: property 4's repair is **D47's**
+(reservations identified by the call that made them, release at the
+call sites, `_account` books and releases nothing), and property 8's
+skip half is **D48 (3)'s** wording (`vetoed` a plain property, not a
+`@computed_field`). This command's repairs of those two properties
+(dd787db's deque-based identity, and the `@computed_field` form) were
+superseded by the rulings that merged first; the reproductions and
+break-proofs below were measured against the pre-merge code and still
+describe the defects they named. Properties 1, 2, 6, 7 and 9 are this
+command's repairs, unchanged by the merge; properties 3 and 5 were
+already held and still are.
+
+### 107.1 Property 1 — an unpriced component is unknown, not free (repaired, 94b4e71)
 
 **Reproduction.** The catalogue parse read
 `float(pricing.get("prompt") or 0.0)` — an absent component became
@@ -11227,7 +11777,7 @@ asserts the model is *not* in `_model_pricing`; on the old parse it
 was present at `(0.0, 0.0)`. `test_a_charge_the_estimate_cannot_bound_is_unrated`
 same for an extra charge with no boundable rate.
 
-### 103.2 Property 2 — explicit zero is a price, not a gap (repaired, 94b4e71)
+### 107.2 Property 2 — explicit zero is a price, not a gap (repaired, 94b4e71)
 
 **Reproduction.** Absent and explicit zero both became `(0.0, 0.0)`
 — indistinguishable by construction, so a provider that publishes a
@@ -11248,22 +11798,22 @@ the zero-priced model *is* in the table and bounded, not blind;
 zero extra charge beside real token rates does not make the model
 unrated. On the old parse the first test's assertion of "in the table
 and bounded" passed for the wrong reason (absent models were there
-too) — the distinguishing test is the absent-component one in §103.1,
+too) — the distinguishing test is the absent-component one in §107.1,
 which fails on the old parse.
 
-### 103.3 Property 3 — concurrent calls reserve liabilities atomically (already held, D45 (5))
+### 107.3 Property 3 — concurrent calls reserve liabilities atomically (already held, D45 (5))
 
 Verified, not repaired. The reserve is synchronous:
 `_guard_spend` computes the worst case and executes
 `self.reserved += worst` with no `await` between the ceiling check
 and the reservation, so on the single-threaded event loop no second
 coroutine can interleave between "can I afford this" and "this is
-now held". The observable proof is the property-4 pair in §103.4:
+now held". The observable proof is the property-4 pair in §107.4:
 two calls are in flight *concurrently* through a gated transport that
 controls which completes first, and each call's reservation is
 accounted exactly once, in both completion orders.
 
-### 103.4 Property 4 — out-of-order completion releases only the owning reservation (repaired, dd787db)
+### 107.4 Property 4 — out-of-order completion releases only the owning reservation (repaired, dd787db)
 
 **Reproduction, defect A (out-of-order failure kept the wrong worst
 case).** The release was first-in-first-out (`popleft`), not by the
@@ -11297,7 +11847,20 @@ unchanged. Tests: `TestReservationsAreOwnedByTheirCall` in
 request in flight until the test opens the gate — the transport makes
 completion order a controlled input, not a race.
 
-### 103.5 Property 5 — API execution uses the submitted workflow ID and preserves its owner (already held, ARCH-20261002-109)
+**Post-merge.** D47 (merged first, command 113's execution) is the
+implementation on the merged tree: `_Reservation` carries
+`("worst", "function", "model", "released")`, release happens at the
+chat/rerank call sites (`_release`), `_account` books cost and
+releases nothing, and `_fail_call` keeps the failed call's own worst
+case behind the `released` flag. The property is identical — a
+reservation is released only by the call that made it — and D47's
+tests (`TestReservationsAreIdentifiedNotCounted`,
+`TestABlindCallReleasesNothing`, `TestAFailedCallBooksItsOwnWorstCase`)
+supersede `TestReservationsAreOwnedByTheirCall` and `_GatedTransport`,
+which the merge drops. The pricing-honesty parse beneath the guard
+(properties 1–2, this command's) layers on top unchanged.
+
+### 107.5 Property 5 — API execution uses the submitted workflow ID and preserves its owner (already held, ARCH-20261002-109)
 
 Verified by reading the path the probe names, no change.
 `POST /api/workflows` creates the row with `user_id=_get_user_id(request)`
@@ -11311,7 +11874,7 @@ and runs that row; every read path goes through
 ID the API executes is the ID it returned, and the row it touches is
 the caller's.
 
-### 103.6 Property 6 — whitespace-only validator evidence is no assessment (repaired, 8196387; Ruling D49 (1))
+### 107.6 Property 6 — whitespace-only validator evidence is no assessment (repaired, 8196387; Ruling D49 (1))
 
 **Reproduction.** `_missing_substance` in `autornd/models/verdicts.py`
 tested only `not evidence`, so a validator that returned `["   "]` —
@@ -11331,7 +11894,7 @@ and `["  ", "\t"]` — all resolve red with the cause and
 ISO 286-2"]` still resolves green with zero normalisations, which is
 the distinction the ruling preserves.
 
-### 103.7 Property 7 — a nonempty implementation with `done=false` cannot ship as completed (repaired, 8196387; Ruling D49 (2))
+### 107.7 Property 7 — a nonempty implementation with `done=false` cannot ship as completed (repaired, 8196387; Ruling D49 (2))
 
 **Reproduction.** `GraphExecutor.run` ended every run no node stopped
 as `completed`, never reading the implement verdict's typed `done`
@@ -11359,7 +11922,7 @@ terminal's refusal, not a rework), carries `done: False` with
 `green: True`, and the run ends blocked with `done: false` and the
 summary in the reason.
 
-### 103.8 Property 8 — a negative review blocks; a skipped review is not an approval (negative half already held; skip half repaired, 8196387; Ruling D49 (3))
+### 107.8 Property 8 — a negative review blocks; a skipped review is not an approval (negative half already held; skip half repaired, 8196387; Ruling D49 (3))
 
 **The negative half already held** (D46 (2)): a real `ship: False`
 ends the run blocked — `tests/test_graph.py`'s do-not-ship test
@@ -11394,7 +11957,21 @@ skip record ends the run `completed` — a skip continues — while
 `TestDoubleCheckVerdict` in `tests/test_verdicts.py` proves the
 complement and the schema/dump split.
 
-### 103.9 Property 9 — every terminal path reconciles booked spend, and liability is its own column (repaired, 33351ff)
+**Post-merge.** D48 (3) (merged first, command 114's execution) is
+the wording on the merged tree: `vetoed` is a plain `@property`, not
+a `@computed_field` — it is not in `model_dump()`, and the persisted
+record keeps `ship` (the source of truth), from which any reader
+computes the veto; the adapter's skip record carries `vetoed: false`
+explicitly, so the pass/refusal/skip distinction survives without a
+persisted computed field. The gates, the skip record and the adapter
+are as described above. `TestDoubleCheckVerdict`'s second test was
+repaired under convention 17 to pin the merged contract (the schema
+never asks for `vetoed`; the dump carries `ship`, not `vetoed`) —
+the superseded assertion (`dumped["vetoed"] is True`) tested the
+`@computed_field` form this merge replaced, and the test asserting
+current behaviour was the wrong one against the settled instrument.
+
+### 107.9 Property 9 — every terminal path reconciles booked spend, and liability is its own column (repaired, 33351ff)
 
 **Reproduction.** A run that dies after dispatch with one call booked
 ($0.002) and one failed after reservation ($0.05 worst case): the old
@@ -11424,7 +12001,7 @@ $0.002, reserves and fails a $0.05 worst case, then raises; the run
 ends BLOCKED with `total_cost == 0.002` and
 `unreconciled_liability == 0.05`.
 
-### 103.10 The suite, the network it did not use, and what was left undone
+### 107.10 The suite, the network it did not use, and what was left undone
 
 **Protected suite, before and after.** The before-state (branch with
 all repairs applied, counts not yet re-derived) ran **4 failed, 1215
@@ -11479,3 +12056,33 @@ behaviour question — the advisor's, not an instrument repair.
 framework, no general plugin system, no new paid stage; no model-pin
 changes, no `.env` edits, no secrets, no production redesign; no paid
 measurement of any kind.
+
+**Merged-tree state** (the integration the owner approved: main
+into the branch, after the stale-ref discovery above). `origin/main` had
+executed commands 112–115 as PRs #137–#140 — the hermetic suite
+(112), Ruling D47 (113), Ruling D48 (114), the record repairs (115)
+— and this branch's unique work layers on top: the pricing-honesty
+parse (properties 1–2), the whitespace-only assessment rule
+(D49 (1)), the `done: false` completed-terminal gate (D49 (2)), the
+liability column and terminal reconciliation (property 9), and the
+skip-record shape (D49 (3), converged with D48 (3)). The merged tree:
+**1241 tests in 72 files, all passing in 105.43s, zero non-loopback
+connection attempts** — under main's hermetic mechanism
+(`AUTORND_TESTING` forces placeholder settings before any import and
+a session guard refuses every non-loopback resolution and connection,
+failing the test that made the attempt at teardown; the per-test
+attribution is `_NetworkGuard` in `tests/conftest.py`). The counts
+were re-derived to 1241/72 everywhere they are stated (README badge
+and Testing section, HANDOVER's header, §2.2 tree line, §3.7 table
+and §4.2 pass count). `tests/hermetic_guard.py` and
+`tests/test_hermeticity.py` are **deleted** — superseded by main's
+`tests/test_hermetic_suite.py`, which proves the same property
+(attempted vs completed connections, the five leaks, the local
+embedder) with the settled mechanism; keeping both would have made
+the old guard's deliberate probes attempt real connections, since
+main's conftest does not install it. The rerank-double repair
+described above landed on the merged tree as main's `seal_double` —
+the same repair, the settled mechanism. The doublecheck-endpoint
+liability question stays surfaced, not repaired (question 3 in the
+response).
+

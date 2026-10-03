@@ -83,18 +83,74 @@ async def run(client_factory, out: Path, per_call: float, total: float) -> list[
     return rows
 
 
+def _questions_by_id() -> dict:
+    return {q["id"]: q for q in questions()}
+
+
+def _stored_label(rows: list[dict]) -> str:
+    """The version the rows name, or 'pre-D44' when they name none.
+
+    The rule is the row's own, not the header's: a row that names no key was
+    scored before keys carried versions, and calling it anything else launders
+    its date.
+    """
+    for r in rows:
+        if r.get("key_version"):
+            return str(r["key_version"])
+    return "pre-D44"
+
+
+def _current_hold(by_id: dict, row: dict) -> bool:
+    """Does this answer hold every item under the keys as they stand now?"""
+    q = by_id.get(row["id"])
+    if not (row.get("answer") and q):
+        return False
+    items = score_answer(q, row["answer"])
+    return bool(items) and all(items.values())
+
+
 def report(rows: list[dict]) -> str:
+    """Score what it labels (ARCH-20261002-115).
+
+    Every recorded answer is re-scored under the keys as they stand NOW and
+    printed under the current version. Where a row carries the score from its
+    own run, that verdict travels beside the new one under its own label —
+    the version the row names, or 'pre-D44' when it names none.
+
+    The defect this repairs: the report read the STORED scores and labelled
+    them with the current version. 107's report printed '3/6 · key v1' while
+    its answers had been scored under the key before version 1 — a report
+    that scores what it labels is the only kind whose number means anything.
+    """
+    by_id = _questions_by_id()
     lines = []
     for r in rows:
-        held = "".join("+" if v else "-" for v in (r.get("items") or {}).values())
-        lines.append(f"{r['id']:<3} {'ALL HOLD' if r.get('all_hold') else 'FAIL':<9} "
+        q = by_id.get(r["id"])
+        items = score_answer(q, r["answer"]) if (r.get("answer") and q) else {}
+        held = "".join("+" if v else "-" for v in items.values())
+        lines.append(f"{r['id']:<3} {'ALL HOLD' if items and all(items.values()) else 'FAIL':<9} "
                      f"items[{held}] {r.get('seconds')}s ${r.get('cost', 0):.4f} "
-                     f"sprawl={r.get('sprawl')} finish={r.get('finish_reason')}")
+                     f"sprawl={r.get('sprawl')} finish={r.get('finish_reason')} "
+                     f"· {KEY_LABEL}")
+        if "all_hold" in r:
+            stored = "".join("+" if v else "-" for v in (r.get("items") or {}).values())
+            lines.append(f"     as recorded: "
+                         f"{'ALL HOLD' if r.get('all_hold') else 'FAIL':<9} "
+                         f"items[{stored}] · {r.get('key_version') or 'pre-D44'}")
     golden_rows = [r for r in rows if r["id"] != "IA"]
     sprawls = [r["sprawl"] for r in golden_rows if r.get("sprawl") is not None]
-    lines.append(f"{sum(bool(r.get('all_hold')) for r in golden_rows)}/6 golden hold every item · "
+    current_n = sum(1 for r in golden_rows if _current_hold(by_id, r))
+    stored_rows = [r for r in golden_rows if "all_hold" in r]
+    stored_part = ""
+    if stored_rows:
+        stored_part = (
+            f" (as recorded "
+            f"{sum(bool(r.get('all_hold')) for r in stored_rows)}/{len(stored_rows)}"
+            f" · {_stored_label(stored_rows)})")
+    lines.append(f"{current_n}/6 golden hold every item · "
                  f"median sprawl {statistics.median(sprawls) if sprawls else None} · "
-                 f"total ${sum(r.get('cost', 0) or 0 for r in rows):.4f} · {KEY_LABEL}")
+                 f"total ${sum(r.get('cost', 0) or 0 for r in rows):.4f} · "
+                 f"{KEY_LABEL}{stored_part}")
     return "\n".join(lines)
 
 

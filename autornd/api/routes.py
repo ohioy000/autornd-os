@@ -232,15 +232,6 @@ def _summarize(w: Workflow) -> WorkflowSummary:
     )
 
 
-async def _run_workflow(request: str, session: AsyncSession):
-    client = OpenRouterClient()
-    engine = WorkflowEngine(client, session)
-    try:
-        await engine.execute(request)
-    finally:
-        await client.close()
-
-
 @router.post("/workflows", status_code=202)
 async def submit_workflow(
     body: WorkflowRequest,
@@ -249,18 +240,23 @@ async def submit_workflow(
     session: AsyncSession = Depends(get_session),
 ):
     # Ruling D45 (6): refused here, before the row exists — a submission that
-    # is not admitted must leave nothing behind.
+    # is not admitted must leave nothing behind. Ruling D47: a slot admitted
+    # is a slot released — if the commit or the scheduling raises, the gate is
+    # restored before the error reaches the caller.
     caller = _admit_run(request, body.request)
+    try:
+        workflow = Workflow(
+            request=body.request,
+            status=WorkflowStatus.PENDING,
+            user_id=_get_user_id(request),
+        )
+        session.add(workflow)
+        await session.commit()
 
-    workflow = Workflow(
-        request=body.request,
-        status=WorkflowStatus.PENDING,
-        user_id=_get_user_id(request),
-    )
-    session.add(workflow)
-    await session.commit()
-
-    background.add_task(_run_workflow_bg, workflow.id, caller, body.request)
+        background.add_task(_run_workflow_bg, workflow.id, caller, body.request)
+    except BaseException:
+        _run_gate.release(caller, body.request)
+        raise
 
     return {
         "data": _summarize(workflow),
@@ -298,13 +294,17 @@ async def submit_workflow_sync(
     """Execute a workflow synchronously and return the full result."""
     caller = _admit_run(request, body.request)
 
-    workflow = Workflow(
-        request=body.request,
-        status=WorkflowStatus.PENDING,
-        user_id=_get_user_id(request),
-    )
-    session.add(workflow)
-    await session.commit()
+    try:
+        workflow = Workflow(
+            request=body.request,
+            status=WorkflowStatus.PENDING,
+            user_id=_get_user_id(request),
+        )
+        session.add(workflow)
+        await session.commit()
+    except BaseException:
+        _run_gate.release(caller, body.request)
+        raise
 
     client = _bound_client()
     engine = WorkflowEngine(client, session)
@@ -415,6 +415,9 @@ async def estimate_doublecheck(
     for p in workflow.phases:
         payload_chars += len(p.verdict_json)
     est_tokens = payload_chars // 3
+    # Ruling D47 (2): every route that CAN spend passes the run gate. This one
+    # makes no call — _estimate_cost is local arithmetic over the catalogue
+    # rate — so there is nothing to admit and nothing to count.
     client = OpenRouterClient()
     cost = client._estimate_cost(settings.model_premium, est_tokens, est_tokens // 2)
     return {"data": {"estimated_cost": round(cost, 4), "model": settings.model_premium}}
@@ -452,33 +455,42 @@ async def run_doublecheck_endpoint(
     plan = PlanVerdict(**plan_data)
     implement = ImplementVerdict(**impl_data)
 
-    client = _bound_client()
+    # Ruling D47 (2): the doublecheck can spend, so it passes the same run
+    # gate as the submit paths and counts against max_concurrent_runs — no
+    # caller multiplies the per-run bounds by calling this many times at once.
+    # The dedupe key is the workflow's own request text: a second doublecheck
+    # of a workflow the caller already has in flight is a duplicate (409).
+    caller = _admit_run(request, workflow.request)
     try:
-        verdict, response = await run_doublecheck(
-            client, workflow.request, plan, implement,
+        client = _bound_client()
+        try:
+            verdict, response = await run_doublecheck(
+                client, workflow.request, plan, implement,
+            )
+        finally:
+            await client.close()
+
+        phase_result = PhaseResult(
+            workflow_id=workflow.id,
+            phase="doublecheck",
+            iteration=1,
+            verdict_json=json.dumps(verdict.model_dump()),
+            model_used=response.model,
+            cost=response.cost,
         )
-    finally:
-        await client.close()
+        session.add(phase_result)
+        workflow.total_cost += response.cost
+        await session.commit()
 
-    phase_result = PhaseResult(
-        workflow_id=workflow.id,
-        phase="doublecheck",
-        iteration=1,
-        verdict_json=json.dumps(verdict.model_dump()),
-        model_used=response.model,
-        cost=response.cost,
-    )
-    session.add(phase_result)
-    workflow.total_cost += response.cost
-    await session.commit()
-
-    return {
-        "data": {
-            "verdict": verdict.model_dump(),
-            "model": response.model,
-            "cost": round(response.cost, 4),
+        return {
+            "data": {
+                "verdict": verdict.model_dump(),
+                "model": response.model,
+                "cost": round(response.cost, 4),
+            }
         }
-    }
+    finally:
+        _run_gate.release(caller, workflow.request)
 
 
 # ── Settings endpoints ──

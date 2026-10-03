@@ -28,6 +28,7 @@ from autornd.models.verdicts import (
     ValidateVerdict,
 )
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
+from tests.conftest import seal_double
 
 
 def _plan_state() -> ExecutionState:
@@ -64,7 +65,7 @@ class TestNodeCeilingsReachTheirCalls:
         from autornd import config
 
         monkeypatch.setattr(config.settings, "plan_max_tokens", 112768)
-        runner = PhaseRunner(client=OpenRouterClient(api_key="test"))
+        runner = PhaseRunner(client=seal_double(OpenRouterClient(api_key="test")))
         verdict = PlanVerdict(ready=True, plan="p",
                               success_criteria=["Backoff capped at 60s"])
         with patch("autornd.engine.phases.run_plan",
@@ -74,7 +75,7 @@ class TestNodeCeilingsReachTheirCalls:
         assert run.await_args.kwargs["max_tokens"] == 112768
 
     async def test_a_literal_plan_ceiling_passes_through(self):
-        runner = PhaseRunner(client=OpenRouterClient(api_key="test"))
+        runner = PhaseRunner(client=seal_double(OpenRouterClient(api_key="test")))
         verdict = PlanVerdict(ready=True, plan="p",
                               success_criteria=["Backoff capped at 60s"])
         with patch("autornd.engine.phases.run_plan",
@@ -88,7 +89,7 @@ class TestNodeCeilingsReachTheirCalls:
         from autornd import config
 
         monkeypatch.setattr(config.settings, "plan_max_tokens", 32768)
-        runner = PhaseRunner(client=OpenRouterClient(api_key="test"))
+        runner = PhaseRunner(client=seal_double(OpenRouterClient(api_key="test")))
         verdict = PlanVerdict(ready=True, plan="p",
                               success_criteria=["Backoff capped at 60s"])
         with patch("autornd.engine.phases.run_plan",
@@ -115,14 +116,7 @@ class TestNodeCeilingsReachTheirCalls:
                 prompt_tokens=1, completion_tokens=1, cost=0.001)
 
         client.chat_json = AsyncMock(side_effect=chat_json)
-        # The rerank probe is the one boundary this test's context
-        # build reaches with the real client's own method: it posts to
-        # the provider's rerank API, and the suite may not reach it
-        # (ARCH-20261002-112). The refusal is the same capability
-        # answer a model without the API gives.
-        client.rerank = AsyncMock(
-            side_effect=RuntimeError(
-                "rerank is not part of the test double"))
+        seal_double(client)
         triage = TriageVerdict(domains=["backend"], risk="medium",
                                specialists=["backend_engineer"], summary="s")
         await phases.run_plan(client, "add retry", triage,
@@ -136,7 +130,7 @@ class TestNodeCeilingsReachTheirCalls:
         from autornd import config
 
         monkeypatch.setattr(config.settings, "validate_max_tokens", 28000)
-        runner = PhaseRunner(client=OpenRouterClient(api_key="test"))
+        runner = PhaseRunner(client=seal_double(OpenRouterClient(api_key="test")))
         verdict = ValidateVerdict(green=True, red_cause=None, evidence=[])
         with patch("autornd.engine.phases.run_validate",
                    new=AsyncMock(return_value=(verdict, _ok_response()))) as run:
@@ -153,7 +147,7 @@ class TestNodeCeilingsReachTheirCalls:
         from autornd import config
 
         monkeypatch.setattr(config.settings, "plan_max_tokens", 112768)
-        runner = PhaseRunner(client=OpenRouterClient(api_key="test"))
+        runner = PhaseRunner(client=seal_double(OpenRouterClient(api_key="test")))
         verdict = ImplementVerdict(done=True, green=True, summary="s",
                                    iteration=1)
         with patch("autornd.engine.phases.run_implement",
@@ -172,7 +166,7 @@ class TestNodeCeilingsReachTheirCalls:
         from autornd.models.verdicts import ReviewVerdict
 
         monkeypatch.setattr(config.settings, "plan_max_tokens", 112768)
-        runner = PhaseRunner(client=OpenRouterClient(api_key="test"))
+        runner = PhaseRunner(client=seal_double(OpenRouterClient(api_key="test")))
         verdict = ReviewVerdict(ship=True, findings=[], verdict="ok")
         with patch("autornd.engine.phases.run_review",
                    new=AsyncMock(return_value=(verdict, [_ok_response()]))) as run:
@@ -206,6 +200,7 @@ class TestNodeCeilingsReachTheirCalls:
                 prompt_tokens=1, completion_tokens=1, cost=0.001)
 
         client.chat_json = AsyncMock(side_effect=chat_json)
+        seal_double(client)
         plan = PlanVerdict(ready=True, plan="p",
                            success_criteria=["Backoff capped at 60s"])
         await phases.run_implement(
@@ -236,6 +231,7 @@ class TestNodeCeilingsReachTheirCalls:
                 prompt_tokens=1, completion_tokens=1, cost=0.001)
 
         client.chat_json = AsyncMock(side_effect=chat_json)
+        seal_double(client)
         plan = PlanVerdict(ready=True, plan="p",
                            success_criteria=["Backoff capped at 60s"])
         impl = ImplementVerdict(done=True, green=True, summary="s",

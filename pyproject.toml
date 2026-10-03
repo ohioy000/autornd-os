@@ -34,10 +34,6 @@ autornd = "autornd.cli:main"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-# The hermetic guard's own probes deliberately attempt a non-loopback
-# connection to prove the guard refuses it; the teardown check in
-# tests/conftest.py exempts tests carrying this mark.
-markers = ["hermetic_probe: deliberate non-loopback attempt proving the guard"]
 
 # Without this, setuptools flat-layout auto-discovery sees evals/, profiles/
 # and workflows/ beside autornd/ and refuses to build at all:

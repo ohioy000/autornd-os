@@ -26,6 +26,15 @@ provider. Run it before you start and again before you push.
 
 All tests must pass before submitting a PR.
 
+**The suite is hermetic wherever it runs.** Its configuration is its own:
+`tests/conftest.py` forces every setting to a placeholder before the first
+autornd import, so neither a `.env` in the checkout nor pins exported in your
+shell can reach a test, and a session guard refuses every connection to a
+non-loopback address — recording the attempt and failing the test that made it
+by name, even when the code under test swallowed the error. A test double must
+stub every network method it leaves live (`seal_double` in conftest completes a
+half-patched one). The end-to-end proofs live in `tests/test_hermetic_suite.py`.
+
 ## Evals
 
 Unit tests prove the harness does what it says. **Evals measure whether the

@@ -26,9 +26,24 @@ Load when writing tests. Source: `tests/conftest.py` and the test files beside i
   overridden.
 - `make_mock_response(content, model)` and `make_mock_client(responses)`.
 
-Note `conftest.py:9-12`: placeholder `MODEL_*` env vars are set **before any
-autornd import**, because `config.py` validates the six required tiers at import
-time and exits without them.
+Note `conftest.py`: the suite's settings are **forced before any autornd
+import** — every field in `PLACEHOLDERS`, not `setdefault`, so neither a `.env`
+in the checkout (the dotenv read is disabled under `AUTORND_TESTING`) nor pins
+exported in the shell can displace them. A test that needs a different value
+sets it itself.
+
+## The suite cannot reach the provider (ARCH-20261002-112)
+
+A session guard refuses name resolution and connect to any non-loopback
+address, records the attempt, and fails the test that made it **by name in
+teardown even when the code under test caught the error** — which is how five
+provider calls (each carrying the owner's key) survived inside green tests.
+`make_mock_client` stubs `chat`, `chat_json` and `rerank`; a hand-built double
+calls `seal_double(client)` to complete itself; the catalogue probes
+(`check_models`, `verify_model`) are stubbed at `httpx.AsyncClient` or at
+`autornd.preflight._fetch` by the tests that trigger them. Every full run ends
+with the guard's own count on the terminal summary — it must read zero. The
+proofs, including the guard's own break, are `tests/test_hermetic_suite.py`.
 
 ## Test doubles must bill
 

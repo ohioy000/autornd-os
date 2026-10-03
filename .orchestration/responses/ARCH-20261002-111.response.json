@@ -58,5 +58,17 @@
     "behaviour": "d2b1516",
     "tests": "38ba3cc",
     "counts_and_record": "aae2704"
-  }
+  },
+  "corrections": [
+    {
+      "added_by": "ARCH-20261002-115",
+      "corrects": "commits — two of the five cited hashes do not exist",
+      "correction": "'in_progress: 5c7e836' should be ea0b75d ('Response ARCH-20261002-111 IN_PROGRESS: opened before the work starts'), and 'ruling_first: 499b548' should be ccc9b6f ('Ruling D46 ruled before the code: an approval means something was checked'). Both cited shas are missing from the object database (git cat-file -t reports missing for each); the three remaining hashes — d2b1516, 38ba3cc, aae2704 — exist and are correct. Nothing is rewritten above: the wrong entries stand where they were written, and this entry names both."
+    },
+    {
+      "added_by": "ARCH-20261002-115",
+      "corrects": "results.the_command_question_traces — '102 ran 1 unit'",
+      "correction": "That inventory missed docs/traces/102-golden-arm-b.jsonl (1 header + 6 units). Corrected: 102 ran 7 units across its two traces (6 golden + 1 ia-side), 106 ran 7 (6 + 1). The per-kind question over all four traces is answered in notebook §106."
+    }
+  ]
 }

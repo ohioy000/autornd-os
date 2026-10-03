@@ -11,9 +11,7 @@ import re
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import (
-    BaseModel, Field, computed_field, field_validator, model_validator,
-)
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class RiskLevel(str, Enum):
@@ -572,17 +570,17 @@ class DoubleCheckVerdict(BaseModel):
     recommendations: list[str] = Field(default_factory=list)
     verdict: str
 
-    # Ruling D49 (3): the gate after the independent pass routes on
-    # `vetoed`, the computed complement of `ship`, so a skip record
-    # can answer the gate ("no veto happened") without carrying an
-    # approval field at all. Computed, so the provider's contract is
-    # unchanged — the field never reaches the JSON schema the model is
-    # asked to answer — while the persisted record carries it, keeping
-    # failed, unchecked, unavailable and passed checks apart for
-    # anything that reads the record.
-    @computed_field(return_type=bool)
     @property
     def vetoed(self) -> bool:
+        """Ruling D48 (3): the gate's typed veto.
+
+        True only when the check RAN and said do not ship — a computed
+        property, not a field, so the schema and the model's output are
+        unchanged. A skip records no ship at all and vetoes nothing; the gate
+        reads this same path on both branches (`not independent_check.vetoed`),
+        so a skipped check and a shipped one pass, and only a real do-not-ship
+        blocks the run.
+        """
         return not self.ship
 
 

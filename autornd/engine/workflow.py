@@ -51,6 +51,9 @@ class WorkflowEngine:
     def __init__(self, client: OpenRouterClient, session: AsyncSession):
         self.client = client
         self.session = session
+        # Ruling D48: progress writes lost at the database, named in the run's
+        # record rather than left silent. Per-run, never shared.
+        self._lost_progress: list[str] = []
 
     # Which node maps to which visible status while a run is in flight. The
     # dashboard and the API poll this, so it has to keep moving.
@@ -156,7 +159,12 @@ class WorkflowEngine:
             # terminal in `error`, committed — the result is kept
             # (ARCH-20261002-109).
             workflow.status = WorkflowStatus(state.status)
-            workflow.error = state.reason if state.status != "completed" else None
+            # The lost-progress note rides on the error even when the run
+            # completed: a record that silently misses what it lost is the
+            # defect D48 names (convention 28).
+            _base = state.reason if state.status != "completed" else None
+            workflow.error = "; ".join(
+                p for p in (_base, self._lost_note()) if p) or None
         except Exception as exc:
             logger.exception("Workflow %d failed", workflow.id)
             await self._flush_phases(workflow, pending_saves, chain)
@@ -170,7 +178,9 @@ class WorkflowEngine:
             workflow.unreconciled_liability = (
                 self.client.unreconciled_liability)
             workflow.status = WorkflowStatus.BLOCKED
-            workflow.error = f"{type(exc).__name__}: {exc}"[:2000]
+            workflow.error = "; ".join(
+                p for p in (f"{type(exc).__name__}: {exc}",
+                            self._lost_note()) if p)[:2000]
             workflow.updated_at = datetime.now(timezone.utc)
             await self.session.commit()
             return workflow
@@ -215,6 +225,9 @@ class WorkflowEngine:
     async def _write_progress(self, workflow: Workflow, item: dict) -> None:
         if item["written"]:
             return
+        # Read while the instance is live: after a rollback it is expired, and
+        # the handler below must read nothing from it (Ruling D48).
+        workflow_id = workflow.id
         try:
             data = (
                 item["verdict"].model_dump()
@@ -237,12 +250,35 @@ class WorkflowEngine:
             await self.session.commit()
             item["written"] = True
         except Exception:
-            # Kept out of the run's way and out of silence both: the run's
-            # result survives, and the record says which node was lost.
+            # Ruling D48: one failed progress write loses that node's record
+            # and nothing else. The session is rolled back — a failed commit
+            # leaves it unusable and the terminal at the end of the run would
+            # fail with it — the row is re-read so the run keeps everything it
+            # still needs, and the loss is NAMED in the run's record rather
+            # than left silent (convention 28). The item is consumed: the
+            # drain never retries a write that failed at the database and
+            # never re-raises it.
             logger.exception(
-                "Progress write failed for node %s on workflow %d",
-                item["node_id"], workflow.id,
+                "Progress write failed for node %s on workflow %s — the "
+                "node's record is lost, the run continues",
+                item["node_id"], workflow_id,
             )
+            self._lost_progress.append(str(item["node_id"]))
+            item["written"] = True
+            try:
+                await self.session.rollback()
+                await self.session.refresh(workflow)
+            except Exception:
+                logger.exception(
+                    "Rollback after a failed progress write also failed "
+                    "for workflow %s", workflow_id)
+
+    def _lost_note(self) -> str:
+        if not self._lost_progress:
+            return ""
+        return ("progress write lost for: "
+                + ", ".join(self._lost_progress)
+                + " (that node's phase record was not saved)")
 
     @staticmethod
     def _enforce_triage_composition(verdict: TriageVerdict) -> None:
