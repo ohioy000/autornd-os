@@ -12,9 +12,10 @@ that scores free-text answers against the keys. This file runs both
 instruments, proves each can fail on a corrupted copy (convention 22 -
 an instrument written in the same commit as the dataset gets no run of
 its own to prove it on), checks the three-way separation the command
-requires, records the open item that blocks freezing (the supplied
-array holds 5 of the 25 questions the command expects), and guards the
-version record the way D44 guards the golden scoreboard.
+requires, records the open item that blocks freezing (the
+owner or qualified-reviewer signoff the command requires
+is still pending), and guards the version record the way
+D44 guards the golden scoreboard.
 """
 
 from __future__ import annotations
@@ -72,16 +73,20 @@ class TestTheVerifierHoldsTheKeys:
     def test_every_check_holds_on_the_tree(self):
         out = _verify(TIER2)
         assert out.returncode == 0, out.stdout + out.stderr
-        assert "VERIFICATION PASSED: all 61 checks hold" in out.stdout
-        # Convention 28: the instrument examined all five questions
-        # and reports the open item beside its result.
-        for i in range(1, 6):
+        assert "VERIFICATION PASSED: all 268 checks hold" in out.stdout
+        # Convention 28: the instrument examined all 25
+        # questions and reports the open item beside its
+        # result.
+        for i in range(1, 26):
             assert f"Q{i}." in out.stdout, (
                 f"the verifier's table holds no Q{i} check - it "
                 f"examined fewer questions than the dataset has")
-        assert "5 questions verified" in out.stdout
+        assert "25 questions verified" in out.stdout
         assert "NOT frozen" in out.stdout
-        assert "20 questions short" in out.stdout
+        # The open item is the signoff the command requires,
+        # not a count: the owner supplied all 25 questions
+        # on 2026-10-03.
+        assert "signoff" in out.stdout
 
     def test_a_corrupted_numeric_key_fails_the_cross_check(
             self, tmp_path):
@@ -95,7 +100,7 @@ class TestTheVerifierHoldsTheKeys:
             json.dumps(keys, indent=2) + "\n", encoding="utf-8")
         out = _verify(copy)
         assert out.returncode == 1
-        assert "VERIFICATION FAILED: 1/61 checks failed: X1" in (
+        assert "VERIFICATION FAILED: 1/268 checks failed: X1" in (
             out.stdout)
 
     def test_a_corrupted_candidate_export_fails_the_hash(
@@ -105,7 +110,7 @@ class TestTheVerifierHoldsTheKeys:
             f.write(b"x")
         out = _verify(copy)
         assert out.returncode == 1
-        assert "VERIFICATION FAILED: 1/61 checks failed: G1" in (
+        assert "VERIFICATION FAILED: 1/268 checks failed: G1" in (
             out.stdout)
 
     def test_a_corrupted_source_archive_fails_the_archive_hash(
@@ -116,7 +121,7 @@ class TestTheVerifierHoldsTheKeys:
             f.write(b"x")
         out = _verify(copy)
         assert out.returncode == 1
-        assert "VERIFICATION FAILED: 1/61 checks failed: Q2.1" in (
+        assert "VERIFICATION FAILED: 1/268 checks failed: Q2.1" in (
             out.stdout)
 
     def test_swapped_model_answer_steps_fail_the_order_check(
@@ -132,7 +137,7 @@ class TestTheVerifierHoldsTheKeys:
             json.dumps(keys, indent=2) + "\n", encoding="utf-8")
         out = _verify(copy)
         assert out.returncode == 1
-        assert "VERIFICATION FAILED: 1/61 checks failed: Q5.5" in (
+        assert "VERIFICATION FAILED: 1/268 checks failed: Q5.5" in (
             out.stdout)
 
 
@@ -145,14 +150,14 @@ class TestTheScorerScoresNotRegexes:
     def test_the_self_test_passes(self):
         out = _self_test(TIER2)
         assert out.returncode == 0, out.stdout + out.stderr
-        assert ("SCORER SELF-TEST PASSED: all 64 fixtures hold"
+        assert ("SCORER SELF-TEST PASSED: all 248 fixtures hold"
                 in out.stdout)
         for qid in QUESTION_IDS:
             assert f"{qid} model answer" in out.stdout, (
                 f"the self-test never ran {qid}'s model answer")
         # Convention 28: the scorer reports the open item beside
         # its result, not just a green count.
-        assert "Candidate holds 5 questions" in out.stdout
+        assert "Candidate holds 25 questions" in out.stdout
         assert "NOT frozen" in out.stdout
 
     def test_a_corrupted_key_fails_the_intact_model_answer(
@@ -301,8 +306,30 @@ class TestTheDatasetSeparation:
         # answers do not.
         for probe in ("19.5", "23.5", "19.5 percent",
                       "23.5 percent", "6.13592", "20.3718",
-                      "0.0101859", "0.2355", "8.00", "8.0",
-                      "8000", "0.10"):
+                      "0.0101859", "0.2355", "8000",
+                      # Q6-Q25: the derived keys, the accepted
+                      # notations and the verdicts. Stated inputs
+                      # that a question itself carries (8.00
+                      # and 12.0 N/mm, 0.100 m, 35.0 deg C,
+                      # 240 mm, 500 rpm, 3.04 V ...)
+                      # are deliberately absent from this list.
+                      "0,1,1,0", "8 h", "4 h", "2 h",
+                      "133.333", "26.6667", "0.720", "15.0",
+                      "PASS", "without restart",
+                      "counterclockwise", "300 rpm",
+                      "as nitrogen",
+                      "8.64665", "0.135335",
+                      "120000", "160 s",
+                      "-0.030", "+0.010",
+                      "0.480", "0.800480",
+                      "50 lb", "annually",
+                      "7.20", "20.8333", "1.15741",
+                      "0.132", "0.264", "20.0 mA",
+                      "2.04", "308.15",
+                      "6 months", "14 h", "30 days",
+                      "0.882353", "61.7647", "176.471",
+                      "6.28319", "3:1", "12.0 N m",
+                      "1.08", "1080"):
             assert probe not in text, (
                 f"the model-visible file carries the key value "
                 f"{probe!r} - scorer material leaked into what "
@@ -317,49 +344,56 @@ class TestTheDatasetSeparation:
 
 
 class TestTheManifestRecordsTheOpenItem:
-    """The supplied array holds 5 of the 25 questions the command
-    expects. That discrepancy is the freeze blocker: it is recorded,
-    not resolved, because resolving it means supplying questions,
-    which the command forbids the executor (and any AI model) to
-    do. The source archives the verification depends on must match
-    the files on disk."""
+    """The owner supplied all 25 questions the command expects,
+    so the count discrepancy the earlier state recorded is
+    resolved. The remaining freeze blocker is the signoff: the
+    command requires owner or qualified-reviewer signoff on the
+    verification and the source review before paid use, and
+    that signoff is recorded as pending, not performed. The
+    source archives the verification depends on must match the
+    files on disk."""
 
-    def test_the_count_discrepancy_is_recorded_not_resolved(self):
-        assert MANIFEST["questions"] == 5
+    def test_the_signoff_is_recorded_not_performed(self):
+        assert MANIFEST["questions"] == 25
         assert MANIFEST["command_expected_questions"] == 25
         assert MANIFEST["frozen"] is False
         blockers = MANIFEST["freeze_blocked_by"]
         assert blockers, "no freeze blocker recorded"
-        assert any("count-discrepancy" in b for b in blockers), (
-            "the recorded freeze blockers do not name the count "
-            "discrepancy")
+        assert any("review-pending" in b for b in blockers), (
+            "the recorded freeze blockers do not name the "
+            "pending review")
+        assert any("signoff" in b for b in blockers), (
+            "the recorded freeze blockers do not name the "
+            "signoff the command requires")
 
     def test_the_source_archives_match_the_files_on_disk(self):
         archives = MANIFEST["source_archives"]
-        assert len(archives) == 2, (
-            "the manifest records a different number of source "
-            "archives than the verification reads")
-        first = archives[0]
-        for field, path_key in (("file", "file"),
-                                ("text_extraction",
-                                 "text_extraction")):
-            path = TIER2 / first[path_key]
+        assert len(archives) == 8, (
+            "the manifest records a different number of "
+            "source archives than the verification reads")
+        for archive in archives:
+            # Every archive records the archived document
+            # itself; the govinfo PDFs additionally record
+            # their text extraction (the eCFR snapshots are
+            # already text).
+            path = TIER2 / archive["file"]
             assert path.exists(), f"missing archive {path}"
-            assert path.stat().st_size == first[
-                "bytes" if path_key == "file" else "text_bytes"]
-            recorded = first["sha256" if path_key == "file"
-                             else "text_sha256"]
-            actual = hashlib.sha256(
-                path.read_bytes()).hexdigest()
-            assert actual == recorded, (
-                f"{path.name} hashes to {actual}, the manifest "
-                f"records {recorded}")
-        crosscheck = archives[1]
-        path = TIER2 / crosscheck["file"]
-        assert path.exists(), f"missing archive {path}"
-        assert path.stat().st_size == crosscheck["bytes"]
-        actual = hashlib.sha256(path.read_bytes()).hexdigest()
-        assert actual == crosscheck["sha256"]
+            assert path.stat().st_size == archive["bytes"]
+            actual = hashlib.sha256(path.read_bytes()).hexdigest()
+            assert actual == archive["sha256"], (
+                f"{path.name} hashes to {actual}, the "
+                f"manifest records {archive['sha256']}")
+            if "text_extraction" in archive:
+                text = TIER2 / archive["text_extraction"]
+                assert text.exists(), f"missing archive {text}"
+                assert text.stat().st_size == archive[
+                    "text_bytes"]
+                actual = hashlib.sha256(
+                    text.read_bytes()).hexdigest()
+                assert actual == archive["text_sha256"], (
+                    f"{text.name} hashes to {actual}, the "
+                    f"manifest records "
+                    f"{archive['text_sha256']}")
 
 
 class TestTheExtractionIsIdempotent:

@@ -1,18 +1,18 @@
 {
-  "dataset_version": "candidate-2026-10-03.2",
-  "scorer_version": "candidate-2026-10-03.2",
+  "dataset_version": "candidate-2026-10-03.3",
+  "scorer_version": "candidate-2026-10-03.3",
   "frozen": false,
   "freeze_blocked_by": [
-    "count-discrepancy: the owner's command and its $90.00 aggregate ceiling are written for a 25-question set; the supplied candidate array holds 5. The remaining 20 questions must be supplied by the owner or advisor - the tier-2 command forbids the executor (and any AI model) from generating, screening, or selecting questions."
+    "review-pending: the count discrepancy is resolved - the owner supplied all 25 questions on 2026-10-03 (the array the command names, registered verbatim). The set is not frozen: the tier-2 command requires owner or qualified-reviewer signoff on the verification and the source review before paid use ('Deterministic arithmetic verification is not independent subject-matter approval'). Freezing waits on that signoff."
   ],
   "candidate": {
     "file": "candidate/25GoldenQuestion.json",
-    "bytes": 135695,
-    "sha256": "260ceecd22f686086f0c35f0c26585e61d66ba15bca1c4f2f92a11a6d079851d",
+    "bytes": 204068,
+    "sha256": "66af3e5a9476dadf4f94f874e8d3d73c09215f25e6b1b2977b343d7689040343",
     "format": "orpg.3.0 chat export; the question array is the final assistant message's output_text",
     "supplied_by": "owner, in conversation, 2026-10-03"
   },
-  "questions": 5,
+  "questions": 25,
   "command_expected_questions": 25,
   "shapes": [
     "DERIVATION",
@@ -26,7 +26,27 @@
     "Regulation or standards",
     "Mechanical",
     "Materials",
-    "Fluids or thermal"
+    "Fluids or thermal",
+    "Electrical or electronics",
+    "Regulation or standards",
+    "Fluids or thermal",
+    "Mechanical",
+    "Materials",
+    "Mechanical",
+    "Regulation or standards",
+    "Electrical or electronics",
+    "Fluids or thermal",
+    "Materials",
+    "Materials",
+    "Regulation or standards",
+    "Mechanical",
+    "Electrical or electronics",
+    "Fluids or thermal",
+    "Fluids or thermal",
+    "Regulation or standards",
+    "Materials",
+    "Mechanical",
+    "Electrical or electronics"
   ],
   "separation": {
     "model_visible_requests": "questions.json",
@@ -55,6 +75,72 @@
       "file": "sources/ecfr-current-2026-10-01-sec1910-146.xml",
       "bytes": 84744,
       "sha256": "d3dc555e5e783af729b8243ba7932aff576daac7562817c4ddc038d5ef8eb182"
+    },
+    {
+      "question": "Q7, Q22",
+      "edition": "29 CFR, Title 29, July 1, 2014 edition, section 1910.95",
+      "edition_basis": "The section PDF's first page carries the tail of the preceding section beside section 1910.95's opening paragraph; the edition is identified by the govinfo package identifier (CFR-2014-title29-vol5 = the annual edition of Title 29, volume 5, revised as of July 1) and corroborated by the GPO typesetting footer on every page ('29 CFR Ch. XVII (7-1-14 Edition)').",
+      "url": "https://www.govinfo.gov/content/pkg/CFR-2014-title29-vol5/pdf/CFR-2014-title29-vol5-sec1910-95.pdf",
+      "retrieved_utc": "2026-10-03T09:44:53Z",
+      "file": "sources/CFR-2014-title29-vol5-sec1910-95.pdf",
+      "bytes": 390261,
+      "sha256": "41d25960a760c3dcecc7b52cfb40b8bf69bdecd11cfdc3608cbccd8675d754d9",
+      "text_extraction": "sources/CFR-2014-title29-vol5-sec1910-95.txt",
+      "text_bytes": 145372,
+      "text_sha256": "c3064933002fe22e1eef0f4139821e98e8fc03cb58f913e75da0e6f081571561",
+      "text_extraction_tool": "pdftotext -layout (Poppler); the committed .txt is the hermetic test input"
+    },
+    {
+      "what": "Stability cross-check: the Table G-16 duration rows (8 hours at 90 dBA, 4 hours at 95 dBA, 2 hours at 100 dBA, slow response) and the paragraph (g) provisions (baseline audiogram within 6 months, at least 14 hours without workplace noise before a baseline, retest within 30 days) are identical in the pinned July 1, 2014 annual edition and in the current eCFR text as of 2026-10-01, fetched via the eCFR versioner API - a 12-year span, which satisfies the command's 'unchanged for at least three years' requirement for lookup sources.",
+      "url": "https://www.ecfr.gov/api/versioner/v1/full/2026-10-01/title-29.xml?part=1910&section=1910.95",
+      "retrieved_utc": "2026-10-03T09:47:06Z",
+      "file": "sources/ecfr-current-2026-10-01-sec1910-95.xml",
+      "bytes": 83466,
+      "sha256": "f83a1303a004b5ae65d6e7a0780ea7df4c0f15e5463c62a5499f34cf405b6d5d"
+    },
+    {
+      "question": "Q12",
+      "edition": "40 CFR, Title 40, July 1, 2014 edition, section 141.62",
+      "edition_basis": "The edition is identified by the govinfo package identifier (CFR-2014-title40-vol23 = the annual edition of Title 40, volume 23, revised as of July 1) and corroborated by the GPO typesetting footer on every page ('40 CFR Ch. I (7-1-14 Edition)').",
+      "url": "https://www.govinfo.gov/content/pkg/CFR-2014-title40-vol23/pdf/CFR-2014-title40-vol23-sec141-62.pdf",
+      "retrieved_utc": "2026-10-03T09:44:54Z",
+      "file": "sources/CFR-2014-title40-vol23-sec141-62.pdf",
+      "bytes": 315341,
+      "sha256": "85f5e637381e75f129c6947a5b9e146b54c8f007bbe28f3e71ed38e994c35d69",
+      "text_extraction": "sources/CFR-2014-title40-vol23-sec141-62.txt",
+      "text_bytes": 27755,
+      "text_sha256": "cf097fb2b6309d21fcb646266c8bc2a6a4f48ced8d422a5555571096668ca00f",
+      "text_extraction_tool": "pdftotext -layout (Poppler); the committed .txt is the hermetic test input"
+    },
+    {
+      "what": "Stability cross-check: the maximum contaminant levels in paragraph (b) - fluoride 4.0 mg/L ((b)(1)), nitrate 10 mg/L as Nitrogen ((b)(7)), arsenic 0.010 mg/L ((b)(16)) - are identical in the pinned July 1, 2014 annual edition and in the current eCFR text as of 2026-10-01, fetched via the eCFR versioner API - a 12-year span, which satisfies the command's 'unchanged for at least three years' requirement for lookup sources.",
+      "url": "https://www.ecfr.gov/api/versioner/v1/full/2026-10-01/title-40.xml?part=141&section=141.62",
+      "retrieved_utc": "2026-10-03T09:47:11Z",
+      "file": "sources/ecfr-current-2026-10-01-sec141-62.xml",
+      "bytes": 10267,
+      "sha256": "44ae04fb1e9f8c98b70a4b299b5475621bc87b5723cfce6a1e12e8cfc4d7c117"
+    },
+    {
+      "question": "Q17",
+      "edition": "29 CFR, Title 29, July 1, 2014 edition, section 1910.147",
+      "edition_basis": "The edition is identified by the govinfo package identifier (CFR-2014-title29-vol5 = the annual edition of Title 29, volume 5, revised as of July 1) and corroborated by the GPO typesetting footer on every page ('29 CFR Ch. XVII (7-1-14 Edition)').",
+      "url": "https://www.govinfo.gov/content/pkg/CFR-2014-title29-vol5/pdf/CFR-2014-title29-vol5-sec1910-147.pdf",
+      "retrieved_utc": "2026-10-03T09:44:54Z",
+      "file": "sources/CFR-2014-title29-vol5-sec1910-147.pdf",
+      "bytes": 289367,
+      "sha256": "e97f08c55876fb103391810dfe250e5404f9acdaef772989be90a794580c6d9a",
+      "text_extraction": "sources/CFR-2014-title29-vol5-sec1910-147.txt",
+      "text_bytes": 75665,
+      "text_sha256": "741db5b20271bfc7885f79fed5966e36f91e125d8151d99b46d9176cb7691ecb",
+      "text_extraction_tool": "pdftotext -layout (Poppler); the committed .txt is the hermetic test input"
+    },
+    {
+      "what": "Stability cross-check: the tagout-device attachment means' minimum unlocking strength (no less than 50 pounds, (c)(5)(ii)(C)(2)) and the energy-control procedure's periodic inspection frequency (at least annually, (c)(6)(i)) are identical in the pinned July 1, 2014 annual edition and in the current eCFR text as of 2026-10-01, fetched via the eCFR versioner API - a 12-year span, which satisfies the command's 'unchanged for at least three years' requirement for lookup sources.",
+      "url": "https://www.ecfr.gov/api/versioner/v1/full/2026-10-01/title-29.xml?part=1910&section=1910.147",
+      "retrieved_utc": "2026-10-03T09:47:12Z",
+      "file": "sources/ecfr-current-2026-10-01-sec1910-147.xml",
+      "bytes": 34063,
+      "sha256": "cd19626f5224029ba07a7ecdd36caa27fb2e6f0ed9b22e8b39de6a761eb131d9"
     }
   ]
 }

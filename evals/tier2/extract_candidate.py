@@ -31,13 +31,26 @@ RAW = HERE / "candidate" / "25GoldenQuestion.json"
 PDF_PATH = HERE / "sources" / "CFR-2014-title29-vol5-sec1910-146.pdf"
 TEXT_PATH = HERE / "sources" / "CFR-2014-title29-vol5-sec1910-146.txt"
 ECFR_PATH = HERE / "sources" / "ecfr-current-2026-10-01-sec1910-146.xml"
+# Q7 and Q22 share one regulation (29 CFR 1910.95: Table G-16
+# and paragraph (g)); Q12 reads 40 CFR 141.62(b); Q17 reads
+# 29 CFR 1910.147(c)(5)(ii)(C)(2) and (c)(6)(i).
+PDF_95_PATH = HERE / "sources" / "CFR-2014-title29-vol5-sec1910-95.pdf"
+TEXT_95_PATH = HERE / "sources" / "CFR-2014-title29-vol5-sec1910-95.txt"
+ECFR_95_PATH = HERE / "sources" / "ecfr-current-2026-10-01-sec1910-95.xml"
+PDF_62_PATH = HERE / "sources" / "CFR-2014-title40-vol23-sec141-62.pdf"
+TEXT_62_PATH = HERE / "sources" / "CFR-2014-title40-vol23-sec141-62.txt"
+ECFR_62_PATH = HERE / "sources" / "ecfr-current-2026-10-01-sec141-62.xml"
+PDF_147_PATH = HERE / "sources" / "CFR-2014-title29-vol5-sec1910-147.pdf"
+TEXT_147_PATH = HERE / "sources" / "CFR-2014-title29-vol5-sec1910-147.txt"
+ECFR_147_PATH = HERE / "sources" / "ecfr-current-2026-10-01-sec1910-147.xml"
 
-DATASET_VERSION = "candidate-2026-10-03.2"
-SCORER_VERSION = "candidate-2026-10-03.2"
+DATASET_VERSION = "candidate-2026-10-03.3"
+SCORER_VERSION = "candidate-2026-10-03.3"
 
-# The count discrepancy that blocks freezing: the owner's command
-# and its $90.00 aggregate ceiling arithmetic are written for a
-# 25-question set; the supplied candidate array holds 5.
+# The count the owner's command expects. When the supplied
+# array falls short, the discrepancy blocks freezing; when
+# it matches, the remaining blocker is the review and
+# signoff the command requires before paid use.
 COMMAND_EXPECTED_COUNT = 25
 
 
@@ -137,20 +150,35 @@ def main() -> None:
         json.dumps(scorer_only, indent=2) + "\n"
     )
 
+    supplied = len(questions)
+    if supplied == COMMAND_EXPECTED_COUNT:
+        blockers = [
+            "review-pending: the count discrepancy is resolved - "
+            "the owner supplied all 25 questions on 2026-10-03 "
+            "(the array the command names, registered verbatim). "
+            "The set is not frozen: the tier-2 command requires "
+            "owner or qualified-reviewer signoff on the verification "
+            "and the source review before paid use ('Deterministic "
+            "arithmetic verification is not independent "
+            "subject-matter approval'). Freezing waits on that "
+            "signoff."
+        ]
+    else:
+        blockers = [
+            "count-discrepancy: the owner's command and its $90.00 "
+            "aggregate ceiling are written for a 25-question set; "
+            "the supplied candidate array holds "
+            f"{supplied}. The remaining "
+            f"{COMMAND_EXPECTED_COUNT - supplied} questions "
+            "must be supplied by the owner or advisor - the tier-2 "
+            "command forbids the executor (and any AI model) from "
+            "generating, screening, or selecting questions."
+        ]
     manifest = {
         "dataset_version": DATASET_VERSION,
         "scorer_version": SCORER_VERSION,
         "frozen": False,
-        "freeze_blocked_by": [
-            "count-discrepancy: the owner's command and its $90.00 "
-            "aggregate ceiling are written for a 25-question set; "
-            "the supplied candidate array holds "
-            f"{len(questions)}. The remaining "
-            f"{COMMAND_EXPECTED_COUNT - len(questions)} questions "
-            "must be supplied by the owner or advisor - the tier-2 "
-            "command forbids the executor (and any AI model) from "
-            "generating, screening, or selecting questions."
-        ],
+        "freeze_blocked_by": blockers,
         "candidate": {
             "file": "candidate/25GoldenQuestion.json",
             "bytes": RAW.stat().st_size,
@@ -218,14 +246,174 @@ def main() -> None:
                         "ecfr-current-2026-10-01-sec1910-146.xml",
                 "bytes": ECFR_PATH.stat().st_size,
                 "sha256": sha256_file(ECFR_PATH),
+            },
+            {
+                "question": "Q7, Q22",
+                "edition": "29 CFR, Title 29, July 1, 2014 "
+                             "edition, section 1910.95",
+                "edition_basis": "The section PDF's first page "
+                                 "carries the tail of the preceding "
+                                 "section beside section 1910.95's "
+                                 "opening paragraph; the edition is "
+                                 "identified by the govinfo package "
+                                 "identifier (CFR-2014-title29-vol5 "
+                                 "= the annual edition of Title 29, "
+                                 "volume 5, revised as of July 1) "
+                                 "and corroborated by the GPO "
+                                 "typesetting footer on every page "
+                                 "('29 CFR Ch. XVII (7-1-14 "
+                                 "Edition)').",
+                "url": "https://www.govinfo.gov/content/pkg/"
+                       "CFR-2014-title29-vol5/pdf/"
+                       "CFR-2014-title29-vol5-sec1910-95.pdf",
+                "retrieved_utc": "2026-10-03T09:44:53Z",
+                "file": "sources/CFR-2014-title29-vol5-sec1910-95.pdf",
+                "bytes": PDF_95_PATH.stat().st_size,
+                "sha256": sha256_file(PDF_95_PATH),
+                "text_extraction": "sources/"
+                                   "CFR-2014-title29-vol5-sec1910-95.txt",
+                "text_bytes": TEXT_95_PATH.stat().st_size,
+                "text_sha256": sha256_file(TEXT_95_PATH),
+                "text_extraction_tool": "pdftotext -layout "
+                                        "(Poppler); the committed "
+                                        ".txt is the hermetic test "
+                                        "input",
+            },
+            {
+                "what": "Stability cross-check: the Table G-16 "
+                        "duration rows (8 hours at 90 dBA, 4 hours "
+                        "at 95 dBA, 2 hours at 100 dBA, slow "
+                        "response) and the paragraph (g) provisions "
+                        "(baseline audiogram within 6 months, "
+                        "at least 14 hours without workplace noise "
+                        "before a baseline, retest within 30 days) "
+                        "are identical in the pinned July 1, 2014 "
+                        "annual edition and in the current eCFR text "
+                        "as of 2026-10-01, fetched via the eCFR "
+                        "versioner API - a 12-year span, which "
+                        "satisfies the command's 'unchanged for at "
+                        "least three years' requirement for lookup "
+                        "sources.",
+                "url": "https://www.ecfr.gov/api/versioner/v1/full/"
+                       "2026-10-01/title-29.xml?part=1910"
+                       "&section=1910.95",
+                "retrieved_utc": "2026-10-03T09:47:06Z",
+                "file": "sources/"
+                        "ecfr-current-2026-10-01-sec1910-95.xml",
+                "bytes": ECFR_95_PATH.stat().st_size,
+                "sha256": sha256_file(ECFR_95_PATH),
+            },
+            {
+                "question": "Q12",
+                "edition": "40 CFR, Title 40, July 1, 2014 "
+                             "edition, section 141.62",
+                "edition_basis": "The edition is identified by the "
+                                 "govinfo package identifier "
+                                 "(CFR-2014-title40-vol23 = the "
+                                 "annual edition of Title 40, volume "
+                                 "23, revised as of July 1) and "
+                                 "corroborated by the GPO typesetting "
+                                 "footer on every page ('40 CFR Ch. I "
+                                 "(7-1-14 Edition)').",
+                "url": "https://www.govinfo.gov/content/pkg/"
+                       "CFR-2014-title40-vol23/pdf/"
+                       "CFR-2014-title40-vol23-sec141-62.pdf",
+                "retrieved_utc": "2026-10-03T09:44:54Z",
+                "file": "sources/CFR-2014-title40-vol23-sec141-62.pdf",
+                "bytes": PDF_62_PATH.stat().st_size,
+                "sha256": sha256_file(PDF_62_PATH),
+                "text_extraction": "sources/"
+                                   "CFR-2014-title40-vol23-sec141-62.txt",
+                "text_bytes": TEXT_62_PATH.stat().st_size,
+                "text_sha256": sha256_file(TEXT_62_PATH),
+                "text_extraction_tool": "pdftotext -layout "
+                                        "(Poppler); the committed "
+                                        ".txt is the hermetic test "
+                                        "input",
+            },
+            {
+                "what": "Stability cross-check: the maximum "
+                        "contaminant levels in paragraph (b) - "
+                        "fluoride 4.0 mg/L ((b)(1)), nitrate 10 mg/L "
+                        "as Nitrogen ((b)(7)), arsenic 0.010 mg/L "
+                        "((b)(16)) - are identical in the pinned "
+                        "July 1, 2014 annual edition and in the "
+                        "current eCFR text as of 2026-10-01, fetched "
+                        "via the eCFR versioner API - a 12-year span, "
+                        "which satisfies the command's 'unchanged for "
+                        "at least three years' requirement for lookup "
+                        "sources.",
+                "url": "https://www.ecfr.gov/api/versioner/v1/full/"
+                       "2026-10-01/title-40.xml?part=141"
+                       "&section=141.62",
+                "retrieved_utc": "2026-10-03T09:47:11Z",
+                "file": "sources/"
+                        "ecfr-current-2026-10-01-sec141-62.xml",
+                "bytes": ECFR_62_PATH.stat().st_size,
+                "sha256": sha256_file(ECFR_62_PATH),
+            },
+            {
+                "question": "Q17",
+                "edition": "29 CFR, Title 29, July 1, 2014 "
+                             "edition, section 1910.147",
+                "edition_basis": "The edition is identified by the "
+                                 "govinfo package identifier "
+                                 "(CFR-2014-title29-vol5 = the "
+                                 "annual edition of Title 29, volume "
+                                 "5, revised as of July 1) and "
+                                 "corroborated by the GPO typesetting "
+                                 "footer on every page ('29 CFR Ch. "
+                                 "XVII (7-1-14 Edition)').",
+                "url": "https://www.govinfo.gov/content/pkg/"
+                       "CFR-2014-title29-vol5/pdf/"
+                       "CFR-2014-title29-vol5-sec1910-147.pdf",
+                "retrieved_utc": "2026-10-03T09:44:54Z",
+                "file": "sources/CFR-2014-title29-vol5-sec1910-147.pdf",
+                "bytes": PDF_147_PATH.stat().st_size,
+                "sha256": sha256_file(PDF_147_PATH),
+                "text_extraction": "sources/"
+                                   "CFR-2014-title29-vol5-sec1910-147.txt",
+                "text_bytes": TEXT_147_PATH.stat().st_size,
+                "text_sha256": sha256_file(TEXT_147_PATH),
+                "text_extraction_tool": "pdftotext -layout "
+                                        "(Poppler); the committed "
+                                        ".txt is the hermetic test "
+                                        "input",
+            },
+            {
+                "what": "Stability cross-check: the tagout-device "
+                        "attachment means' minimum unlocking strength "
+                        "(no less than 50 pounds, "
+                        "(c)(5)(ii)(C)(2)) and the energy-control "
+                        "procedure's periodic inspection frequency "
+                        "(at least annually, (c)(6)(i)) are identical "
+                        "in the pinned July 1, 2014 annual edition "
+                        "and in the current eCFR text as of 2026-10-01, "
+                        "fetched via the eCFR versioner API - a "
+                        "12-year span, which satisfies the command's "
+                        "'unchanged for at least three years' "
+                        "requirement for lookup sources.",
+                "url": "https://www.ecfr.gov/api/versioner/v1/full/"
+                       "2026-10-01/title-29.xml?part=1910"
+                       "&section=1910.147",
+                "retrieved_utc": "2026-10-03T09:47:12Z",
+                "file": "sources/"
+                        "ecfr-current-2026-10-01-sec1910-147.xml",
+                "bytes": ECFR_147_PATH.stat().st_size,
+                "sha256": sha256_file(ECFR_147_PATH),
             }
         ],
     }
     (HERE / "manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n"
     )
-    print(f"questions: {len(questions)} (command expects "
-          f"{COMMAND_EXPECTED_COUNT} - NOT frozen)")
+    if supplied == COMMAND_EXPECTED_COUNT:
+        print(f"questions: {supplied} (command expects "
+              f"{COMMAND_EXPECTED_COUNT} - count discrepancy "
+              "resolved; NOT frozen: review/signoff pending)")
+    else:
+        print(f"questions: {supplied} (command expects "
+              f"{COMMAND_EXPECTED_COUNT} - NOT frozen)")
     print(f"candidate sha256: {raw_hash}")
     for q in questions:
         print(f"  {q['id']} {q['shape']:<11} {q['domain']}")

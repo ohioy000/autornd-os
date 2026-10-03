@@ -1,0 +1,669 @@
+                                § 1910.147                                                            29 CFR Ch. XVII (7–1–14 Edition)
+                                service should perform a critique of the prac-            that are ‘‘worst-case’’ or most restrictive
+                                tice rescue, or have another qualified party              with respect to internal configuration, ele-
+                                perform the critique, so that deficiencies in             vation, and portal size. The following charac-
+                                procedures, equipment, training, or number                teristics of a practice space should be consid-
+                                of personnel can be identified and corrected.             ered when deciding whether a space is truly
+                                The results of the critique, and the correc-              representative of an actual permit space:
+                                tions made to respond to the deficiencies                   (1) Internal configuration.
+                                identified, should be given to the employer                 (a) Open—there are no obstacles, barriers,
+                                to enable it to determine whether the rescue              or obstructions within the space. One exam-
+                                service can quickly be upgraded to meet the               ple is a water tank.
+                                employer’s rescue needs or whether another                  (b) Obstructed—the permit space contains
+                                service must be selected. The following ques-             some type of obstruction that a rescuer
+                                tions will assist employers and rescue teams              would need to maneuver around. An example
+                                and services evaluate their performance.                  would be a baffle or mixing blade. Large
+                                  1. Have all members of the service been                 equipment, such as a ladder or scaffold,
+                                trained as permit space entrants, at a min-               brought into a space for work purposes
+                                imum, including training in the potential                 would be considered an obstruction if the po-
+                                hazards of all permit spaces, or of represent-            sitioning or size of the equipment would
+                                ative permit spaces, from which rescue may                make rescue more difficult.
+                                be needed? Can team members recognize the                   (2) Elevation.
+                                signs, symptoms, and consequences of expo-                  (a) Elevated—a permit space where the en-
+                                sure to any hazardous atmospheres that may                trance portal or opening is above grade by 4
+                                be present in those permit spaces?                        feet or more. This type of space usually re-
+                                  2. Is every team member provided with,                  quires knowledge of high angle rescue proce-
+                                and properly trained in, the use and need for             dures because of the difficulty in packaging
+                                PPE, such as SCBA or fall arrest equipment,               and transporting a patient to the ground
+                                which may be required to perform permit                   from the portal.
+                                space rescues in the facility? Is every team
+                                                                                            (b) Non-elevated—a permit space with the
+                                member properly trained to perform his or
+                                                                                          entrance portal located less than 4 feet above
+                                her functions and make rescues, and to use
+                                                                                          grade. This type of space will allow the res-
+                                any rescue equipment, such as ropes and
+                                                                                          cue team to transport an injured employee
+                                backboards, that may be needed in a rescue
+                                                                                          normally.
+                                attempt?
+                                                                                            (3) Portal size.
+                                  3. Are team members trained in the first
+                                                                                            (a) Restricted—A portal of 24 inches or less
+                                aid and medical skills needed to treat vic-
+                                                                                          in the least dimension. Portals of this size
+                                tims overcome or injured by the types of
+                                                                                          are too small to allow a rescuer to simply
+                                hazards that may be encountered in the per-
+                                                                                          enter the space while using SCBA. The por-
+                                mit spaces at the facility?
+                                  4. Do all team members perform their func-              tal size is also too small to allow normal spi-
+                                tions safely and efficiently? Do rescue serv-             nal immobilization of an injured employee.
+                                ice personnel focus on their own safety be-                 (b) Unrestricted—A portal of greater than
+                                fore considering the safety of the victim?                24 inches in the least dimension. These por-
+                                  5. If necessary, can the rescue service prop-           tals allow relatively free movement into and
+                                erly test the atmosphere to determine if it is            out of the permit space.
+                                IDLH?                                                       (4) Space access.
+                                  6. Can the rescue personnel identify infor-               (a) Horizontal—The portal is located on
+                                mation pertinent to the rescue from entry                 the side of the permit space. Use of retrieval
+                                permits, hot work permits, and MSDSs?                     lines could be difficult.
+                                  7. Has the rescue service been informed of                (b) Vertical—The portal is located on the
+                                any hazards to personnel that may arise                   top of the permit space, so that rescuers
+                                from outside the space, such as those that                must climb down, or the bottom of the per-
+                                may be caused by future work near the                     mit space, so that rescuers must climb up to
+                                space?                                                    enter the space. Vertical portals may require
+                                  8. If necessary, can the rescue service prop-           knowledge of rope techniques, or special pa-
+                                erly package and retrieve victims from a                  tient packaging to safely retrieve a downed
+                                permit space that has a limited size opening              entrant.
+                                (less than 24 inches (60.9 cm) in diameter),              [58 FR 4549, Jan. 14, 1993; 58 FR 34845, 34846,
+                                limited internal space, or internal obstacles             June 29, 1993, as amended at 59 FR 26114, May
+                                or hazards?                                               19, 1994; 63 FR 66038, 66039, Dec. 1, 1998; 76 FR
+                                  9. If necessary, can the rescue service safe-           80739, Dec. 27, 2011]
+                                ly perform an elevated (high angle) rescue?
+                                  10. Does the rescue service have a plan for             § 1910.147 The control of hazardous
+                                each of the kinds of permit space rescue op-                   energy (lockout/tagout).
+                                erations at the facility? Is the plan adequate
+                                for all types of rescue operations that may                  (a) Scope, application, and purpose—(1)
+                                be needed at the facility? Teams may prac-                Scope. (i) This standard covers the serv-
+                                tice in representative spaces, or in spaces               icing and maintenance of machines and
+
+                                                                                     496
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00506   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                § 1910.147
+
+                                equipment in which the unexpected                           (A) Work on cord and plug connected
+                                energization or start up of the ma-                       electric equipment for which exposure
+                                chines or equipment, or release of                        to     the    hazards    of   unexpected
+                                stored energy could cause injury to em-                   energization or start up of the equip-
+                                ployees. This standard establishes min-                   ment is controlled by the unplugging of
+                                imum performance requirements for                         the equipment from the energy source
+                                the control of such hazardous energy.                     and by the plug being under the exclu-
+                                  (ii) This standard does not cover the                   sive control of the employee per-
+                                following:                                                forming the servicing or maintenance.
+                                  (A) Construction and agriculture em-                      (B) Hot tap operations involving
+                                ployment;                                                 transmission and distribution systems
+                                  (B) Employment covered by parts                         for substances such as gas, steam,
+                                1915, 1917, and 1918 of this title;                       water or petroleum products when they
+                                  (C) Installations under the exclusive                   are performed on pressurized pipelines,
+                                control of electric utilities for the pur-                provided that the employer dem-
+                                pose of power generation, transmission                    onstrates that (1) continuity of service
+                                and distribution, including related                       is essential; (2) shutdown of the system
+                                equipment for communication or me-                        is impractical; and (3) documented pro-
+                                tering;                                                   cedures are followed, and special equip-
+                                  (D) Exposure to electrical hazards                      ment is used which will provide proven
+                                from work on, near, or with conductors                    effective protection for employees.
+                                or equipment in electric-utilization in-                    (3) Purpose. (i) This section requires
+                                stallations, which is covered by sub-                     employers to establish a program and
+                                part S of this part; and                                  utilize procedures for affixing appro-
+                                  (E) Oil and gas well drilling and serv-                 priate lockout devices or tagout de-
+                                icing.                                                    vices to energy isolating devices, and
+                                  (2) Application. (i) This standard ap-                  to otherwise disable machines or equip-
+                                plies to the control of energy during                     ment       to      prevent    unexpected
+                                servicing and/or maintenance of ma-                       energization, start-up or release of
+                                chines and equipment.                                     stored energy in order to prevent in-
+                                  (ii) Normal production operations are                   jury to employees.
+                                not covered by this standard (See sub-                      (ii) When other standards in this part
+                                part 0 of this part). Servicing and/or                    require the use of lockout or tagout,
+                                maintenance which takes place during                      they shall be used and supplemented by
+                                normal production operations is cov-                      the procedural and training require-
+                                ered by this standard only if;:                           ments of this section.
+                                  (A) An employee is required to re-                        (b) Definitions applicable to this sec-
+                                move or bypass a guard or other safety                    tion.
+                                device; or                                                  Affected employee. An employee whose
+                                  (B) An employee is required to place                    job requires him/her to operate or use a
+                                any part of his or her body into an area                  machine or equipment on which serv-
+                                on a machine or piece of equipment                        icing or maintenance is being per-
+                                where work is actually performed upon                     formed under lockout or tagout, or
+                                the material being processed (point of                    whose job requires him/her to work in
+                                operation) or where an associated dan-                    an area in which such servicing or
+                                ger zone exists during a machine oper-                    maintenance is being performed.
+                                ating cycle.                                                Authorized employee. A person who
+                                                                                          locks out or tags out machines or
+                                  NOTE: Exception to paragraph (a)(2)(ii):
+                                                                                          equipment in order to perform serv-
+                                Minor tool changes and adjustments, and
+                                other minor servicing activities, which take              icing or maintenance on that machine
+                                place during normal production operations,                or equipment. An affected employee be-
+                                are not covered by this standard if they are              comes an authorized employee when
+                                routine, repetitive, and integral to the use of           that employee’s duties include per-
+                                the equipment for production, provided that               forming servicing or maintenance cov-
+                                the work is performed using alternative                   ered under this section.
+                                measures which provide effective protection                 Capable of being locked out. An energy
+                                (See subpart 0 of this part).
+                                                                                          isolating device is capable of being
+                                  (iii) This standard does not apply to                   locked out if it has a hasp or other
+                                the following.                                            means of attachment to which, or
+
+                                                                                     497
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00507   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.147                                                            29 CFR Ch. XVII (7–1–14 Edition)
+
+                                through which, a lock can be affixed, or                  perform its intended production func-
+                                it has a locking mechanism built into                     tion.
+                                it. Other energy isolating devices are                      Servicing and/or maintenance. Work-
+                                capable of being locked out, if lockout                   place activities such as constructing,
+                                can be achieved without the need to                       installing, setting up, adjusting, in-
+                                dismantle, rebuild, or replace the en-                    specting, modifying, and maintaining
+                                ergy isolating device or permanently                      and/or servicing machines or equip-
+                                alter its energy control capability.                      ment. These activities include lubrica-
+                                  Energized. Connected to an energy                       tion, cleaning or unjamming of ma-
+                                source or containing residual or stored                   chines or equipment and making ad-
+                                energy.                                                   justments or tool changes, where the
+                                  Energy isolating device. A mechanical                   employee may be exposed to the unex-
+                                device that physically prevents the                       pected energization or startup of the
+                                transmission or release of energy, in-                    equipment or release of hazardous en-
+                                cluding but not limited to the fol-                       ergy.
+                                lowing: A manually operated electrical                      Setting up. Any work performed to
+                                circuit breaker; a disconnect switch; a                   prepare a machine or equipment to per-
+                                manually operated switch by which the                     form its normal production operation.
+                                conductors of a circuit can be discon-                      Tagout. The placement of a tagout
+                                nected from all ungrounded supply con-                    device on an energy isolating device, in
+                                ductors, and, in addition, no pole can                    accordance with an established proce-
+                                be operated independently; a line                         dure, to indicate that the energy iso-
+                                valve; a block; and any similar device                    lating device and the equipment being
+                                used to block or isolate energy. Push                     controlled may not be operated until
+                                buttons, selector switches and other                      the tagout device is removed.
+                                control circuit type devices are not en-                    Tagout device. A prominent warning
+                                ergy isolating devices.                                   device, such as a tag and a means of at-
+                                                                                          tachment, which can be securely fas-
+                                  Energy source. Any source of elec-
+                                                                                          tened to an energy isolating device in
+                                trical, mechanical, hydraulic, pneu-
+                                                                                          accordance with an established proce-
+                                matic, chemical, thermal, or other en-
+                                                                                          dure, to indicate that the energy iso-
+                                ergy.                                                     lating device and the equipment being
+                                  Hot tap. A procedure used in the re-                    controlled may not be operated until
+                                pair, maintenance and services activi-                    the tagout device is removed.
+                                ties which involves welding on a piece                      (c) General—(1) Energy control pro-
+                                of equipment (pipelines, vessels or                       gram. The employer shall establish a
+                                tanks) under pressure, in order to in-                    program consisting of energy control
+                                stall connections or appurtenances. It                    procedures, employee training and
+                                is commonly used to replace or add                        periodic inspections to ensure that be-
+                                sections of pipeline without the inter-                   fore any employee performs any serv-
+                                ruption of service for air, gas, water,                   icing or maintenance on a machine or
+                                steam, and petrochemical distribution                     equipment where the unexpected ener-
+                                systems.                                                  gizing, start up or release of stored en-
+                                  Lockout. The placement of a lockout                     ergy could occur and cause injury, the
+                                device on an energy isolating device, in                  machine or equipment shall be isolated
+                                accordance with an established proce-                     from the energy source, and rendered
+                                dure, ensuring that the energy iso-                       inoperative.
+                                lating device and the equipment being                       (2) Lockout/tagout. (i) If an energy iso-
+                                controlled cannot be operated until the                   lating device is not capable of being
+                                lockout device is removed.                                locked out, the employer’s energy con-
+                                  Lockout device. A device that utilizes                  trol program under paragraph (c)(1) of
+                                a positive means such as a lock, either                   this section shall utilize a tagout sys-
+                                key or combination type, to hold an                       tem.
+                                energy isolating device in a safe posi-                     (ii) If an energy isolating device is
+                                tion and prevent the energizing of a                      capable of being locked out, the em-
+                                machine or equipment. Included are                        ployer’s energy control program under
+                                blank flanges and bolted slip blinds.                     paragraph (c)(1) of this section shall
+                                  Normal production operations. The uti-                  utilize lockout, unless the employer
+                                lization of a machine or equipment to                     can demonstrate that the utilization of
+
+                                                                                     498
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00508   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                § 1910.147
+
+                                a tagout system will provide full em-                     source will completely deenergize and de-
+                                ployee protection as set forth in para-                   activate the machine or equipment; (4) the
+                                graph (c)(3) of this section.                             machine or equipment is isolated from that
+                                  (iii) After January 2, 1990, whenever                   energy source and locked out during serv-
+                                replacement or major repair, renova-                      icing or maintenance; (5) a single lockout de-
+                                                                                          vice will achieve a locked-out condition; (6)
+                                tion or modification of a machine or
+                                                                                          the lockout device is under the exclusive
+                                equipment is performed, and whenever                      control of the authorized employee per-
+                                new machines or equipment are in-                         forming the servicing or maintenance; (7)
+                                stalled, energy isolating devices for                     the servicing or maintenance does not create
+                                such machine or equipment shall be de-                    hazards for other employees; and (8) the em-
+                                signed to accept a lockout device.                        ployer, in utilizing this exception, has had
+                                  (3) Full employee protection. (i) When a                no accidents involving the unexpected acti-
+                                tagout device is used on an energy iso-                   vation or reenergization of the machine or
+                                lating device which is capable of being                   equipment during servicing or maintenance.
+                                locked out, the tagout device shall be
+                                                                                             (ii) The procedures shall clearly and
+                                attached at the same location that the
+                                lockout device would have been at-                        specifically outline the scope, purpose,
+                                tached, and the employer shall dem-                       authorization, rules, and techniques to
+                                onstrate that the tagout program will                     be utilized for the control of hazardous
+                                provide a level of safety equivalent to                   energy, and the means to enforce com-
+                                that obtained by using a lockout pro-                     pliance including, but not limited to,
+                                gram.                                                     the following:
+                                  (ii) In demonstrating that a level of                      (A) A specific statement of the in-
+                                safety is achieved in the tagout pro-                     tended use of the procedure;
+                                gram which is equivalent to the level                        (B) Specific procedural steps for
+                                of safety obtained by using a lockout                     shutting down, isolating, blocking and
+                                program, the employer shall dem-                          securing machines or equipment to
+                                onstrate full compliance with all                         control hazardous energy;
+                                tagout-related provisions of this stand-                     (C) Specific procedural steps for the
+                                ard together with such additional ele-                    placement, removal and transfer of
+                                ments as are necessary to provide the                     lockout devices or tagout devices and
+                                equivalent safety available from the                      the responsibility for them; and
+                                use of a lockout device. Additional                          (D) Specific requirements for testing
+                                means to be considered as part of the                     a machine or equipment to determine
+                                demonstration of full employee protec-
+                                                                                          and verify the effectiveness of lockout
+                                tion shall include the implementation
+                                                                                          devices, tagout devices, and other en-
+                                of additional safety measures such as
+                                                                                          ergy control measures.
+                                the removal of an isolating circuit ele-
+                                ment, blocking of a controlling switch,                      (5) Protective materials and hardware.
+                                opening of an extra disconnecting de-                     (i) Locks, tags, chains, wedges, key
+                                vice, or the removal of a valve handle                    blocks, adapter pins, self-locking fas-
+                                to reduce the likelihood of inadvertent                   teners, or other hardware shall be pro-
+                                energization.                                             vided by the employer for isolating, se-
+                                  (4) Energy control procedure. (i) Proce-                curing or blocking of machines or
+                                dures shall be developed, documented                      equipment from energy sources.
+                                and utilized for the control of poten-                       (ii) Lockout devices and tagout de-
+                                tially hazardous energy when employ-                      vices shall be singularly identified;
+                                ees are engaged in the activities cov-                    shall be the only devices(s) used for
+                                ered by this section.                                     controlling energy; shall not be used
+                                  NOTE: Exception: The employer need not
+                                                                                          for other purposes; and shall meet the
+                                document the required procedure for a par-                following requirements:
+                                ticular machine or equipment, when all of                    (A) Durable. (1) Lockout and tagout
+                                the following elements exist: (1) The ma-                 devices shall be capable of with-
+                                chine or equipment has no potential for                   standing the environment to which
+                                stored or residual energy or reaccumulation               they are exposed for the maximum pe-
+                                of stored energy after shut down which could
+                                                                                          riod of time that exposure is expected.
+                                endanger employees; (2) the machine or
+                                equipment has a single energy source which                   (2) Tagout devices shall be con-
+                                can be readily identified and isolated; (3) the           structed and printed so that exposure
+                                isolation and locking out of that energy                  to weather conditions or wet and damp
+
+                                                                                     499
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00509   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.147                                                            29 CFR Ch. XVII (7–1–14 Edition)
+
+                                locations will not cause the tag to de-                   include a review, between the inspector
+                                teriorate or the message on the tag to                    and each authorized employee, of that
+                                become illegible.                                         employee’s responsibilities under the
+                                  (3) Tags shall not deteriorate when                     energy control procedure being in-
+                                used in corrosive environments such as                    spected.
+                                areas where acid and alkali chemicals                       (D) Where tagout is used for energy
+                                are handled and stored.                                   control, the periodic inspection shall
+                                  (B) Standardized. Lockout and tagout                    include a review, between the inspector
+                                devices shall be standardized within                      and each authorized and affected em-
+                                the facility in at least one of the fol-                  ployee, of that employee’s responsibil-
+                                lowing criteria: Color; shape; or size;                   ities under the energy control proce-
+                                and additionally, in the case of tagout                   dure being inspected, and the elements
+                                devices, print and format shall be                        set forth in paragraph (c)(7)(ii) of this
+                                standardized.                                             section.
+                                  (C) Substantial—(1) Lockout devices.                      (ii) The employer shall certify that
+                                Lockout devices shall be substantial                      the periodic inspections have been per-
+                                enough to prevent removal without the                     formed. The certification shall identify
+                                use of excessive force or unusual tech-                   the machine or equipment on which
+                                niques, such as with the use of bolt                      the energy control procedure was being
+                                cutters or other metal cutting tools.                     utilized, the date of the inspection, the
+                                  (2) Tagout devices. Tagout devices, in-                 employees included in the inspection,
+                                cluding and their means of attachment,                    and the person performing the inspec-
+                                shall be substantial enough to prevent                    tion.
+                                inadvertent or accidental removal.                          (7) Training and communication. (i)
+                                Tagout device attachment means shall                      The employer shall provide training to
+                                be of a non-reusable type, attachable                     ensure that the purpose and function of
+                                by hand, self-locking, and non-releas-                    the energy control program are under-
+                                able with a minimum unlocking                             stood by employees and that the
+                                strength of no less than 50 pounds and                    knowledge and skills required for the
+                                having the general design and basic                       safe application, usage, and removal of
+                                characteristics of being at least equiv-                  the energy controls are acquired by
+                                alent to a one-piece, all-environment-                    employees. The training shall include
+                                tolerant nylon cable tie.                                 the following:
+                                  (D) Identifiable. Lockout devices and                     (A) Each authorized employee shall
+                                tagout devices shall indicate the iden-                   receive training in the recognition of
+                                tity of the employee applying the de-                     applicable hazardous energy sources,
+                                vice(s).                                                  the type and magnitude of the energy
+                                  (iii) Tagout devices shall warn                         available in the workplace, and the
+                                against hazardous conditions if the ma-                   methods and means necessary for en-
+                                chine or equipment is energized and                       ergy isolation and control.
+                                shall include a legend such as the fol-                     (B) Each affected employee shall be
+                                lowing: Do Not Start, Do Not Open, Do                     instructed in the purpose and use of
+                                Not Close, Do Not Energize, Do Not Oper-                  the energy control procedure.
+                                ate.                                                        (C) All other employees whose work
+                                  (6) Periodic inspection. (i) The em-                    operations are or may be in an area
+                                ployer shall conduct a periodic inspec-                   where energy control procedures may
+                                tion of the energy control procedure at                   be utilized, shall be instructed about
+                                least annually to ensure that the pro-                    the procedure, and about the prohibi-
+                                cedure and the requirements of this                       tion relating to attempts to restart or
+                                standard are being followed.                              reenergize machines or equipment
+                                  (A) The periodic inspection shall be                    which are locked out or tagged out.
+                                perfomed by an authorized employee                          (ii) When tagout systems are used,
+                                other than the ones(s) utilizing the en-                  employees shall also be trained in the
+                                ergy control procedure being inspected.                   following limitations of tags:
+                                  (B) The periodic inspection shall be                      (A) Tags are essentially warning de-
+                                conducted to correct any deviations or                    vices affixed to energy isolating de-
+                                inadequacies identified.                                  vices, and do not provide the physical
+                                  (C) Where lockout is used for energy                    restraint on those devices that is pro-
+                                control, the periodic inspection shall                    vided by a lock.
+
+                                                                                     500
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00510   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                § 1910.147
+
+                                  (B) When a tag is attached to an en-                    applied, and after they are removed
+                                ergy isolating means, it is not to be re-                 from the machine or equipment.
+                                moved without authorization of the au-                      (d) Application of control. The estab-
+                                thorized person responsible for it, and                   lished procedures for the application of
+                                it is never to be bypassed, ignored, or                   energy control (the lockout or tagout
+                                otherwise defeated.                                       procedures) shall cover the following
+                                  (C) Tags must be legible and under-                     elements and actions and shall be done
+                                standable by all authorized employees,                    in the following sequence:
+                                affected employees, and all other em-                       (1) Preparation for shutdown. Before
+                                ployees whose work operations are or                      an authorized or affected employee
+                                may be in the area, in order to be effec-                 turns off a machine or equipment, the
+                                tive.                                                     authorized employee shall have knowl-
+                                  (D) Tags and their means of attach-                     edge of the type and magnitude of the
+                                ment must be made of materials which                      energy, the hazards of the energy to be
+                                will withstand the environmental con-                     controlled, and the method or means to
+                                ditions encountered in the workplace.                     control the energy.
+                                  (E) Tags may evoke a false sense of                       (2) Machine or equipment shutdown.
+                                security, and their meaning needs to be                   The machine or equipment shall be
+                                understood as part of the overall en-                     turned off or shut down using the pro-
+                                ergy control program.                                     cedures established for the machine or
+                                  (F) Tags must be securely attached
+                                                                                          equipment. An orderly shutdown must
+                                to energy isolating devices so that they
+                                                                                          be utilized to avoid any additional or
+                                cannot be inadvertently or acciden-
+                                                                                          increased hazard(s) to employees as a
+                                tally detached during use.
+                                                                                          result of the equipment stoppage.
+                                  (iii) Employee retraining.
+                                                                                            (3) Machine or equipment isolation. All
+                                  (A) Retraining shall be provided for
+                                                                                          energy isolating devices that are need-
+                                all authorized and affected employees
+                                                                                          ed to control the energy to the ma-
+                                whenever there is a change in their job
+                                                                                          chine or equipment shall be physically
+                                assignments, a change in machines,
+                                                                                          located and operated in such a manner
+                                equipment or processes that present a
+                                                                                          as to isolate the machine or equipment
+                                new hazard, or when there is a change
+                                                                                          from the energy source(s).
+                                in the energy control procedures.
+                                  (B) Additional retraining shall also                      (4) Lockout or tagout device applica-
+                                be conducted whenever a periodic in-                      tion. (i) Lockout or tagout devices shall
+                                spection under paragraph (c)(6) of this                   be affixed to each energy isolating de-
+                                section reveals, or whenever the em-                      vice by authorized employees.
+                                ployer has reason to believe, that there                    (ii) Lockout devices, where used,
+                                are deviations from or inadequacies in                    shall be affixed in a manner to that
+                                the employee’s knowledge or use of the                    will hold the energy isolating devices
+                                energy control procedures.                                in a ‘‘safe’’ or ‘‘off’’ position.
+                                  (C) The retraining shall reestablish                      (iii) Tagout devices, where used, shall
+                                employee proficiency and introduce                        be affixed in such a manner as will
+                                new or revised control methods and                        clearly indicate that the operation or
+                                procedures, as necessary.                                 movement of energy isolating devices
+                                  (iv) The employer shall certify that                    from the ‘‘safe’’ or ‘‘off’’ position is
+                                employee training has been accom-                         prohibited.
+                                plished and is being kept up to date.                       (A) Where tagout devices are used
+                                The certification shall contain each                      with energy isolating devices designed
+                                employee’s name and dates of training.                    with the capability of being locked, the
+                                  (8) Energy isolation. Lockout or                        tag attachment shall be fastened at the
+                                tagout shall be performed only bythe                      same point at which the lock would
+                                authorized employees who are per-                         have been attached.
+                                forming the servicing or maintenance.                       (B) Where a tag cannot be affixed di-
+                                  (9) Notification of employees. Affected                 rectly to the energy isolating device,
+                                employees shall be notified by the em-                    the tag shall be located as close as
+                                ployer or authorized employee of the                      safely possible to the device, in a posi-
+                                application and removal of lockout de-                    tion that will be immediately obvious
+                                vices or tagout devices. Notification                     to anyone attempting to operate the
+                                shall be given before the controls are                    device.
+
+                                                                                     501
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00511   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.147                                                            29 CFR Ch. XVII (7–1–14 Edition)
+
+                                  (5) Stored energy. (i) Following the ap-                safety to the removal of the device by
+                                plication of lockout or tagout devices                    the authorized employee who applied
+                                to energy isolating devices, all poten-                   it. The specific procedure shall include
+                                tially hazardous stored or residual en-                   at least the following elements:
+                                ergy shall be relieved, disconnected, re-                    (i) Verfication by the employer that
+                                strained, and otherwise rendered safe.                    the authorized employee who applied
+                                  (ii) If there is a possibility of re-                   the device is not at the facility;
+                                accumulation of stored energy to a                           (ii) Making all reasonable efforts to
+                                hazardous level, verification of isola-                   contact the authorized employee to in-
+                                tion shall be continued until the serv-                   form him/her that his/her lockout or
+                                icing or maintenance is completed, or                     tagout device has been removed; and
+                                until the possibility of such accumula-                      (iii) Ensuring that the authorized
+                                tion no longer exists.                                    employee has this knowledge before he/
+                                  (6) Verification of isolation. Prior to                 she resumes work at that facility.
+                                starting work on machines or equip-                          (f) Additional requirements—(1) Testing
+                                ment that have been locked out or                         or positioning of machines, equipment or
+                                tagged out, the authorized employee                       components thereof. In situations in
+                                shall    verify   that     isolation  and                 which lockout or tagout devices must
+                                deenergization of the machine or                          be temporarily removed from the en-
+                                equipment have been accomplished.                         ergy isolating device and the machine
+                                  (e) Release from lockout or tagout. Be-                 or equipment energized to test or posi-
+                                fore lockout or tagout devices are re-                    tion the machine, equipment or compo-
+                                moved and energy is restored to the                       nent thereof, the following sequence of
+                                machine or equipment, procedures                          actions shall be followed:
+                                shall be followed and actions taken by                       (i) Clear the machine or equipment of
+                                the authorized employee(s) to ensure                      tools and materials in accordance with
+                                the following:                                            paragraph (e)(1) of this section;
+                                  (1) The machine or equipment. The                          (ii) Remove employees from the ma-
+                                work area shall be inspected to ensure                    chine or equipment area in accordance
+                                that nonessential items have been re-                     with paragraph (e)(2) of this section;
+                                moved and to ensure that machine or                          (iii) Remove the lockout or tagout
+                                equipment components are operation-                       devices as specified in paragraph (e)(3)
+                                ally intact.                                              of this section;
+                                  (2) Employees. (i) The work area shall                     (iv) Energize and proceed with test-
+                                be checked to ensure that all employ-                     ing or positioning;
+                                ees have been safely positioned or re-                       (v) Deenergize all systems and re-
+                                moved.                                                    apply energy control measures in ac-
+                                  (ii) After lockout or tagout devices                    cordance with paragraph (d) of this sec-
+                                have been removed and before a ma-                        tion to continue the servicing and/or
+                                chine or equipment is started, affected                   maintenance.
+                                employees shall be notified that the                         (2) Outside personnel (contractors, etc.).
+                                lockout or tagout device(s) have been                     (i) Whenever outside servicing per-
+                                removed.                                                  sonnel are to be engaged in activities
+                                  (3) Lockout or tagout devices removal.                  covered by the scope and application of
+                                Each lockout or tagout device shall be                    this standard, the on-site employer and
+                                removed from each energy isolating de-                    the outside employer shall inform each
+                                vice by the employee who applied the                      other of their respective lockout or
+                                device. Exception to paragraph (e)(3):                    tagout procedures.
+                                When the authorized employee who ap-                         (ii) The on-site employer shall ensure
+                                plied the lockout or tagout device is                     that his/her employees understand and
+                                not available to remove it, that device                   comply with the restrictions and prohi-
+                                may be removed under the direction of                     bitions of the outside employer’s en-
+                                the employer, provided that specific                      ergy control program.
+                                procedures and training for such re-                         (3) Group lockout or tagout. (i) When
+                                moval have been developed, docu-                          servicing and/or maintenance is per-
+                                mented and incorporated into the em-                      formed by a crew, craft, department or
+                                ployer’s energy control program. The                      other group, they shall utilize a proce-
+                                employer shall demonstrate that the                       dure which affords the employees a
+                                specific procedure provides equivalent                    level of protection equivalent to that
+
+                                                                                     502
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00512   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                    § 1910.147
+
+                                provided by the implementation of a                       their procedures so they meet the require-
+                                personal lockout or tagout device.                        ments of this standard. When the energy iso-
+                                  (ii) Group lockout or tagout devices                    lating devices are not lockable, tagout may
+                                                                                          be used, provided the employer complies
+                                shall be used in accordance with the
+                                                                                          with the provisions of the standard which re-
+                                procedures required by paragraph (c)(4)                   quire additional training and more rigorous
+                                of this section including, but not nec-                   periodic inspections. When tagout is used
+                                essarily limited to, the following spe-                   and the energy isolating devices are lock-
+                                cific requirements:                                       able, the employer must provide full em-
+                                  (A) Primary responsibility is vested                    ployee protection (see paragraph (c)(3)) and
+                                in an authorized employee for a set                       additional training and more rigorous peri-
+                                number of employees working under                         odic inspections are required. For more com-
+                                                                                          plex systems, more comprehensive proce-
+                                the protection of a group lockout or
+                                                                                          dures may need to be developed, documented
+                                tagout device (such as an operations                      and utilized.
+                                lock);
+                                  (B) Provision for the authorized em-                                    Lockout Procedure
+                                ployee to ascertain the exposure status                   Lockout procedure for
+                                of individual group members with re-
+                                                                                          llllllllllllllllllllllll
+                                gard to the lockout or tagout of the
+                                machine or equipment and                                  (Name of Company for single procedure or
+                                                                                          identification of equipment if multiple pro-
+                                  (C) When more than one crew, craft,                     cedures are used)
+                                department, etc. is involved, assign-
+                                ment of overall job-associated lockout                                           Purpose
+                                or tagout control responsibility to an                      This procedure establishes the minimum
+                                authorized employee designated to co-                     requirements for the lockout of energy iso-
+                                ordinate affected work forces and en-                     lating devices whenever maintenance or
+                                sure continuity of protection; and                        servicing is done on machines or equipment.
+                                  (D) Each authorized employee shall                      It shall be used to ensure that the machine
+                                affix a personal lockout or tagout de-                    or equipment is stopped, isolated from all
+                                vice to the group lockout device, group                   potentially hazardous energy sources and
+                                                                                          locked out before employees perform any
+                                lockbox, or comparable mechanism
+                                                                                          servicing or maintenance where the unex-
+                                when he or she begins work, and shall                     pected energization or start-up of the ma-
+                                remove those devices when he or she                       chine or equipment or release of stored en-
+                                stops working on the machine or equip-                    ergy could cause injury.
+                                ment being serviced or maintained.
+                                  (4) Shift or personnel changes. Specific                            Compliance With This Program
+                                procedures shall be utilized during                         All employees are required to comply with
+                                shift or personnel changes to ensure                      the restrictions and limitations imposed
+                                the continuity of lockout or tagout                       upon them during the use of lockout. The au-
+                                protection, including provision for the                   thorized employees are required to perform
+                                orderly transfer of lockout or tagout                     the lockout in accordance with this proce-
+                                                                                          dure. All employees, upon observing a ma-
+                                device protection between off-going                       chine or piece of equipment which is locked
+                                and oncoming employees, to minimize                       out to perform servicing or maintenance
+                                exposure to hazards from the unex-                        shall not attempt to start, energize or use
+                                pected energization or start-up of the                    that machine or equipment.
+                                machine or equipment, or the release                      llllllllllllllllllllllll
+                                of stored energy.                                         Type of compliance enforcement to be taken
+                                  NOTE: The following appendix to § 1910.147              for violation of the above.
+                                services as a non-mandatory guideline to as-
+                                sist employers and employees in complying                                 Sequence of Lockout
+                                with the requirements of this section, as well              (1) Notify all affected employees that serv-
+                                as to provide other helpful information.                  icing or maintenance is required on a ma-
+                                Nothing in the appendix adds to or detracts               chine or equipment and that the machine or
+                                from any of the requirements of this section.             equipment must be shut down and locked out
+                                                                                          to perform the servicing or maintenance.
+                                 APPENDIX A TO § 1910.147—TYPICAL MINIMAL
+                                           LOCKOUT PROCEDURE                              llllllllllllllllllllllll
+                                                                                          Name(s)/Job Title(s) of affected employees
+                                                        General                           and how to notify.
+                                  The following simple lockout procedure is                 (2) The authorized employee shall refer to
+                                provided to assist employers in developing                the company procedure to identify the type
+
+                                                                                     503
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00513   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                § 1910.151                                                            29 CFR Ch. XVII (7–1–14 Edition)
+                                and magnitude of the energy that the ma-                    (4) Remove the lockout devices and reener-
+                                chine or equipment utilizes, shall understand             gize the machine or equipment.
+                                the hazards of the energy, and shall know
+                                                                                            NOTE: The removal of some forms of block-
+                                the methods to control the energy.
+                                                                                          ing may require reenergization of the ma-
+                                llllllllllllllllllllllll                                  chine before safe removal.
+                                Type(s) and magnitude(s) of energy, its haz-                (5) Notify affected employees that the serv-
+                                ards and the methods to control the energy.               icing or maintenance is completed and the
+                                  (3) If the machine or equipment is oper-                machine or equipment is ready for use.
+                                ating, shut it down by the normal stopping                [54 FR 36687, Sept. 1, 1989, as amended at 54
+                                procedure (depress stop button, open switch,              FR 42498, Oct. 17, 1989; 55 FR 38685, 38686,
+                                close valve, etc.).                                       Sept. 20, 1990; 76 FR 24698, May 2, 2011; 76 FR
+                                llllllllllllllllllllllll                                  44265, July 25, 2011]
+                                Type(s) and location(s) of machine or equip-
+                                ment operating controls.                                   Subpart K—Medical and First Aid
+                                  (4) De-activate the energy isolating de-
+                                vice(s) so that the machine or equipment is
+                                isolated from the energy source(s).                         AUTHORITY: Sections 4, 6, and 8 of the Occu-
+                                                                                          pational Safety and Health Act of 1970, 29
+                                llllllllllllllllllllllll                                  U.S.C. 653, 655, and 657; Secretary of Labor’s
+                                Type(s) and location(s) of energy isolating               Order No. 12–71 (36 FR 8754), 8–76 (41 FR
+                                devices.                                                  25059), 9–83 (48 FR 35736), 1–90 (55 FR 9033), 6–
+                                  (5) Lock out the energy isolating device(s)             96 (62 FR 111), or 3–2000 (65 FR 50017), as ap-
+                                with assigned individual lock(s).                         plicable, and 29 CFR part 1911.
+                                  (6) Stored or residual energy (such as that
+                                in capacitors, springs, elevated machine                  § 1910.151      Medical services and first
+                                members, rotating flywheels, hydraulic sys-                   aid.
+                                tems, and air, gas, steam, or water pressure,               (a) The employer shall ensure the
+                                etc.) must be dissipated or restrained by
+                                methods such as grounding, repositioning,
+                                                                                          ready availability of medical personnel
+                                blocking, bleeding down, etc.                             for advice and consultation on matters
+                                llllllllllllllllllllllll
+                                                                                          of plant health.
+                                                                                            (b) In the absence of an infirmary,
+                                Type(s) of stored energy—methods to dis-
+                                sipate or restrain.
+                                                                                          clinic, or hospital in near proximity to
+                                                                                          the workplace which is used for the
+                                  (7) Ensure that the equipment is discon-
+                                                                                          treatment of all injured employees, a
+                                nected from the energy source(s) by first
+                                checking that no personnel are exposed, then              person or persons shall be adequately
+                                verify the isolation of the equipment by op-              trained to render first aid. Adequate
+                                erating the push button or other normal op-               first aid supplies shall be readily avail-
+                                erating control(s) or by testing to make cer-             able.
+                                tain the equipment will not operate.                        (c) Where the eyes or body of any per-
+                                  CAUTION: Return operating control(s) to                 son may be exposed to injurious corro-
+                                neutral or ‘‘off’’ position after verifying the           sive materials, suitable facilities for
+                                isolation of the equipment.                               quick drenching or flushing of the eyes
+                                llllllllllllllllllllllll                                  and body shall be provided within the
+                                Method of verifying the isolation of the                  work area for immediate emergency
+                                equipment.                                                use.
+                                  (8) The machine or equipment is now
+                                locked out.                                                  APPENDIX A TO § 1910.151—FIRST AID KITS
+                                                                                                      (NON-MANDATORY)
+                                  Restoring Equipment to Service. When the
+                                servicing or maintenance is completed and                   First aid supplies are required to be readily
+                                the machine or equipment is ready to return               available under paragraph § 1910.151(b). An
+                                to normal operating condition, the following              example of the minimal contents of a generic
+                                steps shall be taken.                                     first aid kit is described in American Na-
+                                  (1) Check the machine or equipment and                  tional Standard (ANSI) Z308.1–1998 ‘‘Min-
+                                the immediate area around the machine or                  imum Requirements for Workplace First-aid
+                                equipment to ensure that nonessential items               Kits.’’ The contents of the kit listed in the
+                                have been removed and that the machine or                 ANSI standard should be adequate for small
+                                equipment components are operationally in-                worksites. When larger operations or mul-
+                                tact.                                                     tiple operations are being conducted at the
+                                  (2) Check the work area to ensure that all              same location, employers should determine
+                                employees have been safely positioned or re-              the need for additional first aid kits at the
+                                moved from the area.                                      worksite, additional types of first aid equip-
+                                  (3) Verify that the controls are in neutral.            ment and supplies and additional quantities
+
+                                                                                     504
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00514   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+

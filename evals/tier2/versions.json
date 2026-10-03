@@ -1,5 +1,5 @@
 {
-  "ruling": "The tier-2 candidate dataset is versioned the way D44 (ARCH-20260930-108) versions the golden scoreboard: the manifest's dataset_version and scorer_version name the current entry, and tests/test_tier2_keys.py checks that questions.json, keys.json, scorer.py and verify_keys.py hash to that entry. The candidate set is NOT frozen - manifest.json records the count discrepancy (5 questions supplied of the 25 the command expects) as the freeze blocker. A change to any of the four files is a new version: an entry naming the change and what triggered it. When the remaining 20 questions are supplied and the set freezes, the frozen version adds an entry here and the freeze blocker is cleared.",
+  "ruling": "The tier-2 candidate dataset is versioned the way D44 (ARCH-20260930-108) versions the golden scoreboard: the manifest's dataset_version and scorer_version name the current entry, and tests/test_tier2_keys.py checks that questions.json, keys.json, scorer.py and verify_keys.py hash to that entry. The candidate set is NOT frozen - manifest.json records the pending owner or qualified-reviewer signoff as the freeze blocker. A change to any of the four files is a new version: an entry naming the change and what triggered it. When the signoff the command requires is granted, the frozen version adds an entry here and the freeze blocker is cleared.",
   "versions": [
     {
       "version": "candidate-2026-10-03",
@@ -36,6 +36,18 @@
       },
       "change": "verify_keys.py only: the Q5 worked-answer checks (Q5.5, Q5.6) read keys.json from the script's own directory even when --dir pointed elsewhere, so a copy of the dataset could pass the ordering check against the original's model answer - the one path that ignored the directory it was told to verify. verify_q5 and _model_answer now take the directory. No check semantics changed; the same 61 checks run and hold on the tree and on a faithful copy. Triggered by the suite guard's Q5.5 break-proof (swapped model-answer steps in a copied keys.json), which could not fail before the repair.",
       "verification": "evals/tier2/verify_keys.py: 61/61 checks pass on the tree and on a faithful copy (exit 0 both). evals/tier2/scorer.py --self-test: 64/64 fixtures pass (exit 0)."
+    },
+    {
+      "version": "candidate-2026-10-03.3",
+      "date": "2026-10-03",
+      "sha256": {
+        "questions.json": "35bff36583c1e34bebd8a917a4b5553f0134f3e2a6567b06f242a6f71101729c",
+        "keys.json": "c05c95fbffedee588d239dc39ef386003fefa73997855ca74f35961a59ffbb89",
+        "scorer.py": "30eb30a219773cfe43968c966ac806d6806536034e0dff1afa9c2aad557b8695",
+        "verify_keys.py": "cf1b9b7e2dd4b5a0683b0cb9228fabb70f6d176febc8f62e506c1ae1f828f0fa"
+      },
+      "change": "Registration of the complete 25-question set. Trigger: the owner supplied the remaining 20 questions on 2026-10-03 (candidate/25GoldenQuestion.json, sha256 66af3e5a..., 204068 bytes - the array the command names, registered verbatim; the executor generated, screened and selected nothing). All four lookup sources are now archived and verified: the govinfo July 1, 2014 CFR PDFs for 29 CFR 1910.95, 29 CFR 1910.146, 29 CFR 1910.147 and 40 CFR 141.62, each cross-checked against its 2026-10-01 eCFR snapshot; editions are identified by package identifier and GPO typesetting footer, not inferred from a current webpage. verify_keys.py extended to Q6-Q25: 61 -> 268 checks (deterministic recomputation of every numerical key from first principles, dimension and boundary-operator checks, discrete selections, tolerance boundaries, falsification of every claimed wrong answer, verbatim quotation matches against the archived sources). scorer.py extended with _score_q6 through _score_q25: 64 -> 248 self-test fixtures (25 model answers, 47 equivalent notations, 100 tolerance boundaries, 56 wrong answers, 20 discrete selections). The count discrepancy that blocked candidate-2026-10-03 is resolved; the remaining freeze blocker is the signoff the command requires - owner or qualified-reviewer signoff on the verification and the source review before paid use - recorded as pending in manifest.json.",
+      "verification": "evals/tier2/verify_keys.py: 268/268 checks pass (exit 0). evals/tier2/scorer.py --self-test: 248/248 fixtures pass (exit 0)."
     }
   ]
 }

@@ -1,0 +1,1103 @@
+                                Occupational Safety and Health Admin., Labor                                                 § 1910.95
+
+                                of the booth falls below that specified                     (1) The gas must have a distinctive
+                                in Table G–10.                                            and strong enough odor to warn work-
+                                  (iv)(a) Means for heating make-up air                   men in a spray booth or room of its
+                                to any spray booth or room, before or                     presence if in an unburned state in the
+                                at the time spraying is normally per-                     make-up air.
+                                formed, shall be provided in all places                     (2) The maximum rate of gas supply
+                                where the outdoor temperature may be                      to the make-up air heater burners
+                                expected to remain below 55 °F. for ap-                   must not exceed that which would
+                                preciable periods of time during the op-                  yield in excess of 200 p.p.m. (parts per
+                                eration of the booth except where ade-                    million) of carbon monoxide or 2,000
+                                quate and safe means of radiant heat-
+                                                                                          p.p.m. of total combustible gases in the
+                                ing for all operating personnel affected
+                                                                                          mixture if the unburned gas upon the
+                                is provided. The replacement air during
+                                the heating seasons shall be main-                        occurrence of flame failure were mixed
+                                tained at not less than 65 °F. at the                     with all of the make-up air supplied.
+                                point of entry into the spray booth or                      (3) A fan must be provided to deliver
+                                spray room. When otherwise unheated                       the mixture of heated air and products
+                                make-up air would be at a temperature                     of combustion from the plenum cham-
+                                of more than 10 °F. below room tem-                       ber housing the gas burners to the
+                                perature, its temperature shall be regu-                  spray booth or room.
+                                lated as provided in section 3.6.3 of                       (8) Scope. Spray booths or spray
+                                ANSI Z9.2–1960.                                           rooms are to be used to enclose or con-
+                                  (b) As an alternative to an air re-                     fine all spray finishing operations cov-
+                                placement system complying with the                       ered by this paragraph (c). This para-
+                                preceding section, general heating of                     graph does not apply to the spraying of
+                                the building in which the spray room                      the exteriors of buildings, fixed tanks,
+                                or booth is located may be employed                       or similar structures, nor to small
+                                provided that all occupied parts of the                   portable spraying apparatus not used
+                                building are maintained at not less                       repeatedly in the same location.
+                                than 65 °F. when the exhaust system is
+                                in operation or the general heating sys-                  [39 FR 23502, June 27, 1974, as amended at 40
+                                tem supplemented by other sources of                      FR 23073, May 28, 1975; 40 FR 24522, June 9,
+                                heat may be employed to meet this re-                     1975; 43 FR 49746, Oct. 24, 1978; 49 FR 5322,
+                                quirement.                                                Feb. 10, 1984; 55 FR 32015, Aug. 6, 1990; 58 FR
+                                                                                          35308, June 30, 1993; 61 FR 9236, Mar. 7, 1996;
+                                  (c) No means of heating make-up air
+                                                                                          63 FR 1269, Jan. 8, 1998; 64 FR 13909, Mar. 23,
+                                shall be located in a spray booth.
+                                                                                          1999; 72 FR 71069, Dec. 14, 2007; 74 FR 46356,
+                                  (d) Where make-up air is heated by                      Sept. 9, 2009]
+                                coal or oil, the products of combustion
+                                shall not be allowed to mix with the                      § 1910.95     Occupational noise exposure.
+                                make-up air, and the products of com-
+                                bustion shall be conducted outside the                      (a) Protection against the effects of
+                                building through a flue terminating at                    noise exposure shall be provided when
+                                a point remote from all points where                      the sound levels exceed those shown in
+                                make-up air enters the building.                          Table G–16 when measured on the A
+                                  (e) Where make-up air is heated by                      scale of a standard sound level meter
+                                gas, and the products of combustion                       at slow response. When noise levels are
+                                are not mixed with the make-up air but                    determined by octave band analysis,
+                                are conducted through an independent                      the equivalent A-weighted sound level
+                                flue to a point outside the building re-                  may be determined as follows:
+                                mote from all points where make-up
+                                air enters the building, it is not nec-
+                                essary to comply with paragraph
+                                (c)(7)(iv)(f) of this section.
+                                  (f) Where make-up air to any manu-
+                                ally operated spray booth or room is
+                                heated by gas and the products of com-
+                                bustion are allowed to mix with the
+                                supply air, the following precautions
+                                must be taken:
+
+                                                                                     213
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00223   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.95                                                                                                       29 CFR Ch. XVII (7–1–14 Edition)
+
+                                                                                                                                             TABLE G–16—PERMISSIBLE NOISE
+                                                                                                                                                EXPOSURES 1—Continued
+                                                                                                                                                                                                              Sound
+                                                                                                                                                                                                            level dBA
+                                                                                                                                                   Duration per day, hours                                   slow re-
+                                                                                                                                                                                                              sponse
+                                                                                                                              14  ⁄ or less .............................................................         115
+                                                                                                                                   1 When the daily noise exposure is composed of two or
+                                                                                                                              more periods of noise exposure of different levels, their com-
+                                                                                                                              bined effect should be considered, rather than the individual
+                                                                                                                              effect of each. If the sum of the following fractions: C1/T1+C2/
+                                                                                                                              T2Cn/Tn exceeds unity, then, the mixed exposure should be
+                                                                                                                              considered to exceed the limit value. Cn indicates the total
+                                                                                                                              time of exposure at a specified noise level, and Tn indicates
+                                                                                                                              the total time of exposure permitted at that level.
+                                                                                                                                 Exposure to impulsive or impact noise should not exceed
+                                                                                                                              140 dB peak sound pressure level.
+
+                                                                                                                                (c) Hearing conservation program. (1)
+                                                                                                                              The employer shall administer a con-
+                                                                                                                              tinuing, effective hearing conservation
+                                                                                                                              program, as described in paragraphs (c)
+                                                                                                                              through (o) of this section, whenever
+                                                 FIGURE G–9                                                                   employee noise exposures equal or ex-
+                                Equivalent sound level contours. Octave                                                       ceed an 8-hour time-weighted average
+                                band sound pressure levels may be converted                                                   sound level (TWA) of 85 decibels meas-
+                                to the equivalent A-weighted sound level by                                                   ured on the A scale (slow response) or,
+                                plotting them on this graph and noting the
+                                                                                                                              equivalently, a dose of fifty percent.
+                                A-weighted sound level corresponding to the
+                                                                                                                              For purposes of the hearing conserva-
+                                point of highest penetration into the sound
+                                level contours. This equivalent A-weighted                                                    tion program, employee noise expo-
+                                sound level, which may differ from the ac-                                                    sures shall be computed in accordance
+                                tual A-weighted sound level of the noise, is                                                  with appendix A and Table G–16a, and
+                                used to determine exposure limits from                                                        without regard to any attenuation pro-
+                                Table 1.G–16.                                                                                 vided by the use of personal protective
+                                                                                                                              equipment.
+                                  (b)(1) When employees are subjected                                                           (2) For purposes of paragraphs (c)
+                                to sound exceeding those listed in                                                            through (n) of this section, an 8-hour
+                                Table G–16, feasible administrative or                                                        time-weighted average of 85 decibels or
+                                engineering controls shall be utilized.                                                       a dose of fifty percent shall also be re-
+                                If such controls fail to reduce sound                                                         ferred to as the action level.
+                                levels within the levels of Table G–16,                                                         (d) Monitoring. (1) When information
+                                personal protective equipment shall be                                                        indicates that any employee’s exposure
+                                provided and used to reduce sound lev-                                                        may equal or exceed an 8-hour time-
+                                els within the levels of the table.                                                           weighted average of 85 decibels, the
+                                  (2) If the variations in noise level in-                                                    employer shall develop and implement
+                                volve maxima at intervals of 1 second                                                         a monitoring program.
+                                or less, it is to be considered contin-                                                         (i) The sampling strategy shall be de-
+                                uous.                                                                                         signed to identify employees for inclu-
+                                                                                                                              sion in the hearing conservation pro-
+                                TABLE G–16—PERMISSIBLE NOISE EXPOSURES 1                                                      gram and to enable the proper selec-
+                                                                                                                              tion of hearing protectors.
+                                                                                                                  Sound
+                                                                                                                level dBA       (ii) Where circumstances such as high
+                                                   Duration per day, hours                                       slow re-     worker mobility, significant variations
+                                                                                                                  sponse
+                                                                                                                              in sound level, or a significant compo-
+                                8 ...........................................................................          90     nent of impulse noise make area moni-
+                                6 ...........................................................................          92     toring generally inappropriate, the em-
+                                4 ...........................................................................          95     ployer shall use representative per-
+                                3 ...........................................................................          97     sonal sampling to comply with the
+                                2 ...........................................................................         100     monitoring requirements of this para-
+                                11⁄2 .......................................................................          102
+                                1 ...........................................................................         105
+                                                                                                                              graph unless the employer can show
+                                1⁄2 .........................................................................         110     that area sampling produces equivalent
+                                                                                                                              results.
+
+                                                                                                                            214
+                                                                                                                                                                                                                        EC27OC91.023
+
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014          Jkt 232118             PO 00000             Frm 00224          Fmt 8010     Sfmt 8002             Q:\29\29V5.TXT                31
+                                Occupational Safety and Health Admin., Labor                                                § 1910.95
+
+                                  (2)(i) All continuous, intermittent                       (4) All audiograms obtained pursuant
+                                and impulsive sound levels from 80                        to this section shall meet the require-
+                                decibels to 130 decibels shall be inte-                   ments of appendix C: Audiometric Meas-
+                                grated into the noise measurements.                       uring Instruments.
+                                  (ii) Instruments used to measure em-                      (5) Baseline audiogram. (i) Within 6
+                                ployee noise exposure shall be cali-                      months of an employee’s first exposure
+                                brated to ensure measurement accu-                        at or above the action level, the em-
+                                racy.                                                     ployer shall establish a valid baseline
+                                  (3) Monitoring shall be repeated                        audiogram against which subsequent
+                                whenever a change in production, proc-                    audiograms can be compared.
+                                ess, equipment or controls increases                        (ii) Mobile test van exception. Where
+                                noise exposures to the extent that:                       mobile test vans are used to meet the
+                                  (i) Additional employees may be ex-                     audiometric testing obligation, the em-
+                                posed at or above the action level; or                    ployer shall obtain a valid baseline
+                                  (ii) The attenuation provided by                        audiogram within 1 year of an employ-
+                                hearing protectors being used by em-                      ee’s first exposure at or above the ac-
+                                ployees may be rendered inadequate to                     tion level. Where baseline audiograms
+                                meet the requirements of paragraph (j)                    are obtained more than 6 months after
+                                of this section.                                          the employee’s first exposure at or
+                                  (e) Employee notification. The em-                      above the action level, employees shall
+                                ployer shall notify each employee ex-                     wearing hearing protectors for any pe-
+                                posed at or above an 8-hour time-                         riod exceeding six months after first
+                                weighted average of 85 decibels of the                    exposure until the baseline audiogram
+                                results of the monitoring.                                is obtained.
+                                  (f) Observation of monitoring. The em-                    (iii) Testing to establish a baseline
+                                ployer shall provide affected employees                   audiogram shall be preceded by at least
+                                or their representatives with an oppor-                   14 hours without exposure to workplace
+                                tunity to observe any noise measure-                      noise. Hearing protectors may be used
+                                ments conducted pursuant to this sec-                     as a substitute for the requirement
+                                tion.                                                     that baseline audiograms be preceded
+                                  (g) Audiometric testing program. (1)                    by 14 hours without exposure to work-
+                                The employer shall establish and main-                    place noise.
+                                tain an audiometric testing program as                      (iv) The employer shall notify em-
+                                provided in this paragraph by making                      ployees of the need to avoid high levels
+                                audiometric testing available to all                      of non-occupational noise exposure
+                                employees whose exposures equal or ex-                    during the 14-hour period immediately
+                                ceed an 8-hour time-weighted average                      preceding the audiometric examina-
+                                of 85 decibels.                                           tion.
+                                  (2) The program shall be provided at                      (6) Annual audiogram. At least annu-
+                                no cost to employees.                                     ally after obtaining the baseline audio-
+                                  (3) Audiometric tests shall be per-                     gram, the employer shall obtain a new
+                                formed by a licensed or certified audi-                   audiogram for each employee exposed
+                                ologist, otolaryngologist, or other phy-                  at or above an 8-hour time-weighted
+                                sician, or by a technician who is cer-                    average of 85 decibels.
+                                tified by the Council of Accreditation                      (7) Evaluation of audiogram. (i) Each
+                                in Occupational Hearing Conservation,                     employee’s annual audiogram shall be
+                                or who has satisfactorily demonstrated                    compared to that employee’s baseline
+                                competence         in      administering                  audiogram to determine if the audio-
+                                audiometric examinations, obtaining                       gram is valid and if a standard thresh-
+                                valid audiograms, and properly using,                     old shift as defined in paragraph (g)(10)
+                                maintaining and checking calibration                      of this section has occurred. This com-
+                                and proper functioning of the audiom-                     parison may be done by a technician.
+                                eters being used. A technician who op-                      (ii) If the annual audiogram shows
+                                erates    microprocessor     audiometers                  that an employee has suffered a stand-
+                                does not need to be certified. A techni-                  ard threshold shift, the employer may
+                                cian who performs audiometric tests                       obtain a retest within 30 days and con-
+                                must be responsible to an audiologist,                    sider the results of the retest as the an-
+                                otolaryngologist or physician.                            nual audiogram.
+
+                                                                                     215
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00225   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.95                                                             29 CFR Ch. XVII (7–1–14 Edition)
+
+                                  (iii)         The           audiologist,                  (iii) If subsequent audiometric test-
+                                otolaryngologist, or physician shall re-                  ing of an employee whose exposure to
+                                view problem audiograms and shall de-                     noise is less than an 8-hour TWA of 90
+                                termine whether there is a need for fur-                  decibels indicates that a standard
+                                ther evaluation. The employer shall                       threshold shift is not persistent, the
+                                provide to the person performing this                     employer:
+                                evaluation the following information:                       (A) Shall inform the employee of the
+                                  (A) A copy of the requirements for                      new audiometric interpretation; and
+                                hearing conservation as set forth in                        (B) May discontinue the required use
+                                paragraphs (c) through (n) of this sec-
+                                                                                          of hearing protectors for that em-
+                                tion;
+                                                                                          ployee.
+                                  (B) The baseline audiogram and most
+                                recent audiogram of the employee to                         (9) Revised baseline. An annual audio-
+                                be evaluated;                                             gram may be substituted for the base-
+                                  (C) Measurements of background                          line audiogram when, in the judgment
+                                sound     pressure     levels    in   the                 of the audiologist, otolaryngologist or
+                                audiometric test room as required in                      physician who is evaluating the audio-
+                                appendix D: Audiometric Test Rooms.                       gram:
+                                  (D) Records of audiometer calibra-                        (i) The standard threshold shift re-
+                                tions required by paragraph (h)(5) of                     vealed by the audiogram is persistent;
+                                this section.                                             or
+                                  (8) Follow-up procedures. (i) If a com-                   (ii) The hearing threshold shown in
+                                parison of the annual audiogram to the                    the annual audiogram indicates signifi-
+                                baseline audiogram indicates a stand-                     cant improvement over the baseline
+                                ard threshold shift as defined in para-                   audiogram.
+                                graph (g)(10) of this section has oc-                       (10) Standard threshold shift. (i) As
+                                curred, the employee shall be informed                    used in this section, a standard thresh-
+                                of this fact in writing, within 21 days of                old shift is a change in hearing thresh-
+                                the determination.
+                                                                                          old relative to the baseline audiogram
+                                  (ii) Unless a physician determines
+                                                                                          of an average of 10 dB or more at 2000,
+                                that the standard threshold shift is not
+                                work related or aggravated by occupa-                     3000, and 4000 Hz in either ear.
+                                tional noise exposure, the employer                         (ii) In determining whether a stand-
+                                shall ensure that the following steps                     ard threshold shift has occurred, allow-
+                                are taken when a standard threshold                       ance may be made for the contribution
+                                shift occurs:                                             of aging (presbycusis) to the change in
+                                  (A) Employees not using hearing pro-                    hearing level by correcting the annual
+                                tectors shall be fitted with hearing pro-                 audiogram according to the procedure
+                                tectors, trained in their use and care,                   described in appendix F: Calculation
+                                and required to use them.                                 and Application of Age Correction to
+                                  (B) Employees already using hearing                     Audiograms.
+                                protectors shall be refitted and re-                        (h) Audiometric test requirements. (1)
+                                trained in the use of hearing protectors                  Audiometric tests shall be pure tone,
+                                and provided with hearing protectors                      air conduction, hearing threshold ex-
+                                offering greater attenuation if nec-                      aminations, with test frequencies in-
+                                essary.                                                   cluding as a minimum 500, 1000, 2000,
+                                  (C) The employee shall be referred for                  3000, 4000, and 6000 Hz. Tests at each
+                                a clinical audiological evaluation or an                  frequency shall be taken separately for
+                                otological examination, as appropriate,                   each ear.
+                                if additional testing is necessary or if
+                                                                                            (2) Audiometric tests shall be con-
+                                the employer suspects that a medical
+                                                                                          ducted with audiometers (including
+                                pathology of the ear is caused or aggra-
+                                vated by the wearing of hearing protec-                   microprocessor audiometers) that meet
+                                tors.                                                     the specifications of, and are main-
+                                  (D) The employee is informed of the                     tained and used in accordance with,
+                                need for an otological examination if a                   American National Standard Specifica-
+                                medical pathology of the ear that is                      tion for Audiometers, S3.6–1969, which
+                                unrelated to the use of hearing protec-                   is incorporated by reference as speci-
+                                tors is suspected.                                        fied in § 1910.6.
+
+                                                                                     216
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00226   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                § 1910.95
+
+                                  (3) Pulsed-tone and self-recording                      ing protectors provided by the em-
+                                audiometers, if used, shall meet the re-                  ployer.
+                                quirements specified in appendix C:                         (4) The employer shall provide train-
+                                Audiometric Measuring Instruments.                        ing in the use and care of all hearing
+                                  (4) Audiometric examinations shall                      protectors provided to employees.
+                                be administered in a room meeting the                       (5) The employer shall ensure proper
+                                requirements listed in appendix D:                        initial fitting and supervise the correct
+                                Audiometric Test Rooms.                                   use of all hearing protectors.
+                                  (5) Audiometer calibration. (i) The                       (j) Hearing protector attenuation. (1)
+                                functional operation of the audiometer                    The employer shall evaluate hearing
+                                shall be checked before each day’s use                    protector attenuation for the specific
+                                by testing a person with known, stable                    noise environments in which the pro-
+                                hearing thresholds, and by listening to                   tector will be used. The employer shall
+                                the audiometer’s output to make sure                      use one of the evaluation methods de-
+                                that the output is free from distorted                    scribed in appendix B: Methods for Esti-
+                                or unwanted sounds. Deviations of 10                      mating the Adequacy of Hearing Protec-
+                                decibels or greater require an acoustic                   tion Attenuation.
+                                calibration.                                                (2) Hearing protectors must attenu-
+                                  (ii) Audiometer calibration shall be                    ate employee exposure at least to an 8-
+                                checked acoustically at least annually                    hour time-weighted average of 90 deci-
+                                in accordance with appendix E: Acoustic                   bels as required by paragraph (b) of
+                                Calibration of Audiometers. Test fre-                     this section.
+                                quencies below 500 Hz and above 6000 Hz                     (3) For employees who have experi-
+                                may be omitted from this check. Devi-                     enced a standard threshold shift, hear-
+                                ations of 15 decibels or greater require                  ing protectors must attenuate em-
+                                an exhaustive calibration.                                ployee exposure to an 8-hour time-
+                                  (iii) An exhaustive calibration shall                   weighted average of 85 decibels or
+                                be performed at least every two years                     below.
+                                in accordance with sections 4.1.2; 4.1.3.;                  (4) The adequacy of hearing protector
+                                4.1.4.3; 4.2; 4.4.1; 4.4.2; 4.4.3; and 4.5 of             attenuation shall be re-evaluated
+                                the American National Standard Speci-                     whenever employee noise exposures in-
+                                fication for Audiometers, S3.6–1969.                      crease to the extent that the hearing
+                                Test frequencies below 500 Hz and                         protectors provided may no longer pro-
+                                above 6000 Hz may be omitted from this                    vide adequate attenuation. The em-
+                                calibration.                                              ployer shall provide more effective
+                                  (i) Hearing protectors. (1) Employers                   hearing protectors where necessary.
+                                shall make hearing protectors avail-                        (k) Training program. (1) The em-
+                                able to all employees exposed to an 8-                    ployer shall train each employee who is
+                                hour time-weighted average of 85 deci-                    exposed to noise at or above an 8-hour
+                                bels or greater at no cost to the em-                     time weighted average of 85 decibels in
+                                ployees. Hearing protectors shall be re-                  accordance with the requirements of
+                                placed as necessary.                                      this section. The employer shall insti-
+                                  (2) Employers shall ensure that hear-                   tute a training program and ensure em-
+                                ing protectors are worn:                                  ployee participation in the program.
+                                  (i) By an employee who is required by                     (2) The training program shall be re-
+                                paragraph (b)(1) of this section to wear                  peated annually for each employee in-
+                                personal protective equipment; and                        cluded in the hearing conservation pro-
+                                  (ii) By any employee who is exposed                     gram. Information provided in the
+                                to an 8-hour time-weighted average of                     training program shall be updated to
+                                85 decibels or greater, and who:                          be consistent with changes in protec-
+                                  (A) Has not yet had a baseline audio-                   tive equipment and work processes.
+                                gram established pursuant to para-                          (3) The employer shall ensure that
+                                graph (g)(5)(ii); or                                      each employee is informed of the fol-
+                                  (B) Has experienced a standard                          lowing:
+                                threshold shift.                                            (i) The effects of noise on hearing;
+                                  (3) Employees shall be given the op-                      (ii) The purpose of hearing protec-
+                                portunity to select their hearing pro-                    tors, the advantages, disadvantages,
+                                tectors from a variety of suitable hear-                  and attenuation of various types, and
+
+                                                                                     217
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00227   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.95                                                             29 CFR Ch. XVII (7–1–14 Edition)
+
+                                instructions on selection, fitting, use,                  CFR 1910.1020 (a)–(e) and (g)–(i) apply to
+                                and care; and                                             access to records under this section.
+                                  (iii) The purpose of audiometric test-                    (5) Transfer of records. If the employer
+                                ing, and an explanation of the test pro-                  ceases to do business, the employer
+                                cedures.                                                  shall transfer to the successor em-
+                                  (l) Access to information and training                  ployer all records required to be main-
+                                materials. (1) The employer shall make                    tained by this section, and the suc-
+                                available to affected employees or                        cessor employer shall retain them for
+                                their representatives copies of this                      the remainder of the period prescribed
+                                standard and shall also post a copy in                    in paragraph (m)(3) of this section.
+                                the workplace.                                              (n) Appendices. (1) Appendices A, B, C,
+                                  (2) The employer shall provide to af-                   D, and E to this section are incor-
+                                fected employees any informational                        porated as part of this section and the
+                                materials pertaining to the standard                      contents of these appendices are man-
+                                that are supplied to the employer by                      datory.
+                                the Assistant Secretary.                                    (2) Appendices F and G to this sec-
+                                  (3) The employer shall provide, upon                    tion are informational and are not in-
+                                request, all materials related to the                     tended to create any additional obliga-
+                                employer’s training and education pro-                    tions not otherwise imposed or to de-
+                                gram pertaining to this standard to the                   tract from any existing obligations.
+                                Assistant Secretary and the Director.
+                                                                                            (o)    Exemptions.     Paragraphs     (c)
+                                  (m) Recordkeeping—(1) Exposure meas-
+                                                                                          through (n) of this section shall not
+                                urements. The employer shall maintain
+                                                                                          apply to employers engaged in oil and
+                                an accurate record of all employee ex-
+                                posure measurements required by para-                     gas well drilling and servicing oper-
+                                graph (d) of this section.                                ations.
+                                  (2) Audiometric tests. (i) The employer                   APPENDIX A TO § 1910.95—NOISE EXPOSURE
+                                shall retain all employee audiometric                                   COMPUTATION
+                                test records obtained pursuant to para-
+                                graph (g) of this section:                                             This appendix is Mandatory
+                                  (ii) This record shall include:                              I. COMPUTATION OF EMPLOYEE NOISE
+                                  (A) Name and job classification of                                       EXPOSURE
+                                the employee;
+                                  (B) Date of the audiogram;                                (1) Noise dose is computed using Table G–
+                                  (C) The examiner’s name;                                16a as follows:
+                                                                                            (i) When the sound level, L, is constant
+                                  (D) Date of the last acoustic or ex-
+                                                                                          over the entire work shift, the noise dose, D,
+                                haustive calibration of the audiometer;                   in percent, is given by: D=100 C/T where C is
+                                and                                                       the total length of the work day, in hours,
+                                  (E) Employee’s most recent noise ex-                    and T is the reference duration cor-
+                                posure assessment.                                        responding to the measured sound level, L,
+                                  (F) The employer shall maintain ac-                     as given in Table G–16a or by the formula
+                                curate records of the measurements of                     shown as a footnote to that table.
+                                the background sound pressure levels                        (ii) When the workshift noise exposure is
+                                in audiometric test rooms.                                composed of two or more periods of noise at
+                                  (3) Record retention. The employer                      different levels, the total noise dose over the
+                                                                                          work day is given by:
+                                shall retain records required in this
+                                paragraph (m) for at least the following                  D=100(C1/T1+C2/T2+Cn/Tn),
+                                periods.                                                  where Cn indicates the total time of exposure
+                                  (i) Noise exposure measurement                          at a specific noise level, and Tn indicates the
+                                records shall be retained for two years.                  reference duration for that level as given by
+                                                                                          Table G–16a.
+                                  (ii) Audiometric test records shall be
+                                retained for the duration of the af-                        (2) The eight-hour time-weighted average
+                                fected employee’s employment.                             sound level (TWA), in decibels, may be com-
+                                                                                          puted from the dose, in percent, by means of
+                                  (4) Access to records. All records re-
+                                                                                          the formula: TWA=16.61 log10 (D/100)+90. For
+                                quired by this section shall be provided                  an eight-hour workshift with the noise level
+                                upon request to employees, former em-                     constant over the entire shift, the TWA is
+                                ployees, representatives designated by                    equal to the measured sound level.
+                                the individual employee, and the As-                        (3) A table relating dose and TWA is given
+                                sistant Secretary. The provisions of 29                   in Section II.
+
+                                                                                     218
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00228   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                                                                                             § 1910.95
+
+                                                                  TABLE G–16A                                                  amount of such exposure is usually measured
+                                                                                                                               with an audiodosimeter which gives a read-
+                                                                                                                   Ref-        out in terms of ‘‘dose.’’ In order to better un-
+                                                                                                                  erence
+                                           A-weighted sound level, L (decibel)                                   duration,     derstand the requirements of the amend-
+                                                                                                                 T (hour)      ment, dosimeter readings can be converted
+                                                                                                                               to an ‘‘8-hour time-weighted average sound
+                                80 ...........................................................................         32      level.’’ (TWA).
+                                81 ...........................................................................       27.9
+                                                                                                                                 In order to convert the reading of a dosim-
+                                82 ...........................................................................       24.3
+                                83 ...........................................................................       21.1      eter into TWA, see Table A–1, below. This
+                                84 ...........................................................................       18.4      table applies to dosimeters that are set by
+                                85 ...........................................................................         16      the manufacturer to calculate dose or per-
+                                86 ...........................................................................       13.9      cent exposure according to the relationships
+                                87 ...........................................................................       12.1      in Table G–16a. So, for example, a dose of 91
+                                88 ...........................................................................       10.6
+                                89 ...........................................................................         9.2
+                                                                                                                               percent over an eight hour day results in a
+                                90 ...........................................................................           8     TWA of 89.3 dB, and, a dose of 50 percent cor-
+                                91 ...........................................................................         7.0     responds to a TWA of 85 dB.
+                                92 ...........................................................................         6.1       If the dose as read on the dosimeter is less
+                                93 ...........................................................................         5.3     than or greater than the values found in
+                                94 ...........................................................................         4.6     Table A–1, the TWA may be calculated by
+                                95 ...........................................................................           4
+                                96 ...........................................................................         3.5
+                                                                                                                               using the formula: TWA=16.61 log10 (D/100)+90
+                                97 ...........................................................................         3.0     where TWA=8-hour time-weighted average
+                                98 ...........................................................................         2.6     sound level and D=accumulated dose in per-
+                                99 ...........................................................................         2.3     cent exposure.
+                                100 .........................................................................            2
+                                101 .........................................................................          1.7         TABLE A–1—CONVERSION FROM ‘‘PERCENT
+                                102 .........................................................................          1.5
+                                103 .........................................................................          1.3         NOISE EXPOSURE’’ OR ‘‘DOSE’’ TO ‘‘8-HOUR
+                                104 .........................................................................          1.1         TIME-WEIGHTED AVERAGE SOUND LEVEL’’
+                                105 .........................................................................            1         (TWA)
+                                106 .........................................................................        0.87
+                                107 .........................................................................        0.76                   Dose or percent noise exposure                                      TWA
+                                108 .........................................................................        0.66
+                                109 .........................................................................        0.57      10 ...........................................................................    73.4
+                                110 .........................................................................          0.5     15 ...........................................................................    76.3
+                                111 .........................................................................        0.44      20 ...........................................................................    78.4
+                                112 .........................................................................        0.38      25 ...........................................................................    80.0
+                                113 .........................................................................        0.33      30 ...........................................................................    81.3
+                                114 .........................................................................        0.29      35 ...........................................................................    82.4
+                                115 .........................................................................        0.25      40 ...........................................................................    83.4
+                                116 .........................................................................        0.22      45 ...........................................................................    84.2
+                                117 .........................................................................        0.19      50 ...........................................................................    85.0
+                                118 .........................................................................        0.16      55 ...........................................................................    85.7
+                                119 .........................................................................        0.14      60 ...........................................................................    86.3
+                                120 .........................................................................       0.125      65 ...........................................................................    86.9
+                                121 .........................................................................        0.11      70 ...........................................................................    87.4
+                                122 .........................................................................       0.095      75 ...........................................................................    87.9
+                                123 .........................................................................       0.082      80 ...........................................................................    88.4
+                                124 .........................................................................       0.072      81 ...........................................................................    88.5
+                                125 .........................................................................       0.063      82 ...........................................................................    88.6
+                                126 .........................................................................       0.054      83 ...........................................................................    88.7
+                                127 .........................................................................       0.047      84 ...........................................................................    88.7
+                                128 .........................................................................       0.041      85 ...........................................................................    88.8
+                                129 .........................................................................       0.036      86 ...........................................................................    88.9
+                                130 .........................................................................       0.031      87 ...........................................................................    89.0
+                                                                                                                               88 ...........................................................................    89.1
+                                  In the above table the reference duration,                                                   89 ...........................................................................    89.2
+                                T, is computed by                                                                              90 ...........................................................................    89.2
+                                                                                                                               91 ...........................................................................    89.3
+                                                                                                                               92 ...........................................................................    89.4
+                                                                                                                               93 ...........................................................................    89.5
+                                                                                                                               94 ...........................................................................    89.6
+                                                                                                                               95 ...........................................................................    89.6
+                                                                                                                               96 ...........................................................................    89.7
+                                where L is the measured A-weighted sound                                                       97 ...........................................................................    89.8
+                                level.                                                                                         98 ...........................................................................    89.9
+                                                                                                                               99 ...........................................................................    89.9
+                                II. CONVERSION BETWEEN ‘‘DOSE’’ AND ‘‘8-                                                       100 .........................................................................     90.0
+                                  HOUR TIME-WEIGHTED AVERAGE’’ SOUND                                                           101 .........................................................................     90.1
+                                  LEVEL                                                                                        102 .........................................................................     90.1
+                                                                                                                               103 .........................................................................     90.2
+                                  Compliance with paragraphs (c)–(r) of this                                                   104 .........................................................................     90.3
+                                regulation is determined by the amount of                                                      105 .........................................................................     90.4
+                                exposure to noise in the workplace. The                                                        106 .........................................................................     90.4
+
+
+                                                                                                                             219
+                                                                                                                                                                                                                        ER25SE06.008</MATH>
+
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014          Jkt 232118            PO 00000             Frm 00229           Fmt 8010      Sfmt 8002           Q:\29\29V5.TXT                  31
+                                § 1910.95                                                                                                  29 CFR Ch. XVII (7–1–14 Edition)
+
+                                    TABLE A–1—CONVERSION FROM ‘‘PERCENT                                                        TABLE A–1—CONVERSION FROM ‘‘PERCENT
+                                    NOISE EXPOSURE’’ OR ‘‘DOSE’’ TO ‘‘8-HOUR                                                   NOISE EXPOSURE’’ OR ‘‘DOSE’’ TO ‘‘8-HOUR
+                                    TIME-WEIGHTED AVERAGE SOUND LEVEL’’                                                        TIME-WEIGHTED AVERAGE SOUND LEVEL’’
+                                    (TWA)—Continued                                                                            (TWA)—Continued
+                                             Dose or percent noise exposure                                     TWA                     Dose or percent noise exposure                                     TWA
+
+                                107 .........................................................................      90.5    590 .........................................................................    102.8
+                                108 .........................................................................      90.6    600 .........................................................................    102.9
+                                109 .........................................................................      90.6    610 .........................................................................    103.0
+                                110 .........................................................................      90.7    620 .........................................................................    103.2
+                                111 .........................................................................      90.8    630 .........................................................................    103.3
+                                112 .........................................................................      90.8    640 .........................................................................    103.4
+                                113 .........................................................................      90.9    650 .........................................................................    103.5
+                                114 .........................................................................      90.9    660 .........................................................................    103.6
+                                115 .........................................................................      91.1    670 .........................................................................    103.7
+                                116 .........................................................................      91.1
+                                                                                                                           680 .........................................................................    103.8
+                                117 .........................................................................      91.1
+                                                                                                                           690 .........................................................................    103.9
+                                118 .........................................................................      91.2
+                                                                                                                           700 .........................................................................    104.0
+                                119 .........................................................................      91.3
+                                                                                                                           710 .........................................................................    104.1
+                                120 .........................................................................      91.3
+                                125 .........................................................................      91.6    720 .........................................................................    104.2
+                                130 .........................................................................      91.9    730 .........................................................................    104.3
+                                135 .........................................................................      92.2    740 .........................................................................    104.4
+                                140 .........................................................................      92.4    750 .........................................................................    104.5
+                                145 .........................................................................      92.7    760 .........................................................................    104.6
+                                150 .........................................................................      92.9    770 .........................................................................    104.7
+                                155 .........................................................................      93.2    780 .........................................................................    104.8
+                                160 .........................................................................      93.4    790 .........................................................................    104.9
+                                165 .........................................................................      93.6    800 .........................................................................    105.0
+                                170 .........................................................................      93.8    810 .........................................................................    105.1
+                                175 .........................................................................      94.0    820 .........................................................................    105.2
+                                180 .........................................................................      94.2    830 .........................................................................    105.3
+                                185 .........................................................................      94.4    840 .........................................................................    105.4
+                                190 .........................................................................      94.6    850 .........................................................................    105.4
+                                195 .........................................................................      94.8    860 .........................................................................    105.5
+                                200 .........................................................................      95.0    870 .........................................................................    105.6
+                                210 .........................................................................      95.4    880 .........................................................................    105.7
+                                220 .........................................................................      95.7    890 .........................................................................    105.8
+                                230 .........................................................................      96.0    900 .........................................................................    105.8
+                                240 .........................................................................      96.3    910 .........................................................................    105.9
+                                250 .........................................................................      96.6    920 .........................................................................    106.0
+                                260 .........................................................................      96.9    930 .........................................................................    106.1
+                                270 .........................................................................      97.2    940 .........................................................................    106.2
+                                280 .........................................................................      97.4    950 .........................................................................    106.2
+                                290 .........................................................................      97.7    960 .........................................................................    106.3
+                                300 .........................................................................      97.9    970 .........................................................................    106.4
+                                310 .........................................................................      98.2    980 .........................................................................    106.5
+                                320 .........................................................................      98.4    990 .........................................................................    106.5
+                                330 .........................................................................      98.6    999 .........................................................................    106.6
+                                340 .........................................................................      98.8
+                                350 .........................................................................      99.0
+                                360 .........................................................................      99.2    APPENDIX B TO § 1910.95—METHODS FOR ESTI-
+                                370 .........................................................................      99.4     MATING THE ADEQUACY OF HEARING PRO-
+                                380 .........................................................................      99.6     TECTOR ATTENUATION
+                                390 .........................................................................      99.8
+                                400 .........................................................................     100.0                       This appendix is Mandatory
+                                410 .........................................................................     100.2
+                                420 .........................................................................     100.4      For employees who have experienced a sig-
+                                430 .........................................................................     100.5    nificant threshold shift, hearing protector
+                                440 .........................................................................     100.7    attenuation must be sufficient to reduce em-
+                                450 .........................................................................     100.8    ployee exposure to a TWA of 85 dB. Employ-
+                                460 .........................................................................     101.0
+                                470 .........................................................................     101.2
+                                                                                                                           ers must select one of the following methods
+                                480 .........................................................................     101.3    by which to estimate the adequacy of hear-
+                                490 .........................................................................     101.5    ing protector attenuation.
+                                500 .........................................................................     101.6      The most convenient method is the Noise
+                                510 .........................................................................     101.8    Reduction Rating (NRR) developed by the
+                                520 .........................................................................     101.9    Environmental Protection Agency (EPA).
+                                530 .........................................................................     102.0    According to EPA regulation, the NRR must
+                                540 .........................................................................     102.2
+                                550 .........................................................................     102.3
+                                                                                                                           be shown on the hearing protector package.
+                                560 .........................................................................     102.4    The NRR is then related to an individual
+                                570 .........................................................................     102.6    worker’s noise environment in order to as-
+                                580 .........................................................................     102.7    sess the adequacy of the attenuation of a
+
+                                                                                                                      220
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014         Jkt 232118             PO 00000            Frm 00230           Fmt 8010   Sfmt 8002           Q:\29\29V5.TXT                 31
+                                Occupational Safety and Health Admin., Labor                                                  § 1910.95
+                                given hearing protector. This appendix de-                  (A) Obtain a representative sample of the
+                                scribes four methods of using the NRR to de-              C-weighted sound levels in the employee’s
+                                termine whether a particular hearing pro-                 environment.
+                                tector provides adequate protection within a                (B) Subtract the NRR from the C-weighted
+                                given exposure environment. Selection                     average sound level to obtain the estimated
+                                among the four procedures is dependent upon               A-weighted TWA under the ear protector.
+                                the employer’s noise measuring instruments.                 (v) When using area monitoring procedures
+                                  Instead of using the NRR, employers may                 and a sound level meter set to the A-weigh-
+                                evaluate the adequacy of hearing protector                ing network.
+                                attenuation by using one of the three meth-                 (A) Obtain a representative sound level for
+                                ods developed by the National Institute for               the area in question.
+                                Occupational Safety and Health (NIOSH),                     (B) Subtract 7 dB from the NRR and sub-
+                                which are described in the ‘‘List of Personal             tract the remainder from the A-weighted
+                                Hearing Protectors and Attenuation Data,’’                sound level for that area.
+                                HEW Publication No. 76–120, 1975, pages 21–37.              (vi) When using area monitoring proce-
+                                These methods are known as NIOSH methods                  dures and a sound level meter set to the C-
+                                #1B1, #1B2 and #1B3. The NRR described                    weighting network:
+                                below is a simplification of NIOSH method
+                                                                                            (A) Obtain a representative sound level for
+                                #1B2. The most complex method is NIOSH
+                                                                                          the area in question.
+                                method #1B1, which is probably the most ac-
+                                                                                            (B) Subtract the NRR from the C-weighted
+                                curate method since it uses the largest
+                                                                                          sound level for that area.
+                                amount of spectral information from the in-
+                                dividual employee’s noise environment. As                     APPENDIX C TO § 1910.95—AUDIOMETRIC
+                                in the case of the NRR method described                            MEASURING INSTRUMENTS
+                                below, if one of the NIOSH methods is used,
+                                the selected method must be applied to an                             This appendix is Mandatory
+                                individual’s noise environment to assess the
+                                adequacy of the attenuation. Employers                      1. In the event that pulsed-tone audiom-
+                                should be careful to take a sufficient number             eters are used, they shall have a tone on-
+                                of measurements in order to achieve a rep-                time of at least 200 milliseconds.
+                                resentative sample for each time segment.                   2. Self-recording audiometers shall comply
+                                  NOTE: The employer must remember that                   with the following requirements:
+                                calculated attenuation values reflect real-                 (A) The chart upon which the audiogram is
+                                istic values only to the extent that the pro-             traced shall have lines at positions cor-
+                                tectors are properly fitted and worn.                     responding to all multiples of 10 dB hearing
+                                                                                          level within the intensity range spanned by
+                                  When using the NRR to assess hearing pro-               the audiometer. The lines shall be equally
+                                tector adequacy, one of the following meth-               spaced and shall be separated by at least 1⁄4
+                                ods must be used:                                         inch. Additional increments are optional.
+                                  (i) When using a dosimeter that is capable              The audiogram pen tracings shall not exceed
+                                of C-weighted measurements:                               2 dB in width.
+                                  (A) Obtain the employee’s C-weighted dose                 (B) It shall be possible to set the stylus
+                                for the entire workshift, and convert to TWA              manually at the 10-dB increment lines for
+                                (see appendix A, II).                                     calibration purposes.
+                                  (B) Subtract the NRR from the C-weighted                  (C) The slewing rate for the audiometer at-
+                                TWA to obtain the estimated A-weighted                    tenuator shall not be more than 6 dB/sec ex-
+                                TWA under the ear protector.                              cept that an initial slewing rate greater than
+                                  (ii) When using a dosimeter that is not ca-             6 dB/sec is permitted at the beginning of
+                                pable of C-weighted measurements, the fol-                each new test frequency, but only until the
+                                lowing method may be used:                                second subject response.
+                                  (A) Convert the A-weighted dose to TWA                    (D) The audiometer shall remain at each
+                                (see appendix A).                                         required test frequency for 30 seconds (±3 sec-
+                                  (B) Subtract 7 dB from the NRR.                         onds). The audiogram shall be clearly
+                                  (C) Subtract the remainder from the A-                  marked at each change of frequency and the
+                                weighted TWA to obtain the estimated A-                   actual frequency change of the audiometer
+                                weighted TWA under the ear protector.                     shall not deviate from the frequency bound-
+                                  (iii) When using a sound level meter set to             aries marked on the audiogram by more than
+                                the A-weighting network:                                  ±3 seconds.
+                                  (A) Obtain the employee’s A-weighted                      (E) It must be possible at each test fre-
+                                TWA.                                                      quency to place a horizontal line segment
+                                  (B) Subtract 7 dB from the NRR, and sub-                parallel to the time axis on the audiogram,
+                                tract the remainder from the A-weighted                   such that the audiometric tracing crosses
+                                TWA to obtain the estimated A-weighted                    the line segment at least six times at that
+                                TWA under the ear protector.                              test frequency. At each test frequency the
+                                  (iv) When using a sound level meter set on              threshold shall be the average of the
+                                the C-weighting network:                                  midpoints of the tracing excursions.
+
+                                                                                     221
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00231   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.95                                                                                   29 CFR Ch. XVII (7–1–14 Edition)
+                                 APPENDIX D TO § 1910.95—AUDIOMETRIC TEST                                     D. This measurement may be made elec-
+                                                   ROOMS                                                    trically with a voltmeter connected to the
+                                                                                                            earphone terminals.
+                                                  This appendix is Mandatory                                  (3) Tolerances
+                                  Rooms used for audiometric testing shall                                    When any of the measured sound levels de-
+                                not have background sound pressure levels                                   viate from the levels in Table E–1 or Table
+                                exceeding those in Table D–1 when measured                                  E–2 by ±3 dB at any test frequency between
+                                by equipment conforming at least to the                                     500 and 3000 Hz, 4 dB at 4000 Hz, or 5 dB at
+                                Type 2 requirements of American National                                    6000 Hz, an exhaustive calibration is advised.
+                                Standard Specification for Sound Level Me-                                  An exhaustive calibration is required if the
+                                ters, S1.4–1971 (R1976), and to the Class II re-                            deviations are greater than 15 dB or greater
+                                quirements of American National Standard                                    at any test frequency.
+                                Specification for Octave, Half-Octave, and
+                                Third-Octave Band Filter Sets, S1.11–1971                                     TABLE E–1—REFERENCE THRESHOLD LEVELS
+                                (R1976).                                                                       FOR TELEPHONICS—TDH–39 EARPHONES
+
+                                   TABLE D–1—MAXIMUM ALLOWABLE OCTAVE-                                                                                              Reference
+                                                                                                                                                                     threshold          Sound
+                                   BAND SOUND PRESSURE LEVELS FOR                                                          Frequency, Hz                              level for      level meter
+                                   AUDIOMETRIC TEST ROOMS                                                                                                             TDH–39           reading,
+                                                                                                                                                                    earphones,            dB
+                                                                                                                                                                         dB
+                                Octave-band center fre-
+                                  quency (Hz) ................           500   1000    2000   4000   8000
+                                                                                                            500 .................................................           11.5           81.5
+                                Sound pressure level
+                                                                                                            1000 ...............................................             7             77
+                                  (dB) .............................      40      40     47    57      62
+                                                                                                            2000 ...............................................             9             79
+                                                                                                            3000 ...............................................            10             80
+                                           APPENDIX E TO § 1910.95—ACOUSTIC                                 4000 ...............................................             9.5           79.5
+                                            CALIBRATION OF AUDIOMETERS                                      6000 ...............................................            15.5           85.5
+
+                                                  This appendix is Mandatory
+                                                                                                              TABLE E–2—REFERENCE THRESHOLD LEVELS
+                                  Audiometer calibration shall be checked                                      FOR TELEPHONICS—TDH–49 EARPHONES
+                                acoustically, at least annually, according to
+                                the procedures described in this appendix.                                                                                                 Ref-
+                                The equipment necessary to perform these                                                                                                  erence        Sound
+                                                                                                                                                                        threshold
+                                measurements is a sound level meter, oc-                                                                                                                 level
+                                                                                                                                                                         level for
+                                                                                                                             Frequency, Hz                                              meter
+                                tave-band filter set, and a National Bureau                                                                                              TDH–49        reading,
+                                of Standards 9A coupler. In making these                                                                                                   ear-           dB
+                                                                                                                                                                         phones,
+                                measurements, the accuracy of the cali-                                                                                                     dB
+                                brating equipment shall be sufficient to de-
+                                termine that the audiometer is within the                                   500 .....................................................        13.5          83.5
+                                tolerances permitted by American Standard                                   1000 ...................................................          7.5          77.5
+                                Specification for Audiometers, S3.6–1969.                                   2000 ...................................................           11          81.0
+                                                                                                            3000 ...................................................          9.5          79.5
+                                  (1) Sound Pressure Output Check
+                                                                                                            4000 ...................................................         10.5          80.5
+                                  A. Place the earphone coupler over the                                    6000 ...................................................         13.5          83.5
+                                microphone of the sound level meter and
+                                place the earphone on the coupler.
+                                  B. Set the audiometer’s hearing threshold                                 APPENDIX F TO § 1910.95—CALCULATIONS AND
+                                level (HTL) dial to 70 dB.                                                   APPLICATION OF AGE CORRECTIONS TO
+                                  C. Measure the sound pressure level of the                                 AUDIOGRAMS
+                                tones at each test frequency from 500 Hz                                                  This appendix Is Non-Mandatory
+                                through 6000 Hz for each earphone.
+                                  D. At each frequency the readout on the                                     In determining whether a standard thresh-
+                                sound level meter should correspond to the                                  old shift has occurred, allowance may be
+                                levels in Table E–1 or Table E–2, as appro-                                 made for the contribution of aging to the
+                                priate, for the type of earphone, in the col-                               change in hearing level by adjusting the
+                                umn entitled ‘‘sound level meter reading.’’                                 most recent audiogram. If the employer
+                                  (2) Linearity Check                                                       chooses to adjust the audiogram, the em-
+                                  A. With the earphone in place, set the fre-                               ployer shall follow the procedure described
+                                quency to 1000 Hz and the HTL dial on the                                   below. This procedure and the age correction
+                                audiometer to 70 dB.                                                        tables were developed by the National Insti-
+                                  B. Measure the sound levels in the coupler                                tute for Occupational Safety and Health in
+                                at each 10-dB decrement from 70 dB to 10 dB,                                the criteria document entitled ‘‘Criteria for
+                                noting the sound level meter reading at each                                a Recommended Standard . . . Occupational
+                                setting.                                                                    Exposure to Noise,’’ ((HSM)–11001).
+                                  C. For each 10-dB decrement on the audi-                                    For each audiometric test frequency;
+                                ometer the sound level meter should indicate                                  (i) Determine from Tables F–1 or F–2 the
+                                a corresponding 10 dB decrease.                                             age correction values for the employee by:
+
+                                                                                                        222
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014        Jkt 232118             PO 00000    Frm 00232     Fmt 8010   Sfmt 8002           Q:\29\29V5.TXT                31
+                                Occupational Safety and Health Admin., Labor                                                                                    § 1910.95
+                                  (A) Finding the age at which the most re-                                     TABLE F–1—AGE CORRECTION VALUES IN
+                                cent audiogram was taken and recording the                                              DECIBELS FOR MALES
+                                corresponding values of age corrections at
+                                1000 Hz through 6000 Hz;                                                                                  Audiometric Test Frequencies (Hz)
+                                  (B) Finding the age at which the baseline                                        Years
+                                                                                                                                         1000   2000    3000    4000     6000
+                                audiogram was taken and recording the cor-
+                                responding values of age corrections at 1000                              20 or younger .......             5       3       4       5          8
+                                Hz through 6000 Hz.                                                       21 .........................      5       3       4       5          8
+                                  (ii) Subtract the values found in step (i)(B)                           22 .........................      5       3       4       5          8
+                                from the value found in step (i)(A).                                      23 .........................      5       3       4       6          9
+                                  (iii) The differences calculated in step (ii)                           24 .........................      5       3       5       6          9
+                                                                                                          25 .........................      5       3       5       7         10
+                                represented that portion of the change in                                 26 .........................      5       4       5       7         10
+                                hearing that may be due to aging.                                         27 .........................      5       4       6       7         11
+                                  Example: Employee is a 32-year-old male.                                28 .........................      6       4       6       8         11
+                                The audiometric history for his right ear is                              29 .........................      6       4       6       8         12
+                                shown in decibels below.                                                  30 .........................      6       4       6       9         12
+                                                                                                          31 .........................      6       4       7       9         13
+                                                                 Audiometric test frequency (Hz)          32 .........................      6       5       7      10         14
+                                  Employee’s age                                                          33 .........................      6       5       7      10         14
+                                                               1000   2000    3000     4000      6000     34 .........................      6       5       8      11         15
+                                                                                                          35 .........................      7       5       8      11         15
+                                26 .........................     10       5       5       10        5     36 .........................      7       5       9      12         16
+                                *27 ........................      0       0       0        5        5     37 .........................      7       6       9      12         17
+                                28 .........................      0       0       0       10        5     38 .........................      7       6       9      13         17
+                                29 .........................      5       0       5       15        5     39 .........................      7       6      10      14         18
+                                30 .........................      0       5      10       20       10     40 .........................      7       6      10      14         19
+                                31 .........................      5      10      20       15       15     41 .........................      7       6      10      14         20
+                                *32 ........................      5      10      10       25       20     42 .........................      8       7      11      16         20
+                                                                                                          43 .........................      8       7      12      16         21
+                                  The audiogram at age 27 is considered the                               44 .........................      8       7      12      17         22
+                                baseline since it shows the best hearing                                  45 .........................      8       7      13      18         23
+                                threshold levels. Asterisks have been used to                             46 .........................      8       8      13      19         24
+                                identify the baseline and most recent audio-                              47 .........................      8       8      14      19         24
+                                                                                                          48 .........................      9       8      14      20         25
+                                gram. A threshold shift of 20 dB exists at 4000
+                                                                                                          49 .........................      9       9      15      21         26
+                                Hz between the audiograms taken at ages 27                                50 .........................      9       9      16      22         27
+                                and 32.                                                                   51 .........................      9       9      16      23         28
+                                  (The threshold shift is computed by sub-                                52 .........................      9      10      17      24         29
+                                tracting the hearing threshold at age 27,                                 53 .........................      9      10      18      25         30
+                                which was 5, from the hearing threshold at                                54 .........................     10      10      18      26         31
+                                age 32, which is 25). A retest audiogram has                              55 .........................     10      11      19      27         32
+                                                                                                          56 .........................     10      11      20      28         34
+                                confirmed this shift. The contribution of
+                                                                                                          57 .........................     10      11      21      29         35
+                                aging to this change in hearing may be esti-                              58 .........................     10      12      22      31         36
+                                mated in the following manner:                                            59 .........................     11      12      22      32         37
+                                  Go to Table F–1 and find the age correction                             60 or older ............         11      13      23      33         38
+                                values (in dB) for 4000 Hz at age 27 and age 32.
+                                                                        Frequency (Hz)                          TABLE F–2—AGE CORRECTION VALUES IN
+                                                               1000   2000    3000     4000      6000
+                                                                                                                        DECIBELS FOR FEMALES
+
+                                Age 32 ..................         6       5       7       10       14                                     Audiometric Test Frequencies (Hz)
+                                                                                                                   Years
+                                Age 27 ..................         5       4       6        7       11                                    1000   2000    3000    4000     6000
+                                      Difference ......           1       1       1        3        3     20 or younger .......             7       4       3        3         6
+                                                                                                          21 .........................      7       4       4        3         6
+                                  The difference represents the amount of                                 22 .........................      7       4       4        4         6
+                                hearing loss that may be attributed to aging                              23 .........................      7       5       4        4         7
+                                in the time period between the baseline                                   24 .........................      7       5       4        4         7
+                                audiogram and the most recent audiogram.                                  25 .........................      8       5       4        4         7
+                                                                                                          26 .........................      8       5       5        4         8
+                                In this example, the difference at 4000 Hz is                             27 .........................      8       5       5        5         8
+                                3 dB. This value is subtracted from the hear-                             28 .........................      8       5       5        5         8
+                                ing level at 4000 Hz, which in the most recent                            29 .........................      8       5       5        5         9
+                                audiogram is 25, yielding 22 after adjust-                                30 .........................      8       6       5        5         9
+                                ment. Then the hearing threshold in the                                   31 .........................      8       6       6        5         9
+                                baseline audiogram at 4000 Hz (5) is sub-                                 32 .........................      9       6       6        6        10
+                                tracted from the adjusted annual audiogram                                33 .........................      9       6       6        6        10
+                                                                                                          34 .........................      9       6       6        6        10
+                                hearing threshold at 4000 Hz (22). Thus the                               35 .........................      9       6       7        7        11
+                                age-corrected threshold shift would be 17 dB                              36 .........................      9       7       7        7        11
+                                (as opposed to a threshold shift of 20 dB                                 37 .........................      9       7       7        7        12
+                                without age correction).                                                  38 .........................     10       7       7        7        12
+
+
+                                                                                                        223
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014        Jkt 232118        PO 00000    Frm 00233        Fmt 8010   Sfmt 8002          Q:\29\29V5.TXT       31
+                                § 1910.95                                                                            29 CFR Ch. XVII (7–1–14 Edition)
+
+                                      TABLE F–2—AGE CORRECTION VALUES IN                                 level meter and the dosimeter. A sound level
+                                        DECIBELS FOR FEMALES—Continued                                   meter is a device that measures the inten-
+                                                                                                         sity of sound at a given moment. Since
+                                                                Audiometric Test Frequencies (Hz)        sound level meters provide a measure of
+                                         Years                                                           sound intensity at only one point in time, it
+                                                               1000   2000    3000    4000      6000
+                                                                                                         is generally necessary to take a number of
+                                39 .........................     10       7       8       8         12   measurements at different times during the
+                                40 .........................     10       7       8       8         13   day to estimate noise exposure over a work-
+                                41 .........................     10       8       8       8         13   day. If noise levels fluctuate, the amount of
+                                42 .........................     10       8       9       9         13
+                                                                                                         time noise remains at each of the various
+                                43 .........................     11       8       9       9         14
+                                44 .........................     11       8       9       9         14   measured levels must be determined.
+                                45 .........................     11       8      10      10         15     To estimate employee noise exposures with
+                                46 .........................     11       9      10      10         15   a sound level meter it is also generally nec-
+                                47 .........................     11       9      10      11         16   essary to take several measurements at dif-
+                                48 .........................     12       9      11      11         16   ferent locations within the workplace. After
+                                49 .........................     12       9      11      11         16
+                                50 .........................     12      10      11      12         17
+                                                                                                         appropriate sound level meter readings are
+                                51 .........................     12      10      12      12         17   obtained, people sometimes draw ‘‘maps’’ of
+                                52 .........................     12      10      12      13         18   the sound levels within different areas of the
+                                53 .........................     13      10      13      13         18   workplace. By using a sound level ‘‘map’’
+                                54 .........................     13      11      13      14         19   and information on employee locations
+                                55 .........................     13      11      14      14         19   throughout the day, estimates of individual
+                                56 .........................     13      11      14      15         20
+                                                                                                         exposure levels can be developed. This meas-
+                                57 .........................     13      11      15      15         20
+                                58 .........................     14      12      15      16         21   urement method is generally referred to as
+                                59 .........................     14      12      16      16         21   area noise monitoring.
+                                60 or older ............         14      12      16      17         22     A dosimeter is like a sound level meter ex-
+                                                                                                         cept that it stores sound level measurements
+                                APPENDIX G TO § 1910.95—MONITORING NOISE                                 and integrates these measurements over
+                                 LEVELS NON-MANDATORY INFORMATIONAL                                      time, providing an average noise exposure
+                                 APPENDIX                                                                reading for a given period of time, such as an
+                                                                                                         8-hour workday. With a dosimeter, a micro-
+                                  This appendix provides information to help                             phone is attached to the employee’s clothing
+                                employers comply with the noise monitoring                               and the exposure measurement is simply
+                                obligations that are part of the hearing con-                            read at the end of the desired time period. A
+                                servation amendment.                                                     reader may be used to read-out the
+                                  WHAT IS THE PURPOSE OF NOISE MONITORING?                               dosimeter’s measurements. Since the dosim-
+                                  This revised amendment requires that em-                               eter is worn by the employee, it measures
+                                ployees be placed in a hearing conservation                              noise levels in those locations in which the
+                                program if they are exposed to average noise                             employee travels. A sound level meter can
+                                levels of 85 dB or greater during an 8 hour
+                                                                                                         also be positioned within the immediate vi-
+                                workday. In order to determine if exposures
+                                                                                                         cinity of the exposed worker to obtain an in-
+                                are at or above this level, it may be nec-
+                                                                                                         dividual exposure estimate. Such procedures
+                                essary to measure or monitor the actual
+                                                                                                         are generally referred to as personal noise
+                                noise levels in the workplace and to estimate
+                                                                                                         monitoring.
+                                the noise exposure or ‘‘dose’’ received by em-
+                                ployees during the workday.                                                Area monitoring can be used to estimate
+                                  WHEN IS IT NECESSARY TO IMPLEMENT A                                    noise exposure when the noise levels are rel-
+                                NOISE MONITORING PROGRAM?
+                                                                                                         atively constant and employees are not mo-
+                                  It is not necessary for every employer to                              bile. In workplaces where employees move
+                                measure workplace noise. Noise monitoring                                about in different areas or where the noise
+                                or measuring must be conducted only when                                 intensity tends to fluctuate over time, noise
+                                exposures are at or above 85 dB. Factors                                 exposure is generally more accurately esti-
+                                which suggest that noise exposures in the                                mated by the personal monitoring approach.
+                                workplace may be at this level include em-                                 In situations where personal monitoring is
+                                ployee complaints about the loudness of                                  appropriate, proper positioning of the micro-
+                                noise, indications that employees are losing                             phone is necessary to obtain accurate meas-
+                                their hearing, or noisy conditions which                                 urements. With a dosimeter, the microphone
+                                make normal conversation difficult. The em-                              is generally located on the shoulder and re-
+                                ployer should also consider any information                              mains in that position for the entire work-
+                                available regarding noise emitted from spe-                              day. With a sound level meter, the micro-
+                                cific machines. In addition, actual workplace                            phone is stationed near the employee’s head,
+                                noise measurements can suggest whether or                                and the instrument is usually held by an in-
+                                not a monitoring program should be initi-                                dividual who follows the employee as he or
+                                ated.                                                                    she moves about.
+                                  HOW IS NOISE MEASURED?                                                   Manufacturer’s instructions, contained in
+                                  Basically, there are two different instru-                             dosimeter and sound level meter operating
+                                ments to measure noise exposures: the sound                              manuals, should be followed for calibration
+
+                                                                                                       224
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014        Jkt 232118        PO 00000    Frm 00234       Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                                             § 1910.95
+                                and maintenance. To ensure accurate re-                                    firms and industrial hygiene firms also pro-
+                                sults, it is considered good professional prac-                            vide noise monitoring services. Universities
+                                tice to calibrate instruments before and                                   with audiology, industrial hygiene, or acous-
+                                after each use.                                                            tical engineering departments may also pro-
+                                  HOW OFTEN IS IT NECESSARY TO MONITOR                                     vide information or may be able to help em-
+                                NOISE LEVELS?                                                              ployers meet their obligations under this
+                                  The amendment requires that when there                                   amendment.
+                                are significant changes in machinery or pro-                                 Free, on-site assistance may be obtained
+                                duction processes that may result in in-                                   from OSHA-supported state and private con-
+                                creased noise levels, remonitoring must be                                 sultation organizations. These safety and
+                                conducted to determine whether additional                                  health consultative entities generally give
+                                employees need to be included in the hearing                               priority to the needs of small businesses.
+                                conservation program. Many companies
+                                choose to remonitor periodically (once every                                 APPENDIX H TO § 1910.95—AVAILABILITY OF
+                                year or two) to ensure that all exposed em-                                         REFERENCED DOCUMENTS
+                                ployees are included in their hearing con-                                    Paragraphs (c) through (o) of 29 CFR 1910.95
+                                servation programs.                                                        and the accompanying appendices contain
+                                  WHERE CAN EQUIPMENT AND TECHNICAL AD-                                    provisions which incorporate publications by
+                                VICE BE OBTAINED?                                                          reference. Generally, the publications pro-
+                                  Noise monitoring equipment may be either                                 vide criteria for instruments to be used in
+                                purchased or rented. Sound level meters cost                               monitoring and audiometric testing. These
+                                about $500 to $1,000, while dosimeters range                               criteria are intended to be mandatory when
+                                in price from about $750 to $1,500. Smaller                                so indicated in the applicable paragraphs of
+                                companies may find it more economical to                                   § 1910.95 and appendices.
+                                rent equipment rather than to purchase it.                                    It should be noted that OSHA does not re-
+                                Names of equipment suppliers may be found                                  quire that employers purchase a copy of the
+                                in the telephone book (Yellow Pages) under                                 referenced publications. Employers, how-
+                                headings such as: ‘‘Safety Equipment,’’ ‘‘In-                              ever, may desire to obtain a copy of the ref-
+                                dustrial Hygiene,’’ or ‘‘Engineers-Acous-                                  erenced publications for their own informa-
+                                tical.’’ In addition to providing information                              tion.
+                                on obtaining noise monitoring equipment,                                      The designation of the paragraph of the
+                                many companies and individuals included                                    standard in which the referenced publica-
+                                under such listings can provide professional                               tions appear, the titles of the publications,
+                                advice on how to conduct a valid noise moni-                               and the availability of the publications are
+                                toring program. Some audiological testing                                  as follows:
+
+                                   Paragraph designation                        Referenced publication                               Available from—
+
+                                Appendix B .........................   ‘‘List of Personal Hearing Protectors and   National Technical Information Service, Port Royal
+                                                                          Attenuation Data,’’ HEW Pub. No. 76–       Road, Springfield, VA 22161.
+                                                                          120, 1975. NTIS-PB267461.
+                                Appendix D .........................   ‘‘Specification for Sound Level Meters,’’   American National Standards Institute, Inc., 1430
+                                                                          S1.4–1971 (R1976).                         Broadway, New York, NY 10018.
+                                § 1910.95(k)(2), appendix E            ‘‘Specifications for Audiometers,’’ S3.6–   American National Standards Institute, Inc., 1430
+                                                                          1969.                                      Broadway, New York, NY 10018.
+                                Appendix D .........................   ‘‘Specification for Octave, Half-Octave     Back Numbers Department, Dept. STD, American In-
+                                                                          and Third-Octave Band Filter Sets,’’       stitute of Physics, 333 E. 45th St., New York, NY
+                                                                          S1.11–1971 (R1976).                        10017; American National Standards Institute, Inc.,
+                                                                                                                     1430 Broadway, New York, NY 10018.
+
+
+
+                                  The referenced publications (or a micro-                                 Action level—An 8-hour time-weighted aver-
+                                fiche of the publications) are available for                                age of 85 decibels measured on the A-scale,
+                                review at many universities and public li-                                  slow response, or equivalently, a dose of
+                                braries throughout the country. These publi-                                fifty percent.
+                                cations may also be examined at the OSHA                                   Audiogram—A chart, graph, or table result-
+                                Technical Data Center, Room N2439, United                                   ing from an audiometric test showing an
+                                States Department of Labor, 200 Constitu-                                   individual’s hearing threshold levels as a
+                                tion Avenue, NW., Washington, DC 20210,                                     function of frequency.
+                                (202) 219–7500 or at any OSHA Regional Office
+                                                                                                           Audiologist—A professional, specializing in
+                                (see telephone directories under United
+                                                                                                            the study and rehabilitation of hearing,
+                                States Government—Labor Department).
+                                                                                                            who is certified by the American Speech-
+                                        APPENDIX I TO § 1910.95—DEFINITIONS                                 Language-Hearing Association or licensed
+                                                                                                            by a state board of examiners.
+                                  These definitions apply to the following
+                                                                                                           Baseline audiogram—The audiogram against
+                                terms as used in paragraphs (c) through (n)
+                                of 29 CFR 1910.95.                                                          which future audiograms are compared.
+
+
+                                                                                                      225
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014      Jkt 232118         PO 00000       Frm 00235     Fmt 8010    Sfmt 8002     Q:\29\29V5.TXT      31
+                                § 1910.97                                                             29 CFR Ch. XVII (7–1–14 Edition)
+                                Criterion sound level—A sound level of 90                 exposed to the incident electro-
+                                  decibels.                                               magnetic energy.
+                                Decibel (dB)—Unit of measurement of sound                   (iii) Radiation protection guide. Radi-
+                                  level.
+                                Hertz (Hz)—Unit of measurement of fre-
+                                                                                          ation level which should not be exceed-
+                                  quency, numerically equal to cycles per                 ed without careful consideration of the
+                                  second.                                                 reasons for doing so.
+                                Medical pathology—A disorder or disease.                    (iv) The word ‘‘symbol’’ as used in
+                                  For purposes of this regulation, a condi-               this specification refers to the overall
+                                  tion or disease affecting the ear, which                design, shape, and coloring of the rf ra-
+                                  should be treated by a physician specialist.            diation sign shown in figure G–11.
+                                Noise dose—The ratio, expressed as a per-                   (v) Whole body irradiation. Pertains to
+                                  centage, of (1) the time integral, over a
+                                  stated time or event, of the 0.6 power of the
+                                                                                          the case in which the entire body is ex-
+                                  measured SLOW exponential time-aver-                    posed to the incident electromagnetic
+                                  aged, squared A-weighted sound pressure                 energy or in which the cross section of
+                                  and (2) the product of the criterion dura-              the body is smaller than the cross sec-
+                                  tion (8 hours) and the 0.6 power of the                 tion of the incident radiation beam.
+                                  squared sound pressure corresponding to                   (2) Radiation protection guide. (i) For
+                                  the criterion sound level (90 dB).                      normal environmental conditions and
+                                Noise dosimeter—An instrument that inte-                  for incident electromagnetic energy of
+                                  grates a function of sound pressure over a
+                                  period of time in such a manner that it di-
+                                                                                          frequencies from 10 MHz to 100 GHz,
+                                  rectly indicates a noise dose.                          the radiation protection guide is 10
+                                Otolaryngologist—A physician specializing                 mW/cm.2 (milliwatt per square centi-
+                                  in diagnosis and treatment of disorders of              meter) as averaged over any possible
+                                  the ear, nose and throat.                               0.1-hour period. This means the fol-
+                                Representative exposure—Measurements of                   lowing:
+                                  an employee’s noise dose or 8-hour time-
+                                  weighted average sound level that the em-               Power density: 10 mW./cm.2 for periods of 0.1-
+                                  ployers deem to be representative of the                 hour or more.
+                                  exposures of other employees in the work-               Energy density: 1 mW.-hr./cm.2 (milliwatt
+                                  place.                                                   hour per square centimeter) during any 0.1-
+                                Sound level—Ten times the common loga-                     hour period.
+                                  rithm of the ratio of the square of the
+                                  measured A-weighted sound pressure to the               This guide applies whether the radi-
+                                  square of the standard reference pressure               ation is continuous or intermittent.
+                                  of 20 micropascals. Unit: decibels (dB). For              (ii) These formulated recommenda-
+                                  use with this regulation, SLOW time re-                 tions pertain to both whole body irra-
+                                  sponse, in accordance with ANSI S1.4–1971               diation and partial body irradiation.
+                                  (R1976), is required.                                   Partial body irradiation must be in-
+                                Sound level meter—An instrument for the
+                                                                                          cluded since it has been shown that
+                                  measurement of sound level.
+                                Time-weighted average sound level—That                    some parts of the human body (e.g.,
+                                  sound level, which if constant over an 8-               eyes, testicles) may be harmed if ex-
+                                  hour exposure, would result in the same                 posed to incident radiation levels sig-
+                                  noise dose as is measured.                              nificantly in excess of the rec-
+                                [39 FR 23502, June 27, 1974, as amended at 46
+                                                                                          ommended levels.
+                                FR 4161, Jan. 16, 1981; 46 FR 62845, Dec. 29,               (3) Warning symbol. (i) The warning
+                                1981; 48 FR 9776, Mar. 8, 1983; 48 FR 29687,              symbol for radio frequency radiation
+                                June 28, 1983; 54 FR 24333, June 7, 1989; 61 FR           hazards shall consist of a red isosceles
+                                9236, Mar. 7, 1996; 71 FR 16672, Apr. 3, 2006; 73         triangle above an inverted black isos-
+                                FR 75584, Dec. 12, 2008]                                  celes triangle, separated and outlined
+                                                                                          by an aluminum color border. The
+                                § 1910.97 Nonionizing radiation.                          words ‘‘Warning—Radio-Frequency Ra-
+                                   (a) Electromagnetic radiation—(1) Defi-                diation Hazard’’ shall appear in the
+                                nitions applicable to this paragraph. (i)                 upper triangle. See figure G–11.
+                                The term electromagnetic radiation is re-                   (ii) ANSI Z53.1–1967 or ANSI Z535.1–
+                                stricted to that portion of the spec-                     2006(R2011), incorporated by reference
+                                trum commonly defined as the radio                        in § 1910.6, is for use for color specifica-
+                                frequency region, which for the purpose                   tion. All lettering and the border shall
+                                of this specification shall include the                   be of aluminum color.
+                                microwave frequency region.                                 (iii) The inclusion and choice of
+                                   (ii) Partial body irradiation. Pertains                warning information or precautionary
+                                to the case in which part of the body is                  instructions is at the discretion of the
+
+                                                                                     226
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00236   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+
