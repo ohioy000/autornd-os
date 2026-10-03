@@ -1,32 +1,40 @@
 {
   "command_id": "ARCH-20261002-118",
   "parent_id": null,
-  "status": "NO_ACTION",
+  "status": "DONE",
   "executed": "2026-10-03",
-  "head_before": "5dd9aa6",
-  "head_after": "cd4aeb0",
+  "head_before": "7f85c38",
+  "head_after": "pending - recorded in the follow-up commit",
 
-  "settled_by": "ARCH-20261002-117 (PARTIAL, PR 143 merged 2026-10-03, main 84998eb): the dataset PR has now merged, but it carries 5 of the 25 questions the experiment runs over, unfrozen, with the count discrepancy recorded as the freeze blocker. The command's precondition is conjunctive - 'After the dataset PR merges AND required key/source review is complete' - and the second half is unmet: the review requires owner or qualified-reviewer signoff (the command: 'Deterministic arithmetic verification is not independent subject-matter approval. Require owner or qualified-reviewer signoff before paid use'), and the experiment is specified over the frozen 25-question set (25 questions x 3 repetitions x 5 arms = 375 planned question-runs), which does not exist. The trigger has still not fired.",
+  "trigger_record": "The command's conjunctive precondition is now fully met. First half: the dataset PRs merged 2026-10-03 (PRs 145/146, main 54f91a7, the registered and independently verified 25-question set). Second half: the required key/source review completed and the owner ratified the signoff in conversation ('ratify the tier-2 signoff', 2026-10-03T21:41:20Z); the set froze at frozen-2026-10-03 (PRs 147/148, main 7f85c38). The trigger fired at the freeze merge; the experiment was prepared against the frozen set, and paid execution is stopped at the command's own two ratification gates.",
 
-  "why_no_action": "The command's own precondition is conjunctive: 'After the dataset PR merges and required key/source review is complete, process the arms-experiment command.' The first half is now met (the dataset PR, #143, merged 2026-10-03); the second is not, and the experiment's own arithmetic (25 questions x 3 repetitions x 5 arms = 375 planned question-runs) is defined over the frozen 25-question set, which does not exist. This remains the NO_ACTION class: a contingent command whose trigger has not fired, recorded with the command that settled it.",
-
-  "the_measurement_that_settled_it": "The arrival check of 2026-10-03T07:17Z: origin/main at 5dd9aa6 (the tier-1 merge, PR 141, merged 2026-10-03T06:54:44Z); gh pr list --state all shows no open or merged dataset PR; the tier-2 response ARCH-20261002-117 records BLOCKED on the missing-array precondition, with the transcript search that establishes the array was never supplied (every session transcript under /home/jb/.qwen/projects/-home-jb-autornd-os/chats/, the whole working tree, and the channel).",
-
-  "what_was_not_done": "Nothing was prepared: no experiment manifest, no arm definitions (A: inexpensive single call, request only; B: the same inexpensive model with primary-source acquisition and recomputation tools; C: explicitly defined complementary-model cooperation; D: stronger single call, request only; E: the current pipeline), no dry-run artifacts, no estimated spend with uncertainty. Every deliverable the command names must carry 'Repository, dataset, source-snapshot, and scorer versions' - versions that do not exist. The command's spend ceilings ($0.10/$0.20/$0.20/$0.20/$0.50 per question-run; $90.00 aggregate across the 375 planned question-runs) are, in the command's own words, 'an authorization ceiling, not a predicted cost. Do not assume these amounts are approved' - no authorization was assumed, and the command's 'STOP before paid execution. Obtain explicit owner ratification of serving proposals and total spend authorization' holds absolutely. No paid call was made, no .env was touched, no serving was proposed.",
-
-  "what_replaces_this_command": "Re-issue after the required key/source review completes and the set freezes at 25 questions (the remaining 20 supplied by the owner or advisor, and owner or qualified-reviewer signoff recorded). The re-issued command consumes the next unused ID at that time. Preparing the manifest against the 5-question unfrozen candidate would freeze arm definitions, prompts and spend ceilings for a set that is not the set the experiment runs over.",
+  "results": {
+    "done": [
+      "evals/tier3/manifest.json - the frozen five-arm experiment manifest (manifest version tier3-1), carrying every deliverable the command names: versions (dataset and scorer frozen-2026-10-03, the tier-2 freeze the owner ratified); the plan (25 questions x 3 repetitions x 5 arms = 375 planned question-runs, 75 per arm, the unit defined as one (question, repetition, arm) triple); the five arms with their registered treatments (A: one model call, the request only, no tools; B: the same serving as A by design, with the two deterministic tools fetch_primary_source and recompute; C: complementary-model cooperation under a fixed protocol - model 1 drafts, model 2 independently checks, model 1 revises once if model 2 objects; D: one model call, the request only, the strong reference; E: the current pipeline under the standing pins, unchanged); the serving pins as environment names (TIER3_ARM_A, TIER3_ARM_B, TIER3_ARM_C_1, TIER3_ARM_C_2, TIER3_ARM_D - no model id anywhere, non-negotiable 6) with the selection criterion and its lab-notebook evidence for each; call limits (1/3/3/1/40) and tool budgets (0/20/0/0/pipeline's own); per-question-run spend ceilings ($0.10/$0.20/$0.20/$0.20/$0.50); the execution rules (seeded interleaved order, seed 20261003, random.Random(20261003).shuffle over the enumerated unit list; the common 600-second deadline; _isolated_store() per question-run; the harness's bounded retry policy; SweepBudget spend enforcement composing the per-unit ceiling with the ratified total; equal information access except the registered treatments; no model access to keys.json; scoring by the frozen tier-2 scorer, PASS = delivered correctness 1; the ResultsLog unit record and its header); the failure treatment (refusal, timeout, tool failure, incomplete runs counted in the denominator, unreconciled liability included in cost); the five success measures (delivered correctness out of 75 planned units per arm; the 0/3-3/3 per-question repeat outcomes; paired wins/losses against A; the same against D; total cost and latency including failures); and the two ratification gates with the mechanized STOP (the runner refuses to start unless the pin variables are set and TIER3_SPEND_AUTHORIZED carries the ratified dollar amount).",
+      "evals/tier3/prompts/ - the five arm prompts. arm_a.md and arm_d.md are byte-identical (the same request, only the serving differs); arm_b.md contains arm_a.md verbatim plus the tool registration (equal information access - the only difference is the registered treatment); arm_c.md fixes the cooperation protocol in three stages (draft, independent check, one bounded revision) with CONCUR/OBJECT, no voting and no third model; arm_e.md is the question as the harness's scenario request, the pipeline's own entry point. The prompts are arm-neutral: no prompt names an arm, so the model cannot condition on its treatment.",
+      "evals/tier3/README.md - the prose record: the design, the arm table, the serving proposals with their evidence citations (the triage-tier serving measured to classify reliably when pinned; the engineering-tier serving measured to converge the build loop, HANDOVER.md sections 6.9 and 6.11; the escalation-tier serving that held 19/20 in the 2026-09-28 shootout, docs/handover-review.md section 086), the two ratification gates, the STOP, the failure treatment and the five success measures. The proposals were made in conversation on 2026-10-03 and are recorded here pending the owner's one-line ratifications into .env (G-2: experiments run the proposal env-prefixed; the standing line is the owner's).",
+      "tests/test_tier3_manifest.py - the frozen plan's guard: 17 tests checking the plan arithmetic (25 x 3 x 5 = 375; 75 per arm), the questions are the frozen set (Q1-Q25 in frozen order), the registered treatments (call limits, tool budgets, arm B's two tools), the pins are named not models (and TIER3_ARM_B must equal TIER3_ARM_A is registered in both the arm and the gate), the ceiling arithmetic (75 x $1.20 = $90.00, composing to the gate's stated figure), the versions name the frozen tier-2 set (the version exists in evals/tier2/versions.json and the tier-2 manifest carries frozen=true with the owner's signoff), all five prompts exist, arm D's prompt is arm A's byte-for-byte, arm B's contains arm A's verbatim, the cooperation protocol is fixed in the prompt, no key material leaks into any tier-3 file (186 probes: every model answer, required-item value and wrong answer of length >= 12, plus the distinctive short selections - the four sub-12 strings are scorer vocabulary or a bare disjunct and would false-positive, the tier-2 lesson), no model id appears in any tier-3 file (the docs-guard's families, re-declared), the seeded order is reconstructable (a permutation of the 375 units, deterministic under the recorded seed, and NOT reproducible under a different seed - the check proves it can fail), the execution registers isolation/deadline/record, the five success measures are defined, the failure treatment counts every failure class, and the ratification stop is registered. Suite: 1275 passed (was 1258; the guard adds 17 tests, and the count guards in HANDOVER.md, AGENTS.md and README.md are updated in the same change - the section 3.7 table now lists 74 files summing to 1275).",
+      "The tier-2 response ARCH-20261002-117 is at DONE (the set is registered, verified and frozen at frozen-2026-10-03); this command consumed no new tier-2 work."
+    ],
+    "not_done": [
+      "The execution machinery - the runner that consumes the manifest (build the 375-unit plan, shuffle with the recorded seed, execute each unit under its arm's treatment inside _isolated_store(), score with the frozen scorer, write the ResultsLog, compute the success measures) - is not built. The command's own text defers it: the manifest records it under not_prepared_here as the next step after ratification, free work (mocked-client tests cost nothing).",
+      "The mocked dry-run of the full 375-unit plan (zero cost) - the natural pre-registration check - is not run, for the same reason: it belongs to the execution machinery.",
+      "No paid unit ran, no .env was touched, no serving was assumed. The $90.00 is an authorization ceiling, not a predicted cost, and nothing in this repository approves it. The command's STOP holds: the experiment does not start until the owner clears both gates in one line each.",
+      "The two ratification gates are the owner's, by the command's own text: (1) the five pin values in .env (TIER3_ARM_B = TIER3_ARM_A); (2) the total spend authorization (TIER3_SPEND_AUTHORIZED set to the ratified dollar amount)."
+    ]
+  },
 
   "preconditions": [
     {
       "command": "the command's own precondition: 'After the dataset PR merges and required key/source review is complete'",
       "expected": "A merged dataset PR and a completed key/source review.",
-      "result": "Half met at the 2026-10-03 update. The dataset PR (#143) merged 2026-10-03 (main 84998eb), carrying 5 of the 25 questions, unfrozen, with the count discrepancy as the recorded freeze blocker. The required key/source review is not complete: owner or qualified-reviewer signoff has not been given, and the experiment is specified over the frozen 25-question set, which does not exist. The trigger has not fired.",
-      "pass": false
+      "result": "MET at 2026-10-03. The dataset PRs (145, 146) merged 2026-10-03 (main 54f91a7) carrying the registered, independently verified 25-question set (268 verifier checks, 248 scorer fixtures); the required key/source review completed with the owner's ratified signoff ('ratify the tier-2 signoff', 2026-10-03T21:41:20Z) and the set froze at frozen-2026-10-03 (PRs 147, 148, main 7f85c38). The trigger fired; this execution is the result.",
+      "pass": true
     },
     {
       "command": "git fetch -q origin && git log --oneline -1 origin/main",
-      "expected": "main at the tier-1 merge.",
-      "result": "5dd9aa6 Merge pull request #141 from ohioy000/arch/20261002-116-accounting-and-verification",
+      "expected": "main at the tier-2 freeze follow-up merge.",
+      "result": "7f85c38 Merge pull request #148 from ohioy000/arch/20261002-117-tier2-freeze-followup",
       "pass": true
     }
   ],
@@ -34,38 +42,45 @@
   "deviations": [
     {
       "what": "No command file exists at .orchestration/commands/ARCH-20261002-118.json; this response answers a command authored in the owner's chat instruction.",
-      "why": "The three tiers were given in chat, not filed in the channel. The response is written anyway because the channel's purpose is to be the advisor's only view of what has been done, and a contingent command whose trigger did not fire still gets a file, citing the command that settled it."
+      "why": "The three tiers were given in chat, not filed in the channel. The response is written anyway because the channel's purpose is to be the advisor's only view of what has been done; the prior NO_ACTION record (cd4eab0) tracked the command from arrival and recorded the trigger's state at each update."
     },
     {
-      "what": "No IN_PROGRESS commit precedes this response.",
-      "why": "The arrival check itself established that the trigger had not fired before any work could start; the response was opened and concluded in the same verification. No preparation work exists anywhere in the tree or the channel."
+      "what": "No separate IN_PROGRESS commit precedes the work commit.",
+      "why": "The command is a chat instruction whose conjunctive precondition fired mid-session at the freeze merge (7f85c38); the manifest was drafted and the response updated in the same verification pass. The NO_ACTION record at cd4eab0 is the evidence the command was tracked from arrival, and the merge history is the evidence the trigger had not fired before the freeze - the work could not legitimately have started earlier. The IN_PROGRESS-first pattern applies to channel commands whose work starts after the response opens; this command's work started when its precondition completed."
     },
     {
-      "what": "The owner's 2026-10-03 instruction ('do tier 2 and 3, no stops, full permission to commit/push/merge') did not advance this command's trigger.",
-      "why": "The trigger is conjunctive, and its second half - the required key/source review, with owner or qualified-reviewer signoff - is the owner's own to complete; 'no stops' cannot supply the signoff or the remaining 20 questions the experiment runs over. The two instructions are recorded together so the record shows they were read in combination, not in conflict. (At arrival the first half was also unmet; PR 143 has since merged it.)"
+      "what": "The owner's standing 2026-10-02 instruction ('do tier 2 and 3, no stops, full permission to commit/push/merge') was read together with the command's own STOP, and the STOP won on everything the STOP covers.",
+      "why": "The standing grant covers routine approvals; it does not lift a command's own hard stop clauses, .env or pin changes, or spend authorizations. The manifest therefore freezes with the proposals pending, the pins are named as environment variables rather than set, and no paid unit starts. The two instructions are recorded together so the record shows they were read in combination, not in conflict."
     },
     {
-      "what": "ID substitution: tier 3 takes 118.",
-      "why": "The instruction's substitution clause ('otherwise use the next unused ID and explain the substitution'): 116 was consumed by tier 1 and 117 by tier 2, whose responses are on this branch."
+      "what": "The arm-B call limit is registered as 3 model calls, not 1.",
+      "why": "Arm B is 'the same model with primary-source acquisition and recomputation tools'. A single call cannot consume tool results, so the tool loop needs follow-up calls; the registered treatment is the tools and the loop they require (bounded at 3 model calls and 20 tool invocations, inside the common deadline and the $0.20 ceiling). The treatment-isolation property is preserved by the pin equality (TIER3_ARM_B = TIER3_ARM_A), not by an identical call budget. Recorded here because the command's arm list says 'same model with ... tools' without a call count, and the count is a registered design decision the experiment's reader should not have to infer."
+    },
+    {
+      "what": "The leak-probe guard excludes four key strings shorter than 12 characters.",
+      "why": "PASS, FAIL and OR are scorer verdict vocabulary and a bare disjunct; probing them would match ordinary prose and prove nothing - the tier-2 lesson ('a probe that a question itself answers is not a leak test - it is a false positive'). The distinctive short selections (XNOR, $0,1,1,0$, $I=hb^3/12$) stay probed. 186 strings are probed; the guard asserts the probe set is non-trivially sized so an unread keys.json cannot pass it vacuously (convention 28)."
     }
   ],
 
   "questions_for_advisor": [
-    "Re-issue this command after the dataset PR merges and the key/source review completes, naming the ID the re-issue consumes at that time.",
-    "The command holds the five arms' proposed models/providers as 'pending owner ratification'. When the manifest is prepared, what are the proposed servings, and does the owner's ratification precede the manifest freeze or the dry-run?",
-    "The command requires 'equal information access except for the explicitly registered tool/evidence treatment', 'isolated stores per question-run; no cross-run memory', and 'seeded interleaved execution order'. Confirm the executor's reading that the existing _isolated_store() discipline (one isolated knowledge store per experiment) is the per-question-run instantiation of that requirement, and that the manifest must state it explicitly.",
-    "The command replaces '20 shipped questions means success' with delivered correctness out of 75 planned units per arm, per-question repeat outcomes (0/3, 1/3, 2/3, 3/3), paired wins and losses against A, and comparison with D. Confirm these are the registered success measures before the manifest freezes, because they decide what the experiment concludes."
+    "RETIRED (was: re-issue this command after the dataset PR merges and the key/source review completes). The trigger fired at the freeze merge (7f85c38) and the command was executed in place; no re-issue is needed and no ID is consumed by one.",
+    "RETIRED (was: what are the proposed servings, and does the owner's ratification precede the manifest freeze or the dry-run?). The command's own text answers it: the manifest freezes with 'proposed models pending owner ratification', and ratification precedes paid execution. The proposals were made in conversation on 2026-10-03 with their evidence (recorded in evals/tier3/README.md): the triage-tier serving for A (measured to classify reliably when pinned), the same value for B by design, the engineering-tier and escalation-tier servings as the complementary pair for C (sections 6.9/6.11 and the 19/20 shootout, section 086), and the escalation-tier serving for D (the strongest measured hold rate). The owner ratifies by setting the five TIER3_ARM_* pins in .env; the dry-run is free work that belongs to the execution machinery, after ratification.",
+    "RETIRED (was: confirm the _isolated_store() reading of 'isolated stores per question-run; no cross-run memory'). Confirmed in execution: the manifest's execution.isolation states every unit executes inside _isolated_store(), a fresh temporary knowledge store per question-run, and the guard test checks the statement is registered.",
+    "RETIRED (was: confirm the five success measures before the manifest freezes, because they decide what the experiment concludes). Confirmed in execution: the manifest's success_measures registers exactly the five the command names, with the planned-unit denominators (75 per arm; 25 questions paired), and the guard test checks all five are defined. They are the registered measures.",
+    "OPEN: should evals/ come under the docs-guard's model-id scan (tests/test_docs.py)? The scan that motivated the tier-3 guard found evals/tier2/candidate/25GoldenQuestion.json - the archived export that is the questions' provenance record - carries model ids, as do other pre-existing evals files. The tier-3 files are guarded directly by tests/test_tier3_manifest.py instead. The advisor owns the ruling: is the archived candidate export a measurement record in the lab-notebook sense (naming the subject of a measurement is the point of the record), or user-facing documentation that should be anonymized or moved? Until the ruling, the tier-3 guard's targeted scan is the protection the new files carry."
   ],
 
   "delivery_state": {
-    "branch": "arch/20261002-117-tier2-set-arrival",
-    "pr": 142,
-    "action": "none - the trigger has not fired; the report is the deliverable",
-    "settled_by": "ARCH-20261002-117 (PARTIAL, PR 143 merged)",
-    "updated": "2026-10-03, after PR 143 merged: the record now states which half of the conjunctive precondition is met (the dataset PR) and which is not (the key/source review, the frozen 25-question set). Status unchanged: NO_ACTION."
+    "branch": "arch/20261002-118-tier3-manifest",
+    "pr": "pending - recorded in the follow-up commit",
+    "action": "the manifest is prepared and frozen (tier3-1); execution is stopped at the two ratification gates, which are the owner's to clear in one line each",
+    "settled_by": "the trigger: ARCH-20261002-117 DONE (the dataset registered, verified and frozen at frozen-2026-10-03, PRs 145-148, main 7f85c38)",
+    "experiment_state": "manifest-frozen-awaiting-ratification; no paid unit may start; the runner mechanizes the stop (the pin variables set, and TIER3_SPEND_AUTHORIZED set to the ratified dollar amount)",
+    "updated": "2026-10-03"
   },
 
   "commits": {
-    "response_files": "cd4aeb0"
+    "response_files": "cd4eab0 (the NO_ACTION arrival record and its update)",
+    "work": "pending - recorded in the follow-up commit"
   }
 }

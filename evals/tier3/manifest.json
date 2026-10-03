@@ -1,0 +1,126 @@
+{
+  "experiment": "tier3-five-arm-question-experiment",
+  "command": "ARCH-20261002-118",
+  "status": "manifest-frozen-awaiting-ratification",
+  "ruling": "The owner's tier-3 instruction (2026-10-02): prepare the five-arm experiment over the frozen 25-question tier-2 set, without starting it. This manifest is the frozen plan. It is complete and executable, but no unit starts until the two ratification gates below are cleared by the owner in one line each. The $90.00 figure is an authorization ceiling, not a predicted cost; it is not approved by anything in this file.",
+
+  "versions": {
+    "repository": "the commit this manifest is merged on",
+    "dataset": "frozen-2026-10-03",
+    "scorer": "frozen-2026-10-03",
+    "manifest": "tier3-1",
+    "version_note": "The dataset and scorer versions name the tier-2 freeze (evals/tier2/versions.json, frozen-2026-10-03, ratified by the owner's signoff on 2026-10-03T21:41:20Z). The experiment scores against the frozen keys with the frozen scorer; a change to either tier-2 versioned file is a new tier-3 manifest version."
+  },
+
+  "plan": {
+    "questions": 25,
+    "repetitions_per_question": 3,
+    "arms": 5,
+    "planned_question_runs": 375,
+    "planned_units_per_arm": 75,
+    "unit": "one (question, repetition, arm) triple: one question from the frozen questions.json, one of its three repetitions, answered under one arm's registered treatment, scored once by the frozen scorer",
+    "question_source": "evals/tier2/questions.json (the model-visible file: id, shape, domain, question). Every arm receives exactly this text; no arm receives keys.json, the model answers, or the wrong answers."
+  },
+
+  "arms": {
+    "A": {
+      "name": "inexpensive-single-call",
+      "treatment": "One model call, the request only. No tools, no workflow, no retrieval. The serving is the experiment's inexpensive reference.",
+      "model_pin_env": "TIER3_ARM_A",
+      "model_selection_criterion": "The harness's triage-tier serving: the cheapest tier the harness uses productively, measured to classify reliably when pinned (HANDOVER.md section 6, the triage-reliability measurement; the standing triage pin's evidence). Proposed in conversation 2026-10-03; the owner ratifies the pin value in .env (env-prefixed).",
+      "call_limit": 1,
+      "tool_invocations": 0,
+      "prompt": "prompts/arm_a.md",
+      "spend_ceiling_per_question_run": 0.10
+    },
+    "B": {
+      "name": "same-model-with-tools",
+      "treatment": "The same serving as arm A (the same pin value by design - the two arms differ only in the registered tool treatment), with two deterministic tools: primary-source acquisition and recomputation. The prompt is arm A's prompt verbatim plus the tool registration; the question text, the deadline and the scoring are identical.",
+      "model_pin_env": "TIER3_ARM_B",
+      "model_selection_criterion": "Identical to arm A's pin value - the arm exists to isolate the tool treatment, so the two pins must resolve to the same serving. The owner sets both to the same value.",
+      "call_limit": 3,
+      "tool_invocations": 20,
+      "tools": {
+        "fetch_primary_source": "Retrieves the text at a given URL. The manifest records the archived primary-source URLs for the five lookup questions (the govinfo July 1, 2014 PDFs and the 2026-10-01 eCFR snapshots under evals/tier2/sources/). The tool returns the retrieved text; it performs no judgment.",
+        "recompute": "Evaluates one deterministic arithmetic expression and returns its value. No model judgment, no external calls. The arm is expected to recompute every numerical derivation with it rather than trust mental arithmetic."
+      },
+      "prompt": "prompts/arm_b.md",
+      "spend_ceiling_per_question_run": 0.20
+    },
+    "C": {
+      "name": "complementary-model-cooperation",
+      "treatment": "Two servings with complementary measured strengths cooperate under a fixed protocol: model 1 drafts, model 2 independently checks, model 1 revises once if model 2 objects. The protocol, not the models' own discretion, decides what is delivered.",
+      "model_pin_env": ["TIER3_ARM_C_1", "TIER3_ARM_C_2"],
+      "model_selection_criterion": "Complementary pair measured in this repository's lab notebook: the engineering-tier serving (measured to converge the build loop - HANDOVER.md sections 6.9 and 6.11) and the escalation-tier serving (measured to hold escalation 19/20 in the 2026-09-28 shootout, docs/handover-review.md section 086). Complementary, not equivalent: one is measured on engineering convergence, the other on escalation judgment. Proposed in conversation 2026-10-03; the owner ratifies both pin values in .env.",
+      "call_limit": 3,
+      "tool_invocations": 0,
+      "prompt": "prompts/arm_c.md",
+      "disagreement_handling": "Model 2's objections are recorded in the run transcript. The delivered answer is model 1's revised answer when model 2 objected (one revision round, bounded by the call limit), or model 1's draft when model 2 concurred. There is no voting and no third model.",
+      "spend_ceiling_per_question_run": 0.20
+    },
+    "D": {
+      "name": "stronger-single-call",
+      "treatment": "One model call, the request only - arm A's shape with a stronger serving. The strong reference arm: the experiment's comparison point for whether the inexpensive arms' gap is a serving gap or a treatment gap.",
+      "model_pin_env": "TIER3_ARM_D",
+      "model_selection_criterion": "The strongest single serving measured in this repository: the escalation-tier serving that held escalation 19/20 in the 2026-09-28 shootout (docs/handover-review.md section 086), the strongest measured hold rate in the lab notebook. Proposed in conversation 2026-10-03; the owner ratifies the pin value in .env.",
+      "call_limit": 1,
+      "tool_invocations": 0,
+      "prompt": "prompts/arm_d.md (identical to arm A's prompt - the same request, only the serving differs)",
+      "spend_ceiling_per_question_run": 0.20
+    },
+    "E": {
+      "name": "current-pipeline",
+      "treatment": "The current pipeline: the question enters as a request through the full harness workflow (the graph engine, workflows/*.yaml, triage and engineering phases, escalation as routed), under the standing pins in .env. The delivered answer is the pipeline's final answer text (the terminal phase's conclusion), extracted from the run record.",
+      "model_pin_env": "the standing pins (.env, the owner's) - no experiment pin",
+      "model_selection_criterion": "The owner's standing configuration, unchanged. Arm E exists so the experiment compares against what the harness ships today.",
+      "call_limit": 40,
+      "tool_invocations": "the pipeline's own (research, grounding) under its standing risk gates",
+      "prompt": "prompts/arm_e.md (the question as the harness's scenario request - the pipeline's own entry point)",
+      "spend_ceiling_per_question_run": 0.50
+    }
+  },
+
+  "execution": {
+    "interleaved_order": {
+      "seed": 20261003,
+      "algorithm": "Enumerate the 375 units as (question_id, repetition, arm) with question_id in the frozen questions.json order, repetition in 1..3, arm in A,B,C,D,E; then random.Random(20261003).shuffle(the list). Units execute in the shuffled order - no arm runs as a block, so time-of-day and serving-load confounds distribute across arms.",
+      "reproducibility": "The seed is recorded here; the order is reconstructable exactly. The runner records the seed and the resulting order's sha256 in the results header, and the guard test reconstructs the order and checks it."
+    },
+    "common_deadline_seconds": 600,
+    "deadline_note": "One wall-clock deadline for every unit of every arm, enforced by the runner's watchdog. A unit that exceeds it is stopped and recorded as incomplete.",
+    "isolation": "Every unit executes inside _isolated_store() (autornd.evals.runner): a fresh temporary knowledge store per question-run, no cross-run memory. This is the per-question-run instantiation of the command's 'isolated stores per question-run; no cross-run memory'.",
+    "retry_rules": "Transient provider failures (empty replies, 429, 5xx) are retried by the harness's existing retry policy, bounded, with backoff. A unit that exhausts its retries is an incomplete run: delivered correctness 0, its cost and latency recorded and counted. Retries are recorded per unit with their attribution (the runner's retries record).",
+    "spend_enforcement": "Each unit's client carries its arm's per-question-run ceiling (the runner's spend_ceiling); the whole experiment runs under a SweepBudget whose cap is the owner's ratified total authorization (the fit rule composes the two ceilings: a unit starts only if it could not overrun the sweep cap). The sweep cap is the authorization ceiling, not a prediction.",
+    "information_access": "Equal across arms except the registered treatments: the same question text (read from the frozen questions.json), the same deadline, the same seeded order, the same scorer, the same isolation. The only differences are the registered treatments - the serving(s), the tools, the cooperation protocol, and the pipeline itself.",
+    "no_model_access_to_keys": "keys.json is read only by the scorer process after each unit's answer is delivered. No arm's prompt, tool, or workflow returns key material. The fetch tool's recorded URL list is the public regulation archives under evals/tier2/sources/, not the keys.",
+    "scoring": "The frozen tier-2 scorer (evals/tier2/scorer.py, frozen-2026-10-03) scores every delivered answer against the frozen keys (evals/tier2/keys.json). A unit's delivered correctness is 1 when the scorer's verdict is PASS (every required item holds, with a consistent final conclusion) and 0 otherwise. Whole-question correctness requires all requested parts.",
+    "record": "One JSONL line per unit (the runner's ResultsLog unit record): the arm, the question id, the repetition, the pin that served (resolved from the environment at run time), the delivered answer, the scorer's per-item results and verdict, calls, seconds, cost, cost by tier, providers by tier, retries, refusals, the stop reason, the watchdog, and the unreconciled liability. The header carries the configuration: the seed, the order's sha256, the resolved pin names, the ceilings, and the versions."
+  },
+
+  "failure_treatment": {
+    "refusal": "A serving that refuses the request delivers nothing: the unit scores 0 and is recorded with the refusal. A unit whose lookups were all refused (arm B's fetch tool) is a poisoned reading, not a model measurement - recorded as such beside the score, the way the runner's refusal line already reports it.",
+    "timeout": "The common deadline. A unit stopped by the watchdog is incomplete: 0 delivered, cost and latency recorded and counted.",
+    "tool_failure": "Arm B: a tool failure is recorded with the failure; the model continues without the tool and the delivered answer is scored on what it delivered. If the run cannot conclude, the unit is incomplete.",
+    "incomplete_runs": "Counted in the denominator. The success measures are fractions of the 75 PLANNED units per arm, so an incomplete, refused or timed-out unit is 0 delivered, never dropped.",
+    "outstanding_liability": "Calls that failed after dispatch (the runner's unreconciled_liability, Ruling D45) are recorded per unit and included in that unit's cost and in the total-cost success measure. What a run is on the hook for is part of what it cost to start."
+  },
+
+  "success_measures": {
+    "delivered_correctness_per_arm": "The count of the 75 planned units per arm whose delivered answer the frozen scorer scores PASS, reported as a fraction of 75. This replaces '20 shipped questions means success'.",
+    "per_question_repeat_outcomes": "For each question and arm, the number of its three repetitions that delivered correct: the 0/3, 1/3, 2/3, 3/3 distribution, per arm. Repeatability is itself a measurement - an arm that answers correctly once and wrongly twice is not the arm that answers correctly three times.",
+    "paired_wins_and_losses_against_A": "Paired by question: for each of the 25 questions, arm X wins against A when X's correct-repetition count (0-3) exceeds A's, loses when it is lower, ties when equal. Reported as wins/losses/ties per non-A arm across the 25 questions.",
+    "comparison_with_D": "The same paired measure against D (the strong reference). The A-vs-D gap bounds what the treatments can possibly recover; an arm that beats A but not D is a treatment effect inside the inexpensive band, not a serving effect.",
+    "total_cost_and_latency_including_failures": "The sum of cost across all 375 units including refused, timed-out, incomplete and failed units, with the unreconciled liability included; and latency (total wall-clock and per-unit distribution), likewise including failures. No measure excludes the units that failed."
+  },
+
+  "ratification_gates": {
+    "gate_1_servings": "The owner ratifies the five pin values by setting TIER3_ARM_A, TIER3_ARM_B, TIER3_ARM_C_1, TIER3_ARM_C_2 and TIER3_ARM_D in .env (arm E uses the standing pins, unchanged). TIER3_ARM_B must equal TIER3_ARM_A by design. Until this gate is cleared, no unit starts.",
+    "gate_2_spend": "The owner authorizes the total spend: $90.00 across the 375 planned question-runs (75 units per arm at $0.10/$0.20/$0.20/$0.20/$0.50). This is an authorization ceiling, not a predicted cost; it is not approved by this manifest. Until this gate is cleared, no unit starts.",
+    "stop": "STOP before paid execution. The experiment does not start without both gates cleared in one line each by the owner. The runner mechanizes the stop: it refuses to start unless the environment shows both gates cleared (the pin variables set, and TIER3_SPEND_AUTHORIZED set to the ratified dollar amount)."
+  },
+
+  "not_prepared_here": {
+    "execution_machinery": "The runner that consumes this manifest (build the 375-unit plan, shuffle with the recorded seed, execute each unit under its arm's treatment inside _isolated_store(), score with the frozen scorer, write the ResultsLog, compute the success measures) is the next step after ratification - it is free work (mocked-client tests cost nothing) and can be built and tested before the first paid unit.",
+    "dry_run": "A mocked dry-run of the full 375-unit plan (zero cost) is the natural pre-registration check: it proves the machinery before any money moves."
+  }
+}
