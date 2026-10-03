@@ -1,0 +1,1402 @@
+                                Occupational Safety and Health Admin., Labor                                                § 1910.146
+                                the requirements contained in various sec-                employees involved with a permit-re-
+                                tions of the standard:                                    quired confined space entry can safely
+                                  1. Bresnahan, Thomas F., and Bryk, Jo-                  enter into and work within the space.
+                                seph, ‘‘The Hazard Association Values of Ac-                Attendant means an individual sta-
+                                cident Prevention Signs’’, Journal of Amer-               tioned outside one or more permit
+                                ican Society of Safety Engineers; January 1975.
+                                  2. Dreyfuss, H., Symbol Sourcebook, McGraw
+                                                                                          spaces who monitors the authorized en-
+                                Hill; New York, NY, 1972.                                 trants and who performs all attend-
+                                  3. Glass, R.A. and others, Some Criteria for            ant’s duties assigned in the employer’s
+                                Colors and Signs in Workplaces, National Bu-              permit space program.
+                                reau of Standards, Washington DC, 1983.                     Authorized entrant means an em-
+                                  4. Graphic Symbols for Public Areas and Oc-             ployee who is authorized by the em-
+                                cupational Environments, Treasury Board of                ployer to enter a permit space.
+                                Canada, Ottawa, Canada, July 1980.
+                                                                                            Blanking or blinding means the abso-
+                                  5. Howett, G.L., Size of Letters Required for
+                                Visibility as a Function of Viewing Distance              lute closure of a pipe, line, or duct by
+                                and Observer Acuity, National Bureau of                   the fastening of a solid plate (such as a
+                                Standards, Washington DC, July 1983.                      spectacle blind or a skillet blind) that
+                                  6. Lerner, N.D. and Collins, B.L., The As-              completely covers the bore and that is
+                                sessment of Safety Symbol Understandability by            capable of withstanding the maximum
+                                Different Testing Methods, National Bureau of             pressure of the pipe, line, or duct with
+                                Standards, Washington DC, 1980.                           no leakage beyond the plate.
+                                  7. Lerner, N.D. and Collins, B.L., Workplace
+                                Safety Symbols, National Bureau of Stand-
+                                                                                            Confined space means a space that:
+                                ards, Washington DC, 1980.                                  (1) Is large enough and so configured
+                                  8. Modley, R. and Meyers, W.R., Handbook                that an employee can bodily enter and
+                                of Pictorial Symbols, Dover Publication, New              perform assigned work; and
+                                York, NY, 1976.                                             (2) Has limited or restricted means
+                                  9. Product Safety Signs and Labels, FMC Cor-            for entry or exit (for example, tanks,
+                                poration, Santa Clara, CA, 1978.                          vessels, silos, storage bins, hoppers,
+                                  10. Safety Color Coding for Marking Physical
+                                                                                          vaults, and pits are spaces that may
+                                Hazards, Z53.1, American National Standards
+                                Institute, New York, NY, 1979.                            have limited means of entry.); and
+                                  11. Signs and Symbols for the Occupational                (3) Is not designed for continuous em-
+                                Environment, Can. 3–Z–321–77, Canadian                    ployee occupancy.
+                                Standards Association, Ottawa, September                    Double block and bleed means the clo-
+                                1977.                                                     sure of a line, duct, or pipe by closing
+                                  12. Symbols for Industrial Safety, National             and locking or tagging two in-line
+                                Bureau of Standards, Washington DC, April                 valves and by opening and locking or
+                                1982.
+                                  13. Symbol Signs, U.S. Department of Trans-
+                                                                                          tagging a drain or vent valve in the
+                                portation, Washington DC, November 1974.                  line between the two closed valves.
+                                                                                            Emergency means any occurrence (in-
+                                [39 FR 23502, June 27, 1974, as amended at 43
+                                                                                          cluding any failure of hazard control or
+                                FR 49749, Oct. 24, 1978; 43 FR 51759, Nov. 7,
+                                1978; 49 FR 5322, Feb. 10, 1984; 51 FR 33260,             monitoring equipment) or event inter-
+                                Sept. 19, 1986; 61 FR 9239, Mar. 7, 1996; 76 FR           nal or external to the permit space
+                                24698, May 2, 2011; 76 FR 44265, July 25, 2011;           that could endanger entrants.
+                                78 FR 35566, June 13, 2013]                                 Engulfment means the surrounding
+                                                                                          and effective capture of a person by a
+                                § 1910.146 Permit-required       confined                 liquid or finely divided (flowable) solid
+                                     spaces.                                              substance that can be aspirated to
+                                   (a) Scope and application. This section                cause death by filling or plugging the
+                                contains requirements for practices                       respiratory system or that can exert
+                                and procedures to protect employees in                    enough force on the body to cause
+                                general industry from the hazards of                      death by strangulation, constriction,
+                                entry into permit-required confined                       or crushing.
+                                spaces. This section does not apply to                      Entry means the action by which a
+                                agriculture, to construction, or to ship-                 person passes through an opening into
+                                yard employment (parts 1928, 1926, and                    a permit-required confined space.
+                                1915 of this chapter, respectively).                      Entry includes ensuing work activities
+                                   (b) Definitions.                                       in that space and is considered to have
+                                   Acceptable entry conditions means the                  occurred as soon as any part of the en-
+                                conditions that must exist in a permit                    trant’s body breaks the plane of an
+                                space to allow entry and to ensure that                   opening into the space.
+
+                                                                                     475
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00485   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.146                                                            29 CFR Ch. XVII (7–1–14 Edition)
+
+                                  Entry permit (permit) means the writ-                     (5) Any other atmospheric condition
+                                ten or printed document that is pro-                      that is immediately dangerous to life
+                                vided by the employer to allow and                        or health.
+                                control entry into a permit space and                       NOTE: For air contaminants for which
+                                that contains the information specified                   OSHA has not determined a dose or permis-
+                                in paragraph (f) of this section.                         sible exposure limit, other sources of infor-
+                                  Entry supervisor means the person                       mation, such as Material Safety Data Sheets
+                                (such as the employer, foreman, or                        that comply with the Hazard Communica-
+                                crew chief) responsible for determining                   tion Standard, § 1910.1200 of this part, pub-
+                                if acceptable entry conditions are                        lished information, and internal documents
+                                                                                          can provide guidance in establishing accept-
+                                present at a permit space where entry                     able atmospheric conditions.
+                                is planned, for authorizing entry and
+                                overseeing entry operations, and for                        Hot work permit means the employer’s
+                                terminating entry as required by this                     written authorization to perform oper-
+                                section.                                                  ations (for example, riveting, welding,
+                                                                                          cutting, burning, and heating) capable
+                                  NOTE: An entry supervisor also may serve                of providing a source of ignition.
+                                as an attendant or as an authorized entrant,                Immediately dangerous to life or health
+                                as long as that person is trained and
+                                                                                          (IDLH) means any condition that poses
+                                equipped as required by this section for each
+                                role he or she fills. Also, the duties of entry           an immediate or delayed threat to life
+                                supervisor may be passed from one indi-                   or that would cause irreversible ad-
+                                vidual to another during the course of an                 verse health effects or that would
+                                entry operation.                                          interfere with an individual’s ability to
+                                                                                          escape unaided from a permit space.
+                                  Hazardous atmosphere means an at-
+                                mosphere that may expose employees                          NOTE: Some materials—hydrogen fluoride
+                                to the risk of death, incapacitation,                     gas and cadmium vapor, for example—may
+                                impairment of ability to self-rescue                      produce immediate transient effects that,
+                                                                                          even if severe, may pass without medical at-
+                                (that is, escape unaided from a permit                    tention, but are followed by sudden, possibly
+                                space), injury, or acute illness from one                 fatal collapse 12–72 hours after exposure. The
+                                or more of the following causes:                          victim ‘‘feels normal’’ from recovery from
+                                  (1) Flammable gas, vapor, or mist in                    transient effects until collapse. Such mate-
+                                excess of 10 percent of its lower flam-                   rials in hazardous quantities are considered
+                                mable limit (LFL);                                        to be ‘‘immediately’’ dangerous to life or
+                                                                                          health.
+                                  (2) Airborne combustible dust at a
+                                concentration that meets or exceeds its                     Inerting means the displacement of
+                                LFL;                                                      the atmosphere in a permit space by a
+                                                                                          noncombustible gas (such as nitrogen)
+                                  NOTE: This concentration may be approxi-
+                                                                                          to such an extent that the resulting at-
+                                mated as a condition in which the dust ob-
+                                scures vision at a distance of 5 feet (1.52 m)            mosphere is noncombustible.
+                                or less.                                                    NOTE: This procedure produces an IDLH ox-
+                                                                                          ygen-deficient atmosphere.
+                                  (3) Atmospheric oxygen concentra-
+                                tion below 19.5 percent or above 23.5                       Isolation means the process by which
+                                percent;                                                  a permit space is removed from service
+                                  (4) Atmospheric concentration of any                    and completely protected against the
+                                substance for which a dose or a permis-                   release of energy and material into the
+                                sible exposure limit is published in sub-                 space by such means as: blanking or
+                                part G, Occupational Health and Envi-                     blinding; misaligning or removing sec-
+                                ronmental Control, or in subpart Z, Toxic                 tions of lines, pipes, or ducts; a double
+                                and Hazardous Substances, of this part                    block and bleed system; lockout or
+                                and which could result in employee ex-                    tagout of all sources of energy; or
+                                posure in excess of its dose or permis-                   blocking or disconnecting all mechan-
+                                sible exposure limit;                                     ical linkages.
+                                                                                            Line breaking means the intentional
+                                  NOTE: An atmospheric concentration of
+                                                                                          opening of a pipe, line, or duct that is
+                                any substance that is not capable of causing
+                                death, incapacitation, impairment of ability              or has been carrying flammable, corro-
+                                to self-rescue, injury, or acute illness due to           sive, or toxic material, an inert gas, or
+                                its health effects is not covered by this pro-            any fluid at a volume, pressure, or tem-
+                                vision.                                                   perature capable of causing injury.
+
+                                                                                     476
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00486   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                § 1910.146
+
+                                  Non-permit confined space means a                         NOTE: Testing enables employers both to
+                                confined space that does not contain                      devise and implement adequate control
+                                or, with respect to atmospheric haz-                      measures for the protection of authorized en-
+                                                                                          trants and to determine if acceptable entry
+                                ards, have the potential to contain any
+                                                                                          conditions are present immediately prior to,
+                                hazard capable of causing death or seri-                  and during, entry.
+                                ous physical harm.
+                                  Oxygen deficient atmosphere means an                      (c) General requirements. (1) The em-
+                                atmosphere containing less than 19.5                      ployer shall evaluate the workplace to
+                                percent oxygen by volume.                                 determine if any spaces are permit- re-
+                                  Oxygen enriched atmosphere means an                     quired confined spaces.
+                                atmosphere containing more than 23.5                        NOTE: Proper application of the decision
+                                percent oxygen by volume.                                 flow chart in appendix A to § 1910.146 would
+                                  Permit-required confined space (permit                  facilitate compliance with this requirement.
+                                space) means a confined space that has                      (2) If the workplace contains permit
+                                one or more of the following character-                   spaces, the employer shall inform ex-
+                                istics:                                                   posed employees, by posting danger
+                                  (1) Contains or has a potential to                      signs or by any other equally effective
+                                contain a hazardous atmosphere;                           means, of the existence and location of
+                                  (2) Contains a material that has the                    and the danger posed by the permit
+                                potential for engulfing an entrant;                       spaces.
+                                  (3) Has an internal configuration
+                                such that an entrant could be trapped                      NOTE: A sign reading ‘‘DANGER—PERMIT-
+                                or asphyxiated by inwardly converging                     REQUIRED CONFINED SPACE, DO NOT
+                                walls or by a floor which slopes down-                    ENTER’’ or using other similar language
+                                                                                          would satisfy the requirement for a sign.
+                                ward and tapers to a smaller cross- sec-
+                                tion; or                                                    (3) If the employer decides that its
+                                  (4) Contains any other recognized se-                   employees will not enter permit
+                                rious safety or health hazard.                            spaces, the employer shall take effec-
+                                  Permit-required confined space program                  tive measures to prevent its employees
+                                (permit space program) means the em-                      from entering the permit spaces and
+                                ployer’s overall program for control-                     shall comply with paragraphs (c)(1),
+                                ling, and, where appropriate, for pro-                    (c)(2), (c)(6), and (c)(8) of this section.
+                                tecting employees from, permit space                        (4) If the employer decides that its
+                                hazards and for regulating employee                       employees will enter permit spaces, the
+                                entry into permit spaces.                                 employer shall develop and implement
+                                  Permit system means the employer’s                      a written permit space program that
+                                written procedure for preparing and                       complies with this section. The written
+                                issuing permits for entry and for re-                     program shall be available for inspec-
+                                turning the permit space to service fol-                  tion by employees and their authorized
+                                lowing termination of entry.                              representatives.
+                                  Prohibited condition means any condi-                     (5) An employer may use the alter-
+                                tion in a permit space that is not al-                    nate procedures specified in paragraph
+                                lowed by the permit during the period                     (c)(5)(ii) of this section for entering a
+                                when entry is authorized.                                 permit space under the conditions set
+                                  Rescue service means the personnel                      forth in paragraph (c)(5)(i) of this sec-
+                                designated to rescue employees from                       tion.
+                                permit spaces.                                              (i) An employer whose employees
+                                  Retrieval system means the equipment                    enter a permit space need not comply
+                                (including a retrieval line, chest or                     with paragraphs (d) through (f) and (h)
+                                full-body harness, wristlets, if appro-                   through (k) of this section, provided
+                                priate, and a lifting device or anchor)                   that:
+                                used for non-entry rescue of persons                        (A) The employer can demonstrate
+                                from permit spaces.                                       that the only hazard posed by the per-
+                                  Testing means the process by which                      mit space is an actual or potential haz-
+                                the hazards that may confront entrants                    ardous atmosphere;
+                                of a permit space are identified and                        (B) The employer can demonstrate
+                                evaluated. Testing includes specifying                    that continuous forced air ventilation
+                                the tests that are to be performed in                     alone is sufficient to maintain that
+                                the permit space.                                         permit space safe for entry;
+
+                                                                                     477
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00487   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.146                                                            29 CFR Ch. XVII (7–1–14 Edition)
+
+                                  (C) The employer develops moni-                           (E) Continuous forced air ventilation
+                                toring and inspection data that sup-                      shall be used, as follows:
+                                ports the demonstrations required by                        (1) An employee may not enter the
+                                paragraphs (c)(5)(i)(A) and (c)(5)(i)(B) of               space until the forced air ventilation
+                                this section;                                             has eliminated any hazardous atmos-
+                                  (D) If an initial entry of the permit                   phere;
+                                space is necessary to obtain the data                       (2) The forced air ventilation shall be
+                                required by paragraph (c)(5)(i)(C) of                     so directed as to ventilate the imme-
+                                this section, the entry is performed in                   diate areas where an employee is or
+                                compliance       with     paragraphs     (d)              will be present within the space and
+                                through (k) of this section;                              shall continue until all employees have
+                                  (E) The determinations and sup-                         left the space;
+                                porting data required by paragraphs                         (3) The air supply for the forced air
+                                (c)(5)(i)(A), (c)(5)(i)(B), and (c)(5)(i)(C)              ventilation shall be from a clean
+                                of this section are documented by the                     source and may not increase the haz-
+                                employer and are made available to                        ards in the space.
+                                each employee who enters the permit                         (F) The atmosphere within the space
+                                space under the terms of paragraph                        shall be periodically tested as nec-
+                                (c)(5) of this section or to that employ-                 essary to ensure that the continuous
+                                ee’s authorized representative; and                       forced air ventilation is preventing the
+                                  (F) Entry into the permit space                         accumulation of a hazardous atmos-
+                                under the terms of paragraph (c)(5)(i)                    phere. Any employee who enters the
+                                of this section is performed in accord-                   space, or that employee’s authorized
+                                ance with the requirements of para-                       representative, shall be provided with
+                                graph (c)(5)(ii) of this section.                         an opportunity to observe the periodic
+                                  NOTE: See paragraph (c)(7) of this section              testing required by this paragraph.
+                                for reclassification of a permit space after                (G) If a hazardous atmosphere is de-
+                                all hazards within the space have been elimi-             tected during entry:
+                                nated.                                                      (1) Each employee shall leave the
+                                  (ii) The following requirements apply                   space immediately;
+                                to entry into permit spaces that meet                       (2) The space shall be evaluated to
+                                the conditions set forth in paragraph                     determine how the hazardous atmos-
+                                (c)(5)(i) of this section.                                phere developed; and
+                                  (A) Any conditions making it unsafe                       (3) Measures shall be implemented to
+                                to remove an entrance cover shall be                      protect employees from the hazardous
+                                eliminated before the cover is removed.                   atmosphere before any subsequent
+                                  (B) When entrance covers are re-                        entry takes place.
+                                moved, the opening shall be promptly                        (H) The employer shall verify that
+                                guarded by a railing, temporary cover,                    the space is safe for entry and that the
+                                or other temporary barrier that will                      pre-entry measures required by para-
+                                prevent an accidental fall through the                    graph (c)(5)(ii) of this section have been
+                                opening and that will protect each em-                    taken, through a written certification
+                                ployee working in the space from for-                     that contains the date, the location of
+                                eign objects entering the space.                          the space, and the signature of the per-
+                                  (C) Before an employee enters the                       son providing the certification. The
+                                space, the internal atmosphere shall be                   certification shall be made before
+                                tested, with a calibrated direct-reading                  entry and shall be made available to
+                                instrument, for oxygen content, for                       each employee entering the space or to
+                                flammable gases and vapors, and for                       that employee’s authorized representa-
+                                potential toxic air contaminants, in                      tive .
+                                that order. Any employee who enters                         (6) When there are changes in the use
+                                the space, or that employee’s author-                     or configuration of a non-permit con-
+                                ized representative, shall be provided                    fined space that might increase the
+                                an opportunity to observe the pre-                        hazards to entrants, the employer shall
+                                entry testing required by this para-                      reevaluate that space and, if necessary,
+                                graph.                                                    reclassify it as a permit-required con-
+                                  (D) There may be no hazardous at-                       fined space.
+                                mosphere within the space whenever                          (7) A space classified by the employer
+                                any employee is inside the space.                         as a permit-required confined space
+
+                                                                                     478
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00488   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                § 1910.146
+
+                                may be reclassified as a non-permit                       space program meeting the require-
+                                confined space under the following pro-                   ments of this section;
+                                cedures:                                                    (ii) Apprise the contractor of the ele-
+                                  (i) If the permit space poses no actual                 ments, including the hazards identified
+                                or potential atmospheric hazards and if                   and the host employer’s experience
+                                all hazards within the space are elimi-                   with the space, that make the space in
+                                nated without entry into the space, the                   question a permit space;
+                                permit space may be reclassified as a                       (iii) Apprise the contractor of any
+                                non-permit confined space for as long                     precautions or procedures that the host
+                                as the non-atmospheric hazards remain                     employer has implemented for the pro-
+                                eliminated.                                               tection of employees in or near permit
+                                  (ii) If it is necessary to enter the per-               spaces where contractor personnel will
+                                mit space to eliminate hazards, such                      be working;
+                                entry shall be performed under para-                        (iv) Coordinate entry operations with
+                                graphs (d) through (k) of this section.
+                                                                                          the contractor, when both host em-
+                                If testing and inspection during that
+                                                                                          ployer personnel and contractor per-
+                                entry demonstrate that the hazards
+                                                                                          sonnel will be working in or near per-
+                                within the permit space have been
+                                eliminated, the permit space may be                       mit spaces, as required by paragraph
+                                reclassified as a non-permit confined                     (d)(11) of this section; and
+                                space for as long as the hazards remain                     (v) Debrief the contractor at the con-
+                                eliminated.                                               clusion of the entry operations regard-
+                                                                                          ing the permit space program followed
+                                  NOTE: Control of atmospheric hazards                    and regarding any hazards confronted
+                                through forced air ventilation does not con-
+                                                                                          or created in permit spaces during
+                                stitute elimination of the hazards. Para-
+                                graph (c)(5) covers permit space entry where              entry operations.
+                                the employer can demonstrate that forced                    (9) In addition to complying with the
+                                air ventilation alone will control all hazards            permit space requirements that apply
+                                in the space.                                             to all employers, each contractor who
+                                  (iii) The employer shall document                       is retained to perform permit space
+                                the basis for determining that all haz-                   entry operations shall:
+                                ards in a permit space have been elimi-                     (i) Obtain any available information
+                                nated, through a certification that con-                  regarding permit space hazards and
+                                tains the date, the location of the                       entry operations from the host em-
+                                space, and the signature of the person                    ployer;
+                                making the determination. The certifi-                      (ii) Coordinate entry operations with
+                                cation shall be made available to each                    the host employer, when both host em-
+                                employee entering the space or to that                    ployer personnel and contractor per-
+                                employee’s authorized representative.                     sonnel will be working in or near per-
+                                  (iv) If hazards arise within a permit                   mit spaces, as required by paragraph
+                                space that has been declassified to a                     (d)(11) of this section; and
+                                non-permit space under paragraph                            (iii) Inform the host employer of the
+                                (c)(7) of this section, each employee in                  permit space program that the con-
+                                the space shall exit the space. The em-                   tractor will follow and of any hazards
+                                ployer shall then reevaluate the space
+                                                                                          confronted or created in permit spaces,
+                                and determine whether it must be re-
+                                                                                          either through a debriefing or during
+                                classified as a permit space, in accord-
+                                                                                          the entry operation.
+                                ance with other applicable provisions
+                                of this section.                                            (d) Permit-required confined space pro-
+                                  (8) When an employer (host em-                          gram (permit space program). Under
+                                ployer) arranges to have employees of                     the permit space program required by
+                                another employer (contractor) perform                     paragraph (c)(4) of this section, the em-
+                                work that involves permit space entry,                    ployer shall:
+                                the host employer shall:                                    (1) Implement the measures nec-
+                                  (i) Inform the contractor that the                      essary to prevent unauthorized entry;
+                                workplace contains permit spaces and                        (2) Identify and evaluate the hazards
+                                that permit space entry is allowed only                   of permit spaces before employees
+                                through compliance with a permit                          enter them;
+
+                                                                                     479
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00489   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.146                                                            29 CFR Ch. XVII (7–1–14 Edition)
+
+                                  (3) Develop and implement the                             (ix) Any other equipment necessary
+                                means, procedures, and practices nec-                     for safe entry into and rescue from per-
+                                essary for safe permit space entry oper-                  mit spaces.
+                                ations, including, but not limited to,                      (5) Evaluate permit space conditions
+                                the following:                                            as follows when entry operations are
+                                  (i) Specifying acceptable entry condi-                  conducted:
+                                tions;                                                      (i) Test conditions in the permit
+                                  (ii) Providing each authorized en-                      space to determine if acceptable entry
+                                trant or that employee’s authorized                       conditions exist before entry is author-
+                                representative with the opportunity to                    ized to begin, except that, if isolation
+                                observe any monitoring or testing of                      of the space is infeasible because the
+                                permit spaces;                                            space is large or is part of a continuous
+                                  (iii) Isolating the permit space;                       system (such as a sewer), pre-entry
+                                  (iv) Purging, inerting, flushing, or                    testing shall be performed to the ex-
+                                ventilating the permit space as nec-                      tent feasible before entry is authorized
+                                essary to eliminate or control atmos-                     and, if entry is authorized, entry condi-
+                                pheric hazards;                                           tions shall be continuously monitored
+                                  (v) Providing pedestrian, vehicle, or                   in the areas where authorized entrants
+                                other barriers as necessary to protect                    are working;
+                                entrants from external hazards; and                         (ii) Test or monitor the permit space
+                                  (vi) Verifying that conditions in the                   as necessary to determine if acceptable
+                                permit space are acceptable for entry                     entry conditions are being maintained
+                                throughout the duration of an author-                     during the course of entry operations;
+                                ized entry.                                               and
+                                  (4) Provide the following equipment                       (iii) When testing for atmospheric
+                                                                                          hazards, test first for oxygen, then for
+                                (specified     in    paragraphs    (d)(4)(i)
+                                                                                          combustible gases and vapors, and then
+                                through (d)(4)(ix) of this section) at no
+                                                                                          for toxic gases and vapors.
+                                cost to employees, maintain that
+                                equipment properly, and ensure that                         (iv) Provide each authorized entrant
+                                employees use that equipment prop-                        or that employee’s authorized rep-
+                                erly:                                                     resentative an opportunity to observe
+                                                                                          the pre-entry and any subsequent test-
+                                  (i) Testing and monitoring equipment
+                                                                                          ing or monitoring of permit spaces;
+                                needed to comply with paragraph (d)(5)
+                                                                                            (v) Reevaluate the permit space in
+                                of this section;
+                                                                                          the presence of any authorized entrant
+                                  (ii) Ventilating equipment needed to
+                                                                                          or that employee’s authorized rep-
+                                obtain acceptable entry conditions;                       resentative who requests that the em-
+                                  (iii) Communications equipment nec-                     ployer conduct such reevaluation be-
+                                essary for compliance with paragraphs                     cause the entrant or representative has
+                                (h)(3) and (i)(5) of this section;                        reason to believe that the evaluation of
+                                  (iv) Personal protective equipment                      that space may not have been ade-
+                                insofar as feasible engineering and                       quate;
+                                work practice controls do not ade-                          (vi) Immediately provide each au-
+                                quately protect employees;                                thorized entrant or that employee’s au-
+                                  (v) Lighting equipment needed to en-                    thorized representative with the re-
+                                able employees to see well enough to                      sults of any testing conducted in ac-
+                                work safely and to exit the space                         cord with paragraph (d) of this section.
+                                quickly in an emergency;
+                                                                                             NOTE: Atmospheric testing conducted in
+                                  (vi) Barriers and shields as required
+                                                                                          accordance with appendix B to § 1910.146
+                                by paragraph (d)(3)(v) of this section.                   would be considered as satisfying the re-
+                                  (vii) Equipment, such as ladders,                       quirements of this paragraph. For permit
+                                needed for safe ingress and egress by                     space operations in sewers, atmospheric test-
+                                authorized entrants;                                      ing conducted in accordance with appendix
+                                  (viii) Rescue and emergency equip-                      B, as supplemented by appendix E to
+                                ment needed to comply with paragraph                      § 1910.146, would be considered as satisfying
+                                                                                          the requirements of this paragraph.
+                                (d)(9) of this section, except to the ex-
+                                tent that the equipment is provided by                      (6) Provide at least one attendant
+                                rescue services; and                                      outside the permit space into which
+
+                                                                                     480
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00490   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                § 1910.146
+
+                                entry is authorized for the duration of                   space program may not protect em-
+                                entry operations;                                         ployees and revise the program to cor-
+                                  NOTE: Attendants may be assigned to mon-
+                                                                                          rect deficiencies found to exist before
+                                itor more than one permit space provided the              subsequent entries are authorized; and
+                                duties described in paragraph (i) of this sec-              NOTE: Examples of circumstances requiring
+                                tion can be effectively performed for each                the review of the permit space program are:
+                                permit space that is monitored. Likewise, at-             any unauthorized entry of a permit space,
+                                tendants may be stationed at any location                 the detection of a permit space hazard not
+                                outside the permit space to be monitored as               covered by the permit, the detection of a
+                                long as the duties described in paragraph (i)             condition prohibited by the permit, the oc-
+                                of this section can be effectively performed
+                                                                                          currence of an injury or near-miss during
+                                for each permit space that is monitored.
+                                                                                          entry, a change in the use or configuration
+                                  (7) If multiple spaces are to be mon-                   of a permit space, and employee complaints
+                                itored by a single attendant, include in                  about the effectiveness of the program.
+                                the permit program the means and pro-                       (14) Review the permit space pro-
+                                cedures to enable the attendant to re-                    gram, using the canceled permits re-
+                                spond to an emergency affecting one or                    tained under paragraph (e)(6) of this
+                                more of the permit spaces being mon-                      section within 1 year after each entry
+                                itored without distraction from the at-                   and revise the program as necessary, to
+                                tendant’s responsibilities under para-                    ensure that employees participating in
+                                graph (i) of this section;                                entry operations are protected from
+                                  (8) Designate the persons who are to                    permit space hazards.
+                                have active roles (as, for example, au-
+                                thorized entrants, attendants, entry                        NOTE: Employers may perform a single an-
+                                supervisors, or persons who test or                       nual review covering all entries performed
+                                monitor the atmosphere in a permit                        during a 12-month period. If no entry is per-
+                                                                                          formed during a 12-month period, no review
+                                space) in entry operations, identify the
+                                                                                          is necessary.
+                                duties of each such employee, and pro-
+                                vide each such employee with the                          Appendix C to § 1910.146 presents examples of
+                                                                                          permit space programs that are considered
+                                training required by paragraph (g) of
+                                                                                          to comply with the requirements of para-
+                                this section;                                             graph (d) of this section.
+                                  (9) Develop and implement proce-
+                                dures for summoning rescue and emer-                        (e) Permit system. (1) Before entry is
+                                gency services, for rescuing entrants                     authorized, the employer shall docu-
+                                from permit spaces, for providing nec-                    ment the completion of measures re-
+                                essary emergency services to rescued                      quired by paragraph (d)(3) of this sec-
+                                employees, and for preventing unau-                       tion by preparing an entry permit.
+                                thorized personnel from attempting a
+                                                                                            NOTE: Appendix D to § 1910.146 presents ex-
+                                rescue;                                                   amples of permits whose elements are con-
+                                  (10) Develop and implement a system                     sidered to comply with the requirements of
+                                for the preparation, issuance, use, and                   this section.
+                                cancellation of entry permits as re-
+                                quired by this section;                                     (2) Before entry begins, the entry su-
+                                  (11) Develop and implement proce-                       pervisor identified on the permit shall
+                                dures to coordinate entry operations                      sign the entry permit to authorize
+                                when employees of more than one em-                       entry.
+                                ployer are working simultaneously as                        (3) The completed permit shall be
+                                authorized entrants in a permit space,                    made available at the time of entry to
+                                so that employees of one employer do                      all authorized entrants or their author-
+                                not endanger the employees of any                         ized representatives, by posting it at
+                                other employer;                                           the entry portal or by any other equal-
+                                  (12) Develop and implement proce-                       ly effective means, so that the entrants
+                                dures (such as closing off a permit                       can confirm that pre-entry prepara-
+                                space and canceling the permit) nec-                      tions have been completed.
+                                essary for concluding the entry after                       (4) The duration of the permit may
+                                entry operations have been completed;                     not exceed the time required to com-
+                                  (13) Review entry operations when                       plete the assigned task or job identi-
+                                the employer has reason to believe that                   fied on the permit in accordance with
+                                the measures taken under the permit                       paragraph (f)(2) of this section.
+
+                                                                                     481
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00491   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.146                                                            29 CFR Ch. XVII (7–1–14 Edition)
+
+                                  (5) The entry supervisor shall termi-                     (10) The results of initial and periodic
+                                nate entry and cancel the entry permit                    tests performed under paragraph (d)(5)
+                                when:                                                     of this section, accompanied by the
+                                  (i) The entry operations covered by                     names or initials of the testers and by
+                                the entry permit have been completed;                     an indication of when the tests were
+                                or                                                        performed;
+                                  (ii) A condition that is not allowed                      (11) The rescue and emergency serv-
+                                under the entry permit arises in or                       ices that can be summoned and the
+                                near the permit space.                                    means (such as the equipment to use
+                                  (6) The employer shall retain each                      and the numbers to call) for sum-
+                                canceled entry permit for at least 1                      moning those services;
+                                year to facilitate the review of the per-                   (12) The communication procedures
+                                mit-required confined space program                       used by authorized entrants and at-
+                                required by paragraph (d)(14) of this                     tendants to maintain contact during
+                                section. Any problems encountered                         the entry;
+                                during an entry operation shall be                          (13) Equipment, such as personal pro-
+                                noted on the pertinent permit so that                     tective equipment, testing equipment,
+                                appropriate revisions to the permit                       communications equipment, alarm sys-
+                                space program can be made.                                tems, and rescue equipment, to be pro-
+                                  (f) Entry permit. The entry permit                      vided for compliance with this section;
+                                that documents compliance with this                         (14) Any other information whose in-
+                                section and authorizes entry to a per-                    clusion is necessary, given the cir-
+                                mit space shall identify:                                 cumstances of the particular confined
+                                  (1) The permit space to be entered;                     space, in order to ensure employee
+                                  (2) The purpose of the entry;                           safety; and
+                                  (3) The date and the authorized dura-                     (15) Any additional permits, such as
+                                tion of the entry permit;                                 for hot work, that have been issued to
+                                  (4) The authorized entrants within                      authorize work in the permit space.
+                                the permit space, by name or by such                        (g) Training. (1) The employer shall
+                                other means (for example, through the                     provide training so that all employees
+                                use of rosters or tracking systems) as                    whose work is regulated by this section
+                                will enable the attendant to determine                    acquire the understanding, knowledge,
+                                quickly and accurately, for the dura-                     and skills necessary for the safe per-
+                                tion of the permit, which authorized                      formance of the duties assigned under
+                                entrants are inside the permit space;                     this section.
+                                  NOTE: This requirement may be met by in-
+                                                                                            (2) Training shall be provided to each
+                                serting a reference on the entry permit as to             affected employee:
+                                the means used, such as a roster or tracking                (i) Before the employee is first as-
+                                system, to keep track of the authorized en-               signed duties under this section;
+                                trants within the permit space.                             (ii) Before there is a change in as-
+                                  (5) The personnel, by name, currently                   signed duties;
+                                serving as attendants;                                      (iii) Whenever there is a change in
+                                  (6) The individual, by name, cur-                       permit space operations that presents a
+                                rently serving as entry supervisor,                       hazard about which an employee has
+                                with a space for the signature or ini-                    not previously been trained;
+                                tials of the entry supervisor who origi-                    (iv) Whenever the employer has rea-
+                                nally authorized entry;                                   son to believe either that there are de-
+                                  (7) The hazards of the permit space to                  viations from the permit space entry
+                                be entered;                                               procedures required by paragraph (d)(3)
+                                  (8) The measures used to isolate the                    of this section or that there are inad-
+                                permit space and to eliminate or con-                     equacies in the employee’s knowledge
+                                trol permit space hazards before entry;                   or use of these procedures.
+                                                                                            (3) The training shall establish em-
+                                  NOTE: Those measures can include the                    ployee proficiency in the duties re-
+                                lockout or tagging of equipment and proce-                quired by this section and shall intro-
+                                dures for purging, inerting, ventilating, and
+                                                                                          duce new or revised procedures, as nec-
+                                flushing permit spaces.
+                                                                                          essary, for compliance with this sec-
+                                  (9) The acceptable entry conditions;                    tion.
+
+                                                                                     482
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00492   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                § 1910.146
+
+                                  (4) The employer shall certify that                       (4) Remains outside the permit space
+                                the training required by paragraphs                       during entry operations until relieved
+                                (g)(1) through (g)(3) of this section has                 by another attendant;
+                                been accomplished. The certification                         NOTE: When the employer’s permit entry
+                                shall contain each employee’s name,                       program allows attendant entry for rescue,
+                                the signatures or initials of the train-                  attendants may enter a permit space to at-
+                                ers, and the dates of training. The cer-                  tempt a rescue if they have been trained and
+                                tification shall be available for inspec-                 equipped for rescue operations as required by
+                                tion by employees and their authorized                    paragraph (k)(1) of this section and if they
+                                representatives.                                          have been relieved as required by paragraph
+                                  (h) Duties of authorized entrants. The                  (i)(4) of this section.
+                                employer shall ensure that all author-                      (5) Communicates with authorized
+                                ized entrants:                                            entrants as necessary to monitor en-
+                                  (1) Know the hazards that may be                        trant status and to alert entrants of
+                                faced during entry, including informa-                    the need to evacuate the space under
+                                tion on the mode, signs or symptoms,                      paragraph (i)(6) of this section;
+                                and consequences of the exposure;                           (6) Monitors activities inside and out-
+                                  (2) Properly use equipment as re-                       side the space to determine if it is safe
+                                quired by paragraph (d)(4) of this sec-                   for entrants to remain in the space and
+                                tion;                                                     orders the authorized entrants to evac-
+                                  (3) Communicate with the attendant                      uate the permit space immediately
+                                as necessary to enable the attendant to                   under any of the following conditions;
+                                monitor entrant status and to enable                        (i) If the attendant detects a prohib-
+                                the attendant to alert entrants of the                    ited condition;
+                                need to evacuate the space as required                      (ii) If the attendant detects the be-
+                                by paragraph (i)(6) of this section;                      havioral effects of hazard exposure in
+                                  (4) Alert the attendant whenever:                       an authorized entrant;
+                                  (i) The entrant recognizes any warn-                      (iii) If the attendant detects a situa-
+                                ing sign or symptom of exposure to a                      tion outside the space that could en-
+                                dangerous situation, or                                   danger the authorized entrants; or
+                                  (ii) The entrant detects a prohibited                     (iv) If the attendant cannot effec-
+                                condition; and                                            tively and safely perform all the duties
+                                  (5) Exit from the permit space as                       required under paragraph (i) of this
+                                quickly as possible whenever:                             section;
+                                  (i) An order to evacuate is given by                      (7) Summon rescue and other emer-
+                                the attendant or the entry supervisor,                    gency services as soon as the attendant
+                                  (ii) The entrant recognizes any warn-                   determines that authorized entrants
+                                ing sign or symptom of exposure to a                      may need assistance to escape from
+                                dangerous situation,                                      permit space hazards;
+                                  (iii) The entrant detects a prohibited                    (8) Takes the following actions when
+                                condition, or                                             unauthorized persons approach or enter
+                                  (iv) An evacuation alarm is acti-                       a permit space while entry is under-
+                                vated.                                                    way:
+                                  (i) Duties of attendants. The employer                    (i) Warn the unauthorized persons
+                                shall ensure that each attendant:                         that they must stay away from the per-
+                                  (1) Knows the hazards that may be                       mit space;
+                                faced during entry, including informa-                      (ii) Advise the unauthorized persons
+                                tion on the mode, signs or symptoms,                      that they must exit immediately if
+                                and consequences of the exposure;                         they have entered the permit space;
+                                  (2) Is aware of possible behavioral ef-                 and
+                                fects of hazard exposure in authorized                      (iii) Inform the authorized entrants
+                                entrants;                                                 and the entry supervisor if unauthor-
+                                  (3) Continuously maintains an accu-                     ized persons have entered the permit
+                                rate count of authorized entrants in                      space;
+                                the permit space and ensures that the                       (9) Performs non-entry rescues as
+                                means used to identify authorized en-                     specified by the employer’s rescue pro-
+                                trants under paragraph (f)(4) of this                     cedure; and
+                                section accurately identifies who is in                     (10) Performs no duties that might
+                                the permit space;                                         interfere with the attendant’s primary
+
+                                                                                     483
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00493   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.146                                                            29 CFR Ch. XVII (7–1–14 Edition)
+
+                                duty to monitor and protect the au-                       ticular permit space or types of permit
+                                thorized entrants.                                        spaces identified;
+                                  (j) Duties of entry supervisors. The em-                  (iii) Select a rescue team or service
+                                ployer shall ensure that each entry su-                   from those evaluated that:
+                                pervisor:                                                   (A) Has the capability to reach the
+                                  (1) Knows the hazards that may be                       victim(s) within a time frame that is
+                                faced during entry, including informa-                    appropriate for the permit space haz-
+                                tion on the mode, signs or symptoms,                      ard(s) identified;
+                                and consequences of the exposure;                           (B) Is equipped for and proficient in
+                                  (2) Verifies, by checking that the ap-                  performing the needed rescue services;
+                                propriate entries have been made on                         (iv) Inform each rescue team or serv-
+                                                                                          ice of the hazards they may confront
+                                the permit, that all tests specified by
+                                                                                          when called on to perform rescue at the
+                                the permit have been conducted and
+                                                                                          site; and
+                                that all procedures and equipment
+                                                                                            (v) Provide the rescue team or serv-
+                                specified by the permit are in place be-
+                                                                                          ice selected with access to all permit
+                                fore endorsing the permit and allowing
+                                                                                          spaces from which rescue may be nec-
+                                entry to begin;
+                                                                                          essary so that the rescue service can
+                                  (3) Terminates the entry and cancels                    develop appropriate rescue plans and
+                                the permit as required by paragraph                       practice rescue operations.
+                                (e)(5) of this section;
+                                  (4) Verifies that rescue services are                     NOTE TO PARAGRAPH (k)(1): Non-mandatory
+                                                                                          appendix F contains examples of criteria
+                                available and that the means for sum-
+                                                                                          which employers can use in evaluating pro-
+                                moning them are operable;                                 spective rescuers as required by paragraph
+                                  (5) Removes unauthorized individuals                    (k)(1) of this section.
+                                who enter or who attempt to enter the
+                                                                                            (2) An employer whose employees
+                                permit space during entry operations;
+                                                                                          have been designated to provide permit
+                                and
+                                                                                          space rescue and emergency services
+                                  (6) Determines, whenever responsi-                      shall take the following measures:
+                                bility for a permit space entry oper-                       (i) Provide affected employees with
+                                ation is transferred and at intervals                     the personal protective equipment
+                                dictated by the hazards and operations                    (PPE) needed to conduct permit space
+                                performed within the space, that entry                    rescues safely and train affected em-
+                                operations remain consistent with                         ployees so they are proficient in the
+                                terms of the entry permit and that ac-                    use of that PPE, at no cost to those
+                                ceptable entry conditions are main-                       employees;
+                                tained.                                                     (ii) Train affected employees to per-
+                                  (k) Rescue and emergency services. (1)                  form assigned rescue duties. The em-
+                                An employer who designates rescue and                     ployer must ensure that such employ-
+                                emergency services, pursuant to para-                     ees successfully complete the training
+                                graph (d)(9) of this section, shall:                      required to establish proficiency as an
+                                  (i) Evaluate a prospective rescuer’s                    authorized entrant, as provided by
+                                ability to respond to a rescue summons                    paragraphs (g) and (h) of this section;
+                                in a timely manner, considering the                         (iii) Train affected employees in
+                                hazard(s) identified;                                     basic first-aid and cardiopulmonary re-
+                                  NOTE TO PARAGRAPH (k)(1)(i): What will be               suscitation (CPR). The employer shall
+                                considered timely will vary according to the              ensure that at least one member of the
+                                specific hazards involved in each entry. For              rescue team or service holding a cur-
+                                example, § 1910.134, Respiratory Protection,              rent certification in first aid and CPR
+                                requires that employers provide a standby                 is available; and
+                                person or persons capable of immediate ac-                  (iv) Ensure that affected employees
+                                tion to rescue employee(s) wearing res-                   practice making permit space rescues
+                                piratory protection while in work areas de-
+                                                                                          at least once every 12 months, by
+                                fined as IDLH atmospheres.
+                                                                                          means of simulated rescue operations
+                                  (ii) Evaluate a prospective rescue                      in which they remove dummies, mani-
+                                service’s ability, in terms of pro-                       kins, or actual persons from the actual
+                                ficiency with rescue-related tasks and                    permit spaces or from representative
+                                equipment, to function appropriately                      permit spaces. Representative permit
+                                while rescuing entrants from the par-                     spaces shall, with respect to opening
+
+                                                                                     484
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00494   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                § 1910.146
+
+                                size, configuration, and accessibility,                   aware that rescue is necessary. A me-
+                                simulate the types of permit spaces                       chanical device shall be available to re-
+                                from which rescue is to be performed.                     trieve personnel from vertical type per-
+                                  (3) To facilitate non-entry rescue, re-                 mit spaces more than 5 feet (1.52 m)
+                                trieval systems or methods shall be                       deep.
+                                used whenever an authorized entrant                         (4) If an injured entrant is exposed to
+                                enters a permit space, unless the re-                     a substance for which a Material Safe-
+                                trieval equipment would increase the                      ty Data Sheet (MSDS) or other similar
+                                overall risk of entry or would not con-                   written information is required to be
+                                tribute to the rescue of the entrant.                     kept at the worksite, that MSDS or
+                                Retrieval systems shall meet the fol-                     written information shall be made
+                                lowing requirements.                                      available to the medical facility treat-
+                                  (i) Each authorized entrant shall use                   ing the exposed entrant.
+                                a chest or full body harness, with a re-                    (l) Employee participation. (1) Employ-
+                                trieval line attached at the center of                    ers shall consult with affected employ-
+                                the entrant’s back near shoulder level,                   ees and their authorized representa-
+                                above the entrant’s head, or at another                   tives on the development and imple-
+                                point which the employer can establish                    mentation of all aspects of the permit
+                                presents a profile small enough for the                   space program required by paragraph
+                                successful removal of the entrant.                        (c) of this section.
+                                Wristlets may be used in lieu of the                        (2) Employers shall make available
+                                chest or full body harness if the em-
+                                                                                          to affected employees and their author-
+                                ployer can demonstrate that the use of
+                                                                                          ized representatives all information re-
+                                a chest or full body harness is infeasi-
+                                                                                          quired to be developed by this section.
+                                ble or creates a greater hazard and that
+                                the use of wristlets is the safest and                     APPENDIXES TO § 1910.146—PERMIT-REQUIRED
+                                most effective alternative.                                           CONFINED SPACES
+                                  (ii) The other end of the retrieval line                  NOTE: Appendixes A through F serve to
+                                shall be attached to a mechanical de-                     provide information and non-mandatory
+                                vice or fixed point outside the permit                    guidelines to assist employers and employees
+                                space in such a manner that rescue can                    in complying with the appropriate require-
+                                begin as soon as the rescuer becomes                      ments of this section.
+
+
+
+
+                                                                                     485
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00495   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.146                                                            29 CFR Ch. XVII (7–1–14 Edition)
+
+                                  APPENDIX A TO § 1910.146—PERMIT-REQUIRED CONFINED SPACE DECISION
+                                                             FLOW CHART
+
+
+
+
+                                  APPENDIX B TO § 1910.146—PROCEDURES FOR                 of the permit space and verification that ac-
+                                           ATMOSPHERIC TESTING                            ceptable entry conditions for entry into that
+                                                                                          space exist.
+                                  Atmospheric testing is required for two
+                                distinct purposes: evaluation of the hazards
+
+
+                                                                                     486
+                                                                                                                                          EC27OC91.029</GPH>
+
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00496   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                   § 1910.146
+                                   (1) Evaluation testing. The atmosphere of a              specific monitoring programs will be devel-
+                                confined space should be analyzed using                     oped.
+                                equipment of sufficient sensitivity and speci-              Presence of explosive/flammable gases. Equal to
+                                ficity to identify and evaluate any hazardous               or greater than 10% of the lower flammable
+                                atmospheres that may exist or arise, so that                limit (LFL).
+                                appropriate permit entry procedures can be
+                                                                                            Oxygen Deficiency. A concentration of oxygen
+                                developed and acceptable entry conditions
+                                                                                            in the atmosphere equal to or less than 19.5%
+                                stipulated for that space. Evaluation and in-
+                                                                                            by volume.
+                                terpretation of these data, and development
+                                of the entry procedure, should be done by, or               A. Entry Without Permit/Attendant
+                                reviewed by, a technically qualified profes-                Certification. Confined spaces may be entered
+                                sional (e.g., OSHA consultation service, or                 without the need for a written permit or at-
+                                certified industrial hygienist, registered                  tendant provided that the space can be main-
+                                safety engineer, certified safety professional,             tained in a safe condition for entry by me-
+                                certified marine chemist, etc.) based on eval-              chanical ventilation alone, as provided in
+                                uation of all serious hazards.                              § 1910.146(c)(5). All spaces shall be considered
+                                   (2) Verification testing. The atmosphere of a            permit-required confined spaces until the
+                                permit space which may contain a hazardous                  pre-entry procedures demonstrate otherwise.
+                                atmosphere should be tested for residues of                 Any employee required or permitted to pre-
+                                all contaminants identified by evaluation                   check or enter an enclosed/confined space
+                                testing using permit specified equipment to                 shall have successfully completed, -as a min-
+                                determine that residual concentrations at                   imum, the training as required by the fol-
+                                the time of testing and entry are within the                lowing sections of these procedures. A written
+                                range of acceptable entry conditions. Results               copy of operating and rescue procedures as re-
+                                of testing (i.e., actual concentration, etc.)               quired by these procedures shall be at the work
+                                should be recorded on the permit in the                     site for the duration of the job. The Confined
+                                space provided adjacent to the stipulated ac-               Space Pre-Entry Check List must be com-
+                                ceptable entry condition.                                   pleted by the LEAD WORKER before entry
+                                   (3) Duration of testing. Measurement of val-             into a confined space. This list verifies com-
+                                ues for each atmospheric parameter should                   pletion of items listed below. This check list
+                                be made for at least the minimum response                   shall be kept at the job site for duration of
+                                time of the test instrument specified by the                the job. If circumstances dictate an interrup-
+                                manufacturer.                                               tion in the work, the permit space must be
+                                   (4) Testing stratified atmospheres. When                 re-evaluated and a new check list must be
+                                monitoring for entries involving a descent                  completed.
+                                into atmospheres that may be stratified, the                Control of atmospheric and engulfment hazards.
+                                atmospheric envelope should be tested a dis-                Pumps and Lines. All pumps and lines which
+                                tance of approximately 4 feet (1.22 m) in the               may reasonably cause contaminants to flow
+                                direction of travel and to each side. If a sam-             into the space shall be disconnected, blinded
+                                pling probe is used, the entrant’s rate of                  and locked out, or effectively isolated by
+                                progress should be slowed to accommodate                    other means to prevent development of dan-
+                                the sampling speed and detector response.                   gerous air contamination or engulfment. Not
+                                   (5) Order of testing. A test for oxygen is per-          all laterals to sewers or storm drains require
+                                formed first because most combustible gas                   blocking. However, where experience or
+                                meters are oxygen dependent and will not                    knowledge of industrial use indicates there
+                                provide reliable readings in an oxygen defi-                is a reasonable potential for contamination
+                                cient atmosphere. Combustible gasses are                    of air or engulfment into an occupied sewer,
+                                tested for next because the threat of fire or               then all affected laterals shall be blocked. If
+                                explosion is both more immediate and more                   blocking and/or isolation requires entry into
+                                life threatening, in most cases, than expo-                 the space the provisions for entry into a
+                                sure to toxic gasses and vapors. If tests for               permit- required confined space must be im-
+                                toxic gasses and vapors are necessary, they                 plemented.
+                                are performed last.                                         Surveillance. The surrounding area shall be
+                                  APPENDIX C TO § 1910.146—EXAMPLES OF                      surveyed to avoid hazards such as drifting
+                                PERMIT-REQUIRED CONFINED SPACE PROGRAMS                     vapors from the tanks, piping, or sewers.
+                                                                                            Testing. The atmosphere within the space
+                                                        Example 1.                          will be tested to determine whether dan-
+                                Workplace. Sewer entry.                                     gerous air contamination and/or oxygen defi-
+                                                                                            ciency exists. Detector tubes, alarm only gas
+                                Potential hazards. The employees could be ex-
+                                                                                            monitors and explosion meters are examples
+                                posed to the following:
+                                                                                            of monitoring equipment that may be used
+                                Engulfment.                                                 to test permit space atmospheres. Testing
+                                Presence of toxic gases. Equal to or more than              shall be performed by the LEAD WORKER
+                                10 ppm hydrogen sulfide measured as an 8-                   who has successfully completed the Gas De-
+                                hour time-weighted average. If the presence                 tector training for the monitor he will use.
+                                of other toxic contaminants is suspected,                   The minimum parameters to be monitored
+
+                                                                                       487
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118    PO 00000    Frm 00497   Fmt 8010   Sfmt 8003   Q:\29\29V5.TXT   31
+                                § 1910.146                                                            29 CFR Ch. XVII (7–1–14 Edition)
+                                are oxygen deficiency, LFL, and hydrogen                  used. Testing shall be performed by the SU-
+                                sulfide concentration. A written record of                PERVISOR who has successfully completed
+                                the pre-entry test results shall be made and              the gas detector training for the monitor he
+                                kept at the work site for the duration of the             will use. The minimum parameters to be
+                                job. The supervisor will certify in writing,              monitored are oxygen deficiency, LFL and
+                                based upon the results of the pre-entry test-             hydrogen sulfide concentration. A written
+                                ing, that all hazards have been eliminated.               record of the pre- entry test results shall be
+                                Affected employees shall be able to review                made and kept at the work site for the dura-
+                                the testing results. The most hazardous con-              tion of the job. Affected employees shall be
+                                ditions shall govern when work is being per-              able to review the testing results. The most
+                                formed in two adjoining, connecting spaces.               hazardous conditions shall govern when
+                                Entry Procedures. If there are no non-atmos-              work is being performed in two adjoining,
+                                pheric hazards present and if the pre-entry               connected spaces.
+                                tests show there is no dangerous air con-                 Space Ventilation. Mechanical ventilation
+                                tamination and/or oxygen deficiency within                systems, where applicable, shall be set at
+                                the space and there is no reason to believe               100% outside air. Where possible, open addi-
+                                that any is likely to develop, entry into and             tional manholes to increase air circulation.
+                                work within may proceed. Continuous test-                 Use portable blowers to augment natural cir-
+                                ing of the atmosphere in the immediate vi-                culation if needed. After a suitable ven-
+                                cinity of the workers within the space shall              tilating period, repeat the testing. Entry
+                                be accomplished. The workers will imme-                   may not begin until testing has dem-
+                                diately leave the permit space when any of                onstrated that the hazardous atmosphere has
+                                the gas monitor alarm set points are reached              been eliminated.
+                                as defined. Workers will not return to the                Entry Procedures. The following procedure
+                                area until a SUPERVISOR who has com-                      shall be observed under any of the following
+                                pleted the gas detector training has used a               conditions: 1.) Testing demonstrates the ex-
+                                direct reading gas detector to evaluate the               istence of dangerous or deficient conditions
+                                situation and has determined that it is safe              and additional ventilation cannot reduce
+                                to enter.                                                 concentrations to safe levels; 2.) The atmos-
+                                Rescue. Arrangements for rescue services are              phere tests as safe but unsafe conditions can
+                                not required where there is no attendant.                 reasonably be expected to develop; 3.) It is
+                                See the rescue portion of section B., below,              not feasible to provide for ready exit from
+                                for instructions regarding rescue planning                spaces equipped with automatic fire suppres-
+                                where an entry permit is required.                        sion systems and it is not practical or safe to
+                                B. Entry Permit Required                                  deactivate such systems; or 4.) An emer-
+                                Permits. Confined Space Entry Permit. All                 gency exists and it is not feasible to wait for
+                                spaces shall be considered permit-required                pre-entry procedures to take effect.
+                                confined spaces until the pre-entry proce-                  All personnel must be trained. A self con-
+                                dures demonstrate otherwise. Any employee                 tained breathing apparatus shall be worn by
+                                required or permitted to pre-check or enter a             any person entering the space. At least one
+                                permit-required confined space shall have                 worker shall stand by the outside of the
+                                successfully completed, as a minimum, the                 space ready to give assistance in case of
+                                training as required by the following sec-                emergency. The standby worker shall have a
+                                tions of these procedures. A written copy of              self contained breathing apparatus available
+                                operating and rescue procedures as required by            for immediate use. There shall be at least
+                                these procedures shall be at the work site for the        one additional worker within sight or call of
+                                duration of the job. The Confined Space Entry             the standby worker. Continuous powered
+                                Permit must be completed before approval                  communications shall be maintained be-
+                                can be given to enter a permit-required con-              tween the worker within the confined space
+                                fined space. This permit verifies completion              and standby personnel.
+                                of items listed below. This permit shall be                 If at any time there is any questionable ac-
+                                kept at the job site for the duration of the              tion or non- movement by the worker inside,
+                                job. If circumstances cause an interruption               a verbal check will be made. If there is no re-
+                                in the work or a change in the alarm condi-               sponse, the worker will be moved imme-
+                                tions for which entry was approved, a new                 diately. Exception: If the worker is disabled
+                                Confined Space Entry Permit must be com-                  due to falling or impact, he/she shall not be
+                                pleted.                                                   removed from the confined space unless
+                                                                                          there is immediate danger to his/her life.
+                                Control of atmospheric and engulfment hazards.
+                                                                                          Local fire department rescue personnel shall
+                                Surveillance. The surrounding area shall be               be notified immediately. The standby worker
+                                surveyed to avoid hazards such as drifting                may only enter the confined space in case of
+                                vapors from tanks, piping or sewers.                      an emergency (wearing the self contained
+                                Testing. The confined space atmosphere shall              breathing apparatus) and only after being re-
+                                be tested to determine whether dangerous                  lieved by another worker. Safety belt or har-
+                                air contamination and/or oxygen deficiency                ness with attached lifeline shall be used by
+                                exists. A direct reading gas monitor shall be             all workers entering the space with the free
+
+                                                                                     488
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00498   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                  § 1910.146
+                                end of the line secured outside the entry                   6. Slipping and falling on grease in the cook-
+                                opening. The standby worker shall attempt                   er/dryer;
+                                to remove a disabled worker via his lifeline                7. Electrically shocked by faulty equipment
+                                before entering the space.                                  taken into the cooker/dryer;
+                                   When practical, these spaces shall be en-                8. Burned or overcome by fire or products of
+                                tered through side openings—those within                    combustion; or
+                                31⁄2 feet (1.07 m) of the bottom. When entry                9. Overcome by fumes generated by welding
+                                must be through a top opening, the safety                   or cutting done on grease covered surfaces.
+                                belt shall be of the harness type that sus-                 Permits. The supervisor in this case is always
+                                pends a person upright and a hoisting device                present at the cooker/dryer or other permit
+                                or similar apparatus shall be available for                 entry confined space when entry is made.
+                                lifting workers out of the space.                           The supervisor must follow the pre-entry iso-
+                                   In any situation where their use may en-                 lation procedures described in the entry per-
+                                danger the worker, use of a hoisting device                 mit in preparing for entry, and ensure that
+                                or safety belt and attached lifeline may be                 the protective clothing, ventilating equip-
+                                discontinued.                                               ment and any other equipment required by
+                                   When dangerous air contamination is at-                  the permit are at the entry site.
+                                tributable to flammable and/or explosive                    Control of hazards. Mechanical. Lock out
+                                substances, lighting and electrical equip-                  main power switch to agitator motor at
+                                ment shall be Class 1, Division 1 rated per                 main power panel. Affix tag to the lock to
+                                National Electrical Code and no ignition                    inform others that a permit entry confined
+                                sources shall be introduced into the area.                  space entry is in progress.
+                                   Continuous gas monitoring shall be per-
+                                                                                            Engulfment. Close all valves in the raw mate-
+                                formed during all confined space operations.
+                                                                                            rial blow line. Secure each valve in its closed
+                                If alarm conditions change adversely, entry
+                                                                                            position using chain and lock. Attach a tag
+                                personnel shall exit the confined space and a
+                                                                                            to the valve and chain warning that a permit
+                                new confined space permit issued.
+                                                                                            entry confined space entry is in progress.
+                                Rescue. Call the fire department services for               The same procedure shall be used for secur-
+                                rescue. Where immediate hazards to injured                  ing the fat recycle valve.
+                                personnel are present, workers at the site                  Burns and heat stress. Close steam supply
+                                shall implement emergency procedures to fit                 valves to jacket and secure with chains and
+                                the situation.                                              tags. Insert solid blank at flange in cooker
+                                                        Example 2.                          vent line to condenser manifold duct system.
+                                                                                            Vent cooker/dryer by opening access door at
+                                Workplace. Meat and poultry rendering                       discharge end and top center door to allow
+                                plants.                                                     natural ventilation throughout the entry. If
+                                   Cookers and dryers are either batch or con-              faster cooling is needed, use a portable ven-
+                                tinuous in their operation. Multiple batch                  tilation fan to increase ventilation. Cooling
+                                cookers are operated in parallel. When one                  water may be circulated through the jacket
+                                unit of a multiple set is shut down for re-                 to reduce both outer and inner surface tem-
+                                pairs, means are available to isolate that                  peratures of cooker/dryers faster. Check air
+                                unit from the others which remain in oper-                  and inner surface temperatures in cooker/
+                                ation.                                                      dryer to assure they are within acceptable
+                                   Cookers and dryers are horizontal, cylin-                limits before entering, or use proper protec-
+                                drical vessels equipped with a center, rotat-               tive clothing.
+                                ing shaft and agitator paddles or discs. If the             Fire and fume hazards. Careful site prepara-
+                                inner shell is jacketed, it is usually heated               tion, such as cleaning the area within 4
+                                with steam at pressures up to 150 psig (1034.25             inches (10.16 cm) of all welding or torch cut-
+                                kPa). The rotating shaft assembly of the                    ting operations, and proper ventilation are
+                                continuous cooker or dryer is also steam                    the preferred controls. All welding and cut-
+                                heated.                                                     ting operations shall be done in accordance
+                                Potential Hazards. The recognized hazards as-
+                                                                                            with the requirements of 29 CFR part 1910,
+                                sociated with cookers and dryers are the risk
+                                                                                            subpart Q, OSHA’s welding standard. Proper
+                                that employees could be:
+                                                                                            ventilation may be achieved by local exhaust
+                                1. Struck or caught by rotating agitator;                   ventilation, or the use of portable ventila-
+                                2. Engulfed in raw material or hot, recycled                tion fans, or a combination of the two prac-
+                                fat;                                                        tices.
+                                3. Burned by steam from leaks into the cook-
+                                                                                            Electrical shock. Electrical equipment used in
+                                er/dryer steam jacket or the condenser duct
+                                                                                            cooker/dryers shall be in serviceable condi-
+                                system if steam valves are not properly
+                                                                                            tion.
+                                closed and locked out;
+                                4. Burned by contact with hot metal sur-                    Slips and falls. Remove residual grease before
+                                faces, such as the agitator shaft assembly, or              entering cooker/dryer.
+                                inner shell of the cooker/dryer;                            Attendant. The supervisor shall be the at-
+                                5. Heat stress caused by warm atmosphere                    tendant for employees entering cooker/dry-
+                                inside cooker/dryer;                                        ers.
+
+                                                                                       489
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118    PO 00000    Frm 00499   Fmt 8010   Sfmt 8003   Q:\29\29V5.TXT   31
+                                § 1910.146                                                              29 CFR Ch. XVII (7–1–14 Edition)
+                                Permit. The permit shall specify how isola-                 er, dry bulk trailer or truck, etc. meet per-
+                                tion shall be done and any other prepara-                   mit requirements before authorizing entry.
+                                tions needed before making entry. This is es-               Attendant. The area supervisor shall des-
+                                pecially important in parallel arrangements                 ignate an employee to maintain communica-
+                                of cooker/dryers so that the entire operation               tion by employer specified means with em-
+                                need not be shut down to allow safe entry                   ployees working in tanks to ensure their
+                                into one unit.                                              safety. The attendant may not enter any
+                                Rescue. When necessary, the attendant shall                 permit entry confined space to rescue an en-
+                                call the fire department as previously ar-                  trant or for any other reason, unless author-
+                                ranged.                                                     ized by the rescue procedure and, and even
+                                                                                            then, only after calling the rescue team and
+                                                        Example 3.                          being relieved by as attendant by another
+                                Workplace. Workplaces where tank cars,                      worker.
+                                trucks, and trailers, dry bulk tanks and                    Communications and observation. Communica-
+                                trailers, railroad tank cars, and similar port-             tions between attendant and entrant(s) shall
+                                able tanks are fabricated or serviced.                      be maintained throughout entry. Methods of
+                                A. During fabrication. These tanks and dry-                 communication that may be specified by the
+                                bulk    carriers    are  entered     repeatedly             permit include voice, voice powered radio,
+                                throughout the fabrication process. These                   tapping or rapping codes on tank walls, sig-
+                                products are not configured identically, but                nalling tugs on a rope, and the attendant’s
+                                the manufacturing processes by which they                   observation that work activities such as
+                                are made are very similar.                                  chipping, grinding, welding, spraying, etc.,
+                                Sources of hazards. In addition to the me-                  which require deliberate operator control
+                                chanical hazards arising from the risks that                continue normally. These activities often
+                                an entrant would be injured due to contact                  generate so much noise that the necessary
+                                with components of the tank or the tools                    hearing protection makes communication by
+                                being used, there is also the risk that a                   voice difficult.
+                                worker could be injured by breathing fumes                  Rescue procedures. Acceptable rescue proce-
+                                from welding materials or mists or vapors                   dures include entry by a team of employee-
+                                from materials used to coat the tank inte-                  rescuers, use of public emergency services,
+                                rior. In addition, many of these vapors and                 and procedures for breaching the tank. The
+                                mists are flammable, so the failure to prop-                area permit specifies which procedures are
+                                erly ventilate a tank could lead to a fire or               available, but the area supervisor makes the
+                                explosion.                                                  final decision based on circumstances. (Cer-
+                                Control of hazards.                                         tain injuries may make it necessary to
+                                Welding. Local exhaust ventilation shall be                 breach the tank to remove a person rather
+                                used to remove welding fumes once the tank                  than risk additional injury by removal
+                                or carrier is completed to the point that                   through an existing manhole. However, the
+                                workers may enter and exit only through a                   supervisor must ensure that no breaching
+                                manhole. (Follow the requirements of 29 CFR                 procedure used for rescue would violate
+                                1910, subpart Q, OSHA’s welding standard, at                terms of the entry permit. For instance, if
+                                all times.) Welding gas tanks may never be                  the tank must be breached by cutting with a
+                                brought into a tank or carrier that is a per-               torch, the tank surfaces to be cut must be
+                                mit entry confined space.                                   free of volatile or combustible coatings with-
+                                  Application of interior coatings/linings. At-             in 4 inches (10.16 cm) of the cutting line and
+                                mospheric hazards shall be controlled by                    the atmosphere within the tank must be
+                                forced air ventilation sufficient to keep the               below the LFL.
+                                atmospheric concentration of flammable ma-                  Retrieval line and harnesses. The retrieval
+                                terials below 10% of the lower flammable                    lines and harnesses generally required under
+                                limit (LFL) (or lower explosive limit (LEL),                this standard are usually impractical for use
+                                whichever term is used locally). The appro-                 in tanks because the internal configuration
+                                priate respirators are provided and shall be                of the tanks and their interior baffles and
+                                used in addition to providing forced ventila-               other structures would prevent rescuers from
+                                tion if the forced ventilation does not main-               hauling out injured entrants. However, un-
+                                tain acceptable respiratory conditions.                     less the rescue procedure calls for breaching
+                                Permits. Because of the repetitive nature of                the tank for rescue, the rescue team shall be
+                                the entries in these operations, an ‘‘Area                  trained in the use of retrieval lines and har-
+                                Entry Permit’’ will be issued for a 1 month                 nesses for removing injured employees
+                                period to cover those production areas where                through manholes.
+                                tanks are fabricated to the point that entry                B. Repair or service of ‘‘used’’ tanks and bulk
+                                and exit are made using manholes.                           trailers.
+                                Authorization. Only the area supervisor may                 Sources of hazards. In addition to facing the
+                                authorize an employee to enter a tank with-                 potential hazards encountered in fabrication
+                                in the permit area. The area supervisor must                or manufacturing, tanks or trailers which
+                                determine that conditions in the tank trail-                have been in service may contain residues of
+
+                                                                                       490
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118    PO 00000    Frm 00500   Fmt 8010   Sfmt 8003    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                § 1910.146
+                                dangerous materials, whether left over from               (Follow the requirements of 29 CFR 1910, sub-
+                                the transportation of hazardous cargoes or                part Q, OSHA’s welding standard, at all
+                                generated by chemical or bacterial action on              times.)
+                                residues of non-hazardous cargoes.                        Permits. An entry permit valid for up to 1
+                                Control of atmospheric hazards. A ‘‘used’’ tank           year shall be issued prior to authorization of
+                                shall be brought into areas where tank entry              entry into used tank trailers, dry bulk trail-
+                                is authorized only after the tank has been                ers or trucks. In addition to the pre-entry
+                                emptied, cleansed (without employee entry)                cleaning requirement, this permit shall re-
+                                of any residues, and purged of any potential              quire the employee safeguards specified for
+                                atmospheric hazards.                                      new tank fabrication or construction permit
+                                Welding. In addition to tank cleaning for                 areas.
+                                control of atmospheric hazards, coating and               Authorization. Only the area supervisor may
+                                surface materials shall be removed 4 inches               authorize an employee to enter a tank trail-
+                                (10.16 cm) or more from any surface area                  er, dry bulk trailer or truck within the per-
+                                where welding or other torch work will be                 mit area. The area supervisor must deter-
+                                done and care taken that the atmosphere                   mine that the entry permit requirements
+                                within the tank remains well below the LFL.               have been met before authorizing entry.
+
+
+
+
+                                                                                     491
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00501   Fmt 8010   Sfmt 8003   Q:\29\29V5.TXT   31
+                                § 1910.146                                                            29 CFR Ch. XVII (7–1–14 Edition)
+
+                                                        APPENDIX D TO § 1910.146—SAMPLE PERMITS
+
+
+
+
+                                                                                     492
+                                                                                                                                         EC27OC91.030</GPH>
+
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00502   Fmt 8010   Sfmt 8006    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                § 1910.146
+
+
+
+
+                                   APPENDIX E TO § 1910.146—SEWER SYSTEM                  exists any way to completely isolate the
+                                                    ENTRY                                 space (a section of a continuous system) to
+                                                                                          be entered; second, because isolation is not
+                                  Sewer entry differs in three vital respects
+                                                                                          complete, the atmosphere may suddenly and
+                                from other permit entries; first, there rarely
+
+                                                                                     493
+                                                                                                                                         EC27OC91.031</GPH>
+
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00503   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.146                                                            29 CFR Ch. XVII (7–1–14 Edition)
+                                unpredictably become lethally hazardous                   entry. Only the employer can decide, based
+                                (toxic, flammable or explosive) from causes               upon his or her knowledge of, and experience
+                                beyond the control of the entrant or em-                  with permit spaces in sewer systems, what
+                                ployer, and third, experienced sewer workers              the best type of testing instrument may be
+                                are especially knowledgeable in entry and                 for any specific entry operation.
+                                work in their permit spaces because of their                The selected testing instrument should be
+                                frequent entries. Unlike other employments                carried and used by the entrant in sewer line
+                                where permit space entry is a rare and excep-             work to monitor the atmosphere in the en-
+                                tional event, sewer workers’ usual work en-               trant’s environment, and in advance of the
+                                vironment is a permit space.                              entrant’s direction of movement, to warn the
+                                   (1) Adherence to procedure. The employer               entrant of any deterioration in atmospheric
+                                should designate as entrants only employees               conditions. Where several entrants are work-
+                                who are thoroughly trained in the employ-                 ing together in the same immediate loca-
+                                er’s sewer entry procedures and who dem-                  tion, one instrument, used by the lead en-
+                                onstrate that they follow these entry proce-              trant, is acceptable.
+                                dures exactly as prescribed when performing                 (3) Surge flow and flooding. Sewer crews
+                                sewer entries.                                            should develop and maintain liaison, to the
+                                   (2) Atmospheric monitoring. Entrants should            extent possible, with the local weather bu-
+                                be trained in the use of, and be equipped                 reau and fire and emergency services in their
+                                with, atmospheric monitoring equipment                    area so that sewer work may be delayed or
+                                which sounds an audible alarm, in addition                interrupted and entrants withdrawn when-
+                                to its visual readout, whenever one of the                ever sewer lines might be suddenly flooded
+                                following conditions are encountered: Oxy-                by rain or fire suppression activities, or
+                                gen concentration less than 19.5 percent;                 whenever flammable or other hazardous ma-
+                                flammable gas or vapor at 10 percent or more              terials are released into sewers during emer-
+                                of the lower flammable limit (LFL); or hy-                gencies by industrial or transportation acci-
+                                drogen sulfide or carbon monoxide at or                   dents.
+                                above 10 ppm or 35 ppm, respectively, meas-                 (4) Special Equipment. Entry into large bore
+                                ured as an 8-hour time-weighted average. At-              sewers may require the use of special equip-
+                                mospheric monitoring equipment needs to be                ment. Such equipment might include such
+                                calibrated according to the manufacturer’s                items as atmosphere monitoring devices
+                                instructions. The oxygen sensor/broad range               with automatic audible alarms, escape self-
+                                sensor is best suited for initial use in situa-           contained breathing apparatus (ESCBA) with
+                                tions where the actual or potential contami-              at least 10 minute air supply (or other
+                                nants have not been identified, because                   NIOSH approved self-rescuer), and water-
+                                broad range sensors, unlike substance-spe-                proof flashlights, and may also include boats
+                                cific sensors, enable employers to obtain an              and rafts, radios and rope stand-offs for pull-
+                                overall    reading   of    the   hydrocarbons             ing around bends and corners as needed.
+                                (flammables) present in the space. However,
+                                such sensors only indicate that a hazardous               APPENDIX F TO § 1910.146—RESCUE TEAM OR
+                                threshold of a class of chemicals has been ex-             RESCUE SERVICE EVALUATION CRITERIA
+                                ceeded. They do not measure the levels of                  (NON-MANDATORY)
+                                contamination of specific substances. There-                (1) This appendix provides guidance to em-
+                                fore, substance-specific devices, which meas-             ployers in choosing an appropriate rescue
+                                ure the actual levels of specific substances,             service. It contains criteria that may be used
+                                are best suited for use where actual and po-              to evaluate the capabilities both of prospec-
+                                tential contaminants have been identified.                tive and current rescue teams. Before a res-
+                                The measurements obtained with substance-                 cue team can be trained or chosen, however,
+                                specific devices are of vital importance to               a satisfactory permit program, including an
+                                the employer when decisions are made con-                 analysis of all permit-required confined
+                                cerning the measures necessary to protect                 spaces to identify all potential hazards in
+                                entrants (such as ventilation or personal                 those spaces, must be completed. OSHA be-
+                                protective equipment) and the setting and                 lieves that compliance with all the provi-
+                                attainment of appropriate entry conditions.               sions of § 1910.146 will enable employers to
+                                However, the sewer environment may sud-                   conduct permit space operations without re-
+                                denly and unpredictably change, and the sub-              course to rescue services in nearly all cases.
+                                stance-specific devices may not detect the                However, experience indicates that cir-
+                                potentially lethal atmospheric hazards                    cumstances will arise where entrants will
+                                which may enter the sewer environment.                    need to be rescued from permit spaces. It is
+                                   Although OSHA considers the information                therefore important for employers to select
+                                and guidance provided above to be appro-                  rescue services or teams, either on-site or
+                                priate and useful in most sewer entry situa-              off-site, that are equipped and capable of
+                                tions, the Agency emphasizes that each em-                minimizing harm to both entrants and res-
+                                ployer must consider the unique cir-                      cuers if the need arises.
+                                cumstances, including the predictability of                 (2) For all rescue teams or services, the
+                                the atmosphere, of the sewer permit spaces                employer’s evaluation should consist of two
+                                in the employer’s workplace in preparing for              components: an initial evaluation, in which
+
+                                                                                     494
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00504   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+                                Occupational Safety and Health Admin., Labor                                                 § 1910.146
+                                employers decide whether a potential rescue               potential bottlenecks or traffic congestion
+                                service or team is adequately trained and                 that might be encountered in transit, the re-
+                                equipped to perform permit space rescues of               liability of the rescuer’s vehicles, and the
+                                the kind needed at the facility and whether               training and skill of its drivers.
+                                such rescuers can respond in a timely man-                  3. What is the availability of the rescue
+                                ner, and a performance evaluation, in which               service? Is it unavailable at certain times of
+                                employers measure the performance of the                  the day or in certain situations? What is the
+                                team or service during an actual or practice              likelihood that key personnel of the rescue
+                                rescue. For example, based on the initial                 service might be unavailable at times? If the
+                                evaluation, an employer may determine that                rescue service becomes unavailable while an
+                                maintaining an on-site rescue team will be                entry is underway, does it have the capa-
+                                more expensive than obtaining the services                bility of notifying the employer so that the
+                                of an off-site team, without being signifi-               employer can instruct the attendant to abort
+                                cantly more effective, and decide to hire a               the entry immediately?
+                                rescue service. During a performance evalua-                4. Does the rescue service meet all the re-
+                                tion, the employer could decide, after ob-                quirements of paragraph (k)(2) of the stand-
+                                serving the rescue service perform a practice             ard? If not, has it developed a plan that will
+                                rescue, that the service’s training or pre-               enable it to meet those requirements in the
+                                paredness was not adequate to effect a time-              future? If so, how soon can the plan be imple-
+                                ly or effective rescue at his or her facility             mented?
+                                and decide to select another rescue service,                5. For off-site services, is the service will-
+                                or to form an internal rescue team.                       ing to perform rescues at the employer’s
+                                                                                          workplace? (An employer may not rely on a
+                                                A. Initial Evaluation                     rescuer who declines, for whatever reason, to
+                                   I. The employer should meet with the pro-              provide rescue services.)
+                                spective rescue service to facilitate the eval-             6. Is an adequate method for communica-
+                                uations required by § 1910.146(k)(1)(i) and               tions between the attendant, employer and
+                                § 1910.146(k)(1)(ii). At a minimum, if an off-            prospective rescuer available so that a res-
+                                site rescue service is being considered, the              cue request can be transmitted to the res-
+                                employer must contact the service to plan                 cuer without delay? How soon after notifica-
+                                and coordinate the evaluations required by                tion can a prospective rescuer dispatch a res-
+                                the standard. Merely posting the service’s                cue team to the entry site?
+                                number or planning to rely on the 911 emer-                 7. For rescues into spaces that may pose
+                                gency phone number to obtain these services               significant atmospheric hazards and from
+                                at the time of a permit space emergency                   which rescue entry, patient packaging and
+                                would not comply with paragraph (k)(1) of                 retrieval cannot be safely accomplished in a
+                                the standard.                                             relatively short time (15–20 minutes), em-
+                                   II. The capabilities required of a rescue              ployers should consider using airline res-
+                                service vary with the type of permit spaces               pirators (with escape bottles) for the res-
+                                from which rescue may be necessary and the                cuers and to supply rescue air to the patient.
+                                hazards likely to be encountered in those                 If the employer decides to use SCBA, does
+                                spaces. Answering the questions below will                the prospective rescue service have an ample
+                                assist employers in determining whether the               supply of replacement cylinders and proce-
+                                rescue service is capable of performing res-              dures for rescuers to enter and exit (or be re-
+                                cues in the permit spaces present at the em-              trieved) well within the SCBA’s air supply
+                                ployer’s workplace.                                       limits?
+                                   1. What are the needs of the employer with               8. If the space has a vertical entry over 5
+                                regard to response time (time for the rescue              feet in depth, can the prospective rescue
+                                service to receive notification, arrive at the            service properly perform entry rescues? Does
+                                scene, and set up and be ready for entry)?                the service have the technical knowledge
+                                For example, if entry is to be made into an               and equipment to perform rope work or ele-
+                                IDLH atmosphere, or into a space that can                 vated rescue, if needed?
+                                quickly develop an IDLH atmosphere (if ven-                 9. Does the rescue service have the nec-
+                                tilation fails or for other reasons), the rescue          essary skills in medical evaluation, patient
+                                team or service would need to be standing by              packaging and emergency response?
+                                at the permit space. On the other hand, if                  10. Does the rescue service have the nec-
+                                the danger to entrants is restricted to me-               essary equipment to perform rescues, or
+                                chanical hazards that would cause injuries                must the equipment be provided by the em-
+                                (e.g., broken bones, abrasions) a response                ployer or another source?
+                                time of 10 or 15 minutes might be adequate.                           B. Performance Evaluation
+                                   2. How quickly can the rescue team or
+                                service get from its location to the permit                 Rescue services are required by paragraph
+                                spaces from which rescue may be necessary?                (k)(2)(iv) of the standard to practice rescues
+                                Relevant factors to consider would include:               at least once every 12 months, provided that
+                                the location of the rescue team or service                the team or service has not successfully per-
+                                relative to the employer’s workplace, the                 formed a permit space rescue within that
+                                quality of roads and highways to be traveled,             time. As part of each practice session, the
+
+                                                                                     495
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00505   Fmt 8010   Sfmt 8002   Q:\29\29V5.TXT   31
+                                § 1910.147                                                            29 CFR Ch. XVII (7–1–14 Edition)
+                                service should perform a critique of the prac-            that are ‘‘worst-case’’ or most restrictive
+                                tice rescue, or have another qualified party              with respect to internal configuration, ele-
+                                perform the critique, so that deficiencies in             vation, and portal size. The following charac-
+                                procedures, equipment, training, or number                teristics of a practice space should be consid-
+                                of personnel can be identified and corrected.             ered when deciding whether a space is truly
+                                The results of the critique, and the correc-              representative of an actual permit space:
+                                tions made to respond to the deficiencies                   (1) Internal configuration.
+                                identified, should be given to the employer                 (a) Open—there are no obstacles, barriers,
+                                to enable it to determine whether the rescue              or obstructions within the space. One exam-
+                                service can quickly be upgraded to meet the               ple is a water tank.
+                                employer’s rescue needs or whether another                  (b) Obstructed—the permit space contains
+                                service must be selected. The following ques-             some type of obstruction that a rescuer
+                                tions will assist employers and rescue teams              would need to maneuver around. An example
+                                and services evaluate their performance.                  would be a baffle or mixing blade. Large
+                                  1. Have all members of the service been                 equipment, such as a ladder or scaffold,
+                                trained as permit space entrants, at a min-               brought into a space for work purposes
+                                imum, including training in the potential                 would be considered an obstruction if the po-
+                                hazards of all permit spaces, or of represent-            sitioning or size of the equipment would
+                                ative permit spaces, from which rescue may                make rescue more difficult.
+                                be needed? Can team members recognize the                   (2) Elevation.
+                                signs, symptoms, and consequences of expo-                  (a) Elevated—a permit space where the en-
+                                sure to any hazardous atmospheres that may                trance portal or opening is above grade by 4
+                                be present in those permit spaces?                        feet or more. This type of space usually re-
+                                  2. Is every team member provided with,                  quires knowledge of high angle rescue proce-
+                                and properly trained in, the use and need for             dures because of the difficulty in packaging
+                                PPE, such as SCBA or fall arrest equipment,               and transporting a patient to the ground
+                                which may be required to perform permit                   from the portal.
+                                space rescues in the facility? Is every team
+                                                                                            (b) Non-elevated—a permit space with the
+                                member properly trained to perform his or
+                                                                                          entrance portal located less than 4 feet above
+                                her functions and make rescues, and to use
+                                                                                          grade. This type of space will allow the res-
+                                any rescue equipment, such as ropes and
+                                                                                          cue team to transport an injured employee
+                                backboards, that may be needed in a rescue
+                                                                                          normally.
+                                attempt?
+                                                                                            (3) Portal size.
+                                  3. Are team members trained in the first
+                                                                                            (a) Restricted—A portal of 24 inches or less
+                                aid and medical skills needed to treat vic-
+                                                                                          in the least dimension. Portals of this size
+                                tims overcome or injured by the types of
+                                                                                          are too small to allow a rescuer to simply
+                                hazards that may be encountered in the per-
+                                                                                          enter the space while using SCBA. The por-
+                                mit spaces at the facility?
+                                  4. Do all team members perform their func-              tal size is also too small to allow normal spi-
+                                tions safely and efficiently? Do rescue serv-             nal immobilization of an injured employee.
+                                ice personnel focus on their own safety be-                 (b) Unrestricted—A portal of greater than
+                                fore considering the safety of the victim?                24 inches in the least dimension. These por-
+                                  5. If necessary, can the rescue service prop-           tals allow relatively free movement into and
+                                erly test the atmosphere to determine if it is            out of the permit space.
+                                IDLH?                                                       (4) Space access.
+                                  6. Can the rescue personnel identify infor-               (a) Horizontal—The portal is located on
+                                mation pertinent to the rescue from entry                 the side of the permit space. Use of retrieval
+                                permits, hot work permits, and MSDSs?                     lines could be difficult.
+                                  7. Has the rescue service been informed of                (b) Vertical—The portal is located on the
+                                any hazards to personnel that may arise                   top of the permit space, so that rescuers
+                                from outside the space, such as those that                must climb down, or the bottom of the per-
+                                may be caused by future work near the                     mit space, so that rescuers must climb up to
+                                space?                                                    enter the space. Vertical portals may require
+                                  8. If necessary, can the rescue service prop-           knowledge of rope techniques, or special pa-
+                                erly package and retrieve victims from a                  tient packaging to safely retrieve a downed
+                                permit space that has a limited size opening              entrant.
+                                (less than 24 inches (60.9 cm) in diameter),              [58 FR 4549, Jan. 14, 1993; 58 FR 34845, 34846,
+                                limited internal space, or internal obstacles             June 29, 1993, as amended at 59 FR 26114, May
+                                or hazards?                                               19, 1994; 63 FR 66038, 66039, Dec. 1, 1998; 76 FR
+                                  9. If necessary, can the rescue service safe-           80739, Dec. 27, 2011]
+                                ly perform an elevated (high angle) rescue?
+                                  10. Does the rescue service have a plan for             § 1910.147 The control of hazardous
+                                each of the kinds of permit space rescue op-                   energy (lockout/tagout).
+                                erations at the facility? Is the plan adequate
+                                for all types of rescue operations that may                  (a) Scope, application, and purpose—(1)
+                                be needed at the facility? Teams may prac-                Scope. (i) This standard covers the serv-
+                                tice in representative spaces, or in spaces               icing and maintenance of machines and
+
+                                                                                     496
+
+
+
+VerDate Mar<15>2010   11:48 Aug 01, 2014   Jkt 232118   PO 00000   Frm 00506   Fmt 8010   Sfmt 8002    Q:\29\29V5.TXT   31
+

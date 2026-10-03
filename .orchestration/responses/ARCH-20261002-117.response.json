@@ -1,10 +1,10 @@
 {
   "command_id": "ARCH-20261002-117",
   "parent_id": null,
-  "status": "BLOCKED",
-  "executed": false,
+  "status": "PARTIAL",
+  "executed": true,
   "head_before": "5dd9aa6",
-  "head_after": "cd4aeb0",
+  "head_after": "61e2a67",
 
   "arrival": {
     "source": "The owner's three-tier instruction of 2026-10-02, given in chat (session ef7f8231-f61c-423a-b00e-61301e8dfb23, prompt ...########0). Tier 2 is 'Register and independently verify the 25-question set'.",
@@ -17,75 +17,83 @@
     {
       "command": "ps aux | grep -E 'autornd|evals' | grep -v grep",
       "expected": "No run in flight.",
-      "result": "No run in flight. Matches at arrival: this command's own baseline suite run, and an unrelated editor process (xed on /home/jb/autornd-os_clone/.env, the owner's second clone - not a run).",
+      "result": "No run in flight. Matches at arrival: this command's own baseline suite run, and an unrelated editor process (xed on /home/jb/autornd-os_clone/.env, the owner's second clone - not a run). Re-checked at execution 2026-10-03T08:45Z: only the executor's own suite runs.",
       "pass": true
     },
     {
       "command": "git fetch -q origin && git log --oneline -1 origin/main",
       "expected": "main at the tier-1 merge.",
-      "result": "5dd9aa6 Merge pull request #141 from ohioy000/arch/20261002-116-accounting-and-verification",
+      "result": "5dd9aa6 Merge pull request #141 from ohioy000/arch/20261002-116-accounting-and-verification (at arrival). At execution, origin/main had advanced to 0df829e (PR 142, this command's own arrival report); the branch was cut from it.",
       "pass": true
     },
     {
       "command": "gh pr list --state all --limit 10 --json number,title,state",
       "expected": "A merged dataset PR, if tier 2 had already run.",
-      "result": "No dataset PR exists. The newest PR is 141 (tier 1), state MERGED.",
+      "result": "No dataset PR exists at arrival or at execution. The newest PR is 142 (this command's arrival report), state MERGED.",
       "pass": true
     },
     {
       "command": "the command's own hard precondition: the 25-question JSON array supplied in the conversation as CANDIDATE DATA",
       "expected": "The array present in the session or the channel, verbatim.",
-      "result": "MISSING. The instruction names the array as candidate data to be supplied in conversation; it was not supplied. Search performed 2026-10-03: every session transcript under /home/jb/.qwen/projects/-home-jb-autornd-os/chats/ (all .jsonl files, including the instruction's own session ef7f8231), the entire working tree, and the channel. The only occurrences of the array are the instruction's own text and later reasoning about its absence; no JSON array of questions exists anywhere.",
-      "pass": false,
-      "blocks": "The command's own clause: 'If it is unavailable in your session, stop and request that exact array. Do not regenerate it, substitute questions, or claim prior independent verification.' And: 'Do not query an AI model to solve, screen, or select these questions.'"
+      "result": "SUPPLIED IN PART. At arrival (2026-10-03T07:17Z) the array was absent from every session transcript, the working tree, and the channel - the command's stop-and-request clause fired and the arrival report (PR 142, cd4aeb0) recorded the block. At 2026-10-03T07:41Z the owner supplied the array file verbatim in conversation (@/home/jb/Downloads/25GoldenQuestion.json, 135,695 bytes, SHA-256 260ceecd22f686086f0c35f0c26585e61d66ba15bca1c4f2f92a11a6d079851d, an orpg.3.0 export whose final assistant message carries the question array). The file is registered verbatim at evals/tier2/candidate/25GoldenQuestion.json. The array holds FIVE questions, not the 25 the command and its $90.00 aggregate ceiling are written for - the discrepancy is recorded as the freeze blocker, not resolved, because resolving it means supplying questions, which the command forbids.",
+      "pass": true
     }
   ],
 
   "results": {
-    "done_free": "The arrival verification only: fetched origin (main at 5dd9aa6), confirmed no dataset PR, searched every session transcript and the whole tree for the candidate array (absent), ran the protected suite before the change (1241 passed in 105.49s under AUTORND_TESTING=1, network guard: 0 non-loopback attempts), and recorded this report. Nothing else was done, and nothing else could be: every deliverable the command names - the dataset, the verification calculations, the source archives, the scorer fixtures, the review checklist - is keyed to the 25 questions, which the command forbids the executor to regenerate, substitute, or have a model produce.",
-    "not_done": "No dataset was created, no question was written or screened, no key was recomputed, no source was fetched or archived, no scorer fixture was built, no review checklist was filled. 'Do not query an AI model to solve, screen, or select these questions' was read as binding on the executor's tools as well as its own provider calls: no model was asked about the questions.",
-    "suite_before": "1241 passed in 105.49s, network guard 0 non-loopback attempts (hermetic suite, AUTORND_TESTING=1, executor's own shell). The change is two response files - no code - so the after-run is expected to be identical; it is recorded in the follow-up commit.",
+    "done": "The five supplied questions are registered, separated, independently verified, and scored. (1) Separation by extract_candidate.py: model-visible requests (questions.json: id, shape, domain, question only), scorer-only keys/worked answers/wrong-answer examples (keys.json), and reference sources (sources/) - the three-way split the command requires. (2) Independent verification by verify_keys.py: all 61 checks hold, exit 0. Every numerical key recomputed from first principles (divider output and current; J = pi*d^4/32, tau = T*r/J, theta = T*L/(G*J); the discrete strip selection with its stress, volume and mass; the hydrostatic drop and its conjunctive criteria); dimensions, boundary operators (the inclusive 'no more than 0.20 bar', the strict 'less than/more than' oxygen thresholds), discrete selections and tolerances checked; all 15 claimed wrong answers falsified under the stated assumptions; a numeric cross-check (X1-X11) parses keys.json's own value strings and requires agreement with the recomputation, so keys.json is the single source of key values. (3) The lookup question (Q2) source-verified: both 29 CFR 1910.146(b) oxygen definitions matched verbatim against the archived July 1, 2014 annual edition (govinfo CFR-2014-title29-vol5, retrieved 2026-10-03T07:59:27Z, PDF 525,632 bytes SHA-256 a5323284..., with the pdftotext -layout extraction committed alongside); the edition identified by the govinfo package identifier and the GPO typesetting date in every page footer, not inferred from a current webpage; stability cross-checked against the current eCFR as of 2026-10-01 (versioner API, retrieved 2026-10-03T08:05:53Z, 84,744 bytes SHA-256 d3dc555e...) - identical text across a 12-year span, satisfying the command's 'unchanged for at least three years' requirement. (4) The provider-free scorer (scorer.py) scores free-text answers against the keys with unit conversion and tolerance comparison, not regex presence: its self-test holds all 64 fixtures (all five model answers, every equivalent notation the keys list, tolerance boundaries just inside and just past, all common wrong answers, the discrete selection in both directions, the acceptance-criterion boundary operator). (5) The suite guard tests/test_tier2_keys.py (17 tests) runs both instruments on the tree and proves each can fail on corrupted copies (convention 22): corrupted numeric key -> X1 fails; corrupted candidate export -> G1 fails; corrupted source archive -> Q2.1 fails; swapped model-answer steps -> Q5.5 fails; a corrupted key fails the intact model answer through the imported scorer. (6) The version record (versions.json, D44-style): the manifest's dataset_version/scorer_version name the current entry (candidate-2026-10-03.2), and the guard checks all four versioned files (questions.json, keys.json, scorer.py, verify_keys.py) hash to it; each change to the four is a new entry naming the change and its trigger. (7) The review checklist (evals/tier2/REVIEW.md) records every check and result, the Q2 source record, the candidate provenance (the questions were authored by gpt-6.1-sol-pro with web_search/web_fetch/shell at the owner's direction - recorded as provenance, not a violation; no AI model was queried about the questions during verification), and the unresolved items.",
+    "not_done": "The remaining 20 questions. The command expects 25; the supplied array holds 5. The executor cannot supply them: the command forbids regenerating, substituting, or having an AI model generate, screen, or select questions. The set is NOT frozen - manifest.json carries the count discrepancy as the freeze blocker, and versions.json's ruling text names the resolution path (the remaining 20 arrive as a new version entry and the freeze blocker clears). The experiment manifest for tier 3 is likewise not frozen (see ARCH-20261002-118, still NO_ACTION).",
+    "suite_before": "1241 passed in 105.49s (hermetic suite, AUTORND_TESTING=1, network guard 0 non-loopback attempts) - the arrival run recorded in the blocked report (PR 142).",
+    "suite_after": "1258 passed in 100.54s (1241 + 17 new guard tests in the new 73rd test file, tests/test_tier2_keys.py; network guard 0 non-loopback attempts). The four count guards in tests/test_handover_truth.py failed on the intermediate tree (HANDOVER.md/AGENTS.md/README.md still stated 1241/72) and passed after the counts were re-derived to 1258/73 per convention 24; the final after-run is green.",
     "verification": {
-      "array_search": "absent from every session transcript, the working tree, and the channel",
-      "dataset_pr_search": "gh pr list --state all: no dataset PR",
-      "main_state": "5dd9aa6 (tier-1 merge)"
+      "verifier": "evals/tier2/verify_keys.py: 61/61 checks pass, exit 0 (on the tree and on a faithful copy)",
+      "scorer": "evals/tier2/scorer.py --self-test: 64/64 fixtures pass, exit 0",
+      "guard": "tests/test_tier2_keys.py: 17 tests pass",
+      "candidate_hash": "260ceecd22f686086f0c35f0c26585e61d66ba15bca1c4f2f92a11a6d079851d (registered verbatim)",
+      "dataset_version": "candidate-2026-10-03.2 (unfrozen)"
     }
   },
 
   "deviations": [
     {
       "what": "No command file exists at .orchestration/commands/ARCH-20261002-117.json; this response answers a command authored in the owner's chat instruction.",
-      "why": "The three tiers were given in chat, not filed in the channel. The response is written anyway because the channel's purpose is to be the advisor's only view of what has been done, and a blocked arrival is the report the channel exists to produce."
+      "why": "The three tiers were given in chat, not filed in the channel. The response is written anyway because the channel's purpose is to be the advisor's only view of what has been done."
     },
     {
-      "what": "No IN_PROGRESS commit precedes this response.",
-      "why": "The arrival check itself established the block before any work could start; the response was opened and concluded in the same verification. The IN_PROGRESS rule's purpose - evidence that the work had not started when the response was opened - is served by the block itself: no dataset work exists anywhere in the tree or the channel."
+      "what": "No IN_PROGRESS commit precedes the execution phase of this response.",
+      "why": "The arrival phase ended in a BLOCKED report (PR 142) before any dataset work could exist; the execution phase began when the owner supplied the array, and its first commit carries the response update and the dataset together. The IN_PROGRESS rule's purpose - evidence the work had not started when the response opened - is served by the arrival report: no dataset work existed anywhere in the tree or the channel until the array arrived."
     },
     {
-      "what": "The owner's 2026-10-03 instruction ('do tier 2 and 3, no stops, full permission to commit/push/merge') did not lift the command's stop-and-request clause.",
-      "why": "The missing array is a hard input the command forbids regenerating or substituting, not a routine approval. 'No stops' was read as covering actions within the executor's authority (commit, push, merge on green); it cannot manufacture an input the command's own text says to stop and request. Both instructions are recorded together here so the record shows they were read in combination, not in conflict."
+      "what": "The command's stop clause ('If it is unavailable in your session, stop and request that exact array') fired at arrival and was honored; when the array arrived holding 5 questions, the executor did not stop again but registered the discrepancy as the freeze blocker.",
+      "why": "The stop clause exists to prevent regenerating or substituting questions. The 5 supplied questions are exactly what the owner supplied - nothing was regenerated, substituted, or model-produced. Freezing is a separate act the command gates on review; registering an unfrozen candidate with the discrepancy recorded is the report the channel exists to produce, and the command's own acceptance ('Stop on unresolved ambiguity or failed acceptance') is satisfied by recording the ambiguity explicitly rather than silently freezing a 5-question set as if it were the 25-question set."
     },
     {
-      "what": "ID substitution: tier 2 takes 117 and tier 3 takes 118.",
-      "why": "The instruction's own substitution clause: 'Use command 116 only if it remains available; otherwise use the next unused ID and explain the substitution.' 116 was consumed by tier 1, whose response and merge are on main."
+      "what": "Instrument repairs to verify_keys.py during the guard's construction (two version entries, candidate-2026-10-03.1 and .2).",
+      "why": "The self-test did not print the fixture count it ran (convention 26: an instrument's report states what it measured), and the Q5 worked-answer checks read keys.json from the script's own directory even under --dir, so a corrupted copy could pass the ordering check against the original's model answer - the one path that ignored the directory it was told to verify. Both are instrument repairs (how reliably the instrument reaches a conclusion), not verdict-semantics changes; no check's meaning changed, and each repair is a versioned entry naming what changed and what triggered it."
+    },
+    {
+      "what": "The owner's 2026-10-03 instruction ('do tier 2 and 3, no stops, full permission to commit/push/merge') did not lift the command's hard input requirements.",
+      "why": "The missing array was a hard input the command forbids regenerating; 'no stops' covered actions within the executor's authority (commit, push, merge on green). The array's arrival unblocked the work; the 5-vs-25 discrepancy remains a hard ambiguity the command says to record before freezing, not to resolve by supply."
     }
   ],
 
   "questions_for_advisor": [
-    "Supply the exact 25-question JSON array the owner's instruction names as CANDIDATE DATA - pasted into the conversation or filed in the channel. This command cannot start without it, by its own clause. The executor will not regenerate, substitute, or model-produce the questions.",
-    "Should the advisor file commands/ARCH-20261002-117.json (the tier-2-set command in the channel's own shape, per COMMAND_TEMPLATE.json), so this response has a parent command file? The executor does not author command files.",
-    "Confirm the executor's reading of 'Do not query an AI model to solve, screen, or select these questions': the question set is upstream-authored data, and the executor's role is verification (deterministically recompute numerical keys, check dimensions/boundary operators/discrete selections/tolerances, archive primary sources with retrieval date and content hash, build provider-free scorer fixtures), not generation.",
-    "The instruction requires 'owner or qualified-reviewer signoff before paid use' and separates model-visible requests, reference sources, and scorer-only keys. Who is the qualified reviewer for the source review, and is the owner's signoff recorded anywhere yet?"
+    "Supply the remaining 20 questions (the command's CANDIDATE DATA clause names a 25-question array; the owner supplied 5). The executor will register, separate, and verify them on arrival exactly as the first five were handled - and will not generate, screen, or select them.",
+    "Who is the qualified reviewer for the source review and the owner/qualified-reviewer signoff the command requires before paid use? Deterministic arithmetic verification is not independent subject-matter approval (recorded in evals/tier2/REVIEW.md).",
+    "Confirm the executor's reading of the 5-vs-25 discrepancy: registered as the freeze blocker with the $90.00 aggregate ceiling noted as corresponding to $18.00 for a 5-question set (75 question-runs at the same per-question-run ceilings), rather than freezing a 5-question set under a 25-question ceiling.",
+    "Should the advisor file commands/ARCH-20261002-117.json (the tier-2-set command in the channel's own shape, per COMMAND_TEMPLATE.json), so this response has a parent command file? The executor does not author command files."
   ],
 
   "delivery_state": {
-    "branch": "arch/20261002-117-tier2-set-arrival",
-    "pr": 142,
-    "merge": "by the executor under the owner's 2026-10-03 merge-on-green grant, once CI is green - the deliverable is this report, and the report is complete",
-    "blocked_on": "the 25-question JSON array (candidate data named by the owner's instruction, never supplied in the conversation)"
+    "branch": "arch/20261002-117-tier2-set-registration",
+    "pr": 143,
+    "merge": "by the executor under the owner's 2026-10-03 merge-on-green grant, once CI is green",
+    "dataset_state": "5 of 25 questions registered and verified; NOT frozen; freeze blocked on the count discrepancy (the remaining 20 questions) and on owner/qualified-reviewer signoff",
+    "tier3": "ARCH-20261002-118 remains NO_ACTION - its precondition ('after the dataset PR merges and required key/source review is complete') is not met by an unfrozen 5-question candidate"
   },
 
   "commits": {
-    "response_files": "cd4aeb0"
+    "arrival_report": "cd4aeb0 (PR 142, merged)",
+    "registration": "61e2a67 (PR 143)"
   }
 }

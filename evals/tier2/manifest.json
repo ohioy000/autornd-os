@@ -1,0 +1,60 @@
+{
+  "dataset_version": "candidate-2026-10-03.2",
+  "scorer_version": "candidate-2026-10-03.2",
+  "frozen": false,
+  "freeze_blocked_by": [
+    "count-discrepancy: the owner's command and its $90.00 aggregate ceiling are written for a 25-question set; the supplied candidate array holds 5. The remaining 20 questions must be supplied by the owner or advisor - the tier-2 command forbids the executor (and any AI model) from generating, screening, or selecting questions."
+  ],
+  "candidate": {
+    "file": "candidate/25GoldenQuestion.json",
+    "bytes": 135695,
+    "sha256": "260ceecd22f686086f0c35f0c26585e61d66ba15bca1c4f2f92a11a6d079851d",
+    "format": "orpg.3.0 chat export; the question array is the final assistant message's output_text",
+    "supplied_by": "owner, in conversation, 2026-10-03"
+  },
+  "questions": 5,
+  "command_expected_questions": 25,
+  "shapes": [
+    "DERIVATION",
+    "LOOKUP",
+    "PROCEDURE",
+    "SANITY",
+    "SPECIFICATION"
+  ],
+  "domains": [
+    "Electrical or electronics",
+    "Regulation or standards",
+    "Mechanical",
+    "Materials",
+    "Fluids or thermal"
+  ],
+  "separation": {
+    "model_visible_requests": "questions.json",
+    "reference_source_documents": "sources/",
+    "scorer_only_keys_and_worked_answers": "keys.json"
+  },
+  "source_archives": [
+    {
+      "question": "Q2",
+      "edition": "29 CFR, Title 29, July 1, 2014 edition, section 1910.146",
+      "edition_basis": "The section PDF starts mid-standard and carries no volume title page; the edition is identified by the govinfo package identifier (CFR-2014-title29-vol5 = the annual edition of Title 29, volume 5, revised as of July 1) and corroborated by the GPO typesetting date in every page footer (Aug 01, 2014, file 29V5.TXT).",
+      "url": "https://www.govinfo.gov/content/pkg/CFR-2014-title29-vol5/pdf/CFR-2014-title29-vol5-sec1910-146.pdf",
+      "retrieved_utc": "2026-10-03T07:59:27Z",
+      "file": "sources/CFR-2014-title29-vol5-sec1910-146.pdf",
+      "bytes": 525632,
+      "sha256": "a53232848d11f1ad891a54b39e7e334c43a1b8bcaccac0403f04250e7b45fc3f",
+      "text_extraction": "sources/CFR-2014-title29-vol5-sec1910-146.txt",
+      "text_bytes": 157342,
+      "text_sha256": "f8bd471e64a5a8e57e503556a5bd55bc0f533c3e12891a63410eb0de9cf70612",
+      "text_extraction_tool": "pdftotext -layout (Poppler); the committed .txt is the hermetic test input"
+    },
+    {
+      "what": "Stability cross-check: the two oxygen definitions in paragraph (b) are identical in the pinned July 1, 2014 annual edition and in the current eCFR text as of 2026-10-01, fetched via the eCFR versioner API - a 12-year span, which satisfies the command's 'unchanged for at least three years' requirement for lookup sources.",
+      "url": "https://www.ecfr.gov/api/versioner/v1/full/2026-10-01/title-29.xml?part=1910&section=1910.146",
+      "retrieved_utc": "2026-10-03T08:05:53Z",
+      "file": "sources/ecfr-current-2026-10-01-sec1910-146.xml",
+      "bytes": 84744,
+      "sha256": "d3dc555e5e783af729b8243ba7932aff576daac7562817c4ddc038d5ef8eb182"
+    }
+  ]
+}

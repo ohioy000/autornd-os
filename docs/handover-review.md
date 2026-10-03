@@ -12086,3 +12086,239 @@ the same repair, the settled mechanism. The doublecheck-endpoint
 liability question stays surfaced, not repaired (question 3 in the
 response).
 
+## 108. ARCH-20261002-117: register and independently verify the 25-question set (executor, 2026-10-03, tier 2 of the owner's three-tier instruction)
+
+> **The blueprint (tier 2 of the owner's three-tier instruction
+> of 2026-10-02, session ef7f8231, given in chat — pasted
+> verbatim; the instruction's tier-2 clause reads):** "Register
+> and independently verify the 25-question set. After the
+> preceding repair PR merges, process the tier-2-set command.
+> Use command 116 only if it remains available; otherwise use
+> the next unused ID and explain the substitution. Use the
+> 25-question JSON array supplied in this conversation as
+> CANDIDATE DATA. If it is unavailable in your session, stop
+> and request that exact array. Do not regenerate it, substitute
+> questions, or claim prior independent verification. Do not
+> query an AI model to solve, screen, or select these
+> questions. For each question: check that inputs and
+> assumptions determine the keyed answer; independently
+> recompute numerical keys using deterministic calculations;
+> check dimensions, boundary operators, discrete selections,
+> and tolerances; verify that each claimed wrong answer is
+> actually wrong under the stated assumptions; flag ambiguities
+> for resolution before freezing the set. For lookup questions:
+> fetch the freely available primary text; archive the required
+> source material with actual retrieval date, URL, and content
+> hash; match every claimed verbatim quotation against that
+> archive; remove unsupported historical retrieval/edition
+> claims; use a single fixed, correctly identified source
+> snapshot throughout measurement; do not infer a historical
+> regulatory edition merely from a current webpage. Separate:
+> (1) model-visible requests; (2) reference source documents
+> available only according to each arm's evidence policy;
+> (3) scorer-only keys, worked answers, and wrong-answer
+> examples. Create provider-free scorer fixtures for every part,
+> including tolerance boundaries and correct equivalent notation.
+> Whole-question correctness requires all requested parts and a
+> consistent final conclusion. Do not use regex presence alone
+> as proof of semantic correctness. Record unresolved
+> engineering/source-review items explicitly. Deterministic
+> arithmetic verification is not independent subject-matter
+> approval. Require owner or qualified-reviewer signoff before
+> paid use. Freeze the dataset and scorer versions after review.
+> No paid calls. No standing configuration changes. Deliver the
+> dataset, verification calculations, source archives, scorer
+> fixtures, review checklist, and PR. Run the hermetic suite
+> before and after. Stop on unresolved ambiguity or failed
+> acceptance."
+
+The command's ID: 116 was consumed by tier 1 (PR 141), so
+the substitution clause names this command 117 and tier 3
+takes 118 (both recorded in the response file). The command
+was authored in chat, not filed in the channel; the response
+answers it anyway, because the response directory is the
+advisor's only view of what has been done.
+
+### 108.0 Arrival: the stop clause fired, then the array arrived
+
+At arrival (2026-10-03T07:17Z) the array was absent from every
+session transcript, the working tree, and the channel. The
+command's own clause — "If it is unavailable in your session,
+stop and request that exact array" — is a hard precondition,
+and the arrival report recorded the BLOCKED arrival (PR 142,
+cd4aeb0) with the search evidence. At 2026-10-03T07:41Z the
+owner supplied the file verbatim in conversation
+(`@/home/jb/Downloads/25GoldenQuestion.json`, 135,695 bytes,
+SHA-256 `260ceecd…`, an orpg.3.0 export whose final assistant
+message carries the question array). The array holds **five
+questions, not the 25** the command and its $90.00 aggregate
+ceiling are written for. That discrepancy is the execution's
+central fact: registered as the freeze blocker, not resolved —
+resolving it means supplying questions, which the command
+forbids the executor (and any AI model) to do.
+
+### 108.1 Separation (1)/(2)/(3)
+
+`extract_candidate.py` derives the three forms from the raw
+export, idempotently: `questions.json` (model-visible requests:
+exactly id, shape, domain, question), `keys.json` (scorer-only:
+required items with values, tolerances, derivations/sources;
+scope_in/scope_out; common wrong answers with why_wrong; the
+worked model answer), and `sources/` (the archived reference
+documents). The manifest records versions, counts, the
+candidate record, the separation map, and the source archives
+with retrieval timestamps and content hashes. The suite guard
+asserts the separation (no key value leaks into the
+model-visible file — probed against every numerical key and
+both oxygen thresholds — and no request text rides in the
+scorer-only file).
+
+### 108.2 Independent verification: 61 checks
+
+`verify_keys.py` is deliberately independent of `scorer.py`
+(its own unit table, its own formulas): two instruments that
+share a conversion table share a bug. Per question it
+recomputes every numerical key from the stated inputs
+(Q1: divider output 8.00 V ±0.01 and series current 2.00 mA
+±0.01; Q3: J = πd⁴/32 = 6.13592×10⁻⁷ m⁴, τ = Tr/J =
+2.03718×10⁷ Pa, θ = TL/(GJ) = 0.0101859 rad, each ±0.2%
+relative; Q4: the discrete selection of the smallest passing
+strip (3.00 mm of the available set), its stress against the
+100 MPa allowable with equality permitted, the next-thinner
+strip's 150 MPa failure, volume 2.00×10⁻⁵ m³ and mass
+0.2355 kg ±0.0005; Q5: the logged drop 6.00→5.90 bar =
+0.10 bar ±0.001 against the inclusive "no more than 0.20
+bar" criterion). It checks dimensions, boundary operators
+(the limit itself passes, one hundredth past it fails),
+discrete selections and tolerances; falsifies all 15 claimed
+wrong answers under the stated assumptions; and cross-checks
+(X1–X11) by parsing keys.json's own value strings and requiring
+agreement with the recomputation — keys.json is the single
+source of key values, so a drift in it cannot pass silently.
+The Q2 source checks match both 29 CFR 1910.146(b) definitions
+verbatim against the archived edition and cross-check them
+against the current eCFR (§108.3). All 61 checks hold, exit 0,
+on the tree and on a faithful copy.
+
+### 108.3 The lookup question's source record
+
+The pinned edition: **29 CFR, Title 29, volume 5, annual
+edition revised as of July 1, 2014**, §1910.146(b), from
+govinfo (`CFR-2014-title29-vol5-sec1910-146.pdf`, retrieved
+2026-10-03T07:59:27Z, 525,632 bytes, SHA-256 `a5323284…`;
+the `pdftotext -layout` extraction is committed beside it so
+CI needs no pdftotext). The edition is identified by the
+govinfo package identifier and corroborated by the GPO
+typesetting date in every page footer ("Aug 01, 2014", file
+`29V5.TXT`) — the section PDF starts mid-standard and carries
+no title page, so the identification does not rest on
+inference from a current webpage. Both definitions, matched
+character-for-character (modulo whitespace) against the
+left-column reconstruction of the two-column typesetting:
+
+> "Oxygen deficient atmosphere means an atmosphere containing less than 19.5 percent oxygen by volume."
+
+> "Oxygen enriched atmosphere means an atmosphere containing more than 23.5 percent oxygen by volume."
+
+Stability cross-check: both definitions are identical in the
+current eCFR text as of 2026-10-01 (versioner API, retrieved
+2026-10-03T08:05:53Z, 84,744 bytes, SHA-256 `d3dc555e…`,
+archived) — a 12-year span, satisfying the command's
+"unchanged for at least three years" requirement. The single
+fixed, correctly identified source snapshot is the verification
+basis; the current eCFR is the cross-check, not the edition of
+record.
+
+### 108.4 The provider-free scorer: 64 fixtures
+
+`scorer.py` scores free-text answers against the keys with
+unit conversion (its own table; pressure in Pa so 600 kPa ==
+6.00 bar) and tolerance comparison (absolute, relative, with
+1e-9 floating-point boundary slack), not regex presence. Its
+self-test holds all 64 fixtures: the five model answers hold
+every item; every equivalent notation the keys list (mV, kPa,
+N/mm², mrad, cm³, g, minutes, volume fractions, v/v,
+below/above phrasing) holds; tolerance boundaries hold just
+inside and fail just past; all 15 common wrong answers are
+caught; the discrete selection holds in both directions; and
+the acceptance-criterion boundary operator is enforced ("no
+more than 0.20 bar" passes, "below 0.20 bar" fails).
+Whole-question correctness requires all requested parts and a
+consistent final conclusion — the verdict is the conjunction
+of every item, and the answer's last verdict word is its
+stated verdict.
+
+### 108.5 The suite guard proves the instruments can fail
+
+`tests/test_tier2_keys.py` (17 tests) runs both instruments
+on the tree and, per convention 22, proves each can fail on
+corrupted copies: a corrupted numeric key fails the X1
+cross-check; a corrupted candidate export fails G1; a
+corrupted source archive fails Q2.1; swapped model-answer
+steps fail the Q5.5 ordering check; a corrupted key fails the
+intact model answer through the imported scorer. The version
+guard (D44-style) checks the manifest names the current
+`versions.json` entry and all four versioned files
+(questions.json, keys.json, scorer.py, verify_keys.py) hash to
+it — a one-byte change and a missing entry both fail naming
+the rule, and an empty version list fails naming the missing
+entry. The extraction is proven idempotent on a copy.
+
+### 108.6 Departures and instrument repairs (two version entries)
+
+`candidate-2026-10-03.1`: the scorer's self-test did not
+print the fixture count it ran — an instrument's report
+states what it measured (convention 26) — so it now counts
+and prints "all 64 fixtures hold". No scoring behaviour
+changed. `candidate-2026-10-03.2`: the verifier's Q5
+worked-answer checks read `keys.json` from the script's own
+directory even under `--dir`, so a corrupted copy could pass
+the ordering check against the original's model answer — the
+one path that ignored the directory it was told to verify.
+`verify_q5` and `_model_answer` now take the directory. No
+check's semantics changed; the same 61 checks hold on the tree
+and on a faithful copy. Both repairs are instrument repairs
+(how reliably the instrument reaches a conclusion), not
+verdict-semantics changes, and each is a versioned entry
+naming what changed and what triggered it.
+
+### 108.7 The unresolved items (the freeze blockers)
+
+1. **The count discrepancy.** The command and its $90.00
+   aggregate ceiling are written for 25 questions ($1.20 per
+   question-run × 375 planned question-runs). The supplied
+   array holds 5; the same per-question-run ceilings correspond
+   to $18.00 for a 5-question set (75 question-runs). The
+   remaining 20 questions must be supplied by the owner or
+   advisor. The set is registered unfrozen; `manifest.json`
+   carries the blocker and `versions.json` names the
+   resolution path (a new entry when the set freezes).
+2. **Signoff.** Deterministic arithmetic verification is not
+   independent subject-matter approval; the command requires
+   owner or qualified-reviewer signoff before paid use.
+3. **Tier 3 stays NO_ACTION** (ARCH-20261002-118): its
+   precondition — "after the dataset PR merges and required
+   key/source review is complete" — is not met by an unfrozen
+   5-question candidate, and no paid execution may start
+   without explicit owner ratification of the serving
+   proposals and the total spend authorization.
+
+Execution record, 2026-10-03. Suite before (the arrival run,
+PR 142): **1241 passed in 105.49s**, network guard 0
+non-loopback attempts. Suite after: **1258 passed in 100.54s**
+(1241 + the 17-test guard in the new 73rd test file; the four
+count guards in `tests/test_handover_truth.py` failed on the
+intermediate tree — HANDOVER/AGENTS/README still stated
+1241/72 — and passed once the counts were re-derived to
+1258/73 per convention 24), network guard 0 non-loopback
+attempts. No paid calls, no standing configuration changes,
+`.env` untouched. The candidate's provenance is recorded, not
+violated: the five questions were authored by gpt-6.1-sol-pro
+with `web_search`/`web_fetch`/shell at the owner's direction
+(the export records its own provenance); the executor
+generated, screened, and selected nothing, and no AI model was
+queried about the questions during verification. The full
+checklist is `evals/tier2/REVIEW.md`; the channel report is
+`.orchestration/responses/ARCH-20261002-117.response.json`
+(PARTIAL).
+
