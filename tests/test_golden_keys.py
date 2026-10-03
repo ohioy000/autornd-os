@@ -106,6 +106,25 @@ class TestTheTraceScorerReadsTheWrittenRecord:
         assert all(row["items"].values()) and row["within_target"] is False
         assert row["verdict"] == "FAIL"
 
+    def test_answer_rows_are_scored_not_skipped(self, tmp_path, capsys):
+        """ARCH-20261002-115: one tool re-scores every recorded run. This
+        reader took unit rows only, so 107's direct-call baseline scored 0/0
+        with its answers sitting in the file — no evidence reported as no
+        problem (convention 28)."""
+        q1 = KEYS["golden"][0]
+        rows = self._rows(tmp_path, [
+            {"record": "answer", "id": q1["id"], "answer": q1["model_answer"],
+             "seconds": 1.0, "cost": 0.001},
+            {"record": "answer", "id": "IA", "answer": "no idea",
+             "seconds": 1.0, "cost": 0.001},
+        ])
+        out = capsys.readouterr().out
+        assert rows[0]["answer"] == "direct answer"
+        assert rows[0]["verdict"] == "PASS"
+        assert rows[1]["verdict"] == "FAIL"
+        assert "1/2 PASS" in out
+        assert f"key v{KEYS['version']}" in out
+
 
 class TestTheScoreboardIsFrozenAndVersioned:
     """Ruling D44: keys.json and score.py hash to the entry versions.json keeps

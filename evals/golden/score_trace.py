@@ -8,6 +8,8 @@ score.py, unchanged; it decides nothing score.py does not. The answer text:
 - a blocked run whose watchdog points at an agreed iteration:
   iterations[index].implement_summary, scored as 'approved, not shipped'
   (diagnostic only; it can never pass);
+- a baseline's `record: "answer"` row: its answer, scored as 'direct answer'
+  (ARCH-20261002-115 — one tool re-scores every recorded run);
 - otherwise there is no answer.
 A question passes under keys.json's pass_rule: shipped, every item holds
 (and, for Q5, the order holds), and seconds <= time_target_s.
@@ -80,10 +82,56 @@ def score_unit(unit: dict, header: dict) -> dict:
             "verdict": "PASS" if passed else "FAIL"}
 
 
+def score_answer_row(row: dict, header: dict) -> dict:
+    """A baseline's `record: "answer"` row: the answer IS the deliverable.
+
+    ARCH-20261002-115: this tool read unit rows only, so 107's direct-call
+    baseline scored 0/0 — six answers sitting in the file, invisible. The
+    regression vectors in score.py have read both shapes from the start
+    ('scenario' or 'id'); only this reader was narrow (convention 28: no
+    evidence reported as no problem).
+    """
+    q = BY_ID.get(row.get("id"))
+    answer = row.get("answer")
+    kind = "direct answer" if answer else "no answer"
+    base = {"scenario": row.get("id"), "key": q["id"] if q else None,
+            "status": "direct" if answer else
+                      ("error" if row.get("error") else "skipped"),
+            "answer": kind,
+            "seconds": row.get("seconds"), "target_s": q and q["time_target_s"],
+            "cost": round(row.get("cost") or 0.0, 4),
+            "cap": header.get("max_spend_total") or header.get("max_spend"),
+            "risk": "direct",
+            "reason": row.get("error") or row.get("reason")}
+    if q is None:
+        return {**base, "verdict": "UNKEYED"}
+    if not answer:
+        return {**base, "items": {}, "verdict": "FAIL (no answer)"}
+    if q["id"] == "IA":
+        t = golden.normalize(answer)
+        items = {it["id"]: golden.item_holds(it, t) for it in q["core_items"]}
+        supplementary = {it["id"]: golden.item_holds(it, t)
+                         for it in q["supplementary_items"]}
+    else:
+        items = golden.score(q, answer)
+        supplementary = {}
+    norm = golden.normalize(answer)
+    sprawl = len(answer) / max(1, len(q["model_answer"]))
+    scope_hits = sum(1 for term in q.get("scope_out", []) if term.lower() in norm)
+    within = row["seconds"] is not None and row["seconds"] <= q["time_target_s"]
+    passed = bool(answer) and all(items.values()) and within
+    return {**base, "items": items, "supplementary": supplementary,
+            "within_target": within, "sprawl": round(sprawl, 1),
+            "scope_out_hits": scope_hits, "answer_chars": len(answer),
+            "verdict": "PASS" if passed else "FAIL"}
+
+
 def main(path: str) -> list[dict]:
     lines = [json.loads(l) for l in Path(path).read_text(encoding="utf-8").splitlines() if l.strip()]
     header = next((l for l in lines if l.get("record") == "header"), {})
-    rows = [score_unit(u, header) for u in lines if u.get("record") == "unit"]
+    rows = [score_unit(u, header) if u.get("record") == "unit"
+            else score_answer_row(u, header)
+            for u in lines if u.get("record") in ("unit", "answer")]
     for r in rows:
         held = "".join("+" if v else "-" for v in r.get("items", {}).values())
         print(f"{r['key'] or r['scenario']:<4} {r['verdict']:<18} {r['status']:<10} "
@@ -96,7 +144,7 @@ def main(path: str) -> list[dict]:
         if r.get("supplementary"):
             print(f"     supplementary: {r['supplementary']}")
     passes = sum(r["verdict"] == "PASS" for r in rows)
-    shipped = sum(r["answer"] == "shipped" for r in rows)
+    shipped = sum(r["answer"] in ("shipped", "direct answer") for r in rows)
     sprawls = [r["sprawl"] for r in rows if r.get("sprawl") is not None]
     print(f"\n{passes}/{len(rows)} PASS · {shipped}/{len(rows)} shipped · "
           f"median sprawl {statistics.median(sprawls) if sprawls else None} · "
