@@ -4,7 +4,7 @@
   "status": "DONE",
   "executed": "2026-10-03",
   "head_before": "7f85c38",
-  "head_after": "pending - recorded in the follow-up commit",
+  "head_after": "9799f37",
 
   "trigger_record": "The command's conjunctive precondition is now fully met. First half: the dataset PRs merged 2026-10-03 (PRs 145/146, main 54f91a7, the registered and independently verified 25-question set). Second half: the required key/source review completed and the owner ratified the signoff in conversation ('ratify the tier-2 signoff', 2026-10-03T21:41:20Z); the set froze at frozen-2026-10-03 (PRs 147/148, main 7f85c38). The trigger fired at the freeze merge; the experiment was prepared against the frozen set, and paid execution is stopped at the command's own two ratification gates.",
 
@@ -72,7 +72,7 @@
 
   "delivery_state": {
     "branch": "arch/20261002-118-tier3-manifest",
-    "pr": "pending - recorded in the follow-up commit",
+    "pr": "149 (merged 2026-10-03 as 9799f37, CI green: docker, editable-install, test 3.11/3.12/3.13)",
     "action": "the manifest is prepared and frozen (tier3-1); execution is stopped at the two ratification gates, which are the owner's to clear in one line each",
     "settled_by": "the trigger: ARCH-20261002-117 DONE (the dataset registered, verified and frozen at frozen-2026-10-03, PRs 145-148, main 7f85c38)",
     "experiment_state": "manifest-frozen-awaiting-ratification; no paid unit may start; the runner mechanizes the stop (the pin variables set, and TIER3_SPEND_AUTHORIZED set to the ratified dollar amount)",
@@ -81,6 +81,6 @@
 
   "commits": {
     "response_files": "cd4eab0 (the NO_ACTION arrival record and its update)",
-    "work": "pending - recorded in the follow-up commit"
+    "work": "52fb338 (PR 149, merged 2026-10-03 as 9799f37)"
   }
 }
