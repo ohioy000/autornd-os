@@ -44,7 +44,8 @@
   "results": {
     "done_free": "The arrival verification only: fetched origin (main at 5dd9aa6), confirmed no dataset PR, searched every session transcript and the whole tree for the candidate array (absent), ran the protected suite before the change (1241 passed in 105.49s under AUTORND_TESTING=1, network guard: 0 non-loopback attempts), and recorded this report. Nothing else was done, and nothing else could be: every deliverable the command names - the dataset, the verification calculations, the source archives, the scorer fixtures, the review checklist - is keyed to the 25 questions, which the command forbids the executor to regenerate, substitute, or have a model produce.",
     "not_done": "No dataset was created, no question was written or screened, no key was recomputed, no source was fetched or archived, no scorer fixture was built, no review checklist was filled. 'Do not query an AI model to solve, screen, or select these questions' was read as binding on the executor's tools as well as its own provider calls: no model was asked about the questions.",
-    "suite_before": "1241 passed in 105.49s, network guard 0 non-loopback attempts (hermetic suite, AUTORND_TESTING=1, executor's own shell). The change is two response files - no code - so the after-run is expected to be identical; it is recorded in the follow-up commit.",
+    "suite_before": "1241 passed in 105.49s, network guard 0 non-loopback attempts (hermetic suite, AUTORND_TESTING=1, executor's own shell).",
+    "suite_after": "1241 passed in 102.17s, network guard 0 non-loopback attempts - identical to before, as the diff is two response files and no code.",
     "verification": {
       "array_search": "absent from every session transcript, the working tree, and the channel",
       "dataset_pr_search": "gh pr list --state all: no dataset PR",
@@ -81,7 +82,7 @@
   "delivery_state": {
     "branch": "arch/20261002-117-tier2-set-arrival",
     "pr": 142,
-    "merge": "by the executor under the owner's 2026-10-03 merge-on-green grant, once CI is green - the deliverable is this report, and the report is complete",
+    "merge": "0df829e - merged 2026-10-03T07:23:50Z by the executor under the owner's 2026-10-03 merge-on-green grant, CI green (docker, editable-install, test 3.11/3.12/3.13 all passing); the deliverable is this report, and the report is complete",
     "blocked_on": "the 25-question JSON array (candidate data named by the owner's instruction, never supplied in the conversation)"
   },
 

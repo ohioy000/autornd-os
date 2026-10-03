@@ -60,6 +60,7 @@
   "delivery_state": {
     "branch": "arch/20261002-117-tier2-set-arrival",
     "pr": 142,
+    "merge": "0df829e - merged 2026-10-03T07:23:50Z by the executor under the owner's 2026-10-03 merge-on-green grant, CI green (the report travels on the merged tree)",
     "action": "none - the trigger did not fire; the report is the deliverable",
     "settled_by": "ARCH-20261002-117 (BLOCKED)"
   },
