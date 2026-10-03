@@ -59,7 +59,7 @@
 
   "delivery_state": {
     "branch": "arch/20261002-117-tier2-set-arrival",
-    "pr": null,
+    "pr": 142,
     "action": "none - the trigger did not fire; the report is the deliverable",
     "settled_by": "ARCH-20261002-117 (BLOCKED)"
   },

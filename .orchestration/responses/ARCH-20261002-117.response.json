@@ -80,7 +80,7 @@
 
   "delivery_state": {
     "branch": "arch/20261002-117-tier2-set-arrival",
-    "pr": null,
+    "pr": 142,
     "merge": "by the executor under the owner's 2026-10-03 merge-on-green grant, once CI is green - the deliverable is this report, and the report is complete",
     "blocked_on": "the 25-question JSON array (candidate data named by the owner's instruction, never supplied in the conversation)"
   },
