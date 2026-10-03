@@ -61,6 +61,18 @@ def capturing_client(reply: dict):
 
     client.chat_json = AsyncMock(side_effect=chat_json)
     client.chat = AsyncMock()
+
+    # The plan phase builds grounding, which probes the rerank API
+    # with this client — and this double has no rerank half, so the
+    # probe reached the provider when the module-level rerank mode
+    # was cold (an isolated run of this file; the full suite never
+    # sees it because an earlier file already flipped the mode).
+    # Answer the probe locally, the way conftest's double does.
+    async def _mock_rerank(model, query, documents, top_n):
+        raise RuntimeError(
+            "rerank is not part of the test double")
+
+    client.rerank = AsyncMock(side_effect=_mock_rerank)
     client.close = AsyncMock()
     client.captured_schemas = seen
     return client

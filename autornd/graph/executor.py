@@ -1009,6 +1009,47 @@ class GraphExecutor:
             if not await self._execute(node, state):
                 break
         if not state.finished:
+            # Ruling D49 (2): the completed terminal means
+            # finished. The implement verdict carries a typed
+            # `done` field, and an implementation explicitly
+            # marked incomplete is not completed delivery — the
+            # run ends blocked, naming the verdict that said so.
+            # A graph that produced no implement verdict is not
+            # "explicitly incomplete" (nothing declared the work
+            # unfinished), so it keeps the terminal; a `done`
+            # that is absent is unknown, not false.
+            # The implement node lives in a loop body, off the
+            # top-level schedule, so it is found by what the run
+            # actually executed: the last trace step of a node
+            # whose prompt is "implement" holds the latest
+            # implement verdict the run produced.
+            implement_ids = {n.id for n in self.spec.nodes
+                             if n.prompt == "implement"}
+            implement = None
+            for step in reversed(state.trace):
+                if step.node_id in implement_ids:
+                    implement = state.outputs.get(step.node_id)
+                    break
+            if implement is not None:
+                # The verdict is an object in production and a
+                # dict from a scripted double; read `done` the
+                # way resolve_path reads outputs — by key or by
+                # attribute — and treat absence as unknown, not
+                # false (a required field a double omitted is a
+                # double that does not simulate its verdict).
+                done = (implement.get("done")
+                        if isinstance(implement, dict)
+                        else getattr(implement, "done", None))
+                if done is False:
+                    summary = getattr(implement, "summary", "") or (
+                        implement.get("summary", "")
+                        if isinstance(implement, dict) else "")
+                    state.end(
+                        "blocked",
+                        "the implementation verdict says the work is "
+                        "not done (done: false)"
+                        + (f" — {summary}" if summary else ""))
+                    return state
             state.end("completed", _advisory_review_suffix(state) or None)
         return state
 

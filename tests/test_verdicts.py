@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from autornd.models.verdicts import (
     Domain,
     Domain,
+    DoubleCheckVerdict,
     ImplementVerdict,
     PlanVerdict,
     ReviewFinding,
@@ -15,6 +16,28 @@ from autornd.models.verdicts import (
     TriageVerdict,
     ValidateVerdict,
 )
+
+
+class TestDoubleCheckVerdict:
+    """Ruling D49 (3): the gate after the independent pass routes on
+    `vetoed`, the computed complement of `ship`."""
+
+    def test_vetoed_is_the_computed_complement_of_ship(self):
+        assert DoubleCheckVerdict(ship=True, confidence="high",
+                                  verdict="Ship.").vetoed is False
+        assert DoubleCheckVerdict(ship=False, confidence="low",
+                                  verdict="Do not ship.").vetoed is True
+
+    def test_the_record_carries_vetoed_the_contract_does_not(self):
+        """The persisted record must keep a pass and a refusal apart
+        from a check that never ran, so `vetoed` is in the dump. The
+        provider's contract must not ask the model for a field the
+        harness computes, so it is not in the schema."""
+        dumped = DoubleCheckVerdict(ship=False, confidence="low",
+                                    verdict="Do not ship.").model_dump()
+        assert dumped["vetoed"] is True
+        assert "vetoed" not in DoubleCheckVerdict.model_json_schema()[
+            "properties"]
 
 
 class TestTriageVerdict:

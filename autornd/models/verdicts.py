@@ -11,7 +11,9 @@ import re
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel, Field, computed_field, field_validator, model_validator,
+)
 
 
 class RiskLevel(str, Enum):
@@ -359,7 +361,12 @@ def _missing_substance(verdict: Any) -> str | None:
     if isinstance(summary, str) and not summary.strip():
         return "the implementation returned no deliverable"
     evidence = getattr(verdict, "evidence", None)
-    if isinstance(evidence, list) and not evidence:
+    # Ruling D49 (1), extending D46 (1) from empty to whitespace-only:
+    # a list is an assessment only if one entry has content. ["   "]
+    # held nothing the old `not evidence` could see, and a green built
+    # on it shipped work nobody checked.
+    if isinstance(evidence, list) and not any(
+            isinstance(item, str) and item.strip() for item in evidence):
         return "the validator returned no assessment"
     return None
 
@@ -564,6 +571,19 @@ class DoubleCheckVerdict(BaseModel):
     critical_issues: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
     verdict: str
+
+    # Ruling D49 (3): the gate after the independent pass routes on
+    # `vetoed`, the computed complement of `ship`, so a skip record
+    # can answer the gate ("no veto happened") without carrying an
+    # approval field at all. Computed, so the provider's contract is
+    # unchanged — the field never reaches the JSON schema the model is
+    # asked to answer — while the persisted record carries it, keeping
+    # failed, unchecked, unavailable and passed checks apart for
+    # anything that reads the record.
+    @computed_field(return_type=bool)
+    @property
+    def vetoed(self) -> bool:
+        return not self.ship
 
 
 class EscalationVerdict(BaseModel):

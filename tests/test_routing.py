@@ -717,6 +717,11 @@ class TestIndependentPassSkips:
             None, ExecutionState(request="r"))
 
         assert verdict["skipped"] is True
+        # Ruling D49 (3): the skip claims no verdict at all — no
+        # `ship`, neither an approval nor a veto — only that the
+        # check did not happen, and why.
+        assert verdict["vetoed"] is False
+        assert "ship" not in verdict, "a skip must not claim an approval"
         assert "engineering model" in verdict["reason"]
         assert responses == [], "a skip must not cost a call"
 

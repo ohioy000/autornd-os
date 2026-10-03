@@ -337,10 +337,14 @@ nodes:
   # into the reason. A terminal, not a route: a do-not-ship is not an
   # iteration. Carries the node's own `when:` — a gate that reads a path the
   # skipped node never wrote raises (hard rule 3).
+  # Ruling D49 (3): the gate routes on `vetoed`, the computed complement of
+  # `ship`, so the skip record — which carries `skipped` and `vetoed: false`
+  # and no `ship` at all — answers "no veto happened" without claiming the
+  # approval a pass that never ran cannot have made.
   - id: independent_verdict
     kind: gate
     when: triage.unrecallable
-    condition: independent_check.ship == true
+    condition: independent_check.vetoed == false
     depends_on: [independent_check]
     on_fail: blocked
     on_fail_reason: "Independent check: do not ship"

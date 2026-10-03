@@ -36,9 +36,12 @@ def _satisfying_verdicts(**overrides):
         "review": {"ship": True},
         "rework_review": {"ship": True},
         # Ruling D46 (2): the do-not-ship has a consumer now — the gate after
-        # this node reads `ship`, so a run that reaches the independent pass
-        # answers for it.
-        "independent_check": {"ship": True, "confidence": "high",
+        # this node reads the verdict, so a run that reaches the independent
+        # pass answers for it. Ruling D49 (3): the gate routes on `vetoed`,
+        # the computed complement of `ship`, so the double carries both —
+        # exactly what a real DoubleCheckVerdict's record holds.
+        "independent_check": {"ship": True, "vetoed": False,
+                              "confidence": "high",
                               "critical_issues": [], "recommendations": [],
                               "verdict": "Ship."},
     }

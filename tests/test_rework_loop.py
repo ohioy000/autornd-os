@@ -125,8 +125,11 @@ class TestTheReworkLoopIsBoundedAndRoutes:
             "review": review, "rework_review": review,
             # The ship path runs the independent pass (unrecallable triage)
             # and its gate — Ruling D46 (2) gave the verdict a consumer, so
-            # the double answers for the node the run reaches.
-            "independent_check": {"ship": True, "confidence": "high",
+            # the double answers for the node the run reaches. Ruling D49 (3):
+            # the gate routes on `vetoed`, so the double carries it beside
+            # `ship`, as a real verdict's record does.
+            "independent_check": {"ship": True, "vetoed": False,
+                                  "confidence": "high",
                                   "critical_issues": [], "recommendations": [],
                                   "verdict": "Ship."},
             "triage": {"risk": "high", "domains": ["backend"], "unrecallable": True}})
