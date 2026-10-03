@@ -11160,3 +11160,37 @@ blocked, $0.134). Every file proves what it shows and no more.
    test_green_resolution stays 16). README badge, Testing section and
    Project Structure comment; HANDOVER's header, §2.2 tree line, §3.7 and
    §4.2. Suite 1198 passed scrubbed, before 1191.
+
+## 103. Ruling D49 — verification is typed, and the completed terminal means finished (advisor, 2026-10-02, ruled on the owner's command, carried by ARCH-20261002-116)
+
+> **Ruling D49 (advisor, 2026-10-02; ruled on the owner's 2026-10-02 command, carried by ARCH-20261002-116) — verification is typed, and the completed terminal means finished. (1) Missing or whitespace-only assessment is not completed verification: a validation whose evidence is empty, or holds no entry with non-whitespace content, resolves red with a cause that names what was missing, counted like every normalization (D46 (1), extended from empty to whitespace-only). (2) An implementation explicitly marked incomplete cannot qualify for completed delivery: the executor's completed terminal reads the implement verdict's typed `done` field, and `done is false` ends the run blocked, naming the incomplete implementation; a run whose graph produced no implement verdict is not "explicitly incomplete" and keeps its terminal. (3) Unavailable verification is distinct from passing verification: the independent pass's skip record carries no `ship` at all — neither an approval nor a veto — it carries `skipped` and `vetoed: false`, and the gate after it routes on `independent_check.vetoed == false`, which a skip satisfies without claiming an approval the pass never made; a real verdict's `vetoed` is its computed `not ship`. Applied narrowly, on typed fields, never by parsing prose: the distinctions among failed, unchecked, unavailable and passed checks are preserved, not flattened. Rationale: the owner's three-tier command of 2026-10-02, probing nine properties provider-free under ARCH-20261002-116: a validator could return `["   "]` and ship as green (`_missing_substance` in models/verdicts.py tested only `not evidence`); the executor ended every run no node stopped as `completed`, never reading the implement verdict's `done` (GraphExecutor.run); and the independent pass's skip record claimed `ship: true` — an approval field — so a check that never ran read exactly like one that passed (PhaseRunner._phase_doublecheck; both workflow gates routed on `independent_check.ship`). The ruling ID is D49, not D47 or D48: those numbers are claimed by commands ARCH-20261002-113 and -114, which are unexecuted on main, and one ID must not name two rulings. Falsifier: a green validation whose evidence is whitespace-only, a completed run whose latest implement verdict says `done: false`, or a gate that routes a skipped independent check as an approval.**
+
+Carried verbatim to HANDOVER.md's rulings block in the same commit.
+The owner's command dictates the ruling text; the exhibits beneath it
+are the executor's measurements against the tree. The command also
+ordered the verification of commands 112–115 against the actual
+implementation before any repair: **all four are unexecuted on main**
+— `git diff 535a9e0..main --stat` shows only the four command JSONs
+(371 insertions, no code), no response files exist under
+`.orchestration/responses/`, and neither Ruling D47 nor D48 appears
+in HANDOVER.md or this notebook. Their repairs are therefore this
+command's work where the owner's probe properties overlap them, and
+their fate is question 2 in the response.
+
+Execution record: §103.1–§103.9 below, one section per probe
+property, each with its reproduction (failing on the code as it
+stood), its repair, and its break-the-line proof.
+
+### 103.0 The nine properties against the tree, before any repair
+
+| # | property (the owner's probe) | verdict against main |
+|---|---|---|
+| 1 | unknown/absent price or unsupported additional charge cannot dispatch through a bounded client | **defect** — the catalogue parse reads an absent pricing component as `0.0`, so an unrated model enters the table at $0.00 and the guard bounds it as free |
+| 2 | explicit catalogue zero pricing distinguishable from missing pricing | **defect** — absent and explicit zero both became `(0.0, 0.0)`; indistinguishable by construction |
+| 3 | concurrent calls reserve liabilities atomically | **held** (D45 (5), ARCH-20261002-110) — the worst case is reserved before dispatch |
+| 4 | out-of-order completion releases only the owning reservation | **defect** — the release is first-in-first-out (`popleft`), so an out-of-order completion releases another call's reservation, and a call that never reserved (unrated model) releases the oldest reservation at all |
+| 5 | API execution uses the submitted workflow ID and preserves its owner | **held** (ARCH-20261002-109) — `_run_workflow_bg` loads the submitted row and passes `workflow=workflow`; `user_id` rides the row |
+| 6 | empty or whitespace-only validator evidence cannot qualify as a substantive assessment | **defect** — `_missing_substance` tested only `not evidence`; `["   "]` shipped as green |
+| 7 | a nonempty implementation with `done=false` cannot ship as completed | **defect** — `GraphExecutor.run` ended every unstopped run `completed`, never reading the implement verdict's `done` |
+| 8 | negative independent review blocks shipping; a skipped review does not fabricate approval | **half held** — a real `ship: false` ends the run blocked (D46 (2)); the skip fabricated `ship: true`, reading exactly like an approval |
+| 9 | every terminal path reconciles the client's booked spend into the workflow record, including paid retries followed by failure; outstanding liability kept separate | **defect** — the API path's exception terminal committed the row without ever assigning `total_cost`; no liability column exists on the API path (the eval path already carries both, `evals/runner.py`) |
