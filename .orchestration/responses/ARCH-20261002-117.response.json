@@ -1,0 +1,89 @@
+{
+  "command_id": "ARCH-20261002-117",
+  "parent_id": null,
+  "status": "BLOCKED",
+  "executed": false,
+  "head_before": "5dd9aa6",
+  "head_after": "pending - recorded in the follow-up commit (the ARCH-20261002-116 pattern)",
+
+  "arrival": {
+    "source": "The owner's three-tier instruction of 2026-10-02, given in chat (session ef7f8231-f61c-423a-b00e-61301e8dfb23, prompt ...########0). Tier 2 is 'Register and independently verify the 25-question set'.",
+    "id_substitution": "The instruction's substitution clause: 'Use command 116 only if it remains available; otherwise use the next unused ID and explain the substitution.' Command 116 was consumed by tier 1 (ARCH-20261002-116, merged 2026-10-03T06:54:44Z as PR 141, main 5dd9aa6), so this command takes the next unused channel ID, 117. Tier 3 accordingly takes 118.",
+    "command_file": "Absent. The three tiers were authored in the owner's chat instruction, not in .orchestration/commands/; no commands/ARCH-20261002-117.json exists. Per the channel's purpose ('the response directory is the advisor's only view of what has been done'), this response records the arrival and its block. The executor does not author command files; the advisor may file one verbatim (carriage) if the channel record should carry the command's own shape.",
+    "arrived": "2026-10-03T07:17:54Z (branch cut from origin/main at 5dd9aa6)"
+  },
+
+  "preconditions": [
+    {
+      "command": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "expected": "No run in flight.",
+      "result": "No run in flight. Matches at arrival: this command's own baseline suite run, and an unrelated editor process (xed on /home/jb/autornd-os_clone/.env, the owner's second clone - not a run).",
+      "pass": true
+    },
+    {
+      "command": "git fetch -q origin && git log --oneline -1 origin/main",
+      "expected": "main at the tier-1 merge.",
+      "result": "5dd9aa6 Merge pull request #141 from ohioy000/arch/20261002-116-accounting-and-verification",
+      "pass": true
+    },
+    {
+      "command": "gh pr list --state all --limit 10 --json number,title,state",
+      "expected": "A merged dataset PR, if tier 2 had already run.",
+      "result": "No dataset PR exists. The newest PR is 141 (tier 1), state MERGED.",
+      "pass": true
+    },
+    {
+      "command": "the command's own hard precondition: the 25-question JSON array supplied in the conversation as CANDIDATE DATA",
+      "expected": "The array present in the session or the channel, verbatim.",
+      "result": "MISSING. The instruction names the array as candidate data to be supplied in conversation; it was not supplied. Search performed 2026-10-03: every session transcript under /home/jb/.qwen/projects/-home-jb-autornd-os/chats/ (all .jsonl files, including the instruction's own session ef7f8231), the entire working tree, and the channel. The only occurrences of the array are the instruction's own text and later reasoning about its absence; no JSON array of questions exists anywhere.",
+      "pass": false,
+      "blocks": "The command's own clause: 'If it is unavailable in your session, stop and request that exact array. Do not regenerate it, substitute questions, or claim prior independent verification.' And: 'Do not query an AI model to solve, screen, or select these questions.'"
+    }
+  ],
+
+  "results": {
+    "done_free": "The arrival verification only: fetched origin (main at 5dd9aa6), confirmed no dataset PR, searched every session transcript and the whole tree for the candidate array (absent), ran the protected suite before the change (1241 passed in 105.49s under AUTORND_TESTING=1, network guard: 0 non-loopback attempts), and recorded this report. Nothing else was done, and nothing else could be: every deliverable the command names - the dataset, the verification calculations, the source archives, the scorer fixtures, the review checklist - is keyed to the 25 questions, which the command forbids the executor to regenerate, substitute, or have a model produce.",
+    "not_done": "No dataset was created, no question was written or screened, no key was recomputed, no source was fetched or archived, no scorer fixture was built, no review checklist was filled. 'Do not query an AI model to solve, screen, or select these questions' was read as binding on the executor's tools as well as its own provider calls: no model was asked about the questions.",
+    "suite_before": "1241 passed in 105.49s, network guard 0 non-loopback attempts (hermetic suite, AUTORND_TESTING=1, executor's own shell). The change is two response files - no code - so the after-run is expected to be identical; it is recorded in the follow-up commit.",
+    "verification": {
+      "array_search": "absent from every session transcript, the working tree, and the channel",
+      "dataset_pr_search": "gh pr list --state all: no dataset PR",
+      "main_state": "5dd9aa6 (tier-1 merge)"
+    }
+  },
+
+  "deviations": [
+    {
+      "what": "No command file exists at .orchestration/commands/ARCH-20261002-117.json; this response answers a command authored in the owner's chat instruction.",
+      "why": "The three tiers were given in chat, not filed in the channel. The response is written anyway because the channel's purpose is to be the advisor's only view of what has been done, and a blocked arrival is the report the channel exists to produce."
+    },
+    {
+      "what": "No IN_PROGRESS commit precedes this response.",
+      "why": "The arrival check itself established the block before any work could start; the response was opened and concluded in the same verification. The IN_PROGRESS rule's purpose - evidence that the work had not started when the response was opened - is served by the block itself: no dataset work exists anywhere in the tree or the channel."
+    },
+    {
+      "what": "The owner's 2026-10-03 instruction ('do tier 2 and 3, no stops, full permission to commit/push/merge') did not lift the command's stop-and-request clause.",
+      "why": "The missing array is a hard input the command forbids regenerating or substituting, not a routine approval. 'No stops' was read as covering actions within the executor's authority (commit, push, merge on green); it cannot manufacture an input the command's own text says to stop and request. Both instructions are recorded together here so the record shows they were read in combination, not in conflict."
+    },
+    {
+      "what": "ID substitution: tier 2 takes 117 and tier 3 takes 118.",
+      "why": "The instruction's own substitution clause: 'Use command 116 only if it remains available; otherwise use the next unused ID and explain the substitution.' 116 was consumed by tier 1, whose response and merge are on main."
+    }
+  ],
+
+  "questions_for_advisor": [
+    "Supply the exact 25-question JSON array the owner's instruction names as CANDIDATE DATA - pasted into the conversation or filed in the channel. This command cannot start without it, by its own clause. The executor will not regenerate, substitute, or model-produce the questions.",
+    "Should the advisor file commands/ARCH-20261002-117.json (the tier-2-set command in the channel's own shape, per COMMAND_TEMPLATE.json), so this response has a parent command file? The executor does not author command files.",
+    "Confirm the executor's reading of 'Do not query an AI model to solve, screen, or select these questions': the question set is upstream-authored data, and the executor's role is verification (deterministically recompute numerical keys, check dimensions/boundary operators/discrete selections/tolerances, archive primary sources with retrieval date and content hash, build provider-free scorer fixtures), not generation.",
+    "The instruction requires 'owner or qualified-reviewer signoff before paid use' and separates model-visible requests, reference sources, and scorer-only keys. Who is the qualified reviewer for the source review, and is the owner's signoff recorded anywhere yet?"
+  ],
+
+  "delivery_state": {
+    "branch": "arch/20261002-117-tier2-set-arrival",
+    "pr": null,
+    "merge": "by the executor under the owner's 2026-10-03 merge-on-green grant, once CI is green - the deliverable is this report, and the report is complete",
+    "blocked_on": "the 25-question JSON array (candidate data named by the owner's instruction, never supplied in the conversation)"
+  },
+
+  "commits": {}
+}
