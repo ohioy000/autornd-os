@@ -60,7 +60,8 @@
   ],
   "delivery_state": {
     "branch": "arch/20261002-116-accounting-and-verification",
-    "pr": "pending — the branch is pushed and the PR opened for architect merge; the number is recorded in the follow-up commit, per 111's convention"
+    "pr": 141,
+    "merge": "not by the executor — returned for architect merge, per the owner's instruction and the channel protocol"
   },
   "commits": {
     "carriage": "09d5127",
