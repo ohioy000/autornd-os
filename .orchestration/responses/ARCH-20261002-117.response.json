@@ -4,7 +4,7 @@
   "status": "PARTIAL",
   "executed": true,
   "head_before": "5dd9aa6",
-  "head_after": "pending - recorded in the follow-up commit (the ARCH-20261002-117 arrival pattern)",
+  "head_after": "61e2a67",
 
   "arrival": {
     "source": "The owner's three-tier instruction of 2026-10-02, given in chat (session ef7f8231-f61c-423a-b00e-61301e8dfb23, prompt ...########0). Tier 2 is 'Register and independently verify the 25-question set'.",
@@ -86,7 +86,7 @@
 
   "delivery_state": {
     "branch": "arch/20261002-117-tier2-set-registration",
-    "pr": "pending - opened from this branch under the owner's 2026-10-03 merge-on-green grant",
+    "pr": 143,
     "merge": "by the executor under the owner's 2026-10-03 merge-on-green grant, once CI is green",
     "dataset_state": "5 of 25 questions registered and verified; NOT frozen; freeze blocked on the count discrepancy (the remaining 20 questions) and on owner/qualified-reviewer signoff",
     "tier3": "ARCH-20261002-118 remains NO_ACTION - its precondition ('after the dataset PR merges and required key/source review is complete') is not met by an unfrozen 5-question candidate"
@@ -94,6 +94,6 @@
 
   "commits": {
     "arrival_report": "cd4aeb0 (PR 142, merged)",
-    "registration": "pending - recorded in the follow-up commit (the ARCH-20261002-117 arrival pattern)"
+    "registration": "61e2a67 (PR 143)"
   }
 }
