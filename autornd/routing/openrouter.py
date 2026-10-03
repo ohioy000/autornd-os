@@ -958,6 +958,30 @@ _model_status: dict[str, dict] = {}
 _model_pricing: dict[str, tuple[float, float]] = {}
 
 
+def _prices_what_the_guard_cannot_bound(pricing: dict[str, Any]) -> bool:
+    """Does this catalogue entry carry a charge beside prompt and
+    completion tokens?
+
+    The worst-case estimate bounds prompt bytes and completion tokens.
+    Anything else the provider prices — a per-request fee, a search
+    surcharge, a reasoning rate, a cache-read rate — depends on what
+    the call does, not only on what it says, so a bound built from the
+    two token rates understates it. The catalogue prices in strings;
+    empty and zero mean "no charge for this component", and a value
+    that does not parse is a charge this cannot read, which is the
+    same answer: unboundable.
+    """
+    for key, value in pricing.items():
+        if key in ("prompt", "completion") or value in (None, ""):
+            continue
+        try:
+            if float(value) != 0.0:
+                return True
+        except (TypeError, ValueError):
+            return True
+    return False
+
+
 async def check_models() -> dict[str, dict]:
     """Validate configured models against OpenRouter's model list."""
     global _model_status
@@ -994,11 +1018,28 @@ async def check_models() -> dict[str, dict]:
             available_ids = {m["id"] for m in catalogue}
             for m in catalogue:
                 pricing = m.get("pricing") or {}
+                # A component the catalogue does not price is unknown,
+                # not free: the model stays unrated — the guard is
+                # blind for it — rather than entering the table at
+                # $0.00, which a bounded client would read as "a call
+                # costs nothing". An explicit "0" is a published
+                # price of zero and stays priced, so the two facts
+                # remain distinguishable (Ruling D49's distinction,
+                # applied to pricing; ARCH-20261002-116). A charge
+                # beside prompt and completion — a per-request fee,
+                # a search surcharge, a reasoning rate — is one the
+                # worst-case estimate cannot bound, so the model is
+                # unrated too: a bound built from tokens alone would
+                # understate what the call can cost.
+                if _prices_what_the_guard_cannot_bound(pricing):
+                    continue
+                prompt = pricing.get("prompt")
+                completion = pricing.get("completion")
+                if prompt is None or completion is None:
+                    continue
                 try:
                     _model_pricing[m["id"]] = (
-                        float(pricing.get("prompt") or 0.0),
-                        float(pricing.get("completion") or 0.0),
-                    )
+                        float(prompt), float(completion))
                 except (TypeError, ValueError):
                     continue
     except Exception as exc:
