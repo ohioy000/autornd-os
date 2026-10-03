@@ -1,0 +1,16 @@
+{
+  "command_id": "ARCH-20261002-116",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "ef4e266",
+  "head_after": null,
+  "opened": "2026-10-02, before any work on this command started",
+  "results": [],
+  "deviations": [
+    "The command file is the owner's instruction of 2026-10-02, carried verbatim into the channel's shape by the executor (transport, not authorship — the executor holds no ruling authority).",
+    "Branch naming: arch/20261002-116-accounting-and-verification, cut from main at ef4e266."
+  ],
+  "questions_for_advisor": [
+    "110's open question (blind dispatch policy) and the fate of the carriage-only commands 112-115 are recorded in the command file."
+  ]
+}
