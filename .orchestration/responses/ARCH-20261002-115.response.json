@@ -44,7 +44,7 @@
   ],
   "delivery_state": {
     "branch": "arch/20261002-115-the-record",
-    "pr": null
+    "pr": 140
   },
   "commits": {
     "in_progress": "65ef2ea",
