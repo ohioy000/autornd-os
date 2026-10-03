@@ -1,9 +1,9 @@
 {
   "command_id": "ARCH-20261002-115",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "executed": true,
   "head_before": "8c9ef52",
-  "head_after": null,
+  "head_after": "6720fe5",
   "arrival": {
     "parent_id": "ARCH-20261002-114: response present at .orchestration/responses/ARCH-20261002-114.response.json on main (merged 8c9ef52, PR #139)",
     "preconditions_present": 3,
@@ -23,13 +23,32 @@
       "result": "COUNT, literal: 1225 passed, 0 failed, network guard 0 attempts."
     }
   ],
-  "baseline_suite": "1225 passed before (literal, guard 0)",
-  "results": {},
-  "deviations": [],
-  "questions_for_advisor": [],
+  "baseline_suite": "1225 passed before (literal, guard 0); 1229 passed after",
+  "results": {
+    "a_report_scores_what_it_labels": "baseline.report re-scores every recorded answer under the keys as they stand now and prints that score under the current version; where a row carries the score from its run, that verdict travels beside it under the version its row names, or 'pre-D44' when it names none. The acceptance quote, over 107's recorded answers: '6/6 golden hold every item · median sprawl 2.5 · total $0.0220 · key v1 (as recorded 3/6 · pre-D44)'. Per row the old key's flips are visible (Q3: 'ALL HOLD items[+++] · key v1' over 'as recorded: FAIL items[---] · pre-D44'; Q4 and Q5 the same shape). Tests in tests/test_direct_baseline.py, including a row whose stored all_hold disagrees with the current key. Break — restoring the stored read — quoted: \"assert 'ALL HOLD' in 'Q1  FAIL      items[--] 1.0s $0.0010 sprawl=1.0 finish=stop · key v1'\".",
+    "one_re_score_tool": "score_trace.py reads answer rows as well as unit rows, so one command re-scores every recorded run under a key version. The three summary lines, quoted as the tool prints them: 102-golden-arm-b '3/6 PASS · 3/6 shipped · median sprawl 32.0 · total $0.3554 · key v1'; 106-golden-arm-b '2/6 PASS · 3/6 shipped · median sprawl 22.9 · total $0.2527 · key v1'; 107-direct-baseline '6/7 PASS · 7/7 shipped · median sprawl 2.1 · total $0.0219 · key v1'. The advisor's reading matched 102 (3/6) and 106 (2/6) exactly; 107 prints 6/7 where the advisor read 6/6 because the trace's seventh row is the IA side test, which fails on IA.2, IA.4 and IA.6 — the golden six (Q1-Q6) all hold, which is the 6/6 baseline.report prints (its summary counts golden rows only). Break — dropping the answer rows — reproduces the old reading exactly ('0/0 PASS · 0/0 shipped · median sprawl None · total $0 · key v1', the test failing with IndexError).",
+    "corrections_appended": "Nothing deleted, nothing rewritten silently; each correction names what it corrects. 108's response and notebook §99: the figure '3/6 golden hold every item · … · key v1' was scored under the key before version 1 — 107 under version 1 holds 6/6 as the repaired report prints it. 111's response: the two hashes that do not exist — commits.in_progress '5c7e836' should be ea0b75d and commits.ruling_first '499b548' should be ccc9b6f (git cat-file -t reports missing for both; the other three cited hashes exist and are correct) — and the trace inventory that missed docs/traces/102-golden-arm-b.jsonl. Notebook §102.3: the same miss, corrected to 102 = 7 units (6 golden + 1 ia-side) and 106 = 7.",
+    "question_111_answered": "Four counts over the four traces (14 units), in notebook §106.2, each with what the record can and cannot show. (i) green with nothing behind it: 0 — and the record holds only post-normalization verdicts, so it cannot show what the raw reply was. (ii) feasibility concerns recorded as plan blockers: 1 unit — 102-golden Q6 carries 2 distinct feasibility blockers and BOTH also sit in its plan.blockers, the pre-R7 contamination exactly as it happened; the record shows both lists and their overlap but not which was written first. (iii) consistency passing with no shared unit: 0 by re-run — 8 of 10 holdable units share units and check, none passes unchecked (102 Q6 and 106-ia-side genuinely conflict on re-run and the recorded runs refused both); the recorded consistency outputs predate the checked flag (every one reads '<absent>'), so the run's own view is underivable, and two 106-golden blocked units hold no implementation summary and cannot be re-run. (iv) iterations whose fold refused while neither validate nor implement was red: 3 — 102-golden Q3 iteration 1 (consistency, coverage) and 106-golden Q3 iterations 1 and 2 (coverage), each with validate_green and implement_green both true; THE FAILURE LOG IS NOT IN THE UNIT RECORD at all, so nothing in these files can say whether an entry was written — which is precisely 111's clause [4] defect's shape.",
+    "question_110_answered": "Calls with no catalogue price, in notebook §106.3: 106's records carry spend_guard_blind and read 0 blind calls across all 7 units; 102's records predate the F3 guard and carry no such field — underivable, and the absence of the field is no evidence (convention 28); 107's 7 answer rows never carried it (the writer does not read the client's list). Recommendation for the advisor to rule separately: REFUSE a call with no catalogue price while a spend ceiling is set — under a ceiling the guard's contract is to bound the run and an unpriced call has no computable worst case, which is unbounded by construction (D45's door left open); with no ceiling set, blind calls may continue and be recorded. The refusal should name the model and the fix, in D45's shape. Falsifier: a blind call that took a ceiling'd run past its ceiling unnoticed — the shape of 102's IA run ($0.1570 against $0.08, the F3 exhibit).",
+    "verification": "python3 evals/golden/score_trace.py docs/traces/107-direct-baseline.jsonl | tail -1 -> '6/7 PASS · 7/7 shipped · median sprawl 2.1 · total $0.0219 · key v1' (naming key v1, not 0/0). python3 evals/golden/score.py | tail -1 -> SELF-TEST PASSED. .venv/bin/python3 -m pytest tests/ -q -> 1229 passed, network guard 0 attempts. git diff --stat origin/main -- autornd/ workflows/ docs/traces/ evals/golden/keys.json evals/golden/score.py evals/golden/versions.json evals/golden/SOURCE.md -> empty.",
+    "acceptance": "The repaired report prints 107 under key v1 as 6/6 with the as-recorded 3/6 beside it under its own label (quoted); score_trace prints key-v1 summary lines for 102, 106 and 107 (all three quoted as printed); corrections appended to 108's and 111's responses and to notebook §99 and §102.3 with nothing deleted; 111's four counts and 110's unpriced count reported with their limits; the excluded diff is empty; suite green before (1225) and after (1229)."
+  },
+  "deviations": [
+    "test_the_trace_header_and_report_name_the_key_version asserted the summary ENDED with the key label; 115's ruled format puts the as-recorded label after the current one. The assertion now makes the claim D44 makes — the label is named — not its position in the line. Rule 7: the rule is right, the assertion was over-specific.",
+    "score_trace's summary 'shipped' bucket now counts direct answers too: a direct call's answer IS its deliverable, and the alternative was a summary reading '6/7 PASS · 0/7 shipped' while every row carried an answer.",
+    "Counts re-derived (convention 24): 1229 collected — 1225 before, +4 (test_direct_baseline 3→6, test_golden_keys 9→10). README badge/Testing/Project Structure and HANDOVER's header/§2.2/§3.7/§4.2."
+  ],
+  "questions_for_advisor": [
+    "The recommendation on unpriced calls (refuse while a ceiling is set; record-only when none is set) is the executor's recommendation and awaits the advisor's ruling, per the command.",
+    "The record has no failure log anywhere in it (111's clause [4] asked an iteration-level question the record structurally cannot answer). If the advisor wants that answerable from the record, the run record would need the adapter's failure_log — a runner.py field like checks_not_checked in 114."
+  ],
   "delivery_state": {
     "branch": "arch/20261002-115-the-record",
     "pr": null
   },
-  "commits": {}
+  "commits": {
+    "in_progress": "65ef2ea",
+    "tools_and_tests": "3285b7c",
+    "corrections_answers_counts": "6720fe5"
+  }
 }
