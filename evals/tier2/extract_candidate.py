@@ -44,13 +44,12 @@ PDF_147_PATH = HERE / "sources" / "CFR-2014-title29-vol5-sec1910-147.pdf"
 TEXT_147_PATH = HERE / "sources" / "CFR-2014-title29-vol5-sec1910-147.txt"
 ECFR_147_PATH = HERE / "sources" / "ecfr-current-2026-10-01-sec1910-147.xml"
 
-DATASET_VERSION = "candidate-2026-10-03.3"
-SCORER_VERSION = "candidate-2026-10-03.3"
+DATASET_VERSION = "frozen-2026-10-03"
+SCORER_VERSION = "frozen-2026-10-03"
 
-# The count the owner's command expects. When the supplied
-# array falls short, the discrepancy blocks freezing; when
-# it matches, the remaining blocker is the review and
-# signoff the command requires before paid use.
+# The count the owner's command expects. The owner
+# supplied all 25 on 2026-10-03, and ratified the
+# tier-2 signoff the same day: the set is frozen.
 COMMAND_EXPECTED_COUNT = 25
 
 
@@ -152,17 +151,25 @@ def main() -> None:
 
     supplied = len(questions)
     if supplied == COMMAND_EXPECTED_COUNT:
-        blockers = [
-            "review-pending: the count discrepancy is resolved - "
-            "the owner supplied all 25 questions on 2026-10-03 "
-            "(the array the command names, registered verbatim). "
-            "The set is not frozen: the tier-2 command requires "
-            "owner or qualified-reviewer signoff on the verification "
-            "and the source review before paid use ('Deterministic "
-            "arithmetic verification is not independent "
-            "subject-matter approval'). Freezing waits on that "
-            "signoff."
-        ]
+        blockers = []
+        freeze = {
+            "signed_off_by": "owner",
+            "signed_off_utc": "2026-10-03T21:41:20Z",
+            "granted": ("in conversation: "
+                        "'ratify the tier-2 signoff'"),
+            "scope": ("the independent verification (all 268 "
+                      "checks of verify_keys.py) and the source "
+                      "review (four archived July 1, 2014 govinfo "
+                      "editions with verbatim quotation matches and "
+                      "2026-10-01 eCFR stability cross-checks) the "
+                      "tier-2 command requires before the set "
+                      "freezes and before paid use"),
+            "effect": ("the dataset and scorer versions are frozen "
+                       "at frozen-2026-10-03; paid use of the set "
+                       "is permitted subject to the tier-3 command's "
+                       "own ratification requirements "
+                       "(ARCH-20261002-118)"),
+        }
     else:
         blockers = [
             "count-discrepancy: the owner's command and its $90.00 "
@@ -174,11 +181,13 @@ def main() -> None:
             "command forbids the executor (and any AI model) from "
             "generating, screening, or selecting questions."
         ]
+        freeze = None
     manifest = {
         "dataset_version": DATASET_VERSION,
         "scorer_version": SCORER_VERSION,
-        "frozen": False,
+        "frozen": freeze is not None,
         "freeze_blocked_by": blockers,
+        "freeze": freeze,
         "candidate": {
             "file": "candidate/25GoldenQuestion.json",
             "bytes": RAW.stat().st_size,
@@ -410,7 +419,9 @@ def main() -> None:
     if supplied == COMMAND_EXPECTED_COUNT:
         print(f"questions: {supplied} (command expects "
               f"{COMMAND_EXPECTED_COUNT} - count discrepancy "
-              "resolved; NOT frozen: review/signoff pending)")
+              "resolved; FROZEN at " + DATASET_VERSION +
+              " by the owner's signoff, "
+              f"{freeze['signed_off_utc']})")
     else:
         print(f"questions: {supplied} (command expects "
               f"{COMMAND_EXPECTED_COUNT} - NOT frozen)")

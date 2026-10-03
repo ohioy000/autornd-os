@@ -12436,3 +12436,61 @@ untouched. The channel report
 carries the outcome and the two-commit `head_after`
 record; the checklist is `evals/tier2/REVIEW.md`.
 
+### 108.9 The signoff is ratified and the set freezes
+
+Later the same day the owner ratified the tier-2 signoff
+("ratify the tier-2 signoff") — the act the command
+requires before the set freezes and before paid use,
+covering the independent verification (all 268 checks)
+and the source review (four archived July 1, 2014 govinfo
+editions, verbatim quotation matches, 12-year eCFR
+stability cross-checks). The executor executed the freeze
+the command orders after review:
+
+- `manifest.json`: `frozen: true`, `freeze_blocked_by`
+  empty, and a `freeze` record naming the grantor
+  (owner), the time (2026-10-03T21:41:20Z), the scope
+  and the effect (paid use permitted subject to tier 3's
+  own ratifications).
+- `versions.json`: the `frozen-2026-10-03` entry, and
+  the manifest names it. The dataset content is unchanged
+  from `candidate-2026-10-03.3` — `questions.json` and
+  `keys.json` hash identically; the freeze changed only
+  what the instruments report and the manifest records.
+- `verify_keys.py`: the G3 check now requires the frozen
+  state with the signoff recorded (a copy that cleared
+  the freeze record would fail G3); both instruments'
+  closing lines report the frozen version.
+- `extract_candidate.py` (the manifest's generator)
+  carries the freeze record, so re-running it reproduces
+  `manifest.json` byte-for-byte — the extraction-idempotency
+  guard holds on the frozen tree.
+- The guard tests that asserted the unfrozen state were
+  the stale half of the pair (convention 17) and were
+  updated in the same change; `tests/test_tier2_keys.py`
+  now asserts the freeze record (grantor, time, scope,
+  effect, empty blockers, the frozen version named).
+
+The response for ARCH-20261002-117 moves to **DONE**:
+every acceptance criterion the command assigns to the
+executor is met — registered, separated, independently
+verified, scored, versioned, checklisted, and frozen on
+the owner's signoff. What remains is not this command's
+work: tier 3 (ARCH-20261002-118) must obtain its own
+explicit ratifications (the serving proposals and the
+total spend authorization) before any paid run; the
+tier-2 signoff permits paid use of the set, it does not
+ratify the experiment.
+
+Execution record, 2026-10-03 (freeze phase). Suite
+before (merged main 54f91a7, the tree at the branch
+point): **1258 passed**, network guard 0 non-loopback
+attempts. Suite after: **1258 passed** (the freeze adds
+no test files and no tests — the 17 guard tests are
+updated in place), network guard 0 non-loopback attempts.
+No paid calls, no standing configuration changes, `.env`
+untouched. The channel report carries the freeze and the
+two-commit `head_after` record; the checklist is
+`evals/tier2/REVIEW.md` (status: frozen at
+`frozen-2026-10-03`).
+
