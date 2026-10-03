@@ -160,6 +160,15 @@ class WorkflowEngine:
         except Exception as exc:
             logger.exception("Workflow %d failed", workflow.id)
             await self._flush_phases(workflow, pending_saves, chain)
+            # The failed terminal reconciles the same figures. A
+            # call can be accounted and its phase write never
+            # happen — a handler that raised after its request
+            # was made, a retry sequence that exhausted — and
+            # without this the row committed BLOCKED with the
+            # spend already made erased from it.
+            workflow.total_cost = self.client.spend
+            workflow.unreconciled_liability = (
+                self.client.unreconciled_liability)
             workflow.status = WorkflowStatus.BLOCKED
             workflow.error = f"{type(exc).__name__}: {exc}"[:2000]
             workflow.updated_at = datetime.now(timezone.utc)
@@ -167,6 +176,16 @@ class WorkflowEngine:
             return workflow
 
         await self._flush_phases(workflow, pending_saves, chain)
+        # The terminal reconciles the client's own accounting
+        # into the record, deliberately: a phase write sets
+        # total_cost as a side effect, but only for calls whose
+        # phase got written, and the figures at the terminal are
+        # the run's final ones. Booked spend and the outstanding
+        # liability of failed-after-dispatch calls are recorded
+        # apart — one is what the run was charged, the other is
+        # what it may still owe.
+        workflow.total_cost = self.client.spend
+        workflow.unreconciled_liability = self.client.unreconciled_liability
         workflow.updated_at = datetime.now(timezone.utc)
         await self.session.commit()
 

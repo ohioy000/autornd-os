@@ -212,6 +212,52 @@ class TestWorkflowEngine:
         assert workflow.status == WorkflowStatus.COMPLETED
         assert workflow.total_cost > 0
 
+    async def test_a_failed_run_reconciles_spend_and_liability(
+            self, db_session, monkeypatch):
+        """ARCH-20261002-116 (property 9): every terminal path
+        reconciles the client's booked spend into the workflow
+        record. A run that dies after dispatch — a call
+        accounted, a worst case reserved, the request then
+        failed — committed BLOCKED with total_cost still at
+        its default: the money already spent was erased from
+        the record, and the liability the guard held had no
+        column to land in at all."""
+        from autornd.routing import openrouter as orr
+
+        client = OpenRouterClient(api_key="test")
+        client.spend_ceiling = 0.08
+        model = client.get_model("engineering")
+        # A rate the guard can bound: 5,000 tokens at $0.00001
+        # is a $0.05 worst case.
+        monkeypatch.setattr(orr, "_model_pricing", {model: (0.0, 1e-5)})
+
+        async def _run_and_die(self, request):
+            # Booked: a call that completed and was accounted.
+            client._account("triage", 0.002)
+            # In flight: a call whose worst case was reserved
+            # before dispatch, then failed after it.
+            reservation = client._guard_spend(
+                "engineering", model, 100, max_tokens=5_000)
+            client._fail_call("engineering", model, "error_status",
+                              reservation=reservation)
+            raise RuntimeError("the run died after dispatch")
+
+        monkeypatch.setattr(
+            "autornd.graph.executor.GraphExecutor.run", _run_and_die)
+
+        engine = WorkflowEngine(client, db_session)
+        workflow = await engine.execute(
+            "Redesign deep sleep state machine for sensor nodes")
+
+        assert workflow.status == WorkflowStatus.BLOCKED
+        assert "died after dispatch" in workflow.error
+        # The call that completed is booked spend, kept on the
+        # record — it was $0.002 the run already paid.
+        assert workflow.total_cost == pytest.approx(0.002)
+        # The failed call's worst case is liability, not spend:
+        # the two are kept apart, and neither is lost.
+        assert workflow.unreconciled_liability == pytest.approx(0.05)
+
     async def test_blocked_plan(self, db_session, monkeypatch):
         client = OpenRouterClient(api_key="test")
 

@@ -42,6 +42,15 @@ class Workflow(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
     total_cost: Mapped[float] = mapped_column(Float, default=0.0)
+    # ARCH-20261002-116 (property 9): the worst case of calls that
+    # failed after dispatch and could not be reconciled, kept apart
+    # from booked spend. It is not money known spent — a request that
+    # errored server-side can still be billed, so it is counted
+    # against the spend ceiling for the rest of the run — and
+    # flattening it into total_cost would misstate what the run was
+    # actually charged. Additive with a default, so an upgraded
+    # database backfills every existing row to zero.
+    unreconciled_liability: Mapped[float] = mapped_column(Float, default=0.0)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     user_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
