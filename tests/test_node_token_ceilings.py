@@ -115,6 +115,14 @@ class TestNodeCeilingsReachTheirCalls:
                 prompt_tokens=1, completion_tokens=1, cost=0.001)
 
         client.chat_json = AsyncMock(side_effect=chat_json)
+        # The rerank probe is the one boundary this test's context
+        # build reaches with the real client's own method: it posts to
+        # the provider's rerank API, and the suite may not reach it
+        # (ARCH-20261002-112). The refusal is the same capability
+        # answer a model without the API gives.
+        client.rerank = AsyncMock(
+            side_effect=RuntimeError(
+                "rerank is not part of the test double"))
         triage = TriageVerdict(domains=["backend"], risk="medium",
                                specialists=["backend_engineer"], summary="s")
         await phases.run_plan(client, "add retry", triage,

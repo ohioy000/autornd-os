@@ -120,6 +120,30 @@ class TestTheWarningReachesTheOperator:
         async def no_runs(*a, **k):
             raise AssertionError("a paid path was entered after the warning")
 
+        async def catalogue_already_loaded() -> None:
+            # The CLI refreshes the catalogue between the preflight
+            # and the sweep — a network GET this test never needed
+            # (its subject is the arithmetic and the warning, and the
+            # sweep itself is stubbed below).
+            return None
+
+        async def preflight_catalogue(path: str) -> dict:
+            # The preflight reads the provider catalogue (another
+            # network GET) before any sweep. The test's subject is
+            # the sweep arithmetic, so the catalogue is answered from
+            # the suite's own placeholder tiers, never the provider
+            # (ARCH-20261002-112).
+            from autornd.config import settings
+
+            tiers = ("triage", "engineering", "architecture",
+                     "escalation", "research", "search", "ranker",
+                     "premium", "judge")
+            ids = [getattr(settings, f"model_{t}") for t in tiers]
+            return {"data": [{"id": m} for m in ids if m]}
+
+        monkeypatch.setattr("autornd.preflight._fetch",
+                            preflight_catalogue)
+        monkeypatch.setattr(cli, "check_models", catalogue_already_loaded)
         monkeypatch.setattr(cli, "run_repeated", no_runs)
         monkeypatch.setattr(
             "sys.argv",

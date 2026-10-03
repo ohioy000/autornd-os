@@ -199,8 +199,27 @@ class TestWorkflowEngine:
         assert workflow.status == WorkflowStatus.COMPLETED
         assert workflow.total_cost > 0
 
-    async def test_blocked_plan(self, db_session):
+    async def test_blocked_plan(self, db_session, monkeypatch):
         client = OpenRouterClient(api_key="test")
+
+        async def _no_lookup(lookup_client, request, question,
+                             **kwargs):
+            # The one network boundary this test's blocked plan would
+            # reach: the gap the blockers name is looked up, and the
+            # suite may not reach the provider (ARCH-20261002-112).
+            # No answer is the same outcome a failed lookup produces.
+            return "", [], "mock"
+
+        monkeypatch.setattr(
+            "autornd.knowledge.research._lookup", _no_lookup)
+
+        # The context build also probes the rerank API with this
+        # client's own method — another boundary the suite may not
+        # reach (ARCH-20261002-112). The refusal is the same
+        # capability answer a model without the API gives.
+        client.rerank = AsyncMock(
+            side_effect=RuntimeError(
+                "rerank is not part of the test double"))
 
         triage_resp = {
             "domains": ["hardware"],

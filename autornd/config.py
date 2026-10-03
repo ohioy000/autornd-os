@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import os
+
 from pydantic import ValidationError, field_validator
 from pydantic_settings import BaseSettings
 
@@ -182,7 +186,17 @@ class Settings(BaseSettings):
         "review_rework_attempts", "plan_max_tokens", "judge_max_tokens",
     }
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    # The suite's isolation (ARCH-20261002-112's constraint, implemented
+    # under ARCH-20261002-116): with AUTORND_HERMETIC set, settings read
+    # the process environment only — a .env in the working directory (an
+    # operator's checkout holds one, and the suite may run from it) cannot
+    # reach the suite. Production keeps reading .env exactly as before.
+    # Said so here per the command's allowance: this is the one place the
+    # suite's hermeticity needed a hook in production code.
+    model_config = {
+        "env_file": None if os.environ.get("AUTORND_HERMETIC") else ".env",
+        "env_file_encoding": "utf-8",
+    }
 
     @field_validator("run_time_budget_seconds", mode="before")
     @classmethod

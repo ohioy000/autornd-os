@@ -99,6 +99,15 @@ def sweep(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "run_repeated", fake_run_repeated)
     monkeypatch.setattr(cli, "OpenRouterClient", CountingClient)
 
+    async def catalogue_already_loaded() -> None:
+        # The CLI refreshes the model catalogue (a free GET, but a
+        # network one) between the preflight and the sweep. The sweep
+        # itself is stubbed here, so the refresh has nothing to load
+        # and may not reach the provider (ARCH-20261002-112).
+        return None
+
+    monkeypatch.setattr(cli, "check_models", catalogue_already_loaded)
+
     async def run(*extra: str) -> int:
         monkeypatch.setattr(sys, "argv", [
             "cli", "--scenarios", str(suite), "--workflow", "engineering-rnd",
