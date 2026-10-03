@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1241 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
+**Tests:** 1258 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -310,7 +310,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      72 files, 1241 tests
+tests/                      73 files, 1258 tests
 
 ```
 
@@ -715,7 +715,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1241 total)
+### 3.7 Test distribution (1258 total)
 
 
 | file | n | file | n |
@@ -753,10 +753,10 @@ is revoked and the warning re-opens with a date.
 | test_settings_map.py | 5 | test_shipped_examples.py | 15 |
 | test_specialists.py | 11 | test_spend_guard.py | 15 |
 | test_structural_roles.py | 13 | test_sweep_budget.py | 21 |
-| test_terminal_on_bound.py | 21 | test_trace_durability.py | 7 |
-| test_triage.py | 10 | test_verdicts.py | 49 |
-| test_watchdog.py | 23 | test_workflow.py | 4 |
-
+| test_terminal_on_bound.py | 21 | test_tier2_keys.py | 17 |
+| test_trace_durability.py | 7 | test_triage.py | 10 |
+| test_verdicts.py | 49 | test_watchdog.py | 23 |
+| test_workflow.py | 4 |  |  |
 Regenerate with `pytest tests/ --collect-only -q`; the total is the part that
 matters and `tests/test_docs.py` fails if the README badge disagrees with it.
 
@@ -799,7 +799,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1241/1241 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1258/1258 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

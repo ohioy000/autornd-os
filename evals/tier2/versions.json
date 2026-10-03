@@ -1,0 +1,41 @@
+{
+  "ruling": "The tier-2 candidate dataset is versioned the way D44 (ARCH-20260930-108) versions the golden scoreboard: the manifest's dataset_version and scorer_version name the current entry, and tests/test_tier2_keys.py checks that questions.json, keys.json, scorer.py and verify_keys.py hash to that entry. The candidate set is NOT frozen - manifest.json records the count discrepancy (5 questions supplied of the 25 the command expects) as the freeze blocker. A change to any of the four files is a new version: an entry naming the change and what triggered it. When the remaining 20 questions are supplied and the set freezes, the frozen version adds an entry here and the freeze blocker is cleared.",
+  "versions": [
+    {
+      "version": "candidate-2026-10-03",
+      "date": "2026-10-03",
+      "sha256": {
+        "questions.json": "e7b5956054a6b47dcdd4707ae18caef523becf9e7e82a0636b7f761239bd2256",
+        "keys.json": "ed3358a1cc785782334a51fc7e6e87604f7dbce043a25976d218f3e9d16d137a",
+        "scorer.py": "83bb06bcb8cfff19f9958785879acb7238f4f7d3e77e35d799964091bce97ef3",
+        "verify_keys.py": "ea58bc6bf7ac614d9be8fd8bbad41d686ffdf48d9ed15fa9f69a5297011797ea"
+      },
+      "change": "Initial registration of the owner-supplied candidate export (candidate/25GoldenQuestion.json, sha256 260ceecd..., 5 questions of the 25 the command expects). Separation into model-visible requests (questions.json), scorer-only keys and worked answers (keys.json), and reference sources (sources/) by extract_candidate.py. All 61 verification checks hold: every numerical key recomputed from first principles and cross-checked against keys.json's own value strings; both 29 CFR 1910.146(b) oxygen definitions matched verbatim against the archived July 1, 2014 edition and stability-cross-checked against the 2026-10-01 eCFR; every claimed wrong answer falsified under the stated assumptions; boundary operators and the discrete thickness selection verified. The provider-free scorer holds all 64 self-test fixtures (model answers, equivalent notations, tolerance boundaries, wrong answers, discrete selections). Unfrozen: the count discrepancy blocks the freeze pending the owner or advisor supplying the remaining 20 questions.",
+      "verification": "evals/tier2/verify_keys.py: 61/61 checks pass (exit 0). evals/tier2/scorer.py --self-test: 64/64 fixtures pass (exit 0)."
+    },
+    {
+      "version": "candidate-2026-10-03.1",
+      "date": "2026-10-03",
+      "sha256": {
+        "questions.json": "e7b5956054a6b47dcdd4707ae18caef523becf9e7e82a0636b7f761239bd2256",
+        "keys.json": "ed3358a1cc785782334a51fc7e6e87604f7dbce043a25976d218f3e9d16d137a",
+        "scorer.py": "fb4cc3d4cc0195931e3f96179f0288cd2304de20f83fcc3f92d9b094faeffff3",
+        "verify_keys.py": "ea58bc6bf7ac614d9be8fd8bbad41d686ffdf48d9ed15fa9f69a5297011797ea"
+      },
+      "change": "scorer.py only: the self-test now counts the fixtures it runs and prints the total in its PASS line ('all 64 fixtures hold'), so the printed output itself states its coverage - an instrument's report states what it measured (convention 26). No scoring, normalization or fixture behaviour changed; the same 64 cases run and hold. Triggered by tests/test_tier2_keys.py, which asserts on the printed fixture count.",
+      "verification": "evals/tier2/verify_keys.py: 61/61 checks pass (exit 0). evals/tier2/scorer.py --self-test: 64/64 fixtures pass (exit 0)."
+    },
+    {
+      "version": "candidate-2026-10-03.2",
+      "date": "2026-10-03",
+      "sha256": {
+        "questions.json": "e7b5956054a6b47dcdd4707ae18caef523becf9e7e82a0636b7f761239bd2256",
+        "keys.json": "ed3358a1cc785782334a51fc7e6e87604f7dbce043a25976d218f3e9d16d137a",
+        "scorer.py": "fb4cc3d4cc0195931e3f96179f0288cd2304de20f83fcc3f92d9b094faeffff3",
+        "verify_keys.py": "db58bcabd3617a20a9705b18ce7a18acf3c1fc9e8ea78b9cd0f1292156e0fe86"
+      },
+      "change": "verify_keys.py only: the Q5 worked-answer checks (Q5.5, Q5.6) read keys.json from the script's own directory even when --dir pointed elsewhere, so a copy of the dataset could pass the ordering check against the original's model answer - the one path that ignored the directory it was told to verify. verify_q5 and _model_answer now take the directory. No check semantics changed; the same 61 checks run and hold on the tree and on a faithful copy. Triggered by the suite guard's Q5.5 break-proof (swapped model-answer steps in a copied keys.json), which could not fail before the repair.",
+      "verification": "evals/tier2/verify_keys.py: 61/61 checks pass on the tree and on a faithful copy (exit 0 both). evals/tier2/scorer.py --self-test: 64/64 fixtures pass (exit 0)."
+    }
+  ]
+}

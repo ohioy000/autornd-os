@@ -1,0 +1,328 @@
+[
+  {
+    "id": "Q1",
+    "required_items": [
+      {
+        "item": "Output voltage",
+        "value": "$+8.00\\,\\mathrm{V}$ relative to ground",
+        "tolerance_or_variants": "Accept $8\\,\\mathrm{V}$, $8.0\\,\\mathrm{V}$, or $8000\\,\\mathrm{mV}$; numerical tolerance $\\pm0.01\\,\\mathrm{V}$. An omitted positive sign is acceptable.",
+        "derivation_or_source": "$V_o=12.0\\times4.00/(2.00+4.00)=8.00\\,\\mathrm{V}$."
+      },
+      {
+        "item": "Divider current",
+        "value": "$2.00\\,\\mathrm{mA}$ from the supply toward ground",
+        "tolerance_or_variants": "Accept $2\\,\\mathrm{mA}$ or $0.002\\,\\mathrm{A}$; numerical tolerance $\\pm0.01\\,\\mathrm{mA}$. Direction may be implicit in a positive supply current.",
+        "derivation_or_source": "$I=12.0/(2000+4000)=0.00200\\,\\mathrm{A}$."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Given circuit and Ohm's law",
+        "reference": "Question inputs; series resistances and unloaded voltage-divider formula."
+      }
+    ],
+    "scope_in": [
+      "Output voltage relative to ground.",
+      "Current through the series resistors."
+    ],
+    "scope_out": [
+      "Resistor power ratings.",
+      "Loading, resistor tolerances, or nonideal supply behavior.",
+      "Alternative divider designs."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$4\\,\\mathrm{V}$ output",
+        "why_wrong": "This is the voltage across the upper resistor, not the output voltage across the lower resistor."
+      },
+      {
+        "answer": "$6\\,\\mathrm{mA}$ current",
+        "why_wrong": "This uses only the upper resistance instead of the total series resistance."
+      }
+    ],
+    "model_answer": "Output: $+8.00\\,\\mathrm{V}$ relative to ground.\nCurrent: $2.00\\,\\mathrm{mA}$ from supply to ground."
+  },
+  {
+    "id": "Q2",
+    "required_items": [
+      {
+        "item": "Oxygen-deficient atmosphere",
+        "value": "Less than $19.5\\%$ oxygen by volume",
+        "tolerance_or_variants": "Accept 'below', 'less than', or $<19.5\\%$; accept 'volume percent', '% v/v', or a volume fraction $<0.195$. Threshold and strict inequality must be exact.",
+        "derivation_or_source": "July 1, 2014 edition of $29$ CFR \u00a7 $1910.146(b)$, definition 'Oxygen deficient atmosphere': 'an atmosphere containing less than 19.5 percent oxygen by volume.'"
+      },
+      {
+        "item": "Oxygen-enriched atmosphere",
+        "value": "More than $23.5\\%$ oxygen by volume",
+        "tolerance_or_variants": "Accept 'above', 'greater than', 'more than', or $>23.5\\%$; accept 'volume percent', '% v/v', or a volume fraction $>0.235$. Threshold and strict inequality must be exact.",
+        "derivation_or_source": "July 1, 2014 edition of $29$ CFR \u00a7 $1910.146(b)$, definition 'Oxygen enriched atmosphere': 'an atmosphere containing more than 23.5 percent oxygen by volume.'"
+      }
+    ],
+    "sources": [
+      {
+        "title": "Code of Federal Regulations, Title 29, July 1, 2014 edition, \u00a7 1910.146",
+        "url": "https://www.govinfo.gov/content/pkg/CFR-2014-title29-vol5/pdf/CFR-2014-title29-vol5-sec1910-146.pdf",
+        "section": "Paragraph (b), definitions 'Oxygen deficient atmosphere' and 'Oxygen enriched atmosphere'.",
+        "stability": "Fixed historical edition published in 2014; freely readable official government PDF."
+      }
+    ],
+    "scope_in": [
+      "Both oxygen thresholds.",
+      "Strict comparison operators.",
+      "Concentrations expressed by volume."
+    ],
+    "scope_out": [
+      "Confined-space entry procedures.",
+      "Claims that oxygen concentration alone determines whether entry is safe.",
+      "Definitions from other regulations or nonmandatory example programs."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "Oxygen deficient at or below $19.5\\%$",
+        "why_wrong": "The requested paragraph (b) definition says less than, not less than or equal to."
+      },
+      {
+        "answer": "Oxygen enriched at or above $23.5\\%$",
+        "why_wrong": "The requested definition says more than, not greater than or equal to."
+      },
+      {
+        "answer": "Percent oxygen by mass",
+        "why_wrong": "Both definitions specify oxygen by volume."
+      }
+    ],
+    "model_answer": "Oxygen deficient: $<19.5\\%$ oxygen by volume.\nOxygen enriched: $>23.5\\%$ oxygen by volume."
+  },
+  {
+    "id": "Q3",
+    "required_items": [
+      {
+        "item": "Polar second moment of area",
+        "value": "$6.13592\\times10^{-7}\\,\\mathrm{m^4}$",
+        "tolerance_or_variants": "Accept $6.14\\times10^{-7}\\,\\mathrm{m^4}$ or equivalent scientific notation; relative tolerance $0.2\\%$.",
+        "derivation_or_source": "$d=0.0500\\,\\mathrm{m}$; $J=\\pi d^4/32=\\pi(0.0500)^4/32=6.13592315\\times10^{-7}\\,\\mathrm{m^4}$."
+      },
+      {
+        "item": "Maximum shear-stress magnitude",
+        "value": "$20.3718\\,\\mathrm{MPa}$",
+        "tolerance_or_variants": "Accept $20.4\\,\\mathrm{MPa}$ or $2.03718\\times10^7\\,\\mathrm{Pa}$; relative tolerance $0.2\\%$.",
+        "derivation_or_source": "$\\tau_{\\max}=T(d/2)/J=500(0.0250)/(6.13592315\\times10^{-7})=2.03718327\\times10^7\\,\\mathrm{Pa}=20.3718\\,\\mathrm{MPa}$."
+      },
+      {
+        "item": "End-to-end twist magnitude",
+        "value": "$0.0101859\\,\\mathrm{rad}$",
+        "tolerance_or_variants": "Accept $0.0102\\,\\mathrm{rad}$ or $10.1859\\,\\mathrm{mrad}$; relative tolerance $0.2\\%$. A degree-only answer does not satisfy the requested radians.",
+        "derivation_or_source": "$\\theta=TL/(GJ)=500(1.00)/[(80.0\\times10^9)(6.13592315\\times10^{-7})]=0.0101859164\\,\\mathrm{rad}$."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Solid circular shaft torsion",
+        "reference": "Question inputs and standard relations $J=\\pi d^4/32$, $\\tau_{\\max}=T(d/2)/J$, and $\\theta=TL/(GJ)$."
+      }
+    ],
+    "scope_in": [
+      "The three requested quantities with units.",
+      "A compact substitution into each formula."
+    ],
+    "scope_out": [
+      "Material strength or factor-of-safety assessment.",
+      "Finite-element analysis.",
+      "Stress concentrations, warping corrections, or end effects."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "$J=\\pi d^4/64$",
+        "why_wrong": "This is the planar second moment of area; the polar second moment for a solid circular section is twice as large."
+      },
+      {
+        "answer": "$40.7\\,\\mathrm{MPa}$ maximum shear stress",
+        "why_wrong": "Using diameter instead of radius in $Tr/J$ doubles the stress."
+      },
+      {
+        "answer": "$0.0102$ degrees",
+        "why_wrong": "The torsion formula produces radians; labeling that numerical result as degrees is incorrect."
+      }
+    ],
+    "model_answer": "$J=\\pi(0.0500)^4/32=6.14\\times10^{-7}\\,\\mathrm{m^4}$.\n$\\tau_{\\max}=500(0.0250)/J=20.4\\,\\mathrm{MPa}$.\n$\\theta=500(1.00)/(80.0\\times10^9J)=0.0102\\,\\mathrm{rad}$."
+  },
+  {
+    "id": "Q4",
+    "required_items": [
+      {
+        "item": "Selected dimensions",
+        "value": "Width $20.0\\,\\mathrm{mm}$, thickness $3.00\\,\\mathrm{mm}$, length $500\\,\\mathrm{mm}$",
+        "tolerance_or_variants": "Accept equivalent dimensions in metres or an explicitly labeled dimension string. Thickness selection must be exactly the available $3\\,\\mathrm{mm}$ size.",
+        "derivation_or_source": "$A_{\\min}=F/\\sigma_{\\mathrm{allow}}=6000/100=60\\,\\mathrm{mm^2}$, using $100\\,\\mathrm{MPa}=100\\,\\mathrm{N/mm^2}$; $t_{\\min}=60/20=3.00\\,\\mathrm{mm}$."
+      },
+      {
+        "item": "Selected gross cross-sectional area",
+        "value": "$60.0\\,\\mathrm{mm^2}$",
+        "tolerance_or_variants": "Accept $6.00\\times10^{-5}\\,\\mathrm{m^2}$; relative tolerance $0.1\\%$.",
+        "derivation_or_source": "$A=bt=20.0\\times3.00=60.0\\,\\mathrm{mm^2}$."
+      },
+      {
+        "item": "Selected-strip stress and strength verdict",
+        "value": "$100\\,\\mathrm{MPa}$; passes at the allowable limit",
+        "tolerance_or_variants": "Accept $100\\,\\mathrm{N/mm^2}$ or $1.00\\times10^8\\,\\mathrm{Pa}$; relative tolerance $0.1\\%$. Must identify equality as acceptable.",
+        "derivation_or_source": "$\\sigma=F/A=6000/60.0=100\\,\\mathrm{N/mm^2}=100\\,\\mathrm{MPa}$; the question permits equality."
+      },
+      {
+        "item": "Next thinner available strip stress and verdict",
+        "value": "$2.00\\,\\mathrm{mm}$ thickness gives $150\\,\\mathrm{MPa}$ and fails",
+        "tolerance_or_variants": "Accept $150\\,\\mathrm{N/mm^2}$ or $1.50\\times10^8\\,\\mathrm{Pa}$; relative tolerance $0.1\\%$. Both thinner thickness and failure verdict must be identifiable.",
+        "derivation_or_source": "$A_2=20.0\\times2.00=40.0\\,\\mathrm{mm^2}$; $\\sigma_2=6000/40.0=150\\,\\mathrm{MPa}>100\\,\\mathrm{MPa}$."
+      },
+      {
+        "item": "Selected-strip volume",
+        "value": "$3.00\\times10^{-5}\\,\\mathrm{m^3}$",
+        "tolerance_or_variants": "Accept $30000\\,\\mathrm{mm^3}$ or $30.0\\,\\mathrm{cm^3}$; relative tolerance $0.1\\%$.",
+        "derivation_or_source": "$V=AL=(6.00\\times10^{-5})(0.500)=3.00\\times10^{-5}\\,\\mathrm{m^3}$."
+      },
+      {
+        "item": "Selected-strip mass",
+        "value": "$0.2355\\,\\mathrm{kg}$",
+        "tolerance_or_variants": "Accept $235.5\\,\\mathrm{g}$ or rounded $0.236\\,\\mathrm{kg}$; absolute tolerance $\\pm0.0005\\,\\mathrm{kg}$.",
+        "derivation_or_source": "$m=\\rho V=7850(3.00\\times10^{-5})=0.2355\\,\\mathrm{kg}$."
+      },
+      {
+        "item": "Answer organization and consistency",
+        "value": "Three sections: selected dimensions; strength check; volume and mass",
+        "tolerance_or_variants": "Equivalent headings are acceptable. All selected-strip calculations must use the same selected dimensions.",
+        "derivation_or_source": "Question explicitly requests these three sections; area, stress, volume, and mass all follow from the selected $3.00\\,\\mathrm{mm}$ thickness."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Given material and design data",
+        "reference": "Question inputs; $A=bt$, $\\sigma=F/A$, $V=AL$, and $m=\\rho V$."
+      }
+    ],
+    "scope_in": [
+      "Smallest acceptable available thickness and all selected dimensions.",
+      "Selected area, selected stress, and rejection of the next thinner size.",
+      "Selected volume and mass.",
+      "Three short, internally consistent sections."
+    ],
+    "scope_out": [
+      "Connection design or stress concentrations.",
+      "Buckling, fatigue, or corrosion allowances.",
+      "An additional safety factor beyond the stated allowable stress.",
+      "Steel-grade selection or procurement advice."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "Select $4\\,\\mathrm{mm}$ because $3\\,\\mathrm{mm}$ reaches the allowable stress",
+        "why_wrong": "Equality is expressly permitted, and the task requires the smallest passing thickness."
+      },
+      {
+        "answer": "Select $2\\,\\mathrm{mm}$",
+        "why_wrong": "Its axial stress is $150\\,\\mathrm{MPa}$, exceeding the allowable."
+      },
+      {
+        "answer": "$235.5\\,\\mathrm{kg}$ mass",
+        "why_wrong": "This is a unit-conversion error; the selected volume is $3.00\\times10^{-5}\\,\\mathrm{m^3}$."
+      }
+    ],
+    "model_answer": "### Selected dimensions\nWidth $20.0\\,\\mathrm{mm}$; thickness $3.00\\,\\mathrm{mm}$; length $500\\,\\mathrm{mm}$.\n\n### Strength check\nArea $60.0\\,\\mathrm{mm^2}$; stress $6000/60.0=100\\,\\mathrm{MPa}$: passes at the limit. The $2.00\\,\\mathrm{mm}$ strip gives $150\\,\\mathrm{MPa}$: fails.\n\n### Volume and mass\n$V=60.0\\times500=30000\\,\\mathrm{mm^3}=3.00\\times10^{-5}\\,\\mathrm{m^3}$.\n$m=7850V=0.2355\\,\\mathrm{kg}$."
+  },
+  {
+    "id": "Q5",
+    "required_items": [
+      {
+        "item": "First operation: fill and vent",
+        "value": "Fill with water with the high-point vent open until bubble-free water exits",
+        "tolerance_or_variants": "Accept 'purge air' or 'bleed air' if open high-point vent and bubble-free discharge are explicit. Must precede vent closure and pressurization.",
+        "derivation_or_source": "Given bench instruction requires filling and removing air through the open high-point vent."
+      },
+      {
+        "item": "Second operation: close vent",
+        "value": "Close the high-point vent before pressurizing",
+        "tolerance_or_variants": "May share a numbered step with filling, provided closure occurs after bubble-free discharge and before pressurization.",
+        "derivation_or_source": "Given bench instruction explicitly requires this order."
+      },
+      {
+        "item": "Third operation: establish test pressure",
+        "value": "Raise pressure to $6.00\\,\\mathrm{bar}$ gauge",
+        "tolerance_or_variants": "Accept $6\\,\\mathrm{bar(g)}$ or $600\\,\\mathrm{kPa}$ gauge. The stated target is exact; do not substitute the component pressure rating.",
+        "derivation_or_source": "Test pressure is specified directly in the question."
+      },
+      {
+        "item": "Fourth operation: isolate before timing",
+        "value": "Isolate the hand pump, then start the hold timer",
+        "tolerance_or_variants": "Accept 'close the pump isolation valve' or equivalent pump isolation. Timer must start after isolation.",
+        "derivation_or_source": "Given bench instruction defines the start of the isolated hold."
+      },
+      {
+        "item": "Fifth operation: isolated hold",
+        "value": "Hold for $300\\,\\mathrm{s}$ without adding water; observe for visible leakage",
+        "tolerance_or_variants": "Accept $5\\,\\mathrm{min}$ or 'five minutes'. No pumping or pressure top-up during the hold.",
+        "derivation_or_source": "The question specifies the hold duration, no-addition rule, and leakage observation throughout the hold."
+      },
+      {
+        "item": "Acceptance and failure criteria",
+        "value": "Pass only if pressure drop is $\\leq0.20\\,\\mathrm{bar}$ and no visible water leakage occurs; otherwise fail",
+        "tolerance_or_variants": "Accept $\\leq20\\,\\mathrm{kPa}$ or 'at most $0.20\\,\\mathrm{bar}$'. Both conditions must be required, with equality accepted.",
+        "derivation_or_source": "Acceptance criteria are supplied in the question; the two conditions are conjunctive."
+      },
+      {
+        "item": "Logged pressure drop",
+        "value": "$0.10\\,\\mathrm{bar}$",
+        "tolerance_or_variants": "Accept $0.1\\,\\mathrm{bar}$ or $10\\,\\mathrm{kPa}$; absolute tolerance $\\pm0.001\\,\\mathrm{bar}$.",
+        "derivation_or_source": "$\\Delta p=p_{\\mathrm{start}}-p_{\\mathrm{end}}=6.00-5.90=0.10\\,\\mathrm{bar}$."
+      },
+      {
+        "item": "Logged test verdict",
+        "value": "PASS",
+        "tolerance_or_variants": "Accept 'passes' or 'acceptable'. Must be linked to acceptable pressure drop and absence of visible leakage.",
+        "derivation_or_source": "$0.10\\,\\mathrm{bar}\\leq0.20\\,\\mathrm{bar}$ and the log reports no visible leakage throughout the hold."
+      },
+      {
+        "item": "Final operations: assess, depressurize, confirm zero, disconnect",
+        "value": "Assess the result, then open the release valve, confirm $0\\,\\mathrm{bar}$ gauge, and only then disconnect",
+        "tolerance_or_variants": "Accept 'bleed down through the release valve' or 'release pressure'. Depressurization and explicit zero-gauge confirmation must precede disconnection.",
+        "derivation_or_source": "The question prescribes assessment before depressurization and zero-gauge confirmation before disconnection."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Given bench instruction and completed test log",
+        "reference": "All sequence requirements, pressures, duration, and acceptance conditions are supplied in the question."
+      }
+    ],
+    "scope_in": [
+      "Ordered filling, vent closure, pressurization, pump isolation, timed hold, assessment, depressurization, and disconnection.",
+      "No water addition during the hold.",
+      "Both pass/fail criteria.",
+      "Calculated logged pressure drop and PASS verdict."
+    ],
+    "scope_out": [
+      "Alternative test pressures or external pressure-test standards.",
+      "Compressed-gas testing.",
+      "Manifold structural design.",
+      "New measurements or additional commissioning tests."
+    ],
+    "common_wrong_answers": [
+      {
+        "answer": "Test at $10.0\\,\\mathrm{bar}$",
+        "why_wrong": "That is the component rating, not the specified test pressure."
+      },
+      {
+        "answer": "Start timing while raising pressure",
+        "why_wrong": "The hold begins only after the pump is isolated."
+      },
+      {
+        "answer": "Maintain $6.00\\,\\mathrm{bar}$ by pumping during the hold",
+        "why_wrong": "Adding water is prohibited and would invalidate the isolated pressure-drop assessment."
+      },
+      {
+        "answer": "Fail because the final pressure is below $6.00\\,\\mathrm{bar}$",
+        "why_wrong": "The procedure allows a pressure drop up to and including $0.20\\,\\mathrm{bar}$."
+      },
+      {
+        "answer": "Disconnect before confirming zero gauge pressure",
+        "why_wrong": "The prescribed sequence requires depressurization and zero-gauge confirmation before disconnection."
+      }
+    ],
+    "model_answer": "1. Fill with water through the open high-point vent until bubble-free water exits.\n2. Close the vent; pressurize to $6.00\\,\\mathrm{bar}$ gauge.\n3. Isolate the hand pump, then start the timer.\n4. Hold for $300\\,\\mathrm{s}$ without adding water; observe for leakage.\n5. Pass only with pressure drop $\\leq0.20\\,\\mathrm{bar}$ and no visible leakage; otherwise fail. Logged drop: $6.00-5.90=0.10\\,\\mathrm{bar}$, with no leakage: PASS.\n6. Open the release valve, confirm $0\\,\\mathrm{bar}$ gauge, then disconnect."
+  }
+]

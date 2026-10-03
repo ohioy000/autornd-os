@@ -1,0 +1,1048 @@
+{
+  "version": "orpg.3.0",
+  "title": "25 GOLDEN QUESTIONSET",
+  "characters": {
+    "char-1790887040-lsZkdfPYpZqw5ui5wXRN": {
+      "id": "char-1790887040-lsZkdfPYpZqw5ui5wXRN",
+      "model": "openai/gpt-6.1-sol-pro",
+      "modelInfo": {
+        "slug": "openai/gpt-6.1-sol-pro",
+        "hf_slug": null,
+        "updated_at": "2026-09-29T17:47:32.607Z",
+        "created_at": "2026-09-29T17:28:06.435Z",
+        "hf_updated_at": null,
+        "name": "OpenAI: GPT-6.1 Sol Pro",
+        "short_name": "GPT-6.1 Sol Pro",
+        "author": "openai",
+        "author_display_name": "OpenAI",
+        "author_icon_uri": null,
+        "description": "GPT-6.1 Sol Pro is the same underlying model as [GPT-6.1 Sol](https://openrouter.ai/openai/gpt-6.1-sol), served with `reasoning.mode` set to `pro` for higher-quality responses on complex tasks.\n\n**Cost note:** pro mode spends far more reasoning tokens per request, so a typical request costs several times more than the same request on GPT-6.1 Sol and takes much longer to complete. It is intended for hard, high-stakes problems where the extra accuracy justifies the cost. For everyday coding, agentic, and chat workloads, use [GPT-6.1 Sol](https://openrouter.ai/openai/gpt-6.1-sol) instead.\n\nLearn more in OpenAI's docs: https://developers.openai.com/api/docs/guides/reasoning#reasoning-mode",
+        "model_version_group_id": null,
+        "context_length": 1050000,
+        "input_modalities": [
+          "file",
+          "image",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "has_text_output": true,
+        "group": "GPT",
+        "instruct_type": null,
+        "default_system": null,
+        "default_stops": [],
+        "hidden": false,
+        "router": null,
+        "warning_message": null,
+        "promotion_message": null,
+        "routing_error_message": null,
+        "required_attestation_types": [],
+        "is_private": false,
+        "permaslug": "openai/gpt-6.1-sol-pro-20260929",
+        "supports_reasoning": true,
+        "reasoning_config": {
+          "start_token": null,
+          "end_token": null,
+          "is_mandatory_reasoning": true,
+          "supports_reasoning_effort": true,
+          "supported_reasoning_efforts": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "default_reasoning_effort": "medium",
+          "default_reasoning_enabled": true
+        },
+        "features": {
+          "reasoning_config": {
+            "start_token": null,
+            "end_token": null,
+            "is_mandatory_reasoning": true,
+            "supports_reasoning_effort": true,
+            "supported_reasoning_efforts": [
+              "low",
+              "medium",
+              "high",
+              "xhigh",
+              "max"
+            ],
+            "default_reasoning_effort": "medium",
+            "default_reasoning_enabled": true
+          },
+          "chat_template_config": {}
+        },
+        "default_parameters": {
+          "temperature": null,
+          "top_p": null,
+          "top_k": null,
+          "frequency_penalty": null,
+          "presence_penalty": null,
+          "repetition_penalty": null
+        },
+        "default_order": [
+          "openai",
+          "azure"
+        ],
+        "quick_start_example_type": "reasoning",
+        "previews_by_modality": {},
+        "preview_thumbnail_url": null,
+        "preview_audio": null,
+        "author_flagship_modalities": [],
+        "is_trainable_text": null,
+        "is_trainable_image": null,
+        "knowledge_cutoff": null,
+        "limit_rpm": null,
+        "limit_rpd": null,
+        "supported_tts_voices": null,
+        "endpoint": {
+          "id": "6348d380-dcd3-433a-9988-62fd4c3a5c9b",
+          "name": "Azure | openai/gpt-6.1-sol-pro-20260929",
+          "context_length": 1050000,
+          "model": {
+            "slug": "openai/gpt-6.1-sol-pro",
+            "hf_slug": null,
+            "updated_at": "2026-09-29T17:47:32.607352+00:00",
+            "created_at": "2026-09-29T17:28:06.435+00:00",
+            "hf_updated_at": null,
+            "name": "OpenAI: GPT-6.1 Sol Pro",
+            "short_name": "GPT-6.1 Sol Pro",
+            "author": "openai",
+            "author_display_name": "OpenAI",
+            "author_icon_uri": null,
+            "description": "GPT-6.1 Sol Pro is the same underlying model as [GPT-6.1 Sol](https://openrouter.ai/openai/gpt-6.1-sol), served with `reasoning.mode` set to `pro` for higher-quality responses on complex tasks.\n\n**Cost note:** pro mode spends far more reasoning tokens per request, so a typical request costs several times more than the same request on GPT-6.1 Sol and takes much longer to complete. It is intended for hard, high-stakes problems where the extra accuracy justifies the cost. For everyday coding, agentic, and chat workloads, use [GPT-6.1 Sol](https://openrouter.ai/openai/gpt-6.1-sol) instead.\n\nLearn more in OpenAI's docs: https://developers.openai.com/api/docs/guides/reasoning#reasoning-mode",
+            "model_version_group_id": null,
+            "context_length": 1050000,
+            "input_modalities": [
+              "file",
+              "image",
+              "text"
+            ],
+            "output_modalities": [
+              "text"
+            ],
+            "has_text_output": true,
+            "group": "GPT",
+            "instruct_type": null,
+            "default_system": null,
+            "default_stops": [],
+            "hidden": false,
+            "router": null,
+            "warning_message": null,
+            "promotion_message": null,
+            "routing_error_message": null,
+            "required_attestation_types": [],
+            "is_private": false,
+            "permaslug": "openai/gpt-6.1-sol-pro-20260929",
+            "supports_reasoning": true,
+            "reasoning_config": {
+              "start_token": null,
+              "end_token": null,
+              "is_mandatory_reasoning": true,
+              "supports_reasoning_effort": true,
+              "supported_reasoning_efforts": [
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+                "max"
+              ],
+              "default_reasoning_effort": "medium",
+              "default_reasoning_enabled": true
+            },
+            "features": {
+              "reasoning_config": {
+                "start_token": null,
+                "end_token": null,
+                "is_mandatory_reasoning": true,
+                "supports_reasoning_effort": true,
+                "supported_reasoning_efforts": [
+                  "low",
+                  "medium",
+                  "high",
+                  "xhigh",
+                  "max"
+                ],
+                "default_reasoning_effort": "medium",
+                "default_reasoning_enabled": true
+              },
+              "chat_template_config": {}
+            },
+            "default_parameters": {
+              "temperature": null,
+              "top_p": null,
+              "top_k": null,
+              "frequency_penalty": null,
+              "presence_penalty": null,
+              "repetition_penalty": null
+            },
+            "default_order": [
+              "openai",
+              "azure"
+            ],
+            "quick_start_example_type": "reasoning",
+            "previews_by_modality": {},
+            "preview_thumbnail_url": null,
+            "preview_audio": null,
+            "author_flagship_modalities": [],
+            "is_trainable_text": null,
+            "is_trainable_image": null,
+            "knowledge_cutoff": null,
+            "limit_rpm": null,
+            "limit_rpd": null,
+            "supported_tts_voices": null
+          },
+          "model_variant_slug": "openai/gpt-6.1-sol-pro",
+          "model_variant_permaslug": "openai/gpt-6.1-sol-pro-20260929",
+          "adapter_name": "InternalStreamAzureOpenAIResponsesAdapter",
+          "provider_name": "Azure",
+          "provider_info": {
+            "name": "Azure",
+            "displayName": "Azure",
+            "slug": "azure",
+            "baseUrl": "https://openrouter-foundry-east-resource.cognitiveservices.azure.com/openai",
+            "dataPolicy": {
+              "training": false,
+              "trainingOpenRouter": false,
+              "retainsPrompts": false,
+              "canPublish": false,
+              "termsOfServiceURL": "https://www.microsoft.com/en-us/legal/terms-of-use?oneroute=true",
+              "privacyPolicyURL": "https://www.microsoft.com/en-us/privacy/privacystatement",
+              "requiresUserIDs": false
+            },
+            "headquarters": "US",
+            "hasChatCompletions": true,
+            "hasCompletions": false,
+            "isAbortable": true,
+            "moderationRequired": false,
+            "requiredAttestationTypes": [],
+            "adapterName": "InternalStreamAzureOpenAIResponsesAdapter",
+            "statusPageUrl": "https://status.azure.com/",
+            "byokEnabled": true,
+            "icon": {
+              "url": "/images/icons/Azure.svg"
+            },
+            "sendClientIp": false,
+            "pricingStrategy": "openai_responses"
+          },
+          "provider_display_name": "Azure",
+          "provider_slug": "azure",
+          "provider_model_id": "gpt-6.1-sol",
+          "quantization": "unknown",
+          "variant": "standard",
+          "is_free": false,
+          "can_abort": true,
+          "max_prompt_tokens": 922000,
+          "max_completion_tokens": 128000,
+          "max_tokens_per_image": null,
+          "supported_parameters": [
+            "max_completion_tokens",
+            "reasoning",
+            "include_reasoning",
+            "seed",
+            "response_format",
+            "structured_outputs",
+            "tools",
+            "tool_choice",
+            "verbosity"
+          ],
+          "excluded_parameters": [
+            "temperature",
+            "top_p"
+          ],
+          "is_byok": false,
+          "moderation_required": false,
+          "data_policy": {
+            "training": false,
+            "trainingOpenRouter": false,
+            "retainsPrompts": false,
+            "canPublish": false,
+            "termsOfServiceURL": "https://www.microsoft.com/en-us/legal/terms-of-use?oneroute=true",
+            "privacyPolicyURL": "https://www.microsoft.com/en-us/privacy/privacystatement"
+          },
+          "pricing": {
+            "prompt": "0.000002",
+            "completion": "0.00001",
+            "input_cache_read": "0.0000001",
+            "input_cache_write": "0.0000025",
+            "web_search": "0.01",
+            "discount": 0,
+            "overrides": [
+              {
+                "min_prompt_tokens": 272000,
+                "prompt": "0.000004",
+                "completion": "0.000015",
+                "input_cache_read": "0.0000002",
+                "input_cache_write": "0.000005"
+              }
+            ],
+            "display_pricing": [
+              {
+                "kind": "token",
+                "sku_label": "Input Price",
+                "price": "0.000002",
+                "displayMultiplier": 1000000,
+                "unitLabel": "/M tokens",
+                "tiers": [
+                  {
+                    "sku_label": "≤272K",
+                    "price": "0.000002"
+                  },
+                  {
+                    "sku_label": ">272K",
+                    "price": "0.000004"
+                  }
+                ]
+              },
+              {
+                "kind": "token",
+                "sku_label": "Output Price",
+                "price": "0.00001",
+                "displayMultiplier": 1000000,
+                "unitLabel": "/M tokens",
+                "tiers": [
+                  {
+                    "sku_label": "≤272K",
+                    "price": "0.00001"
+                  },
+                  {
+                    "sku_label": ">272K",
+                    "price": "0.000015"
+                  }
+                ]
+              },
+              {
+                "kind": "token",
+                "sku_label": "Cache Read",
+                "price": "0.0000001",
+                "displayMultiplier": 1000000,
+                "unitLabel": "/M tokens",
+                "tiers": [
+                  {
+                    "sku_label": "≤272K",
+                    "price": "0.0000001"
+                  },
+                  {
+                    "sku_label": ">272K",
+                    "price": "0.0000002"
+                  }
+                ]
+              },
+              {
+                "kind": "token",
+                "sku_label": "Cache Write",
+                "price": "0.0000025",
+                "displayMultiplier": 1000000,
+                "unitLabel": "/M tokens",
+                "tiers": [
+                  {
+                    "sku_label": "≤272K",
+                    "price": "0.0000025"
+                  },
+                  {
+                    "sku_label": ">272K",
+                    "price": "0.000005"
+                  }
+                ]
+              },
+              {
+                "kind": "unit",
+                "sku_label": "Web Search",
+                "price": "0.01",
+                "displayMultiplier": 1000,
+                "unitLabel": "/1K calls",
+                "isServerTool": true
+              }
+            ]
+          },
+          "server_tool_costs_discount_exempt": true,
+          "display_pricing": [
+            {
+              "kind": "token",
+              "sku_label": "Input Price",
+              "price": "0.000002",
+              "displayMultiplier": 1000000,
+              "unitLabel": "/M tokens",
+              "tiers": [
+                {
+                  "sku_label": "≤272K",
+                  "price": "0.000002"
+                },
+                {
+                  "sku_label": ">272K",
+                  "price": "0.000004"
+                }
+              ]
+            },
+            {
+              "kind": "token",
+              "sku_label": "Output Price",
+              "price": "0.00001",
+              "displayMultiplier": 1000000,
+              "unitLabel": "/M tokens",
+              "tiers": [
+                {
+                  "sku_label": "≤272K",
+                  "price": "0.00001"
+                },
+                {
+                  "sku_label": ">272K",
+                  "price": "0.000015"
+                }
+              ]
+            },
+            {
+              "kind": "token",
+              "sku_label": "Cache Read",
+              "price": "0.0000001",
+              "displayMultiplier": 1000000,
+              "unitLabel": "/M tokens",
+              "tiers": [
+                {
+                  "sku_label": "≤272K",
+                  "price": "0.0000001"
+                },
+                {
+                  "sku_label": ">272K",
+                  "price": "0.0000002"
+                }
+              ]
+            },
+            {
+              "kind": "token",
+              "sku_label": "Cache Write",
+              "price": "0.0000025",
+              "displayMultiplier": 1000000,
+              "unitLabel": "/M tokens",
+              "tiers": [
+                {
+                  "sku_label": "≤272K",
+                  "price": "0.0000025"
+                },
+                {
+                  "sku_label": ">272K",
+                  "price": "0.000005"
+                }
+              ]
+            },
+            {
+              "kind": "unit",
+              "sku_label": "Web Search",
+              "price": "0.01",
+              "displayMultiplier": 1000,
+              "unitLabel": "/1K calls",
+              "isServerTool": true
+            }
+          ],
+          "pricing_json": {
+            "openai_responses:prompt_tokens": "0.000002",
+            "openai_responses:web_search_calls": "0.01",
+            "openai_responses:completion_tokens": "0.00001",
+            "openai_responses:cache_write_tokens": "0.0000025",
+            "openai_responses:cached_prompt_tokens": "0.0000001",
+            "openai_responses:high_context_threshold": "272000",
+            "openai_responses:prompt_tokens_high_context": "0.000004",
+            "openai_responses:completion_tokens_high_context": "0.000015",
+            "openai_responses:cache_write_tokens_high_context": "0.000005",
+            "openai_responses:cached_prompt_tokens_high_context": "0.0000002"
+          },
+          "pricing_version_id": "d08a17cc-b314-486f-8fd9-6e1dfdbab266",
+          "is_pricing_unresolved": false,
+          "is_hidden": false,
+          "is_private": false,
+          "is_byok_only": false,
+          "is_deranked": false,
+          "is_disabled": false,
+          "is_hipaa_eligible": false,
+          "supports_tool_parameters": true,
+          "supports_reasoning": true,
+          "supports_multipart": true,
+          "limit_rpm": null,
+          "limit_rpd": null,
+          "has_completions": false,
+          "has_chat_completions": true,
+          "features": {
+            "supports_file_urls": true,
+            "supports_native_web_search": true,
+            "supports_native_apply_patch": true,
+            "supports_tool_choice": {
+              "literal_none": true,
+              "literal_auto": true,
+              "literal_required": true,
+              "type_function": true
+            }
+          },
+          "supported_video_parameters": null,
+          "supported_image_parameters": null,
+          "provider_region": null,
+          "declared_region": null,
+          "deprecation_date": null,
+          "allowed_passthrough_parameters": [],
+          "capacity_tpm": null,
+          "created_at": "2026-09-29T01:20:24.516Z",
+          "status": 0
+        },
+        "display_required_attestation_types": [],
+        "variant_deprecation_date": null,
+        "searchKeywords": [
+          "openai",
+          "gpt",
+          "6.1",
+          "sol",
+          "pro",
+          "gpt6",
+          "1"
+        ]
+      },
+      "description": "",
+      "includeDefaultSystemPrompt": true,
+      "isStreaming": true,
+      "samplingParameters": {},
+      "isDisabled": false,
+      "isRemoved": false,
+      "createdAt": "2026-10-01T20:37:20.750Z",
+      "updatedAt": "2026-10-01T20:38:39.117Z",
+      "plugins": []
+    }
+  },
+  "messages": {
+    "msg-1790887040-dLLnWnE342YJizHqLLkg": {
+      "id": "msg-1790887040-dLLnWnE342YJizHqLLkg",
+      "context": "main-chat",
+      "contentType": "text",
+      "characterId": "USER",
+      "createdAt": "2026-10-01T20:37:20.930Z",
+      "updatedAt": "2026-10-01T20:37:20.930Z",
+      "isEdited": false,
+      "isRetrying": false,
+      "isCollapsed": false,
+      "type": "user",
+      "items": [
+        {
+          "id": "item-1790887040-6ffo0wq7cFaj1zvuJL0Z",
+          "type": "message"
+        }
+      ]
+    },
+    "msg-1790887040-EdKeAdY0Z4ETCtMrdWgJ": {
+      "id": "msg-1790887040-EdKeAdY0Z4ETCtMrdWgJ",
+      "parentMessageId": "msg-1790887040-dLLnWnE342YJizHqLLkg",
+      "context": "main-chat",
+      "contentType": "text",
+      "characterId": "char-1790887040-lsZkdfPYpZqw5ui5wXRN",
+      "createdAt": "2026-10-01T20:37:20.931Z",
+      "updatedAt": "2026-10-01T20:37:49.503Z",
+      "isEdited": false,
+      "isRetrying": false,
+      "isCollapsed": false,
+      "type": "assistant",
+      "isGenerating": false,
+      "metadata": {
+        "plugins": [],
+        "tokensCount": 346,
+        "variantSlug": "openai/gpt-6.1-sol-pro",
+        "requestedModel": "openai/gpt-6.1-sol-pro",
+        "cost": "0.010344",
+        "generationId": "gen-1790887057-gkueyztZgun9Rju2ehAf",
+        "serverTools": {
+          "webSearchEngine": "auto",
+          "webFetchEngine": "auto"
+        },
+        "routerMetadata": {
+          "requested": "openai/gpt-6.1-sol-pro",
+          "strategy": "direct",
+          "region": "MSP",
+          "summary": "available=2, selected=OpenAI",
+          "attempt": 1,
+          "is_byok": false,
+          "endpoints": {
+            "total": 6,
+            "available": [
+              {
+                "provider": "OpenAI",
+                "model": "openai/gpt-6.1-sol-pro-20260929",
+                "selected": true
+              },
+              {
+                "provider": "Azure",
+                "model": "openai/gpt-6.1-sol-pro-20260929",
+                "selected": false
+              }
+            ]
+          },
+          "pipeline": [
+            {
+              "type": "server_tools",
+              "name": "server-tools",
+              "summary": "Server tools invoked (sdk): openrouter:datetime, openrouter:web_search, openrouter:web_fetch, openrouter:shell",
+              "data": {
+                "mode": "sdk",
+                "tools": [
+                  "openrouter:datetime",
+                  "openrouter:web_search",
+                  "openrouter:web_fetch",
+                  "openrouter:shell"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "items": [
+        {
+          "id": "rs_0c54df665d24c092016abec49d41c487d1afd814ed0fc832da",
+          "type": "reasoning",
+          "outputIndex": 0,
+          "sequenceIndex": 0
+        },
+        {
+          "id": "msg_tmp_xprozh0hayr",
+          "type": "message",
+          "outputIndex": 1,
+          "sequenceIndex": 1
+        }
+      ]
+    },
+    "msg-1790887086-ZTAgvdiqyyfdhGSt54g4": {
+      "id": "msg-1790887086-ZTAgvdiqyyfdhGSt54g4",
+      "context": "main-chat",
+      "contentType": "text",
+      "characterId": "USER",
+      "createdAt": "2026-10-01T20:38:06.533Z",
+      "updatedAt": "2026-10-01T20:38:06.533Z",
+      "isEdited": false,
+      "isRetrying": false,
+      "isCollapsed": false,
+      "type": "user",
+      "items": [
+        {
+          "id": "item-1790887086-XPeXDLTvHQk4viOUAw80",
+          "type": "message"
+        }
+      ]
+    },
+    "msg-1790887086-2RiymlHBOC5VQLsPLZDL": {
+      "id": "msg-1790887086-2RiymlHBOC5VQLsPLZDL",
+      "parentMessageId": "msg-1790887086-ZTAgvdiqyyfdhGSt54g4",
+      "context": "main-chat",
+      "contentType": "text",
+      "characterId": "char-1790887040-lsZkdfPYpZqw5ui5wXRN",
+      "createdAt": "2026-10-01T20:38:06.534Z",
+      "updatedAt": "2026-10-01T20:38:29.493Z",
+      "isEdited": false,
+      "isRetrying": false,
+      "isCollapsed": false,
+      "type": "assistant",
+      "isGenerating": false,
+      "metadata": {
+        "plugins": [],
+        "variantSlug": "openai/gpt-6.1-sol-pro",
+        "requestedModel": "openai/gpt-6.1-sol-pro",
+        "serverTools": {
+          "webSearchEngine": "auto",
+          "webFetchEngine": "auto"
+        }
+      },
+      "items": []
+    },
+    "msg-1790887175-rdJkKoC3JCdtWk6YhrvI": {
+      "id": "msg-1790887175-rdJkKoC3JCdtWk6YhrvI",
+      "context": "main-chat",
+      "contentType": "text",
+      "characterId": "USER",
+      "createdAt": "2026-10-01T20:39:35.605Z",
+      "updatedAt": "2026-10-01T20:39:35.605Z",
+      "isEdited": false,
+      "isRetrying": false,
+      "isCollapsed": false,
+      "type": "user",
+      "items": [
+        {
+          "id": "item-1790887175-rNk4dyiziIMhWBD72NuY",
+          "type": "message"
+        }
+      ]
+    },
+    "msg-1790887175-fPZD1uwHxqJrH2JWTmTh": {
+      "id": "msg-1790887175-fPZD1uwHxqJrH2JWTmTh",
+      "parentMessageId": "msg-1790887175-rdJkKoC3JCdtWk6YhrvI",
+      "context": "main-chat",
+      "contentType": "text",
+      "characterId": "char-1790887040-lsZkdfPYpZqw5ui5wXRN",
+      "createdAt": "2026-10-01T20:39:35.606Z",
+      "updatedAt": "2026-10-01T20:43:09.615Z",
+      "isEdited": false,
+      "isRetrying": false,
+      "isCollapsed": false,
+      "type": "assistant",
+      "isGenerating": false,
+      "metadata": {
+        "plugins": [],
+        "tokensCount": 14211,
+        "variantSlug": "openai/gpt-6.1-sol-pro",
+        "requestedModel": "openai/gpt-6.1-sol-pro",
+        "cost": "0.25971",
+        "generationId": "gen-1790887175-aDsgnje0dGWUa5M1njgl",
+        "serverTools": {
+          "webSearchEngine": "auto",
+          "webFetchEngine": "auto"
+        },
+        "routerMetadata": {
+          "requested": "openai/gpt-6.1-sol-pro",
+          "strategy": "direct",
+          "region": "MSP",
+          "summary": "available=1, selected=OpenAI",
+          "attempt": 1,
+          "is_byok": false,
+          "endpoints": {
+            "total": 6,
+            "available": [
+              {
+                "provider": "OpenAI",
+                "model": "openai/gpt-6.1-sol-pro-20260929",
+                "selected": true
+              }
+            ]
+          },
+          "pipeline": [
+            {
+              "type": "server_tools",
+              "name": "server-tools",
+              "summary": "Server tools invoked (sdk): openrouter:datetime, openrouter:web_search, openrouter:web_fetch, openrouter:shell",
+              "data": {
+                "mode": "sdk",
+                "tools": [
+                  "openrouter:datetime",
+                  "openrouter:web_search",
+                  "openrouter:web_fetch",
+                  "openrouter:shell"
+                ],
+                "executed_engines": {
+                  "openrouter:web_search": [
+                    "exa"
+                  ],
+                  "openrouter:web_fetch": [
+                    "exa"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "items": [
+        {
+          "id": "rs_0159ebb2a015843b016abec525ada087d199bf3e6f8497e4ab",
+          "type": "reasoning",
+          "outputIndex": 0,
+          "sequenceIndex": 0
+        },
+        {
+          "id": "st_tmp_zn5b8fevzya",
+          "type": "openrouter:web_search",
+          "outputIndex": 1,
+          "sequenceIndex": 1
+        },
+        {
+          "id": "rs_0159ebb2a015843b016abec547116487d184cf3fc57008e821",
+          "type": "reasoning",
+          "outputIndex": 2,
+          "sequenceIndex": 2
+        },
+        {
+          "id": "st_tmp_z5anow6x82",
+          "type": "openrouter:web_fetch",
+          "outputIndex": 3,
+          "sequenceIndex": 3
+        },
+        {
+          "id": "st_tmp_js6enui5o3",
+          "type": "openrouter:shell",
+          "outputIndex": 4,
+          "sequenceIndex": 4
+        },
+        {
+          "id": "st_tmp_1j3o32yzs2z",
+          "type": "openrouter:shell",
+          "outputIndex": 5,
+          "sequenceIndex": 5
+        },
+        {
+          "id": "msg_tmp_yu18vy8jkvg",
+          "type": "message",
+          "outputIndex": 6,
+          "sequenceIndex": 6
+        }
+      ]
+    }
+  },
+  "items": {
+    "item-1790887040-6ffo0wq7cFaj1zvuJL0Z": {
+      "id": "item-1790887040-6ffo0wq7cFaj1zvuJL0Z",
+      "messageId": "msg-1790887040-dLLnWnE342YJizHqLLkg",
+      "data": {
+        "type": "message",
+        "role": "user",
+        "content": [
+          {
+            "type": "input_text",
+            "text": "Output only JSON: an array of objects with the fields id, shape, domain,\nquestion, required_items (an array of {item, value, tolerance_or_variants,\nderivation_or_source}), sources, scope_in, scope_out, common_wrong_answers,\nmodel_answer.\n\n"
+          }
+        ]
+      }
+    },
+    "rs_0c54df665d24c092016abec49d41c487d1afd814ed0fc832da": {
+      "id": "rs_0c54df665d24c092016abec49d41c487d1afd814ed0fc832da",
+      "messageId": "msg-1790887040-EdKeAdY0Z4ETCtMrdWgJ",
+      "data": {
+        "type": "reasoning",
+        "id": "rs_0c54df665d24c092016abec49d41c487d1afd814ed0fc832da",
+        "summary": [],
+        "encrypted_content": "gAAAAABqvsSdkYvhbA-LwnStj5irQrZxtTKQFM7mKaczHFvKInmagAWybjn_m8JBb_mvXiD5gX4nOWSSQV3OzZG6wZpxCwuPCJgrgKA0IKQkFxjkDGjsmUu2oqtYse_ERwsCFuWtrryDjYWggO7mTiydXFvzkVKP4H6jCzU_JKxIO4LzTkw46b83mFB8wxuo9JODi8PsxF5PJytoplsaQob87Z0Y0ozzhXpdjrD-onmCNFSUNvvbhFB-StsYoRH48DA5ohxEAwWufMXmBSBnhqjY82JBwoPjiUmhKCSUo7_QKiKmDn-Jv5vTS52EE0t3TRPJfAyzQOSso1A46us8t6eDxO-R2ssqAOnxIrA0bFbLEEcBZadT0rvHJdlK0PyJI21wb0olViOAcQp6z4Eh2fqqVEiLLVY8FlerUx0XehRowLO_pf-OmTZazd8NGOyThL2Qc3mzThzgwQXvP6wFrG7hUM2Z9QX0FoH_wZtTGsktyefVzKMG9lIxWK5Qoi6ao1blFqHKfME3uGQsZ1HAob-rFH5QFc7MIvZwFJ2GtYl5tocMoeP17YAedkpfl6__C6w7vO7zxJLA2fDGEqY_wcuYLj1sz2NgcO10Pp_3kTRopP2kmBIrW_v8_lAzODY0HTK3iD6p_p-H3pVaVi9R4xx0t8FXwSqILUI_eKhz3wUU_cafWInWSjNiGMsB0E9iai9hxiYgiJExT8amiUwZNaTPwmmyMw97DyASATdNH2Ld_WiVPpxZm5HMHw3_x_1PdnpvU5Ccuks1UOyVaHg5j1LAziE32_p_1l3rtwx9CakoA1QY8zP8wWSYooQdl_QFOTVhPfLN78uFLTAQgfHW9Yb5jIEhb6C4cCmaJiKYoW50CDlu4crP0ZthG9akUJSRmVc19UoISlDGjuQLlNYaGO93XhIp-rw96kVYXw_zmWsKhWEK0gZ4fA0n140midZjqmmfHi8jvAOQNcCIs3vdpRC1Wkg7DnrqOgnVy0AHxsXBKoS3PjBDGf8ueoq9MlQv4oRi0DVutId9QUfYzarW_K4d7QRtlqMU6xYTXCIK74bvRozIDZX1XNGmzu53r-uNG6ot_3nhTFiL_dI7TRYXeBbaTJS5GaI_kZqCqyTK7Axz_DOlMPfDryPw3tB5gcwqxQVKISlCohec4ELKIcuRi8tmTCD2b8Q1-jOxF10I24w9CKBwQ4I9QW1zRJ9Kbv9CFaQCBhyzX5KzsWb7_HkRh3hZhlXTxE83YuT7FJlcNtTLTFR3lYFfGENMjd-4nQS_u8lkhAvkhw-8l4slIm6w77Qlmgd_2NKCD5TLq0IBOnVV6WX0ZJK3QRb4Z75QKp7APAf0lIRtrJR5s50KzFi_Nt8-XT0T0Z6MYJldIqM7k1h3cmF6WS99-V8bgcc2M-SpOboCNTr1t_VA93il7h2MxRZtbB92s0SExYZDPbwjmikxeAEJWKoWHcmYJWtD3DI0vq6mpJPK-0Y193mUwcWLJiGNj8n_9D2DYyORxUC61MRP9_xjLJnFH_NIhkSUNi6msT4HVU3KWWdC4RvLOKdB7qbrpnRaU7BjZf4PydTXZwm5lhM_MxC1PsIxPhaDwVGIwFILcHriQ6O8K9x2j1eRSb_WkIO707OrP_yb2054j4vE_89LXVfUuP6SSviTBy48tQE6EQYbkBRN3o6VQc1dRjjEvAjAIAlMKfcnOQasiw98k858yEW_8M4nFKi1FAnQ8rZhtIprljz9F8SHmZDTdOuWcO6OLCH3mi8auq_AWIauNpvBhQZyKfhJ8UGU_ItpDLrsgwclaGOxFYCvQs2wf_ojTdTvPYAQnxa9oA2zrTvLFu8LbMgbmiV0H5r7pPEwSFaG2Ggozsg1wGHcUX77p2aNhislVjtZMQ8AaHv_UgJPWmQXieMd_N4Y7vtY7s9yutH6YEdnx-h2qQSVMfVKZqzWKlD-9s5WyFzIhm4DJikgjFj8MailP7zYJq01sD8bV9TsNUfVIZcTM83tWoNapBHbo3sFa5KrVtVy-iTOIq9WDODLIhvKTjQiBtAW-9ltvknd_53p0RXPaXEzEinF24VtMM1_9I_kaTiLMTWNFoYh1V-Z2r0Q45V4c1EtMXErrLfX4ixv-t9x_hZUmJhxa_z90fSDwRHG2EwO2zFrg90Sk1dY-bjA8aFJ2MtD8tknR6h05sLS4AA1F7JI4gVNdajzkjI-fC7BBZq2F0bpiakFuuLi7Ckey-bfq7j_K9zopbOJAoeqng9I.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LjEtc29sLXByby0yMDI2MDkyOXxvcGVuYWkifQ",
+        "status": "completed",
+        "format": "openai-responses-v1"
+      }
+    },
+    "msg_tmp_xprozh0hayr": {
+      "id": "msg_tmp_xprozh0hayr",
+      "messageId": "msg-1790887040-EdKeAdY0Z4ETCtMrdWgJ",
+      "data": {
+        "id": "msg_tmp_xprozh0hayr",
+        "role": "assistant",
+        "type": "message",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "[\n  {\n    \"id\": \"clarification_needed\",\n    \"shape\": \"clarification\",\n    \"domain\": null,\n    \"question\": \"What topic or source material should the objects cover, and how many objects should be generated?\",\n    \"required_items\": [],\n    \"sources\": [],\n    \"scope_in\": [],\n    \"scope_out\": [],\n    \"common_wrong_answers\": [],\n    \"model_answer\": \"Please provide the topic or source material and the desired number of objects.\"\n  }\n]",
+            "annotations": [],
+            "logprobs": []
+          }
+        ]
+      }
+    },
+    "item-1790887086-XPeXDLTvHQk4viOUAw80": {
+      "id": "item-1790887086-XPeXDLTvHQk4viOUAw80",
+      "messageId": "msg-1790887086-ZTAgvdiqyyfdhGSt54g4",
+      "data": {
+        "type": "message",
+        "role": "user",
+        "content": [
+          {
+            "type": "input_text",
+            "text": "randomized all sectors"
+          }
+        ]
+      }
+    },
+    "item-1790887175-rNk4dyiziIMhWBD72NuY": {
+      "id": "item-1790887175-rNk4dyiziIMhWBD72NuY",
+      "messageId": "msg-1790887175-rdJkKoC3JCdtWk6YhrvI",
+      "data": {
+        "type": "message",
+        "role": "user",
+        "content": [
+          {
+            "type": "input_text",
+            "text": "You are designing a small benchmark of technical questions with verifiable\nanswers. Each question will be put to an automated question-answering system,\nand each answer will be scored line by line against the answer key you write.\nThe accuracy of your answer keys matters more than anything else.\n\nPART 1 — Write 5 questions, one of each shape:\n\n1. SANITY: a short technical question a competent engineer answers correctly\n   in under a minute (for example a small combinational-logic design or a\n   direct application of a basic circuit or mechanics law). It tests whether\n   the system can answer a simple question simply.\n2. LOOKUP: a factual question whose answer is fixed by a stable, public,\n   authoritative source (a regulation, a published standard, or a physical\n   data table) and consists of specific figures: durations, limits, counts,\n   or values. The source must be freely readable online and unchanged for at\n   least three years.\n3. DERIVATION: a calculation where every input is given in the question and\n   the answer is one or more numbers that follow from standard engineering\n   formulas.\n4. SPECIFICATION: a short design task with stated constraints and stated\n   part or material data. The answer has two or three sections, and several\n   figures must agree across those sections.\n5. PROCEDURE: an ordered test, commissioning, troubleshooting, or maintenance\n   procedure. The correct answer contains specific steps in a specific order,\n   with pass/fail criteria that follow from data given in the question.\n\nRules for every question:\n- Write it the way a real engineer would ask a colleague: plain and specific.\n  Do not tell the answerer how to verify, what to cite, or what to do if\n  unsure. No trick questions and no traps. Exactly one correct answer must\n  exist.\n- Put every number the answer needs into the question, except in the LOOKUP\n  question, whose figures come from its public source.\n- State any convention that would otherwise make two different answers both\n  defensible (units, logic polarity, sign convention, standard edition), or\n  make the answer key accept both.\n- No current events, prices, or anything that changes from month to month.\n  Nothing that requires running code, taking measurements, or reading images.\n- Use a different domain for each question: electrical or electronics;\n  mechanical; fluids or thermal; materials; regulation or standards.\n- Each question must be fully answerable by an expert in one page or less.\n\nFor each question, write an answer key that a non-expert could score using\ntext search:\n- required_items: every specific figure (with units and an accepted tolerance\n  or rounding) or short fact that a correct answer must state;\n- the derivation of every derived figure, or the exact source section for\n  every looked-up figure, so the key itself can be checked;\n- accepted variants (unit spellings, equivalent forms, rounding);\n- scope_in: what a complete answer contains;\n- scope_out: what a good answer should NOT spend effort on, so an over-long\n  answer can be recognised;\n- common_wrong_answers, and why each one is wrong;\n- model_answer: a correct, complete answer in as few words as possible.\n\nBefore you finish, re-derive every figure in every key from scratch and fix\nany mistakes. If you are not certain of a LOOKUP figure, replace that question\nwith one you are certain of.\n\nPART 2 — For each question pasted below, write an answer key in the same\nformat. Mark its shape as OWNER. Do not change the question's wording.\n\nOutput only JSON: an array of objects with the fields id, shape, domain,\nquestion, required_items (an array of {item, value, tolerance_or_variants,\nderivation_or_source}), sources, scope_in, scope_out, common_wrong_answers,\nmodel_answer.\n"
+          }
+        ]
+      }
+    },
+    "rs_0159ebb2a015843b016abec525ada087d199bf3e6f8497e4ab": {
+      "id": "rs_0159ebb2a015843b016abec525ada087d199bf3e6f8497e4ab",
+      "messageId": "msg-1790887175-fPZD1uwHxqJrH2JWTmTh",
+      "data": {
+        "type": "reasoning",
+        "id": "rs_0159ebb2a015843b016abec525ada087d199bf3e6f8497e4ab",
+        "summary": [],
+        "encrypted_content": "gAAAAABqvsUlmbEiOmCogOkz_H7B8qdmEZvAxdUuOGs6jafBt68tnWWKz1edK5SbgYCn5UbvsUn696UVzQ--rWXyxhP4UMhwfciOoJcko0cTQ6GGA15D6m0McASI9oDOdQE9G342a850uwaNUIm10J2UGCA-hlPlisqhUfmOlpdm8dbRh11usPhfO67XMFkAWq54wPL8_57pE2s-8cfBr318YcKQUvZDHEt7AnBPQc5lplqs4zloCY9yjy6aOYfe-xzXWfx8c63RSDWNZWZHpAsPJwOXqciluiOPJaoFrinf8bS3GtFpiJ-dwJVzOm3Tq4UnfRD9-5ekBxcTkMn1X7qWW_C6g1xabuKZIaTaLYS2QqxxvOiKswzB3w3Qr9mHvkLgYrXW-wuFHJWc1Voeh88bTUZUGcmGwnnZc3jb9gnP5EHCkXIl51mdKLiLyX83S-7Kl4WT-51VR5KYOown12u-kYrnT4OjI1wIkayOYfkU_wQVPZgQWSuMNt6dmlMxAI2Fs2XaI3JAax6xbfmKi-na_E4Z19FaZfv6A_x5PhQsgIfc1-IAGHJ1osOacW2HsNoPW2_j_BGSwa3_VVo1ddPviOnHxC7vm5DsKuchrBipPM6Ub_jVyfMSTHpEA6MJWRmiGuOyVzzIlVnxkHJzzm1F9iAyb40Udvi8fOvJ47LQdX6kWkVjo6I0THwa5gN-anhcYgc4AwsRp7bfieyeAQX90b9yYp6D4-_TJ8dwTm4sIhCBm82JbfP3NhjFY1dHoRMDik9RLf3CEydZ4VUqOo45YyZyE2krLbj6WmElTm-R1w7829ejy0UhQUYkHb2wijdVTszGx_qoF79wuFNkKSJio-HVOtgvhwO_ZsvW8dX7J5EFw-ce60Gef1dviHANZHdSiaNF6elz-JthhK6VFCi_24pCJ0Sgc7qqjEgDtGodFGInCtj4-Z6aM-v_UHcI1fD--lNj7l1-RIe2V-jO9u8F183yODNex8IrOXreBEBDuEv_gnyKP0UR27hS2DGJ8KtbraSktfdDk_noxkGL8BfUiu6R6PJbckpcxdo_oFw3r29z37BM3rUjjrQ7xQeGw5Qup5ByKnh0XqdU9upE7p_o-E5IjQkjgLGq9gri5n-8vOrqv6tRySS50YUjz34ZH-skysKHPqpZV0qqKTu6pq-2anoaxYa0hx4yZvKAPnfjYEeCMQ8Roy4-_kBjxp86qZlh7PY7qdEGAL7JHuTcor3Can_g0EmfNaoYNOFX4M080R4J2egDPU8vCp-wfPZaa6P92XemhguLfNVS4MzAH8WPPGfZ54DWFq2JsavtVGXGfE5ucP3iifBw-HKs_8q-pv1YC3l1HWjJkCJ6eMR56Yjetm7WPFF6s6UTJ9SJSb6_GrcesrJD4FqpXCBboVQvcjRTI6KZBK3rxy0SVJp_0-pjnOKiuNqB5cWnCrsVV6sw6mS4mopASA-luCnlLdfQVzCceh1BoI9wzTgIb6BxGBlMmy98XwM8_ef3762CHGPJYHs8FHmrs7z4ZwRigahhy-ZQMqR00C8o7F2SmiTgTLKgKpgyjPaISa72meYMUNLZuKHViHtDCw0CreCrFiY1Ig9Iyz1MTomPdBFY9ZMai5exzE0MWraAoiHoQIOmU40IMsRmqs9s8lFCtqp8F2KWPQ0cGHvrToByY3FSt5rKXev0q7vCGwmXboa6woviaUHQ4OA2VeNJ-TtaK0aT2rUOMgylwXslWHvNg-2yIcBPcTWewsLgfUvZHlAKxLXVmEqJxB2-VWVJ3TYRqOPDqV50-DbdPhxGya_mchnzj88ZJLOdsxeur_yyQqn4TW59bWHKqaGl4voabnmcw7ajq9F6i3bvsUHtH-BsaxRuNzYnixGd71GjZgk86MygIDbHBTYalnspgr8IbEBELFeVpHaU5L8NZw1yEDbpkYdCvcYuuPEi4fYR1s-VY8OzhhpHmhTsdKpKgd2Nl2X9468DStfjBZR7nhPIi7KJQ1zZa7FZre3gsk8kiyiorY8A5m_DPbdm109j9ApJwLzIA2O41gT8lK4_8lNocN8WZQl3sVN1bRlph268E-DQrWCLQXXOkPm_niuYhPJIW9kvlVGWcz5r2mJ6yp4W-BRXEPTZPxnI6K5_oj225IMpd4eg2i8lpkcI8cSIWrOZXfKvLIRgloVWKVIKqBwor1Jex9ejMrNSoiT2plQQdpjEOBJUY0-aG8qFhpUL4jJrPHVrbwbe3_g8PVhCQk6ohyDH5eCxXZPzH5VPEaLwVAB7LeppmoDlmqZ1CaDx3WehkBbX3nti29SJAprjHBjecg9Y3bdZX7tEBsTC3waz0UCScKEacWfvqCKmTy5dZsiOvuG59vxD2Ezgj7AI2DsoXoaNswJfu6wQZ8wlmRaAImQ-l_AW6s7Y3-YCNU7Hcwpkg97nWG-q568aNRF9Ug_WMpl7kTMiTzXbnPBZd1c8r0W_HbASwuOgdeH8gTJ-DCLSogMUyR924q0LNWHmGjHuIy4ituWeK6ZBwgb4IdgQ-srgJHf0x1LGtMHg1yJYT-jHvpKyeHoeRuOHp4OYNIMOKi_90R9AhQwopo2LZKBkAKM2nDm-UU1PVG5inkwnoVIHPmoxneEjznWS2aAevslWnxwAXCo4EbX0CtAzThTJAZIbJgmzUvGlq5RD6QFS2ak49qE73GiC-VqPIMsXVsJ5hZuEu7AEMKnJmKfZoEm6sPBLTBMeIZeuHXVuGX8GOxHIsqBt5adhSj5rj6fCUe6mkcxSaR7iRvzXF5iu68SLRcMSVqOuCGkpASGhKnuDZy0Ln1qhuSr_hubGuOQMb0EV1J6yN8ie5aEUELD6mrBg-OlfXnqYeRx-XD-lmYpg8NFrGBRq9cTuY_cQ4viJQFeQbk69TiE3lWiWRRnRnm6EVcrITll5ZwSVQxdfG0ZokGhJ82hARSFM9F3bT3H4j0fwSNXry1_-xR0-rA1-uOv1HZvU8klqelgNimwcNjzeaYX2kJFO3HFMMjltsZSeIhUdBN8UPMl-_-to84uFmRK8ckYLnNiSf6SI24AWSoRrZ2vZA8gnttWT68X0vV7Q3BIcHAue2U5PeyoxGeu6uvZfD8dJ0Lc1OUMHi8IEiTzjgNOY_PBl3IEsjU04uuuccsZ-7cqnAkQKEx6MGQe-FgSllwuSLw5vvp0UkBunZW24xjS2qn_HcEJUBlKXG6bUuOlNQ3NxS2FwlaWsamzGrCu2H7OiotspN-wEcztlNhz0W0vcMQkj5JRpaZm_NuTi0s7Q7pj_G109jE5k1VYJkQLnBij_Qp6Q2DxIrSPj3fKoLJhqW4RgPeChQmPWMzkfbkYBqE1WAH9n5Ly0PsehVoaDc2VCfdHURjx5XycYG-UD0gDITg90lkbtgmSdRSQ5vuodwQamewoZ2krqW8s9sN53xk2mq8oL25RV1z5IpG_W_vSYZdKeYqJHE7UNqK1u2Fz5kyzalg4ilVQaj_gVs_wa945B3SIjI8sqdJ0f86xRko_TUYx04f8JHlYu94alArKNAcyxrU1K3krcqS1P2hkZ-YP9Llj3LubBKFymgBlePPIbqI23xJBsxxFICgFmWjOi93bO4fKvLq1gnxmZdaCEwj4IelhClTnQ1kGcY9BG7NQDQN3Mqq9EmktLMs7zo1HrwfQ7-P8vfZnWe6XDP5hvNeIZwCfjh6E-hN3eiWo6iAt-xFKkktzmyNwymIwtAMleM-uFiZizpcuDHA7JzZL4OjSu3_bgXb6TAF6Y9eJGiNoWAAgvlYD017B-eesZnV74VH43RfTDeREQ-qPVe75G2v0i3KtTGvzdYolM74xcMMZpPx6OBZWchCBwz4uQX73rg8ew_7J2cy-ir_UqjR_4lR2OwzFqyiE8RXRjb2U8V8ZAcD9yN6nfM_I41oDJkXQnvntzUgV7L-waDB1sorjpaoAc_0uO3U3meNXPVa-JHNHPjtWz-017UzxjHOcZzZwgh_9RiHCfBpSllKErSLfCRH6g9HbZ_Pj_0-zd_jscBu_BdT5bUQ3nJqhRExZTomXabizLV_jKkYciUF3imBGBaA7QyChB67EWt2far5LOkc03gPsAPcvyIawinmT5aYUqC7SsLgy1JWb-sZPpYNV_6UQg4KcTnxT5QiC2JvY2EUwLi8QshlNuyuePBywqmrcFym7u-Lj4QW_YPUOhFkoSCmdgzGu9UnZCgPWi-2r0lKLjdZJs39Ennkos1Qf0nnlW60uF_tOZbiPYMilRU062_LUEbLTKUxYpcgX08w_7X-4TqTC9263v8X5Yx93jxUUUN5ME6cIu1BSTBSlPcHrP7aL4nm0-FPm9A3bQlfeWc9IwU-HaP2gz8oNHr_V_FP2mbDU3e_nszlvtT8DXDKDGqby96U9d0FeOG24rBICsmDT7GRvhu6iTXfgKdi7x5-TcOqrA.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LjEtc29sLXByby0yMDI2MDkyOXxvcGVuYWkifQ",
+        "status": "completed",
+        "format": "openai-responses-v1"
+      }
+    },
+    "st_tmp_zn5b8fevzya": {
+      "id": "st_tmp_zn5b8fevzya",
+      "messageId": "msg-1790887175-fPZD1uwHxqJrH2JWTmTh",
+      "data": {
+        "id": "st_tmp_zn5b8fevzya",
+        "status": "completed",
+        "type": "openrouter:web_search",
+        "action": {
+          "type": "search",
+          "query": "site.govinfo.gov 2019 29 CFR 1910.146 oxygen deficient 19.5 enriched 23.5",
+          "sources": [
+            {
+              "type": "url",
+              "url": "https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XVII/part-1910/subpart-J/section-1910.146"
+            },
+            {
+              "type": "url",
+              "url": "http://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
+            },
+            {
+              "type": "url",
+              "url": "https://www.govinfo.gov/content/pkg/CFR-2014-title29-vol5/pdf/CFR-2014-title29-vol5-sec1910-146.pdf"
+            },
+            {
+              "type": "url",
+              "url": "https://www.law.cornell.edu/cfr/text/29/1910.146"
+            },
+            {
+              "type": "url",
+              "url": "https://www.govinfo.gov/content/pkg/CFR-2010-title29-vol5/pdf/CFR-2010-title29-vol5-sec1910-146.pdf"
+            }
+          ]
+        }
+      }
+    },
+    "rs_0159ebb2a015843b016abec547116487d184cf3fc57008e821": {
+      "id": "rs_0159ebb2a015843b016abec547116487d184cf3fc57008e821",
+      "messageId": "msg-1790887175-fPZD1uwHxqJrH2JWTmTh",
+      "data": {
+        "type": "reasoning",
+        "id": "rs_0159ebb2a015843b016abec547116487d184cf3fc57008e821",
+        "summary": [],
+        "encrypted_content": "gAAAAABqvsVHGGRtZn2je9PvxHHRu94CfsCbvsCnpLP0m22DkTcndlR59XHScMk7WfbVqNOe5S7mqMNdnCABpbAjhc-DrHnFhCFr_YSo49g3IqggTlKDpNmGgeqxX6m0Iufzvc3WgUcUxEuUuIcWr08iT36WAS27plQSUYmXpIjYPnaoW3gPA_EBCVwr6Slj-PPOWOwF-vROVJbm_h8W73dRrY_NNjf9iFSn_pOLgyrK_Y4JhRFNhv2ej3a8t6y7LESnIUyVM3HEd1flcBVQRmqovinDEYi13ZU2AY9Wo7DEmv4bF10ZrDC2ITzJhQ46fxZsdaT-UtUYGpPIwQInVZZLMxcDcQYhCt1dYBab96z_z0kUEwVI6gbrrabUXK3prD9sKHd1UhCARRNUqIU8in0gdg84D4L1lJ1XfaZZwM7UdQ6InWwGVP6k6xw0w_BpmJxOh-xfHEe1_qdAyQkjGQSLcrzGKv8MIa5I0en-3EbQhEkneKHL4o2awzwT3GQbg7XwYUS8C4wnOqpDrNvUhouNtG1diL8ty5DiOrDO2eukiJE88Ts1gSUIgd7rR9TfecVwpliQFX71gd_uf67uKYEOC1a2TjXuMO6pngVj14vgGSuH3IUylFdkRenid_PfE1oU0xZju5pQoA8bYgLGLzY_Gh7DwT9hoC-lT19QCwJZ_mqUfDA78X_3JF_CT23nKukvGWGeTiEZbnyBCUbwSNE2_jDX3ArLnX2lDKeOUtb5nJk-pYUpRA5W5vNlfs7m26Q3iTgxYyfAWZd2Y43dBzybFlCg3eyrf3G6MCcc5NdMmxsAwccDguwfSPhPP-J8GcZlt5YITNZEfwCTviFS054DgfYXLLzDvTyaRE0npc4xjQF2Tzo8GkrVWLWs7jxdU7z7Gr9p6ay5ZhSSN7_nFu4AtJNxYaCBZiVmzmgczV09pl4XcVN6yAkguimyUYQKhvqJfcaXxFjzeKDbFHX1jS9eZTjpfj-46GGSoZ2-vuWa0f1U5qtjSw2ZW1GM93XZSR0D6a9PDGqRnZ971fU3Y3UkGvxZUhboInj-3kM0cSZEE7sL6LxTL0IkFMpqn4G27HGtWUSYzK2uhcPSFxdlM-TqqzRaTVBLdauM6Csunh13OZXTOxWEryEJoG7hrwVPEh8C7IqIScEFTBkZfkIHsPfp6GPrrZhmpROlgJkswoT-lmiJto1Fygu8Fuy5SzJJ-cKzIFdkdtZlR1pH2nHIN21xF3FCA3IairVSC83Z9oCmqf8Td_g3nv2p3hr2FBweZSuFPfPIPLs_QNd0zoXjWnMgc-lI_x1dMrkJv7hu4U1qwqGQpv7cSIgT0qbK5Ajrrn_8Sv3tKjLuTQkUcDB1XDD6A--Q3H3deQ7XKPF2jmi8eV8n42_lsgDDb5yl2nwP6WAXmPejhOKWmiGBYZL5gYgas5fuL1z0-KucNkesGGtGbJJc_7YaWKGSrZ12yTC1sUBiXBpnygEJuN5TiypzX_uHuADbXkvqTJxsSZF4UZQKIcFnWnvevw4Bfz0Xjel7z8WSW8bcuekyH68VASS43iAMcITtdFP0fAXFggcwtYckRlhm-xXFzuKFp--4P6sd0wo--lnmQ3TPCdXy3wNXpuIB7-ddlV5qIuZkxfJpb5sJ0D7l-SN3ejThXvmyn-MlyG0knSVRuQHTqN6uwyvbgaNYiHZ7zPV-VVwGRjkc0d-wz0rDiT1BB8_GBtXUvIzvcKfh5uXVAbZjeSESGzRviE78VjzsjCEXqfUkbo_g-X-ke4RVYuQXxGry75-FR8kau7vJ98Sjb9w6FCSiwdfUPwJQorlNarQyfKhHsN7s-hs9rrFyOucfBqzVCmx0GzanSWvvVeRd3_havtv-NQ8oOwP7Xr8__OHdxWNzKQjGDfTSGGqWXgtxJH4EMLoQ7JDaEAXDb7V86dr9g_M9bbvKfkJ6Cqp7UjomQ4EYiw2tdTrcTpcYTtfX_Ayj-EJbPOVE8wp02ZmbaNRDtyPVjf_l_f4x2PTf4LG-RRF4ccoTuEA1W27g_gT4-5nqdkZGnPVgMMMFUHbNOpdqJAcumZE61ETsESqEAQ8woFTPoJRYvFIat_O2IreO34P4bQgqxpRJcb34YKkWnWtUQHD5Mx7y5RKWHLFjh61_butQ4tIgcwwMRbfrIXexwP0XmUJxoPfoWiln-Df4p8-l3rCUVmzBYUgW4AWhRhnCwJGDMyNrnS3AodPmE9y2r3dxZ4JizZP9l_uu-B2umBeISt_Yui5uDmnq136kszGHuyKyYGgHdBSnQ95SaiD-qqfNRIgnvtwM3W2ukJCWyV7iPp5RkE-ZKZTwlVt6d_hZ-qJni-AedyuRxT5g5PDkRGPoNYb1pcT9W6hbsOQ4CdHjhvXMmGnNwZMgeWt04g6mKMrQaos_baNVTcKdoVw5xFDrb9fQyqvOjNqDXbHL8537ZTIJwbcIMuaF6sNKJ8cVfXDHwZltUed9IivGIjfvha-ukyRZ_e7Om4v1qcFhrymwmCSkabG1fGahUNxBHYk7CeD96284yaz0p_8UL5FzYGMq7VPFGsExIs6z0YvxnxkljtVWcTCO2XY3Lkc-JqgE1QMZKAtH8GeMaiM5O_bGymAVMMCWPn4DbHmo04q8meKBRHligbalDn1-VEEJhl3mLzIHI3CVTmPl_07vUEqTghWY2fnCkaut5Id2gg9VpG3v1VqPJjCX5eFReyhiR9Bv7_ZGdboARXvIA4ApvMZg11k2ot2BQ1hxgABO4ANeaEFDW_4BHTKJYJG0HxtUx4gh7Y2FvSrhaZjuJpyoemzhwUdJD5_Pz5uXrhb28QHSbGAu_YOgHu6Etgc3yItfryzF1kwDownMR6yOFDcdqehkC9UMyXUslJU86u5NMm40NFufkCef-bkJDeXMU20IakRqmgucpI7GKHAHnU6eA6a7Ugjk8myeTdfaHXyLYSiGbhcEFMQUQi3Jv-n7_lXXP-n0a5wcrV9eBU-lIlDCWkqzlS48AdYDW0OpS3vJ7_VnPOxaurDBnr6LVc4E2z-yjBGuD41LuvUNLhHDgZlck2A_B9ypPHM5NN51mSSn3W5fRiR9KIw1rGraRL9dLOMGSdepqmqufeBEx8fHuNm8sxxNKR6WarCiP-QVzj2ZyTWfn7KOjSULhTOriV1F5e1U-JQvkIHyrjHZWqfc7mD19nTtcl3Pp-UsJ-yt_paBuYvTb1OeMOnIQWu5g_on9ipbKvCK8nACGAqhMIQScpqvWTRThFXjGB5R7J_xAD3MsJxKDGJgr6S4DSenyfzuzoIxzjxv01041knIqLrHES5yDuS2UWXAWblLZNBcX02lp-82PoQuQ6snkmrnDRIGpA2744yIwd0P6wRQnKqduOKLQ9013GFcqA9EFZ6HhzNKLhqFPfkg_U9z7uy8NSep41amnQ5ZUs9SwStAkqVV8TPcGa0buwpA46RwwmgX7OGYG2kFsxM1EwZ1lmPDJSqjBoEYawrQASZeMMkdwxxTx0ddNY4h9Gist3c952QALWc96zgHQgFoZ3U6qjza0BKaH7tbe84KrNGjhkWVg2hAFCH51uuu4GXkd40DgtjMwSMBkJip266CJuBnipEhjjx4fuCjAejozlMghp8bA1EKj4kJZk_pAAwGq95RzZduCKdvJ9wgiNubOk5Y0HmDtWqb-5J27QYE-sF7LPJWcZkcpmosIDNti_5N8pVtAcTzN7O4g0DmlIiOzbFmNOzxlU_yQeh94zKcFYtJOiKFx6CZVFWner7NnhLhOoXEcva3Harfo-_XFu6wCKZsPdThFpmD6yYhHVY1lqLv814Jqah02n9aVQiCZwk7kNLZcQYknATyhQuvgdhvPrdxmEgJKA8KOjIKCGwlwF1xD4tdQCFs4rJmSjK_LNpp4PK-wRVgwfpfNgc9ykW9Db6hnYeXuOWMDP6f2hzw6fIaTNYNOm29XgqqAO2-McMv0hErokULQcXOVIc7iRK52r6Ve9J5vCIUotOaqUvFAwQ7bQCmYa67zoo8Neeq-EJg_QoeXFD7O2sueTzXLTMtZ11LQoNo5CavQ7tqH9KYrLbH_MD0Nyo5WHy1Mhsowr3FEjksF3WjiDNmAIapzgwL0lqXoa3lgeuwxX4hPgyrSfQvLthh_KZzX7iakXYfQmPXL_trFwK7yi-SZ4JmP76v_KxKI-RWmNij6XElCNi50PaGoHybpbpkee7Aor8LGK4SsQmwhMkcuu6gsSDb14yOLeVcSr4jwkMfrxRitcbWYg==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LjEtc29sLXByby0yMDI2MDkyOXxvcGVuYWkifQ",
+        "status": "completed",
+        "format": "openai-responses-v1"
+      }
+    },
+    "st_tmp_z5anow6x82": {
+      "id": "st_tmp_z5anow6x82",
+      "messageId": "msg-1790887175-fPZD1uwHxqJrH2JWTmTh",
+      "data": {
+        "id": "st_tmp_z5anow6x82",
+        "status": "completed",
+        "type": "openrouter:web_fetch",
+        "url": "https://www.govinfo.gov/content/pkg/CFR-2014-title29-vol5/pdf/CFR-2014-title29-vol5-sec1910-146.pdf",
+        "content": "## Occupational Safety and Health Admin., Labor § 1910.146\n\nthe requirements contained in various sec \ntions of the standard: \n1. Bresnahan, Thomas F., and Bryk, Jo \nseph, ‘‘The Hazard Association Values of Ac \ncident Prevention Signs’’, Journal of Amer \nican Society of Safety Engineers; January 1975. \n2. Dreyfuss, H., Symbol Sourcebook, McGraw \nHill; New York, NY, 1972. \n3. Glass, R.A. and others, Some Criteria for \nColors and Signs in Workplaces, National Bu \nreau of Standards, Washington DC, 1983. \n4. Graphic Symbols for Public Areas and Oc \ncupational Environments, Treasury Board of \nCanada, Ottawa, Canada, July 1980. \n5. Howett, G.L., Size of Letters Required for \nVisibility as a Function of Viewing Distance \nand Observer Acuity, National Bureau of \nStandards, Washington DC, July 1983. \n6. Lerner, N.D. and Collins, B.L., The As \nsessment of Safety Symbol Understandability by \nDifferent Testing Methods, National Bureau of \nStandards, Washington DC, 1980. \n7. Lerner, N.D. and Collins, B.L., Workplace \nSafety Symbols, National Bureau of Stand \nards, Washington DC, 1980. \n8. Modley, R. and Meyers, W.R., Handbook \nof Pictorial Symbols, Dover Publication, New \nYork, NY, 1976. \n9. Product Safety Signs and Labels, FMC Cor \nporation, Santa Clara, CA, 1978. \n10. Safety Color Coding for Marking Physical \nHazards, Z53.1, American National Standards \nInstitute, New York, NY, 1979. \n11. Signs and Symbols for the Occupational \nEnvironment, Can. 3–Z–321–77, Canadian \nStandards Association, Ottawa, September \n1977. \n12. Symbols for Industrial Safety, National \nBureau of Standards, Washington DC, April \n1982. \n13. Symbol Signs, U.S. Department of Trans \nportation, Washington DC, November 1974. \n[39 FR 23502, June 27, 1974, as amended at 43 \nFR 49749, Oct. 24, 1978; 43 FR 51759, Nov. 7, \n1978; 49 FR 5322, Feb. 10, 1984; 51 FR 33260, \nSept. 19, 1986; 61 FR 9239, Mar. 7, 1996; 76 FR \n24698, May 2, 2011; 76 FR 44265, July 25, 2011; \n78 FR 35566, June 13, 2013] \n\n§ 1910.146 Permit-required confined spaces. (a) Scope and application. This section contains requirements for practices and procedures to protect employees in general industry from the hazards of entry into permit-required confined spaces. This section does not apply to agriculture, to construction, or to ship yard employment (parts 1928, 1926, and 1915 of this chapter, respectively). (b) Definitions. Acceptable entry conditions means the conditions that must exist in a permit space to allow entry and to ensure that employees involved with a permit-re quired confined space entry can safely enter into and work within the space. Attendant means an individual sta tioned outside one or more permit spaces who monitors the authorized en trants and who performs all attend ant’s duties assigned in the employer’s permit space program. Authorized entrant means an em ployee who is authorized by the em ployer to enter a permit space. Blanking or blinding means the abso lute closure of a pipe, line, or duct by the fastening of a solid plate (such as a spectacle blind or a skillet blind) that completely covers the bore and that is capable of withstanding the maximum pressure of the pipe, line, or duct with no leakage beyond the plate. Confined space means a space that: (1) Is large enough and so configured that an employee can bodily enter and perform assigned work; and (2) Has limited or restricted means for entry or exit (for example, tanks, vessels, silos, storage bins, hoppers, vaults, and pits are spaces that may have limited means of entry.); and (3) Is not designed for continuous em ployee occupancy. Double block and bleed means the clo sure of a line, duct, or pipe by closing and locking or tagging two in-line valves and by opening and locking or tagging a drain or vent valve in the line between the two closed valves. Emergency means any occurrence (in cluding any failure of hazard control or monitoring equipment) or event inter nal or external to the permit space that could endanger entrants. Engulfment means the surrounding and effective capture of a person by a liquid or finely divided (flowable) solid substance that can be aspirated to cause death by filling or plugging the respiratory system or that can exert enough force on the body to cause death by strangulation, constriction, or crushing. Entry means the action by which a person passes through an opening into a permit-required confined space. Entry includes ensuing work activities in that space and is considered to have occurred as soon as any part of the en trant’s body breaks the plane of an opening into the space.\n\n## § 1910.146 29 CFR Ch. XVII (7–1–14 Edition)\n\nEntry permit (permit) means the writ ten or printed document that is pro vided by the employer to allow and control entry into a permit space and that contains the information specified in paragraph (f) of this section. Entry supervisor means the person (such as the employer, foreman, or crew chief) responsible for determining if acceptable entry conditions are present at a permit space where entry is planned, for authorizing entry and overseeing entry operations, and for terminating entry as required by this section.\n\nNOTE: An entry supervisor also may serve as an attendant or as an authorized entrant, as long as that person is trained and equipped as required by this section for each role he or she fills. Also, the duties of entry supervisor may be passed from one indi vidual to another during the course of an entry operation. Hazardous atmosphere means an at mosphere that may expose employees to the risk of death, incapacitation, impairment of ability to self-rescue (that is, escape unaided from a permit space), injury, or acute illness from one or more of the following causes: (1) Flammable gas, vapor, or mist in excess of 10 percent of its lower flam mable limit (LFL); (2) Airborne combustible dust at a concentration that meets or exceeds its LFL;\n\nNOTE: This concentration may be approxi mated as a condition in which the dust ob scures vision at a distance of 5 feet (1.52 m) or less.\n\n(3) Atmospheric oxygen concentra tion below 19.5 percent or above 23.5 percent; (4) Atmospheric concentration of any substance for which a dose or a permis sible exposure limit is published in sub part G, Occupational Health and Envi ronmental Control, or in subpart Z, Toxic and Hazardous Substances, of this part and which could result in employee ex posure in excess of its dose or permis sible exposure limit;\n\nNOTE: An atmospheric concentration of any substance that is not capable of causing death, incapacitation, impairment of ability to self-rescue, injury, or acute illness due to its health effects is not covered by this pro vision.\n\n(5) Any other atmospheric condition that is immediately dangerous to life or health.\n\nNOTE: For air contaminants for which OSHA has not determined a dose or permis sible exposure limit, other sources of infor mation, such as Material Safety Data Sheets that comply with the Hazard Communica tion Standard, §1910.1200 of this part, pub lished information, and internal documents can provide guidance in establishing accept able atmospheric conditions.\n\nHot work permit means the employer’s written authorization to perform oper ations (for example, riveting, welding, cutting, burning, and heating) capable of providing a source of ignition. Immediately dangerous to life or health (IDLH) means any condition that poses an immediate or delayed threat to life or that would cause irreversible ad verse health effects or that would interfere with an individual’s ability to escape unaided from a permit space.\n\nNOTE: Some materials—hydrogen fluoride gas and cadmium vapor, for example—may produce immediate transient effects that, even if severe, may pass without medical at tention, but are followed by sudden, possibly fatal collapse 12–72 hours after exposure. The victim ‘‘feels normal’’ from recovery from transient effects until collapse. Such mate rials in hazardous quantities are considered to be ‘‘immediately’’ dangerous to life or health. Inerting means the displacement of the atmosphere in a permit space by a noncombustible gas (such as nitrogen) to such an extent that the resulting at mosphere is noncombustible.\n\nNOTE: This procedure produces an IDLH ox ygen-deficient atmosphere.\n\nIsolation means the process by which a permit space is removed from service and completely protected against the release of energy and material into the space by such means as: blanking or blinding; misaligning or removing sec tions of lines, pipes, or ducts; a double block and bleed system; lockout or tagout of all sources of energy; or blocking or disconnecting all mechan ical linkages. Line breaking means the intentional opening of a pipe, line, or duct that is or has been carrying flammable, corro sive, or toxic material, an inert gas, or any fluid at a volume, pressure, or tem perature capable of causing injury.\n\n## Occupational Safety and Health Admin., Labor § 1910.146\n\nNon-permit confined space means a confined space that does not contain or, with respect to atmospheric haz ards, have the potential to contain any hazard capable of causing death or seri ous physical harm. Oxygen deficient atmosphere means an atmosphere containing less than 19.5 percent oxygen by volume. Oxygen enriched atmosphere means an atmosphere containing more than 23.5 percent oxygen by volume. Permit-required confined space (permit space) means a confined space that has one or more of the following character istics: (1) Contains or has a potential to contain a hazardous atmosphere; (2) Contains a material that has the potential for engulfing an entrant; (3) Has an internal configuration such that an entrant could be trapped or asphyxiated by inwardly converging walls or by a floor which slopes down ward and tapers to a smaller cross- sec tion; or (4) Contains any other recognized se rious safety or health hazard. Permit-required confined space program (permit space program) means the em ployer’s overall program for control ling, and, where appropriate, for pro tecting employees from, permit space hazards and for regulating employee entry into permit spaces. Permit system means the employer’s written procedure for preparing and issuing permits for entry and for re turning the permit space to service fol lowing termination of entry. Prohibited condition means any condi tion in a permit space that is not al lowed by the permit during the period when entry is authorized. Rescue service means the personnel designated to rescue employees from permit spaces. Retrieval system means the equipment (including a retrieval line, chest or full-body harness, wristlets, if appro priate, and a lifting device or anchor) used for non-entry rescue of persons from permit spaces. Testing means the process by which the hazards that may confront entrants of a permit space are identified and evaluated. Testing includes specifying the tests that are to be performed in the permit space.\n\nNOTE: Testing enables employers both to devise and implement adequate control measures for the protection of authorized en trants and to determine if acceptable entry conditions are present immediately prior to, and during, entry.\n\n(c) General requirements. (1) The em ployer shall evaluate the workplace to determine if any spaces are permit- re quired confined spaces.\n\nNOTE: Proper application of the decision flow chart in appendix A to §1910.146 would facilitate compliance with this requirement.\n\n(2) If the workplace contains permit spaces, the employer shall inform ex posed employees, by posting danger signs or by any other equally effective means, of the existence and location of and the danger posed by the permit spaces.\n\nNOTE: A sign reading ‘‘DANGER—PERMIT REQUIRED CONFINED SPACE, DO NOT ENTER’’ or using other similar language would satisfy the requirement for a sign.\n\n(3) If the employer decides that its employees will not enter permit spaces, the employer shall take effec tive measures to prevent its employees from entering the permit spaces and shall comply with paragraphs (c)(1), (c)(2), (c)(6), and (c)(8) of this section. (4) If the employer decides that its employees will enter permit spaces, the employer shall develop and implement a written permit space program that complies with this section. The written program shall be available for inspec tion by employees and their authorized representatives. (5) An employer may use the alter nate procedures specified in paragraph (c)(5)(ii) of this section for entering a permit space under the conditions set forth in paragraph (c)(5)(i) of this sec tion. (i) An employer whose employees enter a permit space need not comply with paragraphs (d) through (f) and (h) through (k) of this section, provided that: (A) The employer can demonstrate that the only hazard posed by the per mit space is an actual or potential haz ardous atmosphere; (B) The employer can demonstrate that continuous forced air ventilation alone is sufficient to maintain that permit space safe for entry;\n\n## § 1910.146 29 CFR Ch. XVII (7–1–14 Edition)\n\n(C) The employer develops moni toring and inspection data that sup ports the demonstrations required by paragraphs (c)(5)(i)(A) and (c)(5)(i)(B) of this section; (D) If an initial entry of the permit space is necessary to obtain the data required by paragraph (c)(5)(i)(C) of this section, the entry is performed in compliance with paragraphs (d) through (k) of this section; (E) The determinations and sup porting data required by paragraphs (c)(5)(i)(A), (c)(5)(i)(B), and (c)(5)(i)(C) of this section are documented by the employer and are made available to each employee who enters the permit space under the terms of paragraph (c)(5) of this section or to that employ ee’s authorized representative; and (F) Entry into the permit space under the terms of paragraph (c)(5)(i) of this section is performed in accord ance with the requirements of para graph (c)(5)(ii) of this section.\n\nNOTE: See paragraph (c)(7) of this section for reclassification of a permit space after all hazards within the space have been elimi nated.\n\n(ii) The following requirements apply to entry into permit spaces that meet the conditions set forth in paragraph (c)(5)(i) of this section. (A) Any conditions making it unsafe to remove an entrance cover shall be eliminated before the cover is removed. (B) When entrance covers are re moved, the opening shall be promptly guarded by a railing, temporary cover, or other temporary barrier that will prevent an accidental fall through the opening and that will protect each em ployee working in the space from for eign objects entering the space. (C) Before an employee enters the space, the internal atmosphere shall be tested, with a calibrated direct-reading instrument, for oxygen content, for flammable gases and vapors, and for potential toxic air contaminants, in that order. Any employee who enters the space, or that employee’s author ized representative, shall be provided an opportunity to observe the pre entry testing required by this para graph. (D) There may be no hazardous at mosphere within the space whenever any employee is inside the space.\n\n(E) Continuous forced air ventilation shall be used, as follows: (1) An employee may not enter the space until the forced air ventilation has eliminated any hazardous atmos phere; (2) The forced air ventilation shall be so directed as to ventilate the imme diate areas where an employee is or will be present within the space and shall continue until all employees have left the space; (3) The air supply for the forced air ventilation shall be from a clean source and may not increase the haz ards in the space. (F) The atmosphere within the space shall be periodically tested as nec essary to ensure that the continuous forced air ventilation is preventing the accumulation of a hazardous atmos phere. Any employee who enters the space, or that employee’s authorized representative, shall be provided with an opportunity to observe the periodic testing required by this paragraph. (G) If a hazardous atmosphere is de tected during entry: (1) Each employee shall leave the space immediately; (2) The space shall be evaluated to determine how the hazardous atmos phere developed; and (3) Measures shall be implemented to protect employees from the hazardous atmosphere before any subsequent entry takes place. (H) The employer shall verify that the space is safe for entry and that the pre-entry measures required by para graph (c)(5)(ii) of this section have been taken, through a written certification that contains the date, the location of the space, and the signature of the per son providing the certification. The certification shall be made before entry and shall be made available to each employee entering the space or to that employee’s authorized representa tive . (6) When there are changes in the use or configuration of a non-permit con fined space that might increase the hazards to entrants, the employer shall reevaluate that space and, if necessary, reclassify it as a permit-required con fined space. (7) A space classified by the employer as a permit-required confined space\n\n## Occupational Safety and Health Admin., Labor § 1910.146\n\nmay be reclassified as a non-permit confined space under the following pro cedures: (i) If the permit space poses no actual or potential atmospheric hazards and if all hazards within the space are elimi nated without entry into the space, the permit space may be reclassified as a non-permit confined space for as long as the non-atmospheric hazards remain eliminated. (ii) If it is necessary to enter the per mit space to eliminate hazards, such entry shall be performed under para graphs (d) through (k) of this section. If testing and inspection during that entry demonstrate that the hazards within the permit space have been eliminated, the permit space may be reclassified as a non-permit confined space for as long as the hazards remain eliminated.\n\nNOTE: Control of atmospheric hazards through forced air ventilation does not con stitute elimination of the hazards. Para graph (c)(5) covers permit space entry where the employer can demonstrate that forced air ventilation alone will control all hazards in the space.\n\n(iii) The employer shall document the basis for determining that all haz ards in a permit space have been elimi nated, through a certification that con tains the date, the location of the space, and the signature of the person making the determination. The certifi cation shall be made available to each employee entering the space or to that employee’s authorized representative. (iv) If hazards arise within a permit space that has been declassified to a non-permit space under paragraph (c)(7) of this section, each employee in the space shall exit the space. The em ployer shall then reevaluate the space and determine whether it must be re classified as a permit space, in accord ance with other applicable provisions of this section. (8) When an employer (host em ployer) arranges to have employees of another employer (contractor) perform work that involves permit space entry, the host employer shall: (i) Inform the contractor that the workplace contains permit spaces and that permit space entry is allowed only through compliance with a permit space program meeting the require ments of this section; (ii) Apprise the contractor of the ele ments, including the hazards identified and the host employer’s experience with the space, that make the space in question a permit space; (iii) Apprise the contractor of any precautions or procedures that the host employer has implemented for the pro tection of employees in or near permit spaces where contractor personnel will be working; (iv) Coordinate entry operations with the contractor, when both host em ployer personnel and contractor per sonnel will be working in or near per mit spaces, as required by paragraph (d)(11) of this section; and (v) Debrief the contractor at the con clusion of the entry operations regard ing the permit space program followed and regarding any hazards confronted or created in permit spaces during entry operations. (9) In addition to complying with the permit space requirements that apply to all employers, each contractor who is retained to perform permit space entry operations shall: (i) Obtain any available information regarding permit space hazards and entry operations from the host em ployer; (ii) Coordinate entry operations with the host employer, when both host em ployer personnel and contractor per sonnel will be working in or near per mit spaces, as required by paragraph (d)(11) of this section; and (iii) Inform the host employer of the permit space program that the con tractor will follow and of any hazards confronted or created in permit spaces, either through a debriefing or during the entry operation. (d) Permit-required confined space pro gram (permit space program). Under the permit space program required by paragraph (c)(4) of this section, the em ployer shall: (1) Implement the measures nec essary to prevent unauthorized entry; (2) Identify and evaluate the hazards of permit spaces before employees enter them;\n\n## § 1910.146 29 CFR Ch. XVII (7–1–14 Edition)\n\n(3) Develop and implement the means, procedures, and practices nec essary for safe permit space entry oper ations, including, but not limited to, the following: (i) Specifying acceptable entry condi tions; (ii) Providing each authorized en trant or that employee’s authorized representative with the opportunity to observe any monitoring or testing of permit spaces; (iii) Isolating the permit space; (iv) Purging, inerting, flushing, or ventilating the permit space as nec essary to eliminate or control atmos pheric hazards; (v) Providing pedestrian, vehicle, or other barriers as necessary to protect entrants from external hazards; and (vi) Verifying that conditions in the permit space are acceptable for entry throughout the duration of an author ized entry. (4) Provide the following equipment (specified in paragraphs (d)(4)(i) through (d)(4)(ix) of this section) at no cost to employees, maintain that equipment properly, and ensure that employees use that equipment prop erly: (i) Testing and monitoring equipment needed to comply with paragraph (d)(5) of this section; (ii) Ventilating equipment needed to obtain acceptable entry conditions; (iii) Communications equipment nec essary for compliance with paragraphs (h)(3) and (i)(5) of this section; (iv) Personal protective equipment insofar as feasible engineering and work practice controls do not ade quately protect employees; (v) Lighting equipment needed to en able employees to see well enough to work safely and to exit the space quickly in an emergency; (vi) Barriers and shields as required by paragraph (d)(3)(v) of this section. (vii) Equipment, such as ladders, needed for safe ingress and egress by authorized entrants; (viii) Rescue and emergency equip ment needed to comply with paragraph (d)(9) of this section, except to the ex tent that the equipment is provided by rescue services; and\n\n(ix) Any other equipment necessary for safe entry into and rescue from per mit spaces. (5) Evaluate permit space conditions as follows when entry operations are conducted: (i) Test conditions in the permit space to determine if acceptable entry conditions exist before entry is author ized to begin, except that, if isolation of the space is infeasible because the space is large or is part of a continuous system (such as a sewer), pre-entry testing shall be performed to the ex tent feasible before entry is authorized and, if entry is authorized, entry condi tions shall be continuously monitored in the areas where authorized entrants are working; (ii) Test or monitor the permit space as necessary to determine if acceptable entry conditions are being maintained during the course of entry operations; and (iii) When testing for atmospheric hazards, test first for oxygen, then for combustible gases and vapors, and then for toxic gases and vapors. (iv) Provide each authorized entrant or that employee’s authorized rep resentative an opportunity to observe the pre-entry and any subsequent test ing or monitoring of permit spaces; (v) Reevaluate the permit space in the presence of any authorized entrant or that employee’s authorized rep resentative who requests that the em ployer conduct such reevaluation be cause the entrant or representative has reason to believe that the evaluation of that space may not have been ade quate; (vi) Immediately provide each au thorized entrant or that employee’s au thorized representative with the re sults of any testing conducted in ac cord with paragraph (d) of this section.\n\nNOTE: Atmospheric testing conducted in accordance with appendix B to §1910.146 would be considered as satisfying the re quirements of this paragraph. For permit space operations in sewers, atmospheric test ing conducted in accordance with appendix B, as supplemented by appendix E to §1910.146, would be considered as satisfying the requirements of this paragraph.\n\n(6) Provide at least one attendant outside the permit space into which\n\n## Occupational Safety and Health Admin., Labor § 1910.146\n\nentry is authorized for the duration of entry operations;\n\nNOTE: Attendants may be assigned to mon itor more than one permit space provided the duties described in paragraph (i) of this sec tion can be effectively performed for each permit space that is monitored. Likewise, at tendants may be stationed at any location outside the permit space to be monitored as long as the duties described in paragraph (i) of this section can be effectively performed for each permit space that is monitored.\n\n(7) If multiple spaces are to be mon itored by a single attendant, include in the permit program the means and pro cedures to enable the attendant to re spond to an emergency affecting one or more of the permit spaces being mon itored without distraction from the at tendant’s responsibilities under para graph (i) of this section; (8) Designate the persons who are to have active roles (as, for example, au thorized entrants, attendants, entry supervisors, or persons who test or monitor the atmosphere in a permit space) in entry operations, identify the duties of each such employee, and pro vide each such employee with the training required by paragraph (g) of this section; (9) Develop and implement proce dures for summoning rescue and emer gency services, for rescuing entrants from permit spaces, for providing nec essary emergency services to rescued employees, and for preventing unau thorized personnel from attempting a rescue; (10) Develop and implement a system for the preparation, issuance, use, and cancellation of entry permits as re quired by this section; (11) Develop and implement proce dures to coordinate entry operations when employees of more than one em ployer are working simultaneously as authorized entrants in a permit space, so that employees of one employer do not endanger the employees of any other employer; (12) Develop and implement proce dures (such as closing off a permit space and canceling the permit) nec essary for concluding the entry after entry operations have been completed; (13) Review entry operations when the employer has reason to believe that the measures taken under the permit space program may not protect em ployees and revise the program to cor rect deficiencies found to exist before subsequent entries are authorized; and\n\nNOTE: Examples of circumstances requiring the review of the permit space program are: any unauthorized entry of a permit space, the detection of a permit space hazard not covered by the permit, the detection of a condition prohibited by the permit, the oc currence of an injury or near-miss during entry, a change in the use or configuration of a permit space, and employee complaints about the effectiveness of the program.\n\n(14) Review the permit space pro gram, using the canceled permits re tained under paragraph (e)(6) of this section within 1 year after each entry and revise the program as necessary, to ensure that employees participating in entry operations are protected from permit space hazards.\n\nNOTE: Employers may perform a single an nual review covering all entries performed during a 12-month period. If no entry is per formed during a 12-month period, no review is necessary. Appendix C to §1910.146 presents examples of permit space programs that are considered to comply with the requirements of para graph (d) of this section.\n\n(e) Permit system. (1) Before entry is authorized, the employer shall docu ment the completion of measures re quired by paragraph (d)(3) of this sec tion by preparing an entry permit.\n\nNOTE: Appendix D to §1910.146 presents ex amples of permits whose elements are con sidered to comply with the requirements of this section.\n\n(2) Before entry begins, the entry su pervisor identified on the permit shall sign the entry permit to authorize entry. (3) The completed permit shall be made available at the time of entry to all authorized entrants or their author ized representatives, by posting it at the entry portal or by any other equal ly effective means, so that the entrants can confirm that pre-entry prepara tions have been completed. (4) The duration of the permit may not exceed the time required to com plete the assigned task or job identi fied on the permit in accordance with paragraph (f)(2) of this section.\n\n## § 1910.146 29 CFR Ch. XVII (7–1–14 Edition)\n\n(5) The entry supervisor shall termi nate entry and cancel the entry permit when: (i) The entry operations covered by the entry permit have been completed; or (ii) A condition that is not allowed under the entry permit arises in or near the permit space. (6) The employer shall retain each canceled entry permit for at least 1 year to facilitate the review of the per mit-required confined space program required by paragraph (d)(14) of this section. Any problems encountered during an entry operation shall be noted on the pertinent permit so that appropriate revisions to the permit space program can be made. (f) Entry permit. The entry permit that documents compliance with this section and authorizes entry to a per mit space shall identify: (1) The permit space to be entered; (2) The purpose of the entry; (3) The date and the authorized dura tion of the entry permit; (4) The authorized entrants within the permit space, by name or by such other means (for example, through the use of rosters or tracking systems) as will enable the attendant to determine quickly and accurately, for the dura tion of the permit, which authorized entrants are inside the permit space;\n\nNOTE: This requirement may be met by in serting a reference on the entry permit as to the means used, such as a roster or tracking system, to keep track of the authorized en trants within the permit space.\n\n(5) The personnel, by name, currently serving as attendants; (6) The individual, by name, cur rently serving as entry supervisor, with a space for the signature or ini tials of the entry supervisor who origi nally authorized entry; (7) The hazards of the permit space to be entered; (8) The measures used to isolate the permit space and to eliminate or con trol permit space hazards before entry;\n\nNOTE: Those measures can include the lockout or tagging of equipment and proce dures for purging, inerting, ventilating, and flushing permit spaces.\n\n(9) The acceptable entry conditions;\n\n(10) The results of initial and periodic tests performed under paragraph (d)(5) of this section, accompanied by the names or initials of the testers and by an indication of when the tests were performed; (11) The rescue and emergency serv ices that can be summoned and the means (such as the equipment to use and the numbers to call) for sum moning those services; (12) The communication procedures used by authorized entrants and at tendants to maintain contact during the entry; (13) Equipment, such as personal pro tective equipment, testing equipment, communications equipment, alarm sys tems, and rescue equipment, to be pro vided for compliance with this section; (14) Any other information whose in clusion is necessary, given the cir cumstances of the particular confined space, in order to ensure employee safety; and (15) Any additional permits, such as for hot work, that have been issued to authorize work in the permit space. (g) Training. (1) The employer shall provide training so that all employees whose work is regulated by this section acquire the understanding, knowledge, and skills necessary for the safe per formance of the duties assigned under this section. (2) Training shall be provided to each affected employee: (i) Before the employee is first as signed duties under this section; (ii) Before there is a change in as signed duties; (iii) Whenever there is a change in permit space operations that presents a hazard about which an employee has not previously been trained; (iv) Whenever the employer has rea son to believe either that there are de viations from the permit space entry procedures required by paragraph (d)(3) of this section or that there are inad equacies in the employee’s knowledge or use of these procedures. (3) The training shall establish em ployee proficiency in the duties re quired by this section and shall intro duce new or revised procedures, as nec essary, for compliance with this sec tion.\n\n## Occupational Safety and Health Admin., Labor § 1910.146\n\n(4) The employer shall certify that the training required by paragraphs (g)(1) through (g)(3) of this section has been accomplished. The certification shall contain each employee’s name, the signatures or initials of the train ers, and the dates of training. The cer tification shall be available for inspec tion by employees and their authorized representatives. (h) Duties of authorized entrants. The employer shall ensure that all author ized entrants: (1) Know the hazards that may be faced during entry, including informa tion on the mode, signs or symptoms, and consequences of the exposure; (2) Properly use equipment as re quired by paragraph (d)(4) of this sec tion; (3) Communicate with the attendant as necessary to enable the attendant to monitor entrant status and to enable the attendant to alert entrants of the need to evacuate the space as required by paragraph (i)(6) of this section; (4) Alert the attendant whenever: (i) The entrant recognizes any warn ing sign or symptom of exposure to a dangerous situation, or (ii) The entrant detects a prohibited condition; and (5) Exit from the permit space as quickly as possible whenever: (i) An order to evacuate is given by the attendant or the entry supervisor, (ii) The entrant recognizes any warn ing sign or symptom of exposure to a dangerous situation, (iii) The entrant detects a prohibited condition, or (iv) An evacuation alarm is acti vated. (i) Duties of attendants. The employer shall ensure that each attendant: (1) Knows the hazards that may be faced during entry, including informa tion on the mode, signs or symptoms, and consequences of the exposure; (2) Is aware of possible behavioral ef fects of hazard exposure in authorized entrants; (3) Continuously maintains an accu rate count of authorized entrants in the permit space and ensures that the means used to identify authorized en trants under paragraph (f)(4) of this section accurately identifies who is in the permit space;\n\n(4) Remains outside the permit space during entry operations until relieved by another attendant;\n\nNOTE: When the employer’s permit entry program allows attendant entry for rescue, attendants may enter a permit space to at tempt a rescue if they have been trained and equipped for rescue operations as required by paragraph (k)(1) of this section and if they have been relieved as required by paragraph (i)(4) of this section.\n\n(5) Communicates with authorized entrants as necessary to monitor en trant status and to alert entrants of the need to evacuate the space under paragraph (i)(6) of this section; (6) Monitors activities inside and out side the space to determine if it is safe for entrants to remain in the space and orders the authorized entrants to evac uate the permit space immediately under any of the following conditions; (i) If the attendant detects a prohib ited condition; (ii) If the attendant detects the be havioral effects of hazard exposure in an authorized entrant; (iii) If the attendant detects a situa tion outside the space that could en danger the authorized entrants; or (iv) If the attendant cannot effec tively and safely perform all the duties required under paragraph (i) of this section; (7) Summon rescue and other emer gency services as soon as the attendant determines that authorized entrants may need assistance to escape from permit space hazards; (8) Takes the following actions when unauthorized persons approach or enter a permit space while entry is under way: (i) Warn the unauthorized persons that they must stay away from the per mit space; (ii) Advise the unauthorized persons that they must exit immediately if they have entered the permit space; and (iii) Inform the authorized entrants and the entry supervisor if unauthor ized persons have entered the permit space; (9) Performs non-entry rescues as specified by the employer’s rescue pro cedure; and (10) Performs no duties that might interfere with the attendant’s primary\n\n## § 1910.146 29 CFR Ch. XVII (7–1–14 Edition)\n\nduty to monitor and protect the au thorized entrants. (j) Duties of entry supervisors. The em ployer shall ensure that each entry su pervisor: (1) Knows the hazards that may be faced during entry, including informa tion on the mode, signs or symptoms, and consequences of the exposure; (2) Verifies, by checking that the ap propriate entries have been made on the permit, that all tests specified by the permit have been conducted and that all procedures and equipment specified by the permit are in place be fore endorsing the permit and allowing entry to begin; (3) Terminates the entry and cancels the permit as required by paragraph (e)(5) of this section; (4) Verifies that rescue services are available and that the means for sum moning them are operable; (5) Removes unauthorized individuals who enter or who attempt to enter the permit space during entry operations; and (6) Determines, whenever responsi bility for a permit space entry oper ation is transferred and at intervals dictated by the hazards and operations performed within the space, that entry operations remain consistent with terms of the entry permit and that ac ceptable entry conditions are main tained. (k) Rescue and emergency services. (1) An employer who designates rescue and emergency services, pursuant to para graph (d)(9) of this section, shall: (i) Evaluate a prospective rescuer’s ability to respond to a rescue summons in a timely manner, considering the hazard(s) identified;\n\nNOTE TO PARAGRAPH (k)(1)(i): What will be considered timely will vary according to the specific hazards involved in each entry. For example, §1910.134, Respiratory Protection, requires that employers provide a standby person or persons capable of immediate ac tion to rescue employee(s) wearing res piratory protection while in work areas de fined as IDLH atmospheres.\n\n(ii) Evaluate a prospective rescue service’s ability, in terms of pro ficiency with rescue-related tasks and equipment, to function appropriately while rescuing entrants from the par ticular permit space or types of permit spaces identified; (iii) Select a rescue team or service from those evaluated that: (A) Has the capability to reach the victim(s) within a time frame that is appropriate for the permit space haz ard(s) identified; (B) Is equipped for and proficient in performing the needed rescue services; (iv) Inform each rescue team or serv ice of the hazards they may confront when called on to perform rescue at the site; and (v) Provide the rescue team or serv ice selected with access to all permit spaces from which rescue may be nec essary so that the rescue service can develop appropriate rescue plans and practice rescue operations.\n\nNOTE TO PARAGRAPH (k)(1): Non-mandatory appendix F contains examples of criteria which employers can use in evaluating pro spective rescuers as required by paragraph (k)(1) of this section.\n\n(2) An employer whose employees have been designated to provide permit space rescue and emergency services shall take the following measures: (i) Provide affected employees with the personal protective equipment (PPE) needed to conduct permit space rescues safely and train affected em ployees so they are proficient in the use of that PPE, at no cost to those employees; (ii) Train affected employees to per form assigned rescue duties. The em ployer must ensure that such employ ees successfully complete the training required to establish proficiency as an authorized entrant, as provided by paragraphs (g) and (h) of this section; (iii) Train affected employees in basic first-aid and cardiopulmonary re suscitation (CPR). The employer shall ensure that at least one member of the rescue team or service holding a cur rent certification in first aid and CPR is available; and (iv) Ensure that affected employees practice making permit space rescues at least once every 12 months, by means of simulated rescue operations in which they remove dummies, mani kins, or actual persons from the actual permit spaces or from representative permit spaces. Representative permit spaces shall, with respect to opening\n\n## Occupational Safety and Health Admin., Labor § 1910.146\n\nsize, configuration, and accessibility, simulate the types of permit spaces from which rescue is to be performed. (3) To facilitate non-entry rescue, re trieval systems or methods shall be used whenever an authorized entrant enters a permit space, unless the re trieval equipment would increase the overall risk of entry or would not con tribute to the rescue of the entrant. Retrieval systems shall meet the fol lowing requirements. (i) Each authorized entrant shall use a chest or full body harness, with a re trieval line attached at the center of the entrant’s back near shoulder level, above the entrant’s head, or at another point which the employer can establish presents a profile small enough for the successful removal of the entrant. Wristlets may be used in lieu of the chest or full body harness if the em ployer can demonstrate that the use of a chest or full body harness is infeasi ble or creates a greater hazard and that the use of wristlets is the safest and most effective alternative. (ii) The other end of the retrieval line shall be attached to a mechanical de vice or fixed point outside the permit space in such a manner that rescue can begin as soon as the rescuer becomes aware that rescue is necessary. A me chanical device shall be available to re trieve personnel from vertical type per mit spaces more than 5 feet (1.52 m) deep. (4) If an injured entrant is exposed to a substance for which a Material Safe ty Data Sheet (MSDS) or other similar written information is required to be kept at the worksite, that MSDS or written information shall be made available to the medical facility treat ing the exposed entrant. (l) Employee participation. (1) Employ ers shall consult with affected employ ees and their authorized representa tives on the development and imple mentation of all aspects of the permit space program required by paragraph (c) of this section. (2) Employers shall make available to affected employees and their author ized representatives all information re quired to be developed by this section.\n\nAPPENDIXES TO §1910.146—PERMIT-REQUIRED CONFINED SPACES\n\nNOTE: Appendixes A through F serve to provide information and non-mandatory guidelines to assist employers and employees in complying with the appropriate require ments of this section.\n\n## § 1910.146 29 CFR Ch. XVII (7–1–14 Edition)\n\nAPPENDIX A TO § 1910.146—PERMIT-REQUIRED CONFINED SPACE DECISION FLOW CHART\n\nAPPENDIX B TO §1910.146—PROCEDURES FOR ATMOSPHERIC TESTING\n\nAtmospheric testing is required for two distinct purposes: evaluation of the hazards of the permit space and verification that ac ceptable entry conditions for entry into that space exist.\n\nVerDate Mar<15>2010 11:48 Aug 01, 2014 Jkt 232118 PO 00000 Frm 00496 Fmt 8010 Sfmt 8002 Q:\\29\\29V5.TXT 31 E C 2 7 O C 9 1 .0 2 9 < /G P H >\n\n## Occupational Safety and Health Admin., Labor § 1910.146\n\n(1) Evaluation testing. The atmosphere of a confined space should be analyzed using equipment of sufficient sensitivity and speci ficity to identify and evaluate any hazardous atmospheres that may exist or arise, so that appropriate permit entry procedures can be developed and acceptable entry conditions stipulated for that space. Evaluation and in terpretation of these data, and development of the entry procedure, should be done by, or reviewed by, a technically qualified profes sional (e.g., OSHA consultation service, or certified industrial hygienist, registered safety engineer, certified safety professional, certified marine chemist, etc.) based on eval uation of all serious hazards. (2) Verification testing. The atmosphere of a permit space which may contain a hazardous atmosphere should be tested for residues of all contaminants identified by evaluation testing using permit specified equipment to determine that residual concentrations at the time of testing and entry are within the range of acceptable entry conditions. Results of testing (i.e., actual concentration, etc.) should be recorded on the permit in the space provided adjacent to the stipulated ac ceptable entry condition. (3) Duration of testing. Measurement of val ues for each atmospheric parameter should be made for at least the minimum response time of the test instrument specified by the manufacturer. (4) Testing stratified atmospheres. When monitoring for entries involving a descent into atmospheres that may be stratified, the atmospheric envelope should be tested a dis tance of approximately 4 feet (1.22 m) in the direction of travel and to each side. If a sam pling probe is used, the entrant’s rate of progress should be slowed to accommodate the sampling speed and detector response. (5) Order of testing. A test for oxygen is per formed first because most combustible gas meters are oxygen dependent and will not provide reliable readings in an oxygen defi cient atmosphere. Combustible gasses are tested for next because the threat of fire or explosion is both more immediate and more life threatening, in most cases, than expo sure to toxic gasses and vapors. If tests for toxic gasses and vapors are necessary, they are performed last.\n\nAPPENDIX C TO §1910.146—EXAMPLES OF PERMIT-REQUIRED CONFINED SPACE PROGRAMS\n\nExample 1. \nWorkplace. Sewer entry. \nPotential hazards. The employees could be ex \nposed to the following: \nEngulfment. \nPresence of toxic gases. Equal to or more than \n10 ppm hydrogen sulfide measured as an 8- \nhour time-weighted average. If the presence \nof other toxic contaminants is suspected, \n\nspecific monitoring programs will be devel oped. Presence of explosive/flammable gases. Equal to or greater than 10% of the lower flammable limit (LFL). Oxygen Deficiency. A concentration of oxygen in the atmosphere equal to or less than 19.5% by volume. A. Entry Without Permit/Attendant Certification. Confined spaces may be entered without the need for a written permit or at tendant provided that the space can be main tained in a safe condition for entry by me chanical ventilation alone, as provided in §1910.146(c)(5). All spaces shall be considered permit-required confined spaces until the pre-entry procedures demonstrate otherwise. Any employee required or permitted to pre check or enter an enclosed/confined space shall have successfully completed, -as a min imum, the training as required by the fol lowing sections of these procedures. A written copy of operating and rescue procedures as re quired by these procedures shall be at the work site for the duration of the job. The Confined Space Pre-Entry Check List must be com pleted by the LEAD WORKER before entry into a confined space. This list verifies com pletion of items listed below. This check list shall be kept at the job site for duration of the job. If circumstances dictate an interrup tion in the work, the permit space must be re-evaluated and a new check list must be completed. Control of atmospheric and engulfment hazards. Pumps and Lines. All pumps and lines which may reasonably cause contaminants to flow into the space shall be disconnected, blinded and locked out, or effectively isolated by other means to prevent development of dan gerous air contamination or engulfment. Not all laterals to sewers or storm drains require blocking. However, where experience or knowledge of industrial use indicates there is a reasonable potential for contamination of air or engulfment into an occupied sewer, then all affected laterals shall be blocked. If blocking and/or isolation requires entry into the space the provisions for entry into a permit- required confined space must be im plemented. Surveillance. The surrounding area shall be surveyed to avoid hazards such as drifting vapors from the tanks, piping, or sewers. Testing. The atmosphere within the space will be tested to determine whether dan gerous air contamination and/or oxygen defi ciency exists. Detector tubes, alarm only gas monitors and explosion meters are examples of monitoring equipment that may be used to test permit space atmospheres. Testing shall be performed by the LEAD WORKER who has successfully completed the Gas De tector training for the monitor he will use. The minimum parameters to be monitored\n\n## § 1910.146 29 CFR Ch. XVII (7–1–14 Edition)\n\nare oxygen deficiency, LFL, and hydrogen sulfide concentration. A written record of the pre-entry test result",
+        "title": "Occupational Safety and Health Admin., Labor § 1910.146",
+        "httpStatus": 200
+      }
+    },
+    "st_tmp_js6enui5o3": {
+      "id": "st_tmp_js6enui5o3",
+      "messageId": "msg-1790887175-fPZD1uwHxqJrH2JWTmTh",
+      "data": {
+        "id": "st_tmp_js6enui5o3",
+        "status": "completed",
+        "type": "openrouter:shell",
+        "action": {
+          "commands": [
+            "python - <<'PY'\nimport math\nT=500.;d=.05;L=1.;G=80e9\nJ=math.pi*d**4/32\nprint('J',J,'stressMPa',T*d/(2*J)/1e6,'twistrad',T*L/(G*J))\nfor t in [.002,.003,.004]:\n A=.020*t\n print('thickness',t,'area',A,'stressMPa',6000/A/1e6,'volume',A*.500,'mass',7850*A*.500)\nprint('divider',12/(2000+4000),12*4000/(2000+4000))\nprint('pressure drop',6.0-5.9)\nPY"
+          ],
+          "max_output_length": 2000,
+          "timeout_ms": 1000
+        },
+        "output": [
+          {
+            "stdout": "",
+            "stderr": "bash: line 264: python: command not found",
+            "outcome": {
+              "type": "exit",
+              "exit_code": 127
+            }
+          }
+        ],
+        "container_id": "sess_ZUXnECCwXazPN0KHaYRh",
+        "call_id": "call_mT054QWXs6EAtd9ekwFErWtB",
+        "arguments": "{\"commands\":[\"python - <<'PY'\\nimport math\\nT=500.;d=.05;L=1.;G=80e9\\nJ=math.pi*d**4/32\\nprint('J',J,'stressMPa',T*d/(2*J)/1e6,'twistrad',T*L/(G*J))\\nfor t in [.002,.003,.004]:\\n A=.020*t\\n print('thickness',t,'area',A,'stressMPa',6000/A/1e6,'volume',A*.500,'mass',7850*A*.500)\\nprint('divider',12/(2000+4000),12*4000/(2000+4000))\\nprint('pressure drop',6.0-5.9)\\nPY\"],\"timeout_ms\":1000,\"max_output_length\":2000}"
+      }
+    },
+    "st_tmp_1j3o32yzs2z": {
+      "id": "st_tmp_1j3o32yzs2z",
+      "messageId": "msg-1790887175-fPZD1uwHxqJrH2JWTmTh",
+      "data": {
+        "id": "st_tmp_1j3o32yzs2z",
+        "status": "completed",
+        "type": "openrouter:shell",
+        "action": {
+          "commands": [
+            "python3 - <<'PY'\nimport math\nT=500.;d=.05;L=1.;G=80e9\nJ=math.pi*d**4/32\nprint(J,T*d/(2*J)/1e6,T*L/(G*J))\nfor t in [.002,.003,.004]:\n A=.020*t\n print(t,A,6000/A/1e6,A*.500,7850*A*.500)\nprint(12/(2000+4000),12*4000/(2000+4000),6.0-5.9)\nPY"
+          ],
+          "max_output_length": 2000,
+          "timeout_ms": 1000
+        },
+        "output": [
+          {
+            "stdout": "6.135923151542566e-07 20.3718327157626 0.0101859163578813\n0.002 4e-05 150.0 2e-05 0.157\n0.003 6e-05 100.0 3e-05 0.23550000000000001\n0.004 8e-05 75.0 4e-05 0.314\n0.002 8.0 0.09999999999999964",
+            "stderr": "",
+            "outcome": {
+              "type": "exit",
+              "exit_code": 0
+            }
+          }
+        ],
+        "container_id": "sess_ZUXnECCwXazPN0KHaYRh",
+        "call_id": "call_jtw5b07tLUJK21shOa8sqF3F",
+        "arguments": "{\"commands\":[\"python3 - <<'PY'\\nimport math\\nT=500.;d=.05;L=1.;G=80e9\\nJ=math.pi*d**4/32\\nprint(J,T*d/(2*J)/1e6,T*L/(G*J))\\nfor t in [.002,.003,.004]:\\n A=.020*t\\n print(t,A,6000/A/1e6,A*.500,7850*A*.500)\\nprint(12/(2000+4000),12*4000/(2000+4000),6.0-5.9)\\nPY\"],\"timeout_ms\":1000,\"max_output_length\":2000}"
+      }
+    },
+    "msg_tmp_yu18vy8jkvg": {
+      "id": "msg_tmp_yu18vy8jkvg",
+      "messageId": "msg-1790887175-fPZD1uwHxqJrH2JWTmTh",
+      "data": {
+        "id": "msg_tmp_yu18vy8jkvg",
+        "role": "assistant",
+        "type": "message",
+        "status": "completed",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "[\n  {\n    \"id\": \"Q1\",\n    \"shape\": \"SANITY\",\n    \"domain\": \"Electrical or electronics\",\n    \"question\": \"An ideal voltage divider has a $2.00\\\\,\\\\mathrm{k\\\\Omega}$ resistor from a $+12.0\\\\,\\\\mathrm{V}$ supply to its output and a $4.00\\\\,\\\\mathrm{k\\\\Omega}$ resistor from the output to ground. The output is unloaded. What are the output voltage relative to ground and the current flowing from the supply through the resistors?\",\n    \"required_items\": [\n      {\n        \"item\": \"Output voltage\",\n        \"value\": \"$+8.00\\\\,\\\\mathrm{V}$ relative to ground\",\n        \"tolerance_or_variants\": \"Accept $8\\\\,\\\\mathrm{V}$, $8.0\\\\,\\\\mathrm{V}$, or $8000\\\\,\\\\mathrm{mV}$; numerical tolerance $\\\\pm0.01\\\\,\\\\mathrm{V}$. An omitted positive sign is acceptable.\",\n        \"derivation_or_source\": \"$V_o=12.0\\\\times4.00/(2.00+4.00)=8.00\\\\,\\\\mathrm{V}$.\"\n      },\n      {\n        \"item\": \"Divider current\",\n        \"value\": \"$2.00\\\\,\\\\mathrm{mA}$ from the supply toward ground\",\n        \"tolerance_or_variants\": \"Accept $2\\\\,\\\\mathrm{mA}$ or $0.002\\\\,\\\\mathrm{A}$; numerical tolerance $\\\\pm0.01\\\\,\\\\mathrm{mA}$. Direction may be implicit in a positive supply current.\",\n        \"derivation_or_source\": \"$I=12.0/(2000+4000)=0.00200\\\\,\\\\mathrm{A}$.\"\n      }\n    ],\n    \"sources\": [\n      {\n        \"title\": \"Given circuit and Ohm's law\",\n        \"reference\": \"Question inputs; series resistances and unloaded voltage-divider formula.\"\n      }\n    ],\n    \"scope_in\": [\n      \"Output voltage relative to ground.\",\n      \"Current through the series resistors.\"\n    ],\n    \"scope_out\": [\n      \"Resistor power ratings.\",\n      \"Loading, resistor tolerances, or nonideal supply behavior.\",\n      \"Alternative divider designs.\"\n    ],\n    \"common_wrong_answers\": [\n      {\n        \"answer\": \"$4\\\\,\\\\mathrm{V}$ output\",\n        \"why_wrong\": \"This is the voltage across the upper resistor, not the output voltage across the lower resistor.\"\n      },\n      {\n        \"answer\": \"$6\\\\,\\\\mathrm{mA}$ current\",\n        \"why_wrong\": \"This uses only the upper resistance instead of the total series resistance.\"\n      }\n    ],\n    \"model_answer\": \"Output: $+8.00\\\\,\\\\mathrm{V}$ relative to ground.\\nCurrent: $2.00\\\\,\\\\mathrm{mA}$ from supply to ground.\"\n  },\n  {\n    \"id\": \"Q2\",\n    \"shape\": \"LOOKUP\",\n    \"domain\": \"Regulation or standards\",\n    \"question\": \"Under the definitions in $29$ CFR § $1910.146(b)$, July 1, 2014 edition, what oxygen concentration defines an oxygen-deficient atmosphere, and what concentration defines an oxygen-enriched atmosphere? Include the comparison operators and the concentration basis.\",\n    \"required_items\": [\n      {\n        \"item\": \"Oxygen-deficient atmosphere\",\n        \"value\": \"Less than $19.5\\\\%$ oxygen by volume\",\n        \"tolerance_or_variants\": \"Accept 'below', 'less than', or $<19.5\\\\%$; accept 'volume percent', '% v/v', or a volume fraction $<0.195$. Threshold and strict inequality must be exact.\",\n        \"derivation_or_source\": \"July 1, 2014 edition of $29$ CFR § $1910.146(b)$, definition 'Oxygen deficient atmosphere': 'an atmosphere containing less than 19.5 percent oxygen by volume.'\"\n      },\n      {\n        \"item\": \"Oxygen-enriched atmosphere\",\n        \"value\": \"More than $23.5\\\\%$ oxygen by volume\",\n        \"tolerance_or_variants\": \"Accept 'above', 'greater than', 'more than', or $>23.5\\\\%$; accept 'volume percent', '% v/v', or a volume fraction $>0.235$. Threshold and strict inequality must be exact.\",\n        \"derivation_or_source\": \"July 1, 2014 edition of $29$ CFR § $1910.146(b)$, definition 'Oxygen enriched atmosphere': 'an atmosphere containing more than 23.5 percent oxygen by volume.'\"\n      }\n    ],\n    \"sources\": [\n      {\n        \"title\": \"Code of Federal Regulations, Title 29, July 1, 2014 edition, § 1910.146\",\n        \"url\": \"https://www.govinfo.gov/content/pkg/CFR-2014-title29-vol5/pdf/CFR-2014-title29-vol5-sec1910-146.pdf\",\n        \"section\": \"Paragraph (b), definitions 'Oxygen deficient atmosphere' and 'Oxygen enriched atmosphere'.\",\n        \"stability\": \"Fixed historical edition published in 2014; freely readable official government PDF.\"\n      }\n    ],\n    \"scope_in\": [\n      \"Both oxygen thresholds.\",\n      \"Strict comparison operators.\",\n      \"Concentrations expressed by volume.\"\n    ],\n    \"scope_out\": [\n      \"Confined-space entry procedures.\",\n      \"Claims that oxygen concentration alone determines whether entry is safe.\",\n      \"Definitions from other regulations or nonmandatory example programs.\"\n    ],\n    \"common_wrong_answers\": [\n      {\n        \"answer\": \"Oxygen deficient at or below $19.5\\\\%$\",\n        \"why_wrong\": \"The requested paragraph (b) definition says less than, not less than or equal to.\"\n      },\n      {\n        \"answer\": \"Oxygen enriched at or above $23.5\\\\%$\",\n        \"why_wrong\": \"The requested definition says more than, not greater than or equal to.\"\n      },\n      {\n        \"answer\": \"Percent oxygen by mass\",\n        \"why_wrong\": \"Both definitions specify oxygen by volume.\"\n      }\n    ],\n    \"model_answer\": \"Oxygen deficient: $<19.5\\\\%$ oxygen by volume.\\nOxygen enriched: $>23.5\\\\%$ oxygen by volume.\"\n  },\n  {\n    \"id\": \"Q3\",\n    \"shape\": \"DERIVATION\",\n    \"domain\": \"Mechanical\",\n    \"question\": \"A uniform solid circular shaft has diameter $50.0\\\\,\\\\mathrm{mm}$, length $1.00\\\\,\\\\mathrm{m}$, and shear modulus $80.0\\\\,\\\\mathrm{GPa}$. It carries a constant torque of $500\\\\,\\\\mathrm{N\\\\,m}$. Assume linear-elastic Saint-Venant torsion and ignore end effects. Calculate the polar second moment of area in $\\\\mathrm{m^4}$, the maximum shear-stress magnitude in $\\\\mathrm{MPa}$, and the end-to-end twist magnitude in radians.\",\n    \"required_items\": [\n      {\n        \"item\": \"Polar second moment of area\",\n        \"value\": \"$6.13592\\\\times10^{-7}\\\\,\\\\mathrm{m^4}$\",\n        \"tolerance_or_variants\": \"Accept $6.14\\\\times10^{-7}\\\\,\\\\mathrm{m^4}$ or equivalent scientific notation; relative tolerance $0.2\\\\%$.\",\n        \"derivation_or_source\": \"$d=0.0500\\\\,\\\\mathrm{m}$; $J=\\\\pi d^4/32=\\\\pi(0.0500)^4/32=6.13592315\\\\times10^{-7}\\\\,\\\\mathrm{m^4}$.\"\n      },\n      {\n        \"item\": \"Maximum shear-stress magnitude\",\n        \"value\": \"$20.3718\\\\,\\\\mathrm{MPa}$\",\n        \"tolerance_or_variants\": \"Accept $20.4\\\\,\\\\mathrm{MPa}$ or $2.03718\\\\times10^7\\\\,\\\\mathrm{Pa}$; relative tolerance $0.2\\\\%$.\",\n        \"derivation_or_source\": \"$\\\\tau_{\\\\max}=T(d/2)/J=500(0.0250)/(6.13592315\\\\times10^{-7})=2.03718327\\\\times10^7\\\\,\\\\mathrm{Pa}=20.3718\\\\,\\\\mathrm{MPa}$.\"\n      },\n      {\n        \"item\": \"End-to-end twist magnitude\",\n        \"value\": \"$0.0101859\\\\,\\\\mathrm{rad}$\",\n        \"tolerance_or_variants\": \"Accept $0.0102\\\\,\\\\mathrm{rad}$ or $10.1859\\\\,\\\\mathrm{mrad}$; relative tolerance $0.2\\\\%$. A degree-only answer does not satisfy the requested radians.\",\n        \"derivation_or_source\": \"$\\\\theta=TL/(GJ)=500(1.00)/[(80.0\\\\times10^9)(6.13592315\\\\times10^{-7})]=0.0101859164\\\\,\\\\mathrm{rad}$.\"\n      }\n    ],\n    \"sources\": [\n      {\n        \"title\": \"Solid circular shaft torsion\",\n        \"reference\": \"Question inputs and standard relations $J=\\\\pi d^4/32$, $\\\\tau_{\\\\max}=T(d/2)/J$, and $\\\\theta=TL/(GJ)$.\"\n      }\n    ],\n    \"scope_in\": [\n      \"The three requested quantities with units.\",\n      \"A compact substitution into each formula.\"\n    ],\n    \"scope_out\": [\n      \"Material strength or factor-of-safety assessment.\",\n      \"Finite-element analysis.\",\n      \"Stress concentrations, warping corrections, or end effects.\"\n    ],\n    \"common_wrong_answers\": [\n      {\n        \"answer\": \"$J=\\\\pi d^4/64$\",\n        \"why_wrong\": \"This is the planar second moment of area; the polar second moment for a solid circular section is twice as large.\"\n      },\n      {\n        \"answer\": \"$40.7\\\\,\\\\mathrm{MPa}$ maximum shear stress\",\n        \"why_wrong\": \"Using diameter instead of radius in $Tr/J$ doubles the stress.\"\n      },\n      {\n        \"answer\": \"$0.0102$ degrees\",\n        \"why_wrong\": \"The torsion formula produces radians; labeling that numerical result as degrees is incorrect.\"\n      }\n    ],\n    \"model_answer\": \"$J=\\\\pi(0.0500)^4/32=6.14\\\\times10^{-7}\\\\,\\\\mathrm{m^4}$.\\n$\\\\tau_{\\\\max}=500(0.0250)/J=20.4\\\\,\\\\mathrm{MPa}$.\\n$\\\\theta=500(1.00)/(80.0\\\\times10^9J)=0.0102\\\\,\\\\mathrm{rad}$.\"\n  },\n  {\n    \"id\": \"Q4\",\n    \"shape\": \"SPECIFICATION\",\n    \"domain\": \"Materials\",\n    \"question\": \"Specify a uniform steel tie strip carrying a centered static tensile load of $6.00\\\\,\\\\mathrm{kN}$. Its width is fixed at $20.0\\\\,\\\\mathrm{mm}$ and its length at $500\\\\,\\\\mathrm{mm}$. Available thicknesses are $2.00$, $3.00$, and $4.00\\\\,\\\\mathrm{mm}$. The allowable axial stress is $100\\\\,\\\\mathrm{MPa}$, with equality permitted, and the steel density is $7850\\\\,\\\\mathrm{kg/m^3}$. Select the smallest available thickness that passes. Use gross-section axial stress only; ignore holes, connections, self-weight loading, corrosion, and dimensional tolerances. Give three short sections: selected dimensions; strength check, including the stress in the next thinner available strip; and volume and mass of the selected strip.\",\n    \"required_items\": [\n      {\n        \"item\": \"Selected dimensions\",\n        \"value\": \"Width $20.0\\\\,\\\\mathrm{mm}$, thickness $3.00\\\\,\\\\mathrm{mm}$, length $500\\\\,\\\\mathrm{mm}$\",\n        \"tolerance_or_variants\": \"Accept equivalent dimensions in metres or an explicitly labeled dimension string. Thickness selection must be exactly the available $3\\\\,\\\\mathrm{mm}$ size.\",\n        \"derivation_or_source\": \"$A_{\\\\min}=F/\\\\sigma_{\\\\mathrm{allow}}=6000/100=60\\\\,\\\\mathrm{mm^2}$, using $100\\\\,\\\\mathrm{MPa}=100\\\\,\\\\mathrm{N/mm^2}$; $t_{\\\\min}=60/20=3.00\\\\,\\\\mathrm{mm}$.\"\n      },\n      {\n        \"item\": \"Selected gross cross-sectional area\",\n        \"value\": \"$60.0\\\\,\\\\mathrm{mm^2}$\",\n        \"tolerance_or_variants\": \"Accept $6.00\\\\times10^{-5}\\\\,\\\\mathrm{m^2}$; relative tolerance $0.1\\\\%$.\",\n        \"derivation_or_source\": \"$A=bt=20.0\\\\times3.00=60.0\\\\,\\\\mathrm{mm^2}$.\"\n      },\n      {\n        \"item\": \"Selected-strip stress and strength verdict\",\n        \"value\": \"$100\\\\,\\\\mathrm{MPa}$; passes at the allowable limit\",\n        \"tolerance_or_variants\": \"Accept $100\\\\,\\\\mathrm{N/mm^2}$ or $1.00\\\\times10^8\\\\,\\\\mathrm{Pa}$; relative tolerance $0.1\\\\%$. Must identify equality as acceptable.\",\n        \"derivation_or_source\": \"$\\\\sigma=F/A=6000/60.0=100\\\\,\\\\mathrm{N/mm^2}=100\\\\,\\\\mathrm{MPa}$; the question permits equality.\"\n      },\n      {\n        \"item\": \"Next thinner available strip stress and verdict\",\n        \"value\": \"$2.00\\\\,\\\\mathrm{mm}$ thickness gives $150\\\\,\\\\mathrm{MPa}$ and fails\",\n        \"tolerance_or_variants\": \"Accept $150\\\\,\\\\mathrm{N/mm^2}$ or $1.50\\\\times10^8\\\\,\\\\mathrm{Pa}$; relative tolerance $0.1\\\\%$. Both thinner thickness and failure verdict must be identifiable.\",\n        \"derivation_or_source\": \"$A_2=20.0\\\\times2.00=40.0\\\\,\\\\mathrm{mm^2}$; $\\\\sigma_2=6000/40.0=150\\\\,\\\\mathrm{MPa}>100\\\\,\\\\mathrm{MPa}$.\"\n      },\n      {\n        \"item\": \"Selected-strip volume\",\n        \"value\": \"$3.00\\\\times10^{-5}\\\\,\\\\mathrm{m^3}$\",\n        \"tolerance_or_variants\": \"Accept $30000\\\\,\\\\mathrm{mm^3}$ or $30.0\\\\,\\\\mathrm{cm^3}$; relative tolerance $0.1\\\\%$.\",\n        \"derivation_or_source\": \"$V=AL=(6.00\\\\times10^{-5})(0.500)=3.00\\\\times10^{-5}\\\\,\\\\mathrm{m^3}$.\"\n      },\n      {\n        \"item\": \"Selected-strip mass\",\n        \"value\": \"$0.2355\\\\,\\\\mathrm{kg}$\",\n        \"tolerance_or_variants\": \"Accept $235.5\\\\,\\\\mathrm{g}$ or rounded $0.236\\\\,\\\\mathrm{kg}$; absolute tolerance $\\\\pm0.0005\\\\,\\\\mathrm{kg}$.\",\n        \"derivation_or_source\": \"$m=\\\\rho V=7850(3.00\\\\times10^{-5})=0.2355\\\\,\\\\mathrm{kg}$.\"\n      },\n      {\n        \"item\": \"Answer organization and consistency\",\n        \"value\": \"Three sections: selected dimensions; strength check; volume and mass\",\n        \"tolerance_or_variants\": \"Equivalent headings are acceptable. All selected-strip calculations must use the same selected dimensions.\",\n        \"derivation_or_source\": \"Question explicitly requests these three sections; area, stress, volume, and mass all follow from the selected $3.00\\\\,\\\\mathrm{mm}$ thickness.\"\n      }\n    ],\n    \"sources\": [\n      {\n        \"title\": \"Given material and design data\",\n        \"reference\": \"Question inputs; $A=bt$, $\\\\sigma=F/A$, $V=AL$, and $m=\\\\rho V$.\"\n      }\n    ],\n    \"scope_in\": [\n      \"Smallest acceptable available thickness and all selected dimensions.\",\n      \"Selected area, selected stress, and rejection of the next thinner size.\",\n      \"Selected volume and mass.\",\n      \"Three short, internally consistent sections.\"\n    ],\n    \"scope_out\": [\n      \"Connection design or stress concentrations.\",\n      \"Buckling, fatigue, or corrosion allowances.\",\n      \"An additional safety factor beyond the stated allowable stress.\",\n      \"Steel-grade selection or procurement advice.\"\n    ],\n    \"common_wrong_answers\": [\n      {\n        \"answer\": \"Select $4\\\\,\\\\mathrm{mm}$ because $3\\\\,\\\\mathrm{mm}$ reaches the allowable stress\",\n        \"why_wrong\": \"Equality is expressly permitted, and the task requires the smallest passing thickness.\"\n      },\n      {\n        \"answer\": \"Select $2\\\\,\\\\mathrm{mm}$\",\n        \"why_wrong\": \"Its axial stress is $150\\\\,\\\\mathrm{MPa}$, exceeding the allowable.\"\n      },\n      {\n        \"answer\": \"$235.5\\\\,\\\\mathrm{kg}$ mass\",\n        \"why_wrong\": \"This is a unit-conversion error; the selected volume is $3.00\\\\times10^{-5}\\\\,\\\\mathrm{m^3}$.\"\n      }\n    ],\n    \"model_answer\": \"### Selected dimensions\\nWidth $20.0\\\\,\\\\mathrm{mm}$; thickness $3.00\\\\,\\\\mathrm{mm}$; length $500\\\\,\\\\mathrm{mm}$.\\n\\n### Strength check\\nArea $60.0\\\\,\\\\mathrm{mm^2}$; stress $6000/60.0=100\\\\,\\\\mathrm{MPa}$: passes at the limit. The $2.00\\\\,\\\\mathrm{mm}$ strip gives $150\\\\,\\\\mathrm{MPa}$: fails.\\n\\n### Volume and mass\\n$V=60.0\\\\times500=30000\\\\,\\\\mathrm{mm^3}=3.00\\\\times10^{-5}\\\\,\\\\mathrm{m^3}$.\\n$m=7850V=0.2355\\\\,\\\\mathrm{kg}$.\"\n  },\n  {\n    \"id\": \"Q5\",\n    \"shape\": \"PROCEDURE\",\n    \"domain\": \"Fluids or thermal\",\n    \"question\": \"Write the ordered hydrostatic leak-test procedure for an already connected, initially unpressurized water manifold on a guarded bench. All test components are rated for $10.0\\\\,\\\\mathrm{bar}$ gauge. The bench instruction requires filling with water while the high-point vent is open until bubble-free water exits, then closing the vent before pressurization. Raise the pressure to $6.00\\\\,\\\\mathrm{bar}$ gauge, isolate the hand pump, and start the hold timer only after isolation. Do not add water during the $300\\\\,\\\\mathrm{s}$ hold. A test passes only if the pressure drop is no more than $0.20\\\\,\\\\mathrm{bar}$ and there is no visible water leakage during the hold. After assessing the result, use the release valve to depressurize and confirm $0\\\\,\\\\mathrm{bar}$ gauge before disconnecting. The completed test log shows $6.00\\\\,\\\\mathrm{bar}$ at the start of the isolated hold, $5.90\\\\,\\\\mathrm{bar}$ after $300\\\\,\\\\mathrm{s}$, and no visible leakage throughout. Include the acceptance criteria and the verdict for this log.\",\n    \"required_items\": [\n      {\n        \"item\": \"First operation: fill and vent\",\n        \"value\": \"Fill with water with the high-point vent open until bubble-free water exits\",\n        \"tolerance_or_variants\": \"Accept 'purge air' or 'bleed air' if open high-point vent and bubble-free discharge are explicit. Must precede vent closure and pressurization.\",\n        \"derivation_or_source\": \"Given bench instruction requires filling and removing air through the open high-point vent.\"\n      },\n      {\n        \"item\": \"Second operation: close vent\",\n        \"value\": \"Close the high-point vent before pressurizing\",\n        \"tolerance_or_variants\": \"May share a numbered step with filling, provided closure occurs after bubble-free discharge and before pressurization.\",\n        \"derivation_or_source\": \"Given bench instruction explicitly requires this order.\"\n      },\n      {\n        \"item\": \"Third operation: establish test pressure\",\n        \"value\": \"Raise pressure to $6.00\\\\,\\\\mathrm{bar}$ gauge\",\n        \"tolerance_or_variants\": \"Accept $6\\\\,\\\\mathrm{bar(g)}$ or $600\\\\,\\\\mathrm{kPa}$ gauge. The stated target is exact; do not substitute the component pressure rating.\",\n        \"derivation_or_source\": \"Test pressure is specified directly in the question.\"\n      },\n      {\n        \"item\": \"Fourth operation: isolate before timing\",\n        \"value\": \"Isolate the hand pump, then start the hold timer\",\n        \"tolerance_or_variants\": \"Accept 'close the pump isolation valve' or equivalent pump isolation. Timer must start after isolation.\",\n        \"derivation_or_source\": \"Given bench instruction defines the start of the isolated hold.\"\n      },\n      {\n        \"item\": \"Fifth operation: isolated hold\",\n        \"value\": \"Hold for $300\\\\,\\\\mathrm{s}$ without adding water; observe for visible leakage\",\n        \"tolerance_or_variants\": \"Accept $5\\\\,\\\\mathrm{min}$ or 'five minutes'. No pumping or pressure top-up during the hold.\",\n        \"derivation_or_source\": \"The question specifies the hold duration, no-addition rule, and leakage observation throughout the hold.\"\n      },\n      {\n        \"item\": \"Acceptance and failure criteria\",\n        \"value\": \"Pass only if pressure drop is $\\\\leq0.20\\\\,\\\\mathrm{bar}$ and no visible water leakage occurs; otherwise fail\",\n        \"tolerance_or_variants\": \"Accept $\\\\leq20\\\\,\\\\mathrm{kPa}$ or 'at most $0.20\\\\,\\\\mathrm{bar}$'. Both conditions must be required, with equality accepted.\",\n        \"derivation_or_source\": \"Acceptance criteria are supplied in the question; the two conditions are conjunctive.\"\n      },\n      {\n        \"item\": \"Logged pressure drop\",\n        \"value\": \"$0.10\\\\,\\\\mathrm{bar}$\",\n        \"tolerance_or_variants\": \"Accept $0.1\\\\,\\\\mathrm{bar}$ or $10\\\\,\\\\mathrm{kPa}$; absolute tolerance $\\\\pm0.001\\\\,\\\\mathrm{bar}$.\",\n        \"derivation_or_source\": \"$\\\\Delta p=p_{\\\\mathrm{start}}-p_{\\\\mathrm{end}}=6.00-5.90=0.10\\\\,\\\\mathrm{bar}$.\"\n      },\n      {\n        \"item\": \"Logged test verdict\",\n        \"value\": \"PASS\",\n        \"tolerance_or_variants\": \"Accept 'passes' or 'acceptable'. Must be linked to acceptable pressure drop and absence of visible leakage.\",\n        \"derivation_or_source\": \"$0.10\\\\,\\\\mathrm{bar}\\\\leq0.20\\\\,\\\\mathrm{bar}$ and the log reports no visible leakage throughout the hold.\"\n      },\n      {\n        \"item\": \"Final operations: assess, depressurize, confirm zero, disconnect\",\n        \"value\": \"Assess the result, then open the release valve, confirm $0\\\\,\\\\mathrm{bar}$ gauge, and only then disconnect\",\n        \"tolerance_or_variants\": \"Accept 'bleed down through the release valve' or 'release pressure'. Depressurization and explicit zero-gauge confirmation must precede disconnection.\",\n        \"derivation_or_source\": \"The question prescribes assessment before depressurization and zero-gauge confirmation before disconnection.\"\n      }\n    ],\n    \"sources\": [\n      {\n        \"title\": \"Given bench instruction and completed test log\",\n        \"reference\": \"All sequence requirements, pressures, duration, and acceptance conditions are supplied in the question.\"\n      }\n    ],\n    \"scope_in\": [\n      \"Ordered filling, vent closure, pressurization, pump isolation, timed hold, assessment, depressurization, and disconnection.\",\n      \"No water addition during the hold.\",\n      \"Both pass/fail criteria.\",\n      \"Calculated logged pressure drop and PASS verdict.\"\n    ],\n    \"scope_out\": [\n      \"Alternative test pressures or external pressure-test standards.\",\n      \"Compressed-gas testing.\",\n      \"Manifold structural design.\",\n      \"New measurements or additional commissioning tests.\"\n    ],\n    \"common_wrong_answers\": [\n      {\n        \"answer\": \"Test at $10.0\\\\,\\\\mathrm{bar}$\",\n        \"why_wrong\": \"That is the component rating, not the specified test pressure.\"\n      },\n      {\n        \"answer\": \"Start timing while raising pressure\",\n        \"why_wrong\": \"The hold begins only after the pump is isolated.\"\n      },\n      {\n        \"answer\": \"Maintain $6.00\\\\,\\\\mathrm{bar}$ by pumping during the hold\",\n        \"why_wrong\": \"Adding water is prohibited and would invalidate the isolated pressure-drop assessment.\"\n      },\n      {\n        \"answer\": \"Fail because the final pressure is below $6.00\\\\,\\\\mathrm{bar}$\",\n        \"why_wrong\": \"The procedure allows a pressure drop up to and including $0.20\\\\,\\\\mathrm{bar}$.\"\n      },\n      {\n        \"answer\": \"Disconnect before confirming zero gauge pressure\",\n        \"why_wrong\": \"The prescribed sequence requires depressurization and zero-gauge confirmation before disconnection.\"\n      }\n    ],\n    \"model_answer\": \"1. Fill with water through the open high-point vent until bubble-free water exits.\\n2. Close the vent; pressurize to $6.00\\\\,\\\\mathrm{bar}$ gauge.\\n3. Isolate the hand pump, then start the timer.\\n4. Hold for $300\\\\,\\\\mathrm{s}$ without adding water; observe for leakage.\\n5. Pass only with pressure drop $\\\\leq0.20\\\\,\\\\mathrm{bar}$ and no visible leakage; otherwise fail. Logged drop: $6.00-5.90=0.10\\\\,\\\\mathrm{bar}$, with no leakage: PASS.\\n6. Open the release valve, confirm $0\\\\,\\\\mathrm{bar}$ gauge, then disconnect.\"\n  }\n]",
+            "annotations": [
+              {
+                "type": "url_citation",
+                "url": "https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XVII/part-1910/subpart-J/section-1910.146",
+                "title": "29 CFR 1910.146 -- Permit-required confined spaces.",
+                "start_index": 0,
+                "end_index": 0,
+                "content": "eCFR :: 29 CFR 1910.146 -- Permit-required confined spaces.\n\n...\n\nNomenclature changes to part 1910 appear at 84 FR 21597, May 14, 2019.\n\n...\n\n#### § 1910.146 Permit-required confined spaces.\n\n...\n\nHazardous atmosphere means an atmosphere that may expose employees to the risk of death, incapacitation, impairment of ability to self-rescue (that is, escape unaided from a permit space), injury, or acute illness from one or more of the following causes:\n\n...\n\n(1) Flammable gas, vapor, or mist in excess of 10 percent of its lower flammable limit (LFL);\n\n...\n\n(2) Airborne combustible dust at a concentration ... ;\n\n...\n\nThis concentration may be approximated as a condition in which the dust obscures vision at a distance of 5 feet (1.52 m) or less.\n\n...\n\n(3) Atmospheric oxygen concentration below 19.5 percent or above 23.5 percent;\n\n...\n\n(4) Atmospheric concentration of any substance for which a dose or a permissible exposure limit is published in subpart G, Occupational Health and Environmental Control, or in subpart Z, Toxic and Hazardous Substances, of this part and which could result in employee exposure in excess of its dose or permissible exposure limit;\n\n...\n\nAn atmospheric concentration of any substance that is not capable of causing death, incapacitation, impairment of ability to self-rescue, injury, or acute illness due to its health effects is not covered by this provision.\n\n...\n\n-permit confined ... a ... to ... .\n\n...\n\nOxygen deficient atmosphere means an atmosphere containing less than 19.5 percent oxygen by volume.\n\n...\n\nOxygen enriched atmosphere means an atmosphere containing more than 23.5 percent oxygen by volume.\n\n...\n\nit ... required confined space (permit space) means a confined space that has one or more of the following characteristics:"
+              },
+              {
+                "type": "url_citation",
+                "url": "http://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146",
+                "title": "1910.146 - Permit-required confined spaces",
+                "start_index": 0,
+                "end_index": 0,
+                "content": "Note: An entry supervisor also may serve as an attendant or as ... authorized entrant, as long as that person is trained and equipped as required by ... section for each role he or she fills. Also, the duties of entry supervisor may be passed from one individual to another during the course of an entry operation. Hazardous atmosphere means an atmosphere that may expose employees to the risk of death, incapacitation, impairment of ability to self-rescue (that is, escape unaided from a permit space), injury, or acute illness from one or more of the following causes: (1) Flammable gas, vapor, or mist in excess of 10 percent of its lower flammable limit (LFL); (2) Airborne combustible dust at a concentration that meets or exceeds its LFL; Note: This concentration may be approximated as a condition in which the dust obscures vision at a distance of 5 feet (1.52 m) or less. (3) Atmospheric oxygen concentration below 19.5 percent or above 23.5 percent; (4) Atmospheric concentration of any substance for which a dose or a permissible exposure limit is published in subpart G, Occupational Health and Environmental Control, or in subpart Z, Toxic and Hazardous Substances, of this part and which could result in employee exposure in excess of its dose or permissible exposure limit; Note: An atmospheric concentration of any substance that is not capable of causing death, incapacitation, impairment of ability to self-rescue, injury, or acute illness due to its health effects is not covered by this provision. (5) Any other atmospheric condition that is immediately dangerous to life or health. Note: For air contaminants for which OSHA has not determined a dose or permissible exposure limit, other sources of information, such as Material Safety Data Sheets that comply with the Hazard Communication Standard, § 1910.1200 of this part, published information, and internal documents can provide guidance in ... conditions. ... a ... .\n\n...\n\nLine breaking means the intentional opening of a pipe, line, or duct that is or has been carrying flammable, corrosive, or toxic material, an inert gas, or any fluid at a volume, pressure, or temperature capable of causing injury. Non-permit confined space means a confined space that does not contain or, with respect to atmospheric hazards, have the potential to contain any hazard capable of causing death or serious physical harm. Oxygen deficient atmosphere means an atmosphere containing less than 19.5 percent oxygen by volume. Oxygen enriched atmosphere means an atmosphere containing more than 23.5 percent oxygen by volume. Permit-required confined space (permit space) means a confined space that has one or more of the following characteristics: (1) Contains or has a potential to contain a hazardous atmosphere; (2) Contains a material that has the potential for engulfing an entrant; (3) Has an internal configuration such that an entrant could be trapped or asphyxiated by inwardly converging walls or by a floor which slopes downward and tapers to a smaller cross-section; or (4) Contains any other recognized serious safety or health hazard. Permit-required confined space program (permit space program) means the employer's overall program for controlling, and, where appropriate, for protecting employees from, permit space hazards and for regulating employee entry into permit spaces. Permit system means the employer's written procedure for preparing and issuing permits for entry and for returning the permit space to service following termination of entry. Pro"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.govinfo.gov/content/pkg/CFR-2014-title29-vol5/pdf/CFR-2014-title29-vol5-sec1910-146.pdf",
+                "title": "Occupational Safety and Health Admin., Labor § 1910.146",
+                "start_index": 0,
+                "end_index": 0,
+                "content": "passed from one indi vid ... another during the course of an entry operation. Hazardous atmosphere means an at mosphere that may expose employees to the risk of death, incapacitation, impairment of ability to self-rescue (that is, escape unaided from a permit space), injury, or acute illness from one or more of the following causes: (1) Flammable gas, vapor, or mist in excess of 10 percent of its lower flam mable limit (LFL); (2) Airborne combustible dust at a concentration that meets or exceeds its LFL;\n\n...\n\nNOTE: This concentration may be approxi mated as a condition in which the dust ob scures vision at a distance of 5 feet (1.52 m) or less.\n\n...\n\n(3) Atmospheric oxygen concentra tion below 19.5 percent or above 23.5 percent; (4) Atmospheric concentration of any substance for which a dose or a permis sible exposure limit is published in sub part G, Occupational Health and Envi ronmental Control, or in subpart Z, Toxic and Hazardous Substances, of this part and which could result in employee ex posure in excess of its dose or permis sible exposure limit;\n\n...\n\nNon-permit confined space means a confined space that does not contain or, with respect to atmospheric haz ards, have the potential to contain any hazard capable of causing death or seri ous physical harm. Oxygen deficient atmosphere means an atmosphere containing less than 19.5 percent oxygen by volume. Oxygen enriched atmosphere means an atmosphere containing more than 23.5 percent oxygen by volume. Permit-required confined space (permit space) means a confined space that has one or more of the following character istics: (1) Contains or has a potential to contain a hazardous atmosphere; (2) Contains a material that has the potential for engulfing an entrant; (3) Has an internal configuration such that an entrant could be trapped or asphyxiated by inwardly converging walls or by a floor which slopes down ward and tapers to a smaller cross- sec tion; or (4) Contains any other recognized se rious safety or health hazard. Permit ... program) means the ... ing"
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.law.cornell.edu/cfr/text/29/1910.146",
+                "title": "29 CFR § 1910.146 - Permit-required confined spaces.",
+                "start_index": 0,
+                "end_index": 0,
+                "content": "acute ... from one ... more of the following\n\n...\n\n( ... ) or\n\n...\n\n(3) Atmospheric oxygen concentration below 19.5 percent or above 23.5 percent;\n\n...\n\n(4) Atmospheric concentration of any substance for which a dose or a permissible exposure limit is published in subpart G, Occupational Health and Environmental Control, or in subpart Z, Toxic and Hazardous Substances, of this part and which could result in employee exposure in excess of its dose or permissible exposure limit;\n\n...\n\nNon- ... a ... causing ... or serious physical harm. \n\nOxygen deficient atmosphere means an atmosphere containing less than 19.5 percent oxygen by volume.\n\n...\n\nOxygen enriched atmosphere means an atmosphere containing more than 23.5 percent oxygen by volume."
+              },
+              {
+                "type": "url_citation",
+                "url": "https://www.govinfo.gov/content/pkg/CFR-2010-title29-vol5/pdf/CFR-2010-title29-vol5-sec1910-146.pdf",
+                "title": "§ 1910.146 29 CFR Ch. XVII (7–1–10 Edition)",
+                "start_index": 0,
+                "end_index": 0,
+                "content": "operation. Hazardous atmosphere means an at mosphere that may expose employees to the risk of death, incapacitation, impairment of ability to self-rescue (that is, escape unaided from a permit space), injury, or acute illness from one or more of the following causes: (1) Flammable gas, vapor, or mist in excess of 10 percent of its lower flam mable limit (LFL); (2) Airborne combustible dust at a concentration that meets or exceeds its LFL; NOTE: This concentration may be approxi mated as a condition in which the dust ob scures vision at a distance of 5 feet (1.52 m) or less. (3) Atmospheric oxygen concentra tion below 19.5 percent or above 23.5 percent; (4) Atmospheric concentration of any substance for which a dose or a permis sible exposure limit is published in Subpart G, Occupational Health and En vironmental Control, or in Subpart Z, Toxic and Hazardous Substances, of this part and which could result in em ployee exposure in excess of its dose or permissible exposure limit; NOTE: An atmospheric concentration of any substance that is not capable of causing death, incapacitation, impairment of ability to self-rescue, injury, or acute illness due to its health effects is not covered by this pro vision. (5) Any other ... condition that is immediately dangerous\n\n...\n\nor, with respect to atmospheric haz ards, have the potential to contain any hazard capable of causing death or seri ous physical harm. Oxygen deficient atmosphere means an atmosphere containing less than 19.5 percent oxygen by volume. Oxygen enriched atmosphere means an atmosphere containing more than 23.5 percent oxygen by volume. Permit-required confined space (permit space) means a confined space that has one or more of the following character istics: (1) Contains or has a potential to contain a hazardous atmosphere; (2) Contains a material that has the potential for engulfing an entrant;"
+              }
+            ],
+            "logprobs": []
+          }
+        ]
+      }
+    }
+  },
+  "artifacts": {},
+  "artifactFiles": {},
+  "artifactVersions": {},
+  "artifactFileContents": {}
+}
