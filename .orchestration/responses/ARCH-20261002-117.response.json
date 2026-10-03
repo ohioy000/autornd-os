@@ -4,7 +4,7 @@
   "status": "PARTIAL",
   "executed": true,
   "head_before": "86a58b2",
-  "head_after": "pending - recorded in the follow-up commit",
+  "head_after": "8360518",
 
   "arrival": {
     "source": "The owner's three-tier instruction of 2026-10-02, given in chat (session ef7f8231-f61c-423a-b00e-61301e8dfb23, prompt ...########0). Tier 2 is 'Register and independently verify the 25-question set'.",
@@ -90,7 +90,7 @@
 
   "delivery_state": {
     "branch": "arch/20261002-117-tier2-set-complete",
-    "pr": "opened from this branch (the five-question registration was PR 143, merged)",
+    "pr": 145,
     "merge": "by the executor under the owner's 2026-10-03 merge-on-green grant, once CI is green and every acceptance criterion is demonstrated",
     "dataset_state": "25 of 25 questions registered and verified; NOT frozen; freeze blocked on the owner or qualified-reviewer signoff (pending)",
     "tier3": "ARCH-20261002-118 remains NO_ACTION - its precondition ('after the dataset PR merges and required key/source review is complete') is not met by an unfrozen candidate"
@@ -99,6 +99,6 @@
   "commits": {
     "arrival_report": "cd4aeb0 (PR 142, merged)",
     "five_question_registration": "61e2a67 (PR 143, merged)",
-    "completion": "pending - recorded in the follow-up commit"
+    "completion": "ccb1a25 (PR 145, merged 2026-10-03 as 8360518; CI green - docker, editable-install, and the test matrix on Python 3.11/3.12/3.13 all passed)"
   }
 }
