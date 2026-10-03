@@ -1,0 +1,35 @@
+{
+  "command_id": "ARCH-20261002-115",
+  "status": "IN_PROGRESS",
+  "executed": true,
+  "head_before": "8c9ef52",
+  "head_after": null,
+  "arrival": {
+    "parent_id": "ARCH-20261002-114: response present at .orchestration/responses/ARCH-20261002-114.response.json on main (merged 8c9ef52, PR #139)",
+    "preconditions_present": 3,
+    "transport": "Branch arch/20261002-115-the-record cut from origin/main 8c9ef52, the name taken from the command's deliverable block."
+  },
+  "preconditions": [
+    {
+      "n": 1,
+      "result": "READINGS, no run in flight: the owner's editor on the .env path and the kiro IDE session (ARCHITECT-HANDOFF.md scratchpad) — the same two argv matches as 114, neither an autornd or evals run (convention 26)."
+    },
+    {
+      "n": 2,
+      "result": "PASS: 114's response is on main — 57919e7, merged in 8c9ef52."
+    },
+    {
+      "n": 3,
+      "result": "COUNT, literal: 1225 passed, 0 failed, network guard 0 attempts."
+    }
+  ],
+  "baseline_suite": "1225 passed before (literal, guard 0)",
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "delivery_state": {
+    "branch": "arch/20261002-115-the-record",
+    "pr": null
+  },
+  "commits": {}
+}
