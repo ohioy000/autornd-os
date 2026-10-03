@@ -64,6 +64,25 @@ class TestTheTruthTable:
         # The derivation of green is counted as always, then its refusal.
         assert normalisations() == 2
 
+    def test_whitespace_only_evidence_is_no_assessment(self):
+        """Ruling D49 (1), extending D46 (1) from empty to
+        whitespace-only: a list is an assessment only if one entry
+        has content. Reproduced — the old `_missing_substance`
+        tested only `not evidence`, so `["   "]` built a green on
+        nothing and the run shipped it."""
+        reset_normalisations()
+        for evidence in ([""], ["   "], ["  ", "\t"]):
+            v = ValidateVerdict(green=True, evidence=evidence)
+            assert v.green is False, evidence
+            assert v.red_cause == "the validator returned no assessment"
+        assert normalisations() == 3, "each refusal is counted"
+        reset_normalisations()
+        # One entry with content beside the padding is an assessment.
+        padded = ValidateVerdict(green=True,
+                                 evidence=["   ", "cte cited to ISO 286-2"])
+        assert padded.green is True
+        assert normalisations() == 0
+
     def test_green_false_with_a_cause_passes_through(self):
         v = implement(green=False, red_cause="criterion 4 fails")
         assert v.green is False and v.red_cause == "criterion 4 fails"

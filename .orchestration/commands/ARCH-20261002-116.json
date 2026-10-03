@@ -1,0 +1,102 @@
+{
+  "command_id": "ARCH-20261002-116",
+  "parent_id": null,
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "The accounting and verification instruments hold the distinctions they claim: no call dispatches through a bounded client without a price it can bound, reservations are released only by the call that made them, a failure after dispatch keeps its own worst case, every terminal path reconciles booked spend into the record with outstanding liability kept separate, and an approval or a completion means something was checked and finished.",
+
+  "evidence": [
+    "The four merges on main after 535a9e0 (f8557bb, bf4a0ef, b4c5f05, ef4e266) each carry exactly one file — the command JSON. `git diff 535a9e0..main --stat` is 4 command files, 371 insertions, no code. Commands 112-115 are therefore unexecuted: no response files exist at .orchestration/responses/ARCH-20261002-11{2,3,4,5}.response.json, and the rulings their commands name (D47, D48) were never committed to HANDOVER.md or docs/handover-review.md (`grep -n 'Ruling D4[78]' HANDOVER.md docs/handover-review.md` is empty).",
+    "The executor's shell exports the owner's pins (MODEL_*, API_KEY, OPENROUTER_PROVIDER_*) and the checkout holds the owner's .env (8729 bytes, 2026-09-29). tests/conftest.py:9-11 places the six required MODEL_* placeholders with os.environ.setdefault, so an exported value beats them, and autornd/config.py reads .env from the working directory (model_config env_file). An unguarded suite run in this shell runs on the owner's real configuration; the audit behind 112 measured 5 such attempts.",
+    "autornd/routing/openrouter.py:418-424 (_reconcile) and :436-440 (_fail_call) pop the oldest reservation, not the completing call's own. A call that completes out of order releases another call's reservation; a blind call (no catalogue rate, so no reservation) releases the oldest one on reconciliation. The advisor's 113 probe: A (worst $0.06) in flight, B (worst $0.01) completes first, $0.010 reserved while A is still in flight, C (worst $0.05) admitted though only $0.039 truly remained, $0.111 booked against a $0.10 ceiling.",
+    "autornd/routing/openrouter.py:940-947 (the catalogue parse): `float(pricing.get('prompt') or 0.0)` — a catalogue entry with no pricing, or with a missing prompt or completion component, becomes the rate (0.0, 0.0): priced as free, reserved at $0.00, never recorded as blind. An explicit catalogue zero and an absent price are indistinguishable. The worst-case formula (openrouter.py:478-484) counts prompt bytes and completion tokens only; a published per-request charge is not bounded at all.",
+    "autornd/models/verdicts.py:346-358 (_missing_substance): an empty evidence list is refused, but evidence=['   '] is not — `not evidence` is False for a non-empty list, so a whitespace-only assessment approves work as green. D46 (1) is the ruling this narrows.",
+    "autornd/graph/executor.py:1027-1029 (run): a run whose graph concludes ends `state.end('completed', ...)` with nothing reading the final implement verdict's `done`. A nonempty implementation explicitly marked done=false ships as completed delivery. ImplementVerdict requires `done` (verdicts.py:229) precisely because nothing else implies it.",
+    "autornd/graph/adapter.py:741-755 (_phase_doublecheck): with no independent model configured, the skip output is {'skipped': True, 'ship': True, 'reason': ...} — an approval-shaped value written by a check that did not run — and the gate after it (workflows/engineering-rnd.yaml:343, workflows/independent-check-probe.yaml:72) reads independent_check.ship, so a skip fabricates the approval the gate asks for.",
+    "autornd/engine/workflow.py: the except path (execute's handler) commits the row BLOCKED without ever assigning workflow.total_cost from the client, so a run that paid for calls and then raised lands with total_cost 0.0; and no path records the client's unreconciled_liability anywhere on the API path — the Workflow model (autornd/models/workflow.py) has no column for it, though the eval unit record carries it (autornd/evals/runner.py:915-916).",
+    "The owner's instruction of 2026-10-02 (this command): verify commands 112-115 against the implementation, probe nine properties provider-free, repair demonstrated accounting/instrument defects only, and record the architect ruling 'Missing or whitespace-only assessment is not completed verification. An implementation explicitly marked incomplete cannot qualify for completed delivery. Unavailable verification is distinct from passing verification.' under the next unused ruling ID."
+  ],
+
+  "scope": {
+    "include": [
+      "autornd/routing/openrouter.py (reservation identity, catalogue pricing honesty, worst-case bound)",
+      "autornd/models/verdicts.py (whitespace-only evidence; DoubleCheckVerdict computed property only — no field added, removed or renamed)",
+      "autornd/graph/adapter.py (the doublecheck skip shape only)",
+      "autornd/graph/executor.py (the completed-terminal gate only)",
+      "autornd/engine/workflow.py (terminal reconciliation on every terminal path)",
+      "autornd/models/workflow.py and autornd/database.py (one additive nullable column, via the existing _add_missing_columns pattern)",
+      "autornd/config.py (only the dotenv isolation switch the suite's hermeticity needs, said so here)",
+      "workflows/engineering-rnd.yaml and workflows/independent-check-probe.yaml (independent_verdict's condition only)",
+      "tests/conftest.py, tests/hermetic_guard.py, tests/test_hermeticity.py, and the five tests the 112 audit names",
+      "tests/ (reproduction and regression tests for each demonstrated defect)",
+      "docs/handover-review.md, HANDOVER.md, README.md, AGENTS.md, CLAUDE.md, .claude/context/testing.md",
+      ".orchestration/commands/ARCH-20261002-116.json (carriage of the owner's instruction) and .orchestration/responses/"
+    ],
+    "exclude": [
+      ".env and every .env* file except .env.example: the owner's (G-3). No test may read, write, move or create one inside the repo; the sentinel .env is built under tmp_path.",
+      "The dispatch policy for a call whose price cannot be bounded (refuse vs the current record-and-dispatch): that is the advisor's open question from ARCH-20261002-110, not this command's. This command repairs the accounting around it, not the policy.",
+      "judges_agree's fold semantics (D46 (3) as ruled stands: an unchecked check passes as before and is listed), D36's four plan rules, D43's scope text: byte-identical.",
+      "evals/golden/, docs/traces/, workflows/lean.yaml. No loop wiring, loop bounds or gates beyond the independent_verdict condition. No queue, recovery framework, plugin system or new paid stage. No DB schema change beyond the one additive column named above."
+    ]
+  },
+
+  "constraints": [
+    "FREE. No provider call, no paid measurement, no model-pin change, no .env edit, no secret anywhere in the transcript or the tree.",
+    "RUN THE SUITE ONLY UNDER THE GUARD. Before any pytest run, install an independently enforced outbound-network denial with connection-attempt logging: every non-loopback name resolution and connect is refused, each attempt is recorded (test, target, outcome) and fails the test that made it by name, even when the code under test catches the error. Attempted connections are reported separately from completed connections. Do not test hermeticity by allowing real requests and seeing whether they happen.",
+    "PLACEHOLDERS WIN. From before the first autornd import, the suite's configuration belongs to the suite: every model tier (required and optional), the provider key, provider order, provider fallbacks and every credential setting are forced (not setdefault) to a placeholder or empty value that no export and no .env in the working directory can displace, and the suite does not read the dotenv file (a setting in autornd/config.py, said so here per 112's allowance). A test that needs a different value sets it itself.",
+    "RULING FIRST, VERBATIM, in HANDOVER.md and the notebook, before the repair code in commit order. The ruling text is the owner's: 'Missing or whitespace-only assessment is not completed verification. An implementation explicitly marked incomplete cannot qualify for completed delivery. Unavailable verification is distinct from passing verification.' Record it under the next unused ruling ID — D49, because D47 and D48 are claimed by the unexecuted commands 113 and 114 and were never committed, and one ID must not name two rulings. Apply it narrowly, on typed fields, never prose parsing, preserving the distinctions among failed, unchecked, unavailable and passed checks.",
+    "RESERVATIONS ARE OWNED. Each dispatch's reservation is identified, and only the call that made it releases it, on reconciliation or on failure. A call that reserved nothing (blind, or no ceiling set) releases nothing; so does a test double that books cost without guarding. A failed call keeps its OWN worst case as unreconciled liability. The call ceiling counts every call in flight, blind ones included. One reservation per call stands, held across that call's retries.",
+    "PRICING IS HONEST. An absent prompt or completion price in the catalogue makes the model unrated (the guard's blind list, recorded), never a zero rate; an explicit catalogue zero stays a priced zero; a published per-request charge is added to the worst case. Explicit zero pricing must be distinguishable from missing pricing, provider-free.",
+    "THE COMPLETED TERMINAL MEANS FINISHED. A run whose final implement verdict is explicitly done=false ends blocked, naming the incomplete implementation. A validation verdict whose evidence is missing, empty or whitespace-only resolves red with a cause naming what was absent, counted like every normalization.",
+    "A SKIPPED CHECK SAYS SO. The doublecheck skip output is {'skipped': True, 'vetoed': False, 'reason': ...} with no ship; DoubleCheckVerdict gains the computed property vetoed (equal to not ship — a property, not a field, so the schema and the model's output are unchanged); independent_verdict's condition reads independent_check.vetoed == false in both workflow files, so the gate reads the same typed path on both branches. A check that ran and said do-not-ship still ends the run blocked with its findings.",
+    "EVERY TERMINAL RECONCILES. Every terminal path of the API engine writes the client's booked spend into the workflow row, including paid retries followed by failure, and records outstanding liability separately from booked spend (one additive nullable column through the existing _add_missing_columns pattern; the eval unit record already carries both).",
+    "PROVE EVERY REPAIR. A reproduction test that fails on the current code, quoted; a regression test that passes after; and each repair proved by breaking one line and quoting the failure. For every existing test a repair changes, say which of the two is wrong (convention 17).",
+    "VERIFY 112-115 AGAINST THE TREE, not their response files (which do not exist): report each command's acceptance criteria against the actual implementation, and record that the four merges were carriage-only."
+  ],
+
+  "acceptance_criteria": [
+    "Ruling D49 is verbatim in HANDOVER.md and docs/handover-review.md, committed before the repair code.",
+    "The advisor's out-of-order case reproduces on the current code (reserved falls to the completing call's worst case) and is repaired afterwards (reserved keeps the in-flight call's worst case; the next call is refused before dispatch; booked spend never exceeds the ceiling). Quoted both ways.",
+    "A catalogue entry with no pricing, or a missing price component, lands in spend_guard_blind and never in _model_pricing; an explicit (0.0, 0.0) rate is priced, reserves $0.00, and is not blind; a published per-request charge is part of the worst case. Quoted.",
+    "A whitespace-only evidence list resolves the verdict red with a cause naming the absent assessment, counted under green_refused_no_substance; a done=false final implementation ends the run blocked, naming it; a skipped doublecheck carries no ship and the gate still passes it, while a run doublecheck with ship=false ends blocked with its findings. Quoted.",
+    "A run that paid for calls and then raised still lands with its booked spend in the row, and the row carries unreconciled liability as its own column, distinct from total_cost.",
+    "A full suite run under the guard records zero non-loopback connection attempts; the guard's break (one line) is quoted letting an attempt through; with sentinels exported and a sentinel .env in a subprocess's working directory, the suite's settings equal its placeholders.",
+    "Suite green before and after, run under the guard in the executor's own shell, which exports the owner's pins and holds the owner's .env. Count reported before and after.",
+    "`git diff --stat origin/main -- evals/golden/ docs/traces/ workflows/lean.yaml .env.example` is empty. No .env* file other than .env.example changed. The only schema change is the one additive column.",
+    "The response file carries the nine-property table (repaired / already-correct / unresolved), the verification of commands 112-115 against the tree, the network-attempt evidence, the schema/data compatibility implications, and the PR number in delivery_state."
+  ],
+
+  "verification": [
+    {"command": "git diff 535a9e0..main --stat", "expected": "Only the four command files — the evidence that 112-115 are unexecuted on main."},
+    {"command": "grep -n 'Ruling D49' HANDOVER.md docs/handover-review.md", "expected": "Present in both, verbatim."},
+    {"command": "grep -n 'independent_check.vetoed' workflows/engineering-rnd.yaml workflows/independent-check-probe.yaml", "expected": "One condition in each."},
+    {"command": "grep -n 'setdefault' tests/conftest.py", "expected": "No placeholder for a setting the suite reads is placed with setdefault."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass under the guard, invoked literally in the executor's own shell; count reported."}
+  ],
+
+  "rollback": "Revert the merge. Reservations release in arrival order again, a blind completion releases another call's reservation, absent catalogue prices masquerade as free, whitespace-only evidence approves, done=false ships as completed, a skipped independent check writes ship:true, one failed terminal write can lose a run's spend, and the suite reads the owner's configuration and can reach the provider.",
+
+  "deliverable": {
+    "branch": "arch/20261002-116-accounting-and-verification",
+    "branch_created_by": "executor (carriage of the owner's instruction)",
+    "pr": true,
+    "merge": "not by the executor — returned for architect merge, per the owner's instruction",
+    "commit_style": "conventional"
+  },
+
+  "assumptions": [
+    "The executor's clone holds the owner's .env and the shell exports the owner's pins. The guard makes every suite result independent of both; without it no suite run in this shell is safe to start.",
+    "D47 and D48 being uncommitted means the next free ruling ID is D49. If the advisor intends to rule D47/D48 as the unexecuted commands 113/114 describe, the IDs reconcile then; one ID must not name two rulings in the meantime."
+  ],
+
+  "questions": [
+    "110's open question, still open: should a call whose worst case cannot be bounded (no catalogue price) be refused while a spend ceiling is set, or dispatch as today with the blindness recorded? This command repairs the accounting around the blind path; the dispatch policy is the advisor's to rule.",
+    "Commands 112-115 merged as carriage-only. Should the advisor re-issue them (their work is partly done by this command: 112's hermetic suite, 113's reservation identity, 114's skip shape, none of 115's record repairs), or retire them as superseded by this command's response?"
+  ],
+
+  "preconditions": [
+    {"command": "ps aux | grep -E 'autornd|evals' | grep -v grep", "expected": "No run in flight. Record what matches and why it is not a run."},
+    {"command": "git log --oneline -1 main", "expected": "ef4e266 (the 115 carriage merge). This branch is cut from it."},
+    {"command": "ls .orchestration/responses/ARCH-20261002-11{2,3,4,5}.response.json", "expected": "All four missing — the commands are new (unexecuted) by the channel's own definition, which this command verifies and reports."}
+  ]
+}

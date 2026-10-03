@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from autornd.models.verdicts import (
     Domain,
     Domain,
+    DoubleCheckVerdict,
     ImplementVerdict,
     PlanVerdict,
     ReviewFinding,
@@ -15,6 +16,35 @@ from autornd.models.verdicts import (
     TriageVerdict,
     ValidateVerdict,
 )
+
+
+class TestDoubleCheckVerdict:
+    """D48 (3) / D49 (3) — the gate after the independent pass
+    routes on `vetoed`, the computed complement of `ship`."""
+
+    def test_vetoed_is_the_computed_complement_of_ship(self):
+        assert DoubleCheckVerdict(ship=True, confidence="high",
+                                  verdict="Ship.").vetoed is False
+        assert DoubleCheckVerdict(ship=False, confidence="low",
+                                  verdict="Do not ship.").vetoed is True
+
+    def test_the_contract_does_not_ask_for_vetoed(self):
+        """`vetoed` is a property, not a field: the provider's
+        contract is unchanged — the model is never asked for it,
+        and the persisted record keeps the source of truth, `ship`,
+        from which any reader computes the veto. The distinction
+        among pass, refusal and skip is preserved: a real verdict
+        records `ship`, and the adapter's skip record carries
+        `vetoed: false` with no `ship` at all (adapter.py; the
+        skip shape is driven end to end in test_graph.py)."""
+        verdict = DoubleCheckVerdict(ship=False, confidence="low",
+                                     verdict="Do not ship.")
+        assert "vetoed" not in DoubleCheckVerdict.model_json_schema()[
+            "properties"]
+        dumped = verdict.model_dump()
+        assert "vetoed" not in dumped
+        assert dumped["ship"] is False
+        assert verdict.vetoed is True
 
 
 class TestTriageVerdict:

@@ -276,6 +276,7 @@ def _rejection_note(error: Exception) -> str:
         "invent new field values, and do not add fields that are not in the schema."
     )
 
+
 class OpenRouterClient:
     """Async client that routes requests to the right model via OpenRouter."""
 
@@ -382,7 +383,8 @@ class OpenRouterClient:
 
     def _account(self, function: str, cost: float,
                  provider: str | None = None,
-                 prompt_tokens: int = 0, completion_tokens: int = 0) -> None:
+                 prompt_tokens: int = 0, completion_tokens: int = 0,
+                 reservation: _Reservation | None = None) -> None:
         """Record one billable request. Called for every request, no exceptions.
 
         Budgets are enforced here rather than by the caller, so a ceiling covers
@@ -457,7 +459,12 @@ class OpenRouterClient:
         will ever arrive to replace the estimate. The reservation becomes
         unreconciled liability: counted against the ceiling for the rest of the
         run, and recorded with the kind of failure that made reconciliation
-        impossible (error_status, timeout, transport_error, cancelled).
+        impossible (error_status, timeout, transport_error, cancelled). The
+        reservation is the call's own — a failed call keeps its own worst
+        case, never another in-flight call's. A call that never reserved (an
+        unrated model) keeps nothing: no worst case was ever computed, and
+        inventing one is the guessing the guard exists to avoid; its
+        blindness is already recorded.
         """
         self._in_flight = max(0, self._in_flight - 1)
         worst = 0.0
@@ -481,9 +488,14 @@ class OpenRouterClient:
         checked after the call. D45 amendment (b): the prompt side is now a
         bound (UTF-8 bytes plus the template allowance) rather than a mean.
         D45 (5), repaired by D47: the worst case is RESERVED, by identity,
-        until the call that made it is reconciled or fails. With no catalogue
-        rate the guard is blind: the call is made and the blindness recorded,
-        never guessed. Returns the reservation, or None for a blind call."""
+        until the call that made it is reconciled or fails — a reservation
+        is released only by the call that made it, never by whichever is
+        oldest. The guard is blind — the call is made and the blindness
+        recorded, never guessed — in three ways: the model is not in the
+        catalogue, the catalogue prices neither side of the call (an absent
+        component is unknown, not free), or the entry carries a charge
+        beside prompt and completion tokens that the worst case cannot
+        bound. Returns the reservation, or None for a blind call."""
         if self.call_ceiling is not None and (
                 self.calls + self._in_flight + 1 > self.call_ceiling):
             # Amendment (c): checked before dispatch, and every in-flight call
@@ -712,7 +724,8 @@ class OpenRouterClient:
             self._release(reservation)
             self._account(function, cost, provider,
                           prompt_tokens=prompt_tokens,
-                          completion_tokens=completion_tokens)
+                          completion_tokens=completion_tokens,
+                          reservation=reservation)
         except BaseException as exc:
             if not reconciled:
                 self._fail_call(function, model, _failure_kind(exc),
@@ -764,7 +777,8 @@ class OpenRouterClient:
             reconciled = True
             self._release(reservation)
             self._account("ranker", float(usage.get("cost") or 0.0),
-                          prompt_tokens=int(usage.get("total_tokens") or 0))
+                          prompt_tokens=int(usage.get("total_tokens") or 0),
+                          reservation=reservation)
         except BaseException as exc:
             if not reconciled:
                 self._fail_call("ranker", model, _failure_kind(exc),
@@ -998,6 +1012,30 @@ _model_status: dict[str, dict] = {}
 _model_pricing: dict[str, tuple[float, float]] = {}
 
 
+def _prices_what_the_guard_cannot_bound(pricing: dict[str, Any]) -> bool:
+    """Does this catalogue entry carry a charge beside prompt and
+    completion tokens?
+
+    The worst-case estimate bounds prompt bytes and completion tokens.
+    Anything else the provider prices — a per-request fee, a search
+    surcharge, a reasoning rate, a cache-read rate — depends on what
+    the call does, not only on what it says, so a bound built from the
+    two token rates understates it. The catalogue prices in strings;
+    empty and zero mean "no charge for this component", and a value
+    that does not parse is a charge this cannot read, which is the
+    same answer: unboundable.
+    """
+    for key, value in pricing.items():
+        if key in ("prompt", "completion") or value in (None, ""):
+            continue
+        try:
+            if float(value) != 0.0:
+                return True
+        except (TypeError, ValueError):
+            return True
+    return False
+
+
 async def check_models() -> dict[str, dict]:
     """Validate configured models against OpenRouter's model list."""
     global _model_status
@@ -1034,11 +1072,28 @@ async def check_models() -> dict[str, dict]:
             available_ids = {m["id"] for m in catalogue}
             for m in catalogue:
                 pricing = m.get("pricing") or {}
+                # A component the catalogue does not price is unknown,
+                # not free: the model stays unrated — the guard is
+                # blind for it — rather than entering the table at
+                # $0.00, which a bounded client would read as "a call
+                # costs nothing". An explicit "0" is a published
+                # price of zero and stays priced, so the two facts
+                # remain distinguishable (Ruling D49's distinction,
+                # applied to pricing; ARCH-20261002-116). A charge
+                # beside prompt and completion — a per-request fee, a
+                # search surcharge, a reasoning rate — is one the
+                # worst-case estimate cannot bound, so the model is
+                # unrated too: a bound built from tokens alone would
+                # understate what the call can cost.
+                if _prices_what_the_guard_cannot_bound(pricing):
+                    continue
+                prompt = pricing.get("prompt")
+                completion = pricing.get("completion")
+                if prompt is None or completion is None:
+                    continue
                 try:
                     _model_pricing[m["id"]] = (
-                        float(pricing.get("prompt") or 0.0),
-                        float(pricing.get("completion") or 0.0),
-                    )
+                        float(prompt), float(completion))
                 except (TypeError, ValueError):
                     continue
     except Exception as exc:

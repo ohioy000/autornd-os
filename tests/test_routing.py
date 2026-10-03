@@ -117,6 +117,77 @@ class TestCostEstimation:
             await check_models()
         assert orr._model_pricing[settings.model_triage] == (0.000001, 0.000004)
 
+    async def _parse_catalogue(self, data: dict) -> None:
+        """Run the catalogue through the real parse (check_models),
+        with the provider's reply mocked, so a test asserts what the
+        parse produced rather than what a hand-built table says."""
+        import autornd.routing.openrouter as orr
+
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        async def _get(url, **kw):
+            if url.endswith("/endpoints"):
+                return httpx.Response(404, json={}, request=httpx.Request("GET", url))
+            return self._cat(data)
+
+        mock_client.get = AsyncMock(side_effect=_get)
+        with patch("autornd.routing.openrouter.httpx.AsyncClient", return_value=mock_client):
+            await check_models()
+
+    async def test_an_absent_component_leaves_the_model_unrated(self):
+        """Ruling D49, property 1 (ARCH-20261002-116): a component the
+        catalogue does not price is unknown, not free. The old parse
+        read the absent side as $0.00 and entered the model at half a
+        price, so the guard bounded a call on it as if the missing
+        side cost nothing."""
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/half-priced",
+             "pricing": {"prompt": "0.000001"}},
+        ]})
+        assert "vendor/half-priced" not in orr._model_pricing
+
+    async def test_an_explicit_zero_is_a_price_not_a_gap(self):
+        """Ruling D49, property 2: a published zero is a price, and
+        stays distinguishable from a component the catalogue never
+        priced (which leaves the model unrated, above)."""
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/free",
+             "pricing": {"prompt": "0", "completion": "0"}},
+        ]})
+        assert orr._model_pricing["vendor/free"] == (0.0, 0.0)
+
+    async def test_a_charge_the_estimate_cannot_bound_is_unrated(self):
+        """Ruling D49, property 1: a charge beside prompt and
+        completion — a per-request fee, a search surcharge — is one
+        the worst-case estimate cannot bound, so the model is
+        unrated rather than falsely bounded by its token rates."""
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/per-request",
+             "pricing": {"prompt": "0.000001", "completion": "0.000004",
+                          "request": "0.01"}},
+        ]})
+        assert "vendor/per-request" not in orr._model_pricing
+
+    async def test_a_zero_charge_beside_the_token_rates_stays_priced(self):
+        """The unboundable-component rule is about real charges: a
+        component priced at zero adds nothing to bound."""
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/cacheable",
+             "pricing": {"prompt": "0.000001", "completion": "0.000004",
+                          "input_cache_read": "0"}},
+        ]})
+        assert orr._model_pricing["vendor/cacheable"] == (0.000001, 0.000004)
+
     @staticmethod
     def _cat(data):
         return httpx.Response(
@@ -646,6 +717,11 @@ class TestIndependentPassSkips:
             None, ExecutionState(request="r"))
 
         assert verdict["skipped"] is True
+        # Ruling D49 (3): the skip claims no verdict at all — no
+        # `ship`, neither an approval nor a veto — only that the
+        # check did not happen, and why.
+        assert verdict["vetoed"] is False
+        assert "ship" not in verdict, "a skip must not claim an approval"
         assert "engineering model" in verdict["reason"]
         assert responses == [], "a skip must not cost a call"
 

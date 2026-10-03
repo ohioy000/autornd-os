@@ -28,7 +28,13 @@ def _add_missing_columns(conn) -> None:
 
     inspector = inspect(conn)
     tables = set(inspector.get_table_names())
-    additive = {"workflows": {"error": "TEXT"}}
+    # `unreconciled_liability` is additive with a default: SQLite
+    # fills every existing row from it, so the column is safe to
+    # add to a live database the way a nullable one is.
+    additive = {"workflows": {
+        "error": "TEXT",
+        "unreconciled_liability": "FLOAT NOT NULL DEFAULT 0.0",
+    }}
 
     for table, columns in additive.items():
         if table not in tables:

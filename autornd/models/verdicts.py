@@ -359,7 +359,12 @@ def _missing_substance(verdict: Any) -> str | None:
     if isinstance(summary, str) and not summary.strip():
         return "the implementation returned no deliverable"
     evidence = getattr(verdict, "evidence", None)
-    if isinstance(evidence, list) and not evidence:
+    # Ruling D49 (1), extending D46 (1) from empty to whitespace-only:
+    # a list is an assessment only if one entry has content. ["   "]
+    # held nothing the old `not evidence` could see, and a green built
+    # on it shipped work nobody checked.
+    if isinstance(evidence, list) and not any(
+            isinstance(item, str) and item.strip() for item in evidence):
         return "the validator returned no assessment"
     return None
 

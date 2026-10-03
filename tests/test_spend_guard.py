@@ -303,6 +303,49 @@ class TestTheCallCeilingIsCheckedBeforeDispatch:
         assert "ceiling 2" in str(exceeded.value)
 
 
+class TestUnratedIsNotFree:
+    """Ruling D49, properties 1 and 2 (ARCH-20261002-116): a model the
+    catalogue does not fully price is unknown, not free, and a
+    published zero is a price. What the parse produces for each case
+    is asserted at the parse (test_routing.py, TestCostEstimation);
+    here is what each means to the guard.
+
+    The defect this pins: the old parse entered a model with an absent
+    pricing component at (prompt, 0.0), so the guard bounded a call on
+    it at the prompt rate alone — a call that could cost $0.04 passed
+    as $0.0004, bounded and silent, with no blindness recorded."""
+
+    async def test_an_unrated_model_dispatches_blind_and_says_so(self, rates):
+        """No table entry — what the parse leaves for a model with an
+        absent component, or an unboundable charge — means the guard
+        cannot bound the call. It is made (F3: refusing every unrated
+        model would break runs against models the catalogue has not
+        been read for) and the blindness is recorded, never guessed."""
+        requests: list = []
+        client = _client(requests)
+        client.spend_ceiling = 0.08
+        await client.chat("escalation", "sys", "user", max_tokens=10_000)
+        assert len(requests) == 1
+        assert client.spend_guard_blind == [
+            {"function": "escalation",
+             "model": client.get_model("escalation")}]
+
+    async def test_an_explicit_zero_price_is_bounded_not_blind(self, rates):
+        """A published zero is a price: the guard bounds the call at
+        $0.00 — the same answer as the provider's own accounting for a
+        free model — and says nothing was blind. Distinguishable from
+        the unrated case above, which is the property."""
+        requests: list = []
+        client = _client(requests)
+        model = client.get_model("escalation")
+        rates[model] = (0.0, 0.0)          # what the parse keeps
+        client.spend_ceiling = 0.08
+        await client.chat("escalation", "sys", "user", max_tokens=10_000)
+        assert len(requests) == 1
+        assert client.spend_guard_blind == []
+        assert client.reserved == 0.0      # a $0.00 worst case, reserved
+
+
 # ── Ruling D47 (ARCH-20261002-113): a reservation is identified ─────────────
 #
 # (b) the advisor's out-of-order case, (c) a blind call releases nothing,

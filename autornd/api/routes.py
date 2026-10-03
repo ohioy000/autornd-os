@@ -195,6 +195,11 @@ class WorkflowSummary(BaseModel):
     risk_level: str | None
     iteration: int
     total_cost: float
+    # ARCH-20261002-116 (property 9): the worst case of
+    # calls that failed after dispatch, kept apart from
+    # booked spend. Additive to the response — a consumer
+    # that does not read it is unchanged.
+    unreconciled_liability: float = 0.0
     created_at: str
     updated_at: str
 
@@ -221,6 +226,7 @@ def _summarize(w: Workflow) -> WorkflowSummary:
         risk_level=w.risk_level,
         iteration=w.iteration,
         total_cost=round(w.total_cost, 4),
+        unreconciled_liability=round(w.unreconciled_liability, 4),
         created_at=w.created_at.isoformat(),
         updated_at=w.updated_at.isoformat(),
     )
@@ -374,6 +380,7 @@ def _detail(w: Workflow) -> WorkflowDetail:
         risk_level=w.risk_level,
         iteration=w.iteration,
         total_cost=round(w.total_cost, 4),
+        unreconciled_liability=round(w.unreconciled_liability, 4),
         created_at=w.created_at.isoformat(),
         updated_at=w.updated_at.isoformat(),
         phases=[

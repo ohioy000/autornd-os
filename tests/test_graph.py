@@ -574,6 +574,57 @@ class TestExecutorReproducesThePipeline:
         assert "build_loop" not in runner.ai_calls, (
             "the gate must not route a do-not-ship into a loop")
 
+    async def test_an_implementation_marked_incomplete_cannot_complete(self):
+        """Ruling D49 (2): the completed terminal means finished.
+        The implement verdict's typed `done` field says the work
+        is not done, so the run ends blocked naming it — even
+        though every gate downstream passed. Reproduced: the
+        executor ended every run no node stopped as completed,
+        never reading `done` at all."""
+        state, runner = await _run({
+            **BASE, "validate": {"green": True},
+            "implement": {"done": False, "green": True, "iteration": 1,
+                          "blocked_on": [],
+                          "summary": ("Applied exponential backoff to the "
+                                      "reconnect loop capped at 60s with "
+                                      "jitter on every retry attempt. The "
+                                      "operator guide is not written.")}})
+        assert state.status == "blocked"
+        assert "done: false" in state.reason
+        assert "operator guide is not written" in state.reason
+        assert runner.ai_calls.count("implement") == 1, (
+            "the loop converged — this is the terminal's refusal, "
+            "not a rework")
+
+    async def test_a_skipped_independent_pass_is_not_an_approval(self):
+        """Ruling D49 (3): unavailable verification is distinct
+        from passing verification. The skip record — what
+        PhaseRunner writes when no model can serve the pass
+        (test_routing.py drives that path directly) — carries no
+        `ship` at all: neither an approval nor a veto. The gate
+        routes on `vetoed`, so a skip continues the run, but the
+        record says a check did not happen, and anything that
+        reads it can tell a skip from a pass. Reproduced: the
+        skip record claimed `ship: true`, so a check that never
+        ran read exactly like one that passed."""
+        state, runner = await _run({
+            **BASE, "validate": {"green": True},
+            "triage": {"risk": "high", "domains": ["firmware"],
+                       "specialists": ["firmware_engineer"],
+                       "unrecallable": True},
+            "review": {"ship": True},
+            "independent_check": {
+                "skipped": True, "vetoed": False,
+                "reason": ("no model available for an independent "
+                           "pass that is not the engineering model "
+                           "itself")}})
+        assert state.status == "completed"
+        assert "independent_check" in state.path
+        record = state.outputs["independent_check"]
+        assert record["skipped"] is True
+        assert record["vetoed"] is False
+        assert "ship" not in record, "a skip must not claim an approval"
+
     async def test_the_gate_costs_nothing(self):
         """It is a gate, not a call. Free checks exist to avoid paid ones."""
         _, clean = await _run({**BASE, "validate": {"green": True},
