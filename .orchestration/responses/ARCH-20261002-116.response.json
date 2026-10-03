@@ -3,7 +3,7 @@
   "status": "DONE",
   "executed": true,
   "head_before": "ef4e266",
-  "head_after": "de26d6a",
+  "head_after": "d037b56",
   "arrival": {
     "parent_id": null,
     "preconditions_present": 3,
@@ -80,6 +80,6 @@
     "ruling_d49_repairs": "8196387",
     "counts_rederived": "d6f5014",
     "execution_record": "de26d6a",
-    "merge": "to be filled by the follow-up commit — the merge commit this response travels on"
+    "merge": "d037b56"
   }
 }
