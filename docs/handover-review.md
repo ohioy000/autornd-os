@@ -10755,6 +10755,20 @@ unchanged and still true — no test file was added.
    (convention 28); the baseline's own report is the instrument for that
    record, and it is the one quoted above.
 
+### 99.x Correction (appended 2026-10-02 by ARCH-20261002-115)
+
+The 107 figure quoted in this section and in 108's response —
+`3/6 golden hold every item · median sprawl 2.5 · total $0.0220 · key v1` —
+was **scored under the key before version 1**: `baseline.report` read the
+stored verdicts from the run and printed the current key's label beside them,
+so the label claimed a version the number was not computed under. Under
+version 1, 107's direct answers hold **6/6**, as the repaired report prints
+it: `6/6 golden hold every item · median sprawl 2.5 · total $0.0220 · key v1
+(as recorded 3/6 · pre-D44)`. The same deviation item quoted above
+(`score_trace.py ... reads 0/0`) is also closed by the same repair — the
+reader now takes answer rows. Nothing above is deleted: the wrong figure
+stands where it was written and this names it.
+
 ## 100. ARCH-20261002-109: one row per submission, progress as it happens (executor, 2026-10-02)
 
 Instrument repair, not a ruling: the harness concludes exactly what it did
@@ -11110,6 +11124,12 @@ Read from the committed traces (rows keyed `record`: `header` / `unit`; no
 So 102 ran **1 unit** (golden_side_ia, blocked, $0.157) and 106 ran **7
 units** (golden_q1–q6 — three completed, three blocked — plus golden_side_ia,
 blocked, $0.134). Every file proves what it shows and no more.
+
+**Correction (appended 2026-10-02 by ARCH-20261002-115):** this inventory
+missed `docs/traces/102-golden-arm-b.jsonl` — 1 header + 6 units — which
+exists beside the two 102-ia-side files listed above. Corrected counts:
+**102 ran 7 units** (6 golden + 1 ia-side) and **106 ran 7** (6 golden +
+1 ia-side). The per-kind question over all four traces is answered in §106.
 
 ### 102.4 Tests that asserted retired behaviour (rule 7 / convention 17)
 
@@ -11526,3 +11546,145 @@ in the unit record, with the per-iteration list beside it. Break —
    (test_api 41→42, test_engine 6→8, test_graph 85→87, test_rework_loop 19→20,
    test_run_record 6→7). README badge/Testing/Project Structure and HANDOVER's
    header/§2.2/§3.7/§4.2.
+
+## 106. ARCH-20261002-115: put the record right (executor, 2026-10-02)
+
+Measurement and record repair — no ruling, no spend. Two tools repaired, four
+corrections appended (nothing deleted), and the questions 110 and 111 asked
+answered from the committed traces.
+
+### 106.1 A report scores what it labels
+
+`baseline.report` read the **stored** verdicts and printed the **current**
+key's label beside them: 107's report said `3/6 · key v1` having scored under
+the key before version 1. It now re-scores every recorded answer under the
+keys as they stand and prints that under the current version, with the run's
+own verdict beside it under the version its row names (or `pre-D44`).
+Repaired report over 107's recorded answers, quoted in full summary:
+
+```
+6/6 golden hold every item · median sprawl 2.5 · total $0.0220 · key v1 (as recorded 3/6 · pre-D44)
+```
+
+and per row, the flip the old key hid (Q3 shown; Q4 and Q5 the same shape):
+
+```
+Q3  ALL HOLD  items[+++] 18.848s $0.0049 sprawl=3.8 finish=stop · key v1
+     as recorded: FAIL      items[---] · pre-D44
+```
+
+Break — restoring the stored read (`items = r.get("items") or {}`) —
+
+```
+E  AssertionError: Q1  FAIL      items[--] 1.0s $0.0010 sprawl=1.0 finish=stop · key v1
+E  assert 'ALL HOLD' in 'Q1  FAIL ... · key v1'
+```
+
+`score_trace.py` read unit rows only, so 107's direct-call baseline scored
+0/0 with its answers sitting in the file (convention 28). It reads
+`record: "answer"` rows now — one tool re-scores every recorded run. The
+three summary lines the command asked for, quoted as the tool prints them:
+
+```
+102-golden-arm-b       3/6 PASS · 3/6 shipped · median sprawl 32.0 · total $0.3554 · key v1
+106-golden-arm-b       2/6 PASS · 3/6 shipped · median sprawl 22.9 · total $0.2527 · key v1
+107-direct-baseline    6/7 PASS · 7/7 shipped · median sprawl 2.1 · total $0.0219 · key v1
+```
+
+The advisor read 102 3/6 and 106 2/6 — both match exactly. 107 prints **6/7**
+where the advisor read 6/6: the seventh row is the IA side test, which fails
+on IA.2, IA.4 and IA.6; the golden six all hold (Q1–Q6), which is the 6/6
+baseline.report prints (its summary counts golden rows only). Break —
+dropping the answer rows — reproduces the old reading exactly
+(`0/0 PASS · 0/0 shipped · … · key v1`; the test fails with
+`IndexError: list index out of range`).
+
+### 106.2 111's question, answered (four counts over the four traces)
+
+14 units (102: 6 golden + 1 ia-side; 106: 6 golden + 1 ia-side).
+
+- **(i) green with nothing behind it: 0.** No validate verdict is green with
+  an empty evidence list, and no implement verdict is green with an empty
+  summary. *What the record cannot show:* whether the reply that was
+  normalized into such a verdict came back empty — the record holds the
+  post-normalization verdict, and `normalised_by_kind` counts resolutions,
+  not refusals (D46 (1)'s counter did not exist yet).
+- **(ii) feasibility concerns recorded as plan blockers: 1 unit.**
+  102-golden Q6 carries 2 distinct feasibility blockers, and **both also sit
+  in that unit's `plan.blockers`** — the pre-R7 contamination exactly as it
+  happened: the reviewers' concerns written into the architect's list. 106's
+  runs recorded none (its reviewers named no blockers). *The record shows*
+  both lists (`feasibility_blockers` and `verdicts.plan.blockers`) and their
+  overlap; it cannot show which was written first.
+- **(iii) consistency passed with no shared unit: 0 by re-run.** Re-running
+  `numbers_consistent` on the recorded plan and implementation text: 8 of 10
+  holdable units share units and **check** (checked true); none passes
+  unchecked. Two verdicts, both failing on re-run — 102-golden Q6 and
+  106-ia-side (a real conflict, which the recorded runs also refused: both
+  recorded `consistency: passed=false`). *What the record cannot show:* the
+  recorded `consistency` outputs predate the `checked` flag — every one reads
+  `<absent>` — so the run's own view of whether it compared anything is
+  underivable from the record; the re-run is the only reading. Two 106-golden
+  units (blocked runs) hold no implementation summary and cannot be re-run at
+  all.
+- **(iv) iterations whose fold refused while neither validate nor implement
+  was red: 3.** 102-golden Q3 iteration 1 (dissenting: consistency, coverage)
+  and 106-golden Q3 iterations 1 and 2 (dissenting: coverage) — each with
+  `validate_green` and `implement_green` both true. *What the record cannot
+  show:* **the failure log is not in the unit record** — nothing in these
+  files can say whether an entry was written, which is precisely 111's
+  clause [4] defect; the record shows the refusals and the two greens, and
+  pre-111 an iteration in exactly this shape wrote nothing.
+
+### 106.3 110's question, answered (calls with no catalogue price)
+
+- **106 (both traces): the field exists and reads 0** — `spend_guard_blind`
+  is empty on all 7 units: every call that run made had a catalogue rate.
+- **102 (both traces): the field does not exist** — the record predates the
+  F3 guard (ARCH-20261001-104), so blind-ness is **underivable** from it.
+  What can be derived: the per-tier call and cost totals and the header's
+  model and pin, and nothing finer — the record does not carry the catalogue
+  that the guard consulted. The absence of the field is no evidence either
+  way (convention 28).
+- **107: 7 answer rows, no field** — `baseline.run` never wrote it; the
+  guard's blind list lives on the client and the writer does not read it.
+  Underivable from the record.
+
+**Recommendation (the advisor rules separately): refuse a call with no
+catalogue price while a spend ceiling is set.** Under a ceiling the guard's
+contract is to bound the run's spend, and an unpriced call has no computable
+worst case — it is unbounded by construction, which is exactly the thing the
+ceiling exists to prevent. The blind *record* was the right repair for its
+era (make the gap visible), but D45's "no open, unbounded spend" closes the
+door it left open. With **no** ceiling set, blind calls may continue and be
+recorded — there is no bound to violate. The refusal should name the model
+and the fix (pin a priced model, or drop the ceiling), in the same shape as
+D45's other refusals. Falsifier: a blind call that took a ceiling'd run past
+its ceiling unnoticed — which is the shape of 102's IA run ($0.1570 against
+$0.08, the F3 exhibit itself).
+
+### 106.4 Corrections, departures and counts
+
+Corrections appended, nothing deleted or rewritten silently (each names what
+it corrects): 108's response and §99 above (the `3/6 · key v1` figure and its
+true reading); 111's response (the two hashes that do not exist —
+`5c7e836` should be `ea0b75d`, `499b548` should be `ccc9b6f` — and the
+missed 102 golden trace); §102.3 above (same miss, corrected counts).
+
+Departures and rule 7:
+1. `test_the_trace_header_and_report_name_the_key_version` asserted the
+   summary *ended* with the key label. 115's ruled format puts the as-recorded
+   label after the current one; the assertion is now the claim D44 makes (the
+   label is named) rather than its position in the line. The rule is right;
+   the assertion was over-specific.
+2. The score_trace summary's `shipped` bucket counts direct answers too — a
+   direct call's answer IS its deliverable, and the alternative was a summary
+   that read `6/7 PASS · 0/7 shipped` while every row carried an answer.
+3. Counts re-derived (convention 24): 1229 collected — 1225 before, +4
+   (test_direct_baseline 3→6, test_golden_keys 9→10). README badge/Testing/
+   Project Structure and HANDOVER's header/§2.2/§3.7/§4.2.
+
+The excluded diff is empty by the command's own verification: no harness
+change (`autornd/`, `workflows/`), no trace edit (`docs/traces/` read-only),
+and no advisor-owned file touched (`keys.json`, `score.py`, `versions.json`,
+`SOURCE.md`).

@@ -52,5 +52,12 @@
     "ruling_first": "a809005",
     "guard_and_stamps": "19c7416",
     "readme_counts_record": "878e322"
-  }
+  },
+  "corrections": [
+    {
+      "added_by": "ARCH-20261002-115",
+      "corrects": "results.key_version_outputs — the 107 figure '3/6 golden hold every item · median sprawl 2.5 · total $0.0220 · key v1'",
+      "correction": "That '3/6' was scored under the key BEFORE version 1: baseline.report read the stored verdicts from the run and printed the CURRENT key's label beside them. Under version 1, 107's direct answers hold 6/6 as the repaired report prints it — '6/6 golden hold every item · median sprawl 2.5 · total $0.0220 · key v1 (as recorded 3/6 · pre-D44)'. The 106 figures above it are unaffected: score_trace re-scored those under the current key at the time. See docs/handover-review.md §99's appended correction."
+    }
+  ]
 }
