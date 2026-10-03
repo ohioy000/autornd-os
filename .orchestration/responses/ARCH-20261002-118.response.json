@@ -6,21 +6,21 @@
   "head_before": "5dd9aa6",
   "head_after": "cd4aeb0",
 
-  "settled_by": "ARCH-20261002-117 (BLOCKED): the 25-question JSON array - the candidate data the tier-2 set is built from - was never supplied in the conversation, and the tier-2 command's own clause stops the work and requests it. No dataset exists, so no dataset PR exists to merge.",
+  "settled_by": "ARCH-20261002-117 (PARTIAL, PR 143 merged 2026-10-03, main 84998eb): the dataset PR has now merged, but it carries 5 of the 25 questions the experiment runs over, unfrozen, with the count discrepancy recorded as the freeze blocker. The command's precondition is conjunctive - 'After the dataset PR merges AND required key/source review is complete' - and the second half is unmet: the review requires owner or qualified-reviewer signoff (the command: 'Deterministic arithmetic verification is not independent subject-matter approval. Require owner or qualified-reviewer signoff before paid use'), and the experiment is specified over the frozen 25-question set (25 questions x 3 repetitions x 5 arms = 375 planned question-runs), which does not exist. The trigger has still not fired.",
 
-  "why_no_action": "The command's own precondition is sequential: 'After the dataset PR merges and required key/source review is complete, process the arms-experiment command.' The trigger did not fire, and cannot fire until tier 2 completes. This is the NO_ACTION class: a contingent command whose trigger did not fire, recorded with the command that settled it.",
+  "why_no_action": "The command's own precondition is conjunctive: 'After the dataset PR merges and required key/source review is complete, process the arms-experiment command.' The first half is now met (the dataset PR, #143, merged 2026-10-03); the second is not, and the experiment's own arithmetic (25 questions x 3 repetitions x 5 arms = 375 planned question-runs) is defined over the frozen 25-question set, which does not exist. This remains the NO_ACTION class: a contingent command whose trigger has not fired, recorded with the command that settled it.",
 
   "the_measurement_that_settled_it": "The arrival check of 2026-10-03T07:17Z: origin/main at 5dd9aa6 (the tier-1 merge, PR 141, merged 2026-10-03T06:54:44Z); gh pr list --state all shows no open or merged dataset PR; the tier-2 response ARCH-20261002-117 records BLOCKED on the missing-array precondition, with the transcript search that establishes the array was never supplied (every session transcript under /home/jb/.qwen/projects/-home-jb-autornd-os/chats/, the whole working tree, and the channel).",
 
   "what_was_not_done": "Nothing was prepared: no experiment manifest, no arm definitions (A: inexpensive single call, request only; B: the same inexpensive model with primary-source acquisition and recomputation tools; C: explicitly defined complementary-model cooperation; D: stronger single call, request only; E: the current pipeline), no dry-run artifacts, no estimated spend with uncertainty. Every deliverable the command names must carry 'Repository, dataset, source-snapshot, and scorer versions' - versions that do not exist. The command's spend ceilings ($0.10/$0.20/$0.20/$0.20/$0.50 per question-run; $90.00 aggregate across the 375 planned question-runs) are, in the command's own words, 'an authorization ceiling, not a predicted cost. Do not assume these amounts are approved' - no authorization was assumed, and the command's 'STOP before paid execution. Obtain explicit owner ratification of serving proposals and total spend authorization' holds absolutely. No paid call was made, no .env was touched, no serving was proposed.",
 
-  "what_replaces_this_command": "Re-issue after the tier-2 dataset PR merges and the required key/source review completes. The re-issued command consumes the next unused ID at that time.",
+  "what_replaces_this_command": "Re-issue after the required key/source review completes and the set freezes at 25 questions (the remaining 20 supplied by the owner or advisor, and owner or qualified-reviewer signoff recorded). The re-issued command consumes the next unused ID at that time. Preparing the manifest against the 5-question unfrozen candidate would freeze arm definitions, prompts and spend ceilings for a set that is not the set the experiment runs over.",
 
   "preconditions": [
     {
       "command": "the command's own precondition: 'After the dataset PR merges and required key/source review is complete'",
       "expected": "A merged dataset PR and a completed key/source review.",
-      "result": "Neither exists. No dataset PR (gh pr list --state all: newest is 141, tier 1, merged); no key/source review can exist because no dataset exists to review.",
+      "result": "Half met at the 2026-10-03 update. The dataset PR (#143) merged 2026-10-03 (main 84998eb), carrying 5 of the 25 questions, unfrozen, with the count discrepancy as the recorded freeze blocker. The required key/source review is not complete: owner or qualified-reviewer signoff has not been given, and the experiment is specified over the frozen 25-question set, which does not exist. The trigger has not fired.",
       "pass": false
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "what": "The owner's 2026-10-03 instruction ('do tier 2 and 3, no stops, full permission to commit/push/merge') did not advance this command's trigger.",
-      "why": "The trigger is a merged dataset PR, which depends on tier 2, which is blocked on the never-supplied 25-question array. 'No stops' cannot manufacture the prerequisite artifact; the two instructions are recorded together so the record shows they were read in combination, not in conflict."
+      "why": "The trigger is conjunctive, and its second half - the required key/source review, with owner or qualified-reviewer signoff - is the owner's own to complete; 'no stops' cannot supply the signoff or the remaining 20 questions the experiment runs over. The two instructions are recorded together so the record shows they were read in combination, not in conflict. (At arrival the first half was also unmet; PR 143 has since merged it.)"
     },
     {
       "what": "ID substitution: tier 3 takes 118.",
@@ -60,8 +60,9 @@
   "delivery_state": {
     "branch": "arch/20261002-117-tier2-set-arrival",
     "pr": 142,
-    "action": "none - the trigger did not fire; the report is the deliverable",
-    "settled_by": "ARCH-20261002-117 (BLOCKED)"
+    "action": "none - the trigger has not fired; the report is the deliverable",
+    "settled_by": "ARCH-20261002-117 (PARTIAL, PR 143 merged)",
+    "updated": "2026-10-03, after PR 143 merged: the record now states which half of the conjunctive precondition is met (the dataset PR) and which is not (the key/source review, the frozen 25-question set). Status unchanged: NO_ACTION."
   },
 
   "commits": {
