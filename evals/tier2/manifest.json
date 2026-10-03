@@ -1,10 +1,15 @@
 {
-  "dataset_version": "candidate-2026-10-03.3",
-  "scorer_version": "candidate-2026-10-03.3",
-  "frozen": false,
-  "freeze_blocked_by": [
-    "review-pending: the count discrepancy is resolved - the owner supplied all 25 questions on 2026-10-03 (the array the command names, registered verbatim). The set is not frozen: the tier-2 command requires owner or qualified-reviewer signoff on the verification and the source review before paid use ('Deterministic arithmetic verification is not independent subject-matter approval'). Freezing waits on that signoff."
-  ],
+  "dataset_version": "frozen-2026-10-03",
+  "scorer_version": "frozen-2026-10-03",
+  "frozen": true,
+  "freeze_blocked_by": [],
+  "freeze": {
+    "signed_off_by": "owner",
+    "signed_off_utc": "2026-10-03T21:41:20Z",
+    "granted": "in conversation: 'ratify the tier-2 signoff'",
+    "scope": "the independent verification (all 268 checks of verify_keys.py) and the source review (four archived July 1, 2014 govinfo editions with verbatim quotation matches and 2026-10-01 eCFR stability cross-checks) the tier-2 command requires before the set freezes and before paid use",
+    "effect": "the dataset and scorer versions are frozen at frozen-2026-10-03; paid use of the set is permitted subject to the tier-3 command's own ratification requirements (ARCH-20261002-118)"
+  },
   "candidate": {
     "file": "candidate/25GoldenQuestion.json",
     "bytes": 204068,

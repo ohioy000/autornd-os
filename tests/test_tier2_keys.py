@@ -12,10 +12,8 @@ that scores free-text answers against the keys. This file runs both
 instruments, proves each can fail on a corrupted copy (convention 22 -
 an instrument written in the same commit as the dataset gets no run of
 its own to prove it on), checks the three-way separation the command
-requires, records the open item that blocks freezing (the
-owner or qualified-reviewer signoff the command requires
-is still pending), and guards the version record the way
-D44 guards the golden scoreboard.
+requires, records the freeze the owner's signoff ratified, and
+guards the version record the way D44 guards the golden scoreboard.
 """
 
 from __future__ import annotations
@@ -82,10 +80,10 @@ class TestTheVerifierHoldsTheKeys:
                 f"the verifier's table holds no Q{i} check - it "
                 f"examined fewer questions than the dataset has")
         assert "25 questions verified" in out.stdout
-        assert "NOT frozen" in out.stdout
-        # The open item is the signoff the command requires,
-        # not a count: the owner supplied all 25 questions
-        # on 2026-10-03.
+        # The instrument reports the freeze beside its
+        # result: the set is frozen by the owner's
+        # signoff, not merely counted.
+        assert "frozen at frozen-2026-10-03" in out.stdout
         assert "signoff" in out.stdout
 
     def test_a_corrupted_numeric_key_fails_the_cross_check(
@@ -155,10 +153,10 @@ class TestTheScorerScoresNotRegexes:
         for qid in QUESTION_IDS:
             assert f"{qid} model answer" in out.stdout, (
                 f"the self-test never ran {qid}'s model answer")
-        # Convention 28: the scorer reports the open item beside
-        # its result, not just a green count.
+        # Convention 28: the scorer reports the freeze
+        # beside its result, not just a green count.
         assert "Candidate holds 25 questions" in out.stdout
-        assert "NOT frozen" in out.stdout
+        assert "frozen at frozen-2026-10-03" in out.stdout
 
     def test_a_corrupted_key_fails_the_intact_model_answer(
             self, tmp_path):
@@ -343,28 +341,34 @@ class TestTheDatasetSeparation:
                 f"scorer-only file")
 
 
-class TestTheManifestRecordsTheOpenItem:
-    """The owner supplied all 25 questions the command expects,
-    so the count discrepancy the earlier state recorded is
-    resolved. The remaining freeze blocker is the signoff: the
-    command requires owner or qualified-reviewer signoff on the
-    verification and the source review before paid use, and
-    that signoff is recorded as pending, not performed. The
-    source archives the verification depends on must match the
-    files on disk."""
+class TestTheManifestRecordsTheFreeze:
+    """The owner supplied all 25 questions the command
+    expects, so the count discrepancy the earlier state
+    recorded is resolved, and the owner ratified the
+    tier-2 signoff on 2026-10-03: the set is frozen.
+    The manifest records the signoff - its grantor,
+    time, scope and effect - and carries no freeze
+    blocker. The source archives the verification
+    depends on must match the files on disk."""
 
-    def test_the_signoff_is_recorded_not_performed(self):
+    def test_the_freeze_is_recorded_with_the_signoff(self):
         assert MANIFEST["questions"] == 25
         assert MANIFEST["command_expected_questions"] == 25
-        assert MANIFEST["frozen"] is False
-        blockers = MANIFEST["freeze_blocked_by"]
-        assert blockers, "no freeze blocker recorded"
-        assert any("review-pending" in b for b in blockers), (
-            "the recorded freeze blockers do not name the "
-            "pending review")
-        assert any("signoff" in b for b in blockers), (
-            "the recorded freeze blockers do not name the "
-            "signoff the command requires")
+        assert MANIFEST["frozen"] is True, (
+            "the owner ratified the tier-2 signoff on "
+            "2026-10-03, but the manifest still records "
+            "the set as unfrozen")
+        assert MANIFEST["freeze_blocked_by"] == [], (
+            "the manifest records freeze blockers after "
+            "the owner's signoff cleared the last one")
+        freeze = MANIFEST["freeze"]
+        assert freeze["signed_off_by"] == "owner"
+        assert freeze["signed_off_utc"] == "2026-10-03T21:41:20Z"
+        assert "ratify the tier-2 signoff" in freeze["granted"]
+        assert "verification" in freeze["scope"]
+        assert "source review" in freeze["scope"]
+        assert MANIFEST["dataset_version"] == "frozen-2026-10-03"
+        assert MANIFEST["scorer_version"] == "frozen-2026-10-03"
 
     def test_the_source_archives_match_the_files_on_disk(self):
         archives = MANIFEST["source_archives"]

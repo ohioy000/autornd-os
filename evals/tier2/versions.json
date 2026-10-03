@@ -1,5 +1,5 @@
 {
-  "ruling": "The tier-2 candidate dataset is versioned the way D44 (ARCH-20260930-108) versions the golden scoreboard: the manifest's dataset_version and scorer_version name the current entry, and tests/test_tier2_keys.py checks that questions.json, keys.json, scorer.py and verify_keys.py hash to that entry. The candidate set is NOT frozen - manifest.json records the pending owner or qualified-reviewer signoff as the freeze blocker. A change to any of the four files is a new version: an entry naming the change and what triggered it. When the signoff the command requires is granted, the frozen version adds an entry here and the freeze blocker is cleared.",
+  "ruling": "The tier-2 candidate dataset is versioned the way D44 (ARCH-20260930-108) versions the golden scoreboard: the manifest's dataset_version and scorer_version name the current entry, and tests/test_tier2_keys.py checks that questions.json, keys.json, scorer.py and verify_keys.py hash to that entry. The set is FROZEN at frozen-2026-10-03: the owner ratified the tier-2 signoff on 2026-10-03 (the independent verification - all 268 checks - and the source review the command requires), and the manifest records the signoff. A change to any of the four files after the freeze is a new version: an entry naming the change and what triggered it.",
   "versions": [
     {
       "version": "candidate-2026-10-03",
@@ -48,6 +48,18 @@
       },
       "change": "Registration of the complete 25-question set. Trigger: the owner supplied the remaining 20 questions on 2026-10-03 (candidate/25GoldenQuestion.json, sha256 66af3e5a..., 204068 bytes - the array the command names, registered verbatim; the executor generated, screened and selected nothing). All four lookup sources are now archived and verified: the govinfo July 1, 2014 CFR PDFs for 29 CFR 1910.95, 29 CFR 1910.146, 29 CFR 1910.147 and 40 CFR 141.62, each cross-checked against its 2026-10-01 eCFR snapshot; editions are identified by package identifier and GPO typesetting footer, not inferred from a current webpage. verify_keys.py extended to Q6-Q25: 61 -> 268 checks (deterministic recomputation of every numerical key from first principles, dimension and boundary-operator checks, discrete selections, tolerance boundaries, falsification of every claimed wrong answer, verbatim quotation matches against the archived sources). scorer.py extended with _score_q6 through _score_q25: 64 -> 248 self-test fixtures (25 model answers, 47 equivalent notations, 100 tolerance boundaries, 56 wrong answers, 20 discrete selections). The count discrepancy that blocked candidate-2026-10-03 is resolved; the remaining freeze blocker is the signoff the command requires - owner or qualified-reviewer signoff on the verification and the source review before paid use - recorded as pending in manifest.json.",
       "verification": "evals/tier2/verify_keys.py: 268/268 checks pass (exit 0). evals/tier2/scorer.py --self-test: 248/248 fixtures pass (exit 0)."
+    },
+    {
+      "version": "frozen-2026-10-03",
+      "date": "2026-10-03",
+      "sha256": {
+        "questions.json": "35bff36583c1e34bebd8a917a4b5553f0134f3e2a6567b06f242a6f71101729c",
+        "keys.json": "c05c95fbffedee588d239dc39ef386003fefa73997855ca74f35961a59ffbb89",
+        "scorer.py": "fb2894b268f3008e05913469a0452e943f9b6bffde2e05f7e7908225d7e99897",
+        "verify_keys.py": "941ca13c181aaf1a197408a39c946fb8211ef048b7c3c8adb252888bb5aeeb40"
+      },
+      "change": "The freeze the command orders after review. Trigger: the owner ratified the tier-2 signoff on 2026-10-03 ('ratify the tier-2 signoff'), covering the independent verification (all 268 checks of verify_keys.py) and the source review (four archived July 1, 2014 govinfo editions with verbatim quotation matches and 2026-10-01 eCFR stability cross-checks). The dataset content is unchanged from candidate-2026-10-03.3 - questions.json and keys.json hash identically; the two instrument files change only in what they report: the verifier's G3 check now requires the frozen state with the owner signoff recorded (manifest.json: frozen=true, freeze_blocked_by empty, a freeze record naming the signoff's grantor, time, scope and effect), and both instruments' closing lines report the frozen version instead of the pending signoff. extract_candidate.py (the manifest's generator) carries the freeze record so re-running it reproduces manifest.json byte-for-byte. Paid use of the set is permitted subject to the tier-3 command's own ratification requirements (ARCH-20261002-118).",
+      "verification": "evals/tier2/verify_keys.py: 268/268 checks pass (exit 0). evals/tier2/scorer.py --self-test: 248/248 fixtures pass (exit 0). evals/tier2/extract_candidate.py re-run reproduces manifest.json byte-for-byte (the extraction-idempotency guard)."
     }
   ]
 }

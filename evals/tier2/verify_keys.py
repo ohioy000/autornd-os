@@ -35,10 +35,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 
 # The question set the command expects. The owner
-# supplied all 25 on 2026-10-03; the count
-# discrepancy that blocked the first registration is
-# resolved, and the remaining freeze blocker is the
-# review and signoff the command requires.
+# supplied all 25 on 2026-10-03 and ratified the
+# tier-2 signoff the same day; the count discrepancy
+# that blocked the first registration is resolved,
+# and the set is frozen (manifest.json records the
+# signoff).
 COMMAND_EXPECTED_QUESTIONS = 25
 
 # The two definitions 29 CFR 1910.146(b) states, as the archived
@@ -2952,20 +2953,20 @@ def verify_structure(directory: Path) -> tuple[dict, dict, dict]:
           f"{[q['id'] for q in questions]}")
 
     check("G3", "the command's expected count is met "
-                "and the set is not frozen",
+                "and the set is frozen with the signoff "
+                "recorded",
           manifest["questions"] == COMMAND_EXPECTED_QUESTIONS
           and manifest["command_expected_questions"] == COMMAND_EXPECTED_QUESTIONS
-          and manifest["frozen"] is False
-          and manifest["freeze_blocked_by"],
+          and manifest["frozen"] is True
+          and not manifest["freeze_blocked_by"]
+          and manifest.get("freeze", {}).get("signed_off_by") == "owner"
+          and manifest.get("freeze", {}).get("scope"),
           f"the candidate holds all "
           f"{manifest['questions']} questions the "
-          f"command expects. The count discrepancy "
-          f"that blocked the first registration is "
-          f"resolved; the remaining freeze blocker is "
-          f"the review and signoff the command "
-          f"requires. frozen={manifest['frozen']}; "
-          f"blocker: "
-          f"{manifest['freeze_blocked_by'][0][:80]}...")
+          f"command expects, and the set is frozen at "
+          f"{manifest['dataset_version']} by the owner's "
+          f"signoff ({manifest['freeze']['signed_off_utc']}): "
+          f"{manifest['freeze']['scope'][:80]}...")
 
     leak = [q["id"] for q in questions
             if set(q) != {"id", "shape", "domain", "question"}]
@@ -3051,11 +3052,12 @@ def main(argv: list[str] | None = None) -> int:
             f"questions short of the command's expected "
             f"{manifest['command_expected_questions']}")
     else:
-        short = ("the owner or qualified-reviewer signoff "
-                 "the command requires is still pending")
+        short = (f"frozen at {manifest['dataset_version']} "
+                 f"by the owner's signoff "
+                 f"({manifest['freeze']['signed_off_utc']})")
     print(f"VERIFICATION PASSED: all {len(CHECKS)} checks hold "
           f"({manifest['questions']} questions verified; "
-          f"the set is NOT frozen - {short})")
+          f"the set is {short})")
     return 0
 
 

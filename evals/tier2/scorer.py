@@ -2212,7 +2212,8 @@ def self_test() -> int:
     print(f"Candidate holds {MANIFEST['questions']} questions "
           f"(the command expects "
           f"{MANIFEST['command_expected_questions']}); the set "
-          f"is NOT frozen - see manifest.json")
+          f"is frozen at {MANIFEST['dataset_version']} by the "
+          f"owner's signoff - see manifest.json")
     failures = 0
     ran = 0
 

@@ -4,16 +4,22 @@ Command: **ARCH-20261002-117** (tier 2 of the owner's
 three-tier instruction of 2026-10-02): "Register and
 independently verify the 25-question set."
 
-**Status: the complete 25-question set is registered and
-verified. The set is NOT frozen.** The owner supplied all
-25 questions on 2026-10-03 (the array the command names,
-registered verbatim — the executor generated, screened
-and selected nothing). The count discrepancy that blocked
-the first registration is resolved; the remaining freeze
-blocker is the signoff the command requires: owner or
-qualified-reviewer signoff on this verification and the
-source review before paid use. See "Unresolved items"
-below.
+**Status: the complete 25-question set is registered,
+verified and FROZEN at `frozen-2026-10-03`.** The
+owner supplied all 25 questions on 2026-10-03 (the
+array the command names, registered verbatim — the
+executor generated, screened and selected nothing),
+and ratified the tier-2 signoff the same day
+("ratify the tier-2 signoff"), covering the
+independent verification (all 268 checks) and the
+source review (the four archived July 1, 2014
+govinfo editions with verbatim quotation matches and
+2026-10-01 eCFR stability cross-checks). The freeze
+the command orders after review is executed: the
+manifest records the signoff (grantor, time, scope,
+effect) and carries no freeze blocker. Paid use of
+the set is permitted subject to the tier-3 command's
+own ratification requirements (ARCH-20261002-118).
 
 ## What was delivered
 
@@ -27,12 +33,16 @@ below.
 | Independent verifier (recomputation) | `verify_keys.py` |
 | Provider-free scorer (answer scoring) | `scorer.py` |
 | Version record (D44-style guard) | `versions.json` |
-| Manifest (versions, counts, archives, blockers) | `manifest.json` |
+| Manifest (versions, counts, archives, freeze record) | `manifest.json` |
 | This checklist | `REVIEW.md` |
 
-Dataset version / scorer version: `candidate-2026-10-03.3`
+Dataset version / scorer version: `frozen-2026-10-03`
 (see `versions.json`; every change to the four versioned
 files is a new entry naming the change and its trigger).
+The set froze at this entry on the owner's 2026-10-03
+signoff; its content is identical to
+`candidate-2026-10-03.3` (questions.json and
+keys.json hash unchanged).
 
 ## The checks, and their results
 
@@ -170,30 +180,44 @@ select any question, and no AI model was queried about the
 questions** during verification — the verifier and scorer
 are deterministic, provider-free programs.
 
-## Unresolved items (freeze blockers)
+## Resolved items (the signoff the command required)
 
-1. **Owner or qualified-reviewer signoff (the remaining
-   blocker).** Deterministic arithmetic verification is
-   **not** independent subject-matter approval. The
-   recomputation proves the keys follow from the stated
-   inputs and formulas; it does not prove the questions
-   are the right questions, that the formulas are the
-   right models of the domains, or that the archived
-   edition is the edition each question intends. Per the
-   command, owner or qualified-reviewer signoff on this
-   verification and the source review is required before
-   the set freezes and before any paid use. The signoff
-   is recorded as pending in `manifest.json`
-   (`freeze_blocked_by: review-pending …`); the set
-   stays unfrozen until it is granted.
-2. **Source review of the lookup questions.** The five
-   lookup questions' quotations were matched against the
-   archived July 1, 2014 editions and stability-checked
-   against the 2026-10-01 eCFR. A qualified reviewer
-   should still read the archived sources beside the
-   keys (not just the machine match) before signoff —
-   the match proves the quotation is in the archive, not
-   that the question asks the right thing of it.
+The owner ratified the tier-2 signoff on 2026-10-03
+(21:41:20Z, in conversation: "ratify the tier-2
+signoff"). The ratification covers:
+
+1. **The independent verification.** All 268 checks of
+   `evals/tier2/verify_keys.py` hold: every numerical
+   key recomputed from first principles, dimensions,
+   boundary operators, discrete selections and tolerance
+   boundaries checked, all 56 claimed wrong answers
+   falsified, and `keys.json`'s own value strings
+   cross-checked against the recomputation (X1–X67).
+2. **The source review.** The five lookup questions
+   (Q2, Q7, Q12, Q17, Q22) are verified against four
+   archived July 1, 2014 govinfo editions with every
+   claimed verbatim quotation matched character-for-character
+   against the archive, editions identified by package
+   identifier and GPO typesetting footer (not inferred
+   from a current webpage), and each regulation
+   stability-cross-checked against the 2026-10-01 eCFR
+   (a 12-year span).
+
+The freeze is executed: `manifest.json` records
+`frozen: true`, an empty `freeze_blocked_by`, and the
+`freeze` record (grantor, time, scope, effect);
+`versions.json` carries the `frozen-2026-10-03` entry
+and the manifest names it. The dataset content is
+unchanged from `candidate-2026-10-03.3` — the freeze
+changed only what the instruments report and the
+manifest records.
+
+**Not a blank cheque for paid execution of tier 3.**
+The signoff permits paid use of the set; the five-arm
+experiment (ARCH-20261002-118) remains gated on its
+own ratifications: explicit owner ratification of the
+serving proposals and of the total spend authorization
+before any paid run.
 
 ## Not done (out of scope under the command)
 
