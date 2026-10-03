@@ -1,0 +1,276 @@
+"""The tier-3 experiment manifest is a frozen plan, and a frozen plan
+is checked like a frozen dataset (ARCH-20261002-118).
+
+The manifest (evals/tier3/manifest.json) registers the five-arm
+experiment over the frozen tier-2 question set: the plan arithmetic,
+the arm treatments, the serving pins (environment names, never model
+ids - non-negotiable 6), the ceilings, the execution rules, the
+failure treatment, the success measures and the two ratification
+gates that stop paid execution. This file checks every registered
+invariant holds on the tree, that the checks can fail (the seeded
+order is re-derived, and a different seed must NOT reproduce it),
+and that nothing the models must not see - key material, model ids -
+leaked into any tier-3 file. The prompts are checked structurally:
+arm D's prompt is arm A's byte-for-byte (the same request, only the
+serving differs) and arm B's contains arm A's verbatim (equal
+information access - the only difference is the tool registration).
+"""
+
+from __future__ import annotations
+
+import json
+import random
+import re
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parent.parent
+TIER3 = ROOT / "evals" / "tier3"
+TIER2 = ROOT / "evals" / "tier2"
+MANIFEST = json.loads((TIER3 / "manifest.json").read_text(encoding="utf-8"))
+TIER2_MANIFEST = json.loads((TIER2 / "manifest.json").read_text(encoding="utf-8"))
+TIER2_VERSIONS = json.loads((TIER2 / "versions.json").read_text(encoding="utf-8"))
+QUESTIONS = json.loads((TIER2 / "questions.json").read_text(encoding="utf-8"))
+KEYS = json.loads((TIER2 / "keys.json").read_text(encoding="utf-8"))
+ARMS = ("A", "B", "C", "D", "E")
+PROMPTS = TIER3 / "prompts"
+
+
+def _tier3_files() -> list[Path]:
+    files = [TIER3 / "manifest.json", TIER3 / "README.md"]
+    files.extend(sorted(PROMPTS.glob("*.md")))
+    return files
+
+
+def _key_strings() -> list[str]:
+    """Every string keys.json holds that an answer could leak.
+
+    Four key strings are shorter than 12 characters and are scorer
+    vocabulary or a bare disjunct ("PASS", "FAIL", "OR") - a probe
+    would match ordinary prose and prove nothing (the tier-2 lesson:
+    a probe that a question itself answers is a false positive, not
+    a leak test). The distinctive short selections stay probed.
+    """
+    probes = [q["model_answer"] for q in KEYS]
+    for q in KEYS:
+        probes.extend(it["value"] for it in q["required_items"])
+        probes.extend(w["answer"] for w in q["common_wrong_answers"])
+    distinctive = {"XNOR", "$0,1,1,0$", "$I=hb^3/12$"}
+    return [p for p in probes if len(p) >= 12 or p in distinctive]
+
+
+class TestThePlan:
+    def test_the_plan_arithmetic_holds(self):
+        plan = MANIFEST["plan"]
+        assert plan["questions"] == 25
+        assert plan["repetitions_per_question"] == 3
+        assert plan["arms"] == 5
+        assert plan["planned_question_runs"] == 25 * 3 * 5 == 375
+        assert plan["planned_units_per_arm"] == 75
+        assert "questions.json" in plan["question_source"]
+
+    def test_the_questions_are_the_frozen_set(self):
+        ids = [q["id"] for q in QUESTIONS]
+        assert ids == [f"Q{i}" for i in range(1, 26)], (
+            "the frozen tier-2 set is not the 25-question set the "
+            "experiment plans over - the manifest's question_source "
+            "names a different dataset than the tree holds")
+        assert MANIFEST["plan"]["questions"] == len(QUESTIONS)
+
+    def test_the_arms_carry_their_registered_treatments(self):
+        arms = MANIFEST["arms"]
+        # The registered call limits and tool budgets are the treatment.
+        assert arms["A"]["call_limit"] == 1 and arms["A"]["tool_invocations"] == 0
+        assert arms["B"]["call_limit"] == 3 and arms["B"]["tool_invocations"] == 20
+        assert set(arms["B"]["tools"]) == {"fetch_primary_source", "recompute"}
+        assert arms["C"]["call_limit"] == 3 and arms["C"]["tool_invocations"] == 0
+        assert arms["D"]["call_limit"] == 1 and arms["D"]["tool_invocations"] == 0
+        assert arms["E"]["call_limit"] == 40
+
+    def test_the_serving_pins_are_named_not_models(self):
+        arms = MANIFEST["arms"]
+        assert arms["A"]["model_pin_env"] == "TIER3_ARM_A"
+        assert arms["B"]["model_pin_env"] == "TIER3_ARM_B"
+        assert arms["C"]["model_pin_env"] == ["TIER3_ARM_C_1", "TIER3_ARM_C_2"]
+        assert arms["D"]["model_pin_env"] == "TIER3_ARM_D"
+        assert "standing pins" in arms["E"]["model_pin_env"]
+        # Arm B isolates the tool treatment, so its pin must resolve to
+        # arm A's serving - the manifest registers the equality, and the
+        # ratification gate repeats it as a requirement on the owner.
+        assert "same" in arms["B"]["model_selection_criterion"].lower()
+        assert "TIER3_ARM_B must equal TIER3_ARM_A" in MANIFEST["ratification_gates"][
+            "gate_1_servings"]
+
+
+class TestTheMoney:
+    def test_the_ceiling_arithmetic_holds(self):
+        ceilings = {a: MANIFEST["arms"][a]["spend_ceiling_per_question_run"]
+                    for a in ARMS}
+        assert ceilings == {"A": 0.10, "B": 0.20, "C": 0.20, "D": 0.20, "E": 0.50}
+        per_unit_total = sum(ceilings.values())
+        assert per_unit_total == pytest.approx(1.20)
+        total = MANIFEST["plan"]["planned_units_per_arm"] * per_unit_total
+        assert total == pytest.approx(90.00), (
+            "the registered ceilings no longer compose to the $90.00 "
+            "authorization ceiling the ratification gate states")
+
+
+class TestTheVersions:
+    def test_the_versions_name_the_frozen_tier2_set(self):
+        versions = MANIFEST["versions"]
+        assert versions["dataset"] == "frozen-2026-10-03"
+        assert versions["scorer"] == "frozen-2026-10-03"
+        frozen = {v["version"] for v in TIER2_VERSIONS["versions"]}
+        assert versions["dataset"] in frozen, (
+            "the manifest names a tier-2 version the version record "
+            "does not hold")
+        # The tier-2 freeze itself: the signoff the owner ratified.
+        assert TIER2_MANIFEST["dataset_version"] == "frozen-2026-10-03"
+        assert TIER2_MANIFEST["frozen"] is True
+        assert TIER2_MANIFEST["freeze"]["signed_off_by"] == "owner"
+
+
+class TestThePrompts:
+    def test_all_five_prompts_exist(self):
+        for arm in ARMS:
+            # The D and E prompt fields carry a parenthetical note
+            # after the path; the file is the first token.
+            declared = MANIFEST["arms"][arm]["prompt"].split()[0]
+            assert declared.startswith("prompts/"), declared
+            assert (TIER3 / declared).exists(), (
+                f"arm {arm} declares {declared}, which is not in the tree")
+
+    def test_arm_d_prompt_is_arm_a_prompt_verbatim(self):
+        a = (PROMPTS / "arm_a.md").read_bytes()
+        d = (PROMPTS / "arm_d.md").read_bytes()
+        assert a == d, (
+            "arm D's prompt is not arm A's prompt byte-for-byte - the "
+            "strong-reference arm must pose the identical request so the "
+            "A-vs-D gap is a serving gap, not a prompt gap")
+
+    def test_arm_b_prompt_is_arm_a_prompt_plus_the_tool_registration(self):
+        a = (PROMPTS / "arm_a.md").read_text(encoding="utf-8")
+        b = (PROMPTS / "arm_b.md").read_text(encoding="utf-8")
+        assert a in b, (
+            "arm B's prompt does not contain arm A's prompt verbatim - "
+            "equal information access requires the question, the deadline "
+            "and the answer format to be identical, with the tool "
+            "registration as the only addition")
+        assert "fetch_primary_source" in b and "recompute" in b
+
+    def test_the_cooperation_protocol_is_fixed_in_the_prompt(self):
+        c = (PROMPTS / "arm_c.md").read_text(encoding="utf-8")
+        for stage in ("STAGE 1", "STAGE 2", "STAGE 3"):
+            assert stage in c
+        # The protocol's bounds: one bounded revision round, no voting,
+        # no third model, and a recorded objection or a concurrence.
+        assert "CONCUR" in c and "OBJECT" in c
+        assert "no voting" in c and "no third model" in c
+
+
+class TestTheSecrecy:
+    def test_no_key_material_leaks_into_any_tier3_file(self):
+        probes = _key_strings()
+        # Convention 28: the probe must have computed its subject. An
+        # empty keys.json would otherwise pass this vacuously.
+        assert len(probes) >= 100, (
+            f"only {len(probes)} key strings probed - the probe set "
+            "did not read the frozen keys")
+        for path in _tier3_files():
+            text = path.read_text(encoding="utf-8")
+            for probe in probes:
+                assert probe not in text, (
+                    f"key material from the frozen keys.json leaked "
+                    f"into {path.relative_to(ROOT)}: {probe[:60]!r}")
+
+    def test_no_model_id_in_any_tier3_file(self):
+        # The same families test_docs.py guards in user-facing docs,
+        # re-declared here because tests do not import each other.
+        # The tier-3 files are user-facing documentation of the
+        # experiment, so non-negotiable 6 applies to them in full.
+        model_names = re.compile(
+            r"glm|deepseek|minimax|sonar|perplexity|gemini|kimi|qwen|gpt-"
+            r"|mistral|llama|claude|openai|anthropic|moonshot|z-ai",
+            re.IGNORECASE)
+        allowed = ["OpenAI-compatible", "OpenAI chat-completions",
+                   "CLAUDE.md", ".claude/", "Claude Code"]
+        for path in _tier3_files():
+            for n, line in enumerate(
+                    path.read_text(encoding="utf-8").splitlines(), 1):
+                stripped = line
+                for word in allowed:
+                    stripped = stripped.replace(word, "")
+                hit = model_names.search(stripped)
+                assert not hit, (
+                    f"model id in {path.relative_to(ROOT)}:{n}: "
+                    f"{line.strip()[:80]} - non-negotiable 6: the "
+                    "manifest names pin environment variables, and the "
+                    "serving proposals live in the owner's .env")
+
+
+class TestTheExecution:
+    def test_the_seeded_order_is_reconstructable(self):
+        seed = MANIFEST["execution"]["interleaved_order"]["seed"]
+        assert seed == 20261003
+        units = [(q["id"], rep, arm)
+                 for q in QUESTIONS for rep in (1, 2, 3) for arm in ARMS]
+        expected = set(units)
+        order = list(units)
+        random.Random(seed).shuffle(order)
+        # A permutation: every unit once, none invented, none dropped.
+        assert len(order) == 375
+        assert len(set(order)) == 375
+        assert set(order) == expected
+        # Determinism: the seed reconstructs the order exactly.
+        again = list(units)
+        random.Random(seed).shuffle(again)
+        assert order == again
+        # The seed is load-bearing: a different seed must not
+        # reproduce the order, or the reconstruction proves nothing.
+        other = list(units)
+        random.Random(seed + 1).shuffle(other)
+        assert other != order
+
+    def test_the_execution_registers_isolation_deadline_and_record(self):
+        execution = MANIFEST["execution"]
+        assert "_isolated_store()" in execution["isolation"]
+        assert execution["common_deadline_seconds"] == 600
+        assert "ResultsLog" in execution["record"]
+        assert "keys.json" in execution["no_model_access_to_keys"]
+        assert "retry" in execution["retry_rules"].lower()
+        assert "SweepBudget" in execution["spend_enforcement"]
+
+    def test_the_five_success_measures_are_defined(self):
+        measures = MANIFEST["success_measures"]
+        assert set(measures) == {
+            "delivered_correctness_per_arm",
+            "per_question_repeat_outcomes",
+            "paired_wins_and_losses_against_A",
+            "comparison_with_D",
+            "total_cost_and_latency_including_failures"}
+        for name, text in measures.items():
+            assert text.strip(), f"success measure {name} is empty"
+        # The denominator is the planned units, not the shipped ones.
+        assert "75" in measures["delivered_correctness_per_arm"]
+        assert "0/3" in measures["per_question_repeat_outcomes"]
+
+    def test_the_failure_treatment_counts_every_failure_class(self):
+        treatment = MANIFEST["failure_treatment"]
+        assert set(treatment) == {"refusal", "timeout", "tool_failure",
+                                  "incomplete_runs", "outstanding_liability"}
+        # Incomplete runs are counted in the denominator, never
+        # dropped, and the liability is part of what a unit cost.
+        assert "denominator" in treatment["incomplete_runs"]
+        assert "unreconciled_liability" in treatment["outstanding_liability"]
+
+    def test_the_ratification_stop_is_registered(self):
+        assert MANIFEST["status"] == "manifest-frozen-awaiting-ratification"
+        gates = MANIFEST["ratification_gates"]
+        assert set(gates) == {"gate_1_servings", "gate_2_spend", "stop"}
+        assert "$90.00" in gates["gate_2_spend"]
+        assert "authorization ceiling, not a predicted cost" in gates["gate_2_spend"]
+        # The STOP is mechanized, not just stated: the runner refuses
+        # to start unless the environment shows both gates cleared.
+        assert "TIER3_SPEND_AUTHORIZED" in gates["stop"]
+        assert "does not start" in gates["stop"]

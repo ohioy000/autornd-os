@@ -12494,3 +12494,191 @@ two-commit `head_after` record; the checklist is
 `evals/tier2/REVIEW.md` (status: frozen at
 `frozen-2026-10-03`).
 
+
+
+## 109. ARCH-20261002-118: prepare the five-arm experiment — without starting it (executor, 2026-10-03, tier 3 of the owner's three-tier instruction)
+
+### 109.1 The blueprint, as given
+
+The owner's third tier (chat instruction, 2026-10-02), verbatim:
+
+> **Tier 3 — "Prepare the five-arm experiment—without starting it."**
+> Precondition: "After the dataset PR merges and required key/source
+> review is complete, process the arms-experiment command." Five arms:
+> A inexpensive single call; B same model with primary-source
+> acquisition and recomputation tools; C complementary-model
+> cooperation; D stronger single call; E current pipeline. 25
+> questions × 3 repetitions × 5 arms = 375 planned question-runs.
+> Freeze an experiment manifest (versions, proposed models pending
+> owner ratification, exact prompts/tools/workflows/call limits/
+> retry rules/disagreement handling, equal information access except
+> the registered treatment, no model access to keys, isolated stores
+> per question-run, seeded interleaved order, common deadlines,
+> per-question-run/per-arm/total spend ceilings, treatment of
+> refusal/timeout/tool failure/incomplete runs/outstanding
+> liability). Ceilings $0.10/$0.20/$0.20/$0.20/$0.50 per
+> question-run, "$90.00 across 375 units… an authorization ceiling,
+> not a predicted cost. Do not assume these amounts are approved."
+> Success measures: delivered correctness out of 75 planned units
+> per arm, per-question repeat outcomes 0/3–3/3, paired wins/losses
+> against A, comparison with D, total cost/latency including
+> failures. Replace "20 shipped questions means success". "STOP
+> before paid execution. Obtain explicit owner ratification of
+> serving proposals and total spend authorization."
+
+### 109.2 The trigger fired
+
+The precondition is conjunctive, and both halves landed on
+2026-10-03: the dataset PRs (145, 146) merged the registered,
+independently verified 25-question set (main 54f91a7), and the
+owner ratified the tier-2 signoff ("ratify the tier-2 signoff",
+2026-10-03T21:41:20Z), completing the required key/source review
+and freezing the set at `frozen-2026-10-03` (PRs 147, 148, main
+7f85c38). The trigger fired at the freeze merge; the experiment
+was prepared against the frozen set in the same session.
+
+### 109.3 The frozen manifest (`evals/tier3/manifest.json`, tier3-1)
+
+The manifest carries every deliverable the blueprint names. The
+plan: 25 × 3 × 5 = 375 planned question-runs, 75 per arm, the
+unit defined as one (question, repetition, arm) triple, the
+question read from the frozen `questions.json` (the model-visible
+file — no arm receives keys, model answers or wrong answers). The
+arms and their registered treatments:
+
+- **A — inexpensive single call.** One model call, the request
+  only, no tools. Pin `TIER3_ARM_A`; $0.10; call limit 1.
+- **B — the same model with tools.** The same serving as A by
+  design (`TIER3_ARM_B` must equal `TIER3_ARM_A`; the owner sets
+  both to the same value), plus two deterministic tools —
+  `fetch_primary_source` (retrieves the text at a URL; no
+  judgment) and `recompute` (evaluates one arithmetic expression;
+  no model judgment, no external calls). $0.20; up to 3 model
+  calls (the tool loop) and 20 tool invocations. The prompt is
+  arm A's verbatim plus the tool registration.
+- **C — complementary-model cooperation.** Two servings with
+  complementary measured strengths under a fixed protocol: model 1
+  drafts, model 2 independently checks, model 1 revises once if
+  model 2 objects. Pins `TIER3_ARM_C_1`/`TIER3_ARM_C_2`; $0.20;
+  call limit 3. The delivered answer is model 1's revised answer
+  when model 2 objected, or the draft when model 2 concurred —
+  no voting, no third model, objections recorded in the transcript.
+- **D — stronger single call.** Arm A's shape, a stronger serving.
+  Pin `TIER3_ARM_D`; $0.20; call limit 1; the prompt is arm A's
+  byte-for-byte.
+- **E — current pipeline.** The question enters as the harness's
+  scenario request through the full workflow under the standing
+  pins, unchanged; the terminal phase's conclusion is the delivered
+  answer. $0.50; the pipeline's own call ceiling (40) and tools
+  under its standing risk gates.
+
+The serving proposals were made in conversation on 2026-10-03 with
+their evidence, and are recorded in `evals/tier3/README.md`: the
+triage-tier serving for A (measured to classify reliably when
+pinned), the same value for B by design, the engineering-tier and
+escalation-tier servings as C's complementary pair (§6.9/§6.11 —
+converged the build loop; §086 — held escalation 19/20), and the
+escalation-tier serving for D (the strongest measured hold rate).
+Per non-negotiable 6 the manifest and README name **pin
+environment variables, never model ids**; a model id is not a
+system (§6.1), so the pins — not bare model names — are the unit
+of ratification, and the runner will record the resolved serving
+(model, provider) for every unit.
+
+Execution rules as registered: the seeded interleaved order
+(enumerate the 375 units with question ids in frozen order,
+repetitions 1–3, arms A–E, then `random.Random(20261003).shuffle`;
+the seed is recorded and the order is reconstructable exactly);
+the common 600-second deadline (the runner's watchdog);
+`_isolated_store()` per question-run (the per-question-run
+instantiation of "isolated stores per question-run; no cross-run
+memory"); the harness's bounded retry policy; `SweepBudget`
+enforcement composing each unit's ceiling with the ratified total;
+equal information access except the registered treatments; no model
+access to `keys.json` (the scorer process reads it only after each
+unit's answer is delivered); scoring by the frozen tier-2 scorer
+(PASS = delivered correctness 1); the ResultsLog unit record and
+its header (seed, order sha256, resolved pins, ceilings, versions).
+
+Failure treatment: refusal scores 0 and is recorded (an
+all-refused-lookup unit is a poisoned reading, recorded as such
+beside the score); timeout is incomplete (0, cost and latency
+counted); a tool failure is recorded and the model continues
+(scored on what it delivered); incomplete runs are counted in the
+denominator — the success measures are fractions of the 75
+**planned** units per arm; unreconciled liability (Ruling D45) is
+included in its unit's cost and the total. The five success
+measures are registered exactly as the blueprint names them, and
+`$90.00` is registered as an authorization ceiling, not a
+predicted cost.
+
+### 109.4 The guard (`tests/test_tier3_manifest.py`, 17 tests)
+
+The frozen plan is checked like a frozen dataset: the plan
+arithmetic; the questions are the frozen set; the registered
+treatments; the pins are named not models (and the B=A equality
+is registered in both the arm and the gate); the ceiling
+arithmetic (75 × $1.20 = $90.00); the versions name the frozen
+tier-2 set (the version exists in `versions.json`, the tier-2
+manifest carries `frozen: true` with the owner's signoff); all
+five prompts exist, arm D's is arm A's byte-for-byte, arm B's
+contains arm A's verbatim, the cooperation protocol is fixed in
+the prompt; **no key material leaks into any tier-3 file** (186
+probes — every model answer, required-item value and wrong
+answer; the four sub-12-character strings are scorer vocabulary
+or a bare disjunct and would false-positive, the tier-2 lesson;
+the guard asserts the probe set is non-trivially sized so an
+unread `keys.json` cannot pass it vacuously, convention 28); **no
+model id appears in any tier-3 file** (the docs-guard's families,
+re-declared); the seeded order is reconstructable — a permutation
+of the 375 units, deterministic under the recorded seed, and
+**not** reproducible under a different seed, so the check proves
+it can fail; the execution registers isolation, deadline and
+record; the five success measures are defined; the failure
+treatment counts every failure class; and the ratification stop is
+registered (status `manifest-frozen-awaiting-ratification`, the
+mechanized STOP naming `TIER3_SPEND_AUTHORIZED`).
+
+### 109.5 Execution record
+
+Suite before (merged main 7f85c38, the tree at the branch point):
+**1258 passed**, network guard 0 non-loopback attempts. Suite
+after: **1275 passed** (the guard adds one file, 17 tests; the
+count guards in `HANDOVER.md`, `AGENTS.md` and `README.md` are
+updated in the same change — the §3.7 table now lists 74 files
+summing to 1275), network guard 0 non-loopback attempts. No paid
+calls, no standing configuration changes, `.env` untouched — the
+two ratification gates are the owner's to clear in one line each
+(the five `TIER3_ARM_*` pins, `TIER3_ARM_B` = `TIER3_ARM_A`; the
+total spend authorization), and the runner that consumes the
+manifest mechanizes the stop: it refuses to start unless the
+environment shows both gates cleared.
+
+Two design decisions the blueprint left open, recorded here.
+(1) The arm-B call limit is 3 model calls, not 1: a single call
+cannot consume tool results, so the tool loop needs follow-up
+calls — the treatment-isolation property is preserved by the pin
+equality, not by an identical call budget. (2) The prompts are
+arm-neutral: no prompt names its arm, so the model cannot
+condition on its treatment; the runner records the arm.
+
+One question for the advisor, open: should `evals/` come under
+the docs-guard's model-id scan (`tests/test_docs.py`)? The scan
+that motivated the tier-3 guard found the archived candidate
+export (`evals/tier2/candidate/25GoldenQuestion.json` — the
+questions' provenance record) carries model ids, as do other
+pre-existing `evals` files. The tier-3 files are guarded directly
+by `tests/test_tier3_manifest.py` instead. The ruling to make:
+is the archived export a measurement record in the lab-notebook
+sense (naming the subject of a measurement is the point of the
+record), or user-facing documentation to anonymize or move?
+
+Not prepared here, per the blueprint's own deferral: the
+execution machinery (the runner that consumes the manifest) and
+the mocked dry-run of the full 375-unit plan — free work
+(mocked-client tests cost nothing), the natural pre-registration
+check, buildable and testable before the first paid unit. The
+response for ARCH-20261002-118 moves to **DONE** with the STOP
+recorded: every deliverable the command assigns to the executor is
+frozen in the manifest, and no paid unit may start until the
+owner clears both gates.
