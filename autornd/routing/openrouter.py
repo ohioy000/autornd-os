@@ -256,6 +256,25 @@ def _rejection_note(error: Exception) -> str:
         "invent new field values, and do not add fields that are not in the schema."
     )
 
+class _Reservation:
+    """One call's worst case, held from before dispatch until the
+    call is reconciled or fails.
+
+    The reservation is OWNED by the call that made it: a call that
+    finishes — in order, out of order, or not at all — releases
+    its own worst case, never another in-flight call's. The
+    deque this lives in used to be released first-in-first-out, so
+    the second call to finish released the first call's
+    reservation, and a call that never reserved (an unrated model)
+    released whichever was oldest (ARCH-20261002-116, property 4).
+    """
+
+    __slots__ = ("worst",)
+
+    def __init__(self, worst: float) -> None:
+        self.worst = worst
+
+
 class OpenRouterClient:
     """Async client that routes requests to the right model via OpenRouter."""
 
@@ -356,27 +375,35 @@ class OpenRouterClient:
         # have been spent (a request that errored server-side can still be
         # billed), so the worst case is counted against the ceiling and
         # recorded with the kind of failure that prevented reconciliation.
-        self._reservations: deque[float] = deque()
+        self._reservations: deque[_Reservation] = deque()
         self.reserved: float = 0.0
         self.unreconciled_liability: float = 0.0
         self.failed_after_dispatch: list[dict[str, Any]] = []
 
     def _account(self, function: str, cost: float,
                  provider: str | None = None,
-                 prompt_tokens: int = 0, completion_tokens: int = 0) -> None:
+                 prompt_tokens: int = 0, completion_tokens: int = 0,
+                 reservation: _Reservation | None = None) -> None:
         """Record one billable request. Called for every request, no exceptions.
 
         Budgets are enforced here rather than by the caller, so a ceiling covers
         research lookups and reranking too. A run that exceeds one has already
         paid for the request in hand — this stops the next one.
 
-        D45: reconciling a call releases the worst case it reserved before
-        dispatch and books what it actually cost. Released first, so the
-        ceiling check below sees this call already moved from reservation to
-        spend. A call that never reaches this point failed after dispatch and
-        keeps its reservation as unreconciled liability (_fail_call).
+        D45 (5): reconciling a call releases the worst case it reserved before
+        dispatch and books what it actually cost. The reservation is the
+        call's own, released by identity — a call that finishes out of order
+        releases its own worst case, not another in-flight call's, and a call
+        that never reserved (an unrated model, or a test double) releases
+        nothing: there is no worst case of its own to release. Released
+        first, so the ceiling check below sees this call already moved from
+        reservation to spend. A call that never reaches this point failed
+        after dispatch and keeps its reservation as unreconciled liability
+        (_fail_call).
         """
-        self._reconcile()
+        if reservation is not None:
+            self._reservations.remove(reservation)
+            self.reserved -= reservation.worst
         self.calls += 1
         self.calls_by_function[function] = self.calls_by_function.get(function, 0) + 1
         if provider:
@@ -417,13 +444,8 @@ class OpenRouterClient:
         failed after dispatch and could not be reconciled."""
         return self.spend + self.reserved + self.unreconciled_liability
 
-    def _reconcile(self) -> None:
-        """Release one outstanding reservation — the call being accounted."""
-        if self._reservations:
-            worst = self._reservations.popleft()
-            self.reserved -= worst
-
-    def _fail_call(self, function: str, model: str, kind: str) -> None:
+    def _fail_call(self, function: str, model: str, kind: str,
+                   reservation: _Reservation | None = None) -> None:
         """D45 (5): a call that failed after dispatch keeps its worst case.
 
         The request left this process, so the money may have been spent — a
@@ -431,20 +453,26 @@ class OpenRouterClient:
         will ever arrive to replace the estimate. The reservation becomes
         unreconciled liability: counted against the ceiling for the rest of the
         run, and recorded with the kind of failure that made reconciliation
-        impossible (error_status, timeout, transport_error, cancelled).
+        impossible (error_status, timeout, transport_error, cancelled). The
+        reservation is the call's own — a failed call keeps its own worst
+        case, never another in-flight call's. A call that never reserved (an
+        unrated model) keeps nothing: no worst case was ever computed, and
+        inventing one is the guessing the guard exists to avoid; its
+        blindness is already recorded.
         """
         worst = 0.0
-        if self._reservations:
-            worst = self._reservations.popleft()
-            self.reserved -= worst
-            self.unreconciled_liability += worst
+        if reservation is not None:
+            self._reservations.remove(reservation)
+            self.reserved -= reservation.worst
+            self.unreconciled_liability += reservation.worst
+            worst = reservation.worst
         self.failed_after_dispatch.append({
             "function": function, "model": model, "kind": kind,
             "worst_case": round(worst, 6),
         })
 
     def _guard_spend(self, function: str, model: str, prompt_bytes: int,
-                     max_tokens: int) -> None:
+                     max_tokens: int) -> _Reservation | None:
         """Refuse, before it is made, a call that cannot fit — and reserve it.
 
         F3 (ARCH-20261001-104): 102's IA run ended at $0.1570 against $0.08
@@ -453,8 +481,15 @@ class OpenRouterClient:
         bound (UTF-8 bytes plus the template allowance) rather than a mean.
         D45 (5): the worst case is RESERVED until the call is reconciled, so
         concurrent calls cannot each pass against the same remaining balance.
-        With no catalogue rate the guard is blind: the call is made and the
-        blindness recorded, never guessed."""
+        The guard is blind — the call is made and the blindness recorded,
+        never guessed — in three ways: the model is not in the catalogue,
+        the catalogue prices neither side of the call (an absent component
+        is unknown, not free), or the entry carries a charge beside prompt
+        and completion tokens that the worst case cannot bound. The
+        reservation the call made is returned, so the call releases its
+        own worst case when it is reconciled or fails — not whichever
+        reservation was oldest.
+        """
         if self.call_ceiling is not None and (
                 self.calls + len(self._reservations) + 1 > self.call_ceiling):
             # Amendment (c): checked before dispatch, and in-flight calls
@@ -466,11 +501,11 @@ class OpenRouterClient:
                 f"this is expected. By tier: {self.calls_by_function}"
             )
         if self.spend_ceiling is None:
-            return
+            return None
         rates = _model_pricing.get(model)
         if not rates:
             self.spend_guard_blind.append({"function": function, "model": model})
-            return
+            return None
         prompt_rate, completion_rate = rates
         worst = ((prompt_bytes + CHAT_TEMPLATE_ALLOWANCE_BYTES) * prompt_rate
                  + max_tokens * completion_rate)
@@ -478,8 +513,10 @@ class OpenRouterClient:
         if worst > remaining:
             raise SpendGuardRefused(function, model, worst, remaining,
                                     self._committed(), self.spend_ceiling)
-        self._reservations.append(worst)
+        reservation = _Reservation(worst)
+        self._reservations.append(reservation)
         self.reserved += worst
+        return reservation
 
     def reset_accounting(self) -> None:
         self.spend = 0.0
@@ -582,9 +619,9 @@ class OpenRouterClient:
         max_tokens: int = 16384,
     ) -> ModelResponse:
         model = self.get_model(function)
-        self._guard_spend(function, model,
-                          _prompt_bytes(system_prompt, user_message),
-                          max_tokens)
+        reservation = self._guard_spend(
+            function, model,
+            _prompt_bytes(system_prompt, user_message), max_tokens)
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message},
@@ -676,10 +713,12 @@ class OpenRouterClient:
             reconciled = True
             self._account(function, cost, provider,
                           prompt_tokens=prompt_tokens,
-                          completion_tokens=completion_tokens)
+                          completion_tokens=completion_tokens,
+                          reservation=reservation)
         except BaseException as exc:
             if not reconciled:
-                self._fail_call(function, model, _failure_kind(exc))
+                self._fail_call(function, model, _failure_kind(exc),
+                                reservation=reservation)
             raise
 
         return ModelResponse(
@@ -707,7 +746,7 @@ class OpenRouterClient:
         # no pre-call check at all — the one dispatch in the client that could
         # spend without asking. Rerank responses carry no completion side, so
         # the worst case is the document bytes bounded as prompt.
-        self._guard_spend(
+        reservation = self._guard_spend(
             "ranker", model,
             _prompt_bytes(query, *documents), max_tokens=0)
         reconciled = False
@@ -725,10 +764,12 @@ class OpenRouterClient:
             # was the one tier that never appeared in any total.
             reconciled = True
             self._account("ranker", float(usage.get("cost") or 0.0),
-                          prompt_tokens=int(usage.get("total_tokens") or 0))
+                          prompt_tokens=int(usage.get("total_tokens") or 0),
+                          reservation=reservation)
         except BaseException as exc:
             if not reconciled:
-                self._fail_call("ranker", model, _failure_kind(exc))
+                self._fail_call("ranker", model, _failure_kind(exc),
+                                reservation=reservation)
             raise
         logger.debug(
             "rerank %s: %s docs, %s tokens, cost %s",
@@ -1026,8 +1067,8 @@ async def check_models() -> dict[str, dict]:
                 # price of zero and stays priced, so the two facts
                 # remain distinguishable (Ruling D49's distinction,
                 # applied to pricing; ARCH-20261002-116). A charge
-                # beside prompt and completion — a per-request fee,
-                # a search surcharge, a reasoning rate — is one the
+                # beside prompt and completion — a per-request fee, a
+                # search surcharge, a reasoning rate — is one the
                 # worst-case estimate cannot bound, so the model is
                 # unrated too: a bound built from tokens alone would
                 # understate what the call can cost.

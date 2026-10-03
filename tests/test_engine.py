@@ -108,6 +108,19 @@ def _make_mock_client():
         return data, response
 
     client.chat_json = AsyncMock(side_effect=_mock_chat_json)
+
+    # The context build probes the rerank API with this client, and
+    # this double has no rerank half. The full suite never sees the
+    # probe only because an earlier file has already flipped the
+    # module-level rerank mode to "distance"; run this file alone
+    # and the probe reaches the provider (ARCH-20261002-116's
+    # audit measured exactly that on the owner's ranker pin).
+    # Answer the probe locally, the way conftest's double does.
+    async def _mock_rerank(model, query, documents, top_n):
+        raise RuntimeError(
+            "rerank is not part of the test double")
+
+    client.rerank = AsyncMock(side_effect=_mock_rerank)
     client.close = AsyncMock()
     return client
 

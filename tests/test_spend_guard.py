@@ -301,3 +301,171 @@ class TestTheCallCeilingIsCheckedBeforeDispatch:
             await client.chat("escalation", "sys", "user", max_tokens=10)
         assert len(requests) == 2           # the third was never sent
         assert "ceiling 2" in str(exceeded.value)
+
+
+class TestUnratedIsNotFree:
+    """Ruling D49, properties 1 and 2 (ARCH-20261002-116): a model the
+    catalogue does not fully price is unknown, not free, and a
+    published zero is a price. What the parse produces for each case
+    is asserted at the parse (test_routing.py, TestCostEstimation);
+    here is what each means to the guard.
+
+    The defect this pins: the old parse entered a model with an absent
+    pricing component at (prompt, 0.0), so the guard bounded a call on
+    it at the prompt rate alone — a call that could cost $0.04 passed
+    as $0.0004, bounded and silent, with no blindness recorded."""
+
+    async def test_an_unrated_model_dispatches_blind_and_says_so(self, rates):
+        """No table entry — what the parse leaves for a model with an
+        absent component, or an unboundable charge — means the guard
+        cannot bound the call. It is made (F3: refusing every unrated
+        model would break runs against models the catalogue has not
+        been read for) and the blindness is recorded, never guessed."""
+        requests: list = []
+        client = _client(requests)
+        client.spend_ceiling = 0.08
+        await client.chat("escalation", "sys", "user", max_tokens=10_000)
+        assert len(requests) == 1
+        assert client.spend_guard_blind == [
+            {"function": "escalation",
+             "model": client.get_model("escalation")}]
+
+    async def test_an_explicit_zero_price_is_bounded_not_blind(self, rates):
+        """A published zero is a price: the guard bounds the call at
+        $0.00 — the same answer as the provider's own accounting for a
+        free model — and says nothing was blind. Distinguishable from
+        the unrated case above, which is the property."""
+        requests: list = []
+        client = _client(requests)
+        model = client.get_model("escalation")
+        rates[model] = (0.0, 0.0)          # what the parse keeps
+        client.spend_ceiling = 0.08
+        await client.chat("escalation", "sys", "user", max_tokens=10_000)
+        assert len(requests) == 1
+        assert client.spend_guard_blind == []
+        assert client.reserved == 0.0      # a $0.00 worst case, reserved
+
+
+class _GatedTransport(httpx.AsyncBaseTransport):
+    """A transport whose first request waits on a gate, so a test
+    controls which of two in-flight calls finishes first — the shape
+    reviewer fan-out produces, and the shape the old first-in-first-
+    out release got wrong."""
+
+    def __init__(self, first: httpx.Response):
+        self.first = first
+        self.arrived = asyncio.Event()
+        self.gate = asyncio.Event()
+        self.requests: list[str] = []
+
+    async def handle_async_request(
+            self, request: httpx.Request) -> httpx.Response:
+        model = json.loads(request.content)["model"]
+        self.requests.append(model)
+        if len(self.requests) == 1:
+            self.arrived.set()
+            await self.gate.wait()
+            return self.first
+        return httpx.Response(200, json={
+            "choices": [{"message": {"content": "{}"},
+                         "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1,
+                      "cost": 0.001},
+            "provider": "Test", "model": model})
+
+
+def _gated_client(first: httpx.Response) -> tuple[OpenRouterClient,
+                                                  _GatedTransport]:
+    transport = _GatedTransport(first)
+    client = OpenRouterClient(api_key="k",
+                              base_url="https://router.test/api/v1")
+    client._client = httpx.AsyncClient(
+        base_url=client.base_url, transport=transport)
+    return client, transport
+
+
+class TestReservationsAreOwnedByTheirCall:
+    """D45 (5), repaired (ARCH-20261002-116, property 4): the
+    reservation a call releases is its own — identified by the call
+    that made it — not whichever was oldest.
+
+    The old release was first-in-first-out, which got two things
+    wrong, both reproduced here end to end: a call that finished out
+    of order released another in-flight call's worst case (so a
+    failed call kept the wrong worst case as liability), and a call
+    that never reserved — an unrated model — released the oldest
+    reservation at all (so the guard was walked past while a rated
+    call was still in flight)."""
+
+    async def test_an_out_of_order_failure_keeps_its_own_worst_case(
+            self, rates):
+        """A ($0.06) and B ($0.01) are in flight. B completes first;
+        A then fails after dispatch. The liability kept must be A's
+        $0.06. The old release took B's completion to mean A's
+        reservation was gone, and kept B's $0.01 for A's failure —
+        understating what the run may still owe by $0.05."""
+        client, transport = _gated_client(
+            httpx.Response(500, json={"error": {"message": "boom"}}))
+        model = client.get_model("escalation")
+        rates[model] = (0.0, 1e-5)         # 1,000 tokens -> $0.01
+        client.spend_ceiling = 0.08
+
+        expensive = asyncio.create_task(
+            client.chat("escalation", "sys", "user", max_tokens=6_000))
+        await transport.arrived.wait()     # A is in flight, held
+        cheap = await client.chat("escalation", "sys", "user",
+                                  max_tokens=1_000)   # B finishes first
+        assert cheap is not None
+        # B's completion released B's own $0.01 — A's $0.06 is still
+        # held, because A is still in flight.
+        assert client.reserved == pytest.approx(0.06, abs=1e-6)
+
+        transport.gate.set()               # A fails after dispatch
+        with pytest.raises(httpx.HTTPStatusError):
+            await expensive
+        assert client.reserved == 0.0
+        assert client.unreconciled_liability == pytest.approx(0.06, abs=1e-6)
+        assert client.failed_after_dispatch == [{
+            "function": "escalation", "model": model,
+            "kind": "error_status", "worst_case": 0.06}]
+
+    async def test_a_call_that_never_reserved_releases_nothing(
+            self, rates):
+        """A rated call ($0.05) is in flight; an unrated model's call
+        completes beside it. The blind call reserved nothing, so it
+        releases nothing — the rated call's worst case stays held, and
+        the ceiling still refuses a second $0.05 call. The old release
+        popped the rated call's reservation on the blind call's
+        completion, which let the second $0.05 call through against a
+        $0.08 ceiling while $0.10 was in fact committed."""
+        client, transport = _gated_client(
+            httpx.Response(200, json={
+                "choices": [{"message": {"content": "{}"},
+                             "finish_reason": "stop"}],
+                "usage": {"prompt_tokens": 1, "completion_tokens": 1,
+                          "cost": 0.001},
+                "provider": "Test"}))
+        model = client.get_model("escalation")
+        rates[model] = (0.0, 1e-5)         # 5,000 tokens -> $0.05
+        # The research tier is unrated: its calls are blind (F3).
+        client.spend_ceiling = 0.08
+
+        rated = asyncio.create_task(
+            client.chat("escalation", "sys", "user", max_tokens=5_000))
+        await transport.arrived.wait()     # the rated call is in flight
+        await client.chat("research", "sys", "user", max_tokens=5_000)
+        assert client.spend_guard_blind == [
+            {"function": "research",
+             "model": client.get_model("research")}]
+        # The blind call completed and booked its $0.001, but the
+        # rated call's $0.05 is still held — it is still in flight.
+        assert client.reserved == pytest.approx(0.05, abs=1e-6)
+        # And the ceiling still sees it: a second $0.05 call cannot
+        # fit ($0.001 booked + $0.05 held + $0.05 asked > $0.08).
+        with pytest.raises(SpendGuardRefused) as refused:
+            await client.chat("escalation", "sys", "user", max_tokens=5_000)
+        assert refused.value.remaining == pytest.approx(0.029, abs=1e-6)
+
+        transport.gate.set()               # the rated call completes
+        await rated
+        assert client.reserved == 0.0
