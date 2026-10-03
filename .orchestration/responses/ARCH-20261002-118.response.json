@@ -1,0 +1,70 @@
+{
+  "command_id": "ARCH-20261002-118",
+  "parent_id": null,
+  "status": "NO_ACTION",
+  "executed": "2026-10-03",
+  "head_before": "5dd9aa6",
+  "head_after": "cd4aeb0",
+
+  "settled_by": "ARCH-20261002-117 (BLOCKED): the 25-question JSON array - the candidate data the tier-2 set is built from - was never supplied in the conversation, and the tier-2 command's own clause stops the work and requests it. No dataset exists, so no dataset PR exists to merge.",
+
+  "why_no_action": "The command's own precondition is sequential: 'After the dataset PR merges and required key/source review is complete, process the arms-experiment command.' The trigger did not fire, and cannot fire until tier 2 completes. This is the NO_ACTION class: a contingent command whose trigger did not fire, recorded with the command that settled it.",
+
+  "the_measurement_that_settled_it": "The arrival check of 2026-10-03T07:17Z: origin/main at 5dd9aa6 (the tier-1 merge, PR 141, merged 2026-10-03T06:54:44Z); gh pr list --state all shows no open or merged dataset PR; the tier-2 response ARCH-20261002-117 records BLOCKED on the missing-array precondition, with the transcript search that establishes the array was never supplied (every session transcript under /home/jb/.qwen/projects/-home-jb-autornd-os/chats/, the whole working tree, and the channel).",
+
+  "what_was_not_done": "Nothing was prepared: no experiment manifest, no arm definitions (A: inexpensive single call, request only; B: the same inexpensive model with primary-source acquisition and recomputation tools; C: explicitly defined complementary-model cooperation; D: stronger single call, request only; E: the current pipeline), no dry-run artifacts, no estimated spend with uncertainty. Every deliverable the command names must carry 'Repository, dataset, source-snapshot, and scorer versions' - versions that do not exist. The command's spend ceilings ($0.10/$0.20/$0.20/$0.20/$0.50 per question-run; $90.00 aggregate across the 375 planned question-runs) are, in the command's own words, 'an authorization ceiling, not a predicted cost. Do not assume these amounts are approved' - no authorization was assumed, and the command's 'STOP before paid execution. Obtain explicit owner ratification of serving proposals and total spend authorization' holds absolutely. No paid call was made, no .env was touched, no serving was proposed.",
+
+  "what_replaces_this_command": "Re-issue after the tier-2 dataset PR merges and the required key/source review completes. The re-issued command consumes the next unused ID at that time.",
+
+  "preconditions": [
+    {
+      "command": "the command's own precondition: 'After the dataset PR merges and required key/source review is complete'",
+      "expected": "A merged dataset PR and a completed key/source review.",
+      "result": "Neither exists. No dataset PR (gh pr list --state all: newest is 141, tier 1, merged); no key/source review can exist because no dataset exists to review.",
+      "pass": false
+    },
+    {
+      "command": "git fetch -q origin && git log --oneline -1 origin/main",
+      "expected": "main at the tier-1 merge.",
+      "result": "5dd9aa6 Merge pull request #141 from ohioy000/arch/20261002-116-accounting-and-verification",
+      "pass": true
+    }
+  ],
+
+  "deviations": [
+    {
+      "what": "No command file exists at .orchestration/commands/ARCH-20261002-118.json; this response answers a command authored in the owner's chat instruction.",
+      "why": "The three tiers were given in chat, not filed in the channel. The response is written anyway because the channel's purpose is to be the advisor's only view of what has been done, and a contingent command whose trigger did not fire still gets a file, citing the command that settled it."
+    },
+    {
+      "what": "No IN_PROGRESS commit precedes this response.",
+      "why": "The arrival check itself established that the trigger had not fired before any work could start; the response was opened and concluded in the same verification. No preparation work exists anywhere in the tree or the channel."
+    },
+    {
+      "what": "The owner's 2026-10-03 instruction ('do tier 2 and 3, no stops, full permission to commit/push/merge') did not advance this command's trigger.",
+      "why": "The trigger is a merged dataset PR, which depends on tier 2, which is blocked on the never-supplied 25-question array. 'No stops' cannot manufacture the prerequisite artifact; the two instructions are recorded together so the record shows they were read in combination, not in conflict."
+    },
+    {
+      "what": "ID substitution: tier 3 takes 118.",
+      "why": "The instruction's substitution clause ('otherwise use the next unused ID and explain the substitution'): 116 was consumed by tier 1 and 117 by tier 2, whose responses are on this branch."
+    }
+  ],
+
+  "questions_for_advisor": [
+    "Re-issue this command after the dataset PR merges and the key/source review completes, naming the ID the re-issue consumes at that time.",
+    "The command holds the five arms' proposed models/providers as 'pending owner ratification'. When the manifest is prepared, what are the proposed servings, and does the owner's ratification precede the manifest freeze or the dry-run?",
+    "The command requires 'equal information access except for the explicitly registered tool/evidence treatment', 'isolated stores per question-run; no cross-run memory', and 'seeded interleaved execution order'. Confirm the executor's reading that the existing _isolated_store() discipline (one isolated knowledge store per experiment) is the per-question-run instantiation of that requirement, and that the manifest must state it explicitly.",
+    "The command replaces '20 shipped questions means success' with delivered correctness out of 75 planned units per arm, per-question repeat outcomes (0/3, 1/3, 2/3, 3/3), paired wins and losses against A, and comparison with D. Confirm these are the registered success measures before the manifest freezes, because they decide what the experiment concludes."
+  ],
+
+  "delivery_state": {
+    "branch": "arch/20261002-117-tier2-set-arrival",
+    "pr": 142,
+    "action": "none - the trigger did not fire; the report is the deliverable",
+    "settled_by": "ARCH-20261002-117 (BLOCKED)"
+  },
+
+  "commits": {
+    "response_files": "cd4aeb0"
+  }
+}
