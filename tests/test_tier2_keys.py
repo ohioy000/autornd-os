@@ -148,8 +148,8 @@ class TestTheScorerScoresNotRegexes:
     def test_the_self_test_passes(self):
         out = _self_test(TIER2)
         assert out.returncode == 0, out.stdout + out.stderr
-        assert ("SCORER SELF-TEST PASSED: all 248 fixtures hold"
-                in out.stdout)
+        assert ("SCORER SELF-TEST PASSED: all 263 "
+                "fixtures hold" in out.stdout)
         for qid in QUESTION_IDS:
             assert f"{qid} model answer" in out.stdout, (
                 f"the self-test never ran {qid}'s model answer")
@@ -187,10 +187,14 @@ class TestTheScorerScoresNotRegexes:
 
 class TestTheDatasetIsVersioned:
     """The tier-2 set is versioned the way D44 versions the golden
-    scoreboard: the manifest names the current versions.json entry,
-    and the four versioned files hash to it. A change to any of the
-    four is a new version - an entry naming the change and what
-    triggered it."""
+    scoreboard, with the freeze the owner ratified: the manifest's
+    dataset_version names the frozen dataset entry - questions.json
+    and keys.json hash to it - and its scorer_version names the
+    scorer entry - scorer.py and verify_keys.py hash to it - which
+    is the same version, or a later one under the freeze when the
+    instrument alone was repaired (the dataset content unchanged).
+    A change to any of the four is a new version - an entry naming
+    the change and what triggered it."""
 
     @staticmethod
     def _assert_versioned(directory: Path) -> None:
@@ -198,42 +202,68 @@ class TestTheDatasetIsVersioned:
             (directory / "manifest.json").read_text(encoding="utf-8"))
         versions = json.loads(
             (directory / "versions.json").read_text(encoding="utf-8"))
-        named = manifest["dataset_version"]
-        assert manifest["scorer_version"] == named, (
-            f"manifest.json names dataset version {named} but "
-            f"scorer version {manifest['scorer_version']} - the "
-            f"two must name the same entry")
+        dataset = manifest["dataset_version"]
+        scorer = manifest["scorer_version"]
+        # The dataset froze at its version; a scorer repair
+        # under the freeze is a later version, never an older
+        # one, and never a dataset change.
+        assert scorer >= dataset, (
+            f"Ruling D44 (applied to the tier-2 set): "
+            f"manifest.json names dataset version {dataset} but "
+            f"scorer version {scorer} - the scorer version must "
+            f"be the dataset version or a later version under "
+            f"the freeze")
         assert versions["versions"], (
             f"Ruling D44 (applied to the tier-2 set): "
             f"versions.json has no entries at all, so manifest "
-            f"version {named} has no entry. A key change is a new "
+            f"version {dataset} has no entry. A key change is a "
+            f"new version: an entry naming the change and what "
+            f"triggered it.")
+        dataset_entry = next(
+            (e for e in versions["versions"]
+             if e["version"] == dataset), None)
+        assert dataset_entry is not None, (
+            f"Ruling D44 (applied to the tier-2 set): manifest "
+            f"names dataset version {dataset} and versions.json "
+            f"has no entry for it. A key change is a new "
             f"version: an entry naming the change and what "
             f"triggered it.")
-        entry = next(
+        scorer_entry = next(
             (e for e in versions["versions"]
-             if e["version"] == named), None)
-        assert entry is not None, (
+             if e["version"] == scorer), None)
+        assert scorer_entry is not None, (
             f"Ruling D44 (applied to the tier-2 set): manifest "
-            f"names version {named} and versions.json has no entry "
-            f"for it. A key change is a new version: an entry "
-            f"naming the change and what triggered it.")
-        assert versions["versions"][-1]["version"] == named, (
-            f"manifest.json names {named} but versions.json's "
-            f"current entry is "
-            f"{versions['versions'][-1]['version']} - the manifest "
-            f"must name the current entry")
-        for name in ("questions.json", "keys.json", "scorer.py",
-                     "verify_keys.py"):
+            f"names scorer version {scorer} and versions.json "
+            f"has no entry for it. A key change is a new "
+            f"version: an entry naming the change and what "
+            f"triggered it.")
+        assert versions["versions"][-1]["version"] == scorer, (
+            f"manifest.json names scorer version {scorer} but "
+            f"versions.json's current entry is "
+            f"{versions['versions'][-1]['version']} - the "
+            f"manifest must name the current entry")
+        # The dataset content hashes to the frozen dataset
+        # entry; the instruments hash to the scorer entry the
+        # manifest names. A scorer entry under the freeze
+        # carries the dataset content's hashes unchanged, so
+        # the dataset entry remains the authority for the
+        # dataset files.
+        for name, entry in (
+                ("questions.json", dataset_entry),
+                ("keys.json", dataset_entry),
+                ("scorer.py", scorer_entry),
+                ("verify_keys.py", scorer_entry)):
             actual = hashlib.sha256(
                 (directory / name).read_bytes()).hexdigest()
             assert actual == entry["sha256"][name], (
                 f"Ruling D44 (applied to the tier-2 set): {name} "
-                f"no longer hashes to the version {named} entry in "
+                f"no longer hashes to the version "
+                f"{entry['version']} entry in "
                 f"versions.json (recorded "
                 f"{entry['sha256'][name]}, found {actual}). A "
-                f"defect a reading finds in a key is fixed only as "
-                f"a new version, after the run that found it has "
-                f"been reported under the old one.")
+                f"defect a reading finds in a key is fixed only "
+                f"as a new version, after the run that found it "
+                f"has been reported under the old one.")
 
     def test_the_tree_matches_the_recorded_version(self):
         self._assert_versioned(TIER2)
@@ -368,7 +398,14 @@ class TestTheManifestRecordsTheFreeze:
         assert "verification" in freeze["scope"]
         assert "source review" in freeze["scope"]
         assert MANIFEST["dataset_version"] == "frozen-2026-10-03"
-        assert MANIFEST["scorer_version"] == "frozen-2026-10-03"
+        # The dataset froze at frozen-2026-10-03; the
+        # scorer repair Ruling D50 (1) orders is a new
+        # version under the freeze - the dataset content
+        # is unchanged, only the instrument changed
+        # (versions.json carries the entry naming the
+        # change and its trigger).
+        assert MANIFEST["scorer_version"] == \
+            "frozen-2026-10-03.2"
 
     def test_the_source_archives_match_the_files_on_disk(self):
         archives = MANIFEST["source_archives"]

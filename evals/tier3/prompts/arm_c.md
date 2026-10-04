@@ -18,7 +18,15 @@ MODEL 1'S DRAFT:
 
 {{MODEL_1_DRAFT}}
 
-Then either CONCUR (the draft holds on every check), or OBJECT, stating each specific objection: which step, which assumption, which figure, and what the question's text requires instead.
+Then answer with the typed verdict and nothing else — a JSON object with exactly two fields:
+
+{"concur": true, "objections": []}
+
+when the draft holds on every check, or
+
+{"concur": false, "objections": ["..."]}
+
+when it does not, with one objection per list entry, each naming which step, which assumption, which figure, and what the question's text requires instead. concur is true exactly when objections is empty; a non-empty objections list means the draft does not hold.
 
 ## STAGE 3 — model 1 revises (only if model 2 objected)
 

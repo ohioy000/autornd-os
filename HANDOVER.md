@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1275 · **Date of this snapshot:** 2026-10-02, counts re-derived against the tree under test
+**Tests:** 1321 · **Date of this snapshot:** 2026-10-04, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -47,6 +47,8 @@
 > **Ruling D48 (advisor, 2026-10-02) — D46, completed. (1) A check that compared nothing never turns a fail into a pass. The judges fold lists every unchecked check. An unchecked check that passed is not a dissent; an unchecked check that failed is a dissent, as it was before D46. This corrects the advisor's command 111, whose constraint [4] made every unchecked check non-blocking. D46 (3) says such a check 'passes as before', and never let a failure through. (2) A ready plan's own blockers did not stop the plan gate, so they are not requirements either. They reach the implementer under a heading that names them as the plan's own, beside the reviewers' considerations and framed the same way: weigh them; nothing is judged against them. D46 (2) moved feasibility's concerns out of plan.blockers but did not decide what the implementer sees of the plan's own blockers, and 111 dropped them without a ruling. (3) A check that did not run carries no approval-shaped value. A skipped independent check records that it was skipped and why, and records no ship. The gate after it reads a typed veto, which is true only when the check ran and said do not ship. D36's plan rules and D43's scope rule are untouched. Rationale: the advisor's post-merge review of 111 (2026-10-02). By the advisor's own command, a failing check that compared nothing had become non-blocking in the fold. 106's IA unit carried 5 blockers of the plan's own, which 111 stopped showing the implementer. The skipped independent check wrote ship: true. Falsifier: a run that converges with a failing check in the fold; a ready plan's own blocker missing from the implement prompt; or a ship value recorded by a check that did not run.**
 
 > **Ruling D49 (advisor, 2026-10-02; ruled on the owner's 2026-10-02 command, carried by ARCH-20261002-116) — verification is typed, and the completed terminal means finished. (1) Missing or whitespace-only assessment is not completed verification: a validation whose evidence is empty, or holds no entry with non-whitespace content, resolves red with a cause that names what was missing, counted like every normalization (D46 (1), extended from empty to whitespace-only). (2) An implementation explicitly marked incomplete cannot qualify for completed delivery: the executor's completed terminal reads the implement verdict's typed `done` field, and `done is false` ends the run blocked, naming the incomplete implementation; a run whose graph produced no implement verdict is not "explicitly incomplete" and keeps its terminal. (3) Unavailable verification is distinct from passing verification: the independent pass's skip record carries no `ship` at all — neither an approval nor a veto — it carries `skipped` and `vetoed: false`, and the gate after it routes on `independent_check.vetoed == false`, which a skip satisfies without claiming an approval the pass never made; a real verdict's `vetoed` is its computed `not ship`. Applied narrowly, on typed fields, never by parsing prose: the distinctions among failed, unchecked, unavailable and passed checks are preserved, not flattened. Rationale: the owner's three-tier command of 2026-10-02, probing nine properties provider-free under ARCH-20261002-116: a validator could return `["   "]` and ship as green (`_missing_substance` in models/verdicts.py tested only `not evidence`); the executor ended every run no node stopped as `completed`, never reading the implement verdict's `done` (GraphExecutor.run); and the independent pass's skip record claimed `ship: true` — an approval field — so a check that never ran read exactly like one that passed (PhaseRunner._phase_doublecheck; both workflow gates routed on `independent_check.ship`). The ruling ID is D49, chosen at ruling time because commands ARCH-20261002-113 and -114 were unexecuted on the tree measured; both have since been executed on main, and D48 (3) ruled the same distinction as D49 (3) — the merged tree carries D48's wording in the verdict, the adapter's skip record and the gate, so D49 (3) stands as the convergence note and D49 (1)–(2) are the clauses D48 did not cover. Falsifier: a green validation whose evidence is whitespace-only, a completed run whose latest implement verdict says `done: false`, or a gate that routes a skipped independent check as an approval.**
+
+> **Ruling D50 (advisor, 2026-10-03) — the tier-3 experiment measures answers, not formatting. (1) Two independent hand readings are the primary measure of a tier-3 unit's correctness, as D44 rules for the golden set, and the tier-2 scorer is the screen. Two readers, blind to arm, read every unit the scorer fails and a seeded sample of ten per arm that it passes. The report gives the scorer's verdicts and the readings side by side, per arm, with their disagreements counted. A disagreement is reported, never settled by editing the scorer inside the run that found it. Before any paid unit, the scorer is repaired as a new version against the recorded real answers to its questions and against every notation of each key's model answer. (2) Arm B's treatment is the tools, and its prompt adds only them: it is arm A's prompt with the sentences that deny tools replaced by one that points to them, plus the tool registration. (3) Arm E delivers what the harness ships. A unit of arm E is delivered only when its run ends in the completed terminal (D49). A judge-approved draft that has not shipped by the deadline is scored and reported beside the delivered count as 'approved, not shipped'. It is never counted as delivered. (4) Arm C's check returns a typed verdict, and its control flow never reads prose (hard rule 2). A check that returns no valid verdict after the bounded retries is recorded as unavailable, never as concurrence, and model 1's draft is delivered. (5) Arm B's source tool is closed-world. Given a citation that a question states, it returns that section's archived text in the stated edition, and for anything else it returns a typed not-available result. The experiment tests access to the primary source, not web retrieval. Rationale: the advisor's pre-run review of tier 2 and tier 3 (2026-10-03). Tier-2 Q1-Q5 are the golden Q1-Q5 word for word. The frozen scorer passed 5 of the 12 recorded real answers to them that readings had found correct, 0 of 6 on Q4 and Q5. Every failure held a recognition error: a bold heading, a Unicode superscript, 'must not exceed', 'Close the high-point vent', a threshold stated past a 120-character window, a rule line read as the verdict. These errors depend on format, so they would differ by arm. Arm B's prompt told the model no tools were available and then registered two. Arm E had no rule for a draft approved but not shipped by the deadline, and arm C's CONCUR/OBJECT would have been read as English. Falsifier: a tier-3 correctness figure that rests on the scorer alone; an arm B prompt that differs from arm A's beyond the tools; an arm E draft counted as delivered without a completed terminal; arm C's stage 3 decided by matching text; a fetch result that depends on the network.**
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -310,7 +312,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      74 files, 1275 tests
+tests/                      76 files, 1321 tests
 
 ```
 
@@ -715,7 +717,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1275 total)
+### 3.7 Test distribution (1321 total)
 
 
 | file | n | file | n |
@@ -754,7 +756,8 @@ is revoked and the warning re-opens with a date.
 | test_specialists.py | 11 | test_spend_guard.py | 15 |
 | test_structural_roles.py | 13 | test_sweep_budget.py | 21 |
 | test_terminal_on_bound.py | 21 | test_tier2_keys.py | 17 |
-| test_tier3_manifest.py | 17 | test_trace_durability.py | 7 |
+| test_tier2_regression.py | 6 | test_tier3_manifest.py | 25 |
+| test_tier3_runner.py | 32 | test_trace_durability.py | 7 |
 | test_triage.py | 10 | test_verdicts.py | 49 |
 | test_watchdog.py | 23 | test_workflow.py | 4 |
 Regenerate with `pytest tests/ --collect-only -q`; the total is the part that
@@ -799,7 +802,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1275/1275 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1321/1321 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
