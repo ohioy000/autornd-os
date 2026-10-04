@@ -86,6 +86,41 @@ class TestTheGuardDecidesBeforeTheCall:
         assert worst < 0.08
         assert client.spend_guard_blind == []
 
+    async def test_the_worst_case_adds_the_per_request_charge_once(
+            self, rates, monkeypatch):
+        """The spend-guard repair (the PR #152 review's
+        third item): a flat per-request charge is part of the
+        worst case, added once per call. A call that fits on
+        its token side alone is still refused when the
+        charge pushes it over what remains."""
+        from autornd.routing import openrouter as _openrouter
+
+        requests: list = []
+        client = _client(requests)
+        model = client.get_model("escalation")
+        rates[model] = (0.0, 1e-5)               # 10,000 tokens -> $0.10
+        monkeypatch.setitem(_openrouter._model_per_request,
+                            model, 0.01)
+        client.spend_ceiling = 0.105             # the token side fits...
+        with pytest.raises(SpendGuardRefused) as refused:
+            await client.chat("escalation", "sys", "user", max_tokens=10_000)
+        assert requests == []                     # nothing was sent
+        # ...but the per-request charge, added once, is what
+        # the bound refuses: $0.10 + $0.01 exceeds $0.105.
+        assert refused.value.worst_case == pytest.approx(0.11, abs=1e-6)
+        assert refused.value.remaining == pytest.approx(0.105)
+        # Break-proof (openrouter.py, _guard_spend):
+        #     + max_tokens * completion_rate
+        #     + _model_per_request.get(model, 0.0))
+        # -> + max_tokens * completion_rate)
+        # FAILED ...::test_the_worst_case_adds_the_per_
+        # request_charge_once - Failed: DID NOT RAISE
+        # SpendGuardRefused : the guard's worst case
+        # omitted the per-request charge, so the call
+        # whose flat fee pushed it over the ceiling
+        # was made — the request was dispatched — and
+        # the spend ceiling was walked past.
+
     async def test_with_no_rate_the_call_is_made_and_the_guard_says_it_was_blind(self, rates):
         requests: list = []
         client = _client(requests)

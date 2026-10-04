@@ -129,15 +129,24 @@ refusal stops the experiment before any paid call:
 
 1. **The worst case of each arm A–D sequence** against its per-unit ceiling, at the
    guard's own formula: (prompt bytes + the 512-byte chat-template allowance) × the
-   prompt rate + max_tokens × the completion rate, at the registered max_tokens, the
+   prompt rate + max_tokens × the completion rate + the entry's flat per-request
+   charge, added once per call, at the registered max_tokens, the
    largest prompt the call can carry, arm B's largest tool result included.
 2. **Arm B's serving lists tool support.**
 3. **Arm B's largest prompt fits the serving's context window**, bounded in bytes (a
    byte-level tokenizer never emits more tokens than bytes).
 4. **Every serving — arm E's tiers included — is in the catalogue and priced on both
-   sides of the call.** A catalogue entry carrying any charge beside prompt and
-   completion tokens makes the guard blind for it (D49: an unknown price is not free),
-   and a serving absent from the catalogue is refused outright.
+   sides of the call.** A serving absent from the catalogue is refused outright. A
+   catalogue entry makes the guard blind only for a charge the worst-case bound
+   cannot cover (D49: an unknown price is not free): a component priced above the
+   rate its side is charged at, or one the bound does not know. The bound covers
+   what its own rates already charge — the cache components at or below the prompt
+   rate, reasoning at or below the completion rate — adds a flat per-request charge
+   once per call, and ignores the image and audio components a text-only call never
+   carries. A variant suffix (`:exacto` among them) resolves to its base model's
+   catalogue entry: the per-model endpoint confirms the variant is served but
+   carries no pricing of its own, so the base entry's published price is the known
+   price the bound reads.
 5. **The registered max_tokens against the pinned endpoint's max_completion_tokens**
    (the owner's addition): an arm A–D call whose registered max_tokens exceeds the
    endpoint's cap is refused — the client does not clamp, so the call would fail at the
@@ -149,7 +158,8 @@ Catalogue blindness (a missing `supported_parameters`, `context_length`,
 `max_completion_tokens`, or pricing) is a **report, not a guess** — named, and the
 experiment may proceed with the blindness on the record. The free `worst-case` command
 prints arm E's per-tier table: each tier's standing output cap, the guard's worst case
-at the catalogue's rates, and the spend above which the guard would refuse the call.
+at the catalogue's rates, the per-request charge it adds, the entry that priced a
+variant serving, and the spend above which the guard would refuse the call.
 
 ## Failure treatment (registered, not improvised)
 
