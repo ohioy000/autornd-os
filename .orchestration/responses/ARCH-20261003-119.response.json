@@ -109,16 +109,40 @@
     }
   ],
 
+  "followup_2026_10_04": {
+    "trigger": "The advisor's PR #152 review (2026-10-04): 'hold the merge. Fix two defects on the same branch, then re-measure on the owner's actual lineup.' Both defects are repaired on this branch as the versioned change the review requires; the merge stays held by the advisor.",
+    "defect_1_scorer": "The order items now read the answer's own procedure - its numbered (including sub-numbered), bulleted and 'Step n' lines - and no other lines (_PROCEDURE_LINE, _procedure_lines, _ordered in evals/tier2/scorer.py). The review's exhibit - Q5's model answer with its steps reversed, preceded by the question text verbatim - was measured at PASS 9/9 under frozen-2026-10-03.1 (the question's prose states the correct order and supplied every order pair) and is measured at FAIL 8/9 under the repair: only 'Final operations' fails, because assess-then-depressurize is the exhibit's only cross-step pair. The same construction is a wrong-answer fixture for every order question the tree holds, with the measured readings Q5 8/9, Q10 3/4, Q15 5/6, Q20 5/6. The review's second scorer defect - the Q2 false PASS (a definition stated as 'less than 19.0 percent' with '19.5%' named elsewhere as 'some sources' passed under both prior versions) - is fixed generally: the definition's 120-character window must itself state the threshold it defines (_threshold_stated), so the construction now fails (the deficient definition's window carries 19.0, not 19.5; the enriched definition still passes) and is added as a wrong-answer fixture. The scorer is frozen-2026-10-03.2 (versions.json entry; manifest.json and the tier-3 manifest tier3-3 name it).",
+    "findings_for_the_readers": [
+      "The review's parenthetical order-item list (Q10, Q11, Q14, Q16, Q19) repeats the frozen-2026-10-03.1 changelog text, not the tree: the tree's order items live in the five PROCEDURE-shaped questions Q5, Q10, Q15, Q20, Q25 (_ordered is called by _score_q5, _score_q10, _score_q15, _score_q20, _score_q25; Q11, Q14, Q16, Q19 - SANITY and SPECIFICATION shapes - carry no order item). The fixtures cover every order item the tree has, and the general rule in _ordered fixes order items wherever they live.",
+      "Q25's order pairs all sit inside single steps, so the reversed-steps construction cannot falsify it: the reversed exhibit scores 6/6 PASS. No wrong-answer fixture exists for Q25's order items by this construction; a Q25 wrong answer must misstate an order within a step. Listed in REVIEW.md as a known weakness, per the review's instruction."
+    ],
+    "defect_2_fetch": "fetch_primary_source (evals/tier3/runner.py) strips the LaTeX '$' wrappers wherever they sit before the anchored citation match, so a citation copied verbatim from a question resolves: the questions wrap each figure separately ('$29$ CFR § $1910.146(b)$'), and the three with a paragraph inside the wrappers (Q2, Q12, Q22) left a trailing '$' after the paragraph group, which defeated the anchored match and returned not-available. The guard test (tests/test_tier3_runner.py::test_fetch_accepts_a_citation_copied_verbatim) uses the exact wrapped strings extracted from questions.json for all five lookup questions (Q2, Q7, Q12, Q17, Q22), asserts the set is exactly those five, and carries the break-proof quoted under it: with the strip removed, Q2's verbatim citation returns not-available.",
+    "companion_instrument_repair": "notation_sweep.py's heading restyle now leaves numbered step lines intact (convention 17: the sweep instrument was wrong, not the scorer). The first .2 draft failed the sweep's four Q5 heading variants at 6/9 because restyling a numbered line stripped its numbering, destroying the procedure the repaired scorer reads. The sweep's measured counts are unchanged: 52/52 model-answer variants pass, 42/42 wrong-answer variants fail.",
+    "measurements": "verify_keys 268/268 (keys.json unchanged); scorer self-test 263/263 (258 plus the four exhibit fixtures and the threshold fixture); the twelve recorded answers 12/12; the notation sweep 52/52 and 42/42; extract_candidate.py re-run reproduces manifest.json byte-for-byte with only scorer_version changed; the suite 1321 passed in 76 files (the new fetch guard test moved the stated counts, which the README badge and HANDOVER guards re-derive in the same change). All three repairs carry break-proofs run before the commit: reverting _ordered to whole-answer scope fails all four exhibit fixtures (the exhibit passes 9/9 again - the exact defect); removing the threshold-in-window check fails the Q2 fixture (the false PASS returns); removing the wrapper strip fails the verbatim-citation test.",
+    "deviations": [
+      {
+        "what": "The advisor's review holds the PR #152 merge; the owner's 2026-10-03 standing grant ('full permission including to commit/push/merge till your done') is overridden for this PR by the review's explicit 'hold the merge'. The work is committed and pushed; the merge is not requested.",
+        "why": "The review is the ruling authority on what ships; a later explicit instruction supersedes the standing grant for the PR it governs."
+      },
+      {
+        "what": "The review's re-measurement item (the harness preflight, the tier-3 preflight, the worst-case report and the fingerprint under the new lineup: engineering inkling-small, judge qwen3-235b-a22b-2507, premium unset) is not executed: the working .env does not carry that lineup, and the executor never edits .env (G-3). The review's optional add-on (rerun the timing probe on the corrected lineup) is likewise not executed - it is paid work the owner has not authorized.",
+        "why": "Waiting on the owner's .env confirmation for the re-measurement, and on the owner's explicit authorization for the paid probe. Reported as blocked, not silently skipped."
+      }
+    ],
+    "work_commit": "1d76ade (this branch, PR #152)"
+  },
+
   "delivery_state": {
     "branch": "arch/20261003-119-tier3-runnable",
-    "pr": "152 (https://github.com/ohioy000/autornd-os/pull/152), opened 2026-10-04, CI running; the merge is the advisor-custodian's, per the command's deliverable block",
-    "action": "the tier-3 experiment is runnable and proved by a mocked dry run of all 375 units (plus the 50-unit pilot); the scorer is repaired as frozen-2026-10-03.1; execution is stopped at the owner's two ratification gates. The advisor-custodian merges on green, after checking acceptance against the tree (the command's deliverable block reserves the merge to the advisor-custodian).",
+    "pr": "152 (https://github.com/ohioy000/autornd-os/pull/152), opened 2026-10-04; the merge is HELD by the advisor's 2026-10-04 review until the two defects it named are re-measured on the owner's actual lineup - the repairs themselves are committed (1d76ade)",
+    "action": "the tier-3 experiment is runnable and proved by a mocked dry run of all 375 units (plus the 50-unit pilot); the scorer is repaired as frozen-2026-10-03.2 (the .2 repair the advisor's PR #152 review ordered: order items read the answer's own procedure, definitions state their own threshold; the fetch repair on the same branch); execution is stopped at the owner's two ratification gates. The advisor-custodian merges on green, after checking acceptance against the tree.",
     "experiment_state": "runnable-awaiting-ratification; no paid unit may start; the runner mechanizes the stop (the five TIER3 pins set, TIER3_SERVINGS_RATIFIED at the printed fingerprint, TIER3_ARM_B = TIER3_ARM_A, and TIER3_SPEND_AUTHORIZED / TIER3_PILOT_AUTHORIZED set)",
     "commits": {
       "response_in_progress": "c0228e1",
       "ruling_d50": "1323272",
       "scorer_repair": "a9d35ab",
       "work": "a0fa5f4 (PR 152)",
+      "review_repair": "1d76ade (frozen-2026-10-03.2 + the fetch repair, the advisor's PR #152 review)",
       "followup": "this commit"
     },
     "updated": "2026-10-04"
