@@ -130,7 +130,7 @@ class TestTheVersions:
     def test_the_versions_name_the_frozen_tier2_set(self):
         versions = MANIFEST["versions"]
         assert versions["dataset"] == "frozen-2026-10-03"
-        assert versions["scorer"] == "frozen-2026-10-03.1"
+        assert versions["scorer"] == "frozen-2026-10-03.2"
         frozen = {v["version"] for v in TIER2_VERSIONS["versions"]}
         assert versions["dataset"] in frozen, (
             "the manifest names a tier-2 version the version record "
@@ -141,7 +141,7 @@ class TestTheVersions:
         assert versions["scorer"] in frozen, (
             "the manifest names a scorer version the version "
             "record does not hold")
-        assert versions["manifest"] == "tier3-2"
+        assert versions["manifest"] == "tier3-3"
         # The tier-2 freeze itself: the signoff the owner ratified.
         assert TIER2_MANIFEST["dataset_version"] == "frozen-2026-10-03"
         assert TIER2_MANIFEST["frozen"] is True

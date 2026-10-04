@@ -842,13 +842,20 @@ def fetch_primary_source(citation: str) -> dict[str, Any]:
     Accepts a CFR citation in the forms the questions write it —
     '29 CFR § 1910.146(b)', '40 CFR 141.62(b)', with or without
     the '§', the paragraph, or the LaTeX '$' wrappers the
-    questions wrap their figures in — normalises it to title and
-    section, and returns that section's July 1, 2014 edition
-    text from the committed archive. Any other citation gets a
-    typed not-available result: recorded, and not a refusal.
+    questions wrap their figures in, wherever the wrappers sit
+    (the questions wrap each figure separately, so a paragraph
+    inside the wrappers leaves a trailing '$' after it) —
+    normalises it to title and section, and returns that
+    section's July 1, 2014 edition text from the committed
+    archive. Any other citation gets a typed not-available
+    result: recorded, and not a refusal.
     The tool opens no socket — the archive is the whole world.
     """
-    match = _CITATION.match(citation or "")
+    # The wrappers are copied verbatim with the
+    # citation, wherever they sit: stripped before
+    # the anchored match, which the trailing '$'
+    # of a wrapped paragraph would otherwise defeat.
+    match = _CITATION.match((citation or "").replace("$", ""))
     if not match:
         return {"available": False, "citation": citation,
                 "reason": "not a CFR citation in a form the "

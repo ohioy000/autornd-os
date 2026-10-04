@@ -51,7 +51,7 @@ DATASET_VERSION = "frozen-2026-10-03"
 # scorer failed) is a new version under the freeze:
 # the dataset content is unchanged, only the
 # instrument changed.
-SCORER_VERSION = "frozen-2026-10-03.1"
+SCORER_VERSION = "frozen-2026-10-03.2"
 
 # The count the owner's command expects. The owner
 # supplied all 25 on 2026-10-03, and ratified the

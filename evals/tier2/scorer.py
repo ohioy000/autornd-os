@@ -35,6 +35,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 KEYS = json.loads((HERE / "keys.json").read_text(encoding="utf-8"))
+QUESTIONS = json.loads(
+    (HERE / "questions.json").read_text(encoding="utf-8"))
 MANIFEST = json.loads(
     (HERE / "manifest.json").read_text(encoding="utf-8"))
 SCORER_VERSION = MANIFEST["scorer_version"]
@@ -558,6 +560,27 @@ def _leakage_absent(low: str) -> bool:
                      r"\b(?:none|zero|0)\b", low))
 
 
+def _threshold_stated(near: str, threshold: float) -> bool:
+    """The definition's own window states the
+    threshold it defines: a percent quantity, or a
+    unitless volume fraction, inside the window. A
+    threshold named elsewhere in the answer ('some
+    sources cite 19.5%') does not state the
+    definition's threshold - the definition itself
+    must carry the value it defines."""
+    for value, unit in extract_quantities(near):
+        dim = _dimension(unit)
+        if dim == "%":
+            stated = value
+        elif unit == "" and value < 1:
+            stated = value * 100.0   # volume fraction
+        else:
+            continue
+        if abs(stated - threshold) < 1e-9:
+            return True
+    return False
+
+
 def _score_q2(answer: str, record: dict) -> list[dict]:
     plain = _normalize(answer).lower()
     quantities = extract_quantities(plain)
@@ -607,6 +630,8 @@ def _score_q2(answer: str, record: dict) -> list[dict]:
             if "mass" in near:
                 continue
             if "volume" not in near and "v/v" not in near:
+                continue
+            if not _threshold_stated(near, threshold):
                 continue
             return _pass(item, f"{operator_words[0]} "
                                f"{threshold}% by volume, as "
@@ -806,6 +831,34 @@ def _numbered_steps(text: str) -> list[str]:
     return steps
 
 
+# The answer's own procedure: its numbered lines
+# ('1.' and sub-numbered '1.1.'), bulleted lines,
+# 'Step n' lines in the plain, bold ('**Step n —**'),
+# markdown ('### Step n —') and step-table forms the
+# recorded answers and the notation sweep write, and
+# nothing else. The question's own prose, a preamble,
+# an equipment list, an assumptions table or a
+# falsifier section is not the procedure: a mention
+# outside the steps neither creates an order nor
+# undoes one (the review's exhibit restates the
+# question - correct order in prose - and then
+# states the procedure backwards).
+_PROCEDURE_LINE = re.compile(
+    r"^\s*(?:"
+    r"(?:\d+(?:\.\d+)*)[.)]\s"
+    r"|[-*+]\s"
+    r"|#{1,6}\s*\**\s*step\s+\d+"
+    r"|\**\s*step\s+\d+\s*[—:.-]"
+    r"|\|\s*\d+\s*\|"
+    r")",
+    re.IGNORECASE)
+
+
+def _procedure_lines(answer: str) -> list[str]:
+    return [line for line in _normalize(answer).splitlines()
+            if _PROCEDURE_LINE.match(line)]
+
+
 def _phrase_positions(answer: str,
                       phrases: tuple[str, ...]) -> list[int]:
     """Every reading-order position at which any of
@@ -833,18 +886,22 @@ def _phrase_positions(answer: str,
 def _ordered(answer: str, pairs: tuple[tuple[str, ...],
                                         tuple[str, ...]]) -> bool:
     """Every (before-phrases, after-phrases) pair
-    holds: some occurrence of a before-phrase
-    precedes some occurrence of an after-phrase, in
-    the answer's reading order. An answer states an
-    ordered procedure when the order holds somewhere
-    in it: a mention in a preamble, an equipment
-    list or a falsifier does not undo the order the
-    procedure itself states, and an operation named
-    in different words ('raise the pressure' for
-    pressurization) is the same operation."""
+    holds inside the answer's own procedure: some
+    occurrence of a before-phrase precedes some
+    occurrence of an after-phrase, in the procedure's
+    reading order. Only the procedure's lines are
+    read - an answer with no procedure lines states
+    no order, and a mention outside the steps
+    neither creates an order nor undoes one. An
+    operation named in different words ('raise the
+    pressure' for pressurization) is the same
+    operation."""
+    procedure = "\n".join(_procedure_lines(answer))
+    if not procedure.strip():
+        return False
     for before, after in pairs:
-        before_at = _phrase_positions(answer, before)
-        after_at = _phrase_positions(answer, after)
+        before_at = _phrase_positions(procedure, before)
+        after_at = _phrase_positions(procedure, after)
         if not before_at or not after_at:
             return False
         if not any(a < b for a in before_at
@@ -2338,6 +2395,47 @@ def _fixture(
     return failures, len(cases)
 
 
+_STEP_LINE = re.compile(r"^(\d+)\.\s+(.*)$")
+
+
+def _steps_reversed(answer: str) -> str:
+    """The answer's numbered steps in reverse order,
+    renumbered from 1: the procedure the answer
+    states, backwards. Lines that are not numbered
+    steps stay where they are."""
+    lines = answer.splitlines()
+    bodies = [m.group(2) for m in
+              (_STEP_LINE.match(line) for line in lines)
+              if m]
+    bodies.reverse()
+    out: list[str] = []
+    n = 0
+    for line in lines:
+        m = _STEP_LINE.match(line)
+        if m:
+            n += 1
+            out.append(f"{n}. {bodies[n - 1]}")
+        else:
+            out.append(line)
+    return "\n".join(out)
+
+
+def _restated_question_exhibit(question_id: str) -> str:
+    """The review's exhibit: the question's own text
+    verbatim - which states the correct order in its
+    prose - followed by the key's model answer with
+    its steps reversed. Under the loose reading the
+    question's prose supplied every order pair and
+    the exhibit passed whole; under the procedure
+    scope only the reversed steps are read, and the
+    cross-step order fails."""
+    question = next(q["question"] for q in QUESTIONS
+                    if q["id"] == question_id)
+    model = next(k["model_answer"] for k in KEYS
+                 if k["id"] == question_id)
+    return question + "\n\n" + _steps_reversed(model)
+
+
 def self_test() -> int:
     print(f"Scorer self-test, scorer version "
           f"{SCORER_VERSION}, dataset version "
@@ -2978,6 +3076,15 @@ def self_test() -> int:
          "Oxygen enriched: more than 23.5% oxygen by mass.",
          {"Oxygen-deficient atmosphere": False,
           "Oxygen-enriched atmosphere": False, "verdict": "FAIL"}),
+        ("Q2 wrong: the threshold named elsewhere, "
+         "not in the definition", "Q2",
+         "Oxygen deficient: less than 19.0 percent "
+         "oxygen by volume. Oxygen enriched: more than "
+         "23.5 percent oxygen by volume. Some sources "
+         "cite 19.5 percent as the deficient threshold.",
+         {"Oxygen-deficient atmosphere": False,
+          "Oxygen-enriched atmosphere": True,
+          "verdict": "FAIL"}),
         ("Q3 wrong: J = pi d^4/64", "Q3",
          "J = 3.06796e-7 m^4",
          {"Polar second moment of area": False, "verdict": "FAIL"}),
@@ -3349,6 +3456,57 @@ def self_test() -> int:
         ("Q20 wrong: stop the pump to end collection",
          "Q20", "Stop the pump to end collection.",
          {"End sequence": False, "verdict": "FAIL"}),
+        # The review's exhibit, 2026-10-04: the
+        # question's own text verbatim - which
+        # states the correct order in its prose -
+        # followed by the key's model answer with
+        # its steps reversed. The prose is not the
+        # procedure: only the reversed steps are
+        # read, and the cross-step order fails.
+        # The readings are the measured ones: Q5
+        # 8/9, Q10 3/4, Q15 5/6, Q20 5/6.
+        ("Q5 exhibit: the question restated, the "
+         "steps reversed", "Q5",
+         _restated_question_exhibit("Q5"),
+         {"First operation: fill and vent": True,
+          "Second operation: close vent": True,
+          "Third operation: establish test pressure": True,
+          "Fourth operation: isolate before timing": True,
+          "Fifth operation: isolated hold": True,
+          "Acceptance and failure criteria": True,
+          "Logged pressure drop": True,
+          "Logged test verdict": True,
+          "Final operations: assess, depressurize, "
+          "confirm zero, disconnect": False,
+          "verdict": "FAIL"}),
+        ("Q10 exhibit: the question restated, the "
+         "steps reversed", "Q10",
+         _restated_question_exhibit("Q10"),
+         {"Setpoint and timer-start order": False,
+          "Hold criterion": True,
+          "Logged verdict": True,
+          "Shutdown and removal order": True,
+          "verdict": "FAIL"}),
+        ("Q15 exhibit: the question restated, the "
+         "steps reversed", "Q15",
+         _restated_question_exhibit("Q15"),
+         {"Ordered check sequence": False,
+          "Acceptance criteria": True,
+          "First signed error and verdict": True,
+          "Second signed error and verdict": True,
+          "Return-zero error and verdict": True,
+          "Overall verdict": True,
+          "verdict": "FAIL"}),
+        ("Q20 exhibit: the question restated, the "
+         "steps reversed", "Q20",
+         _restated_question_exhibit("Q20"),
+         {"Start and stabilization": False,
+          "Collection sequence": True,
+          "End sequence": True,
+          "Reference flow": True,
+          "Signed indication error": True,
+          "Acceptance and verdict": True,
+          "verdict": "FAIL"}),
         ("Q21 wrong: 50 deg C", "Q21",
          "T_f = 50 deg C.",
          {"Final temperature": False,

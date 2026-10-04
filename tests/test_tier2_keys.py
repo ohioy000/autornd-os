@@ -148,7 +148,7 @@ class TestTheScorerScoresNotRegexes:
     def test_the_self_test_passes(self):
         out = _self_test(TIER2)
         assert out.returncode == 0, out.stdout + out.stderr
-        assert ("SCORER SELF-TEST PASSED: all 258 "
+        assert ("SCORER SELF-TEST PASSED: all 263 "
                 "fixtures hold" in out.stdout)
         for qid in QUESTION_IDS:
             assert f"{qid} model answer" in out.stdout, (
@@ -405,7 +405,7 @@ class TestTheManifestRecordsTheFreeze:
         # (versions.json carries the entry naming the
         # change and its trigger).
         assert MANIFEST["scorer_version"] == \
-            "frozen-2026-10-03.1"
+            "frozen-2026-10-03.2"
 
     def test_the_source_archives_match_the_files_on_disk(self):
         archives = MANIFEST["source_archives"]

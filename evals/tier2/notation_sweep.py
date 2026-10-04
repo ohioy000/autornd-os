@@ -88,7 +88,15 @@ def _restyle_headings(text: str,
                       style) -> str | None:
     """Every heading line re-rendered in one
     heading style. None when the answer carries
-    no heading line."""
+    no heading line. A numbered line is a step
+    line, not a section heading: its numbering is
+    the procedure's structure, so it is left as
+    it is - restyling it would strip the numbers,
+    and an answer whose steps carry no numbers
+    states no procedure the scorer can read (the
+    scorer reads order in the answer's own
+    numbered, bulleted or 'Step n' lines, and in
+    no other lines)."""
     lines = text.splitlines()
     if not any(scorer._HEADING.match(l)
                for l in lines):
@@ -96,7 +104,8 @@ def _restyle_headings(text: str,
     out: list[str] = []
     number = 0
     for line in lines:
-        if scorer._HEADING.match(line):
+        if (scorer._HEADING.match(line)
+                and not _STEP.match(line)):
             number += 1
             out.append(style(_heading_text(line),
                              number))

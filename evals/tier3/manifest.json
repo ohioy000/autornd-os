@@ -7,9 +7,9 @@
   "versions": {
     "repository": "the commit this manifest is merged on",
     "dataset": "frozen-2026-10-03",
-    "scorer": "frozen-2026-10-03.1",
-    "manifest": "tier3-2",
-    "version_note": "The dataset names the tier-2 freeze (evals/tier2/versions.json, frozen-2026-10-03, ratified by the owner's signoff on 2026-10-03T21:41:20Z). The scorer names the repaired version (frozen-2026-10-03.1, Ruling D50 (1): the frozen version passed 5 of the 12 recorded real answers; the repair passes all twelve, and the repair is a NEW version under the same freeze, not an edit to the frozen one). tier3-2 registers the runner (ARCH-20261003-119): the execution machinery tier3-1 listed under not_prepared_here now exists (evals/tier3/runner.py), and this version registers every parameter a unit's outcome depends on. A change to either tier-2 versioned file is a new tier-3 manifest version."
+    "scorer": "frozen-2026-10-03.2",
+    "manifest": "tier3-3",
+    "version_note": "The dataset names the tier-2 freeze (evals/tier2/versions.json, frozen-2026-10-03, ratified by the owner's signoff on 2026-10-03T21:41:20Z). The scorer names the repaired version (frozen-2026-10-03.2, the advisor's PR #152 review of 2026-10-04: the order items read the answer's own procedure - its numbered, bulleted and 'Step n' lines - and no other lines, and the Q2 definitions must state their own threshold inside the definition's own window; the dataset content is unchanged, a NEW version under the same freeze; frozen-2026-10-03.1, Ruling D50 (1), is the version it builds on). tier3-3 registers that scorer repair and the fetch repair the same review ordered on the same branch: a citation copied verbatim from a question, with the LaTeX '$' wrappers wherever the question puts them (Q2, Q12, Q22 returned not-available), now resolves - the wrappers are stripped before the anchored match, and the break-proof is quoted under the test (tests/test_tier3_runner.py). tier3-2 registered the runner (ARCH-20261003-119). A change to either tier-2 versioned file is a new tier-3 manifest version."
   },
 
   "plan": {

@@ -53,6 +53,7 @@ import json
 import math
 import os
 import random
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -1611,6 +1612,58 @@ class TestITheClosedWorldFetch:
         # were reported as not available, so arm B's
         # source tool would have answered every lookup
         # question with a typed refusal.
+
+    def test_fetch_accepts_a_citation_copied_verbatim(
+            self):
+        # The review's defect, 2026-10-04: a model
+        # that copies the citation exactly as the
+        # question writes it - with the LaTeX '$'
+        # wrappers wherever the question puts them -
+        # must still resolve it. The questions wrap
+        # each figure separately, so the three with
+        # a paragraph inside the wrappers (Q2, Q12,
+        # Q22) carry a trailing '$' after the
+        # paragraph, which defeated the anchored
+        # match and returned not-available.
+        wrapped = re.compile(
+            r"\$?\d+\$?\s+CFR\s+§?\s*\$?\d+"
+            r"(?:\.\d+)*\$?(?:\([^)]*\))?\$?")
+        verbatim = {}
+        for question_id, question in QUESTIONS.items():
+            found = wrapped.search(question["question"])
+            if found:
+                verbatim[question_id] = found.group(0)
+        # Convention 28: the probe must have computed
+        # its subject - an empty or partial set would
+        # pass vacuously.
+        assert set(verbatim) == {
+            "Q2", "Q7", "Q12", "Q17", "Q22"}, (
+            f"the frozen set carries other wrapped "
+            f"citations: {sorted(verbatim)}")
+        for question_id, citation in verbatim.items():
+            assert "$" in citation, (
+                f"{question_id}'s citation {citation!r} "
+                f"carries no wrapper - not the verbatim "
+                f"form the question writes")
+            result = runner.fetch_primary_source(citation)
+            assert result["available"] is True, (
+                f"{question_id}'s verbatim citation "
+                f"{citation!r} is not in the archive: "
+                f"{result}")
+            assert result["edition"] == "July 1, 2014"
+            assert result["text"], (
+                f"{question_id}'s archived text is empty")
+        # Break-proof (runner.py, fetch_primary_source):
+        #     match = _CITATION.match(
+        #             (citation or "").replace("$", ""))
+        #     -> match = _CITATION.match(citation or "")
+        # FAILED ...::test_fetch_accepts_a_citation_
+        # copied_verbatim - AssertionError: Q2's
+        # verbatim citation '$29$ CFR § $1910.146(b)$'
+        # is not in the archive: {'available': False,
+        # 'citation': '$29$ CFR § $1910.146(b)$',
+        # 'reason': 'not a CFR citation in a form the
+        # questions write it'} : assert False is True
 
     def test_fetch_is_typed_not_available_outside_the_archive(
             self):
