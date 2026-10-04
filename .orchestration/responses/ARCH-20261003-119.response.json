@@ -1,0 +1,45 @@
+{
+  "command_id": "ARCH-20261003-119",
+  "parent_id": "ARCH-20261002-118",
+  "status": "IN_PROGRESS",
+  "executed": "2026-10-03",
+  "head_before": "7a7fc6a",
+  "head_after": "pending",
+
+  "trigger_record": "The command is new: commands/ARCH-20261003-119.json exists (carried to main by PR 151, merge 7a7fc6a) and responses/ARCH-20261003-119.response.json did not. Parent check passed before executing: parent_id ARCH-20261002-118 has its response at .orchestration/responses/ARCH-20261002-118.response.json, status DONE, on main at 51bcb72. This response is committed IN_PROGRESS before the work starts, per the channel rule.",
+
+  "preconditions": [
+    {
+      "command": "ps aux | grep -E 'autornd|evals' | grep -v grep",
+      "expected": "No run in flight.",
+      "result": "MET. The only match is the Kiro editor session (/usr/share/kiro/kiro /home/jb/autornd-os_clone/.env), matched on 'autornd' inside the clone's path - an editor holding the owner's clone .env open, not a run. No runner, no pytest, no sweep process exists.",
+      "pass": true
+    },
+    {
+      "command": "git fetch --prune origin && git log --oneline -1 origin/main -- .orchestration/responses/ARCH-20261002-118.response.json",
+      "expected": "118's response on main, at DONE (51bcb72 or later).",
+      "result": "MET. 51bcb72 (arch/20261002-118-tier3-manifest-followup) 'Response ARCH-20261002-118: record the tier-3 manifest merge (PR 149, main 9799f37)' - the DONE response, on main. The fetch pruned origin/arch/20261003-119-tier3-runnable (the advisor deleted the remote branch after the PR 151 merge); the work branch is re-created from main at 7a7fc6a, which carries the command file verbatim.",
+      "pass": true
+    },
+    {
+      "command": "python3 evals/tier2/scorer.py --self-test | tail -1 && sha256sum evals/tier2/scorer.py",
+      "expected": "All 248 fixtures hold; fb2894b268f3008e... (frozen-2026-10-03).",
+      "result": "MET. 'SCORER SELF-TEST PASSED: all 248 fixtures hold (model answers, equivalent notations, tolerance boundaries, wrong answers, discrete selections)'; scorer sha256 fb2894b268f3008e05913469a0452e943f9b6bffde2e05f7e7908225d7e99897. The frozen dataset sha256s also match the command's figures: questions.json 35bff36583c1e34b..., keys.json c05c95fbffedee58...",
+      "pass": true
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green; record the count (1275 at 1f8d45c).",
+      "result": "MET. 1275 passed in 97.04s; network guard: 0 non-loopback attempt(s) recorded. The count matches the command's expectation (main's move from 1f8d45c to 7a7fc6a carried the command file only - no tests).",
+      "pass": true
+    }
+  ],
+
+  "work_starting": "The execution plan, in commit order per the command's 'RULING FIRST, VERBATIM ... before the code in commit order': (1) Ruling D50 committed verbatim in HANDOVER.md and docs/handover-review.md; (2) the tier-2 scorer repaired as a new versions.json entry against the 12 recorded real answers, with the notation-variant sweep and the regression vectors committed as tests (questions.json and keys.json byte-identical throughout); (3) the tier-3 runner (gates, preflight, resume, ResultsLog, reading sheet, pilot mode), the closed-world fetch tool and the whitelisted recompute, arm C's typed CooperationCheckVerdict, the arm B and arm C prompt repairs, the additive client paths (serving per call, tools, tool calls returned), the manifest as tier3-2 and the README corrections; (4) tests (a)-(j), each proven by breaking one line, plus the two mocked dry runs (375 units and the 50-unit pilot) and the count guards; (5) the follow-up commit recording the delivery sha and PR number. Free work throughout: no provider call, no paid unit, no .env edit.",
+
+  "deviations": [
+    "None so far. The remote work branch was deleted after the PR 151 merge (observed via the prune in precondition 2); it is re-created from main at 7a7fc6a, which is byte-identical in content to the deleted tip (the merge carried only the command file). No other departure from the command's plan."
+  ],
+
+  "questions_for_advisor": []
+}
