@@ -12682,3 +12682,196 @@ response for ARCH-20261002-118 moves to **DONE** with the STOP
 recorded: every deliverable the command assigns to the executor is
 frozen in the manifest, and no paid unit may start until the
 owner clears both gates.
+
+
+## 110. Ruling D50 — the tier-3 experiment measures answers, not formatting (advisor, 2026-10-03, carried by ARCH-20261003-119)
+
+> **Ruling D50 (advisor, 2026-10-03) — the tier-3 experiment measures answers, not formatting. (1) Two independent hand readings are the primary measure of a tier-3 unit's correctness, as D44 rules for the golden set, and the tier-2 scorer is the screen. Two readers, blind to arm, read every unit the scorer fails and a seeded sample of ten per arm that it passes. The report gives the scorer's verdicts and the readings side by side, per arm, with their disagreements counted. A disagreement is reported, never settled by editing the scorer inside the run that found it. Before any paid unit, the scorer is repaired as a new version against the recorded real answers to its questions and against every notation of each key's model answer. (2) Arm B's treatment is the tools, and its prompt adds only them: it is arm A's prompt with the sentences that deny tools replaced by one that points to them, plus the tool registration. (3) Arm E delivers what the harness ships. A unit of arm E is delivered only when its run ends in the completed terminal (D49). A judge-approved draft that has not shipped by the deadline is scored and reported beside the delivered count as 'approved, not shipped'. It is never counted as delivered. (4) Arm C's check returns a typed verdict, and its control flow never reads prose (hard rule 2). A check that returns no valid verdict after the bounded retries is recorded as unavailable, never as concurrence, and model 1's draft is delivered. (5) Arm B's source tool is closed-world. Given a citation that a question states, it returns that section's archived text in the stated edition, and for anything else it returns a typed not-available result. The experiment tests access to the primary source, not web retrieval. Rationale: the advisor's pre-run review of tier 2 and tier 3 (2026-10-03). Tier-2 Q1-Q5 are the golden Q1-Q5 word for word. The frozen scorer passed 5 of the 12 recorded real answers to them that readings had found correct, 0 of 6 on Q4 and Q5. Every failure held a recognition error: a bold heading, a Unicode superscript, 'must not exceed', 'Close the high-point vent', a threshold stated past a 120-character window, a rule line read as the verdict. These errors depend on format, so they would differ by arm. Arm B's prompt told the model no tools were available and then registered two. Arm E had no rule for a draft approved but not shipped by the deadline, and arm C's CONCUR/OBJECT would have been read as English. Falsifier: a tier-3 correctness figure that rests on the scorer alone; an arm B prompt that differs from arm A's beyond the tools; an arm E draft counted as delivered without a completed terminal; arm C's stage 3 decided by matching text; a fetch result that depends on the network.**
+
+Carried verbatim to HANDOVER.md's rulings block in the same commit.
+The blueprint below is pasted verbatim from the command file
+(`.orchestration/commands/ARCH-20261003-119.json`, committed to the
+tree by PR 151), which also carries the evidence array, the acceptance
+criteria, the verification commands, the rollback and the preconditions.
+
+### 110.1 The command's objective
+
+Make the tier-3 experiment runnable, and make it measure answers rather than their formatting (Ruling D50):
+- build the runner, and prove it with a mocked dry run of all 375 units;
+- repair the frozen tier-2 scorer as a new version, against the recorded real answers;
+- correct arm B's prompt, give arm C a typed check, and make arm B's source tool closed-world;
+- register every parameter a unit's outcome depends on;
+- put every serving, arm E's included, behind one ratification the owner gives by fingerprint.
+Free work: no paid call.
+
+### 110.2 The ruled design (the command's constraints, verbatim)
+
+RULING FIRST, VERBATIM, in HANDOVER.md and the notebook, before the code in commit order.
+
+RULING D50, COMMITTED VERBATIM: 'Ruling D50 (advisor, 2026-10-03) — the tier-3 experiment measures answers, not formatting. (1) Two independent hand readings are the primary measure of a tier-3 unit's correctness, as D44 rules for the golden set, and the tier-2 scorer is the screen. Two readers, blind to arm, read every unit the scorer fails and a seeded sample of ten per arm that it passes. The report gives the scorer's verdicts and the readings side by side, per arm, with their disagreements counted. A disagreement is reported, never settled by editing the scorer inside the run that found it. Before any paid unit, the scorer is repaired as a new version against the recorded real answers to its questions and against every notation of each key's model answer. (2) Arm B's treatment is the tools, and its prompt adds only them: it is arm A's prompt with the sentences that deny tools replaced by one that points to them, plus the tool registration. (3) Arm E delivers what the harness ships. A unit of arm E is delivered only when its run ends in the completed terminal (D49). A judge-approved draft that has not shipped by the deadline is scored and reported beside the delivered count as 'approved, not shipped'. It is never counted as delivered. (4) Arm C's check returns a typed verdict, and its control flow never reads prose (hard rule 2). A check that returns no valid verdict after the bounded retries is recorded as unavailable, never as concurrence, and model 1's draft is delivered. (5) Arm B's source tool is closed-world. Given a citation that a question states, it returns that section's archived text in the stated edition, and for anything else it returns a typed not-available result. The experiment tests access to the primary source, not web retrieval. Rationale: the advisor's pre-run review of tier 2 and tier 3 (2026-10-03). Tier-2 Q1-Q5 are the golden Q1-Q5 word for word. The frozen scorer passed 5 of the 12 recorded real answers to them that readings had found correct, 0 of 6 on Q4 and Q5. Every failure held a recognition error: a bold heading, a Unicode superscript, 'must not exceed', 'Close the high-point vent', a threshold stated past a 120-character window, a rule line read as the verdict. These errors depend on format, so they would differ by arm. Arm B's prompt told the model no tools were available and then registered two. Arm E had no rule for a draft approved but not shipped by the deadline, and arm C's CONCUR/OBJECT would have been read as English. Falsifier: a tier-3 correctness figure that rests on the scorer alone; an arm B prompt that differs from arm A's beyond the tools; an arm E draft counted as delivered without a completed terminal; arm C's stage 3 decided by matching text; a fetch result that depends on the network.'
+
+THE SCORER, AS A NEW VERSION (D50 (1)). This is an instrument repair under the freeze's own rule: a change after the freeze is a new versions.json entry that names the change and its trigger. questions.json and keys.json stay byte-identical.
+- Read each of the 12 recorded answers listed in the evidence against every tier-2 required item. Record the readings, item by item, as regression vectors: what the reading found, never an assumed PASS.
+- Repair each recognition class the readings expose as a general rule, never as a special case for one answer:
+  - headings in bold, italic or 'Heading:' form;
+  - Unicode superscript digits and minus, and every exponent form ('×10⁻⁵', '\times 10^{-5}', 'e-5', 'x 10^-5');
+  - digit grouping ('30,000', '30 000');
+  - operator phrasings ('must not exceed', 'no more than', 'at most', 'up to and including', '<=', and their strict counterparts);
+  - the vent-closure phrasing;
+  - a fixed window after a term's first mention;
+  - a rule line read as the verdict.
+- Apply each class to all 25 scorer functions, and list which functions each repair touches.
+- Run a notation-variant sweep. Render each key's model answer, and each of its wrong answers, in every variant form that applies:
+  - heading styles;
+  - exponent and unit forms;
+  - digit grouping;
+  - operator phrasings;
+  - numbered, bulleted or tabulated steps;
+  - a verdict stated before or after its figures;
+  - a conditional rule line elsewhere in the answer.
+  Every model-answer variant must pass, and every wrong-answer variant must fail. Quote the counts: variants rendered, failures under frozen-2026-10-03, and failures under the new version.
+- All 248 existing fixtures still hold. For each repair class, add a wrong answer in the newly accepted form that must still fail, for example a 0.30 bar limit written 'must not exceed', or the wrong thickness's area written in mm².
+- Re-score the 12 recorded answers under both versions and quote them side by side (D44). Each FAIL left under the new version names the item the reading found missing.
+- Commit the probe that scores them as a test, so the vectors run in the suite.
+
+ARM B'S PROMPT (D50 (2)).
+- arm_b.md's first paragraph becomes 'You are a technical expert answering one question. Use the tools registered below where they help.'
+- The tool registration sits before the closing 'Answer now.'
+- Everything else is arm_a.md byte for byte.
+- The guard asserts the property mechanically: replacing arm_b.md's first paragraph with arm_a.md's, and removing its tool section, yields arm_a.md exactly.
+- arm_d.md stays arm_a.md byte for byte.
+- Rule 7: the old test enforced the contradiction. Say so.
+
+ARM C'S CHECK (D50 (4)).
+- Stage 2 returns a typed verdict, CooperationCheckVerdict: concur (bool), and objections (a list of strings that is non-empty when concur is false). It is requested as JSON through the client's existing response_format handling.
+- Stage 3 runs only when concur is false.
+- A verdict still invalid after the bounded retries is recorded as unavailable, and the draft is delivered.
+- Each stage is a separate call that shows the model only its own stage's text, the question, and the inputs that stage names.
+- Rewrite arm_c.md's stage 2 to ask for the JSON.
+
+ARM B'S TOOLS (D50 (5)).
+- fetch_primary_source(citation) accepts a CFR citation in the forms the questions write it: '29 CFR § 1910.146(b)', '40 CFR 141.62(b)', with or without '§' and the paragraph. It normalises the citation to title and section, and returns that section's July 1, 2014 edition text from evals/tier2/sources/ (the committed .txt).
+  - Any other citation gets a typed not-available result. That result is recorded, and it is not a refusal.
+  - The tool opens no socket.
+- recompute(expression) evaluates arithmetic by walking a whitelisted syntax tree.
+  - It accepts numbers, + − × ÷ and powers, parentheses, pi, e, and the functions sqrt, exp, ln, log10, sin, cos, tan, their inverses, abs, min and max.
+  - It never evals, execs or compiles model text (hard rule 3).
+  - Exponents and results are bounded, and an error returns a typed result to the model.
+- The loop allows at most 3 model calls and 20 tool invocations per unit. Calls 1 and 2 offer the tools. Call 3 offers none, so the model must answer. Every invocation is recorded: the tool, its arguments, the result's size, any error.
+- Rewrite arm_b.md's tool registration to match, and update the manifest's tool descriptions.
+
+REGISTERED PARAMETERS.
+- Every model call in arms A-D carries max_tokens 8000 and temperature 0.3, the client's default. 8000 is more than 3× the largest completion that 107's direct calls used.
+- finish_reason is recorded per call. A truncated answer is scored as delivered and flagged.
+- Arm E runs on the pipeline's own standing caps.
+- A TIER3 pin names its serving the way a MODEL_* tier does. Its provider preference uses the same per-tier syntax, under the arm's name.
+- The runner records every call's resolved model and provider.
+- Any path added to the client is priced, reserved and reconciled under D45, like the existing paths.
+
+THE PREFLIGHT, BEFORE THE FIRST UNIT. It refuses to start, and prints the figures, in four cases:
+- the worst case of any of arms A-D over its whole call sequence exceeds the arm's per-unit ceiling. Compute it as the call limit × each call's worst case at the registered max_tokens, with the largest prompt the call can carry, arm B's largest tool result included;
+- arm B's serving does not list tool support. When the catalogue is blind, the preflight reports that and does not guess;
+- arm B's context window cannot hold its prompt, the largest archived source and max_tokens, estimated at the harness's CHARS_PER_TOKEN;
+- any serving has no catalogue price (D49: an unknown price is not free).
+Arm E runs under the guard as it ships.
+
+WHAT RUNS IS WHAT WAS RATIFIED (G-2).
+- Before the first unit, the runner resolves every arm's serving, arm E's for each tier. It prints the map with a fingerprint: the first 12 hex digits of the sha256 of the map's canonical JSON.
+- It refuses to start unless all three hold:
+  - TIER3_SERVINGS_RATIFIED equals that fingerprint;
+  - TIER3_ARM_B resolves to the same serving as TIER3_ARM_A;
+  - TIER3_SPEND_AUTHORIZED is set (TIER3_PILOT_AUTHORIZED in pilot mode).
+- These checks come before any network call, and the refusal names each missing gate.
+- The runner reads TIER3_* the way the harness reads its settings (the environment, then .env), in its own settings class. autornd/config.py does not change.
+- Arm E's lineup is the owner's choice. This command builds the gate; it does not choose the lineup.
+
+ARM E (D50 (3)).
+- Each unit runs through run_scenario with the common deadline as its timeout, so D38's watchdog ends the run by its own terminal.
+- Delivered means a completed terminal's verdicts.implement.summary, as score_trace reads it.
+- A judge-approved iteration with no completed terminal is scored and recorded as 'approved, not shipped', beside the delivered count.
+
+RESUME AND THE RECORD.
+- The ResultsLog is append-only, in evals/results/ (git-ignored).
+- On a restart with the same manifest version and order sha256, the runner skips every unit already recorded, and runs nothing twice or out of order.
+- A unit in flight at the interruption is charged its full ceiling against the sweep as unreconciled liability, then re-run.
+- The header carries the seed, the order's sha256, the servings map and its fingerprint, the ceilings, max_tokens, the temperature and the versions.
+
+THE READING SHEET (D50 (1)).
+- After a run, the runner exports a reading sheet. It holds every scorer FAIL and a seeded sample of ten scorer PASSes per arm, in a seeded order, with no arm label. Each entry carries the question, the delivered answer and the key's required items.
+- Two readers fill it in independently, item by item, each with a verdict.
+- A merge step lists their disagreements and records each resolution.
+- The five success measures are computed both ways and reported side by side: scorer-only, and read (the read verdict where read, the scorer's elsewhere).
+
+THE CALIBRATION PILOT, BUILT BUT NOT RUN.
+- A pilot mode runs arms A and D on the 25 questions × 1 repetition: 50 units, with registered seed 20261004, its own results file, and the same gates plus TIER3_PILOT_AUTHORIZED.
+- Its purpose is to measure the scorer's agreement with readings on all 25 questions, and to check whether arm A already scores near the maximum, before the main run.
+- Its outputs never enter the main measures.
+- Register it in the manifest with an authorization ceiling of $7.50 (25 × $0.10 + 25 × $0.20). Nothing in the repository approves that amount.
+
+THE MOCKED DRY RUN.
+- Run the full 375-unit plan and the 50-unit pilot through the real runner with mocked clients (no network, no spend), and quote both summaries.
+- Include each failure class at least once: refusal, deadline, tool failure, an invalid arm C verdict, an incomplete unit, and a resume after a kill.
+- The order's sha256 must match the guard's reconstruction.
+
+THE RECORD.
+- Correct the manifest's and README's '§086' to the 086 escalation shootout (docs/traces/086-escalation-shootout.jsonl, 19/20 against 13/20), and say that it graded escalation output, not direct answers to questions.
+- Name no model id; the tier-3 guard enforces this.
+- Version the manifest tier3-2, naming the new scorer version.
+- The two ratification gates now read: the servings, by fingerprint and with arm E included; and the spend.
+
+118's OPEN QUESTION, ANSWERED BY THE ADVISOR: no. evals/ and docs/traces/ hold measurement records that name the servings they measured. They are not user-facing documentation. tests/test_docs.py keeps its scope, and the tier-3 guard keeps its targeted scan.
+
+TESTS, through the real runner and the provider-free doubles:
+(a) the order;
+(b) each arm's treatment and call limits, including arm B's third call offering no tools, and arm C's stage 3 running only when concur is false;
+(c) each gate's refusal;
+(d) every failure class, counted in its arm's 75-unit denominator;
+(e) resume;
+(f) arm E's 'approved, not shipped';
+(g) each preflight refusal;
+(h) recompute's rejections: names, attributes and calls outside the whitelist, and an oversized exponent;
+(i) fetch on each lookup question's citation in its written form, not-available otherwise, and no socket opened;
+(j) the reading sheet and the measures computed both ways.
+Prove each test by breaking one line, and quote the failures.
+
+Free. No provider call, no paid unit, no .env edit.
+
+### 110.3 The owner's three additions (2026-10-03, in the owner's message)
+
+**1. The tier-3 preflight also refuses to start when an arm A-D call's max_tokens exceeds the pinned endpoint's max_completion_tokens in the catalogue. For arm E's tiers, it reports any standing cap above the endpoint's limit. The judge endpoint caps output at 16,384, and the client doesn't clamp.**
+
+**2. In the response, quote the worst case per call for each arm E tier under this lineup and these caps, against the $0.50 per-unit ceiling. Use the guard's own formula (openrouter.py _guard_spend) and the catalogue rates for the pinned providers (a free public GET). Say which calls the guard would refuse, and at what spend.**
+
+**3. The harness preflight (autornd/preflight.py) will probably fail the engineering pin, because inkling-small's only endpoint doesn't list response_format. It served live on 09-26 through the client's JSON fallback (see run 102's record). Report what the gate says, under questions. Don't edit preflight.py, and don't add a skip to the tier-3 path. The advisor will rule on it.**
+
+"The servings fingerprint resolves against this lineup, so the owner ratifies exactly these pins."
+
+Optional paid add-on, authorized separately and kept off 119's branch because 119 is free-only: a $1.50-ceiling timing probe (3 runs x $0.50) of golden_q1, golden_q2 and golden_q3 through the current pipeline on this lineup, run as a separate step after 119's PR is open, with the per-unit report the owner specified.
+
+### 110.4 The owner's lineup and the caps gate (2026-10-03)
+
+The owner's standing lineup (set in the clone's .env, 2026-10-03; the permitted lines, no key material):
+
+- MODEL_TRIAGE=google/gemini-3.8-flash, MODEL_RESEARCH=google/gemini-3.8-flash
+- MODEL_ENGINEERING=thinkingmachines/inkling-small:exacto
+- MODEL_ARCHITECTURE=xiaomi/mimo-v2.6-pro:exacto
+- MODEL_ESCALATION=moonshotai/kimi-k3:exacto
+- MODEL_JUDGE=qwen/qwen3-235b-a22b-2507:exacto
+- MODEL_PREMIUM= (empty, on purpose: no frontier model sits inside arm E; the independent check falls back to the architecture model)
+- MODEL_RANKER=qwen/qwen3-reranker-8b, MODEL_SEARCH=perplexity/sonar
+- OPENROUTER_PROVIDER_ORDER=triage:google-ai-studio,engineering:deepinfra/fp8,architecture:xiaomi/fp8,escalation:inference-net/fp4,search:Perplexity,research:google-ai-studio,ranker:Fireworks,premium:,judge:deepinfra/fp8
+- PLAN_MAX_TOKENS=14000, JUDGE_MAX_TOKENS=16000, ESCALATION_MAX_TOKENS=13000
+
+The caps gate (the owner's pre-start check, run via dotenv_values on both .env files): the owner's expected 14000/16000/13000 did not match — both files carried 78000/70000/32000 — and the executor STOPPED and reported, per the owner's instruction. The owner then directed the exact values; the executor applied them to both files (the only .env edit the executor has ever made, made on the owner's explicit directive, values dictated line by line; the three lines carry a leading space in the file's optional-settings section, preserved by the edit) and re-ran the check: PASS, both files. The MODEL_* lineup landed in the clone's .env on the owner's edit (MODEL_PREMIUM emptied, provider order re-pinned); the working repo's .env still carries the previous MODEL_* pins — the harness loads the working repo's .env, so the servings fingerprint the runner prints will resolve arm E against whatever the runner loads, and the owner ratifies the printed map (the gate is print-then-ratify by design).
+
+### 110.5 Execution record
+
+Filled as the work lands; the delivery commit completes it. State at
+the D50 commit: all four preconditions passed (no run in flight — the
+only `ps` match is the Kiro editor holding the clone's .env open;
+118's DONE response on main at 51bcb72; the frozen scorer's self-test
+248/248 at fb2894b268f3008e with the dataset sha256s unchanged; the
+suite green at 1275 passed, network guard 0 non-loopback attempts);
+the IN_PROGRESS response committed before the work started (c0228e1);
+the caps gate cleared as recorded in 110.4. The suite's before-count
+is 1275 (precondition 4); the after-count is recorded at delivery.
