@@ -4,7 +4,7 @@
   "status": "DONE",
   "executed": "2026-10-03 — 2026-10-04",
   "head_before": "7a7fc6a",
-  "head_after": "pending — the work commit on this branch; the follow-up commit records its sha and the PR number",
+  "head_after": "a0fa5f4",
 
   "trigger_record": "The command is new: commands/ARCH-20261003-119.json exists (carried to main by PR 151, merge 7a7fc6a) and responses/ARCH-20261003-119.response.json did not. Parent check passed before executing: parent_id ARCH-20261002-118 has its response at .orchestration/responses/ARCH-20261002-118.response.json, status DONE, on main at 51bcb72. This response was committed IN_PROGRESS before the work started (c0228e1), per the channel rule.",
 
@@ -55,8 +55,7 @@
     "not_done": [
       "The calibration pilot and the main run - paid work that is not part of this command ('Free. No provider call, no paid unit, no .env edit.'). They are stopped at the owner's gates, in the owner's order: the five TIER3 pins (TIER3_ARM_A, TIER3_ARM_B = TIER3_ARM_A, TIER3_ARM_C_1, TIER3_ARM_C_2, TIER3_ARM_D) ratified by the printed fingerprint (TIER3_SERVINGS_RATIFIED), then optionally the pilot (TIER3_PILOT_AUTHORIZED, ceiling $7.50), then the main run (TIER3_SPEND_AUTHORIZED, ceiling $90.00). Nothing in this repository approves either amount.",
       "The arm-E lineup choice - the owner's (G-2). The gate is print-then-ratify by design; the runner prints the resolved map and its fingerprint and waits. Under the owner's current lineup the fingerprint is 37fb062aebff.",
-      "The two advisor rulings the response asks for (the arm-E guard blindness under the current lineup; the harness-preflight reading), and the command's three questions are answered above and in §110.5 for the advisor to rule on.",
-      "head_after and the PR number - recorded by the follow-up commit, per the two-commit delivery."
+      "The two advisor rulings the response asks for (the arm-E guard blindness under the current lineup; the harness-preflight reading), and the command's three questions are answered above and in §110.5 for the advisor to rule on."
     ]
   },
 
@@ -112,15 +111,15 @@
 
   "delivery_state": {
     "branch": "arch/20261003-119-tier3-runnable",
-    "pr": "pending - opened by the follow-up commit, which records the number here",
+    "pr": "152 (https://github.com/ohioy000/autornd-os/pull/152), opened 2026-10-04, CI running; the merge is the advisor-custodian's, per the command's deliverable block",
     "action": "the tier-3 experiment is runnable and proved by a mocked dry run of all 375 units (plus the 50-unit pilot); the scorer is repaired as frozen-2026-10-03.1; execution is stopped at the owner's two ratification gates. The advisor-custodian merges on green, after checking acceptance against the tree (the command's deliverable block reserves the merge to the advisor-custodian).",
     "experiment_state": "runnable-awaiting-ratification; no paid unit may start; the runner mechanizes the stop (the five TIER3 pins set, TIER3_SERVINGS_RATIFIED at the printed fingerprint, TIER3_ARM_B = TIER3_ARM_A, and TIER3_SPEND_AUTHORIZED / TIER3_PILOT_AUTHORIZED set)",
     "commits": {
       "response_in_progress": "c0228e1",
       "ruling_d50": "1323272",
       "scorer_repair": "a9d35ab",
-      "work": "pending - recorded by the follow-up commit",
-      "followup": "pending"
+      "work": "a0fa5f4 (PR 152)",
+      "followup": "this commit"
     },
     "updated": "2026-10-04"
   }
