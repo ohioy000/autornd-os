@@ -499,8 +499,10 @@ class OpenRouterClient:
         recorded, never guessed — in three ways: the model is not in the
         catalogue, the catalogue prices neither side of the call (an absent
         component is unknown, not free), or the entry carries a charge
-        beside prompt and completion tokens that the worst case cannot
-        bound. Returns the reservation, or None for a blind call."""
+        the worst case cannot bound (a component priced above the rate
+        its side is charged at, or one the bound does not know). A
+        per-request charge is part of the bound, added once per call.
+        Returns the reservation, or None for a blind call."""
         if self.call_ceiling is not None and (
                 self.calls + self._in_flight + 1 > self.call_ceiling):
             # Amendment (c): checked before dispatch, and every in-flight call
@@ -520,7 +522,8 @@ class OpenRouterClient:
             return None
         prompt_rate, completion_rate = rates
         worst = ((prompt_bytes + CHAT_TEMPLATE_ALLOWANCE_BYTES) * prompt_rate
-                 + max_tokens * completion_rate)
+                 + max_tokens * completion_rate
+                 + _model_per_request.get(model, 0.0))
         remaining = self.spend_ceiling - self._committed()
         if worst > remaining:
             raise SpendGuardRefused(function, model, worst, remaining,
@@ -1031,28 +1034,70 @@ _model_status: dict[str, dict] = {}
 # model id -> (prompt rate, completion rate) per token, from the provider catalogue
 _model_pricing: dict[str, tuple[float, float]] = {}
 
+# model id -> the flat per-request charge (the catalogue's per-request
+# components, a search surcharge among them), from the provider
+# catalogue. The worst-case bound adds it once per request the call
+# can make.
+_model_per_request: dict[str, float] = {}
+
+# The catalogue's component classes, as the worst-case bound reads
+# them. The tier-3 preflight applies the same classes
+# (evals/tier3/runner.py: _unboundable_reason), and a test asserts
+# the two agree.
+_CACHE_COMPONENTS = ("input_cache_read", "input_cache_write")
+_REASONING_COMPONENTS = ("internal_reasoning",)
+_PER_REQUEST_COMPONENTS = ("web_search", "request")
+_MODALITY_COMPONENTS = ("image", "audio", "input_audio_cache")
+
 
 def _prices_what_the_guard_cannot_bound(pricing: dict[str, Any]) -> bool:
-    """Does this catalogue entry carry a charge beside prompt and
-    completion tokens?
+    """Does this catalogue entry carry a charge the worst-case bound
+    cannot bound?
 
-    The worst-case estimate bounds prompt bytes and completion tokens.
-    Anything else the provider prices — a per-request fee, a search
-    surcharge, a reasoning rate, a cache-read rate — depends on what
-    the call does, not only on what it says, so a bound built from the
-    two token rates understates it. The catalogue prices in strings;
-    empty and zero mean "no charge for this component", and a value
-    that does not parse is a charge this cannot read, which is the
-    same answer: unboundable.
+    The bound charges the prompt rate for every prompt byte and the
+    completion rate for the whole output cap, so a component priced
+    at or below the rate the bound already charges its side at
+    cannot cost more than the bound does: the cache components
+    against the prompt rate, reasoning against the completion rate
+    (reasoning tokens are part of the output the cap bounds). A
+    flat per-request charge does not scale with the call, so the
+    bound adds it once per request. The modality components (image,
+    audio) never charge on the text-only calls the harness makes.
+    Anything else — a component priced above the rate its side is
+    charged at, or a component the bound does not know — is a
+    charge a token-only bound understates. The catalogue prices in
+    strings; empty and zero mean "no charge for this component",
+    and a value that does not parse is a charge this cannot read,
+    which is the same answer: unboundable.
     """
+    try:
+        prompt = float(pricing.get("prompt"))
+    except (TypeError, ValueError):
+        prompt = None
+    try:
+        completion = float(pricing.get("completion"))
+    except (TypeError, ValueError):
+        completion = None
     for key, value in pricing.items():
         if key in ("prompt", "completion") or value in (None, ""):
             continue
         try:
-            if float(value) != 0.0:
-                return True
+            rate = float(value)
         except (TypeError, ValueError):
             return True
+        if key in _PER_REQUEST_COMPONENTS:
+            continue
+        if key in _MODALITY_COMPONENTS:
+            continue
+        if key in _CACHE_COMPONENTS:
+            if prompt is None or rate > prompt:
+                return True
+            continue
+        if key in _REASONING_COMPONENTS:
+            if completion is None or rate > completion:
+                return True
+            continue
+        return True
     return False
 
 
@@ -1100,11 +1145,16 @@ async def check_models() -> dict[str, dict]:
                 # price of zero and stays priced, so the two facts
                 # remain distinguishable (Ruling D49's distinction,
                 # applied to pricing; ARCH-20261002-116). A charge
-                # beside prompt and completion — a per-request fee, a
-                # search surcharge, a reasoning rate — is one the
-                # worst-case estimate cannot bound, so the model is
-                # unrated too: a bound built from tokens alone would
-                # understate what the call can cost.
+                # the worst-case bound cannot bound — a component
+                # priced above the rate its side is charged at, or
+                # one the bound does not know — leaves the model
+                # unrated too: a bound built from the token rates
+                # alone would understate what the call can cost. The
+                # components the bound does cover (the cache and
+                # reasoning components at or below their side's
+                # rate, the per-request charge added once per
+                # request, the modality components a text-only call
+                # never carries) leave it rated.
                 if _prices_what_the_guard_cannot_bound(pricing):
                     continue
                 prompt = pricing.get("prompt")
@@ -1116,6 +1166,15 @@ async def check_models() -> dict[str, dict]:
                         float(prompt), float(completion))
                 except (TypeError, ValueError):
                     continue
+                # The per-request components the bound adds once
+                # per request, recorded beside the token rates so
+                # the guard charges them on every call.
+                per_request = sum(
+                    float(pricing[key])
+                    for key in _PER_REQUEST_COMPONENTS
+                    if pricing.get(key) not in (None, ""))
+                if per_request:
+                    _model_per_request[m["id"]] = per_request
     except Exception as exc:
         logger.warning("Could not fetch OpenRouter model list: %s", exc)
         _model_status = {fn: {"model": mid, "available": None} for fn, mid in configured.items()}
@@ -1127,6 +1186,22 @@ async def check_models() -> dict[str, dict]:
     misses = {m for m in configured.values() if m and m not in available_ids}
     if misses:
         available_ids |= await _confirm_models(misses)
+
+    # A variant suffix (':exacto' among them) names a serving of the
+    # base model. The bulk catalogue prices the base entry; the
+    # per-model endpoint confirms a variant is served but carries no
+    # pricing of its own, so a confirmed variant is rated at its base
+    # entry's published price — the known price, not an unknown one
+    # (D49: a known price is not unknown).
+    for model_id in sorted(available_ids):
+        if model_id in _model_pricing or ":" not in model_id:
+            continue
+        base, _separator, _variant = model_id.rpartition(":")
+        if base in _model_pricing:
+            _model_pricing[model_id] = _model_pricing[base]
+            if base in _model_per_request:
+                _model_per_request[model_id] = (
+                    _model_per_request[base])
 
     status = {}
     for fn, model_id in configured.items():

@@ -162,11 +162,14 @@ class TestCostEstimation:
         ]})
         assert orr._model_pricing["vendor/free"] == (0.0, 0.0)
 
-    async def test_a_charge_the_estimate_cannot_bound_is_unrated(self):
-        """Ruling D49, property 1: a charge beside prompt and
-        completion — a per-request fee, a search surcharge — is one
-        the worst-case estimate cannot bound, so the model is
-        unrated rather than falsely bounded by its token rates."""
+    async def test_a_per_request_charge_is_bounded_once_per_request(self):
+        """The spend-guard repair (the PR #152 review's third
+        item): a flat per-request charge does not scale with the
+        call, so the bound adds it once per request. The model is
+        rated at its token rates and the charge is recorded beside
+        them — D49's "a known price is not unknown" — where the
+        old parse left the model unrated, blind for a charge the
+        bound covers."""
         import autornd.routing.openrouter as orr
 
         await self._parse_catalogue({"data": [
@@ -174,7 +177,129 @@ class TestCostEstimation:
              "pricing": {"prompt": "0.000001", "completion": "0.000004",
                           "request": "0.01"}},
         ]})
-        assert "vendor/per-request" not in orr._model_pricing
+        assert orr._model_pricing["vendor/per-request"] == (0.000001, 0.000004)
+        assert orr._model_per_request["vendor/per-request"] == pytest.approx(0.01)
+
+    async def test_a_cache_component_at_or_below_the_prompt_rate_is_bounded(self):
+        """The bound charges the prompt rate for every prompt byte,
+        so a cache component priced at or below that rate cannot
+        cost more than the bound does."""
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/cacheable",
+             "pricing": {"prompt": "0.000001", "completion": "0.000004",
+                          "input_cache_read": "0.000001",
+                          "input_cache_write": "0.0000005"}},
+        ]})
+        assert orr._model_pricing["vendor/cacheable"] == (0.000001, 0.000004)
+
+    async def test_a_cache_component_above_the_prompt_rate_is_unrated(self):
+        """A cache component priced above the prompt rate is a
+        charge the bound understates: the model stays unrated."""
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/expensive-cache",
+             "pricing": {"prompt": "0.000001", "completion": "0.000004",
+                          "input_cache_read": "0.000002"}},
+        ]})
+        assert "vendor/expensive-cache" not in orr._model_pricing
+
+    async def test_reasoning_at_or_below_the_completion_rate_is_bounded(self):
+        """Reasoning tokens are part of the output the cap bounds,
+        so reasoning priced at or below the completion rate cannot
+        cost more than the bound does. The equality case is the
+        catalogue's own: a provider charging reasoning at exactly
+        its completion rate."""
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/reasoning",
+             "pricing": {"prompt": "0.000001", "completion": "0.000004",
+                          "internal_reasoning": "0.000004"}},
+        ]})
+        assert orr._model_pricing["vendor/reasoning"] == (0.000001, 0.000004)
+
+    async def test_reasoning_above_the_completion_rate_is_unrated(self):
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/expensive-reasoning",
+             "pricing": {"prompt": "0.000001", "completion": "0.000004",
+                          "internal_reasoning": "0.000005"}},
+        ]})
+        assert "vendor/expensive-reasoning" not in orr._model_pricing
+
+    async def test_modality_components_do_not_unrate_a_text_only_call(self):
+        """The harness's calls are text-only: the image and audio
+        components never charge on one, so they leave the model
+        rated."""
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/multimodal",
+             "pricing": {"prompt": "0.000001", "completion": "0.000004",
+                          "image": "0.00000075", "audio": "0.00000075",
+                          "input_audio_cache": "0.000000075"}},
+        ]})
+        assert orr._model_pricing["vendor/multimodal"] == (0.000001, 0.000004)
+
+    async def test_a_component_the_bound_does_not_know_is_unrated(self):
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/unknown-component",
+             "pricing": {"prompt": "0.000001", "completion": "0.000004",
+                          "fine_tuning": "0.01"}},
+        ]})
+        assert "vendor/unknown-component" not in orr._model_pricing
+
+    async def test_a_variant_suffix_is_rated_at_its_base_entry(self, monkeypatch):
+        """The bound resolves a variant suffix (':exacto' among
+        them) to the base model's catalogue entry: the per-model
+        endpoint confirms the variant is served but carries no
+        pricing of its own, so the base entry's published price —
+        the known price, with its per-request charge — is what
+        the guard reads for the serving."""
+        import autornd.routing.openrouter as orr
+
+        monkeypatch.setattr(settings, "model_triage",
+                            "vendor/base:exacto")
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        async def _get(url, **kw):
+            if url.endswith("/endpoints"):
+                return httpx.Response(200, json={},
+                                    request=httpx.Request("GET", url))
+            return self._cat({"data": [
+                {"id": "vendor/base",
+                 "pricing": {"prompt": "0.000001", "completion": "0.000004",
+                              "web_search": "0.005"}},
+            ]})
+
+        mock_client.get = AsyncMock(side_effect=_get)
+        with patch("autornd.routing.openrouter.httpx.AsyncClient", return_value=mock_client):
+            await check_models()
+        assert orr._model_pricing["vendor/base:exacto"] == (0.000001, 0.000004)
+        assert orr._model_per_request["vendor/base:exacto"] == pytest.approx(0.005)
+        assert orr._model_status["triage"] == {
+            "model": "vendor/base:exacto", "available": True}
+        # Break-proof (openrouter.py, check_models,
+        # the variant registration):
+        #     if base in _model_pricing:
+        # -> if False and base in _model_pricing:
+        # FAILED ...::test_a_variant_suffix_is_
+        # rated_at_its_base_entry - KeyError:
+        # 'vendor/base:exacto' : the confirmed
+        # variant never entered the pricing table,
+        # so the guard would have been blind for
+        # every ':exacto' serving the lineup names,
+        # an unknown price treated as unknown
+        # where the base entry's published price
+        # is the known price the bound reads.
 
     async def test_a_zero_charge_beside_the_token_rates_stays_priced(self):
         """The unboundable-component rule is about real charges: a

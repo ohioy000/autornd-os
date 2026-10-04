@@ -1316,18 +1316,26 @@ class TestGThePreflight:
             "arm D: the serving test/arm-d has no catalogue "
             "price the guard can bound" in refusal
             for refusal in report.refusals), report.refusals
-        # An entry carrying a charge beside prompt and
-        # completion tokens: the guard is blind for it
-        # (D49: an unknown price is not free).
+        # An entry carrying a charge the bound cannot
+        # cover: a cache component priced above the
+        # prompt rate, which the token-only bound
+        # understates. The guard is blind for it
+        # (D49: an unknown price is not free). A
+        # per-request charge is not this case — the
+        # bound adds it once per call — and neither
+        # is a component priced at or below the rate
+        # its side is charged at: the repair the PR
+        # #152 review ordered made both bounded.
         catalogue = _fixture_catalogue()
         for entry in catalogue:
             if entry["id"] == TEST_SERVINGS["C"][0]:
-                entry["pricing"]["web_search"] = "0.014"
+                entry["pricing"]["input_cache_read"] = \
+                    f"{FIXTURE_PROMPT_RATE * 2}"
         report = runner.run_preflight(TEST_SERVINGS, catalogue)
         assert any(
             "arm C: the serving test/arm-c-1 has no catalogue "
             "price the guard can bound" in refusal
-            and "web_search" in refusal
+            and "input_cache_read" in refusal
             for refusal in report.refusals), report.refusals
         # Arm E's tiers are covered by the same case: the
         # gate covers the standing pins.
@@ -1448,6 +1456,285 @@ class TestGThePreflight:
         # standing cap, so the figures would have
         # understated every tier's worst case by the
         # cap they were meant to bound.
+
+
+# ── (g2) The worst-case bound's own repair ──────────
+#
+# The bound covers what its own rates already charge: a
+# variant suffix resolves to the base entry's price, the
+# cache and reasoning components are bounded against the
+# rates their sides are charged at, a flat per-request
+# charge is added once per call, and the guard stays blind
+# only for a component priced above the rate its side is
+# charged at — or one the bound does not know.
+
+# A lineup whose arm E/architecture serving is a variant
+# endpoint: served (the per-model endpoint confirmed it)
+# but priced by its base entry, the way the catalogue
+# prices the ':exacto' servings the ratified lineup names.
+VARIANT_SERVINGS = {
+    "A": "test/arm-a",
+    "B": "test/arm-a",
+    "C": ["test/arm-c-1", "test/arm-c-2"],
+    "D": "test/arm-d",
+    "E": {tier: ("test/arm-e-architecture:exacto"
+                 if tier == "architecture"
+                 else f"test/arm-e-{tier}")
+          for tier in runner.PIPELINE_TIERS},
+}
+
+
+def _variant_catalogue() -> list[dict[str, Any]]:
+    """The fixture catalogue with the architecture tier's
+    serving as a confirmed variant: the serving itself
+    carries no pricing (the per-model endpoint confirms it
+    is served and carries none), and its base entry, priced
+    at the fixture's rates, is the entry that bounds it."""
+    catalogue = _fixture_catalogue(VARIANT_SERVINGS)
+    entries = {entry["id"]: entry for entry in catalogue}
+    variant = entries["test/arm-e-architecture:exacto"]
+    variant["pricing"] = {}
+    variant["confirmed_served"] = True
+    for parameter in ("context_length", "max_completion_tokens",
+                      "supported_parameters"):
+        variant.pop(parameter, None)
+    catalogue.append({
+        "id": "test/arm-e-architecture",
+        "pricing": {"prompt": f"{FIXTURE_PROMPT_RATE}",
+                    "completion": f"{FIXTURE_COMPLETION_RATE}"},
+        "context_length": 200000,
+        "max_completion_tokens": 32768,
+        "supported_parameters": [
+            "tools", "response_format", "max_tokens",
+            "temperature"],
+    })
+    return catalogue
+
+
+class TestG2TheWorstCaseBound:
+    def test_a_variant_suffix_resolves_to_its_base_entry(self):
+        rows = runner.arm_e_worst_case(
+            VARIANT_SERVINGS, _variant_catalogue())
+        (row,) = [row for row in rows
+                  if row["tier"] == "architecture"]
+        assert not row.get("unknown")
+        # The base entry's rates, not a guess: the row
+        # states which entry priced the serving.
+        assert row["priced_as"] == "test/arm-e-architecture"
+        assert row["prompt_rate"] == FIXTURE_PROMPT_RATE
+        assert row["completion_rate"] == FIXTURE_COMPLETION_RATE
+        assert row["per_request_charge"] == 0.0
+        # The guard's formula, written out here rather than
+        # recomputed through the function under test: the
+        # largest question the pipeline's entry point
+        # carries, the 512-byte chat-template allowance,
+        # the fixture's rates and the tier's standing cap.
+        prompt_bytes = len(QUESTIONS[max(
+            QUESTIONS,
+            key=lambda qid: len(QUESTIONS[qid]["question"]))]["question"].encode("utf-8"))
+        expected = ((prompt_bytes + 512)
+                    * FIXTURE_PROMPT_RATE
+                    + row["cap"] * FIXTURE_COMPLETION_RATE)
+        assert row["worst_case"] == pytest.approx(expected)
+        # Break-proof (runner.py, _resolve_entry):
+        #     if entry.get("pricing"):
+        #         return entry
+        # -> if True:
+        #         return entry
+        # FAILED ...::test_a_variant_suffix_resolves_to_
+        # its_base_entry - AssertionError: assert not True,
+        # where True = row.get('unknown') — the variant's
+        # own (empty) entry priced the serving, so the table
+        # reported it served but blind, and the preflight
+        # refused it ("arm E: the serving
+        # test/arm-e-architecture:exacto has no catalogue
+        # price the guard can bound (served but not priced
+        # in the catalogue ...)"), where the base entry's
+        # published price is the known price the bound reads.
+
+    def test_a_serving_the_catalogue_never_carried_stays_unlisted(
+            self):
+        # Resolution only borrows a price for an id the
+        # catalogue actually carries: an id it never listed
+        # and never confirmed is not in the catalogue, even
+        # when its base model is priced.
+        servings = dict(VARIANT_SERVINGS)
+        servings["E"] = dict(VARIANT_SERVINGS["E"])
+        servings["E"]["architecture"] = "test/never-listed:exacto"
+        rows = runner.arm_e_worst_case(
+            servings, _variant_catalogue())
+        (row,) = [row for row in rows
+                  if row["tier"] == "architecture"]
+        assert row["unknown"]
+        assert row["reason"] == "not in the provider catalogue"
+
+    def test_a_per_request_charge_is_added_once_per_call(self):
+        catalogue = _fixture_catalogue()
+        for entry in catalogue:
+            if entry["id"] == TEST_SERVINGS["E"]["search"]:
+                entry["pricing"]["web_search"] = "0.005"
+        rows = runner.arm_e_worst_case(TEST_SERVINGS, catalogue)
+        (row,) = [row for row in rows
+                  if row["tier"] == "search"]
+        assert not row.get("unknown")
+        assert row["per_request_charge"] == pytest.approx(0.005)
+        # The guard's formula, written out here rather than
+        # recomputed through the function under test: the
+        # largest question the pipeline's entry point
+        # carries, the 512-byte chat-template allowance,
+        # the fixture's rates, the tier's standing cap,
+        # and the per-request charge added once.
+        prompt_bytes = len(QUESTIONS[max(
+            QUESTIONS,
+            key=lambda qid: len(QUESTIONS[qid]["question"]))]["question"].encode("utf-8"))
+        expected = ((prompt_bytes + 512)
+                    * FIXTURE_PROMPT_RATE
+                    + row["cap"] * FIXTURE_COMPLETION_RATE
+                    + 0.005)
+        assert row["worst_case"] == pytest.approx(expected)
+        # Break-proof (runner.py, worst_case_cost):
+        #     + max_tokens * completion_rate
+        #     + per_request_charge)
+        # -> + max_tokens * completion_rate)
+        # FAILED ...::test_a_per_request_charge_is_added_
+        # once_per_call - AssertionError: Obtained
+        # 0.0009608999999999999, Expected 0.0059609
+        # ± 6.0e-09 : the table's worst case omitted the
+        # per-request charge, so every call the search tier
+        # makes would have been understated by the flat fee
+        # the provider charges it.
+
+    def test_the_components_the_bound_covers_are_bounded(
+            self):
+        # The cache components at (and below) the prompt
+        # rate, reasoning at the completion rate, and the
+        # modality components a text-only call never
+        # carries: none of them unrates the serving.
+        catalogue = _fixture_catalogue()
+        for entry in catalogue:
+            if entry["id"] == TEST_SERVINGS["E"]["triage"]:
+                entry["pricing"].update({
+                    "input_cache_read": f"{FIXTURE_PROMPT_RATE}",
+                    "input_cache_write": "0",
+                    "internal_reasoning":
+                        f"{FIXTURE_COMPLETION_RATE}",
+                    "image": "0.00000075",
+                    "audio": "0.00000075",
+                    "input_audio_cache": "0.000000075"})
+        rows = runner.arm_e_worst_case(TEST_SERVINGS, catalogue)
+        (row,) = [row for row in rows
+                  if row["tier"] == "triage"]
+        assert not row.get("unknown")
+
+    def test_a_component_priced_above_its_side_stays_blind(self):
+        # A cache component priced above the prompt rate is
+        # a charge the bound understates: the guard says so,
+        # naming the component, rather than bounding it.
+        catalogue = _fixture_catalogue()
+        for entry in catalogue:
+            if entry["id"] == TEST_SERVINGS["E"]["triage"]:
+                entry["pricing"]["input_cache_read"] = \
+                    f"{FIXTURE_PROMPT_RATE * 10}"
+        rows = runner.arm_e_worst_case(TEST_SERVINGS, catalogue)
+        (row,) = [row for row in rows
+                  if row["tier"] == "triage"]
+        assert row["unknown"]
+        assert "input_cache_read" in row["reason"]
+        # Break-proof (runner.py, _unboundable_reason):
+        #     if prompt is None or rate > prompt:
+        #         charges.append(key)
+        # -> if False:
+        #         charges.append(key)
+        # FAILED ...::test_a_component_priced_above_its_
+        # side_stays_blind (the row reported the
+        # serving boundable) and
+        # ...::test_the_two_instruments_apply_the_
+        # same_test - AssertionError:
+        # {'prompt': '1e-07', 'completion': '2e-07',
+        # 'input_cache_read': '1e-06'} assert False
+        # == True : a cache component priced ten times
+        # the prompt rate was reported as bounded, the
+        # two instruments disagreed on the same entry,
+        # and the worst case would have understated
+        # every cached-token charge the call can carry.
+
+    def test_a_component_the_bound_does_not_know_stays_blind(
+            self):
+        catalogue = _fixture_catalogue()
+        for entry in catalogue:
+            if entry["id"] == TEST_SERVINGS["E"]["triage"]:
+                entry["pricing"]["fine_tuning"] = "0.01"
+        rows = runner.arm_e_worst_case(TEST_SERVINGS, catalogue)
+        (row,) = [row for row in rows
+                  if row["tier"] == "triage"]
+        assert row["unknown"]
+        assert "fine_tuning" in row["reason"]
+
+    def test_the_preflight_prices_a_variant_through_its_base(
+            self):
+        report = runner.run_preflight(
+            VARIANT_SERVINGS, _variant_catalogue())
+        assert not any(
+            "test/arm-e-architecture:exacto" in refusal
+            for refusal in report.refusals), report.refusals
+
+    def test_the_two_instruments_apply_the_same_test(self):
+        # The preflight's classifier and the client's parse
+        # are two copies of one ruling; a battery of catalog
+        # shapes proves they still agree, missing sides
+        # included (the client folds that check into its
+        # parse, the preflight states it as its own reason).
+        import autornd.routing.openrouter as _openrouter
+        battery = [
+            {"prompt": f"{FIXTURE_PROMPT_RATE}",
+             "completion": f"{FIXTURE_COMPLETION_RATE}"},
+            {"prompt": "0", "completion": "0"},
+            {"prompt": f"{FIXTURE_PROMPT_RATE}"},
+            {"prompt": f"{FIXTURE_PROMPT_RATE}",
+             "completion": f"{FIXTURE_COMPLETION_RATE}",
+             "web_search": "0.005"},
+            {"prompt": f"{FIXTURE_PROMPT_RATE}",
+             "completion": f"{FIXTURE_COMPLETION_RATE}",
+             "request": "0.01"},
+            {"prompt": f"{FIXTURE_PROMPT_RATE}",
+             "completion": f"{FIXTURE_COMPLETION_RATE}",
+             "input_cache_read": f"{FIXTURE_PROMPT_RATE}"},
+            {"prompt": f"{FIXTURE_PROMPT_RATE}",
+             "completion": f"{FIXTURE_COMPLETION_RATE}",
+             "input_cache_read": f"{FIXTURE_PROMPT_RATE * 10}"},
+            {"prompt": f"{FIXTURE_PROMPT_RATE}",
+             "completion": f"{FIXTURE_COMPLETION_RATE}",
+             "internal_reasoning":
+                 f"{FIXTURE_COMPLETION_RATE}"},
+            {"prompt": f"{FIXTURE_PROMPT_RATE}",
+             "completion": f"{FIXTURE_COMPLETION_RATE}",
+             "internal_reasoning":
+                 f"{FIXTURE_COMPLETION_RATE * 10}"},
+            {"prompt": f"{FIXTURE_PROMPT_RATE}",
+             "completion": f"{FIXTURE_COMPLETION_RATE}",
+             "image": "0.00000075", "audio": "0.00000075",
+             "input_audio_cache": "0.000000075"},
+            {"prompt": f"{FIXTURE_PROMPT_RATE}",
+             "completion": f"{FIXTURE_COMPLETION_RATE}",
+             "fine_tuning": "0.01"},
+            {"prompt": f"{FIXTURE_PROMPT_RATE}",
+             "completion": f"{FIXTURE_COMPLETION_RATE}",
+             "web_search": "a price that does not parse"},
+            {"prompt": f"{FIXTURE_PROMPT_RATE}",
+             "completion": f"{FIXTURE_COMPLETION_RATE}",
+             "input_cache_read": "0"},
+        ]
+        for pricing in battery:
+            entry = {"id": "vendor/x", "pricing": dict(pricing)}
+            preflight_blind = (
+                runner._unboundable_reason(entry) is not None)
+            sides_missing = ("prompt" not in pricing
+                             or "completion" not in pricing)
+            client_blind = (
+                sides_missing
+                or _openrouter._prices_what_the_guard_cannot_bound(
+                    pricing))
+            assert preflight_blind == client_blind, pricing
 
 
 # ── (h) The recompute whitelist ─────────────────────

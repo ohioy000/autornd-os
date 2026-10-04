@@ -367,9 +367,48 @@ async def fetch_catalogue(
     return catalogue
 
 
+# The catalogue's component classes, as the worst-case bound reads
+# them — the same classes the client's guard applies
+# (autornd/routing/openrouter.py:
+# _prices_what_the_guard_cannot_bound; a test asserts the two
+# agree).
+_CACHE_COMPONENTS = ("input_cache_read", "input_cache_write")
+_REASONING_COMPONENTS = ("internal_reasoning",)
+_PER_REQUEST_COMPONENTS = ("web_search", "request")
+_MODALITY_COMPONENTS = ("image", "audio", "input_audio_cache")
+
+
 def catalogue_index(catalogue: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """The catalogue keyed by model id."""
     return {entry["id"]: entry for entry in catalogue}
+
+
+def _resolve_entry(index: dict[str, dict[str, Any]],
+                   serving: str) -> dict[str, Any] | None:
+    """The catalogue entry that prices a serving, or None when
+    the catalogue carries neither the serving nor its base.
+
+    A variant suffix (':exacto' among them) names a serving
+    of the base model: the bulk catalogue prices the base
+    entry, and the per-model endpoint confirms a variant is
+    served but carries no pricing of its own, so a served
+    variant is priced at its base entry's published price
+    (D49: a known price is not an unknown one). Only an
+    entry the catalogue actually carries resolves — an id
+    the catalogue never listed and never confirmed stays
+    "not in the provider catalogue", never a price borrowed
+    for an id that may not be served at all."""
+    entry = index.get(serving)
+    if entry is None:
+        return None
+    if entry.get("pricing"):
+        return entry
+    base, separator, _variant = serving.rpartition(":")
+    if separator:
+        base_entry = index.get(base)
+        if base_entry is not None and base_entry.get("pricing"):
+            return base_entry
+    return entry
 
 
 def _unboundable_reason(entry: dict[str, Any]) -> str | None:
@@ -377,14 +416,25 @@ def _unboundable_reason(entry: dict[str, Any]) -> str | None:
     or None when it can.
 
     The same test the client's own catalogue loader applies
-    (autornd/routing/openrouter.py: _prices_what_the_guard_cannot_bound):
-    a component the catalogue does not price is unknown, not free,
-    and a charge beside prompt and completion — a per-request fee, a
-    search surcharge, a reasoning rate, a cache rate — is one a
-    token-only bound understates. The three states say which: served
-    but not priced in the catalogue (confirmed via the per-model
-    endpoint), a charge beside the token rates, and a priced entry
-    with a missing side. An unknown price is not free (D49)."""
+    (autornd/routing/openrouter.py:
+    _prices_what_the_guard_cannot_bound): a component the
+    catalogue does not price is unknown, not free. The bound
+    charges the prompt rate for every prompt byte and the
+    completion rate for the whole output cap, so a component
+    priced at or below the rate the bound already charges
+    its side at cannot cost more than the bound does — the
+    cache components against the prompt rate, reasoning
+    against the completion rate — and a flat per-request
+    charge is added once per request. The modality
+    components (image, audio) never charge on the
+    text-only calls this experiment makes. A component
+    priced above the rate its side is charged at, or one
+    the bound does not know, is a charge a token-only worst
+    case understates. The states say which: served but not
+    priced in the catalogue (confirmed via the per-model
+    endpoint), a charge the bound cannot cover, and a
+    priced entry with a missing side. An unknown price is
+    not free (D49)."""
     pricing = entry.get("pricing") or {}
     if not pricing:
         if entry.get("confirmed_served"):
@@ -392,15 +442,36 @@ def _unboundable_reason(entry: dict[str, Any]) -> str | None:
                     "(confirmed via the per-model endpoint) — "
                     "the guard is blind for it")
         return "the catalogue entry carries no pricing"
+    try:
+        prompt = float(pricing.get("prompt"))
+    except (TypeError, ValueError):
+        prompt = None
+    try:
+        completion = float(pricing.get("completion"))
+    except (TypeError, ValueError):
+        completion = None
     charges = []
     for key, value in pricing.items():
         if key in ("prompt", "completion") or value in (None, ""):
             continue
         try:
-            if float(value) != 0.0:
-                charges.append(key)
+            rate = float(value)
         except (TypeError, ValueError):
             charges.append(key)
+            continue
+        if key in _PER_REQUEST_COMPONENTS:
+            continue          # added once per request
+        if key in _MODALITY_COMPONENTS:
+            continue          # text-only calls never carry them
+        if key in _CACHE_COMPONENTS:
+            if prompt is None or rate > prompt:
+                charges.append(key)
+            continue
+        if key in _REASONING_COMPONENTS:
+            if completion is None or rate > completion:
+                charges.append(key)
+            continue
+        charges.append(key)   # a component the bound does not cover
     if charges:
         return ("carries charges beside prompt and completion "
                 f"tokens ({', '.join(sorted(charges))}), which "
@@ -427,7 +498,7 @@ def _rates(index: dict[str, dict[str, Any]], serving: str,
            where: str) -> tuple[float, float]:
     """The serving's (prompt, completion) rates, or an
     UnpricedServing when the catalogue cannot bound them."""
-    entry = index.get(serving)
+    entry = _resolve_entry(index, serving)
     if entry is None:
         raise UnpricedServing(
             f"{where}: the serving {serving!r} is not in "
@@ -439,6 +510,28 @@ def _rates(index: dict[str, dict[str, Any]], serving: str,
             "is not free)")
     pricing = entry["pricing"]
     return float(pricing["prompt"]), float(pricing["completion"])
+
+
+def _per_request_charge(entry: dict[str, Any] | None) -> float:
+    """The entry's flat per-request charge: the components
+    the worst-case bound adds once per request the call can
+    make. An entry the catalogue does not carry carries no
+    charge, and an unparseable component is a charge the
+    bound cannot read — unboundable, which _unboundable_reason
+    has already said by the time any caller reaches this."""
+    if entry is None:
+        return 0.0
+    pricing = entry.get("pricing") or {}
+    total = 0.0
+    for key in _PER_REQUEST_COMPONENTS:
+        value = pricing.get(key)
+        if value in (None, ""):
+            continue
+        try:
+            total += float(value)
+        except (TypeError, ValueError):
+            continue
+    return total
 
 
 # ── The prompts and their rendering ───────────────────────────────
@@ -488,13 +581,16 @@ def _stage_message(stage: str, question: str, draft: str | None,
 # ── The worst case, at the guard's own formula ────────────────────
 
 def worst_case_cost(prompt_rate: float, completion_rate: float,
-                    prompt_bytes: int, max_tokens: int) -> float:
+                    prompt_bytes: int, max_tokens: int,
+                    per_request_charge: float = 0.0) -> float:
     """The client's own pre-call guard formula (D45), as the owner's
     addition to this command directs: the worst case of one call at
     the given prompt size and output cap. The guard refuses the call
-    when this exceeds what remains of the unit's ceiling."""
+    when this exceeds what remains of the unit's ceiling. A flat
+    per-request charge (a search surcharge among them) is added
+    once: the call pays it whatever the token counts."""
     return ((prompt_bytes + CHAT_TEMPLATE_ALLOWANCE_BYTES) * prompt_rate
-            + max_tokens * completion_rate)
+            + max_tokens * completion_rate + per_request_charge)
 
 
 def _largest_question() -> str:
@@ -554,7 +650,9 @@ def _arm_sequence_worst_case(arm: str, servings: dict[str, Any],
         worst_per_call = max(
             worst_per_call,
             worst_case_cost(prompt_rate, completion_rate,
-                            prompt_bytes, REGISTERED_MAX_TOKENS))
+                            prompt_bytes, REGISTERED_MAX_TOKENS,
+                            _per_request_charge(
+                                _resolve_entry(index, serving))))
     return worst_per_call * call_limit, call_limit
 
 
@@ -618,10 +716,13 @@ def run_preflight(servings: dict[str, Any],
 
     # Case 4 first, and for every serving arm E's included: the
     # worst cases below need rates, and a serving with no price is
-    # refused whatever else is true of it.
+    # refused whatever else is true of it. A variant serving
+    # resolves to the entry that prices it, so a served variant
+    # of a priced base is refused only when that price cannot be
+    # bounded.
     for arm in ARMS:
         for serving in _arm_servings(arm, servings):
-            entry = index.get(serving)
+            entry = _resolve_entry(index, serving)
             if entry is None:
                 report.refusals.append(
                     f"arm {arm}: the serving {serving!r} is not in the "
@@ -635,8 +736,8 @@ def run_preflight(servings: dict[str, Any],
 
     # Case 1: the worst case of arms A-D over the whole sequence.
     for arm in ("A", "B", "C", "D"):
-        if any(index.get(serving) is None
-               or _unpriced(index.get(serving) or {})
+        if any(_resolve_entry(index, serving) is None
+               or _unpriced(_resolve_entry(index, serving))
                for serving in _arm_servings(arm, servings)):
             continue       # case 4 already refused this arm
         worst, call_limit = _arm_sequence_worst_case(arm, servings, index)
@@ -650,8 +751,9 @@ def run_preflight(servings: dict[str, Any],
                 f"the call can carry, arm B's largest tool result included)")
 
     # Case 2: arm B's serving must list tool support. Blind is a
-    # report, not a guess (the command's own text).
-    b_entry = index.get(servings["B"])
+    # report, not a guess (the command's own text). A variant
+    # serving reads the entry that prices it.
+    b_entry = _resolve_entry(index, servings["B"])
     if b_entry is not None:
         supported = b_entry.get("supported_parameters")
         if supported is None:
@@ -691,7 +793,7 @@ def run_preflight(servings: dict[str, Any],
     # tiers: a report — arm E runs under the guard as it ships.
     for arm in ("A", "B", "C", "D"):
         for serving in _arm_servings(arm, servings):
-            entry = index.get(serving)
+            entry = _resolve_entry(index, serving)
             if entry is None:
                 continue                   # already refused above
             cap = entry.get("max_completion_tokens")
@@ -708,7 +810,7 @@ def run_preflight(servings: dict[str, Any],
                     f"max_completion_tokens {cap} — the client does not "
                     "clamp, so the call would fail at the provider")
     for tier, serving in servings["E"].items():
-        entry = index.get(serving)
+        entry = _resolve_entry(index, serving)
         if entry is None:
             continue
         cap = entry.get("max_completion_tokens")
@@ -740,7 +842,12 @@ def arm_e_worst_case(servings: dict[str, Any],
     point carries, the question as the scenario request the pipeline
     receives; the pipeline's own node prompts sit above it, so these
     figures are floors. The guard computes the real bytes at call
-    time and refuses the call then, which is the binding check.
+    time and refuses the call then, which is the binding check. A
+    serving whose catalogue entry carries no pricing of its own —
+    a variant endpoint (':exacto' among them) the per-model
+    endpoint confirms is served — is priced at its base entry's
+    published rate, and the row says which entry priced it. A flat
+    per-request charge is added once per call.
     """
     index = catalogue_index(catalogue)
     question = _largest_question()
@@ -749,7 +856,7 @@ def arm_e_worst_case(servings: dict[str, Any],
     for tier in PIPELINE_TIERS:
         serving = servings["E"][tier]
         cap = _tier_output_cap(tier)
-        entry = index.get(serving)
+        entry = _resolve_entry(index, serving)
         if entry is None:
             rows.append({"tier": tier, "serving": serving,
                          "cap": cap, "unknown": True,
@@ -764,8 +871,9 @@ def arm_e_worst_case(servings: dict[str, Any],
             continue
         prompt_rate, completion_rate = _rates(
             index, serving, f"arm E/{tier}")
+        per_request = _per_request_charge(entry)
         worst = worst_case_cost(prompt_rate, completion_rate,
-                                prompt_bytes, cap)
+                                prompt_bytes, cap, per_request)
         ceiling = ARM_CEILINGS["E"]
         # The guard refuses the call when the worst case exceeds what
         # remains, so the call is refusable once the unit has spent
@@ -776,6 +884,8 @@ def arm_e_worst_case(servings: dict[str, Any],
             "cap": cap,
             "prompt_rate": prompt_rate,
             "completion_rate": completion_rate,
+            "per_request_charge": per_request,
+            "priced_as": entry["id"],
             "worst_case": worst,
             "unit_ceiling": ceiling,
             "refuses_even_at_zero_spend": worst > ceiling,
@@ -2543,6 +2653,11 @@ def _install_dry_run_rates(catalogue: list[dict[str, Any]]) -> int:
             installed += 1
         except (KeyError, TypeError, ValueError):
             continue
+        # The per-request charge rides with the rates, so the
+        # guard the dry run's calls pass through charges it too.
+        per_request = _per_request_charge(entry)
+        if per_request:
+            _openrouter._model_per_request[entry["id"]] = per_request
     return installed
 
 
@@ -3192,12 +3307,20 @@ def _print_worst_case(rows: list[dict[str, Any]]) -> None:
                    if row["refuses_even_at_zero_spend"]
                    else f"refusable above spend "
                         f"${row['refusable_above_spend']:.4f}")
+        priced_as = row.get("priced_as", row["serving"])
+        priced = (f", priced as {priced_as} "
+                  f"(variant suffix resolved)"
+                  if priced_as != row["serving"] else "")
+        charge = (f"a per-request charge "
+                  f"${row['per_request_charge']:.4f} added "
+                  f"once per call; "
+                  if row.get("per_request_charge") else "")
         print(
-            f"arm E/{row['tier']}: {row['serving']} — "
+            f"arm E/{row['tier']}: {row['serving']}{priced} — "
             f"standing cap {row['cap']}, worst case per call "
             f"${row['worst_case']:.4f} against the "
             f"${row['unit_ceiling']:.2f} per-unit ceiling "
-            f"({refusal}; the prompt side is the largest "
+            f"({refusal}; {charge}the prompt side is the largest "
             f"question, a floor — the guard computes the real "
             f"bytes at call time)")
 
