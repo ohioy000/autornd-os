@@ -113,3 +113,176 @@ engineering call that fails after the 400-retry.
   the pipeline's own bounds, not answer quality.
 - The timing figures are unaffected by the store: the plan and
   judge nodes' pace is a property of the servings.
+
+## The measured record (2026-10-04, after the run)
+
+The results file is `evals/results/probe-20261004-golden-q123-rerun.jsonl`
+(gitignored, like every local run output). The header records
+the corrected lineup exactly — engineering
+`thinkingmachines/inkling-small`, judge
+`qwen/qwen3-235b-a22b-2507:exacto`, premium absent, the
+`.env` provider order, and `"preflight": {"ran": false,
+"override": true}` — prediction 1 **HELD**.
+
+The sweep, derived from the results file: **0/3 units passed,
+0/3 shipped; 13 calls; 1111.3 s; $0.0720 booked of the
+$1.5000 sweep cap** (the terminal's sweep-budget line
+printed `sweep budget: $0.0720 of $1.5000`). `score_trace`'s
+reading of the same file, verbatim:
+
+```
+Q1   FAIL (no answer)   blocked    no answer              items[] 164.083s/300s $0.0163/0.5 risk=low sprawl=None scope_out=None
+Q2   FAIL (no answer)   blocked    no answer              items[] 347.592s/300s $0.0224/0.5 risk=critical sprawl=None scope_out=None
+Q3   FAIL (no answer)   blocked    no answer              items[] 599.606s/300s $0.0333/0.5 risk=medium sprawl=None scope_out=None
+
+0/3 PASS · 0/3 shipped · median sprawl None · total $0.072 · key v1
+```
+
+Booked spend by tier: architecture $0.0380, research $0.0189,
+triage $0.0151, engineering $0.00, judge $0.00. No search-tier
+call was made — the empty-knowledge-store caveat held.
+
+### Per-unit records
+
+- **golden_q1** — blocked, 164.083 s, 4 calls, $0.0163 booked.
+  The plan node (architecture, `mimo-v2.6-pro:exacto`) took
+  144.464 s / 6,497 completion tokens in one call. The
+  feasibility node's engineering call was dispatched and failed
+  with a 429 (`error_status`); its worst-case reservation
+  $0.024359 was booked as unreconciled liability.
+- **golden_q2** — blocked, 347.592 s, 4 calls, $0.0224 booked.
+  Plan node 328.301 s / 13,678 completion tokens, one call.
+  Engineering call dispatched, 429, liability $0.026227.
+- **golden_q3** — blocked, 599.606 s, 5 calls, $0.0333 booked.
+  Plan node 444.382 s / **21,377 completion tokens across TWO
+  architecture calls**: the first call ran past the 14,000-token
+  cap and was truncated mid-JSON — the client logged `JSON parse
+  failed (attempt 1/3) for architecture: Unterminated string
+  starting at: line 3 column 11 (char 29)` and retried. The
+  feasibility node's engineering call was cancelled by the
+  deliberation watchdog at 599.6048 s (`fired: true`,
+  `rule: cancelled`, `node: feasibility`, `tier: engineering` —
+  the 429 retries burned the remaining budget); liability
+  $0.023837 (`kind: cancelled`). The watchdog's own billing
+  note, verbatim: *"unknown — the watchdog stopped the wait;
+  whether the provider stops billing an abandoned call is not
+  observable from the harness."*
+
+Every engineering failure carried the provider's own sentence:
+*"thinkingmachines/inkling-small is temporarily rate-limited
+upstream. Please retry shortly, or add your own key to
+accumulate your rate limits:
+https://openrouter.ai/settings/integrations"*
+
+### Predictions vs measured
+
+1. **HELD** — the header records `{ran: false, override: true}`.
+2. **NOT EXERCISED** — no 400 occurred. Every engineering call
+   failed on an upstream 429 before parameter acceptance was
+   tested, so the 400-retry safety net was never needed.
+3. **HELD** — 164.083 / 347.592 / 599.606 s (all ≤ 600),
+   4 / 4 / 5 calls (≤ 40), and the watchdog ended Q3 by its
+   own terminal at 599.6048 s.
+4. **HELD** — $0.0720 booked of $1.50; $0.1464 including the
+   three failed dispatches' liability ($0.024359 + $0.026227 +
+   $0.023837 = $0.074423).
+5. **PARTIALLY MEASURED** — the plan node (architecture, the
+   unchanged serving) ran 144.5 / 328.3 / 444.4 s, slower than
+   the first probe's 126.0 / 293.1 / 282.5 s because the
+   14,000 cap now truncates a Q3-scale plan mid-JSON and forces
+   a second call (see 6). The engineering and judge tiers are
+   **NOT MEASURED** — no engineering call completed, so no
+   implementation was produced and the judge never ran. The
+   pace question the probe exists to make is still open.
+6. **CONFIRMED — stronger than predicted.** `PLAN_MAX_TOKENS=14000`
+   binds per call, measurably: Q3's plan call was truncated at
+   the cap mid-JSON (unterminated-string parse failure, client
+   retried), and the plan node finished across two calls
+   totalling 21,377 completion tokens in 444.4 s, against the
+   first probe's single-call 18,069 tokens / 282.5 s under the
+   old 78,000 cap. A Q3-scale plan wants ~1.5–2× the standing
+   cap.
+7. **MEASURED 0/3** — every unit blocked: Q1 and Q2 stopped on
+   the engineering 429, Q3 on the watchdog waiting on the same
+   429.
+
+Falsifiers: none fired — no second preflight finding, no unit
+past its 600 s or 40-call bound, sweep spend $0.0720 < $1.50,
+no spend-guard refusal, and no engineering call failed after the
+400-retry (no 400 occurred at all).
+
+### Findings (owner-visible)
+
+- **F1 — the corrected engineering pin is upstream-rate-limited
+  under the shared key.** Every engineering call (the feasibility
+  node of all three units) was dispatched and failed with a 429.
+  The client retried per its backoff; Q3's feasibility call
+  spent the remaining budget in retries until the watchdog
+  cancelled it. The engineering tier's pace — and with it the
+  judge's — is still unmeasured, and the response_format
+  question is still unanswered live: no engineering call got
+  past the 429 to test the parameter path.
+- **F2 — `PLAN_MAX_TOKENS=14000` binds per call and truncates a
+  Q3-scale plan mid-JSON** (see 6). The plan node survives via
+  the client's parse-retry, but pays a second call and ~160 s.
+  The cap is ~2× too small for Q3-scale plans — the owner's
+  line (G-3).
+- **F3 — the repaired spend guard proved itself live on a paid
+  run.** The worst-case line printed bounded for every tier
+  (`triage $0.0614, research $0.0614, search $0.0160,
+  architecture $0.0122, engineering $0.0168, judge $0.0056,
+  escalation $0.1820`) where the first probe printed "unknown
+  (no rate)" for every tier; and the three failed-after-dispatch
+  engineering calls booked their reservations as unreconciled
+  liability ($0.0744) — the D45 liability path, exercised for
+  the first time on a live run.
+- **F4 — the stale-exports discovery** (in the
+  pre-registration): the shell exports the old lineup over the
+  owner's `.env`; the owner's own runs need a fresh shell.
+
+### Departures
+
+- **D1** — the pre-registration commit (4c837ea) passed its
+  message double-quoted through the shell, so the dollar figures
+  were shell-expanded: `$0.50` read as `bash.50` and `$1.50` as
+  `.50` — convention 26's exact warned failure. The document
+  itself carries the correct figures; the mangling is recorded
+  here rather than rewritten (no history rewrite). Every other
+  commit on the branch used `git commit -F /tmp/msg*.txt`.
+- **D2** — the invocation removed the shell's stale exports
+  (`env -u ...`) so the `.env` is the source of truth — recorded
+  in the pre-registration as a measurement-fidelity departure
+  from the first probe's invocation.
+- **D3** — the probe did not answer the engineering/judge pace
+  question (the 429s) — the measurement it existed to make is
+  still open.
+- **D4** — the sweep's worst-case line and the pre-registration's
+  free table print different figures for the same tiers
+  (triage/research $0.0614 vs $0.0766, architecture $0.0122 vs
+  $0.0129, engineering $0.0168 vs $0.0175, judge $0.0056 vs
+  $0.0057, escalation $0.1820 vs $0.1832, search $0.0160 vs
+  $0.0226): the two instruments measure different sides of the
+  same call. The sweep CLI's line is completion-side only
+  (`max_tokens × completion rate` — its own docstring says so);
+  the tier-3 preflight's arm-E table is the full guard formula
+  (the largest prompt's bytes plus the chat-template allowance at
+  the prompt rate, the cap at the completion rate, and the
+  per-request charge). Both bounded every tier, which is the
+  property the repair exists for; each figure is quoted where it
+  was printed.
+
+### Where this leaves the owner
+
+The re-measurement's other parts are done: the guard bounds
+every tier (F3), the 14,000 cap is confirmed binding (F2), and
+the liability path is proven live. The open question is the
+engineering tier itself. Options: **(a)** retry the probe later
+— the 429 is "temporary" per the provider; **(b)** add the
+owner's own key (G-1: through the terminal into `.env` only) to
+accumulate rate limits; **(c)** pick a different engineering
+model/endpoint (G-2 pin ratification / G-3 `.env`); **(d)**
+accept — the pace question waits. The same 429 would hit any
+paid tier-3 arm-E unit, so the tier-3 experiment's gate 1 (the
+five `TIER3_ARM_*` pins plus `TIER3_SERVINGS_RATIFIED` at
+fingerprint `2d48223a86e0`) stays pending the owner until the
+engineering tier clears or the owner acts.
