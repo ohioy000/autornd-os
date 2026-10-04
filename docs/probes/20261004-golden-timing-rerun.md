@@ -286,3 +286,92 @@ paid tier-3 arm-E unit, so the tier-3 experiment's gate 1 (the
 five `TIER3_ARM_*` pins plus `TIER3_SERVINGS_RATIFIED` at
 fingerprint `2d48223a86e0`) stays pending the owner until the
 engineering tier clears or the owner acts.
+
+## The re-run — pre-registration (2026-10-04, second sample)
+
+The owner's directive: "try again with new env i just
+updated". The owner edited `.env` (G-3 — the edit is the
+owner's; its secret contents are neither printed nor
+inspected). Two edits this window, both measured before any
+paid call:
+
+1. The first edit raised the caps (the harness read plan
+   500000, escalation 50000, judge 55000, validate 32000,
+   search 55000/56000 — was 14000/13000/16000/16000/8000/
+   16000). Measured effect: the guard's worst case per
+   engineering call rose to $0.6000 and escalation to
+   $0.7000 — both above the probe's registered $0.50
+   per-run cap, so the guard would have refused every
+   engineering call before dispatch. The conflict was put to
+   the owner as a blocking question before any paid call
+   (free checks first).
+2. The owner's second edit set the plan cap to 125000 ("I
+   changed to 125k this lineup is prime now"). Measured:
+   plan 125000, escalation 50000, judge 55000, validate
+   32000, search 55000/56000; worst cases triage/research
+   $0.0614, search $0.0560, architecture $0.1087,
+   engineering $0.1500, judge $0.0192, escalation $0.7000.
+   Every call this probe makes now fits the $0.50 per-run
+   cap. The escalation tier's worst case ($0.7000) still
+   exceeds it — the CLI prints its standing warning — but
+   this probe makes no escalation call (both prior runs'
+   units blocked at the feasibility node), so no refusal
+   occurs on it.
+
+The lineup is unchanged: fingerprint `2d48223a86e0`, the
+same arm-E map, the same provider order, and the same one
+genuine harness-preflight finding (the engineering
+endpoint's `response_format` declaration). If the owner's
+edit rotated the key — the provider's own advice for the
+429 — the re-run measures whether the 429 clears; the key
+is the owner's and is neither printed nor inspected.
+
+Configuration (identical to the first run except where
+named): this branch; scenarios `/tmp/golden-q123/`
+(byte-copies); workflow `engineering-rnd`; repeat 1;
+timeout 600 s; max_calls 40; `--max-spend 0.50`,
+`--max-spend-sweep 1.50`; `--skip-preflight` (the same
+known finding — the owner's recorded override; the header
+records `{ran: false, override: true}`); the same `env -u`
+invocation (the shell's stale exports still stand over
+`.env`); a NEW results file,
+`evals/results/probe-20261004-golden-q123-rerun2.jsonl`.
+This is a second sample, never a confirmation (convention
+27): the plan node regenerates its plan between runs, so
+this run measures a different contract.
+
+### The prediction (registered before the first paid call of the re-run)
+
+1. The results header records `{ran: false, override:
+   true}`.
+2. The 14,000-cap truncation does NOT repeat: Q3's plan
+   needed 21,377 tokens and the plan cap is now 125,000,
+   so Q3's plan completes in one call — no mid-JSON
+   truncation, no parse-retry.
+3. The engineering 429 either clears (the owner's edit
+   rotated the key — then the feasibility node completes,
+   an implementation ships, the judge's validating-call
+   pace is measured, and the pace question the probe exists
+   for is answered) or repeats (then the record repeats the
+   first run's shape: 0/3 blocked on the upstream 429 — a
+   measurement of the serving, not of the harness).
+4. Every unit is bounded: 600 s, 40 calls, the watchdog's
+   own terminal.
+5. Total spend lands under the $1.50 sweep cap, and no call
+   the probe makes is refused by the guard (the largest
+   worst case it can make is engineering at $0.1500, under
+   the $0.50 per-run cap).
+6. What this run does NOT predict: whether units ship. The
+   pace is the measurement.
+
+Falsifiers: a second preflight finding beyond the known
+declaration gap; a unit past its 600 s or 40-call bound;
+sweep spend above $1.50; a spend-guard refusal on a call
+the probe makes; an engineering call that fails for a
+reason other than the upstream 429 (e.g., a 400 the retry
+does not clear).
+
+Caveat: the same empty knowledge store — no search-tier
+call; the timing figures are unaffected by the store. The
+re-run's measured record is appended below after the run,
+in this same file, and committed again.
