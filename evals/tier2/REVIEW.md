@@ -36,21 +36,30 @@ own ratification requirements (ARCH-20261002-118).
 | Manifest (versions, counts, archives, freeze record) | `manifest.json` |
 | This checklist | `REVIEW.md` |
 
-Dataset version / scorer version: `frozen-2026-10-03`
-(see `versions.json`; every change to the four versioned
-files is a new entry naming the change and its trigger).
-The set froze at this entry on the owner's 2026-10-03
-signoff; its content is identical to
-`candidate-2026-10-03.3` (questions.json and
-keys.json hash unchanged).
+Dataset version / scorer version: the dataset
+is `frozen-2026-10-03` (questions.json and
+keys.json hash unchanged since the freeze — the
+set froze at that entry on the owner's 2026-10-03
+signoff, and its content is identical to
+`candidate-2026-10-03.3`); the scorer is
+`frozen-2026-10-03.1` — the scorer repair
+Ruling D50 (1) orders, recorded as a new version
+under the freeze: the dataset content did not
+change, only the instrument did (see
+`versions.json` and the repair record below;
+every change to the four versioned files is a
+new entry naming the change and its trigger).
 
 ## The checks, and their results
 
 All 268 checks of `evals/tier2/verify_keys.py` hold (exit
-0); all 248 scorer self-test fixtures hold (exit 0). The
+0); all 258 scorer self-test fixtures hold (exit 0). The
 suite guard `tests/test_tier2_keys.py` (17 tests) runs
 both instruments on the tree and proves each can fail on
-corrupted copies (convention 22).
+corrupted copies (convention 22);
+`tests/test_tier2_regression.py` re-scores the twelve
+recorded answers and runs the notation-variant sweep
+(Ruling D50 (1); see the repair record below).
 
 The 268 checks are: 6 global checks (G1–G6), 195
 per-question checks (Q1.1 … Q25.7), and 67 cross-checks
@@ -94,7 +103,7 @@ single source of key values.
 | Q25.1–Q25.7 | initialization order (0 V → enable → confirm LOW); rising sweep (monotonic increase, record LOW-to-HIGH, continue to 5.00 V, confirm HIGH); falling sweep and shutdown order (monotonic decrease, record HIGH-to-LOW, return to zero, then disable); all four acceptance criteria (2.90–3.10 V and 1.90–2.10 V inclusive, correct endpoint states, one transition per sweep); hysteresis width recomputed (3.04 − 1.96 = 1.08 V); logged verdict (both transitions inside the bands → PASS); "-1.08 V hysteresis width" wrong answer falsified | PASS (width 1.08 V; logged 3.04/1.96 V → PASS) |
 | X1–X67 | keys.json's own value strings parsed and required to agree with the first-principles recomputation within the stated tolerances | PASS (single source of key values) |
 
-Scorer self-test (248 fixtures): all 25 model answers
+Scorer self-test (258 fixtures): all 25 model answers
 hold every item; 47 equivalent notations the keys list
 hold (number words, μg/L, μA, ms, mJ, N mm, kN/m, rev/s,
 K, mV, mm⁴, μm, newton-metres, mg N/L, …); 100 tolerance
@@ -104,9 +113,116 @@ common wrong answers are caught with verdict FAIL; 20
 discrete selections hold in both directions (Q9
 stiffness 8/10/12, Q14 heater 750/1000/1250, Q19
 resistance 270/330/390 and ratings 0.125/0.250/0.500,
-Q24 diameter 160/200/240). The scorer scores semantics —
+Q24 diameter 160/200/240); and 10 wrong answers in the
+newly accepted forms are caught (the repair record
+below). The scorer scores semantics —
 unit conversion and tolerance comparison — not regex
 presence.
+
+## Scorer repair record — `frozen-2026-10-03.1`
+
+**Trigger.** Ruling D50 (1), carried by
+ARCH-20261003-119: the tier-3 experiment must
+measure answers, not formatting, and the tier-2
+scorer is repaired as a new version before any
+paid unit runs. The diagnosis: the frozen scorer
+(`frozen-2026-10-03`) read the *notation* of the
+twelve recorded answers (`docs/traces/107-direct-baseline.jsonl`,
+`102-golden-arm-b.jsonl`, `106-golden-arm-b.jsonl`
+— real provider output, five questions per run)
+rather than their content: **7 of the 12 vectors
+failed** under the frozen scorer (107 Q4, Q5;
+102 Q2, Q4, Q5; 106 Q4, Q5). A scorer that fails
+correct answers because they are written in a
+different notation measures formatting, not
+answers.
+
+**The repair — eight general classes, each a
+widening of what the scorer reads, never a
+narrowing** (the wrong-answer corpus stays
+rejected; class (7) is a read rule, not a
+threshold change):
+
+1. **Heading forms** (`_HEADING` in
+   `_score_q4`'s sections and
+   `_organization`'s heads): bold, italic,
+   labeled and numbered headings are read as
+   headings, not just markdown `#`.
+2. **Plain-digit unit exponents** (`_UNIT_AFTER`):
+   `mm2`/`mm3` read as `mm²`/`mm³` (the UNITS
+   table already keys both).
+3. **Unicode-superscript exponents and digit
+   grouping** (`_normalize`): `6.14×10⁻⁷` and
+   `30,000` are normalized to the caret form and
+   the bare integer.
+4. **Inclusive-max operator synonyms**
+   (`_NONSTRICT_LESS`, `INCLUSIVE_MAX`): "must
+   not exceed", "does not exceed", "up to and
+   including" read as the inclusive ≤ the keys
+   state.
+5. **Q2 every-mention window** (`_score_q2`'s
+   `threshold_check`): the threshold is checked at
+   *every* mention of the gas — a passing window
+   anywhere passes; the fail detail names that
+   every mention misstates operator, basis or
+   comparison.
+6. **Leakage-absence phrasings**
+   (`_leakage_absent`): "no visible leakage",
+   "zero visible", "leakage: none" read as the
+   absence the keys define.
+7. **The verdict read, excluding conditional
+   clauses** (`_score_q5` item 8): a verdict word
+   inside an occurrence-level 40-character
+   conditional window is ignored; a line beginning
+   with a conditional marker (`if`, `unless`,
+   `when`, `then`, `otherwise`, `iff`, `must be`,
+   `→`) is a rule line in its entirety; a labeled
+   declaration (`Verdict: PASS`) takes precedence
+   over the last stated word.
+8. **Operation-phrase widening and occurrence-pair
+   ordering** (`_phrase_positions`, `_ordered`):
+   every occurrence of each operation phrase is
+   located (word-boundary stems: `pressuriz` reads
+   "pressurize" and "pressurization", both
+   American and British `pressuris` stems, and
+   `close` reads "closed"), and ordering holds when
+   *any* before-occurrence precedes *any*
+   after-occurrence.
+
+**Verification** (all recorded in the
+`frozen-2026-10-03.1` `versions.json` entry):
+
+- The 12 recorded vectors now score **12/12**
+  (frozen: 5/12) — `evals/tier2/regression_12.py`,
+  wired into the suite by
+  `tests/test_tier2_regression.py`.
+- The notation-variant sweep: **52 model-answer
+  variants all pass, 42 wrong-answer variants all
+  fail** — `evals/tier2/notation_sweep.py` (every
+  Q1–Q5 model answer and every Q1–Q5 wrong answer
+  rendered in every applicable variant form: five
+  heading styles, three exponent forms, two unit
+  forms, two grouping separators, eight operator
+  synonym classes, five step styles plus a step
+  table, verdict before/after the figures, rule
+  lines at start/middle/end, plain text).
+- The self-test holds **258/258** (248 frozen
+  fixtures plus 10 new wrong answers, one in each
+  newly accepted form, so every widening is
+  guarded by a wrong answer it must still catch).
+- `verify_keys.py`'s 268 checks hold (keys.json
+  unchanged); `extract_candidate.py` re-run
+  reproduces `manifest.json` with exactly one
+  field changed (`scorer_version`), and
+  questions.json/keys.json byte-identical.
+
+**Scope of the freeze.** The dataset content is
+untouched: questions.json and keys.json hash to
+the frozen-2026-10-03 entry. Only scorer.py
+changed, and the manifest's `scorer_version`
+names the new entry while `dataset_version` keeps
+the frozen name — the dataset froze; the
+instrument was repaired under the freeze.
 
 ## Source records (the lookup questions)
 

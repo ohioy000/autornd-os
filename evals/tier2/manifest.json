@@ -1,6 +1,6 @@
 {
   "dataset_version": "frozen-2026-10-03",
-  "scorer_version": "frozen-2026-10-03",
+  "scorer_version": "frozen-2026-10-03.1",
   "frozen": true,
   "freeze_blocked_by": [],
   "freeze": {

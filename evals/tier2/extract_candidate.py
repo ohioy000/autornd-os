@@ -45,7 +45,13 @@ TEXT_147_PATH = HERE / "sources" / "CFR-2014-title29-vol5-sec1910-147.txt"
 ECFR_147_PATH = HERE / "sources" / "ecfr-current-2026-10-01-sec1910-147.xml"
 
 DATASET_VERSION = "frozen-2026-10-03"
-SCORER_VERSION = "frozen-2026-10-03"
+# The scorer's current version. The dataset froze
+# at frozen-2026-10-03; the scorer repair Ruling
+# D50 (1) orders (the recorded answers the frozen
+# scorer failed) is a new version under the freeze:
+# the dataset content is unchanged, only the
+# instrument changed.
+SCORER_VERSION = "frozen-2026-10-03.1"
 
 # The count the owner's command expects. The owner
 # supplied all 25 on 2026-10-03, and ratified the

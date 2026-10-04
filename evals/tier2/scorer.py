@@ -188,6 +188,24 @@ def _normalize(text: str) -> str:
     text = re.sub(r"(\d)\s*(?:\\times|×|x|\*)\s*10\s*\^\s*"
                     r"\{?\s*(-?\d+)\s*\}?", r"\1e\2", text)
     text = text.replace("\\times", " * ")
+    # 3×10⁻⁵, 3 x 10⁻⁵ and 3*10⁻⁵ -> 3e-5: the
+    # exponent in unicode superscripts, joined to its
+    # mantissa before the superscript characters are
+    # replaced digit by digit (which would otherwise
+    # read '3 * 10 - 5' and lose the exponent).
+    def _superscript_digits(m: re.Match) -> str:
+        return (m.group(1) + "e"
+                + "".join(_SUPERSCRIPT[c]
+                          for c in m.group(2)))
+    text = re.sub(r"(\d)\s*(?:\\times|×|x|\*)\s*10\s*"
+                  r"([⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+)",
+                  _superscript_digits, text)
+    # Digit grouping: '30,000' and '30 000' read as
+    # 30000, so the number extractor sees one number
+    # (a separator between digits, followed by exactly
+    # three digits and then a non-digit or the end).
+    text = re.sub(r"(?<=\d)[,\s](?=\d{3}(?:\D|$))", "",
+                  text)
     text = text.replace("\\,", " ").replace("\\;", " ")
     text = text.replace("\\ ", " ")
     text = text.replace("$", "")
@@ -226,9 +244,14 @@ _NUMBER = re.compile(r"[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?")
 # m/s, N/mm); a compound capture that names no known
 # unit falls back to its longest known prefix, so
 # '8 h/day' still reads as hours and '9.00 N m and'
-# still reads as newton-metres.
+# still reads as newton-metres. The first token may
+# carry its exponent as a plain digit ('mm2' for
+# mm², 'mm3' for mm³): the UNITS table names both
+# spellings, so '60.0 mm²' and '60.0 mm2' are the
+# same area.
 _UNIT_AFTER = re.compile(
-    r"\s*([A-Za-z%]+(?:\^\d+)?(?:[\s/·][A-Za-z%]+(?:\^\d+)?)*)")
+    r"\s*([A-Za-z%]+(?:\^\d+|\d)?"
+    r"(?:[\s/·][A-Za-z%]+(?:\^\d+)?)*)")
 
 
 def _word_numbers(text: str) -> str:
@@ -465,10 +488,74 @@ def _score_q1(answer: str, record: dict) -> list[dict]:
 # ── Q2: the two definitions, with operators and basis ─────────
 
 _STRICT_LESS = ("less than", "below", "under", "<")
+# The inclusive upper bound: every phrasing that
+# states '<=' - the boundary itself is included.
+# 'must not exceed', 'does not exceed' and 'up to
+# and including' name the same bound as 'no more
+# than' and 'at most'; a strict phrasing ('below',
+# 'less than') states a different, stricter bound.
 _NONSTRICT_LESS = ("at or below", "or less", "no more than",
-                   "<=", "at most")
+                   "<=", "at most", "must not exceed",
+                   "does not exceed", "up to and including")
 _STRICT_MORE = ("more than", "above", "greater than", "over", ">")
 _NONSTRICT_MORE = ("at or above", "or more", "at least", ">=")
+INCLUSIVE_MAX = ("no more than", "at most", "must not exceed",
+                 "does not exceed", "up to and including",
+                 "at or below", "no greater than", "<=")
+
+# Q5's operation phrases. The recorded answers name
+# the same operation in different words: pressurization
+# without the verb 'pressurize' ('raise the pressure'),
+# the assessment without the verb 'assess' ('record the
+# final pressure'), depressurization in either spelling.
+# Every phrase matches on a leading word boundary, so
+# 'pressuriz' reads 'pressurize' and 'pressurization'
+# but not 'unpressurized', and 'close' reads 'closed'.
+_PRESSURIZING = ("pressuriz", "pressuris",
+                 "raise the pressure",
+                 "raise pressure", "raising pressure",
+                 "raising the pressure",
+                 "increase the pressure",
+                 "increase pressure")
+_ASSESSING = ("assess", "assessment", "compare",
+              "evaluate", "record the final pressure",
+              "final pressure", "pass", "fail")
+_DEPRESSURIZING = ("release", "depressuriz", "depressuris",
+                   "bleed")
+# A verdict word inside a conditional clause states
+# what a verdict WOULD be ('if either criterion
+# fails, the verdict is FAIL'); the marker in the
+# forty characters before the word marks the clause.
+_CONDITIONAL = re.compile(
+    r"\b(?:if|unless|when|then|otherwise|iff)\b"
+    r"|\bmust be\b|→")
+# A section heading: markdown ('## Heading'),
+# numbered ('1. Heading'), bold ('**Heading**'),
+# italic ('*Heading*', '__Heading__', '_Heading_')
+# or labeled ('Heading: ...'). A heading is a
+# whole line, so a bullet or a step line that
+# merely starts with a marker is not one.
+_HEADING = re.compile(
+    r"^(#{1,6}\s+\S"
+    r"|\d+\.\s+[A-Z]"
+    r"|\*\*[^*]+\*\*"
+    r"|__[^_]+__"
+    r"|\*[^*\n]+\*"
+    r"|_[^_\n]+_"
+    r"|[Hh]eading:\s*\S)")
+
+
+def _leakage_absent(low: str) -> bool:
+    """Whether the answer states the absence of
+    visible leakage: 'no visible leakage', 'zero
+    visible leakage', 'leakage: none' and their
+    kin, in either word order."""
+    return bool(
+        re.search(r"\b(?:no|zero|none|without|free of|"
+                  r"absence of|not|0)\b[^.\n]{0,24}"
+                  r"\bleakag", low)
+        or re.search(r"\bleakag[^.\n]{0,24}"
+                     r"\b(?:none|zero|0)\b", low))
 
 
 def _score_q2(answer: str, record: dict) -> list[dict]:
@@ -484,9 +571,7 @@ def _score_q2(answer: str, record: dict) -> list[dict]:
                                f"{gas} atmosphere")
         # The threshold the answer states for this gas: a
         # percent quantity, or a unitless value below 1 (a
-        # volume fraction), near the gas's name.
-        gas_at = plain.find(gas)
-        near = plain[gas_at:gas_at + 120]
+        # volume fraction), stated anywhere in the answer.
         stated = None
         for value, unit in quantities:
             dim = _dimension(unit)
@@ -504,26 +589,35 @@ def _score_q2(answer: str, record: dict) -> list[dict]:
                                f"for the {gas} atmosphere "
                                f"(strict inequality and threshold "
                                f"must be exact)")
-        # The operator must be the strict one the definition
-        # states; a non-strict operator misstates it.
-        if any(w in near for w in nonstrict_words):
-            return _fail(item, f"a non-strict operator "
-                               f"({nonstrict_words[0]}) misstates "
-                               f"the definition, which is strict "
-                               f"'{'less' if 'less' in operator_words[0] else 'more'} "
-                               f"than'")
-        if not any(w in near for w in operator_words):
-            return _fail(item, f"no strict comparison operator "
-                               f"stated for the {threshold}% "
-                               f"threshold")
-        if "mass" in near:
-            return _fail(item, "the basis is stated as by mass; "
-                               "the definition is by volume")
-        if "volume" not in near and "v/v" not in near:
-            return _fail(item, "the concentration basis "
-                               "(by volume) is not stated")
-        return _pass(item, f"{operator_words[0]} {threshold}% "
-                           f"by volume, as the definition states")
+        # The definition's window: the gas is named in
+        # headings, cross-checks and falsifier sections
+        # before the definition itself, so every mention
+        # of the gas opens a window, and the definition
+        # holds if any window states it correctly. A
+        # window that misstates the operator, the basis
+        # or the concentration basis misstates the
+        # definition only inside that window.
+        for gas_at in (m.start() for m in
+                       re.finditer(re.escape(gas), plain)):
+            near = plain[gas_at:gas_at + 120]
+            if any(w in near for w in nonstrict_words):
+                continue
+            if not any(w in near for w in operator_words):
+                continue
+            if "mass" in near:
+                continue
+            if "volume" not in near and "v/v" not in near:
+                continue
+            return _pass(item, f"{operator_words[0]} "
+                               f"{threshold}% by volume, as "
+                               f"the definition states")
+        return _fail(item, f"no mention of the {gas} "
+                           f"atmosphere states "
+                           f"{operator_words[0]} {threshold}% "
+                           f"by volume: every mention "
+                           f"misstates the operator, the "
+                           f"basis, or the threshold's "
+                           f"comparison")
 
     return [
         threshold_check("deficient", _STRICT_LESS,
@@ -678,7 +772,7 @@ def _score_q4(answer: str, record: dict) -> list[dict]:
                         "Answer organization and consistency")
     lines = [l.strip() for l in answer.splitlines() if l.strip()]
     sections = [l for l in lines
-                if re.match(r"^(#{1,6}\s+\S|\d+\.\s+[A-Z])", l)]
+                if _HEADING.match(l)]
     low = _normalize(answer).lower()
     themes = (any(w in low for w in ("dimension", "width",
                                      "thickness")),
@@ -712,46 +806,49 @@ def _numbered_steps(text: str) -> list[str]:
     return steps
 
 
-def _locate(answer: str, phrases: tuple[str, ...]):
-    """The reading-order position of the first phrase: a
-    (step, offset) pair when the answer is numbered, else a
-    (0, character-offset) pair. None when absent. A phrase
-    starting with 're:' is a regular expression, matched at
-    its start position - which keeps '0 bar' from matching
-    inside '6.00 bar'."""
-    steps = _numbered_steps(answer)
-    if len(steps) >= 2:
-        for i, step in enumerate(steps):
-            low = step.lower()
-            for phrase in phrases:
-                if phrase.startswith("re:"):
-                    m = re.search(phrase[3:], low)
-                    if m:
-                        return (i, m.start())
-                elif phrase in low:
-                    return (i, low.find(phrase))
-        return None
+def _phrase_positions(answer: str,
+                      phrases: tuple[str, ...]) -> list[int]:
+    """Every reading-order position at which any of
+    the phrases occurs. A phrase starting with 're:'
+    is a regular expression, matched at its start
+    position - which keeps '0 bar' from matching
+    inside '6.00 bar'. Every other phrase matches on
+    a leading word boundary and runs to the phrase's
+    end, so 'pressuris' reads 'pressurize' and
+    'pressurization' but not 'unpressurized', and
+    'close' reads 'closed'."""
     low = _normalize(answer).lower()
+    positions: list[int] = []
     for phrase in phrases:
         if phrase.startswith("re:"):
-            m = re.search(phrase[3:], low)
-            if m:
-                return (0, m.start())
-        elif phrase in low:
-            return (0, low.find(phrase))
-    return None
+            for m in re.finditer(phrase[3:], low):
+                positions.append(m.start())
+        else:
+            for m in re.finditer(
+                    r"\b" + re.escape(phrase), low):
+                positions.append(m.start())
+    return positions
 
 
 def _ordered(answer: str, pairs: tuple[tuple[str, ...],
                                         tuple[str, ...]]) -> bool:
-    """Every (before-phrases, after-phrases) pair holds in the
-    answer's reading order."""
+    """Every (before-phrases, after-phrases) pair
+    holds: some occurrence of a before-phrase
+    precedes some occurrence of an after-phrase, in
+    the answer's reading order. An answer states an
+    ordered procedure when the order holds somewhere
+    in it: a mention in a preamble, an equipment
+    list or a falsifier does not undo the order the
+    procedure itself states, and an operation named
+    in different words ('raise the pressure' for
+    pressurization) is the same operation."""
     for before, after in pairs:
-        loc_before, loc_after = (_locate(answer, before),
-                                 _locate(answer, after))
-        if loc_before is None or loc_after is None:
+        before_at = _phrase_positions(answer, before)
+        after_at = _phrase_positions(answer, after)
+        if not before_at or not after_at:
             return False
-        if loc_before >= loc_after:
+        if not any(a < b for a in before_at
+                   for b in after_at):
             return False
     return True
 
@@ -786,7 +883,8 @@ def _score_q5(answer: str, record: dict) -> list[dict]:
     item = _item_by_name(record, "Second operation: close vent")
     if ("close" in low and "vent" in low
             and _ordered(answer,
-                         ((("close",), ("pressuriz",)),))):
+                         ((("close",),
+                            _PRESSURIZING),))):
         items.append(_pass(item, "the vent is closed before "
                                  "pressurization"))
     else:
@@ -842,11 +940,9 @@ def _score_q5(answer: str, record: dict) -> list[dict]:
         (_to_base(v, u) and _to_base(v, u)[0] == "Pa"
          and abs(_to_base(v, u)[1] - 0.20 * 1e5) <= 1e2)
         for v, u in quantities)
-    nonpositive = any(w in low for w in ("no more than",
-                                         "at most", "<=",
-                                         "no greater than"))
+    nonpositive = any(w in low for w in INCLUSIVE_MAX)
     if (drop_limit and nonpositive and criteria[1]
-            and "no visible" in low):
+            and _leakage_absent(low)):
         items.append(_pass(item, "both conjunctive criteria "
                                  "stated: drop at most 0.20 bar "
                                  "and no visible leakage"))
@@ -855,7 +951,7 @@ def _score_q5(answer: str, record: dict) -> list[dict]:
                                  f"{drop_limit}; inclusive "
                                  f"operator stated: {nonpositive}; "
                                  f"leakage condition stated: "
-                                 f"{criteria[1] and 'no visible' in low}"))
+                                 f"{criteria[1] and _leakage_absent(low)}"))
 
     # 7. the logged drop
     item = _item_by_name(record, "Logged pressure drop")
@@ -869,7 +965,7 @@ def _score_q5(answer: str, record: dict) -> list[dict]:
     end = [v for v, u in quantities
            if _to_base(v, u) and _to_base(v, u)[0] == "Pa"
            and abs(_to_base(v, u)[1] - 5.90 * 1e5) <= 1e2]
-    no_leakage = "no visible" in low and "leak" in low
+    no_leakage = _leakage_absent(low) and "leak" in low
     # The compact logged-drop arithmetic
     # 'start-end=drop unit' states all three pressures
     # in one unit; the end pressure carries no unit of
@@ -881,22 +977,60 @@ def _score_q5(answer: str, record: dict) -> list[dict]:
         factor = UNITS[compact.group(4)][1]
         start.append(float(compact.group(1)) * factor)
         end.append(float(compact.group(2)) * factor)
-    # The answer's stated verdict is its last verdict
-    # word: a conditional 'otherwise fail' inside the
-    # criteria does not override the conclusion. Leading
-    # word boundaries only, so 'unacceptable' is not
-    # matched again through its 'acceptable' stem.
-    stated = None
-    for stem, verdict in ((r"\bunacceptable", "FAIL"),
-                            (r"\bacceptable", "PASS"),
-                            (r"\bfail", "FAIL"),
-                            (r"\bpass", "PASS")):
-        matches = list(re.finditer(stem, low))
-        if matches:
-            at = matches[-1].start()
-            if stated is None or at >= stated[0]:
-                stated = (at, verdict)
-    stated_verdict = stated[1] if stated else None
+    # The answer's stated verdict. A verdict word
+    # inside a conditional clause states what a
+    # verdict WOULD be ('if either criterion fails,
+    # the verdict is FAIL'); a conditional marker in
+    # the forty characters before the word marks the
+    # clause, so a rule line does not override the
+    # conclusion. The conclusion itself is declared
+    # on a line that names the verdict and gives its
+    # value ('Verdict: PASS', '| Verdict | PASS |');
+    # the last such declaration is the stated
+    # verdict. With no declaration, the last
+    # unconditional verdict word is the stated one.
+    # Leading word boundaries only, so 'unacceptable'
+    # is not matched again through its 'acceptable'
+    # stem.
+    stated = None        # (line, position, verdict)
+    declared = None      # the declared verdict
+    for index, line in enumerate(low.splitlines()):
+        # A line that begins with a conditional
+        # marker is a rule line in its entirety:
+        # it states what a verdict WOULD be under
+        # a condition, however long the clause.
+        rule_line = bool(re.match(
+            r"\s*(?:if|unless|when|then|"
+            r"otherwise|iff)\b", line))
+        occurrences = [
+            (m.start(), verdict)
+            for stem, verdict in (
+                    (r"\bunacceptable", "FAIL"),
+                    (r"\bacceptable", "PASS"),
+                    (r"\bfail", "FAIL"),
+                    (r"\bpass", "PASS"))
+            for m in re.finditer(stem, line)
+            if not rule_line and not _CONDITIONAL.search(
+                line[max(0, m.start() - 40):
+                     m.start()])]
+        if occurrences:
+            stated = (index, *max(occurrences))
+        for m in re.finditer(r"verdict\b", line):
+            if rule_line or _CONDITIONAL.search(
+                    line[max(0, m.start() - 40):
+                         m.start()]):
+                continue
+            value = re.match(
+                r"\s*[:=|]*\s*\*{0,2}\s*"
+                r"(pass|fail)\b",
+                line[m.end():])
+            if value:
+                declared = ("PASS"
+                            if value.group(1) == "pass"
+                            else "FAIL")
+    stated_verdict = (declared if declared is not None
+                      else stated[2] if stated
+                      else None)
     # The question's log: 6.00 -> 5.90 bar, no visible
     # leakage. The drop is 0.10 bar, within the 0.20 bar
     # limit, so the verdict for this log is PASS. The
@@ -929,11 +1063,11 @@ def _score_q5(answer: str, record: dict) -> list[dict]:
                          "Final operations: assess, depressurize, "
                          "confirm zero, disconnect")
     final_order = (
-        (("assess", "pass", "fail"), ("release", "depressuriz",
-                                        "bleed")),
-        (("release", "depressuriz", "bleed"),
+        (_ASSESSING, _DEPRESSURIZING),
+        (_DEPRESSURIZING,
          (r"re:(?<![\d.])0\s*bar", "zero")),
-        ((r"re:(?<![\d.])0\s*bar", "zero"), ("disconnect",)),
+        ((r"re:(?<![\d.])0\s*bar", "zero"),
+         ("disconnect",)),
     )
     has_final = ("release" in low or "depressuriz" in low
                  or "bleed" in low) and "disconnect" in low
@@ -976,8 +1110,7 @@ def _organization(record: dict, answer: str,
     lines = [l.strip() for l in answer.splitlines()
              if l.strip()]
     heads = [l for l in lines
-             if re.match(r"^(#{1,6}\s+\S|\d+\.\s+[A-Z])",
-                         l)]
+             if _HEADING.match(l)]
     low = _normalize(answer).lower()
     present = [any(w in low for w in theme)
                for theme in themes]
@@ -2944,6 +3077,157 @@ def self_test() -> int:
          "valve and confirm 0 bar gauge.",
          {"Final operations: assess, depressurize, confirm "
           "zero, disconnect": False, "verdict": "FAIL"}),
+        # Wrong answers in the newly accepted forms:
+        # each repair class accepts a notation, and
+        # a wrong answer stated in it must still
+        # fail (the notation-variant sweep renders
+        # the same classes over the keys' own
+        # answers; evals/tier2/notation_sweep.py).
+        ("Q4 wrong: select 4 mm in bold headings", "Q4",
+         "**Selected dimensions**\n"
+         "Width 20.0 mm; thickness 4.00 mm; length 500 mm.\n"
+         "\n"
+         "**Strength check**\n"
+         "Area 80.0 mm^2; stress 6000/80.0 = 75 MPa: "
+         "passes.\n"
+         "\n"
+         "**Volume and mass**\n"
+         "V = 80.0 x 500 = 40000 mm^3 = 4.00e-5 m^3.\n"
+         "m = 7850V = 0.314 kg.",
+         {"Selected dimensions": False, "verdict": "FAIL"}),
+        ("Q4 wrong: wrong area in plain-digit "
+         "unit form", "Q4",
+         "### Selected dimensions\n"
+         "Width 20.0 mm; thickness 3.00 mm; length 500 mm.\n"
+         "### Strength check\n"
+         "Area 40.0 mm2; stress 6000/40.0 = 150 MPa: "
+         "passes.\n"
+         "### Volume and mass\n"
+         "V = 60.0 x 500 = 30000 mm^3 = 3.00e-5 m^3.\n"
+         "m = 7850V = 0.2355 kg.",
+         {"Selected gross cross-sectional area": False,
+          "verdict": "FAIL"}),
+        ("Q4 wrong: wrong volume in superscript "
+         "exponent form", "Q4",
+         "### Selected dimensions\n"
+         "Width 20.0 mm; thickness 3.00 mm; length 500 mm.\n"
+         "### Strength check\n"
+         "Area 60.0 mm²; stress 6000/60.0 = 100 MPa: "
+         "passes.\n"
+         "### Volume and mass\n"
+         "V = 60.0×500 = 3.00×10⁻⁴ m³ = 3.00e-4 m^3.\n"
+         "m = 7850V = 2.355 kg.",
+         {"Selected-strip volume": False,
+          "verdict": "FAIL"}),
+        ("Q4 wrong: wrong volume in grouped "
+         "digits", "Q4",
+         "### Selected dimensions\n"
+         "Width 20.0 mm; thickness 3.00 mm; length 500 mm.\n"
+         "### Strength check\n"
+         "Area 60.0 mm^2; stress 6000/60.0 = 100 MPa: "
+         "passes.\n"
+         "### Volume and mass\n"
+         "V = 60.0 x 500 = 300,000 mm^3 = 3.00e-4 m^3.\n"
+         "m = 7850V = 2.355 kg.",
+         {"Selected-strip volume": False,
+          "verdict": "FAIL"}),
+        ("Q2 wrong: 'must not exceed' misstates "
+         "the strict definition", "Q2",
+         "Oxygen deficient: the threshold must not "
+         "exceed 19.5% oxygen by volume. Oxygen "
+         "enriched: the threshold must not exceed "
+         "23.5% oxygen by volume.",
+         {"Oxygen-deficient atmosphere": False,
+          "Oxygen-enriched atmosphere": False,
+          "verdict": "FAIL"}),
+        ("Q2 wrong: document form, wrong "
+         "threshold", "Q2",
+         "SECTION 1: OXYGEN-DEFICIENT ATMOSPHERE "
+         "DEFINITION\n"
+         "Canonical Definition: An oxygen-deficient "
+         "atmosphere is defined as an atmosphere "
+         "containing less than 19.0 percent oxygen "
+         "by volume.\n"
+         "SECTION 2: OXYGEN-ENRICHED ATMOSPHERE "
+         "DEFINITION\n"
+         "Canonical Definition: An oxygen-enriched "
+         "atmosphere is defined as an atmosphere "
+         "containing more than 23.5 percent oxygen "
+         "by volume.",
+         {"Oxygen-deficient atmosphere": False,
+          "verdict": "FAIL"}),
+        ("Q5 wrong: pumping hold in zero-leakage "
+         "phrasing", "Q5",
+         "1. Fill with water through the open high-point "
+         "vent until bubble-free water exits.\n"
+         "2. Close the vent; pressurize to 6.00 bar "
+         "gauge.\n"
+         "3. Isolate the hand pump, then start the "
+         "timer.\n"
+         "4. Hold for 300 s, pumping water to maintain "
+         "6.00 bar; zero visible leakage.\n"
+         "5. Drop 0.10 bar <= 0.20 bar: PASS.\n"
+         "6. Open the release valve, confirm 0 bar "
+         "gauge, then disconnect.",
+         {"Fifth operation: isolated hold": False,
+          "verdict": "FAIL"}),
+        ("Q5 wrong: document form, timer before "
+         "isolation", "Q5",
+         "## Scope\n"
+         "The timer is verified before the test; the "
+         "pump pressurizes the manifold to the test "
+         "pressure.\n"
+         "\n"
+         "### Step 1 — Fill\n"
+         "1.1. Open the high-point vent and fill until "
+         "bubble-free water exits.\n"
+         "### Step 2 — Pressurize\n"
+         "2.1. Close the vent; raise the pressure to "
+         "6.00 bar gauge.\n"
+         "### Step 3 — Start the timer\n"
+         "3.1. Start the 300 s hold timer.\n"
+         "### Step 4 — Isolate\n"
+         "4.1. Isolate the hand pump; hold for 300 s "
+         "without adding water.\n"
+         "### Step 5 — Log\n"
+         "5.1. Drop 0.10 bar <= 0.20 bar, no visible "
+         "leakage: PASS.\n"
+         "### Step 6 — Finish\n"
+         "6.1. Open the release valve, confirm 0 bar "
+         "gauge, then disconnect.",
+         {"Fourth operation: isolate before timing": False,
+          "verdict": "FAIL"}),
+        ("Q5 wrong: rule line after a FAIL "
+         "conclusion", "Q5",
+         "1. Fill with water through the open high-point "
+         "vent until bubble-free water exits.\n"
+         "2. Close the vent; pressurize to 6.00 bar "
+         "gauge.\n"
+         "3. Isolate the hand pump, then start the "
+         "timer.\n"
+         "4. Hold for 300 s without adding water.\n"
+         "5. Drop 0.10 bar <= 0.20 bar, no visible "
+         "leakage: FAIL.\n"
+         "6. Open the release valve, confirm 0 bar "
+         "gauge, then disconnect.\n"
+         "If either criterion is satisfied, the verdict "
+         "is PASS.",
+         {"Logged test verdict": False, "verdict": "FAIL"}),
+        ("Q5 wrong: table declaration of the wrong "
+         "verdict", "Q5",
+         "1. Fill with water through the open high-point "
+         "vent until bubble-free water exits.\n"
+         "2. Close the vent; pressurize to 6.00 bar "
+         "gauge.\n"
+         "3. Isolate the hand pump, then start the "
+         "timer.\n"
+         "4. Hold for 300 s without adding water.\n"
+         "5. Drop 0.10 bar <= 0.20 bar, no visible "
+         "leakage.\n"
+         "6. Open the release valve, confirm 0 bar "
+         "gauge, then disconnect.\n"
+         "| Verdict | FAIL |",
+         {"Logged test verdict": False, "verdict": "FAIL"}),
         ("Q6 wrong: OR", "Q6", "OR",
          {"Alarm function": False,
           "Ordered outputs": False, "verdict": "FAIL"}),
