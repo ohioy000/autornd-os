@@ -12864,14 +12864,161 @@ The owner's standing lineup (set in the clone's .env, 2026-10-03; the permitted 
 
 The caps gate (the owner's pre-start check, run via dotenv_values on both .env files): the owner's expected 14000/16000/13000 did not match — both files carried 78000/70000/32000 — and the executor STOPPED and reported, per the owner's instruction. The owner then directed the exact values; the executor applied them to both files (the only .env edit the executor has ever made, made on the owner's explicit directive, values dictated line by line; the three lines carry a leading space in the file's optional-settings section, preserved by the edit) and re-ran the check: PASS, both files. The MODEL_* lineup landed in the clone's .env on the owner's edit (MODEL_PREMIUM emptied, provider order re-pinned); the working repo's .env still carries the previous MODEL_* pins — the harness loads the working repo's .env, so the servings fingerprint the runner prints will resolve arm E against whatever the runner loads, and the owner ratifies the printed map (the gate is print-then-ratify by design).
 
-### 110.5 Execution record
+### 110.5 Execution record (executor, 2026-10-03/04)
 
-Filled as the work lands; the delivery commit completes it. State at
-the D50 commit: all four preconditions passed (no run in flight — the
-only `ps` match is the Kiro editor holding the clone's .env open;
-118's DONE response on main at 51bcb72; the frozen scorer's self-test
-248/248 at fb2894b268f3008e with the dataset sha256s unchanged; the
-suite green at 1275 passed, network guard 0 non-loopback attempts);
-the IN_PROGRESS response committed before the work started (c0228e1);
-the caps gate cleared as recorded in 110.4. The suite's before-count
-is 1275 (precondition 4); the after-count is recorded at delivery.
+**Commit order, as the command's "RULING FIRST ... before the code in
+commit order" requires:** c0228e1 (the IN_PROGRESS response, opened
+before the work started) → 1323272 (Ruling D50 verbatim, in HANDOVER.md
+and this notebook) → a9d35ab (the scorer repair, frozen-2026-10-03.1) →
+the work commit (the runner, the tools, the prompts, the client paths,
+the manifest, the tests, the counts) → the follow-up commit recording the
+delivery sha and the PR number. Suite: **1275 passed before** (precondition
+4, at the branch point) → **1320 passed after** (+6 regression tests with
+the scorer repair, +31 runner tests, +8 manifest tests 17→25), network
+guard 0 non-loopback attempts, both runs.
+
+**What landed.** The runner (`evals/tier3/runner.py`, CLI: `preflight`,
+`worst-case`, `run`, `pilot`, `dry-run`, `reading-sheet`) with the
+ratification gates mechanized before any network call (the servings map
+with its fingerprint, `TIER3_SERVINGS_RATIFIED` == the fingerprint,
+`TIER3_ARM_B` == `TIER3_ARM_A`, `TIER3_SPEND_AUTHORIZED` /
+`TIER3_PILOT_AUTHORIZED`, each missing gate named); the five-case
+preflight (worst case vs ceiling at the guard's own formula, tool support,
+context window in bytes, D49 two-sided pricing, and the owner's addition —
+registered max_tokens vs the endpoint's max_completion_tokens, refused for
+arms A-D, reported for arm E's tiers); the closed-world fetch (the archived
+July 1, 2014 editions, typed not-available, no socket); the whitelisted
+recompute (a walked syntax tree, never eval); arm C's typed
+`CooperationCheckVerdict` through the client's response_format handling,
+with the unavailable/starved paths; arm B's prompt repair (arm A's prompt
+plus the tool registration, the mechanical guard test); the additive client
+paths (a serving named per call, tools passed, tool calls returned — every
+existing path unchanged); manifest `tier3-2` naming the new scorer version;
+the 086 reference corrected to the escalation shootout. The mocked dry run
+proves all of it at zero cost: the 375-unit main run (killed after 40 for
+the resume exhibit, then resumed to the end — $8.8488 spent, $0.2000 of it
+the in-flight unit's liability charge, $0.0017 unreconciled liability;
+statuses 1 deadline, 371 delivered, 2 incomplete, 1 refusal; delivered
+correctness A 73/75, B 74/75, C 74/75, D 72/75, E 72/75, every failure
+class counted) and the 50-unit pilot ($0.0162, A 23/25, D 23/25); the
+reading sheet exports 55 entries and the merge demonstrates both paths (54
+agreements, 1 disagreement, 0 unread). Tests (a)-(j) all pass, each proven
+by breaking one line of the runner and quoting the failure.
+
+**The scorer repair (frozen-2026-10-03.1, a9d35ab).** Eight general
+recognition classes, each a rule applied to every question the class
+touches, none a special case for one answer (the full list is in
+`evals/tier2/versions.json`). The 12 recorded answers went from 5/12
+(frozen-2026-10-03) to **12/12**; the notation-variant sweep renders 52
+model-answer variants (all pass) and 42 wrong-answer variants (all fail);
+the self-test grew 248 → 258 fixtures; questions.json and keys.json are
+byte-identical to the freeze (sha256 35bff36583c1… and c05c95fbffed…);
+`verify_keys.py` still holds 268/268. **The command's Q1: no recorded
+answer still fails under the new version — there is no FAIL left to name a
+missing item; the seven failures the repair closed, with their items, are
+listed in the version record.**
+
+**The command's Q2 (long-answer sensitivity beyond `_score_q2`'s
+window).** The functions that score a long, correct answer differently
+from a short one, and what the repair did: `_score_q4`'s organization
+item and `_organization` (Q4, Q6, Q8, Q13, Q18) — headings in bold,
+italic or 'Heading:' form now join markdown and numbered headings;
+`_score_q5`'s acceptance item — the inclusive upper bound's phrasings and
+the leakage-absence phrasings; `_score_q5`'s verdict item — the stated
+verdict is now read outside conditional clauses, so a rule line no longer
+overrides the conclusion; `_score_q5`'s operation-order items and the order
+items of Q10, Q11, Q14, Q16, Q19 — operation synonyms ('raise the
+pressure' for pressurization), any-occurrence pairing, and a mention in a
+preamble, an equipment list or a falsifier no longer undoes the order the
+procedure itself states. Underneath every numeric item (Q1-Q25), `_normalize`
+and `_UNIT_AFTER` now read a unicode-superscript exponent as its mantissa's
+exponent, a plain-digit unit ('mm2') as its superscript form, and digit
+grouping as one number — the forms long answers are written in.
+
+**The command's Q3 (sequential runtime and the resume cost, from the
+record).** 107's direct calls: 10-19 s each, 1,012-2,500 completion
+tokens, $0.0020-$0.0049 per call. Arms A-D are at most 600 calls
+(A 75×1, B 75×3, C 75×3, D 75×1), so **6,000-11,400 s ≈ 1.7-3.2 h
+sequential**. Arm E from 102/106's pipeline units under the recorded
+09-29 lineup: plans of 409-1,097 s plus judging of 972-3,078 s =
+1,381-4,175 s per unit — **29-87 h sequential, and each unit alone
+exceeds the common 600 s deadline**, so the recorded lineup cannot
+complete a plan and a judging round inside it (the command's own evidence);
+under the owner's current lineup arm E's timing is unmeasured — that is
+what the owner's optional timing probe measures. A resume costs only the
+unit in flight: its full ceiling charged as unreconciled liability
+($0.10/$0.20/$0.20/$0.20/$0.50 by arm) and re-run; every recorded unit
+is skipped by the resume guard, so nothing already run is paid twice. The
+dry run measured the mechanism itself: the kill left ('Q20', 2, 'D') in
+flight, charged $0.2000, and the resumed run totaled $8.8488 (mocked
+rates).
+
+**The owner's three additions.** (1) The max_completion_tokens preflight
+case is implemented and tested (an arm A-D call whose registered
+max_tokens exceeds the pinned endpoint's cap is refused; arm E's tiers are
+reported beside the endpoints' caps — the standing caps are the owner's
+.env lines, and the judge endpoint's 16,384-token cap sits above
+JUDGE_MAX_TOKENS=16000). (2) The arm-E worst-case quote, at the guard's
+own formula and the catalogue's rates, under the owner's current lineup
+(fingerprint 37fb062aebff): **every one of the seven arm-E tiers is
+unboundable** — three `:exacto` pins (architecture, judge, escalation) are
+served-but-unpriced in the catalogue; four listed servings carry charges
+beside prompt and completion tokens (gemini-3.8-flash: audio, image,
+input_audio_cache, input_cache_read, input_cache_write, internal_reasoning,
+web_search; sonar: web_search; qwen3-235b: input_cache_read), which a
+token-only worst case understates. The guard would therefore refuse **no**
+arm-E call at any spend: the $0.50 per-unit ceiling is not guard-enforced
+for arm E under this lineup, and the $90.00 authorization is not
+mechanically enforced for it either. The blindness is on the record (D49:
+an unknown price is not free); the advisor rules what follows. (3) The
+harness preflight (`autornd/preflight.py`, unedited, no skip added to the
+tier-3 path) passes **31 ok, 0 failing** under the current lineup — the
+engineering pin's endpoint (nebius/fp8) lists `response_format`, so the
+predicted refusal did not materialize. The prediction was written against
+the earlier lineup's inkling-small pin (§110.4); the working `.env` now
+carries a different MODEL_* lineup, and the gate's reading is the
+reading. Reported under questions for the advisor to rule.
+
+**What execution found that the command missed (the departures class).**
+- The break-proof loop exposed a convention-26 defect in the executor's
+  own first pass: 20 of the 30 break-proof comments quoted drafted
+  failure text that had never been run. All 30 now quote measured
+  failures (29 mutations applied one at a time with always-revert, plus
+  the individually re-verified cases). Two drafted mutations were
+  ineffective and are documented as such: widening arm B's call range to
+  `range(1, 10)` passes because the loop's own limit check caps it at 3
+  calls (the working mutation is the off-by-one narrowing, which fails
+  `assert 2 == 3`), and `.match`→`.search` passes because the pattern's
+  `^` anchor constrains where a search can start (the working mutation
+  drops the `\s*$` end anchor, which fails `assert True is False`). The
+  arm-C pair of break-proof comments had been swapped between the two
+  tests; they now sit on their own tests.
+- Four count guards failed mid-change (README badge, HANDOVER's stated
+  total, §4.2's pass count, the file count) — the count re-derivation
+  (1275→1320 tests, 75→76 files) landed in the same change as the tests
+  that caused it, per the channel's shape.
+- Two instrument repairs inside the runner, both convention-18 class
+  (how reliably the instrument reaches a conclusion, not what it
+  concludes): R1 — a unit's record now carries the client's booked
+  spend and liability even when a call fails mid-flight (a mocked client
+  that books spend before failing was losing the unit's cost from the
+  record); R2 — the recompute tool's power operation wraps its result in
+  an overflow check, so an oversized power returns the typed rejection
+  the model reads, not an uncaught `OverflowError`. Neither changes any
+  verdict, gate or measure; both are the runner's own instrumentation.
+- The .env edits recorded in §110.4 (the caps gate, the owner-directed
+  values) and the lineup change since §110.4 (the working `.env`'s
+  MODEL_* pins differ from what §110.4 recorded — the harness preflight's
+  print is the evidence) are the owner's (G-3); the executor made no
+  .env edit beyond the §110.4 directive.
+- The remote work branch was deleted after the PR 151 merge (observed in
+  precondition 2); it was re-created from main at 7a7fc6a, which carries
+  the command file verbatim.
+
+**Left undone, by design:** the calibration pilot and the main run — paid
+work that is not part of this command. They wait on the owner's gates
+(the five TIER3 pins, `TIER3_SERVINGS_RATIFIED` at the printed
+fingerprint, then `TIER3_PILOT_AUTHORIZED` / `TIER3_SPEND_AUTHORIZED`).
+The arm-E lineup choice is the owner's (G-2); the gate is print-then-ratify,
+and the pilot's own authorization ceiling is $7.50, the main run's $90.00 —
+nothing in this repository approves either amount.

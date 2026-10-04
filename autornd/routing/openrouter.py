@@ -45,6 +45,11 @@ class ModelResponse:
     # Where a search-backed answer came from. Without these a lookup is just
     # another confident assertion, which is the thing it exists to replace.
     citations: list[str] = field(default_factory=list)
+    # Tool calls the model requested (arch-20261003-119, arm B's
+    # tool loop). Empty unless the call offered tools and the model
+    # asked for them; the caller executes the tool and answers with
+    # the result on the next call.
+    tool_calls: list[dict[str, Any]] = field(default_factory=list)
 
 
 
@@ -625,8 +630,19 @@ class OpenRouterClient:
         response_format: dict[str, Any] | None = None,
         temperature: float = 0.3,
         max_tokens: int = 16384,
+        model: str | None = None,
+        tools: list[dict[str, Any]] | None = None,
     ) -> ModelResponse:
-        model = self.get_model(function)
+        # Additive (arch-20261003-119): a call may name its serving
+        # directly (the tier-3 arms' TIER3_* pins, resolved from the
+        # environment by the experiment's own settings class), and may
+        # offer tools. Neither parameter changes an existing path: with
+        # both unset the call resolves and behaves exactly as before.
+        # The provider preference works the same way for a named
+        # serving as for a tier - provider_order_for(function) reads
+        # the per-tier syntax under the caller's function name, so an
+        # arm named "tier3_arm_a" takes "tier3_arm_a:Provider".
+        model = model or self.get_model(function)
         reservation = self._guard_spend(
             function, model,
             _prompt_bytes(system_prompt, user_message),
@@ -644,6 +660,8 @@ class OpenRouterClient:
         }
         if response_format:
             payload["response_format"] = response_format
+        if tools:
+            payload["tools"] = tools
         # Ask for real spend rather than inferring it. Providers that ignore
         # this simply omit usage.cost and we fall back to catalogue rates.
         payload["usage"] = {"include": True}
@@ -693,6 +711,7 @@ class OpenRouterClient:
 
             choice = data["choices"][0]
             content = choice["message"]["content"] or ""
+            tool_calls = choice["message"].get("tool_calls") or []
             finish_reason = choice.get("finish_reason")
             citations = [
                 (a.get("url_citation") or {}).get("url", "")
@@ -738,6 +757,7 @@ class OpenRouterClient:
             finish_reason=finish_reason,
             provider=provider,
             citations=citations,
+            tool_calls=tool_calls,
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
             cost=cost,

@@ -1,5 +1,6 @@
 """The tier-3 experiment manifest is a frozen plan, and a frozen plan
-is checked like a frozen dataset (ARCH-20261002-118).
+is checked like a frozen dataset (ARCH-20261002-118; the runner
+registered by ARCH-20261003-119, manifest tier3-2).
 
 The manifest (evals/tier3/manifest.json) registers the five-arm
 experiment over the frozen tier-2 question set: the plan arithmetic,
@@ -12,8 +13,11 @@ order is re-derived, and a different seed must NOT reproduce it),
 and that nothing the models must not see - key material, model ids -
 leaked into any tier-3 file. The prompts are checked structurally:
 arm D's prompt is arm A's byte-for-byte (the same request, only the
-serving differs) and arm B's contains arm A's verbatim (equal
-information access - the only difference is the tool registration).
+serving differs), and arm B's is arm A's with exactly two
+registered differences - the first paragraph and the tool
+registration - so that replacing the first and removing the tools
+reconstructs arm A exactly (equal information access: the question,
+the deadline and the answer format are identical).
 """
 
 from __future__ import annotations
@@ -38,7 +42,8 @@ PROMPTS = TIER3 / "prompts"
 
 
 def _tier3_files() -> list[Path]:
-    files = [TIER3 / "manifest.json", TIER3 / "README.md"]
+    files = [TIER3 / "manifest.json", TIER3 / "README.md",
+             TIER3 / "runner.py"]
     files.extend(sorted(PROMPTS.glob("*.md")))
     return files
 
@@ -99,8 +104,13 @@ class TestThePlan:
         # arm A's serving - the manifest registers the equality, and the
         # ratification gate repeats it as a requirement on the owner.
         assert "same" in arms["B"]["model_selection_criterion"].lower()
-        assert "TIER3_ARM_B must equal TIER3_ARM_A" in MANIFEST["ratification_gates"][
-            "gate_1_servings"]
+        # The gate is mechanized on a fingerprint of the
+        # resolved servings map, and arm B's pin must equal
+        # arm A's when resolved.
+        gate_1 = MANIFEST["ratification_gates"]["gate_1_servings"]
+        assert "TIER3_ARM_B equals TIER3_ARM_A" in gate_1
+        assert "TIER3_SERVINGS_RATIFIED" in gate_1
+        assert "fingerprint" in gate_1
 
 
 class TestTheMoney:
@@ -120,11 +130,18 @@ class TestTheVersions:
     def test_the_versions_name_the_frozen_tier2_set(self):
         versions = MANIFEST["versions"]
         assert versions["dataset"] == "frozen-2026-10-03"
-        assert versions["scorer"] == "frozen-2026-10-03"
+        assert versions["scorer"] == "frozen-2026-10-03.1"
         frozen = {v["version"] for v in TIER2_VERSIONS["versions"]}
         assert versions["dataset"] in frozen, (
             "the manifest names a tier-2 version the version record "
             "does not hold")
+        # The scorer repair is a NEW version under the freeze
+        # (Ruling D50 (1)): the version record holds it, and
+        # it is the version the runner scores with.
+        assert versions["scorer"] in frozen, (
+            "the manifest names a scorer version the version "
+            "record does not hold")
+        assert versions["manifest"] == "tier3-2"
         # The tier-2 freeze itself: the signoff the owner ratified.
         assert TIER2_MANIFEST["dataset_version"] == "frozen-2026-10-03"
         assert TIER2_MANIFEST["frozen"] is True
@@ -152,20 +169,51 @@ class TestThePrompts:
     def test_arm_b_prompt_is_arm_a_prompt_plus_the_tool_registration(self):
         a = (PROMPTS / "arm_a.md").read_text(encoding="utf-8")
         b = (PROMPTS / "arm_b.md").read_text(encoding="utf-8")
-        assert a in b, (
-            "arm B's prompt does not contain arm A's prompt verbatim - "
-            "equal information access requires the question, the deadline "
-            "and the answer format to be identical, with the tool "
-            "registration as the only addition")
+        # D50 (2): arm B's prompt adds only the tools. The
+        # reconstruction is mechanical: replace arm B's
+        # intro paragraph with arm A's and remove the tool
+        # section (from the TOOLS heading to just before
+        # the closing "Answer now."), and arm A is
+        # recovered exactly.
+        # The old test asserted arm A's full text was
+        # contained in arm B's; the earlier draft kept arm
+        # A's "no tools are available" paragraph while
+        # registering tools - self-contradictory, and the
+        # old test enforced the contradiction. Rule 17:
+        # the test was the bug.
+        a_blocks = a.split("\n\n")
+        b_blocks = b.split("\n\n")
+        # The title is shared; the intro paragraph is the
+        # first difference.
+        diff = next(i for i, (x, y) in
+                    enumerate(zip(a_blocks, b_blocks)) if x != y)
+        assert diff > 0, "the prompts' titles differ"
+        rest_blocks = list(b_blocks)
+        rest_blocks[diff] = a_blocks[diff]
+        rest = "\n\n".join(rest_blocks)
+        tools_start = rest.index("## TOOLS (registered for this run)")
+        answer_now = rest.rindex("Answer now.")
+        reconstructed = rest[:tools_start] + rest[answer_now:]
+        assert reconstructed == a, (
+            "arm B's prompt is not arm A's prompt plus exactly "
+            "the tool registration: replacing the intro "
+            "paragraph and removing the tool section must "
+            "reconstruct arm A byte-for-byte - equal "
+            "information access requires the question, the "
+            "deadline and the answer format to be identical")
         assert "fetch_primary_source" in b and "recompute" in b
+        # And arm B must not retain arm A's "no tools" text.
+        assert "no tools" not in b.lower()
 
     def test_the_cooperation_protocol_is_fixed_in_the_prompt(self):
         c = (PROMPTS / "arm_c.md").read_text(encoding="utf-8")
         for stage in ("STAGE 1", "STAGE 2", "STAGE 3"):
             assert stage in c
-        # The protocol's bounds: one bounded revision round, no voting,
-        # no third model, and a recorded objection or a concurrence.
-        assert "CONCUR" in c and "OBJECT" in c
+        # The protocol's bounds: one bounded revision round,
+        # no voting, no third model, and a typed verdict -
+        # concur true exactly when the objections list is empty.
+        assert '{"concur": true, "objections": []}' in c
+        assert '{"concur": false, "objections":' in c
         assert "no voting" in c and "no third model" in c
 
 
@@ -241,6 +289,91 @@ class TestTheExecution:
         assert "retry" in execution["retry_rules"].lower()
         assert "SweepBudget" in execution["spend_enforcement"]
 
+    def test_the_registered_call_parameters(self):
+        # Every parameter a unit's outcome depends on is
+        # registered here, not buried in a call site.
+        params = MANIFEST["execution"]["registered_call_parameters"]
+        assert params["max_tokens"] == 8000
+        assert params["temperature"] == 0.3
+        assert "finish_reason" in params
+        assert "truncated" in params["finish_reason"]
+
+    def test_the_pilot_is_registered(self):
+        pilot = MANIFEST["execution"]["pilot"]
+        assert pilot["arms"] == ["A", "D"]
+        assert pilot["repetitions_per_question"] == 1
+        assert pilot["planned_units"] == 50
+        assert pilot["seed"] == 20261004
+        assert "TIER3_PILOT_AUTHORIZED" in pilot["authorization"]
+        assert "$7.50" in pilot["authorization"]
+
+    def test_the_preflight_is_registered(self):
+        preflight = MANIFEST["execution"]["preflight"]
+        # Five refusals: the worst-case ceilings, tool support,
+        # context, the unboundable servings and the registered
+        # max_tokens against the endpoint's max_completion_tokens.
+        assert len(preflight["refuses"]) == 5
+        assert any("worst case" in r for r in preflight["refuses"])
+        assert any("tool support" in r for r in preflight["refuses"])
+        assert any("context window" in r for r in preflight["refuses"])
+        assert any("guard can bound" in r for r in preflight["refuses"])
+        assert any("max_completion_tokens" in r for r in preflight["refuses"])
+        # Reports: the catalogue's blindness, arm E's standing
+        # caps, and the arm-E worst-case table.
+        assert len(preflight["reports"]) == 3
+        assert any("blind" in r for r in preflight["reports"])
+        assert any("standing tier caps" in r for r in preflight["reports"])
+        assert any("worst-case table" in r for r in preflight["reports"])
+
+    def test_the_dry_run_and_reading_sheet_are_registered(self):
+        dry_run = MANIFEST["execution"]["dry_run"]
+        assert "mocked" in dry_run["what"]
+        for failure in ("refusal", "deadline", "tool failure",
+                        "invalid arm C verdict", "incomplete unit",
+                        "resume after a kill"):
+            assert failure in dry_run["failure_classes"], (
+                f"the dry run does not register the {failure} "
+                "failure class")
+        sheet = MANIFEST["execution"]["reading_sheet"]
+        assert "FAIL" in sheet["what"]
+        assert "seeded" in sheet["what"]
+        assert "no arm label" in sheet["what"]
+
+    def test_arm_b_call_structure_is_registered(self):
+        structure = MANIFEST["arms"]["B"]["call_structure"]
+        assert "Calls 1 and 2 offer the tools" in structure
+        assert "call 3 offers none" in structure
+        assert "20 tool invocations" in structure
+
+    def test_arm_c_check_is_a_typed_verdict(self):
+        check = MANIFEST["arms"]["C"]["check"]
+        assert '{"concur": boolean, "objections": [string]}' in check
+        assert "concur true exactly when objections is empty" in check
+        # The bounded retries are a hard whole-sequence bound:
+        # the revision runs only when the check objected AND a
+        # call remains.
+        assert "hard whole-sequence bound" in check
+        assert "starvation" in check
+
+    def test_arm_e_delivery_is_the_completed_terminal(self):
+        treatment = MANIFEST["arms"]["E"]["treatment"]
+        assert "completed terminal" in treatment
+        # Approved-not-shipped is scored and reported beside
+        # the delivered count, never counted as delivered.
+        assert "approved, not shipped" in treatment
+        assert "never counted as delivered" in treatment
+
+    def test_the_086_shootout_is_corrected(self):
+        # The shootout graded escalation output, not direct
+        # answers to questions - the manifest says so where
+        # it cites the 19/20-against-13/20 result.
+        for arm in ("C", "D"):
+            criterion = MANIFEST["arms"][arm]["model_selection_criterion"]
+            assert "086 escalation shootout" in criterion
+            assert "docs/traces/086-escalation-shootout.jsonl" in criterion
+            assert "19/20" in criterion and "13/20" in criterion
+            assert "graded escalation output, not direct answers" in criterion
+
     def test_the_five_success_measures_are_defined(self):
         measures = MANIFEST["success_measures"]
         assert set(measures) == {
@@ -270,7 +403,12 @@ class TestTheExecution:
         assert set(gates) == {"gate_1_servings", "gate_2_spend", "stop"}
         assert "$90.00" in gates["gate_2_spend"]
         assert "authorization ceiling, not a predicted cost" in gates["gate_2_spend"]
-        # The STOP is mechanized, not just stated: the runner refuses
-        # to start unless the environment shows both gates cleared.
-        assert "TIER3_SPEND_AUTHORIZED" in gates["stop"]
-        assert "does not start" in gates["stop"]
+        # The STOP is mechanized, not just stated: the runner
+        # refuses to start unless the environment shows both
+        # gates cleared - the servings fingerprint and the
+        # spend (or the pilot's own authorization).
+        stop = gates["stop"]
+        assert "TIER3_SERVINGS_RATIFIED" in stop
+        assert "TIER3_SPEND_AUTHORIZED" in stop
+        assert "TIER3_PILOT_AUTHORIZED" in stop
+        assert "does not start" in stop

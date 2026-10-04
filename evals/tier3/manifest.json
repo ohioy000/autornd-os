@@ -1,15 +1,15 @@
 {
   "experiment": "tier3-five-arm-question-experiment",
-  "command": "ARCH-20261002-118",
+  "command": "ARCH-20261002-118 (manifest frozen); the runner built under ARCH-20261003-119",
   "status": "manifest-frozen-awaiting-ratification",
   "ruling": "The owner's tier-3 instruction (2026-10-02): prepare the five-arm experiment over the frozen 25-question tier-2 set, without starting it. This manifest is the frozen plan. It is complete and executable, but no unit starts until the two ratification gates below are cleared by the owner in one line each. The $90.00 figure is an authorization ceiling, not a predicted cost; it is not approved by anything in this file.",
 
   "versions": {
     "repository": "the commit this manifest is merged on",
     "dataset": "frozen-2026-10-03",
-    "scorer": "frozen-2026-10-03",
-    "manifest": "tier3-1",
-    "version_note": "The dataset and scorer versions name the tier-2 freeze (evals/tier2/versions.json, frozen-2026-10-03, ratified by the owner's signoff on 2026-10-03T21:41:20Z). The experiment scores against the frozen keys with the frozen scorer; a change to either tier-2 versioned file is a new tier-3 manifest version."
+    "scorer": "frozen-2026-10-03.1",
+    "manifest": "tier3-2",
+    "version_note": "The dataset names the tier-2 freeze (evals/tier2/versions.json, frozen-2026-10-03, ratified by the owner's signoff on 2026-10-03T21:41:20Z). The scorer names the repaired version (frozen-2026-10-03.1, Ruling D50 (1): the frozen version passed 5 of the 12 recorded real answers; the repair passes all twelve, and the repair is a NEW version under the same freeze, not an edit to the frozen one). tier3-2 registers the runner (ARCH-20261003-119): the execution machinery tier3-1 listed under not_prepared_here now exists (evals/tier3/runner.py), and this version registers every parameter a unit's outcome depends on. A change to either tier-2 versioned file is a new tier-3 manifest version."
   },
 
   "plan": {
@@ -35,14 +35,15 @@
     },
     "B": {
       "name": "same-model-with-tools",
-      "treatment": "The same serving as arm A (the same pin value by design - the two arms differ only in the registered tool treatment), with two deterministic tools: primary-source acquisition and recomputation. The prompt is arm A's prompt verbatim plus the tool registration; the question text, the deadline and the scoring are identical.",
+      "treatment": "The same serving as arm A (the same pin value by design - the two arms differ only in the registered tool treatment), with two deterministic tools: primary-source acquisition and recomputation. The prompt is arm A's prompt with exactly two differences and no others: the first paragraph names the tools ('Use the tools registered below where they help', where arm A's says 'Answer from your own knowledge...'), and the tool registration sits between the answer format and the closing 'Answer now.' Replacing arm B's first paragraph with arm A's and removing the tool section yields arm A's prompt exactly - the property the manifest test checks mechanically (the earlier draft, which kept arm A's 'no tools are available' paragraph while registering tools, was self-contradictory; the old test enforced the contradiction, and tier3-2 corrects both). The question text, the deadline and the scoring are identical.",
       "model_pin_env": "TIER3_ARM_B",
       "model_selection_criterion": "Identical to arm A's pin value - the arm exists to isolate the tool treatment, so the two pins must resolve to the same serving. The owner sets both to the same value.",
       "call_limit": 3,
       "tool_invocations": 20,
+      "call_structure": "Calls 1 and 2 offer the tools; call 3 offers none, so the model must answer. At most 3 model calls and 20 tool invocations per unit. Every invocation is recorded: the tool, its arguments, the result's size, any error. A tool failure is recorded and the model continues without the tool; the delivered answer is scored on what it delivered.",
       "tools": {
-        "fetch_primary_source": "Retrieves the text at a given URL. The manifest records the archived primary-source URLs for the five lookup questions (the govinfo July 1, 2014 PDFs and the 2026-10-01 eCFR snapshots under evals/tier2/sources/). The tool returns the retrieved text; it performs no judgment.",
-        "recompute": "Evaluates one deterministic arithmetic expression and returns its value. No model judgment, no external calls. The arm is expected to recompute every numerical derivation with it rather than trust mental arithmetic."
+        "fetch_primary_source": "Fetches the archived July 1, 2014 text of the CFR section a question cites, written as the question writes it (for example '29 CFR § 1910.146(b)'). Closed-world: the world is the committed archive under evals/tier2/sources/ (the archived sections the lookup questions cite); any other citation returns a typed not-available result, which is a result, not a failure. Opens no network connection.",
+        "recompute": "Evaluates one arithmetic expression and returns its value: numbers, the four operations and powers, parentheses, pi and e, and the functions sqrt, exp, ln, log10, sin, cos, tan, their inverses, abs, min and max. The expression is parsed and walked as a syntax tree - it is never evaluated, executed or compiled as code (hard rule 3); anything outside that grammar, an exponent beyond 1000, or a result beyond 1e300 is a typed rejection. No model judgment, no external calls."
       },
       "prompt": "prompts/arm_b.md",
       "spend_ceiling_per_question_run": 0.20
@@ -51,18 +52,19 @@
       "name": "complementary-model-cooperation",
       "treatment": "Two servings with complementary measured strengths cooperate under a fixed protocol: model 1 drafts, model 2 independently checks, model 1 revises once if model 2 objects. The protocol, not the models' own discretion, decides what is delivered.",
       "model_pin_env": ["TIER3_ARM_C_1", "TIER3_ARM_C_2"],
-      "model_selection_criterion": "Complementary pair measured in this repository's lab notebook: the engineering-tier serving (measured to converge the build loop - HANDOVER.md sections 6.9 and 6.11) and the escalation-tier serving (measured to hold escalation 19/20 in the 2026-09-28 shootout, docs/handover-review.md section 086). Complementary, not equivalent: one is measured on engineering convergence, the other on escalation judgment. Proposed in conversation 2026-10-03; the owner ratifies both pin values in .env.",
+      "model_selection_criterion": "Complementary pair measured in this repository's lab notebook: the engineering-tier serving (measured to converge the build loop - HANDOVER.md sections 6.9 and 6.11) and the escalation-tier serving (measured to hold escalation 19/20 against 13/20 in the 086 escalation shootout, docs/traces/086-escalation-shootout.jsonl - a shootout that graded escalation output, not direct answers to questions). Complementary, not equivalent: one is measured on engineering convergence, the other on escalation judgment. Proposed in conversation 2026-10-03; the owner ratifies both pin values in .env.",
       "call_limit": 3,
       "tool_invocations": 0,
       "prompt": "prompts/arm_c.md",
-      "disagreement_handling": "Model 2's objections are recorded in the run transcript. The delivered answer is model 1's revised answer when model 2 objected (one revision round, bounded by the call limit), or model 1's draft when model 2 concurred. There is no voting and no third model.",
+      "check": "Model 2's check returns a typed verdict, not prose: a JSON object {\"concur\": boolean, \"objections\": [string]}, concur true exactly when objections is empty. The runner parses the verdict (control flow never reads prose - hard rule 2); a reply that is not a valid verdict is retried within the bound (2 attempts), and a check that returns no valid verdict after the bounded retries is recorded as unavailable - never as concurrence - and model 1's draft is delivered. The three calls are a hard whole-sequence bound: the check's bounded retries compete with the revision for the third call, so a revision runs only when the check objected AND a call remains; the starvation path is recorded, not hidden.",
+      "disagreement_handling": "Model 2's objections are recorded in the run transcript (the typed verdict's objections list). The delivered answer is model 1's revised answer when model 2 objected (one revision round), or model 1's draft when model 2 concurred. There is no voting and no third model.",
       "spend_ceiling_per_question_run": 0.20
     },
     "D": {
       "name": "stronger-single-call",
       "treatment": "One model call, the request only - arm A's shape with a stronger serving. The strong reference arm: the experiment's comparison point for whether the inexpensive arms' gap is a serving gap or a treatment gap.",
       "model_pin_env": "TIER3_ARM_D",
-      "model_selection_criterion": "The strongest single serving measured in this repository: the escalation-tier serving that held escalation 19/20 in the 2026-09-28 shootout (docs/handover-review.md section 086), the strongest measured hold rate in the lab notebook. Proposed in conversation 2026-10-03; the owner ratifies the pin value in .env.",
+      "model_selection_criterion": "The strongest single serving measured in this repository: the escalation-tier serving that held escalation 19/20 against 13/20 in the 086 escalation shootout (docs/traces/086-escalation-shootout.jsonl - a shootout that graded escalation output, not direct answers to questions), the strongest measured hold rate in the lab notebook. Proposed in conversation 2026-10-03; the owner ratifies the pin value in .env.",
       "call_limit": 1,
       "tool_invocations": 0,
       "prompt": "prompts/arm_d.md (identical to arm A's prompt - the same request, only the serving differs)",
@@ -70,7 +72,7 @@
     },
     "E": {
       "name": "current-pipeline",
-      "treatment": "The current pipeline: the question enters as a request through the full harness workflow (the graph engine, workflows/*.yaml, triage and engineering phases, escalation as routed), under the standing pins in .env. The delivered answer is the pipeline's final answer text (the terminal phase's conclusion), extracted from the run record.",
+      "treatment": "The current pipeline: the question enters as a request through the full harness workflow (the graph engine, workflows/*.yaml, triage and engineering phases, escalation as routed), under the standing pins in .env, with the common deadline as its timeout so the harness's own watchdog ends the run by its own terminal. Delivered means the pipeline's completed terminal: the terminal phase's conclusion (verdicts.implement.summary), read the way the record reads it. A judge-approved draft that no completed terminal shipped is scored and reported beside the delivered count as 'approved, not shipped' - never counted as delivered (Ruling D50 (3)). A run that ended without an answer is an incomplete unit.",
       "model_pin_env": "the standing pins (.env, the owner's) - no experiment pin",
       "model_selection_criterion": "The owner's standing configuration, unchanged. Arm E exists so the experiment compares against what the harness ships today.",
       "call_limit": 40,
@@ -84,23 +86,61 @@
     "interleaved_order": {
       "seed": 20261003,
       "algorithm": "Enumerate the 375 units as (question_id, repetition, arm) with question_id in the frozen questions.json order, repetition in 1..3, arm in A,B,C,D,E; then random.Random(20261003).shuffle(the list). Units execute in the shuffled order - no arm runs as a block, so time-of-day and serving-load confounds distribute across arms.",
-      "reproducibility": "The seed is recorded here; the order is reconstructable exactly. The runner records the seed and the resulting order's sha256 in the results header, and the guard test reconstructs the order and checks it."
+      "reproducibility": "The seed is recorded here; the order is reconstructable exactly. The runner records the seed and the resulting order's sha256 in the results header, and the guard test reconstructs the order independently and checks the two digests match."
     },
     "common_deadline_seconds": 600,
-    "deadline_note": "One wall-clock deadline for every unit of every arm, enforced by the runner's watchdog. A unit that exceeds it is stopped and recorded as incomplete.",
+    "deadline_note": "One wall-clock deadline for every unit of every arm, enforced by the runner's watchdog. A unit that exceeds it is stopped and recorded as a deadline failure.",
     "isolation": "Every unit executes inside _isolated_store() (autornd.evals.runner): a fresh temporary knowledge store per question-run, no cross-run memory. This is the per-question-run instantiation of the command's 'isolated stores per question-run; no cross-run memory'.",
     "retry_rules": "Transient provider failures (empty replies, 429, 5xx) are retried by the harness's existing retry policy, bounded, with backoff. A unit that exhausts its retries is an incomplete run: delivered correctness 0, its cost and latency recorded and counted. Retries are recorded per unit with their attribution (the runner's retries record).",
     "spend_enforcement": "Each unit's client carries its arm's per-question-run ceiling (the runner's spend_ceiling); the whole experiment runs under a SweepBudget whose cap is the owner's ratified total authorization (the fit rule composes the two ceilings: a unit starts only if it could not overrun the sweep cap). The sweep cap is the authorization ceiling, not a prediction.",
     "information_access": "Equal across arms except the registered treatments: the same question text (read from the frozen questions.json), the same deadline, the same seeded order, the same scorer, the same isolation. The only differences are the registered treatments - the serving(s), the tools, the cooperation protocol, and the pipeline itself.",
-    "no_model_access_to_keys": "keys.json is read only by the scorer process after each unit's answer is delivered. No arm's prompt, tool, or workflow returns key material. The fetch tool's recorded URL list is the public regulation archives under evals/tier2/sources/, not the keys.",
-    "scoring": "The frozen tier-2 scorer (evals/tier2/scorer.py, frozen-2026-10-03) scores every delivered answer against the frozen keys (evals/tier2/keys.json). A unit's delivered correctness is 1 when the scorer's verdict is PASS (every required item holds, with a consistent final conclusion) and 0 otherwise. Whole-question correctness requires all requested parts.",
-    "record": "One JSONL line per unit (the runner's ResultsLog unit record): the arm, the question id, the repetition, the pin that served (resolved from the environment at run time), the delivered answer, the scorer's per-item results and verdict, calls, seconds, cost, cost by tier, providers by tier, retries, refusals, the stop reason, the watchdog, and the unreconciled liability. The header carries the configuration: the seed, the order's sha256, the resolved pin names, the ceilings, and the versions."
+    "no_model_access_to_keys": "keys.json is read only by the scorer process after each unit's answer is delivered. No arm's prompt, tool, or workflow returns key material. The fetch tool's closed world is the committed archive under evals/tier2/sources/, not the keys.",
+    "registered_call_parameters": {
+      "max_tokens": 8000,
+      "temperature": 0.3,
+      "finish_reason": "recorded per call; a truncated answer (finish_reason=length) is scored as delivered and flagged (the unit record's truncated field)",
+      "note": "Every parameter a unit's outcome depends on is registered here rather than buried in a call site. Arms A-D's calls carry these max_tokens and temperature; arm E's calls carry the pipeline's own standing caps (the .env tier caps), which the preflight checks against the pinned endpoints' max_completion_tokens."
+    },
+    "resolved_servings_recorded": "Every unit's record names the pin that served it, resolved from the environment at run time, and every call's resolved model and provider is on the client's accounting record (the unit record's providers_by_tier).",
+    "resume": "The results log is append-only (one JSONL line per unit, flushed as written, with a durable mirror outside the repo). A restart with the same manifest version and order digest skips every unit already recorded - nothing runs twice or out of order. The unit in flight at the interruption (a unit_started line with no unit record) is charged its full per-unit ceiling against the sweep as unreconciled liability, then re-run. A restart with a different manifest version or order digest refuses.",
+    "record": "One JSONL line per unit (the runner's ResultsLog unit record): the arm, the question id, the repetition, the pin that served (resolved from the environment at run time), the delivered answer, the scorer's per-item results and verdict, calls, seconds, cost, cost by tier, providers by tier, retries, refusals, the stop reason, the watchdog, and the unreconciled liability. The header carries the configuration: the seed, the order's sha256, the resolved pin names, the ceilings, and the versions.",
+    "pilot": {
+      "arms": ["A", "D"],
+      "repetitions_per_question": 1,
+      "planned_units": 50,
+      "seed": 20261004,
+      "authorization": "TIER3_PILOT_AUTHORIZED, $7.50 (25 units at $0.10 and 25 at $0.20) - a separate gate from the main run's, so the pilot can be authorized and run alone",
+      "purpose": "Calibration: the inexpensive arm against the strong reference on the frozen set, at 1/6 the main run's cost, before the owner decides whether the full $90.00 authorization is money well spent."
+    },
+    "preflight": {
+      "when": "Free, before the first unit, after the ratification gates. Its only network call is the catalogue GET itself (unauthenticated, free).",
+      "refuses": [
+        "The worst case of any of arms A-D over its whole call sequence exceeds the arm's per-unit ceiling (the guard's own formula: (prompt bytes + the 512-byte chat-template allowance) x the prompt rate + max_tokens x the completion rate, at the registered max_tokens and the largest prompt the call can carry, arm B's largest archived tool result included; arm C's largest call carries model 1's draft).",
+        "Arm B's serving does not list tool support (the catalogue is blind about supported_parameters: reported, not guessed).",
+        "Arm B's context window cannot hold the largest prompt (the registered question, the arm B prompt and the largest archived source, bounded in bytes - D45 amendment (b): a byte-level tokenizer never emits more tokens than bytes) plus the registered max_tokens.",
+        "Any serving the lineup names - arm E's included - has no catalogue price the guard can bound (D49: an unknown price is not free - a serving absent from the catalogue, or one carrying a charge beside prompt and completion tokens, is unboundable, and the guard is blind for it).",
+        "The registered max_tokens (8000) exceeds a pinned endpoint's max_completion_tokens in the catalogue (the client does not clamp, so the call would fail at the provider). Arm E's tiers are reported, not refused: arm E runs under the guard as it ships."
+      ],
+      "reports": [
+        "The catalogue is blind about a serving's supported_parameters, context length or max_completion_tokens.",
+        "Arm E's standing tier caps exceed the pinned endpoint's max_completion_tokens.",
+        "The arm-E worst-case table (the owner's addition): the worst case per call for each arm E tier under the ratified lineup and the standing caps, against the $0.50 per-unit ceiling, with the guard's formula and the catalogue's rates - saying which calls the guard would refuse and at what spend."
+      ]
+    },
+    "dry_run": {
+      "what": "A mocked run of the full machinery - the gates, the preflight, the plan and its order, the arm executors under their registered treatments and bounds, the deadline, the scoring, the append-only record, the resume, the measures - with the model-serving layer mocked: a scripted client for arms A-D that bills through the real guard and accounting, a fixture catalogue, and a stand-in at the pipeline boundary for arm E (the pipeline's own execution is proven by the harness's suite; everything above the boundary is the experiment's machinery and runs for real). No network, no spend.",
+      "failure_classes": "Each failure class the manifest names, included at least once: refusal, deadline, tool failure, an invalid arm C verdict (prose twice - recorded unavailable, never as concurrence), an incomplete unit (a provider failure), and a resume after a kill (the main run is killed after 40 units, the in-flight unit charged its ceiling as unreconciled liability, and the run resumed to the end). The order's sha256 is the guard's reconstruction.",
+      "pilot_dry_run": "The 50-unit pilot, mocked the same way."
+    },
+    "reading_sheet": {
+      "what": "Every FAIL unit and a seeded sample of 10 PASS units per arm (seeded order, no arm label), for the two independent hand readings that are the primary measure (Ruling D50 (1)). The merge records agreements, disagreements and unread entries; the five measures are computed scorer-only and again with the readers' verdicts where they read, and the two are reported side by side."
+    }
   },
 
   "failure_treatment": {
     "refusal": "A serving that refuses the request delivers nothing: the unit scores 0 and is recorded with the refusal. A unit whose lookups were all refused (arm B's fetch tool) is a poisoned reading, not a model measurement - recorded as such beside the score, the way the runner's refusal line already reports it.",
-    "timeout": "The common deadline. A unit stopped by the watchdog is incomplete: 0 delivered, cost and latency recorded and counted.",
-    "tool_failure": "Arm B: a tool failure is recorded with the failure; the model continues without the tool and the delivered answer is scored on what it delivered. If the run cannot conclude, the unit is incomplete.",
+    "timeout": "The common deadline. A unit stopped by the watchdog is a deadline failure: 0 delivered, cost and latency recorded and counted.",
+    "tool_failure": "Arm B: a tool failure is recorded with the failure (the tool, its arguments, the result's size, any error); the model continues without the tool and the delivered answer is scored on what it delivered. If the run cannot conclude, the unit is incomplete.",
     "incomplete_runs": "Counted in the denominator. The success measures are fractions of the 75 PLANNED units per arm, so an incomplete, refused or timed-out unit is 0 delivered, never dropped.",
     "outstanding_liability": "Calls that failed after dispatch (the runner's unreconciled_liability, Ruling D45) are recorded per unit and included in that unit's cost and in the total-cost success measure. What a run is on the hook for is part of what it cost to start."
   },
@@ -114,13 +154,12 @@
   },
 
   "ratification_gates": {
-    "gate_1_servings": "The owner ratifies the five pin values by setting TIER3_ARM_A, TIER3_ARM_B, TIER3_ARM_C_1, TIER3_ARM_C_2 and TIER3_ARM_D in .env (arm E uses the standing pins, unchanged). TIER3_ARM_B must equal TIER3_ARM_A by design. Until this gate is cleared, no unit starts.",
-    "gate_2_spend": "The owner authorizes the total spend: $90.00 across the 375 planned question-runs (75 units per arm at $0.10/$0.20/$0.20/$0.20/$0.50). This is an authorization ceiling, not a predicted cost; it is not approved by this manifest. Until this gate is cleared, no unit starts.",
-    "stop": "STOP before paid execution. The experiment does not start without both gates cleared in one line each by the owner. The runner mechanizes the stop: it refuses to start unless the environment shows both gates cleared (the pin variables set, and TIER3_SPEND_AUTHORIZED set to the ratified dollar amount)."
+    "gate_1_servings": "The owner ratifies every arm's serving - arm E's per tier - by setting TIER3_ARM_A, TIER3_ARM_B, TIER3_ARM_C_1, TIER3_ARM_C_2 and TIER3_ARM_D in .env (arm E uses the standing pins, unchanged, and the gate covers them: the resolved map includes arm E's seven tiers). The runner resolves the map, prints it with a fingerprint (the first 12 hex of the sha256 of its canonical JSON), and refuses to start unless TIER3_SERVINGS_RATIFIED equals that fingerprint and TIER3_ARM_B equals TIER3_ARM_A. Until this gate is cleared, no unit starts.",
+    "gate_2_spend": "The owner authorizes the total spend: $90.00 across the 375 planned question-runs (75 units per arm at $0.10/$0.20/$0.20/$0.20/$0.50), or $7.50 for the pilot alone (TIER3_PILOT_AUTHORIZED). This is an authorization ceiling, not a predicted cost; it is not approved by this manifest. Until this gate is cleared, no unit starts.",
+    "stop": "STOP before paid execution. The experiment does not start without both gates cleared in one line each by the owner. The runner mechanizes the stop: it refuses to start unless the environment shows both gates cleared (TIER3_SERVINGS_RATIFIED set to the resolved map's fingerprint, and TIER3_SPEND_AUTHORIZED - or TIER3_PILOT_AUTHORIZED for the pilot - set to at least the ratified dollar amount), and it prints the servings map and each missing gate before any network call."
   },
 
   "not_prepared_here": {
-    "execution_machinery": "The runner that consumes this manifest (build the 375-unit plan, shuffle with the recorded seed, execute each unit under its arm's treatment inside _isolated_store(), score with the frozen scorer, write the ResultsLog, compute the success measures) is the next step after ratification - it is free work (mocked-client tests cost nothing) and can be built and tested before the first paid unit.",
-    "dry_run": "A mocked dry-run of the full 375-unit plan (zero cost) is the natural pre-registration check: it proves the machinery before any money moves."
+    "paid_execution": "The main run (375 units, $90.00 authorization) and the pilot (50 units, $7.50) are paid execution: they start only when the owner's ratification gates are cleared. Everything else - the runner (evals/tier3/runner.py), the dry run, the preflight, the worst-case table, the reading sheet, and the tests - is free work, and is done (ARCH-20261003-119)."
   }
 }

@@ -1,6 +1,6 @@
 # Technical question — single answer
 
-You are a technical expert answering one question. Answer from your own knowledge. Do not use tools, lookups, or external sources — none are available to you.
+You are a technical expert answering one question. Use the tools registered below where they help.
 
 ## QUESTION
 
@@ -10,13 +10,11 @@ You are a technical expert answering one question. Answer from your own knowledg
 
 Derive the answer from the question's stated assumptions. Show every numerical step and state every assumption you use. Give a final conclusion that answers every part the question asks, in one place, clearly labelled.
 
-Answer now.
-
 ## TOOLS (registered for this run)
 
 You have two tools, available to you in this run:
 
-- fetch_primary_source(url): retrieves the full text at the given URL and returns it verbatim. When a question turns on the text of a regulation, fetch the source at its public URL and quote what it says; do not paraphrase a quotation you have not retrieved.
-- recompute(expression): evaluates one deterministic arithmetic expression and returns its value. Use it for every numerical derivation; do not trust mental arithmetic for the final figures.
+- fetch_primary_source(citation): fetches the archived July 1, 2014 text of the CFR section the question cites, written as the question writes it (for example '29 CFR § 1910.146(b)'). Returns the section's archived text verbatim, or a typed not-available result when the citation is not one of the archived editions. Opens no network connection.
+- recompute(expression): evaluates one arithmetic expression — numbers, the four operations and powers, parentheses, pi and e, and the functions sqrt, exp, ln, log10, sin, cos, tan, their inverses, abs, min and max — and returns its value. Use it for every numerical derivation; do not trust mental arithmetic for the final figures.
 
-The question, the deadline and the scoring are exactly as stated above; the tools are the only addition.
+Answer now.
