@@ -32,6 +32,17 @@ logger = logging.getLogger(__name__)
 _RATE_LIMIT_ATTEMPTS = 3
 _RATE_LIMIT_BACKOFF_S = 2.0
 
+# The transient-TLS retry (the SSLV3_ALERT_BAD_RECORD_MAC
+# repair, ordered in the advisor's review of the 2026-10-05
+# delivery PRs): one retry of the post itself. A record-MAC
+# alert is a condition of the connection, not a verdict about
+# the serving — the same pin answered on retry — so the retry
+# is a fresh attempt of the same request. Bounded and short
+# for the same reasons as the 429 loop above: the pinned tier
+# cannot fall back and the caller holds a scenario clock.
+_TRANSIENT_TLS_ATTEMPTS = 2
+_TRANSIENT_TLS_BACKOFF_S = 1.0
+
 
 @dataclass
 class ModelResponse:
@@ -223,6 +234,27 @@ def _failure_kind(exc: BaseException) -> str:
     if isinstance(exc, httpx.TransportError):
         return "transport_error"
     return type(exc).__name__
+
+
+def _is_transient_tls_alert(exc: BaseException) -> bool:
+    """The transient TLS record-MAC alert, as measured.
+
+    The fourth sample's failure surfaced as a raw ssl.SSLError
+    whose message carries the alert name; the same alert behind
+    httpx would ride in a TransportError's chain instead. The
+    alert is matched by name in the exception or its chain — this
+    specific alert, not any SSL error: a certificate failure is a
+    verdict about the serving, not a condition of the connection,
+    and retrying it would spend the same worst case twice.
+    """
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if "BAD_RECORD_MAC" in str(current):
+            return True
+        current = current.__cause__ or current.__context__
+    return False
 
 
 class SpendGuardRefused(BudgetExceeded):
@@ -566,6 +598,10 @@ class OpenRouterClient:
     RETRY_SCHEMA_REJECTION = "schema_rejection"
     RETRY_EMPTY_REPLY = "empty_reply"
     RETRY_PARSE_FAILURE = "parse_failure"
+    # The transient-TLS retry. Counted so the reconciliation
+    # states every retry by class — a retry the record cannot
+    # name is a blind spot a reader inherits (convention 26).
+    RETRY_TRANSIENT_TLS = "transient_tls"
 
     def _count_retry(self, kind: str) -> None:
         self.retries_by_kind[kind] = self.retries_by_kind.get(kind, 0) + 1
@@ -589,8 +625,43 @@ class OpenRouterClient:
             # Named so a reader of an empty rejection count knows what it
             # excludes without reading this file.
             "excluded_from_rejection_counters": [
-                self.RETRY_EMPTY_REPLY, self.RETRY_PARSE_FAILURE],
+                self.RETRY_EMPTY_REPLY, self.RETRY_PARSE_FAILURE,
+                self.RETRY_TRANSIENT_TLS],
         }
+
+    async def _post_retrying_transient_tls(
+            self, client: httpx.AsyncClient, path: str,
+            payload: dict[str, Any], model: str) -> httpx.Response:
+        """POST, retrying the transient TLS record-MAC alert.
+
+        The alert is a condition of the connection, not a verdict
+        about the serving, so the retry is a fresh attempt of the
+        same request. Bounded and backed off like the 429 loop
+        above, and counted by class, so the record reconciles every
+        retry. An exhausted alert still raises — the caller's
+        dispatch accounting (D45) books its worst case exactly as
+        before. `except Exception` on purpose: a cancellation is a
+        BaseException and must reach the watchdog's cut untried.
+        """
+        for attempt in range(_TRANSIENT_TLS_ATTEMPTS):
+            try:
+                return await client.post(path, json=payload)
+            except Exception as exc:
+                if not _is_transient_tls_alert(exc):
+                    raise
+                if attempt + 1 >= _TRANSIENT_TLS_ATTEMPTS:
+                    raise
+                self._count_retry(self.RETRY_TRANSIENT_TLS)
+                delay = _TRANSIENT_TLS_BACKOFF_S * (2 ** attempt)
+                logger.warning(
+                    "transient TLS alert (%s) for %s (attempt "
+                    "%d/%d) — a condition of the connection, "
+                    "retrying in %.1fs",
+                    type(exc).__name__, model, attempt + 1,
+                    _TRANSIENT_TLS_ATTEMPTS, delay,
+                )
+                await asyncio.sleep(delay)
+        raise AssertionError("unreachable")  # pragma: no cover
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -701,14 +772,16 @@ class OpenRouterClient:
         reconciled = False
         try:
             client = await self._get_client()
-            resp = await client.post("/chat/completions", json=payload)
+            resp = await self._post_retrying_transient_tls(
+                client, "/chat/completions", payload, model)
             if resp.status_code == 400 and response_format:
                 logger.warning(
                     "400 with response_format for %s — retrying without it. Body: %s",
                     model, resp.text[:300],
                 )
                 payload.pop("response_format", None)
-                resp = await client.post("/chat/completions", json=payload)
+                resp = await self._post_retrying_transient_tls(
+                    client, "/chat/completions", payload, model)
             for attempt in range(1, _RATE_LIMIT_ATTEMPTS):
                 if resp.status_code != 429:
                     break
@@ -719,7 +792,8 @@ class OpenRouterClient:
                     model, attempt, _RATE_LIMIT_ATTEMPTS, delay, resp.text[:200],
                 )
                 await asyncio.sleep(delay)
-                resp = await client.post("/chat/completions", json=payload)
+                resp = await self._post_retrying_transient_tls(
+                    client, "/chat/completions", payload, model)
             _raise_for_status(resp, "chat/completions")
             data = resp.json()
 
