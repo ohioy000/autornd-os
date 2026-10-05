@@ -1106,3 +1106,589 @@ under the new lineup (inkling at $4.05/M
 completion) should be re-quoted free before
 ratification (the tier-3 runner's
 `worst-case` subcommand).
+
+## The fifth sample — pre-registration (2026-10-05, before the first paid call)
+
+The owner acted on option (a): the
+watchdog's budget is now 1900 s. The
+`.env` edit (G-3, made at the owner's
+explicit direction on 2026-10-05; the
+file's contents are never printed):
+`RUN_TIME_BUDGET_SECONDS=1900` — the
+line the fourth sample's apparatus
+finding asked for. The owner's direction
+for this sample: run the fourth sample
+again, from a fresh shell. The sample's
+primary question is therefore the
+apparatus fix itself — does the 1900 s
+budget reach the D38 watchdog now (all
+four previous samples armed it at 600 s
+from the runs' environment, not from any
+file), and does the fourth sample's
+outcome hold or improve once a large-plan
+unit is no longer cancelled at 600 s?
+
+The free checks re-verified the locked
+configuration before any paid call, under
+the exact `env -u` list the paid run
+uses:
+
+- **The apparatus fix reaches the
+  settings.** A fresh process (every
+  shell export stripped, including
+  `RUN_TIME_BUDGET_SECONDS`) resolves
+  `run_time_budget_seconds = 1900.0`
+  (autornd/config.py:146; the config
+  default is 1800.0, and before the
+  `.env` edit a fresh process resolved
+  exactly that — the 600.0 recorded in
+  samples 1–4 came from those runs'
+  environment, not from the file, which
+  carried no run_time_budget line at
+  all). This is the controlled variable
+  of the sample: the paid run's
+  environment unsets `RUN_TIME_BUDGET_
+  SECONDS`, so the `.env` line — and
+  nothing else — arms the watchdog.
+- **The locked lineup governs.** Under
+  the same list the settings resolve to
+  the sample-4 lineup: engineering
+  `thinkingmachines/inkling:exacto`,
+  judge `qwen/qwen3-235b-a22b-2507:
+  exacto`, provider order
+  `engineering:together` and
+  `judge:google-vertex/us-south1`, plan
+  ceiling 55,000 (the config default —
+  `.env` carries no cap lines; the shell's
+  stale `PLAN_MAX_TOKENS=78000`,
+  `MODEL_ENGINEERING=qwen/qwen3-235b-
+  a22b-2507` and `MODEL_JUDGE=moonshotai/
+  kimi-k2.5:exacto` are stripped, which
+  is why a fresh shell is required at
+  all).
+- **The guard's geometry fits.** The
+  worst-case table (completion side,
+  max_tokens × the catalogue rate) is
+  unchanged from sample 4 — nothing in
+  the guard's inputs moved: triage
+  $0.0614, research $0.0614, search
+  $0.0180, architecture $0.0479,
+  **engineering $0.2228**, judge $0.0057,
+  escalation $0.2520 — every tier under
+  the $0.50 per-run cap, so no guard
+  refusal is expected. Budget geometry:
+  3 units × $0.50 = $1.50, exactly the
+  sweep cap (permitted == wanted; the
+  CLI's worst-case warning does not
+  fire).
+- **The pin-check false negative
+  persists** (the owed tag-match repair
+  is not made): the preflight would
+  report the judge pin `google-vertex/
+  us-south1` as failing. The evidence
+  that it serves is sample 4's 24 judge
+  calls via that endpoint at 2.7–17.3 s
+  per call. The sweep therefore runs with
+  `--skip-preflight` and the override
+  recorded, as in samples 1–4.
+- The suite `/tmp/golden-q123` still
+  holds the three scenarios
+  (golden_q1/2/3.yaml).
+
+Configuration: golden_q1–q3 through
+`engineering-rnd`, repeat 1, timeout
+1900 s, `--max-spend 0.50` per
+scenario-run, `--max-spend-sweep 1.50`,
+the `env -u` invocation extended with
+`-u RUN_TIME_BUDGET_SECONDS` (the
+controlled variable), a new results file
+(`evals/results/probe-20261004-golden-
+q123-rerun5.jsonl`, gitignored like every
+local run output).
+
+Predictions:
+
+1. The header records the lineup above
+   and `{ran: false, override: true}`.
+2. **Every unit record's watchdog carries
+   `budget_seconds: 1900.0`** — the
+   apparatus fix verified live.
+   Falsifier: any unit shows a different
+   budget (1800.0 would mean the `.env`
+   line was not read; 600.0 would mean a
+   run-environment export overrode the
+   file; anything else, a third source) —
+   the sample's primary question answered
+   "no", reported immediately.
+3. Every plan completes in ONE
+   architecture call under the 55,000
+   ceiling (sample 4's largest: 24,107
+   tokens, 44% of the ceiling).
+4. The engineering tier serves via
+   Together (sample 4: 12 of 12
+   dispatches completed, feasibility
+   10.6–17.9 s). An engineering 429
+   after the client's retries is a
+   falsifier — it would show the
+   availability problem is not purely
+   DeepInfra's route.
+5. The judge tier serves via
+   google-vertex/us-south1 at 2.7–17.3 s
+   per call; the judge model's
+   intermittent upstream 429s may recur
+   (two calls lost in sample 4's Q1) but
+   retries absorb all but a few. A judge
+   404 — the tag failing to resolve
+   server-side — is a falsifier.
+6. **No unit ends by watchdog
+   cancellation on a time basis.**
+   Sample 4's Q2 (a 24,107-token plan,
+   522.66 s) was cancelled at 599.6 s
+   with 45.8 s remaining; under a 1900 s
+   budget its implement node completes.
+   Falsifier: a watchdog cancellation on
+   a time basis under a 1900.0 budget —
+   the budget reached the record but not
+   the arbiter, a second and deeper
+   apparatus finding. (A cancellation on
+   a non-time rule would be a new finding
+   to record, not a falsifier of the
+   fix.)
+7. Spend: $0.50–$1.30 of the $1.50 sweep
+   cap. Units now run longer — a Q2-class
+   unit proceeds through implement and
+   judging instead of being cancelled —
+   so per-unit cost rises above sample
+   4's $0.0577–$0.2920 range; no
+   spend-guard refusal is expected (every
+   tier's worst case fits the per-run
+   cap).
+8. Outcome: 1–3 of 3 units ship. Sample
+   4's Q1 produced a validated-green
+   deliverable (all six success criteria
+   PASS, 258.7 s) before a one-off
+   SSLError ended its rework loop; the
+   SSL class's transience is unmeasured
+   (one occurrence).
+
+Falsifiers (the registered list): any
+unit's watchdog budget ≠ 1900.0; a
+watchdog cancellation on a time basis
+under a 1900.0 budget; an engineering
+429 after the client's retries; a judge
+404; a plan past 55,000 tokens; sweep
+spend past $1.50; a spend-guard refusal;
+a recurring 400 (Together's route
+rejecting `response_format` — the
+client's log-drop-retry safety net's
+first live exercise; sample 4 never
+triggered it).
+
+Caveats: the wall clock — under a 1900 s
+watchdog budget a unit may run up to
+~1900 s, so the sweep may take over an
+hour (sample 4 took 1413.8 s under the
+600 s watchdog; the run is launched as a
+background process accordingly). The
+SSLError class (one occurrence). The
+judge's upstream 429s (intermittent,
+provider-side). Q3's escalation-recovery
+loop not converging on numerically
+correct work (a harness-behaviour
+question for the advisor, not a serving
+one). The preflight override (the owed
+instrument repair).
+
+Departure: none from the standing
+protocol — this pre-registration is
+committed before the first paid call
+(the sample-4 "no git actions until
+complete" directive was specific to that
+run and is not repeated for this one;
+the working tree is clean at launch).
+
+## The fifth sample — measured record (2026-10-05, after the paid run)
+
+The sweep: **1 of 3 units passed —
+the first golden_q1 pass in five
+samples** — 37 calls, 1159.7 s,
+$0.3050 of the $1.50 sweep cap
+(per unit: Q1 $0.0414, Q2 $0.1183,
+Q3 $0.1453 booked; Q3 also carries
+$0.2863 unreconciled liability — the
+escalation call cancelled after
+dispatch, D45's worst-case booking).
+Served by: engineering via Together
+(10 of 10 dispatches completed across
+the three units — 2 / 4 / 4 calls;
+feasibility in 10.0 / 27.9 / 10.6 s),
+architecture via Xiaomi, judge via
+Google (15 calls, $0.0231), research
+and triage via Google AI Studio. The
+escalation tier's single dispatch (Q3)
+was cancelled by the watchdog before
+any serving was observed
+(`serving_observed: null`). The run
+log shows one judge 429 ("attempt 1/3
+— upstream capacity, retrying in
+2.0s"), absorbed by the client's
+transport retry — the unit ledgers'
+retry counters stayed zero (a
+transport retry that succeeds is
+recorded as one completed call, not a
+ledger retry). "Knowledge collection
+not found — run ingestion first"
+repeats throughout: the probe runs
+with the isolated empty store by
+design, so no search-tier call was
+made.
+
+**The primary falsifier fired: the
+watchdog armed at 600 s, not 1900 s.**
+Q3's watchdog block, verbatim:
+`{armed: true, budget_seconds: 600.0,
+reserve_seconds: 0.4, fired: true,
+rule: cancelled, node: escalation,
+iteration: 0, tier: escalation,
+elapsed_seconds: 599.605,
+available_seconds: 22.4144,
+terminal_seconds: 599.6051, ...}` and
+its terminal names the budget in
+prose: "the escalation call at
+'escalation' was cancelled at
+599.605s of the 600s budget, leaving
+the 0.4s reserve to write this
+terminal". The `.env` line — set at
+the owner's direction between samples
+4 and 5, verified to resolve to
+1900.0 in a fresh process — did not
+reach the watchdog.
+
+**The apparatus finding, now complete.**
+The watchdog's budget under the eval
+sweep has three candidate sources and
+a precedence the prior sessions'
+finding missed:
+
+1. `autornd/evals/runner.py:819-822`
+   — `deadline = scenario.timeout or
+   timeout`, then `executor =
+   GraphExecutor(spec, runner,
+   settings_lookup, time_budget=
+   deadline)`. The eval runner
+   constructs the executor with an
+   EXPLICIT time budget: the scenario
+   YAML's own `timeout` field, else
+   the CLI's `--timeout`.
+2. The golden scenarios declare
+   `timeout: 600` (line 7 of
+   `evals/scenarios/golden/golden_q{1,2,3}
+   .yaml` on main; the probe's /tmp
+   copies are byte-identical). Set
+   deliberately by 29b015a ("106:
+   golden scenario timeouts at twice
+   each question's time target"). The
+   scenario's 600 therefore wins over
+   the CLI's `--timeout 1900`.
+3. `settings.run_time_budget_seconds`
+   — the `.env` knob — is consulted
+   only by the API entry point
+   (`autornd/engine/workflow.py:144`),
+   never by the eval runner. The
+   `.env` line is the wrong knob for
+   this path: it does what it says for
+   the API path and is inert for the
+   sweep.
+
+The prior sessions' diagnosis was
+wrong twice — first "pinned at 600 in
+the owner's .env" (the file carried no
+such line), then "the 600 came from
+the runs' environment" (this run's
+environment stripped the variable and
+the watchdog still armed at 600). The
+600 was always the scenario YAMLs' own
+`timeout` field, which neither the
+`.env` line nor `--timeout` can move.
+The falsifier's three readings,
+resolved: 1800.0 would have meant the
+`.env` line was not read (it was — a
+fresh process resolves 1900.0); 600.0,
+what happened, means the scenario's
+own timeout field bound. The fix for
+the eval path is to edit `timeout:
+600` in the golden scenario YAMLs (or
+delete the field so the CLI's
+`--timeout` governs). That change
+alters what the harness measures — a
+unit may run ~3× longer before the
+watchdog ends it — so it is a
+behaviour change (loop wiring and exit
+conditions are the advisor's to rule),
+recorded here and NOT made.
+
+Per unit:
+
+**Q1 — PASSED, the first golden_q1
+pass in five samples.** 8 calls,
+197.683 s, $0.0414. Plan node 150.054
+s, feasibility 9.996 s (Together),
+implement 21.059 s, review 3.424 s,
+validate 3.099 s, triage 2.845 s.
+Zero retries, zero rejections, zero
+liability, zero failed-after-dispatch.
+The deliverable — the unloaded ideal
+voltage divider (V_out = 8.00 V,
+I_supply = 2.00 mA, derived as
+12.0 V × 4.00 kΩ / 6.00 kΩ and
+12.0 V / 6.00 kΩ) — passed every
+assertion: implement_green, coverage
+and consistency passed, zero
+dissenting or unchecked checks, and
+the deliverable's own falsifier check
+(M = 0 canonical figures outside
+their rounding bands). Engineering via
+Together, judge via Google (2 calls,
+$0.0019). The locked lineup completes
+the golden_q1 pipeline cleanly end to
+end.
+
+**Q2 — blocked on criterion content, a
+new ending in five samples.** 12 calls,
+362.371 s, $0.1183 — all inside the
+budget; the watchdog never armed. Plan
+node 204.524 s, implement 97.098 s
+(two iterations, 36 s + 60 s),
+feasibility 27.853 s, review 17.298 s.
+The build judges blocked the
+deliverable on its own claim: it
+asserts BOTH the deficient-atmosphere
+and the oxygen-enriched-atmosphere
+definitions as verbatim sentences from
+§ 1910.146(b), each with the citation
+"29 CFR § 1910.146(b), Title 29,
+Volume 5, revised as of July 1, 2014"
+— but the cited paragraph contains
+only the deficient-atmosphere
+definition; no value, operator, or
+basis for "oxygen enriched atmosphere"
+exists in the source of truth or any
+corroborating rendering. The criterion
+the implementation named cannot be
+satisfied from the source of truth.
+Zero retries, zero rejections, zero
+liability. This is a content finding,
+not a serving failure: the first unit
+in five samples blocked by the judges
+on the deliverable's claim rather than
+by pace, the watchdog, or a 429.
+Whether the scenario's expectation or
+the deliverable's citation practice is
+the defect is a criterion-content
+question for the advisor.
+
+**Q3 — blocked by the watchdog (the
+falsifier).** 17 calls, 599.606 s,
+$0.1453 booked + $0.2863 unreconciled
+liability. Plan node 373.08 s — the
+largest plan node in five samples —
+implement 127.515 s, escalation 22.42
+s, rework_review 17.363 s, validate
+16.64 s, review 12.609 s, feasibility
+10.58 s, triage 10.154 s. Judge: 9
+calls, $0.0150 via Google. The
+escalation's rework loop ran one
+iteration: an implementation was
+agreed (index 1) but the rework_review
+gate failed, the latest implementation
+differs and is dissented, and the
+further escalation call was cancelled
+at 599.605 s with 22.4 s still
+available — the watchdog's pace rule
+judged the call could not finish in
+the remaining budget. The escalation's
+serving was never observed.
+
+**The plan node's tier, an instrument
+ambiguity recorded as such.** The step
+records label the plan node
+`architecture` in Q2 and Q3 but
+`engineering` in Q1 — yet Q1's call
+ledger shows exactly one architecture
+call (8,177 completion tokens) and two
+engineering calls (4,442 tokens
+total, the feasibility and implement
+pairs). At 150.054 s for 8,177 tokens
+the plan ran at 18.4 s per 1k tokens —
+the architecture model's signature
+pace (Q2: 204.524 s / 9,888 tokens =
+20.7 s per 1k; Q3: 373.08 s / 18,083
+tokens = 20.6 s per 1k; sample 4:
+~21.7 s per 1k) — while the engineering
+model runs two orders faster (the
+10.0 s feasibility calls produce
+~1,500 tokens). The arithmetic says
+all three plans were served by the
+architecture model (mimo-pro via
+Xiaomi); Q1's step record's `tier:
+engineering` label contradicts its own
+ledger (the same node read
+`architecture` in sample 4). The step
+record's tier field is inaccurate for
+this unit.
+
+**The pace analysis, restated under
+the corrected attribution.** The plan
+node (architecture model, all three
+units): 150.1 / 204.5 / 373.1 s for
+8,177 / 9,888 / 18,083 tokens —
+18.4–20.7 s per 1k tokens, plan-size
+variance 139.8–522.7 s across the two
+samples (7,314–24,107 tokens). The
+engineering tier (inkling via
+Together): feasibility 10.0–27.9 s,
+implements 21.1–127.5 s. A unit whose
+plan stays ~8–10k tokens fits the 600 s
+budget with room (Q1: 197.7 s to a
+passed deliverable); a 18k-token plan
+(Q3) plus implement leaves the
+escalation nothing (373.1 + 127.5 =
+500.6 s of the 600 s before the
+escalation's own 22.4 s).
+
+Predictions vs measured:
+
+1. **HELD** — the header records the
+   locked lineup and `{ran: false,
+   override: true}`.
+2. **FALSIFIED — the primary falsifier
+   fired.** Q3's watchdog block carries
+   `budget_seconds: 600.0` and its
+   terminal names the 600 s budget in
+   prose. The apparatus fix did not
+   reach the watchdog; the `.env` line
+   is the wrong knob for the eval path
+   (the full precedence is above).
+3. **HELD** — every plan completed in
+   ONE call (zero parse retries in all
+   three units), all under the 55,000
+   ceiling (the largest, Q3's 18,083
+   tokens, 33% of it).
+4. **HELD** — the engineering tier
+   served via Together: 10 of 10
+   dispatches completed (feasibility
+   10.0 / 27.9 / 10.6 s). No 429, no
+   400 — Together's route accepted
+   `response_format` again; the
+   client's 400 safety net was never
+   needed. The availability problem
+   stayed buried on DeepInfra's route
+   for a fifth sample.
+5. **HELD with a recurrence** — the
+   judge served via Google (15 calls,
+   $0.0231) at the new serving's pace,
+   and the judge model 429'd once
+   upstream (attempt 1/3, absorbed by
+   the transport retry) — the
+   intermittent-upstream-429 phenomenon
+   on its third sample (one call lost
+   in sample 4's Q1, two there, one
+   here; retries have absorbed every
+   occurrence so far).
+6. **FALSIFIED — the primary falsifier,
+   in its stronger form.** Q3 ended by
+   watchdog cancellation on a time
+   basis — under a 600.0 budget, i.e.
+   the fix never armed at all, not
+   merely failed to bind.
+7. **MEASURED — under the predicted
+   range's floor.** $0.3050 of $1.50
+   (predicted $0.50–$1.30): Q1
+   completed cleanly at $0.0414 and Q2
+   blocked early at $0.1183, so the
+   units ran cheaper than sample 4's;
+   no guard refusal (every tier's worst
+   case fits the per-run cap).
+8. **MEASURED — 1 of 3 units shipped**
+   (Q1), inside the predicted 1–3. The
+   first golden unit passed in fifteen
+   golden units across five samples.
+
+Falsifiers (the registered list):
+**fired — predictions 2 and 6** (the
+watchdog budget was 600.0, and a
+watchdog cancellation on a time basis
+ended Q3). Held: no engineering 429
+after retries, no judge 404 (the tag
+pin resolved server-side again), no
+plan past 55,000 tokens, sweep spend
+$0.3050 < $1.50, no spend-guard
+refusal, no recurring 400. The SSL
+transport class did not recur (zero
+occurrences this sample — one
+occurrence in sample 4 remains a
+single data point).
+
+The five samples together
+($0.0720 + $0.0945 + $0.0884 +
+$0.4239 + $0.3050 = $0.9838 of the
+$7.50 total authorization across five
+runs): the locked lineup (engineering
+plain inkling via Together, judge
+qwen3-235b via google-vertex/us-south1,
+55,000 ceiling) now passes a golden
+unit end to end (Q1: 197.7 s, $0.0414,
+zero retries, rejections, or liability)
+and serves every tier reliably (10 of
+10 engineering dispatches this sample;
+the judge tag pin resolved and served
+again). What still binds the remaining
+units is no longer serving — it is
+(1) the watchdog's 600 s budget, which
+is the scenario YAMLs' own `timeout`
+field and which neither the `.env` line
+nor `--timeout 1900` can move; (2)
+plan-node size on the architecture
+model (a 18k-token plan plus implement
+leaves the escalation nothing under
+600 s); and (3) criterion content (Q2's
+deliverable cited a definition the
+source of truth does not contain).
+
+Where this leaves the owner:
+**(a)** the `.env` line stays or goes —
+it governs the API entry point's
+watchdog (`engine/workflow.py:144`),
+not the eval sweep's; it is inert for
+these probes (G-3, the owner's call).
+**(b)** The scenario-timeout raise
+(`timeout: 600` → 1900 in
+`evals/scenarios/golden/`, or deleting
+the field so `--timeout` governs) is a
+behaviour change — what the watchdog
+measures — and is the advisor's to
+rule, the owner's to direct; the
+probe's standing question ("does a
+large-plan unit complete under a
+1900 s budget?") is still unanswered,
+now for a fifth sample. **(c)** Q2's
+block is a criterion-content question
+(the deliverable's citation practice vs
+the scenario's expectation), the
+advisor's to rule. **(d)** The step
+record's tier field mislabeled Q1's
+plan node — an instrument repair
+(the step ledger vs the call ledger
+disagree), owed and recorded, not made.
+**(e)** The judge's intermittent
+upstream 429s are on their third
+sample, always absorbed so far —
+provider-side, the owner's own-key
+remedy (G-1) or acceptance. **(f)** The
+tier-3 experiment's gate 1 is fully
+retired as a blocker: the engineering
+tier serves, fits, and now passes a
+golden unit; the arm-E worst-case
+table re-quote under the locked lineup
+remains the owner's pre-ratification
+step.
