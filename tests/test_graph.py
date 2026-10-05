@@ -486,6 +486,62 @@ class ScriptedRunner:
         return get_check(node.check)(**resolve_args(node, state))
 
 
+class _Ledger:
+    """The client's call ledger, as the production client keeps it.
+
+    The executor's tier instrument reads `calls_by_function` off the
+    runner's client — the same ledger the unit record's `calls_by_tier`
+    is built from — so a double that exercises the instrument carries
+    one: the function each node's call books under.
+    """
+
+    def __init__(self, booked_as):
+        self.calls = 0
+        self.calls_by_function: dict[str, int] = {}
+        self._booked_as = booked_as
+
+    def book(self, node_id):
+        function = self._booked_as.get(node_id, "engineering")
+        self.calls_by_function[function] = (
+            self.calls_by_function.get(function, 0) + 1)
+        self.calls += 1
+
+
+class BookingRunner(ScriptedRunner):
+    """The scripted double, booking its calls on the production ledger.
+
+    The plan node is the measured fact this double exists to carry:
+    run_plan (autornd/engine/phases.py) dispatches the plan call on
+    the architecture function whatever the workflow's `tier_when`
+    condition resolves — it ignores the `tier` argument it is passed.
+    Every other AI node books under the tier the workflow names for
+    it, which is what the shipped phases do. (domain_review books
+    "judge" here; production makes no call for it when no peer is
+    assigned, and the instrument's answer is "judge" either way —
+    the booked function, or the routing answer the empty delta
+    falls back to.)
+    """
+
+    # node id -> the function its call books under
+    BOOKED_AS = {
+        "triage": "triage",
+        "plan": "architecture",
+        "feasibility": "engineering",
+        "implement": "engineering",
+        "domain_review": "judge",
+        "validate": "judge",
+        "review": "judge",
+    }
+
+    def __init__(self, verdicts):
+        super().__init__(verdicts)
+        self.client = _Ledger(self.BOOKED_AS)
+
+    async def run_ai(self, node, state):
+        self.client.book(node.id)
+        return await super().run_ai(node, state)
+
+
 async def _run(verdicts, settings=None):
     spec = load("workflows/engineering-rnd.yaml")
     runner = ScriptedRunner(verdicts)
@@ -789,6 +845,75 @@ class TestExecutorMechanics:
         state, _ = await _run({**BASE, "validate": flaky})
         implements = [s for s in state.trace if s.node_id == "implement"]
         assert [s.iteration for s in implements] == [1, 2]
+
+
+LOW_RISK_TRIAGE = {"risk": "low", "domains": ["backend"],
+                   "unrecallable": False}
+# BASE carries no validate verdict — every run of the shipped
+# workflow needs one, the loop's exit condition reads it.
+LOW_RISK_HAPPY = {**BASE, "triage": LOW_RISK_TRIAGE,
+                  "validate": {"green": True}}
+
+
+@pytest.mark.asyncio
+class TestTheStepRecordNamesTheTierThatServed:
+    """The step ledger's tier is an instrument: it names the tier the
+    run's own call ledger says served the node, not the tier the
+    workflow file's conditions say it would.
+
+    **The measurement this exists for.** The golden probe's fifth
+    sample: a low-risk plan node's step read `engineering` — the
+    `tier_when` condition's answer — while its call booked under
+    `architecture` (the plan phase dispatches on the architecture
+    function whatever the condition resolves; run_plan ignores the
+    tier argument it is passed). The step ledger and the call ledger
+    disagreed, and the watchdog's pace attribution, keyed off the
+    step's tier, inherited the disagreement. These tests simulate the
+    condition end to end rather than asserting the shape of the fix
+    (convention 22).
+    """
+
+    async def test_a_low_risk_plan_step_names_the_booked_tier(self):
+        spec = load("workflows/engineering-rnd.yaml")
+        runner = BookingRunner(LOW_RISK_HAPPY)
+        executor = GraphExecutor(spec, runner, SETTINGS)
+        state = await executor.run("Add retry")
+        plan_steps = [s for s in state.trace if s.node_id == "plan"]
+        assert plan_steps, "the plan node did not run"
+        assert all(s.tier == "architecture" for s in plan_steps), (
+            "the step ledger must name the tier the call ledger says "
+            "served the plan node — the architecture function — not "
+            "the tier_when condition's answer")
+        # The condition's answer really was engineering, so the record
+        # above is a measurement, not a restatement of the routing.
+        assert executor.resolve_tier(spec.get("plan"), state) == \
+            "engineering"
+
+    async def test_every_step_names_the_function_that_served_it(self):
+        spec = load("workflows/engineering-rnd.yaml")
+        runner = BookingRunner(LOW_RISK_HAPPY)
+        state = await GraphExecutor(spec, runner, SETTINGS).run(
+            "Add retry")
+        served = {s.node_id: s.tier for s in state.trace
+                  if s.kind == "ai" and not s.skipped}
+        assert served == {
+            "triage": "triage",
+            "plan": "architecture",
+            "feasibility": "engineering",
+            "implement": "engineering",
+            "domain_review": "judge",
+            "validate": "judge",
+            "review": "judge",
+        }
+
+    async def test_a_runner_without_a_ledger_keeps_the_routing_answer(self):
+        """The fallback the repair keeps: no ledger to read, the record
+        keeps the workflow file's own answer — correct exactly when the
+        ledger cannot say, which is the double every other test here
+        runs on."""
+        state, _ = await _run(LOW_RISK_HAPPY)
+        plan_steps = [s for s in state.trace if s.node_id == "plan"]
+        assert all(s.tier == "engineering" for s in plan_steps)
 
 
 class TestResolveArgs:

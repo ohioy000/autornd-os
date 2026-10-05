@@ -95,10 +95,14 @@ class StepRecord:
     # for B7 costs about half a dollar, and "it timed out" is a reading, not a
     # diagnosis. Zero for a skipped node, which costs nothing.
     seconds: float = 0.0
-    # The tier a model-calling node routed to on this run, as resolve_tier
-    # gave it; None for checks and gates. Measured need: 094's record could
-    # only ESTIMATE the judges' pace (3,078 s over 14 calls, split evenly),
-    # because per-phase totals cannot say which call took how long.
+    # The tier this node's calls were actually booked under,
+    # measured off the run's own call ledger (the one function
+    # that grew across the node's execution); the workflow file's
+    # routing answer (resolve_tier) when the node made no call or
+    # the ledger cannot say. Measured need: 094's record could
+    # only ESTIMATE the judges' pace (3,078 s over 14 calls, split
+    # evenly), because per-phase totals cannot say which call took
+    # how long.
     tier: str | None = None
     # True when the D38 watchdog cut this node mid-flight. Its `seconds` are
     # then the time it ran before the cut, not a completed call's duration.
@@ -515,6 +519,38 @@ class GraphExecutor:
         calls = getattr(getattr(self.runner, "client", None), "calls", None)
         return calls if isinstance(calls, int) else None
 
+    def _functions(self) -> dict[str, int] | None:
+        """The client's per-function call counts, when the runner
+        exposes one. A copy, so a snapshot compares against the
+        counts as they were, not as they become."""
+        counts = getattr(getattr(self.runner, "client", None),
+                         "calls_by_function", None)
+        return dict(counts) if isinstance(counts, dict) else None
+
+    def _measured_tier(self, before: dict[str, int]) -> str | None:
+        """The tier this node's calls were actually booked under.
+
+        The step record's tier is an instrument, and an instrument
+        states what it measured and nothing more (convention 26): the
+        tier the run's own call ledger says served the node, not the
+        tier the workflow file's conditions say it would. Measured
+        2026-10-05 (the golden probe's fifth sample): a low-risk plan
+        node's step read `engineering` — the `tier_when` condition's
+        answer — while its call booked under `architecture`, because
+        the plan phase dispatches on the architecture function
+        whatever the condition resolves (run_plan ignores the tier
+        argument it is passed); the step ledger and the call ledger
+        disagreed, and the pace attribution keyed off the step's tier
+        inherited the disagreement. Exactly one function grown across
+        the node is that function; no call, or calls spread across
+        functions, keeps the condition's answer.
+        """
+        after = self._functions()
+        if after is None:
+            return None
+        grown = [fn for fn, n in after.items() if n > before.get(fn, 0)]
+        return grown[0] if len(grown) == 1 else None
+
     def _configured_serving(self, tier: str | None) -> dict[str, Any] | None:
         """Which model and pin a call on this tier is configured to use.
 
@@ -603,9 +639,11 @@ class GraphExecutor:
         return True
 
     def _after_step(self, node: Node, record: StepRecord, completed: bool,
-                    calls_before: int | None, state: ExecutionState,
-                    trace_index: int) -> None:
-        """Bookkeeping after a node: pace, slow-call flags, history tags.
+                    calls_before: int | None,
+                    functions_before: dict[str, int] | None,
+                    state: ExecutionState, trace_index: int) -> None:
+        """Bookkeeping after a node: the served tier, pace, slow-call
+        flags, history tags.
 
         Read-only with respect to the run: nothing here changes a decision
         already taken. Only a completed node's output is read, because a node
@@ -629,6 +667,14 @@ class GraphExecutor:
 
         if node.kind is not NodeKind.AI or not (completed or record.cancelled):
             return
+        # The record's tier is corrected from the run's own call
+        # ledger before the pace bookkeeping below keys its samples
+        # on it, so the record and the pace attribution name the
+        # tier that served the node, not the tier the workflow's
+        # conditions named.
+        measured = self._measured_tier(functions_before)
+        if measured is not None:
+            record.tier = measured
         calls_after = self._calls()
         called = (calls_before is None or calls_after is None
                   or calls_after > calls_before)
@@ -884,6 +930,7 @@ class GraphExecutor:
         state.trace.append(record)
         trace_index = len(state.trace) - 1
         calls_before = self._calls()
+        functions_before = self._functions()
         started = time.perf_counter()
         route_to: str | None = None
         completed = False
@@ -906,8 +953,8 @@ class GraphExecutor:
             # In a finally so a node that raises still reports what it cost —
             # the expensive failures are the ones worth timing.
             record.seconds = round(time.perf_counter() - started, 3)
-            self._after_step(node, record, completed, calls_before, state,
-                             trace_index)
+            self._after_step(node, record, completed, calls_before,
+                             functions_before, state, trace_index)
 
         # Deliberately outside the timer. A gate's own work is one condition
         # test; the sub-graph it routes to is timed by its own nodes, and
