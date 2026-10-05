@@ -528,3 +528,74 @@ owner's line — the scenarios' own bound is 600 s);
 pending, and no paid tier-3 arm-E unit can start until
 the engineering tier both serves reliably and fits the
 deadline.
+
+## The third sample — pre-registration (2026-10-04)
+
+The owner's directive: "rertry". The free checks
+re-read before this registration: the configuration
+is UNCHANGED from the second sample — the same
+lineup (fingerprint `2d48223a86e0`, the same arm-E
+map, the same provider order), plan cap 125000
+(escalation 50000, judge 55000, validate 32000,
+search 55000/56000), worst cases triage/research
+$0.0614, search $0.0560, architecture $0.1087,
+engineering $0.1500, judge $0.0192, escalation
+$0.7000 (every call this probe makes fits the
+$0.50 per-run cap; escalation's $0.7000 still
+exceeds it but this probe makes no escalation
+call), and the same one genuine harness-preflight
+finding (the engineering endpoint's
+`response_format` declaration). Configuration
+identical to the second sample except the results
+file: `evals/results/probe-20261004-golden-q123-rerun3.jsonl`.
+A third sample, never a confirmation (convention
+27).
+
+What the second sample established (the prior
+this one measures against): the 429 is
+intermittent (Q2's and Q3's feasibility
+engineering calls completed; Q1's feasibility and
+Q3's implement did not), the engineering pace is
+60.4–161.4 s per feasibility node (too slow for
+the 600 s deadline against a 312.8–365.5 s plan
+node), and the 125,000 cap lets every plan
+complete in one call.
+
+### The prediction (registered before the first paid call of the third sample)
+
+1. The results header records `{ran: false,
+   override: true}`.
+2. Every plan completes in ONE architecture
+   call (the 125,000 cap).
+3. The 429 recurs on some engineering
+   dispatches and clears on others (the
+   intermittent pattern); whether any unit's full
+   engineering sequence (feasibility + implement)
+   completes is the measurement — the second
+   sample's Q2 showed the sequence can start
+   (feasibility completed) but the watchdog's
+   pace arithmetic ended it at implement.
+4. Every unit is bounded: 600 s, 40 calls, the
+   watchdog's own terminal.
+5. Total spend lands under the $1.50 sweep cap,
+   and no call the probe makes is refused by the
+   guard (the largest worst case is engineering
+   at $0.1500, under the $0.50 per-run cap).
+6. What this run does NOT predict: whether units
+   ship. The pace finding (60.4–161.4 s per
+   engineering node against a ~320–365 s plan
+   node) says no unit can ship inside 600 s on
+   this lineup; this sample measures the spread,
+   not the verdict.
+
+Falsifiers: a second preflight finding beyond
+the known declaration gap; a unit past its 600 s
+or 40-call bound; sweep spend above $1.50; a
+spend-guard refusal on a call the probe makes;
+an engineering call that fails for a reason other
+than the upstream 429.
+
+Caveat: the same empty knowledge store — no
+search-tier call. The third sample's measured
+record is appended below after the run, in this
+same file, and committed again.
