@@ -277,22 +277,28 @@ def _run(coro):
 
 class TestATheOrder:
     def test_the_order_is_the_guard_reconstruction(self):
+        # The stage-1 plan's order: over the seven
+        # selected questions, not the frozen set's 25.
+        selected = runner.stage1_questions()
+        assert [q["id"] for q in selected] == list(
+            runner.STAGE1_QUESTION_IDS)
         order = runner.build_order(
-            runner.SEED, runner.REPITIONS, runner.ARMS)
+            runner.SEED, runner.REPITIONS, runner.ARMS,
+            selected)
         # The independent reconstruction: the manifest's own
         # comprehension and seed, built here from the frozen
         # questions, not from the runner's code.
         units = [[question["id"], repetition, arm]
-                 for question in runner.load_questions()
+                 for question in selected
                  for repetition in (1, 2, 3)
                  for arm in runner.ARMS]
         random.Random(runner.SEED).shuffle(units)
         # The runner's order IS that reconstruction.
         assert order == units
-        # A permutation: 375 units, every one once, none
+        # A permutation: 105 units, every one once, none
         # invented, none dropped.
-        assert len(order) == 375
-        assert len({tuple(unit) for unit in order}) == 375
+        assert len(order) == 105
+        assert len({tuple(unit) for unit in order}) == 105
         assert {tuple(unit) for unit in order} == {
             tuple(unit) for unit in units}
         # The digest both sides compute is the same figure.
@@ -302,7 +308,8 @@ class TestATheOrder:
         # reproduce the order, or the reconstruction proves
         # nothing.
         other = runner.build_order(
-            runner.SEED + 1, runner.REPITIONS, runner.ARMS)
+            runner.SEED + 1, runner.REPITIONS, runner.ARMS,
+            selected)
         assert other != order
         # Break-proof (runner.py, build_order):
         #     random.Random(seed).shuffle(units)
@@ -799,7 +806,7 @@ class TestCTheGates:
             pilot=False)
         assert any(
             "TIER3_SPEND_AUTHORIZED is 10.00, below the "
-            "main run's authorization ceiling $90.00" in d
+            "main run's authorization ceiling $30.00" in d
             for d in missing)
         # Gate 2, not a dollar amount at all.
         tier3 = _settings(
@@ -891,9 +898,9 @@ class TestDTheFailureClasses:
             result = _run(runner.dry_run())
         finally:
             runner.RESULTS_DIR = saved_results_dir
-        # The main run: 375 units, killed after the
+        # The main run: 105 units, killed after the
         # registered point, resumed to the end.
-        assert result["main"]["units"] == 375
+        assert result["main"]["units"] == 105
         assert result["main"]["resumed"] is True
         assert result["main"]["charged_liability"] > 0.0
         killed = result["killed"]
@@ -902,7 +909,7 @@ class TestDTheFailureClasses:
         # The pilot: 50 units, 25 per arm.
         assert result["pilot"]["units"] == 50
         # Every failure class the command names, counted -
-        # in the census, and in its arm's 75-unit
+        # in the census, and in its arm's 21-unit
         # denominator (the planned count is the
         # denominator, never the delivered count).
         census = result["main"]["census"]
@@ -921,12 +928,12 @@ class TestDTheFailureClasses:
         measures = result["main"]["measures"][
             "delivered_correctness_per_arm"]
         for arm in runner.ARMS:
-            assert measures[arm]["planned"] == 75, (
-                f"arm {arm}'s denominator is not 75")
+            assert measures[arm]["planned"] == 21, (
+                f"arm {arm}'s denominator is not 21")
         # The order's digest is the guard's reconstruction
         # (test (a) rebuilds it independently).
         units = [[question["id"], repetition, arm]
-                 for question in runner.load_questions()
+                 for question in runner.stage1_questions()
                  for repetition in (1, 2, 3)
                  for arm in runner.ARMS]
         random.Random(runner.SEED).shuffle(units)
@@ -1038,13 +1045,13 @@ class TestETheResume:
         # recorded units were skipped, not re-run.
         ran = ((len(wiring.clients) - units_before)
                + (scenario_runner.runs - e_runs_before))
-        assert ran == 375 - 3
+        assert ran == 105 - 3
         assert (len(wiring.clients)
-                + scenario_runner.runs) == 375
+                + scenario_runner.runs) == 105
         keys = [(r["question_id"], r["repetition"], r["arm"])
                 for r in resumed["records"]]
-        assert len(keys) == 375
-        assert len(set(keys)) == 375
+        assert len(keys) == 105
+        assert len(set(keys)) == 105
         # The in-flight unit was charged its full ceiling
         # against the sweep as unreconciled liability, and
         # re-run (its record is in the file).
