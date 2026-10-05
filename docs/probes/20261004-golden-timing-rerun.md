@@ -599,3 +599,148 @@ Caveat: the same empty knowledge store — no
 search-tier call. The third sample's measured
 record is appended below after the run, in this
 same file, and committed again.
+
+### The third sample — measured record (2026-10-04, after the run)
+
+The results file (gitignored, like every local
+run output): `evals/results/probe-20261004-golden-q123-rerun3.jsonl`.
+The header records the same lineup and
+`"preflight": {"ran": false, "override": true}`
+— prediction 1 **HELD**. The sweep: **0/3 units
+passed, 0/3 shipped; 12 calls; 1076.3 s;
+$0.0884 booked of the $1.5000 sweep cap** (the
+terminal's sweep-budget line printed `sweep
+budget: $0.0884 of $1.5000`; the sweep CLI
+exited 1 — units ended blocked, not a crash).
+`score_trace`'s reading, verbatim:
+
+```
+Q1   FAIL (no answer)   blocked    no answer              items[] 260.945s/300s $0.0227/0.5 risk=low sprawl=None scope_out=None
+Q2   FAIL (no answer)   blocked    no answer              items[] 458.911s/300s $0.0286/0.5 risk=critical sprawl=None scope_out=None
+Q3   FAIL (no answer)   blocked    no answer              items[] 356.478s/300s $0.0371/0.5 risk=medium sprawl=None scope_out=None
+
+0/3 PASS · 0/3 shipped · median sprawl None · total $0.0884 · key v1
+```
+
+Booked spend by tier: architecture $0.0525,
+research $0.0204, triage $0.0155, engineering
+$0.00 — **no engineering call completed in
+this sample**. No search-tier call (the
+empty-store caveat held); no judge call (no
+implementation was agreed).
+
+Per-unit records (the shape is identical
+across the three units — the plan node
+completes, the feasibility node's engineering
+call is dispatched and fails with the 429
+after the client's 3 retries, and the run
+ends on the exception):
+
+- **golden_q1** — blocked, 260.945 s, 4
+  calls, $0.0227 booked. The plan node
+  completed in ONE architecture call: 241.719
+  s, 14,280 completion tokens. The feasibility
+  node's engineering call was dispatched and
+  failed with the 429 (`error_status`; its
+  worst-case reservation $0.024885 booked as
+  liability). The feasibility phase itself
+  took 6.671 s (the retries' backoff is not
+  in the phase seconds; the run ended on the
+  exception).
+- **golden_q2** — blocked, 458.911 s, 4
+  calls, $0.0286 booked. The plan node
+  completed in one call: 439.947 s, **20,909
+  completion tokens** — the largest plan of
+  the three samples, well under the 125,000
+  cap. The feasibility node's engineering call
+  dispatched, 429 after the 3 retries
+  (liability $0.026702).
+- **golden_q3** — blocked, 356.478 s, 4
+  calls, $0.0371 booked. The plan node
+  completed in one call: 330.477 s, **23,139
+  completion tokens**. The feasibility node's
+  engineering call dispatched, 429 after the
+  3 retries (liability $0.026572).
+
+Every engineering failure carried the
+provider's own sentence: *"thinkingmachines/
+inkling-small is temporarily rate-limited
+upstream. Please retry shortly, or add your
+own key to accumulate your rate limits:
+https://openrouter.ai/settings/integrations"*
+
+Predictions vs measured:
+
+1. **HELD** — the header records `{ran:
+   false, override: true}`.
+2. **HELD** — every plan completed in ONE
+   architecture call (14,280 / 20,909 /
+   23,139 completion tokens — all above the
+   old 14,000 cap, all under the 125,000
+   cap; the cap now holds with headroom
+   across three samples, the largest plan
+   23,139 tokens).
+3. **MEASURED — the 429 recurred on EVERY
+   engineering dispatch this sample** (3 of
+   3 units' feasibility calls failed after
+   the client's 3 retries). The intermittence
+   is run-correlated: the second sample was a
+   good window (2 of 3 units' feasibility
+   calls completed), the first and third
+   samples bad windows (0 of 3). Across the
+   three samples, 2 of 9 units' feasibility
+   dispatches completed — both in one run.
+4. **HELD** — 260.945 / 458.911 / 356.478 s
+   (all ≤ 600), 4 / 4 / 4 calls (≤ 40); the
+   429 failures ended the runs on the
+   exception before the watchdog's budget
+   arithmetic was needed (the watchdog did
+   not fire).
+5. **HELD** — $0.0884 booked of $1.50; no
+   spend-guard refusal (the largest worst
+   case the probe made was engineering at
+   $0.1500, under the $0.50 per-run cap);
+   total liability $0.078159 ($0.024885 +
+   $0.026702 + $0.026572), total exposure
+   $0.1666.
+6. **MEASURED 0/3** — no unit shipped; no
+   engineering call completed, so this sample
+   adds no pace measurement. The pace verdict
+   from the second sample stands (60.4–161.4 s
+   per feasibility node against a
+   312.8–365.5 s plan node: the 600 s
+   deadline cannot fit plan + feasibility +
+   implement before any judging round).
+
+Falsifiers: none fired — no second preflight
+finding, no unit past its 600 s or 40-call
+bound, sweep spend $0.0884 < $1.50, no
+spend-guard refusal, and no 400 (every
+failure was a 429).
+
+The three samples together ($0.0720 +
+$0.0945 + $0.0884 = $0.2549 of the $4.50
+total authorization across the three runs):
+the plan node is measured (241.7–439.9 s,
+14,280–23,139 completion tokens, always one
+call at the 125,000 cap); the engineering
+serving is intermittently unavailable
+(2 of 9 units' feasibility dispatches
+completed, both in one run) and, when it
+serves, too slow for the 600 s deadline
+(60.4–161.4 s per node); the judge's pace
+remains unmeasured (no implementation was
+agreed in any of the nine units). Where this
+leaves the owner: the options are unchanged —
+**(a)** keep retrying (the availability is a
+window the provider controls; the pace
+finding stands regardless), **(b)** pick a
+different engineering model/endpoint (G-2 pin
+ratification / G-3 `.env`) — the decisive
+option, one whose per-call pace fits the
+600 s deadline alongside the ~320–440 s plan
+node, **(c)** raise the per-scenario timeout
+(the owner's line — does not address the 429),
+**(d)** accept. No paid tier-3 arm-E unit can
+start until the engineering tier both serves
+reliably and fits the deadline.
