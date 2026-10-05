@@ -68,11 +68,12 @@ def _key_strings() -> list[str]:
 class TestThePlan:
     def test_the_plan_arithmetic_holds(self):
         plan = MANIFEST["plan"]
-        assert plan["questions"] == 25
+        assert plan["stage"].startswith("stage 1")
+        assert plan["questions"] == 7
         assert plan["repetitions_per_question"] == 3
         assert plan["arms"] == 5
-        assert plan["planned_question_runs"] == 25 * 3 * 5 == 375
-        assert plan["planned_units_per_arm"] == 75
+        assert plan["planned_question_runs"] == 7 * 3 * 5 == 105
+        assert plan["planned_units_per_arm"] == 21
         assert "questions.json" in plan["question_source"]
 
     def test_the_questions_are_the_frozen_set(self):
@@ -81,7 +82,14 @@ class TestThePlan:
             "the frozen tier-2 set is not the 25-question set the "
             "experiment plans over - the manifest's question_source "
             "names a different dataset than the tree holds")
-        assert MANIFEST["plan"]["questions"] == len(QUESTIONS)
+        # The stage-1 plan runs seven of the frozen set's
+        # questions, and every one of them is a member of
+        # the frozen set the tree holds.
+        selection = MANIFEST["plan"]["question_selection"]
+        assert len(selection["selected"]) == 7
+        assert set(selection["selected"]) <= set(ids)
+        assert MANIFEST["plan"]["questions"] == len(
+            selection["selected"])
 
     def test_the_arms_carry_their_registered_treatments(self):
         arms = MANIFEST["arms"]
@@ -113,17 +121,114 @@ class TestThePlan:
         assert "fingerprint" in gate_1
 
 
+class TestTheStage1Selection:
+    """The selection rule, fixed by rule before any run
+    (the owner's 2026-10-05 directive, specification 1):
+    from Q6-Q25 only, one question per shape, then two
+    more from two different shapes, all by
+    random.Random(seed). The guard reconstructs the
+    selection from the rule and the seed independently of
+    the runner's own implementation, and fails under a
+    different seed."""
+
+    def _reconstruct(self, seed: int) -> list[str]:
+        """The rule, rebuilt here from the manifest's own
+        text - not from the runner's code."""
+        candidates = [q for q in QUESTIONS
+                      if 6 <= int(q["id"][1:]) <= 25]
+        by_shape: dict[str, list[str]] = {}
+        for question in candidates:
+            by_shape.setdefault(question["shape"], []).append(
+                question["id"])
+        rng = random.Random(seed)
+        selected = [rng.choice(pool) for pool in by_shape.values()]
+        for shape in rng.sample(list(by_shape), 2):
+            taken = set(selected)
+            remaining = [q for q in by_shape[shape]
+                         if q not in taken]
+            selected.append(rng.choice(remaining))
+        frozen_order = [q["id"] for q in QUESTIONS]
+        return sorted(selected, key=frozen_order.index)
+
+    def test_the_selection_is_the_rule_executed(self):
+        selection = MANIFEST["plan"]["question_selection"]
+        seed = selection["seed"]
+        assert seed == 20261005
+        reconstructed = self._reconstruct(seed)
+        assert reconstructed == selection["selected"], (
+            "the manifest's recorded selection is not the "
+            "selection rule executed with the recorded seed - "
+            "the rule, the seed and the ids must agree before "
+            "any paid unit")
+        # And the runner's own constant is the same seven.
+        from evals.tier3 import runner
+        assert list(runner.STAGE1_QUESTION_IDS) == reconstructed
+        assert [q["id"] for q in runner.stage1_questions()] == (
+            reconstructed)
+
+    def test_the_selection_fails_under_a_different_seed(self):
+        """The seed is load-bearing: a different seed must
+        not reconstruct the recorded selection, or the
+        guard proves nothing."""
+        selection = MANIFEST["plan"]["question_selection"]
+        other = self._reconstruct(selection["seed"] + 1)
+        assert other != selection["selected"]
+
+    def test_the_selection_covers_the_shapes_the_rule_requires(self):
+        selection = MANIFEST["plan"]["question_selection"]
+        shapes = selection["selected_shapes"]
+        assert set(shapes.values()) == {
+            "SANITY", "LOOKUP", "DERIVATION", "SPECIFICATION",
+            "PROCEDURE"}, (
+            "the rule takes one question per shape - the "
+            "selection must cover all five shapes")
+        counts: dict[str, int] = {}
+        for shape in shapes.values():
+            counts[shape] = counts.get(shape, 0) + 1
+        assert sorted(counts.values()) == [1, 1, 1, 2, 2], (
+            "the rule takes one per shape then two more from "
+            "two different shapes - exactly two shapes "
+            "contribute a second question")
+        # Every selected question is from Q6-Q25: Q1-Q5 are
+        # calibration-exposed and reserved for stage 2.
+        for question_id in selection["selected"]:
+            assert 6 <= int(question_id[1:]) <= 25, (
+                f"{question_id} is not from Q6-Q25 - the rule "
+                "draws from Q6-Q25 only")
+
+    def test_the_stage_2_remainder_is_the_rest_of_the_set(self):
+        selection = MANIFEST["plan"]["question_selection"]
+        remainder = selection["stage_2_remainder"]
+        # The remaining 18: Q1-Q5 (calibration-exposed)
+        # plus the 13 Q6-Q25 questions not selected.
+        expected = [f"Q{i}" for i in range(1, 6)]
+        expected += [f"Q{i}" for i in range(6, 26)
+                     if f"Q{i}" not in selection["selected"]]
+        assert len(expected) == 18
+        assert sorted(remainder) == sorted(expected), (
+            "the registered stage-2 remainder is not the rest "
+            "of the frozen set - stage 2 runs the questions the "
+            "selection did not take, Q1-Q5 included, and nothing "
+            "else")
+
+
 class TestTheMoney:
     def test_the_ceiling_arithmetic_holds(self):
         ceilings = {a: MANIFEST["arms"][a]["spend_ceiling_per_question_run"]
                     for a in ARMS}
-        assert ceilings == {"A": 0.10, "B": 0.20, "C": 0.20, "D": 0.20, "E": 0.50}
+        assert ceilings == {"A": 0.10, "B": 0.50, "C": 0.50, "D": 0.20, "E": 0.50}
         per_unit_total = sum(ceilings.values())
-        assert per_unit_total == pytest.approx(1.20)
-        total = MANIFEST["plan"]["planned_units_per_arm"] * per_unit_total
-        assert total == pytest.approx(90.00), (
-            "the registered ceilings no longer compose to the $90.00 "
-            "authorization ceiling the ratification gate states")
+        assert per_unit_total == pytest.approx(1.80)
+        # The stage-1 compositional ceiling: 21 units
+        # per arm at the per-unit ceilings. The owner's
+        # ratified amount ($30.00, authorized 2026-10-05)
+        # is below the compositional ceiling, and the
+        # ratification gate carries both.
+        compositional = (MANIFEST["plan"]["planned_units_per_arm"]
+                         * per_unit_total)
+        assert compositional == pytest.approx(37.80)
+        gate_2 = MANIFEST["ratification_gates"]["gate_2_spend"]
+        assert "$30.00" in gate_2 and "$37.80" in gate_2
 
 
 class TestTheVersions:
@@ -141,7 +246,7 @@ class TestTheVersions:
         assert versions["scorer"] in frozen, (
             "the manifest names a scorer version the version "
             "record does not hold")
-        assert versions["manifest"] == "tier3-3"
+        assert versions["manifest"] == "tier3-4"
         # The tier-2 freeze itself: the signoff the owner ratified.
         assert TIER2_MANIFEST["dataset_version"] == "frozen-2026-10-03"
         assert TIER2_MANIFEST["frozen"] is True
@@ -259,16 +364,22 @@ class TestTheSecrecy:
 
 class TestTheExecution:
     def test_the_seeded_order_is_reconstructable(self):
-        seed = MANIFEST["execution"]["interleaved_order"]["seed"]
+        order_rule = MANIFEST["execution"]["interleaved_order"]
+        seed = order_rule["seed"]
         assert seed == 20261003
+        # The order runs the stage-1 selection: the 105
+        # units over the seven selected questions, not
+        # the frozen set's full 375.
+        selected = MANIFEST["plan"]["question_selection"]["selected"]
         units = [(q["id"], rep, arm)
-                 for q in QUESTIONS for rep in (1, 2, 3) for arm in ARMS]
+                 for q in QUESTIONS if q["id"] in selected
+                 for rep in (1, 2, 3) for arm in ARMS]
         expected = set(units)
         order = list(units)
         random.Random(seed).shuffle(order)
         # A permutation: every unit once, none invented, none dropped.
-        assert len(order) == 375
-        assert len(set(order)) == 375
+        assert len(order) == 105
+        assert len(set(order)) == 105
         assert set(order) == expected
         # Determinism: the seed reconstructs the order exactly.
         again = list(units)
@@ -283,7 +394,7 @@ class TestTheExecution:
     def test_the_execution_registers_isolation_deadline_and_record(self):
         execution = MANIFEST["execution"]
         assert "_isolated_store()" in execution["isolation"]
-        assert execution["common_deadline_seconds"] == 600
+        assert execution["common_deadline_seconds"] == 1800
         assert "ResultsLog" in execution["record"]
         assert "keys.json" in execution["no_model_access_to_keys"]
         assert "retry" in execution["retry_rules"].lower()
@@ -306,6 +417,30 @@ class TestTheExecution:
         assert pilot["seed"] == 20261004
         assert "TIER3_PILOT_AUTHORIZED" in pilot["authorization"]
         assert "$7.50" in pilot["authorization"]
+        # Stage 1 supersedes the pilot's calibration role;
+        # whether the mode is deleted is the advisor's ruling,
+        # recorded as a question in the 119 response.
+        assert "Superseded in role by stage 1" in pilot["supersession"]
+
+    def test_the_stage_2_rule_is_pre_registered(self):
+        rule = MANIFEST["execution"]["stage_2_rule"]
+        # Pre-registered before the first paid unit, and
+        # fixed: not adjusted after stage 1's results.
+        assert "before the first paid unit" in rule
+        assert "not adjusted after stage 1" in rule
+        # The threshold: |E - A| >= 7 of the 21 units per arm.
+        assert "7 or more of the 21" in rule
+        assert "the pipeline question is answered" in rule
+        assert "stage 2 is the owner's option" in rule
+        # The otherwise-branch: the remaining 18 questions,
+        # Q1-Q5 reported separately as calibration-exposed.
+        assert "remaining 18 questions" in rule
+        assert "calibration-exposed" in rule
+        # The remainder the rule names is the plan's registered
+        # remainder: the 18 the selection guard checks above.
+        assert "stage_2_remainder" in rule
+        assert len(MANIFEST["plan"]["question_selection"][
+            "stage_2_remainder"]) == 18
 
     def test_the_preflight_is_registered(self):
         preflight = MANIFEST["execution"]["preflight"]
@@ -384,9 +519,14 @@ class TestTheExecution:
             "total_cost_and_latency_including_failures"}
         for name, text in measures.items():
             assert text.strip(), f"success measure {name} is empty"
-        # The denominator is the planned units, not the shipped ones.
-        assert "75" in measures["delivered_correctness_per_arm"]
+        # The denominator is the planned units, not the shipped ones:
+        # 21 units per arm in stage 1.
+        assert "21" in measures["delivered_correctness_per_arm"]
         assert "0/3" in measures["per_question_repeat_outcomes"]
+        # And the measures name the stage-1 frame they score in.
+        assert "105" in measures["total_cost_and_latency_including_failures"]
+        assert "7 selected questions" in measures[
+            "paired_wins_and_losses_against_A"]
 
     def test_the_failure_treatment_counts_every_failure_class(self):
         treatment = MANIFEST["failure_treatment"]
@@ -401,8 +541,14 @@ class TestTheExecution:
         assert MANIFEST["status"] == "manifest-frozen-awaiting-ratification"
         gates = MANIFEST["ratification_gates"]
         assert set(gates) == {"gate_1_servings", "gate_2_spend", "stop"}
-        assert "$90.00" in gates["gate_2_spend"]
-        assert "authorization ceiling, not a predicted cost" in gates["gate_2_spend"]
+        assert "$30.00" in gates["gate_2_spend"]
+        assert "$37.80" in gates["gate_2_spend"]
+        assert "not predicted costs" in gates["gate_2_spend"]
+        # A lower authorization is allowed: the fit rule then
+        # decides which units start, and a unit the rule does not
+        # start is recorded as not started - never silently dropped.
+        assert "lower" in gates["gate_2_spend"].lower() or (
+            "not started" in MANIFEST["spend_enforcement"])
         # The STOP is mechanized, not just stated: the runner
         # refuses to start unless the environment shows both
         # gates cleared - the servings fingerprint and the

@@ -1,9 +1,9 @@
 """The tier-3 experiment runner (ARCH-20261003-119).
 
 This is the machinery the frozen manifest (evals/tier3/manifest.json,
-tier3-2) describes and tier3-1 registered under
-``not_prepared_here``: the plan builder with its recorded seed, the
-servings map and its ratification fingerprint, the free preflight,
+tier3-4, the owner's staged plan) describes and tier3-1 registered
+under ``not_prepared_here``: the plan builder with its recorded seed,
+the servings map and its ratification fingerprint, the free preflight,
 the five arm executors under their registered treatments, the
 closed-world source tool and the whitelisted recompute, arm C's
 typed check, the append-only results log with resume, the reading
@@ -16,13 +16,13 @@ arm's serving resolved, arm E's per tier, printed with a
 fingerprint the owner ratifies (G-2); arm B's pin equal to arm
 A's; and the spend authorization. The gates are checked before any
 network call, and a refusal names each missing gate. Every unit
-runs inside ``_isolated_store()`` under the common 600-second
+runs inside ``_isolated_store()`` under the common 1800-second
 deadline, and every failure class the manifest names is counted in
-its arm's 75-unit denominator, never dropped.
+its arm's 21-unit denominator, never dropped.
 
     python3 evals/tier3/runner.py preflight      # free: gates, catalogue, preflight
     python3 evals/tier3/runner.py worst-case     # free: the arm-E worst-case table
-    python3 evals/tier3/runner.py run            # the 375-unit main run (paid)
+    python3 evals/tier3/runner.py run            # the 105-unit stage-1 main run (paid)
     python3 evals/tier3/runner.py pilot          # the 50-unit calibration pilot (paid)
     python3 evals/tier3/runner.py dry-run        # the mocked dry runs (free)
     python3 evals/tier3/runner.py reading-sheet RESULTS_FILE
@@ -100,8 +100,10 @@ from autornd.routing.openrouter import (           # noqa: E402
 
 __all__ = [
     "ARM_CEILINGS", "ARMS", "DEADLINE_SECONDS", "PILOT_ARMS",
-    "PILOT_CEILING", "PILOT_SEED", "PILOT_REPETITIONS", "REGISTERED_MAX_TOKENS",
-    "REGISTERED_TEMPERATURE", "SEED", "REPITIONS", "MAIN_CEILING",
+    "PILOT_CEILING", "PILOT_SEED", "PILOT_REPETITIONS",
+    "REGISTERED_MAX_TOKENS", "REGISTERED_TEMPERATURE",
+    "SELECTION_SEED", "SEED", "STAGE1_QUESTION_IDS",
+    "REPITIONS", "MAIN_CEILING",
     "CooperationCheckVerdict", "DryRunScript", "ExperimentRefused",
     "PreflightReport", "Tier3ResultsLog", "Tier3Settings", "UnitResult",
     "arm_e_worst_case", "build_order", "compute_measures",
@@ -109,11 +111,11 @@ __all__ = [
     "fetch_catalogue", "fetch_primary_source", "gate_report",
     "merge_readings", "order_digest", "parse_check_verdict",
     "recompute", "render_prompt", "resolve_servings", "run_experiment",
-    "run_preflight", "run_unit", "servings_fingerprint", "summarize",
-    "worst_case_cost",
+    "run_preflight", "run_unit", "servings_fingerprint", "stage1_questions",
+    "summarize", "worst_case_cost",
 ]
 
-# ── The registered plan (the manifest, tier3-2) ───────────────────
+# ── The registered plan (the manifest, tier3-4) ───────────────────
 #
 # Every constant here is a registered parameter: a value a unit's
 # outcome depends on, so it is named in the manifest and the results
@@ -125,14 +127,30 @@ SEED = 20261003
 PILOT_SEED = 20261004
 REPITIONS = 3
 PILOT_REPETITIONS = 1
-DEADLINE_SECONDS = 600.0
+DEADLINE_SECONDS = 1800.0
 
-# The per-unit authorization ceilings the manifest registers. They
-# compose to the $90.00 main-run authorization (75 units per arm)
-# and the $7.50 pilot authorization (25 units per pilot arm).
-ARM_CEILINGS = {"A": 0.10, "B": 0.20, "C": 0.20, "D": 0.20, "E": 0.50}
-MAIN_CEILING = 90.00
+# The per-unit authorization ceilings the manifest registers.
+# For the staged plan's stage 1 they compose to the $37.80
+# compositional ceiling (21 units per arm); the owner's
+# ratified amount, which the spend gate enforces and the
+# sweep's cap carries, is $30.00 (MAIN_CEILING below). The
+# pilot composes to the $7.50 pilot authorization (25 units
+# per pilot arm).
+ARM_CEILINGS = {"A": 0.10, "B": 0.50, "C": 0.50, "D": 0.20, "E": 0.50}
+MAIN_CEILING = 30.00
 PILOT_CEILING = 7.50
+
+# The stage-1 question selection (the owner's 2026-10-05
+# directive, registered in the manifest as tier3-4): the
+# selection rule's seed and the ids it selected, fixed by
+# rule before any run. The rule itself is stage1_questions()
+# below; the manifest records the seed and the ids, and the
+# guard test (tests/test_tier3_manifest.py) reconstructs the
+# selection from the rule independently and fails under a
+# different seed.
+SELECTION_SEED = 20261005
+STAGE1_QUESTION_IDS = ("Q6", "Q10", "Q14", "Q15",
+                       "Q16", "Q17", "Q23")
 
 # The registered call parameters for arms A-D. 8000 is more than
 # 3x the largest completion 107's direct calls used; the client's
@@ -213,8 +231,50 @@ def load_questions() -> list[dict[str, Any]]:
         return json.load(handle)
 
 
+def stage1_questions(
+        questions: list[dict[str, Any]] | None = None,
+        seed: int = SELECTION_SEED) -> list[dict[str, Any]]:
+    """The stage-1 selection, the rule executed (the owner's
+    2026-10-05 directive, specification 1, registered in the
+    manifest as tier3-4): from the frozen set's Q6-Q25 only -
+    Q1-Q5 are calibration-exposed (the 2026-10-03/04 golden
+    probes answered them) and reserved for stage 2 - one
+    question per shape (the five shapes the frozen set carries),
+    then two more questions from two different shapes, all by
+    ``random.Random(seed)``.
+
+    The rule is fixed by rule before any run: the manifest
+    records the seed and the seven ids it selects
+    (STAGE1_QUESTION_IDS), and the guard test reconstructs the
+    selection from the rule independently of this
+    implementation, failing under a different seed. The seven
+    are returned in frozen-set order - the order the plan's
+    enumeration and the manifest's record both use.
+    """
+    frozen = load_questions() if questions is None else questions
+    candidates = [q for q in frozen
+                  if 6 <= int(q["id"][1:]) <= 25]
+    by_shape: dict[str, list[dict[str, Any]]] = {}
+    for question in candidates:
+        by_shape.setdefault(question["shape"], []).append(question)
+    rng = random.Random(seed)
+    # Step 1 - one question per shape, the shapes in the
+    # order they first appear in the frozen set.
+    selected = [rng.choice(pool) for pool in by_shape.values()]
+    # Step 2 - two more from two different shapes.
+    for shape in rng.sample(list(by_shape), 2):
+        taken = {q["id"] for q in selected}
+        remaining = [q for q in by_shape[shape]
+                     if q["id"] not in taken]
+        selected.append(rng.choice(remaining))
+    frozen_order = {q["id"]: i for i, q in enumerate(frozen)}
+    return sorted(selected, key=lambda q: frozen_order[q["id"]])
+
+
 def build_order(seed: int, repetitions: int,
-                arms: tuple[str, ...]) -> list[list[Any]]:
+                arms: tuple[str, ...],
+                questions: list[dict[str, Any]] | None = None
+                ) -> list[list[Any]]:
     """The manifest's interleaved order, executed rather than
     described: the units enumerated as (question_id, repetition, arm)
     with question_id in the frozen questions.json order, then
@@ -222,13 +282,21 @@ def build_order(seed: int, repetitions: int,
     block, so time-of-day and serving-load confounds distribute
     across arms.
 
+    The questions default to the frozen set (the pilot and a
+    stage-2 run enumerate over their own sets); the staged
+    plan's stage-1 main run enumerates over the seven
+    selected questions (``stage1_questions()``), so the 105
+    units are the plan's and the order's digest is the
+    stage-1 plan's.
+
     The guard test (tests/test_tier3_manifest.py) reconstructs the
     order with the same comprehension and the same seed; this
     function is that reconstruction, and ``order_digest`` is the
     figure both sides compute.
     """
     units = [[question["id"], repetition, arm]
-             for question in load_questions()
+             for question in (load_questions()
+                              if questions is None else questions)
              for repetition in range(1, repetitions + 1)
              for arm in arms]
     random.Random(seed).shuffle(units)
@@ -2454,7 +2522,13 @@ async def run_experiment(
     arms = PILOT_ARMS if pilot else ARMS
     repetitions = PILOT_REPETITIONS if pilot else REPITIONS
     seed = PILOT_SEED if pilot else SEED
-    order = build_order(seed, repetitions, arms)
+    # The staged plan's stage-1 main run enumerates over
+    # the seven selected questions (the selection rule the
+    # manifest registers); the pilot and a stage-2 run
+    # enumerate over the frozen set's own.
+    order_questions = (load_questions() if pilot
+                       else stage1_questions())
+    order = build_order(seed, repetitions, arms, order_questions)
     digest = order_digest(order)
     authorization = PILOT_CEILING if pilot else MAIN_CEILING
 
@@ -2467,6 +2541,10 @@ async def run_experiment(
         "dataset_version": scorer.MANIFEST["dataset_version"],
         "scorer_version": scorer.SCORER_VERSION,
         "seed": seed,
+        "selection_seed": (None if pilot
+                           else SELECTION_SEED),
+        "stage1_question_ids": (list(STAGE1_QUESTION_IDS)
+                                if not pilot else None),
         "repetitions": repetitions,
         "arms": list(arms),
         "order_sha256": digest,
@@ -2861,17 +2939,23 @@ def build_dry_run_script() -> DryRunScript:
                     ] = _shipped(correct(question_id))
 
     # ── The failure-class exhibits, one each ──
+    # Keyed to the stage-1 selection's questions (the
+    # seven the plan runs: Q6, Q10, Q14, Q15, Q16, Q17,
+    # Q23) — an exhibit keyed to a question the plan does
+    # not run never fires, and the dry run would prove a
+    # failure class it does not exercise. Each (question,
+    # repetition, arm) triple below is distinct.
     # refusal: a serving that chose to answer nothing.
-    script._calls[("Q1", 1, "A")] = [_answer_call("")]
+    script._calls[("Q6", 1, "A")] = [_answer_call("")]
     # deadline: a call that outlasts the unit's shortened
     # deadline, cancelled by the runner's wait_for.
-    script._calls[("Q2", 1, "D")] = [
-        _answer_call(correct("Q2"), sleep=0.25)]
-    script._deadlines[("Q2", 1, "D")] = 0.05
+    script._calls[("Q10", 1, "D")] = [
+        _answer_call(correct("Q10"), sleep=0.25)]
+    script._deadlines[("Q10", 1, "D")] = 0.05
     # incomplete: a serving that consumed its budget and
     # emitted nothing — the provider failure the client
     # raises after its bounded retries.
-    script._calls[("Q1", 1, "D")] = [
+    script._calls[("Q14", 1, "D")] = [
         _provider_failure_call(
             "scripted: the serving consumed its budget and "
             "emitted nothing")]
@@ -2879,47 +2963,47 @@ def build_dry_run_script() -> DryRunScript:
     # real OSError would); the model continues without the
     # tool and the delivered answer is scored on what it
     # delivered.
-    script._tool_failures.add(("Q4", 1, "B"))
+    script._tool_failures.add(("Q15", 1, "B"))
     # an invalid arm C verdict: the check answers in prose,
     # twice — no valid verdict after the bounded retries,
     # recorded as unavailable, never as concurrence, and
     # the draft delivered.
-    script._calls[("Q5", 1, "C")] = [
-        _answer_call(correct("Q5")),
+    script._calls[("Q16", 1, "C")] = [
+        _answer_call(correct("Q16")),
         _answer_call("The draft looks sound to me; I have no "
                      "objections to raise."),
         _answer_call("I concur with the draft as it stands.")]
     # arm B's two-round unit: tools on calls 1 and 2, the
     # answer on call 3 — which offers no tools, so the
     # model must answer.
-    script._calls[("Q7", 1, "B")] = [
+    script._calls[("Q17", 1, "B")] = [
         _tool_call("fetch_primary_source",
-                   {"citation": citation_of("Q7")}),
+                   {"citation": citation_of("Q17")}),
         _tool_call("recompute", {"expression": "90 / 2"}),
-        _answer_call(correct("Q7"))]
+        _answer_call(correct("Q17"))]
 
     # ── The FAIL cases, so the sheet has FAILs to read ──
-    script._calls[("Q3", 1, "A")] = [_answer_call(wrong("Q3"))]
-    script._calls[("Q6", 1, "B")] = [
+    script._calls[("Q23", 1, "A")] = [_answer_call(wrong("Q23"))]
+    script._calls[("Q10", 1, "B")] = [
         _tool_call("recompute",
                    {"expression": "12.0 / (4.00 + 2.00)"}),
-        _answer_call(wrong("Q6"))]
-    script._calls[("Q8", 1, "C")] = [
-        _answer_call(wrong("Q8")),
+        _answer_call(wrong("Q10"))]
+    script._calls[("Q14", 1, "C")] = [
+        _answer_call(wrong("Q14")),
         _answer_call('{"concur": false, "objections": '
                      '["The draft does not answer the third '
                      'part the question asks."]}'),
-        _answer_call(wrong("Q8"))]
-    script._calls[("Q9", 1, "D")] = [_answer_call(wrong("Q9"))]
+        _answer_call(wrong("Q14"))]
+    script._calls[("Q15", 1, "D")] = [_answer_call(wrong("Q15"))]
 
     # ── Arm E's delivery kinds ──
     # a shipped wrong answer (delivered, FAIL);
-    script._arm_e["tier3_e_Q2_r1"] = _shipped(wrong("Q2"))
+    script._arm_e["tier3_e_Q17_r1"] = _shipped(wrong("Q17"))
     # a judge-approved draft that never shipped;
-    script._arm_e["tier3_e_Q3_r1"] = _approved_not_shipped(
-        correct("Q3"))
+    script._arm_e["tier3_e_Q23_r1"] = _approved_not_shipped(
+        correct("Q23"))
     # a run that ended without an answer.
-    script._arm_e["tier3_e_Q4_r1"] = _no_answer()
+    script._arm_e["tier3_e_Q6_r1"] = _no_answer()
     return script
 
 

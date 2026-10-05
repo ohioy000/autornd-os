@@ -1,37 +1,55 @@
 # Tier-3 five-arm question experiment
 
 **Status: runnable (ARCH-20261003-119). The plan is frozen (`frozen-2026-10-03`,
-manifest `tier3-2`), the runner is built and proved by a mocked dry run of all
-375 units, and execution stops at the owner's two ratification gates. No paid
-unit may start until the owner clears both.**
+manifest `tier3-4`), the runner is built and proved by a mocked dry run of all
+105 stage-1 units, and execution stops at the owner's two ratification gates. No
+paid unit may start until the owner clears both.**
 
 This directory holds the frozen plan for the five-arm experiment over the frozen
 tier-2 question set (25 questions, `frozen-2026-10-03`, ratified by the owner's
-signoff on 2026-10-03T21:41:20Z). The runner that consumes it is
+signoff on 2026-10-03T21:41:20Z), run in stages (the owner's 2026-10-05
+directive). Stage 1 is the calibration stage: 7 questions x 3 repetitions x 5
+arms = 105 planned question-runs. The runner that consumes it is
 `evals/tier3/runner.py` (built by ARCH-20261003-119, Ruling D50).
 
 ## The design in one paragraph
 
-Twenty-five questions, three repetitions each, five arms: **375 planned question-runs**
-(75 per arm). Every unit is one (question, repetition, arm) triple: the question text from
+Seven questions, three repetitions each, five arms: **105 planned question-runs**
+(21 per arm). The seven are fixed by rule before any run (the owner's 2026-10-05
+directive, specification 1): drawn from Q6-Q25 only — Q1-Q5 are calibration-exposed
+(the 2026-10-03/04 golden probes answered them under the pre-freeze configuration)
+and reserved for stage 2 — one question per shape (the five shapes the frozen set
+carries), then two more questions from two different shapes, all by
+`random.Random(20261005)`. The seed and the seven ids it selected are recorded in
+the manifest (`Q6, Q10, Q14, Q15, Q16, Q17, Q23` — SANITY and PROCEDURE each
+contribute a second question), and the guard test reconstructs the selection from
+the rule independently of the runner's implementation, failing under a different
+seed. Every unit is one (question, repetition, arm) triple: the question text from
 the frozen `evals/tier2/questions.json` is answered under one arm's registered treatment,
 inside an isolated knowledge store (`_isolated_store()`, a fresh temporary Chroma
-directory per question-run), under one common 600-second deadline, in a seeded interleaved
-order (`random.Random(20261003).shuffle` over the enumerated unit list — no arm runs as a
+directory per question-run), under one common 1800-second deadline, in a seeded interleaved
+order (`random.Random(20261003).shuffle` over the enumerated 105-unit list — no arm runs as a
 block; the order's sha256 is recorded in the results header and the resume guard
 reconstructs it). Every delivered answer is scored by the frozen tier-2 scorer against the frozen
 keys. The five arms differ only in their registered treatments — the serving(s), the tools,
 the cooperation protocol, and the pipeline itself; the question text, the deadline, the
 order, the isolation and the scorer are identical across arms. Every call the runner makes
-carries the registered parameters: **max_tokens 8000, temperature 0.3**.
+carries the registered parameters: **max_tokens 8000, temperature 0.3**. The deadline was
+raised from 600 to 1800 seconds by tier3-4 (the owner's 2026-10-05 directive and the
+advisor's ruling of the same date): the measured engineering pace (the 2026-10-04 probes,
+161.435 s per feasibility node against a 312.8-365.5 s plan node) showed a plan-scale
+unit cannot fit 600 s before any judging round. The scenario YAMLs' own timeouts are the
+golden pass rule (twice each question's time target), versioned under D44, and are not
+edited — probes use copies with the probe's deadline; tier 3's deadline changes only
+through the manifest, as tier3-4.
 
 ## The arms
 
 | arm | treatment | pin env | model calls | tools | ceiling/question-run |
 |---|---|---|---|---|---|
 | A | inexpensive single call, request only | `TIER3_ARM_A` | 1 | none | $0.10 |
-| B | the same serving as A + primary-source acquisition and recomputation | `TIER3_ARM_B` (= A's value by design) | up to 3 (the tool loop) | `fetch_primary_source`, `recompute` (both deterministic, no judgment) | $0.20 |
-| C | complementary-model cooperation: model 1 drafts, model 2 independently checks, model 1 revises once if model 2 objects | `TIER3_ARM_C_1`, `TIER3_ARM_C_2` | 3 | none | $0.20 |
+| B | the same serving as A + primary-source acquisition and recomputation | `TIER3_ARM_B` (= A's value by design) | up to 3 (the tool loop) | `fetch_primary_source`, `recompute` (both deterministic, no judgment) | $0.50 |
+| C | complementary-model cooperation: model 1 drafts, model 2 independently checks, model 1 revises once if model 2 objects | `TIER3_ARM_C_1`, `TIER3_ARM_C_2` | 3 | none | $0.50 |
 | D | stronger single call, request only — the strong reference | `TIER3_ARM_D` | 1 | none | $0.20 |
 | E | the current pipeline under the standing pins (.env, the owner's, unchanged) | standing pins | up to 40 (the pipeline's own ceiling) | the pipeline's own, under its standing risk gates | $0.50 |
 
@@ -104,14 +122,46 @@ is what is measured. That is why the pins, not bare model names, are the unit of
 ratification, and why the runner records the *resolved* pin (model, provider) for every
 unit it executes.
 
+## The staged design and the pre-registered stage-2 rule
+
+Tier 3 runs in stages (the owner's 2026-10-05 directive). **Stage 1 is the
+calibration stage**: the seven selected questions, three repetitions, all five
+arms — 105 planned question-runs, 21 per arm, under the owner's $30.00
+authorization. Stage 1 answers the pilot's question (whether the inexpensive
+arm against the strong reference is worth the full spend) at the full treatment
+spread, so the pilot's role is superseded (its registration, its gate and its
+$7.50 authorization are unchanged; whether the pilot mode is deleted from the
+manifest and the runner is the advisor's ruling, recorded as a question in the
+119 response).
+
+**The stage-2 rule, pre-registered 2026-10-05 before the first paid unit of
+stage 1** (the owner's directive, specification 3 — fixed, not adjusted after
+stage 1's results are known): after stage 1 completes, if arm E's delivered
+correctness differs from arm A's by **7 or more of the 21 units**
+(|E − A| ≥ 7/21), the pipeline question is answered — the difference is large
+enough that the pipeline's serving, not its treatment, is the measurable cause —
+and **stage 2 is the owner's option**. Otherwise stage 2 runs the remaining 18
+questions of the frozen set under this same manifest (Q1-Q5 plus the 13 unselected
+Q6-Q25 questions), with **Q1-Q5 reported separately as calibration-exposed**
+(the 2026-10-03/04 golden probes answered them under the pre-freeze
+configuration).
+
 ## The two ratification gates (the STOP, mechanized)
 
 1. **Servings.** The owner sets `TIER3_ARM_A`, `TIER3_ARM_B`, `TIER3_ARM_C_1`,
    `TIER3_ARM_C_2` and `TIER3_ARM_D` in `.env` (`TIER3_ARM_B` = `TIER3_ARM_A`).
-2. **Spend.** The owner authorizes the total spend: **$90.00 across the 375 planned
-   question-runs** (75 units per arm at $0.10/$0.20/$0.20/$0.20/$0.50). This is an
-   authorization ceiling, not a predicted cost. **It is not approved by anything in this
-   repository, and it must not be assumed to be approved.**
+2. **Spend.** The owner authorizes the stage-1 spend: the owner's ratified amount,
+   **$30.00** (authorized 2026-10-05), against the stage-1 compositional ceiling
+   of **$37.80** (the 105 planned question-runs: 21 units per arm at
+   $0.10/$0.50/$0.50/$0.20/$0.50). These are authorization figures, not
+   predicted costs. **They are not approved by anything in this repository, and
+   they must not be assumed to be approved.** The owner may authorize a lower
+   `TIER3_SPEND_AUTHORIZED` and the sweep's fit rule then applies: a unit the fit
+   rule does not start is recorded as not started (the runner's `skipped` status,
+   its stop reason on the record), never silently dropped — the success measures'
+   denominators are the 21 planned units per arm, the not-started included. Where
+   the runner requires `TIER3_SPEND_AUTHORIZED` to equal a manifest figure, the
+   manifest carries the owner's ratified amount.
 
 The runner mechanizes the stop. Before any network call it resolves every arm's serving
 (arm E's per tier), prints the map with its **fingerprint** (the first 12 hex of the
@@ -164,8 +214,8 @@ variant serving, and the spend above which the guard would refuse the call.
 ## Failure treatment (registered, not improvised)
 
 Refusal, deadline, tool failure, incomplete runs and outstanding liability are all *counted,
-not dropped*: the success measures are fractions of the 75 **planned** units per arm, so a
-refused, timed-out or incomplete unit is 0 delivered correctness with its cost and latency
+not dropped*: the success measures are fractions of the 21 **planned** units per arm, so a
+refused, timed-out, incomplete or not-started unit is 0 delivered correctness with its cost and latency
 recorded. A lookup the closed-world fetch answers "not available" is a recorded reading,
 not a failure and not a refusal. Calls that failed after dispatch (the runner's
 `unreconciled_liability`, Ruling D45) are included in their unit's cost and in the
@@ -175,18 +225,18 @@ recorded manifest version or order digest differs from this run's.
 
 ## The five success measures
 
-1. **Delivered correctness per arm** — the count of the 75 planned units per arm whose
-   delivered answer the frozen scorer scores PASS, as a fraction of 75. Two hand
+1. **Delivered correctness per arm** — the count of the 21 planned units per arm whose
+   delivered answer the frozen scorer scores PASS, as a fraction of 21. Two hand
    readings are the primary measure (Ruling D50 (1)): the runner exports a reading sheet
    (every scorer FAIL plus a seeded sample of PASSes, no arm label, blind to the
    treatment) and reports the measures computed scorer-only and again with the readers'
    verdicts where they read, side by side.
-2. **Per-question repeat outcomes** — for each question and arm, the 0/3–3/3 distribution
+2. **Per-question repeat outcomes** — for each of the 7 selected questions and arm, the 0/3–3/3 distribution
    of its three repetitions. Repeatability is itself a measurement.
 3. **Paired wins/losses against A** — per question, each non-A arm's correct-repetition
-   count (0–3) against A's: wins/losses/ties across the 25 questions.
+   count (0–3) against A's: wins/losses/ties across the 7 questions.
 4. **Comparison with D** — the same paired measure against the strong reference.
-5. **Total cost and latency including failures** — the sum across all 375 units, failures
+5. **Total cost and latency including failures** — the sum across all 105 units, failures
    and unreconciled liability included; no measure excludes the units that failed.
 
 ## The runner
@@ -205,17 +255,17 @@ recorded manifest version or order digest differs from this run's.
 The dry run proves the whole machinery at zero cost: the same runner, a mocked lineup
 (placeholder servings by fingerprint), a scripted model whose correct answers are the
 recorded real answers where the tier-2 regression record holds them. Its record, under
-manifest `tier3-2` (fingerprint `444cba832c69`, order sha256
-`6407a7dba3f82a610cc0f30afd6d4f5ee3129fc5f6885492f8064e7d7b76e7c9`):
+manifest `tier3-4` (fingerprint `444cba832c69`, order sha256
+`821b3242c9c20fc0960b2426b26b43f9fa03a0f0c940fcac91ee9ab273cc6b8e`):
 
 - **The main run, killed for the resume exhibit:** 40 units, all delivered, then the
-  process is killed with the next unit (`('Q20', 2, 'D')`) left in flight.
-- **The main run, resumed to the end:** 375 units, **$8.8488 spent — $0.2000 of it the
-  in-flight unit's liability charge** — $0.0017 unreconciled liability; statuses 1
-  deadline, 371 delivered, 2 incomplete, 1 refusal; delivered correctness A 73/75,
-  B 74/75, C 74/75, D 72/75, E 72/75; census: 73 check:concurred, 1 check:objected,
+  process is killed with the next unit (`('Q16', 1, 'B')`) left in flight.
+- **The main run, resumed to the end:** 105 units, **$3.1019 spent — $0.5000 of it the
+  in-flight unit's liability charge** — $0.0018 unreconciled liability; statuses 1
+  deadline, 101 delivered, 2 incomplete, 1 refusal; delivered correctness A 19/21,
+  B 20/21, C 20/21, D 18/21, E 18/21; census: 19 check:concurred, 1 check:objected,
   1 check:unavailable, 1 deadline, 1 tool_failure, 1 delivery:approved-not-shipped,
-  1 delivery:no-answer, 73 delivery:shipped, 2 incomplete, 1 refusal.
+  1 delivery:no-answer, 19 delivery:shipped, 2 incomplete, 1 refusal.
 - **The pilot, resumed to the end:** 50 units, $0.0162 spent, 48 delivered, 1
   incomplete, 1 refusal; A 23/25, D 23/25.
 - **The reading sheet:** 55 entries (every FAIL plus the seeded PASS sample, 10 per
@@ -223,3 +273,30 @@ manifest `tier3-2` (fingerprint `444cba832c69`, order sha256
 
 The mocked dry run writes its results under `evals/results/` (git-ignored scratch);
 `reading-sheet` re-exports the sheet from any results file.
+
+## The preflight under the current-lineup pins (measured 2026-10-05)
+
+The free preflight was run under the proposed lineup, env-prefixed (G-2):
+**A and B on the triage-tier serving, C on the engineering-tier serving (model 1)
+and the escalation-tier serving (model 2), D on the escalation-tier serving**,
+arm E on the standing pins unchanged. The lineup's fingerprint is
+`49a20f34fe7a`; with `TIER3_SERVINGS_RATIFIED` set to it and
+`TIER3_SPEND_AUTHORIZED=30.00` (env-prefixed, the owner's ratified amount),
+**the ratification gates hold and the preflight holds — the experiment may start
+once the owner authorizes the spend.**
+
+The measured findings, in the command's own terms:
+
+- **Catalogue blindness, reported not guessed:** every serving in the lineup,
+  arm E's tiers included, is blind about `max_completion_tokens`, so the
+  registered max_tokens 8000 (and the standing tier caps) could not be checked
+  against any of them. The preflight proceeds with the blindness on the record.
+- **Arm E's per-tier worst cases against the $0.50 per-unit ceiling:** triage
+  $0.0766, research $0.0766, search $0.0226, architecture $0.0686,
+  engineering $0.0274, judge $0.1582, escalation **$0.4491** — the escalation
+  tier is the tightest headroom in the lineup (refusable above spend
+  $0.0509), and each `:exacto` variant is priced as its base model's
+  catalogue entry. The triage, research and search entries add a flat
+  per-request charge once per call ($0.0140, $0.0140 and $0.0050).
+- **Arms A–D:** every arm's worst-case sequence fits its per-unit ceiling at
+  the catalogue's rates — no refusal, so the preflight prints no A–D table.
