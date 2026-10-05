@@ -744,3 +744,365 @@ node, **(c)** raise the per-scenario timeout
 **(d)** accept. No paid tier-3 arm-E unit can
 start until the engineering tier both serves
 reliably and fits the deadline.
+
+## The fourth sample — pre-registration (2026-10-05, before the first paid call)
+
+The owner acted on options (b) and (c)
+together: a different engineering serving
+**and** a raised per-scenario timeout. The
+owner's `.env` edits (G-3; contents never
+printed): engineering is now plain
+`thinkingmachines/inkling` (not
+`inkling-small`) via **Together** (the
+catalogue lists two providers for plain
+inkling — DeepInfra and Together; the
+`inkling-small` id is DeepInfra-only), the
+judge provider is **google-vertex/us-south1**
+(the judge model is unchanged,
+`qwen/qwen3-235b-a22b-2507:exacto`), and
+the plan ceiling is **55,000** (was 125,000).
+The per-scenario timeout is raised 600 →
+**1900 s** — the owner's stated trade-off:
+sacrifice speed for performance and price
+with mimo-pro.
+
+The free checks re-verified the locked
+configuration before any paid call:
+
+- **The guard's geometry fits.** The worst-
+  case table (completion side, max_tokens ×
+  the catalogue rate): triage $0.0614,
+  research $0.0614, search $0.0180,
+  architecture $0.0479, **engineering
+  $0.2228**, judge $0.0057, escalation
+  $0.2520 — every tier under the $0.50
+  per-run cap, no warning fired. The 55,000
+  ceiling is what makes it fit: plain inkling
+  completes at $4.05/M on both providers
+  (3.375× inkling-small's $1.20/M), so at
+  the old 125,000 ceiling the engineering
+  worst case would have been $0.50625 —
+  over the cap, and the guard would have
+  refused every engineering call before
+  dispatch (the 500000-cap conflict's
+  geometry, now caused by the model switch).
+  At 55,000 the largest measured plan
+  (23,139 tokens) still holds with 58%
+  headroom.
+- **The engineering pin resolves**: Together
+  serves `thinkingmachines/inkling` (the
+  endpoints route lists both providers).
+  Together's endpoint does not declare
+  `response_format` (the same declaration
+  gap DeepInfra's carried) — the client's
+  shipped safety net (log, drop the
+  parameter, retry on a 400) covers it; it
+  has never been exercised live.
+- **The judge pin check reports FAIL, and
+  the record shows why that is an instrument
+  false negative, not a configuration 404**:
+  the check compares the pin against the
+  endpoint's `provider_name` (`Google`,
+  normalized `google`), but the client routes
+  by **tag** — it passes the pin verbatim in
+  `provider.order`, and the catalogue lists
+  the judge model's `google-vertex/us-south1`
+  endpoint (tag `google-vertex/us-south1`,
+  declaring `response_format` and
+  `max_tokens`, priced). The pin check's
+  normalization was written before any
+  tag-style pin whose prefix names a platform
+  rather than its provider; every prior pin's
+  tag prefix matched its provider name. The
+  router's server-side resolution of the tag
+  is provider behaviour — the first judge
+  call of any unit that reaches judging is
+  the live test, and a 404 there is a
+  falsifier of this pre-registration.
+- The sweep runs with `--skip-preflight`
+  (the owner's standing override; the results
+  header records `{ran: false, override:
+  true}`), because the two free findings
+  above would otherwise refuse the start.
+
+Configuration: golden_q1–q3 through
+`engineering-rnd`, repeat 1, timeout 1900 s,
+`--max-spend 0.50` per scenario-run,
+`--max-spend-sweep 1.50`, the same `env -u`
+invocation (the shell's stale exports
+removed so the owner's `.env` is the source
+of truth), a new results file
+(`evals/results/probe-20261004-golden-q123-rerun4.jsonl`,
+gitignored like every local run output).
+
+Predictions:
+
+1. The header records the lineup above and
+   `{ran: false, override: true}`.
+2. Every plan completes in ONE architecture
+   call — the 55,000 ceiling holds if plans
+   stay under it (the largest plan of the
+   three samples was 23,139 tokens, 42% of
+   the ceiling); a plan past 55,000 would
+   truncate mid-JSON (the sample-1 finding
+   at 14,000) and the client's parse-retry
+   would split it across calls.
+3. The engineering dispatch via Together:
+   the measurement. Whether Together's serving
+   escapes the upstream 429 that hit
+   DeepInfra's inkling-small is unknown — a
+   different model id and a different provider
+   route. The response_format gap means the
+   first engineering call may 400 once before
+   the client's safety net retries without
+   the parameter.
+4. Units stay within 1900 s and 40 calls.
+   At the measured paces (plan 241.7–439.9 s;
+   feasibility 60.4–161.4 s when it served;
+   judge 271–291 s in the first probe), a
+   full unit — plan + feasibility + implement
+   + validate + one judging round — fits
+   1900 s with room for a second judging
+   round.
+5. Booked spend under $1.50; no spend-guard
+   refusal (every tier's worst case fits,
+   engineering $0.2228 completion-side).
+6. The outcome: units may now complete
+   feasibility and implement and reach
+   judging — the first judge calls in four
+   samples, which would measure the judge's
+   pace and live-test the google-vertex tag
+   pin.
+
+Falsifiers: a second preflight finding; a
+unit past 1900 s or 40 calls; sweep spend
+over $1.50; a spend-guard refusal; a
+recurring 400 (the safety net failing); a
+judge 404 (the tag pin not resolving
+server-side); a plan past 55,000 tokens.
+
+Caveats: the same empty knowledge store —
+no search-tier call. The fourth sample's
+measured record is appended below after the
+run, in this same file, and committed with
+the run's completion (the owner directed no
+git actions until the test completes, so the
+pre-registration rides uncommitted until
+then — a recorded departure from
+pre-register-and-commit-first; the
+predictions precede the result in this
+document either way).
+
+### The fourth sample — measured record (2026-10-05, after the run)
+
+The results file (gitignored, like every
+local run output): `evals/results/
+probe-20261004-golden-q123-rerun4.jsonl`.
+The header records the locked lineup —
+engineering `thinkingmachines/inkling:exacto`
+via `together`, judge `qwen/qwen3-235b-a22b-
+2507:exacto` via `google-vertex/us-south1` —
+`"timeout": 1900.0` and `"preflight":
+{"ran": false, "override": true}` —
+prediction 1 **HELD**. The sweep: **0/3
+units passed, 49 calls, 1413.8 s, $0.4239
+booked of the $1.5000 sweep cap** (the
+sweep CLI exited 1 — units ended blocked 2,
+escalated 1, not a crash). Booked spend by
+tier: engineering $0.2396, escalation
+$0.0793, architecture $0.0356, judge
+$0.0319, research $0.0198, triage $0.0177.
+Served by: engineering via **Together**,
+judge via **Google**, escalation via
+InferenceNet, architecture via Xiaomi,
+research and triage via Google AI Studio.
+
+Per-unit records:
+
+- **golden_q1** — blocked, 258.679 s, 13
+  calls, $0.0743 booked. The plan node
+  completed in ONE architecture call:
+  147.867 s, 7,464 completion tokens. The
+  feasibility node's engineering call
+  **completed on Together in 10.58 s** —
+  the 429 that ended the first three
+  samples did not recur. The implement
+  node completed (22.389 s and 32.221 s
+  across two attempts; engineering 3 calls,
+  $0.0500 booked), the deliverable was
+  **implement_green and validate_green —
+  all six success criteria PASS, the first
+  golden unit in four samples to produce a
+  validated deliverable** — and the review
+  loop revised it green again. The unit
+  then died on a **new failure class**:
+  `SSLError: [SSL: SSLV3_ALERT_BAD_RECORD_
+  MAC]` — a TLS transport alert, not
+  upstream capacity — during the rework
+  loop's third implement call (0.482 s in).
+  The judge tier served 6 calls via Google
+  (5.484 / 2.729 / 7.532 / 17.282 s —
+  the tag pin resolved server-side and
+  served, the first judge calls in four
+  samples); two judge calls failed with the
+  qwen3-235b upstream 429 after the
+  client's retries (the same rate-limit
+  phenomenon, now observed on a second
+  model family). Liability $0.2641 (the
+  SSL-killed engineering call's worst case
+  $0.248866 + the two judge 429s $0.0152).
+- **golden_q2** — blocked, 599.606 s, 6
+  calls, $0.0577 booked. The plan node
+  completed in ONE architecture call:
+  **522.66 s, 24,107 completion tokens** —
+  mimo-pro's pace on a large plan (~21.7 s
+  per 1k tokens), 87% of the 600 s budget.
+  The feasibility node completed on
+  Together (17.949 s). The deliberation
+  watchdog then cancelled the implement
+  call at iteration 1: budget 600.0 s,
+  pace 17.949 s (the observed engineering
+  pace), 45.7984 s available, terminal at
+  599.6052 s — the remaining pipeline
+  (implement + validate + review + possible
+  rework) could not fit 45.8 s. The
+  cancelled dispatch's worst case $0.242959
+  booked as liability.
+- **golden_q3** — **escalated**, 555.501 s,
+  30 calls, $0.2920 booked, zero liability
+  (every call completed). The plan node
+  completed in one call (139.753 s, 7,314
+  tokens); feasibility completed on
+  Together (10.56 s); the implement node
+  ran 7 engineering calls across 3
+  iterations (239.63 s) — **every iteration
+  implement_green and validate_green**; the
+  judge tier served 18 calls ($0.0239);
+  the escalation tier served 1 call via
+  InferenceNet (71.373 s, $0.0793) and its
+  recovery loop ran 3 iterations without
+  converging, "still red". The escalation's
+  own assessment, verbatim in substance:
+  all three attempts produced identical,
+  numerically correct results (J = 6.14e-7
+  m^4, tau_max = 20.4 MPa, theta = 0.0102
+  rad); "the failures are purely
+  presentational and self-inflicted... The
+  block is now a prose artifact, not an
+  engineering defect" — each attempt's
+  added explanatory prose about rounding
+  conventions became a new procedural
+  finding surface.
+
+Predictions vs measured:
+
+1. **HELD** — the header records the locked
+   lineup and `{ran: false, override: true}`.
+2. **HELD** — every plan completed in ONE
+   architecture call (7,464 / 24,107 /
+   7,314 completion tokens — all under the
+   55,000 ceiling, the largest 44% of it).
+3. **MEASURED — Together's serving
+   completed.** The 429 did not recur: all
+   12 engineering dispatches across the
+   three units completed (3 / 2 / 7 calls;
+   feasibility in 10.58 / 17.95 / 10.56 s;
+   engineering $0.2396 booked, the largest
+   tier spend). The availability problem
+   was DeepInfra's route (or the
+   inkling-small id's upstream), not the
+   model family. No 400 occurred —
+   Together's route accepted response_format
+   despite not declaring it; the client's
+   400-retry safety net was never needed.
+4. **MEASURED — and the 1900 s bound was
+   never tested.** Q1 258.679 s / 13 calls,
+   Q2 599.606 s / 6 calls (the watchdog
+   cancelled it), Q3 555.501 s / 30 calls —
+   all inside 600 s. The D38 watchdog's
+   budget is `settings.run_time_budget_
+   seconds` (autornd/engine/workflow.py:144),
+   which the owner's `.env` pins at 600 (the
+   config default is 1800); the CLI's
+   `--timeout` is a separate, outer bound
+   that does not move the watchdog. The
+   owner's 1900 s raise reached the outer
+   bound only — the watchdog still armed at
+   600 s in all three units (each unit's
+   record carries `budget_seconds: 600.0`).
+   The raise the owner asked for is one
+   `.env` line away: `RUN_TIME_BUDGET_
+   SECONDS=1900` (G-3).
+5. **HELD** — $0.4239 booked of $1.50; no
+   spend-guard refusal (engineering's worst
+   case $0.2228 fit the $0.50 per-run cap).
+   Total liability $0.5071 (Q1 $0.2641 +
+   Q2 $0.242959 + Q3 $0.00); total
+   exposure $0.9310.
+6. **MEASURED — units reached judging, and
+   the judge's pace on the new serving is
+   2.7–17.3 s per call** (24 judge calls
+   across the sweep, $0.0319) — against
+   271–291 s on the first probe's old judge
+   serving. The pace problem the original
+   probe raised is answered by the new
+   lineup: the judge tier is no longer the
+   bottleneck. The judge model itself
+   429'd intermittently upstream (two calls
+   lost in Q1; retries absorbed the rest) —
+   the same phenomenon on a second family.
+
+Falsifiers: none fired — no second preflight
+finding, no unit past 600 s or 40 calls (the
+1900 s bound was not the watchdog's), sweep
+spend $0.4239 < $1.50, no spend-guard
+refusal, no recurring 400, no judge 404 (the
+tag pin resolved server-side and served), no
+plan past 55,000 tokens. The SSL transport
+error is a new failure class, not a
+registered falsifier — one occurrence.
+
+The four samples together ($0.0720 +
+$0.0945 + $0.0884 + $0.4239 = $0.6788 of
+the $6.00 total authorization across the
+four runs): the engineering tier now serves
+reliably (Together: 12 of 12 dispatches
+completed in this sample, after 2 of 9 on
+DeepInfra's inkling-small across three
+samples) and the judge tier serves and is
+fast (2.7–17.3 s per call). The pace
+question is answered conditionally: a unit
+whose plan node stays ~7–8k tokens fits
+600 s with ~400 s to spare (Q1: 258.7 s to
+a green deliverable; Q3: the full pipeline
+including escalation in 555.5 s), but a
+24k-token plan on mimo-pro (522.7 s) eats
+the budget alone (Q2). Where this leaves
+the owner: **(a)** set `RUN_TIME_BUDGET_
+SECONDS=1900` in `.env` (G-3) if the
+watchdog's budget should be 1900 s — the
+`--timeout` raise alone does not reach it;
+**(b)** the SSLError class — one occurrence,
+transience unmeasured (a re-run would tell);
+**(c)** the judge model's intermittent
+upstream 429s — the provider's own-key
+remedy (G-1) or acceptance (retries absorb
+most); **(d)** Q3's prose-artifact block —
+the escalation's recovery loop not
+converging on numerically correct work is a
+harness-behaviour finding (the review loop
+generates finding surfaces from defensive
+meta-prose), the advisor's to rule on, not
+a serving change; **(e)** the plan node's
+variance on mimo-pro (139.8–522.7 s by
+plan size) is the measured cost of the
+owner's "sacrifice speed for performance"
+trade — under a 600 s bound, plans above
+~10k tokens risk the watchdog; **(f)** the
+tier-3 experiment's gate 1 is no longer
+blocked by the engineering tier — it serves
+and fits — and the arm-E worst-case table
+under the new lineup (inkling at $4.05/M
+completion) should be re-quoted free before
+ratification (the tier-3 runner's
+`worst-case` subcommand).
