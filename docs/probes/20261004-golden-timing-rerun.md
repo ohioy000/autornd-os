@@ -1692,3 +1692,131 @@ golden unit; the arm-E worst-case
 table re-quote under the locked lineup
 remains the owner's pre-ratification
 step.
+
+## Correction (2026-10-05) — the advisor's review of the delivery PRs
+
+**What it corrects.** The fifth
+sample's Q2 finding — "the cited
+paragraph contains only the
+deficient-atmosphere definition; no
+value, operator, or basis for
+'oxygen enriched atmosphere' exists
+in the source of truth or any
+corroborating rendering" (the same
+claim the unit record's
+`blocked_check` entries carry) —
+was wrong about the source of
+truth.
+
+**The correction.** The archived
+July 1, 2014 text of 29 CFR
+§ 1910.146(b) carries BOTH
+definitions.
+`evals/tier2/sources/CFR-2014-title29-vol5-sec1910-146.txt`,
+lines 166 and 169, in the
+two-column layout that prints
+"(c) General requirements" beside
+them — the definitions close
+paragraph (b):
+
+> Oxygen deficient atmosphere means an
+> atmosphere containing less than 19.5
+> percent oxygen by volume.
+>
+> Oxygen enriched atmosphere means an
+> atmosphere containing more than 23.5
+> percent oxygen by volume.
+
+The definition the unit was blocked
+on is present, at lines 168–170.
+The deliverable's citation practice
+was satisfiable from the source of
+truth.
+
+**Why Q2 actually blocked — the
+re-read.** The request asks for the
+two concentrations, the comparison
+operators and the concentration
+basis. The plan's criteria 1, 2 and
+4 answer exactly that. Criteria 3, 5
+and 6 add specifics the request did
+not ask for — 3: "Both definitions
+appear in the deliverable as verbatim
+sentences taken from § 1910.146(b),
+each accompanied by the citation…";
+5: "a cross-source agreement check
+showing zero divergences … a
+recorded divergence count other than
+0 invalidates the deliverable"; 6:
+"the amendment-history check …
+identifies the amendment-history
+documents examined" — and the plan
+prompt's own scope rule (Ruling
+D43, `autornd/engine/phases.py`)
+says: "A criterion may not add
+specifics the request did not ask
+for." The implement phase then
+misread the source — concluding
+paragraph (b) "contains no
+definition for 'oxygen enriched
+atmosphere'" when it carries it at
+lines 168–170 — and blocked on the
+invented criterion. In the advisor's
+off-books run, the same class of
+invented criterion (a "verbatim,
+zero-character diff against the GPO
+file") blocked Q2. The block was the
+plan's out-of-scope invented
+criterion, enforced by a source
+misreading — not a missing
+definition, and not the scenario's
+expectation (the scenario's `expect`
+is `status: completed, max_calls:
+40`; it demands no verbatim
+citation).
+
+**The advisor's ruling on the
+scenario timeouts.** The golden
+scenario YAMLs' own `timeout: 600`
+stays: it is part of the golden pass
+rule (twice each question's time
+target), versioned under D44. Probes
+use copies carrying the probe's
+deadline — the advisor's off-books
+run did this at 1800 s, and Q3 ran
+785 s, then stopped on spend, not
+time: under a raised deadline the
+time dimension stops binding, and
+the per-unit spend ceiling becomes
+the binder for a large-plan unit.
+Tier 3's deadline changes only
+through the manifest
+(`common_deadline_seconds`, tier3-4,
+1800 s, per the owner's earlier
+deadline prompt). The fifth sample's
+apparatus finding stands as
+measured (the scenario YAML's own
+timeout beats the CLI's `--timeout`
+at `autornd/evals/runner.py:819-822`;
+the `.env` knob is the API entry
+point's budget,
+`autornd/engine/workflow.py:144`) —
+what it was owed is this ruling, not
+a scenario edit.
+
+**Where this leaves the open
+items.** The scenario-timeout
+question is ruled (no scenario edit;
+tier 3 moves through the manifest).
+The Q2 criterion-content question is
+answered (the plan's invented
+criterion plus a source misreading;
+the scenario's expectation is
+satisfiable from the source of
+truth). The two instrument repairs
+the review ordered — the step
+ledger's plan-node tier mislabel
+and the transient TLS transport
+error that killed a call instead of
+retrying it — are each their own PR,
+each proven by breaking one line.
