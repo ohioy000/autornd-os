@@ -1106,3 +1106,203 @@ under the new lineup (inkling at $4.05/M
 completion) should be re-quoted free before
 ratification (the tier-3 runner's
 `worst-case` subcommand).
+
+## The fifth sample — pre-registration (2026-10-05, before the first paid call)
+
+The owner acted on option (a): the
+watchdog's budget is now 1900 s. The
+`.env` edit (G-3, made at the owner's
+explicit direction on 2026-10-05; the
+file's contents are never printed):
+`RUN_TIME_BUDGET_SECONDS=1900` — the
+line the fourth sample's apparatus
+finding asked for. The owner's direction
+for this sample: run the fourth sample
+again, from a fresh shell. The sample's
+primary question is therefore the
+apparatus fix itself — does the 1900 s
+budget reach the D38 watchdog now (all
+four previous samples armed it at 600 s
+from the runs' environment, not from any
+file), and does the fourth sample's
+outcome hold or improve once a large-plan
+unit is no longer cancelled at 600 s?
+
+The free checks re-verified the locked
+configuration before any paid call, under
+the exact `env -u` list the paid run
+uses:
+
+- **The apparatus fix reaches the
+  settings.** A fresh process (every
+  shell export stripped, including
+  `RUN_TIME_BUDGET_SECONDS`) resolves
+  `run_time_budget_seconds = 1900.0`
+  (autornd/config.py:146; the config
+  default is 1800.0, and before the
+  `.env` edit a fresh process resolved
+  exactly that — the 600.0 recorded in
+  samples 1–4 came from those runs'
+  environment, not from the file, which
+  carried no run_time_budget line at
+  all). This is the controlled variable
+  of the sample: the paid run's
+  environment unsets `RUN_TIME_BUDGET_
+  SECONDS`, so the `.env` line — and
+  nothing else — arms the watchdog.
+- **The locked lineup governs.** Under
+  the same list the settings resolve to
+  the sample-4 lineup: engineering
+  `thinkingmachines/inkling:exacto`,
+  judge `qwen/qwen3-235b-a22b-2507:
+  exacto`, provider order
+  `engineering:together` and
+  `judge:google-vertex/us-south1`, plan
+  ceiling 55,000 (the config default —
+  `.env` carries no cap lines; the shell's
+  stale `PLAN_MAX_TOKENS=78000`,
+  `MODEL_ENGINEERING=qwen/qwen3-235b-
+  a22b-2507` and `MODEL_JUDGE=moonshotai/
+  kimi-k2.5:exacto` are stripped, which
+  is why a fresh shell is required at
+  all).
+- **The guard's geometry fits.** The
+  worst-case table (completion side,
+  max_tokens × the catalogue rate) is
+  unchanged from sample 4 — nothing in
+  the guard's inputs moved: triage
+  $0.0614, research $0.0614, search
+  $0.0180, architecture $0.0479,
+  **engineering $0.2228**, judge $0.0057,
+  escalation $0.2520 — every tier under
+  the $0.50 per-run cap, so no guard
+  refusal is expected. Budget geometry:
+  3 units × $0.50 = $1.50, exactly the
+  sweep cap (permitted == wanted; the
+  CLI's worst-case warning does not
+  fire).
+- **The pin-check false negative
+  persists** (the owed tag-match repair
+  is not made): the preflight would
+  report the judge pin `google-vertex/
+  us-south1` as failing. The evidence
+  that it serves is sample 4's 24 judge
+  calls via that endpoint at 2.7–17.3 s
+  per call. The sweep therefore runs with
+  `--skip-preflight` and the override
+  recorded, as in samples 1–4.
+- The suite `/tmp/golden-q123` still
+  holds the three scenarios
+  (golden_q1/2/3.yaml).
+
+Configuration: golden_q1–q3 through
+`engineering-rnd`, repeat 1, timeout
+1900 s, `--max-spend 0.50` per
+scenario-run, `--max-spend-sweep 1.50`,
+the `env -u` invocation extended with
+`-u RUN_TIME_BUDGET_SECONDS` (the
+controlled variable), a new results file
+(`evals/results/probe-20261004-golden-
+q123-rerun5.jsonl`, gitignored like every
+local run output).
+
+Predictions:
+
+1. The header records the lineup above
+   and `{ran: false, override: true}`.
+2. **Every unit record's watchdog carries
+   `budget_seconds: 1900.0`** — the
+   apparatus fix verified live.
+   Falsifier: any unit shows a different
+   budget (1800.0 would mean the `.env`
+   line was not read; 600.0 would mean a
+   run-environment export overrode the
+   file; anything else, a third source) —
+   the sample's primary question answered
+   "no", reported immediately.
+3. Every plan completes in ONE
+   architecture call under the 55,000
+   ceiling (sample 4's largest: 24,107
+   tokens, 44% of the ceiling).
+4. The engineering tier serves via
+   Together (sample 4: 12 of 12
+   dispatches completed, feasibility
+   10.6–17.9 s). An engineering 429
+   after the client's retries is a
+   falsifier — it would show the
+   availability problem is not purely
+   DeepInfra's route.
+5. The judge tier serves via
+   google-vertex/us-south1 at 2.7–17.3 s
+   per call; the judge model's
+   intermittent upstream 429s may recur
+   (two calls lost in sample 4's Q1) but
+   retries absorb all but a few. A judge
+   404 — the tag failing to resolve
+   server-side — is a falsifier.
+6. **No unit ends by watchdog
+   cancellation on a time basis.**
+   Sample 4's Q2 (a 24,107-token plan,
+   522.66 s) was cancelled at 599.6 s
+   with 45.8 s remaining; under a 1900 s
+   budget its implement node completes.
+   Falsifier: a watchdog cancellation on
+   a time basis under a 1900.0 budget —
+   the budget reached the record but not
+   the arbiter, a second and deeper
+   apparatus finding. (A cancellation on
+   a non-time rule would be a new finding
+   to record, not a falsifier of the
+   fix.)
+7. Spend: $0.50–$1.30 of the $1.50 sweep
+   cap. Units now run longer — a Q2-class
+   unit proceeds through implement and
+   judging instead of being cancelled —
+   so per-unit cost rises above sample
+   4's $0.0577–$0.2920 range; no
+   spend-guard refusal is expected (every
+   tier's worst case fits the per-run
+   cap).
+8. Outcome: 1–3 of 3 units ship. Sample
+   4's Q1 produced a validated-green
+   deliverable (all six success criteria
+   PASS, 258.7 s) before a one-off
+   SSLError ended its rework loop; the
+   SSL class's transience is unmeasured
+   (one occurrence).
+
+Falsifiers (the registered list): any
+unit's watchdog budget ≠ 1900.0; a
+watchdog cancellation on a time basis
+under a 1900.0 budget; an engineering
+429 after the client's retries; a judge
+404; a plan past 55,000 tokens; sweep
+spend past $1.50; a spend-guard refusal;
+a recurring 400 (Together's route
+rejecting `response_format` — the
+client's log-drop-retry safety net's
+first live exercise; sample 4 never
+triggered it).
+
+Caveats: the wall clock — under a 1900 s
+watchdog budget a unit may run up to
+~1900 s, so the sweep may take over an
+hour (sample 4 took 1413.8 s under the
+600 s watchdog; the run is launched as a
+background process accordingly). The
+SSLError class (one occurrence). The
+judge's upstream 429s (intermittent,
+provider-side). Q3's escalation-recovery
+loop not converging on numerically
+correct work (a harness-behaviour
+question for the advisor, not a serving
+one). The preflight override (the owed
+instrument repair).
+
+Departure: none from the standing
+protocol — this pre-registration is
+committed before the first paid call
+(the sample-4 "no git actions until
+complete" directive was specific to that
+run and is not repeated for this one;
+the working tree is clean at launch).
