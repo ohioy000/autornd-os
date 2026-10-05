@@ -432,6 +432,18 @@ class TestTheExecution:
         assert "7 or more of the 21" in rule
         assert "the pipeline question is answered" in rule
         assert "stage 2 is the owner's option" in rule
+        # The advisor's 2026-10-05 review struck the causal
+        # clause, before any paid unit: arms E and A differ in
+        # both serving and treatment, and separating the two
+        # is what the A-vs-D comparison is for - the rule is
+        # a stopping rule only, and names no cause.
+        assert "measurable cause" not in rule
+        # The clause change is recorded in the manifest, with
+        # the struck text and its reason.
+        change = MANIFEST["execution"]["stage_2_rule_change_2026_10_05"]
+        assert "measurable cause" in change
+        assert "struck" in change
+        assert "A-vs-D" in change
         # The otherwise-branch: the remaining 18 questions,
         # Q1-Q5 reported separately as calibration-exposed.
         assert "remaining 18 questions" in rule

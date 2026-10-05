@@ -138,13 +138,17 @@ manifest and the runner is the advisor's ruling, recorded as a question in the
 stage 1** (the owner's directive, specification 3 — fixed, not adjusted after
 stage 1's results are known): after stage 1 completes, if arm E's delivered
 correctness differs from arm A's by **7 or more of the 21 units**
-(|E − A| ≥ 7/21), the pipeline question is answered — the difference is large
-enough that the pipeline's serving, not its treatment, is the measurable cause —
-and **stage 2 is the owner's option**. Otherwise stage 2 runs the remaining 18
+(|E − A| ≥ 7/21), the pipeline question is answered, and **stage 2 is the
+owner's option**. Otherwise stage 2 runs the remaining 18
 questions of the frozen set under this same manifest (Q1-Q5 plus the 13 unselected
 Q6-Q25 questions), with **Q1-Q5 reported separately as calibration-exposed**
 (the 2026-10-03/04 golden probes answered them under the pre-freeze
-configuration).
+configuration). One clause was struck from the rule by the advisor's
+2026-10-05 review, before any paid unit — "the difference is large enough
+that the pipeline's serving, not its treatment, is the measurable cause" —
+because arms E and A differ in both serving and treatment, and separating
+the two is what the A-vs-D comparison is for: the rule is a stopping rule
+only, and names no cause. The rule's decision content is unchanged.
 
 ## The two ratification gates (the STOP, mechanized)
 
