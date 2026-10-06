@@ -84,12 +84,21 @@
           "detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Every item holds; the hold rule (any excursion fails, no restart) is stated in the answer's own words.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All four items hold: setpoint->coupon-band->timer order, inclusive 118-122 C hold for 600 s with excursion-fails/no-restart stated (step 5a and assumptions), logged PASS with 119-121 C/600 s, assess->switch-off->cool-to-<=40 C->remove order (steps 7-10). Scorer's hold-criterion fail is a recognition miss of the no-restart text."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 2,
@@ -123,12 +132,21 @@
           "detail": "the ordered outputs for 00, 01, 10, 11 are 0, 1, 1, 0"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Alarm = A XOR B = A'B + AB' with ordered outputs 0,1,1,0 for 00,01,10,11; both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 3,
@@ -206,12 +224,21 @@
           "detail": "8 section headings covering the requested themes"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "'750 W ... 160 s > 120 s (exceeds the time limit)' is the failure verdict; every other item holds.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: 120000 J, 1000 W smallest passing, 120 s passes (equality allowed), 750 W takes 160 s with the failure verdict stated explicitly as 'exceeds the time limit', 120 kJ delivered, three requested sections. Scorer's next-smaller fail missed the explicit failure verdict."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 4,
@@ -289,12 +316,21 @@
           "detail": "4 section headings covering the requested themes"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold with the 750 W heater's fail stated literally; derivations shown inline."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 5,
@@ -350,12 +386,21 @@
           "detail": "switch-off then cool then remove order: False; 40 deg C removal threshold stated: True - both are required"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Every item holds; the hold rule (any excursion fails, no restart) is stated in the answer's own words.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All four items hold: step 7 states excursion -> FAIL, do not restart; steps 9-12 give assess -> switch off -> cool inside to <=40 C -> remove; logged verdict PASS with 600 s, 119-121 C identified. Scorer's two fails are recognition misses."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 6,
@@ -433,12 +478,21 @@
           "detail": "the overall FAIL and the second reading as its cause are not both stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Signed errors +0.010/-0.030/+0.005, the inclusive 0.020/0.010 limits, per-reading pass/fail/pass and the overall FAIL caused by the 2.000 mm reading are all stated.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: ordered sequence with no re-zeroing, inclusive limits stated (+-0.020 mm nonzero, <=0.010 mm return zero), signed errors +0.010/Pass, -0.030/Fail, +0.005/Pass, overall FAIL naming the 2.000 mm point. Scorer missed the bold-marked verdicts - the recognition error D50 names."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 7,
@@ -472,12 +526,21 @@
           "detail": "0.80048 m = 0.80048 m within abs tolerance of key 0.80048 m"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Length increase 0.480 mm and final length 0.800480 m, both within tolerance, derived from the original length."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 8,
@@ -544,12 +607,22 @@
           "detail": "no stated N quantity within abs tolerance (10) of key 17647.1 N"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Exact forces derived (12,353 N / 210/17 kN); the conclusion's 12.4/17.6 kN read as a rounding to the inputs' 3 significant figures.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "FAIL",
         "note": "Extension 0.882 mm and stresses 61.8/176.5 MPa hold, and the derivation carries 12,353 N and 17,647 N (in tolerance, with the equilibrium check), but the Final Conclusion table reports F_Al = 12.4 kN and F_st = 17.6 kN - outside the key's +/-0.01 kN tolerance (12.3429-12.3629 / 17.6371-17.6571 kN). The delivered conclusion's kN values are out of tolerance; the scorer's fail was instead a recognition miss of the comma-separated N quantities."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "FAIL",
+        "rule": "key-strict: an item holds only if the answer's headline value falls within the frozen key's tolerance (reading 2's rule, adopted by the advisor's resolution)",
+        "note": "Substantively correct at the inputs' 3 significant figures. The frozen key accepts 3 s.f. for the extension (0.882 mm) and the stresses (61.8, 176 MPa) but requires +/-0.01 kN for the forces (12.35/17.65 kN): key defect K1, fixed only in the next key version, after this run is reported (D44).",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 9,
@@ -583,12 +656,21 @@
           "detail": "0.80048 m = 0.80048 m within abs tolerance of key 0.80048 m"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Length increase 0.480 mm and final length 0.800480 m (reported as 0.80048 m), both exact; original length used in the formula as required."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 10,
@@ -655,12 +737,22 @@
           "detail": "17647.0 N = 17647 N within abs tolerance of key 17647.1 N"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Exact forces derived (12,353 N / 210/17 kN); the conclusion's 12.4/17.6 kN read as a rounding to the inputs' 3 significant figures.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "FAIL",
         "note": "Extension 0.882 mm and stresses 61.8/176 MPa hold, and the derivation and check carry 12.35/17.65 kN (in tolerance), but the Final conclusion boxes F_Al=12.4 kN and F_St=17.6 kN - outside the key's +/-0.01 kN tolerance (12.3429-12.3629 / 17.6371-17.6571). The delivered bottom line contradicts its own derivation."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "FAIL",
+        "rule": "key-strict: an item holds only if the answer's headline value falls within the frozen key's tolerance (reading 2's rule, adopted by the advisor's resolution)",
+        "note": "Substantively correct at the inputs' 3 significant figures. The frozen key accepts 3 s.f. for the extension (0.882 mm) and the stresses (61.8, 176 MPa) but requires +/-0.01 kN for the forces (12.35/17.65 kN): key defect K1, fixed only in the next key version, after this run is reported (D44).",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 11,
@@ -738,12 +830,21 @@
           "detail": "10 section headings covering the requested themes"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: 120000 J, 1000 W smallest passing (1250 W noted as passing but not smallest), 120 s passes with equality allowed stated, 750 W at 160 s with the explicit failure verdict 'fails to meet the time constraint', delivered energy 120000 J, three sections."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 12,
@@ -799,12 +900,21 @@
           "detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Every item holds; the hold rule (any excursion fails, no restart) is stated in the answer's own words.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All four items hold: set 120 C then wait for coupon probe to enter 118-122 C then start timer (steps 1-2); hold criterion states inclusive band, uninterrupted 600 s, and 'Any excursion ... results in immediate run failure; no in-process restarts are permitted' (assumption 5 and step 3); logged verdict PASS with 119-121 C and 600 s identified; assess -> switch off -> cool inside to <=40 C -> remove (steps 5-8). Scorer's hold-criterion fail missed the excursion text - the 120-character-window recognition error D50 names."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 13,
@@ -838,12 +948,21 @@
           "detail": "0.80048 m = 0.80048 m within abs tolerance of key 0.80048 m"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Length increase 0.480 mm and final length 0.800480 m, both exact, derived from the original length."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 14,
@@ -921,12 +1040,21 @@
           "detail": "5 section headings covering the requested themes"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: 120000 J, 1000 W smallest passing, 120 s passes (equality allowed stated), 750 W at 160 s with explicit 'fails', delivered energy 120000 J, three sections."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 15,
@@ -982,12 +1110,21 @@
           "detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Every item holds; the hold rule (any excursion fails, no restart) is stated in the answer's own words.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All four items hold: setpoint/band/timer order (steps 2-3); hold criterion states inclusive band, uninterrupted 600 s, and step 4 states 'excursion -> FAIL. Stop the timer (no restart)' plus assumption 5's no-restart definition; logged verdict ACCEPTED (PASS) with 119-121 C and 600 s identified; assess -> heating OFF -> cool in closed oven to <=40 C -> remove (steps 5-8). Scorer's hold-criterion fail is a recognition miss."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 16,
@@ -1021,12 +1158,21 @@
           "detail": "the at-least-annually inspection frequency is stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Minimum unlocking strength 'no less than 50 pounds' (inclusive lower bound stated) and inspection 'at least annually' (at least once per year), both with the governing provisions cited."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 17,
@@ -1104,12 +1250,21 @@
           "detail": "the overall FAIL and the second reading as its cause are not both stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Signed errors +0.010/-0.030/+0.005, the inclusive 0.020/0.010 limits, per-reading pass/fail/pass and the overall FAIL caused by the 2.000 mm reading are all stated.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: ordered sequence with no re-zeroing or adjustment; acceptance criteria state the inclusive +/-0.020 mm nonzero limit and <=0.010 mm return-zero limit; signed errors +0.010 mm 'passes', -0.030 mm 'fails', +0.005 mm 'passes' each stated beside its error; overall FAIL naming the 2.000 mm reading as the cause. Scorer's five fails are bold-verdict and sign recognition misses."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 18,
@@ -1143,12 +1298,21 @@
           "detail": "the ordered outputs for 00, 01, 10, 11 are 0, 1, 1, 0"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Alarm Y = A XOR B = A'B + AB' with ordered outputs 0,1,1,0 in the truth table and the boxed sequence; both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 19,
@@ -1182,12 +1346,21 @@
           "detail": "the ordered outputs for 00, 01, 10, 11 are 0, 1, 1, 0"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Alarm = A XOR B (or A'B + AB') with ordered outputs 0,1,1,0; both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 20,
@@ -1221,12 +1394,21 @@
           "detail": "the at-least-annually inspection frequency is stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Minimum unlocking strength 'no less than 50 pounds' with the inclusive lower bound, and inspection 'at least annually' (at least once per year); both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 21,
@@ -1293,12 +1475,22 @@
           "detail": "17647.0 N = 17647 N within abs tolerance of key 17647.1 N"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Exact forces derived (12,353 N / 210/17 kN); the conclusion's 12.4/17.6 kN read as a rounding to the inputs' 3 significant figures.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "FAIL",
         "note": "Extension 0.882 mm and stresses hold, and the derivation carries 1.2353/1.7647 x 10^4 N plus the exact fractions 210/17 and 300/17 kN (approx 12.35/17.65 kN, in tolerance), but the 'Forces carried' box states P_Al approx 12.4 kN and P_St approx 17.6 kN - outside the key's +/-0.01 kN tolerance. The delivered conclusion is out of tolerance even though the body is right."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "FAIL",
+        "rule": "key-strict: an item holds only if the answer's headline value falls within the frozen key's tolerance (reading 2's rule, adopted by the advisor's resolution)",
+        "note": "Substantively correct at the inputs' 3 significant figures. The frozen key accepts 3 s.f. for the extension (0.882 mm) and the stresses (61.8, 176 MPa) but requires +/-0.01 kN for the forces (12.35/17.65 kN): key defect K1, fixed only in the next key version, after this run is reported (D44).",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 22,
@@ -1376,12 +1568,21 @@
           "detail": "the overall FAIL and the second reading as its cause are not both stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Signed errors +0.010/-0.030/+0.005, the inclusive 0.020/0.010 limits, per-reading pass/fail/pass and the overall FAIL caused by the 2.000 mm reading are all stated.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: ordered sequence with the return point 'not re-zeroed' and 'the instrument was not adjusted between the three recorded values' stated; inclusive limits 0.020/0.010 mm stated; signed errors +0.010 mm 'within limit (pass)', -0.030 mm 'outside limit (fail)', +0.005 mm 'within limit (pass)', each beside its error; overall FAIL naming the 2.000 mm reading as the cause. Scorer's five fails are recognition misses."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 23,
@@ -1437,12 +1638,21 @@
           "detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Every item holds; the hold rule (any excursion fails, no restart) is stated in the answer's own words.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All four items hold: set 120 C, wait for coupon probe to enter 118-122 C inclusive, then start the 600 s timer (steps 2-5); hold criterion states inclusive band, uninterrupted 600 s, and step 7 states 'If at any time T < 118 C or T > 122 C: FAIL ... no restart permitted' (also assumption 5 and the excursion rule); logged verdict PASS/ACCEPTED with 119-121 C and 600 s identified; assess -> switch off heating -> leave coupon inside until probe <=40 C -> remove (steps 9-13). Scorer's hold-criterion fail is a recognition miss."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 24,
@@ -1476,12 +1686,21 @@
           "detail": "the ordered outputs for 00, 01, 10, 11 are 0, 1, 1, 0"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Alarm = A XOR B = A'B + AB' with ordered outputs 0,1,1,0 in the derivation, truth table, and final conclusion; both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 25,
@@ -1537,12 +1756,21 @@
           "detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Every item holds; the hold rule (any excursion fails, no restart) is stated in the answer's own words.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All four items hold: set 120 C, wait for coupon probe to enter the inclusive 118-122 C band, then start the 600 s timer (steps 1-3); hold criterion states inclusive band, uninterrupted 600 s, and assumption 5 plus step 3's abort condition state 'Any deviation ... results in an immediate run failure; no restarts ... are permitted'; logged verdict PASS (Accepted) with 119-121 C and 600 s identified; assess (step 4) -> switch off heating -> cool inside closed oven to <=40 C -> remove (step 5 and final conclusion). Scorer's hold-criterion fail is a recognition miss."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 26,
@@ -1598,12 +1826,21 @@
           "detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Every item holds; the hold rule (any excursion fails, no restart) is stated in the answer's own words.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All four items hold: setpoint/band/timer order (steps 1-3); hold criterion states inclusive band, uninterrupted 600 s, and assumption 4 plus step 4's contingency state any excursion 'constitutes an immediate, unrecoverable abort/failure of the run; restarting the cure cycle on the same coupon is strictly prohibited'; logged verdict PASS (ACCEPTED) with 119-121 C and 600 s identified; assess -> switch off heating -> cool inside chamber to <=40 C -> remove (steps 5-6). Scorer's hold-criterion fail is a recognition miss."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 27,
@@ -1637,12 +1874,21 @@
           "detail": "the ordered outputs for 00, 01, 10, 11 are 0, 1, 1, 0"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Alarm F = A XOR B = A\u00b7B-bar + A-bar\u00b7B with ordered outputs 0,1,1,0 in the case analysis, check-by-evaluation, and draft conclusion; both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 28,
@@ -1698,12 +1944,21 @@
           "detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Every item holds; the hold rule (any excursion fails, no restart) is stated in the answer's own words.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All four items hold: set 120 C then wait for the coupon probe to enter the inclusive 118-122 C band then start the 600 s timer (steps 2-3); hold criterion states inclusive band, uninterrupted 600 s, and step 4 states an excursion 'immediately mark[s] the run FAIL, stop[s] the hold timing, do not restart or reset the timer' (also the no-restart assumption); logged verdict PASS with 119-121 C and 600 s identified; assess and record (step 5) -> switch off heating -> leave coupon inside until T_c <=40 C -> remove (step 6 and final conclusion). Scorer's hold-criterion fail is a recognition miss."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 29,
@@ -1781,12 +2036,21 @@
           "detail": "the overall FAIL and the second reading as its cause are not both stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Signed errors +0.010/-0.030/+0.005, the inclusive 0.020/0.010 limits, per-reading pass/fail/pass and the overall FAIL caused by the 2.000 mm reading are all stated.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: ordered sequence (zero the readout; check at 1.000 mm; check at 2.000 mm; return-to-zero 'without re-zeroing') with 'No subsequent re-zeroing or adjustment is permitted' stated; inclusive limits stated as acceptance intervals 0.980-1.020 mm and -0.010 to +0.010 mm; signed errors +0.010 mm 'passes', -0.030 mm 'fails', +0.005 mm 'passes', each stated beside its error and in the final table; overall FAIL because the 2.000 mm reading is outside the inclusive +/-0.020 mm tolerance. Scorer's six fails are recognition misses."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 30,
@@ -1820,12 +2084,21 @@
           "detail": "the ordered outputs for 00, 01, 10, 11 are 0, 1, 1, 0"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Alarm Y = A XOR B = A-bar\u00b7B + A\u00b7B-bar with ordered outputs 0,1,1,0 in the derivation, truth table, and final conclusion; both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 31,
@@ -1903,12 +2176,21 @@
           "detail": "14 section headings covering the requested themes"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: 120000 J = 120 kJ, 1000 W the smallest passing power, 120 s passes with equality explicitly permitted, 750 W at 160 s 'fails the time constraint', delivered energy 120000 J = 120 kJ, three sections."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 32,
@@ -1986,12 +2268,21 @@
           "detail": "the overall FAIL identifies the failed second reading as the cause"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Signed errors +0.010/-0.030/+0.005, the inclusive 0.020/0.010 limits, per-reading pass/fail/pass and the overall FAIL caused by the 2.000 mm reading are all stated.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: ordered sequence with 'The readout was zeroed only at the initial zero position; it was not re-zeroed or adjusted between readings'; inclusive limits |e|<=0.020 mm and |e|<=0.010 mm stated in the table; signed errors +0.010 mm pass, -0.030 mm fail, +0.005 mm pass, each boxed with its verdict; overall FAIL naming the 2.000 mm reading. Scorer's three fails are recognition misses."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 33,
@@ -2025,12 +2316,21 @@
           "detail": "the at-least-annually inspection frequency is stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Minimum unlocking strength 'no less than 50 pounds' (inclusive lower bound) and inspection 'at least annually' (once per year), both with citations; both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 34,
@@ -2064,12 +2364,21 @@
           "detail": "0.80048 m = 0.80048 m within abs tolerance of key 0.80048 m"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Length increase 0.480 mm and final length 0.800480 m (also written 0.80048 m), both exact, using the original length in the formula."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 35,
@@ -2103,12 +2412,21 @@
           "detail": "the at-least-annually inspection frequency is stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Minimum unlocking strength 'no less than 50 pounds' = 50 lb and inspection 'at least annually' (at least once every 12 months); both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 36,
@@ -2142,12 +2460,21 @@
           "detail": "the at-least-annually inspection frequency is stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Minimum unlocking strength stated as >=50 pounds ('not less than 50 pounds') and inspection 'at least annually'; both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 37,
@@ -2203,12 +2530,21 @@
           "detail": "switch-off then cool then remove order: False; 40 deg C removal threshold stated: True - both are required"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Every item holds; the hold rule (any excursion fails, no restart) is stated in the answer's own words.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All four items hold: set 120 C, monitor the coupon probe, start the 600 s timer only when the coupon temperature first satisfies 118 <= T <= 122 C (steps 2-4); hold criterion states inclusive band, uninterrupted 600 s, and step 6 plus the no-restart assumption state any excursion fails the run immediately with no restart or reset; logged verdict PASS/accepted with 119-121 C and 600 s identified; assess (step 7) -> switch off heating -> leave coupon inside until probe <=40 C -> remove (step 8 and final conclusion). Scorer's two fails are recognition misses."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 38,
@@ -2242,12 +2578,21 @@
           "detail": "the ordered outputs for 00, 01, 10, 11 are 0, 1, 1, 0"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Alarm F = A XOR B = A'B + AB' with ordered outputs 0,1,1,0 in the truth table, numeric check, and draft conclusion; both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 39,
@@ -2281,12 +2626,21 @@
           "detail": "the ordered outputs for 00, 01, 10, 11 are 0, 1, 1, 0"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Alarm Y = A XOR B = A-bar\u00b7B + A\u00b7B-bar with ordered outputs 0,1,1,0 in the derivation and final conclusion; both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 40,
@@ -2353,12 +2707,22 @@
           "detail": "17.647 kN = 17647 N within abs tolerance of key 17647.1 N"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Exact forces derived (12,353 N / 210/17 kN); the conclusion's 12.4/17.6 kN read as a rounding to the inputs' 3 significant figures.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "FAIL",
         "note": "Extension 0.882 mm and stresses 61.8/176 MPa hold, and the derivation carries the exact fractions 210000/17 N and 300000/17 N (approx 12,353/17,647 N = 12.353/17.647 kN, in tolerance, also used in the check line), but the Conclusion states P_Al = 12.4 kN and P_st = 17.6 kN as the headline values - outside the key's +/-0.01 kN tolerance (the N parentheticals are in tolerance, the kN headlines are not). The delivered conclusion's kN values are out of tolerance."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "FAIL",
+        "rule": "key-strict: an item holds only if the answer's headline value falls within the frozen key's tolerance (reading 2's rule, adopted by the advisor's resolution)",
+        "note": "Substantively correct at the inputs' 3 significant figures. The frozen key accepts 3 s.f. for the extension (0.882 mm) and the stresses (61.8, 176 MPa) but requires +/-0.01 kN for the forces (12.35/17.65 kN): key defect K1, fixed only in the next key version, after this run is reported (D44).",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 41,
@@ -2436,12 +2800,21 @@
           "detail": "4 section headings covering the requested themes"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: 120000 J = 120 kJ, 1000 W the smallest passing power (750 W 'fails because 750<1000 W'; 1250 W passes but is not smallest), 120 s passes with equality allowed, 750 W at 160 s exceeding the limit by 40 s and therefore failing, delivered energy 120000 J = 120 kJ, three sections."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 42,
@@ -2519,12 +2892,21 @@
           "detail": "9 section headings covering the requested themes"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: 120000 J = 120 kJ, 1000 W smallest passing, 120 s passes (equality allowed), 750 W at 160 s 'fails the time limit', delivered energy 120000 J = 120 kJ, three sections."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 43,
@@ -2602,12 +2984,21 @@
           "detail": "the overall FAIL and the second reading as its cause are not both stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Signed errors +0.010/-0.030/+0.005, the inclusive 0.020/0.010 limits, per-reading pass/fail/pass and the overall FAIL caused by the 2.000 mm reading are all stated.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: ordered sequence with 'No instrument adjustment or re-zeroing occurred between readings'; inclusive limits stated as allowed ranges -0.020..+0.020 mm and |e0| <= 0.010 mm; signed errors +0.010 mm 'passes', -0.030 mm 'fails', +0.005 mm 'passes', each beside its error; overall FAIL because the 2.000 mm reading is outside the inclusive +/-0.020 mm tolerance. Scorer's six fails are recognition misses."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 44,
@@ -2674,12 +3065,22 @@
           "detail": "17.6471 kN = 17647.1 N within abs tolerance of key 17647.1 N"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Exact forces derived (12,353 N / 210/17 kN); the conclusion's 12.4/17.6 kN read as a rounding to the inputs' 3 significant figures.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "FAIL",
         "note": "Extension 0.882 mm and stresses 61.8/176 MPa hold, and the unrounded forces 12.3529/17.6471 kN are stated and labelled, but the answer's declared reporting convention is 3 significant figures and its CANONICAL REPORTED RESULTS and results table report P_al = 12.4 kN and P_st = 17.6 kN - outside the key's +/-0.01 kN tolerance (the rounded reported values, not merely a passing approximation, are the answer's headline)."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "FAIL",
+        "rule": "key-strict: an item holds only if the answer's headline value falls within the frozen key's tolerance (reading 2's rule, adopted by the advisor's resolution)",
+        "note": "Substantively correct at the inputs' 3 significant figures. The frozen key accepts 3 s.f. for the extension (0.882 mm) and the stresses (61.8, 176 MPa) but requires +/-0.01 kN for the forces (12.35/17.65 kN): key defect K1, fixed only in the next key version, after this run is reported (D44).",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 45,
@@ -2735,12 +3136,21 @@
           "detail": "switch-off then cool then remove order: False; 40 deg C removal threshold stated: True - both are required"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Every item holds; the hold rule (any excursion fails, no restart) is stated in the answer's own words.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All four items hold: set 120 C, monitor the coupon probe, start the 600 s timer when 118 <= T_coupon <= 122 C is reached (steps 1-2); hold criterion states inclusive band, uninterrupted 600 s, and assumption 5 plus step 3's abort condition state any excursion fails the run immediately with no restart allowed; logged verdict PASS with 119-121 C and 600 s identified; assess (step 4) -> switch off heating -> cool inside closed oven to <=40 C -> remove (step 5 and final conclusion). Scorer's two fails are recognition misses."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 46,
@@ -2818,12 +3228,21 @@
           "detail": "5 section headings covering the requested themes"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: 120000 J = 120 kJ, 1000 W smallest passing, 120 s passes with equality allowed, 750 W at 160 s 'fails the criterion', delivered energy 120000 J = 120 kJ, three sections."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 47,
@@ -2857,12 +3276,21 @@
           "detail": "0.80048 m = 0.80048 m within abs tolerance of key 0.80048 m"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Length increase 0.480 mm and final length 0.800480 m, both exact, using the original length in the formula."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 48,
@@ -2940,12 +3368,21 @@
           "detail": "the overall FAIL and the second reading as its cause are not both stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Signed errors +0.010/-0.030/+0.005, the inclusive 0.020/0.010 limits, per-reading pass/fail/pass and the overall FAIL caused by the 2.000 mm reading are all stated.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: ordered sequence with 'the baseline for the return-to-zero check is 0.000 mm with no re-zeroing permitted' and 'No instrument adjustments occur between the three log entries'; inclusive limits |error| <= 0.020 mm and |reading| <= 0.010 mm; signed errors +0.010 mm 'within limit (pass)', -0.030 mm 'outside limit (fail)', +0.005 mm 'within limit (pass)'; overall FAIL/NON-CONFORMING naming the 2.000 mm reading. Scorer's five fails are recognition misses."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 49,
@@ -2979,12 +3416,21 @@
           "detail": "the at-least-annually inspection frequency is stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Minimum unlocking strength 'no less than 50 pounds' (inclusive lower bound) and inspection 'at least annually' (at least once every year); both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 50,
@@ -3062,12 +3508,21 @@
           "detail": "5 section headings covering the requested themes"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "All six items hold: 120000 J = 120 kJ, 1000 W the smallest passing power (750 W 'fails the time requirement'; 1250 W passes but is larger than necessary), 120 s passes with equality permitted, delivered energy 120000 J = 120 kJ, three sections."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 51,
@@ -3101,12 +3556,21 @@
           "detail": "the at-least-annually inspection frequency is stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Minimum unlocking strength 'no less than 50 pounds' = 50 lb and inspection 'at least annually' (once per year); both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 52,
@@ -3184,12 +3648,21 @@
           "detail": "the overall FAIL and the second reading as its cause are not both stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "FAIL",
+        "note": "Values and verdicts correct, but the procedure omits the initial zeroing and the no-re-zeroing condition the ordered-check-sequence item requires.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "FAIL",
         "note": "Five of six items hold (inclusive limits -0.020..+0.020 mm and |error| <= 0.010 mm stated; +0.010 mm Pass, -0.030 mm Fail, +0.005 mm Pass each beside its error; overall Fail naming the 2.000 mm point), but the ordered-check-sequence item is unsatisfied: the answer never states the initial zeroing at unloaded zero nor the without-re-zeroing/no-adjustment-between-readings constraint the key requires - it lists only the three reference displacements in order. The scorer's sequence fail is correct; its four other fails are recognition misses of verdicts that are present."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "FAIL",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 53,
@@ -3256,12 +3729,22 @@
           "detail": "17647.0 N = 17647 N within abs tolerance of key 17647.1 N"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "Exact forces derived (12,353 N / 210/17 kN); the conclusion's 12.4/17.6 kN read as a rounding to the inputs' 3 significant figures.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "FAIL",
         "note": "Extension 0.882 mm and stresses 61.8/176 MPa hold, and the derivation and draft-conclusion table carry 1.2353/1.7647 x 10^4 N and the exact fractions 210/17 and 300/17 kN (approx 12.353/17.647 kN, in tolerance), but the boxed forces and the table's 3-significant-figure column report F_Al = 12.4 kN and F_St = 17.6 kN - outside the key's +/-0.01 kN tolerance."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "FAIL",
+        "rule": "key-strict: an item holds only if the answer's headline value falls within the frozen key's tolerance (reading 2's rule, adopted by the advisor's resolution)",
+        "note": "Substantively correct at the inputs' 3 significant figures. The frozen key accepts 3 s.f. for the extension (0.882 mm) and the stresses (61.8, 176 MPa) but requires +/-0.01 kN for the forces (12.35/17.65 kN): key defect K1, fixed only in the next key version, after this run is reported (D44).",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 54,
@@ -3295,12 +3778,21 @@
           "detail": "0.80048 m = 0.80048 m within abs tolerance of key 0.80048 m"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Length increase 0.480 mm and final length 0.800480 m, both exact, using the original length in the formula."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 55,
@@ -3334,12 +3826,21 @@
           "detail": "the at-least-annually inspection frequency is stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Minimum unlocking strength 'no less than 50 pounds' (50 lbs) and inspection 'at least annually' (at least once per year), both quoted from the governing provisions; both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 56,
@@ -3417,12 +3918,21 @@
           "detail": "the overall FAIL and the second reading as its cause are not both stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "FAIL",
+        "note": "Values and verdicts correct, but the procedure omits the initial zeroing and the no-re-zeroing condition the ordered-check-sequence item requires.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "FAIL",
         "note": "Five of six items hold (inclusive limits stated; +0.010 mm Pass, -0.030 mm Fail with magnitude stated, +0.005 mm Pass; overall FAIL naming the 2.000 mm reference point), but the ordered-check-sequence item is unsatisfied: no initial-zeroing statement and no without-re-zeroing/no-adjustment statement - only the three reference displacements in order. The scorer's sequence fail is correct; its four other fails are recognition misses."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "FAIL",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 57,
@@ -3456,12 +3966,21 @@
           "detail": "the at-least-annually inspection frequency is stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "PASS",
+        "note": "The final conclusion carries every key value and verdict; no contradiction found.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "PASS",
         "note": "Minimum unlocking strength 'no less than 50 pounds' = 50 pounds and inspection 'at least annually' (once every 12 months); both items exact."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "PASS",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     },
     {
       "entry": 58,
@@ -3539,12 +4058,83 @@
           "detail": "the overall FAIL and the second reading as its cause are not both stated"
         }
       ],
-      "reading_1": null,
+      "reading_1": {
+        "verdict": "FAIL",
+        "note": "Values and verdicts correct, but the procedure omits the initial zeroing and the no-re-zeroing condition the ordered-check-sequence item requires.",
+        "reader": "advisor"
+      },
       "reading_2": {
         "verdict": "FAIL",
         "note": "Five of six items hold (inclusive limits stated; +0.010 mm Pass, -0.030 mm Fail, +0.005 mm Pass; overall FAIL naming the 2.000 mm reading), but the ordered-check-sequence item is unsatisfied: no initial-zeroing statement and no without-re-zeroing/no-adjustment-between-readings statement. The scorer's sequence fail is correct; its four other fails are recognition misses."
       },
-      "resolution": null
+      "resolution": {
+        "verdict": "FAIL",
+        "rule": "the two readings agree",
+        "resolver": "advisor",
+        "date": "2026-10-06"
+      }
     }
-  ]
+  ],
+  "resolution_record": {
+    "resolver": "advisor",
+    "date": "2026-10-06",
+    "readings": {
+      "reading_1": "advisor (55 PASS, 3 FAIL)",
+      "reading_2": "executor (49 PASS, 9 FAIL; PR #162)"
+    },
+    "disagreements": [
+      8,
+      10,
+      21,
+      40,
+      44,
+      53
+    ],
+    "rule_adopted": "key-strict: an item holds only if the answer's headline value falls within the frozen key's tolerance (reading 2's rule, adopted by the advisor's resolution)",
+    "key_defect_K1": "Substantively correct at the inputs' 3 significant figures. The frozen key accepts 3 s.f. for the extension (0.882 mm) and the stresses (61.8, 176 MPa) but requires +/-0.01 kN for the forces (12.35/17.65 kN): key defect K1, fixed only in the next key version, after this run is reported (D44).",
+    "applied_beyond_the_sheet": {
+      "A-Q23-r2": {
+        "verdict": "PASS",
+        "basis": "headline 12.35 / 17.65 kN",
+        "reads": "advisor only; executor to confirm"
+      },
+      "A-Q23-r3": {
+        "verdict": "PASS",
+        "basis": "headline 12.35 / 17.65 kN",
+        "reads": "advisor only; executor to confirm"
+      },
+      "C-Q23-r3": {
+        "verdict": "FAIL",
+        "basis": "conclusion table bolds the 3 s.f. column, 12.4 / 17.6 kN, beside the precise 12.35 / 17.65 (as entry 53)",
+        "reads": "advisor only; executor to confirm"
+      },
+      "D-Q23-r3": {
+        "verdict": "FAIL",
+        "basis": "conclusion table: 12.4 / 17.6 kN",
+        "reads": "advisor only; executor to confirm"
+      }
+    },
+    "figures": {
+      "key-strict (resolution)": {
+        "totals_of_21": {
+          "A": 18,
+          "B": 7,
+          "C": 17,
+          "D": 18,
+          "E": 0
+        },
+        "stage2_gap": 18
+      },
+      "substantive (3 s.f. accepted)": {
+        "totals_of_21": {
+          "A": 19,
+          "B": 7,
+          "C": 20,
+          "D": 21,
+          "E": 1
+        },
+        "stage2_gap": 18
+      }
+    }
+  }
 }
