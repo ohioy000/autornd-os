@@ -57,7 +57,9 @@ through the manifest, as tier3-4.
 (the owner sets both to the same value), any A-vs-B difference is the tools, not the
 serving. Its prompt is arm A's prompt verbatim plus the tool registration — exactly two
 registered differences, nothing else. The tool loop's structure is registered: calls 1
-and 2 offer the two tools, call 3 offers none (the model must answer); each round's tool
+and 2 offer the two tools, call 3 keeps them declared with
+`tool_choice: "none"` (the model sees the tools it may not use, and
+answers); each round's tool
 results are inlined into the next call's user message; at most 3 calls and 20 tool
 invocations per unit. The fetch tool is **closed-world**: it serves the archived July 1,
 2014 editions under `evals/tier2/sources/` and answers any other citation with a typed
