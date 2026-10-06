@@ -404,5 +404,63 @@
     "merge_order": "the advisor's 2026-10-05 review changed the order: #161 (the staged plan, rebased onto main) merges FIRST; #159 and #160 are on HOLD with required changes and merge after their fixes, in channel order (#159, then #160, which stacks on it).",
     "suite": "1342 passed in 76 files on the plan commit (b94e0a6), run before and after the rebase; CI is the suite. The clause-strike commit follows with no count change.",
     "no_paid_unit_started": "No paid unit of stage 1 has started: the ratification gates are not cleared in the standing .env (G-3, the owner's), and the preflight and the dry run are free. The owner's env steps are recorded in the tier3-4 delivery record above."
+  },
+  "stage1_2026_10_05": {
+    "trigger": "The owner's 2026-10-05 directive (stage 1 is the calibration stage: 7 questions x 3 repetitions x all five arms, 105 units, $30.00 authorized) and the advisor's 2026-10-06 instruction (T2): carry the results file into docs/traces/ as stage 1's trace and quote its sha256; add the notebook section (111) and this response record - the run, the spend, both readings, and the resolution with its rule and key defect K1; and confirm or dispute the advisor's single reading of the four unsampled Q23 answers. Free work: no paid call, no .env edit. The advisor merges; the executor opens the PR.",
+    "run": {
+      "results_file": "evals/results/20261005T215237Z-tier3-run.jsonl",
+      "trace": "docs/traces/20261005T215237Z-tier3-run.jsonl (carried with this record, byte-identical to the results file)",
+      "sha256": "d406f0fd59a7f49917261ef3fdd554e4c688d6eb225bb57855cd36dba73965b5",
+      "shape": "211 lines, 568,942 bytes: a header, 105 unit-started records, 105 unit records",
+      "window": "2026-10-05, 16:52-22:59 local",
+      "manifest": "tier3-4",
+      "scorer": "frozen-2026-10-03.2",
+      "servings_fingerprint": "e0dc92a3aecb",
+      "order_seed": 20261003,
+      "selection_seed": 20261005,
+      "units": "105: questions Q6, Q10, Q14, Q15, Q16, Q17, Q23, each answered 3 times by 5 arms (A: one call, gemini-3.8-flash; B: A's serving plus the closed-world fetch_primary_source and the whitelisted recompute, up to 3 calls; C: Inkling drafts, kimi-k3 checks with a typed CooperationCheckVerdict, Inkling revises; D: one call, kimi-k3; E: the full pipeline)",
+      "unreconciled_liability": "none; no unit reached the 1800 s deadline; no output truncated"
+    },
+    "spend": {
+      "booked_usd": 8.4971,
+      "authorization_usd": 30.00,
+      "arm_e": "86 percent of the spend, $7.33, for no key-held answer (53 percent engineering drafts and redrafts, 31 percent escalation, 8.5 percent judges, 3.5 percent planning)",
+      "arm_a_usd_per_key_held_answer": 0.0081,
+      "mean_seconds_per_unit": "arm E 971.9 against arm A 9.8"
+    },
+    "readings": {
+      "reading_1_advisor": {"pass": 55, "fail": 3},
+      "reading_2_executor": {"pass": 49, "fail": 9, "pr": 162},
+      "agreement": "52 of 58 sheet entries",
+      "disagreements": {"entries": [8, 10, 21, 40, 44, 53], "units": "D-r2, D-r1, C-r1, A-r1, E-r2, C-r2"},
+      "the_scorer_is_a_screen": "18 of its 22 FAILs read PASS; 5 of its 36 sampled PASSes read FAIL under the strict key (all the Q23 precision case); on the screen alone, D would have ranked below A"
+    },
+    "resolution": {
+      "rule_adopted": "reading 2's: an item holds only if the answer's headline (final-conclusion) value falls within the frozen key's tolerance, even if an in-tolerance value appears earlier in the derivation",
+      "reasons": ["the frozen key governs this run's report (D44)", "the headline is what the person asking receives"],
+      "resolved_totals_of_21": {
+        "key_strict": {"A": 18, "B": 7, "C": 17, "D": 18, "E": 0},
+        "three_significant_figures": {"A": 19, "B": 7, "C": 20, "D": 21, "E": 1}
+      },
+      "verdict": "arm E delivered no key-held answer: 20 of 21 units delivered nothing (16 escalated, 4 blocked), all along the same route (draft, judge, redraft, escalate, no answer); its one delivered answer (9 calls, 445 s, $0.085, 7,960 characters) had the right forces at 3 s.f., outside the key's +/-0.01 kN tolerance. The losses are process, not knowledge: the plans carried correct numbers, and the pipeline failed even an XOR truth table, 3 of 3.",
+      "stage_2_rule": "met: |E - A| is 18 of 21 under both counts, against a threshold of 7; paired by question, E lost to A on all 7 (exact sign test p = 0.016)",
+      "recommendations": "do not run stage 2 (the answer is in; the set sits at the single-call ceiling); ruling D51 the yardstick (pass/fail criteria test only what the request asks, enforced by a free mechanical check; D36's output becomes considerations, never graded requirements; reviewers judge against the question; no criterion demands a check the pipeline cannot perform); re-measure the fast path on all 25 tier-2 questions x 3 and the repaired pipeline on stage 1's seven x 3 with two readers; tier 4 design tasks. Stage 2 remains the owner's option."
+    },
+    "key_defect_K1": "For Q23 the frozen key accepts 3 s.f. for the extension (0.882 mm) and both stresses (61.8 and 176 MPa) but requires +/-0.01 kN for the forces (12.35 / 17.65 kN) - a precision inconsistent with the question's own 3 s.f. inputs. Fixed in the next key version, after this report (D44), with both figures reported side by side until then. The defect depends on the serving: arm D rounds to 3 s.f. every time, so the strict key costs D three answers, C three and A one. keys.json is untouched by this run; K1 is a key-version proposal for the owner.",
+    "unsampled_q23_confirmation": {
+      "instruction": "the advisor read the four unsampled scorer passes once under the adopted rule; the executor confirms or disputes each, in full, under the same rule",
+      "A-r2": {"advisor": "PASS", "executor": "PASS", "basis": "confirmed: the final conclusion states the forces as 12.35 / 17.65 kN (the derivation computes 210/17 kN = 12.353 kN and 300/17 kN = 17.647 kN, both in tolerance)"},
+      "A-r3": {"advisor": "PASS", "executor": "PASS", "basis": "confirmed: the final conclusion states the forces as 12.35 / 17.65 kN"},
+      "C-r3": {"advisor": "FAIL", "executor": "FAIL", "basis": "confirmed: the derivation reaches 12.35 / 17.65 kN, but the conclusion table's bolded 3 s.f. column reports 12.4 / 17.6 kN beside the precise values, and the closing prose repeats approximately 12.4 / 17.6 kN - the headline sits outside the +/-0.01 kN tolerance"},
+      "D-r3": {"advisor": "FAIL", "executor": "FAIL", "basis": "confirmed: the final-conclusion table reports the forces as 12.4 / 17.6 kN; the in-tolerance 12.35 + 17.65 appears only in a check line, which the headline rule does not rescue"},
+      "outcome": "all four of the advisor's readings confirmed, none disputed; C-r3's delivered answer also carries 'DRAFT CONCLUSION' stage scaffolding, the exhibit for repair R3"
+    },
+    "records": {
+      "notebook": "docs/handover-review.md section 111 (the run, the spend, both readings, the resolution with its rule and key defect K1, and the four confirmations)",
+      "report": "docs/reviews/2026-10-06-tier3-stage1-report.md (PR #163)",
+      "resolved_sheet": "evals/results/20261005T215237Z-tier3-run.reading-sheet.json (PR #162, resolved by PR #163)"
+    },
+    "deviations": [{"what": "none", "why": "the record task ran as instructed: free work only, no paid call, no .env edit; the trace was verified byte-identical to the results file after the copy (sha256 above)"}],
+    "suite": "1342 passed, network guard 0 non-loopback attempts, before the work and after it (the change touches no code)"
   }
 }
