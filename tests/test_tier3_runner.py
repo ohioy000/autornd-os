@@ -635,6 +635,72 @@ class TestBTheArmTreatments:
         # call - the bound the manifest registers is not
         # the bound the runner enforces.
 
+    def test_arm_c_delivers_the_answer_without_stage_scaffolding(
+            self, fixture_rates):
+        # R3: the delivered answer carries no stage
+        # scaffolding - the echoed stage heading and
+        # the 'draft conclusion' label the stage
+        # prompt asks for are the protocol's words,
+        # not the answer's.
+        draft = _correct("Q1")
+        script = _script(calls={("Q1", 1, "C"): [
+            _answer("**STAGE 1 — MODEL 1 DRAFT**\n\n"
+                    "### 7. DRAFT CONCLUSION — all "
+                    "requested values\n\n" + draft),
+            _answer('{"concur": true, "objections": []}'),
+        ]})
+        wiring = _Wiring(script, fixture_rates)
+        result = _run(runner.run_unit(
+            ("Q1", 1, "C"), QUESTIONS, TEST_SERVINGS, None,
+            client_factory=wiring.client_factory))
+        assert result.status == "delivered"
+        assert result.calls == 2
+        # The echoed stage heading and the numbered
+        # 'DRAFT CONCLUSION' label - a heading the
+        # scorer would have read as a procedure step -
+        # are gone; the delivered answer is the
+        # draft's own text.
+        assert result.answer == draft
+        # The revision's answer is stripped the same
+        # way.
+        revised = _wrong("Q1")
+        script = _script(calls={("Q1", 2, "C"): [
+            _answer(_wrong("Q1")),
+            _answer(json.dumps(
+                {"concur": False, "objections": [
+                    "The draft omits the second part "
+                    "the question asks."]})),
+            _answer("**DRAFT CONCLUSION**\n\n" + revised),
+        ]})
+        wiring = _Wiring(script, fixture_rates)
+        result = _run(runner.run_unit(
+            ("Q1", 2, "C"), QUESTIONS, TEST_SERVINGS, None,
+            client_factory=wiring.client_factory))
+        assert result.status == "delivered"
+        assert result.calls == runner.ARM_C_CALL_LIMIT
+        assert result.check["status"] == "objected"
+        assert result.answer == revised
+        # Break-proof (runner.py, _strip_stage_scaffolding):
+        #     stripped = "\n".join(
+        #         line for line in answer.splitlines()
+        #         if not _is_stage_scaffolding(line))
+        #     return stripped.strip("\n")
+        #     -> return answer
+        # FAILED ...::test_arm_c_delivers_the_answer_
+        # without_stage_scaffolding - AssertionError:
+        # assert '**STAGE 1 — ...,\\text{mA}$$' ==
+        # '**Output Vol...,\\text{mA}$$' with the
+        # diff naming both scaffolding lines (+
+        # **STAGE 1 — MODEL 1 DRAFT**, + ### 7.
+        # DRAFT CONCLUSION — all requested values)
+        # (tests/test_tier3_runner.py:663): the
+        # delivered answer carried the protocol's
+        # own headings - the numbered 'DRAFT
+        # CONCLUSION' label would have been read as
+        # a procedure step, and the answer the
+        # person asking receives was the stage
+        # talking, not the answer.
+
     def test_the_typed_check_accepts_only_typed_verdicts(self):
         concur = runner.parse_check_verdict(
             '{"concur": true, "objections": []}')
