@@ -768,9 +768,9 @@ def run_preflight(servings: dict[str, Any],
 
     1. the worst case of any of arms A-D over its whole call
        sequence exceeds the arm's per-unit ceiling;
-    2. arm B's serving does not list tool support (when the
-       catalogue is blind, the preflight reports that and does not
-       guess);
+    2. arm B's serving does not list tool support or
+       tool_choice support (when the catalogue is blind,
+       the preflight reports that and does not guess);
     3. arm B's context window cannot hold its prompt, the largest
        archived source and max_tokens, bounded in bytes;
     4. any serving has no catalogue price (D49: an unknown price is
@@ -820,9 +820,13 @@ def run_preflight(servings: dict[str, Any],
                 f"max_tokens {REGISTERED_MAX_TOKENS}, the largest prompt "
                 f"the call can carry, arm B's largest tool result included)")
 
-    # Case 2: arm B's serving must list tool support. Blind is a
-    # report, not a guess (the command's own text). A variant
-    # serving reads the entry that prices it.
+    # Case 2: arm B's serving must list tool support, and
+    # tool_choice beside it - R2's final call keeps the
+    # tools declared with tool_choice "none", so an endpoint
+    # that cannot take tool_choice would fail the call the
+    # treatment depends on. Blind is a report, not a guess
+    # (the command's own text). A variant serving reads the
+    # entry that prices it.
     b_entry = _resolve_entry(index, servings["B"])
     if b_entry is not None:
         supported = b_entry.get("supported_parameters")
@@ -830,12 +834,19 @@ def run_preflight(servings: dict[str, Any],
             report.reports.append(
                 f"arm B: the catalogue is blind about {servings['B']}'s "
                 "parameters (the entry carries no supported_parameters), "
-                "so tool support is unverified — reported, not guessed")
-        elif "tools" not in supported:
-            report.refusals.append(
-                f"arm B: {servings['B']} does not list tool support "
-                f"(supported_parameters: "
-                f"{', '.join(str(name) for name in supported) or 'none'})")
+                "so tool and tool_choice support is unverified — "
+                "reported, not guessed")
+        else:
+            if "tools" not in supported:
+                report.refusals.append(
+                    f"arm B: {servings['B']} does not list tool "
+                    f"support (supported_parameters: "
+                    f"{', '.join(str(name) for name in supported) or 'none'})")
+            if "tool_choice" not in supported:
+                report.refusals.append(
+                    f"arm B: {servings['B']} does not list "
+                    f"tool_choice support (supported_parameters: "
+                    f"{', '.join(str(name) for name in supported) or 'none'})")
 
     # Case 3: arm B's context window, bounded in bytes (D45 amendment
     # (b): a byte-level tokenizer never emits more tokens than bytes,
@@ -2793,7 +2804,8 @@ def _dry_run_catalogue(servings: dict[str, Any]) -> list[dict[str, Any]]:
             "context_length": 200000,
             "max_completion_tokens": 32768,
             "supported_parameters": [
-                "tools", "response_format", "max_tokens",
+                "tools", "tool_choice",
+                "response_format", "max_tokens",
                 "temperature"],
         }
         for serving in _all_servings(servings)
