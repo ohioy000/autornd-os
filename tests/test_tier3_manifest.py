@@ -246,16 +246,23 @@ class TestTheVersions:
         assert versions["scorer"] in frozen, (
             "the manifest names a scorer version the version "
             "record does not hold")
-        assert versions["manifest"] == "tier3-5"
+        assert versions["manifest"] == "tier3-6"
         # tier3-5 registers the advisor's R2 (the stage-1
         # report's repair list, 2026-10-06): arm B's final
         # call keeps the tools declared with tool_choice
         # "none", and an empty reply with finish "error" is
         # its own failure class, serving_error.
+        # tier3-6 registers the advisor's R6 (the same
+        # list, 2026-10-06): the experiment's pins are
+        # read from .env.tier3, not .env - the harness's
+        # settings forbid unknown keys, so a TIER3_* line
+        # in .env stops the harness at startup.
         note = versions["version_note"]
         assert "tier3-5" in note
         assert 'tool_choice "none"' in note
         assert "serving_error" in note
+        assert "tier3-6" in note
+        assert ".env.tier3" in note
         # The tier-2 freeze itself: the signoff the owner ratified.
         assert TIER2_MANIFEST["dataset_version"] == "frozen-2026-10-03"
         assert TIER2_MANIFEST["frozen"] is True
@@ -368,7 +375,7 @@ class TestTheSecrecy:
                     f"model id in {path.relative_to(ROOT)}:{n}: "
                     f"{line.strip()[:80]} - non-negotiable 6: the "
                     "manifest names pin environment variables, and the "
-                    "serving proposals live in the owner's .env")
+                    "serving proposals live in the owner's .env.tier3")
 
 
 class TestTheExecution:

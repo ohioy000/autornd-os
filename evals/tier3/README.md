@@ -102,9 +102,14 @@ delivered count, and never counted as delivered.
 Non-negotiable 6 forbids model ids in code, config, profiles, workflows and user-facing
 docs — so this file and the manifest name **pin environment variables**, not servings. The
 proposals were made in conversation on 2026-10-03, with their evidence, and are ratified
-by the owner setting the env-prefixed pins in `.env` (G-2: experiments run the proposal
-env-prefixed; the standing line is the owner's). The selection criteria, with the
-lab-notebook evidence each rests on:
+by the owner setting the env-prefixed pins in **`.env.tier3`** (G-2: experiments run the
+proposal env-prefixed; the standing line is the owner's). The pins live in their own
+file, not `.env`: the harness's settings forbid unknown keys, so a `TIER3_*` line in
+`.env` stops the harness at startup — measured: `ValidationError`, *"Extra inputs are
+not permitted"* — before its first call. `.env.tier3` is git-ignored by the `.env*`
+rule (ARCH-20260930-097), the way `.env` itself is. Arm E's standing pins are the
+harness's own `MODEL_*` settings and stay in `.env`, unchanged. The selection criteria,
+with the lab-notebook evidence each rests on:
 
 - **`TIER3_ARM_A`** — the harness's triage-tier serving: the cheapest tier the harness
   uses productively, measured to classify reliably when pinned (HANDOVER.md §6, the
@@ -155,7 +160,12 @@ only, and names no cause. The rule's decision content is unchanged.
 ## The two ratification gates (the STOP, mechanized)
 
 1. **Servings.** The owner sets `TIER3_ARM_A`, `TIER3_ARM_B`, `TIER3_ARM_C_1`,
-   `TIER3_ARM_C_2` and `TIER3_ARM_D` in `.env` (`TIER3_ARM_B` = `TIER3_ARM_A`).
+   `TIER3_ARM_C_2` and `TIER3_ARM_D` in **`.env.tier3`** (`TIER3_ARM_B` = `TIER3_ARM_A`)
+   — not `.env`: the harness's settings forbid unknown keys, so a `TIER3_*` line in
+   `.env` stops the harness at startup (measured: `ValidationError`, *"Extra inputs
+   are not permitted"*). The pins' own file is git-ignored by the `.env*` rule
+   (ARCH-20260930-097); arm E's standing pins are the harness's own `MODEL_*`
+   settings and stay in `.env`.
 2. **Spend.** The owner authorizes the stage-1 spend: the owner's ratified amount,
    **$30.00** (authorized 2026-10-05), against the stage-1 compositional ceiling
    of **$37.80** (the 105 planned question-runs: 21 units per arm at

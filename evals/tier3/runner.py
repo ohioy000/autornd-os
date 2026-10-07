@@ -195,22 +195,30 @@ _CHAT_DEFAULT_MAX_TOKENS = 16384
 # ── The experiment's own settings (the G-2 gate text) ─────────────
 #
 # "The runner reads TIER3_* the way the harness reads its settings
-# (the environment, then .env), in its own settings class.
-# autornd/config.py does not change."
+# (the environment, then its own env file), in its own settings
+# class. autornd/config.py does not change."
 
 class Tier3Settings(BaseSettings):
-    """The experiment's pins and authorizations, read from the
-    environment then .env — the owner's to set (G-2, G-3).
+    """The experiment's pins and authorizations, read from
+    the environment then .env.tier3 — the owner's to set
+    (G-2, G-3).
 
-    The class declares only the TIER3_* pins; every other
-    variable the environment and .env carry (the harness's
-    own settings, the credentials) is ignored — extra="ignore"
-    — the way the harness's Settings ignores variables it
-    does not declare. The experiment's settings never touch
-    the harness's: ``autornd/config.py`` does not change."""
+    The pins live in their own file, not .env: the
+    harness's settings forbid unknown keys, so a TIER3_*
+    line in .env stops the harness at startup (measured:
+    ValidationError, "Extra inputs are not permitted").
+    .env.tier3 is git-ignored by the .env* rule
+    (ARCH-20260930-097). The class declares only the
+    TIER3_* pins; every other variable the environment
+    and .env.tier3 carry (the harness's own settings, the
+    credentials) is ignored — extra="ignore" — the way
+    the harness's Settings ignores variables it does not
+    declare. The experiment's settings never touch the
+    harness's: ``autornd/config.py`` does not change."""
 
     model_config = SettingsConfigDict(
-        env_file=None if os.environ.get("AUTORND_TESTING") else ".env",
+        env_file=None if os.environ.get("AUTORND_TESTING")
+        else ".env.tier3",
         env_file_encoding="utf-8",
         extra="ignore")
 

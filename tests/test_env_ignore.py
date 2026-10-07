@@ -6,6 +6,10 @@ blocked the push. `.gitignore` named exactly `.env`, so `git add -A` staged
 every other env-named file. No paid run was involved, so the preflight gate
 (096) could not have stopped it.
 
+`.env.tier3` (R6, 2026-10-06) is one of the env-named files the
+rule covers: the tier-3 experiment's pins live there, so it must
+never be staged — the `.env*` rule is what makes it git-ignored.
+
 **What these tests read.** Ignore rules and tracked paths only. They never
 open, list or stat an env file (G-1): `git check-ignore --no-index` judges a
 path name against the rules whether or not the file exists, and `--no-index`
@@ -37,7 +41,8 @@ def _ignored(name: str) -> bool:
 class TestEveryEnvNameIsIgnored:
     """(a) Each probe asserted on its own, so one cannot hide another."""
 
-    @pytest.mark.parametrize("name", [".env", ".env1", ".env.bak", ".env.local"])
+    @pytest.mark.parametrize("name", [".env", ".env1", ".env.bak",
+                                      ".env.local", ".env.tier3"])
     def test_an_env_named_file_is_ignored(self, name):
         assert _ignored(name), f"{name} could be staged by git add"
 
