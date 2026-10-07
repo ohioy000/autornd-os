@@ -1604,6 +1604,61 @@ async def _arm_b(question: str, serving: str,
     return answer, finish_reasons, invocations
 
 
+# The stage protocol's own vocabulary (R3): the words
+# arm C's stages name - the echoed stage heading, the
+# 'draft conclusion' label the stage prompt asks for,
+# the protocol's own input headings - and the
+# descriptors the prompt's own instruction puts in the
+# model's mouth ('in one place, clearly labelled',
+# 'answers every part'). A heading line built only
+# from these words is the protocol talking, not the
+# answer: measured over the stage-1 run, a third of
+# arm C's drafts opened on one, and one carried a
+# numbered 'DRAFT CONCLUSION' heading the scorer
+# would have read as a procedure step.
+_SCAFFOLDING_WORDS = frozenset({
+    "stage", "model", "draft", "conclusion",
+    "answer", "answers", "answered", "part",
+    "parts", "one", "place", "clearly",
+    "labelled", "labeled", "every", "all",
+    "in", "to", "requested", "value", "values",
+    "together", "objection", "objections",
+    "1", "2", "3"})
+_STAGE_HEADING_ORDINAL = re.compile(r"^\d+[.)]\s*")
+
+
+def _is_stage_scaffolding(line: str) -> bool:
+    """A line is stage scaffolding when every word
+    in it is the protocol's own - a heading that
+    names the stage, the draft, the conclusion
+    label or the protocol's inputs, with the
+    markdown decoration and a heading's ordinal
+    stripped first."""
+    text = line.strip()
+    if not text:
+        return False
+    text = re.sub(r"^[#*>]+\s*", "", text)
+    text = _STAGE_HEADING_ORDINAL.sub("", text)
+    text = text.replace("'s", "")
+    text = text.strip("*_ \t")
+    words = re.findall(r"[a-z0-9]+", text.lower())
+    return bool(words) and all(
+        word in _SCAFFOLDING_WORDS for word in words)
+
+
+def _strip_stage_scaffolding(answer: str) -> str:
+    """Arm C's delivered answer carries no stage
+    scaffolding (R3): the protocol's own headings -
+    the echoed stage heading and the 'draft
+    conclusion' label the stage prompt asks for -
+    are the protocol's words, not the answer's, and
+    the answer is delivered without them."""
+    stripped = "\n".join(
+        line for line in answer.splitlines()
+        if not _is_stage_scaffolding(line))
+    return stripped.strip("\n")
+
+
 async def _arm_c(question: str, draft_serving: str,
                  check_serving: str,
                  client: OpenRouterClient) -> tuple[str | None,
@@ -1619,7 +1674,9 @@ async def _arm_c(question: str, draft_serving: str,
     the starvation path is recorded, not hidden. A check that
     returns no valid verdict after the bounded retries is
     recorded as unavailable — never as concurrence — and
-    model 1's draft is delivered (D50 (4)).
+    model 1's draft is delivered (D50 (4)). The
+    delivered answer carries no stage scaffolding
+    (R3).
     """
     finish_reasons: list[str | None] = []
     calls = 0
@@ -1657,16 +1714,19 @@ async def _arm_c(question: str, draft_serving: str,
     # and a call remains.
     if verdict is None:
         check_record["status"] = "unavailable"
-        return draft, finish_reasons, check_record
+        return (_strip_stage_scaffolding(draft),
+                finish_reasons, check_record)
     if verdict.concur:
         check_record["status"] = "concurred"
-        return draft, finish_reasons, check_record
+        return (_strip_stage_scaffolding(draft),
+                finish_reasons, check_record)
     if calls >= ARM_C_CALL_LIMIT:
         # The check objected, but the bounded retries spent the
         # last call: the draft is delivered, the objection
         # recorded beside it.
         check_record["status"] = "starved"
-        return draft, finish_reasons, check_record
+        return (_strip_stage_scaffolding(draft),
+                finish_reasons, check_record)
     calls += 1
     system, user = _stage_message(
         "STAGE 3", question, draft, verdict.objections)
@@ -1674,7 +1734,8 @@ async def _arm_c(question: str, draft_serving: str,
         client, "tier3_arm_c_1", draft_serving, system, user)
     finish_reasons.append(revised.finish_reason)
     check_record["status"] = "objected"
-    return revised.content, finish_reasons, check_record
+    return (_strip_stage_scaffolding(revised.content),
+            finish_reasons, check_record)
 
 
 async def _arm_e(question: str, question_id: str, repetition: int,

@@ -246,16 +246,20 @@ class TestTheVersions:
         assert versions["scorer"] in frozen, (
             "the manifest names a scorer version the version "
             "record does not hold")
-        assert versions["manifest"] == "tier3-5"
-        # tier3-5 registers the advisor's R2 (the stage-1
+        assert versions["manifest"] == "tier3-6"
+        # tier3-5 registered the advisor's R2 (the stage-1
         # report's repair list, 2026-10-06): arm B's final
         # call keeps the tools declared with tool_choice
         # "none", and an empty reply with finish "error" is
         # its own failure class, serving_error.
+        # tier3-6 registers R3: arm C's delivered answer
+        # carries no stage scaffolding.
         note = versions["version_note"]
         assert "tier3-5" in note
         assert 'tool_choice "none"' in note
         assert "serving_error" in note
+        assert "tier3-6" in note
+        assert "stage scaffolding" in note
         # The tier-2 freeze itself: the signoff the owner ratified.
         assert TIER2_MANIFEST["dataset_version"] == "frozen-2026-10-03"
         assert TIER2_MANIFEST["frozen"] is True
@@ -515,6 +519,13 @@ class TestTheExecution:
         # call remains.
         assert "hard whole-sequence bound" in check
         assert "starvation" in check
+        # R3: the delivered answer carries no stage
+        # scaffolding - the protocol's own headings are
+        # the protocol's words, not the answer's.
+        handling = MANIFEST["arms"]["C"][
+            "disagreement_handling"]
+        assert "no stage scaffolding" in handling
+        assert "stripped from what is delivered" in handling
 
     def test_arm_e_delivery_is_the_completed_terminal(self):
         treatment = MANIFEST["arms"]["E"]["treatment"]
