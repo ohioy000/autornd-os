@@ -102,7 +102,10 @@ class StepRecord:
     # the ledger cannot say. Measured need: 094's record could
     # only ESTIMATE the judges' pace (3,078 s over 14 calls, split
     # evenly), because per-phase totals cannot say which call took
-    # how long.
+    # how long. The pace samples do NOT key on this field: they
+    # key on the routing answer, the only tier the pre-start rule
+    # can know at decision time (the advisor's 2026-10-05 HOLD on
+    # PR 159 — a record repair must not change a D38 decision).
     tier: str | None = None
     # True when the D38 watchdog cut this node mid-flight. Its `seconds` are
     # then the time it ran before the cut, not a completed call's duration.
@@ -667,11 +670,17 @@ class GraphExecutor:
 
         if node.kind is not NodeKind.AI or not (completed or record.cancelled):
             return
-        # The record's tier is corrected from the run's own call
-        # ledger before the pace bookkeeping below keys its samples
-        # on it, so the record and the pace attribution name the
-        # tier that served the node, not the tier the workflow's
-        # conditions named.
+        # The tier the pre-start rule looked this node's call up
+        # under: the routing answer the record was created with,
+        # captured before the correction below. The record names
+        # the tier that served the node (the measurement), but the
+        # pace samples key on the routing tier — the only tier the
+        # pre-start rule can know at decision time. Keying them on
+        # the corrected tier instead costs a node whose two tiers
+        # differ its own pace, and the watchdog starts calls it had
+        # refused: the advisor's 2026-10-05 HOLD on PR 159 (a
+        # record repair must not change a D38 decision).
+        routing = record.tier
         measured = self._measured_tier(functions_before)
         if measured is not None:
             record.tier = measured
@@ -680,7 +689,7 @@ class GraphExecutor:
                   or calls_after > calls_before)
         if not called and not record.cancelled:
             return
-        key = (node.id, record.tier)
+        key = (node.id, routing)
         # Ruling D40: a call is compared with its own node's earlier calls
         # only. A node's first call has none and flags nothing. A pace of
         # 0 s (inside the record's millisecond rounding) has no ratio.
@@ -697,8 +706,8 @@ class GraphExecutor:
                 })
         if not record.cancelled:
             self._node_pace[key] = max(own or 0.0, record.seconds)
-            self._pace[record.tier] = max(self._pace.get(record.tier) or 0.0,
-                                          record.seconds)
+            self._pace[routing] = max(self._pace.get(routing) or 0.0,
+                                      record.seconds)
 
     def _approved_pointer(self, state: ExecutionState) -> dict[str, Any]:
         """D38: the last implementation the build judges agreed on.

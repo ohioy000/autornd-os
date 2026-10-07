@@ -6,6 +6,8 @@ workflow, and everything decidable about it, is testable for free.
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from autornd.graph.checks import get_check, registry
@@ -542,6 +544,22 @@ class BookingRunner(ScriptedRunner):
         return await super().run_ai(node, state)
 
 
+class _PaceDouble(BookingRunner):
+    """The booking double with one slow call: the advisor's
+    150 s first call, at the test's scale. The node routes
+    to the judge tier (the spec's own answer) while the
+    ledger books it under engineering (the ledger's answer
+    for a node it does not know) — the routing/served
+    disagreement the golden probe measured, simulated end
+    to end on a hand-built spec."""
+
+    async def run_ai(self, node, state):
+        out = await super().run_ai(node, state)
+        if node.id == "work":
+            await asyncio.sleep(1.5)
+        return out
+
+
 async def _run(verdicts, settings=None):
     spec = load("workflows/engineering-rnd.yaml")
     runner = ScriptedRunner(verdicts)
@@ -914,6 +932,96 @@ class TestTheStepRecordNamesTheTierThatServed:
         state, _ = await _run(LOW_RISK_HAPPY)
         plan_steps = [s for s in state.trace if s.node_id == "plan"]
         assert all(s.tier == "engineering" for s in plan_steps)
+
+
+@pytest.mark.asyncio
+class TestThePaceSamplesKeyOnTheTierTheRuleLooksUp:
+    """The advisor's 2026-10-05 HOLD on PR 159: a record
+    repair must not change a D38 decision.
+
+    **The condition, end to end (convention 22).** A node
+    the workflow routes to one tier while the run's own
+    call ledger books it under another — the golden
+    probe's measured disagreement (a low-risk plan node
+    routes to engineering and books on architecture) —
+    whose first call is slow (the review's 150 s, at the
+    test's scale) and whose second call the pre-start
+    rule must refuse on the node's own pace with the
+    time left against it (the review's 100 s remaining).
+    The spec is hand-built because the shipped workflow
+    cannot reach the condition: the plan node's two
+    tiers differ only at low risk, and the regrounding
+    loop exits at low risk (reground_context's own
+    stay-out rule), so the plan node never runs twice.
+
+    The refusal test passes on main (before the repair
+    lineage, where the record's tier is the routing
+    answer the pace samples already key on) and on the
+    delivered branch (where the record names the served
+    tier but the pace samples key on the routing tier,
+    the only tier the pre-start rule can know at
+    decision time). On the repair as first delivered it
+    failed — the samples keyed on the served tier, the
+    node's own pace invisible to the rule, and the
+    watchdog started the call it had refused; that is
+    the HOLD. Proven by breaking one line: the capture
+    of the routing tier, reading the measured tier
+    instead, is the flaw reproduced, and the test fails
+    under it (assert 2 == 1 — the second call was made
+    and cancelled mid-flight, the log's 'watchdog:
+    cancelled at work', not a 'not_started' refusal).
+    """
+
+    @staticmethod
+    def _spec():
+        return parse({
+            "name": "pace-mismatch",
+            "nodes": [
+                {"id": "work", "kind": "ai", "tier": "judge",
+                 "prompt": "p"},
+                {"id": "loop", "kind": "ai", "body": ["work"],
+                 "until": "work.ready == true",
+                 "max_iterations": 2},
+            ],
+        })
+
+    async def test_the_record_names_the_tier_that_served(self):
+        runner = _PaceDouble({"work": {"ready": False}})
+        state = await GraphExecutor(
+            self._spec(), runner, SETTINGS).run("Add retry")
+        work_steps = [s for s in state.trace
+                      if s.node_id == "work"]
+        assert work_steps, "the node did not run"
+        assert all(s.tier == "engineering" for s in work_steps), (
+            "the record names the tier that served the node — "
+            "the function the ledger booked the call under — "
+            "not the judge tier the spec routes it to")
+
+    async def test_the_second_call_is_refused_on_the_node_s_own_pace(self):
+        runner = _PaceDouble({"work": {"ready": False}})
+        executor = GraphExecutor(self._spec(), runner, SETTINGS,
+                                 time_budget=2.8)
+        state = await executor.run("Add retry")
+        # The first call was made, and only it: the second
+        # was refused at the pre-start rule, never dispatched.
+        assert runner.ai_calls.count("work") == 1, (
+            "the second call must never be made — the node's "
+            "own 1.5 s pace against the time left refuses it")
+        work_steps = [s for s in state.trace
+                      if s.node_id == "work"]
+        assert len(work_steps) == 1
+        # The refusal, typed: the pre-start rule found the
+        # node's own pace — keyed on the tier it looked the
+        # call up under, the routing tier — and refused the
+        # second call with the time left against it.
+        watchdog = state.watchdog
+        assert state.status == "blocked"
+        assert watchdog.fired and watchdog.rule == "not_started"
+        assert (watchdog.node, watchdog.tier) == ("work", "judge")
+        assert watchdog.pace_basis == "node"
+        assert watchdog.pace_seconds is not None and \
+            watchdog.pace_seconds >= 1.5
+        assert 0 < watchdog.available_seconds < watchdog.pace_seconds
 
 
 class TestResolveArgs:
