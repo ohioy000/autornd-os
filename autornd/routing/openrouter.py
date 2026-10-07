@@ -24,7 +24,11 @@ logger = logging.getLogger(__name__)
 # six failures when the rotation served the identical model on demand.
 #
 # Bounded and short, because the pinned tier cannot fall back and the caller
-# is holding a scenario clock. Retries bill like any other attempt.
+# is holding a scenario clock. Retries bill like any other
+# attempt. The same bound and backoff cover the R4 condition
+# below — a reply with no choices array — for the same
+# reason: both are the serving failing a call a pinned tier
+# has nowhere else to send.
 _RATE_LIMIT_ATTEMPTS = 3
 _RATE_LIMIT_BACKOFF_S = 2.0
 
@@ -719,7 +723,47 @@ class OpenRouterClient:
             _raise_for_status(resp, "chat/completions")
             data = resp.json()
 
-            choice = data["choices"][0]
+            # R4: a serving can fail a call at a success status —
+            # the reply is JSON, it carries an error, and there
+            # is no choices array to read. Reading it as
+            # data["choices"][0] raised a bare KeyError, which
+            # the runners' generic handlers class with broken
+            # runs: the unit went "incomplete" and the serving
+            # that produced the reply went unnamed. It is a
+            # provider failure like the 429's — the same bound
+            # and backoff, for the same reason (a pinned tier
+            # cannot fall back and the caller is holding a
+            # scenario clock) — and when the retries exhaust, the
+            # failure is raised typed, carrying the tier, the
+            # model and the body that says what happened.
+            for attempt in range(1, _RATE_LIMIT_ATTEMPTS):
+                choices = (data.get("choices")
+                           if isinstance(data, dict) else None)
+                if choices:
+                    break
+                delay = _RATE_LIMIT_BACKOFF_S * (2 ** (attempt - 1))
+                logger.warning(
+                    "no choices array in %s's reply (attempt "
+                    "%d/%d) — the serving failed the call at "
+                    "status %s, retrying in %.1fs. Body: %s",
+                    model, attempt, _RATE_LIMIT_ATTEMPTS,
+                    resp.status_code, delay, resp.text[:200],
+                )
+                await asyncio.sleep(delay)
+                resp = await client.post("/chat/completions", json=payload)
+                _raise_for_status(resp, "chat/completions")
+                data = resp.json()
+            choices = (data.get("choices")
+                       if isinstance(data, dict) else None)
+            if not choices:
+                raise ProviderFailure(
+                    function,
+                    data.get("provider")
+                    if isinstance(data, dict) else None,
+                    f"{model} returned a reply with no choices "
+                    f"array (HTTP {resp.status_code}); the body "
+                    f"said: {resp.text[:400]}")
+            choice = choices[0]
             content = choice["message"]["content"] or ""
             tool_calls = choice["message"].get("tool_calls") or []
             finish_reason = choice.get("finish_reason")
