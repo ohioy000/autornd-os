@@ -13022,3 +13022,111 @@ fingerprint, then `TIER3_PILOT_AUTHORIZED` / `TIER3_SPEND_AUTHORIZED`).
 The arm-E lineup choice is the owner's (G-2); the gate is print-then-ratify,
 and the pilot's own authorization ceiling is $7.50, the main run's $90.00 —
 nothing in this repository approves either amount.
+
+## 111. Tier 3, stage 1 — the run, the spend, two readings, the resolution (run 2026-10-05; report PR #163; trace carried by ARCH-20261003-119)
+
+**The run.** 105 units — the seven questions the staged plan names (Q6, Q10,
+Q14, Q15, Q16, Q17, Q23), each answered three times by each of the five arms
+(A: one call, gemini-3.8-flash; B: A's serving plus the closed-world
+`fetch_primary_source` and whitelisted `recompute` tools, up to 3 calls; C:
+Inkling drafts, kimi-k3 checks with a typed `CooperationCheckVerdict`, Inkling
+revises; D: one call, kimi-k3, the strong reference; E: the full pipeline) —
+run 2026-10-05 from 16:52 to 22:59 local under the owner's $30.00
+authorization. Manifest `tier3-4`, scorer `frozen-2026-10-03.2`, servings
+fingerprint `e0dc92a3aecb`, order seed 20261003, selection seed 20261005.
+No unit reached the 1800 s deadline; no output was truncated; unreconciled
+liability: none.
+
+**The trace.** The run's record, `evals/results/20261005T215237Z-tier3-run.jsonl`
+(211 lines — a header, 105 unit-started records, 105 unit records; 568,942
+bytes), is carried into this notebook's trace directory as
+`docs/traces/20261005T215237Z-tier3-run.jsonl`, byte-identical to the results
+file, sha256
+`d406f0fd59a7f49917261ef3fdd554e4c688d6eb225bb57855cd36dba73965b5`.
+
+**The spend.** $8.4971 of the $30.00 authorization. Arm E took 86 percent of
+it ($7.33) for no key-held answer — 53 percent of its spend on engineering
+drafts and redrafts, 31 percent on escalation, 8.5 percent on judges, 3.5
+percent on planning; a pipeline unit took 971.9 s on average against 9.8 s for
+arm A's single call, and arm A paid $0.0081 per key-held answer.
+
+**The verdict.** The full pipeline (arm E) delivered no answer that holds
+under the frozen key: 20 of its 21 units delivered nothing (16 escalated, 4
+blocked), all along the same route — draft, judge, redraft, escalate, no
+answer — and its one delivered answer (9 calls, 445 s, $0.085, 7,960
+characters) had the right forces but reported them at 3 significant figures,
+outside the key's ±0.01 kN tolerance. The single-call arms hold 17–18 of 21
+under the same key (19–21 when 3 s.f. is accepted). The stage-2 rule is met:
+|E − A| is 18 of 21 under both counts, against a threshold of 7, and paired
+by question E lost to arm A on all seven (exact sign test p = 0.016). The
+losses are process, not knowledge: the plans carried correct numbers, and the
+pipeline failed even an XOR truth table, 3 of 3. The advisor's recommendations:
+do not run stage 2 (the answer is in, and the question set sits at the
+single-call ceiling); rule D51 the yardstick (pass/fail criteria test only
+what the request asks, enforced by a free mechanical check; D36's output
+becomes considerations, never graded requirements; reviewers judge against the
+question; no criterion demands a check the pipeline cannot perform); re-measure
+the fast path on all 25 tier-2 questions × 3 and the repaired pipeline on
+stage 1's seven × 3, with two readers; and design tier 4 (rubric-scored design
+tasks, where a single call is not at the ceiling). Stage 2 remains the owner's
+option. The full tables — by arm, by question, repeat outcomes, the paired
+sign tests, findings F1–F12 and repairs R1–R8 — are in the report
+(`docs/reviews/2026-10-06-tier3-stage1-report.md`, PR #163).
+
+**The readings (Ruling D50).** Correctness is read, not scored. Reading 1
+(advisor): 55 PASS, 3 FAIL. Reading 2 (executor, PR #162): 49 PASS, 9 FAIL.
+The two agree on 52 of the 58 sheet entries. The scorer is a screen, not a
+measure: 18 of its 22 FAILs read PASS, and 5 of its 36 sampled PASSes read
+FAIL under the strict key — all the Q23 precision case — so on the screen
+alone, D would have ranked below A.
+
+**The resolution.** The readings disagreed on six Q23 entries — 8, 10, 21,
+40, 44 and 53 (D-r2, D-r1, C-r1, A-r1, E-r2, C-r2). Each answer derives the
+exact forces (12,353 N, or 210/17 kN); each headline then reports them at the
+inputs' 3 significant figures (12.4 / 17.6 kN). Reading 1 counted the headline
+as a rounding of a stated in-tolerance value; reading 2 held that the headline
+is the answer, and that it falls outside the tolerance. The advisor adopted
+**reading 2's rule: an item holds only if the answer's headline
+(final-conclusion) value falls within the frozen key's tolerance, even if an
+in-tolerance value appears earlier in the derivation** — because the frozen key
+governs this run's report (D44), and the headline is what the person asking
+receives. Resolved totals, of 21: key-strict A 18, B 7, C 17, D 18, E 0;
+with 3 s.f. accepted A 19, B 7, C 20, D 21, E 1. The three genuine Q15
+failures (entries 52, 56, 58 — A twice, B once) are agreements: each states
+every value and verdict but omits "zero the readout first, never re-zero",
+which the key's ordered-check-sequence item requires.
+
+**Key defect K1.** For Q23 the frozen key accepts 3 s.f. for the extension
+(0.882 mm) and both stresses (61.8 and 176 MPa) but requires ±0.01 kN for the
+forces (12.35 / 17.65 kN) — a precision inconsistent with the question's own
+3 s.f. inputs. The fix belongs in the next key version, after this report (D44),
+with both figures reported side by side until then. The defect depends on the
+serving: arm D rounds to 3 s.f. every time, so the strict key costs D three
+answers, C three and A one. `keys.json` is untouched; K1 is a key-version
+proposal for the owner.
+
+**The four unsampled Q23 units — the executor's confirmation (this record).**
+Four delivered Q23 units were unsampled scorer passes, which the advisor read
+once under the adopted rule and asked the executor to confirm or dispute, in
+full, under the same rule. Each was read end to end against the key. **All four
+of the advisor's readings are confirmed; none is disputed.**
+
+| unit | advisor | executor | the headline under the rule |
+|---|---|---|---|
+| A-r2 | PASS | **PASS** | the final conclusion states the forces as 12.35 / 17.65 kN (the derivation computes 210/17 kN ≈ 12.353 kN and 300/17 kN ≈ 17.647 kN, both in tolerance) |
+| A-r3 | PASS | **PASS** | the final conclusion states the forces as 12.35 / 17.65 kN |
+| C-r3 | FAIL | **FAIL** | the derivation reaches 12.35 / 17.65 kN, but the conclusion table's bolded 3 s.f. column reports 12.4 / 17.6 kN beside the precise values, and the closing prose repeats ≈12.4 / ≈17.6 kN — the headline sits outside the ±0.01 kN tolerance |
+| D-r3 | FAIL | **FAIL** | the final-conclusion table reports the forces as 12.4 / 17.6 kN; the in-tolerance 12.35 + 17.65 appears only in a check line, which the headline rule does not rescue |
+
+C-r3's delivered answer also carries stage scaffolding ("DRAFT CONCLUSION") —
+the exhibit for repair R3.
+
+**Where the record lives.** The resolved reading sheet:
+`evals/results/20261005T215237Z-tier3-run.reading-sheet.json` (carried by PR
+#162, resolved by PR #163). The advisor's report:
+`docs/reviews/2026-10-06-tier3-stage1-report.md` (PR #163). The run's trace:
+`docs/traces/20261005T215237Z-tier3-run.jsonl`, the sha256 above. The same
+record — the run, the spend, both readings, the resolution with its rule and
+key defect K1, and the four confirmations — is appended to the 119 response
+(`.orchestration/responses/ARCH-20261003-119.response.json`), which built the
+runner that produced the measurement.
