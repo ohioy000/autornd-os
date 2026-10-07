@@ -1934,12 +1934,16 @@ async def run_unit(unit_key: tuple[str, int, str],
 def _pipeline_record(run: Any) -> dict[str, Any]:
     """Arm E's internals, as the unit record carries them.
 
-    The plan's success criteria and blockers, the build-loop
-    iterations (each carries its own verdicts, dissent and
-    findings), the escalation verdict, the tokens by tier and
-    the watchdog's typed record. An internals piece that never
-    ran is None, not an empty shell: a run that never escalated
-    has no escalation verdict, and a plan that never ran has no
+    The plan's success criteria and blockers, the run's
+    final verdicts (review, rework_review, domain_review,
+    judges, feasibility, triage - as the eval traces carry
+    them; the review findings live in the review verdict,
+    not in the iterations), the build-loop iterations (each
+    carries its own verdicts, dissent and findings), the
+    escalation verdict, the tokens by tier and the watchdog's
+    typed record. An internals piece that never ran is None,
+    not an empty shell: a run that never escalated has no
+    escalation verdict, and a plan that never ran has no
     criteria to carry (convention 28: no evidence is a
     different claim from a measured zero).
     """
@@ -1956,6 +1960,14 @@ def _pipeline_record(run: Any) -> dict[str, Any]:
             }
             if isinstance(plan, dict) else None),
         "escalation": verdicts.get("escalation"),
+        # The run's final verdicts, as the eval
+        # traces carry them. A verdict whose node
+        # never ran is None, not an empty shell.
+        "verdicts": {
+            name: verdicts.get(name) for name in (
+                "review", "rework_review",
+                "domain_review", "judges",
+                "feasibility", "triage")},
         "iterations": list(getattr(run, "iterations", None) or []),
         "tokens_by_tier": dict(
             getattr(run, "tokens_by_tier", None) or {}),

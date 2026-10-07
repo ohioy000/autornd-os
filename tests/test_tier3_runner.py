@@ -1245,9 +1245,12 @@ class TestFArmEDelivery:
             self, fixture_rates):
         # R1: the unit record carries the scenario run's
         # internals - the plan's success criteria and
-        # blockers, the build-loop iterations (verdicts,
-        # dissent, findings), the escalation verdict, the
-        # tokens by tier and the watchdog's typed record.
+        # blockers, the run's final verdicts (review,
+        # rework_review, domain_review, judges,
+        # feasibility, triage), the build-loop iterations
+        # (verdicts, dissent, findings), the escalation
+        # verdict, the tokens by tier and the watchdog's
+        # typed record.
         correct = _correct("Q2")
         outcome = runner._shipped(correct)
         outcome["verdicts"] = {
@@ -1265,7 +1268,41 @@ class TestFArmEDelivery:
                 "architectural_correction": None,
                 "resolution_directive":
                     "zero the readout first",
-                "requires_human": False}}
+                "requires_human": False},
+            # The run's final verdicts, as the eval
+            # traces carry them: the review findings
+            # live in the review verdict, not in the
+            # iterations.
+            "review": {
+                "ship": False,
+                "findings": [
+                    {"lens": "safety", "severity": "high",
+                     "detail":
+                         "the readout was never zeroed"}],
+                "verdict": "one blocking finding"},
+            "rework_review": {
+                "routed_to": "review_rework_loop",
+                "reason": "the review blocked"},
+            "domain_review": {
+                "concerns": ["the readout's zero"],
+                "critical": True,
+                "reviewers": 2},
+            "judges": {
+                "passed": False,
+                "detail": "not agreed - validate is red",
+                "dissenting": ["validate"],
+                "judges": ["consistency", "coverage",
+                           "implement", "validate"],
+                "unchecked": []},
+            "feasibility": {
+                "feasibility_blockers": [],
+                "considerations": ["the readout's zero"]},
+            "triage": {
+                "domains": ["control systems"],
+                "risk": "high",
+                "specialists": ["controls_engineer"],
+                "unrecallable": False,
+                "summary": "a firmware readout zeroing"}}
         outcome["iterations"] = [
             {"iteration": 1, "dissenting": ["validate"],
              "implement_summary": "first draft",
@@ -1304,6 +1341,25 @@ class TestFArmEDelivery:
         # The escalation verdict.
         assert pipeline["escalation"][
             "resolution_directive"] == "zero the readout first"
+        # The run's final verdicts, as the eval
+        # traces carry them - the review findings live
+        # in the review verdict, not in the iterations.
+        assert pipeline["verdicts"]["review"] == {
+            "ship": False,
+            "findings": [
+                {"lens": "safety", "severity": "high",
+                 "detail": "the readout was never zeroed"}],
+            "verdict": "one blocking finding"}
+        assert pipeline["verdicts"]["rework_review"][
+            "routed_to"] == "review_rework_loop"
+        assert pipeline["verdicts"]["domain_review"][
+            "concerns"] == ["the readout's zero"]
+        assert pipeline["verdicts"]["judges"][
+            "dissenting"] == ["validate"]
+        assert pipeline["verdicts"]["feasibility"][
+            "considerations"] == ["the readout's zero"]
+        assert pipeline["verdicts"]["triage"][
+            "risk"] == "high"
         # The iterations: verdicts, dissent, findings.
         assert pipeline["iterations"][0]["dissenting"] == \
             ["validate"]
@@ -1328,6 +1384,12 @@ class TestFArmEDelivery:
         pipeline = result.record()["pipeline"]
         assert pipeline["plan"] is None
         assert pipeline["escalation"] is None
+        # Nor did any of the final verdicts' nodes
+        # run: None for each, not an empty shell.
+        assert pipeline["verdicts"] == {
+            "review": None, "rework_review": None,
+            "domain_review": None, "judges": None,
+            "feasibility": None, "triage": None}
         # Break-proof (runner.py, run_unit):
         #     result.pipeline = _pipeline_record(run)
         #     -> result.pipeline = None
@@ -1339,6 +1401,20 @@ class TestFArmEDelivery:
         # escalation verdict, the tokens by tier and the watchdog
         # - so the record could no longer say why the pipeline
         # ended the way it did.
+        # Break-proof (runner.py, _pipeline_record):
+        #     name: verdicts.get(name) for name in (
+        #     -> name: (None if name == "review"
+        #               else verdicts.get(name))
+        # FAILED tests/test_tier3_runner.py::TestFArmEDelivery::
+        # test_arm_e_record_carries_the_pipeline_internals -
+        # AssertionError: assert None == {'ship': False,
+        # 'findings': [{'lens': 'safety', 'severity': 'high',
+        # 'detail': 'the readout was never zeroed'}],
+        # 'verdict': 'one blocking finding'}
+        # (tests/test_tier3_runner.py:1347): the record
+        # dropped the review verdict, so the review findings -
+        # which live in the verdict, not in the iterations -
+        # were lost with it.
 
 
 # ── (g) The preflight ───────────────────────────────
