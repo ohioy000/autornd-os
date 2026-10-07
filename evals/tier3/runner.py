@@ -159,10 +159,12 @@ STAGE1_QUESTION_IDS = ("Q6", "Q10", "Q14", "Q15",
 REGISTERED_MAX_TOKENS = 8000
 REGISTERED_TEMPERATURE = 0.3
 
-# The registered treatment bounds. Arm B: at most 3 model calls and
-# 20 tool invocations per unit; calls 1 and 2 offer the tools, call
-# 3 offers none. Arm C: 3 calls as a hard whole-sequence bound,
-# with the check's bounded retries inside it.
+# The registered treatment bounds. Arm B: at most 3 model
+# calls and 20 tool invocations per unit; calls 1 and 2
+# offer the tools, call 3 keeps them declared with
+# tool_choice "none". Arm C: 3 calls as a hard
+# whole-sequence bound, with the check's bounded retries
+# inside it.
 ARM_B_CALL_LIMIT = 3
 ARM_B_TOOL_INVOCATION_LIMIT = 20
 ARM_C_CALL_LIMIT = 3
@@ -1401,7 +1403,7 @@ class UnitResult:
     question_id: str
     repetition: int
     arm: str
-    status: str                     # delivered | refusal | deadline | incomplete | skipped
+    status: str                     # delivered | refusal | serving_error | deadline | incomplete | skipped
     serving: Any = None
     answer: str | None = None
     delivered_kind: str = ""        # arm E: shipped | approved, not shipped | no answer
@@ -1492,10 +1494,13 @@ async def _registered_call(client: OpenRouterClient, function: str,
                            serving: str, system: str, user: str,
                            response_format: dict[str, Any] | None = None,
                            tools: list[dict[str, Any]] | None = None,
+                           tool_choice: str | None = None,
                            ) -> ModelResponse:
     """One registered call: the arm's serving named directly,
-    the registered max_tokens and temperature, and the tools
-    the call offers (arms B's first two calls only)."""
+    the registered max_tokens and temperature, the tools
+    the call offers, and the tool_choice the call sets
+    (arm B's final call keeps the tools declared with
+    tool_choice "none")."""
     return await client.chat(
         function, system, user,
         response_format=response_format,
@@ -1503,6 +1508,7 @@ async def _registered_call(client: OpenRouterClient, function: str,
         max_tokens=REGISTERED_MAX_TOKENS,
         model=serving,
         tools=tools,
+        tool_choice=tool_choice,
     )
 
 
@@ -1548,8 +1554,9 @@ async def _arm_b(question: str, serving: str,
     two registered tools.
 
     At most 3 model calls and 20 tool invocations per unit.
-    Calls 1 and 2 offer the tools; call 3 offers none, so the
-    model must answer. The client's chat() takes no
+    Calls 1 and 2 offer the tools; call 3 keeps them declared
+    with tool_choice "none", so the model sees the tools it
+    may not use and must answer. The client's chat() takes no
     conversation history, so each round's tool results are
     inlined into the next call's user message — the same text
     the model would have seen in a tool-result turn. Every
@@ -1564,11 +1571,18 @@ async def _arm_b(question: str, serving: str,
     user = base_user
     answer: str | None = None
     for call_number in range(1, ARM_B_CALL_LIMIT + 1):
-        # Call 3 offers none: the model must answer.
-        offer = (TOOL_SPEC if call_number < ARM_B_CALL_LIMIT
-                 else None)
+        # The final call keeps the tools declared with
+        # tool_choice "none" (R2): the model sees the
+        # tools it may not use, and answers. Withdrawing
+        # them entirely changed the request the serving
+        # saw - the stage-1 run's 13 final-call errors
+        # (finish "error", 0 tokens) answered a different
+        # request, not the question.
+        choice = ("none" if call_number == ARM_B_CALL_LIMIT
+                  else None)
         response = await _registered_call(
-            client, "tier3_arm_b", serving, system, user, tools=offer)
+            client, "tier3_arm_b", serving, system, user,
+            tools=TOOL_SPEC, tool_choice=choice)
         finish_reasons.append(response.finish_reason)
         if call_number == ARM_B_CALL_LIMIT:
             answer = response.content
@@ -1821,11 +1835,28 @@ async def run_unit(unit_key: tuple[str, int, str],
             else:
                 result.status = "delivered"
         elif answer is None or not str(answer).strip():
-            result.status = "refusal"
-            result.stop_reason = (
-                "the serving returned an empty reply "
-                f"(finish_reason: "
-                f"{result.finish_reasons[-1] if result.finish_reasons else None!r})")
+            if (result.finish_reasons
+                    and result.finish_reasons[-1] == "error"):
+                # An empty reply with finish "error" is
+                # the serving's own failure, never a
+                # refusal (R2): the stage-1 run's 13
+                # arm-B final-call errors carried finish
+                # "error" and 0 tokens - the provider
+                # failed the call, the model never
+                # answered, and "refusal" would have
+                # charged the model for the serving's
+                # failure.
+                result.status = "serving_error"
+                result.stop_reason = (
+                    "the serving returned an empty reply "
+                    "with finish 'error' - a provider "
+                    "failure, not a refusal")
+            else:
+                result.status = "refusal"
+                result.stop_reason = (
+                    "the serving returned an empty reply "
+                    f"(finish_reason: "
+                    f"{result.finish_reasons[-1] if result.finish_reasons else None!r})")
         else:
             result.status = "delivered"
         result.answer = answer
@@ -2974,13 +3005,22 @@ def build_dry_run_script() -> DryRunScript:
                      "objections to raise."),
         _answer_call("I concur with the draft as it stands.")]
     # arm B's two-round unit: tools on calls 1 and 2, the
-    # answer on call 3 — which offers no tools, so the
-    # model must answer.
+    # answer on call 3 — which keeps them declared with
+    # tool_choice "none", so the model must answer.
     script._calls[("Q17", 1, "B")] = [
         _tool_call("fetch_primary_source",
                    {"citation": citation_of("Q17")}),
         _tool_call("recompute", {"expression": "90 / 2"}),
         _answer_call(correct("Q17"))]
+    # serving_error: the final call's empty reply with
+    # finish "error" — the serving failed the call (the
+    # stage-1 run's 13 arm-B final-call errors), so the
+    # unit is counted in its own class, never as a
+    # refusal.
+    script._calls[("Q23", 1, "B")] = [
+        _tool_call("recompute", {"expression": "1.00 + 1.00"}),
+        _tool_call("recompute", {"expression": "2.00 * 2.00"}),
+        _answer_call("", finish_reason="error")]
 
     # ── The FAIL cases, so the sheet has FAILs to read ──
     script._calls[("Q23", 1, "A")] = [_answer_call(wrong("Q23"))]
@@ -3039,6 +3079,7 @@ class DryRunClient(OpenRouterClient):
             max_tokens: int = 16384,
             model: str | None = None,
             tools: list[dict[str, Any]] | None = None,
+            tool_choice: str | None = None,
     ) -> ModelResponse:
         self._call_number += 1
         outcome = (self._outcomes[self._call_number - 1]

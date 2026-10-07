@@ -635,6 +635,7 @@ class OpenRouterClient:
         max_tokens: int = 16384,
         model: str | None = None,
         tools: list[dict[str, Any]] | None = None,
+        tool_choice: str | None = None,
     ) -> ModelResponse:
         # Additive (arch-20261003-119): a call may name its serving
         # directly (the tier-3 arms' TIER3_* pins, resolved from the
@@ -645,6 +646,10 @@ class OpenRouterClient:
         # serving as for a tier - provider_order_for(function) reads
         # the per-tier syntax under the caller's function name, so an
         # arm named "tier3_arm_a" takes "tier3_arm_a:Provider".
+        # tool_choice (R2) is additive the same way: unset, the
+        # payload carries no tool_choice and the provider's own
+        # default decides; set (arm B's final call sends "none"), it
+        # declares the tools while forbidding their use.
         model = model or self.get_model(function)
         reservation = self._guard_spend(
             function, model,
@@ -665,6 +670,8 @@ class OpenRouterClient:
             payload["response_format"] = response_format
         if tools:
             payload["tools"] = tools
+        if tool_choice:
+            payload["tool_choice"] = tool_choice
         # Ask for real spend rather than inferring it. Providers that ignore
         # this simply omit usage.cost and we fall back to catalogue rates.
         payload["usage"] = {"include": True}

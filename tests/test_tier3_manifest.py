@@ -246,7 +246,16 @@ class TestTheVersions:
         assert versions["scorer"] in frozen, (
             "the manifest names a scorer version the version "
             "record does not hold")
-        assert versions["manifest"] == "tier3-4"
+        assert versions["manifest"] == "tier3-5"
+        # tier3-5 registers the advisor's R2 (the stage-1
+        # report's repair list, 2026-10-06): arm B's final
+        # call keeps the tools declared with tool_choice
+        # "none", and an empty reply with finish "error" is
+        # its own failure class, serving_error.
+        note = versions["version_note"]
+        assert "tier3-5" in note
+        assert 'tool_choice "none"' in note
+        assert "serving_error" in note
         # The tier-2 freeze itself: the signoff the owner ratified.
         assert TIER2_MANIFEST["dataset_version"] == "frozen-2026-10-03"
         assert TIER2_MANIFEST["frozen"] is True
@@ -489,7 +498,12 @@ class TestTheExecution:
     def test_arm_b_call_structure_is_registered(self):
         structure = MANIFEST["arms"]["B"]["call_structure"]
         assert "Calls 1 and 2 offer the tools" in structure
-        assert "call 3 offers none" in structure
+        # R2: the final call keeps the tools declared with
+        # tool_choice "none" - the model sees the tools it
+        # may not use, and answers. Withdrawing them
+        # changed the request the serving saw.
+        assert ('call 3 keeps them declared with '
+                'tool_choice "none"') in structure
         assert "20 tool invocations" in structure
 
     def test_arm_c_check_is_a_typed_verdict(self):
@@ -542,12 +556,20 @@ class TestTheExecution:
 
     def test_the_failure_treatment_counts_every_failure_class(self):
         treatment = MANIFEST["failure_treatment"]
-        assert set(treatment) == {"refusal", "timeout", "tool_failure",
-                                  "incomplete_runs", "outstanding_liability"}
+        assert set(treatment) == {"refusal", "serving_error",
+                                  "timeout", "tool_failure",
+                                  "incomplete_runs",
+                                  "outstanding_liability"}
         # Incomplete runs are counted in the denominator, never
         # dropped, and the liability is part of what a unit cost.
         assert "denominator" in treatment["incomplete_runs"]
         assert "unreconciled_liability" in treatment["outstanding_liability"]
+        # R2: the serving's own failure is its own class, beside
+        # and never inside the refusal count - an empty reply
+        # with finish "error" is the provider failing the call,
+        # not the model refusing the question.
+        assert "never a refusal" in treatment["serving_error"]
+        assert "finish" in treatment["serving_error"]
 
     def test_the_ratification_stop_is_registered(self):
         assert MANIFEST["status"] == "manifest-frozen-awaiting-ratification"

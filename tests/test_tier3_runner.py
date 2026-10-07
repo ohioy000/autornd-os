@@ -23,9 +23,10 @@ The ten tests, as the command orders them:
 (a) the order - build_order and order_digest against an
     independent reconstruction, and a different seed must not
     reproduce it;
-(b) each arm's treatment and call limits - arm B's third
-    call offers no tools, arm C's stage 3 runs only when the
-    check objected;
+(b) each arm's treatment and call limits - arm B's
+    final call keeps the tools declared with
+    tool_choice "none", arm C's stage 3 runs only
+    when the check objected;
 (c) each gate's refusal - the three ratification gates, each
     naming what the owner must set;
 (d) every failure class counted in its arm's 75-unit
@@ -227,10 +228,12 @@ class RecordingClient(runner.DryRunClient):
             max_tokens: int = 16384,
             model: str | None = None,
             tools: list[dict[str, Any]] | None = None,
+            tool_choice: str | None = None,
     ) -> runner.ModelResponse:
         self.offers.append({
             "function": function, "model": model,
             "tools": tools, "response_format": response_format,
+            "tool_choice": tool_choice,
             "temperature": temperature,
             "max_tokens": max_tokens,
             "user_message": user_message})
@@ -238,7 +241,8 @@ class RecordingClient(runner.DryRunClient):
             function, system_prompt, user_message,
             response_format=response_format,
             temperature=temperature, max_tokens=max_tokens,
-            model=model, tools=tools)
+            model=model, tools=tools,
+            tool_choice=tool_choice)
 
 
 class _Wiring:
@@ -361,7 +365,7 @@ class TestBTheArmTreatments:
         # calls - the A-vs-D gap would be a call-count
         # gap, not a serving gap.
 
-    def test_arm_b_offers_tools_on_calls_one_and_two_only(
+    def test_arm_b_keeps_the_tools_declared_on_the_final_call(
             self, fixture_rates):
         citation = runner._citation_in(QUESTIONS["Q7"]["question"])
         assert citation == "29 CFR 1910.95"
@@ -380,11 +384,16 @@ class TestBTheArmTreatments:
         assert result.calls == runner.ARM_B_CALL_LIMIT
         assert result.scorer["verdict"] == "PASS"
         client = wiring.clients[0]
-        # Calls 1 and 2 offer the tools; call 3 offers none,
-        # so the model must answer.
+        # Calls 1 and 2 offer the tools with no
+        # tool_choice; call 3 keeps them declared, with
+        # tool_choice "none" - the model sees the tools
+        # it may not use, and answers.
         assert client.offers[0]["tools"] == runner.TOOL_SPEC
+        assert client.offers[0]["tool_choice"] is None
         assert client.offers[1]["tools"] == runner.TOOL_SPEC
-        assert client.offers[2]["tools"] is None
+        assert client.offers[1]["tool_choice"] is None
+        assert client.offers[2]["tools"] == runner.TOOL_SPEC
+        assert client.offers[2]["tool_choice"] == "none"
         # Every call carries the registered parameters and
         # names the serving (arm B's pin is arm A's pin).
         for offer in client.offers:
@@ -419,18 +428,17 @@ class TestBTheArmTreatments:
         assert result.tool_invocations[0]["result"][
             "edition"] == "July 1, 2014"
         # Break-proof (runner.py, _arm_b):
-        #     offer = (TOOL_SPEC if call_number < ARM_B_CALL_LIMIT
-        #              else None)
-        #     -> offer = TOOL_SPEC
-        # FAILED ...::test_arm_b_offers_tools_on_calls_one_and_
-        # two_only - AssertionError: assert [{'type':
-        # 'function', 'function': {'name':
-        # 'fetch_primary_source', ...}}] is None : arm
-        # B's third call offered the tools, so a model
-        # that spent its answer on another tool call
-        # would never be made to answer - the
-        # registered call structure (calls 1-2 offer
-        # tools, call 3 offers none) is the treatment.
+        #     choice = ("none" if call_number == ARM_B_CALL_LIMIT
+        #               else None)
+        #     -> choice = None
+        # FAILED ...::test_arm_b_keeps_the_tools_declared_on_
+        # the_final_call - AssertionError: assert
+        # None == 'none' : the final call was sent no
+        # tool_choice, so the serving saw the tools with
+        # no instruction not to use them - the registered
+        # treatment (call 3 keeps them declared with
+        # tool_choice "none") is not what the runner
+        # sent.
 
     def test_arm_b_stops_at_the_registered_call_limit(
             self, fixture_rates):
@@ -716,6 +724,55 @@ class TestBTheArmTreatments:
         # failure class the manifest names would be
         # invisible in the census.
 
+    def test_serving_error_is_its_own_failure_class(
+            self, fixture_rates):
+        # An empty reply with finish "error" on arm B's
+        # final call: the serving failed the call (the
+        # stage-1 run's 13 arm-B final-call errors
+        # carried finish "error" and 0 tokens), so the
+        # unit is a serving_error - its own class, never
+        # a refusal.
+        script = _script(calls={("Q7", 1, "B"): [
+            _tool_call("fetch_primary_source",
+                       {"citation": "29 CFR 1910.95"}),
+            _tool_call("recompute",
+                       {"expression": "90 / 2"}),
+            _answer("", finish_reason="error")]})
+        wiring = _Wiring(script, fixture_rates)
+        result = _run(runner.run_unit(
+            ("Q7", 1, "B"), QUESTIONS, TEST_SERVINGS, None,
+            client_factory=wiring.client_factory,
+            tool_dispatcher=wiring.tool_dispatcher))
+        assert result.status == "serving_error"
+        assert "finish 'error'" in result.stop_reason
+        assert result.calls == runner.ARM_B_CALL_LIMIT
+        # The census counts it in its own class, beside
+        # and never inside the refusal count.
+        census = runner.failure_census([result.record()])
+        assert census.get("serving_error") == 1
+        assert "refusal" not in census
+        # A plain empty reply (finish "stop") stays a
+        # refusal: only finish "error" names the serving.
+        script = _script(calls={("Q7", 1, "B"): [
+            _answer("")]})
+        wiring = _Wiring(script, fixture_rates)
+        result = _run(runner.run_unit(
+            ("Q7", 1, "B"), QUESTIONS, TEST_SERVINGS, None,
+            client_factory=wiring.client_factory,
+            tool_dispatcher=wiring.tool_dispatcher))
+        assert result.status == "refusal"
+        # Break-proof (runner.py, run_unit):
+        #     result.status = "serving_error"
+        #     -> result.status = "refusal"
+        # FAILED ...::test_serving_error_is_its_own_
+        # failure_class - AssertionError: assert
+        # 'refusal' == 'serving_error' : the
+        # serving's failed call was charged to the
+        # model as a refusal - the class the
+        # manifest names would be invisible in the
+        # census, and the arm's refusal rate would
+        # carry the provider's failures.
+
 
 # ── (c) The ratification gates ──────────────────────
 
@@ -914,7 +971,8 @@ class TestDTheFailureClasses:
         # denominator, never the delivered count).
         census = result["main"]["census"]
         for failure in (
-                "refusal", "deadline", "tool_failure",
+                "refusal", "serving_error", "deadline",
+                "tool_failure",
                 "incomplete",
                 "check:concurred", "check:objected",
                 "check:unavailable",
