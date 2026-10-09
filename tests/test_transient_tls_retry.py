@@ -31,10 +31,14 @@ from autornd.routing.openrouter import OpenRouterClient
 
 
 def _alert():
-    """The measured failure, as it surfaced: a raw ssl.SSLError."""
-    return ssl.SSLError(
+    """The measured failure, as it surfaced: a raw ssl.SSLError
+    with the alert's reason set, as the ssl module sets it on
+    the errors it raises."""
+    alert = ssl.SSLError(
         "[SSL: SSLV3_ALERT_BAD_RECORD_MAC] ssl/tls alert "
         "bad record mac (_ssl.c:2580)")
+    alert.reason = "SSLV3_ALERT_BAD_RECORD_MAC"
+    return alert
 
 
 def _wrapped_alert():
@@ -139,13 +143,57 @@ class TestATransientTLSAlertIsRetried:
         assert out.content == "{}"
         assert http.calls == 2, "the chained alert was not retried"
 
+    async def test_a_retried_alert_books_the_failed_attempt_s_liability(
+            self, monkeypatch, no_sleep, rates):
+        """D45: the alert arrives while the response is being
+        read, so the generation was likely complete and billed —
+        the failed attempt keeps its worst case as unreconciled
+        liability before the retry leaves."""
+        http = _Http([_alert(), _ok()])
+        client = _client_with(http, monkeypatch)
+        model = client.get_model("engineering")
+        rates[model] = (0.0, 1e-5)      # 5,000 tokens -> $0.05
+        client.spend_ceiling = 0.20     # room for both attempts
+        out = await client.chat(function="engineering", system_prompt="s",
+                                user_message="u", model=model,
+                                max_tokens=5_000)
+        assert out.content == "{}"
+        assert http.calls == 2, "the retry did not happen"
+        assert client.unreconciled_liability == pytest.approx(
+            0.05, abs=1e-6), (
+            "the failed attempt's worst case was not booked")
+        assert client.failed_after_dispatch[-1]["kind"] == "SSLError"
+        # The retry reconciled: its actual cost is booked, and
+        # the failed attempt's worst case stays on the hook for
+        # the rest of the run.
+        assert client.spend == pytest.approx(0.001, abs=1e-6)
+
+    async def test_a_retry_that_does_not_fit_is_refused(
+            self, monkeypatch, no_sleep, rates):
+        """The failed attempt's worst case is on the hook, so the
+        retry is re-checked against what remains — refused, not
+        retried, when it does not fit."""
+        http = _Http([_alert(), _ok()])
+        client = _client_with(http, monkeypatch)
+        model = client.get_model("engineering")
+        rates[model] = (0.0, 1e-5)      # 5,000 tokens -> $0.05
+        client.spend_ceiling = 0.08     # 0.05 booked, 0.03 left
+        with pytest.raises(orm.SpendGuardRefused):
+            await client.chat(function="engineering", system_prompt="s",
+                              user_message="u", model=model,
+                              max_tokens=5_000)
+        assert http.calls == 1, "the retry was made despite the ceiling"
+        assert not no_sleep, "no backoff without a retry"
+        assert client.unreconciled_liability == pytest.approx(
+            0.05, abs=1e-6), "the failed attempt's worst case was not booked"
+
     async def test_backoff_grows_and_the_attempts_are_bounded(
             self, monkeypatch, no_sleep, rates):
         http = _Http([_alert()] * 10)
         client = _client_with(http, monkeypatch)
         model = client.get_model("engineering")
         rates[model] = (0.0, 1e-5)      # 5,000 tokens -> $0.05
-        client.spend_ceiling = 0.08
+        client.spend_ceiling = 0.20     # room for both attempts
         with pytest.raises(ssl.SSLError):
             await client.chat(function="engineering", system_prompt="s",
                               user_message="u", model=model,
@@ -153,26 +201,49 @@ class TestATransientTLSAlertIsRetried:
         assert http.calls == orm._TRANSIENT_TLS_ATTEMPTS, (
             "a pinned tier cannot fall back, so this must not retry forever")
         assert no_sleep == [orm._TRANSIENT_TLS_BACKOFF_S]
-        # The exhausted call keeps its liability: the failure is
-        # recorded, not swallowed (D45) — the fourth sample's
-        # shape, worst case and kind.
+        # Both dispatched attempts keep their worst cases (D45):
+        # the first is booked before the retry leaves, the second
+        # by the caller's dispatch accounting when the alert
+        # exhausts the attempts — the fourth sample's shape,
+        # worst case and kind.
         assert client.unreconciled_liability == pytest.approx(
-            0.05, abs=1e-6)
-        assert client.failed_after_dispatch[-1]["kind"] == "SSLError"
+            0.10, abs=1e-6)
+        assert [f["kind"] for f in client.failed_after_dispatch] == [
+            "SSLError", "SSLError"]
 
-    async def test_a_certificate_failure_is_not_retried(
+    async def test_an_ssl_error_with_a_different_reason_is_not_retried(
             self, monkeypatch, no_sleep):
-        """A certificate failure is a verdict about the serving, not
-        a condition of the connection — retrying it would spend the
-        same worst case twice."""
+        """Typed matching: an SSLError whose reason is not the
+        record-MAC alert is a verdict about the serving (or
+        another condition), not this transient one — retrying
+        it would spend the same worst case twice."""
         cert_error = ssl.SSLError(
             "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed")
+        cert_error.reason = "CERTIFICATE_VERIFY_FAILED"
         http = _Http([cert_error, _ok()])
         client = _client_with(http, monkeypatch)
         with pytest.raises(ssl.SSLError):
             await client.chat(function="engineering", system_prompt="s",
                               user_message="u")
-        assert http.calls == 1, "a certificate failure must not be retried"
+        assert http.calls == 1, "a different reason must not be retried"
+        assert not no_sleep, "no backoff without a retry"
+
+    async def test_bad_record_mac_text_without_the_typed_reason(
+            self, monkeypatch, no_sleep):
+        """Hard rule 2: text is not a verdict. An error whose
+        message names the alert but is not an ssl.SSLError
+        carrying the alert's reason is not this condition —
+        the text-matching matcher this repair replaces
+        retried exactly this shape."""
+        impostor = RuntimeError(
+            "[SSL: SSLV3_ALERT_BAD_RECORD_MAC] ssl/tls alert "
+            "bad record mac")
+        http = _Http([impostor, _ok()])
+        client = _client_with(http, monkeypatch)
+        with pytest.raises(RuntimeError):
+            await client.chat(function="engineering", system_prompt="s",
+                              user_message="u")
+        assert http.calls == 1, "text alone must not be retried"
         assert not no_sleep, "no backoff without a retry"
 
     async def test_a_clean_call_is_not_retried_or_delayed(
