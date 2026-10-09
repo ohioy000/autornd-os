@@ -1,0 +1,1881 @@
+{
+  "record": "stage-1-rescore",
+  "date": "2026-10-08",
+  "ruling": "R5 (ARCH-20261003-119): the stage-1 run re-scored under frozen-2026-10-03.3 beside its recorded frozen-2026-10-03.2 readings. Stage 1 stays reported under frozen-2026-10-03.2; this artifact is the side-by-side the command required, with the acceptance measured: the 58 sampled entries agree with the advisor's resolution 58/58 under .3.",
+  "trace": "docs/traces/20261005T215237Z-tier3-run.jsonl",
+  "reading_sheet": "evals/results/20261005T215237Z-tier3-run.reading-sheet.json",
+  "scorer_versions": {
+    "recorded_v2": "frozen-2026-10-03.2",
+    "rescored_v3": "frozen-2026-10-03.3"
+  },
+  "units": 105,
+  "delivered": 71,
+  "not_delivered": {
+    "incomplete": 21,
+    "refusal": 13
+  },
+  "sampled_entries": 58,
+  "v2_determinism": "71/71 delivered answers reproduce the run's recorded frozen-2026-10-03.2 verdict and item counts under the .2 scorer at that version",
+  "agreement_on_the_58_sampled": {
+    "recorded_v2_vs_resolution": "35/58 (the stage-1 report's 18 false negatives and 5 false positives)",
+    "rescored_v3_vs_resolution": "58/58"
+  },
+  "verdict_flips_v2_to_v3": {
+    "units": 24,
+    "sampled_units": 23,
+    "unsampled_units": 1,
+    "pass_to_fail": 6,
+    "fail_to_pass": 18
+  },
+  "flips": [
+    {
+      "question_id": "Q10",
+      "repetition": 2,
+      "arm": "B",
+      "sampled": true,
+      "sampled_entry": 25,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Hold criterion",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+          "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+        }
+      ]
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 3,
+      "arm": "B",
+      "sampled": true,
+      "sampled_entry": 3,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Next smaller heater check",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "750 W within tolerance: True; 160 s within tolerance: True; failure verdict stated: False - all three are required",
+          "v3_detail": "750.0 W = 750 W within rel tolerance of key 750 W; headline 160.0 s = 160 s within abs tolerance of key 160 s; the failure verdict is stated"
+        }
+      ]
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 1,
+      "arm": "C",
+      "sampled": true,
+      "sampled_entry": 48,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Ordered check sequence",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "ordered sequence (zero, 1.000 mm, 2.000 mm, return): True; no re-zeroing between readings stated: False - both are required",
+          "v3_detail": "zero at unloaded zero, apply and record 1.000 mm, apply and record 2.000 mm, then return to zero and record without re-zeroing"
+        },
+        {
+          "item": "First signed error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "0.01 mm = 1e-05 m within abs tolerance of key 1e-05 m; the 'pass' verdict is stated with the error"
+        },
+        {
+          "item": "Second signed error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'fail' verdict stated with the error: False - both are required",
+          "v3_detail": "-0.03 mm = -3e-05 m within abs tolerance of key -3e-05 m; the 'fail' verdict is stated with the error"
+        },
+        {
+          "item": "Return-zero error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+        },
+        {
+          "item": "Overall verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "the overall FAIL and the second reading as its cause are not both stated",
+          "v3_detail": "the overall FAIL identifies the failed second reading as the cause"
+        }
+      ]
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 3,
+      "arm": "C",
+      "sampled": true,
+      "sampled_entry": 1,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Hold criterion",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+          "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+        }
+      ]
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 2,
+      "arm": "C",
+      "sampled": true,
+      "sampled_entry": 53,
+      "resolution_verdict": "FAIL",
+      "verdict_v2": "PASS",
+      "verdict_v3": "FAIL",
+      "item_flips": [
+        {
+          "item": "Aluminum force",
+          "v2_pass": true,
+          "v3_pass": false,
+          "v2_detail": "12353.0 N = 12353 N within abs tolerance of key 12352.9 N",
+          "v3_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+        },
+        {
+          "item": "Steel force",
+          "v2_pass": true,
+          "v3_pass": false,
+          "v2_detail": "17647.0 N = 17647 N within abs tolerance of key 17647.1 N",
+          "v3_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+        }
+      ]
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 1,
+      "arm": "C",
+      "sampled": true,
+      "sampled_entry": 5,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Hold criterion",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+          "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+        },
+        {
+          "item": "Shutdown and removal order",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "switch-off then cool then remove order: False; 40 deg C removal threshold stated: True - both are required",
+          "v3_detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
+        }
+      ]
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 3,
+      "arm": "D",
+      "sampled": true,
+      "sampled_entry": 29,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Ordered check sequence",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "ordered sequence (zero, 1.000 mm, 2.000 mm, return): False; no re-zeroing between readings stated: True - both are required",
+          "v3_detail": "zero at unloaded zero, apply and record 1.000 mm, apply and record 2.000 mm, then return to zero and record without re-zeroing"
+        },
+        {
+          "item": "Acceptance criteria",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "0.020 mm nonzero limit stated: False; 0.010 mm return-zero limit stated: True - both are required",
+          "v3_detail": "both inclusive limits (nonzero errors at most 0.020 mm, return zero at most 0.010 mm) are stated"
+        },
+        {
+          "item": "First signed error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "0.01 mm = 1e-05 m within abs tolerance of key 1e-05 m; the 'pass' verdict is stated with the error"
+        },
+        {
+          "item": "Second signed error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'fail' verdict stated with the error: False - both are required",
+          "v3_detail": "-0.03 mm = -3e-05 m within abs tolerance of key -3e-05 m; the 'fail' verdict is stated with the error"
+        },
+        {
+          "item": "Return-zero error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "headline 0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+        },
+        {
+          "item": "Overall verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "the overall FAIL and the second reading as its cause are not both stated",
+          "v3_detail": "the overall FAIL identifies the failed second reading as the cause"
+        }
+      ]
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 2,
+      "arm": "C",
+      "sampled": true,
+      "sampled_entry": 23,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Hold criterion",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+          "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+        }
+      ]
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 2,
+      "arm": "E",
+      "sampled": true,
+      "sampled_entry": 44,
+      "resolution_verdict": "FAIL",
+      "verdict_v2": "PASS",
+      "verdict_v3": "FAIL",
+      "item_flips": [
+        {
+          "item": "Aluminum force",
+          "v2_pass": true,
+          "v3_pass": false,
+          "v2_detail": "12.3529 kN = 12352.9 N within abs tolerance of key 12352.9 N",
+          "v3_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+        },
+        {
+          "item": "Steel force",
+          "v2_pass": true,
+          "v3_pass": false,
+          "v2_detail": "17.6471 kN = 17647.1 N within abs tolerance of key 17647.1 N",
+          "v3_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+        }
+      ]
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 1,
+      "arm": "D",
+      "sampled": true,
+      "sampled_entry": 10,
+      "resolution_verdict": "FAIL",
+      "verdict_v2": "PASS",
+      "verdict_v3": "FAIL",
+      "item_flips": [
+        {
+          "item": "Aluminum force",
+          "v2_pass": true,
+          "v3_pass": false,
+          "v2_detail": "12353.0 N = 12353 N within abs tolerance of key 12352.9 N",
+          "v3_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+        },
+        {
+          "item": "Steel force",
+          "v2_pass": true,
+          "v3_pass": false,
+          "v2_detail": "17647.0 N = 17647 N within abs tolerance of key 17647.1 N",
+          "v3_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+        }
+      ]
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 3,
+      "arm": "D",
+      "sampled": false,
+      "sampled_entry": null,
+      "resolution_verdict": null,
+      "verdict_v2": "PASS",
+      "verdict_v3": "FAIL",
+      "item_flips": [
+        {
+          "item": "Aluminum force",
+          "v2_pass": true,
+          "v3_pass": false,
+          "v2_detail": "12350.0 N = 12350 N within abs tolerance of key 12352.9 N",
+          "v3_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+        },
+        {
+          "item": "Steel force",
+          "v2_pass": true,
+          "v3_pass": false,
+          "v2_detail": "17650.0 N = 17650 N within abs tolerance of key 17647.1 N",
+          "v3_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+        }
+      ]
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 1,
+      "arm": "A",
+      "sampled": true,
+      "sampled_entry": 40,
+      "resolution_verdict": "FAIL",
+      "verdict_v2": "PASS",
+      "verdict_v3": "FAIL",
+      "item_flips": [
+        {
+          "item": "Aluminum force",
+          "v2_pass": true,
+          "v3_pass": false,
+          "v2_detail": "12.353 kN = 12353 N within abs tolerance of key 12352.9 N",
+          "v3_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+        },
+        {
+          "item": "Steel force",
+          "v2_pass": true,
+          "v3_pass": false,
+          "v2_detail": "17.647 kN = 17647 N within abs tolerance of key 17647.1 N",
+          "v3_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+        }
+      ]
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 2,
+      "arm": "A",
+      "sampled": true,
+      "sampled_entry": 17,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Acceptance criteria",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "0.020 mm nonzero limit stated: False; 0.010 mm return-zero limit stated: True - both are required",
+          "v3_detail": "both inclusive limits (nonzero errors at most 0.020 mm, return zero at most 0.010 mm) are stated"
+        },
+        {
+          "item": "First signed error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "0.01 mm = 1e-05 m within abs tolerance of key 1e-05 m; the 'pass' verdict is stated with the error"
+        },
+        {
+          "item": "Second signed error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'fail' verdict stated with the error: False - both are required",
+          "v3_detail": "-0.03 mm = -3e-05 m within abs tolerance of key -3e-05 m; the 'fail' verdict is stated with the error"
+        },
+        {
+          "item": "Return-zero error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "headline 0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+        },
+        {
+          "item": "Overall verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "the overall FAIL and the second reading as its cause are not both stated",
+          "v3_detail": "the overall FAIL identifies the failed second reading as the cause"
+        }
+      ]
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 2,
+      "arm": "D",
+      "sampled": true,
+      "sampled_entry": 43,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Ordered check sequence",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "ordered sequence (zero, 1.000 mm, 2.000 mm, return): False; no re-zeroing between readings stated: False - both are required",
+          "v3_detail": "zero at unloaded zero, apply and record 1.000 mm, apply and record 2.000 mm, then return to zero and record without re-zeroing"
+        },
+        {
+          "item": "Acceptance criteria",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "0.020 mm nonzero limit stated: False; 0.010 mm return-zero limit stated: True - both are required",
+          "v3_detail": "both inclusive limits (nonzero errors at most 0.020 mm, return zero at most 0.010 mm) are stated"
+        },
+        {
+          "item": "First signed error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "0.01 mm = 1e-05 m within abs tolerance of key 1e-05 m; the 'pass' verdict is stated with the error"
+        },
+        {
+          "item": "Second signed error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'fail' verdict stated with the error: False - both are required",
+          "v3_detail": "-0.03 mm = -3e-05 m within abs tolerance of key -3e-05 m; the 'fail' verdict is stated with the error"
+        },
+        {
+          "item": "Return-zero error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "headline 0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+        },
+        {
+          "item": "Overall verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "the overall FAIL and the second reading as its cause are not both stated",
+          "v3_detail": "the overall FAIL identifies the failed second reading as the cause"
+        }
+      ]
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 3,
+      "arm": "A",
+      "sampled": true,
+      "sampled_entry": 45,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Hold criterion",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+          "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+        },
+        {
+          "item": "Shutdown and removal order",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "switch-off then cool then remove order: False; 40 deg C removal threshold stated: True - both are required",
+          "v3_detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
+        }
+      ]
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 2,
+      "arm": "A",
+      "sampled": true,
+      "sampled_entry": 12,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Hold criterion",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+          "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+        }
+      ]
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 2,
+      "arm": "C",
+      "sampled": true,
+      "sampled_entry": 22,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Ordered check sequence",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "ordered sequence (zero, 1.000 mm, 2.000 mm, return): True; no re-zeroing between readings stated: False - both are required",
+          "v3_detail": "zero at unloaded zero, apply and record 1.000 mm, apply and record 2.000 mm, then return to zero and record without re-zeroing"
+        },
+        {
+          "item": "First signed error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "0.01 mm = 1e-05 m within abs tolerance of key 1e-05 m; the 'pass' verdict is stated with the error"
+        },
+        {
+          "item": "Second signed error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'fail' verdict stated with the error: False - both are required",
+          "v3_detail": "-0.03 mm = -3e-05 m within abs tolerance of key -3e-05 m; the 'fail' verdict is stated with the error"
+        },
+        {
+          "item": "Return-zero error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+        },
+        {
+          "item": "Overall verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "the overall FAIL and the second reading as its cause are not both stated",
+          "v3_detail": "the overall FAIL identifies the failed second reading as the cause"
+        }
+      ]
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 3,
+      "arm": "C",
+      "sampled": true,
+      "sampled_entry": 6,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Acceptance criteria",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "0.020 mm nonzero limit stated: False; 0.010 mm return-zero limit stated: True - both are required",
+          "v3_detail": "both inclusive limits (nonzero errors at most 0.020 mm, return zero at most 0.010 mm) are stated"
+        },
+        {
+          "item": "First signed error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "0.01 mm = 1e-05 m within abs tolerance of key 1e-05 m; the 'pass' verdict is stated with the error"
+        },
+        {
+          "item": "Second signed error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'fail' verdict stated with the error: False - both are required",
+          "v3_detail": "-0.03 mm = -3e-05 m within abs tolerance of key -3e-05 m; the 'fail' verdict is stated with the error"
+        },
+        {
+          "item": "Return-zero error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "headline 0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+        },
+        {
+          "item": "Overall verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "the overall FAIL and the second reading as its cause are not both stated",
+          "v3_detail": "the overall FAIL identifies the failed second reading as the cause"
+        }
+      ]
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 2,
+      "arm": "D",
+      "sampled": true,
+      "sampled_entry": 28,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Hold criterion",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+          "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+        }
+      ]
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 1,
+      "arm": "C",
+      "sampled": true,
+      "sampled_entry": 21,
+      "resolution_verdict": "FAIL",
+      "verdict_v2": "PASS",
+      "verdict_v3": "FAIL",
+      "item_flips": [
+        {
+          "item": "Aluminum force",
+          "v2_pass": true,
+          "v3_pass": false,
+          "v2_detail": "12353.0 N = 12353 N within abs tolerance of key 12352.9 N",
+          "v3_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+        },
+        {
+          "item": "Steel force",
+          "v2_pass": true,
+          "v3_pass": false,
+          "v2_detail": "17647.0 N = 17647 N within abs tolerance of key 17647.1 N",
+          "v3_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+        }
+      ]
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 3,
+      "arm": "D",
+      "sampled": true,
+      "sampled_entry": 37,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Hold criterion",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+          "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+        },
+        {
+          "item": "Shutdown and removal order",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "switch-off then cool then remove order: False; 40 deg C removal threshold stated: True - both are required",
+          "v3_detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
+        }
+      ]
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 1,
+      "arm": "A",
+      "sampled": true,
+      "sampled_entry": 26,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Hold criterion",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+          "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+        }
+      ]
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 1,
+      "arm": "D",
+      "sampled": true,
+      "sampled_entry": 32,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Ordered check sequence",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "ordered sequence (zero, 1.000 mm, 2.000 mm, return): True; no re-zeroing between readings stated: False - both are required",
+          "v3_detail": "zero at unloaded zero, apply and record 1.000 mm, apply and record 2.000 mm, then return to zero and record without re-zeroing"
+        },
+        {
+          "item": "Acceptance criteria",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "0.020 mm nonzero limit stated: False; 0.010 mm return-zero limit stated: False - both are required",
+          "v3_detail": "both inclusive limits (nonzero errors at most 0.020 mm, return zero at most 0.010 mm) are stated"
+        },
+        {
+          "item": "Return-zero error and verdict",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+          "v3_detail": "headline 0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+        }
+      ]
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 1,
+      "arm": "D",
+      "sampled": true,
+      "sampled_entry": 15,
+      "resolution_verdict": "PASS",
+      "verdict_v2": "FAIL",
+      "verdict_v3": "PASS",
+      "item_flips": [
+        {
+          "item": "Hold criterion",
+          "v2_pass": false,
+          "v3_pass": true,
+          "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+          "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+        }
+      ]
+    }
+  ],
+  "unit_records": [
+    {
+      "question_id": "Q14",
+      "repetition": 1,
+      "arm": "B",
+      "status": "delivered",
+      "sampled_entry": 46,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "6/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 3,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 39,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 2,
+      "arm": "B",
+      "status": "delivered",
+      "sampled_entry": 25,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "3/4",
+      "passed_v3": "4/4"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 3,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 3,
+      "arm": "B",
+      "status": "delivered",
+      "sampled_entry": 3,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "5/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 2,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 3,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 2,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 1,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 48,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "1/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 2,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 1,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 1,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 2,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 20,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 2,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 8,
+      "resolution_verdict": "FAIL",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "FAIL",
+      "passed_v2": "3/5",
+      "passed_v3": "3/5"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 1,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 3,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 1,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "3/4",
+      "passed_v3": "4/4"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 2,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 53,
+      "resolution_verdict": "FAIL",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "FAIL",
+      "passed_v2": "5/5",
+      "passed_v3": "3/5"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 1,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 50,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "6/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 1,
+      "arm": "B",
+      "status": "delivered",
+      "sampled_entry": 19,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 2,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 2,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 11,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "6/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 1,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 5,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/4",
+      "passed_v3": "4/4"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 3,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 54,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 3,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 29,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "0/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 2,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 23,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "3/4",
+      "passed_v3": "4/4"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 3,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 56,
+      "resolution_verdict": "FAIL",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "FAIL",
+      "passed_v2": "0/6",
+      "passed_v3": "5/6"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 2,
+      "arm": "E",
+      "status": "delivered",
+      "sampled_entry": 44,
+      "resolution_verdict": "FAIL",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "FAIL",
+      "passed_v2": "5/5",
+      "passed_v3": "3/5"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 3,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 1,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 10,
+      "resolution_verdict": "FAIL",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "FAIL",
+      "passed_v2": "5/5",
+      "passed_v3": "3/5"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 3,
+      "arm": "C",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "5/5",
+      "passed_v3": "5/5"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 2,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 1,
+      "arm": "A",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 2,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 35,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 3,
+      "arm": "D",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "FAIL",
+      "passed_v2": "5/5",
+      "passed_v3": "3/5"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 1,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 40,
+      "resolution_verdict": "FAIL",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "FAIL",
+      "passed_v2": "5/5",
+      "passed_v3": "3/5"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 1,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 1,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 58,
+      "resolution_verdict": "FAIL",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "FAIL",
+      "passed_v2": "1/6",
+      "passed_v3": "5/6"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 3,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 3,
+      "arm": "B",
+      "status": "delivered",
+      "sampled_entry": 30,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 3,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 1,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 3,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 38,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 2,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 17,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "1/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 2,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 43,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "0/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 2,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 3,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 47,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 3,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 45,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/4",
+      "passed_v3": "4/4"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 3,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 1,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 41,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "6/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 2,
+      "arm": "D",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 3,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 2,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 1,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 1,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 1,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 51,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 3,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 16,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 3,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 33,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 3,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 2,
+      "arm": "C",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "6/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 2,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 12,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "3/4",
+      "passed_v3": "4/4"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 2,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 22,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "1/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 3,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 2,
+      "arm": "A",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 2,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 2,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 34,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 1,
+      "arm": "B",
+      "status": "delivered",
+      "sampled_entry": 52,
+      "resolution_verdict": "FAIL",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "FAIL",
+      "passed_v2": "0/6",
+      "passed_v3": "5/6"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 3,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 6,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "1/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 3,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 31,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "6/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 3,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 9,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 2,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 57,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 2,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 28,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "3/4",
+      "passed_v3": "4/4"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 1,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 42,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "6/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 1,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 3,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 14,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "6/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 3,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 1,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 21,
+      "resolution_verdict": "FAIL",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "FAIL",
+      "passed_v2": "5/5",
+      "passed_v3": "3/5"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 3,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 3,
+      "arm": "A",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "5/5",
+      "passed_v3": "5/5"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 1,
+      "arm": "C",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 3,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 3,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 37,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/4",
+      "passed_v3": "4/4"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 2,
+      "arm": "C",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 2,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 13,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q23",
+      "repetition": 2,
+      "arm": "A",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "5/5",
+      "passed_v3": "5/5"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 1,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 2,
+      "arm": "B",
+      "status": "delivered",
+      "sampled_entry": 55,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 1,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 26,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "3/4",
+      "passed_v3": "4/4"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 1,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 32,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "3/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 1,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 7,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 3,
+      "arm": "A",
+      "status": "delivered",
+      "sampled_entry": 36,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 1,
+      "arm": "C",
+      "status": "delivered",
+      "sampled_entry": 27,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 2,
+      "arm": "B",
+      "status": "delivered",
+      "sampled_entry": 24,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 2,
+      "arm": "D",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "6/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 2,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q15",
+      "repetition": 1,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 1,
+      "arm": "E",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 3,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 18,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 2,
+      "arm": "C",
+      "status": "incomplete",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 2,
+      "arm": "B",
+      "status": "refusal",
+      "verdict_recorded_v2": null,
+      "verdict_rescored_v3": null,
+      "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome"
+    },
+    {
+      "question_id": "Q16",
+      "repetition": 1,
+      "arm": "D",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q10",
+      "repetition": 1,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 15,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "FAIL",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "3/4",
+      "passed_v3": "4/4"
+    },
+    {
+      "question_id": "Q14",
+      "repetition": 3,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 4,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "6/6",
+      "passed_v3": "6/6"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 1,
+      "arm": "A",
+      "status": "delivered",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q17",
+      "repetition": 1,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 49,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    },
+    {
+      "question_id": "Q6",
+      "repetition": 1,
+      "arm": "D",
+      "status": "delivered",
+      "sampled_entry": 2,
+      "resolution_verdict": "PASS",
+      "verdict_recorded_v2": "PASS",
+      "verdict_rescored_v3": "PASS",
+      "passed_v2": "2/2",
+      "passed_v3": "2/2"
+    }
+  ]
+}

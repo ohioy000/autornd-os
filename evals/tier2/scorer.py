@@ -185,6 +185,11 @@ def _normalize(text: str) -> str:
     text = re.sub(r"\\mathrm\{([^}]*)\}", r"\1", text)
     text = re.sub(r"\\text\{([^}]*)\}", r"\1", text)
     text = text.replace("\\%", "%")
+    # the inline-math delimiters '\(' and '\)':
+    # delimiters, not parentheses - stripping
+    # them leaves '(0.000 mm reference)' the
+    # only parenthetical a line carries.
+    text = text.replace("\\(", " ").replace("\\)", " ")
     # 6.13592\times10^{-7}, 6.14 x 10^-7 and 6.14*10^7
     # -> 6.14e-7
     text = re.sub(r"(\d)\s*(?:\\times|×|x|\*)\s*10\s*\^\s*"
@@ -206,6 +211,9 @@ def _normalize(text: str) -> str:
     # 30000, so the number extractor sees one number
     # (a separator between digits, followed by exactly
     # three digits and then a non-digit or the end).
+    # The LaTeX spelling '120{,}000' groups the same
+    # way and reads as one number too.
+    text = text.replace("{,}", ",")
     text = re.sub(r"(?<=\d)[,\s](?=\d{3}(?:\D|$))", "",
                   text)
     text = text.replace("\\,", " ").replace("\\;", " ")
@@ -414,6 +422,332 @@ def _key_quantities(item: dict, dimension: str | None = None,
     return quantities[index]
 
 
+# ── The strict-headline rule ─────────────────────────
+#
+# The advisor's resolution of the tier-3 stage-1
+# reading (reading 2's rule, adopted): a numeric
+# item holds only when the answer's headline value
+# for it falls within the frozen key's tolerance.
+# The headline is the quantity the answer presents
+# as its result: the last results section's value
+# for the item, attributed by a token distinctive
+# to that item - its own tokens minus its
+# same-dimension siblings' tokens - so a results
+# table's shared column words ('force', 'stress')
+# attribute to no item, and neither does an
+# aggregate 'total' column. An answer that presents
+# no results section states no headline, and the
+# item is scored on its stated quantities as
+# before: the rule tightens what a presented result
+# counts for, it does not demand one.
+
+_HEADLINE_WORDS = re.compile(
+    r"\b(?:conclusions?|results?|summaries|"
+    r"summary|final\s+answer|deliverables?|"
+    r"reports?)\b", re.IGNORECASE)
+
+# Words that introduce a requirement, not a
+# stated value: a quantity one introduces is
+# a bound the answer holds itself to ('Max
+# drop | 0.20 bar' states the acceptance
+# limit, not the logged drop), so it
+# attributes to no item unless the bound
+# word is part of the item's own name ('an
+# item named Error limit 1 states its own
+# bound).
+_BOUND_WORDS = {
+    "max", "maximum", "min", "minimum",
+    "threshold", "limit", "limits", "peak",
+    "upper", "lower", "bound", "bounds",
+}
+
+# Element symbols the parallel-bars answers
+# subscript their quantities with: '_{al}' and
+# '_al' name the aluminum item's quantities,
+# '_{st}' and '_st' the steel ones.
+_ELEMENT_SYMBOLS = {
+    "al": "aluminum", "aluminium": "aluminum",
+    "st": "steel",
+}
+
+# Function words: they appear in every prose
+# context, so a token they name attributes to
+# no item - 'and' in an item's own name
+# ('Selected heating time and verdict') would
+# otherwise attribute every quantity the answer
+# states '... and ...' to that item.
+_STOPWORDS = {
+    "a", "an", "the", "and", "or", "but",
+    "if", "then", "else", "of", "at", "by",
+    "for", "with", "about", "against",
+    "between", "into", "through", "during",
+    "before", "after", "above", "below", "to",
+    "from", "up", "down", "in", "out", "on",
+    "off", "over", "under", "again", "further",
+    "once", "here", "there", "when", "where",
+    "why", "how", "all", "any", "both", "each",
+    "few", "more", "most", "other", "some",
+    "such", "no", "nor", "not", "only", "own",
+    "same", "so", "than", "too", "very", "can",
+    "will", "just", "should", "now", "is", "are",
+    "was", "were", "be", "been", "being", "have",
+    "has", "had", "having", "do", "does", "did",
+    "doing", "would", "could", "shall", "may",
+    "might", "must", "as", "it", "its", "itself",
+    "this", "that", "these", "those", "i", "you",
+    "he", "she", "we", "they", "them", "his",
+    "her", "their", "our", "your", "my", "me",
+    "him", "us", "what", "which", "who", "whom",
+    "because", "until", "while", "also",
+}
+
+
+def _tokens(text: str) -> set[str]:
+    """The answer's lowercase word tokens, with
+    element symbols read as the material they
+    name and function words dropped. Splitting
+    on every non-alphanumeric character reads
+    'F_{Al}' as {'f', 'al'} and
+    'force-in-aluminium' as its words."""
+    words = set(re.findall(r"[a-z0-9]+",
+                           text.lower()))
+    words -= _STOPWORDS
+    return ((words
+             | {_ELEMENT_SYMBOLS[w]
+                for w in words
+                if w in _ELEMENT_SYMBOLS})
+            - set(_ELEMENT_SYMBOLS))
+
+
+def _headline_sections(answer: str
+                       ) -> list[tuple[str, str]]:
+    """The answer's results sections: (heading,
+    body) pairs, one per heading-shaped line that
+    names a result ('## Final conclusion',
+    '### 3. Conclusion', '8. REPORT FORMAT'). A
+    section runs to the next such heading, so
+    subheadings inside it stay part of it; an
+    answer with no results heading has none."""
+    sections: list[tuple[str, str]] = []
+    heading: str | None = None
+    body: list[str] = []
+    for line in _normalize(answer).splitlines():
+        if (_HEADING.match(line)
+                and _HEADLINE_WORDS.search(line)):
+            if heading is not None:
+                sections.append(
+                    (heading, "\n".join(body)))
+            heading, body = line, []
+        elif heading is not None:
+            body.append(line)
+    if heading is not None:
+        sections.append((heading, "\n".join(body)))
+    return sections
+
+
+def _line_quantities(
+        line: str) -> list[tuple[float, str, str]]:
+    """The (value, unit, text-before) triples a
+    single line states, in reading order. The
+    text before a quantity is the label that
+    introduces it, so only the thirty-two
+    characters immediately before the quantity
+    are kept: a longer reach attributes the
+    quantity to every item named anywhere
+    earlier on the line ('Choose the 1000 W
+    heater: it reaches 35 deg C in exactly
+    120 s' names the selected heater, not the
+    next smaller one)."""
+    normalized = _word_numbers(_normalize(line))
+    triples = []
+    for m in _NUMBER.finditer(normalized):
+        # a quantity inside parentheses is an
+        # aside or a reference the label carries
+        # ('at return-to-zero (0.000 mm
+        # reference): +0.005 mm'), not the
+        # quantity the line states
+        if (normalized[:m.start()].count("(")
+                > normalized[:m.start()].count(")")):
+            continue
+        rest = normalized[m.end():m.end() + 32]
+        before = normalized[max(0, m.start() - 32):
+                            m.start()]
+        triples.append((float(m.group(0)),
+                        _unit_behind(rest),
+                        before))
+    return triples
+
+
+def _table_quantities(
+        block: list[str]
+) -> list[tuple[float, str, str]]:
+    """The (value, unit, context) triples a markdown
+    table states, in reading order. A cell's context
+    is its row's label, its column's header and the
+    text before the quantity in the cell, so a
+    two-material table attributes each column to the
+    material its header names - and a 'Common /
+    Total' column, whose header names no one
+    material, attributes to no item."""
+    rows = [[cell.strip() for cell in
+             line.strip().strip("|").split("|")]
+            for line in block]
+    if len(rows) < 2:
+        return []
+    header, data = rows[0], rows[1:]
+    # the separator row ('|---|---|') states no
+    # quantity and names no column
+    if data and all(
+            re.fullmatch(r"[\s:|-]+", cell)
+            for cell in data[0]):
+        data = data[1:]
+    triples = []
+    for row in data:
+        if len(row) < 2:
+            continue
+        label = row[0]
+        for column, cell in enumerate(row[1:], 1):
+            head = (header[column]
+                    if column < len(header) else "")
+            for value, unit, before in _line_quantities(cell):
+                triples.append(
+                    (value, unit,
+                     f"{label} {head} {before}"))
+    return triples
+
+
+def _section_quantities(
+        body: str
+) -> list[tuple[float, str, str]]:
+    """Every quantity a results section's body
+    states, in reading order, with its
+    introducing context: a table cell's row
+    label, column header and the text before
+    the quantity in the cell; a prose line's
+    text before the quantity. No heading is
+    context - a heading is a section
+    delimiter, not a label the answer applies
+    to a quantity ('Final conclusion' must not
+    attribute every quantity in the section to
+    the item 'final ...' names)."""
+    triples: list[tuple[float, str, str]] = []
+    lines = body.splitlines()
+    i = 0
+    while i < len(lines):
+        if lines[i].lstrip().startswith("|"):
+            block: list[str] = []
+            while (i < len(lines)
+                   and lines[i].lstrip().startswith("|")):
+                block.append(lines[i])
+                i += 1
+            triples.extend(_table_quantities(block))
+        else:
+            triples.extend(_line_quantities(lines[i]))
+            i += 1
+    return triples
+
+
+def _same_dimension_siblings(
+        item: dict,
+        dimension: str | None) -> list[dict]:
+    """The key's other items whose quantity
+    shares the item's dimension: the items a
+    results presentation states side by side
+    with this one. The record is found in KEYS
+    by the item's (name, value) pair."""
+    for record in KEYS:
+        if not any(i["item"] == item["item"]
+                   and i["value"] == item["value"]
+                   for i in record["required_items"]):
+            continue
+        siblings = []
+        for other in record["required_items"]:
+            if (other["item"] == item["item"]
+                    and other["value"] == item["value"]):
+                continue
+            quantities = extract_quantities(
+                other["value"])
+            if dimension is not None:
+                quantities = [
+                    q for q in quantities
+                    if _dimension(q[1]) == dimension]
+            if quantities:
+                siblings.append(other)
+        return siblings
+    return []
+
+
+def _distinctive_tokens(item: dict,
+                        dimension: str | None
+                        ) -> set[str]:
+    """The tokens that name this item and no
+    same-dimension sibling: the item's own tokens
+    minus its siblings'."""
+    distinctive = _tokens(item["item"])
+    for other in _same_dimension_siblings(
+            item, dimension):
+        distinctive -= _tokens(other["item"])
+    return distinctive
+
+
+def _headline_value(item: dict, answer: str,
+                    dimension: str | None
+                    ) -> tuple[str, float] | None:
+    """The item's headline value: the first
+    quantity the last results section that states
+    it attributes to the item, converted to the key
+    dimension's base unit. Returns the stated
+    quantity and its base value, or None when the
+    answer presents no results section that states
+    the item's quantity.
+
+    Attribution is strict: a quantity whose
+    introducing context names a token distinctive
+    to a same-dimension sibling attributes to no
+    item - the context names two items ('time with
+    selected heater') and the answer has not said
+    which one the quantity belongs to."""
+    distinctive = _distinctive_tokens(item, dimension)
+    if not distinctive:
+        return None
+    own = _tokens(item["item"])
+    rivals: set[str] = set()
+    for other in _same_dimension_siblings(
+            item, dimension):
+        rivals |= _distinctive_tokens(
+            other, dimension)
+    key_value, key_unit = _key_quantities(
+        item, dimension, 0)
+    key_dim, _ = _to_base(key_value, key_unit)
+    for heading, body in reversed(
+            _headline_sections(answer)):
+        for value, unit, context in _section_quantities(
+                body):
+            stated = _tokens(context)
+            if not (stated & distinctive):
+                continue
+            if stated & rivals:
+                continue
+            # a bound word introduces a
+            # requirement, not the value
+            # the answer states for the
+            # item ('Max drop | 0.20 bar'
+            # is the acceptance limit, not
+            # the logged drop), so the
+            # quantity attributes to no
+            # item - unless the item's own
+            # name carries the bound word,
+            # for then the bound is what
+            # the item states
+            if (stated & _BOUND_WORDS) - own:
+                continue
+            converted = _to_base(value, unit)
+            if converted and converted[0] == key_dim:
+                return (f"{value} {unit}".strip(),
+                        converted[1])
+    return None
+
+
 def _numeric_item(item: dict, answer: str,
                   dimension: str | None = None,
                   index: int = 0,
@@ -448,6 +782,23 @@ def _numeric_item(item: dict, answer: str,
             f"tolerance unit {tol_unit} does not match key "
             f"unit {key_unit} on item '{item['item']}'")
         tolerance = (tol_kind, tol_base, "")
+    # The strict-headline rule: when the answer
+    # presents its results, the presented value
+    # is the one that counts - a derivation in
+    # tolerance does not rescue a conclusion the
+    # answer itself rounded out of tolerance.
+    headline = _headline_value(item, answer, dimension)
+    if headline is not None:
+        stated, base = headline
+        if _within(base, key_base, tolerance):
+            return _pass(item, f"headline {stated} = "
+                               f"{base:.6g} {key_dim} within "
+                               f"{tol_kind} tolerance of key "
+                               f"{key_base:.6g} {key_dim}")
+        return _fail(item, f"headline {stated} = "
+                           f"{base:.6g} {key_dim} outside "
+                           f"{tol_kind} tolerance of key "
+                           f"{key_base:.6g} {key_dim}")
     for value, unit in extract_quantities(answer):
         converted = _to_base(value, unit)
         if converted and converted[0] == key_dim:
@@ -849,6 +1200,8 @@ _PROCEDURE_LINE = re.compile(
     r"|[-*+]\s"
     r"|#{1,6}\s*\**\s*step\s+\d+"
     r"|\**\s*step\s+\d+\s*[—:.-]"
+    r"|#{1,6}\s+\d+[.)]?\s"
+    r"|\*\*\s*\d+[.)]?\s"
     r"|\|\s*\d+\s*\|"
     r")",
     re.IGNORECASE)
@@ -1340,6 +1693,21 @@ def _score_q9(answer: str, record: dict) -> list[dict]:
 
 # ── Q10: the cure-check sequence ────────────────────────
 
+# 'cool the coupon inside' is the model's
+# phrasing; the answers say it in their own
+# words - a cooling noun, or the coupon
+# being left/kept/staying inside until the
+# probe reads the removal temperature.
+_COOL_IN_PLACE = (
+    "cool", "cooling", "cooldown", "cool-down",
+    "in situ",
+    r"re:\bleave\s+(?:\w+\s+){0,3}?inside",
+    r"re:\bleft\s+(?:\w+\s+){0,3}?inside",
+    r"re:\bremains?\s+(?:\w+\s+){0,3}?inside",
+    r"re:\bkept\s+(?:\w+\s+){0,3}?inside",
+    r"re:\bstays?\s+(?:\w+\s+){0,3}?inside",
+)
+
 def _score_q10(answer: str, record: dict) -> list[dict]:
     items: list[dict] = []
     low = _normalize(answer).lower()
@@ -1376,8 +1744,28 @@ def _score_q10(answer: str, record: dict) -> list[dict]:
     # 2. the hold criterion
     item = _item_by_name(record, "Hold criterion")
     hold = _has_quantity(quantities, "s", 600.0)
+    # the no-restart rule in the answer's own
+    # words: 'without restart' is one phrasing;
+    # the negation may sit either side of the
+    # restart word ('no restart', 'restarting
+    # ... is prohibited')
+    no_restart = (
+        "without restart" in low
+        or "non-restart" in low
+        or "nonrestart" in low
+        or re.search(
+            r"\b(?:no|not|never|without|cannot|"
+            r"can not|do not|don't|"
+            r"zero tolerance for)\b"
+            r"[^.;:\n]{0,30}?\brestart", low)
+        is not None
+        or re.search(
+            r"\brestart\w*\b[^.;:\n]{0,60}?\b"
+            r"(?:prohibited|forbidden|disallowed|"
+            r"not permitted|banned|barred)", low)
+        is not None)
     if (hold and "excursion" in low
-            and "without restart" in low
+            and no_restart
             and ("inclusive" in low or "<=" in low)):
         items.append(_pass(item, "the 600 s hold inside "
                                  "the inclusive band, with "
@@ -1388,7 +1776,7 @@ def _score_q10(answer: str, record: dict) -> list[dict]:
         items.append(_fail(item, f"600 s stated: {hold}; "
                                  f"excursion fails without "
                                  f"restart stated: "
-                                 f"{'excursion' in low and 'without restart' in low}; "
+                                 f"{'excursion' in low and no_restart}; "
                                  f"inclusive limits stated: "
                                  f"{'inclusive' in low or '<=' in low} - all "
                                  f"are required"))
@@ -1414,8 +1802,9 @@ def _score_q10(answer: str, record: dict) -> list[dict]:
     item = _item_by_name(record,
                          "Shutdown and removal order")
     order = _ordered(answer, (
-        (("switch off", "off"), ("cool",)),
-        (("cool",), ("remove",)),
+        (("switch off", "off"), _COOL_IN_PLACE),
+        (_COOL_IN_PLACE,
+         ("remove", "removal", "retrieve")),
     ))
     if order and has_temp(40.0):
         items.append(_pass(item, "heating is switched off, "
@@ -1553,8 +1942,17 @@ def _score_q14(answer: str, record: dict) -> list[dict]:
     heater = _numeric_item(item, answer, dimension="W",
                            tolerance=("rel", 1e-12, ""))
     time750 = _numeric_item(item, answer, dimension="s")
+    # the failure verdict in the answer's own
+    # words: 'fails' is one phrasing; 'exceeds
+    # the time limit' states the same verdict
+    failure_stated = re.search(
+        r"\b(?:fail(?:s|ed|ure|ing)?|"
+        r"exceeds?|too long|over the limit|"
+        r"outside the limit|beyond the limit|"
+        r"greater than the limit|not met|"
+        r"does not meet|violates?)\b", low)
     if (heater["pass"] and time750["pass"]
-            and "fail" in low):
+            and failure_stated is not None):
         items.append(_pass(item, f"{heater['detail']}; "
                                  f"{time750['detail']}; the "
                                  f"failure verdict is "
@@ -1565,7 +1963,7 @@ def _score_q14(answer: str, record: dict) -> list[dict]:
                                  f"within tolerance: "
                                  f"{time750['pass']}; "
                                  f"failure verdict stated: "
-                                 f"{'fail' in low} - all "
+                                 f"{failure_stated is not None} - all "
                                  f"three are required"))
 
     items.append(_numeric_item(
@@ -1589,31 +1987,99 @@ def _score_q15(answer: str, record: dict) -> list[dict]:
                      word: str) -> bool:
         """Whether the stated error carries its verdict:
         the word appears with the error value, in the
-        same step or within the following text. The
-        error may be stated in any notation the key
-        accepts ('0.010 mm' or '10 um')."""
+        same step or near it. The error may be stated
+        in any notation the key accepts ('0.010 mm' or
+        '10 um'), and the verdict may follow it on the
+        next line of a table or list."""
         for step in _numbered_steps(answer):
             low_step = step.lower()
             if (any(t in low_step for t in targets)
                     and word in low_step):
                 return True
         for target in targets:
-            i = low.find(target)
-            if i >= 0 and word in low[i:i + 48]:
-                return True
+            for m in re.finditer(re.escape(target), low):
+                if word in low[max(0, m.start() - 48):
+                               m.end() + 160]:
+                    return True
         return False
+
+    def limit_stated(value: str,
+                     micro: str) -> bool:
+        """Whether the answer states the inclusive
+        limit on the error magnitude, in any of
+        the notations the answers use: an operator
+        before the value ('<= 0.020 mm'), a band
+        around the reading ('-0.020 mm <= error <=
+        +0.020 mm'), a plus-minus bound ('+/-
+        0.020 mm'), interval arithmetic ('1.000-
+        0.020=0.980 mm'), or - when the answer
+        declares its readings are in millimetres -
+        the bare figure ('<= 0.020')."""
+        patterns = (
+            rf"(?:<=|at most|no more than)\s*"
+            rf"[-+]?\s*{value}\s*mm",
+            rf"(?:<=|at most|no more than)\s*"
+            rf"[-+]?\s*{micro}\s*um",
+            rf"[-+]?\s*{value}\s*(?:mm\s*)?"
+            rf"<=\s*\S+\s*<=\s*[-+]?\s*{value}"
+            rf"\s*mm",
+            rf"[-+]?\s*{micro}\s*(?:um\s*)?"
+            rf"<=\s*\S+\s*<=\s*[-+]?\s*{micro}"
+            rf"\s*um",
+            rf"\+/-\s*{value}\s*mm",
+            rf"\+/-\s*{micro}\s*um",
+            rf"\d\.\d{{3}}\s*[-+]\s*{value}\s*=",
+        )
+        bare = (("mm" in low or "millimetre" in low
+                 or "millimeter" in low)
+                and re.search(
+                    rf"(?:<=|at most|no more than)"
+                    rf"\s*{value}(?![a-z%])", low)
+                is not None)
+        return (any(re.search(p, low) is not None
+                    for p in patterns)
+                or bare)
 
     # 1. the ordered check sequence
     item = _item_by_name(record, "Ordered check sequence")
     order = _ordered(answer, (
         (("zero",), ("1.000", "1 mm")),
         (("1.000", "1 mm"), ("2.000", "2 mm")),
-        (("2.000", "2 mm"), ("return",)),
+        (("2.000", "2 mm"), ("return", "final zero")),
     ))
-    no_readjust = ("without" in low
-                   and ("re-zero" in low
-                        or "readjust" in low
-                        or "adjustment" in low))
+    if not order:
+        # the initial zeroing stated as performed
+        # ('the initial zeroing was performed
+        # correctly') supplies the zero step's place
+        # before the 1.000 mm reading, which the
+        # answer's own reference list states after
+        # it; the remaining steps must still hold.
+        initial_zero = re.search(
+            r"\b(?:initial\s+zero|"
+            r"initial\s+zeroing|"
+            r"zeroed\s+at\s+the\s+initial|"
+            r"zeroing\s+was\s+performed|"
+            r"correctly\s+zeroed|"
+            r"zeroed\s+initially|"
+            r"initially\s+zeroed)\b", low)
+        order = (initial_zero is not None
+                 and _ordered(answer, (
+                     (("1.000", "1 mm"),
+                      ("2.000", "2 mm")),
+                     (("2.000", "2 mm"),
+                      ("return", "final zero")),
+                 )))
+    no_readjust = (
+        ("without" in low
+         and ("re-zero" in low
+              or "readjust" in low
+              or "adjustment" in low))
+        or re.search(
+            r"\b(?:no|not|never|without|cannot|"
+            r"can not|do not|don't)\b"
+            r"[^.;:\n]{0,30}?\b(?:re-zero|"
+            r"rezero|readjust|adjust)", low)
+        is not None)
     if order and no_readjust:
         items.append(_pass(item, "zero at unloaded zero, "
                                  "apply and record 1.000 mm, "
@@ -1631,14 +2097,8 @@ def _score_q15(answer: str, record: dict) -> list[dict]:
 
     # 2. the acceptance criteria
     item = _item_by_name(record, "Acceptance criteria")
-    limit1 = (re.search(r"(?:<=|at most|no more than)\s*"
-                        r"0\.020?\s*mm", low)
-              or re.search(r"(?:<=|at most|no more than)\s*"
-                           r"20\s*um", low))
-    limit2 = (re.search(r"(?:<=|at most|no more than)\s*"
-                        r"0\.010?\s*mm", low)
-              or re.search(r"(?:<=|at most|no more than)\s*"
-                           r"10\s*um", low))
+    limit1 = limit_stated(r"0\.020?", "20")
+    limit2 = limit_stated(r"0\.010?", "10")
     if limit1 and limit2:
         items.append(_pass(item, "both inclusive limits "
                                  "(nonzero errors at most "
@@ -2709,6 +3169,281 @@ def self_test() -> int:
          "5. Logged 3.04 and 1.96 V satisfy all checks: "
          "PASS. Width = 1080 mV.",
          {"Hysteresis width": True}),
+    ])
+    failures += more
+    ran += count
+
+    # Results presentations and the answers' own
+    # words: the strict-headline rule (a presented
+    # result governs over a derivation) and the
+    # recognition classes the tier-3 stage-1
+    # reading's false negatives named.
+    print("\nResults presentations and the answers' "
+          "own words:")
+    more, count = _fixture([
+        ("Q23 results table within tolerance", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Aluminum | Steel |\n"
+         "| --- | --- | --- |\n"
+         "| Force | 12.35 kN | 17.65 kN |\n"
+         "| Tensile stress | 61.8 MPa | 176 MPa |\n"
+         "| Common extension | 0.882 mm | 0.882 mm |\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": True,
+          "Steel force": True}),
+        ("Q23 results table rounded out of "
+         "tolerance", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Aluminum | Steel |\n"
+         "| --- | --- | --- |\n"
+         "| Force | 12.4 kN | 17.6 kN |\n"
+         "| Tensile stress | 61.8 MPa | 176 MPa |\n"
+         "| Common extension | 0.882 mm | 0.882 mm |\n\n"
+         "The derivation: the aluminum force is "
+         "12.353 kN and the steel force is "
+         "17.647 kN.\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": False,
+          "Steel force": False}),
+        ("Q23 derivation only, no results section",
+         "Q23",
+         "## Derivation\n\n"
+         "The aluminum bar carries 12.4 kN and the "
+         "steel bar carries 17.6 kN; the stresses "
+         "are 61.8 MPa and 176 MPa; the common "
+         "extension is 0.882 mm. The precise "
+         "figures are 12.353 kN, 17.647 kN, "
+         "61.765 MPa, 176.47 MPa and 0.8824 mm.\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": True,
+          "Steel force": True}),
+        ("Q23 results table with the total column "
+         "first", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Total | Aluminum | Steel |\n"
+         "| --- | --- | --- | --- |\n"
+         "| Force | 30.0 kN | 12.35 kN | 17.65 kN |\n"
+         "| Tensile stress | - | 61.8 MPa | 176 MPa |\n"
+         "| Common extension | - | 0.882 mm | "
+         "0.882 mm |\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": True,
+          "Steel force": True}),
+        ("Q23 boxed results rounded out of "
+         "tolerance", "Q23",
+         "## Final conclusion\n\n"
+         "\\(\\boxed{F_{Al} = 12.4\\,\\mathrm{kN}}\\)\n"
+         "\\(\\boxed{F_{St} = 17.6\\,\\mathrm{kN}}\\)\n"
+         "\\(\\boxed{\\sigma_{Al} = "
+         "61.8\\,\\mathrm{MPa}}\\)\n"
+         "\\(\\boxed{\\sigma_{St} = "
+         "176\\,\\mathrm{MPa}}\\)\n"
+         "\\(\\boxed{\\delta = "
+         "0.882\\,\\mathrm{mm}}\\)\n\n"
+         "The derivation: the bars carry 12.353 kN "
+         "and 17.647 kN.\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": False,
+          "Steel force": False}),
+        ("Q5 summary table states the bound "
+         "before the logged value", "Q5",
+         "## Test procedure\n\n"
+         "1. Fill with water through the open "
+         "high-point vent until bubble-free water "
+         "exits.\n"
+         "2. Close the vent; pressurize to 6.00 "
+         "bar gauge.\n"
+         "3. Isolate the hand pump, then start the "
+         "timer.\n"
+         "4. Hold for 300 s without adding water; "
+         "observe for leakage.\n"
+         "5. A test passes only if the pressure "
+         "drop is no more than 0.20 bar and there "
+         "is no visible water leakage during the "
+         "hold.\n\n"
+         "## Numeric values summary\n\n"
+         "| Quantity | Value |\n"
+         "| --- | --- |\n"
+         "| Test pressure | 6.00 bar gauge |\n"
+         "| Hold duration | 300 s |\n"
+         "| Max drop | 0.20 bar |\n"
+         "| Example end pressure | 5.90 bar |\n"
+         "| Example drop | 0.10 bar |\n"
+         "| Zero reference | 0 bar gauge |\n\n"
+         "Arithmetic: 6.00 bar - 5.90 bar = "
+         "0.10 bar, with no visible leakage: "
+         "PASS.\n"
+         "6. Open the release valve, confirm 0 bar "
+         "gauge, then disconnect.",
+         {"First operation: fill and vent": True,
+          "Second operation: close vent": True,
+          "Third operation: establish test "
+          "pressure": True,
+          "Fourth operation: isolate before "
+          "timing": True,
+          "Fifth operation: isolated hold": True,
+          "Acceptance and failure criteria": True,
+          "Logged pressure drop": True,
+          "Logged test verdict": True,
+          "Final operations: assess, "
+          "depressurize, confirm zero, "
+          "disconnect": True}),
+        ("Q10 hold criterion in the answer's own "
+         "words", "Q10",
+         "The cure-check sequence:\n\n"
+         "1. Set the oven to 120 deg C and confirm "
+         "the coupon probe reads the coupon "
+         "temperature.\n"
+         "2. Wait until the probe reads 118 deg C, "
+         "then start the 600 s timer; the band "
+         "118 deg C to 122 deg C is inclusive.\n"
+         "3. Hold for 600 s. Any excursion outside "
+         "the band fails the run and no restart is "
+         "permitted.\n"
+         "4. The log shows an uninterrupted 600 s "
+         "hold, minimum 119 deg C and maximum 121 "
+         "deg C: PASS.\n"
+         "5. Assess the run, switch off the heating, "
+         "and leave the coupon inside until the "
+         "probe reads 40 deg C before removal.\n",
+         {"Setpoint and timer-start order": True,
+          "Hold criterion": True,
+          "Logged verdict": True,
+          "Shutdown and removal order": True}),
+        ("Q10 shutdown in the answer's own words",
+         "Q10",
+         "1. Set the oven to 120 deg C; the coupon "
+         "probe must enter the 118 deg C to 122 deg C "
+         "band before the timer starts.\n"
+         "2. Hold 600 s inside the inclusive band; "
+         "any excursion fails the run without "
+         "restart.\n"
+         "3. The completed log: uninterrupted 600 s, "
+         "minimum 119 deg C, maximum 121 deg C - "
+         "PASS.\n"
+         "4. Switch off the heating elements.\n"
+         "5. Leave the coupon inside the closed oven "
+         "until the probe reads 40 deg C.\n"
+         "6. Retrieve the coupon.\n",
+         {"Setpoint and timer-start order": True,
+          "Hold criterion": True,
+          "Logged verdict": True,
+          "Shutdown and removal order": True}),
+        ("Q14 failure verdict as 'exceeds the time "
+         "limit'", "Q14",
+         "The heater selection:\n\n"
+         "The energy requirement is 120000 J. The "
+         "smallest available heater that reaches "
+         "35 deg C within the time limit is the "
+         "1000 W heater, which takes 120 s and "
+         "passes. The 750 W heater takes 160 s, "
+         "which exceeds the time limit. The selected "
+         "heater delivers 120000 J.\n",
+         {"Required heat": True,
+          "Selected heater": True,
+          "Selected heating time and verdict": True,
+          "Next smaller heater check": True,
+          "Delivered energy": True}),
+        ("Q15 limits as bands, verdicts far from "
+         "the errors", "Q15",
+         "The extensometer check:\n\n"
+         "1. Zero the instrument at the unloaded "
+         "zero.\n"
+         "2. Apply 1.000 mm and record the reading.\n"
+         "3. Apply 2.000 mm and record the reading.\n"
+         "4. Return to zero and record the reading.\n\n"
+         "Errors at the three readings: +0.010 mm at "
+         "1.000 mm, -0.030 mm at 2.000 mm, and "
+         "+0.005 mm at the return to zero. The first "
+         "reading passes its check, the second "
+         "reading fails it, and the return-zero "
+         "reading passes. The failure is the 2.000 mm "
+         "reading, whose error magnitude exceeds the "
+         "allowable limit.\n\n"
+         "Limits are inclusive: -0.020 mm <= error <= "
+         "+0.020 mm for the nonzero readings and "
+         "-0.010 mm <= error <= +0.010 mm for the "
+         "return zero. The instrument was not "
+         "adjusted between the three recorded values. "
+         "Overall: FAIL.\n",
+         {"Ordered check sequence": True,
+          "Acceptance criteria": True,
+          "First signed error and verdict": True,
+          "Second signed error and verdict": True,
+          "Return-zero error and verdict": True,
+          "Overall verdict": True}),
+        ("Q15 no re-zeroing in the answer's own "
+         "words", "Q15",
+         "The extensometer check:\n\n"
+         "1. Zero at the unloaded zero position.\n"
+         "2. Apply 1.000 mm and record the reading.\n"
+         "3. Apply 2.000 mm and record the reading.\n"
+         "4. Final zero reading.\n\n"
+         "The instrument was not adjusted between the "
+         "three recorded values. Errors: +0.010 mm at "
+         "1.000 mm (pass), -0.030 mm at 2.000 mm "
+         "(fail), +0.005 mm at the final zero (pass). "
+         "Limits: nonzero errors at most 0.020 mm; "
+         "return zero at most 0.010 mm. Overall: "
+         "FAIL.\n",
+         {"Ordered check sequence": True,
+          "Acceptance criteria": True,
+          "First signed error and verdict": True,
+          "Second signed error and verdict": True,
+          "Return-zero error and verdict": True,
+          "Overall verdict": True}),
+        ("Q15 initial zeroing stated after the "
+         "reference list", "Q15",
+         "The extensometer check:\n\n"
+         "1. The reference readings: 1.000 mm, then "
+         "2.000 mm, then the final zero reading.\n"
+         "2. The initial zeroing was performed "
+         "correctly.\n"
+         "3. The instrument was not adjusted between "
+         "the three recorded values.\n\n"
+         "Errors: +0.010 mm at 1.000 mm (pass), "
+         "-0.030 mm at 2.000 mm (fail), +0.005 mm at "
+         "the final zero (pass). Limits: nonzero "
+         "errors at most 0.020 mm; return zero at "
+         "most 0.010 mm. Overall: FAIL.\n",
+         {"Ordered check sequence": True,
+          "Acceptance criteria": True,
+          "First signed error and verdict": True,
+          "Second signed error and verdict": True,
+          "Return-zero error and verdict": True,
+          "Overall verdict": True}),
+        ("Q15 steps as bold numbered headings", "Q15",
+         "The extensometer check:\n\n"
+         "**1. Reference displacement: "
+         "\\(1.000\\ \\mathrm{mm}\\)**\n"
+         "**2. Applied displacement: "
+         "\\(2.000\\ \\mathrm{mm}\\)**\n"
+         "**3. Final zero reading: "
+         "\\(0.000\\ \\mathrm{mm}\\)**\n\n"
+         "The initial zeroing was performed correctly, "
+         "and the instrument was not adjusted between "
+         "the three recorded values. Errors: +0.010 mm "
+         "at 1.000 mm (pass), -0.030 mm at 2.000 mm "
+         "(fail), +0.005 mm at the final zero (pass). "
+         "Limits: nonzero errors at most 0.020 mm; "
+         "return zero at most 0.010 mm. Overall: "
+         "FAIL.\n",
+         {"Ordered check sequence": True,
+          "Acceptance criteria": True,
+          "First signed error and verdict": True,
+          "Second signed error and verdict": True,
+          "Return-zero error and verdict": True,
+          "Overall verdict": True}),
     ])
     failures += more
     ran += count
