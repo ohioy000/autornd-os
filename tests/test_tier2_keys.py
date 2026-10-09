@@ -148,7 +148,7 @@ class TestTheScorerScoresNotRegexes:
     def test_the_self_test_passes(self):
         out = _self_test(TIER2)
         assert out.returncode == 0, out.stdout + out.stderr
-        assert ("SCORER SELF-TEST PASSED: all 263 "
+        assert ("SCORER SELF-TEST PASSED: all 276 "
                 "fixtures hold" in out.stdout)
         for qid in QUESTION_IDS:
             assert f"{qid} model answer" in out.stdout, (
@@ -399,13 +399,14 @@ class TestTheManifestRecordsTheFreeze:
         assert "source review" in freeze["scope"]
         assert MANIFEST["dataset_version"] == "frozen-2026-10-03"
         # The dataset froze at frozen-2026-10-03; the
-        # scorer repair Ruling D50 (1) orders is a new
-        # version under the freeze - the dataset content
-        # is unchanged, only the instrument changed
-        # (versions.json carries the entry naming the
-        # change and its trigger).
+        # scorer repairs Ruling D50 (1) and Ruling R5
+        # order are new versions under the freeze -
+        # the dataset content is unchanged, only the
+        # instrument changed (versions.json carries
+        # the entries naming the changes and their
+        # triggers).
         assert MANIFEST["scorer_version"] == \
-            "frozen-2026-10-03.2"
+            "frozen-2026-10-03.3"
 
     def test_the_source_archives_match_the_files_on_disk(self):
         archives = MANIFEST["source_archives"]
