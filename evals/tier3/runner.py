@@ -1418,6 +1418,11 @@ class UnitResult:
     truncated: bool = False
     tool_invocations: list[dict[str, Any]] = field(default_factory=list)
     check: dict[str, Any] | None = None
+    # arm E: the scenario run's internals (R1) - the plan's
+    # success criteria and blockers, the build-loop iterations
+    # (verdicts, dissent, findings), the escalation verdict,
+    # the tokens by tier and the watchdog's typed record.
+    pipeline: dict[str, Any] | None = None
     stop_reason: str | None = None
     error: str | None = None
     unreconciled_liability: float = 0.0
@@ -1454,6 +1459,7 @@ class UnitResult:
             "truncated": self.truncated,
             "tool_invocations": self.tool_invocations,
             "check": self.check,
+            "pipeline": self.pipeline,
             "stop_reason": self.stop_reason,
             "error": self.error,
             "unreconciled_liability": self.unreconciled_liability,
@@ -1812,6 +1818,11 @@ async def run_unit(unit_key: tuple[str, int, str],
                 getattr(run, "retries", {}) or {})
             result.unreconciled_liability = float(
                 getattr(run, "unreconciled_liability", 0.0) or 0.0)
+            # The scenario run's internals (R1): the record
+            # used to carry the accounting and drop the
+            # pipeline's own story - why it ended the way
+            # it did.
+            result.pipeline = _pipeline_record(run)
         elif client is not None:
             result.cost = client.spend
             result.cost_by_tier = dict(client.spend_by_function)
@@ -1918,6 +1929,50 @@ async def run_unit(unit_key: tuple[str, int, str],
             and result.status not in ("skipped",)):
         budget.record(result.cost)
     return result
+
+
+def _pipeline_record(run: Any) -> dict[str, Any]:
+    """Arm E's internals, as the unit record carries them.
+
+    The plan's success criteria and blockers, the run's
+    final verdicts (review, rework_review, domain_review,
+    judges, feasibility, triage - as the eval traces carry
+    them; the review findings live in the review verdict,
+    not in the iterations), the build-loop iterations (each
+    carries its own verdicts, dissent and findings), the
+    escalation verdict, the tokens by tier and the watchdog's
+    typed record. An internals piece that never ran is None,
+    not an empty shell: a run that never escalated has no
+    escalation verdict, and a plan that never ran has no
+    criteria to carry (convention 28: no evidence is a
+    different claim from a measured zero).
+    """
+    verdicts = getattr(run, "verdicts", None) or {}
+    plan = verdicts.get("plan")
+    return {
+        "status": getattr(run, "status", None),
+        "plan": (
+            {
+                "ready": plan.get("ready"),
+                "success_criteria": list(
+                    plan.get("success_criteria") or []),
+                "blockers": list(plan.get("blockers") or []),
+            }
+            if isinstance(plan, dict) else None),
+        "escalation": verdicts.get("escalation"),
+        # The run's final verdicts, as the eval
+        # traces carry them. A verdict whose node
+        # never ran is None, not an empty shell.
+        "verdicts": {
+            name: verdicts.get(name) for name in (
+                "review", "rework_review",
+                "domain_review", "judges",
+                "feasibility", "triage")},
+        "iterations": list(getattr(run, "iterations", None) or []),
+        "tokens_by_tier": dict(
+            getattr(run, "tokens_by_tier", None) or {}),
+        "watchdog": getattr(run, "watchdog", None),
+    }
 
 
 def _serving_record(arm: str, servings: dict[str, Any]) -> Any:
@@ -3188,6 +3243,7 @@ class DryRunScenarioRunner:
             status=outcome.get("status", ""),
             iterations=outcome.get("iterations", []),
             watchdog=outcome.get("watchdog"),
+            tokens_by_tier=outcome.get("tokens_by_tier", {}),
             retries=outcome.get("retries", {}))
 
 

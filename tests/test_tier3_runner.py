@@ -1241,6 +1241,181 @@ class TestFArmEDelivery:
         # completed terminal would read as delivered -
         # the D49/D50 (3) rule the command registers.
 
+    def test_arm_e_record_carries_the_pipeline_internals(
+            self, fixture_rates):
+        # R1: the unit record carries the scenario run's
+        # internals - the plan's success criteria and
+        # blockers, the run's final verdicts (review,
+        # rework_review, domain_review, judges,
+        # feasibility, triage), the build-loop iterations
+        # (verdicts, dissent, findings), the escalation
+        # verdict, the tokens by tier and the watchdog's
+        # typed record.
+        correct = _correct("Q2")
+        outcome = runner._shipped(correct)
+        outcome["verdicts"] = {
+            "implement": {"summary": correct},
+            "plan": {
+                "ready": True,
+                "plan": "implement the check",
+                "success_criteria": [
+                    "the readout zeroed before the first reading",
+                    "the verdict stated with its value"],
+                "blockers": []},
+            "escalation": {
+                "root_cause_analysis":
+                    "the readout was never zeroed",
+                "architectural_correction": None,
+                "resolution_directive":
+                    "zero the readout first",
+                "requires_human": False},
+            # The run's final verdicts, as the eval
+            # traces carry them: the review findings
+            # live in the review verdict, not in the
+            # iterations.
+            "review": {
+                "ship": False,
+                "findings": [
+                    {"lens": "safety", "severity": "high",
+                     "detail":
+                         "the readout was never zeroed"}],
+                "verdict": "one blocking finding"},
+            "rework_review": {
+                "routed_to": "review_rework_loop",
+                "reason": "the review blocked"},
+            "domain_review": {
+                "concerns": ["the readout's zero"],
+                "critical": True,
+                "reviewers": 2},
+            "judges": {
+                "passed": False,
+                "detail": "not agreed - validate is red",
+                "dissenting": ["validate"],
+                "judges": ["consistency", "coverage",
+                           "implement", "validate"],
+                "unchecked": []},
+            "feasibility": {
+                "feasibility_blockers": [],
+                "considerations": ["the readout's zero"]},
+            "triage": {
+                "domains": ["control systems"],
+                "risk": "high",
+                "specialists": ["controls_engineer"],
+                "unrecallable": False,
+                "summary": "a firmware readout zeroing"}}
+        outcome["iterations"] = [
+            {"iteration": 1, "dissenting": ["validate"],
+             "implement_summary": "first draft",
+             "implement_green": False,
+             "implement_red_cause":
+                 "the readout was not zeroed",
+             "validate_green": False,
+             "validate_red_cause": "the verdict was missing",
+             "validate_evidence": [],
+             "domain_concerns": ["the readout's zero"]},
+            {"iteration": 2, "dissenting": [],
+             "implement_summary": correct,
+             "implement_green": True,
+             "validate_green": True}]
+        outcome["tokens_by_tier"] = {
+            "triage": {"prompt": 1200, "completion": 300},
+            "engineering": {"prompt": 9000, "completion": 2100}}
+        outcome["watchdog"] = {
+            "armed": True, "budget_seconds": 1800.0,
+            "fired": False, "rule": None, "node": None,
+            "slow_calls": []}
+        script = _script(arm_e={"tier3_e_Q2_r1": outcome})
+        wiring = _Wiring(script, fixture_rates)
+        result = _run(runner.run_unit(
+            ("Q2", 1, "E"), QUESTIONS, TEST_SERVINGS, None,
+            scenario_runner=wiring.scenario_runner))
+        pipeline = result.record()["pipeline"]
+        assert pipeline is not None
+        # The plan's success criteria and blockers.
+        assert pipeline["plan"] == {
+            "ready": True,
+            "success_criteria": [
+                "the readout zeroed before the first reading",
+                "the verdict stated with its value"],
+            "blockers": []}
+        # The escalation verdict.
+        assert pipeline["escalation"][
+            "resolution_directive"] == "zero the readout first"
+        # The run's final verdicts, as the eval
+        # traces carry them - the review findings live
+        # in the review verdict, not in the iterations.
+        assert pipeline["verdicts"]["review"] == {
+            "ship": False,
+            "findings": [
+                {"lens": "safety", "severity": "high",
+                 "detail": "the readout was never zeroed"}],
+            "verdict": "one blocking finding"}
+        assert pipeline["verdicts"]["rework_review"][
+            "routed_to"] == "review_rework_loop"
+        assert pipeline["verdicts"]["domain_review"][
+            "concerns"] == ["the readout's zero"]
+        assert pipeline["verdicts"]["judges"][
+            "dissenting"] == ["validate"]
+        assert pipeline["verdicts"]["feasibility"][
+            "considerations"] == ["the readout's zero"]
+        assert pipeline["verdicts"]["triage"][
+            "risk"] == "high"
+        # The iterations: verdicts, dissent, findings.
+        assert pipeline["iterations"][0]["dissenting"] == \
+            ["validate"]
+        assert pipeline["iterations"][0]["implement_summary"] == \
+            "first draft"
+        assert pipeline["iterations"][0]["domain_concerns"] == \
+            ["the readout's zero"]
+        # The tokens by tier.
+        assert pipeline["tokens_by_tier"]["engineering"] == \
+            {"prompt": 9000, "completion": 2100}
+        # The watchdog's typed record.
+        assert pipeline["watchdog"]["budget_seconds"] == 1800.0
+        # A run that never escalated carries no escalation
+        # verdict, and a plan that never ran carries no
+        # criteria: None, not an empty shell.
+        script = _script(arm_e={
+            "tier3_e_Q4_r1": runner._no_answer()})
+        wiring = _Wiring(script, fixture_rates)
+        result = _run(runner.run_unit(
+            ("Q4", 1, "E"), QUESTIONS, TEST_SERVINGS, None,
+            scenario_runner=wiring.scenario_runner))
+        pipeline = result.record()["pipeline"]
+        assert pipeline["plan"] is None
+        assert pipeline["escalation"] is None
+        # Nor did any of the final verdicts' nodes
+        # run: None for each, not an empty shell.
+        assert pipeline["verdicts"] == {
+            "review": None, "rework_review": None,
+            "domain_review": None, "judges": None,
+            "feasibility": None, "triage": None}
+        # Break-proof (runner.py, run_unit):
+        #     result.pipeline = _pipeline_record(run)
+        #     -> result.pipeline = None
+        # FAILED tests/test_tier3_runner.py::TestFArmEDelivery::
+        # test_arm_e_record_carries_the_pipeline_internals -
+        # AssertionError: assert None is not None (line 1238):
+        # the unit record dropped the scenario run's internals -
+        # the plan's criteria and blockers, the iterations, the
+        # escalation verdict, the tokens by tier and the watchdog
+        # - so the record could no longer say why the pipeline
+        # ended the way it did.
+        # Break-proof (runner.py, _pipeline_record):
+        #     name: verdicts.get(name) for name in (
+        #     -> name: (None if name == "review"
+        #               else verdicts.get(name))
+        # FAILED tests/test_tier3_runner.py::TestFArmEDelivery::
+        # test_arm_e_record_carries_the_pipeline_internals -
+        # AssertionError: assert None == {'ship': False,
+        # 'findings': [{'lens': 'safety', 'severity': 'high',
+        # 'detail': 'the readout was never zeroed'}],
+        # 'verdict': 'one blocking finding'}
+        # (tests/test_tier3_runner.py:1347): the record
+        # dropped the review verdict, so the review findings -
+        # which live in the verdict, not in the iterations -
+        # were lost with it.
+
 
 # ── (g) The preflight ───────────────────────────────
 
