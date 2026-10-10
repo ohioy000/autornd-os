@@ -266,6 +266,164 @@ class TestATransientTLSAlertIsRetried:
                               user_message="u")
         assert http.calls == 1, "a cancellation must not be retried"
 
+    async def test_an_alert_on_the_no_choices_re_post_is_retried(
+            self, monkeypatch, no_sleep, rates):
+        """The fourth post site (R4's no-choices re-post) goes
+        through the same helper: a record-MAC alert on it is the
+        same condition of the connection, retried and accounted
+        like the others — one failed entry, the ledger correct."""
+        no_choices = _Resp(200, {"error": "the serving failed the call"})
+        http = _Http([no_choices, _alert(), _ok()])
+        client = _client_with(http, monkeypatch)
+        model = client.get_model("engineering")
+        rates[model] = (0.0, 1e-5)      # 5,000 tokens -> $0.05
+        client.spend_ceiling = 0.20
+        out = await client.chat(function="engineering", system_prompt="s",
+                                user_message="u", model=model,
+                                max_tokens=5_000)
+        assert out.content == "{}"
+        assert http.calls == 3, "the no-choices re-post and its retry"
+        assert no_sleep == [orm._RATE_LIMIT_BACKOFF_S,
+                            orm._TRANSIENT_TLS_BACKOFF_S], (
+            "the no-choices backoff, then the retry's")
+        assert client.retries_by_kind.get("transient_tls") == 1
+        assert [f["kind"] for f in client.failed_after_dispatch] == [
+            "SSLError"]
+        assert client.unreconciled_liability == pytest.approx(
+            0.05, abs=1e-6)
+
+
+class TestABackoffInterruptedBeforeTheRetryDispatches:
+    """The 2026-10-10 review's probe: an interruption landing in
+    the retry's backoff. The retry never left this process, so
+    nothing is booked for it — the ledger carries the attempt
+    that did leave, once, and the in-flight count stays
+    balanced (convention 22: the tests simulate the condition
+    end to end on the real chat() dispatch)."""
+
+    async def test_a_cancelled_backoff_books_one_failure(
+            self, monkeypatch, rates):
+        """The probe, end to end: the alert once, the backoff
+        cancelled. One post left this process, so the ledger
+        carries exactly one failure with one worst case — not
+        the retry's, which never left."""
+        http = _Http([_alert()])
+        client = _client_with(http, monkeypatch)
+        model = client.get_model("engineering")
+        rates[model] = (0.0, 1.00519e-5)  # 10,000 tokens -> $0.100519
+        client.spend_ceiling = 5.0
+
+        async def cancel_sleep(delay):
+            raise asyncio.CancelledError()
+
+        monkeypatch.setattr(orm.asyncio, "sleep", cancel_sleep)
+        with pytest.raises(asyncio.CancelledError):
+            await client.chat(function="engineering", system_prompt="s",
+                              user_message="u", model=model,
+                              max_tokens=10000)
+        assert http.calls == 1, "only the first attempt left"
+        assert client.failed_after_dispatch == [
+            {"function": "engineering", "model": model,
+             "kind": "SSLError", "worst_case": 0.100519}]
+        assert client.unreconciled_liability == pytest.approx(
+            0.100519, abs=1e-6)
+        assert client.reserved == 0.0
+        assert client._in_flight == 0
+
+    async def test_an_error_in_the_backoff_books_nothing_for_the_retry(
+            self, monkeypatch, rates):
+        """Any interruption, not only a cancellation: an error
+        raised while the retry backs off leaves the same ledger
+        — the attempt that left, booked once."""
+        http = _Http([_alert()])
+        client = _client_with(http, monkeypatch)
+        model = client.get_model("engineering")
+        rates[model] = (0.0, 1e-5)      # 5,000 tokens -> $0.05
+        client.spend_ceiling = 0.20
+
+        async def broken_sleep(delay):
+            raise RuntimeError("the watchdog's cut, as an error")
+
+        monkeypatch.setattr(orm.asyncio, "sleep", broken_sleep)
+        with pytest.raises(RuntimeError):
+            await client.chat(function="engineering", system_prompt="s",
+                              user_message="u", model=model,
+                              max_tokens=5_000)
+        assert http.calls == 1, "only the first attempt left"
+        assert [f["kind"] for f in client.failed_after_dispatch] == [
+            "SSLError"]
+        assert client.unreconciled_liability == pytest.approx(
+            0.05, abs=1e-6)
+        assert client._in_flight == 0
+
+    async def test_the_in_flight_count_stays_balanced(
+            self, monkeypatch, rates):
+        """A concurrent call in flight keeps its reservation and
+        its count: the cancelled backoff takes back only the
+        retry's own in-flight count and releases only the
+        retry's own reservation, so the call ceiling still sees
+        the other call and admits no extra one."""
+
+        class _TwoCallHttp:
+            """The first post blocks in flight (the other call);
+            the second raises the alert (the cancelled call's
+            dispatched attempt)."""
+
+            def __init__(self):
+                self.calls = 0
+                self.b_dispatched = asyncio.Event()
+                self.b_release = asyncio.Event()
+
+            async def post(self, path, json):
+                self.calls += 1
+                if self.calls == 1:
+                    self.b_dispatched.set()
+                    await self.b_release.wait()
+                    return _ok()
+                raise _alert()
+
+        http = _TwoCallHttp()
+        client = _client_with(http, monkeypatch)
+        model = client.get_model("engineering")
+        rates[model] = (0.0, 1e-5)      # 5,000 tokens -> $0.05
+        client.spend_ceiling = 0.20
+        client.call_ceiling = 2          # both calls may be in flight
+
+        async def cancel_sleep(delay):
+            raise asyncio.CancelledError()
+
+        monkeypatch.setattr(orm.asyncio, "sleep", cancel_sleep)
+
+        task_b = asyncio.create_task(client.chat(
+            function="engineering", system_prompt="s",
+            user_message="u", model=model, max_tokens=5_000))
+        await http.b_dispatched.wait()   # B's post is in flight now
+        task_a = asyncio.create_task(client.chat(
+            function="engineering", system_prompt="s",
+            user_message="u", model=model, max_tokens=5_000))
+        with pytest.raises(asyncio.CancelledError):
+            await task_a                 # A's backoff is cancelled
+        # Only B is in flight: its reservation is untouched and
+        # the ledger carries A's dispatched attempt, once.
+        assert client._in_flight == 1
+        assert len(client._reservations) == 1
+        assert client.reserved == pytest.approx(0.05, abs=1e-6)
+        assert client.unreconciled_liability == pytest.approx(
+            0.05, abs=1e-6)
+        assert [f["kind"] for f in client.failed_after_dispatch] == [
+            "SSLError"]
+        # The count still sees B, so the ceiling admits no
+        # extra call: one in-flight slot, held by B.
+        client.call_ceiling = 1
+        with pytest.raises(orm.BudgetExceeded):
+            await client.chat(function="engineering", system_prompt="s",
+                              user_message="u", model=model,
+                              max_tokens=5_000)
+        http.b_release.set()
+        out = await task_b
+        assert out.content == "{}"
+        assert client._in_flight == 0
+
 
 class TestTheRetryIsReconciled:
     def test_the_transient_tls_class_is_named_as_excluded(self):

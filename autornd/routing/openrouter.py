@@ -43,6 +43,19 @@ _RATE_LIMIT_BACKOFF_S = 2.0
 # cannot fall back and the caller holds a scenario clock.
 _TRANSIENT_TLS_ATTEMPTS = 2
 _TRANSIENT_TLS_BACKOFF_S = 1.0
+# The reservation holder's marker for a retry whose backoff
+# was interrupted before it left this process. Measured
+# 2026-10-10 (the advisor's probe): a cancellation landing
+# in the backoff used to reach the call site's dispatch
+# accounting holding the retry's reservation, which was
+# booked as a second failure - an attempt that never left,
+# booked as one that did, its worst case counted twice and
+# the in-flight count taken once too many. The helper
+# releases the retry's reservation and marks the holder
+# before the interruption propagates; the call site's
+# accounting books nothing for a marked holder (the attempt
+# that did leave was booked before the backoff).
+_RETRY_NEVER_DISPATCHED: Any = object()
 
 
 @dataclass
@@ -638,7 +651,7 @@ class OpenRouterClient:
             self, client: httpx.AsyncClient, path: str,
             payload: dict[str, Any], model: str, function: str,
             prompt_bytes: int, max_tokens: int,
-            reservation_holder: list[_Reservation | None]
+            reservation_holder: list[Any]
             ) -> httpx.Response:
         """POST, retrying the transient TLS record-MAC alert.
 
@@ -659,10 +672,14 @@ class OpenRouterClient:
         and an attempt that raises still leaves the holder
         pointing at the last dispatched attempt's
         reservation, which is the one the call site's
-        dispatch accounting books or releases. An exhausted
-        alert still raises, and that accounting books the
-        last attempt's worst case as before. `except
-        Exception` on purpose: a cancellation is a
+        dispatch accounting books or releases. A backoff
+        interrupted before the retry leaves marks the
+        holder instead (see _RETRY_NEVER_DISPATCHED):
+        the retry's reservation is released and the call
+        site's accounting books nothing for it. An
+        exhausted alert still raises, and that accounting
+        books the last attempt's worst case as before.
+        `except Exception` on purpose: a cancellation is a
         BaseException and must reach the watchdog's cut
         untried.
         """
@@ -688,7 +705,29 @@ class OpenRouterClient:
                     type(exc).__name__, model, attempt + 1,
                     _TRANSIENT_TLS_ATTEMPTS, delay,
                 )
-                await asyncio.sleep(delay)
+                try:
+                    await asyncio.sleep(delay)
+                except BaseException:
+                    # The backoff was interrupted before the
+                    # retry left this process, so nothing is
+                    # booked for it: the reservation the retry
+                    # would have carried is released, the
+                    # in-flight count is taken back, and the
+                    # holder is marked so the call site's
+                    # dispatch accounting books nothing for
+                    # the retry - the failure the ledger
+                    # carries is the attempt that did leave,
+                    # booked above. The interruption itself
+                    # (a cancellation, the watchdog's cut)
+                    # reaches the caller untried.
+                    self._in_flight = max(0, self._in_flight - 1)
+                    held = reservation_holder[0]
+                    if held is not None and not held.released:
+                        held.released = True
+                        self._reservations.remove(held)
+                        self.reserved -= held.worst
+                    reservation_holder[0] = _RETRY_NEVER_DISPATCHED
+                    raise
         raise AssertionError("unreachable")  # pragma: no cover
 
     async def _get_client(self) -> httpx.AsyncClient:
@@ -864,7 +903,15 @@ class OpenRouterClient:
                     resp.status_code, delay, resp.text[:200],
                 )
                 await asyncio.sleep(delay)
-                resp = await client.post("/chat/completions", json=payload)
+                # The re-post is a dispatch like the others:
+                # a record-MAC alert on it is the same
+                # condition of the connection, retried and
+                # accounted the same way (the 2026-10-10
+                # review's fourth post site).
+                resp = await self._post_retrying_transient_tls(
+                    client, "/chat/completions", payload, model,
+                    function, prompt_bytes, max_tokens,
+                    reservation_holder)
                 _raise_for_status(resp, "chat/completions")
                 data = resp.json()
             choices = (data.get("choices")
@@ -918,10 +965,18 @@ class OpenRouterClient:
             # A BudgetExceeded here is the transient-TLS retry's
             # re-check refusing an attempt that was never dispatched
             # (D45): the runner records the refusal, and the
-            # dispatch ledger records only calls that left.
+            # dispatch ledger records only calls that left. The
+            # holder's marker is the same boundary seen from the
+            # other side: a backoff interrupted before the retry
+            # left books nothing here - the helper booked the
+            # attempt that did leave and released the retry's
+            # reservation before the interruption reached this
+            # handler.
             if not reconciled and not isinstance(exc, BudgetExceeded):
-                self._fail_call(function, model, _failure_kind(exc),
-                                reservation_holder[0])
+                held = reservation_holder[0]
+                if held is not _RETRY_NEVER_DISPATCHED:
+                    self._fail_call(function, model, _failure_kind(exc),
+                                    held)
             raise
 
         return ModelResponse(
