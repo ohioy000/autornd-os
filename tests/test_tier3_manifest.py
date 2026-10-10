@@ -235,7 +235,7 @@ class TestTheVersions:
     def test_the_versions_name_the_frozen_tier2_set(self):
         versions = MANIFEST["versions"]
         assert versions["dataset"] == "frozen-2026-10-03"
-        assert versions["scorer"] == "frozen-2026-10-03.2"
+        assert versions["scorer"] == "frozen-2026-10-03.3"
         frozen = {v["version"] for v in TIER2_VERSIONS["versions"]}
         assert versions["dataset"] in frozen, (
             "the manifest names a tier-2 version the version record "
@@ -246,13 +246,17 @@ class TestTheVersions:
         assert versions["scorer"] in frozen, (
             "the manifest names a scorer version the version "
             "record does not hold")
-        assert versions["manifest"] == "tier3-5"
+        assert versions["manifest"] == "tier3-6"
         # tier3-5 registers the advisor's R2 (the stage-1
         # report's repair list, 2026-10-06): arm B's final
         # call keeps the tools declared with tool_choice
         # "none", and an empty reply with finish "error" is
         # its own failure class, serving_error.
+        # tier3-6 registers the scorer repair Ruling R5
+        # orders (2026-10-08): the stage-1 reading's
+        # recognition classes and the strict-headline rule.
         note = versions["version_note"]
+        assert "tier3-6" in note
         assert "tier3-5" in note
         assert 'tool_choice "none"' in note
         assert "serving_error" in note
