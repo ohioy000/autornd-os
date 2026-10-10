@@ -60,6 +60,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 ROOT = Path(__file__).resolve().parent.parent
 TIER2 = ROOT / "evals" / "tier2"
@@ -810,6 +811,127 @@ def _gates_cleared():
                 os.environ.pop(name, None)
             else:
                 os.environ[name] = value
+
+
+class TestThePinsLiveInTheirOwnFile:
+    """R6: the experiment's pins are read from
+    .env.tier3, not .env. The harness's settings
+    forbid unknown keys, so a TIER3_* line in .env
+    stops the harness at startup — measured:
+    ValidationError, "Extra inputs are not
+    permitted".
+
+    Each test simulates the condition end to end
+    (convention 22) by importing a fresh copy of the
+    settings module the way the owner's run imports
+    it: AUTORND_TESTING unset, so the class's
+    env_file is the real file. The suite imports
+    both modules with the variable set (conftest,
+    before the first import), which binds env_file
+    to None at class-definition time — a fresh
+    import under its own module name is the only
+    way to exercise the file path, and it leaves
+    the suite's own modules untouched, so a file
+    the owner keeps in the repository root can
+    never reach the rest of the suite."""
+
+    def _owner_runner(self, monkeypatch):
+        monkeypatch.delenv("AUTORND_TESTING", raising=False)
+        spec = importlib.util.spec_from_file_location(
+            "tier3_runner_owner", TIER3 / "runner.py")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["tier3_runner_owner"] = module
+        spec.loader.exec_module(module)
+        return module
+
+    def _owner_harness(self, monkeypatch, tmp_path):
+        monkeypatch.delenv("AUTORND_TESTING", raising=False)
+        monkeypatch.chdir(tmp_path)
+        spec = importlib.util.spec_from_file_location(
+            "autornd_config_owner",
+            ROOT / "autornd" / "config.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_the_runner_reads_its_pins_from_the_tier3_file(
+            self, tmp_path, monkeypatch):
+        owner = self._owner_runner(monkeypatch)
+        monkeypatch.chdir(tmp_path)
+        for name in ("TIER3_ARM_A", "TIER3_ARM_B",
+                     "TIER3_ARM_C_1", "TIER3_ARM_C_2",
+                     "TIER3_ARM_D", "TIER3_SERVINGS_RATIFIED",
+                     "TIER3_SPEND_AUTHORIZED",
+                     "TIER3_PILOT_AUTHORIZED"):
+            monkeypatch.delenv(name, raising=False)
+        (tmp_path / ".env.tier3").write_text(
+            "TIER3_ARM_A=test/arm-a\n"
+            "TIER3_ARM_B=test/arm-a\n"
+            "TIER3_SPEND_AUTHORIZED=30.00\n",
+            encoding="utf-8")
+        tier3 = owner.Tier3Settings()
+        assert tier3.tier3_arm_a == "test/arm-a"
+        assert tier3.tier3_arm_b == "test/arm-a"
+        assert tier3.tier3_spend_authorized == "30.00"
+        # Break-proof (runner.py, Tier3Settings):
+        #     else ".env.tier3",
+        #     -> else ".env",
+        # FAILED ...::test_the_runner_reads_its_pins_
+        # from_the_tier3_file - AssertionError:
+        # assert '' == 'test/arm-a' (the pins were
+        # read from .env, which the working directory
+        # does not carry, so every pin resolved empty)
+
+    def test_the_harness_settings_load_with_a_tier3_file_present(
+            self, tmp_path, monkeypatch):
+        # The file the runner reads is not the file
+        # the harness reads: the harness's settings
+        # load with the tier-3 file present, pins
+        # and all — the suite's placeholders arrive
+        # from the environment, as they always do.
+        harness = self._owner_harness(monkeypatch, tmp_path)
+        (tmp_path / ".env.tier3").write_text(
+            "TIER3_ARM_A=test/arm-a\n"
+            "TIER3_ARM_B=test/arm-a\n"
+            "TIER3_SPEND_AUTHORIZED=30.00\n",
+            encoding="utf-8")
+        settings = harness.Settings()
+        assert settings.model_triage, (
+            "the harness settings did not load with "
+            "a tier-3 file present")
+        # Break-proof (autornd/config.py, Settings):
+        #     else ".env",
+        #     -> else ".env.tier3",
+        # FAILED ...::test_the_harness_settings_load_
+        # with_a_tier3_file_present -
+        # pydantic_core._pydantic_core.ValidationError:
+        # 1 validation error for Settings
+        # tier3_arm_a  Extra inputs are not permitted
+        # (the harness read the tier-3 file and stopped)
+
+    def test_the_same_keys_in_env_stop_the_harness(
+            self, tmp_path, monkeypatch):
+        # The control — the measured reason the pins
+        # live in their own file: the same keys in
+        # .env are unknown keys to the harness's
+        # settings, and the harness stops at startup.
+        harness = self._owner_harness(monkeypatch, tmp_path)
+        (tmp_path / ".env").write_text(
+            "TIER3_ARM_A=test/arm-a\n", encoding="utf-8")
+        with pytest.raises(ValidationError) as exc:
+            harness.Settings()
+        assert "Extra inputs are not permitted" in str(
+            exc.value), (
+            "the harness did not refuse the unknown "
+            "key — the reason the pins need their own "
+            "file is gone")
+        # Break-proof (autornd/config.py, Settings):
+        #     model_config = {
+        #         "env_file": ...,
+        #     -> model_config = {"extra": "ignore", ...}
+        # FAILED ...::test_the_same_keys_in_env_stop_
+        # the_harness - Failed: DID NOT RAISE
+        # <class 'pydantic_core.ValidationError'>
 
 
 class TestCTheGates:

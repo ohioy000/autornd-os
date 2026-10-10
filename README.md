@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1355%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1359%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -814,7 +814,7 @@ workflows/                # engineering-rnd, lean, triage-only, triage-classify
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 1355 tests
+tests/                    # 1359 tests
 
 ```
 
@@ -860,7 +860,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-1355 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds. The suite is hermetic wherever it runs — its settings are forced to placeholders and a session guard refuses every non-loopback connection — so it reads the same green on a machine that holds your .env and in CI.
+1359 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds. The suite is hermetic wherever it runs — its settings are forced to placeholders and a session guard refuses every non-loopback connection — so it reads the same green on a machine that holds your .env and in CI.
 which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds. The suite is hermetic wherever it runs — its settings are forced to placeholders and a session guard refuses every non-loopback connection — so it reads the same green on a machine that holds your .env and in CI.
 
 
