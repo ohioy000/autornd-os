@@ -117,8 +117,8 @@ def _fixture_catalogue(servings: dict[str, Any] = TEST_SERVINGS
             "context_length": 200000,
             "max_completion_tokens": 32768,
             "supported_parameters": [
-                "tools", "response_format", "max_tokens",
-                "temperature"],
+                "tools", "tool_choice", "response_format",
+                "max_tokens", "temperature"],
         }
         for serving in runner._all_servings(servings)
     ]
@@ -1484,7 +1484,8 @@ class TestGThePreflight:
         report = runner.run_preflight(TEST_SERVINGS, catalogue)
         assert any(
             "blind about" in note
-            and "tool support is unverified" in note
+            and "tool and tool_choice support is unverified"
+            in note
             for note in report.reports), report.reports
         assert not any("tool support" in refusal
                        for refusal in report.refusals)
@@ -1498,6 +1499,38 @@ class TestGThePreflight:
         # serving that cannot call tools would have run
         # arm B, and the tool treatment would have been
         # measured as a no-tool run.
+
+    def test_case_two_refuses_a_serving_without_tool_choice(
+            self):
+        # R2's final call keeps the tools declared with
+        # tool_choice "none", so the serving must list
+        # tool_choice beside tools: an endpoint without
+        # it would fail the call the treatment depends
+        # on. The catalogue is blind about it: a report,
+        # never a guess.
+        catalogue = _fixture_catalogue()
+        for entry in catalogue:
+            if entry["id"] == TEST_SERVINGS["B"]:
+                entry["supported_parameters"] = [
+                    "tools", "response_format", "max_tokens",
+                    "temperature"]
+        report = runner.run_preflight(TEST_SERVINGS, catalogue)
+        assert any(
+            "arm B" in refusal
+            and "does not list tool_choice support" in refusal
+            for refusal in report.refusals), report.refusals
+        # Break-proof (runner.py, run_preflight, case 2):
+        #     if "tool_choice" not in supported:
+        #     -> if False:
+        # FAILED ...::test_case_two_refuses_a_serving_
+        # without_tool_choice - AssertionError: []
+        # assert False, where False = any(<generator
+        # object ...>) (tests/test_tier3_runner.py:
+        # 1518): a serving that cannot take
+        # tool_choice would have run arm B, and the
+        # final call would have failed at the
+        # provider - the preflight exists to catch
+        # that before the first unit, not after it.
 
     def test_case_three_refuses_a_context_window_too_small(
             self):
