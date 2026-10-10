@@ -191,7 +191,15 @@ class TestEscalationReadsTheBlock:
             self._state(["criterion 1: no source available"]))
         assert result.passed is False
         entry = runner.failure_log[-1]
-        assert entry["blocked_on"] == ["criterion 1: no source available"]
+        # Ruling D51 (5): blocked_on entries are typed
+        # (BlockedOnAsk). A bare string names no ask, so it
+        # is the ruled note — its reason still travels with
+        # the refusal into the log escalation reads. (The
+        # check itself is rewritten to the typed contract in
+        # the D51 commit that follows.)
+        blocked = entry["blocked_on"]
+        assert len(blocked) == 1
+        assert "criterion 1: no source available" in blocked[0]
         assert entry["iteration"] == 1
         assert entry["evidence"], "the reason travels with the refusal"
 

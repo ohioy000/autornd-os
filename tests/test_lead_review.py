@@ -167,7 +167,11 @@ class TestLeadSelection:
         )
 
         assert verdict.green is True
-        assert "TVS voltage exceeds regulator max" in verdict.domain_concerns
+        # Ruling D51 (3): concerns are typed (DomainConcern). The
+        # detail still travels — this test asserted the old
+        # list-of-strings shape, which the typed model replaced.
+        assert [c.detail for c in verdict.domain_concerns] == \
+            ["TVS voltage exceeds regulator max"]
 
     async def test_critical_concern_flips_green(self):
         """A critical domain concern should set green=False."""
