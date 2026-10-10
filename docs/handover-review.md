@@ -13130,3 +13130,213 @@ record — the run, the spend, both readings, the resolution with its rule and
 key defect K1, and the four confirmations — is appended to the 119 response
 (`.orchestration/responses/ARCH-20261003-119.response.json`), which built the
 runner that produced the measurement.
+
+## 112. Ruling D51 — the request is the yardstick (advisor, 2026-10-10, on the owner's go of the same date, carried by ARCH-20261010-120)
+
+> **Ruling D51 (advisor, 2026-10-10, on the owner's go of the same date) — the request is the yardstick. (1) The asks. Before any work is judged, the run extracts the request's asks: verbatim quotes of what the request asks the answer to give or satisfy, each with its kind — value, verdict, step, constraint or format. A model proposes them in an `asks` node on the triage tier, after triage; a free deterministic check keeps a quote only if it occurs in the request under the normalisation the checks already apply, and records every other quote as not anchored, counted. When nothing anchors, the whole request is the one ask. The anchored asks are the run's only success criteria. (2) Every judge judges against the asks and nothing else. Validate, the coverage check, domain review, review, rework review and escalation receive the asks and judge the answer against them. A judge may raise something the asks lack only by quoting the request verbatim, anchored by the same free check. (3) A dissent carries its anchor. A judgment that fails the work names its anchor — an ask, an anchored quote of the request, or a hazard — and what the answer states or omits against it, in typed fields. A hazard is something the answer states or instructs that would, followed as written, injure a person or damage equipment; an omission is never a hazard, and if the request asked for what is missing, it is an ask. Only an anchored dissent fails the work: validate is red only when it names a failed ask; a domain concern flips the implementation red, and a review finding blocks, only when it is critical or high and anchored; the implementer's own red counts only when it names an ask. Any other judgment is a note: recorded and counted, never blocking, and not sent to the next revision, which receives only the anchored dissents. (4) The plan is reasoning, not a yardstick. The plan no longer writes success criteria, and a ready plan no longer needs them. D36's four rules stay byte-identical and keep governing how the plan is reasoned; nothing the plan produces is judged against. Reviewers read the request, the asks and the answer, not the plan; the consistency check's reference is the request's stated figures, not the plan's; the assessment contract's "a contradiction with the plan" becomes "a contradiction with the request". D43's plan-prompt paragraph retires with the criteria it governed — its scope is now enforced by construction — and its deliverable sentence in the implement prompt stays. D46 (2) and D48 (2) are unchanged. (5) Nothing demands what the run cannot do. An ask whose verification needs what the run does not have — a source text the grounding does not hold, a measurement, an execution — is judged on what the answer states, and its verification is recorded as unavailable: neither pass nor fail, never blocking (D49 (3)'s distinction), and listed in the run's record. An implementer's blocked_on entry must name an ask; an entry that names none is a note, counted. (6) Escalation rules on each open dissent before it directs: upheld or not, against its anchor, typed and recorded; the directive addresses only the upheld dissents. Routing is unchanged. (7) An unfinished run keeps its candidate. A run that ends escalated or blocked after an implementation exists records its last answer, labelled unendorsed, with its open dissents and their anchors; D38's approved pointer is computed at every terminal that is not completed, not only at a watchdog cut. Neither counts as delivered; both are read and reported as what abstention cost. Terminal statuses do not change. (8) The verify-first workflow. A second workflow answers once and checks against the asks: triage, grounding, asks, one answer on the engineering tier from the request and the asks with no plan, the free checks, and one check on the judge tier under (3) and (5). No anchored dissent ends the run completed; otherwise one revision addresses only the anchored dissents, followed by the free checks and one more check, and a dissent that survives ends the run escalated and unresolved, with its candidate kept under (7). The standing workflow does not change; which requests take which workflow is ruled on the re-measurement's data. D36's text, the tiers, the pins, the budgets and the loop bounds are untouched. Rationale: tier 3 stage 1 (docs/reviews/2026-10-06-tier3-stage1-report.md): the pipeline held 0 of 21 answers where one call held 18; 20 of 21 units ended with no answer; the plans carried correct numbers but wrote the exam — four of the Q23 plan's six criteria demanded what the question never asked, one of them unsatisfiable by a hand calculation (a measured 60 s falsifier); 9 of the 12 review findings in the log targeted plan-invented content, 3 reviewer-invented scope and none a wrong value; all three Q17 units blocked on a verification the pipeline cannot perform; and the prompts made this the rule — the plan's criteria are what every later phase is judged against and nothing else, and a validator must fail work that disagrees with one. D43 said the request sets the scope, in prompt text, and was not enforced. The design, the theory and the pathways are in docs/reviews/2026-10-10-d51-the-request-is-the-yardstick.md. Falsifier: in the re-measurement, the repaired pipeline still trails the single call by 7 or more of 21 key-held answers on stage 1's seven questions; or a run record shows work failed, blocked or looped by a judgment with no anchor; or a delivered answer misses an item its request asked for, its asks contained it, and no judge dissented.**
+
+Carried verbatim to HANDOVER.md's rulings block in the same commit.
+The blueprint below is pasted verbatim from the command file
+(`.orchestration/commands/ARCH-20261010-120.json`, carried to the tree
+by the advisor on the owner's go), which also carries the evidence array,
+the acceptance criteria, the verification commands, the rollback and the
+preconditions.
+
+### 112.1 The command's objective
+
+Make the request the only yardstick the harness judges against (Ruling D51):
+- extract the request's asks as verbatim quotes, and anchor them with a free check;
+- judge every answer against the asks alone, and let only an anchored dissent fail work;
+- stop the plan writing the exam;
+- record unavailable verification as unavailable;
+- have escalation rule on each dissent;
+- keep an unfinished run's candidate;
+- add the verify-first workflow.
+Free work: no paid call, no .env edit, no database change.
+
+### 112.2 The ruled design (the command's constraints, verbatim)
+
+RULING FIRST, VERBATIM, in HANDOVER.md and the notebook, before the code in commit order.
+
+RULING D51, COMMITTED VERBATIM: 'Ruling D51 (advisor, 2026-10-10, on the owner's go of the same date) — the request is the yardstick. (1) The asks. Before any work is judged, the run extracts the request's asks: verbatim quotes of what the request asks the answer to give or satisfy, each with its kind — value, verdict, step, constraint or format. A model proposes them in an `asks` node on the triage tier, after triage; a free deterministic check keeps a quote only if it occurs in the request under the normalisation the checks already apply, and records every other quote as not anchored, counted. When nothing anchors, the whole request is the one ask. The anchored asks are the run's only success criteria. (2) Every judge judges against the asks and nothing else. Validate, the coverage check, domain review, review, rework review and escalation receive the asks and judge the answer against them. A judge may raise something the asks lack only by quoting the request verbatim, anchored by the same free check. (3) A dissent carries its anchor. A judgment that fails the work names its anchor — an ask, an anchored quote of the request, or a hazard — and what the answer states or omits against it, in typed fields. A hazard is something the answer states or instructs that would, followed as written, injure a person or damage equipment; an omission is never a hazard, and if the request asked for what is missing, it is an ask. Only an anchored dissent fails the work: validate is red only when it names a failed ask; a domain concern flips the implementation red, and a review finding blocks, only when it is critical or high and anchored; the implementer's own red counts only when it names an ask. Any other judgment is a note: recorded and counted, never blocking, and not sent to the next revision, which receives only the anchored dissents. (4) The plan is reasoning, not a yardstick. The plan no longer writes success criteria, and a ready plan no longer needs them. D36's four rules stay byte-identical and keep governing how the plan is reasoned; nothing the plan produces is judged against. Reviewers read the request, the asks and the answer, not the plan; the consistency check's reference is the request's stated figures, not the plan's; the assessment contract's "a contradiction with the plan" becomes "a contradiction with the request". D43's plan-prompt paragraph retires with the criteria it governed — its scope is now enforced by construction — and its deliverable sentence in the implement prompt stays. D46 (2) and D48 (2) are unchanged. (5) Nothing demands what the run cannot do. An ask whose verification needs what the run does not have — a source text the grounding does not hold, a measurement, an execution — is judged on what the answer states, and its verification is recorded as unavailable: neither pass nor fail, never blocking (D49 (3)'s distinction), and listed in the run's record. An implementer's blocked_on entry must name an ask; an entry that names none is a note, counted. (6) Escalation rules on each open dissent before it directs: upheld or not, against its anchor, typed and recorded; the directive addresses only the upheld dissents. Routing is unchanged. (7) An unfinished run keeps its candidate. A run that ends escalated or blocked after an implementation exists records its last answer, labelled unendorsed, with its open dissents and their anchors; D38's approved pointer is computed at every terminal that is not completed, not only at a watchdog cut. Neither counts as delivered; both are read and reported as what abstention cost. Terminal statuses do not change. (8) The verify-first workflow. A second workflow answers once and checks against the asks: triage, grounding, asks, one answer on the engineering tier from the request and the asks with no plan, the free checks, and one check on the judge tier under (3) and (5). No anchored dissent ends the run completed; otherwise one revision addresses only the anchored dissents, followed by the free checks and one more check, and a dissent that survives ends the run escalated and unresolved, with its candidate kept under (7). The standing workflow does not change; which requests take which workflow is ruled on the re-measurement's data. D36's text, the tiers, the pins, the budgets and the loop bounds are untouched. Rationale: tier 3 stage 1 (docs/reviews/2026-10-06-tier3-stage1-report.md): the pipeline held 0 of 21 answers where one call held 18; 20 of 21 units ended with no answer; the plans carried correct numbers but wrote the exam — four of the Q23 plan's six criteria demanded what the question never asked, one of them unsatisfiable by a hand calculation (a measured 60 s falsifier); 9 of the 12 review findings in the log targeted plan-invented content, 3 reviewer-invented scope and none a wrong value; all three Q17 units blocked on a verification the pipeline cannot perform; and the prompts made this the rule — the plan's criteria are what every later phase is judged against and nothing else, and a validator must fail work that disagrees with one. D43 said the request sets the scope, in prompt text, and was not enforced. The design, the theory and the pathways are in docs/reviews/2026-10-10-d51-the-request-is-the-yardstick.md. Falsifier: in the re-measurement, the repaired pipeline still trails the single call by 7 or more of 21 key-held answers on stage 1's seven questions; or a run record shows work failed, blocked or looped by a judgment with no anchor; or a delivered answer misses an item its request asked for, its asks contained it, and no judge dissented.'
+
+RULED TEXT, VERBATIM. Each block below is judgment-steering prompt text. Carry it byte for byte, as Blueprint 016 B2's sentence was carried. Shape lines (the JSON field descriptions) are yours to adapt to the new fields. Sentences that steer judgment are not.
+
+(R-a) THE ASKS PROMPT. The asks node, on the triage tier, with schema AsksVerdict. {request} is the request:
+<<<
+List what this request asks the answer to give or to satisfy.
+
+Each ask is a verbatim quote of the request: copy its words exactly, without paraphrase, so that the quote can be found in the request as written. Give one ask per entry — one value, verdict, step, constraint or format — with its kind:
+- value: a figure, quantity or selection the answer must state
+- verdict: a judgement the answer must reach
+- step: an action the answer must include, in the order the request gives it
+- constraint: a condition the answer must respect, such as a limit, tolerance, rule or prohibition
+- format: a form the request asks the answer to take, such as a sign convention, a unit or a list
+
+Quote only what the request says. Do not add checks, deliverables, methods or presentation the request does not ask for. Do not list the data the request supplies — given values, readings, dimensions — unless the request asks the answer to state them or to use them in a stated way.
+
+Return JSON: {"asks": [{"quote": "...", "kind": "value"}]}
+
+Request:
+{request}
+>>>
+
+(R-b) THE PLAN PROMPT. Delete four things:
+- 'success_criteria' from the JSON contract;
+- the paragraph beginning 'The success criteria are the most important thing you produce.';
+- the paragraph beginning 'Each one must be settleable by reading the implementation';
+- D43's paragraph beginning 'Scope (Ruling D43)', and the line 'If you cannot state real criteria, return ready: false and say why in blockers.'
+In their place, starting exactly where 'The success criteria are the most important thing you produce.' began, insert the block below. {asks} is the anchored asks, numbered from 1, one per line, each followed by its kind in brackets:
+<<<
+You do not write the test this work is judged by. The request is that test, and the asks quoted from it are listed below: every later judgment is made against them and nothing else. Plan how to answer them. The four rules above govern how you reason; they add nothing to what the answer must contain.
+
+The asks, quoted from the request:
+{asks}
+>>>
+D36's block, from 'Rules for the plan (each measured 2026-09-30, each a loop-killer when broken):' up to that point, keeps its sha256 5bd19bc0cfb39888b969bd65d10134fb0638446ecb8140b2aa114929dceb0928. tests/test_scope_rule.py moves its end marker from D43's sentence to this block's first sentence, and the hash assertion is otherwise unchanged.
+
+(R-c) ASSESSMENT_CONTRACT. It is replaced whole by the text below. The measurement comment above the constant stays, with one added line naming D51 as the ruling that rewrote the contract:
+<<<
+You are assessing a written implementation, not a running system. You cannot execute code, run tests, or inspect a repository, and the absence of a live system is not itself a defect.
+
+Judge whether the implementation as written answers each ask, correctly. Mark it red only for substantive problems: an ask it does not answer, an ask it answers wrongly, a logical error in what it states, or a contradiction with the request. Do not mark it red merely because the work has not been run.
+
+Be exacting about the difference. "The request caps the delay at 60 s but the answer sets 600 s" is red. "I cannot confirm this without running it" is not — decide from the text in front of you and say what you found.
+
+The asks are the contract you assess against, and they are fixed: they are the request's own words. You may not reinterpret, relax or add to an ask, and you may not accept work that changed one. Where the work and an ask disagree, that ask fails — whichever of the two looks more sensible to you. Judging the work against anything the request does not ask — a method you prefer, a check it did not request, a plan's own devices — is not an assessment: it is a note, and a note cannot make the work red.
+>>>
+
+(R-d) VALIDATE. The block from 'Check the implementation against each success criterion in turn' to 'rather than substituting criteria of your own.' is replaced by the text below. The 'Success criteria:' section becomes the numbered asks:
+<<<
+The asks below are quoted from the request and numbered. Judge the answer against each ask in turn, and against nothing else.
+
+For each ask, decide:
+- pass: the answer gives or satisfies it, correctly;
+- fail: the answer states something wrong for it, or leaves it out — name the ask's number and what the answer states or omits;
+- unavailable: deciding it needs something you do not have, such as a source text, a measurement or an execution. Judge what the answer states as far as you can and say what you could not check. Unavailable is not a failure.
+
+Where the arithmetic is present, do it and show it. If the answer gets wrong, or leaves out, something the request asks for that the list lacks, quote the request's own words for it, exactly: that counts as a failed ask. Anything else you notice is a note for evidence; it cannot make this red.
+>>>
+
+(R-e) REVIEW AND REWORK REVIEW. The 'Plan:' section leaves run_review's prompt, and the numbered asks take its place. The text below goes after the asks:
+<<<
+Judge the answer against the request. A finding can block only if it is anchored:
+- it names the ask it concerns, by number, and what the answer states or omits against it; or
+- it quotes the request's own words, exactly, for something the answer gets wrong or leaves out; or
+- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment.
+An omission is never a hazard. If the request asked for what is missing, quote the request; if it did not, it is a note.
+Use severity critical or high only for an anchored finding. Everything else is a note, at severity medium or low, and cannot block.
+>>>
+The adversarial line becomes:
+<<<
+Search for failure modes. What breaks under load, at the boundaries, on partial failure, or when an assumption the answer makes turns out to be false?
+>>>
+
+(R-f) DOMAIN REVIEW. 'Success criteria:' becomes the numbered asks, and this text follows them:
+<<<
+Judge the answer against the request from your domain. A concern can be critical only if it is anchored:
+- it names the ask it concerns, by number, and what the answer states or omits against it; or
+- it quotes the request's own words, exactly, for something the answer gets wrong or leaves out; or
+- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment.
+An omission is never a hazard. If the request asked for what is missing, quote the request; if it did not, it is a note, and a note is never critical.
+>>>
+
+(R-g) ESCALATION. Append this text to ESCALATION_SYSTEM_PROMPT, before the JSON fields. The verdict gains 'rulings', one per open dissent: {"dissent": <number>, "upheld": true|false, "reason": "<one line>"}. 'Success Criteria' in its context block becomes the numbered asks:
+<<<
+Before you direct anything, rule on each open dissent in the failure log: does it hold against its anchor — the ask, or the request's quoted words — reading the answer as written? A dissent that judges the answer against something the request does not ask does not hold. Your directive addresses only the upheld dissents. If none is upheld, say so in root_cause_analysis and direct the implementer to keep the answer as it is.
+>>>
+
+(R-h) IMPLEMENT. 'Success criteria:' becomes the heading below, followed by the numbered asks:
+<<<
+The asks, quoted from the request — the answer is judged against these and nothing else:
+>>>
+Blueprint 016 B2's ruled sentence is replaced, by this ruling, with:
+<<<
+If an ask cannot be honestly answered with the grounding available, name it by its number in blocked_on rather than producing something that answers it on paper.
+>>>
+D43's deliverable sentence ('Answer the request, and include the plan's falsifiers, kill triggers or assumption tables only if the request asks for them.') stays byte-identical. Under verify-first there is no plan: the 'Plan:' section is omitted and the task line reads 'Produce the answer to the following request.'
+
+ANCHORING IS TYPED AND FREE. Hard rule 2 applies throughout.
+- A dissent's anchor is a typed field: an ask number, a quote, or hazard: true. It is never found by parsing a finding's prose for 'ask 3'.
+- A quote anchors only when one free check finds it in the request. That check is asks_anchored's own matcher, applying case-folding, whitespace collapse and the LaTeX '$' wrapper strip the tier-3 fetch repair uses.
+- The quote must also clear a minimum length, so 'mm' anchors nothing. Propose the floor (the advisor suggests at least 3 words and 12 characters after normalisation), pin it from both sides in tests, and report it.
+- Every demotion — an unanchored ask quote, an unanchored dissent, a red with no anchor after the schema's bounded retries, a blocked_on entry with no ask — is counted in normalised_by_kind and surfaced in the run's record. Convention 21 applies: a judgment that names no anchor carries no information about the request.
+
+THE FOLD. judges_agree is still unanimous, but over anchored dissents only:
+- validate.green is red iff it names an anchored failed ask;
+- implement.green is flipped red only by a critical anchored domain concern. The implementer's own red is a note, counted; an ask it cannot answer goes in blocked_on, which routes as (f) says;
+- coverage runs against the asks and is anchored by construction;
+- consistency compares the answer with the request's stated figures, and its detail says 'request', never 'plan' (convention 26).
+A review finding blocks iff its severity is critical or high and it is anchored.
+
+THE REVISION. The implementer on an iteration after the first receives only anchored dissents: unmet asks, validate's anchored failures, and anchored review findings with their anchors. Notes are recorded, not sent. D46 (2) and D48 (2) — the plan's own blockers and feasibility's concerns, presented as considerations — are unchanged.
+
+UNAVAILABLE IS NOT A FAIL. An ask validate marks unavailable never blocks. The run's record lists the unavailable asks. criteria_demand_verification reads the asks, so the request's own demand for a source still fires the lookup.
+
+THE CANDIDATE. A run that ends escalated or blocked after an implementation exists records its last answer as an unendorsed candidate, with its open dissents and their anchors. D38's approved pointer is computed at every terminal that is not completed. answer_of reports 'approved, not shipped' when an approved iteration exists, and 'unendorsed candidate' otherwise; both are never delivered. Terminal statuses do not change.
+
+VERIFY-FIRST (workflows/verify-first.yaml). The nodes are:
+- triage;
+- grounding (the same build_context node as engineering-rnd);
+- asks, then asks_anchored;
+- implement on the engineering tier with no plan;
+- coverage and consistency;
+- validate on the judge tier;
+- judges, in a loop with max_iterations 2 and on_exhausted_status escalated.
+At most four model calls after triage and asks: answer, check, revision, check. The record keeps the first answer beside the final one, so the readers can say what the check changed (the design record's prediction 9). The file is anonymous (tests/test_docs.py). It is not the standing workflow, and nothing routes to it.
+
+SCOPE OF CHANGE. D36's text is untouched, and so are the tiers, pins, budgets, loop bounds and max_tokens settings, the database, routing and the tier-3 manifest. engineering-rnd stays the standing workflow.
+
+TESTS SIMULATE THE CONDITION END TO END (convention 22). Each acceptance test below runs a scripted runner through the real graph, and each is quoted with a break-proof: one line broken, the measured failure quoted. A test that enshrined plan-criteria behaviour is handled under convention 17 — changed, retired or kept — with its reason recorded in the response.
+
+FREE WORK. No paid call and no .env edit. No git operation while any paid run is in flight.
+
+### 112.3 The acceptance criteria, verbatim
+
+- (a) D51 is verbatim in HANDOVER.md and docs/handover-review.md §112, before the code in commit order. Each ruled text (R-a)–(R-h) is present byte for byte; quote the grep for each.
+
+- (b) THE STAGE-1 ROUTE, CLOSED. A scripted run: the plan carries the Q23 plan's shape of invented criteria (inline arithmetic, two routes, a format, kill triggers, a 60 s falsifier), the implementer returns the correct answer, and validate dissents on a criterion-shaped objection with no anchor. Under D51 it ends completed with the answer delivered. On main 45b59f1 the same script ends with no answer. Quote both outcomes and the call counts.
+
+- (c) THE Q15 SHAPE, CAUGHT. A scripted run whose first answer omits a quoted step ask: validate's anchored failure makes it red; the revision prompt contains that failure and no notes; the second answer includes the step, and the run completes. Break-proof: strip the anchor, and the omission ships.
+
+- (d) REVIEW ANCHORS. A high finding with no anchor gives ship true, with the finding recorded as a note. A finding anchored by ask number blocks. A finding anchored by a quote that occurs in the request blocks. A finding whose quote does not occur is a note. A finding with hazard: true blocks. Domain review follows the same table for its critical flag.
+
+- (e) asks_anchored. A verbatim quote anchors. A quote with different case, whitespace or LaTeX '$' wrappers anchors. A paraphrase does not. A quote under the floor does not. With no anchored quote, the request itself is the one ask. Every demotion is counted.
+
+- (f) blocked_on. An entry naming an ask routes to escalation as before. An entry naming none is a note, counted, and routes nowhere.
+
+- (g) UNAVAILABLE. An ask marked unavailable never blocks, and the record lists it.
+
+- (h) ESCALATION. The verdict carries a ruling per open dissent. The directive the implementer receives addresses only the upheld dissents. The rulings are in the record.
+
+- (i) THE CANDIDATE. A scripted run that exhausts its loops records the unendorsed candidate and its open dissents. The approved pointer is present at the escalated terminal. answer_of returns the new kind, and the tier-3 delivered count does not include it.
+
+- (j) VERIFY-FIRST. The file loads under the spec validator. A scripted pass completes with 4 model calls: triage, asks, answer, check. A dissent then a pass completes with 6. A persistent dissent ends escalated, with the candidate kept and the first and final answers both in the record. No run exceeds 6 model calls besides grounding.
+
+- (k) D36 IS UNCHANGED. test_scope_rule's D36 hash passes at 5bd19bc0…, with the end marker moved as (R-b) says. test_docs passes, so verify-first is anonymous.
+
+- (l) NO SCHEMA OR CONFIG CHANGE. 'git diff --stat 45b59f1 -- autornd/config.py autornd/routing/ autornd/models/workflow.py autornd/database.py evals/tier2/ evals/tier3/manifest.json profiles/ .env.example' prints nothing.
+
+- (m) The suite is green before and after, with the counts re-derived (convention 24). The network guard reports 0 non-loopback attempts, and CI is green.
+
+### 112.4 The command's assumptions and questions, verbatim
+
+**Assumptions (the executor answers each in the response):**
+
+- chat_json's bounded schema retry can carry the new typed fields: an anchor on a red, and rulings on escalation. If a field cannot be required without breaking an existing retry path, report it and propose the narrowest change, rather than relaxing the anchor.
+
+- run_implement can run with no plan. If it cannot, the plan argument becomes optional, and the prompt omits the 'Plan:' section. Report the change.
+
+- asks_anchored needs the request text, which is not a node output. If the check cannot receive it through args, the adapter supplies it. Report the mechanism.
+
+- Another shipped workflow or the API path may read plan.success_criteria; the dashboard and episodic memory are the likeliest. List each consumer and what changed. A consumer that only displays the field may keep reading it for earlier records.
+
+**Questions:**
+
+- Which existing tests asserted plan-criteria behaviour? For each: changed, retired or kept, and why (convention 17).
+
+- What anchor floor did the tests pin? What do the shortest and longest asks the scripted fixtures carry look like?
+
+- Under D45's guard, what is the asks node's worst case at the current triage pin and max_tokens?
+
+- Which consumers of plan.success_criteria exist outside the judges, and what did each become?
