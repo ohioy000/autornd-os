@@ -1,0 +1,76 @@
+{
+  "command_id": "ARCH-20261010-120",
+  "parent_id": "ARCH-20261003-119",
+  "status": "IN_PROGRESS",
+  "executed": "2026-10-10 - opened. The work itself is deferred by the command's own transport note ('Process this command after the 2026-10-10 review round lands') and the advisor's message of the same date ('Process it after steps 1-3 of the 2026-10-10 review land'), until #160, #165, #167 and #170 are merged; #171 may still be open. This commit is the channel rule's IN_PROGRESS record: the response opened before the work started, the evidence that the work had not started when the response was written.",
+  "head_before": "1a080ce",
+  "head_after": null,
+  "trigger_record": "The advisor, 2026-10-10: 'Command ARCH-20261010-120 (Ruling D51) is on branch arch/20261010-120-d51-yardstick. Process it after steps 1-3 of the 2026-10-10 review land. Its preconditions require #160, #165, #167 and #170 merged; #171 may still be open. Commit the response as IN_PROGRESS first. Carry the ruled prompt texts byte for byte. Free work.' The command's transport note adds: after this command merges, the harness is frozen until the re-measurement finishes (only fixes that stop that run from working), and command 121, which registers the re-measurement (arms A, D, F and E-prime), follows from the advisor.",
+  "preconditions": [
+    {
+      "command": "pgrep -af 'evals[./]tier3[./]runner|evals[./]golden|uvicor[n] autornd' || echo none",
+      "expected": "none: no run in flight.",
+      "result": "MET. none.",
+      "pass": true
+    },
+    {
+      "command": "for n in 160 165 167 170; do gh pr view $n --json state -q .state; done",
+      "expected": "MERGED four times. Otherwise BLOCKED: the review round has not landed.",
+      "result": "NOT MET YET, 1 of 4 at opening: #165 MERGED (merge commit 49724fb, main moved 4c9e890 -> 49724fb while the preconditions ran); #160, #167 and #170 still open at 2026-10-10T19:40Z. The work stays deferred by the advisor's order until the round lands; this is the deferral the command's transport note rules, not a BLOCKED arrival - the advisor's message directs the deferral and the IN_PROGRESS opening.",
+      "pass": false
+    },
+    {
+      "command": "test -f .orchestration/responses/ARCH-20261003-119.response.json && echo present",
+      "expected": "present (the parent's response).",
+      "result": "MET. present (carried to main by the 119 merges, and on this branch with the 2026-10-10 review's records).",
+      "pass": true
+    },
+    {
+      "command": "test -f docs/reviews/2026-10-10-d51-the-request-is-the-yardstick.md && grep -c 'Ruling D51 (advisor, 2026-10-10' docs/reviews/2026-10-10-d51-the-request-is-the-yardstick.md",
+      "expected": "1. The design record is on main.",
+      "result": "MET. 1 (the design record reached main with PR #173, 79cf7a4).",
+      "pass": true
+    },
+    {
+      "command": "sha256sum docs/traces/20261005T215237Z-tier3-run.jsonl | cut -c1-16",
+      "expected": "d406f0fd59a7f499",
+      "result": "MET. d406f0fd59a7f499.",
+      "pass": true
+    },
+    {
+      "command": ".venv/bin/python3 -c \"import json,statistics as s; r=[json.loads(l) for l in open('docs/traces/20261005T215237Z-tier3-run.jsonl')]; e=[x for x in r if x['record']=='unit' and x['arm']=='E']; print(len(e), round(s.median(float(x['cost']) for x in e),4), round(s.median(float(x['seconds']) for x in e)), s.median(int(x['calls']) for x in e))\"",
+      "expected": "21 0.3709 911 30",
+      "result": "MET. 21 0.3709 911 30 - the cited arm-E figures hold exactly.",
+      "pass": true
+    },
+    {
+      "command": "grep -c 'judged against them and nothing else' autornd/engine/phases.py; grep -c 'contradiction with the plan' autornd/engine/phases.py; grep -c 'plan: plan.plan' workflows/engineering-rnd.yaml; grep -c 'def ready_plans_need_criteria' autornd/models/verdicts.py; grep -c 'self._approved_pointer(state)' autornd/graph/executor.py",
+      "expected": "1, five times: the cited code facts hold before the change.",
+      "result": "MET. 1, 1, 1, 1, 1 - all five cited code facts hold on the branch's tree.",
+      "pass": true
+    },
+    {
+      "command": "grep -c 'zeroing the readout at zero displacement' evals/tier2/questions.json",
+      "expected": "1",
+      "result": "MET. 1 - Q15's request carries the sentence verbatim.",
+      "pass": true
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Green; record the count.",
+      "result": "MET. 1353 passed in 134.65s, network guard 0 non-loopback attempts, on the branch's tree (main 4c9e890 plus the command file).",
+      "pass": true
+    }
+  ],
+  "work_starting": "When the round lands (#160, #167 and #170 merged), the branch rebases onto the then-current main and the work proceeds in commit order, free throughout (no paid call, no .env edit): (1) Ruling D51 verbatim into HANDOVER.md and docs/handover-review.md (new section 112), before the code in commit order (constraint 0). (2) The ruled texts (R-a)-(R-h) carried byte for byte, shape lines adapted and judgment-steering sentences identical (constraint 1): the asks prompt on the triage tier with schema AsksVerdict (R-a); the plan prompt's four deletions and the 'You do not write the test this work is judged by' block (R-b); the ASSESSMENT_CONTRACT replaced whole (R-c); VALIDATE's block replaced with the pass/fail/unavailable judgment (R-d); review and rework review's 'Plan:' section replaced by the numbered asks with the anchored-blocking text and the new adversarial line (R-e); domain review's anchored concerns (R-f); escalation's 'rulings', one per open dissent, with the rule-on-each-dissent text (R-g); implement's asks heading and the replaced Blueprint 016 B2 sentence, D43's deliverable sentence staying byte-identical (R-h). (3) Typed, free anchoring (constraint 10): a dissent's anchor is a typed field (ask number, quote, or hazard: true), never parsed from prose; a quote anchors only when the asks_anchored matcher (case-fold, whitespace-collapse, LaTeX '$' strip - the tier-3 fetch repair's normalisation) finds it in the request and it clears the proposed floor (the advisor suggests at least 3 words and 12 characters after normalisation), pinned from both sides in tests and reported; every demotion counted in normalised_by_kind and surfaced in the record. (4) The fold over anchored dissents only; the revision receives only anchored dissents; an unavailable ask never blocks and is listed in the record; blocked_on entries must name an ask; a run that ends escalated or blocked after an implementation exists records its last answer as an unendorsed candidate with its open dissents and their anchors, and D38's approved pointer is computed at every terminal that is not completed (constraints 11-14). (5) workflows/verify-first.yaml: triage, grounding, asks, asks_anchored, implement on the engineering tier with no plan, coverage, consistency, validate on the judge tier, judges in a loop (max_iterations 2, on_exhausted_status escalated); at most four model calls after triage and asks; the first answer kept beside the final; the file anonymous; not the standing workflow, nothing routes to it (constraint 15). (6) The scripted acceptance runs (a)-(m) through the real graph, each with its break-proof (convention 22): the stage-1 route closed (the Q23 plan's invented criteria dissent with no anchor, completed with the answer delivered, against main 45b59f1's no-answer outcome); the Q15 shape caught (an omitted quoted step ask, anchored, revised, completed); the review-anchor and domain-concern tables; asks_anchored's floor and normalisation; blocked_on's ask; unavailable; escalation's rulings; the unendorsed candidate with the approved pointer and answer_of's new kind; verify-first's 4/6-call shapes and persistent-dissent escalation; D36's hash unchanged at 5bd19bc0 with the end marker moved; no schema or config change (the acceptance-l diff prints nothing). (7) Convention 17: every existing test that asserted plan-criteria behaviour is changed, retired or kept with its reason recorded. (8) The counts re-derived from collection (convention 24), the suite green before and after, the network guard 0, CI green.",
+  "results": {
+    "done": [
+      "The arrival record: every precondition run and its result recorded above; the response opened IN_PROGRESS on the command's branch before the work starts, per the channel rule and the advisor's order."
+    ],
+    "not_done": [
+      "The command's work, deferred until the 2026-10-10 review round lands (#160, #167, #170 merged; #165 merged 2026-10-10 at 49724fb). #171 may still be open when the work starts."
+    ]
+  },
+  "deviations": "Two, both transport only. (1) Precondition 2's command ('gh pr view $n --json state -q .state') hangs on the projects-classic GraphQL deprecation (measured 2026-10-08 and again this opening); the REST equivalent ('gh api repos/ohioy000/autornd-os/pulls/$n --jq .state') was run instead - the same check through a working transport. (2) The response is opened on the branch at 1a080ce, one merge behind main at opening (49724fb, #165's merge, which landed while the preconditions ran); the rebase onto the then-current main happens when the work starts, per the channel's rebase precedent.",
+  "questions_for_advisor": "None at opening. The command's four questions (which existing tests asserted plan-criteria behaviour and their convention-17 disposition; the anchor floor the tests pin and the fixtures' shortest and longest asks; the asks node's worst case under D45's guard at the current triage pin and max_tokens; the consumers of plan.success_criteria outside the judges and what each became) are the work's report items and are answered in the response when the work lands."
+}
