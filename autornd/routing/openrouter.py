@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import ssl
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -31,6 +32,30 @@ logger = logging.getLogger(__name__)
 # has nowhere else to send.
 _RATE_LIMIT_ATTEMPTS = 3
 _RATE_LIMIT_BACKOFF_S = 2.0
+
+# The transient-TLS retry (the SSLV3_ALERT_BAD_RECORD_MAC
+# repair, ordered in the advisor's review of the 2026-10-05
+# delivery PRs): one retry of the post itself. A record-MAC
+# alert is a condition of the connection, not a verdict about
+# the serving — the same pin answered on retry — so the retry
+# is a fresh attempt of the same request. Bounded and short
+# for the same reasons as the 429 loop above: the pinned tier
+# cannot fall back and the caller holds a scenario clock.
+_TRANSIENT_TLS_ATTEMPTS = 2
+_TRANSIENT_TLS_BACKOFF_S = 1.0
+# The reservation holder's marker for a retry whose backoff
+# was interrupted before it left this process. Measured
+# 2026-10-10 (the advisor's probe): a cancellation landing
+# in the backoff used to reach the call site's dispatch
+# accounting holding the retry's reservation, which was
+# booked as a second failure - an attempt that never left,
+# booked as one that did, its worst case counted twice and
+# the in-flight count taken once too many. The helper
+# releases the retry's reservation and marks the holder
+# before the interruption propagates; the call site's
+# accounting books nothing for a marked holder (the attempt
+# that did leave was booked before the backoff).
+_RETRY_NEVER_DISPATCHED: Any = object()
 
 
 @dataclass
@@ -223,6 +248,31 @@ def _failure_kind(exc: BaseException) -> str:
     if isinstance(exc, httpx.TransportError):
         return "transport_error"
     return type(exc).__name__
+
+
+def _is_transient_tls_alert(exc: BaseException) -> bool:
+    """The transient TLS record-MAC alert, matched by type.
+
+    The fourth sample's failure surfaced as a raw ssl.SSLError
+    whose .reason is the alert name — the ssl module sets it, a
+    hand-built error does not carry it — and the same alert
+    behind httpx would ride in a TransportError's chain instead.
+    Matched by type and reason, never by message text (hard
+    rule 2): an SSLError with a different reason is a verdict
+    about the serving, not a condition of the connection, and
+    retrying it would spend the same worst case twice; text that
+    merely names the alert is not this condition at all.
+    """
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if (isinstance(current, ssl.SSLError)
+                and getattr(current, "reason", None)
+                == "SSLV3_ALERT_BAD_RECORD_MAC"):
+            return True
+        current = current.__cause__ or current.__context__
+    return False
 
 
 class SpendGuardRefused(BudgetExceeded):
@@ -566,6 +616,10 @@ class OpenRouterClient:
     RETRY_SCHEMA_REJECTION = "schema_rejection"
     RETRY_EMPTY_REPLY = "empty_reply"
     RETRY_PARSE_FAILURE = "parse_failure"
+    # The transient-TLS retry. Counted so the reconciliation
+    # states every retry by class — a retry the record cannot
+    # name is a blind spot a reader inherits (convention 26).
+    RETRY_TRANSIENT_TLS = "transient_tls"
 
     def _count_retry(self, kind: str) -> None:
         self.retries_by_kind[kind] = self.retries_by_kind.get(kind, 0) + 1
@@ -589,8 +643,92 @@ class OpenRouterClient:
             # Named so a reader of an empty rejection count knows what it
             # excludes without reading this file.
             "excluded_from_rejection_counters": [
-                self.RETRY_EMPTY_REPLY, self.RETRY_PARSE_FAILURE],
+                self.RETRY_EMPTY_REPLY, self.RETRY_PARSE_FAILURE,
+                self.RETRY_TRANSIENT_TLS],
         }
+
+    async def _post_retrying_transient_tls(
+            self, client: httpx.AsyncClient, path: str,
+            payload: dict[str, Any], model: str, function: str,
+            prompt_bytes: int, max_tokens: int,
+            reservation_holder: list[Any]
+            ) -> httpx.Response:
+        """POST, retrying the transient TLS record-MAC alert.
+
+        The alert is a condition of the connection, not a
+        verdict about the serving, so the retry is a fresh
+        attempt of the same request. Bounded and backed off
+        like the 429 loop above, and counted by class, so
+        the record reconciles every retry.
+
+        D45: the alert arrives while the response is being
+        read, so the generation was likely complete and
+        billed. Before the retry leaves, the failed attempt
+        keeps its own worst case as unreconciled liability,
+        and the retry is re-checked against the remaining
+        ceiling — refusing instead of retrying when it does
+        not fit. The reservation travels in the holder, not
+        the return value: a retried attempt re-reserves,
+        and an attempt that raises still leaves the holder
+        pointing at the last dispatched attempt's
+        reservation, which is the one the call site's
+        dispatch accounting books or releases. A backoff
+        interrupted before the retry leaves marks the
+        holder instead (see _RETRY_NEVER_DISPATCHED):
+        the retry's reservation is released and the call
+        site's accounting books nothing for it. An
+        exhausted alert still raises, and that accounting
+        books the last attempt's worst case as before.
+        `except Exception` on purpose: a cancellation is a
+        BaseException and must reach the watchdog's cut
+        untried.
+        """
+        for attempt in range(_TRANSIENT_TLS_ATTEMPTS):
+            try:
+                return await client.post(path, json=payload)
+            except Exception as exc:
+                if not _is_transient_tls_alert(exc):
+                    raise
+                if attempt + 1 >= _TRANSIENT_TLS_ATTEMPTS:
+                    raise
+                self._fail_call(function, model, _failure_kind(exc),
+                                reservation_holder[0])
+                reservation_holder[0] = self._guard_spend(
+                    function, model, prompt_bytes, max_tokens)
+                self._in_flight += 1
+                self._count_retry(self.RETRY_TRANSIENT_TLS)
+                delay = _TRANSIENT_TLS_BACKOFF_S * (2 ** attempt)
+                logger.warning(
+                    "transient TLS alert (%s) for %s (attempt "
+                    "%d/%d) — a condition of the connection, "
+                    "retrying in %.1fs",
+                    type(exc).__name__, model, attempt + 1,
+                    _TRANSIENT_TLS_ATTEMPTS, delay,
+                )
+                try:
+                    await asyncio.sleep(delay)
+                except BaseException:
+                    # The backoff was interrupted before the
+                    # retry left this process, so nothing is
+                    # booked for it: the reservation the retry
+                    # would have carried is released, the
+                    # in-flight count is taken back, and the
+                    # holder is marked so the call site's
+                    # dispatch accounting books nothing for
+                    # the retry - the failure the ledger
+                    # carries is the attempt that did leave,
+                    # booked above. The interruption itself
+                    # (a cancellation, the watchdog's cut)
+                    # reaches the caller untried.
+                    self._in_flight = max(0, self._in_flight - 1)
+                    held = reservation_holder[0]
+                    if held is not None and not held.released:
+                        held.released = True
+                        self._reservations.remove(held)
+                        self.reserved -= held.worst
+                    reservation_holder[0] = _RETRY_NEVER_DISPATCHED
+                    raise
+        raise AssertionError("unreachable")  # pragma: no cover
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -655,10 +793,9 @@ class OpenRouterClient:
         # default decides; set (arm B's final call sends "none"), it
         # declares the tools while forbidding their use.
         model = model or self.get_model(function)
+        prompt_bytes = _prompt_bytes(system_prompt, user_message)
         reservation = self._guard_spend(
-            function, model,
-            _prompt_bytes(system_prompt, user_message),
-            max_tokens)
+            function, model, prompt_bytes, max_tokens)
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message},
@@ -699,16 +836,29 @@ class OpenRouterClient:
         # this call's own reservation, by identity, released only here.
         self._in_flight += 1
         reconciled = False
+        # The transient-TLS retry re-reserves the call before
+        # each retry (D45), so the reservation the surviving
+        # attempt holds travels in a holder: an attempt that
+        # raises still leaves the holder pointing at the last
+        # dispatched attempt's reservation, which is the one
+        # the dispatch accounting below books or releases.
+        reservation_holder = [reservation]
         try:
             client = await self._get_client()
-            resp = await client.post("/chat/completions", json=payload)
+            resp = await self._post_retrying_transient_tls(
+                client, "/chat/completions", payload, model,
+                function, prompt_bytes, max_tokens,
+                reservation_holder)
             if resp.status_code == 400 and response_format:
                 logger.warning(
                     "400 with response_format for %s — retrying without it. Body: %s",
                     model, resp.text[:300],
                 )
                 payload.pop("response_format", None)
-                resp = await client.post("/chat/completions", json=payload)
+                resp = await self._post_retrying_transient_tls(
+                    client, "/chat/completions", payload, model,
+                    function, prompt_bytes, max_tokens,
+                    reservation_holder)
             for attempt in range(1, _RATE_LIMIT_ATTEMPTS):
                 if resp.status_code != 429:
                     break
@@ -719,7 +869,10 @@ class OpenRouterClient:
                     model, attempt, _RATE_LIMIT_ATTEMPTS, delay, resp.text[:200],
                 )
                 await asyncio.sleep(delay)
-                resp = await client.post("/chat/completions", json=payload)
+                resp = await self._post_retrying_transient_tls(
+                    client, "/chat/completions", payload, model,
+                    function, prompt_bytes, max_tokens,
+                    reservation_holder)
             _raise_for_status(resp, "chat/completions")
             data = resp.json()
 
@@ -750,7 +903,15 @@ class OpenRouterClient:
                     resp.status_code, delay, resp.text[:200],
                 )
                 await asyncio.sleep(delay)
-                resp = await client.post("/chat/completions", json=payload)
+                # The re-post is a dispatch like the others:
+                # a record-MAC alert on it is the same
+                # condition of the connection, retried and
+                # accounted the same way (the 2026-10-10
+                # review's fourth post site).
+                resp = await self._post_retrying_transient_tls(
+                    client, "/chat/completions", payload, model,
+                    function, prompt_bytes, max_tokens,
+                    reservation_holder)
                 _raise_for_status(resp, "chat/completions")
                 data = resp.json()
             choices = (data.get("choices")
@@ -794,15 +955,28 @@ class OpenRouterClient:
             # Every attempt counts, retries included. A retry storm that costs real
             # money should look expensive rather than free.
             reconciled = True
+            reservation = reservation_holder[0]
             self._release(reservation)
             self._account(function, cost, provider,
                           prompt_tokens=prompt_tokens,
                           completion_tokens=completion_tokens,
                           reservation=reservation)
         except BaseException as exc:
-            if not reconciled:
-                self._fail_call(function, model, _failure_kind(exc),
-                                reservation)
+            # A BudgetExceeded here is the transient-TLS retry's
+            # re-check refusing an attempt that was never dispatched
+            # (D45): the runner records the refusal, and the
+            # dispatch ledger records only calls that left. The
+            # holder's marker is the same boundary seen from the
+            # other side: a backoff interrupted before the retry
+            # left books nothing here - the helper booked the
+            # attempt that did leave and released the retry's
+            # reservation before the interruption reached this
+            # handler.
+            if not reconciled and not isinstance(exc, BudgetExceeded):
+                held = reservation_holder[0]
+                if held is not _RETRY_NEVER_DISPATCHED:
+                    self._fail_call(function, model, _failure_kind(exc),
+                                    held)
             raise
 
         return ModelResponse(
