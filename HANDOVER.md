@@ -743,7 +743,7 @@ is revoked and the warning re-opens with a date.
 | test_preregistration_precedence.py | 9 | test_prior_artifact_revision.py | 3 |
 | test_profiles.py | 23 | test_prohibition_phrasing.py | 20 |
 | test_prohibition_scenario.py | 15 | test_protocol_file.py | 20 |
-| test_rate_limit_retry.py | 8 | test_regrounding.py | 18 |
+| test_rate_limit_retry.py | 13 | test_regrounding.py | 18 |
 | test_rejection_counter.py | 7 | test_repeat_and_fit_rule.py | 15 |
 | test_research.py | 37 | test_response_files.py | 2 |
 | test_results_log.py | 10 | test_retry_reconciliation.py | 13 |

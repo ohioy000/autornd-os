@@ -18,6 +18,21 @@ Two instrument faults turned that into ten dead runs:
 
 Both are repaired. These tests simulate the condition end to end rather than
 asserting the shape of the fix (convention 22).
+
+**The second condition these tests cover (R4, the stage-1 report's
+repair list, 2026-10-06).** A serving can fail a call at a *success*
+status: the reply is JSON, it carries an `error`, and there is no
+`choices` array to read. `chat` used to read `data["choices"][0]`
+and crash with a bare `KeyError` — which the runners' generic
+`except Exception` handlers class with broken runs, so the unit went
+`incomplete` and the serving that produced the reply went unnamed.
+That is a provider failure, not a bug in our own parsing: it is
+retried like a 429 (the same bound and backoff, for the same reason —
+a pinned tier cannot fall back and the caller is holding a scenario
+clock), and when the retries exhaust it raises the typed
+`ProviderFailure`, carrying the tier, the model and the body. The
+tests below drive it end to end over the same fake transport the 429
+tests use, including a `{"error": ...}` reply at status 200.
 """
 
 from __future__ import annotations
@@ -63,6 +78,13 @@ def _rate_limited():
                                  "metadata": {"raw": RAW}}})
 
 
+def _failed_call():
+    """A serving that failed the call at a success status (R4):
+    JSON, an error, and no choices array to read."""
+    return _Resp(200, {"error": {"message": "model unavailable",
+                                 "code": "upstream_error"}})
+
+
 class _Http:
     def __init__(self, responses):
         self._responses = list(responses)
@@ -83,6 +105,16 @@ def no_sleep(monkeypatch):
 
     monkeypatch.setattr(orm.asyncio, "sleep", fake_sleep)
     return slept
+
+
+@pytest.fixture
+def rates(monkeypatch):
+    """The pricing table, empty by default — a priced entry
+    makes the spend guard reserve a real worst case (the same
+    fixture test_spend_guard carries)."""
+    table: dict[str, tuple[float, float]] = {}
+    monkeypatch.setattr(orm, "_model_pricing", table)
+    return table
 
 
 class TestTheDiagnosisSurvives:
@@ -154,3 +186,84 @@ class TestARateLimitIsRetried:
         monkeypatch.setattr(client, "_get_client", AsyncMock(return_value=http))
         await client.chat(function="engineering", system_prompt="s", user_message="u")
         assert client.spend > 0, "the successful attempt after a retry billed nothing"
+
+
+@pytest.mark.asyncio
+class TestAReplyWithoutChoicesIsARetryableProviderFailure:
+    """R4: a 200 reply without a choices array is the serving
+    failing the call, not a missing key in our own code. It is
+    retried like a 429 (same bound, same backoff) and raises a
+    typed ProviderFailure when the retries exhaust — never a
+    KeyError, which the runners' generic handlers would class
+    with broken runs and leave the serving unnamed."""
+
+    async def test_a_failed_call_that_clears_completes(
+            self, monkeypatch, no_sleep):
+        http = _Http([_failed_call(), _ok()])
+        client = OpenRouterClient(api_key="test")
+        monkeypatch.setattr(client, "_get_client", AsyncMock(return_value=http))
+        out = await client.chat(function="engineering", system_prompt="s",
+                                user_message="u")
+        assert out.content == "{}"
+        assert http.calls == 2, "the retry did not happen"
+        assert no_sleep == [orm._RATE_LIMIT_BACKOFF_S], "backoff not applied once"
+
+    async def test_backoff_grows_and_the_attempts_are_bounded(
+            self, monkeypatch, no_sleep):
+        http = _Http([_failed_call()] * 10)
+        client = OpenRouterClient(api_key="test")
+        monkeypatch.setattr(client, "_get_client", AsyncMock(return_value=http))
+        with pytest.raises(orm.ProviderFailure):
+            await client.chat(function="engineering", system_prompt="s",
+                              user_message="u")
+        assert http.calls == orm._RATE_LIMIT_ATTEMPTS, (
+            "a pinned tier cannot fall back, so this must not retry forever")
+        assert no_sleep == [orm._RATE_LIMIT_BACKOFF_S,
+                            orm._RATE_LIMIT_BACKOFF_S * 2]
+
+    async def test_the_exhausted_failure_is_typed_and_names_the_body(
+            self, monkeypatch, no_sleep):
+        """Giving up is fine. Giving up as a KeyError — an
+        unattributed crash the runner classes with broken runs —
+        is the defect."""
+        http = _Http([_failed_call()] * 10)
+        client = OpenRouterClient(api_key="test")
+        monkeypatch.setattr(client, "_get_client", AsyncMock(return_value=http))
+        with pytest.raises(orm.ProviderFailure) as exc:
+            await client.chat(function="engineering", system_prompt="s",
+                              user_message="u")
+        assert exc.value.function == "engineering"
+        assert "no choices array" in str(exc.value)
+        assert "model unavailable" in str(exc.value), (
+            "the body's own sentence was dropped")
+
+    async def test_the_failed_attempts_keep_their_worst_case(
+            self, monkeypatch, no_sleep, rates):
+        """Test doubles must bill (non-negotiable 7): a call that
+        fails after dispatch keeps its own worst case as
+        unreconciled liability — the same accounting a
+        persistent 429 gets — so the ceiling still sees it."""
+        http = _Http([_failed_call()] * 10)
+        client = OpenRouterClient(api_key="test")
+        monkeypatch.setattr(client, "_get_client", AsyncMock(return_value=http))
+        model = client.get_model("engineering")
+        rates[model] = (0.0, 1e-5)               # 10,000 tokens -> $0.10
+        client.spend_ceiling = 1.0
+        with pytest.raises(orm.ProviderFailure):
+            await client.chat(function="engineering", system_prompt="s",
+                              user_message="u", max_tokens=10_000)
+        recorded = client.failed_after_dispatch
+        assert recorded, "the failed call was not recorded after dispatch"
+        assert recorded[-1]["kind"] == "ProviderFailure"
+        assert recorded[-1]["worst_case"] > 0, (
+            "the reservation became nothing: the ceiling is now blind "
+            "to the money this call may have spent")
+        assert client.unreconciled_liability > 0
+
+    async def test_a_clean_call_is_not_retried_or_delayed(
+            self, monkeypatch, no_sleep):
+        http = _Http([_ok()])
+        client = OpenRouterClient(api_key="test")
+        monkeypatch.setattr(client, "_get_client", AsyncMock(return_value=http))
+        await client.chat(function="engineering", system_prompt="s", user_message="u")
+        assert http.calls == 1 and no_sleep == []
