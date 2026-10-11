@@ -1,7 +1,7 @@
 ---
 name: new-worktrees
 description: Sets up one or two git worktrees with dependency sync and health-check verification, running parallel setup with two agents when two branches are given. Use when starting parallel feature development in isolated worktrees.
-argument-hint: [branch-1] [branch-2]
+argument-hint: "[branch-1] [branch-2]"
 ---
 
 # New Worktree

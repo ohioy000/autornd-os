@@ -1,7 +1,7 @@
 ---
 name: system-review
 description: Performs a meta-level review of how well an implementation followed its plan, classifying divergences and recommending AI-Layer improvements. Use after an execution report exists to find bugs in the process, not the code.
-argument-hint: [plan-file] [execution-report-file]
+argument-hint: "[plan-file] [execution-report-file]"
 ---
 
 # System Review
