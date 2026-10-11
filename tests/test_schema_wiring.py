@@ -111,9 +111,10 @@ class TestEverySchemaBearingPhasePassesIt:
         from autornd.engine import phases
 
         c = capturing_client({"green": True, "red_cause": None, "evidence": []})
-        plan = PlanVerdict(ready=True, plan="p", success_criteria=["Backoff capped"])
         impl = ImplementVerdict(done=True, green=True, summary="s", iteration=1)
-        await phases.run_validate(c, "add retry", plan, impl)
+        # Ruling D51 (R-d): the plan is no longer an input to
+        # validation — the asks are, wired by the adapter.
+        await phases.run_validate(c, "add retry", impl)
         assert ValidateVerdict in c.captured_schemas
 
     async def test_escalation(self):
@@ -140,9 +141,10 @@ class TestEverySchemaBearingPhasePassesIt:
         c = capturing_client({"ship": True, "confidence": "high",
                               "critical_issues": [], "recommendations": [],
                               "verdict": "ok"})
-        plan = PlanVerdict(ready=True, plan="p", success_criteria=["c"])
         impl = ImplementVerdict(done=True, green=True, summary="s", iteration=1)
-        await phases.run_doublecheck(c, "add retry", plan, impl)
+        # Ruling D51 (R-d): the plan no longer rides the
+        # doublecheck's prompt — the asks do, wired by the caller.
+        await phases.run_doublecheck(c, "add retry", impl)
         assert DoubleCheckVerdict in c.captured_schemas
 
 
@@ -173,10 +175,11 @@ class TestTheDocumentedExceptions:
         from autornd.specialists.registry import get_specialist
 
         c = capturing_client({"concerns": [], "critical": False})
+        # Ruling D51 (R-d): domain review reads the request and
+        # the asks, not the plan.
         await phases.run_domain_review(
-            c, "add retry", PlanVerdict(ready=True, plan="p",
-                                        success_criteria=["c"]),
-            "summary", [get_specialist("backend_engineer")], "")
+            c, "add retry", "summary",
+            [get_specialist("backend_engineer")], "")
         assert c.captured_schemas == [None], (
             "domain review mutates the implement verdict; it has none of its own")
 
@@ -199,12 +202,13 @@ class TestReviewAggregationAcceptsEveryShapeTheSchemaDoes:
 
         c = capturing_client({"ship": False, "findings": findings,
                               "verdict": "Blocked."})
-        plan = PlanVerdict(ready=True, plan="p", success_criteria=["c"])
         impl = ImplementVerdict(done=True, green=True, summary="s", iteration=1)
         triage = TriageVerdict(domains=["backend"], risk="medium",
                                specialists=["backend_engineer"], summary="s")
+        # Ruling D51 (R-d): review reads the request and
+        # the asks, not the plan.
         return await phases.run_review(
-            c, "add retry", triage, plan, impl,
+            c, "add retry", triage, impl,
             [get_specialist("backend_engineer")], "")
 
     async def test_findings_as_bare_strings(self):
@@ -213,23 +217,46 @@ class TestReviewAggregationAcceptsEveryShapeTheSchemaDoes:
         assert "uncapped" in verdict.findings[0].detail
 
     async def test_findings_with_an_aliased_detail_key(self):
+        # Ruling D51 (R-f): only an anchored finding of
+        # critical or high severity blocks. The hazard
+        # anchor keeps this test's rule — a critical
+        # finding still blocks — under the new contract.
         verdict, _ = await self._review_with(
-            [{"issue": "The backoff is uncapped", "severity": "critical"}])
+            [{"issue": "The backoff is uncapped", "severity": "critical",
+              "hazard": True}])
         assert "uncapped" in verdict.findings[0].detail
-        assert not verdict.ship, "a critical finding still blocks"
+        assert not verdict.ship, "an anchored critical finding still blocks"
 
     async def test_findings_missing_severity(self):
         verdict, _ = await self._review_with([{"detail": "No jitter applied"}])
         assert verdict.findings[0].severity == "medium", "the schema default"
 
     async def test_a_mixture_of_shapes_in_one_review(self):
+        # The high finding carries a hazard anchor: under
+        # Ruling D51 (R-f) only an anchored high or critical
+        # finding blocks, and this test's rule is that one
+        # does.
         verdict, _ = await self._review_with([
             "a bare string",
-            {"issue": "aliased", "severity": "high"},
+            {"issue": "aliased", "severity": "high", "hazard": True},
             {"detail": "no severity"},
         ])
         assert len(verdict.findings) == 3
-        assert not verdict.ship, "the high finding blocks"
+        assert not verdict.ship, "the anchored high finding blocks"
+
+    async def test_an_unanchored_critical_is_a_note(self):
+        """Ruling D51, THE FOLD: a critical finding that
+        carries no anchor — no ask number, no anchored
+        quote, no hazard — is demoted to a medium note:
+        recorded, counted, never blocking. Convention 22:
+        this simulates the condition the demotion watches;
+        without the fold the finding blocks and the test
+        fails."""
+        verdict, _ = await self._review_with(
+            [{"detail": "The backoff is uncapped",
+              "severity": "critical"}])
+        assert verdict.findings[0].severity == "medium"
+        assert verdict.ship, "an unanchored critical cannot block"
 
 
 class TestErrorsCarryTheProvidersMessage:

@@ -583,7 +583,7 @@ class PhaseRunner:
         implement = state.outputs["implement"]
         reviewers = self._resolve_who(node, state)
         concerns, critical, responses = await phases.run_domain_review(
-            self.client, state.request, state.outputs["plan"],
+            self.client, state.request,
             implement.summary, reviewers, self.context,
             function=self._tier(node, state),
         )
@@ -604,7 +604,7 @@ class PhaseRunner:
         triage = self._triage(state)
         implement = state.outputs["implement"]
         verdict, response = await phases.run_validate(
-            self.client, state.request, state.outputs["plan"], implement,
+            self.client, state.request, implement,
             context=self.context, domains=triage.domains,
             max_tokens=self._max_tokens(node),
             function=self._tier(node, state),
@@ -704,7 +704,7 @@ class PhaseRunner:
 
     async def _phase_review(self, node: Node, state: ExecutionState):
         verdict, responses = await phases.run_review(
-            self.client, state.request, self._triage(state), state.outputs["plan"],
+            self.client, state.request, self._triage(state),
             state.outputs["implement"], self._resolve_who(node, state), self.context,
             max_tokens=self._max_tokens(node),
             function=self._tier(node, state),
@@ -756,7 +756,7 @@ class PhaseRunner:
                            "not the engineering model itself"),
             }, []
         verdict, response = await phases.run_doublecheck(
-            self.client, state.request, state.outputs["plan"],
+            self.client, state.request,
             state.outputs["implement"], self.context,
         )
         return verdict, [response]

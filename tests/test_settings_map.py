@@ -105,7 +105,11 @@ RESPONSES = {
 }
 
 BLOCKING = {"lens": "systems_architect", "severity": "high",
-            "detail": "Backoff has no ceiling on reconnect storms."}
+            "detail": "Backoff has no ceiling on reconnect storms.",
+            # Ruling D51 (R-e): a finding blocks only
+            # when it is anchored — here, by the
+            # request's own words.
+            "quote": "retry with exponential backoff"}
 
 
 def _client(review_ships_after: int | None):

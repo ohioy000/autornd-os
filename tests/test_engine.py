@@ -113,9 +113,15 @@ def _make_mock_client():
     return client
 
 
-def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = False):
+def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = False,
+                         request: str = ""):
     """Validate fails N times then passes. Implement always succeeds.
-    When the loop exhausts, K3 autopsy returns the configured requires_human flag."""
+    When the loop exhausts, K3 autopsy returns the configured requires_human flag.
+
+    The failing validate carries the request's own words as its
+    anchor quote: Ruling D51, THE FOLD demotes a red with no
+    anchor to a note, and the simulated failure must stay red
+    for the loop to see it."""
     client = OpenRouterClient(api_key="test")
     validate_count = {"n": 0}
 
@@ -154,9 +160,14 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
         elif "validate this implementation" in msg:
             validate_count["n"] += 1
             if validate_count["n"] <= fail_iterations:
+                # Ruling D51, THE FOLD: a red with no
+                # anchor is a note, so the simulated
+                # failure must anchor to stay red. The
+                # quote is the request's own words.
                 data = {
                     "green": False,
                     "red_cause": "topic_parse_error",
+                    "anchor_quote": request,
                     "evidence": [f"Iteration {validate_count['n']}: topic fails"],
                 }
             else:
@@ -301,7 +312,8 @@ class TestWorkflowEngine:
         assert workflow.status == WorkflowStatus.BLOCKED
 
     async def test_iteration_loop_retries_then_passes(self, db_session):
-        client = _make_failing_client(fail_iterations=2)
+        client = _make_failing_client(
+            fail_iterations=2, request="Refactor MQTT topic structure")
         engine = WorkflowEngine(client, db_session)
         workflow = await engine.execute("Refactor MQTT topic structure")
 
@@ -310,7 +322,9 @@ class TestWorkflowEngine:
 
     async def test_escalation_recovery_also_fails(self, db_session):
         """K3 says fixable, but recovery loop also fails → ESCALATED."""
-        client = _make_failing_client(fail_iterations=99, k3_requires_human=False)
+        client = _make_failing_client(
+            fail_iterations=99, k3_requires_human=False,
+            request="Impossible task that always fails validation")
         engine = WorkflowEngine(client, db_session)
         workflow = await engine.execute("Impossible task that always fails validation")
 
@@ -318,7 +332,9 @@ class TestWorkflowEngine:
 
     async def test_escalation_requires_human_blocks(self, db_session):
         """K3 says requires_human → BLOCKED."""
-        client = _make_failing_client(fail_iterations=99, k3_requires_human=True)
+        client = _make_failing_client(
+            fail_iterations=99, k3_requires_human=True,
+            request="Task needing manual hardware intervention")
         engine = WorkflowEngine(client, db_session)
         workflow = await engine.execute("Task needing manual hardware intervention")
 
@@ -326,7 +342,9 @@ class TestWorkflowEngine:
 
     async def test_escalation_recovery_succeeds(self, db_session):
         """K3 directive fixes the issue — recovery loop passes → COMPLETED."""
-        client = _make_failing_client(fail_iterations=5, k3_requires_human=False)
+        client = _make_failing_client(
+            fail_iterations=5, k3_requires_human=False,
+            request="Task that K3 can fix")
         engine = WorkflowEngine(client, db_session)
         workflow = await engine.execute("Task that K3 can fix")
 

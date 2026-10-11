@@ -1,11 +1,14 @@
-"""Ruling D43: the request sets the scope (ARCH-20261001-105).
+"""Ruling D43 (retired by D51): the request sets the scope
+(ARCH-20261001-105).
 
-Provider-free, through the real prompt builders: run_plan and run_implement
-are called with the billing double, and the prompt each sends is read off
-the call. The plan prompt carries the scope rule after D36's four rules,
-whose text is pinned by a hash taken before the change (D36 is
-owner-supplied and not a word of it may move). The implement prompt carries
-the scope sentence.
+Provider-free, through the real prompt builders: run_plan and
+run_implement are called with the billing double, and the prompt
+each sends is read off the call. D36's four rules are pinned by a
+hash taken before D43 (D36 is owner-supplied and not a word of it
+may move); Ruling D51 (R-b) moved the hash's end marker to the
+first sentence of the block that replaced D43's scope rule, which
+is the same byte position, so the covered bytes are unchanged. The
+implement prompt carries the scope sentence.
 """
 
 from __future__ import annotations
@@ -18,19 +21,16 @@ from autornd.specialists.registry import get_specialists
 from tests.conftest import make_mock_client
 
 # sha256 of D36's block, from "Rules for the plan (each measured
-# 2026-09-30, ..." up to "The success criteria are the most important
-# thing you produce.", taken from main 81da1e0 before D43.
+# 2026-09-30, ..." up to the first sentence of the block that follows
+# it, taken from main 81da1e0 before D43. Ruling D51 (R-b) moved the
+# end marker from D43's sentence "The success criteria are the most
+# important thing you produce." to the first sentence of the block that
+# replaced it ("You do not write the test this work is judged by."):
+# the deletion point is the insertion point, so the bytes the hash
+# covers are unchanged.
 D36_SHA256 = "5bd19bc0cfb39888b969bd65d10134fb0638446ecb8140b2aa114929dceb0928"
 D36_START = "Rules for the plan (each measured 2026-09-30, each a loop-killer when broken):"
-D36_END = "The success criteria are the most important thing you produce."
-SCOPE_RULE = (
-    "Scope (Ruling D43): the request sets the scope. Every success criterion must\n"
-    "test something the request asks for: an output, figure, constraint, format or\n"
-    "verdict the request states, or a fact the grounding supplies to answer it. A\n"
-    "criterion may not add specifics the request did not ask for, such as component\n"
-    "values, part numbers, presentation layout, or the exact form of a derivation.\n"
-    "The four rules above govern how you reason the plan; they do not add to what\n"
-    "the answer must contain.")
+D36_END = "You do not write the test this work is judged by."
 IMPLEMENT_SENTENCE = ("Answer the request, and include the plan's falsifiers, kill "
                       "triggers or assumption tables only if the request asks for them.")
 
@@ -60,11 +60,17 @@ async def _implement_prompt() -> str:
         client.chat_json.await_args.args[2]
 
 
-class TestThePlanPromptCarriesTheScopeRule:
-    async def test_the_rule_is_present_after_d36(self):
+class TestThePlanPromptCarriesTheAsks:
+    async def test_the_scope_rule_is_retired(self):
+        # Convention 17: D51 (R-b) retired D43's scope rule — the plan
+        # no longer writes success criteria, so there is nothing for the
+        # rule to govern. The test that asserted the rule's presence is
+        # the bug written down; it now asserts the retirement.
         prompt = await _plan_prompt()
-        assert SCOPE_RULE in prompt
-        assert prompt.index(D36_START) < prompt.index(SCOPE_RULE)
+        assert "Scope (Ruling D43)" not in prompt
+        assert "success criteria" not in prompt.lower()
+        assert "You do not write the test this work is judged by." in prompt
+        assert "The asks, quoted from the request:" in prompt
 
     async def test_d36_is_byte_identical(self):
         prompt = await _plan_prompt()

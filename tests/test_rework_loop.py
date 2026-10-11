@@ -268,9 +268,15 @@ class TestFeasibilityConcernsAreConsiderationsNotRequirements:
         assert prompt.index(open_points) < prompt.index(considerations)
         assert prompt.index("R7 is provisional") < prompt.index(considerations)
         assert prompt.index("Solid wire") > prompt.index(open_points)
-        # The ruled texts this prompt carries are untouched (D36, D43).
-        assert ("If a criterion cannot be honestly satisfied with the "
-                "grounding available, name it in blocked_on") in prompt
+        # The ruled texts this prompt carries: D36's four
+        # rules, and Ruling D51 (R-h)'s ask-anchored
+        # blocked_on sentence, which replaced the
+        # criterion-named one (convention 17: the test
+        # that asserted the old sentence is the bug written
+        # down).
+        assert ("If an ask cannot be honestly answered with the "
+                "grounding available, name it by its number in "
+                "blocked_on") in prompt
         assert ("Answer the request, and include the plan's falsifiers, kill "
                 "triggers or assumption tables only if the request asks for "
                 "them.") in prompt

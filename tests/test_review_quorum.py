@@ -123,12 +123,13 @@ class TestASpendStopIsNotAReviewerFailure:
     async def test_budget_exceeded_propagates_and_is_not_retried(self):
         client = _failing_reviewers({"test_engineer"}, exc=BudgetExceeded)
         triage = phases.TriageVerdict(**RESPONSES["triage"])
-        plan = phases.PlanVerdict(**RESPONSES["architecture"])
         implement = phases.ImplementVerdict(**{k: _WORK[k] for k in
                                                ("done", "green", "red_cause", "summary")})
+        # Ruling D51 (R-d): review reads the request and
+        # the asks, not the plan.
         with pytest.raises(BudgetExceeded):
             await phases.run_review(
-                client, REQUEST, triage, plan, implement,
+                client, REQUEST, triage, implement,
                 get_specialists(["backend_engineer", "test_engineer",
                                  "systems_architect"]))
         assert list(client.review_failures.values()) == [1]

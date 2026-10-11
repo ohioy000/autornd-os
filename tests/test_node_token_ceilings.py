@@ -232,13 +232,13 @@ class TestNodeCeilingsReachTheirCalls:
 
         client.chat_json = AsyncMock(side_effect=chat_json)
         seal_double(client)
-        plan = PlanVerdict(ready=True, plan="p",
-                           success_criteria=["Backoff capped at 60s"])
         impl = ImplementVerdict(done=True, green=True, summary="s",
                                 iteration=1)
         triage = TriageVerdict(domains=["backend"], risk="medium",
                                specialists=["backend_engineer"], summary="s")
+        # Ruling D51 (R-d): review reads the request and
+        # the asks, not the plan.
         await phases.run_review(
-            client, "add retry", triage, plan, impl,
+            client, "add retry", triage, impl,
             [get_specialist("backend_engineer")], "")
         assert seen["max_tokens"] == 32768

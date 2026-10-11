@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1373 · **Date of this snapshot:** 2026-10-10, counts re-derived against the tree under test
+**Tests:** 1375 · **Date of this snapshot:** 2026-10-10, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -314,7 +314,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      77 files, 1373 tests
+tests/                      77 files, 1375 tests
 
 ```
 
@@ -719,7 +719,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1373 total)
+### 3.7 Test distribution (1375 total)
 
 
 | file | n | file | n |
@@ -739,7 +739,7 @@ is revoked and the warning re-opens with a date.
 | test_handoff_scheduler.py | 4 | test_handover_truth.py | 8 |
 | test_hermetic_suite.py | 9 | test_iteration_dissent.py | 8 |
 | test_judge_tier.py | 11 | test_knowledge.py | 41 |
-| test_lead_review.py | 9 | test_live_wiring.py | 7 |
+| test_lead_review.py | 10 | test_live_wiring.py | 7 |
 | test_node_token_ceilings.py | 8 | test_phase_timing.py | 3 |
 | test_preflight.py | 30 | test_preflight_gate.py | 32 |
 | test_preregistration_precedence.py | 9 | test_prior_artifact_revision.py | 3 |
@@ -752,7 +752,7 @@ is revoked and the warning re-opens with a date.
 | test_review_composition.py | 28 | test_review_quorum.py | 3 |
 | test_rework_loop.py | 20 | test_routing.py | 74 |
 | test_run_record.py | 7 | test_runtime_dependencies.py | 1 |
-| test_schema_wiring.py | 15 | test_scope_rule.py | 3 |
+| test_schema_wiring.py | 16 | test_scope_rule.py | 3 |
 | test_serving_ledger.py | 7 | test_settings.py | 23 |
 | test_settings_map.py | 5 | test_shipped_examples.py | 15 |
 | test_specialists.py | 11 | test_spend_guard.py | 16 |
@@ -805,7 +805,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1373/1373 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1375/1375 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

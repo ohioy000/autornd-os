@@ -187,6 +187,78 @@ def _terms(text: str) -> set[str]:
     return {w for w in words if len(w) > 2 and w not in _STOPWORDS}
 
 
+# ── anchors (Ruling D51 (1), (3)) ─────────────────────────────────
+#
+# The asks are the yardstick, and every dissent that fails work
+# must point at the request's own words. Two primitives serve
+# both the free check that anchors the asks and the phases that
+# anchor dissents, so a quote anchors the same way everywhere:
+# the matcher below is asks_anchored's own matcher, and the
+# phases import it rather than re-deriving it.
+
+def _normalise_quote(text: str) -> str:
+    """The normalisation the checks already apply to a quote.
+
+    Case-folded, whitespace-collapsed, with the LaTeX '$' wrapper
+    stripped — the same three the tier-3 fetch repair applies, so
+    a quote wrapped for math mode anchors the words it wraps.
+    """
+    text = str(text or "").replace("$", "")
+    return " ".join(text.casefold().split())
+
+
+# The floor a quote must clear before it anchors anything: at
+# least 3 words and 12 characters after normalisation. Below it,
+# a quote like "mm" or "the answer" anchors by accident — any
+# request of a dozen words contains "the answer" somewhere — and
+# an anchor that short cannot name what the answer gets wrong.
+# Pinned from both sides in tests/test_anchor_floor.py.
+_ANCHOR_MIN_WORDS = 3
+_ANCHOR_MIN_CHARS = 12
+
+
+def quote_anchors(quote: str, request: str) -> bool:
+    """Does this quote occur in the request, as written?
+
+    Ruling D51 (1): a quote anchors only when the free check
+    finds it in the request under the normalisation the checks
+    already apply, and it clears the floor. A paraphrase does not
+    anchor — the yardstick cannot drift off the request's words —
+    and a quote under the floor anchors nothing.
+    """
+    needle = _normalise_quote(quote)
+    if not needle:
+        return False
+    if len(needle.split()) < _ANCHOR_MIN_WORDS:
+        return False
+    if len(needle) < _ANCHOR_MIN_CHARS:
+        return False
+    return needle in _normalise_quote(request)
+
+
+def dissent_anchored(
+    ask: Any, quote: str, hazard: bool,
+    asks: list[Any] | None, request: str,
+) -> bool:
+    """Is this dissent anchored? (Ruling D51 (3).)
+
+    Three anchors, all typed — never prose: the ask it concerns,
+    by its number in the anchored asks; a quote of the request's
+    own words, anchored by the same free check the asks pass; or
+    a hazard. An omission is never a hazard and never an anchor:
+    if the request asked for what is missing, it is an ask, and
+    the dissent names it by number.
+    """
+    if hazard:
+        return True
+    if isinstance(ask, int) and not isinstance(ask, bool):
+        if 1 <= ask <= len(asks or []):
+            return True
+    if str(quote or "").strip() and quote_anchors(quote, request):
+        return True
+    return False
+
+
 # ── checks ────────────────────────────────────────────────────────────────
 
 @check("judges_agree")

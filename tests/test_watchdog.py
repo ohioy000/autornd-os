@@ -100,6 +100,20 @@ def _responses(**overrides) -> dict:
     return out
 
 
+# Ruling D51, THE FOLD: a review blocks only on an anchored
+# finding — a bare `ship: false` with no finding is an
+# unanchored judgment, a note, never blocking. The doubles
+# below that need the review to block carry the anchor: the
+# quote is this file's request's own words.
+BLOCKING_FINDING = {"lens": "test_engineer", "severity": "high",
+                    "detail": "Backoff has no ceiling on reconnect storms.",
+                    "quote": "retry with exponential backoff"}
+
+
+def _blocking_judge() -> dict:
+    return {"ship": False, "findings": [BLOCKING_FINDING]}
+
+
 def _reshape(client, before=None, summary_by_call=False) -> None:
     """Wrap the double's chat_json without replacing it: the original still
     sleeps for its declared delay and still bills. `before(function,
@@ -348,7 +362,7 @@ class TestThePointerNamesTheLastAgreedImplementation:
         # node whose call would overrun. Until A1 this test asserted
         # domain_review, the misattribution 095 asked about and 098 run 1
         # showed live. The run ends at the same paid point either way.
-        client = make_mock_client(_responses(judge={"ship": False}),
+        client = make_mock_client(_responses(judge=_blocking_judge()),
                                   delays={"judge": 0.5})
         _reshape(client, summary_by_call=True)
         state, runner, _ = await _run(client, budget=1.45, reserve=0.05)
@@ -380,7 +394,7 @@ class TestThePointerNamesTheLastAgreedImplementation:
                     await asyncio.sleep(5.0)
         slow_rereview.reviews = 0
 
-        client = make_mock_client(_responses(judge={"ship": False}))
+        client = make_mock_client(_responses(judge=_blocking_judge()))
         _reshape(client, before=slow_rereview, summary_by_call=True)
         state, runner, _ = await _run(client, budget=1.0, reserve=0.05)
         watchdog = state.watchdog
@@ -488,7 +502,7 @@ class TestASlowCallIsFlaggedNotCancelled:
                 implements["n"] += 1
                 await asyncio.sleep(0.02 if implements["n"] == 1 else 0.2)
 
-        responses = _responses(judge={"ship": False})
+        responses = _responses(judge=_blocking_judge())
         responses["escalation"] = {"root_cause_analysis": "x",
                                    "resolution_directive": "y",
                                    "requires_human": True}
