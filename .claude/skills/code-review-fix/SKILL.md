@@ -1,7 +1,7 @@
 ---
 name: code-review-fix
 description: Fixes bugs surfaced by a manual or AI code review, one at a time, with tests, then runs full validation. Use after a code review has produced a list of issues or a review file.
-argument-hint: [code-review-file-or-issues] [scope]
+argument-hint: "[code-review-file-or-issues] [scope]"
 ---
 
 # Code Review Fix

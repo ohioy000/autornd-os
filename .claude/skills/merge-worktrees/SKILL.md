@@ -1,7 +1,7 @@
 ---
 name: merge-worktrees
 description: Merges two feature branches from worktrees through a safe integration branch with full testing and validation at each step. Use when parallel worktree development is done and the features need to be integrated.
-argument-hint: [branch-1] [branch-2]
+argument-hint: "[branch-1] [branch-2]"
 ---
 
 # Merge Worktrees

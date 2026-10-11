@@ -1,7 +1,7 @@
 ---
 name: prime-frontend
 description: Primes the agent with focused understanding of the frontend portion of the codebase — components, routing, state management, and styling — without loading unrelated backend code. Use at the start of a session when the work is scoped to UI or client-side features. Optionally pulls external task context from Jira issues and Confluence pages first.
-argument-hint: [jira-issue-keys] [confluence-page-ids]
+argument-hint: "[jira-issue-keys] [confluence-page-ids]"
 ---
 
 # Prime Frontend: Load Frontend Context
