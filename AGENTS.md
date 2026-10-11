@@ -86,8 +86,9 @@ cannot see (a live paid run result, a claim about provider behaviour).
 rebase a review ordered; no history rewrite on main or a merged branch; no deletion on a protected
 branch; no direct push to main; do not stack branches — merge each PR before opening the next —
 unless a review orders a stack, and then each tip carries its own re-derived counts and the response
-states the merge order; **no git operation while a paid run is in flight** (that caused the -010
-trace loss); a paid run never starts from a dirty working tree.
+states the merge order (both exceptions owner-ratified 2026-10-11); **no git operation while a paid
+run is in flight** (that caused the -010 trace loss); a paid run never starts from a dirty working
+tree.
 
 - **Suite green before and after; CI green before finishing.** **Pre-register a paid run and commit
   it first** — the evidence the prediction preceded the result; a wrong one is reported as wrong.
