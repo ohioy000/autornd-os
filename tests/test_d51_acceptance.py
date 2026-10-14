@@ -321,6 +321,65 @@ class TestTheQ15Shape:
                "and returns to zero and records without "
                "re-zeroing. Signed errors: +0.010 mm, -0.030 mm, "
                "+0.005 mm. The overall verdict is fail.")
+    # The command's literal (c) script: the first answer
+    # omits the step ask's words entirely. Coverage — the
+    # free check that judges the asks by construction —
+    # catches a word-omission regardless of any anchor, so
+    # this shape and the misstatement shape above isolate
+    # different mechanisms, and both are tested.
+    OMITTED = ("Signed errors: +0.010 mm, -0.030 mm, "
+               "+0.005 mm. The 1.970 mm reading fails its "
+               "reference limit; the overall verdict is fail.")
+
+    @staticmethod
+    def _routes_omitting(anchored: bool):
+        """The literal (c) script: the first answer leaves
+        the step's words out, the revision includes them."""
+        def reply(msg, calls):
+            m = msg.lower()
+            if "classify this engineering request" in m:
+                return {"domains": ["backend"], "risk": "medium",
+                        "specialists": ["backend_engineer",
+                                        "test_engineer"],
+                        "summary": "s"}
+            if "list what this request asks" in m:
+                return {"asks": Q15_ASKS}
+            if "create an implementation plan" in m:
+                return {"ready": True, "blockers": [],
+                        "plan": "Write the check.", "cost_estimate": None,
+                        "success_criteria": ["the check is written"]}
+            if ("review this implementation plan" in m
+                    or "plan produced by systems architect" in m):
+                return {"feasible": True, "concerns": [], "blockers": []}
+            if "implementation for the following plan" in m:
+                revised = any("revise" in c["user"].lower()
+                              for c in calls)
+                return {"done": True, "green": True, "red_cause": None,
+                        "iteration": 2 if revised else 1,
+                        "blocked_on": [],
+                        "summary": TestTheQ15Shape.CORRECT
+                        if revised else TestTheQ15Shape.OMITTED}
+            if "review this implementation from your domain perspective" in m:
+                return {"concerns": [], "critical": False}
+            if "validate this implementation" in m:
+                revised = any("revise" in c["user"].lower()
+                              for c in calls)
+                if revised:
+                    return {"green": True, "red_cause": None,
+                            "evidence": ["ask 1 (zeroing step): PASS",
+                                         "ask 2 (overall verdict): PASS"]}
+                red = {"green": False,
+                       "red_cause": "the answer omits the zeroing step",
+                       "evidence": ["ask 1 (zeroing the readout at zero "
+                                    "displacement): FAIL — the answer "
+                                    "leaves the step out"]}
+                if anchored:
+                    red["failed_ask"] = 1
+                return red
+            if "review this engineering work" in m:
+                return {"ship": True, "findings": [], "verdict": "Ship."}
+            return {"findings": [], "queries": [], "brief": ""}
+        return reply
 
     @staticmethod
     def _routes(anchored: bool):
@@ -431,6 +490,63 @@ class TestTheQ15Shape:
         assert len(runner.iterations) == 1
         assert "optional on an unloaded fixture" in (
             state.outputs["implement"].summary)
+        assert normalisations_by_kind().get(RED_NO_ANCHOR) == 1
+
+    async def test_the_omitted_step_is_caught_revised_and_delivered(self):
+        """The command's literal (c) script: the first answer
+        omits the step ask's words. Validate's anchored failure
+        makes it red — and coverage, the free check that judges
+        the asks by construction (D51 (2)), dissents with it,
+        because the ask's words are absent from the answer. The
+        revision receives the unmet ask and the failure's
+        evidence; the second answer includes the step; the run
+        completes."""
+        state, runner, calls = await _drive(
+            "engineering-rnd", self._routes_omitting(True), Q15)
+        assert state.status == "completed"
+        assert "zeroing the readout at zero displacement" in (
+            state.outputs["implement"].summary)
+        # Both judges that read the asks dissented on the first
+        # iteration: validate on its anchored failure, coverage
+        # on the ask's absent words.
+        assert [i["dissenting"] for i in runner.iterations] == [
+            ["coverage", "validate"], []]
+        # The revision carries the failure and the unmet ask —
+        # the ask's own words, and the judge's FAIL line.
+        revisions = _revision_prompts(calls)
+        assert len(revisions) == 1
+        assert "zeroing the readout at zero displacement" in (
+            revisions[0])
+        assert "FAIL" in revisions[0]
+        assert TestTheQ15Shape.OMITTED in revisions[0]
+
+    async def test_the_omitted_step_does_not_ship_even_unanchored(self):
+        """The (c) break-proof, measured: strip the anchor, and
+        the omission STILL does not ship — coverage holds the
+        loop on the ask's own words, with no paid judge
+        dissenting at all. The run iterates once on the free
+        check alone, the revision includes the step, and the run
+        completes with the step in the answer and the demotion
+        counted. The command's literal break-proof ('the omission
+        ships') does not hold for a word-omission on this branch,
+        by the ruling's own construction: coverage judges the
+        asks by construction, so an ask whose words are absent is
+        caught before any anchor is consulted. The break-proof
+        that isolates validate's anchor is the misstatement shape
+        above, where the words occur and only the anchor stands
+        between the wrong answer and delivery."""
+        state, runner, calls = await _drive(
+            "engineering-rnd", self._routes_omitting(False), Q15)
+        assert state.status == "completed"
+        # Coverage held the loop: two iterations, the omission
+        # revised away, the step in the delivered answer.
+        assert len(runner.iterations) == 2
+        assert [i["dissenting"] for i in runner.iterations] == [
+            ["coverage"], []]
+        assert "zeroing the readout at zero displacement" in (
+            state.outputs["implement"].summary)
+        # The unanchored red was demoted, not obeyed.
+        assert state.outputs["validate"].green is True
         assert normalisations_by_kind().get(RED_NO_ANCHOR) == 1
 
 
