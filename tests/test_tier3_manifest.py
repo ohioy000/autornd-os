@@ -258,8 +258,12 @@ class TestTheVersions:
         # settings forbid unknown keys, so a TIER3_* line
         # in .env stops the harness at startup.
         # tier3-7 registers the scorer repair Ruling R5
-        # orders (2026-10-08): the stage-1 reading's
-        # recognition classes and the strict-headline rule.
+        # orders (2026-10-08, ruled in its final form
+        # 2026-10-14): the stage-1 reading's recognition
+        # classes and the ruled headline rule - a
+        # derivation input is not a stated result, and
+        # the item fails when any collected quantity
+        # lies outside the frozen key's tolerance.
         note = versions["version_note"]
         assert "tier3-6" in note
         assert "tier3-5" in note

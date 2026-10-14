@@ -148,7 +148,7 @@ class TestTheScorerScoresNotRegexes:
     def test_the_self_test_passes(self):
         out = _self_test(TIER2)
         assert out.returncode == 0, out.stdout + out.stderr
-        assert ("SCORER SELF-TEST PASSED: all 276 "
+        assert ("SCORER SELF-TEST PASSED: all 286 "
                 "fixtures hold" in out.stdout)
         for qid in QUESTION_IDS:
             assert f"{qid} model answer" in out.stdout, (

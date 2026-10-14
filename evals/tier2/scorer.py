@@ -545,21 +545,182 @@ def _headline_sections(answer: str
     return sections
 
 
+def _slash_divides(line: str, slash: int) -> bool:
+    """Whether the slash at line[slash] divides
+    two quantities, or lists them. A slash
+    inside a unit capture ('150 N/mm^2', 'm/s')
+    is part of the unit, not an operator. A
+    slash between bare numbers written without
+    spaces divides ('210/17'). Otherwise a slash
+    divides only between quantities of different
+    known dimensions ('12.0 V / 6.00 k ohm');
+    a slash between quantities of the same
+    dimension, or where one side carries no
+    unit, lists them ('61.8 MPa / 176 MPa',
+    '12.35 / 17.65 kN'), and they stay stated
+    values."""
+    if slash <= 0 or slash + 1 >= len(line):
+        return False
+    # a slash between two letters is inside a
+    # compound unit capture ('N/mm', 'm/s')
+    if line[slash - 1].isalpha():
+        return False
+    # bare numbers written without spaces
+    if (line[slash - 1].isdigit()
+            and line[slash + 1].isdigit()):
+        return True
+    # the known dimension each side carries
+    left = list(_NUMBER.finditer(line[:slash]))
+    if not left:
+        return False
+    left_unit = _unit_behind(
+        line[left[-1].end():slash])
+    right = _NUMBER.search(line, slash + 1)
+    if not right:
+        return False
+    right_unit = _unit_behind(
+        line[right.end():right.end() + 32])
+    left_dim = (_dimension(left_unit)
+                 if left_unit else None)
+    right_dim = (_dimension(right_unit)
+                  if right_unit else None)
+    return (left_dim is not None
+            and right_dim is not None
+            and left_dim != right_dim)
+
+
+def _derivation_input(line: str, m: re.Match) -> bool:
+    """Whether the number a match names is a
+    derivation input: an operand of the
+    arithmetic the line shows, not a result
+    the line states. The advisor's 2026-10-14
+    review (ARCH-20261003-119, PART 2, step
+    3) adopted this rule for headline
+    attribution: a derivation input is not a
+    stated result, so a quantity that is an
+    operand of arithmetic the answer shows is
+    attributed to no item. An operand is a
+    number standing on either side of a binary
+    operator: '*', '+', a spaced '-', or '^'
+    followed by a digit, sign or bracket. A
+    slash divides (and so makes its operands)
+    between bare numbers written without
+    spaces, or between quantities of different
+    known dimensions; it lists them otherwise.
+    The value an equation produces - the member
+    after its last '=' - is stated unless an
+    operator touches it, so every member before
+    the last '=' is an input. The degree sign's
+    normalised '^ deg' is not an exponent, and
+    an unspaced hyphen between numbers is a
+    range, not a minus: the sign is inside the
+    match, so the scan never sees it."""
+    # the member an equation produces is the
+    # member after its last '='; every member
+    # before it is an input the equation works
+    # on ('3/3400 m = 8.82e-4 m': the fraction
+    # and its denominator are inputs)
+    equals = line.rfind("=")
+    if equals >= 0 and m.start() < equals:
+        return True
+    # a number standing just after an operator:
+    # the first non-space character before it
+    i = m.start() - 1
+    while i >= 0 and line[i].isspace():
+        i -= 1
+    if i >= 0:
+        c = line[i]
+        if c in ("*", "+", "^"):
+            # '*2.00', '+2.00' and '^2.00' (the
+            # number is an exponent). A run of
+            # asterisks is markdown emphasis
+            # ('**12.4 kN**'), not multiplication.
+            run = 1
+            while i - run >= 0 and line[i - run] == "*":
+                run += 1
+            if c != "*" or run == 1:
+                return True
+        elif c == "/":
+            if _slash_divides(line, i):
+                return True
+        elif c == "-":
+            # a '-' the match did not take as
+            # its sign is a spaced minus: the
+            # match would have carried a '-'
+            # written against the number itself
+            # ('2.90-3.10'), so this one stands
+            # alone between spaces
+            return True
+    # a number standing just before an operator:
+    # the first non-space character after the
+    # number and its unit capture
+    rest = line[m.end():]
+    unit_m = _UNIT_AFTER.match(rest)
+    extent = m.end() + (
+        unit_m.end() if unit_m else 0)
+    j = extent
+    while j < len(line) and line[j].isspace():
+        j += 1
+    if j < len(line):
+        c = line[j]
+        if c in ("*", "+"):
+            run = 1
+            while (j + run < len(line)
+                   and line[j + run] == "*"):
+                run += 1
+            # a single '*' multiplies; a run of
+            # two or more is markdown emphasis
+            if run == 1:
+                return True
+        elif c == "/":
+            if _slash_divides(line, j):
+                return True
+        elif c == "-":
+            # a '-' followed by a space is a
+            # spaced minus; one against a digit
+            # is the next number's sign in a
+            # list ('2.90 -3.10')
+            if (j + 1 < len(line)
+                    and line[j + 1].isspace()):
+                return True
+        elif c == "^":
+            # '^' raises the number to a power
+            # when a digit, sign or bracket
+            # follows; the degree sign's
+            # normalised '^ deg' is not an
+            # exponent, and neither is a '^'
+            # before any other word
+            k = j + 1
+            while k < len(line) and line[k].isspace():
+                k += 1
+            if k < len(line) and (
+                    line[k].isdigit()
+                    or line[k] in "+-([{"):
+                return True
+    return False
+
+
 def _line_quantities(
-        line: str) -> list[tuple[float, str, str]]:
-    """The (value, unit, text-before) triples a
-    single line states, in reading order. The
-    text before a quantity is the label that
+        line: str
+) -> list[tuple[float, str, str, bool]]:
+    """The (value, unit, text-before,
+    derivation-input) quadruples a single
+    line states, in reading order. The text
+    before a quantity is the label that
     introduces it, so only the thirty-two
-    characters immediately before the quantity
-    are kept: a longer reach attributes the
-    quantity to every item named anywhere
-    earlier on the line ('Choose the 1000 W
-    heater: it reaches 35 deg C in exactly
-    120 s' names the selected heater, not the
-    next smaller one)."""
+    characters immediately before the
+    quantity are kept: a longer reach
+    attributes the quantity to every item
+    named anywhere earlier on the line
+    ('Choose the 1000 W heater: it reaches
+    35 deg C in exactly 120 s' names the
+    selected heater, not the next smaller
+    one). The flag is True when the quantity
+    is an operand of the arithmetic the line
+    shows - a derivation input, not a stated
+    result."""
     normalized = _word_numbers(_normalize(line))
-    triples = []
+    quadruples = []
     for m in _NUMBER.finditer(normalized):
         # a quantity inside parentheses is an
         # aside or a reference the label carries
@@ -572,23 +733,31 @@ def _line_quantities(
         rest = normalized[m.end():m.end() + 32]
         before = normalized[max(0, m.start() - 32):
                             m.start()]
-        triples.append((float(m.group(0)),
-                        _unit_behind(rest),
-                        before))
-    return triples
+        quadruples.append((float(m.group(0)),
+                           _unit_behind(rest),
+                           before,
+                           _derivation_input(
+                               normalized, m)))
+    return quadruples
 
 
 def _table_quantities(
         block: list[str]
-) -> list[tuple[float, str, str]]:
-    """The (value, unit, context) triples a markdown
-    table states, in reading order. A cell's context
-    is its row's label, its column's header and the
-    text before the quantity in the cell, so a
-    two-material table attributes each column to the
-    material its header names - and a 'Common /
+) -> list[tuple[float, str, str, bool]]:
+    """The (value, unit, context,
+    derivation-input) quadruples a markdown
+    table states, in reading order. A cell's
+    context is its row's label, its column's
+    header and the text before the quantity
+    in the cell, so a two-material table
+    attributes each column to the material
+    its header names - and a 'Common /
     Total' column, whose header names no one
-    material, attributes to no item."""
+    material, attributes to no item. The
+    flag carries the cell's own arithmetic:
+    a quantity that is an operand of the
+    arithmetic its cell shows is a
+    derivation input, not a stated result."""
     rows = [[cell.strip() for cell in
              line.strip().strip("|").split("|")]
             for line in block]
@@ -601,7 +770,7 @@ def _table_quantities(
             re.fullmatch(r"[\s:|-]+", cell)
             for cell in data[0]):
         data = data[1:]
-    triples = []
+    quadruples = []
     for row in data:
         if len(row) < 2:
             continue
@@ -609,16 +778,18 @@ def _table_quantities(
         for column, cell in enumerate(row[1:], 1):
             head = (header[column]
                     if column < len(header) else "")
-            for value, unit, before in _line_quantities(cell):
-                triples.append(
+            for (value, unit, before,
+                 derivation) in _line_quantities(cell):
+                quadruples.append(
                     (value, unit,
-                     f"{label} {head} {before}"))
-    return triples
+                     f"{label} {head} {before}",
+                     derivation))
+    return quadruples
 
 
 def _section_quantities(
         body: str
-) -> list[tuple[float, str, str]]:
+) -> list[tuple[float, str, str, bool]]:
     """Every quantity a results section's body
     states, in reading order, with its
     introducing context: a table cell's row
@@ -629,8 +800,11 @@ def _section_quantities(
     delimiter, not a label the answer applies
     to a quantity ('Final conclusion' must not
     attribute every quantity in the section to
-    the item 'final ...' names)."""
-    triples: list[tuple[float, str, str]] = []
+    the item 'final ...' names). The flag
+    marks a quantity that is an operand of the
+    arithmetic its line shows."""
+    quadruples: list[tuple[
+        float, str, str, bool]] = []
     lines = body.splitlines()
     i = 0
     while i < len(lines):
@@ -640,11 +814,13 @@ def _section_quantities(
                    and lines[i].lstrip().startswith("|")):
                 block.append(lines[i])
                 i += 1
-            triples.extend(_table_quantities(block))
+            quadruples.extend(
+                _table_quantities(block))
         else:
-            triples.extend(_line_quantities(lines[i]))
+            quadruples.extend(
+                _line_quantities(lines[i]))
             i += 1
-    return triples
+    return quadruples
 
 
 def _same_dimension_siblings(
@@ -690,16 +866,40 @@ def _distinctive_tokens(item: dict,
     return distinctive
 
 
-def _headline_value(item: dict, answer: str,
-                    dimension: str | None
-                    ) -> tuple[str, float] | None:
-    """The item's headline value: the first
-    quantity the last results section that states
-    it attributes to the item, converted to the key
-    dimension's base unit. Returns the stated
-    quantity and its base value, or None when the
-    answer presents no results section that states
-    the item's quantity.
+def _headline_values(item: dict, answer: str,
+                     dimension: str | None
+                     ) -> list[tuple[str, float]]:
+    """Every quantity the last results section that
+    attributes the item's quantity attributes to
+    the item, converted to the key dimension's
+    base unit, in reading order. Returns the
+    stated quantity and its base value for each,
+    or an empty list when no results section
+    attributes the item's quantity.
+
+    The advisor's 2026-10-10 review of the
+    eight open PRs (ARCH-20261003-119, step
+    3) adopted this rule in place of the first
+    quantity: the headline was the first
+    quantity the last results section attributed
+    to the item, so a results table presenting
+    both the precise and the rounded figure
+    attributed both to the item and whichever
+    column came first was the headline - the
+    verdict depended on the column order.
+    The attribution guards are unchanged, and the
+    section the rule reads is unchanged - the last
+    results section that attributes the item's
+    quantity, the section the first-quantity rule
+    preferred. A derivation input is not a stated
+    result: a quantity that is an operand of the
+    arithmetic the answer shows is attributed to no
+    item, so the arithmetic a results presentation
+    shows beside the figures it presents - the
+    fraction a cell derives its value from, the
+    check line a section closes with - attributes
+    nothing, and the figures the section presents
+    are the ones that count.
 
     Attribution is strict: a quantity whose
     introducing context names a token distinctive
@@ -709,7 +909,7 @@ def _headline_value(item: dict, answer: str,
     which one the quantity belongs to."""
     distinctive = _distinctive_tokens(item, dimension)
     if not distinctive:
-        return None
+        return []
     own = _tokens(item["item"])
     rivals: set[str] = set()
     for other in _same_dimension_siblings(
@@ -719,10 +919,18 @@ def _headline_value(item: dict, answer: str,
     key_value, key_unit = _key_quantities(
         item, dimension, 0)
     key_dim, _ = _to_base(key_value, key_unit)
+    found: list[tuple[str, float]] = []
     for heading, body in reversed(
             _headline_sections(answer)):
-        for value, unit, context in _section_quantities(
+        for (value, unit, context,
+             derivation) in _section_quantities(
                 body):
+            if derivation:
+                # an operand of the arithmetic
+                # the answer shows is a
+                # derivation input, not a
+                # stated result
+                continue
             stated = _tokens(context)
             if not (stated & distinctive):
                 continue
@@ -743,9 +951,15 @@ def _headline_value(item: dict, answer: str,
                 continue
             converted = _to_base(value, unit)
             if converted and converted[0] == key_dim:
-                return (f"{value} {unit}".strip(),
-                        converted[1])
-    return None
+                found.append(
+                    (f"{value} {unit}".strip(),
+                     converted[1]))
+        if found:
+            # the last results section that
+            # attributes the item's quantity
+            # is the section the rule reads
+            break
+    return found
 
 
 def _numeric_item(item: dict, answer: str,
@@ -783,22 +997,37 @@ def _numeric_item(item: dict, answer: str,
             f"unit {key_unit} on item '{item['item']}'")
         tolerance = (tol_kind, tol_base, "")
     # The strict-headline rule: when the answer
-    # presents its results, the presented value
-    # is the one that counts - a derivation in
+    # presents its results, the presented values
+    # are the ones that count - a derivation in
     # tolerance does not rescue a conclusion the
-    # answer itself rounded out of tolerance.
-    headline = _headline_value(item, answer, dimension)
-    if headline is not None:
-        stated, base = headline
-        if _within(base, key_base, tolerance):
-            return _pass(item, f"headline {stated} = "
-                               f"{base:.6g} {key_dim} within "
-                               f"{tol_kind} tolerance of key "
-                               f"{key_base:.6g} {key_dim}")
-        return _fail(item, f"headline {stated} = "
-                           f"{base:.6g} {key_dim} outside "
-                           f"{tol_kind} tolerance of key "
-                           f"{key_base:.6g} {key_dim}")
+    # answer itself rounded out of tolerance, and
+    # every presented value must hold: a results
+    # table that presents both the precise and the
+    # rounded figure holds the item only when both
+    # fall within the key's tolerance, so the
+    # verdict does not depend on the column order.
+    headlines = _headline_values(
+        item, answer, dimension)
+    if headlines:
+        for stated, base in headlines:
+            if not _within(
+                    base, key_base, tolerance):
+                return _fail(
+                    item,
+                    f"headline {stated} = "
+                    f"{base:.6g} {key_dim} outside "
+                    f"{tol_kind} tolerance of key "
+                    f"{key_base:.6g} {key_dim}")
+        stated = " and ".join(
+            s for s, _ in headlines)
+        bases = ", ".join(
+            f"{base:.6g}" for _, base in headlines)
+        return _pass(
+            item,
+            f"headline {stated} = "
+            f"{bases} {key_dim} within "
+            f"{tol_kind} tolerance of key "
+            f"{key_base:.6g} {key_dim}")
     for value, unit in extract_quantities(answer):
         converted = _to_base(value, unit)
         if converted and converted[0] == key_dim:
@@ -3175,9 +3404,18 @@ def self_test() -> int:
 
     # Results presentations and the answers' own
     # words: the strict-headline rule (a presented
-    # result governs over a derivation) and the
-    # recognition classes the tier-3 stage-1
-    # reading's false negatives named.
+    # result governs over a derivation, and every
+    # presented figure holds - the two Q23
+    # results-row fixtures score the same row
+    # with its columns swapped, the order the
+    # first-quantity rule let decide the verdict),
+    # the operand guard (a derivation input is not
+    # a stated result: the 102-Q1 summary row in
+    # both column orders and its equation in prose,
+    # a same-dimension slash list, the degree
+    # caret, a check line and an unspaced range)
+    # and the recognition classes the tier-3
+    # stage-1 reading's false negatives named.
     print("\nResults presentations and the answers' "
           "own words:")
     more, count = _fixture([
@@ -3209,6 +3447,73 @@ def self_test() -> int:
           "Steel tensile stress": True,
           "Aluminum force": False,
           "Steel force": False}),
+        ("Q23 results row, rounded column "
+         "first", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Value (rounded, 3 s.f.) "
+         "| Value (precise) |\n"
+         "| --- | --- | --- |\n"
+         "| Common extension | 0.882 mm | "
+         "0.882 mm |\n"
+         "| Tensile stress in aluminum | "
+         "61.8 MPa | 61.8 MPa |\n"
+         "| Tensile stress in steel | 176 MPa | "
+         "176 MPa |\n"
+         "| Force in aluminum bar | 12.4 kN | "
+         "12.35 kN |\n"
+         "| Force in steel bar | 17.6 kN | "
+         "17.65 kN |\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": False,
+          "Steel force": False,
+          "verdict": "FAIL"}),
+        ("Q23 results row, precise column "
+         "first - the same row with the "
+         "columns swapped", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Value (precise) | Value "
+         "(rounded, 3 s.f.) |\n"
+         "| --- | --- | --- |\n"
+         "| Common extension | 0.882 mm | "
+         "0.882 mm |\n"
+         "| Tensile stress in aluminum | "
+         "61.8 MPa | 61.8 MPa |\n"
+         "| Tensile stress in steel | 176 MPa | "
+         "176 MPa |\n"
+         "| Force in aluminum bar | 12.35 kN | "
+         "12.4 kN |\n"
+         "| Force in steel bar | 17.65 kN | "
+         "17.6 kN |\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": False,
+          "Steel force": False,
+          "verdict": "FAIL"}),
+        ("Q23 results row, both figures within "
+         "tolerance", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Value (precise) | Value "
+         "(rounded, 3 s.f.) |\n"
+         "| --- | --- | --- |\n"
+         "| Common extension | 0.882 mm | "
+         "0.882 mm |\n"
+         "| Tensile stress in aluminum | "
+         "61.8 MPa | 61.8 MPa |\n"
+         "| Tensile stress in steel | 176 MPa | "
+         "176 MPa |\n"
+         "| Force in aluminum bar | 12.35 kN | "
+         "12.353 kN |\n"
+         "| Force in steel bar | 17.65 kN | "
+         "17.647 kN |\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": True,
+          "Steel force": True,
+          "verdict": "PASS"}),
         ("Q23 derivation only, no results section",
          "Q23",
          "## Derivation\n\n"
@@ -3444,6 +3749,65 @@ def self_test() -> int:
           "Second signed error and verdict": True,
           "Return-zero error and verdict": True,
           "Overall verdict": True}),
+        ("Q1 summary row, value column first",
+         "Q1",
+         "## Summary of results\n\n"
+         "| Quantity | Value | Reference |\n"
+         "| --- | --- | --- |\n"
+         "| Output Voltage | 8.00 V | "
+         "V_out = V_s × R2 / R_total = "
+         "12.0 V × 4.00 kΩ / 6.00 kΩ |\n",
+         {"Output voltage": True}),
+        ("Q1 summary row, reference column "
+         "first - the same row with the "
+         "columns swapped", "Q1",
+         "## Summary of results\n\n"
+         "| Quantity | Reference | Value |\n"
+         "| --- | --- | --- |\n"
+         "| Output Voltage | "
+         "V_out = V_s × R2 / R_total = "
+         "12.0 V × 4.00 kΩ / 6.00 kΩ | 8.00 V |\n",
+         {"Output voltage": True}),
+        ("Q1 divider equation in prose", "Q1",
+         "## Results\n\n"
+         "The output voltage: "
+         "V_out = 12.0 V × 4.00 k ohm / "
+         "6.00 k ohm = 8.00 V.\n",
+         {"Output voltage": True}),
+        ("Q23 force row, a same-dimension "
+         "slash lists the figures", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Value |\n"
+         "| --- | --- |\n"
+         "| Force in aluminum bar | "
+         "12.35 kN / 12.4 kN |\n",
+         {"Aluminum force": False}),
+        ("Q21 final temperature reached, the "
+         "degree caret is not an exponent",
+         "Q21",
+         "## First results\n\n"
+         "The bath's target temperature is "
+         "50.0 °C.\n\n"
+         "## Final results\n\n"
+         "The final temperature reaches "
+         "35.0 °C^ in exactly 120 s.\n",
+         {"Final temperature": True}),
+        ("Q23 check line beside stated forces",
+         "Q23",
+         "## Final conclusion\n\n"
+         "Force in aluminum bar: 12.35 kN; "
+         "force in steel bar: 17.65 kN.\n\n"
+         "Check: the aluminum force 12.4 kN "
+         "+ the steel force 17.6 kN = the "
+         "bars' combined force of 30.0 kN.\n",
+         {"Aluminum force": True,
+          "Steel force": True}),
+        ("Q23 extension as an unspaced range, "
+         "both members stated", "Q23",
+         "## Final conclusion\n\n"
+         "The common extension is "
+         "0.882-0.883 mm.\n",
+         {"Common extension": False}),
     ])
     failures += more
     ran += count
