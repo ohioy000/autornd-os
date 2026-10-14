@@ -1,0 +1,85 @@
+{
+  "command_id": "ARCH-20261014-121",
+  "parent_id": "ARCH-20261010-120",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Register, dry-run and then run the D51 re-measurement: arms A, D and F on all 25 questions x 3, and the D51 pipeline (E') on stage 1's seven x 3, under a $15.00 authorisation.",
+  "evidence": [
+    "Plan: docs/reviews/2026-10-10-d51-the-request-is-the-yardstick.md section 8 (arms, units, cost about $8).",
+    "Predictions to pre-register: the same file, section 9 (sha256 prefix d0406b0a7e8cbc41 over the section text).",
+    "Decision table to pre-register: the same file, section 7 (sha256 prefix 64961cd5cd2b69a4).",
+    "Stage-1 baseline: docs/traces/20261005T215237Z-tier3-run.jsonl, sha256 d406f0fd59a7f499...; key-strict A 18, D 18, E 0 of 21.",
+    "Spend: the owner authorised $15.00 on 2026-10-14 ('ok on spend'). The gate line TIER3_SPEND_AUTHORIZED=15.00 in .env.tier3 is the owner's to set (G-3).",
+    "Arm E already runs the standing workflow (evals/tier3/runner.py _arm_e, workflow=None); after #176 that workflow is D51's engineering-rnd. Arm F is the same path with workflow verify-first (workflows/verify-first.yaml)."
+  ],
+  "scope": {
+    "include": [
+      "evals/tier3/runner.py — arm F; this stage's unit plan; the report tables below",
+      "evals/tier3/manifest.json — a new version for this run",
+      "evals/tier3/README.md",
+      "tests/test_tier3_*.py",
+      "docs/handover-review.md — section 113, the pre-registration",
+      "docs/traces/ — the run's trace, after the run",
+      "evals/results/ — the reading sheet",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "autornd/ — the harness is frozen until this run is read.",
+      "workflows/ — frozen with the harness.",
+      "evals/tier2/ — keys, questions and scorer frozen (D44).",
+      "profiles/",
+      ".env and every .env* file — the owner's (G-3)."
+    ]
+  },
+  "constraints": [
+    "ARMS: A = one call, pin TIER3_ARM_A, Q1-Q25 x 3, ceiling $0.10 per unit. D = one call, pin TIER3_ARM_D, Q1-Q25 x 3, ceiling $0.20. F = verify-first through arm E's path, standing tiers, Q1-Q25 x 3, ceiling $0.20. E' = arm E unchanged (D51's engineering-rnd), standing tiers, Q6 Q10 Q14 Q15 Q16 Q17 Q23 x 3, ceiling $0.50. Arms B and C do not run.",
+    "UNITS: 246 (75 + 75 + 75 + 21). Interleaved order, seed 20261014, recorded with its sha256 in the results header as stage 1 did.",
+    "UNCHANGED FROM STAGE 1: the 1800 s common deadline; A and D's registered call parameters (max_tokens 8000, temperature 0.3); the pins in .env.tier3; isolation per unit; retry rules; failure treatment.",
+    "SPEND: TIER3_SPEND_AUTHORIZED must equal 15.00 and the sweep budget cap is 15.00. No paid unit before the owner has set that line.",
+    "SCORING: the scorer version on main when the run starts (frozen-2026-10-03.3 after #171). Keys frozen v1. K1 is not ruled: report key-strict as primary and 3 s.f. side by side, as stage 1 did.",
+    "READING: the reading sheet holds every scorer FAIL and a seeded sample of 10 PASS per arm, without arm labels. Two independent readings (D50): the advisor's is reading 1, yours is reading 2. Commit yours before you open the advisor's.",
+    "PRE-REGISTRATION FIRST: commit section 9's nine predictions and section 7's decision table, verbatim, into the manifest and notebook section 113 before any paid unit. Never edit them afterwards.",
+    "NO git operation in the tree while the run writes. Do not start the run with a dirty tree.",
+    "DO NOT touch the harness. If the dry run finds a run-blocking harness defect, stop and report it; do not fix it under this command."
+  ],
+  "acceptance_criteria": [
+    "(a) MANIFEST: a new version registering the arms, units, questions, seed, deadline, ceilings, the 15.00 authorisation, the scorer version and the reading rule exactly as in constraints.",
+    "(b) PLAN: the runner builds exactly 246 units in the seeded order. A guard test rebuilds the order independently and matches the sha256.",
+    "(c) ARM F: runs verify-first through arm E's path. A mocked F unit's record shows workflow verify-first, at most 4 model calls after triage and asks, and its iteration answers (first and final).",
+    "(d) RECORD (E' and F): each unit carries the anchored and demoted asks, every dissent with its anchor, the notes count, escalation's rulings, the candidate and every iteration's answer. Shown on mocked units.",
+    "(e) PRE-REGISTRATION: a test asserts the sha256 of the copied predictions and decision table equals that of sections 9 and 7 of the D51 record.",
+    "(f) DRY RUN: all 246 units mocked at zero spend. Each failure class occurs at least once: refusal, serving error, deadline, provider failure, budget stop. The reading sheet and report are generated.",
+    "(g) REPORT tables: delivered-correct of planned units per arm (key-strict and 3 s.f.); Q1-Q5 also shown separately; paired against A per question; median cost and latency per arm; F's first-answer vs final-answer table (prediction 9); unresolved candidates read (prediction 7); repetition agreement vs correctness (prediction 8); unanchored blocks per E'/F unit (prediction 3).",
+    "(h) PREFLIGHT passes free and prints each arm's worst case within its ceiling.",
+    "(i) Suite green before and after, counts re-derived, CI green. PR opened; the advisor merges.",
+    "(j) AFTER the merge and the owner's gate line: run the 246 units, copy the results to docs/traces/ byte-identical with its sha256, generate the reading sheet, and record spend, units and any failures in the response."
+  ],
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count reported before and after."},
+    {"command": ".venv/bin/python3 -m pytest tests/test_tier3_manifest.py tests/test_tier3_runner.py -q", "expected": "All pass, including the plan, order and pre-registration guards."}
+  ],
+  "rollback": "Before the run: revert the PR. After the run: not applicable — a measurement, bounded by the $15.00 sweep cap.",
+  "deliverable": {"branch": "arch/20261014-121-d51-remeasurement", "pr": true, "commit_style": "prose naming the measurement"},
+  "assumptions": [
+    "The pins in .env.tier3 are the ones stage 1 used. If preflight shows a different serving, stop and report it.",
+    "The standing .env tiers serve E' and F. If the judge tier is unset, validate falls back as configured; report which serving judged.",
+    "Arm E's existing record fields from command 120 cover (d). If one is missing, add it in the runner's record (in scope) and report it."
+  ],
+  "questions": [
+    "Report the expected spend from the dry run's worst cases and stage 1's medians. Do not adjust any ceiling."
+  ],
+  "preconditions": [
+    {"command": "test -f .orchestration/responses/ARCH-20261010-120.response.json && echo ok", "expected": "ok — the parent's response exists."},
+    {"command": ".venv/bin/python3 -c \"import yaml; print(sum('consistency' in (n.get('args') or {}) for f in ['workflows/engineering-rnd.yaml','workflows/lean.yaml','workflows/verify-first.yaml'] for n in yaml.safe_load(open(f))['nodes'] if n.get('check') == 'judges_agree'))\"", "expected": "0 — the #176 follow-up has landed (consistency is a note, not a judge). Otherwise BLOCKED."},
+    {"command": "grep -c 'frozen-2026-10-03.3' evals/tier2/versions.json", "expected": "1 or more — #171 has landed. Otherwise BLOCKED."},
+    {"command": ".venv/bin/python3 -c \"import re,hashlib; t=open('docs/reviews/2026-10-10-d51-the-request-is-the-yardstick.md',encoding='utf-8').read(); s=lambda n: re.search(r'^## %d\\. .*?(?=^## %d\\. )' % (n, n+1), t, re.S|re.M).group(0); print(hashlib.sha256(s(9).encode()).hexdigest()[:16], hashlib.sha256(s(7).encode()).hexdigest()[:16])\"", "expected": "d0406b0a7e8cbc41 64961cd5cd2b69a4"},
+    {"command": "sha256sum docs/traces/20261005T215237Z-tier3-run.jsonl | cut -c1-16", "expected": "d406f0fd59a7f499"},
+    {"command": "pgrep -af 'evals[./]tier3[./]runner|evals[./]golden|uvicor[n] autornd' || echo none", "expected": "none"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; report the count."}
+  ]
+}
