@@ -1,7 +1,7 @@
 ---
 name: prime-backend
 description: Primes the agent with focused understanding of the backend portion of the codebase — API routes, services, data models, and database layer — without loading unrelated frontend code. Use at the start of a session when the work is scoped to API endpoints, business logic, or data access. Optionally pulls external task context from Jira issues and Confluence pages first.
-argument-hint: [jira-issue-keys] [confluence-page-ids]
+argument-hint: "[jira-issue-keys] [confluence-page-ids]"
 ---
 
 # Prime Backend: Load Backend Context

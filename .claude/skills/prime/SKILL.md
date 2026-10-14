@@ -1,7 +1,7 @@
 ---
 name: prime
 description: Primes the agent with deep codebase understanding by analyzing structure, documentation, and key files. Use when starting work on a codebase, at the beginning of a session, or when you need a fast orientation before planning or implementing. Optionally pulls external task context from Jira issues and Confluence pages first.
-argument-hint: [jira-issue-keys] [confluence-page-ids]
+argument-hint: "[jira-issue-keys] [confluence-page-ids]"
 ---
 
 # Prime: Load Project Context
