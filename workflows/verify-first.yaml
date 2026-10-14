@@ -1,0 +1,142 @@
+name: verify-first
+description: >
+  Ruling D51 (8): answer once, check against the asks. No plan —
+  the plan is reasoning, not a yardstick, so this workflow omits
+  it entirely. Triage, grounding, the asks, one answer on the
+  engineering tier from the request and the asks alone, the free
+  checks, and one check on the judge tier. A run with no anchored
+  dissent ends completed; one revision addresses only the anchored
+  dissents; a dissent that survives ends escalated and unresolved,
+  with its candidate kept (D51 (7)). Not the standing workflow —
+  engineering-rnd is — and nothing routes to it: which requests
+  take which workflow is ruled on the re-measurement's data.
+
+nodes:
+  # ── classify ────────────────────────────────────────────────────
+  - id: triage
+    kind: ai
+    tier: triage
+    prompt: triage
+    schema: TriageVerdict
+
+  # Ruling D51 (1): the asks node, on the triage tier. A model
+  # proposes what the request asks, quoted verbatim, each with its
+  # kind; the free check below keeps only what occurs in the
+  # request and counts every other quote as not anchored.
+  - id: asks
+    kind: ai
+    tier: triage
+    prompt: asks
+    schema: AsksVerdict
+    depends_on: [triage]
+
+  - id: asks_anchored
+    kind: check
+    check: asks_anchored
+    args:
+      asks: asks.asks
+      request: request
+    depends_on: [asks]
+
+  # Grounding, assembled deterministically — the same node as
+  # engineering-rnd's, because it is the same job.
+  - id: context
+    kind: check
+    check: build_context
+    depends_on: [asks_anchored]
+
+  # ── answer ───────────────────────────────────────────────────────
+  # The one answer, on the engineering tier, from the request and
+  # the asks with no plan. The implement prompt omits its 'Plan:'
+  # section here: the task line reads 'Produce the answer to the
+  # following request.'
+  - id: implement
+    kind: ai
+    tier: engineering
+    specialist: lead
+    prompt: implement
+    schema: ImplementVerdict
+    max_tokens: plan_max_tokens    # the deliverable is plan-sized; 16k truncated it twice (073, 075)
+
+  # Ruling D51 (5): the implementer's honest-refusal channel. An
+  # entry that names an ask ends the run blocked — this workflow
+  # has no escalation sub-graph to route to, and an unmet ask is a
+  # terminal fact, not an iteration. An entry naming no ask is a
+  # note: counted, never blocking, routed nowhere.
+  - id: blocked_check
+    kind: check
+    check: blocked_on_unmet
+    args:
+      blocked_on: implement.blocked_on
+      asks: asks_anchored.anchored
+      request: request
+    depends_on: [implement]
+
+  - id: blocked_gate
+    kind: gate
+    condition: blocked_check.passed == true
+    depends_on: [blocked_check]
+    on_fail: blocked
+    on_fail_reason: "Implementation blocked on an ask it cannot satisfy"
+
+  # The free checks, before the paid judge. If the implementation
+  # does not even mention an anchored ask, no model call is needed
+  # to know it is not done.
+  - id: coverage
+    kind: check
+    check: criteria_addressed
+    args:
+      criteria: asks_anchored.quotes
+      text: implement.summary
+    depends_on: [implement]
+
+  # Ruling D51 (4): the reference is the request's stated figures,
+  # never a plan — there is no plan here at all.
+  - id: consistency
+    kind: check
+    check: numbers_consistent
+    args:
+      reference: request
+      implementation: implement.summary
+    depends_on: [implement]
+
+  # ── check ────────────────────────────────────────────────────────
+  - id: validate
+    kind: ai
+    tier: judge                # Ruling D35: a different pretraining lineage judges
+    specialist: test_engineer
+    prompt: validate
+    schema: ValidateVerdict
+    max_tokens: judge_max_tokens    # a verdict, not a second implementation
+    depends_on: [coverage, consistency]
+
+  # Every judge this body produced, folded over anchored dissents
+  # only (Ruling D51, "The fold").
+  - id: judges
+    kind: check
+    check: judges_agree
+    args:
+      implement: implement.green
+      validate: validate.green
+      # Ruling D46 (3): the whole check output, not just its
+      # passed — the fold must see `checked` so a check that
+      # compared nothing is non-blocking and listed.
+      coverage: coverage
+      consistency: consistency
+    depends_on: [implement, coverage, consistency, validate]
+
+  # At most four model calls after triage and asks: answer, check,
+  # revision, check — one revision addressing only the anchored
+  # dissents, then the free checks and one more check. A dissent
+  # that survives ends the run escalated and unresolved, with its
+  # candidate kept under D51 (7). The record keeps the first answer
+  # beside the final one, so the readers can say what the check
+  # changed. Two iterations are the rule; the bound is declared, not
+  # a setting, so no .env line can widen it.
+  - id: verify_loop
+    kind: ai
+    body: [implement, blocked_check, blocked_gate, coverage, consistency, validate, judges]
+    until: judges.passed == true
+    max_iterations: 2
+    on_exhausted_status: escalated
+    depends_on: [context]

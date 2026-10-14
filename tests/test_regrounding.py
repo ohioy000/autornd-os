@@ -103,13 +103,23 @@ def _base(overrides=None, risk="medium"):
     verdicts = {
         "triage": {"risk": risk, "domains": ["backend"],
                    "unrecallable": False},
+        # Ruling D51 (1): the asks node's
+        # verdict. The probe request is below
+        # the anchoring floor, so the anchoring
+        # check's fallback -- the whole request
+        # as the one ask -- fires whatever this
+        # double proposes.
+        "asks": {"asks": []},
         "context": {},
         "plan": {"ready": True, "plan": "Do the thing.",
                  "blockers": [],
                  "success_criteria": ["The thing is done"]},
         "feasibility": {"feasible": True},
         "implement": {"done": True, "green": True, "iteration": 1,
-                      "blocked_on": [], "summary": "The thing is done."},
+                      # The summary must address the anchored
+                      # ask -- the request itself, under the
+                      # fallback -- or coverage holds the loop.
+                      "blocked_on": [], "summary": "The D37 probe is done."},
         "domain_review": {"critical": False},
         "validate": {"green": True},
         "review": {"ship": True},

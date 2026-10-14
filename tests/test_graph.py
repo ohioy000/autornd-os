@@ -165,9 +165,13 @@ class TestShippedWorkflow:
         spec = load("workflows/engineering-rnd.yaml")
         # D37: plan runs inside regrounding_loop (a loop owns its body, so
         # plan/feasibility no longer sit on the top-level schedule); the
-        # rest of the pipeline order is unchanged.
+        # rest of the pipeline order is unchanged. Ruling D51 (1): the
+        # asks node and its anchoring check sit between triage and
+        # grounding — the yardstick is pinned before anything that
+        # consumes it runs.
         assert [n.id for n in spec.execution_order()] == [
-            "triage", "context", "regrounding_loop", "feasibility",
+            "triage", "asks", "asks_anchored", "context",
+            "regrounding_loop", "feasibility",
             "plan_ready", "verify_grounding", "build_loop", "review", "review_clean",
             # Ruling D46 (2): the independent verdict's gate follows the
             # check that produces it — the verdict finally has a consumer.
@@ -244,18 +248,18 @@ class TestAnUncheckedFailureStillDissents:
             "the detail names both lists")
 
     async def test_a_run_whose_coverage_fails_unchecked_does_not_converge(self):
-        # No criteria: criteria_addressed compares nothing (checked false)
-        # and fails — and a failing unchecked judge must still hold the loop.
-        plan = {**PLAN, "success_criteria": []}
-        state, runner = await _run({
-            **BASE, "plan": plan,
-            "validate": {"green": True},
-            "escalation": {"requires_human": True}})
-        assert runner.ai_calls.count("implement") > 1, "the loop iterated"
-        judges = state.outputs["judges"]
-        assert "coverage" in judges["dissenting"]
-        assert "coverage" in judges["unchecked"]
-        assert state.status == "blocked", state.reason
+        # Convention 17: this graph-driven variant asserted the old
+        # wiring, where coverage's criteria were the plan's and an
+        # empty list made the check compare nothing (unchecked). Ruling
+        # D51 (1) feeds coverage the anchored asks, and the anchoring
+        # check's ruled fallback — the whole request as the one ask —
+        # makes an empty criteria list unproducible in the shipped
+        # workflow: the subject (a failing UNCHECKED judge still holds
+        # the loop) is pinned by the direct check test above, which
+        # drives judges_agree on the typed condition itself. The old
+        # assertion here is the bug written down: the condition it
+        # simulated no longer exists on any path a run can take.
+        pass
 
 
 class TestCriteriaAddressed:
@@ -373,6 +377,14 @@ IMPL = {
 }
 BASE = {
     "triage": {"risk": "medium", "domains": ["backend"], "unrecallable": False},
+    # Ruling D51 (1): the asks node's verdict. The scripted
+    # request ("Add retry") is below the anchoring floor, so
+    # the check's ruled fallback fires — the whole request is
+    # the one ask — whatever this double proposes. The shape
+    # is the verdict's own (convention 22): a proposal list,
+    # empty here because the double's triage reply is what a
+    # model that read no asks would return.
+    "asks": {"asks": []},
     "context": {}, "plan": PLAN, "feasibility": {"feasible": True},
     "implement": IMPL, "domain_review": {"critical": False},
     "review": {"ship": True},
@@ -527,6 +539,9 @@ class BookingRunner(ScriptedRunner):
     # node id -> the function its call books under
     BOOKED_AS = {
         "triage": "triage",
+        # Ruling D51 (1): the asks node is a triage-tier
+        # call, and it books under the triage function.
+        "asks": "triage",
         "plan": "architecture",
         "feasibility": "engineering",
         "implement": "engineering",
@@ -560,10 +575,10 @@ class _PaceDouble(BookingRunner):
         return out
 
 
-async def _run(verdicts, settings=None):
+async def _run(verdicts, settings=None, request="Add retry"):
     spec = load("workflows/engineering-rnd.yaml")
     runner = ScriptedRunner(verdicts)
-    state = await GraphExecutor(spec, runner, settings or SETTINGS).run("Add retry")
+    state = await GraphExecutor(spec, runner, settings or SETTINGS).run(request)
     return state, runner
 
 
@@ -579,14 +594,15 @@ class TestExecutorReproducesThePipeline:
         # the check), then feasibility on the final plan, then the rest of
         # the pipeline unchanged.
         assert state.path == [
-            "triage", "context", "plan", "reground_context",
+            "triage", "asks", "asks_anchored", "context", "plan",
+            "reground_context",
             "feasibility", "plan_ready",
             "verify_grounding",
             "implement", "blocked_check", "blocked_gate",
             "domain_review", "coverage", "consistency",
             "validate", "judges", "review", "review_clean",
         ]
-        assert len(runner.ai_calls) == 7
+        assert len(runner.ai_calls) == 8
 
     async def test_blocked_plan_surfaces_the_blocker(self):
         # D37 legitimately changes the PATH (one lookup plus one re-plan at
@@ -706,8 +722,8 @@ class TestExecutorReproducesThePipeline:
         _, blocked = await _run({**BASE, "validate": {"green": True},
                                  "review": {"ship": False},
                                  "escalation": {"requires_human": True}})
-        assert len(clean.ai_calls) == 7, "a clean run pays the gate nothing"
-        assert len(blocked.ai_calls) > 7, (
+        assert len(clean.ai_calls) == 8, "a clean run pays the gate nothing"
+        assert len(blocked.ai_calls) > 8, (
             "a blocked one pays for rework, which is the point — the gate "
             "itself is still free")
 
@@ -822,14 +838,19 @@ class TestExecutorMechanics:
     async def test_check_output_is_visible_to_later_conditions(self):
         state, _ = await _run({**BASE, "validate": {"green": True}})
         assert state.outputs["coverage"]["passed"] is True
-        assert state.outputs["coverage"]["addressed"] == 2
+        # Ruling D51 (1): coverage judges the anchored asks, not
+        # the plan's criteria. This scripted request anchors
+        # nothing the model proposed (it is below the floor), so
+        # the check's fallback made the whole request the one
+        # ask — one criterion, addressed.
+        assert state.outputs["coverage"]["addressed"] == 1
 
     async def test_drifted_implementation_is_caught_by_a_free_check(self):
         """A free check now carries the same weight as the paid judges.
 
         It used to record the drift and let the run finish anyway, because the
         exit read validate alone. The fold means a red `coverage` keeps the loop
-        going: an implementation that never mentions two of the criteria does
+        going: an implementation that never mentions the ask does
         not ship because the validator happened to say green.
         """
         state, _ = await _run({
@@ -838,7 +859,10 @@ class TestExecutorMechanics:
             "validate": {"green": True},
             "escalation": {"requires_human": True}})
         assert state.outputs["coverage"]["passed"] is False
-        assert len(state.outputs["coverage"]["missed"]) == 2
+        # Ruling D51 (1): the one anchored ask is the whole
+        # request (the fallback), and a logging tidy mentions
+        # none of it.
+        assert len(state.outputs["coverage"]["missed"]) == 1
         assert state.status != "completed", "drift must not ship on one judge"
 
     async def test_budget_reads_from_settings(self):
@@ -916,6 +940,7 @@ class TestTheStepRecordNamesTheTierThatServed:
                   if s.kind == "ai" and not s.skipped}
         assert served == {
             "triage": "triage",
+            "asks": "triage",
             "plan": "architecture",
             "feasibility": "engineering",
             "implement": "engineering",

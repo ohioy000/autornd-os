@@ -112,7 +112,14 @@ class TestLeadSelection:
         assert "review" in call_order
 
     async def test_domain_review_skipped_when_lead_fails(self):
-        """If lead returns green=False, reviewers should NOT run."""
+        """If lead returns green=False, reviewers should NOT run.
+
+        Ruling D51, THE FOLD: the implementer's own red is a note
+        unless a blocked_on entry names an ask — the judges, not
+        the implementer, decide whether the work fails. Convention
+        17: this test asserted the retired rule that the lead's red
+        stays red; the rule that survived is that the reviewers do
+        not run on it."""
         client = OpenRouterClient(api_key="test")
         call_count = {"n": 0}
 
@@ -135,8 +142,9 @@ class TestLeadSelection:
             primary_domain=Domain.HARDWARE,
         )
 
-        assert verdict.green is False
         assert call_count["n"] == 1  # only the lead was called
+        assert verdict.green is True, "the unanchored red is a note"
+        assert verdict.red_cause is None
 
     async def test_domain_concerns_propagated(self):
         """Domain reviewer concerns should appear in verdict."""
@@ -167,10 +175,20 @@ class TestLeadSelection:
         )
 
         assert verdict.green is True
-        assert "TVS voltage exceeds regulator max" in verdict.domain_concerns
+        # Ruling D51 (3): concerns are typed (DomainConcern). The
+        # detail still travels — this test asserted the old
+        # list-of-strings shape, which the typed model replaced.
+        assert [c.detail for c in verdict.domain_concerns] == \
+            ["TVS voltage exceeds regulator max"]
 
     async def test_critical_concern_flips_green(self):
-        """A critical domain concern should set green=False."""
+        """An anchored critical domain concern should set green=False.
+
+        Ruling D51 (R-f): concerns are typed — each carries its own
+        critical flag and anchor. Convention 17: the old fixture put
+        `critical` at the top level of the reply, a channel the typed
+        contract retired; the per-concern flag with a hazard anchor
+        keeps this test's rule under the new contract."""
         client = OpenRouterClient(api_key="test")
 
         async def _mock(function, system_prompt, user_message, **kw):
@@ -182,8 +200,8 @@ class TestLeadSelection:
                 }
             else:
                 data = {
-                    "concerns": ["Fatal voltage domain crossing"],
-                    "critical": True,
+                    "concerns": [{"detail": "Fatal voltage domain crossing",
+                                     "critical": True, "hazard": True}],
                 }
             return data, make_mock_response(data)
 
@@ -199,3 +217,40 @@ class TestLeadSelection:
 
         assert verdict.green is False
         assert verdict.red_cause is not None
+
+    async def test_an_unanchored_critical_concern_is_a_note(self):
+        """Ruling D51 (R-f), THE FOLD: a critical concern that
+        carries no anchor — no ask number, no anchored quote, no
+        hazard — is a note: counted, never flipping green.
+        Convention 22: this simulates the condition the demotion
+        watches; without it the concern flips green and the test
+        fails."""
+        client = OpenRouterClient(api_key="test")
+
+        async def _mock(function, system_prompt, user_message, **kw):
+            msg = user_message.lower()
+            if "produce the implementation for the following plan" in msg:
+                data = {
+                    "done": True, "green": True, "red_cause": None,
+                    "iteration": 1, "summary": "Built it.",
+                }
+            else:
+                data = {
+                    "concerns": [{"detail": "Fatal voltage domain crossing",
+                                     "critical": True}],
+                }
+            return data, make_mock_response(data)
+
+        client.chat_json = AsyncMock(side_effect=_mock)
+        hw = _make_specialist(SpecialistRole.HARDWARE_ENGINEER)
+        fw = _make_specialist(SpecialistRole.FIRMWARE_ENGINEER)
+
+        verdict, _ = await run_implement(
+            client, "test request", _make_plan(),
+            [hw, fw], iteration=1,
+            primary_domain=Domain.HARDWARE,
+        )
+
+        assert verdict.green is True
+        assert verdict.red_cause is None
+        assert verdict.domain_concerns[0].critical is False

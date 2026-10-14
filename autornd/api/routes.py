@@ -431,7 +431,7 @@ async def run_doublecheck_endpoint(
 ):
     from autornd.config import settings
     from autornd.engine.phases import run_doublecheck
-    from autornd.models.verdicts import ImplementVerdict, PlanVerdict
+    from autornd.models.verdicts import ImplementVerdict
 
     if not settings.model_premium:
         raise HTTPException(404, "Premium model not configured")
@@ -449,10 +449,12 @@ async def run_doublecheck_endpoint(
         if p.phase == "implement":
             impl_data = v
 
+    # The plan's presence still proves the workflow went through the
+    # plan phase; Ruling D51 (R-d) took the plan out of the prompt the
+    # doublecheck reads, so only its verdict is constructed.
     if not plan_data or not impl_data:
         raise HTTPException(400, "Workflow missing plan or implement phase")
 
-    plan = PlanVerdict(**plan_data)
     implement = ImplementVerdict(**impl_data)
 
     # Ruling D47 (2): the doublecheck can spend, so it passes the same run
@@ -465,7 +467,7 @@ async def run_doublecheck_endpoint(
         client = _bound_client()
         try:
             verdict, response = await run_doublecheck(
-                client, workflow.request, plan, implement,
+                client, workflow.request, implement,
             )
         finally:
             await client.close()

@@ -35,7 +35,12 @@ IMPLEMENT_RESP = {
     # Mentions both success criteria by name. It did not before, and the run
     # still completed, because the exit read the validator alone — a drifted
     # implementation shipping on one judge is exactly what the fold stops.
-    "summary": ("Refactored deep sleep FSM with configurable wake sources. "
+    # Ruling D51 (1): the ask is the whole request (below the anchoring
+    # floor after the double's triage reply carries no asks), so the
+    # summary must address the request's own words or coverage holds
+    # the loop.
+    "summary": ("Redesign of the deep sleep state machine for sensor nodes: "
+                "refactored deep sleep FSM with configurable wake sources. "
                 "Measured sleep current 8.2uA against the < 10uA target and "
                 "wake latency 320ms against the < 500ms target."),
 }
@@ -113,9 +118,15 @@ def _make_mock_client():
     return client
 
 
-def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = False):
+def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = False,
+                         request: str = ""):
     """Validate fails N times then passes. Implement always succeeds.
-    When the loop exhausts, K3 autopsy returns the configured requires_human flag."""
+    When the loop exhausts, K3 autopsy returns the configured requires_human flag.
+
+    The failing validate carries the request's own words as its
+    anchor quote: Ruling D51, THE FOLD demotes a red with no
+    anchor to a note, and the simulated failure must stay red
+    for the loop to see it."""
     client = OpenRouterClient(api_key="test")
     validate_count = {"n": 0}
 
@@ -154,9 +165,14 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
         elif "validate this implementation" in msg:
             validate_count["n"] += 1
             if validate_count["n"] <= fail_iterations:
+                # Ruling D51, THE FOLD: a red with no
+                # anchor is a note, so the simulated
+                # failure must anchor to stay red. The
+                # quote is the request's own words.
                 data = {
                     "green": False,
                     "red_cause": "topic_parse_error",
+                    "anchor_quote": request,
                     "evidence": [f"Iteration {validate_count['n']}: topic fails"],
                 }
             else:
@@ -172,9 +188,13 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
                 "red_cause": None,
                 "iteration": 1,
                 # Addresses the criteria this scenario declares; see the note
-                # on IMPLEMENT_RESP above.
-                "summary": ("Implemented topic refactor: all topics parse "
-                            "correctly, validated on subscribe."),
+                # on IMPLEMENT_RESP above. Ruling D51 (1): the anchored ask
+                # is the whole request (the double's triage reply carries
+                # no asks, so the fallback fires), so the summary carries
+                # the request's own words or coverage holds the loop.
+                "summary": (f"Implemented the request — {request} — "
+                            "all topics parse correctly, validated on "
+                            "subscribe."),
             }
         elif "review this implementation from your domain perspective" in msg:
             data = {"concerns": [], "critical": False}
@@ -301,7 +321,8 @@ class TestWorkflowEngine:
         assert workflow.status == WorkflowStatus.BLOCKED
 
     async def test_iteration_loop_retries_then_passes(self, db_session):
-        client = _make_failing_client(fail_iterations=2)
+        client = _make_failing_client(
+            fail_iterations=2, request="Refactor MQTT topic structure")
         engine = WorkflowEngine(client, db_session)
         workflow = await engine.execute("Refactor MQTT topic structure")
 
@@ -310,7 +331,9 @@ class TestWorkflowEngine:
 
     async def test_escalation_recovery_also_fails(self, db_session):
         """K3 says fixable, but recovery loop also fails → ESCALATED."""
-        client = _make_failing_client(fail_iterations=99, k3_requires_human=False)
+        client = _make_failing_client(
+            fail_iterations=99, k3_requires_human=False,
+            request="Impossible task that always fails validation")
         engine = WorkflowEngine(client, db_session)
         workflow = await engine.execute("Impossible task that always fails validation")
 
@@ -318,7 +341,9 @@ class TestWorkflowEngine:
 
     async def test_escalation_requires_human_blocks(self, db_session):
         """K3 says requires_human → BLOCKED."""
-        client = _make_failing_client(fail_iterations=99, k3_requires_human=True)
+        client = _make_failing_client(
+            fail_iterations=99, k3_requires_human=True,
+            request="Task needing manual hardware intervention")
         engine = WorkflowEngine(client, db_session)
         workflow = await engine.execute("Task needing manual hardware intervention")
 
@@ -326,7 +351,9 @@ class TestWorkflowEngine:
 
     async def test_escalation_recovery_succeeds(self, db_session):
         """K3 directive fixes the issue — recovery loop passes → COMPLETED."""
-        client = _make_failing_client(fail_iterations=5, k3_requires_human=False)
+        client = _make_failing_client(
+            fail_iterations=5, k3_requires_human=False,
+            request="Task that K3 can fix")
         engine = WorkflowEngine(client, db_session)
         workflow = await engine.execute("Task that K3 can fix")
 

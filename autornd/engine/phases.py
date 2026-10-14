@@ -15,7 +15,15 @@ from typing import Any
 from pydantic import ValidationError
 
 from autornd.config import settings
+from autornd.graph.checks import dissent_anchored, quote_anchors
 from autornd.models.verdicts import (
+    AsksVerdict,
+    BlockedOnAsk,
+    DomainConcern,
+    RED_NO_ANCHOR,
+    UNANCHORED_DISSENT,
+    Ask,
+    count_normalisation,
     domain_key,
     Domain,
     DoubleCheckVerdict,
@@ -68,29 +76,31 @@ the task."""
 # and the final review blocked on it; validate was the judge that was wrong, and
 # a false pass is the expensive direction because it stops the loop.
 #
+# Ruling D51 rewrote this contract whole: the yardstick is the
+# request's anchored asks, not the plan's criteria.
+#
 # Expect this to need live iterations, as the risk guide did four times over.
 ASSESSMENT_CONTRACT = """\
 You are assessing a written implementation, not a running system. You cannot \
 execute code, run tests, or inspect a repository, and the absence of a live \
 system is not itself a defect.
 
-Judge whether the implementation as described would satisfy each success \
-criterion if applied as written. Mark it red only for substantive problems: a \
-criterion it does not address, a logical error, a contradiction with the plan, \
-or a missing step. Do not mark it red merely because the work has not been run.
+Judge whether the implementation as written answers each ask, correctly. Mark it \
+red only for substantive problems: an ask it does not answer, an ask it answers \
+wrongly, a logical error in what it states, or a contradiction with the request. \
+Do not mark it red merely because the work has not been run.
 
-Be exacting about the difference. "The plan says cap at 60s but the code sets \
-600s" is red. "I cannot confirm this without running it" is not — decide from \
-the text in front of you and say what you found.
+Be exacting about the difference. "The request caps the delay at 60 s but the \
+answer sets 600 s" is red. "I cannot confirm this without running it" is not — \
+decide from the text in front of you and say what you found.
 
-The success criteria are the contract you assess against, and they are fixed. \
-You may not correct, reinterpret, relax or substitute a criterion, and you may \
-not accept work that changed one. Where the work and a criterion disagree, that \
-criterion FAILS — whichever of the two looks more sensible to you. Saying a \
-criterion is wrong, ambiguous or impossible is legitimate and belongs in \
-evidence; passing work against a criterion you have quietly amended is a false \
-assessment, and a false pass is worse than a wrong criterion because it ends \
-the loop."""
+The asks are the contract you assess against, and they are fixed: they are the \
+request's own words. You may not reinterpret, relax or add to an ask, and you may \
+not accept work that changed one. Where the work and an ask disagree, that ask \
+fails — whichever of the two looks more sensible to you. Judging the work against \
+anything the request does not ask — a method you prefer, a check it did not \
+request, a plan's own devices — is not an assessment: it is a note, and a note \
+cannot make the work red."""
 
 
 def enforce_triage_composition(verdict: TriageVerdict) -> None:
@@ -159,6 +169,39 @@ def _role_vocabulary() -> str:
         if extra not in names:
             names.append(extra)
     return ", ".join(names)
+
+
+def _ask_field(ask: Any, key: str) -> Any:
+    """One field of an ask, whether it arrived as a dict or a model.
+
+    The asks node's proposals are Ask models; the anchored asks that
+    reach every judge are the check's dicts. Both carry the same two
+    fields, and the prompts render either.
+    """
+    if isinstance(ask, dict):
+        return ask.get(key)
+    return getattr(ask, key, None)
+
+
+def render_asks(asks: list[Any] | None) -> str:
+    """The anchored asks, numbered from 1, one per line, each
+    followed by its kind in brackets (Ruling D51 (1)).
+
+    The fallback ask — the whole request as the one ask, when nothing
+    the model proposed anchored — carries no kind: it is every kind at
+    once, and a bracket would lie about which one it is.
+    """
+    lines: list[str] = []
+    for i, ask in enumerate(asks or [], start=1):
+        quote = str(_ask_field(ask, "quote") or "").strip()
+        if not quote:
+            continue
+        kind = _ask_field(ask, "kind")
+        kind = str(getattr(kind, "value", kind) or "").strip()
+        lines.append(f"{i}. {quote}" + (f" [{kind}]" if kind else ""))
+    if not lines:
+        return "(none)"
+    return "\n".join(lines)
 
 
 async def run_triage(
@@ -241,6 +284,48 @@ Request:
     return verdict, response
 
 
+async def run_asks(
+    client: OpenRouterClient,
+    request: str,
+    max_tokens: int | None = None,
+) -> tuple[AsksVerdict, ModelResponse]:
+    """The asks node (Ruling D51 (1), text (R-a)).
+
+    A model on the triage tier proposes the request's asks as verbatim
+    quotes, each with its kind. The anchoring is NOT this phase's job:
+    the free check `asks_anchored` keeps a quote only if it occurs in
+    the request, and the anchored asks are the run's only success
+    criteria. Quoting is what a cheap model is good at; anchoring is
+    what a substring check cannot get wrong.
+    """
+    prompt = f"""\
+List what this request asks the answer to give or to satisfy.
+
+Each ask is a verbatim quote of the request: copy its words exactly, without paraphrase, so that the quote can be found in the request as written. Give one ask per entry — one value, verdict, step, constraint or format — with its kind:
+- value: a figure, quantity or selection the answer must state
+- verdict: a judgement the answer must reach
+- step: an action the answer must include, in the order the request gives it
+- constraint: a condition the answer must respect, such as a limit, tolerance, rule or prohibition
+- format: a form the request asks the answer to take, such as a sign convention, a unit or a list
+
+Quote only what the request says. Do not add checks, deliverables, methods or presentation the request does not ask for. Do not list the data the request supplies — given values, readings, dimensions — unless the request asks the answer to state them or to use them in a stated way.
+
+Return JSON: {{"asks": [{{"quote": "...", "kind": "value"}}]}}
+
+Request:
+{request}"""
+
+    data, response = await client.chat_json(
+        function="triage",
+        system_prompt="You are an engineering request analyst. Respond with JSON only.",
+        user_message=prompt,
+        max_tokens=max_tokens or settings.plan_max_tokens,
+        schema=AsksVerdict,
+    )
+    verdict = AsksVerdict(**data)
+    return verdict, response
+
+
 async def run_plan(
     client: OpenRouterClient,
     request: str,
@@ -249,6 +334,7 @@ async def run_plan(
     tier: str | None = None,
     context: str | None = None,
     max_tokens: int | None = None,
+    asks: list[Any] | None = None,
 ) -> tuple[PlanVerdict, ModelResponse]:
     specialist_names = ", ".join(s.name for s in specialists)
     # Grounding is assembled once per workflow by its own node and passed in.
@@ -276,7 +362,6 @@ Return JSON with:
 - blockers: list of blocking issues (empty if ready)
 - cost_estimate: estimated material or resource cost in USD where the work
   implies one (components, licences, capacity), null where it does not
-- success_criteria: 3 to 6 concrete criteria the validate phase will check
 
 Rules for the plan (each measured 2026-09-30, each a loop-killer when broken):
 
@@ -305,23 +390,10 @@ Rules for the plan (each measured 2026-09-30, each a loop-killer when broken):
    checkout-wait over 250 ms sustained, or wait-queue depth above zero
    for 60 s). A plan with no disprovable claim cannot be validated.
 
-The success criteria are the most important thing you produce. Every later
-phase is judged against them and nothing else, so write them as real sentences
-about the finished work — never placeholders, never "...", never "TBD".
+You do not write the test this work is judged by. The request is that test, and the asks quoted from it are listed below: every later judgment is made against them and nothing else. Plan how to answer them. The four rules above govern how you reason; they add nothing to what the answer must contain.
 
-Each one must be settleable by reading the implementation rather than by
-running it: "reconnect loop applies exponential backoff capped at 60s with
-jitter", not "reconnects within 30s in production".
-
-Scope (Ruling D43): the request sets the scope. Every success criterion must
-test something the request asks for: an output, figure, constraint, format or
-verdict the request states, or a fact the grounding supplies to answer it. A
-criterion may not add specifics the request did not ask for, such as component
-values, part numbers, presentation layout, or the exact form of a derivation.
-The four rules above govern how you reason the plan; they do not add to what
-the answer must contain.
-
-If you cannot state real criteria, return ready: false and say why in blockers.
+The asks, quoted from the request:
+{render_asks(asks)}
 
 Request:
 {request}"""
@@ -360,7 +432,7 @@ async def run_plan_feasibility(
 
     context_block = f"\n\nProject context:\n{context}" if context else ""
     bom_block = (
-        f"Cost estimate (USD): {plan.cost_estimate}\n"
+        f"Cost estimate (USD): {plan.cost_estimate}\n\n"
         if plan.cost_estimate is not None else ""
     )
     prompt = f"""\
@@ -370,10 +442,7 @@ Review this implementation plan from your specialist perspective for feasibility
 Plan produced by Systems Architect:
 {plan.plan}
 
-{bom_block}
-Success criteria: {json.dumps(plan.success_criteria)}
-
-Return JSON with:
+{bom_block}Return JSON with:
 - feasible: true if the plan is feasible from your domain's perspective
 - concerns: list of specific concerns or constraints from your domain
 - blockers: list of hard blockers that would prevent implementation (empty if feasible)
@@ -545,7 +614,8 @@ def select_lead(
 
 
 def build_domain_review_prompt(
-    request: str, plan: PlanVerdict, summary: str, context: str = ""
+    request: str, summary: str, asks: list[Any] | None = None,
+    context: str = "",
 ) -> str:
     context_block = f"\n\nProject context:\n{context}" if context else ""
     return f"""\
@@ -557,11 +627,22 @@ Review this implementation from your domain perspective. Do NOT produce an alter
 Implementation summary:
 {summary}
 
-Success criteria:
-{json.dumps(plan.success_criteria)}
+The asks, quoted from the request:
+{render_asks(asks)}
+
+Judge the answer against the request from your domain. A concern can be critical only if it is anchored:
+- it names the ask it concerns, by number, and what the answer states or omits against it; or
+- it quotes the request's own words, exactly, for something the answer gets wrong or leaves out; or
+- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment.
+An omission is never a hazard. If the request asked for what is missing, quote the request; if it did not, it is a note, and a note is never critical.
 
 Return JSON with:
-- concerns: list of specific domain concerns (empty list if none)
+- concerns: list of objects, each with:
+  - detail: the concern
+  - ask: the number of the ask the concern names, when it names one
+  - quote: the request's own words, verbatim, when the concern is anchored by them
+  - hazard: true only when the concern is a hazard
+  - critical: true only when the concern is anchored and blocks the work
 - critical: true if any concern is a hard blocker that would cause failure
 
 Original request:
@@ -571,22 +652,28 @@ Original request:
 async def run_domain_review(
     client: OpenRouterClient,
     request: str,
-    plan: PlanVerdict,
     summary: str,
     reviewers: list[Specialist],
     context: str = "",
     function: str | None = None,
-) -> tuple[list[str], bool, list[ModelResponse]]:
+    asks: list[Any] | None = None,
+) -> tuple[list[DomainConcern], bool, list[ModelResponse]]:
     """Reviewers examine one implementation in parallel.
 
     Returns (concerns, any_critical, responses). A critical concern is the
     caller's cue to flip the implementation red; non-critical ones are recorded
     and passed to the validator.
+
+    Ruling D51 (3), text (R-f): a concern is critical only if it is
+    anchored — it names the ask by number, quotes the request's own
+    words, or is a hazard. An unanchored critical concern is demoted
+    to a note before the caller sees it: counted, kept in the returned
+    list at critical=false, never the reason the work goes red.
     """
     if not reviewers:
         return [], False, []
 
-    prompt = build_domain_review_prompt(request, plan, summary, context)
+    prompt = build_domain_review_prompt(request, summary, asks, context)
     responses: list[ModelResponse] = []
 
     async def _review(spec: Specialist) -> dict[str, Any]:
@@ -596,12 +683,27 @@ async def run_domain_review(
 
     results = await asyncio.gather(*[_review(s) for s in reviewers])
 
-    concerns: list[str] = []
+    concerns: list[DomainConcern] = []
     critical = False
     for result in results:
-        concerns.extend(c for c in result.get("concerns", []) if isinstance(c, str))
-        if result.get("critical"):
-            critical = True
+        for raw in result.get("concerns", []):
+            try:
+                concern = DomainConcern.model_validate(raw)
+            except ValidationError:
+                logger.warning(
+                    "Unusable domain concern from a reviewer: %r", raw)
+                continue
+            if concern.critical and not dissent_anchored(
+                    concern.ask, concern.quote, concern.hazard,
+                    asks, request):
+                # A note, never critical — a judgment that names no
+                # anchor carries no information about the request
+                # (convention 21).
+                count_normalisation(UNANCHORED_DISSENT)
+                concern.critical = False
+            concerns.append(concern)
+            if concern.critical:
+                critical = True
     return concerns, critical, responses
 
 
@@ -686,9 +788,10 @@ REVIEW BLOCKED THE PREVIOUS ATTEMPT on these findings — resolve each one:
 {body}{tail}"""
 
 
-def render_domain_concerns(concerns: list[str]) -> str:
+def render_domain_concerns(concerns: list[DomainConcern]) -> str:
     """The reviewer's own words, as the reason the implementation is red."""
-    cleaned = [str(c).strip() for c in (concerns or []) if str(c).strip()]
+    cleaned = [str(c.detail).strip() for c in (concerns or [])
+               if str(c.detail).strip()]
     if not cleaned:
         return "Domain reviewer flagged critical concern"
     body = "; ".join(cleaned)
@@ -720,7 +823,7 @@ THE PREVIOUS ATTEMPT LEFT THESE SUCCESS CRITERIA UNMET — satisfy each one:
 async def run_implement(
     client: OpenRouterClient,
     request: str,
-    plan: PlanVerdict,
+    plan: PlanVerdict | None,
     specialists: list[Specialist],
     iteration: int,
     red_cause: str | None = None,
@@ -733,6 +836,7 @@ async def run_implement(
     prior_summary: str | None = None,
     considerations: list[str] | None = None,
     max_tokens: int | None = None,
+    asks: list[Any] | None = None,
 ) -> tuple[ImplementVerdict, list[ModelResponse]]:
     # Ruling D33: on every iteration after the first, implement REVISES its own
     # prior artifact rather than regenerating from the plan. The fixer must see
@@ -773,7 +877,7 @@ Address this specific failure in your implementation."""
     # way: weigh them; nothing is judged against them. Feasibility's concerns
     # never appear here, and these never appear there.
     open_points_block = ""
-    if plan.blockers:
+    if plan and plan.blockers:
         open_points_block = f"""
 
 OPEN POINTS THE PLAN ITSELF NAMED (the plan passed its gate with these; not requirements — weigh them; nothing is judged against them):
@@ -795,40 +899,53 @@ CONSIDERATIONS A REVIEWER RAISED (not requirements — weigh them; nothing is ju
     # Ruling D33: produce on the first pass, revise once a prior artifact exists.
     # Iteration 1 has no prior_summary, so this line is byte-identical to the
     # pre-ruling prompt.
-    task_line = (
-        "Revise your previous implementation for the following plan (reproduced below)."
-        if prior_summary
-        else "Produce the implementation for the following plan."
+    #
+    # Ruling D51 (8): under verify-first there is no plan, so the
+    # task names the request, and the 'Plan:' section below is
+    # omitted — the asks are the whole yardstick.
+    if prior_summary:
+        task_line = (
+            "Revise your previous implementation for the following "
+            + ("plan (reproduced below)." if plan
+               else "request (reproduced below).")
+        )
+    elif plan:
+        task_line = "Produce the implementation for the following plan."
+    else:
+        task_line = "Produce the answer to the following request."
+    # The plan section exists only when a plan exists. Under
+    # verify-first (D51 (8)) it is omitted: the request and its
+    # asks are the whole input.
+    plan_block = (
+        f"\nPlan:\n{plan.plan}\n" if plan else ""
     )
-    # The blocked_on sentence below is RULED text (Blueprint 016 B2), carried
-    # verbatim by instruction — it is the one judgment-steering sentence added
-    # to this prompt, and it is not to be paraphrased. The blocked_on line in
-    # the JSON contract is mechanical shape, like every other field's line.
+    # The blocked_on sentence below is RULED text (Ruling D51 (h),
+    # replacing Blueprint 016 B2's sentence by this ruling) — it is
+    # carried verbatim by instruction and is not to be paraphrased.
+    # The blocked_on line in the JSON contract is mechanical shape,
+    # like every other field's line.
     implement_prompt = f"""\
 {task_line} This is iteration {iteration}.
 
 {OUTPUT_CONTRACT}
+{plan_block}
+The asks, quoted from the request — the answer is judged against these and nothing else:
+{render_asks(asks)}
 
-Plan:
-{plan.plan}
-
-Success criteria:
-{json.dumps(plan.success_criteria)}
-
-If a criterion cannot be honestly satisfied with the grounding available, name it in blocked_on rather than producing something that satisfies it on paper.
+If an ask cannot be honestly answered with the grounding available, name it by its number in blocked_on rather than producing something that answers it on paper.
 Answer the request, and include the plan's falsifiers, kill triggers or assumption tables only if the request asks for them.
 {open_points_block}{feasibility_block}
 {feedback}
 {context_block}
 
 Return JSON with:
-- reasoning: fill this FIRST, before every other field. Think step by step here — how you will satisfy each success criterion, and, critically, verify that every numeric value you will state agrees with every threshold, bound and other value in the deliverable (the failure this guards against is a value that violates a limit the same deliverable sets, e.g. a computed figure exceeding a stated threshold). If a previous implementation is shown above, state exactly what was inconsistent, why its logic was wrong, and the specific change you will make to fix it WITHOUT breaking what already passed. This field is a private scratchpad: it is not the deliverable and is not read downstream.
+- reasoning: fill this FIRST, before every other field. Think step by step here — how you will satisfy each ask, and, critically, verify that every numeric value you will state agrees with every threshold, bound and other value in the deliverable (the failure this guards against is a value that violates a limit the same deliverable sets, e.g. a computed figure exceeding a stated threshold). If a previous implementation is shown above, state exactly what was inconsistent, why its logic was wrong, and the specific change you will make to fix it WITHOUT breaking what already passed. This field is a private scratchpad: it is not the deliverable and is not read downstream.
 - done: true if the implementation is complete
-- green: true if you believe it satisfies the success criteria
+- green: true if you believe it satisfies the asks
 - red_cause: null if green, otherwise a short string describing what is wrong
-- blocked_on: list of success criteria the work cannot satisfy, each entry
-  naming the criterion (quote it or give its number) and why it cannot be
-  satisfied; an empty list when there are none
+- blocked_on: list of asks the work cannot honestly answer, each entry
+  naming the ask (its number or its quote) and why it cannot be
+  answered; an empty list when there are none
 - iteration: {iteration}
 - summary: the implementation itself — the design, code, schema, procedure or
   calculation, in full. This field is the deliverable and is what the validate
@@ -858,7 +975,7 @@ Original request:
     )
     responses.append(lead_resp)
     lead_data["iteration"] = iteration
-    domain_concerns: list[str] = []
+    domain_concerns: list[DomainConcern] = []
 
     # The verdict's green is resolved at construction, and this reads the raw
     # dict before that — so an omitted green would read as falsy here and skip
@@ -870,7 +987,8 @@ Original request:
     # Step 2: Domain review (only if the lead succeeded and there are reviewers)
     if lead_data.get("green") and reviewers:
         domain_concerns, critical, review_responses = await run_domain_review(
-            client, request, plan, lead_data.get("summary", ""), reviewers, context
+            client, request, lead_data.get("summary", ""), reviewers,
+            context, asks=asks,
         )
         responses.extend(review_responses)
         if critical:
@@ -879,18 +997,37 @@ Original request:
 
     lead_data["domain_concerns"] = domain_concerns
     verdict = ImplementVerdict(**lead_data)
+
+    # Ruling D51, THE FOLD: the implementer's own red counts only
+    # when it names an ask — a blocked_on entry that names one,
+    # by number or by an anchored quote — or when an anchored
+    # critical domain concern flipped it (R-f): after the domain
+    # review's own demotion, a concern still critical IS anchored.
+    # Any other red is a note: counted, never blocking, and not
+    # sent to the next revision. The judges, not the implementer,
+    # decide whether the work fails; the raw reply still carries
+    # the implementer's own words for the record.
+    if not verdict.green and not any(
+            c.critical for c in verdict.domain_concerns) and not any(
+            b.ask is not None
+            or (bool(str(b.quote).strip())
+                and quote_anchors(str(b.quote), request))
+            for b in verdict.blocked_on):
+        count_normalisation(UNANCHORED_DISSENT)
+        verdict.green = True
+        verdict.red_cause = None
     return verdict, responses
 
 
 async def run_validate(
     client: OpenRouterClient,
     request: str,
-    plan: PlanVerdict,
     implement: ImplementVerdict,
     context: str = "",
     domains: list[Domain] | None = None,
     max_tokens: int | None = None,
     function: str | None = None,
+    asks: list[Any] | None = None,
 ) -> tuple[ValidateVerdict, ModelResponse]:
     test_eng = get_specialist(SpecialistRole.TEST_ENGINEER)
     context_block = f"\n\nProject context:\n{context}" if context else ""
@@ -900,40 +1037,43 @@ async def run_validate(
         concerns_block = f"""
 
 DOMAIN REVIEW CONCERNS (flagged by specialist reviewers — verify these):
-{chr(10).join(f'- {c}' for c in implement.domain_concerns)}"""
+{chr(10).join(f'- {c.detail}' for c in implement.domain_concerns)}"""
 
     prompt = f"""\
-Validate this implementation against the plan's success criteria.
+Validate this implementation against the asks.
 
 {ASSESSMENT_CONTRACT}
 {context_block}
 
-Success criteria:
-{json.dumps(plan.success_criteria)}
+The asks, quoted from the request:
+{render_asks(asks)}
 
 Implementation summary (iteration {implement.iteration}):
 {implement.summary}
 {concerns_block}
 
-Check the implementation against each success criterion in turn, and judge the
-work on those criteria alone. Where a criterion is quantitative and the numbers
-are present, do the arithmetic and show it. Where it is structural, check the
-design actually has the property.
+The asks below are quoted from the request and numbered. Judge the answer against each ask in turn, and against nothing else.
 
-Only a stated success criterion can make this red. Anything else you notice —
-a better approach, a missing extra, a concern outside the criteria — belongs in
-evidence as a note. If the criteria themselves are unusable, say so in
-red_cause rather than substituting criteria of your own.
+For each ask, decide:
+- pass: the answer gives or satisfies it, correctly;
+- fail: the answer states something wrong for it, or leaves it out — name the ask's number and what the answer states or omits;
+- unavailable: deciding it needs something you do not have, such as a source text, a measurement or an execution. Judge what the answer states as far as you can and say what you could not check. Unavailable is not a failure.
+
+Where the arithmetic is present, do it and show it. If the answer gets wrong, or leaves out, something the request asks for that the list lacks, quote the request's own words for it, exactly: that counts as a failed ask. Anything else you notice is a note for evidence; it cannot make this red.
 {checks_block}
 
 Return JSON with:
-- green: true if every success criterion is satisfied
+- green: true if every ask is satisfied
 - red_cause: null if green, otherwise the specific failure cause
-- evidence: one line per criterion, at most 25 words each, naming the criterion,
+- failed_ask: the number of the ask the work fails, when the failure is one ask's
+- anchor_quote: the request's own words, verbatim, for what the answer gets wrong or leaves out, when the failure is not one ask's number
+- hazard: true only when the answer states or instructs something that would, followed as written, injure a person or damage equipment
+- unavailable_asks: numbers of the asks whose verification needs something you do not have — a source text, a measurement or an execution. Unavailable is neither pass nor fail, and never blocks
+- evidence: one line per ask, at most 25 words each, naming the ask,
   the verdict, and the specific thing you saw. Not an essay — the finding is the
   value, and a long verdict costs as much to produce as the work it judges:
-    "Backoff capped at 60s: PASS — step 2 sets max_interval=60"
-    "Jitter applied per attempt: FAIL — step 2 sets a fixed delay, no jitter"
+    "Backoff capped at 60s: PASS — the answer sets max_interval=60"
+    "Jitter applied per attempt: FAIL — the answer sets a fixed delay, no jitter"
 
 Original request:
 {request}"""
@@ -943,6 +1083,20 @@ Original request:
         max_tokens=max_tokens or settings.validate_max_tokens,
         function=function,
     )
+    # Ruling D51 (3), text (R-d): validate is red only when it
+    # names a failed ask — the ask's number, the request's own
+    # quoted words, or a hazard. A red that names no anchor is a
+    # note: counted, never blocking, and not sent to the next
+    # revision. The demotion happens before construction, because
+    # construction would resolve a red_cause into green=false.
+    wants_red = (data.get("green") is False
+                 or bool(str(data.get("red_cause") or "").strip()))
+    if wants_red and not dissent_anchored(
+            data.get("failed_ask"), data.get("anchor_quote"),
+            data.get("hazard"), asks, request):
+        count_normalisation(RED_NO_ANCHOR)
+        data["green"] = True
+        data["red_cause"] = None
     verdict = ValidateVerdict(**data)
     return verdict, response
 
@@ -951,12 +1105,12 @@ async def run_review(
     client: OpenRouterClient,
     request: str,
     triage: TriageVerdict,
-    plan: PlanVerdict,
     implement: ImplementVerdict,
     specialists: list[Specialist],
     context: str = "",
     max_tokens: int | None = None,
     function: str | None = None,
+    asks: list[Any] | None = None,
 ) -> tuple[ReviewVerdict, list[ModelResponse]]:
     adversarial = triage.risk in (RiskLevel.CRITICAL, RiskLevel.HIGH)
     review_mode = "ADVERSARIAL — actively search for failure modes" if adversarial else "COLLABORATIVE"
@@ -971,8 +1125,15 @@ Review this engineering work from your specialist lens.
 Review mode: {review_mode}
 Risk level: {triage.risk.value}
 
-Plan:
-{plan.plan}
+The asks, quoted from the request:
+{render_asks(asks)}
+
+Judge the answer against the request. A finding can block only if it is anchored:
+- it names the ask it concerns, by number, and what the answer states or omits against it; or
+- it quotes the request's own words, exactly, for something the answer gets wrong or leaves out; or
+- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment.
+An omission is never a hazard. If the request asked for what is missing, quote the request; if it did not, it is a note.
+Use severity critical or high only for an anchored finding. Everything else is a note, at severity medium or low, and cannot block.
 
 Implementation summary:
 {implement.summary}
@@ -982,10 +1143,13 @@ Return JSON with:
   - lens: your specialist role (e.g. "firmware_engineer")
   - severity: one of [critical, high, medium, low]
   - detail: specific finding
+  - ask: the number of the ask the finding concerns, when it names one
+  - quote: the request's own words, verbatim, when the finding is anchored by them
+  - hazard: true only when the finding is a hazard
 - ship: true if safe to ship with no blocking findings
 - verdict: one-sentence synthesis
 
-{"Search for failure modes. What breaks under load, at the boundaries, on partial failure, or when an assumption in the plan turns out to be false?" if adversarial else "Focus on correctness and completeness."}
+{"Search for failure modes. What breaks under load, at the boundaries, on partial failure, or when an assumption the answer makes turns out to be false?" if adversarial else "Focus on correctness and completeness."}
 
 Original request:
 {request}"""
@@ -1044,12 +1208,28 @@ Original request:
             except ValidationError:
                 logger.warning("Unusable review finding from %s: %r", result, f)
                 continue
+            # Ruling D51 (3), text (R-e): a finding blocks only
+            # when it is critical or high AND anchored — it names
+            # the ask by number, quotes the request's own words,
+            # or is a hazard. An unanchored critical or high
+            # finding is demoted to a note at severity medium
+            # before the blocking decision: counted, kept in the
+            # record, never blocking.
+            if finding.severity in ("critical", "high") and not dissent_anchored(
+                    finding.ask, finding.quote, finding.hazard,
+                    asks, request):
+                count_normalisation(UNANCHORED_DISSENT)
+                finding.severity = "medium"
             all_findings.append(finding.model_dump())
             if finding.severity in ("critical", "high"):
                 any_blocking = True
 
-    ship = (quorate and not any_blocking
-            and all(r.get("ship", True) for r in successful))
+    # Ruling D51, THE FOLD: the blocking decision rests on the
+    # anchored findings alone. A reviewer's own `ship: false`
+    # with no anchored finding is an unanchored judgment — a
+    # note, never blocking — so the raw field is not a channel
+    # into the verdict's ship.
+    ship = quorate and not any_blocking
 
     verdicts_text = " | ".join(r.get("verdict", "") for r in successful)
     who = ", ".join(f"{n['specialist']} ({n['failure_class']})" for n in not_reviewed)
@@ -1075,9 +1255,9 @@ Original request:
 async def run_doublecheck(
     client: OpenRouterClient,
     request: str,
-    plan: PlanVerdict,
     implement: ImplementVerdict,
     context: str = "",
+    asks: list[Any] | None = None,
 ) -> tuple[DoubleCheckVerdict, ModelResponse]:
     context_block = f"\n\nProject context:\n{context}" if context else ""
     system_prompt = (
@@ -1092,11 +1272,8 @@ Review this engineering implementation independently.
 {ASSESSMENT_CONTRACT}
 {context_block}
 
-Plan:
-{plan.plan}
-
-Success criteria:
-{json.dumps(plan.success_criteria)}
+The asks, quoted from the request:
+{render_asks(asks)}
 
 Implementation summary:
 {implement.summary}
@@ -1130,12 +1307,15 @@ Direct, do not produce: the directive names what the implementer must do, never
 the implementation itself — an autopsy that delivers the work bypasses the
 validation the work still has to pass.
 
+Before you direct anything, rule on each open dissent in the failure log: does it hold against its anchor — the ask, or the request's quoted words — reading the answer as written? A dissent that judges the answer against something the request does not ask does not hold. Your directive addresses only the upheld dissents. If none is upheld, say so in root_cause_analysis and direct the implementer to keep the answer as it is.
+
 You MUST respond with a JSON object containing exactly these fields:
 {{
   "root_cause_analysis": "The fundamental logic or architectural flaw causing the consecutive failures. Conclusion only, no reasoning steps.",
   "architectural_correction": "Corrected logic or missing dependencies if the original plan was flawed. null if plan was sound.",
   "resolution_directive": "Specific, step-by-step instructions for the Implementation model to succeed on its next attempt.",
-  "requires_human": false
+  "requires_human": false,
+  "rulings": [{{"dissent": <number>, "upheld": true, "reason": "<one line>"}}]
 }}
 Set requires_human to true ONLY if the fix requires access, credentials or a
 real-world action that no amount of further specification can supply, or falls
@@ -1149,6 +1329,7 @@ async def run_escalation_autopsy(
     triage: TriageVerdict,
     failure_log: list[dict[str, Any]],
     context: str = "",
+    asks: list[Any] | None = None,
 ) -> tuple[EscalationVerdict, ModelResponse]:
     system_prompt = ESCALATION_SYSTEM_PROMPT.format(n=len(failure_log))
     context_block = f"\n\nProject context:\n{context}" if context else ""
@@ -1160,7 +1341,9 @@ Architect's Plan:
 Triage Classification:
 - Domains: {', '.join(domain_key(d) for d in triage.domains)}
 - Risk: {triage.risk.value}
-- Success Criteria: {json.dumps(plan.success_criteria)}
+
+The asks, quoted from the request:
+{render_asks(asks)}
 {context_block}"""
 
     user_message = f"""\

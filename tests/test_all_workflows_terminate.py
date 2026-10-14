@@ -25,12 +25,23 @@ def _satisfying_verdicts(**overrides):
     verdicts = {
         "triage": {"risk": "medium", "domains": ["backend"],
                    "unrecallable": False},
+        # Ruling D51 (1): the asks node's verdict, scripted
+        # like any other. The probe requests are below the
+        # anchoring floor, so the anchoring check's
+        # fallback — the whole request as the one ask —
+        # fires whatever this double proposes.
+        "asks": {"asks": []},
         "context": {},
         "plan": {"ready": True, "plan": "Do the thing.", "blockers": [],
                  "success_criteria": ["The thing is done"]},
         "feasibility": {"feasible": True},
         "implement": {"done": True, "green": True, "iteration": 1,
-                      "blocked_on": [], "summary": "The thing is done."},
+                      # Ruling D51 (1): the double's summary
+                      # must address the anchored ask — the
+                      # probe request itself, under the
+                      # fallback — or coverage correctly
+                      # holds the loop.
+                      "blocked_on": [], "summary": "The breadth probe is done."},
         "domain_review": {"critical": False},
         "validate": {"green": True},
         "review": {"ship": True},
@@ -61,8 +72,10 @@ class TestEveryWorkflowReachesATerminal:
         state, runner = await _drive("lean", _satisfying_verdicts())
         assert state.status == "completed", state.reason
         assert state.reason == "advisory review: shipped"
+        # Ruling D51 (1): the asks node and its anchoring
+        # check sit between triage and grounding.
         assert state.path == [
-            "triage", "context", "plan", "plan_ready",
+            "triage", "asks", "asks_anchored", "context", "plan", "plan_ready",
             "implement", "coverage", "validate", "judges", "review",
         ]
 

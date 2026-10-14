@@ -221,23 +221,27 @@ class TestReviewVerdict:
 
 
 class TestPlanCriteriaRequired:
-    """Regression: a ready plan with no success criteria left the validator
-    nothing to check, so it could never return green and the loop burned every
-    iteration before escalating."""
+    """D51 (4) retirement record: a ready plan no longer carries success
+    criteria — the request's anchored asks are the run's only success
+    criteria. These tests asserted the retired requirement (a ready plan
+    must carry non-placeholder criteria); under the ruling the tests were
+    the bug written down, so they now assert the new contract: criteria
+    are optional legacy payload that earlier records still carry."""
 
-    def test_placeholder_criteria_are_rejected(self):
-        """The exact failure seen in a live run: the architecture model returned
-        four literal '...' strings, which passed a non-empty check and left the
-        validator nothing to judge, so the loop could never go green."""
-        with pytest.raises(ValidationError, match="placeholder"):
-            PlanVerdict(ready=True, plan="p", blockers=[],
+    def test_placeholder_criteria_load_from_earlier_records(self):
+        """The exact failure this once policed: the architecture model
+        returned four literal '...' strings. That is now a pre-D51
+        record's payload, not a defect — nothing judges against it, so
+        nothing rejects it."""
+        v = PlanVerdict(ready=True, plan="p", blockers=[],
                         success_criteria=["...", "...", "...", "..."])
+        assert v.success_criteria == ["...", "...", "...", "..."]
 
     @pytest.mark.parametrize("crit", [["TBD", "TBD"], ["criterion 1", "criterion 2"],
                                       [""], ["…"], ["placeholder"]])
-    def test_other_degenerate_criteria_rejected(self, crit):
-        with pytest.raises(ValidationError):
-            PlanVerdict(ready=True, plan="p", blockers=[], success_criteria=crit)
+    def test_other_legacy_criteria_load(self, crit):
+        v = PlanVerdict(ready=True, plan="p", blockers=[], success_criteria=crit)
+        assert v.success_criteria == crit
 
     @pytest.mark.parametrize("crit", ["BOM < $45", "All pins assigned",
                                       "Backoff capped at 60s with jitter"])
@@ -247,10 +251,12 @@ class TestPlanCriteriaRequired:
         v = PlanVerdict(ready=True, plan="p", blockers=[], success_criteria=[crit])
         assert v.success_criteria == [crit]
 
-    def test_ready_plan_without_criteria_is_rejected(self):
-        with pytest.raises(ValidationError, match="success_criteria"):
-            PlanVerdict(ready=True, plan="do the thing", blockers=[],
+    def test_ready_plan_without_criteria_is_accepted(self):
+        """Ruling D51 (4): the plan no longer writes success criteria, and a
+        ready plan no longer needs them. The asks node owns the criteria."""
+        v = PlanVerdict(ready=True, plan="do the thing", blockers=[],
                         success_criteria=[])
+        assert v.ready and v.success_criteria == []
 
     def test_ready_plan_with_criteria_is_fine(self):
         v = PlanVerdict(ready=True, plan="do the thing", blockers=[],

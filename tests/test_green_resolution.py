@@ -146,9 +146,14 @@ class TestProgrammaticMutationIsUnaffected:
 
     def test_the_domain_review_mutation_shape_still_works(self):
         from autornd.engine.phases import render_domain_concerns
+        from autornd.models.verdicts import DomainConcern
 
+        # Convention 17: the mutation set plain strings,
+        # the shape DomainConcern replaced (Ruling D51
+        # (R-f)); the typed concern is the shape the field
+        # carries now.
         v = implement(green=True)
-        v.domain_concerns = ["Heatsink undersized"]
+        v.domain_concerns = [DomainConcern(detail="Heatsink undersized")]
         v.green = False
         v.red_cause = render_domain_concerns(v.domain_concerns)
         assert v.green is False

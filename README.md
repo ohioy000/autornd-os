@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1373%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1415%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -19,8 +19,9 @@ It starts from engineering R&D, but nothing in it is specific to engineering. Th
 
 ### What this is
 
-A working multi-model agentic harness for engineering R&D: six workflows
-(engineering-rnd, lean, triage-only, triage-classify, plan-probe,
+A working multi-model agentic harness for engineering R&D: seven
+workflows (engineering-rnd, lean, triage-only, triage-classify,
+verify-first, plan-probe,
 independent-check-probe) that drive a request through grounding, planning,
 building, validation, review and escalation, reaching a typed terminal on a
 live run. Measured: one live completed run, 9 calls, six cents, validate 6/6,
@@ -251,14 +252,15 @@ Four workflows ship:
 | `engineering-rnd` | the full team: feasibility, domain review, escalation, risk-scaled review |
 | `lean` | plan, build, verify. No review team, no escalation — but it keeps the free checks |
 | `triage-only` | classification and grounding, two calls, for measuring triage quality cheaply |
+| `verify-first` | Ruling D51 (8): no plan — answer once on the engineering tier from the request and its asks, check against the asks, one revision if a judge dissents, escalated if the dissent survives. Not the standing workflow; nothing routes to it |
 | `triage-classify` | one node — triage alone. A calibration sweep costs a fraction of a cent per call instead of a whole workflow, which is what makes running one over dozens of scenarios affordable |
 
 Select with `AUTORND_WORKFLOW`. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
 
 | | happy path | never converges |
 |---|---|---|
-| `engineering-rnd` | 10 calls | 17 calls |
-| `lean` | **7 calls** | **14 calls** |
+| `engineering-rnd` | 11 calls | 18 calls |
+| `lean` | **8 calls** | **15 calls** |
 
 Writing the sequence down also forced out rules that had been implicit in code: the test engineer validates the work and so does not build it or review the build (the `builders` and `peers` rosters), feasibility only reviews a plan the architect declared ready, and escalation runs because a loop gave up rather than because its dependencies happened to be satisfied.
 
@@ -810,11 +812,11 @@ autornd/
   specialists/            # Specialist registry + profile-driven prompts
   routing/openrouter.py   # Multi-model client, rerank, model validation
   api/                    # REST endpoints, auth, dashboard
-workflows/                # engineering-rnd, lean, triage-only, triage-classify
+workflows/                # engineering-rnd, lean, triage-only, triage-classify, verify-first
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 1373 tests
+tests/                    # 1415 tests
 
 ```
 
@@ -860,7 +862,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-1373 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds. The suite is hermetic wherever it runs — its settings are forced to placeholders and a session guard refuses every non-loopback connection — so it reads the same green on a machine that holds your .env and in CI.
+1415 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds. The suite is hermetic wherever it runs — its settings are forced to placeholders and a session guard refuses every non-loopback connection — so it reads the same green on a machine that holds your .env and in CI.
 which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds. The suite is hermetic wherever it runs — its settings are forced to placeholders and a session guard refuses every non-loopback connection — so it reads the same green on a machine that holds your .env and in CI.
 
 

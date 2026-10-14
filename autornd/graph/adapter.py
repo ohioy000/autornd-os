@@ -284,7 +284,7 @@ class PhaseRunner:
         )
 
     async def _verify_grounding(self, state: ExecutionState) -> Result:
-        """One bundled lookup when the plan's criteria demand a citation.
+        """One bundled lookup when an ask demands a citation.
 
         B13's override (Blueprint 016 B1). The risk gate zeroes lookups at low
         risk, and the measured failure is what happened next: the plan wrote a
@@ -298,12 +298,21 @@ class PhaseRunner:
         criteria at low risk (hides the need; the claims get written either
         way — §6.3's exact danger).
 
-        Runs once, after the plan exists — the criteria that trigger it do not
+        Runs once, after the plan exists — the asks that trigger it do not
         exist when the context phase assembles grounding, which is why this is
         its own node rather than a branch of build_context.
         """
-        plan = state.outputs.get("plan")
-        criteria = list(getattr(plan, "success_criteria", None) or [])
+        # Ruling D51 (4), (5): the demand is read off the
+        # anchored asks — the run's only yardstick — not off
+        # the plan's criteria, which the plan no longer
+        # writes. A workflow with no asks node still has the
+        # request as its one ask, the same fallback the
+        # anchoring check applies when nothing anchors.
+        anchored = state.outputs.get("asks_anchored")
+        if isinstance(anchored, dict):
+            criteria = list(anchored.get("quotes") or [])
+        else:
+            criteria = [state.request]
         demanded = criteria_demand_verification(criteria)
         looked_up = 0
         if demanded and self.deferred_gaps and not self.verification_lookup_done:
@@ -363,7 +372,10 @@ class PhaseRunner:
                 "iteration": state.iteration,
                 "implement_summary": str(summary or ""),
                 "red_cause": (
-                    "implementation blocked on a criterion it cannot satisfy"),
+                    # Ruling D51 (5): the block names an ask,
+                    # not a plan criterion — the plan is
+                    # reasoning, not a yardstick.
+                    "implementation blocked on an ask it cannot satisfy"),
                 "evidence": [f"blocked: {b}" for b in result.data["blocked"]],
                 "blocked_on": list(result.data["blocked"]),
             })
@@ -375,6 +387,36 @@ class PhaseRunner:
         verdict, response = await phases.run_triage(self.client, state.request)
         return verdict, [response]
 
+    async def _phase_asks(self, node: Node, state: ExecutionState):
+        """The asks node (Ruling D51 (1)): what the request
+        asks, quoted verbatim, each with its kind. A model on
+        the triage tier proposes; the free check
+        `asks_anchored` — the node downstream — keeps only
+        what occurs in the request."""
+        verdict, response = await phases.run_asks(
+            self.client, state.request,
+            max_tokens=self._max_tokens(node))
+        return verdict, [response]
+
+    def _anchored_asks(self, state: ExecutionState) -> list[Any] | None:
+        """The anchored asks every judge judges against (Ruling
+        D51 (1), (2)) — the check's dicts, numbered, exactly
+        as the prompts render them.
+
+        Absent before the asks node has run, and absent in a
+        variant workflow with no asks node, which leaves the
+        phases on their default: no asks rendered. The check's
+        own fallback (the whole request as the one ask) is
+        what makes a run whose proposals anchored nothing still
+        have a yardstick; a workflow with no node has made its
+        own shape, and nothing here supplies one it did not
+        declare.
+        """
+        anchored = state.outputs.get("asks_anchored")
+        if isinstance(anchored, dict):
+            return list(anchored.get("anchored") or [])
+        return None
+
     def _tier(self, node: Node, state: ExecutionState) -> str | None:
         if self.executor is not None:
             return self.executor.resolve_tier(node, state)
@@ -385,6 +427,9 @@ class PhaseRunner:
             self.client, state.request, self._triage(state), self._specialists(state),
             tier=self._tier(node, state), context=self.context,
             max_tokens=self._max_tokens(node),
+            # Ruling D51 (4): the plan is reasoning against the
+            # asks, which it reads but no longer writes.
+            asks=self._anchored_asks(state),
         )
         blockers = [str(b) for b in (getattr(verdict, "blockers", None) or [])]
         # The first plan pass names what it cannot answer; the record keeps
@@ -559,8 +604,13 @@ class PhaseRunner:
         prior_summary = getattr(prior, "summary", None)
         if prior_summary is None and isinstance(prior, dict):
             prior_summary = prior.get("summary")
+        # Ruling D51 (8): verify-first has no plan node, so no plan
+        # exists — the argument is optional and the prompt omits its
+        # 'Plan:' section, naming the request as the task instead.
+        # A workflow WITH a plan still reads it off the state.
+        plan = state.outputs.get("plan")
         verdict, responses = await phases.run_implement(
-            self.client, state.request, state.outputs["plan"], lead,
+            self.client, state.request, plan, lead,
             iteration=state.iteration or 1,
             prior_summary=prior_summary,
             red_cause=last.get("red_cause"),
@@ -576,6 +626,9 @@ class PhaseRunner:
             primary_domain=None,      # the lead is already resolved
             considerations=considerations,
             max_tokens=self._max_tokens(node),
+            # Ruling D51 (2): the answer is judged against the
+            # asks, and the implementer reads them too.
+            asks=self._anchored_asks(state),
         )
         return verdict, responses
 
@@ -583,9 +636,13 @@ class PhaseRunner:
         implement = state.outputs["implement"]
         reviewers = self._resolve_who(node, state)
         concerns, critical, responses = await phases.run_domain_review(
-            self.client, state.request, state.outputs["plan"],
+            self.client, state.request,
             implement.summary, reviewers, self.context,
             function=self._tier(node, state),
+            # Ruling D51 (3): a concern is critical only when
+            # anchored — the reviewers read the asks to anchor
+            # against.
+            asks=self._anchored_asks(state),
         )
         # A critical concern flips the implementation red, exactly as it did
         # when the two steps lived in one function.
@@ -604,10 +661,13 @@ class PhaseRunner:
         triage = self._triage(state)
         implement = state.outputs["implement"]
         verdict, response = await phases.run_validate(
-            self.client, state.request, state.outputs["plan"], implement,
+            self.client, state.request, implement,
             context=self.context, domains=triage.domains,
             max_tokens=self._max_tokens(node),
             function=self._tier(node, state),
+            # Ruling D51 (2): validate judges against the asks
+            # and nothing else.
+            asks=self._anchored_asks(state),
         )
         # Ruling D46 (4): whenever the judges fold refuses convergence, the
         # next attempt is told why — naming EVERY judge that refused, with its
@@ -695,6 +755,10 @@ class PhaseRunner:
         verdict, response = await phases.run_escalation_autopsy(
             self.client, state.request, state.outputs["plan"],
             self._triage(state), self.failure_log, self.context,
+            # Ruling D51 (6): the autopsy rules on each open
+            # dissent against its anchor — the asks the
+            # dissents name.
+            asks=self._anchored_asks(state),
         )
         # A fresh directive, and a clean slate: the recovery attempts should not
         # inherit the failures that prompted the autopsy.
@@ -704,10 +768,13 @@ class PhaseRunner:
 
     async def _phase_review(self, node: Node, state: ExecutionState):
         verdict, responses = await phases.run_review(
-            self.client, state.request, self._triage(state), state.outputs["plan"],
+            self.client, state.request, self._triage(state),
             state.outputs["implement"], self._resolve_who(node, state), self.context,
             max_tokens=self._max_tokens(node),
             function=self._tier(node, state),
+            # Ruling D51 (4): the reviewers read request, asks
+            # and answer — not the plan.
+            asks=self._anchored_asks(state),
         )
         # A blocking review is a failed attempt like any other, and the rework
         # loop downstream reads the failure log. Without this it would rework
@@ -756,7 +823,12 @@ class PhaseRunner:
                            "not the engineering model itself"),
             }, []
         verdict, response = await phases.run_doublecheck(
-            self.client, state.request, state.outputs["plan"],
+            self.client, state.request,
             state.outputs["implement"], self.context,
+            # Ruling D51 (4): the independent pass reads the
+            # asks too — it is the one reviewer that must not
+            # inherit the others' criteria, not the only one
+            # without a yardstick.
+            asks=self._anchored_asks(state),
         )
         return verdict, [response]

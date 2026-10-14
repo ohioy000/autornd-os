@@ -205,6 +205,15 @@ class TestTheRunnerActuallyCallsIt:
             async def run(self, request):
                 raise exc
 
+            def _close_candidate(self, state):
+                # The real executor records the unendorsed
+                # candidate at a terminal that is not completed
+                # (D51 (7)). This double's run raised before
+                # any node executed, so its trace holds no
+                # implement step and the real method records
+                # no candidate — None, the same as here.
+                state.candidate = None
+
         original = runner_mod.GraphExecutor
         runner_mod.GraphExecutor = FakeExecutor
         try:
@@ -333,6 +342,15 @@ class TestAProviderFailureReachesATypedTerminal:
             async def run(self, request):
                 raise provider_failure
 
+            def _close_candidate(self, state):
+                # The real executor records the unendorsed
+                # candidate at a terminal that is not completed
+                # (D51 (7)). This double's run raised before
+                # any node executed, so its trace holds no
+                # implement step and the real method records
+                # no candidate — None, the same as here.
+                state.candidate = None
+
         original = runner_mod.GraphExecutor
         runner_mod.GraphExecutor = FakeExecutor
         try:
@@ -378,6 +396,15 @@ class TestAProviderFailureReachesATypedTerminal:
 
             async def run(self, request):
                 raise ProviderFailure("engineering", "GMICloud", "no text")
+
+            def _close_candidate(self, state):
+                # The real executor records the unendorsed
+                # candidate at a terminal that is not completed
+                # (D51 (7)). This double's run raised before
+                # any node executed, so its trace holds no
+                # implement step and the real method records
+                # no candidate — None, the same as here.
+                state.candidate = None
 
         original = runner_mod.GraphExecutor
         runner_mod.GraphExecutor = FakeExecutor

@@ -79,13 +79,22 @@ REVIEW_PROMPT = "ship: true if safe to ship"
 # One reply serves every engineering and judge phase. The verdict models
 # ignore keys they do not declare, and with MODEL_JUDGE unset the judge nodes
 # fall back to the engineering tier (D35), so both functions answer alike.
+# Ruling D51 (1): the asks node's verdict comes from the triage
+# reply this double returns, which names no asks, so the
+# anchoring check's fallback fires — the whole request is the
+# one ask — and coverage judges it. The summary carries the
+# request's own words or coverage holds the loop and the run
+# never reaches the review the rework tests are about
+# (convention 22).
 _WORK = {"feasible": True, "concerns": [], "blockers": [], "critical": False,
          "done": True, "green": True, "red_cause": None,
          # Ruling D46 (1): a green with nothing behind it is the bug the rule
          # names — the double carries the assessment it claims.
          "evidence": ["Backoff is capped at 60s with jitter, the plan's one "
                       "criterion"],
-         "summary": "Backoff is capped at 60s with jitter applied.",
+         "summary": ("Add retry with exponential backoff to the MQTT "
+                     "client; backoff is capped at 60s with jitter "
+                     "applied."),
          "ship": True, "findings": [], "verdict": "Ship."}
 RESPONSES = {
     "triage": {"domains": ["backend"], "risk": "medium",
@@ -105,7 +114,11 @@ RESPONSES = {
 }
 
 BLOCKING = {"lens": "systems_architect", "severity": "high",
-            "detail": "Backoff has no ceiling on reconnect storms."}
+            "detail": "Backoff has no ceiling on reconnect storms.",
+            # Ruling D51 (R-e): a finding blocks only
+            # when it is anchored — here, by the
+            # request's own words.
+            "quote": "retry with exponential backoff"}
 
 
 def _client(review_ships_after: int | None):

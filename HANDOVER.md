@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1373 · **Date of this snapshot:** 2026-10-10, counts re-derived against the tree under test
+**Tests:** 1415 · **Date of this snapshot:** 2026-10-10, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -49,6 +49,8 @@
 > **Ruling D49 (advisor, 2026-10-02; ruled on the owner's 2026-10-02 command, carried by ARCH-20261002-116) — verification is typed, and the completed terminal means finished. (1) Missing or whitespace-only assessment is not completed verification: a validation whose evidence is empty, or holds no entry with non-whitespace content, resolves red with a cause that names what was missing, counted like every normalization (D46 (1), extended from empty to whitespace-only). (2) An implementation explicitly marked incomplete cannot qualify for completed delivery: the executor's completed terminal reads the implement verdict's typed `done` field, and `done is false` ends the run blocked, naming the incomplete implementation; a run whose graph produced no implement verdict is not "explicitly incomplete" and keeps its terminal. (3) Unavailable verification is distinct from passing verification: the independent pass's skip record carries no `ship` at all — neither an approval nor a veto — it carries `skipped` and `vetoed: false`, and the gate after it routes on `independent_check.vetoed == false`, which a skip satisfies without claiming an approval the pass never made; a real verdict's `vetoed` is its computed `not ship`. Applied narrowly, on typed fields, never by parsing prose: the distinctions among failed, unchecked, unavailable and passed checks are preserved, not flattened. Rationale: the owner's three-tier command of 2026-10-02, probing nine properties provider-free under ARCH-20261002-116: a validator could return `["   "]` and ship as green (`_missing_substance` in models/verdicts.py tested only `not evidence`); the executor ended every run no node stopped as `completed`, never reading the implement verdict's `done` (GraphExecutor.run); and the independent pass's skip record claimed `ship: true` — an approval field — so a check that never ran read exactly like one that passed (PhaseRunner._phase_doublecheck; both workflow gates routed on `independent_check.ship`). The ruling ID is D49, chosen at ruling time because commands ARCH-20261002-113 and -114 were unexecuted on the tree measured; both have since been executed on main, and D48 (3) ruled the same distinction as D49 (3) — the merged tree carries D48's wording in the verdict, the adapter's skip record and the gate, so D49 (3) stands as the convergence note and D49 (1)–(2) are the clauses D48 did not cover. Falsifier: a green validation whose evidence is whitespace-only, a completed run whose latest implement verdict says `done: false`, or a gate that routes a skipped independent check as an approval.**
 
 > **Ruling D50 (advisor, 2026-10-03) — the tier-3 experiment measures answers, not formatting. (1) Two independent hand readings are the primary measure of a tier-3 unit's correctness, as D44 rules for the golden set, and the tier-2 scorer is the screen. Two readers, blind to arm, read every unit the scorer fails and a seeded sample of ten per arm that it passes. The report gives the scorer's verdicts and the readings side by side, per arm, with their disagreements counted. A disagreement is reported, never settled by editing the scorer inside the run that found it. Before any paid unit, the scorer is repaired as a new version against the recorded real answers to its questions and against every notation of each key's model answer. (2) Arm B's treatment is the tools, and its prompt adds only them: it is arm A's prompt with the sentences that deny tools replaced by one that points to them, plus the tool registration. (3) Arm E delivers what the harness ships. A unit of arm E is delivered only when its run ends in the completed terminal (D49). A judge-approved draft that has not shipped by the deadline is scored and reported beside the delivered count as 'approved, not shipped'. It is never counted as delivered. (4) Arm C's check returns a typed verdict, and its control flow never reads prose (hard rule 2). A check that returns no valid verdict after the bounded retries is recorded as unavailable, never as concurrence, and model 1's draft is delivered. (5) Arm B's source tool is closed-world. Given a citation that a question states, it returns that section's archived text in the stated edition, and for anything else it returns a typed not-available result. The experiment tests access to the primary source, not web retrieval. Rationale: the advisor's pre-run review of tier 2 and tier 3 (2026-10-03). Tier-2 Q1-Q5 are the golden Q1-Q5 word for word. The frozen scorer passed 5 of the 12 recorded real answers to them that readings had found correct, 0 of 6 on Q4 and Q5. Every failure held a recognition error: a bold heading, a Unicode superscript, 'must not exceed', 'Close the high-point vent', a threshold stated past a 120-character window, a rule line read as the verdict. These errors depend on format, so they would differ by arm. Arm B's prompt told the model no tools were available and then registered two. Arm E had no rule for a draft approved but not shipped by the deadline, and arm C's CONCUR/OBJECT would have been read as English. Falsifier: a tier-3 correctness figure that rests on the scorer alone; an arm B prompt that differs from arm A's beyond the tools; an arm E draft counted as delivered without a completed terminal; arm C's stage 3 decided by matching text; a fetch result that depends on the network.**
+
+> **Ruling D51 (advisor, 2026-10-10, on the owner's go of the same date) — the request is the yardstick. (1) The asks. Before any work is judged, the run extracts the request's asks: verbatim quotes of what the request asks the answer to give or satisfy, each with its kind — value, verdict, step, constraint or format. A model proposes them in an `asks` node on the triage tier, after triage; a free deterministic check keeps a quote only if it occurs in the request under the normalisation the checks already apply, and records every other quote as not anchored, counted. When nothing anchors, the whole request is the one ask. The anchored asks are the run's only success criteria. (2) Every judge judges against the asks and nothing else. Validate, the coverage check, domain review, review, rework review and escalation receive the asks and judge the answer against them. A judge may raise something the asks lack only by quoting the request verbatim, anchored by the same free check. (3) A dissent carries its anchor. A judgment that fails the work names its anchor — an ask, an anchored quote of the request, or a hazard — and what the answer states or omits against it, in typed fields. A hazard is something the answer states or instructs that would, followed as written, injure a person or damage equipment; an omission is never a hazard, and if the request asked for what is missing, it is an ask. Only an anchored dissent fails the work: validate is red only when it names a failed ask; a domain concern flips the implementation red, and a review finding blocks, only when it is critical or high and anchored; the implementer's own red counts only when it names an ask. Any other judgment is a note: recorded and counted, never blocking, and not sent to the next revision, which receives only the anchored dissents. (4) The plan is reasoning, not a yardstick. The plan no longer writes success criteria, and a ready plan no longer needs them. D36's four rules stay byte-identical and keep governing how the plan is reasoned; nothing the plan produces is judged against. Reviewers read the request, the asks and the answer, not the plan; the consistency check's reference is the request's stated figures, not the plan's; the assessment contract's "a contradiction with the plan" becomes "a contradiction with the request". D43's plan-prompt paragraph retires with the criteria it governed — its scope is now enforced by construction — and its deliverable sentence in the implement prompt stays. D46 (2) and D48 (2) are unchanged. (5) Nothing demands what the run cannot do. An ask whose verification needs what the run does not have — a source text the grounding does not hold, a measurement, an execution — is judged on what the answer states, and its verification is recorded as unavailable: neither pass nor fail, never blocking (D49 (3)'s distinction), and listed in the run's record. An implementer's blocked_on entry must name an ask; an entry that names none is a note, counted. (6) Escalation rules on each open dissent before it directs: upheld or not, against its anchor, typed and recorded; the directive addresses only the upheld dissents. Routing is unchanged. (7) An unfinished run keeps its candidate. A run that ends escalated or blocked after an implementation exists records its last answer, labelled unendorsed, with its open dissents and their anchors; D38's approved pointer is computed at every terminal that is not completed, not only at a watchdog cut. Neither counts as delivered; both are read and reported as what abstention cost. Terminal statuses do not change. (8) The verify-first workflow. A second workflow answers once and checks against the asks: triage, grounding, asks, one answer on the engineering tier from the request and the asks with no plan, the free checks, and one check on the judge tier under (3) and (5). No anchored dissent ends the run completed; otherwise one revision addresses only the anchored dissents, followed by the free checks and one more check, and a dissent that survives ends the run escalated and unresolved, with its candidate kept under (7). The standing workflow does not change; which requests take which workflow is ruled on the re-measurement's data. D36's text, the tiers, the pins, the budgets and the loop bounds are untouched. Rationale: tier 3 stage 1 (docs/reviews/2026-10-06-tier3-stage1-report.md): the pipeline held 0 of 21 answers where one call held 18; 20 of 21 units ended with no answer; the plans carried correct numbers but wrote the exam — four of the Q23 plan's six criteria demanded what the question never asked, one of them unsatisfiable by a hand calculation (a measured 60 s falsifier); 9 of the 12 review findings in the log targeted plan-invented content, 3 reviewer-invented scope and none a wrong value; all three Q17 units blocked on a verification the pipeline cannot perform; and the prompts made this the rule — the plan's criteria are what every later phase is judged against and nothing else, and a validator must fail work that disagrees with one. D43 said the request sets the scope, in prompt text, and was not enforced. The design, the theory and the pathways are in docs/reviews/2026-10-10-d51-the-request-is-the-yardstick.md. Falsifier: in the re-measurement, the repaired pipeline still trails the single call by 7 or more of 21 key-held answers on stage 1's seven questions; or a run record shows work failed, blocked or looped by a judgment with no anchor; or a delivered answer misses an item its request asked for, its asks contained it, and no judge dissented.**
 
 > **Read this first.** Almost every rule, prompt and default in this codebase was
 > derived from a *measurement*, and the measurement is recorded in the comment
@@ -298,8 +300,13 @@ autornd/
     templates/dashboard.html  single-file chat + workflows + settings UI
 
 workflows/
-  engineering-rnd.yaml   ★★ the flagship pipeline, 29 nodes, 4 loops (§3.1)
-  lean.yaml                 10 nodes — cheaper variant, one loop
+  engineering-rnd.yaml   ★★ the flagship pipeline, 31 nodes, 4 loops (§3.1)
+  lean.yaml                 12 nodes — cheaper variant, one loop
+  verify-first.yaml        12 nodes — Ruling D51 (8): no plan node;
+                            the asks are the yardstick, one revision
+                            if a judge dissents, escalated if the
+                            dissent survives. Not the standing
+                            workflow; nothing routes to it.
   triage-only.yaml          2 nodes — triage + grounding (research measurement)
   triage-classify.yaml   ★  1 node — triage alone. Exists so calibration costs
                             ~$0.00002/call instead of a full workflow.
@@ -312,7 +319,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      77 files, 1373 tests
+tests/                      79 files, 1415 tests
 
 ```
 
@@ -454,7 +461,7 @@ idempotent across phases.
 
 ## 3. CURRENT STATE & SOURCE OF TRUTH
 
-### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (29 nodes)
+### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (31 nodes)
 
 **The file is the source of truth; this table is generated from it.** A
 hand-copied YAML lived here for twelve blueprints and drifted — it still
@@ -717,16 +724,17 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1373 total)
+### 3.7 Test distribution (1415 total)
 
 
 | file | n | file | n |
 |---|---|---|---|
 | test_all_judges_exit.py | 18 | test_all_workflows_terminate.py | 7 |
-| test_api.py | 42 | test_auth.py | 16 |
-| test_blocked_on.py | 26 | test_budget_stop_scoring.py | 5 |
-| test_budget_transparency.py | 11 | test_citation_demand.py | 11 |
-| test_command_template.py | 38 | test_coverage_shapes.py | 46 |
+| test_anchor_floor.py | 13 | test_api.py | 42 |
+| test_auth.py | 16 | test_blocked_on.py | 26 |
+| test_budget_stop_scoring.py | 5 | test_budget_transparency.py | 11 |
+| test_citation_demand.py | 12 | test_command_template.py | 38 |
+| test_coverage_shapes.py | 46 | test_d51_acceptance.py | 26 |
 | test_direct_baseline.py | 6 | test_doc_corpora.py | 8 |
 | test_docs.py | 11 | test_engine.py | 9 |
 | test_env_ignore.py | 7 | test_evals.py | 73 |
@@ -737,7 +745,7 @@ is revoked and the warning re-opens with a date.
 | test_handoff_scheduler.py | 4 | test_handover_truth.py | 8 |
 | test_hermetic_suite.py | 9 | test_iteration_dissent.py | 8 |
 | test_judge_tier.py | 11 | test_knowledge.py | 41 |
-| test_lead_review.py | 9 | test_live_wiring.py | 7 |
+| test_lead_review.py | 10 | test_live_wiring.py | 7 |
 | test_node_token_ceilings.py | 8 | test_phase_timing.py | 3 |
 | test_preflight.py | 30 | test_preflight_gate.py | 32 |
 | test_preregistration_precedence.py | 9 | test_prior_artifact_revision.py | 3 |
@@ -750,7 +758,7 @@ is revoked and the warning re-opens with a date.
 | test_review_composition.py | 28 | test_review_quorum.py | 3 |
 | test_rework_loop.py | 20 | test_routing.py | 74 |
 | test_run_record.py | 7 | test_runtime_dependencies.py | 1 |
-| test_schema_wiring.py | 15 | test_scope_rule.py | 3 |
+| test_schema_wiring.py | 16 | test_scope_rule.py | 3 |
 | test_serving_ledger.py | 7 | test_settings.py | 23 |
 | test_settings_map.py | 5 | test_shipped_examples.py | 15 |
 | test_specialists.py | 11 | test_spend_guard.py | 16 |
@@ -761,8 +769,6 @@ is revoked and the warning re-opens with a date.
 | test_transient_tls_retry.py | 14 | test_triage.py | 10 |
 | test_verdicts.py | 49 | test_watchdog.py | 23 |
 | test_workflow.py | 4 |  |  |
-Regenerate with `pytest tests/ --collect-only -q`; the total is the part that
-matters and `tests/test_docs.py` fails if the README badge disagrees with it.
 
 ---
 
@@ -803,7 +809,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1373/1373 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1415/1415 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

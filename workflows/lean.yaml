@@ -1,7 +1,7 @@
 name: lean
 description: >
   The cheapest shape that still checks its work. No feasibility review, no
-  domain review, no escalation — just plan, build, verify against the criteria,
+  domain review, no escalation — just plan, build, verify against the asks,
   and stop. For low-risk work where the full team is more process than the
   change deserves.
 
@@ -15,10 +15,29 @@ nodes:
     prompt: triage
     schema: TriageVerdict
 
+  # Ruling D51 (1): the asks node, as in engineering-rnd —
+  # the request's asks, quoted, then anchored by the free
+  # check that keeps only what occurs in the request. The
+  # anchored asks are this shape's only yardstick too.
+  - id: asks
+    kind: ai
+    tier: triage
+    prompt: asks
+    schema: AsksVerdict
+    depends_on: [triage]
+
+  - id: asks_anchored
+    kind: check
+    check: asks_anchored
+    args:
+      asks: asks.asks
+      request: request
+    depends_on: [asks]
+
   - id: context
     kind: check
     check: build_context
-    depends_on: [triage]
+    depends_on: [asks_anchored]
 
   - id: plan
     kind: ai
@@ -27,7 +46,7 @@ nodes:
     prompt: plan
     schema: PlanVerdict
     max_tokens: plan_max_tokens
-    depends_on: [context]
+    depends_on: [context, asks_anchored]
 
   - id: plan_ready
     kind: gate
@@ -43,13 +62,13 @@ nodes:
     prompt: implement
     schema: ImplementVerdict
 
-  # The free check runs first. An implementation that never mentions a
-  # criterion is rejected before a paid validator is asked about it.
+  # The free check runs first. An implementation that never mentions
+  # an ask is rejected before a paid validator is asked about it.
   - id: coverage
     kind: check
     check: criteria_addressed
     args:
-      criteria: plan.success_criteria
+      criteria: asks_anchored.quotes
       text: implement.summary
     depends_on: [implement]
 

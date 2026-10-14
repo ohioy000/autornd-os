@@ -4,6 +4,10 @@ Exhibit: 102's Q3. The consistency check dissented on a correct answer with
 "pa: plan says ['9'], implementation says ['800']": the plan's
 '80.0 × 10^9 Pa' was read as 9 Pa and the implementation's '20,371,800 Pa'
 as 800 Pa. Those texts are loaded from the committed trace, not retyped.
+(Ruling D51 (4) renamed the check's first argument from `plan` to
+`reference` — consistency compares the request's stated figures — and
+the detail now says "request"; the figure-reading this file pins is
+the same instrument either way.)
 """
 
 from __future__ import annotations
@@ -41,18 +45,26 @@ class TestAFigureIsReadWhole:
 
 
 class TestQ3IsNoLongerAFalseConflict:
+    # Ruling D51 (4): consistency's reference is the
+    # request's stated figures — the first argument is
+    # the reference text, whatever produced it. These
+    # fixtures are the reference side, loaded from the
+    # committed trace (convention 17: the argument was
+    # named `plan`; the rename is the ruling's, the
+    # subject — a figure read whole — is unchanged).
     def test_102_q3_texts_pass(self):
-        plan, implementation = _q3()
-        result = CONSISTENT(plan=plan, implementation=implementation)
+        reference, implementation = _q3()
+        result = CONSISTENT(reference=reference,
+                             implementation=implementation)
         assert result.passed, result.detail
 
     def test_a_real_conflict_still_fails(self):
-        result = CONSISTENT(plan="Shear modulus 80.0 GPa.",
+        result = CONSISTENT(reference="Shear modulus 80.0 GPa.",
                             implementation="Shear modulus 70.0 GPa.")
         assert not result.passed and "gpa" in result.detail.lower()
 
     def test_agreement_is_at_the_less_precise_figure(self):
-        result = CONSISTENT(plan="Max shear stress 20.4 MPa.",
+        result = CONSISTENT(reference="Max shear stress 20.4 MPa.",
                             implementation="Max shear stress 20.3718 MPa.")
         assert result.passed, result.detail
 
@@ -61,7 +73,8 @@ class TestQ3IsNoLongerAFalseConflict:
         def old(text):
             return [(float(v), 99, u) for v, u in checks._NUMBER.findall(text or "")]
         monkeypatch.setattr(checks, "_figures", old)
-        plan, implementation = _q3()
-        result = CONSISTENT(plan=plan, implementation=implementation)
+        reference, implementation = _q3()
+        result = CONSISTENT(reference=reference,
+                             implementation=implementation)
         assert not result.passed
-        assert "pa: plan says" in result.detail
+        assert "pa: request says" in result.detail

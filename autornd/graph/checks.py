@@ -21,6 +21,12 @@ from typing import Any, Callable, Protocol
 
 __all__ = ["CheckResult", "get_check", "registry", "check"]
 
+from autornd.models.verdicts import (
+    BLOCKED_ON_NO_ASK,
+    UNANCHORED_ASK_QUOTE,
+    count_normalisation,
+)
+
 
 class CheckResult(Protocol):
     passed: bool
@@ -187,7 +193,142 @@ def _terms(text: str) -> set[str]:
     return {w for w in words if len(w) > 2 and w not in _STOPWORDS}
 
 
-# ── checks ────────────────────────────────────────────────────────────────
+# ── anchors (Ruling D51 (1), (3)) ─────────────────────────────────
+#
+# The asks are the yardstick, and every dissent that fails work
+# must point at the request's own words. Two primitives serve
+# both the free check that anchors the asks and the phases that
+# anchor dissents, so a quote anchors the same way everywhere:
+# the matcher below is asks_anchored's own matcher, and the
+# phases import it rather than re-deriving it.
+
+def _normalise_quote(text: str) -> str:
+    """The normalisation the checks already apply to a quote.
+
+    Case-folded, whitespace-collapsed, with the LaTeX '$' wrapper
+    stripped — the same three the tier-3 fetch repair applies, so
+    a quote wrapped for math mode anchors the words it wraps.
+    """
+    text = str(text or "").replace("$", "")
+    return " ".join(text.casefold().split())
+
+
+# The floor a quote must clear before it anchors anything: at
+# least 3 words and 12 characters after normalisation. Below it,
+# a quote like "mm" or "the answer" anchors by accident — any
+# request of a dozen words contains "the answer" somewhere — and
+# an anchor that short cannot name what the answer gets wrong.
+# Pinned from both sides in tests/test_anchor_floor.py.
+_ANCHOR_MIN_WORDS = 3
+_ANCHOR_MIN_CHARS = 12
+
+
+def quote_anchors(quote: str, request: str) -> bool:
+    """Does this quote occur in the request, as written?
+
+    Ruling D51 (1): a quote anchors only when the free check
+    finds it in the request under the normalisation the checks
+    already apply, and it clears the floor. A paraphrase does not
+    anchor — the yardstick cannot drift off the request's words —
+    and a quote under the floor anchors nothing.
+    """
+    needle = _normalise_quote(quote)
+    if not needle:
+        return False
+    if len(needle.split()) < _ANCHOR_MIN_WORDS:
+        return False
+    if len(needle) < _ANCHOR_MIN_CHARS:
+        return False
+    return needle in _normalise_quote(request)
+
+
+def dissent_anchored(
+    ask: Any, quote: str, hazard: bool,
+    asks: list[Any] | None, request: str,
+) -> bool:
+    """Is this dissent anchored? (Ruling D51 (3).)
+
+    Three anchors, all typed — never prose: the ask it concerns,
+    by its number in the anchored asks; a quote of the request's
+    own words, anchored by the same free check the asks pass; or
+    a hazard. An omission is never a hazard and never an anchor:
+    if the request asked for what is missing, it is an ask, and
+    the dissent names it by number.
+    """
+    if hazard:
+        return True
+    if isinstance(ask, int) and not isinstance(ask, bool):
+        if 1 <= ask <= len(asks or []):
+            return True
+    if str(quote or "").strip() and quote_anchors(quote, request):
+        return True
+    return False
+
+
+def _ask_field(ask: Any, key: str) -> Any:
+    """Read a field off an ask, whichever shape it arrives in.
+
+    The asks node's proposals are Ask models; the anchored asks that
+    reach every judge are this check's dicts. Both carry the same
+    fields, and the phases render either.
+    """
+    if isinstance(ask, dict):
+        return ask.get(key)
+    return getattr(ask, key, None)
+
+
+# ── checks ──────────────────────────────────────────────────────────
+
+@check("asks_anchored")
+def asks_anchored(asks: list[Any], request: str) -> Result:
+    """Which of the asks node's proposals anchor in the request?
+    (Ruling D51 (1).)
+
+    The asks node proposes; this free check disposes. A proposal
+    anchors when its quote occurs in the request under the
+    normalisation the checks already apply and clears the floor
+    (three words, twelve characters) — the same primitives the
+    phases use to anchor dissents, so an ask anchors the same way
+    everywhere. A proposal that does not anchor is demoted: counted,
+    never judged. The yardstick cannot drift off the request's own
+    words, and a paraphrase of the request is not the request.
+
+    When nothing anchors, the whole request is the one ask — the
+    ruling's own fallback, word for word. It carries no kind: it is
+    every kind at once, and a bracket would lie about which one it
+    is.
+
+    The check never fails. It filters a proposal list; it does not
+    judge work, so `passed` is vacuously true whatever anchors — a
+    loop gate reading it would loop on the judges, not on the
+    anchoring, and no shipped workflow gates on it.
+    """
+    anchored: list[dict[str, Any]] = []
+    demoted: list[str] = []
+    for proposal in asks or []:
+        quote = str(_ask_field(proposal, "quote") or "").strip()
+        if quote_anchors(quote, request):
+            kind = _ask_field(proposal, "kind")
+            anchored.append({
+                "number": len(anchored) + 1,
+                "quote": quote,
+                "kind": str(getattr(kind, "value", kind) or "").strip(),
+            })
+        elif quote:
+            demoted.append(quote)
+            count_normalisation(UNANCHORED_ASK_QUOTE)
+    if not anchored:
+        anchored = [{"number": 1, "quote": str(request), "kind": ""}]
+    return Result(
+        True,
+        f"{len(anchored)} ask(s) anchored"
+        + (f"; {len(demoted)} proposal(s) did not anchor"
+           if demoted else ""),
+        anchored=anchored,
+        quotes=[a["quote"] for a in anchored],
+        demoted=demoted,
+    )
+
 
 @check("judges_agree")
 def judges_agree(**judges: Any) -> Result:
@@ -266,85 +407,86 @@ def judges_agree(**judges: Any) -> Result:
 
 
 @check("blocked_on_unmet")
-def blocked_on_unmet(blocked_on: list[str], criteria: list[str]) -> Result:
-    """Did the implementer refuse on a criterion the plan itself demands?
+def blocked_on_unmet(blocked_on: list[Any], asks: list[Any],
+                     request: str) -> Result:
+    """Did the implementer refuse on an ask? (Ruling D51 (5).)
 
-    The B13 honest-refusal gate (Blueprint 016 B2/B3). `blocked_on` is the
-    implementer's ruled channel for saying "this criterion cannot be honestly
-    satisfied with what is available". The ruled loop semantics: a block naming
-    a plan success criterion routes to escalation immediately, because the
-    measured alternative was six iterations of fabricating citations against an
-    impossible criterion. A block that names NO plan criterion is the
-    implementer's judgement about something else, and the loop treats it like
-    any other dissent — the fold judges it.
+    The B13 honest-refusal gate, re-anchored. The old check asked
+    "does this entry name a plan criterion" and matched by term
+    overlap — a prose channel, and Ruling D51 retires the plan as
+    a yardstick at the same time, so both its input and its matcher
+    were wrong. An entry now names an ask in exactly two typed
+    ways, never by prose:
 
-    Three deterministic ways an entry names a criterion, all deliberately
-    uncalibrated because no live corpus of refusals exists yet:
+    - by number — `ask` is an integer inside the anchored asks'
+      range (1..len(asks));
+    - by quote — `ask` is a string that anchors in the request
+      under the same free check the asks themselves pass.
 
-    - by index — "criterion 2", "criterion_2", "Criteria 2" — any spelling,
-      with the number inside the plan's range;
-    - by containment — the significant terms of the entry are a subset of a
-      criterion's (a quote or fragment), or the criterion's are a subset of the
-      entry's (a full restatement). Single significant terms match, on purpose:
-      a one-word entry like "backoff" naming the backoff criterion is a
-      reference.
-    - by shared majority — at least half of the smaller term set appears in the
-      larger. The exhibit is the first scripted paraphrase this check met,
-      "cannot provide a citable source for each claim": three of its five
-      significant terms are criterion 1's, and a pure subset rule matched
-      nothing. A real refusal carries filler the criterion does not have, so
-      subset-only was the check's fault, not the entry's (convention 17). Half
-      of the smaller set is the deterministic line, and it is pinned from both
-      sides in tests/test_blocked_on.py.
+    An entry that names an ask routes the run to escalation
+    immediately — the measured alternative was six iterations of
+    fabricating citations against an impossible ask. An entry that
+    names none is the implementer's judgement about something else:
+    a note, counted (BLOCKED_ON_NO_ASK), recorded, and routed
+    nowhere — the fold judges it like any other dissent.
 
-    The bias throughout is toward matching. A false positive routes to
-    escalation — honest and bounded. A false negative continues the fabrication
-    loop — the measured harm. No stemming: "capped" and "cap" are different
-    terms, and pretending otherwise is a leniency with no exhibit behind it.
+    The bias toward matching is gone with the term overlap: a
+    false positive now needs the request's own words or a number,
+    and a false negative is a note, not a fabrication loop. The
+    typed contract is pinned from both sides in
+    tests/test_blocked_on.py.
     """
-    entries = [str(b).strip() for b in (blocked_on or []) if str(b).strip()]
+    asks = list(asks or [])
+    entries = [b for b in (blocked_on or []) if b is not None]
     if not entries:
         return Result(True, "nothing blocked on", blocked=[])
 
-    criteria = list(criteria or [])
-    wanted = [(i + 1, _terms(c)) for i, c in enumerate(criteria)]
-
-    def names_a_criterion(entry: str) -> bool:
-        for m in _CRITERION_REF.finditer(entry):
-            n = int(m.group(1))
-            if 1 <= n <= len(criteria):
-                return True
-        entry_terms = _terms(entry)
-        if not entry_terms:
-            return False
-        for _, criterion_terms in wanted:
-            if not criterion_terms:
-                continue
-            smaller, larger = sorted((entry_terms, criterion_terms), key=len)
-            if smaller <= larger:
-                return True
-            overlap = len(smaller & larger)
-            if overlap * 2 >= len(smaller):
-                return True
+    def names_an_ask(entry: Any) -> bool:
+        ask = _ask_field(entry, "ask")
+        if isinstance(ask, int) and not isinstance(ask, bool):
+            return 1 <= ask <= len(asks)
+        if isinstance(ask, str) and ask.strip():
+            return quote_anchors(ask, request)
         return False
 
-    matched = [e for e in entries if names_a_criterion(e)]
-    if matched:
+    def rendered(entry: Any) -> str:
+        """The entry as the failure log and the gate read it: the
+        ask it names, and its reason."""
+        ask = _ask_field(entry, "ask")
+        why = str(_ask_field(entry, "why") or "").strip()
+        if isinstance(ask, int) and not isinstance(ask, bool):
+            head = f"ask {ask}"
+        else:
+            # An anchored quote: the ask's own number when the
+            # quote is one of the anchored asks verbatim, the
+            # request's words otherwise — both name the ask.
+            head = f"ask '{ask}'"
+            for a in asks:
+                if _normalise_quote(str(_ask_field(a, "quote") or "")) == \
+                        _normalise_quote(ask):
+                    head = f"ask {_ask_field(a, 'number')}"
+                    break
+        return f"{head}: {why}" if why else head
+
+    named = [e for e in entries if names_an_ask(e)]
+    for e in entries:
+        if not names_an_ask(e):
+            count_normalisation(BLOCKED_ON_NO_ASK)
+
+    if named:
         return Result(
             False,
-            "implementation names a plan criterion it cannot satisfy: "
-            + "; ".join(matched),
-            blocked=matched,
+            "implementation names an ask it cannot satisfy: "
+            + "; ".join(rendered(e) for e in named),
+            blocked=[{"ask": _ask_field(e, "ask"),
+                      "why": str(_ask_field(e, "why") or "")}
+                     for e in named],
         )
     return Result(
         True,
-        "no blocked entry names a plan criterion — the fold will judge them",
+        "no blocked entry names an ask — the fold will judge them",
         blocked=[],
     )
-
-
-# "criterion 3", "criterion_3", "Criteria 3", "CRITERION-3" — one spelling.
-_CRITERION_REF = re.compile(r"criteri(?:a|on)[_\s\-]*(\d+)", re.IGNORECASE)
 
 
 # ── criterion shape (ruling B17-R1, §29) ──────────────────────────────────
@@ -803,12 +945,15 @@ def criteria_addressed(
 
 
 @check("numbers_consistent")
-def numbers_consistent(plan: str, implementation: str) -> Result:
-    """Do values carried from the plan into the implementation still agree?
+def numbers_consistent(reference: str, implementation: str) -> Result:
+    """Do values carried from the request into the implementation
+    still agree? (Ruling D51 (4): consistency's reference is the
+    request's stated figures — the plan is reasoning, not a
+    yardstick.)
 
     Looks for `<number><unit>` pairs that share a unit and differ in value —
-    the plan capping something at 60s while the implementation sets 600s. It
-    reports contradictions, never absence: a plan value the implementation
+    the request stating 60s while the implementation sets 600s. It
+    reports contradictions, never absence: a request value the implementation
     simply does not mention is not a conflict.
     """
     def indexed(text: str) -> dict[str, list[tuple[float, int]]]:
@@ -823,34 +968,41 @@ def numbers_consistent(plan: str, implementation: str) -> Result:
     def shown(values: list[tuple[float, int]]) -> list[str]:
         return sorted({_normalize(f"{v:.{s}g}") for v, s in values})
 
-    planned, built = indexed(plan), indexed(implementation)
+    requested, built = indexed(reference), indexed(implementation)
     # Ruling D46 (3): with no shared unit there is nothing to compare. It
     # passes exactly as it did — reporting absence as conflict would be a
     # different check — but it is recorded as NOT CHECKED, the fold treats it
     # as non-blocking, and the run's record lists it.
-    if not (planned.keys() & built.keys()):
+    if not (requested.keys() & built.keys()):
         return Result(
             True,
-            "no shared unit between plan and implementation — compared nothing",
+            "no shared unit between request and implementation — "
+            "compared nothing",
             checked=False, conflicts=[],
         )
-    # A conflict is a shared unit whose plan and implementation figures have
-    # no value in common, as before; "in common" now means equal at the
-    # precision of the less precise figure.
+    # A conflict is a shared unit whose request and implementation
+    # figures have no value in common, as before; "in common" now
+    # means equal at the precision of the less precise figure.
     conflicts = [
-        f"{unit}: plan says {shown(planned[unit])}, implementation says {shown(built[unit])}"
-        for unit in planned.keys() & built.keys()
-        if not any(_agree(p, b) for p in planned[unit] for b in built[unit])
+        f"{unit}: request says {shown(requested[unit])}, "
+        f"implementation says {shown(built[unit])}"
+        for unit in requested.keys() & built.keys()
+        if not any(_agree(p, b) for p in requested[unit]
+                   for b in built[unit])
     ]
 
     if conflicts:
         return Result(
             False,
-            "values disagree between plan and implementation — " + "; ".join(conflicts),
+            "values disagree between request and implementation — "
+            + "; ".join(conflicts),
             conflicts=conflicts,
         )
-    return Result(True, "no contradicting values between plan and implementation",
-                  conflicts=[])
+    return Result(
+        True,
+        "no contradicting values between request and implementation",
+        conflicts=[],
+    )
 
 
 @check("reground_context")

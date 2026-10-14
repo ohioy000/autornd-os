@@ -8,6 +8,11 @@ score.py, unchanged; it decides nothing score.py does not. The answer text:
 - a blocked run whose watchdog points at an agreed iteration:
   iterations[index].implement_summary, scored as 'approved, not shipped'
   (diagnostic only; it can never pass);
+- a run that ended escalated or blocked after an
+  implementation exists: its unendorsed candidate (Ruling
+  D51 (7)), scored as 'unendorsed candidate' — read and
+  reported as what abstention cost, never delivered and
+  never scored as shipped;
 - a baseline's `record: "answer"` row: its answer, scored as 'direct answer'
   (ARCH-20261002-115 — one tool re-scores every recorded run);
 - otherwise there is no answer.
@@ -47,6 +52,13 @@ def answer_of(unit: dict) -> tuple[str | None, str]:
     iterations = unit.get("iterations") or []
     if index is not None and 0 <= index < len(iterations):
         return iterations[index].get("implement_summary"), "approved, not shipped"
+    # Ruling D51 (7): the unendorsed candidate — the last
+    # answer a run that ended escalated or blocked kept.
+    # Never delivered, never scored as shipped.
+    candidate = unit.get("candidate") or {}
+    answer = candidate.get("answer")
+    if answer:
+        return answer, "unendorsed candidate"
     return None, "no answer"
 
 

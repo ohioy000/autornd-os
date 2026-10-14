@@ -80,6 +80,52 @@ class SpecialistRole(str, Enum):
     SUPPLY_CHAIN = "supply_chain"
 
 
+# ── Asks (Ruling D51 (1)) ─────────────────────────────────────────
+#
+# The request's asks, proposed by a model on the triage tier and
+# anchored by a free deterministic check (asks_anchored,
+# autornd/graph/checks.py). Each ask is a verbatim quote of the
+# request with its kind. The anchored asks are the run's only
+# success criteria — nothing the plan produces is judged against.
+class AskKind(str, Enum):
+    """The five kinds the asks prompt names. Closed by the ruling:
+    the prompt fixes the vocabulary, and a reply naming a sixth kind
+    is a non-compliant reply the retry path asks again."""
+
+    VALUE = "value"
+    VERDICT = "verdict"
+    STEP = "step"
+    CONSTRAINT = "constraint"
+    FORMAT = "format"
+
+
+class Ask(BaseModel):
+    """One ask: a verbatim quote of the request, with its kind."""
+
+    quote: str
+    kind: AskKind
+
+    @field_validator("kind", mode="before")
+    @classmethod
+    def _normalise_kind(cls, value: object) -> object:
+        """'Value' and ' value ' are the kind the prompt named."""
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
+
+
+class AsksVerdict(BaseModel):
+    """The `asks` node's verdict: what the request asks, quoted.
+
+    The list may be empty — the anchoring check applies the ruled
+    fallback (the whole request is the one ask) when nothing the
+    model proposed anchors, so an empty proposal is a shape the
+    check handles deterministically, not a malformed verdict.
+    """
+
+    asks: list[Ask] = Field(default_factory=list)
+
+
 # ── Triage ──
 
 class TriageVerdict(BaseModel):
@@ -130,39 +176,6 @@ class TriageVerdict(BaseModel):
 
 # ── Plan ──
 
-# A plan whose criteria are "...", "TBD" or similar passes a non-empty check but
-# leaves validate with nothing to check against — it reds the work every
-# iteration, exhausts the loop and escalates. Treat a degenerate criterion as a
-# malformed plan so the retry path asks for a real one.
-_PLACEHOLDER_WORDS = {
-    "tbd", "todo", "n/a", "na", "none", "placeholder", "criterion",
-    "criteria", "unknown", "pending", "...", "etc",
-}
-
-
-def _is_placeholder(value: object) -> bool:
-    """Does this criterion carry no checkable content?
-
-    Judged on substance rather than length — "BOM < $45" is a real criterion
-    and "success criteria 2" is not, though the second is longer.
-    """
-    if not isinstance(value, str):
-        return True
-    text = value.strip().strip(".…-–—*•[]() ").strip()
-    if not text:
-        return True
-
-    tokens = text.lower().split()
-    meaningful = [t for t in tokens if any(ch.isalnum() for ch in t)]
-    if len(meaningful) < 2:
-        # a single word is only a criterion if it is not one of the usual stubs
-        return not meaningful or meaningful[0] in _PLACEHOLDER_WORDS
-
-    # "criterion 1", "TBD - todo" and friends: nothing but stubs and numbers
-    words = [t for t in meaningful if not t.isdigit()]
-    return bool(words) and all(w in _PLACEHOLDER_WORDS for w in words)
-
-
 class PlanVerdict(BaseModel):
     ready: bool
     # Empty is valid when the plan is not ready: a request too underspecified to
@@ -209,13 +222,17 @@ class PlanVerdict(BaseModel):
         return json.dumps(v, indent=2)
 
     @model_validator(mode="after")
-    def ready_plans_need_criteria(self) -> "PlanVerdict":
-        """A ready plan must say how to tell it succeeded.
+    def ready_plans_need_a_plan(self) -> "PlanVerdict":
+        """A ready plan must contain the plan itself.
 
-        Validation checks the implementation against these criteria. With an
-        empty list there is nothing to check, the validator cannot return green
-        on any evidence, and the loop burns every iteration before escalating —
-        so an empty list is a malformed plan, not an acceptable one.
+        Ruling D51 (4): the plan no longer writes success criteria,
+        and a ready plan no longer needs them — the request's anchored
+        asks are the run's only success criteria, so nothing here
+        demands criteria (the field stays, so earlier records load).
+        D36's four rules still govern how the plan is reasoned; they
+        govern reasoning, not what the answer must contain. The
+        placeholder check retired with the requirement it policed: a
+        plan that writes no criteria cannot carry a placeholder one.
         """
         if not self.ready:
             if not self.blockers:
@@ -228,18 +245,6 @@ class PlanVerdict(BaseModel):
                 "a ready plan must contain the plan itself; "
                 "use ready=false with blockers if it cannot be written"
             )
-        if not self.success_criteria:
-            raise ValueError(
-                "a ready plan must provide success_criteria; "
-                "use ready=false with blockers if the work cannot be specified"
-            )
-        placeholders = [c for c in self.success_criteria if _is_placeholder(c)]
-        if placeholders:
-            raise ValueError(
-                f"success_criteria contains placeholders rather than real "
-                f"criteria: {placeholders!r}. Every criterion must be a "
-                f"concrete, checkable statement about the implementation."
-            )
         return self
 
 
@@ -249,6 +254,82 @@ def _coerce_str(v: Any) -> str:
     if isinstance(v, str):
         return v
     return json.dumps(v, indent=2)
+
+
+class BlockedOnAsk(BaseModel):
+    """One ask the work cannot honestly answer (Ruling D51 (5)).
+
+    The entry NAMES the ask — by its number, or by its quote, which
+    the anchoring check verifies against the request. An entry that
+    names no ask is a note: counted, never blocking, routing nowhere
+    (the ruled disposition of "an implementer's blocked_on entry must
+    name an ask"). A bare string — the pre-D51 shape, and the shape a
+    model that did not read the new contract returns — carries its
+    reason in `why` and names nothing, which is exactly that note.
+    """
+
+    ask: int | str | None = None
+    why: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_the_shapes_the_channel_carries(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return {"why": value}
+        if isinstance(value, int) and not isinstance(value, bool):
+            return {"ask": value}
+        return value
+
+    @field_validator("why", mode="before")
+    @classmethod
+    def _coerce_why(cls, value: Any) -> str:
+        if value is None:
+            return ""
+        return value if isinstance(value, str) else _coerce_str(value)
+
+
+class DomainConcern(BaseModel):
+    """One domain reviewer's concern (Ruling D51 (3), text (R-f)).
+
+    A concern can be critical only if it is anchored: it names the
+    ask it concerns by number, quotes the request's own words for
+    something the answer gets wrong or leaves out, or it is a hazard.
+    A critical concern with no anchor is a note — never critical —
+    and cannot flip the implementation red. An omission is never a
+    hazard; if the request asked for what is missing, it is an ask.
+    """
+
+    detail: str = ""
+    ask: int | None = None
+    quote: str = ""
+    hazard: bool = False
+    critical: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_the_shapes_reviewers_use(cls, value: Any) -> Any:
+        # A bare string is the most common shape of all, and carries
+        # no anchor: a note, never critical.
+        if isinstance(value, str):
+            return {"detail": value}
+        if not isinstance(value, dict):
+            return value
+        data = dict(value)
+        if not str(data.get("detail") or "").strip():
+            for alias in ("issue", "description", "concern", "text",
+                          "problem", "note", "summary", "message"):
+                candidate = data.get(alias)
+                if isinstance(candidate, str) and candidate.strip():
+                    data["detail"] = candidate.strip()
+                    break
+        return data
+
+    @field_validator("detail", "quote", mode="before")
+    @classmethod
+    def _coerce_text(cls, value: Any) -> str:
+        if value is None:
+            return ""
+        return value if isinstance(value, str) else _coerce_str(value)
 
 
 class ImplementVerdict(BaseModel):
@@ -267,17 +348,24 @@ class ImplementVerdict(BaseModel):
     # Upper bound is settings.max_iterations (1-20).
     iteration: int = Field(default=1, ge=1)
     summary: str
-    domain_concerns: list[str] = Field(default_factory=list)
-    # Ruled (Blueprint 016 B2) — the honest-refusal channel. Success criteria
-    # the work cannot satisfy with what is available, each naming why. The
-    # measured failure it exists for: a low-risk brief whose plan demanded "a
+    # Ruling D51 (3): typed concerns (DomainConcern). A concern
+    # flips this verdict red only when it is critical AND anchored;
+    # the adapter demotes an unanchored critical concern to a note
+    # before it lands, so the list that arrives here holds what the
+    # record keeps.
+    domain_concerns: list[DomainConcern] = Field(default_factory=list)
+    # Ruled (Blueprint 016 B2) — the honest-refusal channel. Asks
+    # the work cannot satisfy with what is available, each naming the
+    # ask by its number or its quote (Ruling D51 (5)). The measured
+    # failure it exists for: a low-risk brief whose plan demanded "a
     # citable source a reader can use to verify the claim" while the risk gate
     # had already zeroed its lookups, and the implementer fabricated sources
     # for six iterations rather than refusing. Independent of `green` by
     # ruling: the loop routes on this field, not on the implementer's own
     # green self-assessment, so an implementer that blocks does not also have
-    # to declare itself red.
-    blocked_on: list[str] = Field(default_factory=list)
+    # to declare itself red. An entry that names no ask is a note,
+    # counted, and routes nowhere.
+    blocked_on: list[BlockedOnAsk] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _green_from_red_cause(self):
@@ -330,10 +418,40 @@ GREEN_COERCED = "green_coerced_false_against_its_cause"
 GREEN_REFUSED_NO_SUBSTANCE = "green_refused_no_substance"
 EVIDENCE_FOLDED = "evidence_object_folded_to_lines"
 COST_ESTIMATE_COERCED = "cost_estimate_string_coerced_to_float"
+# Ruling D51 — the demotion kinds. Every demotion is counted here and
+# surfaced in the run's record (normalised_by_kind), because a judgment
+# that names no anchor carries no information about the request
+# (convention 21), and a demotion that is silent stops anyone noticing
+# when a serving stops anchoring its failures:
+# - an unanchored ask quote: the asks model proposed a quote the
+#   anchoring check cannot find in the request;
+# - an unanchored dissent: a domain concern or review finding that
+#   claims to fail the work with no anchor;
+# - a red with no anchor after the schema's bounded retries: a
+#   validator that returned red naming neither a failed ask, a request
+#   quote nor a hazard;
+# - a blocked_on entry with no ask: an implementer's refusal that
+#   names no ask, and so routes nowhere.
+UNANCHORED_ASK_QUOTE = "unanchored_ask_quote"
+UNANCHORED_DISSENT = "unanchored_dissent"
+RED_NO_ANCHOR = "red_with_no_anchor"
+BLOCKED_ON_NO_ASK = "blocked_on_entry_names_no_ask"
 
 
 def _count(kind: str) -> None:
     _normalisations[kind] = _normalisations.get(kind, 0) + 1
+
+
+def count_normalisation(kind: str) -> None:
+    """Record one normalization, by kind, from outside this module.
+
+    The demotions Ruling D51 names happen in the phases and the free
+    checks (autornd/engine/phases.py, autornd/graph/checks.py), which
+    construct the verdicts that carry the demoted judgments. They count
+    here, in the one place the run's record reads, so a demotion is
+    visible in `normalised_by_kind` whatever module performed it.
+    """
+    _count(kind)
 
 
 def normalisations() -> int:
@@ -472,11 +590,30 @@ class ValidateVerdict(BaseModel):
     # convention 21. At a measured 41 s per call, each avoided retry is about
     # 41 seconds of a run budget that expires on the clock, not on money.
     evidence: list[str] = Field(default_factory=list)
+    # Ruling D51 (3), text (R-d): a red names the ask it fails
+    # (its number), or quotes the request's own words for what the
+    # answer gets wrong or leaves out, or is a hazard. Only an
+    # anchored red fails the work; a red with no anchor is demoted
+    # to a note before it lands (counted under red_with_no_anchor).
+    failed_ask: int | None = None
+    anchor_quote: str = ""
+    hazard: bool = False
+    # Ruling D51 (5): asks whose verification needs what the run
+    # does not have. Unavailable is neither pass nor fail, never
+    # blocking, and listed in the run's record.
+    unavailable_asks: list[int] = Field(default_factory=list)
 
     @field_validator("evidence", mode="before")
     @classmethod
     def _accept_the_shape_a_serving_returns(cls, value: Any) -> Any:
         return _fold_evidence(value)
+
+    @field_validator("anchor_quote", mode="before")
+    @classmethod
+    def _coerce_anchor_quote(cls, value: Any) -> str:
+        if value is None:
+            return ""
+        return value if isinstance(value, str) else _coerce_str(value)
 
     @model_validator(mode="after")
     def _green_from_red_cause(self):
@@ -498,6 +635,15 @@ class ReviewFinding(BaseModel):
     lens: str = "unknown"
     severity: str = "medium"
     detail: str = ""
+    # Ruling D51 (3), text (R-e): a finding blocks only when it is
+    # critical or high AND anchored — it names the ask it concerns
+    # by number, quotes the request's own words, or is a hazard. An
+    # unanchored critical or high finding is demoted to a note at
+    # severity medium before the blocking decision (counted under
+    # unanchored_dissent).
+    ask: int | None = None
+    quote: str = ""
+    hazard: bool = False
 
     @model_validator(mode="before")
     @classmethod
@@ -584,6 +730,20 @@ class DoubleCheckVerdict(BaseModel):
         return not self.ship
 
 
+class EscalationRuling(BaseModel):
+    """One escalation ruling on one open dissent (Ruling D51 (6)).
+
+    `dissent` is the dissent's number in the run's dissent ledger —
+    the counter the adapter keeps, one per anchored dissent, the same
+    number the iteration record and the failure log carry. `upheld`
+    decides whether the directive addresses it.
+    """
+
+    dissent: int
+    upheld: bool
+    reason: str = ""
+
+
 class EscalationVerdict(BaseModel):
     root_cause_analysis: str = Field(
         ...,
@@ -601,3 +761,9 @@ class EscalationVerdict(BaseModel):
         ...,
         description="True ONLY if the fix requires external API keys, manual hardware intervention, or falls entirely outside the current architecture scope.",
     )
+    # Ruling D51 (6): one ruling per open dissent — {"dissent":
+    # <number>, "upheld": true|false, "reason": "<one line>"}.
+    # The directive addresses only the upheld dissents; a dissent
+    # the escalation does not uphold is a note about the work, not
+    # a fact about the request, and the revision is not spent on it.
+    rulings: list[EscalationRuling] = Field(default_factory=list)

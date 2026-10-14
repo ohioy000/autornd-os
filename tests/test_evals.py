@@ -197,9 +197,20 @@ def scripted(risk="medium", green=True):
                     "success_criteria": ["Backoff is capped at 60s with jitter"]}
         if "review this implementation plan" in m:
             return {"feasible": True, "concerns": [], "blockers": []}
-        if "implementation for the following plan" in m:  # produce (iter 1) or revise (D33, iter>1)
+        if "implementation for the following plan" in m:  # produce (iter 1) or revise (D33)
+            # Ruling D51 (1): the asks node's
+            # verdict comes from the triage
+            # reply above, which names no asks,
+            # so the anchoring check's fallback
+            # fires — the whole request ("Add
+            # retry") is the one ask — and
+            # coverage judges it. The summary
+            # carries the request's own words or
+            # coverage holds the loop
+            # (convention 22).
             return {"done": True, "green": True, "red_cause": None, "iteration": 1,
-                    "summary": "Backoff is capped at 60s with jitter applied."}
+                    "summary": "Add retry with backoff capped at 60s "
+                               "and jitter applied."}
         if "review this implementation from your domain perspective" in m:
             return {"concerns": [], "critical": False}
         if "validate this implementation" in m:
