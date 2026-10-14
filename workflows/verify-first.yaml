@@ -88,6 +88,10 @@ nodes:
     args:
       criteria: asks_anchored.quotes
       text: implement.summary
+      # The review of 2026-10-14: when nothing anchors, the ask
+      # is the whole request, and word presence cannot judge a
+      # whole request — coverage is passed and unchecked, a note.
+      fallback: asks_anchored.fallback
     depends_on: [implement]
 
   # Ruling D51 (4): the reference is the request's stated figures,
@@ -122,7 +126,11 @@ nodes:
       # passed — the fold must see `checked` so a check that
       # compared nothing is non-blocking and listed.
       coverage: coverage
-      consistency: consistency
+      # Consistency is deliberately NOT in this fold since the
+      # review of 2026-10-14: its disagreements are notes, never
+      # vetoes. The node still runs above, its result is still
+      # recorded, and a fail is counted as a consistency_note —
+      # but no loop turns on it.
     depends_on: [implement, coverage, consistency, validate]
 
   # At most four model calls after triage and asks: answer, check,

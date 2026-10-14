@@ -94,6 +94,8 @@ class TestTheCheckAnchorsAndCounts:
             {"number": 1, "quote": AT_FLOOR, "kind": "constraint"}]
         assert result.data["quotes"] == [AT_FLOOR]
         assert result.data["demoted"] == []
+        # Something anchored, so this is not the fallback.
+        assert result.data["fallback"] is False
 
     def test_every_demotion_is_counted(self):
         asks_anchored(
@@ -112,3 +114,49 @@ class TestTheCheckAnchorsAndCounts:
             {"number": 1, "quote": request, "kind": ""}]
         assert result.data["quotes"] == [request]
         assert len(result.data["demoted"]) == 1
+        # The fallback carries its flag, so the coverage check
+        # that reads the anchored asks can recognize what it was
+        # given (the review of 2026-10-14).
+        assert result.data["fallback"] is True
+
+
+class TestTheNormalisationFoldsLaTeX:
+    """The review of 2026-10-14: the normalisation folds the
+    math-mode machinery itself — the spacing commands, the
+    degree forms, the \\mathrm wrappers and the braces — so a
+    quote of the request's LaTeX-quoted words anchors as the
+    words they wrap. Q10's request, verbatim from the frozen
+    tier-2 questions (evals/tier2/questions.json)."""
+
+    Q10 = ("Write the cure-check sequence for an adhesive coupon in "
+           "a guarded laboratory oven. The coupon and its temperature "
+           "probe are already installed. The work instruction requires "
+           "setting the oven to $120\\,^{\\circ}\\mathrm{C}$, waiting "
+           "until the coupon temperature enters the inclusive band "
+           "$118$–$122\\,^{\\circ}\\mathrm{C}$, then starting a "
+           "$600\\,\\mathrm{s}$ timer. The coupon must remain inside "
+           "that band throughout the timed hold; any excursion fails "
+           "the run and no restart is permitted. At the end, assess "
+           "the run, switch off heating, and leave the coupon inside "
+           "until its probe reads $\\leq40\\,^{\\circ}\\mathrm{C}$ "
+           "before removal. A completed log records an uninterrupted "
+           "$600\\,\\mathrm{s}$ hold with minimum "
+           "$119\\,^{\\circ}\\mathrm{C}$ and maximum "
+           "$121\\,^{\\circ}\\mathrm{C}$. Include the acceptance "
+           "criteria and this log's verdict.")
+
+    def test_a_timer_quote_wrapped_for_math_anchors(self):
+        # "then starting a $600\,\mathrm{s}$ timer" — the quote
+        # carries the words as written, the request carries them
+        # wrapped for math mode.
+        assert quote_anchors("starting a 600 s timer", self.Q10)
+
+    def test_a_degree_band_quote_anchors(self):
+        # "the inclusive band $118$–$122\,^{\circ}\mathrm{C}$" —
+        # the degree form and the wrapper fold away.
+        assert quote_anchors(
+            "the inclusive band 118–122 °C", self.Q10)
+
+    def test_a_paraphrase_of_the_wrapped_words_does_not_anchor(self):
+        assert not quote_anchors(
+            "starting the timer for 600 seconds", self.Q10)

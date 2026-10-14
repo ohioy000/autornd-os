@@ -28,6 +28,9 @@ from typing import Any, Callable
 from autornd.evals.assertions import AssertionResult, RunOutcome, score
 from autornd.evals.scenario import Scenario
 from autornd.graph.adapter import PhaseRunner
+from autornd.graph.checks import (
+    asks_anchored, criteria_addressed, numbers_consistent,
+)
 from autornd.graph.executor import GraphExecutor
 from autornd.graph.spec import WorkflowSpec
 from autornd.routing.openrouter import (
@@ -43,6 +46,7 @@ __all__ = [
     "RepeatedReport",
     "RepeatedRun",
     "ScenarioRun",
+    "replay_reading_sheet",
     "run_repeated",
     "run_scenario",
     "run_suite",
@@ -790,6 +794,72 @@ def _end_on_bound(state, bound: str, detail: str,
     state.end("blocked", f"stopped by the {bound}: {detail}")
     if not reached_terminal:
         state.stop_reason = f"runner stopped the run: {detail}"
+
+
+# The review of 2026-10-14's acceptance measurement: the
+# reading sheet the review was opened on, replayed through
+# the free checks the review changed. The sheet is committed
+# beside this module's own results, so the replay reads the
+# measured record rather than a transcription of it.
+READING_SHEET = (
+    Path(__file__).resolve().parents[2] / "evals" / "results"
+    / "20261005T215237Z-tier3-run.reading-sheet.json"
+)
+
+
+def replay_reading_sheet(
+        path: Path | str = READING_SHEET) -> list[dict[str, Any]]:
+    """Replay the reading sheet's entries through the free
+    checks, and report what each check records.
+
+    The sheet is the measured record the review of 2026-10-14
+    was opened on: one entry per sampled unit, each carrying
+    the request, the answer the harness produced, and the
+    scoring fixture's required items — the fixture's asks.
+    Each entry is replayed the way a run's own record reads
+    it: the fixture's asks are proposed and anchored
+    (`asks_anchored`), coverage judges the answer against the
+    anchored asks (`criteria_addressed`, over the fallback
+    when nothing anchored), and consistency compares the
+    request's stated figures against the answer's
+    (`numbers_consistent`). No model is called — the three
+    checks are free, and the replay measures exactly what the
+    record would have recorded.
+    """
+    sheet = json.loads(Path(path).read_text())
+    replays: list[dict[str, Any]] = []
+    for entry in sheet["entries"]:
+        request = str(entry["question"])
+        answer = str(entry["answer"])
+        # The fixture's asks: what each required item says
+        # the answer must give, quoted as the asks node
+        # quotes a proposal.
+        proposals = [
+            {"quote": str(item["value"])}
+            for item in entry.get("required_items") or []
+        ]
+        anchored = asks_anchored(asks=proposals, request=request)
+        coverage = criteria_addressed(
+            criteria=anchored.data["quotes"], text=answer,
+            fallback=anchored.data["fallback"])
+        consistency = numbers_consistent(
+            reference=request, implementation=answer)
+        replays.append({
+            "entry": entry["entry"],
+            "question_id": entry["question_id"],
+            "resolved_pass": str(entry.get("resolution", {})
+                                 .get("verdict", "")).upper() == "PASS",
+            "anchored": anchored.data["anchored"],
+            "fallback": anchored.data["fallback"],
+            "coverage": {"passed": coverage.passed,
+                         "checked": coverage.checked,
+                         "detail": coverage.detail},
+            "consistency": {"passed": consistency.passed,
+                            "checked": consistency.checked,
+                            "conflicts": consistency.data.get(
+                                "conflicts", [])},
+        })
+    return replays
 
 
 async def run_scenario(

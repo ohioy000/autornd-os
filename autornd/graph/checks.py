@@ -23,6 +23,7 @@ __all__ = ["CheckResult", "get_check", "registry", "check"]
 
 from autornd.models.verdicts import (
     BLOCKED_ON_NO_ASK,
+    CONSISTENCY_NOTE,
     UNANCHORED_ASK_QUOTE,
     count_normalisation,
 )
@@ -203,13 +204,25 @@ def _terms(text: str) -> set[str]:
 # phases import it rather than re-deriving it.
 
 def _normalise_quote(text: str) -> str:
-    """The normalisation the checks already apply to a quote.
+    """The normalisation the checks apply to a quote.
 
-    Case-folded, whitespace-collapsed, with the LaTeX '$' wrapper
-    stripped — the same three the tier-3 fetch repair applies, so
-    a quote wrapped for math mode anchors the words it wraps.
+    Case-folded, whitespace-collapsed, and LaTeX-stripped: the
+    '$' math delimiters, the \\, \\; \\: \\! and "\\ " spacing
+    commands, the degree forms, the \\mathrm/\\text/\\textrm
+    wrappers and the braces they leave behind. A quote wrapped
+    for math mode anchors the words it wraps — "a
+    $600\\,\\mathrm{s}$ timer" normalises to "a 600 s timer",
+    which is the request's own words. The review of 2026-10-14:
+    the old three-step normalisation left LaTeX-wrapped quotes
+    unanchored, so a validator quoting the request's math could
+    not anchor it. The floor a quote must clear is unchanged.
     """
     text = str(text or "").replace("$", "")
+    for command in (r"\,", r"\;", r"\:", r"\!", "\\ "):
+        text = text.replace(command, " ")
+    text = text.replace(r"^{\circ}", "°").replace(r"^\circ", "°")
+    text = re.sub(r"\\(?:mathrm|text|textrm)\{([^{}]*)\}", r"\1", text)
+    text = text.replace("{", "").replace("}", "")
     return " ".join(text.casefold().split())
 
 
@@ -245,23 +258,31 @@ def quote_anchors(quote: str, request: str) -> bool:
 def dissent_anchored(
     ask: Any, quote: str, hazard: bool,
     asks: list[Any] | None, request: str,
+    answer: str = "", hazard_quote: str = "",
 ) -> bool:
-    """Is this dissent anchored? (Ruling D51 (3).)
+    """Is this dissent anchored? (Ruling D51 (3); the review
+    of 2026-10-14: a hazard anchors only when quoted.)
 
-    Three anchors, all typed — never prose: the ask it concerns,
-    by its number in the anchored asks; a quote of the request's
-    own words, anchored by the same free check the asks pass; or
-    a hazard. An omission is never a hazard and never an anchor:
-    if the request asked for what is missing, it is an ask, and
-    the dissent names it by number.
+    Three anchors, all typed — never prose: the ask it
+    concerns, by its number in the anchored asks; a quote of
+    the request's own words, anchored by the same free check
+    the asks pass; or a hazard, and a hazard anchors only
+    through the answer's own words that state or instruct
+    it — `hazard_quote`, anchored against the answer the
+    judge was given. A hazard the judge did not quote is a
+    note, counted as unanchored dissent, not a veto: the
+    bool alone cannot say what the answer does. An omission
+    is never a hazard and never an anchor: if the request
+    asked for what is missing, it is an ask, and the dissent
+    names it by number.
     """
-    if hazard:
-        return True
     if isinstance(ask, int) and not isinstance(ask, bool):
         if 1 <= ask <= len(asks or []):
             return True
     if str(quote or "").strip() and quote_anchors(quote, request):
         return True
+    if hazard and str(hazard_quote or "").strip():
+        return quote_anchors(hazard_quote, answer)
     return False
 
 
@@ -296,7 +317,12 @@ def asks_anchored(asks: list[Any], request: str) -> Result:
     When nothing anchors, the whole request is the one ask — the
     ruling's own fallback, word for word. It carries no kind: it is
     every kind at once, and a bracket would lie about which one it
-    is.
+    is. The Result carries `fallback` true in that case, so the
+    coverage check that reads the anchored asks can recognize what
+    it was given: the review of 2026-10-14 measured the fallback
+    judged by word presence failing 5 of 7 correct answers on Q15,
+    and coverage over a fallback ask is passed and NOT CHECKED —
+    the whole request cannot be judged by the words it contains.
 
     The check never fails. It filters a proposal list; it does not
     judge work, so `passed` is vacuously true whatever anchors — a
@@ -317,7 +343,8 @@ def asks_anchored(asks: list[Any], request: str) -> Result:
         elif quote:
             demoted.append(quote)
             count_normalisation(UNANCHORED_ASK_QUOTE)
-    if not anchored:
+    fallback = not anchored
+    if fallback:
         anchored = [{"number": 1, "quote": str(request), "kind": ""}]
     return Result(
         True,
@@ -327,6 +354,7 @@ def asks_anchored(asks: list[Any], request: str) -> Result:
         anchored=anchored,
         quotes=[a["quote"] for a in anchored],
         demoted=demoted,
+        fallback=fallback,
     )
 
 
@@ -800,7 +828,8 @@ def _forbidden_present(token: str, text: str) -> bool:
 
 @check("criteria_addressed")
 def criteria_addressed(
-    criteria: list[str], text: str, threshold: float = 0.5
+    criteria: list[str], text: str, threshold: float = 0.5,
+    fallback: bool = False,
 ) -> Result:
     """Does the implementation visibly address every success criterion?
 
@@ -810,7 +839,21 @@ def criteria_addressed(
     word "backoff" has not addressed a backoff criterion — and it catches the
     failure we kept hitting, where work drifts off the plan without anyone
     noticing until a model reads it three phases later.
+
+    `fallback` marks the asks node's fallback — nothing anchored, so the
+    criterion list is the whole request. Word presence cannot judge a whole
+    request: every word of it is about the answer, so the check is passed
+    and NOT CHECKED — recorded, never a gate (the review of 2026-10-14:
+    judged by word presence, the fallback failed 5 of 7 correct answers on
+    Q15).
     """
+    if fallback:
+        return Result(
+            True,
+            "the whole request is the ask; word presence "
+            "cannot judge it",
+            checked=False,
+        )
     if not criteria:
         # Ruling D46 (3): with no criteria there is nothing to check against.
         # The verdict is unchanged — it fails exactly as it always has — but
@@ -955,6 +998,18 @@ def numbers_consistent(reference: str, implementation: str) -> Result:
     the request stating 60s while the implementation sets 600s. It
     reports contradictions, never absence: a request value the implementation
     simply does not mention is not a conflict.
+
+    The review of 2026-10-14: the figure extractor's unit class
+    admits '$', so a LaTeX math delimiter read as a currency unit —
+    the request's "$750$" indexed under "$" while the implementation's
+    bare "750" indexed under no unit, and five correct answers (the
+    reading sheet's entries 3, 11, 42, 46, 50) failed on a unit the
+    request never states. The delimiter is math markup, not a unit: it
+    is stripped from both texts before figures are extracted. And a
+    disagreement this check finds is a note, not a veto — it is out of
+    the judges' fold (the workflows record it; nothing loops on it),
+    counted like every other demotion so the run's record says how
+    often it fired.
     """
     def indexed(text: str) -> dict[str, list[tuple[float, int]]]:
         found: dict[str, list[tuple[float, int]]] = {}
@@ -968,7 +1023,8 @@ def numbers_consistent(reference: str, implementation: str) -> Result:
     def shown(values: list[tuple[float, int]]) -> list[str]:
         return sorted({_normalize(f"{v:.{s}g}") for v, s in values})
 
-    requested, built = indexed(reference), indexed(implementation)
+    requested, built = indexed(str(reference or "").replace("$", "")), \
+        indexed(str(implementation or "").replace("$", ""))
     # Ruling D46 (3): with no shared unit there is nothing to compare. It
     # passes exactly as it did — reporting absence as conflict would be a
     # different check — but it is recorded as NOT CHECKED, the fold treats it
@@ -992,6 +1048,11 @@ def numbers_consistent(reference: str, implementation: str) -> Result:
     ]
 
     if conflicts:
+        # Out of the fold since the review of 2026-10-14: the
+        # disagreement is recorded and counted as a note, so the
+        # run's record says how often it fired, but it no longer
+        # judges the work — nothing loops on it and no veto reads it.
+        count_normalisation(CONSISTENCY_NOTE)
         return Result(
             False,
             "values disagree between request and implementation — "

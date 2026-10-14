@@ -70,6 +70,10 @@ nodes:
     args:
       criteria: asks_anchored.quotes
       text: implement.summary
+      # The review of 2026-10-14: when nothing anchors, the ask
+      # is the whole request, and word presence cannot judge a
+      # whole request — coverage is passed and unchecked, a note.
+      fallback: asks_anchored.fallback
     depends_on: [implement]
 
   - id: validate

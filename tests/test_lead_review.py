@@ -188,7 +188,10 @@ class TestLeadSelection:
         critical flag and anchor. Convention 17: the old fixture put
         `critical` at the top level of the reply, a channel the typed
         contract retired; the per-concern flag with a hazard anchor
-        keeps this test's rule under the new contract."""
+        keeps this test's rule under the new contract. The review of
+        2026-10-14: the hazard anchor is the answer's own words
+        (`hazard_quote`), so the answer carries the words the concern
+        quotes — a hazard the judge did not quote is a note."""
         client = OpenRouterClient(api_key="test")
 
         async def _mock(function, system_prompt, user_message, **kw):
@@ -196,12 +199,19 @@ class TestLeadSelection:
             if "produce the implementation for the following plan" in msg:
                 data = {
                     "done": True, "green": True, "red_cause": None,
-                    "iteration": 1, "summary": "Built it.",
+                    "iteration": 1,
+                    "summary": "Built it. The firmware shorts the "
+                               "regulator input to ground during the "
+                               "fault test.",
                 }
             else:
                 data = {
-                    "concerns": [{"detail": "Fatal voltage domain crossing",
-                                     "critical": True, "hazard": True}],
+                    "concerns": [{
+                        "detail": "Fatal voltage domain crossing",
+                        "critical": True, "hazard": True,
+                        "hazard_quote": "shorts the regulator input "
+                                        "to ground during the fault "
+                                        "test"}],
                 }
             return data, make_mock_response(data)
 

@@ -841,9 +841,13 @@ class TestExecutorMechanics:
         # Ruling D51 (1): coverage judges the anchored asks, not
         # the plan's criteria. This scripted request anchors
         # nothing the model proposed (it is below the floor), so
-        # the check's fallback made the whole request the one
-        # ask — one criterion, addressed.
-        assert state.outputs["coverage"]["addressed"] == 1
+        # the check's fallback fires — the whole request is the
+        # one ask. The review of 2026-10-14: word presence
+        # cannot judge a whole request, so coverage over the
+        # fallback is passed and recorded as not checked.
+        assert state.outputs["coverage"]["checked"] is False
+        assert "the whole request is the ask" in (
+            state.outputs["coverage"]["detail"])
 
     async def test_drifted_implementation_is_caught_by_a_free_check(self):
         """A free check now carries the same weight as the paid judges.
@@ -853,14 +857,20 @@ class TestExecutorMechanics:
         going: an implementation that never mentions the ask does
         not ship because the validator happened to say green.
         """
+        # The ask is anchored in the request (not the fallback)
+        # so coverage really checks: over a fallback ask the
+        # review of 2026-10-14 made coverage pass unchecked,
+        # and drift is exactly what a checked coverage catches.
         state, _ = await _run({
             **BASE,
+            "asks": {"asks": [{"quote": "the exponential backoff cap",
+                                "kind": "constraint"}]},
             "implement": {**IMPL, "summary": "Tidied the logging."},
             "validate": {"green": True},
-            "escalation": {"requires_human": True}})
+            "escalation": {"requires_human": True}},
+            request="Add retry with the exponential backoff cap")
         assert state.outputs["coverage"]["passed"] is False
-        # Ruling D51 (1): the one anchored ask is the whole
-        # request (the fallback), and a logging tidy mentions
+        # The one anchored ask, and a logging tidy mentions
         # none of it.
         assert len(state.outputs["coverage"]["missed"]) == 1
         assert state.status != "completed", "drift must not ship on one judge"
