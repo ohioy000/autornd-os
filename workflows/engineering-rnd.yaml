@@ -13,12 +13,33 @@ nodes:
     prompt: triage
     schema: TriageVerdict
 
+  # Ruling D51 (1): the asks node. A model on the triage
+  # tier proposes what the request asks, quoted verbatim,
+  # each with its kind. The free check downstream keeps
+  # only what occurs in the request; the anchored asks
+  # are the run's only success criteria, and every judge
+  # judges against them and nothing else.
+  - id: asks
+    kind: ai
+    tier: triage
+    prompt: asks
+    schema: AsksVerdict
+    depends_on: [triage]
+
+  - id: asks_anchored
+    kind: check
+    check: asks_anchored
+    args:
+      asks: asks.asks
+      request: request
+    depends_on: [asks]
+
   # Grounding is assembled deterministically. It costs nothing and it is the
   # single biggest lever on output quality.
   - id: context
     kind: check
     check: build_context
-    depends_on: [triage]
+    depends_on: [asks_anchored]
 
   # ── plan ────────────────────────────────────────────────────────────────
   # Planning normally wants the heavyweight tier: the plan constrains every
@@ -34,7 +55,7 @@ nodes:
     prompt: plan
     schema: PlanVerdict
     max_tokens: plan_max_tokens
-    depends_on: [context]
+    depends_on: [context, asks_anchored]
 
   # Specialists pressure-test the plan before any implementation tokens are
   # spent. No point reviewing a plan the architect has already declared blocked.
@@ -95,11 +116,11 @@ nodes:
     on_fail_reason: "Plan not ready"
 
   # B13's override (Blueprint 016 B1). The risk gate zeroes lookups at low
-  # risk; if the plan then writes a criterion demanding a citable source, the
+  # risk; if an ask then demands a citable source, the
   # implementer would fabricate one rather than refuse — measured once, six
-  # iterations of it. This node re-reads the criteria for free and, when they
+  # iterations of it. This node re-reads the asks for free and, when they
   # demand verifiability, fires the one bundled lookup the risk gate declined,
-  # at the medium-risk budget. $0 where no criterion demands citation.
+  # at the medium-risk budget. $0 where no ask demands citation.
   # Depends on plan_ready: the single chain through the loop and feasibility
   # always resolves there before build starts.
   - id: verify_grounding
@@ -118,12 +139,14 @@ nodes:
     max_tokens: plan_max_tokens    # the deliverable is plan-sized; 16k truncated it twice (073, 075)
 
   # B13's honest-refusal gate (Blueprint 016 B2/B3). The implementer's ruled
-  # channel for saying a criterion cannot be honestly satisfied is blocked_on;
-  # this free check asks whether any blocked entry names a plan success
-  # criterion, and if one does, the gate routes straight to escalation —
-  # before a single paid judge sees the work. The measured failure this
-  # prevents: six iterations of fabricating citations against an impossible
-  # criterion, ended only by the cost ceiling.
+  # channel for saying an ask cannot be honestly satisfied is blocked_on;
+  # this free check asks whether any blocked entry names an ask — by its
+  # number, or by a quote of the request's own words — and if one does, the
+  # gate routes straight to escalation — before a single paid judge sees the
+  # work. The measured failure this prevents: six iterations of fabricating
+  # citations against an impossible ask, ended only by the cost ceiling.
+  # An entry naming no ask is a note: counted, never blocking, routed
+  # nowhere.
   #
   # The check runs in all three loop bodies. What differs is the GATE behind
   # it: `blocked_gate` routes, and routes only from build_loop, because a
@@ -139,7 +162,8 @@ nodes:
     check: blocked_on_unmet
     args:
       blocked_on: implement.blocked_on
-      criteria: plan.success_criteria
+      asks: asks_anchored.anchored
+      request: request
     depends_on: [implement]
 
   - id: blocked_gate
@@ -147,7 +171,7 @@ nodes:
     condition: blocked_check.passed == true
     depends_on: [blocked_check]
     on_fail: escalation
-    on_fail_reason: "Implementation blocked on a criterion it cannot satisfy"
+    on_fail_reason: "Implementation blocked on an ask it cannot satisfy"
 
   # The same block, inside the two loops that sit in the escalation sub-graph,
   # ending the run instead of routing it. The routing gate above cannot go
@@ -168,7 +192,7 @@ nodes:
     condition: blocked_check.passed == true
     depends_on: [blocked_check]
     on_fail: blocked
-    on_fail_reason: "Blocked on a criterion the implementation cannot satisfy"
+    on_fail_reason: "Blocked on an ask the implementation cannot satisfy"
 
   - id: domain_review
     kind: ai
@@ -180,12 +204,12 @@ nodes:
     when: implement.green == true
 
   # Free checks run before the paid validator. If the implementation does not
-  # even mention a criterion, no model call is needed to know it is not done.
+  # even mention an ask, no model call is needed to know it is not done.
   - id: coverage
     kind: check
     check: criteria_addressed
     args:
-      criteria: plan.success_criteria
+      criteria: asks_anchored.quotes
       text: implement.summary
     depends_on: [implement]
 
@@ -193,7 +217,7 @@ nodes:
     kind: check
     check: numbers_consistent
     args:
-      plan: plan.plan
+      reference: request
       implementation: implement.summary
     depends_on: [implement]
 
