@@ -10,7 +10,11 @@ Every double here bills through `client._account`, per convention 9. A free
 double cannot test a spend ceiling at all, which is the point of the rule.
 
 Per-unit call counts used below were measured, not assumed:
-`triage-classify` is 1 call, `engineering-rnd` is 10 under these doubles.
+`triage-classify` is 1 call, `engineering-rnd` is 11 under these
+doubles. Ruling D51 (1) added the asks node, which rides the
+triage function: that tier's call count went from 1 to 2 a unit
+and the whole unit from 10 to 11 — re-measured, not assumed
+(convention 18).
 """
 
 from __future__ import annotations
@@ -165,7 +169,7 @@ class TestBackstop:
             SETTINGS, repeat=1, budget=budget)
 
         errors = [r.runs[0].error or "" for r in report.results]
-        # 10 calls x $0.05 = $0.50 a unit, so two complete and the third crosses.
+        # 11 calls x $0.05 = $0.55 a unit, so two complete and the third crosses.
         assert errors[0] == "" and errors[1] == ""
         assert "stopped at $" in errors[2], f"expected a budget abort, got {errors[2]!r}"
         assert "sweep budget exhausted" in errors[3]
@@ -179,6 +183,15 @@ class TestBackstop:
         bound is the widest fan-out, not one — measured here at two calls with
         a two-specialist roster.
 
+        Ruling D51 (1) re-measured it at ONE call: the asks node
+        is an extra sequential call on the triage tier, so the
+        ceiling trips one call earlier in the crossing unit and
+        only the first call of the first fan-out is still in
+        flight when it does. Five trials read $1.25 every time;
+        the wider fan-out bound below still holds (convention 18:
+        the budget is re-derived in the change that altered the
+        per-run work).
+
         This is why the fit rule matters: with a per-unit cap set there is no
         overshoot at all, because no unit is ever started that could exceed the
         budget. The backstop is the weaker guarantee of the two.
@@ -190,8 +203,8 @@ class TestBackstop:
             SETTINGS, repeat=1, budget=budget)
 
         assert budget.spent > budget.cap, "the backstop trades exactness for progress"
-        assert budget.spent == pytest.approx(1.30), (
-            f"two in-flight calls past a $1.20 cap at $0.05: {budget.spent}")
+        assert budget.spent == pytest.approx(1.25), (
+            f"one in-flight call past a $1.20 cap at $0.05: {budget.spent}")
         assert budget.spent <= budget.cap + 2 * 0.05 + 1e-9
 
     async def test_the_fit_rule_has_no_overshoot_at_all(self):
@@ -277,8 +290,9 @@ class TestTheAbortLandsOnTheExpensiveTier:
         assert "search" in run.cost_by_tier, (
             f"the run never reached the search tier: {run.cost_by_tier}")
         assert run.cost_by_tier["search"] == pytest.approx(0.50)
-        assert run.calls == 4, (
-            f"triage, two grounding calls, then the lookup: {run.calls_by_tier}")
+        assert run.calls == 5, (
+            f"triage, asks, two grounding calls, then the lookup: "
+            f"{run.calls_by_tier}")
 
 
 @pytest.mark.asyncio

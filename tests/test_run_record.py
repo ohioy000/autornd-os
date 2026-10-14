@@ -155,10 +155,17 @@ class TestChecksNotCheckedOnTheUnitRecord:
             self, tmp_path):
         # No figures on either side: numbers_consistent compares nothing and
         # says so, and the record must list it rather than lose it.
+        # Ruling D51 (1), (2): the anchored ask is the whole
+        # request (the double's triage reply names no asks), so the
+        # summary must address the request's own words for coverage
+        # to pass — and must carry no figure, or consistency would
+        # find a shared unit and leave the unchecked list empty.
         _, (unit,) = await _units(tmp_path, lambda: make_mock_client(_responses(
             architecture={"plan": "Do the thing plainly."},
-            engineering={"summary": "The drop arithmetic is shown plainly."},
-            judge={"summary": "The drop arithmetic is shown plainly."},
+            engineering={"summary": "Specify the vdc wiring for the "
+                                  "sensor run plainly."},
+            judge={"summary": "Specify the vdc wiring for the "
+                            "sensor run plainly."},
         )))
         assert unit["status"] == "completed", unit["reason"]
         assert unit["checks_not_checked"] == ["consistency"]

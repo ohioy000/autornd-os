@@ -1,17 +1,21 @@
 """The honest-refusal channel: the implementer may refuse, and the loop listens.
 
-**The ruled design (Blueprint 016 B2/B3).** `blocked_on` is the implementer's
-channel for naming success criteria the work cannot satisfy with what is
-available. The measured failure it exists for: a low-risk brief whose plan
-demanded "a citable source a reader can use to verify the claim" while the risk
-gate had already zeroed its lookups — the implementer fabricated sources for six
-iterations and died on the cost ceiling rather than refusing. The loop
-semantics: a block naming a plan criterion routes to escalation immediately,
-without consuming further iterations.
+**The ruled design (Blueprint 016 B2/B3, re-anchored by Ruling D51
+(5)).** `blocked_on` is the implementer's channel for naming an ask
+the work cannot honestly satisfy with what is available. The
+measured failure it exists for: a low-risk brief whose request
+demanded "a citable source a reader can use to verify the claim"
+while the risk gate had already zeroed its lookups — the implementer
+fabricated sources for six iterations and died on the cost ceiling
+rather than refusing. The loop semantics: a block naming an ask —
+by its number, or by a quote of the request's own words — routes to
+escalation immediately, without consuming further iterations. A block
+naming no ask is a note: counted, recorded, routed nowhere, and the
+fold judges it like any other dissent.
 
-Every test here drives the real check, the real gate wiring or the real
-executor end to end — convention 22's shape. The override-once-per-run half of
-B4 lives in tests/test_citation_demand.py and is not duplicated here.
+Every test here drives the real check, the real gate wiring or the
+real executor end to end — convention 22's shape. The override-once-per-run
+half of B4 lives in tests/test_citation_demand.py and is not duplicated here.
 """
 
 from __future__ import annotations
@@ -23,69 +27,95 @@ from tests.test_graph import BASE, IMPL, SETTINGS, PLAN, _run
 
 unmet = get_check("blocked_on_unmet")
 
+# Ruling D51 (5): the typed contract's fixtures. The asks are
+# the anchoring check's own output shape — dicts with a
+# number, a quote and a kind — and the request is the text
+# both the quotes and a by-quote entry must anchor in.
+REQUEST = ("Add retry with exponential backoff to the MQTT client, "
+           "and cite a source for every claim")
+ASKS = [
+    {"number": 1, "quote": "retry with exponential backoff",
+     "kind": "step"},
+    {"number": 2, "quote": "cite a source for every claim",
+     "kind": "constraint"},
+]
+
 
 class TestTheCheck:
-    """`blocked_on_unmet`: did a blocked entry name a plan criterion?"""
-
-    CRITERIA = [
-        "Every claim carries a citable source a reader can use to verify it",
-        "Tone matches the house style guide",
-    ]
+    """`blocked_on_unmet`: did a blocked entry name an ask?"""
 
     def test_an_empty_list_is_not_a_block(self):
-        assert unmet(blocked_on=[], criteria=self.CRITERIA).passed
+        assert unmet(blocked_on=[], asks=ASKS,
+                     request=REQUEST).passed
 
-    def test_an_index_reference_names_the_criterion(self):
-        r = unmet(blocked_on=["Criterion 1: no source available to verify it"],
-                  criteria=self.CRITERIA)
+    def test_a_number_reference_names_the_ask(self):
+        r = unmet(blocked_on=[{"ask": 1,
+                               "why": "no source available to verify it"}],
+                  asks=ASKS, request=REQUEST)
         assert not r.passed
-        assert r.data["blocked"], "the matched entries travel to the log"
+        assert r.data["blocked"] == [
+            {"ask": 1, "why": "no source available to verify it"}], (
+            "the named entries travel to the log")
 
-    def test_index_spellings_all_match(self):
-        for spelling in ("criterion 2", "criterion_2", "Criteria 2",
-                         "CRITERION-2"):
-            assert not unmet(blocked_on=[f"{spelling} — impossible"],
-                             criteria=self.CRITERIA).passed, spelling
+    def test_a_quote_reference_names_the_ask(self):
+        r = unmet(blocked_on=[{
+            "ask": "retry with exponential backoff",
+            "why": "the backoff curve is unmeasurable here"}],
+            asks=ASKS, request=REQUEST)
+        assert not r.passed
 
-    def test_a_quoted_criterion_matches_by_terms(self):
-        entry = ('"Every claim carries a citable source a reader can use to '
-                 'verify it" — the search tier is unavailable')
-        assert not unmet(blocked_on=[entry], criteria=self.CRITERIA).passed
+    def test_a_quote_matching_an_anchored_ask_names_it_by_number(self):
+        """The detail the failure log and the gate read renders
+        the ask's own number when the quote is one of the
+        anchored asks verbatim — so the autopsy can rule on
+        the dissent by number."""
+        r = unmet(blocked_on=[{"ask": "retry with exponential backoff",
+                               "why": "unmeasurable"}],
+                  asks=ASKS, request=REQUEST)
+        assert "ask 1: unmeasurable" in r.detail
 
-    def test_a_paraphrase_sharing_most_terms_matches(self):
-        """The first scripted paraphrase this check ever met: "cannot provide a
-        citable source for each claim" shares three of its five significant
-        terms with criterion 1 and matched nothing under a pure subset rule.
-        A real model's refusal carries filler the criterion does not have, so
-        the subset rule alone was the check's fault, not the entry's
-        (convention 17). Half of the smaller term set is the line; still
-        uncalibrated against a live corpus of refusals."""
-        entry = "cannot provide a citable source for each claim"
-        assert not unmet(blocked_on=[entry], criteria=self.CRITERIA).passed
+    def test_an_out_of_range_number_names_nothing(self):
+        assert unmet(blocked_on=[{"ask": 9, "why": "impossible"}],
+                     asks=ASKS, request=REQUEST).passed
 
-    def test_an_entry_sharing_fewer_than_half_its_terms_does_not_block(self):
-        """The threshold's other side, pinned so the shared-majority rule
-        cannot quietly become any-overlap."""
-        assert unmet(blocked_on=["cannot verify the deadline here"],
-                     criteria=self.CRITERIA).passed
+    def test_a_quote_not_in_the_request_names_nothing(self):
+        """A paraphrase anchors nothing — the yardstick cannot
+        drift off the request's own words."""
+        assert unmet(blocked_on=[{"ask": "retry the connection",
+                                  "why": "no bench"}],
+                     asks=ASKS, request=REQUEST).passed
 
-    def test_an_entry_naming_no_criterion_does_not_block(self):
-        """A block about something else is the implementer's judgement, and the
-        fold judges it like any other dissent."""
-        assert unmet(blocked_on=["the deadline is unrealistic"],
-                     criteria=self.CRITERIA).passed
+    def test_an_entry_naming_no_ask_is_a_note(self):
+        """A block about something else is the implementer's
+        judgement, and the fold judges it — counted, never
+        blocking, routed nowhere."""
+        from autornd.models.verdicts import (
+            BLOCKED_ON_NO_ASK, normalisations_by_kind,
+            reset_normalisations)
 
-    def test_an_out_of_range_index_does_not_block(self):
-        assert unmet(blocked_on=["criterion 9: impossible"],
-                     criteria=self.CRITERIA).passed
+        reset_normalisations()
+        assert unmet(blocked_on=[{"why": "the deadline is unrealistic"}],
+                     asks=ASKS, request=REQUEST).passed
+        assert normalisations_by_kind().get(BLOCKED_ON_NO_ASK) == 1
+
+    def test_a_bare_string_names_nothing(self):
+        """The pre-D51 shape — a refusal in prose. Under the
+        typed contract it is the ruled note: it carries its
+        reason and names no ask (convention 17: the old check
+        matched it by term overlap; the typed contract is what
+        the ruling demands)."""
+        assert unmet(blocked_on=["criterion 1: no source available"],
+                     asks=ASKS, request=REQUEST).passed
 
     def test_blank_entries_are_ignored(self):
-        assert unmet(blocked_on=["", "   "], criteria=self.CRITERIA).passed
+        assert unmet(blocked_on=["", "   "], asks=ASKS,
+                     request=REQUEST).passed
 
-    def test_the_matched_entries_are_reported_not_swallowed(self):
-        entries = ["criterion 1: no source", "the deadline is unrealistic"]
-        r = unmet(blocked_on=entries, criteria=self.CRITERIA)
-        assert r.data["blocked"] == ["criterion 1: no source"]
+    def test_the_named_entries_are_reported_not_swallowed(self):
+        entries = [{"ask": 1, "why": "no source"},
+                   {"why": "the deadline is unrealistic"}]
+        r = unmet(blocked_on=entries, asks=ASKS, request=REQUEST)
+        assert r.data["blocked"] == [{"ask": 1, "why": "no source"}]
 
 
 class TestTheVerdictField:
@@ -160,21 +190,28 @@ class TestEscalationReadsTheBlock:
     @staticmethod
     def _state(blocked_on):
         from autornd.graph.executor import ExecutionState
-        from autornd.models.verdicts import ImplementVerdict, PlanVerdict
+        from autornd.models.verdicts import ImplementVerdict
 
+        # Ruling D51 (5): the state carries the anchored asks
+        # the check names the entry against — the anchoring
+        # check's own output, with the request itself as the
+        # one ask (its ruled fallback for a request that
+        # anchors nothing).
         state = ExecutionState(request="write the brief", iteration=1)
         state.outputs["implement"] = ImplementVerdict(
             done=True, green=True, summary="s", iteration=1,
             blocked_on=blocked_on)
-        state.outputs["plan"] = PlanVerdict(
-            ready=True, plan="p", blockers=[],
-            success_criteria=["Every claim carries a citable source"])
+        state.outputs["asks_anchored"] = {
+            "anchored": [{"number": 1, "quote": "write the brief",
+                          "kind": ""}],
+            "quotes": ["write the brief"],
+            "demoted": [],
+        }
         return state
 
     @staticmethod
     async def _run_check(state):
         from autornd.graph.adapter import PhaseRunner
-        from autornd.graph.executor import ExecutionState  # noqa: F401
         from autornd.graph.spec import Node, NodeKind
         from autornd.routing.openrouter import OpenRouterClient
 
@@ -182,24 +219,20 @@ class TestEscalationReadsTheBlock:
         node = Node(id="blocked_check", kind=NodeKind.CHECK,
                     check="blocked_on_unmet",
                     args={"blocked_on": "implement.blocked_on",
-                          "criteria": "plan.success_criteria"})
+                          "asks": "asks_anchored.anchored",
+                          "request": "request"})
         result = await runner.run_check(node, state)
         return runner, result
 
     async def test_a_block_writes_itself_to_the_log_escalation_reads(self):
         runner, result = await self._run_check(
-            self._state(["criterion 1: no source available"]))
+            self._state([{"ask": 1, "why": "no source available"}]))
         assert result.passed is False
         entry = runner.failure_log[-1]
-        # Ruling D51 (5): blocked_on entries are typed
-        # (BlockedOnAsk). A bare string names no ask, so it
-        # is the ruled note — its reason still travels with
-        # the refusal into the log escalation reads. (The
-        # check itself is rewritten to the typed contract in
-        # the D51 commit that follows.)
-        blocked = entry["blocked_on"]
-        assert len(blocked) == 1
-        assert "criterion 1: no source available" in blocked[0]
+        # Ruling D51 (5): the typed entry travels to the log
+        # escalation reads, ask number and reason together.
+        assert entry["blocked_on"] == [
+            {"ask": 1, "why": "no source available"}]
         assert entry["iteration"] == 1
         assert entry["evidence"], "the reason travels with the refusal"
 
@@ -213,8 +246,12 @@ class TestEscalationReadsTheBlock:
 class TestTheGateRoutes:
     """The ruled loop semantics, end to end through the real executor."""
 
+    # Ruling D51 (5): the typed entry — ask 1 is the whole
+    # request under the anchoring check's fallback (the
+    # scripted request anchors nothing a model proposed), so
+    # the number names it.
     BLOCKED = {**IMPL, "blocked_on": [
-        "Criterion 1: no source available to verify the backoff cap"]}
+        {"ask": 1, "why": "no source available to verify the backoff cap"}]}
 
     async def test_a_block_routes_immediately_without_consuming_iterations(self):
         """The measured failure was six iterations against an impossible
@@ -231,16 +268,17 @@ class TestTheGateRoutes:
         # block is read where routing detail always lives, exactly as the
         # review_clean test reads its gate.
         assert state.outputs["blocked_gate"]["routed_to"] == "escalation"
-        assert "criterion" in state.outputs["blocked_gate"]["reason"]
+        assert "ask" in state.outputs["blocked_gate"]["reason"]
 
     async def test_blocked_on_empty_behaves_exactly_as_today(self):
         state, runner = await _run({**BASE, "validate": {"green": True}})
         assert state.status == "completed"
         assert runner.ai_calls.count("implement") == 1
 
-    async def test_a_block_naming_no_criterion_does_not_route(self):
-        """A block about something else is a dissent, not a dead end — the fold
-        judges it."""
+    async def test_a_block_naming_no_ask_does_not_route(self):
+        """A block about something else is a note, not a dead end — the fold
+        judges it. A bare string names no ask under the typed contract, so
+        even the pre-D51 shape is the note the ruling demands."""
         state, runner = await _run({
             **BASE,
             "implement": {**IMPL, "blocked_on": ["the deadline is unrealistic"]},
@@ -251,10 +289,10 @@ class TestTheGateRoutes:
     async def test_a_block_inside_recovery_ends_blocked_on_its_first_attempt(self):
         """Was: exhaustion is the honest terminal. It is not, for a block.
 
-        The old assertion here pinned three recovery attempts against a
-        criterion already named unsatisfiable, ending `escalated` — a terminal
-        the run reaches by paying for the answer it already had. `blocked` is
-        the honest one, and `blocked_terminal` reaches it on the first attempt.
+        The old assertion here pinned three recovery attempts against an
+        unsatisfiable ask, ending `escalated` — a terminal the run reaches by
+        paying for the answer it already had. `blocked` is the honest one, and
+        `blocked_terminal` reaches it on the first attempt.
 
         The invariant the old test actually guarded is unchanged and asserted
         below: the escalation sub-graph is never re-entered from inside itself.
@@ -267,7 +305,7 @@ class TestTheGateRoutes:
             "review": {"ship": False, "verdict": "no", "findings": []},
             "escalation": {"requires_human": False,
                            "root_cause_analysis": "unsatisfiable as planned",
-                           "resolution_directive": "drop the criterion"}})
+                           "resolution_directive": "drop the ask"}})
 
         assert state.status == "blocked"
         # 1 build attempt + 1 recovery attempt that ends on the gate, where it
@@ -302,9 +340,9 @@ class TestTheGreenButBlockedGap:
     `blocked_check` is the only thing in the graph that reads `blocked_on`
     independently of `green`; validate's failure-log write is guarded on the
     iteration being red. So an implementation that came back GREEN while naming
-    a criterion it could not satisfy used to record nothing and meet no gate
-    inside the rework and recovery loops: four green judges, the loop
-    converged, and the work SHIPPED carrying the refusal.
+    an ask it could not satisfy used to record nothing and meet no gate inside
+    the rework and recovery loops: four green judges, the loop converged, and
+    the work SHIPPED carrying the refusal.
 
     Found by reading the two write sites, not by a trace — there is no trace of
     it, because the run it produces reports `completed`.
@@ -324,7 +362,7 @@ class TestTheGreenButBlockedGap:
             if calls["n"] == 1:
                 return IMPL
             return {**IMPL, "green": True, "blocked_on": [
-                "Criterion 1: no source available to verify the backoff cap"]}
+                {"ask": 1, "why": "no source available to verify the backoff cap"}]}
 
         return implement
 
@@ -336,20 +374,21 @@ class TestTheGreenButBlockedGap:
             "implement": self._implement_blocks_after_the_build()})
 
         assert state.status == "blocked", (
-            "a green implementation naming an unsatisfiable criterion must not "
+            "a green implementation naming an unsatisfiable ask must not "
             "ship out of the rework loop")
         assert "blocked_terminal" in state.path
 
-    async def test_the_terminal_reason_names_the_criterion(self):
-        """A blocked run says why in the architect's own terms — the gate's
-        detail carries the matched entries, not just that a condition failed."""
+    async def test_the_terminal_reason_names_the_ask(self):
+        """A blocked run says why in the terms the work is judged by — the
+        gate's detail carries the named entries, not just that a condition
+        failed."""
         state, runner = await _run({
             **BASE,
             "validate": {"green": True},
             "review": {"ship": False, "verdict": "no", "findings": []},
             "implement": self._implement_blocks_after_the_build()})
 
-        assert "criterion" in (state.reason or "").lower()
+        assert "ask" in (state.reason or "").lower()
 
     async def test_the_same_verdict_still_ships_when_nothing_is_blocked(self):
         """The gate fires on the block, not on the rework path itself."""

@@ -62,7 +62,17 @@ RESPONSES = {
                      "success_criteria": ["Backoff is capped at 60s with jitter"]},
     "engineering": {"feasible": True, "concerns": [], "blockers": [],
                     "done": True, "green": True, "red_cause": None,
-                    "summary": "Backoff is capped at 60s with jitter applied."},
+                    # Ruling D51 (1): the implementation's
+                    # summary must address the anchored
+                    # asks — here the whole request, the
+                    # anchoring check's fallback for a reply
+                    # that proposed no asks. A summary that
+                    # named only the backoff left four of
+                    # the ask's five terms unmentioned, and
+                    # coverage correctly held the loop.
+                    "summary": ("Retry with exponential backoff "
+                                "added to the MQTT client, capped "
+                                "at 60s with jitter.")},
     "judge": {"concerns": [], "critical": False, "green": True,
               "red_cause": None,
               # Ruling D46 (1): an empty assessment cannot be green — this
@@ -77,12 +87,15 @@ RESPONSES = {
 # The path and per-function call counts of this request on this workflow
 # BEFORE D38, read on c444c51 (the ruling commit, executor untouched) with
 # the same double: completed, 17 nodes, 10 calls. Recorded in the 095
-# response.
-TODAY_PATH = ["triage", "context", "plan", "reground_context", "feasibility",
+# response. Ruling D51 (1) adds the asks node and its anchoring check
+# after triage, and with them one more triage-tier call: 19 nodes,
+# 11 calls.
+TODAY_PATH = ["triage", "asks", "asks_anchored", "context",
+              "plan", "reground_context", "feasibility",
               "plan_ready", "verify_grounding", "implement", "blocked_check",
               "blocked_gate", "domain_review", "coverage", "consistency",
               "validate", "judges", "review", "review_clean"]
-TODAY_CALLS = {"triage": 1, "research": 2, "architecture": 1,
+TODAY_CALLS = {"triage": 2, "research": 2, "architecture": 1,
                "engineering": 3, "judge": 3}
 
 # Prompt phrases that tell the judge tier's phases apart, for the doubles
@@ -188,7 +201,7 @@ class TestNoBudgetIsToday:
         state, _, _ = await _run(client)
         assert state.status == "completed", state.reason
         assert state.path == TODAY_PATH
-        assert client.calls == 10
+        assert client.calls == 11
         assert dict(client.calls_by_function) == TODAY_CALLS
         assert state.stop_reason is None
         watchdog = state.watchdog

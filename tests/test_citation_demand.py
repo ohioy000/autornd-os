@@ -1,16 +1,18 @@
-"""B13's override: the criteria demand verifiability, so the lookup fires.
+"""B13's override: an ask demands verifiability, so the lookup fires.
 
-The measured failure (§24/§26): a low-risk brief whose plan demanded "a
+The measured failure (§24/§26): a low-risk brief whose request demanded "a
 citable source a reader can use to verify the claim" — after the risk gate
 had already zeroed its lookups. The implementer did not refuse honestly; it
 fabricated sources for six iterations and died on the cost ceiling. The
 controlled contrast shipped in one iteration with one lookup at medium risk.
 
 The override (Blueprint 016 B1): the demand is detected free and
-deterministically over the criteria text, and the one bundled lookup the risk
-gate declined fires anyway, at the medium-risk budget. Where no criterion
-demands citation the override costs nothing — that is Part E2's regression
-case, pre-figured here at unit level.
+deterministically over the anchored asks' own text (Ruling D51
+(4), (5): the plan no longer writes the yardstick), and the one
+bundled lookup the risk gate declined fires anyway, at the
+medium-risk budget. Where no ask demands citation the override
+costs nothing — that is Part E2's regression case, pre-figured
+here at unit level.
 """
 
 from __future__ import annotations
@@ -140,9 +142,11 @@ class TestTheDocsPathDefersToo:
 
 class TestTheOverrideNode:
     """The adapter's verify_grounding node, driven directly — the same shape
-    test_routing.py uses for _phase_doublecheck. The plan in state is a real
-    PlanVerdict, because that is the only shape production ever puts there:
-    a dict fixture would simulate a condition nothing produces."""
+    test_routing.py uses for _phase_doublecheck. The anchored asks in state
+    are the anchoring check's own output, because that is the only shape
+    production ever puts there: a dict fixture would simulate a condition
+    nothing produces. Ruling D51 (4), (5): the demand is read off the
+    asks — the run's only yardstick — not off the plan's criteria."""
 
     @staticmethod
     def _runner(deferred):
@@ -154,12 +158,16 @@ class TestTheOverrideNode:
         return runner
 
     @staticmethod
-    def _state(criteria):
+    def _state(quotes):
         from autornd.graph.executor import ExecutionState
-        from autornd.models.verdicts import PlanVerdict
 
         return ExecutionState(request="write the brief", outputs={
-            "plan": PlanVerdict(ready=True, plan="p", success_criteria=criteria)})
+            "asks_anchored": {
+                "anchored": [{"number": i + 1, "quote": q, "kind": ""}
+                             for i, q in enumerate(quotes)],
+                "quotes": list(quotes),
+                "demoted": [],
+            }})
 
     async def test_no_demand_costs_nothing(self, monkeypatch):
         import autornd.knowledge.research as research
@@ -237,3 +245,27 @@ class TestTheOverrideNode:
         lookup.assert_not_called()
         assert result.data["demanded"] is True
         assert result.data["looked_up"] == 0
+
+    async def test_a_workflow_without_an_asks_node_reads_the_request(
+            self, monkeypatch):
+        """Ruling D51 (5)'s fallback, at the node: a variant
+        workflow with no asks node still has a yardstick — the
+        request itself — so a citation demand in the request fires
+        the override rather than silently reading as none."""
+        import autornd.knowledge.research as research
+        from autornd.knowledge.research import Finding
+
+        lookup = AsyncMock(return_value=[Finding("q", "a finding", [])])
+        monkeypatch.setattr(research, "research_gaps", lookup)
+        runner = self._runner(["a gap"])
+        from autornd.graph.executor import ExecutionState
+
+        state = ExecutionState(
+            request="every claim carries a citable source",
+            outputs={})
+
+        result = await runner._verify_grounding(state)
+
+        lookup.assert_called_once()
+        assert result.data["demanded"] is True
+        assert result.data["looked_up"] == 1

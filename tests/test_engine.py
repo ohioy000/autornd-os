@@ -35,7 +35,12 @@ IMPLEMENT_RESP = {
     # Mentions both success criteria by name. It did not before, and the run
     # still completed, because the exit read the validator alone — a drifted
     # implementation shipping on one judge is exactly what the fold stops.
-    "summary": ("Refactored deep sleep FSM with configurable wake sources. "
+    # Ruling D51 (1): the ask is the whole request (below the anchoring
+    # floor after the double's triage reply carries no asks), so the
+    # summary must address the request's own words or coverage holds
+    # the loop.
+    "summary": ("Redesign of the deep sleep state machine for sensor nodes: "
+                "refactored deep sleep FSM with configurable wake sources. "
                 "Measured sleep current 8.2uA against the < 10uA target and "
                 "wake latency 320ms against the < 500ms target."),
 }
@@ -183,9 +188,13 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
                 "red_cause": None,
                 "iteration": 1,
                 # Addresses the criteria this scenario declares; see the note
-                # on IMPLEMENT_RESP above.
-                "summary": ("Implemented topic refactor: all topics parse "
-                            "correctly, validated on subscribe."),
+                # on IMPLEMENT_RESP above. Ruling D51 (1): the anchored ask
+                # is the whole request (the double's triage reply carries
+                # no asks, so the fallback fires), so the summary carries
+                # the request's own words or coverage holds the loop.
+                "summary": (f"Implemented the request — {request} — "
+                            "all topics parse correctly, validated on "
+                            "subscribe."),
             }
         elif "review this implementation from your domain perspective" in msg:
             data = {"concerns": [], "critical": False}

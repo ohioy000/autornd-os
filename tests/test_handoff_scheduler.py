@@ -105,9 +105,10 @@ class TestTheShippedFlagshipIsUnchanged:
         assert state.status == "blocked"
         # D37: plan runs inside regrounding_loop, so the loop's own nodes
         # appear where plan/feasibility used to; the rest of the path every
-        # live run takes is unchanged.
+        # live run takes is unchanged. Ruling D51 (1) puts the asks node
+        # and its anchoring check between triage and grounding.
         assert state.path == [
-            "triage", "context", "plan", "reground_context", "feasibility", "plan_ready",
+            "triage", "asks", "asks_anchored", "context", "plan", "reground_context", "feasibility", "plan_ready",
             "verify_grounding",
             "implement", "blocked_check", "blocked_gate",
             "domain_review", "coverage", "consistency",

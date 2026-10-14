@@ -52,7 +52,17 @@ RESPONSES = {
                "summary": "MQTT client retry", "unrecallable": False},
     "architecture": {"ready": True, "plan": "Cap backoff at 60s.", "blockers": [],
                      "success_criteria": ["Backoff is capped at 60s with jitter"]},
-    "engineering": _WORK, "judge": _WORK,
+    # Ruling D51 (1): the asks node's verdict comes from the triage
+    # reply this double returns, which names no asks, so the
+    # anchoring check's fallback fires — the whole request is the one
+    # ask — and coverage judges it. The summary carries the request's
+    # own words or coverage holds the loop (convention 22).
+    "engineering": {**_WORK, "summary": (
+        "Add retry with exponential backoff to the MQTT client; "
+        "backoff is capped at 60s with jitter applied.")},
+    "judge": {**_WORK, "summary": (
+        "Add retry with exponential backoff to the MQTT client; "
+        "backoff is capped at 60s with jitter applied.")},
     "escalation": {"root_cause_analysis": "x", "resolution_directive": "y",
                    "requires_human": True},
 }

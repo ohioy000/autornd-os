@@ -45,10 +45,16 @@ IMPL_UNMET = {
 # ARCH-20260923-054: the recovery-succeeds case. The deterministic implement
 # answers failure for the first five attempts and success thereafter, so the
 # build_loop exhausts (5) and the FIRST recovery attempt converges. The
-# transition is explicit and controlled: GOOD_SUMMARY names both Redis
-# criteria, so the real coverage check flips red to green.
+# transition is explicit and controlled: GOOD_SUMMARY names the anchored
+# ask, so the real coverage check flips red to green.
+# Ruling D51 (2): coverage judges the asks and nothing
+# else — the plan's success criteria are no longer its
+# input — so the recovered summary must address the ask
+# (the whole request, under the fallback), not the plan's
+# criteria.
 IMPL_RECOVERED_GOOD_SUMMARY = (
-    "Stored computed results in Redis cache; "
+    "Retry added to the reconnect loop; "
+    "stored computed results in Redis cache; "
     "cache invalidation runs on every write."
 )
 
@@ -70,10 +76,28 @@ class TestThreeTerminals:
     async def test_abstained_criteria_complete_with_empty_seat(self):
         """Case (b): a FORM criterion abstains → coverage passes → fold passes
         BUT records an empty seat (ARCH-20260922-043), not a dissent or
-        unanimous agreement."""
+        unanimous agreement.
+
+        Ruling D51 (2), convention 17: coverage judges the anchored
+        asks and nothing else, so the abstaining criterion must be an
+        ASK — a quote the asks node proposes and the anchoring check
+        confirms against the request — where the old test abstained on
+        the plan's own success criteria. The request carries the quote
+        verbatim so it anchors; the ask asserts a cardinality no word
+        bound names, which is the form the coverage check abstains on."""
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
+            # Ruling D51 (1): the asks node's verdict. The
+            # proposal anchors — the request carries the
+            # quote verbatim — so it survives the
+            # anchoring check and becomes the ask coverage
+            # judges. The shape is the verdict's own
+            # (convention 22).
+            "asks": {"asks": [
+                {"number": 1,
+                 "quote": "with exactly 100 connections",
+                 "kind": "format"}]},
             "context": {}, "plan": PLAN_ABSTAINED,
             "feasibility": {"feasible": True},
             "implement": {**IMPL},
@@ -81,7 +105,8 @@ class TestThreeTerminals:
             "review": {"ship": True},
             "validate": {"green": True},
         }
-        state, runner = await _run(verdicts)
+        state, runner = await _run(
+            verdicts, request="Add retry with exactly 100 connections")
         assert state.status == "completed"
         assert "escalation" not in state.path
 
@@ -106,6 +131,13 @@ class TestThreeTerminals:
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
+            # Ruling D51 (1): the asks node's verdict. The
+            # scripted request is below the anchoring floor,
+            # so the check's fallback fires — the whole
+            # request is the one ask — whatever this double
+            # proposes. The shape is the verdict's own
+            # (convention 22); see BASE in test_graph.py.
+            "asks": {"asks": []},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": IMPL_UNMET,
@@ -138,18 +170,35 @@ class TestThreeTerminals:
 
         coverage = state.outputs["coverage"]
         assert coverage["passed"] is False
-        assert len(coverage["missed"]) == 2
+        # Ruling D51 (2), convention 17: coverage judges the
+        # anchored asks and nothing else, so the missed list
+        # names the unmet ask — the whole request under the
+        # fallback — not the plan's success criteria. The
+        # assertion below used to read two plan criteria;
+        # that behaviour is retired with D51.
+        assert coverage["missed"] == ["Add retry"]
 
         judges = state.outputs["judges"]
         assert judges["passed"] is False
         assert "coverage" in judges["detail"]
 
     async def test_exhausted_terminal_names_unmet_criteria(self):
-        """ARCH-20260923-053: case (c)'s terminal quotes the unmet criteria
-        from coverage.missed — MEASURED, the presence test's own output."""
+        """ARCH-20260923-053: case (c)'s terminal quotes the unmet
+        criteria from coverage.missed — MEASURED, the presence test's
+        own output. Ruling D51 (2), convention 17: the criteria
+        coverage judges are the anchored asks, so the terminal quotes
+        the unmet ask — the whole request under the fallback — where
+        it used to quote the plan's success criteria."""
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
+            # Ruling D51 (1): the asks node's verdict. The
+            # scripted request is below the anchoring floor,
+            # so the check's fallback fires — the whole
+            # request is the one ask — whatever this double
+            # proposes. The shape is the verdict's own
+            # (convention 22); see BASE in test_graph.py.
+            "asks": {"asks": []},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": IMPL_UNMET,
@@ -163,8 +212,7 @@ class TestThreeTerminals:
         state, _ = await _run(verdicts)
 
         assert state.status == "escalated"
-        assert "'Caching layer stores computed results in Redis'" in state.reason
-        assert "'Cache invalidation runs on every write'" in state.reason
+        assert "'Add retry'" in state.reason
 
     async def test_exhausted_terminal_labels_the_assessment(self):
         """ARCH-20260923-053: the escalation diagnosis appears in the terminal
@@ -174,6 +222,13 @@ class TestThreeTerminals:
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
+            # Ruling D51 (1): the asks node's verdict. The
+            # scripted request is below the anchoring floor,
+            # so the check's fallback fires — the whole
+            # request is the one ask — whatever this double
+            # proposes. The shape is the verdict's own
+            # (convention 22); see BASE in test_graph.py.
+            "asks": {"asks": []},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": IMPL_UNMET,
@@ -234,6 +289,13 @@ class TestThreeTerminals:
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
+            # Ruling D51 (1): the asks node's verdict. The
+            # scripted request is below the anchoring floor,
+            # so the check's fallback fires — the whole
+            # request is the one ask — whatever this double
+            # proposes. The shape is the verdict's own
+            # (convention 22); see BASE in test_graph.py.
+            "asks": {"asks": []},
             "context": {}, "plan": PLAN_ABSTAINED,
             "feasibility": {"feasible": True},
             "implement": {**IMPL},
@@ -269,6 +331,13 @@ class TestThreeTerminals:
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
+            # Ruling D51 (1): the asks node's verdict. The
+            # scripted request is below the anchoring floor,
+            # so the check's fallback fires — the whole
+            # request is the one ask — whatever this double
+            # proposes. The shape is the verdict's own
+            # (convention 22); see BASE in test_graph.py.
+            "asks": {"asks": []},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": IMPL_UNMET,
@@ -282,17 +351,20 @@ class TestThreeTerminals:
         state, _ = await _run(verdicts)
 
         coverage = state.outputs["coverage"]
-        assert set(coverage["missed"]) == {
-            "Caching layer stores computed results in Redis",
-            "Cache invalidation runs on every write",
-        }
+        # Ruling D51 (2), convention 17: the criteria
+        # coverage judges are the anchored asks, so the
+        # persistent criterion is the unmet ask — the
+        # whole request under the fallback. This used to
+        # read the plan's two success criteria; that
+        # behaviour is retired with D51.
+        assert set(coverage["missed"]) == {"Add retry"}
         assert "0% of its terms appear" in coverage["detail"]
 
         # ARCH-20260923-053 resolved the -052 finding: the criteria ARE now
         # surfaced in the terminal itself (see
         # test_exhausted_terminal_names_unmet_criteria above). This keeps the
         # record-level assertion: they live quoted in coverage.missed.
-        assert "'Caching layer stores computed results in Redis'" in (state.reason or ""), (
+        assert "'Add retry'" in (state.reason or ""), (
             "-053 resolved the -052 finding: the criteria are now in the terminal")
 
     async def test_escalation_diagnosis_is_captured(self):
@@ -301,6 +373,13 @@ class TestThreeTerminals:
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
+            # Ruling D51 (1): the asks node's verdict. The
+            # scripted request is below the anchoring floor,
+            # so the check's fallback fires — the whole
+            # request is the one ask — whatever this double
+            # proposes. The shape is the verdict's own
+            # (convention 22); see BASE in test_graph.py.
+            "asks": {"asks": []},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": IMPL_UNMET,
@@ -327,6 +406,13 @@ class TestThreeTerminals:
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
+            # Ruling D51 (1): the asks node's verdict. The
+            # scripted request is below the anchoring floor,
+            # so the check's fallback fires — the whole
+            # request is the one ask — whatever this double
+            # proposes. The shape is the verdict's own
+            # (convention 22); see BASE in test_graph.py.
+            "asks": {"asks": []},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": IMPL_UNMET,
@@ -370,6 +456,13 @@ class TestRecoverySucceeds:
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
+            # Ruling D51 (1): the asks node's verdict. The
+            # scripted request is below the anchoring floor,
+            # so the check's fallback fires — the whole
+            # request is the one ask — whatever this double
+            # proposes. The shape is the verdict's own
+            # (convention 22); see BASE in test_graph.py.
+            "asks": {"asks": []},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": implement,
@@ -479,6 +572,13 @@ class TestReworkCarriesFindings:
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
+            # Ruling D51 (1): the asks node's verdict. The
+            # scripted request is below the anchoring floor,
+            # so the check's fallback fires — the whole
+            # request is the one ask — whatever this double
+            # proposes. The shape is the verdict's own
+            # (convention 22); see BASE in test_graph.py.
+            "asks": {"asks": []},
             "context": {},
             "plan": {"ready": True,
                      "blockers": [],
@@ -487,7 +587,13 @@ class TestReworkCarriesFindings:
             "feasibility": {"feasible": True},
             "implement": {"done": True, "green": True, "iteration": 1,
                           "blocked_on": [],
-                          "summary": "gp3 provisioned at 5000 IOPS."},
+                          # Ruling D51 (1): coverage judges
+                          # the anchored ask — the whole
+                          # request under the fallback — so
+                          # the summary carries the ask's
+                          # words or the build loop never
+                          # converges for the review to block.
+                          "summary": "Retry added; gp3 provisioned at 5000 IOPS."},
             "domain_review": {"critical": False},
             "review": {"ship": False, "findings": [
                 {"lens": "systems_architect", "severity": "critical",
