@@ -1719,6 +1719,10 @@ async def _arm_e(question: str, question_id: str, repetition: int,
     judge-approved iteration with no completed terminal is
     scored and reported beside the delivered count as
     'approved, not shipped' — never counted as delivered.
+    A run that ended escalated or blocked after an
+    implementation exists keeps its unendorsed candidate
+    (Ruling D51 (7)) — read and reported the same way,
+    never counted as delivered.
     """
     scenario = Scenario(
         id=f"tier3_e_{question_id}_r{repetition}",
@@ -1739,6 +1743,7 @@ async def _arm_e(question: str, question_id: str, repetition: int,
         "verdicts": getattr(run, "verdicts", None),
         "watchdog": getattr(run, "watchdog", None),
         "iterations": getattr(run, "iterations", None),
+        "candidate": getattr(run, "candidate", None),
     }
     answer, kind = answer_of(unit)
     return run, answer, kind
@@ -1965,9 +1970,18 @@ def _pipeline_record(run: Any) -> dict[str, Any]:
     escalation verdict, and a plan that never ran has no
     criteria to carry (convention 28: no evidence is a
     different claim from a measured zero).
+
+    Ruling D51 adds what the run judged against and how it
+    ended (record shape only): the asks - anchored, with
+    the quotes that did not anchor beside them; every open
+    dissent with its anchor; the notes the run counted; and
+    the unendorsed candidate a terminal that is not
+    completed kept, with its open dissents and their
+    anchors.
     """
     verdicts = getattr(run, "verdicts", None) or {}
     plan = verdicts.get("plan")
+    asks_anchored = verdicts.get("asks_anchored")
     return {
         "status": getattr(run, "status", None),
         "plan": (
@@ -1991,6 +2005,29 @@ def _pipeline_record(run: Any) -> dict[str, Any]:
         "tokens_by_tier": dict(
             getattr(run, "tokens_by_tier", None) or {}),
         "watchdog": getattr(run, "watchdog", None),
+        # Ruling D51 (1): the asks the run judged
+        # against - the anchored quotes, and the
+        # proposals that did not anchor, beside them.
+        "asks": (
+            {
+                "anchored": list(
+                    asks_anchored.get("anchored") or []),
+                "quotes": list(
+                    asks_anchored.get("quotes") or []),
+                "demoted": list(
+                    asks_anchored.get("demoted") or []),
+            }
+            if isinstance(asks_anchored, dict) else None),
+        # Ruling D51 (3), (7): every open dissent with
+        # its anchor, as the terminal's candidate carries
+        # it; the notes the run counted; and the
+        # unendorsed candidate itself.
+        "open_dissents": list(
+            (getattr(run, "candidate", None) or {}).get(
+                "open_dissents") or []),
+        "notes": dict(
+            getattr(run, "normalised_by_kind", None) or {}),
+        "candidate": getattr(run, "candidate", None),
     }
 
 

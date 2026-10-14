@@ -280,6 +280,11 @@ class ResultsLog:
             # list that keeps its own. Written field by field like the rest.
             "checks_not_checked": run.checks_not_checked,
             "verdicts": run.verdicts,
+            # Ruling D51 (7): the unendorsed candidate — the
+            # last answer a non-completed terminal kept, with
+            # its open dissents and their anchors. Null on a
+            # completed run and one with no implementation.
+            "candidate": run.candidate,
         })
 
     def close(self) -> None:
@@ -561,6 +566,12 @@ class ScenarioRun:
     # Ruling D38: the watchdog's typed record (WatchdogRecord.as_dict()).
     # None only for a unit that never ran, which had no clock to watch.
     watchdog: dict[str, Any] | None = None
+    # Ruling D51 (7): the unendorsed candidate a terminal that is not
+    # completed keeps — the last answer, labelled unendorsed, with its
+    # open dissents and their anchors. None for a completed run and one
+    # that produced no implementation; answer_of reads it (never
+    # delivered, never scored as shipped).
+    candidate: dict[str, Any] | None = None
 
     # A unit the sweep budget never started is skipped in exactly the sense a
     # not-applicable one is: it produced no evidence, so it must not dilute a
@@ -741,7 +752,8 @@ def _partial_state(executor: GraphExecutor, request: str):
     return getattr(executor, "state", None) or ExecutionState(request=request)
 
 
-def _end_on_bound(state, bound: str, detail: str) -> None:
+def _end_on_bound(state, bound: str, detail: str,
+                  executor: "GraphExecutor | None" = None) -> None:
     """Give a bound-stopped run the typed terminal it never got (B18).
 
     Measured 2026-09-21 on the B14 demonstration: the unit record's `status`
@@ -766,8 +778,15 @@ def _end_on_bound(state, bound: str, detail: str) -> None:
     concluded blocked and a runner that killed a workflow that never
     concluded are different facts, and the -049 trace proved the record
     could not tell them apart.
+
+    Ruling D51 (7): a bound-stopped run is a terminal that is not
+    completed, so the candidate is kept and the approved pointer
+    computed here too — the executor, when the bound fired inside
+    the workflow's own run, holds the record the pointer reads.
     """
     reached_terminal = state.finished
+    if executor is not None and not reached_terminal:
+        executor._close_candidate(state)
     state.end("blocked", f"stopped by the {bound}: {detail}")
     if not reached_terminal:
         state.stop_reason = f"runner stopped the run: {detail}"
@@ -833,7 +852,7 @@ async def run_scenario(
     except asyncio.TimeoutError:
         state = _partial_state(executor, scenario.request)
         error = f"timed out after {deadline:.0f}s"
-        _end_on_bound(state, "deadline", error)
+        _end_on_bound(state, "deadline", error, executor)
         # Ruling D23/D25: the deadline is a declared bound, so the run emits
         # the workflow terminal naming it — in the operator's words, exactly
         # as the call ceiling and iteration bounds do. The runner still stops
@@ -847,7 +866,7 @@ async def run_scenario(
         # what the ceiling's one call of headroom was always meant to allow.
         stopped_by_budget = True
         _end_on_bound(state, "spend ceiling" if error.startswith("stopped at $")
-                      else "call ceiling", error)
+                      else "call ceiling", error, executor)
     except ProviderFailure as exc:
         # A provider that consumed its whole budget and emitted nothing ended
         # the run — the -071 shape. ProviderFailure subclasses RuntimeError,
@@ -861,6 +880,10 @@ async def run_scenario(
         # the two fields are written together here and never merged.
         state = _partial_state(executor, scenario.request)
         error = f"{type(exc).__name__}: {exc}"
+        # D51 (7): a provider-failure terminal is not
+        # completed — the candidate is kept and the
+        # approved pointer computed before the run ends.
+        executor._close_candidate(state)
         state.end("blocked",
                   f"provider failure on tier '{exc.function}': {exc}")
         state.stop_reason = f"runner stopped the run: {error}"
@@ -872,7 +895,7 @@ async def run_scenario(
     except Exception as exc:  # a broken run is a result, not a crash
         state = _partial_state(executor, scenario.request)
         error = f"{type(exc).__name__}: {exc}"
-        _end_on_bound(state, "unhandled error", error)
+        _end_on_bound(state, "unhandled error", error, executor)
     seconds = time.perf_counter() - started
 
     # Every unit that started is billed to the sweep, including one that failed
@@ -946,6 +969,10 @@ async def run_scenario(
         reason=getattr(state, "reason", None) or None,
         watchdog=(state.watchdog.as_dict()
                   if getattr(state, "watchdog", None) is not None else None),
+        # Ruling D51 (7): the unendorsed candidate, read off the
+        # state the executor recorded it on — never parsed from
+        # the terminal's prose (non-negotiable 3).
+        candidate=getattr(state, "candidate", None),
     )
 
 

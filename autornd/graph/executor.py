@@ -158,8 +158,12 @@ class WatchdogRecord:
     # watchdog end whose terminal lands after its budget falsifies D38.
     terminal_seconds: float | None = None
     billing: str | None = None
-    # The last implementation the build judges agreed on. Computed when the
-    # watchdog fires; None otherwise, because nothing was cut.
+    # The last implementation the build judges agreed on. Computed
+    # when the watchdog fires; D51 (7) extends it to every terminal
+    # that is not completed, so a run that exhausted its loops or
+    # failed a gate says whether a build-approved draft existed and
+    # was lost — the record's old blind spot. None on a completed
+    # run and one that never had an agreed iteration to point at.
     approved: dict[str, Any] | None = None
     slow_calls: list[dict[str, Any]] = field(default_factory=list)
 
@@ -186,6 +190,14 @@ class ExecutionState:
     # Ruling D38: the watchdog's typed record. Set at the start of every run
     # by GraphExecutor.run, armed or not.
     watchdog: WatchdogRecord | None = None
+    # Ruling D51 (7): the unendorsed candidate a terminal that is not
+    # completed keeps. A run that ends escalated or blocked after an
+    # implementation exists records its last answer here, labelled
+    # unendorsed, with its open dissents and their anchors. None when no
+    # implementation exists — nothing reads a candidate that is not there
+    # (convention 28). A record field, never a status (hard rule 11):
+    # terminal statuses do not change under D51.
+    candidate: dict[str, Any] | None = None
 
     @property
     def finished(self) -> bool:
@@ -338,6 +350,68 @@ def _summary(verdict: object) -> str | None:
     if isinstance(verdict, dict):
         return verdict.get("summary")
     return getattr(verdict, "summary", None)
+
+
+def _field(output: Any, key: str, default: Any = None) -> Any:
+    """Read a field off a judge's output, whichever shape it arrives in.
+
+    A scripted double writes dicts; the real phases write verdict
+    objects. Both carry the same fields (autornd/models/verdicts.py),
+    and the candidate's record reads them either way — a record that
+    read only one shape would say "no anchor" about an anchor the
+    judge named (convention 28).
+    """
+    if isinstance(output, dict):
+        return output.get(key, default)
+    return getattr(output, key, default)
+
+
+def _anchor_entries(judge: str, output: Any) -> list[dict[str, Any]]:
+    """The typed anchors one judge's output carries (D51 (3)).
+
+    Each entry names its judge and carries its anchor in typed
+    fields — an ask number, a quote of the request, or a hazard
+    flag — never prose. validate's anchor is its own failed-ask
+    triple; review and domain review carry one per finding or
+    concern that blocks: critical or high, and anchored. A judge
+    that dissented without a typed anchor is recorded with none —
+    the fold counted it, and the record says so rather than
+    invent an anchor the judge never named (convention 28).
+    """
+    none_carried = [{"judge": judge, "ask": None, "quote": "",
+                     "hazard": False}]
+    if output is None:
+        return none_carried
+    anchors: list[dict[str, Any]] = []
+    if (_field(output, "failed_ask") is not None
+            or str(_field(output, "anchor_quote") or "")
+            or _field(output, "hazard")):
+        anchors.append({
+            "judge": judge,
+            "ask": _field(output, "failed_ask"),
+            "quote": str(_field(output, "anchor_quote") or ""),
+            "hazard": bool(_field(output, "hazard")),
+        })
+    # domain_concerns is the implement verdict's own channel: a
+    # critical anchored concern is what flips it red, so the
+    # implement judge's dissent carries the concern's anchor.
+    for key in ("findings", "concerns", "domain_concerns"):
+        for item in _field(output, key) or []:
+            blocking = (
+                str(_field(item, "severity", "")).lower()
+                in ("critical", "high")
+                or bool(_field(item, "critical", False)))
+            anchored = (_field(item, "ask") is not None
+                        or str(_field(item, "quote") or "")
+                        or bool(_field(item, "hazard", False)))
+            if blocking and anchored:
+                anchors.append({
+                    "judge": judge,
+                    "ask": _field(item, "ask"),
+                    "quote": str(_field(item, "quote") or ""),
+                    "hazard": bool(_field(item, "hazard", False)),
+                })
+    return anchors or none_carried
 
 
 def _watchdog_reason(record: "WatchdogRecord") -> str:
@@ -709,6 +783,66 @@ class GraphExecutor:
             self._pace[routing] = max(self._pace.get(routing) or 0.0,
                                       record.seconds)
 
+    def _last_implement(self, state: ExecutionState) -> dict[str, Any] | None:
+        """The last implement verdict the run produced (D51 (7)).
+
+        The implement node lives in a loop body, off the
+        top-level schedule, so it is found by what the run
+        actually executed: the last trace step of a node whose
+        prompt is "implement". A run that never reached one has
+        none, and None says so.
+        """
+        implement_ids = {n.id for n in self.spec.nodes
+                         if n.prompt == "implement"}
+        for step in reversed(state.trace):
+            if step.node_id in implement_ids:
+                return state.outputs.get(step.node_id)
+        return None
+
+    def _candidate(self, state: ExecutionState) -> dict[str, Any] | None:
+        """D51 (7): the unendorsed candidate a non-completed terminal keeps.
+
+        A run that ends escalated or blocked after an
+        implementation exists records its last answer, labelled
+        unendorsed, with its open dissents and their anchors —
+        the anchor of each dissent read from the judge that
+        raised it, in the typed fields it carries. No
+        implementation is no candidate: None, and nothing reads
+        one (convention 28).
+        """
+        implement = self._last_implement(state)
+        if implement is None:
+            return None
+        judges = state.outputs.get("judges")
+        dissenting = []
+        if isinstance(judges, dict):
+            for name in judges.get("dissenting") or []:
+                dissenting.extend(
+                    _anchor_entries(str(name),
+                                    state.outputs.get(name)))
+        return {
+            "answer": _summary(implement),
+            "endorsed": False,
+            "open_dissents": dissenting,
+        }
+
+    def _close_candidate(self, state: ExecutionState) -> None:
+        """D51 (7) and D38, at a terminal that is not completed.
+
+        The candidate is recorded once, and D38's approved
+        pointer is computed here rather than only when the
+        watchdog cuts a run: a run that exhausted its loops or
+        failed a gate used to end with no approved-iteration
+        record at all, so the record could not say whether a
+        build-approved draft existed and was lost — the blind
+        spot the command names as its evidence.
+        """
+        if state.candidate is None:
+            state.candidate = self._candidate(state)
+        if (getattr(state, "watchdog", None) is not None
+                and state.watchdog.approved is None):
+            state.watchdog.approved = self._approved_pointer(state)
+
     def _approved_pointer(self, state: ExecutionState) -> dict[str, Any]:
         """D38: the last implementation the build judges agreed on.
 
@@ -809,7 +943,10 @@ class GraphExecutor:
         watchdog.pace_seconds = pace
         watchdog.pace_basis = basis
         watchdog.billing = ABANDONED_CALL_BILLING if rule == "cancelled" else None
-        watchdog.approved = self._approved_pointer(state)
+        # D51 (7): the cut is a terminal that is not completed —
+        # the candidate is kept and the approved pointer computed
+        # here, as at every other non-completed terminal.
+        self._close_candidate(state)
         state.end("blocked", _watchdog_reason(watchdog))
         watchdog.terminal_seconds = round(self._elapsed(), 4)
         logger.info("watchdog: %s at %s (%.3fs of %.3fs)", rule, node.id,
@@ -875,6 +1012,10 @@ class GraphExecutor:
                                       "reason": f"{reason}{detail}"}
             return False, node.on_fail
 
+        # D51 (7): a gate's terminal is not completed —
+        # the candidate is kept and the approved pointer
+        # computed before the run ends.
+        self._close_candidate(state)
         state.end(node.on_fail, f"{reason}{detail}")
         return False, None
 
@@ -1004,6 +1145,10 @@ class GraphExecutor:
         logger.info("loop %s exhausted %d iterations", node.id, budget)
 
         if node.on_exhausted_status:
+            # D51 (7): the exhausted terminal is not completed —
+            # the candidate is kept and the approved pointer
+            # computed before the run ends.
+            self._close_candidate(state)
             state.end(node.on_exhausted_status,
                       f"'{node.id}' did not converge within {budget} iterations"
                       + _dissent_suffix(body, state)
@@ -1100,6 +1245,10 @@ class GraphExecutor:
                     summary = getattr(implement, "summary", "") or (
                         implement.get("summary", "")
                         if isinstance(implement, dict) else "")
+                    # D51 (7): this terminal is not completed —
+                    # the candidate is kept and the approved
+                    # pointer computed before the run ends.
+                    self._close_candidate(state)
                     state.end(
                         "blocked",
                         "the implementation verdict says the work is "
