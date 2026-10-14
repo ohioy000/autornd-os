@@ -319,7 +319,6 @@ Request:
         function="triage",
         system_prompt="You are an engineering request analyst. Respond with JSON only.",
         user_message=prompt,
-        max_tokens=max_tokens or settings.plan_max_tokens,
         schema=AsksVerdict,
     )
     verdict = AsksVerdict(**data)
@@ -633,7 +632,7 @@ The asks, quoted from the request:
 Judge the answer against the request from your domain. A concern can be critical only if it is anchored:
 - it names the ask it concerns, by number, and what the answer states or omits against it; or
 - it quotes the request's own words, exactly, for something the answer gets wrong or leaves out; or
-- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment.
+- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment. Quote those words of the answer.
 An omission is never a hazard. If the request asked for what is missing, quote the request; if it did not, it is a note, and a note is never critical.
 
 Return JSON with:
@@ -642,6 +641,7 @@ Return JSON with:
   - ask: the number of the ask the concern names, when it names one
   - quote: the request's own words, verbatim, when the concern is anchored by them
   - hazard: true only when the concern is a hazard
+  - hazard_quote: when hazard is true, the answer's own words that state or instruct it, verbatim
   - critical: true only when the concern is anchored and blocks the work
 - critical: true if any concern is a hard blocker that would cause failure
 
@@ -695,7 +695,7 @@ async def run_domain_review(
                 continue
             if concern.critical and not dissent_anchored(
                     concern.ask, concern.quote, concern.hazard,
-                    asks, request):
+                    asks, request, summary, concern.hazard_quote):
                 # A note, never critical — a judgment that names no
                 # anchor carries no information about the request
                 # (convention 21).
@@ -1068,6 +1068,7 @@ Return JSON with:
 - failed_ask: the number of the ask the work fails, when the failure is one ask's
 - anchor_quote: the request's own words, verbatim, for what the answer gets wrong or leaves out, when the failure is not one ask's number
 - hazard: true only when the answer states or instructs something that would, followed as written, injure a person or damage equipment
+- hazard_quote: when hazard is true, the answer's own words that state or instruct it, verbatim
 - unavailable_asks: numbers of the asks whose verification needs something you do not have — a source text, a measurement or an execution. Unavailable is neither pass nor fail, and never blocks
 - evidence: one line per ask, at most 25 words each, naming the ask,
   the verdict, and the specific thing you saw. Not an essay — the finding is the
@@ -1093,7 +1094,8 @@ Original request:
                  or bool(str(data.get("red_cause") or "").strip()))
     if wants_red and not dissent_anchored(
             data.get("failed_ask"), data.get("anchor_quote"),
-            data.get("hazard"), asks, request):
+            data.get("hazard"), asks, request,
+            implement.summary, data.get("hazard_quote")):
         count_normalisation(RED_NO_ANCHOR)
         data["green"] = True
         data["red_cause"] = None
@@ -1131,7 +1133,7 @@ The asks, quoted from the request:
 Judge the answer against the request. A finding can block only if it is anchored:
 - it names the ask it concerns, by number, and what the answer states or omits against it; or
 - it quotes the request's own words, exactly, for something the answer gets wrong or leaves out; or
-- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment.
+- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment. Quote those words of the answer.
 An omission is never a hazard. If the request asked for what is missing, quote the request; if it did not, it is a note.
 Use severity critical or high only for an anchored finding. Everything else is a note, at severity medium or low, and cannot block.
 
@@ -1146,6 +1148,7 @@ Return JSON with:
   - ask: the number of the ask the finding concerns, when it names one
   - quote: the request's own words, verbatim, when the finding is anchored by them
   - hazard: true only when the finding is a hazard
+  - hazard_quote: when hazard is true, the answer's own words that state or instruct it, verbatim
 - ship: true if safe to ship with no blocking findings
 - verdict: one-sentence synthesis
 
@@ -1217,7 +1220,8 @@ Original request:
             # record, never blocking.
             if finding.severity in ("critical", "high") and not dissent_anchored(
                     finding.ask, finding.quote, finding.hazard,
-                    asks, request):
+                    asks, request, implement.summary,
+                    finding.hazard_quote):
                 count_normalisation(UNANCHORED_DISSENT)
                 finding.severity = "medium"
             all_findings.append(finding.model_dump())

@@ -620,12 +620,41 @@ class TestReviewAnchors:
           "quote": "a requirement the request never states",
           "detail": "the answer does not meet it"},
          False),
-        # A hazard: blocks.
+        # The hazard table (the review of 2026-10-14): a
+        # hazard anchors only through the answer's own words
+        # that state or instruct it, carried in hazard_quote.
+        # A hazard with no quote: a note — the bool alone
+        # cannot say what the answer does. Break-proof: were
+        # the bool alone an anchor (the retired rule), this
+        # case would escalate and the assertion fails.
         ({"lens": "backend_engineer", "severity": "high",
           "hazard": True,
-          "detail": "the answer instructs shorting the fixture to "
-                    "ground, which would damage the extensometer"},
+          "detail": "the answer instructs shorting the fixture "
+                    "to ground, which would damage the extensometer"},
+         False),
+        # A hazard whose quote is not in the answer: a note.
+        ({"lens": "backend_engineer", "severity": "high",
+          "hazard": True,
+          "hazard_quote": "disconnect the fixture before "
+                          "servicing",
+          "detail": "the answer omits the service disconnect"},
+         False),
+        # A hazard in the answer's own words: blocks.
+        ({"lens": "backend_engineer", "severity": "high",
+          "hazard": True,
+          "hazard_quote": "returns to zero and records "
+                          "without re-zeroing",
+          "detail": "the answer's return-to-zero instruction, "
+                    "followed as written, damages the fixture"},
          True),
+        # An omission framed as a hazard: the answer's own
+        # words cannot state what is absent, so no quote can
+        # anchor — a note.
+        ({"lens": "backend_engineer", "severity": "high",
+          "hazard": True,
+          "hazard_quote": "zero the readout before each reading",
+          "detail": "the answer omits the per-reading zero"},
+         False),
     ])
     async def test_the_finding_table(self, finding, blocks):
         state, runner, calls = await _drive(
@@ -654,10 +683,31 @@ class TestReviewAnchors:
         ({"detail": "the answer leaves this step out",
           "critical": True,
           "quote": "zeroing the readout at zero displacement"}, True),
-        # A hazard concern: critical.
+        # The hazard table (the review of 2026-10-14), the
+        # same four cases the review-finding table carries:
+        # a hazard with no quote is a note — the bool alone
+        # cannot say what the answer does. Break-proof: were
+        # the bool alone an anchor (the retired rule), this
+        # case would escalate and the assertion fails.
         ({"detail": "the answer instructs shorting the fixture to "
                     "ground, which would damage the extensometer",
-          "critical": True, "hazard": True}, True),
+          "critical": True, "hazard": True}, False),
+        # A hazard whose quote is not in the answer: a note.
+        ({"detail": "the answer omits the service disconnect",
+          "critical": True, "hazard": True,
+          "hazard_quote": "disconnect the fixture before "
+                          "servicing"}, False),
+        # A hazard in the answer's own words: critical.
+        ({"detail": "the answer's return-to-zero instruction, "
+                    "followed as written, damages the fixture",
+          "critical": True, "hazard": True,
+          "hazard_quote": "returns to zero and records "
+                          "without re-zeroing"}, True),
+        # An omission framed as a hazard: a note.
+        ({"detail": "the answer omits the per-reading zero",
+          "critical": True, "hazard": True,
+          "hazard_quote": "zero the readout before each reading"},
+         False),
     ])
     async def test_domain_review_follows_the_same_table(self, concern,
                                                        blocks):

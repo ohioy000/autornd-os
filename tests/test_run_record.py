@@ -118,8 +118,15 @@ class TestR8AndR9TheTerminalIsWrittenAndSaid:
 
     async def test_a_workflow_terminal_writes_its_sentence_too(self, tmp_path):
         # Not the watchdog's: this double's build judges never agree, so the
-        # build loop exhausts into escalation, which requires a human.
-        report, (unit,) = await _units(tmp_path, lambda: make_mock_client(_responses()))
+        # build loop exhausts into escalation, which requires a human. The
+        # asks double proposes an ask the request carries verbatim, so
+        # coverage really checks — over the fallback ask coverage passes
+        # unchecked (the review of 2026-10-14) and this double's build
+        # would converge and ship.
+        report, (unit,) = await _units(
+            tmp_path, lambda: make_mock_client(_responses(
+                triage={"asks": [{"quote": "the wiring for a 24 VDC sensor",
+                                  "kind": "value"}]})))
         assert unit["status"] == "blocked" and unit["error"] is None
         assert unit["reason"].startswith("Escalation requires human intervention")
         assert unit["watchdog"]["fired"] is False
@@ -131,11 +138,21 @@ class TestR5ThePaceBasisIsWritten:
         # validate's own first call (0.5 s) is its pace when it is next
         # reached. With a 0.05 s reserve and a
         # 1.45 s budget there is not 0.5 s left, so validate is not started.
+        # The asks double proposes an ask the request carries verbatim, so
+        # coverage really checks and the build loop iterates to the budget —
+        # over the fallback ask coverage passes unchecked (the review of
+        # 2026-10-14), the build converges, and no judge call is ever
+        # refused. (domain_review makes no call here: its peer roster is
+        # empty, so only validate spends the budget.)
         monkeypatch.setattr(executor_module, "WATCHDOG_RESERVE_SECONDS", 0.05)
         _, (unit,) = await _units(
             tmp_path,
-            lambda: make_mock_client(_responses(judge={"ship": False}),
-                                     delays={"judge": 0.5}),
+            lambda: make_mock_client(
+                _responses(triage={"asks": [
+                    {"quote": "the wiring for a 24 VDC sensor",
+                     "kind": "value"}]},
+                    judge={"ship": False}),
+                delays={"judge": 0.5}),
             timeout=1.45)
         watchdog = unit["watchdog"]
         assert watchdog["fired"] and watchdog["rule"] == "not_started", unit["reason"]
@@ -154,13 +171,14 @@ class TestChecksNotCheckedOnTheUnitRecord:
     async def test_the_unit_record_carries_the_run_wide_unchecked_list(
             self, tmp_path):
         # No figures on either side: numbers_consistent compares nothing and
-        # says so, and the record must list it rather than lose it.
-        # Ruling D51 (1), (2): the anchored ask is the whole
-        # request (the double's triage reply names no asks), so the
-        # summary must address the request's own words for coverage
-        # to pass — and must carry no figure, or consistency would
-        # find a shared unit and leave the unchecked list empty.
+        # says so, and the record must list it rather than lose it. The asks
+        # double proposes an ask the request carries verbatim, so coverage
+        # really checks — and the plain summary addresses it (wiring, vdc,
+        # sensor), so coverage passes checked; consistency compares no
+        # shared figure and stays on the unchecked list.
         _, (unit,) = await _units(tmp_path, lambda: make_mock_client(_responses(
+            triage={"asks": [{"quote": "the wiring for a 24 VDC sensor",
+                              "kind": "value"}]},
             architecture={"plan": "Do the thing plainly."},
             engineering={"summary": "Specify the vdc wiring for the "
                                   "sensor run plainly."},

@@ -47,13 +47,18 @@ class TestTheLoopContinuesWhileAnyJudgeDissents:
 
         A free check carries the same weight as a paid one: an implementation
         that never mentions two of its criteria does not ship on a green
-        validator.
+        validator. The ask is anchored in the request — over the fallback
+        ask coverage passes unchecked (the review of 2026-10-14), so this
+        dissent needs a real anchor to be a dissent at all.
         """
         state, _ = await _run({
             **BASE,
+            "asks": {"asks": [{"quote": "the exponential backoff cap",
+                                "kind": "constraint"}]},
             "implement": {**IMPL, "summary": "Tidied the logging."},
             "validate": {"green": True},
-            "escalation": {"requires_human": True}})
+            "escalation": {"requires_human": True}},
+            request="Add retry with the exponential backoff cap")
         assert state.outputs["coverage"]["passed"] is False
         assert state.status != "completed"
 
@@ -206,7 +211,12 @@ class TestEveryShippedLoopFoldsItsOwnJudges:
 
     @pytest.mark.parametrize("workflow,loop,until,fold,expected", [
         ("engineering-rnd", "build_loop", "judges.passed == true", "judges",
-         {"implement", "validate", "coverage", "consistency"}),
+         # Consistency still runs in the body and still records
+         # its result — but out of the fold since the review of
+         # 2026-10-14, where a numbers disagreement became a note
+         # (consistency_note), never a veto. The loop's exit does
+         # not turn on it.
+         {"implement", "validate", "coverage"}),
         # The two loops that can ship re-review first, so they fold review in
         # as well — work ships when everyone who looked at it agrees.
         ("engineering-rnd", "review_rework_loop", "review_fold.passed == true",

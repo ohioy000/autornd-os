@@ -289,11 +289,14 @@ class BlockedOnAsk(BaseModel):
 
 
 class DomainConcern(BaseModel):
-    """One domain reviewer's concern (Ruling D51 (3), text (R-f)).
+    """One domain reviewer's concern (Ruling D51 (3), text (R-f);
+    the review of 2026-10-14: a hazard needs its quote).
 
     A concern can be critical only if it is anchored: it names the
     ask it concerns by number, quotes the request's own words for
-    something the answer gets wrong or leaves out, or it is a hazard.
+    something the answer gets wrong or leaves out, or it is a
+    hazard — and a hazard anchors only through the answer's own
+    words that state or instruct it, carried in `hazard_quote`.
     A critical concern with no anchor is a note — never critical —
     and cannot flip the implementation red. An omission is never a
     hazard; if the request asked for what is missing, it is an ask.
@@ -303,6 +306,12 @@ class DomainConcern(BaseModel):
     ask: int | None = None
     quote: str = ""
     hazard: bool = False
+    # The review of 2026-10-14: when hazard is true, the answer's
+    # own words that state or instruct it, verbatim. The concern's
+    # hazard anchors only when these words occur in the answer the
+    # judge was given; a hazard without them is a note, counted as
+    # unanchored dissent.
+    hazard_quote: str = ""
     critical: bool = False
 
     @model_validator(mode="before")
@@ -324,7 +333,8 @@ class DomainConcern(BaseModel):
                     break
         return data
 
-    @field_validator("detail", "quote", mode="before")
+    @field_validator("detail", "quote", "hazard_quote",
+                     mode="before")
     @classmethod
     def _coerce_text(cls, value: Any) -> str:
         if value is None:
@@ -431,11 +441,15 @@ COST_ESTIMATE_COERCED = "cost_estimate_string_coerced_to_float"
 #   validator that returned red naming neither a failed ask, a request
 #   quote nor a hazard;
 # - a blocked_on entry with no ask: an implementer's refusal that
-#   names no ask, and so routes nowhere.
+#   names no ask, and so routes nowhere;
+# - a consistency note: numbers_consistent found figures that
+#   disagree, and recorded it — out of the fold since the review
+#   of 2026-10-14, so the disagreement is a note, never a veto.
 UNANCHORED_ASK_QUOTE = "unanchored_ask_quote"
 UNANCHORED_DISSENT = "unanchored_dissent"
 RED_NO_ANCHOR = "red_with_no_anchor"
 BLOCKED_ON_NO_ASK = "blocked_on_entry_names_no_ask"
+CONSISTENCY_NOTE = "consistency_note"
 
 
 def _count(kind: str) -> None:
@@ -598,6 +612,12 @@ class ValidateVerdict(BaseModel):
     failed_ask: int | None = None
     anchor_quote: str = ""
     hazard: bool = False
+    # The review of 2026-10-14: when hazard is true, the answer's
+    # own words that state or instruct it, verbatim. The validator's
+    # hazard anchors only when these words occur in the answer the
+    # judge was given; a hazard without them is a note, counted as
+    # unanchored dissent, not a veto.
+    hazard_quote: str = ""
     # Ruling D51 (5): asks whose verification needs what the run
     # does not have. Unavailable is neither pass nor fail, never
     # blocking, and listed in the run's record.
@@ -608,7 +628,7 @@ class ValidateVerdict(BaseModel):
     def _accept_the_shape_a_serving_returns(cls, value: Any) -> Any:
         return _fold_evidence(value)
 
-    @field_validator("anchor_quote", mode="before")
+    @field_validator("anchor_quote", "hazard_quote", mode="before")
     @classmethod
     def _coerce_anchor_quote(cls, value: Any) -> str:
         if value is None:
@@ -644,6 +664,12 @@ class ReviewFinding(BaseModel):
     ask: int | None = None
     quote: str = ""
     hazard: bool = False
+    # The review of 2026-10-14: when hazard is true, the answer's
+    # own words that state or instruct it, verbatim. The finding's
+    # hazard anchors only when these words occur in the answer the
+    # judge was given; a hazard without them is a note, counted as
+    # unanchored dissent, not a block.
+    hazard_quote: str = ""
 
     @model_validator(mode="before")
     @classmethod
@@ -665,7 +691,8 @@ class ReviewFinding(BaseModel):
                     break
         return data
 
-    @field_validator("lens", "severity", "detail", mode="before")
+    @field_validator("lens", "severity", "detail", "hazard_quote",
+                     mode="before")
     @classmethod
     def coerce_to_text(cls, value: Any) -> Any:
         if value is None:

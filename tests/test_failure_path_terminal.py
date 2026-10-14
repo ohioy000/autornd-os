@@ -42,6 +42,14 @@ IMPL_UNMET = {
     "summary": "Applied exponential backoff to the reconnect loop capped at 60s.",
 }
 
+# The review of 2026-10-14: coverage over the fallback ask
+# passes unchecked, so the case-(c) scenario — coverage
+# persistently red, the loops exhausting — needs an ask that
+# really anchors. The request carries the quote verbatim.
+UNMET_REQUEST = "Add retry with cache invalidation on every write"
+UNMET_ASK = {"quote": "cache invalidation on every write",
+             "kind": "constraint"}
+
 # ARCH-20260923-054: the recovery-succeeds case. The deterministic implement
 # answers failure for the first five attempts and success thereafter, so the
 # build_loop exhausts (5) and the FIRST recovery attempt converges. The
@@ -49,9 +57,8 @@ IMPL_UNMET = {
 # ask, so the real coverage check flips red to green.
 # Ruling D51 (2): coverage judges the asks and nothing
 # else — the plan's success criteria are no longer its
-# input — so the recovered summary must address the ask
-# (the whole request, under the fallback), not the plan's
-# criteria.
+# input — so the recovered summary must address the
+# anchored ask (UNMET_ASK), not the plan's criteria.
 IMPL_RECOVERED_GOOD_SUMMARY = (
     "Retry added to the reconnect loop; "
     "stored computed results in Redis cache; "
@@ -132,12 +139,13 @@ class TestThreeTerminals:
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
             # Ruling D51 (1): the asks node's verdict. The
-            # scripted request is below the anchoring floor,
-            # so the check's fallback fires — the whole
-            # request is the one ask — whatever this double
-            # proposes. The shape is the verdict's own
-            # (convention 22); see BASE in test_graph.py.
-            "asks": {"asks": []},
+            # proposal anchors — the request (UNMET_REQUEST)
+            # carries the quote verbatim — so coverage really
+            # checks. Over the fallback ask coverage would
+            # pass unchecked (the review of 2026-10-14) and
+            # these loops would never exhaust. The shape is
+            # the verdict's own (convention 22).
+            "asks": {"asks": [UNMET_ASK]},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": IMPL_UNMET,
@@ -148,7 +156,7 @@ class TestThreeTerminals:
                            "root_cause_analysis": "Implementation does not "
                            "address caching requirements"},
         }
-        state, runner = await _run(verdicts)
+        state, runner = await _run(verdicts, request=UNMET_REQUEST)
 
         assert state.status == "escalated"
         assert "escalation" in state.path
@@ -172,11 +180,12 @@ class TestThreeTerminals:
         assert coverage["passed"] is False
         # Ruling D51 (2), convention 17: coverage judges the
         # anchored asks and nothing else, so the missed list
-        # names the unmet ask — the whole request under the
-        # fallback — not the plan's success criteria. The
-        # assertion below used to read two plan criteria;
-        # that behaviour is retired with D51.
-        assert coverage["missed"] == ["Add retry"]
+        # names the unmet anchored ask, not the plan's
+        # success criteria. The assertion below used to read
+        # two plan criteria, then the whole request under
+        # the fallback; both behaviours are retired (D51,
+        # then the review of 2026-10-14).
+        assert coverage["missed"] == ["cache invalidation on every write"]
 
         judges = state.outputs["judges"]
         assert judges["passed"] is False
@@ -187,18 +196,20 @@ class TestThreeTerminals:
         criteria from coverage.missed — MEASURED, the presence test's
         own output. Ruling D51 (2), convention 17: the criteria
         coverage judges are the anchored asks, so the terminal quotes
-        the unmet ask — the whole request under the fallback — where
-        it used to quote the plan's success criteria."""
+        the unmet anchored ask, where it used to quote the plan's
+        success criteria (and, until the review of 2026-10-14, the
+        whole request under the fallback)."""
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
             # Ruling D51 (1): the asks node's verdict. The
-            # scripted request is below the anchoring floor,
-            # so the check's fallback fires — the whole
-            # request is the one ask — whatever this double
-            # proposes. The shape is the verdict's own
-            # (convention 22); see BASE in test_graph.py.
-            "asks": {"asks": []},
+            # proposal anchors — the request (UNMET_REQUEST)
+            # carries the quote verbatim — so coverage really
+            # checks. Over the fallback ask coverage would
+            # pass unchecked (the review of 2026-10-14) and
+            # these loops would never exhaust. The shape is
+            # the verdict's own (convention 22).
+            "asks": {"asks": [UNMET_ASK]},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": IMPL_UNMET,
@@ -209,10 +220,10 @@ class TestThreeTerminals:
                            "root_cause_analysis": "Implementation does not "
                            "address caching requirements"},
         }
-        state, _ = await _run(verdicts)
+        state, _ = await _run(verdicts, request=UNMET_REQUEST)
 
         assert state.status == "escalated"
-        assert "'Add retry'" in state.reason
+        assert "'cache invalidation on every write'" in state.reason
 
     async def test_exhausted_terminal_labels_the_assessment(self):
         """ARCH-20260923-053: the escalation diagnosis appears in the terminal
@@ -223,12 +234,13 @@ class TestThreeTerminals:
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
             # Ruling D51 (1): the asks node's verdict. The
-            # scripted request is below the anchoring floor,
-            # so the check's fallback fires — the whole
-            # request is the one ask — whatever this double
-            # proposes. The shape is the verdict's own
-            # (convention 22); see BASE in test_graph.py.
-            "asks": {"asks": []},
+            # proposal anchors — the request (UNMET_REQUEST)
+            # carries the quote verbatim — so coverage really
+            # checks. Over the fallback ask coverage would
+            # pass unchecked (the review of 2026-10-14) and
+            # these loops would never exhaust. The shape is
+            # the verdict's own (convention 22).
+            "asks": {"asks": [UNMET_ASK]},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": IMPL_UNMET,
@@ -239,7 +251,7 @@ class TestThreeTerminals:
                            "root_cause_analysis": "Implementation does not "
                            "address caching requirements"},
         }
-        state, _ = await _run(verdicts)
+        state, _ = await _run(verdicts, request=UNMET_REQUEST)
 
         assert "— assessment: Implementation does not address caching requirements" in state.reason
         # The label sits between the measured part and the diagnosis, so the
@@ -290,11 +302,13 @@ class TestThreeTerminals:
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
             # Ruling D51 (1): the asks node's verdict. The
-            # scripted request is below the anchoring floor,
-            # so the check's fallback fires — the whole
-            # request is the one ask — whatever this double
-            # proposes. The shape is the verdict's own
-            # (convention 22); see BASE in test_graph.py.
+            # scripted request is below the anchoring floor
+            # and carries no ask's words, so the check's
+            # fallback fires — the whole request is the one
+            # ask — and coverage over it passes unchecked
+            # (the review of 2026-10-14). The shape is the
+            # verdict's own (convention 22); see BASE in
+            # test_graph.py.
             "asks": {"asks": []},
             "context": {}, "plan": PLAN_ABSTAINED,
             "feasibility": {"feasible": True},
@@ -332,12 +346,13 @@ class TestThreeTerminals:
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
             # Ruling D51 (1): the asks node's verdict. The
-            # scripted request is below the anchoring floor,
-            # so the check's fallback fires — the whole
-            # request is the one ask — whatever this double
-            # proposes. The shape is the verdict's own
-            # (convention 22); see BASE in test_graph.py.
-            "asks": {"asks": []},
+            # proposal anchors — the request (UNMET_REQUEST)
+            # carries the quote verbatim — so coverage really
+            # checks. Over the fallback ask coverage would
+            # pass unchecked (the review of 2026-10-14) and
+            # these loops would never exhaust. The shape is
+            # the verdict's own (convention 22).
+            "asks": {"asks": [UNMET_ASK]},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": IMPL_UNMET,
@@ -348,23 +363,24 @@ class TestThreeTerminals:
                            "root_cause_analysis": "Implementation does not "
                            "address caching requirements"},
         }
-        state, _ = await _run(verdicts)
+        state, _ = await _run(verdicts, request=UNMET_REQUEST)
 
         coverage = state.outputs["coverage"]
         # Ruling D51 (2), convention 17: the criteria
         # coverage judges are the anchored asks, so the
-        # persistent criterion is the unmet ask — the
-        # whole request under the fallback. This used to
-        # read the plan's two success criteria; that
-        # behaviour is retired with D51.
-        assert set(coverage["missed"]) == {"Add retry"}
+        # persistent criterion is the unmet anchored ask.
+        # This used to read the plan's two success
+        # criteria, then the whole request under the
+        # fallback; both behaviours are retired (D51,
+        # then the review of 2026-10-14).
+        assert set(coverage["missed"]) == {"cache invalidation on every write"}
         assert "0% of its terms appear" in coverage["detail"]
 
         # ARCH-20260923-053 resolved the -052 finding: the criteria ARE now
         # surfaced in the terminal itself (see
         # test_exhausted_terminal_names_unmet_criteria above). This keeps the
         # record-level assertion: they live quoted in coverage.missed.
-        assert "'Add retry'" in (state.reason or ""), (
+        assert "'cache invalidation on every write'" in (state.reason or ""), (
             "-053 resolved the -052 finding: the criteria are now in the terminal")
 
     async def test_escalation_diagnosis_is_captured(self):
@@ -374,12 +390,13 @@ class TestThreeTerminals:
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
             # Ruling D51 (1): the asks node's verdict. The
-            # scripted request is below the anchoring floor,
-            # so the check's fallback fires — the whole
-            # request is the one ask — whatever this double
-            # proposes. The shape is the verdict's own
-            # (convention 22); see BASE in test_graph.py.
-            "asks": {"asks": []},
+            # proposal anchors — the request (UNMET_REQUEST)
+            # carries the quote verbatim — so coverage really
+            # checks. Over the fallback ask coverage would
+            # pass unchecked (the review of 2026-10-14) and
+            # these loops would never exhaust. The shape is
+            # the verdict's own (convention 22).
+            "asks": {"asks": [UNMET_ASK]},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": IMPL_UNMET,
@@ -390,7 +407,7 @@ class TestThreeTerminals:
                            "root_cause_analysis": "Implementation does not "
                            "address caching requirements"},
         }
-        state, _ = await _run(verdicts)
+        state, _ = await _run(verdicts, request=UNMET_REQUEST)
 
         esc = state.outputs["escalation"]
         assert esc["root_cause_analysis"] == (
@@ -407,12 +424,13 @@ class TestThreeTerminals:
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
             # Ruling D51 (1): the asks node's verdict. The
-            # scripted request is below the anchoring floor,
-            # so the check's fallback fires — the whole
-            # request is the one ask — whatever this double
-            # proposes. The shape is the verdict's own
-            # (convention 22); see BASE in test_graph.py.
-            "asks": {"asks": []},
+            # proposal anchors — the request (UNMET_REQUEST)
+            # carries the quote verbatim — so coverage really
+            # checks. Over the fallback ask coverage would
+            # pass unchecked (the review of 2026-10-14) and
+            # these loops would never exhaust. The shape is
+            # the verdict's own (convention 22).
+            "asks": {"asks": [UNMET_ASK]},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": IMPL_UNMET,
@@ -422,7 +440,7 @@ class TestThreeTerminals:
             "escalation": {"requires_human": False,
                            "root_cause_analysis": "wrong topic"},
         }
-        state, _ = await _run(verdicts)
+        state, _ = await _run(verdicts, request=UNMET_REQUEST)
         assert state.outputs["escalation"]["requires_human"] is False
         assert state.status == "escalated"
         assert "recovery_loop" in state.outputs, "recovery ran"
@@ -457,12 +475,13 @@ class TestRecoverySucceeds:
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
             # Ruling D51 (1): the asks node's verdict. The
-            # scripted request is below the anchoring floor,
-            # so the check's fallback fires — the whole
-            # request is the one ask — whatever this double
-            # proposes. The shape is the verdict's own
-            # (convention 22); see BASE in test_graph.py.
-            "asks": {"asks": []},
+            # proposal anchors — the request (UNMET_REQUEST)
+            # carries the quote verbatim — so coverage really
+            # checks. Over the fallback ask coverage would
+            # pass unchecked (the review of 2026-10-14) and
+            # these loops would never exhaust. The shape is
+            # the verdict's own (convention 22).
+            "asks": {"asks": [UNMET_ASK]},
             "context": {}, "plan": PLAN_UNMET,
             "feasibility": {"feasible": True},
             "implement": implement,
@@ -474,7 +493,7 @@ class TestRecoverySucceeds:
                            "address caching requirements"},
             "rework_review": {"ship": True},
         }
-        state, runner = await _run(verdicts)
+        state, runner = await _run(verdicts, request=UNMET_REQUEST)
 
         assert state.status == "completed", (
             f"recovery should converge, got {state.status}: {state.reason}")
@@ -573,11 +592,13 @@ class TestReworkCarriesFindings:
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
             # Ruling D51 (1): the asks node's verdict. The
-            # scripted request is below the anchoring floor,
-            # so the check's fallback fires — the whole
-            # request is the one ask — whatever this double
-            # proposes. The shape is the verdict's own
-            # (convention 22); see BASE in test_graph.py.
+            # scripted request is below the anchoring floor
+            # and carries no ask's words, so the check's
+            # fallback fires — the whole request is the one
+            # ask — and coverage over it passes unchecked
+            # (the review of 2026-10-14), so the build
+            # converges for the review to block. The shape
+            # is the verdict's own (convention 22).
             "asks": {"asks": []},
             "context": {},
             "plan": {"ready": True,
@@ -588,11 +609,13 @@ class TestReworkCarriesFindings:
             "implement": {"done": True, "green": True, "iteration": 1,
                           "blocked_on": [],
                           # Ruling D51 (1): coverage judges
-                          # the anchored ask — the whole
-                          # request under the fallback — so
-                          # the summary carries the ask's
-                          # words or the build loop never
-                          # converges for the review to block.
+                          # the anchored asks; here nothing
+                          # anchors, so the fallback ask is
+                          # the whole request and coverage
+                          # over it passes unchecked (the
+                          # review of 2026-10-14) — the
+                          # build converges for the review
+                          # to block.
                           "summary": "Retry added; gp3 provisioned at 5000 IOPS."},
             "domain_review": {"critical": False},
             "review": {"ship": False, "findings": [

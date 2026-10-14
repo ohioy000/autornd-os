@@ -440,20 +440,19 @@ async def run_doublecheck_endpoint(
     if workflow.status.value not in ("completed", "escalated", "blocked"):
         raise HTTPException(400, "Workflow is still running")
 
-    plan_data = None
     impl_data = None
     for p in sorted(workflow.phases, key=lambda x: x.created_at):
         v = json.loads(p.verdict_json)
-        if p.phase == "plan" and plan_data is None:
-            plan_data = v
         if p.phase == "implement":
             impl_data = v
 
-    # The plan's presence still proves the workflow went through the
-    # plan phase; Ruling D51 (R-d) took the plan out of the prompt the
-    # doublecheck reads, so only its verdict is constructed.
-    if not plan_data or not impl_data:
-        raise HTTPException(400, "Workflow missing plan or implement phase")
+    # The implement phase's presence proves the workflow produced
+    # an answer to doublecheck. The plan is not required —
+    # verify-first has none, and Ruling D51 (R-d) took the plan
+    # out of the prompt the doublecheck reads, so only the
+    # implementation's verdict is constructed.
+    if not impl_data:
+        raise HTTPException(400, "Workflow missing implement phase")
 
     implement = ImplementVerdict(**impl_data)
 

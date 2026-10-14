@@ -202,7 +202,13 @@ class TestReviewAggregationAcceptsEveryShapeTheSchemaDoes:
 
         c = capturing_client({"ship": False, "findings": findings,
                               "verdict": "Blocked."})
-        impl = ImplementVerdict(done=True, green=True, summary="s", iteration=1)
+        # The answer the review judges, carrying the words a
+        # hazard finding quotes (the review of 2026-10-14: a
+        # hazard anchors only through the answer's own words).
+        impl = ImplementVerdict(
+            done=True, green=True,
+            summary="s. The backoff is uncapped under load.",
+            iteration=1)
         triage = TriageVerdict(domains=["backend"], risk="medium",
                                specialists=["backend_engineer"], summary="s")
         # Ruling D51 (R-d): review reads the request and
@@ -221,9 +227,12 @@ class TestReviewAggregationAcceptsEveryShapeTheSchemaDoes:
         # critical or high severity blocks. The hazard
         # anchor keeps this test's rule — a critical
         # finding still blocks — under the new contract.
+        # The review of 2026-10-14: the hazard anchors
+        # through the answer's own words, quoted.
         verdict, _ = await self._review_with(
             [{"issue": "The backoff is uncapped", "severity": "critical",
-              "hazard": True}])
+              "hazard": True,
+              "hazard_quote": "the backoff is uncapped under load"}])
         assert "uncapped" in verdict.findings[0].detail
         assert not verdict.ship, "an anchored critical finding still blocks"
 
@@ -235,10 +244,12 @@ class TestReviewAggregationAcceptsEveryShapeTheSchemaDoes:
         # The high finding carries a hazard anchor: under
         # Ruling D51 (R-f) only an anchored high or critical
         # finding blocks, and this test's rule is that one
-        # does.
+        # does. The review of 2026-10-14: the hazard anchors
+        # through the answer's own words, quoted.
         verdict, _ = await self._review_with([
             "a bare string",
-            {"issue": "aliased", "severity": "high", "hazard": True},
+            {"issue": "aliased", "severity": "high", "hazard": True,
+             "hazard_quote": "the backoff is uncapped under load"},
             {"detail": "no severity"},
         ])
         assert len(verdict.findings) == 3
