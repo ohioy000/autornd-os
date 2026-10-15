@@ -1,0 +1,79 @@
+{
+  "command_id": "ARCH-20260926-081",
+  "parent_id": "ARCH-20260926-080",
+  "priority": "P0",
+  "status": "PROPOSED",
+  "objective": "Run the discriminating test for V1 — patch-shaped implement, non-reasoning model — and report whether the class converges, and at what cost, before V2 is considered.",
+  "evidence": [
+    "pull:#92 — the baseline: pool BLOCKED at 42 calls / $0.80; backfill ESCALATED / $0.31; pair $0.80 against Fable $1.35 which solved the class",
+    "run_implement, confirmed 2026-09-26 — no prior-artifact parameter; implement regenerates from plan + diagnosis and never sees what it wrote",
+    "Ruling D33 — implement revises its own prior artifact on iteration > 1 (ARCH-20260926-080)",
+    "Ruling D21 (as recorded) — recovery carries the failure forward; the diagnosis fields are complete and are the control variable held fixed",
+    "AGENTS.md — pre-register before a paid run and commit it first",
+    "AGENTS.md convention 23 — pin the tiers; log the versioned answering ids",
+    "AGENTS.md convention 27 — a repetition of a plan-dependent contrast is a second sample, never a confirmation"
+  ],
+  "scope": {
+    "include": ["docs/preregistration-*.md", "docs/traces/", "evals/"],
+    "exclude": ["autornd/**", "workflows/**", "tests/**"]
+  },
+  "constraints": [
+    "PRECONDITION: ARCH-20260926-080 is merged and Ruling D33 is in the tree. If it is not, return BLOCKED naming it.",
+    "THE VARIABLE IS HELD FIXED EXCEPT ONE: same items, same roster, same model, same tier, same caps, same scenario. The only change from the baseline is the prompt shape D33 introduced. Say explicitly that the model was not changed — that is V2 and it is not this test.",
+    "SAME TWO ITEMS AS THE BASELINE, for comparability: tech-pool-sizing and tech-backfill-migration. Identifying which item exhibited the kappa-shaped local contradiction is required — that item is V1's target and its result is the primary discriminator.",
+    "COMMIT THE PREDICTION FILE BEFORE THE RUN. Author date must precede the run header; the precedence guard checks it.",
+    "THE REGISTERED PREDICTION, committed verbatim and stated in the response BEFORE the result: (1) On a local-edit contradiction — a single value violating a stated threshold — V1 CONVERGES, because seeing the artifact makes the edit actionable. (2) On a derivation-heavy criterion — three or more distinct numeric derivations, batch-size arithmetic — V1 STILL BLOCKS, because seeing the prior artifact does not supply the computation. (3) The regression rate DROPS: a criterion previously judged green does not go red, because the model edits rather than regenerates, and the -049 green-to-red on consistency does not recur. Consequence: V1 partially fixes the class and does not remove the case for V2 on derivation-heavy items.",
+    "STATE the advisor's prediction record so the prediction is read correctly: the last four predictions of the session were refuted or soft — ARCH-20260922-046 (too pessimistic), ARCH-20260923-049 (too optimistic), ARCH-20260923-071 (refuted), and the technical-set difficulty grades (soft agreement). Treat this prediction as a hypothesis under test, not a result.",
+    "REPORT THE DISCRIMINATOR as one of three, named: CONVERGED — the run reaches completed; BLOCKED DIFFERENTLY — still blocked, but the failure is a different or more specific one, or the artifact is visibly held rather than re-rolled; BLOCKED IDENTICALLY — the same failure at the same point.",
+    "THE REGRESSION WATCH IS REQUIRED: report every criterion that was green in an earlier iteration and not green later. This is the -049 failure mode and the acceptance for change (3) above.",
+    "REPORT THE COST COMPOSITION, not only pass or block: cost by tier, calls by tier, iterations, and whether escalation fired. The composition is expected to differ from the baseline — escalation alone is 70-78% of hard-trace spend — and it is reported alongside the outcome.",
+    "REPORT the prompt-size effect: input tokens per iteration versus the baseline, so the artifact's addition is a measured cost rather than an assumed one.",
+    "State the cap and the arithmetic before the first call. Ask the owner for the envelope; do not inherit the baseline's. Recommendation: $1.50 across the pair, sized above the observed $0.80 because convergence may take more iterations before it takes fewer.",
+    "Pin the tiers and log the versioned answering ids. Isolate the knowledge store, or state that you did not and why.",
+    "NO git operation while the run is in flight. The run must not start on a dirty tree.",
+    "Do NOT change any workflow, profile, prompt or constant during this command. If the run fails for a reason you must fix, stop and report — the fix is a new command.",
+    "V2 IS GATED ON THIS RESULT, and this command does not run it. Recommendation only, from the outcome: if CONVERGED, V2 is not warranted for this class and the cost-profile shift is avoided; if BLOCKED DIFFERENTLY or IDENTICALLY, V2 is warranted and is now un-confounded because the prompt shape was held fixed."
+  ],
+  "acceptance_criteria": [
+    "D33 is in the tree and the model is unchanged from the baseline — both asserted.",
+    "Both baseline items are run, and the kappa-shaped item is identified as the primary discriminator.",
+    "The prediction file is committed before the run, both shas recorded, the precedence guard passes.",
+    "The registered prediction and the advisor's prediction record are stated BEFORE the result.",
+    "The outcome is named as CONVERGED, BLOCKED DIFFERENTLY or BLOCKED IDENTICALLY, with the terminal quoted verbatim.",
+    "Every green-to-red regression is listed, or its absence stated.",
+    "Cost composition by tier, calls by tier, iterations and escalation status are reported, and compared to the baseline.",
+    "The per-iteration input-token delta versus the baseline is reported.",
+    "The V2 recommendation is stated, derived from the outcome, and not acted on in this command.",
+    "The trace is committed and the mirror path quoted; one record per produced unit."
+  ],
+  "verification": [
+    {"command": "git log --oneline -1 -- docs/preregistration-*.md", "expected": "Precedes the run; record both shas."},
+    {"command": "grep -c '\"status\"' <results file>", "expected": "One terminal per produced unit; no unit without a status."},
+    {"command": "grep -n 'prior\\|revise' <results file>", "expected": "The prompt shape is visible in the record, proving D33 was active."},
+    {"command": "git status --porcelain docs/traces/", "expected": "The trace is present and the tree is otherwise clean."}
+  ],
+  "rollback": "Not applicable — a measurement. The caps are the bound; no code, workflow or config is modified.",
+  "deliverable": {
+    "branch": "arch/20260926-081-v1-discriminator",
+    "branch_created_by": "executor",
+    "pr": true,
+    "merge": "merge-on-green, per the grant recorded by ARCH-20260926-072",
+    "commit_style": "conventional"
+  },
+  "transport": "Commit this command file verbatim as carriage before executing; commit the response IN_PROGRESS first, then update it in place. delivery_state must carry the PR number per Ruling D16.",
+  "assumptions": [
+    "The same roster used for the baseline is available and pinned. If the roster changed since the baseline, the comparison is confounded — name it and stop."
+  ],
+  "questions": [
+    "Which item exhibited the kappa-shaped local contradiction, and did validate identify the value and its threshold, or only the criterion? If validate named the criterion but not the value, the local-edit case may not be as local as the diagnosis suggests.",
+    "Does the owner ratify the envelope for this pair, or hold? Recommendation $1.50 across the two; the baseline pair was $0.80.",
+    "If V1 converges on the local-edit item and blocks on the derivation item, is the derivation class in scope for the product? That decides whether V2 is a fix or a scope narrowing, and it is the owner's call."
+  ],
+  "preconditions": [
+    {"command": "git rev-parse --short HEAD", "expected": "Record the sha; name any divergence."},
+    {"command": "grep -n 'Ruling D33' docs/handover-review.md", "expected": "Present; ARCH-20260926-080 is merged. If absent, return BLOCKED naming it."},
+    {"command": "ls docs/preregistration-*.md | tail -3", "expected": "Locate the most recent registration to match its shape."},
+    {"command": "git status --porcelain", "expected": "Clean; the run must not start on a dirty tree."},
+    {"command": "test -n \"$OPENROUTER_API_KEY\" && echo present || echo absent", "expected": "Print presence only, never the value. If absent, return BLOCKED naming the owner action."}
+  ]
+}

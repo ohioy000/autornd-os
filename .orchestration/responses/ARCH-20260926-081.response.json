@@ -1,0 +1,43 @@
+{
+  "command_id": "ARCH-20260926-081",
+  "status": "PARTIAL",
+  "executed": true,
+  "head_before": "dccc48e",
+  "head_after": "f3bc95d",
+  "branch": "arch/20260926-081-v1-discriminator",
+  "preconditions_checked": {
+    "d33_in_tree": "present",
+    "080_merged": "PR #94 merged at dccc48e",
+    "prediction_committed_before_run": "ea6f88d (pre-reg 088) precedes the run",
+    "clean_tree": "clean before run",
+    "key_present": "true via .env"
+  },
+  "registered_prediction": "Committed verbatim in docs/preregistration-088-v1-discriminator.md before the run: (1) local-edit contradiction -> V1 CONVERGES; (2) derivation-heavy -> V1 STILL BLOCKS; (3) regression rate DROPS.",
+  "outcome": "INCONCLUSIVE \u2014 the run produced NO evidence on D33. Both units stopped on apparatus, not on convergence behaviour. Neither CONVERGED, BLOCKED DIFFERENTLY, nor BLOCKED IDENTICALLY applies; the V1 hypothesis is untested.",
+  "results": [
+    "conv_pool_sizing (the kappa item): BLOCKED \u2014 'timed out after 900s'. 11 calls, $0.0488, still on iteration 1 (cov_passed true, impl_green false, validate_green true, dissent [consistency, implement]) when the wall-clock stopped it. It never reached a criterion-block state, so it does not test whether revision fixes the kappa class \u2014 the TIMEOUT, not D33, was the limiting factor. Escalation (gpt-5.4) fired: $0.0289, the cost centre as predicted.",
+    "robotics-manipulator (clean same-roster A/B target): BLOCKED \u2014 'HTTPStatusError: 429 ... qwen/qwen3-235b-a22b-2507 is temporarily rate-limited upstream' on DeepInfra. 5 calls, $0.0193, 0 iterations \u2014 it died at the first engineering call, before D33 could act. Zero D33 signal.",
+    "REGRESSION WATCH: not assessable \u2014 pool_sizing produced only iteration 1 (no earlier green to go red); robotics produced 0 iterations. No green-to-red observed because neither run iterated.",
+    "COST COMPOSITION: total $0.0681 of $1.20. By tier: escalation $0.0289 (gpt-5.4), architecture $0.0166 (glm-5.3), search $0.0125, research $0.0059, engineering $0.0039 (qwen3-235b, barely ran), triage $0.0002. Escalation dominates, consistent with the baseline's 70-78%.",
+    "PROMPT-SIZE / D33 ACTIVITY: engineering completion was tiny (pool 3792 tokens over 5 calls; robotics 0) because implement barely executed; the prompt-size delta from D33 could not be meaningfully observed on this run.",
+    "US SERVING held on-pin throughout (triage DigitalOcean, engineering DeepInfra, architecture DigitalOcean, escalation OpenAI, research Google, search Perplexity) until the 429.",
+    "V2 RECOMMENDATION: CANNOT be derived. The run did not discriminate, so V2 is neither warranted nor ruled out by it. Deriving a V2 recommendation from an apparatus-failed run would be exactly the false-negative misdirection Ruling D33 warns against."
+  ],
+  "apparatus_blockers": [
+    "DeepInfra is rate-limiting this account ACROSS models \u2014 deepseek-v4-flash (triage) earlier this session, now qwen3-235b (engineering). With OPENROUTER_PROVIDER_FALLBACKS=0 every DeepInfra 429 is fatal. OWNER ACTION (G-1/G-3): add your own DeepInfra/provider key in OpenRouter to lift the shared rate limits, or re-pin engineering off DeepInfra (Parasail or Google Vertex us-south1 both serve qwen3-235b, US).",
+    "900s per-scenario timeout is too short for this reasoning-heavy roster (glm-5.3 plan + gpt-5.4 escalation, ~1-2 min/call). pool_sizing was still on iteration 1 at 900s. A valid convergence read needs a materially higher timeout (>= 1500-1800s) or a faster roster for the test."
+  ],
+  "deviations": [
+    "Per the command ('if the run fails for a reason you must fix, stop and report \u2014 the fix is a new command'), NOT re-run with changed config under this command. The fix (re-pin engineering off DeepInfra + raise timeout) is a new command / owner decision.",
+    "ROSTER CONFOUND (081 assumption clause): baseline ran on GLM-5 engineering; current roster is qwen3-235b. The design substituted a same-roster robotics A/B for the confounded $0.80 comparison \u2014 but robotics 429'd before producing signal, so even the un-confounded A/B did not land.",
+    "conv_backfill_migration deferred for budget (stated in pre-reg 088)."
+  ],
+  "questions_for_advisor": [
+    "Re-run shape: (a) re-pin engineering off DeepInfra (Parasail/Google, US) to dodge the account rate-limit, and (b) raise the per-scenario timeout to >= 1500-1800s. Both are config changes for a new command. Ratify?",
+    "Given gpt-5.4 escalation dominates cost and the reasoning tiers make runs slow enough to time out, is the escalation/architecture roster the right one for a convergence TEST, or should the test use a faster roster and isolate D33 there?"
+  ],
+  "delivery_state": {
+    "pr": 95,
+    "trace": "docs/traces/088-v1-discriminator.jsonl (mirror in scratchpad run-081-results.jsonl)"
+  }
+}
