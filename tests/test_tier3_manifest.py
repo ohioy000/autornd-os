@@ -22,6 +22,7 @@ the deadline and the answer format are identical).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import random
 import re
@@ -246,7 +247,7 @@ class TestTheVersions:
         assert versions["scorer"] in frozen, (
             "the manifest names a scorer version the version "
             "record does not hold")
-        assert versions["manifest"] == "tier3-7"
+        assert versions["manifest"] == "tier3-8"
         # tier3-5 registers the advisor's R2 (the stage-1
         # report's repair list, 2026-10-06): arm B's final
         # call keeps the tools declared with tool_choice
@@ -264,17 +265,185 @@ class TestTheVersions:
         # derivation input is not a stated result, and
         # the item fails when any collected quantity
         # lies outside the frozen key's tolerance.
+        # tier3-8 registers the D51 re-measurement
+        # (command 121, 2026-10-14): the 246-unit
+        # interleaved plan (arms A, D and F over the
+        # frozen set's twenty-five questions, arm E'
+        # over stage 1's seven, three repetitions each,
+        # seed 20261014), arm F as verify-first through
+        # arm E's path at $0.20 a unit and at most four
+        # model calls after triage and asks, arm E' as
+        # arm E unchanged on stage 1's seven at $0.50 a
+        # unit, the $15.00 authorization, the frozen
+        # scorer, and the pre-registration - the D51
+        # record's section 9 predictions and section 7
+        # decision table, copied verbatim with their
+        # sha256, committed before any paid unit.
         note = versions["version_note"]
         assert "tier3-6" in note
         assert "tier3-5" in note
         assert 'tool_choice "none"' in note
         assert "serving_error" in note
         assert "tier3-7" in note
+        assert "tier3-8" in note
         assert ".env.tier3" in note
         # The tier-2 freeze itself: the signoff the owner ratified.
         assert TIER2_MANIFEST["dataset_version"] == "frozen-2026-10-03"
         assert TIER2_MANIFEST["frozen"] is True
         assert TIER2_MANIFEST["freeze"]["signed_off_by"] == "owner"
+
+
+class TestThePreRegistration:
+    """The D51 re-measurement's pre-registration
+    (command 121, criterion (e)): the D51 record's
+    section 9 predictions and section 7 decision
+    table, copied verbatim into the manifest with
+    their sha256, committed before any paid unit -
+    and never edited afterwards (convention 7: each
+    prediction is reported as it reads).
+
+    The test extracts each section from the record
+    with the record's own section rule and asserts
+    the manifest's copy is byte-identical to it, so
+    the sha256 certifies the record's own text: a
+    change to either the record or the copy breaks
+    the digest, and a copy that paraphrased the
+    predictions would not match."""
+
+    RECORD = ROOT / "docs" / "reviews" / (
+        "2026-10-10-d51-the-request-is-the-yardstick.md")
+
+    def _section(self, number: int) -> str:
+        """The record's own section rule: the section
+        heading through the next one."""
+        text = self.RECORD.read_text(encoding="utf-8")
+        section = re.search(
+            r"^## %d\. .*?(?=^## %d\. )"
+            % (number, number + 1),
+            text, re.S | re.M)
+        assert section is not None, (
+            f"the D51 record holds no section {number} "
+            "- the pre-registration cannot be checked "
+            "(convention 28: an unread section is no "
+            "evidence)")
+        return section.group(0)
+
+    def test_the_predictions_are_the_record_verbatim(self):
+        pre = MANIFEST["remeasurement"]["pre_registration"]
+        section = self._section(9)
+        assert pre["predictions_section_9"] == section, (
+            "the manifest's copy of the D51 record's "
+            "section 9 predictions is not the record's "
+            "own text - the pre-registration must be "
+            "the section verbatim, or the sha256 "
+            "certifies something other than what was "
+            "pre-registered")
+        digest = hashlib.sha256(
+            section.encode("utf-8")).hexdigest()
+        assert (pre["predictions_section_9_sha256"]
+                == digest), (
+            "the manifest's section 9 sha256 is not "
+            "the sha256 of the record's section 9 - "
+            "the pre-registration digest must be "
+            "re-derivable from the record, or it "
+            "guards nothing")
+        # The nine predictions, numbered as the
+        # record numbers them.
+        for prediction in range(1, 10):
+            assert f"\n{prediction}. " in section, (
+                f"the record's section 9 holds no "
+                f"prediction {prediction} - the "
+                f"pre-registration is not the nine the "
+                f"command names")
+
+    def test_the_decision_table_is_the_record_verbatim(self):
+        pre = MANIFEST["remeasurement"]["pre_registration"]
+        section = self._section(7)
+        assert pre["decision_table_section_7"] == section, (
+            "the manifest's copy of the D51 record's "
+            "section 7 decision table is not the "
+            "record's own text - the pre-registration "
+            "must be the section verbatim, or the "
+            "sha256 certifies something other than "
+            "what was pre-registered")
+        digest = hashlib.sha256(
+            section.encode("utf-8")).hexdigest()
+        assert (pre["decision_table_section_7_sha256"]
+                == digest), (
+            "the manifest's section 7 sha256 is not "
+            "the sha256 of the record's section 7 - "
+            "the pre-registration digest must be "
+            "re-derivable from the record, or it "
+            "guards nothing")
+        # The decision the re-measurement makes.
+        assert "The decision the re-measurement makes" in section
+
+    def test_the_pre_registration_names_its_record_and_rule(
+            self):
+        pre = MANIFEST["remeasurement"]["pre_registration"]
+        assert pre["record"] == (
+            "docs/reviews/2026-10-10-d51-the-request-"
+            "is-the-yardstick.md")
+        assert self.RECORD.exists()
+        # The pre-registration's own rule: committed
+        # before any paid unit, never edited after.
+        assert "before any paid unit" in pre["committed"]
+        assert "never edited afterwards" in pre["committed"]
+        # Break-proof: the manifest's copy is the
+        # section verbatim, so a single character
+        # changed in either place breaks the digest.
+        #     pre["predictions_section_9"] == section
+        #     -> pre["predictions_section_9"] == section[:-1]
+        # FAILED ...::test_the_predictions_are_the_
+        # record_verbatim - AssertionError: the copy
+        # would have differed from the record's own
+        # text - a pre-registration that paraphrased
+        # the predictions would have certified the
+        # paraphrase, not the record.
+
+    def test_the_notebook_carries_both_sections_verbatim(
+            self):
+        # The same copies are pre-registered in the
+        # lab notebook's section 113 (the manifest's
+        # pre_registration note says so, and the test
+        # asserts it): the record's own section text,
+        # byte for byte, between the notebook's ruled
+        # text markers. A section that differs by one
+        # character anywhere - a rewording, a dropped
+        # table row, a re-sorted prediction - is not
+        # the section, and the containment fails.
+        notebook = (ROOT / "docs" /
+                    "handover-review.md").read_text(
+                        encoding="utf-8")
+        for number, key in (
+                (9, "predictions_section_9"),
+                (7, "decision_table_section_7")):
+            section = self._section(number)
+            assert section in notebook, (
+                f"the notebook's section 113 does not "
+                f"carry the D51 record's section {number} "
+                f"verbatim - the pre-registration exists "
+                f"in the manifest and in the notebook, "
+                f"or it does not exist")
+            # And the notebook's copy is the one the
+            # manifest's digest certifies: the copy in
+            # the manifest and the copy in the notebook
+            # are the same text.
+            assert (MANIFEST["remeasurement"][
+                "pre_registration"][key] == section)
+        # Break-proof: the notebook's copy is the
+        # section verbatim, so changing one character
+        # of either pasted section breaks the
+        # containment.
+        #     section in notebook
+        #     -> section[:-1] in notebook
+        # FAILED ...::test_the_notebook_carries_both_
+        # sections_verbatim - AssertionError: the
+        # notebook's section 113 does not carry the
+        # D51 record's section 9 verbatim : the pasted
+        # predictions were edited after the copy was
+        # made - a pre-registration adjusted to match
+        # a result is the failure convention 7 names.
 
 
 class TestThePrompts:
