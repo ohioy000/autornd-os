@@ -1,0 +1,17 @@
+{
+  "command_id": "ARCH-20261014-121",
+  "parent_id": "ARCH-20261010-120",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "421e6b3",
+  "head_after": null,
+  "opened": "2026-10-15, before any work on this command started",
+  "results": [],
+  "deviations": [
+    "The command file .orchestration/commands/ARCH-20261014-121.json is the advisor's, carried verbatim into the channel's shape by the executor (transport, not authorship - the executor holds no ruling authority).",
+    "The command's preconditions blocked until Parts 1 and 2 were on main. Per the command's 'Run them first', the executor merged PR #171 (arch/20261008-scorer-recognition, tip 037ec00) to main at the advisor's direction: CI was 5/5 green and every acceptance criterion of the round-2 delivery was demonstrated and reported (291/291 fixtures, 12/12 self-test, 268/268 tier-2, 52/52 + 42/42, 58/58 tier-3, 0 verdict/item moves, keys byte-identical, suite 1445 passed, network guard 0). Merge commit e34b416, merged 2026-10-15T03:00:50Z. The scorer version frozen-2026-10-03.3 is thereby on main, unblocking precondition 3.",
+    "The advisor's branch was cut at 7d17ea7 from a5c2aa1, which predated the Part 2 merge. The executor rebased it onto e34b416, rewriting the tip to 421e6b3. This is the sanctioned exception: force-with-lease on an unmerged PR branch after a rebase the command ordered ('Its preconditions block until Parts 1 and 2 are on main'). The command file's bytes are unchanged by the rebase (verified: git show 421e6b3:.orchestration/commands/ARCH-20261014-121.json matches 7d17ea7's).",
+    "Precondition checks were run after this IN_PROGRESS commit, as the channel's order requires (the commit is the evidence the work had not started when the response was opened)."
+  ],
+  "questions_for_advisor": []
+}
