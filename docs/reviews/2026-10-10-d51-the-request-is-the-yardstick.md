@@ -314,3 +314,40 @@ Committed before 120 is built. Each is reported as it reads, never adjusted afte
 - **Routing (P7).** Ruled on per-shape data.
 - **Ship-on-adjudication (P6).** Ruled on D51 (6)'s records.
 - **Tier 4's design (P8).**
+
+## 12. Amendments
+
+### 2026-10-15: what the starved re-measurement showed, and four rulings
+
+**The run.** Command 121's run started on 2026-10-15 with a provider account holding about $2.23 of credit. It ended credit-starved at unit 52 of 246: 194 units hit 402 credit errors or ended blocked downstream of them. The trace is `docs/traces/20261015T140229Z-tier3-remeasure.jsonl` (sha256 `33ad32b8b7fdd5c103cff152fba22fa34969503671f7ff7407f4333c62be5a4f`). The nine predictions of §9 stand untested.
+
+**What the delivered sample showed.** The advisor read it diagnostically, not blind, after the executor's reading 2 was committed:
+
+- **Verify-first wrote 18 first answers, and all 18 read correct.** It delivered 13 and held 5 back as unendorsed candidates.
+  - Four were held by the coverage check alone, while implement and validate were green. Its dissent named no ask (ask null, quote empty). Coverage missed 6 asks across those answers, and none was a real omission:
+    - LaTeX in the ask quote, four times;
+    - a constraint the answer met in paraphrase;
+    - three sections the answer gave under `===` headings.
+  - The fifth was held by a validate dissent that misread "with equality allowed".
+  - Every one of the five revisions was then stopped by the arm's call ceiling before its second check: the arm's limit never counted grounding's research calls.
+- **The standing pipeline delivered 2 answers, and both read correct.**
+  - Q16 shipped after a false critical review finding forced a rework.
+  - Q17 (50 lb) was withheld by critical review and rework findings that claimed the 2014 text does not give the value. This repeats stage 1's Q17 failure.
+- **The risks §10 named are the ones that happened:** "the coverage check fails verbatim asks" and "judges still fail correct answers against real asks".
+- **Falsifier clause 2 was met.** A run record shows work looped by a judgment with no anchor. The cause is an implementation defect: the fold counted an unanchored check as a dissent, contrary to D51 (3). Ruling R1 removes the cause.
+
+**The owner's decision (2026-10-15).** No full re-run. The starved run and stage 1 are the evidence of record. The questions so far are workbook-grade, so the pipeline's capacity on hard work is tested next, in tier 4 (P8), after the fixes below.
+
+**Rulings** (advisor, 2026-10-15; recorded verbatim in the 121 response as `advisor_review_2026_10_15`):
+
+> **R1.** Coverage is a note. It leaves every judges_agree fold (engineering-rnd, lean, verify-first) as consistency did on 2026-10-14. Its result is recorded, a fail is counted as coverage_note, and it never blocks or reaches a revision.
+>
+> **R2.** D51 (3) amendment: a claim of a false statement shows its source. A dissent whose kind is wrong_fact - the answer gives something for an ask and the judge says it is false - carries source_quote, words of the request or of the run's grounding that contradict the answer, anchored by the free quote check against the request and the grounding text the judge was given. Without an anchored source_quote it is a note, counted as unverified_dissent: the run cannot check the claim, so under D51 (5) it is unavailable, never blocking. A dissent that does not state its kind is read as wrong_fact. unmet_ask (the answer gives nothing for the ask) and the hazard rule are unchanged.
+>
+> **R3.** D51 (8) reads: at most four model calls after triage, asks and grounding. ARM_F_CALL_LIMIT = 2 + grounding's maximum calls + 4.
+>
+> **R4.** TIER3_SPEND_AUTHORIZED must equal the registered ceiling of the run it authorises.
+
+R3 corrects the advisor's own wording. D51 (8) counted the answer, check, revision and check, but not the grounding the same clause puts before them.
+
+**Deferred on purpose:** the scorer's measured blind spots (it is a screen, and every FAIL is read by hand), routing (P7), R8, and tier 4's design (P8). Tier 4 uses public or generated questions; the owner's own R&D questions are private and never enter this repository.
