@@ -589,10 +589,112 @@ def _slash_divides(line: str, slash: int) -> bool:
             and left_dim != right_dim)
 
 
+def _clause_end(line: str, i: int) -> bool:
+    """Whether position i ends a clause. The
+    amendment (2026-10-14, the advisor's
+    ARCH-20261003-119 PART 2 ruling, ROUND
+    2): a clause ends at ';', at a comma or
+    full stop followed by a space, or at the
+    end of the line."""
+    if line[i] == ";":
+        return True
+    return (line[i] in ",."
+            and i + 1 < len(line)
+            and line[i + 1] == " ")
+
+
+def _clause_of(line: str, pos: int) -> tuple[int, int]:
+    """The (start, end) of the clause
+    containing position pos: the span after
+    the last clause boundary before pos, to
+    the first boundary at or after the start
+    (the line's end when there is none)."""
+    start = 0
+    for i in range(pos):
+        if _clause_end(line, i):
+            start = i + 1
+    for i in range(start, len(line)):
+        if _clause_end(line, i):
+            return start, i
+    return start, len(line)
+
+
+def _member_has_operator(text: str) -> bool:
+    """Whether a clause member contains an
+    operator, under the amendment's rule:
+    '=' is not an operator. A single '*'
+    multiplies (a run of asterisks is
+    markdown emphasis), '+' adds, a 'x'
+    with a space on each side multiplies
+    like '*' and '×', a '-' surrounded by
+    spaces subtracts, a '/' divides when
+    _slash_divides says so, and a '^'
+    raises to a power when a digit, sign or
+    bracket follows it. A '^' inside a unit
+    ('mm^2') belongs to the unit and is not
+    an operator, and neither is a sign
+    inside a number's extent: the scan
+    carves out every _NUMBER match before
+    it looks for operators."""
+    extents = [(m.start(), m.end())
+               for m in _NUMBER.finditer(text)]
+
+    def in_number(i: int) -> bool:
+        return any(a <= i < b for a, b in extents)
+
+    i = 0
+    while i < len(text):
+        c = text[i]
+        if c == "*":
+            run = 1
+            while (i + run < len(text)
+                   and text[i + run] == "*"):
+                run += 1
+            if run == 1:
+                return True
+            i += run
+            continue
+        if c == "+" and not in_number(i):
+            return True
+        if (c == "-" and not in_number(i)
+                and i - 1 >= 0
+                and text[i - 1].isspace()
+                and i + 1 < len(text)
+                and text[i + 1].isspace()):
+            return True
+        if c == "/" and _slash_divides(text, i):
+            return True
+        if c == "^":
+            if (i - 1 >= 0
+                    and text[i - 1].isalpha()
+                    and i + 1 < len(text)
+                    and text[i + 1].isdigit()):
+                # a '^' inside a unit ('mm^2')
+                # belongs to the unit
+                i += 1
+                continue
+            k = i + 1
+            while k < len(text) and text[k].isspace():
+                k += 1
+            if k < len(text) and (
+                    text[k].isdigit()
+                    or text[k] in "+-([{"):
+                return True
+        if (c == "x" and i - 1 >= 0
+                and text[i - 1].isspace()
+                and i + 1 < len(text)
+                and text[i + 1].isspace()):
+            # a lowercase 'x' with a space on
+            # each side multiplies
+            return True
+        i += 1
+    return False
+
+
 def _derivation_input(line: str, m: re.Match) -> bool:
     """Whether the number a match names is a
     derivation input: an operand of the
-    arithmetic the line shows, not a result
+    arithmetic the answer shows, not a result
     the line states. The advisor's 2026-10-14
     review (ARCH-20261003-119, PART 2, step
     3) adopted this rule for headline
@@ -601,28 +703,32 @@ def _derivation_input(line: str, m: re.Match) -> bool:
     operand of arithmetic the answer shows is
     attributed to no item. An operand is a
     number standing on either side of a binary
-    operator: '*', '+', a spaced '-', or '^'
-    followed by a digit, sign or bracket. A
-    slash divides (and so makes its operands)
-    between bare numbers written without
-    spaces, or between quantities of different
-    known dimensions; it lists them otherwise.
-    The value an equation produces - the member
-    after its last '=' - is stated unless an
-    operator touches it, so every member before
-    the last '=' is an input. The degree sign's
-    normalised '^ deg' is not an exponent, and
-    an unspaced hyphen between numbers is a
-    range, not a minus: the sign is inside the
-    match, so the scan never sees it."""
-    # the member an equation produces is the
-    # member after its last '='; every member
-    # before it is an input the equation works
-    # on ('3/3400 m = 8.82e-4 m': the fraction
-    # and its denominator are inputs)
-    equals = line.rfind("=")
-    if equals >= 0 and m.start() < equals:
-        return True
+    operator: '*', '+', a spaced '-', a
+    dividing '/', '^' followed by a digit,
+    sign or bracket, or a lowercase 'x' with
+    a space on each side. A slash divides
+    (and so makes its operands) between bare
+    numbers written without spaces, or between
+    quantities of different known dimensions;
+    it lists them otherwise. The amendment
+    (2026-10-14, same ruling, ROUND 2):
+    '=' is not an operator. A clause ends at
+    ';', at a comma or full stop followed by a
+    space, or at the end of the line, and its
+    members are the parts between its '='
+    signs. A member before the clause's last
+    '=' is arithmetic when it contains an
+    operator, and every quantity in it is an
+    operand; a member with no operator is a
+    stated value, however many '=' follow it
+    ('12.4 kN = 12 352.9 N' states both). A
+    '^' inside a unit ('mm^2') belongs to the
+    unit and is not an operator. The degree
+    sign's normalised '^ deg' is not an
+    exponent, and an unspaced hyphen between
+    numbers is a range, not a minus: the sign
+    is inside the match, so the scan never
+    sees it."""
     # a number standing just after an operator:
     # the first non-space character before it
     i = m.start() - 1
@@ -651,6 +757,12 @@ def _derivation_input(line: str, m: re.Match) -> bool:
             # ('2.90-3.10'), so this one stands
             # alone between spaces
             return True
+        elif c == "x":
+            # a lowercase 'x' with a space on
+            # each side multiplies, like '*'
+            # and '×' (the amendment's rule)
+            if i - 1 >= 0 and line[i - 1].isspace():
+                return True
     # a number standing just before an operator:
     # the first non-space character after the
     # number and its unit capture
@@ -697,7 +809,44 @@ def _derivation_input(line: str, m: re.Match) -> bool:
                     line[k].isdigit()
                     or line[k] in "+-([{"):
                 return True
-    return False
+        elif c == "x":
+            # a lowercase 'x' with a space on
+            # each side multiplies, like '*'
+            # and '×' (the amendment's rule)
+            if j + 1 < len(line) and line[j + 1].isspace():
+                return True
+    # the clause the match sits in, under the
+    # amendment: its members are the parts
+    # between its '=' signs. A member before
+    # the clause's last '=' is arithmetic when
+    # it contains an operator, and every
+    # quantity in it is an operand; a member
+    # with no operator is a stated value,
+    # however many '=' follow it. A member
+    # after the last '=' is the value the
+    # clause produces: stated, unless an
+    # operator touches it (checked above).
+    cstart, cend = _clause_of(line, m.start())
+    clause = line[cstart:cend]
+    eqs = [k for k, ch in enumerate(clause)
+           if ch == "="]
+    if not eqs:
+        return False
+    offset = m.start() - cstart
+    member_start = 0
+    for k in eqs:
+        if offset < k:
+            break
+        member_start = k + 1
+    if offset > eqs[-1]:
+        return False
+    member_end = len(clause)
+    for k in eqs:
+        if k >= member_start:
+            member_end = k
+            break
+    member = clause[member_start:member_end]
+    return _member_has_operator(member)
 
 
 def _line_quantities(
@@ -3414,8 +3563,13 @@ def self_test() -> int:
     # both column orders and its equation in prose,
     # a same-dimension slash list, the degree
     # caret, a check line and an unspaced range)
-    # and the recognition classes the tier-3
-    # stage-1 reading's false negatives named.
+    # and the amendment's clause rule ('=' is not
+    # an operator: a no-operator member states
+    # its figures however many '=' follow it, a
+    # spaced x multiplies, and a semicolon ends
+    # the clause), and the recognition classes
+    # the tier-3 stage-1 reading's false negatives
+    # named.
     print("\nResults presentations and the answers' "
           "own words:")
     more, count = _fixture([
@@ -3808,6 +3962,52 @@ def self_test() -> int:
          "The common extension is "
          "0.882-0.883 mm.\n",
          {"Common extension": False}),
+        ("Q23 working line, a no-operator "
+         "member states the rounded force",
+         "Q23",
+         "## Final conclusion\n\n"
+         "Force in aluminum bar: 12.35 kN; "
+         "force in steel bar: 17.65 kN.\n\n"
+         "Aluminum force = 12.4 kN = "
+         "12 352.9 N\n",
+         {"Aluminum force": False,
+          "Steel force": True}),
+        ("Q23 working line, the rounded "
+         "figure after the last '='", "Q23",
+         "## Final conclusion\n\n"
+         "Force in aluminum bar: 12.35 kN; "
+         "force in steel bar: 17.65 kN.\n\n"
+         "Aluminum force = 12 352.9 N = "
+         "12.4 kN\n",
+         {"Aluminum force": False,
+          "Steel force": True}),
+        ("Q23 working line, a wrong force "
+         "in a no-operator member", "Q23",
+         "## Final conclusion\n\n"
+         "Force in aluminum bar: 12.35 kN; "
+         "force in steel bar: 17.65 kN.\n\n"
+         "Aluminum force = 13.0 kN = "
+         "12 352.9 N\n",
+         {"Aluminum force": False,
+          "Steel force": True}),
+        ("Q23 working line, a spaced x "
+         "multiplies the operands", "Q23",
+         "## Final conclusion\n\n"
+         "Force in aluminum bar: 12.35 kN; "
+         "force in steel bar: 17.65 kN.\n\n"
+         "Al force = 0.4118 x 30.0 kN = "
+         "12.35 kN\n",
+         {"Aluminum force": True,
+          "Steel force": True}),
+        ("Q23 working line, a semicolon "
+         "ends the clause", "Q23",
+         "## Final conclusion\n\n"
+         "Force in aluminum bar: 12.35 kN; "
+         "force in steel bar: 17.65 kN.\n\n"
+         "Aluminum force = 13.0 kN; check "
+         "13.0 + 17.0 = 30.0 kN\n",
+         {"Aluminum force": False,
+          "Steel force": True}),
     ])
     failures += more
     ran += count
