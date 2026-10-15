@@ -189,6 +189,7 @@ def _script(
         calls: dict[tuple[str, int, str],
                         list[dict[str, Any]]] | None = None,
         arm_e: dict[str, dict[str, Any]] | None = None,
+        arm_f: dict[str, dict[str, Any]] | None = None,
         deadlines: dict[tuple[str, int, str], float]
         | None = None,
         tool_failures: set[tuple[str, int, str]]
@@ -203,6 +204,8 @@ def _script(
         script._calls[key] = list(outcomes)
     for scenario_id, outcome in (arm_e or {}).items():
         script._arm_e[scenario_id] = dict(outcome)
+    for scenario_id, outcome in (arm_f or {}).items():
+        script._arm_f[scenario_id] = dict(outcome)
     for key, seconds in (deadlines or {}).items():
         script._deadlines[key] = seconds
     script._tool_failures.update(tool_failures)
@@ -2625,3 +2628,739 @@ class TestJTheReadingSheetAndMeasures:
         # two hand readings the ruling makes the
         # primary measure never reached the measures
         # at all.
+
+
+# ── (k) The re-measurement's plan ──────────────
+
+class TestKTheReMeasurePlan:
+    """Command 121's re-measurement (D51, criterion
+    (b)): the 246-unit seeded plan is the manifest's
+    tier3-8 registration, and the guard test
+    reconstructs it independently - the same
+    enumeration the registration names, the same
+    seed - so the runner cannot drift the plan
+    without the test noticing. The re-measurement's
+    own gate names its own $15.00 authorization."""
+
+    def test_the_remeasure_order_is_the_guard_reconstruction(
+            self):
+        order = runner.remeasure_order(runner.REMEASURE_SEED)
+        # The independent reconstruction: the frozen
+        # set's twenty-five questions, three
+        # repetitions, arms A, D and F; then stage
+        # 1's seven, three repetitions, arm E'.
+        frozen = runner.load_questions()
+        units = [[question["id"], repetition, arm]
+                 for question in frozen
+                 for repetition in (1, 2, 3)
+                 for arm in ("A", "D", "F")]
+        for question_id in runner.STAGE1_QUESTION_IDS:
+            for repetition in (1, 2, 3):
+                units.append([question_id, repetition,
+                              "E"])
+        random.Random(runner.REMEASURE_SEED).shuffle(units)
+        assert order == units, (
+            "the runner's re-measurement order is not "
+            "the seeded plan the manifest registers - "
+            "the enumeration and the seed must reproduce "
+            "the order before any paid unit")
+        # 246 units: 75 A, 75 D and 75 F over the
+        # frozen set's twenty-five questions, 21 E'
+        # over stage 1's seven - three repetitions
+        # each.
+        assert len(order) == 246
+        counts: dict[str, int] = {}
+        for _question_id, _repetition, arm in order:
+            counts[arm] = counts.get(arm, 0) + 1
+        assert counts == {"A": 75, "D": 75, "F": 75,
+                          "E": 21}, (
+            "the re-measurement's arm composition is "
+            "not the registered one - 75 units each "
+            "for A, D and F, 21 for E'")
+        # Every unit exactly once: a permutation of
+        # the plan, no unit invented, none dropped.
+        assert len({tuple(unit) for unit in order}) == 246
+        # The digest: the figure the results header
+        # carries and this guard reconstructs.
+        assert (runner.order_digest(order)
+                == runner.order_digest(units))
+        # The seed is load-bearing: a different seed
+        # must not reproduce the order, or the
+        # reconstruction proves nothing.
+        other = runner.remeasure_order(
+            runner.REMEASURE_SEED + 1)
+        assert other != order
+        # And the arms interleave: no arm runs as a
+        # block, so time-of-day and serving-load
+        # confounds distribute across arms.
+        arms_in_order = [arm for _q, _r, arm in order]
+        assert arms_in_order != sorted(arms_in_order)
+        # Break-proof (runner.py, remeasure_order):
+        #     for arm in ("A", "D", "F"):
+        #     -> for arm in ("A", "D"):
+        # FAILED ...::test_the_remeasure_order_is_the_
+        # guard_reconstruction - AssertionError: the
+        # runner's re-measurement order is not the
+        # seeded plan the manifest registers : an
+        # order with no F units is not the registered
+        # plan - the guard reconstruction would hold
+        # every A, D and E' unit and miss all 75 F
+        # units the re-measurement exists to measure.
+
+    def test_the_remeasurement_gate_names_its_own_ceiling(
+            self):
+        # The re-measurement's spend gate reads the
+        # same TIER3_SPEND_AUTHORIZED pin, but names
+        # its own $15.00 ceiling - a refusal that
+        # named the main run's $30.00 would send the
+        # owner to the wrong authorization.
+        tier3 = _settings(
+            tier3_servings_ratified=TEST_FINGERPRINT,
+            tier3_spend_authorized="10.00")
+        missing = runner.gate_report(
+            tier3, TEST_SERVINGS, TEST_FINGERPRINT,
+            pilot=False, mode="remeasure")
+        assert any(
+            "TIER3_SPEND_AUTHORIZED is 10.00, below "
+            "the re-measurement's authorization "
+            "ceiling $15.00" in d for d in missing)
+        # The main run's gate, on the same settings,
+        # names the main run's ceiling - the two
+        # gates are told apart by what they name.
+        main = runner.gate_report(
+            tier3, TEST_SERVINGS, TEST_FINGERPRINT,
+            pilot=False)
+        assert any(
+            "below the main run's authorization "
+            "ceiling $30.00" in d for d in main)
+        assert not any(
+            "re-measurement's authorization" in d
+            for d in main)
+        # Break-proof (runner.py, gate_report):
+        #     if mode == "remeasure":
+        #     -> if False:
+        # FAILED ...::test_the_remeasurement_gate_
+        # names_its_own_ceiling - AssertionError: the
+        # refusal named the main run's $30.00 ceiling
+        # : the re-measurement's gate fell through to
+        # the main run's branch, so an owner who set
+        # $15.00 and read the refusal would have
+        # looked for a $30.00 authorization that does
+        # not exist.
+
+
+# ── (l) Arm F: verify-first through arm E's path ─
+
+class TestLArmFTheVerifyFirstPath:
+    """Command 121's arm F (criteria (c) and (d)):
+    verify-first through arm E's path - the same
+    boundary arm E runs (the scenario, the deadline,
+    the delivery reader, the accounting, the record),
+    with Ruling D51 (8)'s verify-first workflow as
+    the graph - and the D51 record fields every unit
+    carries."""
+
+    def _f_unit(self, script, fixture_rates,
+                unit=("Q2", 1, "F")):
+        wiring = _Wiring(script, fixture_rates)
+        return _run(runner.run_unit(
+            unit, QUESTIONS, TEST_SERVINGS, None,
+            spec_f=runner._verify_first_spec(),
+            scenario_runner=wiring.scenario_runner))
+
+    def test_the_f_unit_runs_verify_first_within_the_call_bound(
+            self, fixture_rates):
+        # Criterion (c): the record shows workflow
+        # verify-first, and at most four model calls
+        # after triage and asks. A revised unit is
+        # the bound's worst case: two engineering and
+        # two judge calls after triage and asks.
+        correct = _correct("Q2")
+        first = _wrong("Q2")
+        script = _script(arm_f={
+            "tier3_f_Q2_r1": runner._revised(
+                first, correct)})
+        result = self._f_unit(script, fixture_rates)
+        assert result.status == "delivered"
+        assert result.delivered_kind == "shipped"
+        record = result.record()
+        assert record["workflow"] == "verify-first"
+        assert record["calls_after_asks"] == 4
+        assert (record["calls_after_asks"]
+                <= runner.ARM_F_CALL_LIMIT - 2)
+        # The scenario's own bound is the registered
+        # one: the workflow is the graph, and its
+        # call budget is the limit the manifest
+        # registers.
+        assert runner.ARM_F_CALL_LIMIT == 6
+        # A unit with no revision: one engineering
+        # and one judge call after triage and asks -
+        # two, well inside the bound.
+        script = _script(arm_f={
+            "tier3_f_Q2_r1": runner._shipped(
+                correct, profile="verify-first")})
+        result = self._f_unit(script, fixture_rates)
+        assert result.record()["calls_after_asks"] == 2
+        # Break-proof (runner.py, _execute_arm):
+        #     calls_after_asks = sum(
+        #         calls for tier, calls in ... .items()
+        #         if tier != "triage")
+        #     -> calls_after_asks = sum(
+        #         ... .values())
+        # FAILED ...::test_the_f_unit_runs_verify_first_
+        # within_the_call_bound - AssertionError:
+        # assert 4 <= 4 ... then assert 6 <= 4 : the
+        # triage tier's two calls were counted as
+        # calls after the asks, so a unit at the
+        # registered bound would have read as over it
+        # - the criterion's bound would be enforced
+        # on the wrong figure.
+
+    def test_the_f_unit_carries_its_iteration_answers(
+            self, fixture_rates):
+        # Criterion (c): the iteration answers - the
+        # first answer beside the final one - are in
+        # the record, which is what prediction 9 (F's
+        # check helps more than it hurts) is measured
+        # on.
+        correct = _correct("Q2")
+        first = _wrong("Q2")
+        script = _script(arm_f={
+            "tier3_f_Q2_r1": runner._revised(
+                first, correct)})
+        result = self._f_unit(script, fixture_rates)
+        iterations = result.record()["pipeline"][
+            "iterations"]
+        assert len(iterations) == 2
+        assert iterations[0]["implement_summary"] == first
+        assert iterations[1]["implement_summary"] == correct
+        # The final answer is the one the scorer reads.
+        assert result.answer == correct
+        assert result.scorer["verdict"] == "PASS"
+        # Break-proof (runner.py, _pipeline_record):
+        #     "iterations": list(
+        #         getattr(run, "iterations", None) or [])
+        #     -> "iterations": []
+        # FAILED ...::test_the_f_unit_carries_its_
+        # iteration_answers - AssertionError:
+        # assert [] == [...] : the record carried no
+        # iterations - the first answer would have
+        # been dropped, and prediction 9's first-vs-
+        # final comparison would have had nothing to
+        # compare.
+
+    def test_the_f_record_carries_the_d51_fields(
+            self, fixture_rates):
+        # Criterion (d), on a mocked escalated F unit:
+        # the anchored and demoted asks (D51 (1)),
+        # every dissent with its anchor (D51 (3), (7)),
+        # the notes count (D51 (3)), the escalation's
+        # rulings (D51 (6)), the candidate, and every
+        # iteration's answer.
+        wrong = _wrong("Q17")
+        dissent = {"judge": "validate", "ask": 1,
+                   "quote": "the request's own words",
+                   "hazard": False}
+        ruling = {"dissent": 1, "upheld": True,
+                  "reason": "the dissent names the ask "
+                            "and quotes the request"}
+        script = _script(arm_f={
+            "tier3_f_Q17_r1": runner._unendorsed_candidate(
+                wrong, [dissent], rulings=[ruling],
+                profile="verify-first")})
+        result = self._f_unit(
+            script, fixture_rates, ("Q17", 1, "F"))
+        record = result.record()
+        pipeline = record["pipeline"]
+        # The asks the run judged against: the anchored
+        # quotes, and the proposals that did not
+        # anchor, beside them.
+        asks = pipeline["asks"]
+        assert asks["anchored"]
+        assert asks["quotes"]
+        assert asks["demoted"]
+        # The escalation's ruling on each dissent
+        # before it directed (D51 (6)).
+        escalation = pipeline["escalation"]
+        assert escalation["rulings"] == [ruling]
+        # The notes the run counted (D51 (3)): one
+        # demotion by kind, and the count beside them
+        # is the total.
+        assert pipeline["notes"] == {
+            "unanchored_dissent": 1}
+        assert pipeline["notes_count"] == 1
+        # The unendorsed candidate (D51 (7)): kept,
+        # with its open dissents and their anchors.
+        candidate = pipeline["candidate"]
+        assert candidate["endorsed"] is False
+        assert candidate["answer"] == wrong
+        assert candidate["open_dissents"] == [dissent]
+        # Every dissent carries its anchor: a judge,
+        # an ask, a quote of the request, and the
+        # hazard flag.
+        for entry in candidate["open_dissents"]:
+            assert entry["judge"]
+            assert entry["ask"] is not None
+            assert entry["quote"]
+        # The candidate is read and reported, never
+        # counted as delivered (D50 (3)).
+        assert result.status == "delivered"
+        assert result.delivered_kind == "unendorsed candidate"
+        assert result.delivered is False
+        assert record["delivered"] is False
+        # Break-proof (runner.py, _pipeline_record):
+        #     "notes_count": sum(
+        #         (getattr(run, "normalised_by_kind",
+        #                  None) or {}).values())
+        #     -> "notes_count": 0
+        # FAILED ...::test_the_f_record_carries_the_
+        # d51_fields - AssertionError: assert 0 == 1 :
+        # the record's notes count did not count the
+        # notes the run recorded - the D51 (3) count
+        # would have read as zero on every unit, and a
+        # run that demoted five judgments would have
+        # been indistinguishable from one that
+        # demoted none.
+
+    def test_the_e_prime_record_carries_the_rulings_on_its_dissents(
+            self, fixture_rates):
+        # Criterion (d), on a mocked escalated E' unit:
+        # two dissents, each with its anchor, and the
+        # escalation's ruling on each - one upheld,
+        # one not (D51 (6)'s per-dissent record).
+        wrong = _wrong("Q10")
+        quote = "the request's own words"
+        dissents = [
+            {"judge": "review", "ask": 1,
+             "quote": quote, "hazard": False},
+            {"judge": "domain_review", "ask": 3,
+             "quote": quote, "hazard": False}]
+        rulings = [
+            {"dissent": 1, "upheld": True,
+             "reason": "the dissent names the ask and "
+                       "quotes the request's own words"},
+            {"dissent": 2, "upheld": False,
+             "reason": "the concern names no ask and "
+                       "quotes no request words: a "
+                       "note, not a dissent"}]
+        script = _script(arm_e={
+            "tier3_e_Q10_r1": runner._unendorsed_candidate(
+                wrong, dissents, rulings=rulings)})
+        wiring = _Wiring(script, fixture_rates)
+        result = _run(runner.run_unit(
+            ("Q10", 1, "E"), QUESTIONS, TEST_SERVINGS,
+            None,
+            scenario_runner=wiring.scenario_runner))
+        record = result.record()
+        pipeline = record["pipeline"]
+        # Every dissent with its anchor, in the
+        # candidate the terminal kept.
+        assert pipeline["candidate"][
+            "open_dissents"] == dissents
+        # The escalation's rulings, one per dissent,
+        # each naming the dissent it ruled on.
+        escalation = pipeline["escalation"]
+        assert escalation["rulings"] == rulings
+        assert [ruling["dissent"]
+                for ruling in escalation["rulings"]
+                ] == [1, 2]
+        assert ([ruling["upheld"]
+                 for ruling in escalation["rulings"]
+                 ] == [True, False])
+        # And the notes count: the run demoted one
+        # judgment by kind.
+        assert pipeline["notes_count"] == 1
+        # Break-proof (runner.py, _unendorsed_candidate):
+        #     "rulings": (rulings if rulings is not None
+        #                 else [...])
+        #     -> "rulings": []
+        # FAILED ...::test_the_e_prime_record_carries_
+        # the_rulings_on_its_dissents - AssertionError:
+        # assert [] == [...] : the escalation's verdict
+        # carried no rulings - D51 (6)'s per-dissent
+        # record would have been lost, and the reading
+        # could not see which dissent the escalation
+        # upheld.
+
+
+# ── (m) The re-measurement's dry run ───────────
+
+class TestMTheReMeasureDryRun:
+    """Command 121's mocked dry run (criterion (f)):
+    all 246 planned units through the real machinery
+    at zero spend - every failure class the command
+    names (refusal, serving error, deadline, provider
+    failure, budget stop) included at least once, on
+    the real fit rule - and the reading sheet and
+    report generated."""
+
+    def test_the_dry_run_runs_all_246_units(
+            self, tmp_path):
+        # The dry run's evidence paths are the
+        # runner's own (evals/results/, git-ignored
+        # scratch); the test redirects them so the
+        # run starts from a clean slate.
+        saved_results_dir = runner.RESULTS_DIR
+        runner.RESULTS_DIR = tmp_path
+        try:
+            result = _run(runner.dry_run())
+        finally:
+            runner.RESULTS_DIR = saved_results_dir
+        remeasurement = result["remeasurement"]
+        # The whole plan: 246 units, every one of
+        # them recorded - the budget-stop class
+        # included, because a unit the fit rule did
+        # not start is a recorded skip, never a
+        # dropped row.
+        assert remeasurement["planned"] == 246
+        assert remeasurement["units"] == 246
+        # Every failure class the command names,
+        # counted at least once.
+        census = remeasurement["census"]
+        for failure in ("refusal", "serving_error",
+                        "deadline", "incomplete",
+                        "budget_stop"):
+            assert census.get(failure, 0) >= 1, (
+                f"the re-measurement dry run's census "
+                f"holds no {failure!r} - the failure "
+                f"class the command names is not "
+                f"included")
+        # And every delivery kind, so every arm's
+        # reading sheet has something to read.
+        for kind in ("delivery:shipped",
+                     "delivery:approved, not shipped",
+                     "delivery:no answer",
+                     "delivery:unendorsed candidate"):
+            assert census.get(kind, 0) >= 1, (
+                f"the re-measurement dry run's census "
+                f"holds no {kind!r} delivery kind - "
+                f"the sheet would have nothing to read "
+                f"for it")
+        # The budget stop: the sweep stopped inside
+        # the tail on the real fit rule, and the
+        # skipped units carry the budget's own words
+        # as their stop reason.
+        budget = remeasurement["budget"]
+        assert budget["spent"] <= budget["cap"]
+        assert budget["skipped"] >= 1
+        tail = remeasurement["budget_stop_tail"]
+        assert len(tail) >= budget["skipped"]
+        for record in remeasurement["records"]:
+            if record["status"] == "skipped":
+                assert "budget" in str(
+                    record.get("stop_reason", "")).lower()
+        # The reading sheet: one entry per sampled
+        # unit, ten per arm, no arm label.
+        sheet = remeasurement["reading_sheet"]
+        assert sheet["entries"] > 0
+        assert all(
+            per_arm["sampled"] == 10
+            for per_arm in sheet["per_arm"].values())
+        # The report: the eight tables the manifest's
+        # tier3-8 registration lists, beside the
+        # metadata they score against (the arms, the
+        # frozen keys and the 3 s.f. widening).
+        report = remeasurement["report"]
+        assert report["tables"] == [
+            "arms", "keys", "keys_3sf",
+            "per_arm", "calibration_q1_q5",
+            "paired_against_a_by_question",
+            "median_cost_and_latency",
+            "f_first_vs_final", "unresolved_candidates",
+            "repetition_agreement_vs_correctness",
+            "unanchored_blocks"]
+        # The order's digest is the guard's
+        # reconstruction (criterion (b)).
+        order = runner.remeasure_order(runner.REMEASURE_SEED)
+        header = json.loads(
+            Path(remeasurement["path"])
+            .read_text(encoding="utf-8").splitlines()[0])
+        assert (header["order_sha256"]
+                == runner.order_digest(order))
+        # Break-proof (runner.py, build_remeasure_script):
+        #     exhibit(("Q10", 1, "D"), 0.0)
+        #     -> pass  (the deadline exhibit dropped)
+        # FAILED ...::test_the_dry_run_runs_all_246_
+        # units - AssertionError: the re-measurement
+        # dry run's census holds no 'deadline' : the
+        # deadline exhibit was never scripted, so a
+        # run whose units all outlasted their deadline
+        # would have read as a clean one - the failure
+        # class the command names was not exercised.
+
+
+# ── (n) The re-measurement's report ────────────
+
+class TestNTheReMeasureReport:
+    """Command 121's report (criterion (g)): the
+    tables the manifest's tier3-8 registration lists,
+    computed from the dry run's own records - the
+    per-arm delivered-correct counts (key-strict and
+    3 s.f. side by side), Q1-Q5 separate, each arm
+    paired against A by question, the medians, F's
+    first against its final answer, the unresolved
+    candidates, repetition agreement against
+    correctness, and the unanchored blocks."""
+
+    def _report(self, tmp_path) -> dict[str, Any]:
+        saved_results_dir = runner.RESULTS_DIR
+        runner.RESULTS_DIR = tmp_path
+        try:
+            result = _run(runner.dry_run())
+        finally:
+            runner.RESULTS_DIR = saved_results_dir
+        remeasurement = result["remeasurement"]
+        return json.loads(Path(remeasurement["report"][
+            "path"]).read_text(encoding="utf-8"))
+
+    def test_the_report_carries_the_eight_tables(
+            self, tmp_path):
+        report = self._report(tmp_path)
+        # Table 1 - per arm: the planned denominators
+        # (75, 75, 75, 21), the delivered counts the
+        # exhibits produce (the refusal and the
+        # serving error are not delivered; the
+        # deadline and the provider failure are not
+        # delivered; the unendorsed candidate and the
+        # no-answer run are not delivered), and the
+        # delivered-correct counts beside them.
+        per_arm = report["per_arm"]
+        assert {arm: row["planned"]
+                for arm, row in per_arm.items()} == {
+            "A": 75, "D": 75, "F": 75, "E": 21}
+        assert per_arm["A"]["delivered"] == 73
+        assert per_arm["A"]["delivered_correct_key_strict"] == 72
+        assert (per_arm["A"]["delivered_correct_3sf"]
+                == per_arm["A"]["delivered_correct_key_strict"])
+        assert per_arm["D"]["delivered"] == 72
+        assert per_arm["D"]["delivered_correct_key_strict"] == 71
+        assert per_arm["F"]["delivered"] == 73
+        assert per_arm["F"]["delivered_correct_key_strict"] == 70
+        assert per_arm["E"]["delivered"] == 18
+        assert per_arm["E"]["delivered_correct_key_strict"] == 17
+        # Every arm's delivered-correct is at most its
+        # delivered, and at most its planned.
+        for row in per_arm.values():
+            assert (row["delivered_correct_key_strict"]
+                    <= row["delivered"] <= row["planned"])
+        # Table 2 - Q1-Q5 separate: fifteen planned
+        # units per arm (five questions, three
+        # repetitions), none of the stage-1 exhibits
+        # among them.
+        calibration = report["calibration_q1_q5"]
+        for arm in ("A", "D"):
+            assert calibration[arm]["planned"] == 15
+            assert (calibration[arm]["delivered"]
+                    == 15)
+        # Table 3 - each arm paired against A, by
+        # question: every frozen-set question has a
+        # row, the stage-1 questions are marked, and
+        # E's pairing covers the seven it ran.
+        pairing = report["paired_against_a_by_question"]
+        assert set(pairing) == {
+            question["id"]
+            for question in runner.load_questions()}
+        for question_id, row in pairing.items():
+            assert row["stage1"] == (
+                question_id in runner.STAGE1_QUESTION_IDS)
+            assert set(row) >= {"stage1", "A", "D",
+                                "F", "E"}
+            if question_id not in runner.STAGE1_QUESTION_IDS:
+                assert row["E"] == 0
+        # The exhibits show in the pairing: arm A's
+        # refusal on Q6 costs it one of its three,
+        # and its serving error on Q16 another.
+        assert pairing["Q6"]["A"] == 2
+        assert pairing["Q16"]["A"] == 2
+        assert pairing["Q23"]["A"] == 2
+        assert pairing["Q15"]["D"] == 2
+        # Table 4 - the medians, per arm, over the
+        # units that ran (a skipped unit never
+        # started, so it has no cost or latency to
+        # median).
+        medians = report["median_cost_and_latency"]
+        assert medians["A"]["units"] == 75
+        assert medians["D"]["units"] == 74
+        assert medians["F"]["units"] == 74
+        assert medians["E"]["units"] == 21
+        for row in medians.values():
+            assert row["median_cost"] is not None
+            assert row["median_seconds"] is not None
+        # Table 5 - F's first answer against its
+        # final one (prediction 9): three units
+        # revised - one wrong-to-right, one
+        # right-to-wrong, one wrong-to-wrong - and
+        # the prediction is reported, not tested,
+        # until five units revise.
+        first_vs_final = report["f_first_vs_final"]
+        assert first_vs_final["revised_units"] == 3
+        assert first_vs_final["transitions"] == {
+            "right_to_right": 0,
+            "right_to_wrong": 1,
+            "wrong_to_right": 1,
+            "wrong_to_wrong": 1,
+            "no_first_answer": 0}
+        assert first_vs_final["testable"] is False
+        # Table 6 - the unresolved candidates: E's
+        # two (the unendorsed candidate and the
+        # approved draft that never shipped) and F's
+        # one (its unendorsed candidate), each read
+        # against the arm's delivered answers.
+        unresolved = report["unresolved_candidates"]
+        assert unresolved["E"]["unresolved_count"] == 2
+        assert unresolved["F"]["unresolved_count"] == 1
+        assert unresolved["E"]["candidates_scored"] == 2
+        assert unresolved["F"]["candidates_scored"] == 1
+        # Table 7 - repetition agreement against
+        # correctness (prediction 8): every arm's
+        # questions are classified, and a question
+        # where no repetition states a quantity is
+        # counted apart, not as agreement.
+        agreement = report[
+            "repetition_agreement_vs_correctness"]
+        for arm, row in agreement["arms"].items():
+            assert row["agree_held"] >= 0
+            assert row["disagree_held"] >= 0
+            assert row["no_quantities"] >= 1
+            assert set(row) >= {
+                "agree_held", "agree_missed",
+                "disagree_held", "disagree_missed",
+                "no_quantities"}
+        # Table 8 - the unanchored blocks (prediction
+        # 3's exhibit): none of the mocked units
+        # dissented without an anchor, so no arm
+        # shows the class - and the table still
+        # computed its subject (the units it watched).
+        unanchored = report["unanchored_blocks"]
+        for arm in ("E", "F"):
+            assert unanchored["arms"][arm]["units"] > 0
+            assert (unanchored["arms"][arm]
+                    ["units_with_unanchored_blocks"]
+                    == 0)
+        # Break-proof (runner.py, remeasure_report,
+        # table 1):
+        #     delivered = [r for r in arm_records
+        #                  if _delivered(r)]
+        #     -> delivered = arm_records
+        # FAILED ...::test_the_report_carries_the_eight_
+        # tables - AssertionError: assert 75 == 73 :
+        # the per-arm table counted every planned unit
+        # as delivered - the refusal, the serving
+        # error, the deadline and the provider failure
+        # would have read as delivered answers, and
+        # the delivered-correct rate would have been
+        # computed over a denominator that includes
+        # units that never delivered.
+
+    def test_the_report_recomputes_from_the_records(
+            self, tmp_path):
+        # The report's figures re-derive from the
+        # units' own records - none is carried in
+        # from anywhere else. The dry run's records,
+        # re-reported through the public function,
+        # are the report the run wrote.
+        saved_results_dir = runner.RESULTS_DIR
+        runner.RESULTS_DIR = tmp_path
+        try:
+            result = _run(runner.dry_run())
+        finally:
+            runner.RESULTS_DIR = saved_results_dir
+        remeasurement = result["remeasurement"]
+        written = json.loads(Path(remeasurement["report"][
+            "path"]).read_text(encoding="utf-8"))
+        questions = {q["id"]: q
+                     for q in runner.load_questions()}
+        recomputed = runner.remeasure_report(
+            remeasurement["records"], questions,
+            scorer.KEYS)
+        assert recomputed == written
+        # Break-proof (runner.py, dry_run):
+        #     remeasurement_report = remeasure_report(
+        #         remeasurement["records"], questions,
+        #         scorer.KEYS)
+        #     -> remeasurement_report = {"per_arm": {}}
+        # FAILED ...::test_the_report_recomputes_from_
+        # the_records - AssertionError: dicts differ :
+        # the report the run wrote was not computed
+        # from the records - a hand-carried figure
+        # would have survived a record change that
+        # should have moved it.
+
+
+# ── (o) The re-measurement's preflight ────────
+
+class TestOTheReMeasurePreflight:
+    """Command 121's preflight (criterion (h)):
+    free, before the first unit, printing each
+    arm's worst case within its ceiling — arm F's
+    verify-first calls on the standing tiers,
+    against its $0.20 per-unit ceiling, at the
+    same standing caps the arm-E table carries
+    (D51 (8) leaves the tiers, the pins, the
+    budgets and the loop bounds untouched)."""
+
+    def test_the_arm_f_worst_case_bounds_the_sequence(
+            self):
+        rows = runner.arm_f_worst_case(
+            TEST_SERVINGS, _fixture_catalogue())
+        # The three tiers the workflow calls, then
+        # the sequence their counts compose.
+        assert [row["tier"] for row in rows] == [
+            "triage", "engineering", "judge",
+            "sequence"]
+        # The per-call worst case on a tier is the
+        # figure the arm-E table carries: the same
+        # standing tiers, the same standing caps.
+        # The tier's own worst case is the
+        # workflow's call count on it times the
+        # per-call worst.
+        e_rows = {row["tier"]: row
+                  for row in runner.arm_e_worst_case(
+                      TEST_SERVINGS, _fixture_catalogue())}
+        for row in rows[:3]:
+            assert row["calls"] == 2
+            assert row["unit_ceiling"] == 0.20
+            assert row["worst_case"] == pytest.approx(
+                e_rows[row["tier"]]["worst_case"])
+            assert row["tier_worst_case"] == pytest.approx(
+                2 * row["worst_case"])
+        # The sequence: six calls, the sum the
+        # counts compose, against the $0.20 ceiling.
+        sequence = rows[3]
+        assert sequence["calls"] == 6
+        assert sequence["worst_case"] == pytest.approx(
+            sum(row["tier_worst_case"]
+                for row in rows[:3]))
+        # The fixture's rates put every worst case
+        # within the ceiling: the preflight passes,
+        # and the table says the sequence is
+        # refusable above the headroom the ceiling
+        # leaves.
+        assert sequence["worst_case"] <= 0.20
+        assert not sequence["refuses_even_at_zero_spend"]
+        assert sequence["refusable_above_spend"] == (
+            pytest.approx(0.20 - sequence["worst_case"]))
+        # A punitive completion rate on the judge
+        # tier puts the sequence over the ceiling,
+        # and the table says so: refused even at
+        # zero spend.
+        catalogue = _fixture_catalogue()
+        for entry in catalogue:
+            if entry["id"] == TEST_SERVINGS["E"]["judge"]:
+                entry["pricing"]["completion"] = "0.001"
+        rows = runner.arm_f_worst_case(
+            TEST_SERVINGS, catalogue)
+        assert rows[3]["refuses_even_at_zero_spend"]
+        assert rows[3]["worst_case"] > 0.20
+        # Break-proof (runner.py, arm_f_worst_case):
+        #     sequence += calls * worst
+        #     -> sequence += worst
+        # FAILED ...::test_the_arm_f_worst_case_
+        # bounds_the_sequence - AssertionError: the
+        # sequence's worst case was one call's, not
+        # the six the verify-first bound composes -
+        # the preflight would have printed arm F's
+        # worst case under its true figure by the
+        # count the workflow makes, and a lineup
+        # whose sequence exceeded the $0.20 ceiling
+        # would have read as within it.

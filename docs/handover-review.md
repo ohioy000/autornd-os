@@ -13340,3 +13340,78 @@ FREE WORK. No paid call and no .env edit. No git operation while any paid run is
 - Under D45's guard, what is the asks node's worst case at the current triage pin and max_tokens?
 
 - Which consumers of plan.success_criteria exist outside the judges, and what did each become?
+
+## 113. Command 121 — the D51 re-measurement (executor, 2026-10-14, carried by ARCH-20261014-121)
+
+The command's objective, verbatim from the command file
+(`.orchestration/commands/ARCH-20261014-121.json`):
+
+> Register, dry-run and then run the D51 re-measurement: arms A, D and F on all 25 questions x 3, and the D51 pipeline (E') on stage 1's seven x 3, under a $15.00 authorisation.
+
+### 113.1 The plan (the manifest's tier3-8 registration)
+
+- **246 units, interleaved, seed 20261014.** Arms A, D and F over the frozen set's twenty-five questions, three repetitions each (75 units per arm); arm E′ — D51's engineering-rnd after #176, the standing workflow unchanged — over stage 1's seven (Q6, Q10, Q14, Q15, Q16, Q17, Q23), three repetitions each (21 units). The enumeration is (question, repetition, arm) in frozen-set order — A, D and F together, then E′ — then `random.Random(20261014).shuffle` over the list, so no arm runs as a block and time-of-day and serving-load confounds distribute across arms. The order's sha256 is `0fab509676897668994534599dde9581d001b5cc6d4f1e9cdb1b46adc9080065`; the guard test (`tests/test_tier3_runner.py`, `TestKTheReMeasurePlan`) reconstructs the order independently of the runner's own code and compares the digest, and a different seed does not reproduce it. Arms B and C do not run.
+- **The treatments, unchanged from stage 1.** A: one call, no tools, $0.10 a unit. D: one call, no tools, $0.20 a unit, arm A's prompt byte-for-byte. F: verify-first (Ruling D51 (8)) through arm E's path — the same scenario boundary, deadline, delivery reader, accounting and record — at $0.20 a unit and at most 4 model calls after triage and asks (ARM_F_CALL_LIMIT is 6 in total: triage's two calls carry the triage and the asks, then answer, check, revision, check). E′: arm E unchanged, $0.50 a unit. The common deadline is 1800 s; isolation per unit, the retry rules and the failure treatment are stage 1's.
+- **The authorization.** $15.00 (the owner's "ok on spend" of 2026-10-14), read from `TIER3_SPEND_AUTHORIZED` in `.env.tier3` (G-3: the owner sets the line; no paid unit runs before it is set); the sweep budget cap is the same $15.00. The compositional ceiling is $48.00 (75×$0.10 + 75×$0.20 + 75×$0.20 + 21×$0.50), so the authorization binds before the plan does: the sweep stops at $15.00 and the fit rule records the rest as skipped, never drops them.
+- **The scoring.** The scorer version on main when the run starts — frozen-2026-10-03.3, the version #171 put there (verified against `evals/tier2/versions.json` before any unit) — with the frozen keys v1. K1 is not ruled: the report carries key-strict as the primary column and 3 s.f. side by side (Q23's two force items re-scored at ±0.05 kN for the 3 s.f. column only, the tolerance that accepts every 3 s.f. rounding).
+- **The reading.** The reading sheet holds every scorer FAIL and a seeded sample of 10 PASS per arm, without arm labels, under the re-measurement's own seed (20261014). Reading 2 is the executor's: blind, committed before the advisor's reading 1 (D50's) is opened.
+
+### 113.2 The pre-registration, verbatim
+
+The D51 record (`docs/reviews/2026-10-10-d51-the-request-is-the-yardstick.md`), committed before any paid unit of this run and never edited afterwards (convention 7: each prediction is reported as it reads). The two sections below are copied byte for byte — the whole of section 9 (the nine predictions) and the whole of section 7 (the sequence and the decision table the re-measurement makes). A test (`tests/test_tier3_manifest.py`, `TestThePreRegistration`) extracts each section from the record with the record's own section rule, asserts the manifest's copy and this notebook's copy are byte-identical to it, and asserts the sha256 of each copy equals the sha256 of the record's own section: section 9 `d0406b0a7e8cbc41a04d71bbebe1b20c6a634468e4a2483d809d6fd3f37e9561`, section 7 `64961cd5cd2b69a48cb33c302421734db2585bbc144c6789c737ab48eae3cb39`.
+
+Section 9, verbatim:
+
+<<<
+## 9. Predictions
+
+Committed before 120 is built. Each is reported as it reads, never adjusted afterwards (convention 7).
+
+1. **E′ holds at least 14 of 21** key-strict answers on stage 1's seven questions (stage 1: 0). With 3 s.f. accepted (K1), at least 16. Its remaining losses will be mostly Q23 under the strict key, because the engineering serving rounds to 3 s.f. (arm C lost all three Q23 units that way). The rest will show in the record as anchored dissents that escalation overrules.
+2. **E′'s median unit costs at most $0.15 and takes at most 400 s** (stage 1: $0.371 and 911 s).
+3. **No E′ or F record shows a block, failure or loop iteration caused by a judgment with no anchor.** Any instance is an implementation defect, not a finding.
+4. **F is at least A − 1 on the seven questions under both key versions, and at least A − 2 on all 25** (key-strict).
+5. **F omits Q15's zeroing step in at most 1 of 3 units** (arm A: 2 of 3).
+6. **F's median unit costs at most $0.05,** and at most 5× arm A's median.
+7. **If F leaves 5 or more answers unresolved,** those candidates read wrong at a higher rate than F's delivered answers. Below 5, this is reported, not tested.
+8. **Agreement predicts correctness (for P5).** On the 25 × 3, a question where all three of an arm's repetitions agree on every asked value is correct more often than one where they disagree.
+9. **F's check helps more than it hurts.** Among F units whose check forced a revision, more go from a wrong first answer to a right final answer than from right to wrong. If fewer than 5 units are revised, this is reported, not tested.
+
+>>>
+
+Section 7, verbatim:
+
+<<<
+## 7. The sequence
+
+| when | step | owner of the step |
+|---|---|---|
+| now → about 10-13 | The repair round: #165, #167, #170 rebased; #160, #171 fixed | executor, then advisor review |
+| about 10-13 → 10-18 | Command 120: D51 and verify-first, free work | executor, then advisor review by probe |
+| about 10-19 → 10-20 | Command 121: the re-measurement's manifest, pre-registration and mocked dry run | advisor writes, executor builds |
+| before the run | Spend authorisation; K1 key version or not; pins unchanged | **owner** |
+| about 10-21 | The run, overnight | owner launches |
+| about 10-22 → 10-24 | Two readings, resolution, verdict, the decision below | advisor and executor |
+
+**After 120 merges, the harness is frozen** until the re-measurement finishes. Only fixes that stop the run from working go in.
+
+**The decision the re-measurement makes:**
+
+| outcome | what it means | next |
+|---|---|---|
+| Pipeline within 2 of A, verify-first at least A − 1 | The yardstick was the cause, and structure no longer harms. | Verify-first becomes the closed-question candidate default; P3/P4 go into it; the pipeline is tested on tier 4 (P8). |
+| Pipeline trails A by 7 or more, verify-first at least A − 1 | The pipeline is not the closed-question lane. | Retire it from closed questions; verify-first is the product there; tier 4 decides the pipeline's fate. |
+| Verify-first trails A by 2 or more | Structure still harms closed questions. | Read the anchored dissents; measure each judge's false-fail rate; decide P6 on the escalation rulings. |
+| Verify-first beats A | The first evidence that structure adds accuracy here. | Build P3 and P5 into it, and test on harder sets. |
+
+>>>
+
+### 113.3 The mocked dry run (the command's pre-registration check)
+
+All 246 units through the real machinery with the model-serving layer replaced by the runner's own doubles — no network, no spend (the suite's guard refuses every non-loopback socket). The census: delivered 239; refusal 1 (Q6 r1 A, a serving that chose to answer nothing); serving_error 1 (Q16 r1 A, an empty reply with finish "error" — the serving's own failure, never a refusal, R2); deadline 1 (Q10 r1 D, a call that outlasts the unit's shortened deadline, cancelled by the runner's backstop); incomplete 2 (Q14 r1 D, a serving that consumed its budget and emitted nothing — the provider-failure class); budget_stop 2 (the sweep stopped at $14.94 of $15.00 on the real fit rule, and the units after the stop — Q5 r3 F and Q16 r2 D — are recorded as skipped with the budget's own words as their stop reason, never dropped). The delivery kinds: shipped 91; approved, not shipped 1 (Q23 r1 E); no answer 2 (Q6 r1 E, and the refusal's own class); unendorsed candidate 2 (Q17 r1 F with one anchored dissent, and Q10 r1 E with two anchored dissents and the escalation's ruling on each — one upheld, one not). The reading sheet (48 entries, ten sampled per arm) and the report (the eight tables) are generated; the report's eight tables are the per-arm delivered-correct counts (key-strict and 3 s.f. side by side), Q1-Q5 separate, each arm paired against A by question, the medians, F's first answer against its final, the unresolved candidates, repetition agreement against correctness, and the unanchored blocks. The dry run's figures are the machinery's proof, not a prediction's answer: the predictions are tested on the paid run's data, never on the mock's.
+
+### 113.4 The acceptance criteria, the verification and the question the command asks
+
+The command's criteria (a)–(j), as registered: the manifest registering the arms, units, questions, seed, deadline, ceilings, the $15.00 authorization, the scorer version and the reading rule exactly as constrained; the plan — the runner builds exactly 246 units in the seeded order, and a guard test rebuilds the order independently and matches the sha256; arm F runs verify-first through arm E's path, a mocked F unit's record shows workflow verify-first, at most 4 model calls after triage and asks, and its iteration answers (first and final); the record — each E′ and F unit carries the anchored and demoted asks, every dissent with its anchor, the notes count, the escalation's rulings, the candidate, and every iteration's answer, shown on mocked units; the pre-registration above, with a test asserting the sha256 of the copied sections equals that of sections 9 and 7 of the D51 record; the mocked dry run of all 246 units at zero spend with every failure class at least once and the reading sheet and report generated; the report's tables; the preflight free, printing each arm's worst case within its ceiling; the suite green before and after with the counts re-derived, CI green, the PR opened and the advisor's merge; and after the merge and the owner's gate line, the 246 units run, the results are copied byte-identical to `docs/traces/` with the sha256 quoted, the reading sheet is generated, and the spend, the units and the failures are recorded in the response.
+
+**The question the command asks the executor to report — the expected spend from the dry run's worst cases and stage 1's medians, with no ceiling adjusted.** The worst cases are the per-unit ceilings: they compose to $48.00 over the 246 units, so the $15.00 authorization is the binding constraint on the worst case — the sweep cannot spend more than $15.00, and the fit rule skips what it cannot guarantee. At stage 1's medians (docs/traces/20261005T215237Z-tier3-run.jsonl: arm A $0.006418 a unit, arm D $0.012375, arm E $0.370938), the expected spend is 75×$0.006418 + 75×$0.012375 + 21×$0.370938 = $9.20 for arms A, D and E′, plus arm F's 75 units at the design record's own bound (prediction 6: at most $0.05 a unit; F has no stage-1 median — it is the new arm) = at most $3.75, for a total of at most $12.95 — under the $15.00 authorization with $2.05 of headroom. No ceiling was adjusted.

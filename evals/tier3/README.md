@@ -260,12 +260,16 @@ recorded manifest version or order digest differs from this run's.
 `evals/tier3/runner.py`, on the command line:
 
 ```
-.venv/bin/python3 -m evals.tier3.runner preflight [--pilot]   # gates + preflight, free
+.venv/bin/python3 -m evals.tier3.runner preflight [--pilot] [--remeasure]
+                                             # gates + preflight, free
 .venv/bin/python3 -m evals.tier3.runner worst-case            # arm-E table, free
 .venv/bin/python3 -m evals.tier3.runner dry-run               # mocked runs, free
 .venv/bin/python3 -m evals.tier3.runner run [--results-file PATH]      # paid
 .venv/bin/python3 -m evals.tier3.runner pilot [--results-file PATH]    # paid
+.venv/bin/python3 -m evals.tier3.runner remeasure [--results-file PATH]
+                                             # the 246-unit re-measurement, paid
 .venv/bin/python3 -m evals.tier3.runner reading-sheet RESULTS_FILE     # free
+.venv/bin/python3 -m evals.tier3.runner remeasure-report RESULTS_FILE  # free
 ```
 
 The dry run proves the whole machinery at zero cost: the same runner, a mocked lineup
@@ -316,3 +320,70 @@ The measured findings, in the command's own terms:
   per-request charge once per call ($0.0140, $0.0140 and $0.0050).
 - **Arms A–D:** every arm's worst-case sequence fits its per-unit ceiling at
   the catalogue's rates — no refusal, so the preflight prints no A–D table.
+
+## The D51 re-measurement (command 121, manifest `tier3-8`)
+
+Ruling D51 made the request the only yardstick the harness judges against, and
+added the **verify-first workflow** (`workflows/verify-first.yaml`): triage, the
+asks and their free anchoring check, one answer on the engineering tier from the
+request and the asks with no plan, the free checks, and one check on the judge
+tier — at most four model calls after triage and asks. The re-measurement
+measures what the yardstick changed: **246 units, interleaved, seed 20261014** —
+arms **A, D and F over the frozen set's twenty-five questions** (75 units each,
+three repetitions) and arm **E′** (D51's engineering-rnd after #176, the
+standing workflow unchanged) **over stage 1's seven** (21 units, three
+repetitions). Arms B and C do not run. The order is the enumeration (question,
+repetition, arm) in frozen-set order — A, D and F together, then E′ — then
+`random.Random(20261014).shuffle`, so no arm runs as a block; its sha256
+(`0fab509676897668…`) is recorded in the results header, and a guard test
+reconstructs the order independently of the runner's implementation.
+
+**Arm F** is verify-first through **arm E's path**: the same scenario boundary,
+deadline, delivery reader, accounting and record, with the verify-first workflow
+as the graph instead of the standing one. It runs on arm E's standing tiers (the
+owner's one ratified fingerprint covers both arms), at **$0.20 a unit** and at
+most **4 model calls after triage and asks** (ARM_F_CALL_LIMIT is 6 in total:
+the triage tier's two calls carry the triage and the asks, then answer, check,
+revision, check — the bound is declared in the workflow, not a setting). Its
+record carries the workflow's name and the calls after the asks, beside the
+iteration answers (first and final), so the readers can say what the check
+changed (the design record's prediction 9).
+
+The re-measurement's own registrations, all in the manifest under `tier3-8`:
+
+- **The authorization: $15.00** (the owner's, 2026-10-14), read from
+  `TIER3_SPEND_AUTHORIZED` in `.env.tier3` — the same pin the main run reads,
+  but the re-measurement's gate names its own $15.00 ceiling. The compositional
+  ceiling is $48.00 (75×$0.10 + 75×$0.20 + 75×$0.20 + 21×$0.50), so the
+  authorization binds first: the sweep stops at $15.00 and the fit rule records
+  the rest as skipped, never drops them. **No paid unit runs before the owner
+  sets the line.**
+- **The scorer:** the version on main when the run starts — `frozen-2026-10-03.3`
+  (the clause-repair version #171 put there), keys v1. **K1 is not ruled**: the
+  report carries key-strict as the primary column and 3 s.f. side by side (Q23's
+  two force items re-scored at ±0.05 kN for the 3 s.f. column only).
+- **The pre-registration:** the D51 record's section 9 (the nine predictions)
+  and section 7 (the sequence and the decision table), copied byte for byte into
+  the manifest and the lab notebook's §113, with their sha256s — a test asserts
+  each copy equals the record's own section, extracted with the record's own
+  section rule. Committed before any paid unit; never edited afterwards
+  (convention 7).
+- **The report's eight tables:** per-arm delivered-correct of planned units
+  (key-strict and 3 s.f. side by side), Q1-Q5 shown separately, each arm paired
+  against A by question, median cost and latency per arm, F's first answer
+  against its final, the unresolved candidates (read against the delivered
+  answers, prediction 7), repetition agreement against correctness (prediction 8),
+  and the unanchored blocks (prediction 3's exhibit).
+- **The record, per unit (D51):** the anchored and demoted asks, every dissent
+  with its anchor, the notes count, the escalation's rulings, the candidate (an
+  unendorsed candidate is read and reported, never counted as delivered), and
+  every iteration's answer.
+
+The re-measurement's dry run (the mocked 246-unit plan, zero spend) exercises
+every failure class the command names — refusal, serving error, deadline,
+provider failure and the budget stop (the fit rule, on the real rule, inside a
+deterministic tail whose ceilings sum past the authorization) — plus every
+delivery kind, and generates the reading sheet and the report. The preflight
+(`preflight --remeasure`) prints each arm's worst case within its ceiling, arm
+F's included: the verify-first sequence's worst case against the $0.20 per-unit
+ceiling, at the same standing caps the arm-E table carries.

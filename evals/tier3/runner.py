@@ -39,6 +39,7 @@ import argparse
 import ast
 import asyncio
 import contextlib
+import copy
 import functools
 import hashlib
 import json
@@ -46,6 +47,7 @@ import math
 import os
 import random
 import re
+import statistics
 import sys
 import time
 from dataclasses import dataclass, field
@@ -99,19 +101,29 @@ from autornd.routing.openrouter import (           # noqa: E402
 )
 
 __all__ = [
-    "ARM_CEILINGS", "ARMS", "DEADLINE_SECONDS", "PILOT_ARMS",
+    "ARM_CEILINGS", "ARM_F_CALL_LIMIT", "ARMS",
+    "DEADLINE_SECONDS", "DRY_RUN_PROMPT_RATE",
+    "DRY_RUN_COMPLETION_RATE", "PILOT_ARMS",
     "PILOT_CEILING", "PILOT_SEED", "PILOT_REPETITIONS",
     "REGISTERED_MAX_TOKENS", "REGISTERED_TEMPERATURE",
-    "SELECTION_SEED", "SEED", "STAGE1_QUESTION_IDS",
+    "REMEASURE_ARMS", "REMEASURE_CEILING",
+    "REMEASURE_SEED", "SELECTION_SEED", "SEED",
+    "STAGE1_QUESTION_IDS",
     "REPITIONS", "MAIN_CEILING",
-    "CooperationCheckVerdict", "DryRunScript", "ExperimentRefused",
-    "PreflightReport", "Tier3ResultsLog", "Tier3Settings", "UnitResult",
-    "arm_e_worst_case", "build_order", "compute_measures",
+    "CooperationCheckVerdict", "DryRunScript",
+    "ExperimentRefused",
+    "PreflightReport", "Tier3ResultsLog", "Tier3Settings",
+    "UnitResult",
+    "arm_e_worst_case", "arm_f_worst_case",
+    "build_order", "build_remeasure_script",
+    "compute_measures",
     "default_results_path", "dry_run", "export_reading_sheet",
     "fetch_catalogue", "fetch_primary_source", "gate_report",
     "merge_readings", "order_digest", "parse_check_verdict",
-    "recompute", "render_prompt", "resolve_servings", "run_experiment",
-    "run_preflight", "run_unit", "servings_fingerprint", "stage1_questions",
+    "recompute", "remeasure_order", "remeasure_report",
+    "render_prompt", "resolve_servings", "run_experiment",
+    "run_preflight", "run_unit", "servings_fingerprint",
+    "stage1_questions",
     "summarize", "worst_case_cost",
 ]
 
@@ -135,10 +147,33 @@ DEADLINE_SECONDS = 1800.0
 # ratified amount, which the spend gate enforces and the
 # sweep's cap carries, is $30.00 (MAIN_CEILING below). The
 # pilot composes to the $7.50 pilot authorization (25 units
-# per pilot arm).
-ARM_CEILINGS = {"A": 0.10, "B": 0.50, "C": 0.50, "D": 0.20, "E": 0.50}
+# per pilot arm). The re-measurement's ceilings compose to
+# $48.00 (75 + 75 + 75 + 21 units at $0.10/$0.20/$0.20/
+# $0.50) against the owner's $15.00 authorization
+# (REMEASURE_CEILING below).
+ARM_CEILINGS = {"A": 0.10, "B": 0.50, "C": 0.50, "D": 0.20,
+                "E": 0.50, "F": 0.20}
 MAIN_CEILING = 30.00
 PILOT_CEILING = 7.50
+
+# The D51 re-measurement (command ARCH-20261014-121, the
+# manifest's tier3-8 registration): arms A, D and F on all
+# 25 questions x 3 repetitions and the D51 pipeline (E') on
+# stage 1's seven x 3 - 246 units, 75 + 75 + 75 + 21,
+# interleaved under order seed 20261014, under the owner's
+# $15.00 authorisation (2026-10-14, 'ok on spend'). Arms B
+# and C do not run. Arm F is Ruling D51 (8)'s verify-first
+# workflow through arm E's path; arm E' is arm E unchanged -
+# the standing workflow, which after #176 is D51's
+# engineering-rnd.
+REMEASURE_ARMS = ("A", "D", "F", "E")
+REMEASURE_SEED = 20261014
+REMEASURE_CEILING = 15.00
+# Arm F's call bound: triage and asks, then at most 4 model
+# calls after them (answer, check, revision, check) - the
+# verify-first workflow's own max_iterations: 2 bound, which
+# no .env line can widen.
+ARM_F_CALL_LIMIT = 6
 
 # The stage-1 question selection (the owner's 2026-10-05
 # directive, registered in the manifest as tier3-4): the
@@ -320,6 +355,36 @@ def order_digest(order: list[list[Any]]) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
+def remeasure_order(
+        seed: int = REMEASURE_SEED,
+        questions: list[dict[str, Any]] | None = None
+        ) -> list[list[Any]]:
+    """The re-measurement's interleaved order (the manifest's
+    tier3-8 registration, the command's constraint): the 246
+    units enumerated as (question_id, repetition, arm) - A, D
+    and F over the frozen set's 25 questions in frozen-set
+    order, repetition in 1..3, arm in A, D, F; then E' over
+    the seven selected questions in frozen-set order,
+    repetition in 1..3 - then ``random.Random(seed).shuffle``
+    over the list. No arm runs as a block, so time-of-day and
+    serving-load confounds distribute across arms.
+
+    The guard test (tests/test_tier3_runner.py) reconstructs
+    the order with the same enumeration and the same seed;
+    ``order_digest`` is the figure both sides compute.
+    """
+    frozen = load_questions() if questions is None else questions
+    units = [[question["id"], repetition, arm]
+             for question in frozen
+             for repetition in (1, 2, 3)
+             for arm in ("A", "D", "F")]
+    for question_id in STAGE1_QUESTION_IDS:
+        for repetition in (1, 2, 3):
+            units.append([question_id, repetition, "E"])
+    random.Random(seed).shuffle(units)
+    return units
+
+
 # ── The servings map and its fingerprint (G-2) ────────────────────
 
 def resolve_servings(tier3: Tier3Settings) -> dict[str, Any]:
@@ -349,12 +414,17 @@ def servings_fingerprint(servings: dict[str, Any]) -> str:
 
 
 def gate_report(tier3: Tier3Settings, servings: dict[str, Any],
-                fingerprint: str, pilot: bool) -> list[str]:
+                fingerprint: str, pilot: bool,
+                mode: str = "main") -> list[str]:
     """The three ratification gates, as the missing ones.
 
     Empty means every gate holds. Each entry names one missing gate,
     so a refusal says exactly what the owner must set — before any
-    network call (the command's gate text).
+    network call (the command's gate text). The spend gate names
+    the run's own authorization: the main run's $30.00, the pilot's
+    $7.50, or the re-measurement's $15.00 (the manifest's tier3-8
+    registration), each read from the TIER3_* pin the owner sets in
+    .env.tier3.
     """
     missing: list[str] = []
     if not tier3.tier3_servings_ratified:
@@ -370,10 +440,21 @@ def gate_report(tier3: Tier3Settings, servings: dict[str, Any],
             f"TIER3_ARM_A ({tier3.tier3_arm_b!r} vs {tier3.tier3_arm_a!r}) "
             "— arm B isolates the tool treatment, so the two pins must "
             "name the same serving")
-    authorization = (tier3.tier3_pilot_authorized if pilot
-                     else tier3.tier3_spend_authorized)
-    ceiling = PILOT_CEILING if pilot else MAIN_CEILING
-    name = "TIER3_PILOT_AUTHORIZED" if pilot else "TIER3_SPEND_AUTHORIZED"
+    if mode == "remeasure":
+        authorization = tier3.tier3_spend_authorized
+        ceiling = REMEASURE_CEILING
+        name = "TIER3_SPEND_AUTHORIZED"
+        label = "re-measurement's"
+    elif pilot:
+        authorization = tier3.tier3_pilot_authorized
+        ceiling = PILOT_CEILING
+        name = "TIER3_PILOT_AUTHORIZED"
+        label = "pilot's"
+    else:
+        authorization = tier3.tier3_spend_authorized
+        ceiling = MAIN_CEILING
+        name = "TIER3_SPEND_AUTHORIZED"
+        label = "main run's"
     if not authorization:
         missing.append(f"{name} is not set")
     else:
@@ -381,12 +462,11 @@ def gate_report(tier3: Tier3Settings, servings: dict[str, Any],
             if float(authorization) < ceiling:
                 missing.append(
                     f"{name} is {float(authorization):.2f}, below the "
-                    f"{pilot and 'pilot' or 'main run'}'s authorization "
-                    f"ceiling ${ceiling:.2f}")
+                    f"{label} authorization ceiling ${ceiling:.2f}")
         except ValueError:
             missing.append(
                 f"{name} is {authorization!r}, which is not a dollar "
-                f"amount (the {pilot and 'pilot' or 'main run'} is "
+                f"amount (the {label} is "
                 f"authorized at ${ceiling:.2f})")
     return missing
 
@@ -985,6 +1065,108 @@ def arm_e_worst_case(servings: dict[str, Any],
     return rows
 
 
+def arm_f_worst_case(servings: dict[str, Any],
+                     catalogue: list[dict[str, Any]]
+                     ) -> list[dict[str, Any]]:
+    """The re-measurement's arm F: the worst case per
+    call on each standing tier the verify-first workflow
+    calls, with the workflow's own call count on that
+    tier, against the $0.20 per-unit ceiling.
+
+    Arm F runs arm E's path on arm E's standing tiers —
+    the same pins, the same standing caps (D51 (8)
+    leaves the tiers, the pins, the budgets and the loop
+    bounds untouched), so the per-call worst case on a
+    tier is the figure the arm-E table carries. What
+    differs is how many calls the workflow makes on it:
+    the triage tier carries the triage and the asks
+    (two calls), and the verify loop runs the answer and
+    the check at most twice (two engineering, two judge)
+    — the registered bound, at most four model calls
+    after triage and asks. The sequence's worst case is
+    the sum those counts compose, against arm F's
+    ceiling; a sequence whose worst case exceeds it
+    refuses even at zero spend, the way the arm-E
+    table's rows say. The prompt side is the largest
+    prompt this experiment's entry point carries, as the
+    arm-E table's is: a floor, with the guard's call-time
+    computation the binding check.
+    """
+    index = catalogue_index(catalogue)
+    question = _largest_question()
+    prompt_bytes = _prompt_bytes(question)
+    # The verify-first workflow's calls on each tier:
+    # the triage and the asks on the triage tier, the
+    # answer and its revision on the engineering tier,
+    # the check and its re-check on the judge tier.
+    counts = {"triage": 2, "engineering": 2, "judge": 2}
+    rows: list[dict[str, Any]] = []
+    sequence = 0.0
+    for tier in ("triage", "engineering", "judge"):
+        serving = servings["E"][tier]
+        cap = _tier_output_cap(tier)
+        calls = counts[tier]
+        entry = _resolve_entry(index, serving)
+        if entry is None:
+            rows.append({"tier": tier, "serving": serving,
+                         "cap": cap, "calls": calls,
+                         "unknown": True,
+                         "reason": "not in the provider "
+                                   "catalogue"})
+            continue
+        reason = _unboundable_reason(entry)
+        if reason is not None:
+            rows.append({"tier": tier, "serving": serving,
+                         "cap": cap, "calls": calls,
+                         "unknown": True, "reason": reason})
+            continue
+        prompt_rate, completion_rate = _rates(
+            index, serving, f"arm F/{tier}")
+        per_request = _per_request_charge(entry)
+        worst = worst_case_cost(prompt_rate, completion_rate,
+                                prompt_bytes, cap, per_request)
+        sequence += calls * worst
+        # The guard refuses the call when the worst case
+        # exceeds what remains, so the tier's calls are
+        # refusable once the unit has spent more than the
+        # ceiling minus the tier's worst case.
+        rows.append({
+            "tier": tier,
+            "serving": serving,
+            "cap": cap,
+            "calls": calls,
+            "prompt_rate": prompt_rate,
+            "completion_rate": completion_rate,
+            "per_request_charge": per_request,
+            "priced_as": entry["id"],
+            "worst_case": worst,
+            "tier_worst_case": calls * worst,
+            "unit_ceiling": ARM_CEILINGS["F"],
+            "refuses_even_at_zero_spend": worst > ARM_CEILINGS["F"],
+            "refusable_above_spend": max(
+                0.0, ARM_CEILINGS["F"] - worst),
+            "endpoint_max_completion_tokens": entry.get(
+                "max_completion_tokens"),
+        })
+    # The bound the workflow's own counts compose: the
+    # whole sequence's worst case, against the per-unit
+    # ceiling. The bound is declared in the workflow, not
+    # a setting, so no .env line can widen it.
+    rows.append({
+        "tier": "sequence",
+        "serving": ("the verify-first bound: 2 triage + "
+                    "2 engineering + 2 judge"),
+        "calls": 6,
+        "worst_case": sequence,
+        "unit_ceiling": ARM_CEILINGS["F"],
+        "refuses_even_at_zero_spend": (
+            sequence > ARM_CEILINGS["F"]),
+        "refusable_above_spend": max(
+            0.0, ARM_CEILINGS["F"] - sequence),
+    })
+    return rows
+
+
 # ── Arm B's tools (D50 (5)) ───────────────────────────────────
 #
 # The source tool is closed-world: it answers from the
@@ -1442,19 +1624,27 @@ class UnitResult:
     # (verdicts, dissent, findings), the escalation verdict,
     # the tokens by tier and the watchdog's typed record.
     pipeline: dict[str, Any] | None = None
+    # Arms E and F: the workflow the unit ran (the standing
+    # engineering-rnd for E, verify-first for F) and the model
+    # calls after triage and asks - the figure the re-
+    # measurement's criterion (c) bounds at 4 for arm F.
+    workflow: str | None = None
+    calls_after_asks: int | None = None
     stop_reason: str | None = None
     error: str | None = None
     unreconciled_liability: float = 0.0
 
     @property
     def delivered(self) -> bool:
-        """Whether the unit delivered an answer. Arm E delivers
-        only what the harness ships (D50 (3)): a judge-approved
-        draft that has not shipped is scored and reported beside
-        the delivered count, never counted as delivered."""
+        """Whether the unit delivered an answer. Arms E and F
+        deliver only what the harness ships (D50 (3)): a
+        judge-approved draft that has not shipped is scored and
+        reported beside the delivered count, never counted as
+        delivered."""
         if self.status != "delivered":
             return False
-        return self.arm != "E" or self.delivered_kind == "shipped"
+        return self.arm not in ("E", "F") or (
+            self.delivered_kind == "shipped")
 
     def record(self) -> dict[str, Any]:
         return {
@@ -1479,6 +1669,8 @@ class UnitResult:
             "tool_invocations": self.tool_invocations,
             "check": self.check,
             "pipeline": self.pipeline,
+            "workflow": self.workflow,
+            "calls_after_asks": self.calls_after_asks,
             "stop_reason": self.stop_reason,
             "error": self.error,
             "unreconciled_liability": self.unreconciled_liability,
@@ -1749,6 +1941,55 @@ async def _arm_e(question: str, question_id: str, repetition: int,
     return run, answer, kind
 
 
+async def _arm_f(question: str, question_id: str, repetition: int,
+                 deadline: float, budget: SweepBudget | None,
+                 spec, settings_lookup_dict: dict[str, Any],
+                 client_factory: Any,
+                 scenario_runner: Any = None,
+                 ) -> tuple[Any, str | None, str]:
+    """Arm F (D51 (8)): verify-first through arm E's
+    path — the same boundary arm E runs (the scenario,
+    the deadline, the delivery reader, the accounting,
+    the record), with Ruling D51 (8)'s verify-first
+    workflow as the graph instead of the standing one.
+
+    The workflow answers once and checks against the
+    asks: triage, the asks and their anchoring check,
+    grounding, one answer on the engineering tier from
+    the request and the asks with no plan, the free
+    checks, and one check on the judge tier — at most 4
+    model calls after triage and asks. A run with no
+    anchored dissent ends completed; otherwise one
+    revision addresses only the anchored dissents, then
+    the free checks and one more check, and a dissent
+    that survives ends the run escalated and unresolved,
+    with its candidate kept under D51 (7).
+    """
+    scenario = Scenario(
+        id=f"tier3_f_{question_id}_r{repetition}",
+        request=question,
+        description=(f"tier-3 arm F unit: question {question_id}, "
+                     f"repetition {repetition}, the verify-first "
+                     f"workflow (D51 (8)) under the standing pins"),
+        workflow="verify-first",
+        timeout=deadline,
+        expect={"max_calls": ARM_F_CALL_LIMIT},
+    )
+    runner = scenario_runner or run_scenario
+    run = await runner(
+        scenario, spec, client_factory, settings_lookup_dict,
+        timeout=deadline, max_spend=ARM_CEILINGS["F"], budget=budget)
+    unit = {
+        "status": getattr(run, "status", None),
+        "verdicts": getattr(run, "verdicts", None),
+        "watchdog": getattr(run, "watchdog", None),
+        "iterations": getattr(run, "iterations", None),
+        "candidate": getattr(run, "candidate", None),
+    }
+    answer, kind = answer_of(unit)
+    return run, answer, kind
+
+
 # ── The unit driver ───────────────────────────────────────────
 
 async def run_unit(unit_key: tuple[str, int, str],
@@ -1762,6 +2003,7 @@ async def run_unit(unit_key: tuple[str, int, str],
                     tool_dispatcher: Any = None,
                     scenario_runner: Any = None,
                     spec: Any = None,
+                    spec_f: Any = None,
                     pipeline_client_factory: Any = None,
                     ) -> UnitResult:
     """One unit, end to end: the arm's treatment under the
@@ -1769,11 +2011,11 @@ async def run_unit(unit_key: tuple[str, int, str],
     the frozen scorer, with every figure the record carries.
 
     The deadline is enforced with ``asyncio.wait_for`` around
-    the whole unit (arm E's run also carries it as its
+    the whole unit (arms E and F's runs also carry it as their
     scenario timeout, so D38's watchdog ends the run by its
-    own terminal and this backstop fires only if the
-    watchdog failed). Arms A-D's spend is booked to the sweep
-    budget here; arm E's is booked inside run_scenario, which
+    own terminal and this backstop fires only if the watchdog
+    failed). Arms A-D's spend is booked to the sweep budget
+    here; arms E and F's is booked inside run_scenario, which
     makes the same decision with the same fit rule.
     """
     question_id, repetition, arm = unit_key
@@ -1785,11 +2027,12 @@ async def run_unit(unit_key: tuple[str, int, str],
     effective_deadline = (deadline_overrides or {}).get(
         unit_key, deadline)
 
-    # The fit rule, decided before any client exists. Arm E's
-    # run_scenario makes the same decision inside itself, with
-    # the same budget object, so the two ceilings compose the
-    # way the harness's sweeps compose them.
-    if (arm != "E" and budget is not None
+    # The fit rule, decided before any client exists. Arms
+    # E and F's run_scenario makes the same decision inside
+    # itself, with the same budget object, so the two
+    # ceilings compose the way the harness's sweeps
+    # compose them.
+    if (arm not in ("E", "F") and budget is not None
             and not budget.can_start(ARM_CEILINGS[arm])):
         result.status = "skipped"
         result.stop_reason = budget.skip(ARM_CEILINGS[arm])
@@ -1815,7 +2058,7 @@ async def run_unit(unit_key: tuple[str, int, str],
                              client_factory=client_factory,
                              tool_dispatcher=tool_dispatcher,
                              scenario_runner=scenario_runner,
-                             spec=spec,
+                             spec=spec, spec_f=spec_f,
                              pipeline_client_factory=(
                                  pipeline_client_factory),
                              client_holder=made),
@@ -1830,7 +2073,7 @@ async def run_unit(unit_key: tuple[str, int, str],
         result.truncated = any(
             reason == "length" for reason in result.finish_reasons)
         if run is not None:
-            # Arm E's accounting is the pipeline run's own.
+            # Arms E and F: the pipeline run's own accounting.
             result.cost = getattr(run, "cost", 0.0) or 0.0
             result.cost_by_tier = dict(
                 getattr(run, "cost_by_tier", {}) or {})
@@ -1847,6 +2090,12 @@ async def run_unit(unit_key: tuple[str, int, str],
             # pipeline's own story - why it ended the way
             # it did.
             result.pipeline = _pipeline_record(run)
+            # The workflow the unit ran and the model calls
+            # after triage and asks (the re-measurement's
+            # criterion (c) bounds arm F's at 4).
+            result.workflow = payload.get("workflow")
+            result.calls_after_asks = payload.get(
+                "calls_after_asks")
         elif client is not None:
             result.cost = client.spend
             result.cost_by_tier = dict(client.spend_by_function)
@@ -1858,10 +2107,24 @@ async def run_unit(unit_key: tuple[str, int, str],
             result.unreconciled_liability = (
                 client.unreconciled_liability)
         # The delivered answer, and the failure classes.
-        if arm == "E":
+        if arm in ("E", "F"):
             kind = payload.get("delivered_kind", "")
             result.delivered_kind = kind
-            if kind == "no answer":
+            if getattr(run, "was_skipped", False) or (
+                    getattr(run, "skipped", False)):
+                # The fit rule stopped this unit before its
+                # first call — run_scenario's own check, the
+                # same rule run_unit applies to arms A-D
+                # above. A unit the sweep never started is
+                # skipped in exactly the sense a not-applicable
+                # one is: counted in its arm's denominator,
+                # never dropped, with the budget's own words
+                # as its stop reason.
+                result.status = "skipped"
+                result.stop_reason = (
+                    getattr(run, "error", None)
+                    or "the sweep's budget stopped the unit")
+            elif kind == "no answer":
                 result.status = "incomplete"
                 result.stop_reason = (
                     f"the pipeline ended without an answer "
@@ -1917,8 +2180,8 @@ async def run_unit(unit_key: tuple[str, int, str],
             # ceiling as liability, the conservative bound on
             # what the unit may have spent.
             if budget is not None:
-                budget.record(ARM_CEILINGS["E"])
-                result.unreconciled_liability += ARM_CEILINGS["E"]
+                budget.record(ARM_CEILINGS[arm])
+                result.unreconciled_liability += ARM_CEILINGS[arm]
     except (ProviderFailure, SpendGuardRefused,
             BudgetExceeded) as exc:
         # A provider that consumed its budget and emitted
@@ -1947,9 +2210,9 @@ async def run_unit(unit_key: tuple[str, int, str],
     # scored as delivered and flagged.
     if result.answer:
         result.scorer = scorer.score(question_id, result.answer)
-    # Arms A-D book their spend to the sweep here; arm E's
-    # run_scenario already booked it.
-    if (arm != "E" and budget is not None
+    # Arms A-D book their spend to the sweep here; arms
+    # E and F's run_scenario already booked it.
+    if (arm not in ("E", "F") and budget is not None
             and result.status not in ("skipped",)):
         budget.record(result.cost)
     return result
@@ -2025,8 +2288,19 @@ def _pipeline_record(run: Any) -> dict[str, Any]:
         "open_dissents": list(
             (getattr(run, "candidate", None) or {}).get(
                 "open_dissents") or []),
+        # Ruling D51 (3): the notes the run counted —
+        # judgments recorded and counted, never blocking
+        # and not sent to the next revision. The harness
+        # counts each demotion by kind (an unanchored ask
+        # quote, an unanchored dissent, a red with no
+        # anchor, a blocked_on entry that names no ask, a
+        # consistency disagreement) in normalised_by_kind;
+        # the count beside them is the notes total.
         "notes": dict(
             getattr(run, "normalised_by_kind", None) or {}),
+        "notes_count": sum(
+            (getattr(run, "normalised_by_kind", None)
+             or {}).values()),
         "candidate": getattr(run, "candidate", None),
     }
 
@@ -2036,7 +2310,11 @@ def _serving_record(arm: str, servings: dict[str, Any]) -> Any:
     if arm == "C":
         return {"model_1": servings["C"][0],
                 "model_2": servings["C"][1]}
-    if arm == "E":
+    if arm in ("E", "F"):
+        # Arm F runs arm E's path on arm E's standing
+        # tiers — the same lineup, so the owner's one
+        # ratified fingerprint covers both arms and the
+        # stage-1 pins serve the whole re-measurement.
         return dict(servings["E"])
     return servings[arm]
 
@@ -2049,6 +2327,7 @@ async def _execute_arm(arm: str, question: str, question_id: str,
                         tool_dispatcher: Any,
                         scenario_runner: Any,
                         spec: Any,
+                        spec_f: Any = None,
                         pipeline_client_factory: Any = None,
                         client_holder: dict[str, Any] | None = None,
                         ) -> dict[str, Any]:
@@ -2101,23 +2380,44 @@ async def _execute_arm(arm: str, question: str, question_id: str,
                 "calls": client.calls,
                 "finish_reasons": finish_reasons,
                 "check": check}
-    # Arm E. The pipeline builds its own clients (run_scenario's
-    # BoundedRunner sets their ceilings from the scenario's
-    # max_calls and the sweep's per-unit cap), so its factory
-    # takes no arguments — a separate seam from the arms A-D
-    # factory above, which names the arm's serving per unit.
+    # Arms E and F. The pipeline builds its own clients
+    # (run_scenario's BoundedRunner sets their ceilings
+    # from the scenario's max_calls and the sweep's
+    # per-unit cap), so its factory takes no arguments —
+    # a separate seam from the arms A-D factory above,
+    # which names the arm's serving per unit. Arm E runs
+    # the standing workflow (the harness's own
+    # engineering-rnd after D51, #176); arm F runs the
+    # same path through the verify-first workflow (D51
+    # (8)), whose build loop is bounded to two
+    # iterations — triage and asks, then at most four
+    # model calls.
     pipeline_factory = (pipeline_client_factory
                         if pipeline_client_factory is not None
                         else (lambda: OpenRouterClient()))
-    run, answer, kind = await _arm_e(
+    arm_spec = spec_f if arm == "F" else spec
+    arm_runner = _arm_f if arm == "F" else _arm_e
+    run, answer, kind = await arm_runner(
         question, question_id, repetition, deadline, budget,
-        spec, settings_lookup(),
+        arm_spec, settings_lookup(),
         pipeline_factory, scenario_runner=scenario_runner)
+    # The model calls after triage and asks: the triage
+    # tier carries both the triage and the asks node,
+    # so every other tier's calls are the ones that
+    # happened after the asks were on the table.
+    calls_after_asks = sum(
+        calls for tier, calls in
+        (getattr(run, "calls_by_tier", {}) or {}).items()
+        if tier != "triage")
     return {"answer": answer, "run": run,
             "delivered_kind": kind,
             "calls": getattr(run, "calls", 0),
             "finish_reasons": [],
-            "tool_invocations": []}
+            "tool_invocations": [],
+            "workflow": (arm_spec.name
+                         if getattr(arm_spec, "name", None)
+                         else None),
+            "calls_after_asks": calls_after_asks}
 
 
 # ── The results log: append-only, with resume ────────────────
@@ -2582,10 +2882,20 @@ def failure_census(records: list[dict[str, Any]]) -> dict[str, int]:
             census[f"check:{record['check'].get('status')}"] = (
                 census.get(f"check:{record['check'].get('status')}",
                            0) + 1)
-        if record["arm"] == "E" and record.get("delivered_kind"):
+        if record["arm"] in ("E", "F") and record.get("delivered_kind"):
             census[f"delivery:{record['delivered_kind']}"] = (
                 census.get(f"delivery:{record['delivered_kind']}",
                            0) + 1)
+        # The budget-stop class: a unit the sweep's fit
+        # rule did not start — its stop reason names the
+        # budget — counted in its arm's denominator, never
+        # dropped (the dry run's proof that the class is
+        # included at least once).
+        if (record.get("status") == "skipped"
+                and "budget" in str(
+                    record.get("stop_reason", "")).lower()):
+            census["budget_stop"] = (
+                census.get("budget_stop", 0) + 1)
         # The tool-failure class: a unit whose tool loop
         # recorded a failed invocation (the tool failed;
         # the model continued without it).
@@ -2597,6 +2907,413 @@ def failure_census(records: list[dict[str, Any]]) -> dict[str, int]:
     return census
 
 
+# ── The re-measurement's report (command 121) ───────
+#
+# The eight tables the manifest's tier3-8 registration
+# lists, computed from the units' own records. Every
+# figure re-derives from the records the run wrote;
+# none is carried in from anywhere else.
+
+def _keys_at_3sf(
+        keys: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The frozen keys with Q23's two force items widened
+    to the tolerance that accepts every 3-significant-figure
+    rounding — K1, not ruled, reported side by side with the
+    key-strict column, never instead of it. 12.35 and 17.65
+    kN at ±0.01 kN become ±0.05 kN, which accepts 12.3 and
+    12.4, and 17.6 and 17.7 kN; every other item scores
+    identically under both columns. A deep copy — the frozen
+    keys the scorer holds are never touched."""
+    widened = copy.deepcopy(keys)
+    for key in widened:
+        if key.get("id") != "Q23":
+            continue
+        for item in key.get("required_items") or []:
+            if str(item.get("item", "")).endswith("force"):
+                item["tolerance_or_variants"] = str(
+                    item.get("tolerance_or_variants", "")
+                ).replace("\\pm0.01", "\\pm0.05")
+    return widened
+
+
+def _delivered(record: dict[str, Any]) -> bool:
+    """The delivered predicate, as the record carries it:
+    arms A-D delivered on status, arms E and F on the
+    delivery kind (D50 (3): an unendorsed candidate is
+    read and reported, never counted as delivered)."""
+    if record.get("arm") in ("E", "F"):
+        return record.get("delivered_kind") == "shipped"
+    return record.get("status") == "delivered"
+
+
+def _verdict(record: dict[str, Any],
+             keys: list[dict[str, Any]]) -> str | None:
+    """The scorer's verdict of the unit's answer against
+    a keys list — None when the unit has no answer to
+    score (an incomplete, refused, deadline or skipped
+    unit is not a FAIL; it is its own failure class)."""
+    answer = record.get("answer")
+    if not answer or not str(answer).strip():
+        return None
+    return scorer.score(
+        record["question_id"], str(answer),
+        keys=keys).get("verdict")
+
+
+def _quantity_signature(answer: str) -> list[tuple[str, float]]:
+    """The answer's stated quantities as the signature
+    repetition agreement is measured on (prediction 8):
+    every (value, unit) pair the answer states, converted
+    to its base unit and rounded, so two answers that
+    state the same values in different units or units of
+    the same dimension agree."""
+    signature: list[tuple[str, float]] = []
+    for value, unit in scorer.extract_quantities(answer):
+        base = scorer._to_base(value, unit)
+        if base is not None:
+            dimension, base_value = base
+            signature.append(
+                (dimension, round(base_value, 6)))
+    return sorted(signature)
+
+
+def _open_dissents(record: dict[str, Any]) -> list[dict[str, Any]]:
+    """The record's open dissents, with their anchors, as
+    the pipeline record carries them (D51 (3), (7))."""
+    return list(((record.get("pipeline") or {}).get(
+        "open_dissents")) or [])
+
+
+def _unanchored_blocks(record: dict[str, Any]) -> list[dict[str, Any]]:
+    """The dissent entries the record carries with no
+    anchor (prediction 3's exhibit): an entry with no ask,
+    no quote and no hazard — a judgment that failed the
+    work without pointing at the request."""
+    return [entry for entry in _open_dissents(record)
+            if entry.get("ask") is None
+            and not str(entry.get("quote") or "")
+            and not entry.get("hazard")]
+
+
+def remeasure_report(records: list[dict[str, Any]],
+                     questions: dict[str, dict[str, Any]]
+                     | list[dict[str, Any]],
+                     keys: list[dict[str, Any]]
+                     ) -> dict[str, Any]:
+    """The re-measurement's report: the eight tables the
+    manifest's tier3-8 registration lists, from the units'
+    own records. ``records`` are the unit records the run
+    wrote (``result.record()``); ``questions`` the frozen
+    set as a dict by id (or a list of the same); ``keys``
+    the frozen keys."""
+    keys_3sf = _keys_at_3sf(keys)
+    if isinstance(questions, dict):
+        question_map = questions
+    else:
+        question_map = {q["id"]: q for q in questions}
+    arms = REMEASURE_ARMS
+
+    # Table 1 — per-arm delivered-correct of planned
+    # units, key-strict (primary) and 3 s.f. side by
+    # side. A skipped unit stays in its arm's
+    # denominator: the fit rule counts it, never drops
+    # it. A unit with no answer has no verdict — its
+    # failure class is its own row in the census, not a
+    # FAIL.
+    per_arm: dict[str, Any] = {}
+    for arm in arms:
+        arm_records = [r for r in records
+                       if r.get("arm") == arm]
+        delivered = [r for r in arm_records
+                     if _delivered(r)]
+        strict = [r for r in delivered
+                  if _verdict(r, keys) == "PASS"]
+        at_3sf = [r for r in delivered
+                  if _verdict(r, keys_3sf) == "PASS"]
+        per_arm[arm] = {
+            "planned": len(arm_records),
+            "delivered": len(delivered),
+            "delivered_correct_key_strict": len(strict),
+            "delivered_correct_3sf": len(at_3sf),
+            "delivered_correct_of_planned_key_strict": (
+                len(strict) / len(arm_records)
+                if arm_records else None),
+            "delivered_correct_of_planned_3sf": (
+                len(at_3sf) / len(arm_records)
+                if arm_records else None),
+            "delivered_correct_of_delivered_key_strict": (
+                len(strict) / len(delivered)
+                if delivered else None),
+            "delivered_correct_of_delivered_3sf": (
+                len(at_3sf) / len(delivered)
+                if delivered else None),
+        }
+
+    # Table 2 — Q1-Q5 shown separately: the five
+    # questions the calibration pilot exposed, where a
+    # single call's own accuracy is the reference the
+    # harness is judged against.
+    calibration_ids = [f"Q{n}" for n in range(1, 6)]
+    calibration: dict[str, Any] = {}
+    for arm in arms:
+        arm_records = [r for r in records
+                       if r.get("arm") == arm
+                       and r.get("question_id")
+                       in calibration_ids]
+        delivered = [r for r in arm_records
+                     if _delivered(r)]
+        strict = [r for r in delivered
+                  if _verdict(r, keys) == "PASS"]
+        at_3sf = [r for r in delivered
+                  if _verdict(r, keys_3sf) == "PASS"]
+        calibration[arm] = {
+            "planned": len(arm_records),
+            "delivered": len(delivered),
+            "delivered_correct_key_strict": len(strict),
+            "delivered_correct_3sf": len(at_3sf),
+        }
+
+    # Table 3 — each arm paired against A, by question:
+    # per question, how many of the arm's three
+    # repetitions held the answer (delivered and
+    # key-strict correct), beside A's own count. E'
+    # ran stage 1's seven only, so its pairing covers
+    # those.
+    pairing: dict[str, dict[str, Any]] = {}
+    for question_id in question_map:
+        row: dict[str, Any] = {
+            "stage1": question_id in STAGE1_QUESTION_IDS,
+        }
+        for arm in arms:
+            arm_records = [
+                r for r in records
+                if r.get("question_id") == question_id
+                and r.get("arm") == arm]
+            row[arm] = sum(
+                1 for r in arm_records
+                if _delivered(r)
+                and _verdict(r, keys) == "PASS")
+        pairing[question_id] = row
+
+    # Table 4 — median cost and median latency per arm,
+    # over the units that ran (a skipped unit never
+    # started, so it has no cost or latency to median).
+    medians: dict[str, Any] = {}
+    for arm in arms:
+        arm_records = [r for r in records
+                       if r.get("arm") == arm
+                       and r.get("status") != "skipped"]
+        costs = [float(r.get("cost") or 0.0)
+                 for r in arm_records]
+        seconds = [float(r.get("seconds") or 0.0)
+                   for r in arm_records]
+        medians[arm] = {
+            "units": len(arm_records),
+            "median_cost": (statistics.median(costs)
+                            if costs else None),
+            "median_seconds": (statistics.median(seconds)
+                               if seconds else None),
+        }
+
+    # Table 5 — F's first answer against its final
+    # answer, among F units whose check forced a
+    # revision (prediction 9): the first iteration's
+    # answer beside the answer the run ended on, both
+    # scored. The prediction is reported, not tested,
+    # when fewer than five units revised.
+    f_units = [r for r in records
+               if r.get("arm") == "F"]
+    transitions = {
+        "right_to_right": 0, "right_to_wrong": 0,
+        "wrong_to_right": 0, "wrong_to_wrong": 0,
+        "no_first_answer": 0,
+    }
+    revised = 0
+    for record in f_units:
+        iterations = list(((record.get("pipeline")
+                            or {}).get("iterations")
+                           or []))
+        answers = [i.get("implement_summary")
+                   for i in iterations
+                   if i.get("implement_summary")]
+        if len(answers) < 2:
+            # One iteration: the check passed (or the
+            # run ended) before any revision, so this
+            # unit is not in the prediction's population.
+            continue
+        revised += 1
+        first, final = answers[0], record.get("answer")
+        if not first or not final:
+            transitions["no_first_answer"] += 1
+            continue
+        first_verdict = scorer.score(
+            record["question_id"], str(first),
+            keys=keys).get("verdict")
+        final_verdict = _verdict(record, keys)
+        if first_verdict == "PASS" and final_verdict == "PASS":
+            transitions["right_to_right"] += 1
+        elif first_verdict == "PASS":
+            transitions["right_to_wrong"] += 1
+        elif final_verdict == "PASS":
+            transitions["wrong_to_right"] += 1
+        else:
+            transitions["wrong_to_wrong"] += 1
+    first_vs_final = {
+        "revised_units": revised,
+        "transitions": transitions,
+        "testable": revised >= 5,
+        "note": ("the prediction is reported, not "
+                 "tested, until five units revise"
+                 if revised < 5 else
+                 "five or more units revised: the "
+                 "prediction is tested"),
+    }
+
+    # Table 6 — the unresolved candidates read
+    # (prediction 7): every unendorsed candidate of E'
+    # and F, with its open dissents and their anchors,
+    # and the candidates' scorer verdicts against the
+    # delivered answers'.
+    candidates: dict[str, Any] = {}
+    for arm in ("E", "F"):
+        unresolved = [
+            r for r in records
+            if r.get("arm") == arm
+            and r.get("delivered_kind") in (
+                "unendorsed candidate",
+                "approved, not shipped")]
+        delivered = [
+            r for r in records
+            if r.get("arm") == arm
+            and r.get("delivered_kind") == "shipped"]
+        wrong = lambda rows: sum(      # noqa: E731
+            1 for r in rows
+            if _verdict(r, keys) == "FAIL")
+        scored = lambda rows: sum(     # noqa: E731
+            1 for r in rows
+            if _verdict(r, keys) is not None)
+        candidates[arm] = {
+            "unresolved_count": len(unresolved),
+            "delivered_count": len(delivered),
+            "candidates_wrong": wrong(unresolved),
+            "candidates_scored": scored(unresolved),
+            "candidates_wrong_rate": (
+                wrong(unresolved) / scored(unresolved)
+                if scored(unresolved) else None),
+            "delivered_wrong": wrong(delivered),
+            "delivered_scored": scored(delivered),
+            "delivered_wrong_rate": (
+                wrong(delivered) / scored(delivered)
+                if scored(delivered) else None),
+            "candidates": [
+                {
+                    "question_id": r["question_id"],
+                    "repetition": r["repetition"],
+                    "delivered_kind": r["delivered_kind"],
+                    "scorer_verdict": _verdict(r, keys),
+                    "open_dissents": [
+                        {
+                            "judge": d.get("judge"),
+                            "ask": d.get("ask"),
+                            "quote": d.get("quote"),
+                            "hazard": d.get("hazard"),
+                        } for d in _open_dissents(r)],
+                } for r in unresolved],
+        }
+
+    # Table 7 — repetition agreement against correctness
+    # (prediction 8): per question and arm, whether all
+    # three repetitions agree on every stated value, and
+    # whether the arm held the question (any repetition
+    # delivered and correct). A question no repetition
+    # states a quantity for carries no agreement signal
+    # and is counted apart, not as agreement.
+    agreement = {"arms": {}}
+    for arm in arms:
+        arm_records = [r for r in records
+                       if r.get("arm") == arm]
+        by_question: dict[str, list[dict[str, Any]]] = {}
+        for record in arm_records:
+            by_question.setdefault(
+                record["question_id"], []).append(record)
+        table = {"agree_held": 0, "agree_missed": 0,
+                 "disagree_held": 0, "disagree_missed": 0,
+                 "no_quantities": 0, "questions": {}}
+        for question_id, rows in sorted(
+                by_question.items()):
+            signatures = [
+                _quantity_signature(str(r.get("answer")
+                                        or ""))
+                for r in rows]
+            held = any(
+                _delivered(r) and _verdict(r, keys)
+                == "PASS" for r in rows)
+            if not any(signatures):
+                table["no_quantities"] += 1
+                verdict = "no_quantities"
+            elif all(s == signatures[0]
+                     for s in signatures):
+                verdict = "agree"
+                if held:
+                    table["agree_held"] += 1
+                else:
+                    table["agree_missed"] += 1
+            else:
+                verdict = "disagree"
+                if held:
+                    table["disagree_held"] += 1
+                else:
+                    table["disagree_missed"] += 1
+            table["questions"][question_id] = {
+                "agreement": verdict, "held": held}
+        agreement["arms"][arm] = table
+
+    # Table 8 — the unanchored blocks per E' and F unit
+    # (prediction 3): every dissent the record carries
+    # with no anchor, per unit. The prediction says
+    # there are none; the table is the exhibit that
+    # would name one.
+    unanchored: dict[str, Any] = {"arms": {}}
+    for arm in ("E", "F"):
+        arm_records = [r for r in records
+                       if r.get("arm") == arm]
+        per_unit = []
+        for record in arm_records:
+            blocks = _unanchored_blocks(record)
+            if blocks:
+                per_unit.append({
+                    "question_id": record["question_id"],
+                    "repetition": record["repetition"],
+                    "unanchored_blocks": [
+                        {"judge": d.get("judge"),
+                         "ask": d.get("ask"),
+                         "quote": d.get("quote"),
+                         "hazard": d.get("hazard")}
+                        for d in blocks],
+                })
+        unanchored["arms"][arm] = {
+            "units": len(arm_records),
+            "units_with_unanchored_blocks": len(per_unit),
+            "units_detail": per_unit,
+        }
+
+    return {
+        "arms": list(arms),
+        "keys": "frozen (the scorer's own, unmodified)",
+        "keys_3sf": ("the frozen keys with Q23's two "
+                     "force items widened to ±0.05 kN "
+                     "(K1, not ruled)"),
+        "per_arm": per_arm,
+        "calibration_q1_q5": calibration,
+        "paired_against_a_by_question": pairing,
+        "median_cost_and_latency": medians,
+        "f_first_vs_final": first_vs_final,
+        "unresolved_candidates": candidates,
+        "repetition_agreement_vs_correctness": agreement,
+        "unanchored_blocks": unanchored,
+    }
+
+
 # ── The experiment driver ──────────────────────────────
 
 def _manifest_version() -> str:
@@ -2606,12 +3323,43 @@ def _manifest_version() -> str:
         return json.load(handle)["versions"]["manifest"]
 
 
+def _pre_registration_digests() -> dict[str, str]:
+    """The pre-registration's two digests, as the
+    manifest's tier3-8 registration carries them: the
+    sha256 of the D51 record's section 9 (the nine
+    predictions) and of its section 7 (the decision
+    table), copied verbatim and committed before any
+    paid unit. The results header names them, so a
+    results file names the pre-registration it was
+    measured against."""
+    with open(TIER3 / "manifest.json",
+              encoding="utf-8") as handle:
+        pre = (json.load(handle)
+               .get("remeasurement", {})
+               .get("pre_registration", {}))
+    return {
+        "predictions_section_9_sha256":
+            pre.get("predictions_section_9_sha256"),
+        "decision_table_section_7_sha256":
+            pre.get("decision_table_section_7_sha256"),
+    }
+
+
 def _standing_spec():
     """The workflow the harness ships, loaded the way the
     eval CLI loads it. Arm E runs the pipeline as it ships."""
     from autornd.graph.spec import load as load_spec
     return load_spec(
         ROOT / "workflows" / f"{harness_settings.autornd_workflow}.yaml")
+
+
+def _verify_first_spec():
+    """The verify-first workflow (Ruling D51 (8)), loaded
+    the same way. Arm F runs the pipeline's own path —
+    arm E's executor, the same tiers, the same pins —
+    through this workflow instead of the standing one."""
+    from autornd.graph.spec import load as load_spec
+    return load_spec(ROOT / "workflows" / "verify-first.yaml")
 
 
 async def run_experiment(
@@ -2640,12 +3388,14 @@ async def run_experiment(
     then re-run.
     """
     pilot = mode == "pilot"
+    remeasure = mode == "remeasure"
     tier3 = Tier3Settings()
     servings = resolve_servings(tier3)
     fingerprint = servings_fingerprint(servings)
 
     # The three ratification gates, before any network call.
-    missing = gate_report(tier3, servings, fingerprint, pilot)
+    missing = gate_report(tier3, servings, fingerprint,
+                            pilot, mode=mode)
     if missing:
         raise ExperimentRefused(
             "the ratification gates are not cleared",
@@ -2661,18 +3411,33 @@ async def run_experiment(
             "the preflight refused to start",
             servings, fingerprint, report.refusals)
 
-    arms = PILOT_ARMS if pilot else ARMS
-    repetitions = PILOT_REPETITIONS if pilot else REPITIONS
-    seed = PILOT_SEED if pilot else SEED
+    arms = (REMEASURE_ARMS if remeasure
+            else PILOT_ARMS if pilot else ARMS)
+    repetitions = (REPITIONS if remeasure or not pilot
+                   else PILOT_REPETITIONS)
+    seed = (REMEASURE_SEED if remeasure
+            else PILOT_SEED if pilot else SEED)
     # The staged plan's stage-1 main run enumerates over
     # the seven selected questions (the selection rule the
     # manifest registers); the pilot and a stage-2 run
-    # enumerate over the frozen set's own.
-    order_questions = (load_questions() if pilot
-                       else stage1_questions())
-    order = build_order(seed, repetitions, arms, order_questions)
+    # enumerate over the frozen set's own. The
+    # re-measurement's plan is its own: arms A, D and F
+    # over the frozen set's twenty-five questions and
+    # arm E over stage 1's seven, three repetitions each,
+    # interleaved and shuffled once with the registered
+    # seed (the guard test reconstructs the order
+    # independently and compares the digest).
+    if remeasure:
+        order = remeasure_order(seed)
+    else:
+        order_questions = (load_questions() if pilot
+                           else stage1_questions())
+        order = build_order(seed, repetitions, arms,
+                            order_questions)
     digest = order_digest(order)
-    authorization = PILOT_CEILING if pilot else MAIN_CEILING
+    authorization = (REMEASURE_CEILING if remeasure
+                     else PILOT_CEILING if pilot
+                     else MAIN_CEILING)
 
     path = (Path(results_path) if results_path is not None
             else default_results_path(mode))
@@ -2703,6 +3468,21 @@ async def run_experiment(
         "arm_c_call_limit": ARM_C_CALL_LIMIT,
         "arm_c_check_attempts": ARM_C_CHECK_ATTEMPTS,
         "arm_e_call_limit": ARM_E_CALL_LIMIT,
+        "arm_f_call_limit": (ARM_F_CALL_LIMIT
+                             if remeasure else None),
+        # The re-measurement's registered plan, as the
+        # header names it: the interleaved order's seed,
+        # the authorisation, and the pre-registration's
+        # two digests (the D51 record's sections 9 and 7,
+        # copied verbatim into the manifest and never
+        # edited afterwards).
+        "remeasurement": ({
+            "arms": list(REMEASURE_ARMS),
+            "seed": REMEASURE_SEED,
+            "authorization_ceiling": REMEASURE_CEILING,
+            "arm_f_call_limit": ARM_F_CALL_LIMIT,
+            "pre_registration": _pre_registration_digests(),
+        } if remeasure else None),
         "pins": {name: getattr(tier3, name) for name in (
             "tier3_arm_a", "tier3_arm_b", "tier3_arm_c_1",
             "tier3_arm_c_2", "tier3_arm_d",
@@ -2716,6 +3496,7 @@ async def run_experiment(
                  for question in load_questions()}
     keys = scorer.KEYS
     spec = _standing_spec() if "E" in arms else None
+    spec_f = _verify_first_spec() if "F" in arms else None
     records: list[dict[str, Any]] = []
     log.header()
 
@@ -2749,7 +3530,7 @@ async def run_experiment(
             client_factory=client_factory,
             tool_dispatcher=tool_dispatcher,
             scenario_runner=scenario_runner,
-            spec=spec,
+            spec=spec, spec_f=spec_f,
             pipeline_client_factory=pipeline_client_factory)
         log.unit(result.record())
         records.append(result.record())
@@ -2790,6 +3571,7 @@ async def run_experiment(
         "budget": {"cap": budget.cap, "spent": budget.spent,
                     "started": budget.started,
                     "skipped": budget.skipped},
+        "order_units": len(order),
         "questions": questions,
         "keys": keys,
         "seed": seed,
@@ -2824,6 +3606,20 @@ DRY_RUN_SERVINGS = {
 # flight, and the run is resumed to the end.
 DRY_RUN_KILL_AFTER = 40
 
+# The fixture catalogue's rates, per token: the prompt
+# side and the completion side. The dry run's scripted
+# token counts are priced at exactly these figures (the
+# budget-stop exhibit bills a call its arm's whole
+# per-unit ceiling through them), so they are named
+# constants rather than literals in two places.
+DRY_RUN_PROMPT_RATE = 0.0000001
+DRY_RUN_COMPLETION_RATE = 0.0000002
+# What the script's default call bills at those rates:
+# the _answer_call fixture's own token counts.
+DRY_RUN_DEFAULT_CALL_COST = (
+    900 * DRY_RUN_PROMPT_RATE
+    + 1200 * DRY_RUN_COMPLETION_RATE)
+
 
 def _all_servings(servings: dict[str, Any]) -> list[str]:
     """Every serving the lineup names, deduplicated."""
@@ -2844,8 +3640,9 @@ def _dry_run_catalogue(servings: dict[str, Any]) -> list[dict[str, Any]]:
     return [
         {
             "id": serving,
-            "pricing": {"prompt": "0.0000001",
-                        "completion": "0.0000002"},
+            "pricing": {"prompt": f"{DRY_RUN_PROMPT_RATE}",
+                        "completion": (
+                            f"{DRY_RUN_COMPLETION_RATE}")},
             "context_length": 200000,
             "max_completion_tokens": 32768,
             "supported_parameters": [
@@ -2947,17 +3744,135 @@ def _provider_failure_call(detail: str) -> dict[str, Any]:
     return {"provider_failure": detail}
 
 
-def _shipped(answer: str) -> dict[str, Any]:
+def _asks_anchored() -> dict[str, Any]:
+    """The D51 (1) asks record a completed run carries:
+    the anchored quotes, and the proposals the free
+    anchoring check could not find in the request,
+    counted beside them. The mock's asks are the
+    request's own words, as the real extractor's are."""
+    return {
+        "anchored": ["the answer the question asks for"],
+        "quotes": ["the question's own wording"],
+        "demoted": ["a proposal the anchoring check "
+                    "could not find in the request"],
+    }
+
+
+def _shipped(answer: str,
+             profile: str = "standing") -> dict[str, Any]:
     """A completed pipeline run whose terminal conclusion is
-    the answer — delivered (D50 (3))."""
+    the answer — delivered (D50 (3)). The record carries the
+    D51 shape the manifest's criterion (d) requires every
+    unit to show: the asks with the quotes that did not
+    anchor beside them, the notes the run counted, and
+    every iteration's answer. ``profile`` selects the
+    workflow's call profile — the standing pipeline's, or
+    verify-first's (one answer, one check: four calls)."""
+    if profile == "verify-first":
+        figures = {"calls": 4, "seconds": 45.0, "cost": 0.04,
+                   "cost_by_tier": {"engineering": 0.02,
+                                    "judge": 0.02},
+                   "calls_by_tier": {"triage": 2,
+                                     "engineering": 1,
+                                     "judge": 1}}
+    else:
+        figures = {"calls": 14, "seconds": 95.0, "cost": 0.11,
+                   "cost_by_tier": {"engineering": 0.08,
+                                    "judge": 0.03},
+                   "calls_by_tier": {"triage": 2,
+                                     "engineering": 8,
+                                     "judge": 4}}
     return {
         "status": "completed",
-        "verdicts": {"implement": {"summary": answer}},
-        "calls": 14, "seconds": 95.0, "cost": 0.11,
-        "cost_by_tier": {"engineering": 0.08, "judge": 0.03},
+        "verdicts": {"implement": {"summary": answer},
+                     "asks_anchored": _asks_anchored()},
+        "iterations": [{"implement_summary": answer}],
+        "normalised_by_kind": {"consistency_note": 1},
         "providers_by_tier": {"engineering": ["dryrun"],
                                 "judge": ["dryrun"]},
         "retries": {},
+        **figures,
+    }
+
+
+def _revised(first: str, final: str) -> dict[str, Any]:
+    """A verify-first run whose check forced one revision
+    (D51 (8)'s repair path): two iterations, each with its
+    answer — prediction 9's population, the first answer
+    beside the final one. Two iterations are two engineering
+    and two judge calls after triage and asks: four, the
+    registered bound (ARM_F_CALL_LIMIT's four)."""
+    return {
+        "status": "completed",
+        "verdicts": {"implement": {"summary": final},
+                     "asks_anchored": _asks_anchored()},
+        "iterations": [{"implement_summary": first},
+                       {"implement_summary": final}],
+        "normalised_by_kind": {"consistency_note": 1},
+        "calls": 6, "seconds": 60.0, "cost": 0.06,
+        "cost_by_tier": {"engineering": 0.04, "judge": 0.02},
+        "calls_by_tier": {"triage": 2, "engineering": 2,
+                          "judge": 2},
+        "providers_by_tier": {"engineering": ["dryrun"],
+                                "judge": ["dryrun"]},
+        "retries": {},
+    }
+
+
+def _unendorsed_candidate(
+        answer: str, dissents: list[dict[str, Any]],
+        rulings: list[dict[str, Any]] | None = None,
+        profile: str = "standing") -> dict[str, Any]:
+    """A run that ended escalated after an implementation
+    existed — D51 (7)'s unendorsed candidate, kept with its
+    open dissents and their anchors, and D51 (6)'s escalation
+    ruling on each dissent before it directed. The dissents
+    are the typed anchors the judges that raised them carry:
+    an ask, a quote of the request, or a hazard."""
+    if profile == "verify-first":
+        figures = {"calls": 6, "seconds": 70.0, "cost": 0.06,
+                   "cost_by_tier": {"engineering": 0.04,
+                                    "judge": 0.02},
+                   "calls_by_tier": {"triage": 2,
+                                     "engineering": 2,
+                                     "judge": 2}}
+    else:
+        figures = {"calls": 38, "seconds": 590.0, "cost": 0.42,
+                   "cost_by_tier": {"engineering": 0.30,
+                                    "judge": 0.12},
+                   "calls_by_tier": {"triage": 2,
+                                     "engineering": 22,
+                                     "judge": 14}}
+    return {
+        "status": "escalated",
+        "verdicts": {
+            "implement": {"summary": answer},
+            "asks_anchored": _asks_anchored(),
+            "escalation": {
+                "root_cause_analysis": (
+                    "the answer states a value the request's "
+                    "own words do not support"),
+                "architectural_correction": None,
+                "resolution_directive": (
+                    "address the upheld dissent only"),
+                "requires_human": False,
+                "rulings": (rulings if rulings is not None
+                            else [
+                                {"dissent": 1, "upheld": True,
+                                 "reason": (
+                                     "the dissent names the "
+                                     "ask and quotes the "
+                                     "request")}]),
+            },
+        },
+        "iterations": [{"implement_summary": answer}],
+        "candidate": {"answer": answer, "endorsed": False,
+                      "open_dissents": dissents},
+        "normalised_by_kind": {"unanchored_dissent": 1},
+        "providers_by_tier": {"engineering": ["dryrun"],
+                                "judge": ["dryrun"]},
+        "retries": {},
+        **figures,
     }
 
 
@@ -2965,14 +3880,20 @@ def _approved_not_shipped(answer: str) -> dict[str, Any]:
     """A judge-approved draft with no completed terminal —
     scored and reported beside the delivered count as
     'approved, not shipped', never counted as delivered
-    (D50 (3), the D38 watchdog's case)."""
+    (D50 (3), the D38 watchdog's case). The record carries
+    the D51 asks and the notes the run counted."""
     return {
         "status": "escalated",
         "watchdog": {"approved": {"index": 1}},
+        "verdicts": {"implement": {"summary": answer},
+                     "asks_anchored": _asks_anchored()},
         "iterations": [{"implement_summary": None},
                         {"implement_summary": answer}],
+        "normalised_by_kind": {"consistency_note": 1},
         "calls": 38, "seconds": 590.0, "cost": 0.42,
         "cost_by_tier": {"engineering": 0.30, "judge": 0.12},
+        "calls_by_tier": {"triage": 2, "engineering": 22,
+                          "judge": 14},
         "providers_by_tier": {"engineering": ["dryrun"],
                                 "judge": ["dryrun"]},
         "retries": {},
@@ -2981,9 +3902,15 @@ def _approved_not_shipped(answer: str) -> dict[str, Any]:
 
 def _no_answer() -> dict[str, Any]:
     """A pipeline run that ended without an answer — an
-    incomplete unit, counted in the denominator."""
-    return {"status": "blocked", "calls": 9, "seconds": 61.0,
-            "cost": 0.05, "cost_by_tier": {"triage": 0.05},
+    incomplete unit, counted in the denominator. The asks
+    still ran (the run judged nothing against them, but it
+    extracted them), so the record carries them."""
+    return {"status": "blocked",
+            "verdicts": {"asks_anchored": _asks_anchored()},
+            "normalised_by_kind": {},
+            "calls": 9, "seconds": 61.0, "cost": 0.05,
+            "cost_by_tier": {"triage": 0.05},
+            "calls_by_tier": {"triage": 9},
             "providers_by_tier": {"triage": ["dryrun"]},
             "retries": {}}
 
@@ -3008,6 +3935,7 @@ class DryRunScript:
         self._calls: dict[tuple[str, int, str],
                            list[dict[str, Any]]] = {}
         self._arm_e: dict[str, dict[str, Any]] = {}
+        self._arm_f: dict[str, dict[str, Any]] = {}
         self._deadlines: dict[tuple[str, int, str], float] = {}
         self._tool_failures: set[tuple[str, int, str]] = set()
 
@@ -3017,6 +3945,10 @@ class DryRunScript:
 
     def arm_e_outcome(self, scenario_id: str) -> dict[str, Any]:
         return dict(self._arm_e.get(scenario_id, _shipped("")))
+
+    def arm_f_outcome(self, scenario_id: str) -> dict[str, Any]:
+        return dict(self._arm_f.get(
+            scenario_id, _shipped("", profile="verify-first")))
 
     def deadline_for(self, unit_key: tuple[str, int, str]
                      ) -> float | None:
@@ -3159,6 +4091,278 @@ def build_dry_run_script() -> DryRunScript:
     return script
 
 
+# ── The re-measurement's dry run (command 121) ──────
+
+def _request_quote(question_id: str,
+                   questions: dict[str, dict[str, Any]]
+                   ) -> str:
+    """A verbatim quote of the request, as a dissent's
+    anchor names it (D51 (3)): the question's own first
+    clause, taken from the request's bytes, so the mock's
+    anchor is a real quote the way a real judge's is."""
+    text = questions[question_id]["question"]
+    for end in (".", "?", ";", "\n"):
+        cut = text.find(end)
+        if cut > 0:
+            return text[:cut]
+    return text[:60]
+
+
+def _ceiling_call(arm: str, answer: str) -> dict[str, Any]:
+    """A call that bills its arm's whole per-unit ceiling
+    (the budget-stop exhibit): the token counts the
+    fixture's rates turn into the ceiling, so the client's
+    own accounting books the full figure the fit rule
+    budgeted for the unit. A hair under the ceiling, so
+    the client's own post-call check — the booked cost
+    against the unit's ceiling — holds exactly, and the
+    unit is delivered at its ceiling rather than refused
+    by it."""
+    prompt_tokens = int(
+        ARM_CEILINGS[arm] * 0.999 / DRY_RUN_PROMPT_RATE)
+    return {"content": answer, "finish_reason": "stop",
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": 0}
+
+
+def _at_ceiling(arm: str, answer: str) -> dict[str, Any]:
+    """A pipeline run that used its whole per-unit ceiling
+    (the budget-stop exhibit's E' and F units): the
+    workflow's own profile, priced at the arm's ceiling
+    with the tiers' shares held."""
+    outcome = _shipped(
+        answer, profile=("verify-first" if arm == "F"
+                         else "standing"))
+    ceiling = ARM_CEILINGS[arm]
+    scale = ceiling / outcome["cost"]
+    outcome["cost"] = ceiling
+    outcome["cost_by_tier"] = {
+        tier: round(amount * scale, 6)
+        for tier, amount in outcome["cost_by_tier"].items()}
+    return outcome
+
+
+def build_remeasure_script(
+        ) -> tuple[DryRunScript, list[tuple[str, int, str]]]:
+    """The re-measurement dry run's own script: the 246-unit
+    plan's defaults, the failure-class exhibits the command
+    names (refusal, serving error, deadline, provider
+    failure, budget stop), the FAIL cases every arm's
+    reading sheet needs, the D51 record exhibits (criterion
+    (d): the anchored and demoted asks, every dissent with
+    its anchor, the notes count, the escalation's rulings,
+    the candidate, every iteration's answer), and the
+    budget-stop tail — the deterministic tail of the seeded
+    order whose units are charged their whole per-unit
+    ceilings, so the $15.00 authorization stops the run
+    inside the tail and the units after the stop skip
+    through the fit rule.
+
+    Returns the script and the tail, so the dry run's
+    report can name the exhibit's population. Every exhibit
+    is keyed to a (question, repetition, arm) unit the
+    re-measurement's plan actually runs — arms A, D, F over
+    the frozen set's twenty-five questions and E' over
+    stage 1's seven — so each class is exercised, not
+    scripted onto a unit the plan never reaches.
+    """
+    script = DryRunScript()
+    questions = {q["id"]: q for q in load_questions()}
+    keys = {k["id"]: k for k in scorer.KEYS}
+    recorded: dict[str, str] = {}
+    for _run, question_id, answer in regression_12.load_vectors():
+        recorded.setdefault(question_id, answer)
+
+    def correct(question_id: str) -> str:
+        return (recorded.get(question_id)
+                or keys[question_id]["model_answer"])
+
+    def wrong(question_id: str) -> str:
+        return keys[question_id]["common_wrong_answers"][0][
+            "answer"]
+
+    def quote(question_id: str) -> str:
+        return _request_quote(question_id, questions)
+
+    # The cost each unit books, as the budget-stop tail's
+    # floor is computed from it: the defaults' own figures,
+    # then each exhibit's, as it is scripted.
+    booked: dict[tuple[str, int, str], float] = {}
+    default_cost = {"A": DRY_RUN_DEFAULT_CALL_COST,
+                    "D": DRY_RUN_DEFAULT_CALL_COST,
+                    "F": 0.04, "E": 0.11}
+
+    # The defaults: every unit of the plan answers correctly
+    # through its arm's registered treatment.
+    for question in questions.values():
+        for repetition in (1, 2, 3):
+            for arm in ("A", "D", "F"):
+                key = (question["id"], repetition, arm)
+                if arm in ("A", "D"):
+                    script._calls[key] = [
+                        _answer_call(correct(question["id"]))]
+                else:
+                    script._arm_f[
+                        f"tier3_f_{question['id']}"
+                        f"_r{repetition}"] = _shipped(
+                            correct(question["id"]),
+                            profile="verify-first")
+                booked[key] = default_cost[arm]
+    for question_id in STAGE1_QUESTION_IDS:
+        for repetition in (1, 2, 3):
+            key = (question_id, repetition, "E")
+            script._arm_e[
+                f"tier3_e_{question_id}_r{repetition}"] = (
+                    _shipped(correct(question_id)))
+            booked[key] = default_cost["E"]
+
+    def exhibit(key: tuple[str, int, str],
+                cost: float) -> None:
+        """Record what an exhibit unit books, so the
+        budget-stop tail's floor is the plan's true
+        spend, not an estimate — and which units are
+        exhibits, so the tail never charges a ceiling
+        over an exhibit's own scripted behaviour."""
+        booked[key] = cost
+        exhibit_keys.add(key)
+
+    exhibit_keys: set[tuple[str, int, str]] = set()
+
+    # ── The failure-class exhibits, one each ──
+    # refusal: a serving that chose to answer nothing
+    # (its empty reply still bills the call).
+    script._calls[("Q6", 1, "A")] = [_answer_call("")]
+    exhibit(("Q6", 1, "A"), DRY_RUN_DEFAULT_CALL_COST)
+    # serving error: the serving failed the call (an empty
+    # reply with finish "error" — the stage-1 run's
+    # arm-B final-call errors, on a unit this plan runs);
+    # the call billed before the serving failed it.
+    script._calls[("Q16", 1, "A")] = [
+        _answer_call("", finish_reason="error")]
+    exhibit(("Q16", 1, "A"), DRY_RUN_DEFAULT_CALL_COST)
+    # deadline: a call that outlasts the unit's shortened
+    # deadline, cancelled by the runner's wait_for before
+    # anything booked (its reservation stays unreconciled
+    # liability on the unit's client, not the sweep).
+    script._calls[("Q10", 1, "D")] = [
+        _answer_call(correct("Q10"), sleep=0.25)]
+    script._deadlines[("Q10", 1, "D")] = 0.05
+    exhibit(("Q10", 1, "D"), 0.0)
+    # provider failure: a serving that consumed its budget
+    # and emitted nothing, after dispatch, the same way.
+    script._calls[("Q14", 1, "D")] = [
+        _provider_failure_call(
+            "scripted: the serving consumed its budget and "
+            "emitted nothing")]
+    exhibit(("Q14", 1, "D"), 0.0)
+
+    # ── The FAIL cases, so every arm's sheet has FAILs ──
+    script._calls[("Q23", 1, "A")] = [_answer_call(wrong("Q23"))]
+    exhibit(("Q23", 1, "A"), DRY_RUN_DEFAULT_CALL_COST)
+    script._calls[("Q15", 1, "D")] = [_answer_call(wrong("Q15"))]
+    exhibit(("Q15", 1, "D"), DRY_RUN_DEFAULT_CALL_COST)
+    # arm F's shipped wrong answer (delivered, FAIL).
+    script._arm_f["tier3_f_Q23_r1"] = _shipped(
+        wrong("Q23"), profile="verify-first")
+    exhibit(("Q23", 1, "F"), 0.04)
+
+    # ── Arm F's revisions (prediction 9's population:
+    # the check forced a revision, and the first answer
+    # sits beside the final one) ──
+    # the check turned a wrong answer right;
+    script._arm_f["tier3_f_Q15_r1"] = _revised(
+        wrong("Q15"), correct("Q15"))
+    # the check turned a right answer wrong;
+    script._arm_f["tier3_f_Q14_r1"] = _revised(
+        correct("Q14"), wrong("Q14"))
+    # the revision left a wrong answer wrong.
+    script._arm_f["tier3_f_Q16_r1"] = _revised(
+        wrong("Q16"), wrong("Q16"))
+    for question_id in ("Q15", "Q14", "Q16"):
+        exhibit((question_id, 1, "F"), 0.06)
+
+    # ── The D51 (7) candidates, with their open dissents
+    # and their anchors, and D51 (6)'s rulings ──
+    # arm F's run ended escalated after its revision: the
+    # dissent survived, so the candidate is kept,
+    # unendorsed, with the judge's anchor — an ask, a
+    # quote of the request — beside it.
+    script._arm_f["tier3_f_Q17_r1"] = _unendorsed_candidate(
+        wrong("Q17"),
+        [{"judge": "validate", "ask": 1,
+          "quote": quote("Q17"), "hazard": False}],
+        profile="verify-first")
+    exhibit(("Q17", 1, "F"), 0.06)
+    # arm E's run ended escalated with two dissents and
+    # the escalation's ruling on each: one upheld, one
+    # not — D51 (6)'s per-dissent record.
+    script._arm_e["tier3_e_Q10_r1"] = _unendorsed_candidate(
+        wrong("Q10"),
+        [{"judge": "review", "ask": 1,
+          "quote": quote("Q10"), "hazard": False},
+         {"judge": "domain_review", "ask": 3,
+          "quote": quote("Q10"), "hazard": False}],
+        rulings=[
+            {"dissent": 1, "upheld": True,
+             "reason": ("the dissent names the ask and "
+                        "quotes the request's own words")},
+            {"dissent": 2, "upheld": False,
+             "reason": ("the concern names no ask and "
+                        "quotes no request words: a note, "
+                        "not a dissent")}])
+    exhibit(("Q10", 1, "E"), 0.42)
+
+    # ── Arm E's delivery kinds ──
+    # a shipped wrong answer (delivered, FAIL);
+    script._arm_e["tier3_e_Q17_r1"] = _shipped(wrong("Q17"))
+    exhibit(("Q17", 1, "E"), 0.11)
+    # a judge-approved draft that never shipped;
+    script._arm_e["tier3_e_Q23_r1"] = _approved_not_shipped(
+        correct("Q23"))
+    exhibit(("Q23", 1, "E"), 0.42)
+    # a run that ended without an answer.
+    script._arm_e["tier3_e_Q6_r1"] = _no_answer()
+    exhibit(("Q6", 1, "E"), 0.05)
+
+    # ── The budget-stop tail ──
+    # The plan's true spend, unit by unit, is known before
+    # anything runs (the dry run is deterministic), so the
+    # tail is long enough that its ceilings sum past the
+    # authorization minus that spend, with margin: the
+    # crossing lands inside the tail, and the units after
+    # it skip through the fit rule — the budget-stop class,
+    # on the real rule, at zero spend.
+    order = remeasure_order(REMEASURE_SEED)
+    floor = sum(booked.get(tuple(key), 0.0) for key in order)
+    target = REMEASURE_CEILING - floor + 1.00
+    tail: list[tuple[str, int, str]] = []
+    accumulated = 0.0
+    for key in reversed(order):
+        if accumulated >= target:
+            break
+        unit_key = tuple(key)
+        if unit_key in exhibit_keys:
+            # An exhibit keeps its own scripted
+            # behaviour; the tail charges the defaults.
+            continue
+        tail.append(unit_key)
+        accumulated += ARM_CEILINGS[unit_key[2]]
+    for unit_key in tail:
+        question_id, repetition, arm = unit_key
+        if arm in ("A", "D"):
+            script._calls[unit_key] = [
+                _ceiling_call(arm, correct(question_id))]
+        elif arm == "F":
+            script._arm_f[
+                f"tier3_f_{question_id}_r{repetition}"] = (
+                    _at_ceiling("F", correct(question_id)))
+        else:
+            script._arm_e[
+                f"tier3_e_{question_id}_r{repetition}"] = (
+                    _at_ceiling("E", correct(question_id)))
+    return script, tail
+
+
 class DryRunClient(OpenRouterClient):
     """The dry run's mocked client for arms A-D.
 
@@ -3255,7 +4459,7 @@ class DryRunClient(OpenRouterClient):
 
 class DryRunScenarioRunner:
     """The dry run's stand-in at the pipeline boundary for
-    arm E.
+    arms E and F.
 
     Everything above this boundary is the real machinery —
     the unit's place in the order, the deadline, the
@@ -3284,7 +4488,13 @@ class DryRunScenarioRunner:
                 scenario=scenario, results=[], calls=0,
                 seconds=0.0, error=budget.skip(max_spend),
                 was_skipped=True)
-        outcome = self._script.arm_e_outcome(scenario.id)
+        # The scenario's id names its arm: tier3_e_* runs
+        # the standing workflow, tier3_f_* the verify-first
+        # one (arm F's scenario, as _arm_f builds it).
+        if scenario.id.startswith("tier3_f_"):
+            outcome = self._script.arm_f_outcome(scenario.id)
+        else:
+            outcome = self._script.arm_e_outcome(scenario.id)
         if budget is not None:
             budget.record(outcome.get("cost", 0.0))
         return ScenarioRun(
@@ -3294,6 +4504,7 @@ class DryRunScenarioRunner:
             cost=outcome.get("cost", 0.0),
             error=outcome.get("error"),
             cost_by_tier=outcome.get("cost_by_tier", {}),
+            calls_by_tier=outcome.get("calls_by_tier", {}),
             providers_by_tier=outcome.get(
                 "providers_by_tier", {}),
             verdicts=outcome.get("verdicts", {}),
@@ -3301,7 +4512,10 @@ class DryRunScenarioRunner:
             iterations=outcome.get("iterations", []),
             watchdog=outcome.get("watchdog"),
             tokens_by_tier=outcome.get("tokens_by_tier", {}),
-            retries=outcome.get("retries", {}))
+            retries=outcome.get("retries", {}),
+            candidate=outcome.get("candidate"),
+            normalised_by_kind=outcome.get(
+                "normalised_by_kind", {}))
 
 
 class _DryRunContext:
@@ -3440,6 +4654,32 @@ async def dry_run() -> dict[str, Any]:
             tool_dispatcher=tool_dispatcher,
             scenario_runner=scenario_runner,
             catalogue=catalogue)
+        # The re-measurement: the 246-unit plan under the
+        # re-measurement's own script — its failure-class
+        # exhibits, its D51 record exhibits and its
+        # budget-stop tail — through the same real
+        # machinery, at the re-measurement's own $15.00
+        # authorization (the gate's line is the main
+        # run's, which the re-measurement's ceiling sits
+        # under). No network, no spend.
+        remeasure_script, remeasure_tail = (
+            build_remeasure_script())
+        remeasure_context = _DryRunContext()
+        remeasure_overrides = {
+            key: seconds for key, seconds
+            in remeasure_script._deadlines.items()}
+        remeasure_path = (RESULTS_DIR
+                          / "dryrun-tier3-remeasure.jsonl")
+        remeasurement = await run_experiment(
+            "remeasure", results_path=remeasure_path,
+            client_factory=_dry_run_client_factory(
+                remeasure_script, rates, remeasure_context),
+            tool_dispatcher=_dry_run_tool_dispatcher(
+                remeasure_script, remeasure_context),
+            scenario_runner=DryRunScenarioRunner(
+                remeasure_script),
+            catalogue=catalogue,
+            deadline_overrides=remeasure_overrides)
 
     # The reading sheets and the five measures, both ways.
     questions = {q["id"]: q for q in load_questions()}
@@ -3451,6 +4691,21 @@ async def dry_run() -> dict[str, Any]:
         pilot["records"], questions, scorer.KEYS,
         RESULTS_DIR / "dryrun-tier3-pilot-reading-sheet.json",
         PILOT_SEED)
+    # The re-measurement's reading sheet and its report:
+    # the eight tables the manifest's tier3-8 registration
+    # lists, computed from the units' own records.
+    remeasure_sheet = export_reading_sheet(
+        remeasurement["records"], questions, scorer.KEYS,
+        RESULTS_DIR / "dryrun-tier3-remeasure-reading-sheet.json",
+        REMEASURE_SEED)
+    remeasurement_report = remeasure_report(
+        remeasurement["records"], questions, scorer.KEYS)
+    remeasure_report_path = (RESULTS_DIR
+                             / "dryrun-tier3-remeasure-report.json")
+    remeasure_report_path.write_text(
+        json.dumps(remeasurement_report, indent=2,
+                   default=str),
+        encoding="utf-8")
     reader_1, reader_2 = _synthetic_readings(main_sheet)
     merged = merge_readings(main_sheet, reader_1, reader_2)
     read_verdicts = {
@@ -3505,6 +4760,29 @@ async def dry_run() -> dict[str, Any]:
             "path": pilot["path"],
             "records": pilot["records"],
         },
+        "remeasurement": {
+            "summary": remeasurement["summary"],
+            "measures": remeasurement["measures"],
+            "census": remeasurement["census"],
+            "units": len(remeasurement["records"]),
+            "planned": remeasurement["order_units"],
+            "budget": remeasurement["budget"],
+            "path": remeasurement["path"],
+            "records": remeasurement["records"],
+            "reading_sheet": {
+                "path": str(RESULTS_DIR
+                            / "dryrun-tier3-remeasure-"
+                            "reading-sheet.json"),
+                "per_arm": remeasure_sheet["per_arm"],
+                "entries": len(remeasure_sheet["entries"]),
+            },
+            "report": {
+                "path": str(remeasure_report_path),
+                "tables": list(remeasurement_report),
+            },
+            "budget_stop_tail": [
+                list(unit_key) for unit_key in remeasure_tail],
+        },
         "reading_sheet": {
             "path": str(RESULTS_DIR
                         / "dryrun-tier3-reading-sheet.json"),
@@ -3533,11 +4811,15 @@ def _print_preflight_findings(report: PreflightReport) -> None:
         print(f"[report] {note}")
 
 
-def _print_worst_case(rows: list[dict[str, Any]]) -> None:
-    """The arm-E worst-case table, one line per tier."""
+def _print_worst_case(rows: list[dict[str, Any]],
+                      arm: str = "E") -> None:
+    """The worst-case table, one line per tier — arm
+    E's standing tiers, or arm F's verify-first call
+    counts on them (with the whole sequence's worst
+    case as its last line)."""
     for row in rows:
         if row.get("unknown"):
-            print(f"arm E/{row['tier']}: {row['serving']} — "
+            print(f"arm {arm}/{row['tier']}: {row['serving']} — "
                   f"no worst case the guard can bound: "
                   f"{row.get('reason')}")
             continue
@@ -3553,10 +4835,26 @@ def _print_worst_case(rows: list[dict[str, Any]]) -> None:
                   f"${row['per_request_charge']:.4f} added "
                   f"once per call; "
                   if row.get("per_request_charge") else "")
+        if row["tier"] == "sequence":
+            # Arm F's bound: the whole call sequence's
+            # worst case, the counts the workflow's own
+            # declared bound composes, against the
+            # per-unit ceiling.
+            print(
+                f"arm {arm}/sequence: {row['calls']} calls "
+                f"({row['serving']}) — worst case "
+                f"${row['worst_case']:.4f} against the "
+                f"${row['unit_ceiling']:.2f} per-unit "
+                f"ceiling ({refusal})")
+            continue
+        calls = row.get("calls")
+        on_tier = (f" — the workflow's {calls} calls on "
+                   f"this tier: ${row['tier_worst_case']:.4f}"
+                   if calls is not None else "")
         print(
-            f"arm E/{row['tier']}: {row['serving']}{priced} — "
+            f"arm {arm}/{row['tier']}: {row['serving']}{priced} — "
             f"standing cap {row['cap']}, worst case per call "
-            f"${row['worst_case']:.4f} against the "
+            f"${row['worst_case']:.4f}{on_tier} against the "
             f"${row['unit_ceiling']:.2f} per-unit ceiling "
             f"({refusal}; {charge}the prompt side is the largest "
             f"question, a floor — the guard computes the real "
@@ -3576,21 +4874,33 @@ async def _cli(argv: list[str] | None = None) -> int:
     preflight_p.add_argument("--pilot", action="store_true",
                              help="check the pilot's gates "
                                   "(TIER3_PILOT_AUTHORIZED)")
+    preflight_p.add_argument(
+        "--remeasure", action="store_true",
+        help="check the re-measurement's gates "
+             "(TIER3_SPEND_AUTHORIZED against the "
+             "re-measurement's $15.00 ceiling)")
     sub.add_parser("worst-case",
                    help="the arm-E worst-case table (free)")
     for name, help_text in (
             ("run", "the 375-unit main run (paid)"),
-            ("pilot", "the 50-unit calibration pilot (paid)")):
+            ("pilot", "the 50-unit calibration pilot (paid)"),
+            ("remeasure",
+             "the 246-unit D51 re-measurement (paid)")):
         command_p = sub.add_parser(name, help=help_text)
         command_p.add_argument("--results-file", default=None,
                                metavar="PATH")
     sub.add_parser("dry-run",
-                   help="the mocked dry runs, main and pilot "
-                        "(free)")
+                   help="the mocked dry runs, main, pilot "
+                        "and re-measurement (free)")
     sheet_p = sub.add_parser(
         "reading-sheet",
         help="export the reading sheet from a results file")
     sheet_p.add_argument("results_file", metavar="RESULTS_FILE")
+    report_p = sub.add_parser(
+        "remeasure-report",
+        help="the re-measurement's eight report tables, "
+             "from a results file")
+    report_p.add_argument("results_file", metavar="RESULTS_FILE")
     args = parser.parse_args(argv)
 
     if args.command == "preflight":
@@ -3600,8 +4910,10 @@ async def _cli(argv: list[str] | None = None) -> int:
         print("servings map:")
         print(json.dumps(servings, indent=2, sort_keys=True))
         print(f"servings fingerprint: {fingerprint}\n")
-        missing = gate_report(tier3, servings, fingerprint,
-                              pilot=args.pilot)
+        missing = gate_report(
+            tier3, servings, fingerprint, pilot=args.pilot,
+            mode=("remeasure" if args.remeasure
+                  else "main"))
         if missing:
             print("the ratification gates are not cleared — "
                   "refusing before any network call:")
@@ -3614,6 +4926,20 @@ async def _cli(argv: list[str] | None = None) -> int:
         report = run_preflight(servings, catalogue)
         _print_preflight_findings(report)
         _print_worst_case(arm_e_worst_case(servings, catalogue))
+        if args.remeasure:
+            # The re-measurement's arm F: the
+            # verify-first workflow's calls on the
+            # standing tiers, against its own $0.20
+            # per-unit ceiling — each arm's worst
+            # case within its ceiling, as the
+            # manifest's tier3-8 registration
+            # registers the preflight.
+            print()
+            print("arm F, the verify-first workflow's "
+                  "calls on arm E's standing tiers:")
+            _print_worst_case(
+                arm_f_worst_case(servings, catalogue),
+                arm="F")
         if report.refusals:
             print(f"\nrefused: the preflight refused to start "
                   f"(exit {REFUSED_EXIT})")
@@ -3632,7 +4958,7 @@ async def _cli(argv: list[str] | None = None) -> int:
         _print_worst_case(arm_e_worst_case(servings, catalogue))
         return 0
 
-    if args.command in ("run", "pilot"):
+    if args.command in ("run", "pilot", "remeasure"):
         mode = args.command
         try:
             result = await run_experiment(
@@ -3651,6 +4977,12 @@ async def _cli(argv: list[str] | None = None) -> int:
         print()
         print(json.dumps(result["measures"], indent=2,
                          default=str))
+        if mode == "remeasure":
+            print()
+            print("the re-measurement's report:")
+            print(json.dumps(remeasure_report(
+                result["records"], result["questions"],
+                result["keys"]), indent=2, default=str))
         return 0
 
     if args.command == "dry-run":
@@ -3680,6 +5012,22 @@ async def _cli(argv: list[str] | None = None) -> int:
         print(result["pilot"]["summary"])
         print(f"  failure census: {json.dumps(result['pilot']['census'], sort_keys=True)}")
         print()
+        print("the re-measurement, the 246-unit plan:")
+        print(result["remeasurement"]["summary"])
+        print(f"  planned: {result['remeasurement']['planned']}"
+              f" units; ran "
+              f"{result['remeasurement']['units']}; the "
+              f"budget stopped it at "
+              f"${result['remeasurement']['budget']['spent']:.4f}"
+              f" of "
+              f"${result['remeasurement']['budget']['cap']:.2f}"
+              f" ({result['remeasurement']['budget']['skipped']}"
+              f" units skipped by the fit rule)")
+        print(f"  failure census: "
+              f"{json.dumps(result['remeasurement']['census'], sort_keys=True)}")
+        print(f"  report: the eight tables, written to "
+              f"{result['remeasurement']['report']['path']}")
+        print()
         print("the reading sheet:")
         print(f"  {result['reading_sheet']['entries']} entries "
               f"({json.dumps(result['reading_sheet']['per_arm'], sort_keys=True)})")
@@ -3688,24 +5036,47 @@ async def _cli(argv: list[str] | None = None) -> int:
               f"{len(result['reading_sheet']['disagreements'])} "
               f"disagreements, "
               f"{len(result['reading_sheet']['unread'])} unread")
+        print(f"  the re-measurement's sheet: "
+              f"{result['remeasurement']['reading_sheet']['entries']}"
+              f" entries "
+              f"({json.dumps(result['remeasurement']['reading_sheet']['per_arm'], sort_keys=True)})")
         print(f"\nresults: {result['main']['path']}")
         print(f"         {result['pilot']['path']}")
+        print(f"         {result['remeasurement']['path']}")
         print(f"         {result['reading_sheet']['path']}")
+        print(f"         {result['remeasurement']['reading_sheet']['path']}")
+        print(f"         {result['remeasurement']['report']['path']}")
         return 0
 
     # reading-sheet
+    if args.command == "reading-sheet":
+        path = Path(args.results_file)
+        records = [json.loads(line) for line in
+                   path.read_text(encoding="utf-8").splitlines()
+                   if line.strip() and json.loads(line).get(
+                       "record") == "unit"]
+        questions = {q["id"]: q for q in load_questions()}
+        sheet = export_reading_sheet(
+            records, questions, scorer.KEYS,
+            path.with_suffix(".reading-sheet.json"), SEED)
+        print(f"reading sheet: {len(sheet['entries'])} entries — "
+              f"{json.dumps(sheet['per_arm'], sort_keys=True)}")
+        print(f"written: {path.with_suffix('.reading-sheet.json')}")
+        return 0
+
+    # remeasure-report: the eight tables, from a results
+    # file's own units.
     path = Path(args.results_file)
     records = [json.loads(line) for line in
                path.read_text(encoding="utf-8").splitlines()
                if line.strip() and json.loads(line).get(
                    "record") == "unit"]
     questions = {q["id"]: q for q in load_questions()}
-    sheet = export_reading_sheet(
-        records, questions, scorer.KEYS,
-        path.with_suffix(".reading-sheet.json"), SEED)
-    print(f"reading sheet: {len(sheet['entries'])} entries — "
-          f"{json.dumps(sheet['per_arm'], sort_keys=True)}")
-    print(f"written: {path.with_suffix('.reading-sheet.json')}")
+    report = remeasure_report(records, questions,
+                              scorer.KEYS)
+    print(f"the re-measurement's report: the eight "
+          f"tables, from {len(records)} units")
+    print(json.dumps(report, indent=2, default=str))
     return 0
 
 
