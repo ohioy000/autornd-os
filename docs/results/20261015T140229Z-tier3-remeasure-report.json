@@ -1,0 +1,841 @@
+{
+  "arms": [
+    "A",
+    "D",
+    "F",
+    "E"
+  ],
+  "keys": "frozen (the scorer's own, unmodified)",
+  "keys_3sf": "the frozen keys with Q23's two force items widened to \u00b10.05 kN (K1, not ruled)",
+  "per_arm": {
+    "A": {
+      "planned": 75,
+      "delivered": 12,
+      "delivered_correct_key_strict": 8,
+      "delivered_correct_3sf": 8,
+      "delivered_correct_of_planned_key_strict": 0.10666666666666667,
+      "delivered_correct_of_planned_3sf": 0.10666666666666667,
+      "delivered_correct_of_delivered_key_strict": 0.6666666666666666,
+      "delivered_correct_of_delivered_3sf": 0.6666666666666666
+    },
+    "D": {
+      "planned": 75,
+      "delivered": 20,
+      "delivered_correct_key_strict": 17,
+      "delivered_correct_3sf": 17,
+      "delivered_correct_of_planned_key_strict": 0.22666666666666666,
+      "delivered_correct_of_planned_3sf": 0.22666666666666666,
+      "delivered_correct_of_delivered_key_strict": 0.85,
+      "delivered_correct_of_delivered_3sf": 0.85
+    },
+    "F": {
+      "planned": 75,
+      "delivered": 13,
+      "delivered_correct_key_strict": 11,
+      "delivered_correct_3sf": 11,
+      "delivered_correct_of_planned_key_strict": 0.14666666666666667,
+      "delivered_correct_of_planned_3sf": 0.14666666666666667,
+      "delivered_correct_of_delivered_key_strict": 0.8461538461538461,
+      "delivered_correct_of_delivered_3sf": 0.8461538461538461
+    },
+    "E": {
+      "planned": 21,
+      "delivered": 1,
+      "delivered_correct_key_strict": 1,
+      "delivered_correct_3sf": 1,
+      "delivered_correct_of_planned_key_strict": 0.047619047619047616,
+      "delivered_correct_of_planned_3sf": 0.047619047619047616,
+      "delivered_correct_of_delivered_key_strict": 1.0,
+      "delivered_correct_of_delivered_3sf": 1.0
+    }
+  },
+  "calibration_q1_q5": {
+    "A": {
+      "planned": 15,
+      "delivered": 3,
+      "delivered_correct_key_strict": 3,
+      "delivered_correct_3sf": 3
+    },
+    "D": {
+      "planned": 15,
+      "delivered": 4,
+      "delivered_correct_key_strict": 3,
+      "delivered_correct_3sf": 3
+    },
+    "F": {
+      "planned": 15,
+      "delivered": 4,
+      "delivered_correct_key_strict": 4,
+      "delivered_correct_3sf": 4
+    },
+    "E": {
+      "planned": 0,
+      "delivered": 0,
+      "delivered_correct_key_strict": 0,
+      "delivered_correct_3sf": 0
+    }
+  },
+  "paired_against_a_by_question": {
+    "Q1": {
+      "stage1": false,
+      "A": 0,
+      "D": 0,
+      "F": 1,
+      "E": 0
+    },
+    "Q2": {
+      "stage1": false,
+      "A": 0,
+      "D": 1,
+      "F": 2,
+      "E": 0
+    },
+    "Q3": {
+      "stage1": false,
+      "A": 2,
+      "D": 0,
+      "F": 1,
+      "E": 0
+    },
+    "Q4": {
+      "stage1": false,
+      "A": 1,
+      "D": 1,
+      "F": 0,
+      "E": 0
+    },
+    "Q5": {
+      "stage1": false,
+      "A": 0,
+      "D": 1,
+      "F": 0,
+      "E": 0
+    },
+    "Q6": {
+      "stage1": true,
+      "A": 0,
+      "D": 1,
+      "F": 0,
+      "E": 0
+    },
+    "Q7": {
+      "stage1": false,
+      "A": 1,
+      "D": 0,
+      "F": 1,
+      "E": 0
+    },
+    "Q8": {
+      "stage1": false,
+      "A": 0,
+      "D": 0,
+      "F": 2,
+      "E": 0
+    },
+    "Q9": {
+      "stage1": false,
+      "A": 0,
+      "D": 2,
+      "F": 0,
+      "E": 0
+    },
+    "Q10": {
+      "stage1": true,
+      "A": 1,
+      "D": 1,
+      "F": 0,
+      "E": 0
+    },
+    "Q11": {
+      "stage1": false,
+      "A": 0,
+      "D": 0,
+      "F": 0,
+      "E": 0
+    },
+    "Q12": {
+      "stage1": false,
+      "A": 0,
+      "D": 0,
+      "F": 0,
+      "E": 0
+    },
+    "Q13": {
+      "stage1": false,
+      "A": 0,
+      "D": 3,
+      "F": 0,
+      "E": 0
+    },
+    "Q14": {
+      "stage1": true,
+      "A": 1,
+      "D": 1,
+      "F": 0,
+      "E": 0
+    },
+    "Q15": {
+      "stage1": true,
+      "A": 0,
+      "D": 0,
+      "F": 0,
+      "E": 0
+    },
+    "Q16": {
+      "stage1": true,
+      "A": 0,
+      "D": 0,
+      "F": 0,
+      "E": 1
+    },
+    "Q17": {
+      "stage1": true,
+      "A": 0,
+      "D": 1,
+      "F": 0,
+      "E": 0
+    },
+    "Q18": {
+      "stage1": false,
+      "A": 0,
+      "D": 0,
+      "F": 3,
+      "E": 0
+    },
+    "Q19": {
+      "stage1": false,
+      "A": 0,
+      "D": 1,
+      "F": 0,
+      "E": 0
+    },
+    "Q20": {
+      "stage1": false,
+      "A": 0,
+      "D": 0,
+      "F": 0,
+      "E": 0
+    },
+    "Q21": {
+      "stage1": false,
+      "A": 1,
+      "D": 1,
+      "F": 1,
+      "E": 0
+    },
+    "Q22": {
+      "stage1": false,
+      "A": 0,
+      "D": 1,
+      "F": 0,
+      "E": 0
+    },
+    "Q23": {
+      "stage1": true,
+      "A": 1,
+      "D": 0,
+      "F": 0,
+      "E": 0
+    },
+    "Q24": {
+      "stage1": false,
+      "A": 0,
+      "D": 2,
+      "F": 0,
+      "E": 0
+    },
+    "Q25": {
+      "stage1": false,
+      "A": 0,
+      "D": 0,
+      "F": 0,
+      "E": 0
+    }
+  },
+  "median_cost_and_latency": {
+    "A": {
+      "units": 75,
+      "median_cost": 0.0,
+      "median_seconds": 0.845
+    },
+    "D": {
+      "units": 75,
+      "median_cost": 0.0,
+      "median_seconds": 1.25
+    },
+    "F": {
+      "units": 75,
+      "median_cost": 0.0,
+      "median_seconds": 1.252
+    },
+    "E": {
+      "units": 21,
+      "median_cost": 0.0,
+      "median_seconds": 1.253
+    }
+  },
+  "f_first_vs_final": {
+    "revised_units": 0,
+    "transitions": {
+      "right_to_right": 0,
+      "right_to_wrong": 0,
+      "wrong_to_right": 0,
+      "wrong_to_wrong": 0,
+      "no_first_answer": 0
+    },
+    "testable": false,
+    "note": "the prediction is reported, not tested, until five units revise"
+  },
+  "unresolved_candidates": {
+    "E": {
+      "unresolved_count": 1,
+      "delivered_count": 1,
+      "candidates_wrong": 0,
+      "candidates_scored": 1,
+      "candidates_wrong_rate": 0.0,
+      "delivered_wrong": 0,
+      "delivered_scored": 1,
+      "delivered_wrong_rate": 0.0,
+      "candidates": [
+        {
+          "question_id": "Q17",
+          "repetition": 3,
+          "delivered_kind": "approved, not shipped",
+          "scorer_verdict": "PASS",
+          "open_dissents": []
+        }
+      ]
+    },
+    "F": {
+      "unresolved_count": 5,
+      "delivered_count": 13,
+      "candidates_wrong": 2,
+      "candidates_scored": 5,
+      "candidates_wrong_rate": 0.4,
+      "delivered_wrong": 2,
+      "delivered_scored": 13,
+      "delivered_wrong_rate": 0.15384615384615385,
+      "candidates": [
+        {
+          "question_id": "Q19",
+          "repetition": 1,
+          "delivered_kind": "unendorsed candidate",
+          "scorer_verdict": "FAIL",
+          "open_dissents": [
+            {
+              "judge": "coverage",
+              "ask": null,
+              "quote": "",
+              "hazard": false
+            },
+            {
+              "judge": "validate",
+              "ask": 6,
+              "quote": "Require a rating at least twice the actual resistor dissipation, with equality allowed",
+              "hazard": false
+            }
+          ]
+        },
+        {
+          "question_id": "Q10",
+          "repetition": 1,
+          "delivered_kind": "unendorsed candidate",
+          "scorer_verdict": "PASS",
+          "open_dissents": [
+            {
+              "judge": "coverage",
+              "ask": null,
+              "quote": "",
+              "hazard": false
+            }
+          ]
+        },
+        {
+          "question_id": "Q23",
+          "repetition": 1,
+          "delivered_kind": "unendorsed candidate",
+          "scorer_verdict": "PASS",
+          "open_dissents": [
+            {
+              "judge": "coverage",
+              "ask": null,
+              "quote": "",
+              "hazard": false
+            }
+          ]
+        },
+        {
+          "question_id": "Q9",
+          "repetition": 2,
+          "delivered_kind": "unendorsed candidate",
+          "scorer_verdict": "FAIL",
+          "open_dissents": [
+            {
+              "judge": "coverage",
+              "ask": null,
+              "quote": "",
+              "hazard": false
+            }
+          ]
+        },
+        {
+          "question_id": "Q10",
+          "repetition": 2,
+          "delivered_kind": "unendorsed candidate",
+          "scorer_verdict": "PASS",
+          "open_dissents": [
+            {
+              "judge": "coverage",
+              "ask": null,
+              "quote": "",
+              "hazard": false
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "repetition_agreement_vs_correctness": {
+    "arms": {
+      "A": {
+        "agree_held": 0,
+        "agree_missed": 0,
+        "disagree_held": 7,
+        "disagree_missed": 3,
+        "no_quantities": 15,
+        "questions": {
+          "Q1": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q10": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q11": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q12": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q13": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q14": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q15": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q16": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q17": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q18": {
+            "agreement": "disagree",
+            "held": false
+          },
+          "Q19": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q2": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q20": {
+            "agreement": "disagree",
+            "held": false
+          },
+          "Q21": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q22": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q23": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q24": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q25": {
+            "agreement": "disagree",
+            "held": false
+          },
+          "Q3": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q4": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q5": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q6": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q7": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q8": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q9": {
+            "agreement": "no_quantities",
+            "held": false
+          }
+        }
+      },
+      "D": {
+        "agree_held": 0,
+        "agree_missed": 0,
+        "disagree_held": 12,
+        "disagree_missed": 1,
+        "no_quantities": 12,
+        "questions": {
+          "Q1": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q10": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q11": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q12": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q13": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q14": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q15": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q16": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q17": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q18": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q19": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q2": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q20": {
+            "agreement": "disagree",
+            "held": false
+          },
+          "Q21": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q22": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q23": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q24": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q25": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q3": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q4": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q5": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q6": {
+            "agreement": "no_quantities",
+            "held": true
+          },
+          "Q7": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q8": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q9": {
+            "agreement": "disagree",
+            "held": true
+          }
+        }
+      },
+      "F": {
+        "agree_held": 0,
+        "agree_missed": 0,
+        "disagree_held": 7,
+        "disagree_missed": 6,
+        "no_quantities": 12,
+        "questions": {
+          "Q1": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q10": {
+            "agreement": "disagree",
+            "held": false
+          },
+          "Q11": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q12": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q13": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q14": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q15": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q16": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q17": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q18": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q19": {
+            "agreement": "disagree",
+            "held": false
+          },
+          "Q2": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q20": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q21": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q22": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q23": {
+            "agreement": "disagree",
+            "held": false
+          },
+          "Q24": {
+            "agreement": "disagree",
+            "held": false
+          },
+          "Q25": {
+            "agreement": "disagree",
+            "held": false
+          },
+          "Q3": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q4": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q5": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q6": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q7": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q8": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q9": {
+            "agreement": "disagree",
+            "held": false
+          }
+        }
+      },
+      "E": {
+        "agree_held": 0,
+        "agree_missed": 0,
+        "disagree_held": 1,
+        "disagree_missed": 1,
+        "no_quantities": 5,
+        "questions": {
+          "Q10": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q14": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q15": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q16": {
+            "agreement": "disagree",
+            "held": true
+          },
+          "Q17": {
+            "agreement": "disagree",
+            "held": false
+          },
+          "Q23": {
+            "agreement": "no_quantities",
+            "held": false
+          },
+          "Q6": {
+            "agreement": "no_quantities",
+            "held": false
+          }
+        }
+      }
+    }
+  },
+  "unanchored_blocks": {
+    "arms": {
+      "E": {
+        "units": 21,
+        "units_with_unanchored_blocks": 0,
+        "units_detail": []
+      },
+      "F": {
+        "units": 75,
+        "units_with_unanchored_blocks": 5,
+        "units_detail": [
+          {
+            "question_id": "Q19",
+            "repetition": 1,
+            "unanchored_blocks": [
+              {
+                "judge": "coverage",
+                "ask": null,
+                "quote": "",
+                "hazard": false
+              }
+            ]
+          },
+          {
+            "question_id": "Q10",
+            "repetition": 1,
+            "unanchored_blocks": [
+              {
+                "judge": "coverage",
+                "ask": null,
+                "quote": "",
+                "hazard": false
+              }
+            ]
+          },
+          {
+            "question_id": "Q23",
+            "repetition": 1,
+            "unanchored_blocks": [
+              {
+                "judge": "coverage",
+                "ask": null,
+                "quote": "",
+                "hazard": false
+              }
+            ]
+          },
+          {
+            "question_id": "Q9",
+            "repetition": 2,
+            "unanchored_blocks": [
+              {
+                "judge": "coverage",
+                "ask": null,
+                "quote": "",
+                "hazard": false
+              }
+            ]
+          },
+          {
+            "question_id": "Q10",
+            "repetition": 2,
+            "unanchored_blocks": [
+              {
+                "judge": "coverage",
+                "ask": null,
+                "quote": "",
+                "hazard": false
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
