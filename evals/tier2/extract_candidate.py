@@ -48,10 +48,13 @@ DATASET_VERSION = "frozen-2026-10-03"
 # The scorer's current version. The dataset froze
 # at frozen-2026-10-03; the scorer repair Ruling
 # D50 (1) orders (the recorded answers the frozen
-# scorer failed) is a new version under the freeze:
-# the dataset content is unchanged, only the
-# instrument changed.
-SCORER_VERSION = "frozen-2026-10-03.2"
+# scorer failed) is a new version under the freeze,
+# and the repair Ruling R5 orders (the tier-3
+# stage-1 reading's recognition classes, the
+# strict-headline rule and its bound-word guard)
+# is a further one: the dataset content is
+# unchanged, only the instrument changed.
+SCORER_VERSION = "frozen-2026-10-03.3"
 
 # The count the owner's command expects. The owner
 # supplied all 25 on 2026-10-03, and ratified the

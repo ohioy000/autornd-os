@@ -1,0 +1,2263 @@
+{
+ "record": "stage-1-rescore",
+ "date": "2026-10-08",
+ "ruling": "R5 (ARCH-20261003-119): the stage-1 run re-scored under frozen-2026-10-03.3 beside its recorded frozen-2026-10-03.2 readings. Stage 1 stays reported under frozen-2026-10-03.2; this artifact is the side-by-side the command required, with the acceptance measured: the 58 sampled entries agree with the advisor's resolution 58/58 under .3.",
+ "trace": "docs/traces/20261005T215237Z-tier3-run.jsonl",
+ "reading_sheet": "evals/results/20261005T215237Z-tier3-run.reading-sheet.json",
+ "scorer_versions": {
+  "recorded_v2": "frozen-2026-10-03.2",
+  "rescored_v3": "frozen-2026-10-03.3"
+ },
+ "units": 105,
+ "delivered": 71,
+ "not_delivered": {
+  "incomplete": 21,
+  "refusal": 13
+ },
+ "sampled_entries": 58,
+ "v2_determinism": "71/71 delivered answers reproduce the run's recorded frozen-2026-10-03.2 verdict and item counts under the .2 scorer at that version",
+ "agreement_on_the_58_sampled": {
+  "recorded_v2_vs_resolution": "35/58 (the stage-1 report's 18 false negatives and 5 false positives)",
+  "rescored_v3_vs_resolution": "58/58"
+ },
+ "verdict_flips_v2_to_v3": {
+  "units": 24,
+  "sampled_units": 23,
+  "unsampled_units": 1,
+  "pass_to_fail": 6,
+  "fail_to_pass": 18
+ },
+ "flips": [
+  {
+   "question_id": "Q10",
+   "repetition": 2,
+   "arm": "B",
+   "sampled": true,
+   "sampled_entry": 25,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Hold criterion",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+     "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+    }
+   ]
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 3,
+   "arm": "B",
+   "sampled": true,
+   "sampled_entry": 3,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Next smaller heater check",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "750 W within tolerance: True; 160 s within tolerance: True; failure verdict stated: False - all three are required",
+     "v3_detail": "750.0 W = 750 W within rel tolerance of key 750 W; headline 160.0 s = 160 s within abs tolerance of key 160 s; the failure verdict is stated"
+    }
+   ]
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 1,
+   "arm": "C",
+   "sampled": true,
+   "sampled_entry": 48,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Ordered check sequence",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "ordered sequence (zero, 1.000 mm, 2.000 mm, return): True; no re-zeroing between readings stated: False - both are required",
+     "v3_detail": "zero at unloaded zero, apply and record 1.000 mm, apply and record 2.000 mm, then return to zero and record without re-zeroing"
+    },
+    {
+     "item": "First signed error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "0.01 mm = 1e-05 m within abs tolerance of key 1e-05 m; the 'pass' verdict is stated with the error"
+    },
+    {
+     "item": "Second signed error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'fail' verdict stated with the error: False - both are required",
+     "v3_detail": "-0.03 mm = -3e-05 m within abs tolerance of key -3e-05 m; the 'fail' verdict is stated with the error"
+    },
+    {
+     "item": "Return-zero error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+    },
+    {
+     "item": "Overall verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "the overall FAIL and the second reading as its cause are not both stated",
+     "v3_detail": "the overall FAIL identifies the failed second reading as the cause"
+    }
+   ]
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 3,
+   "arm": "C",
+   "sampled": true,
+   "sampled_entry": 1,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Hold criterion",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+     "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+    }
+   ]
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 2,
+   "arm": "C",
+   "sampled": true,
+   "sampled_entry": 53,
+   "resolution_verdict": "FAIL",
+   "verdict_v2": "PASS",
+   "verdict_v3": "FAIL",
+   "item_flips": [
+    {
+     "item": "Aluminum force",
+     "v2_pass": true,
+     "v3_pass": false,
+     "v2_detail": "12353.0 N = 12353 N within abs tolerance of key 12352.9 N",
+     "v3_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+    },
+    {
+     "item": "Steel force",
+     "v2_pass": true,
+     "v3_pass": false,
+     "v2_detail": "17647.0 N = 17647 N within abs tolerance of key 17647.1 N",
+     "v3_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+    }
+   ]
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 1,
+   "arm": "C",
+   "sampled": true,
+   "sampled_entry": 5,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Hold criterion",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+     "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+    },
+    {
+     "item": "Shutdown and removal order",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "switch-off then cool then remove order: False; 40 deg C removal threshold stated: True - both are required",
+     "v3_detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
+    }
+   ]
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 3,
+   "arm": "D",
+   "sampled": true,
+   "sampled_entry": 29,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Ordered check sequence",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "ordered sequence (zero, 1.000 mm, 2.000 mm, return): False; no re-zeroing between readings stated: True - both are required",
+     "v3_detail": "zero at unloaded zero, apply and record 1.000 mm, apply and record 2.000 mm, then return to zero and record without re-zeroing"
+    },
+    {
+     "item": "Acceptance criteria",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "0.020 mm nonzero limit stated: False; 0.010 mm return-zero limit stated: True - both are required",
+     "v3_detail": "both inclusive limits (nonzero errors at most 0.020 mm, return zero at most 0.010 mm) are stated"
+    },
+    {
+     "item": "First signed error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "0.01 mm = 1e-05 m within abs tolerance of key 1e-05 m; the 'pass' verdict is stated with the error"
+    },
+    {
+     "item": "Second signed error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'fail' verdict stated with the error: False - both are required",
+     "v3_detail": "-0.03 mm = -3e-05 m within abs tolerance of key -3e-05 m; the 'fail' verdict is stated with the error"
+    },
+    {
+     "item": "Return-zero error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "headline 0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+    },
+    {
+     "item": "Overall verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "the overall FAIL and the second reading as its cause are not both stated",
+     "v3_detail": "the overall FAIL identifies the failed second reading as the cause"
+    }
+   ]
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 2,
+   "arm": "C",
+   "sampled": true,
+   "sampled_entry": 23,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Hold criterion",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+     "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+    }
+   ]
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 2,
+   "arm": "E",
+   "sampled": true,
+   "sampled_entry": 44,
+   "resolution_verdict": "FAIL",
+   "verdict_v2": "PASS",
+   "verdict_v3": "FAIL",
+   "item_flips": [
+    {
+     "item": "Aluminum force",
+     "v2_pass": true,
+     "v3_pass": false,
+     "v2_detail": "12.3529 kN = 12352.9 N within abs tolerance of key 12352.9 N",
+     "v3_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+    },
+    {
+     "item": "Steel force",
+     "v2_pass": true,
+     "v3_pass": false,
+     "v2_detail": "17.6471 kN = 17647.1 N within abs tolerance of key 17647.1 N",
+     "v3_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+    }
+   ]
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 1,
+   "arm": "D",
+   "sampled": true,
+   "sampled_entry": 10,
+   "resolution_verdict": "FAIL",
+   "verdict_v2": "PASS",
+   "verdict_v3": "FAIL",
+   "item_flips": [
+    {
+     "item": "Aluminum force",
+     "v2_pass": true,
+     "v3_pass": false,
+     "v2_detail": "12353.0 N = 12353 N within abs tolerance of key 12352.9 N",
+     "v3_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+    },
+    {
+     "item": "Steel force",
+     "v2_pass": true,
+     "v3_pass": false,
+     "v2_detail": "17647.0 N = 17647 N within abs tolerance of key 17647.1 N",
+     "v3_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+    }
+   ]
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 3,
+   "arm": "D",
+   "sampled": false,
+   "sampled_entry": null,
+   "resolution_verdict": null,
+   "verdict_v2": "PASS",
+   "verdict_v3": "FAIL",
+   "item_flips": [
+    {
+     "item": "Aluminum force",
+     "v2_pass": true,
+     "v3_pass": false,
+     "v2_detail": "12350.0 N = 12350 N within abs tolerance of key 12352.9 N",
+     "v3_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+    },
+    {
+     "item": "Steel force",
+     "v2_pass": true,
+     "v3_pass": false,
+     "v2_detail": "17650.0 N = 17650 N within abs tolerance of key 17647.1 N",
+     "v3_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+    }
+   ]
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 1,
+   "arm": "A",
+   "sampled": true,
+   "sampled_entry": 40,
+   "resolution_verdict": "FAIL",
+   "verdict_v2": "PASS",
+   "verdict_v3": "FAIL",
+   "item_flips": [
+    {
+     "item": "Aluminum force",
+     "v2_pass": true,
+     "v3_pass": false,
+     "v2_detail": "12.353 kN = 12353 N within abs tolerance of key 12352.9 N",
+     "v3_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+    },
+    {
+     "item": "Steel force",
+     "v2_pass": true,
+     "v3_pass": false,
+     "v2_detail": "17.647 kN = 17647 N within abs tolerance of key 17647.1 N",
+     "v3_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+    }
+   ]
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 2,
+   "arm": "A",
+   "sampled": true,
+   "sampled_entry": 17,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Acceptance criteria",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "0.020 mm nonzero limit stated: False; 0.010 mm return-zero limit stated: True - both are required",
+     "v3_detail": "both inclusive limits (nonzero errors at most 0.020 mm, return zero at most 0.010 mm) are stated"
+    },
+    {
+     "item": "First signed error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "0.01 mm = 1e-05 m within abs tolerance of key 1e-05 m; the 'pass' verdict is stated with the error"
+    },
+    {
+     "item": "Second signed error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'fail' verdict stated with the error: False - both are required",
+     "v3_detail": "-0.03 mm = -3e-05 m within abs tolerance of key -3e-05 m; the 'fail' verdict is stated with the error"
+    },
+    {
+     "item": "Return-zero error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "headline 0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+    },
+    {
+     "item": "Overall verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "the overall FAIL and the second reading as its cause are not both stated",
+     "v3_detail": "the overall FAIL identifies the failed second reading as the cause"
+    }
+   ]
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 2,
+   "arm": "D",
+   "sampled": true,
+   "sampled_entry": 43,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Ordered check sequence",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "ordered sequence (zero, 1.000 mm, 2.000 mm, return): False; no re-zeroing between readings stated: False - both are required",
+     "v3_detail": "zero at unloaded zero, apply and record 1.000 mm, apply and record 2.000 mm, then return to zero and record without re-zeroing"
+    },
+    {
+     "item": "Acceptance criteria",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "0.020 mm nonzero limit stated: False; 0.010 mm return-zero limit stated: True - both are required",
+     "v3_detail": "both inclusive limits (nonzero errors at most 0.020 mm, return zero at most 0.010 mm) are stated"
+    },
+    {
+     "item": "First signed error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "0.01 mm = 1e-05 m within abs tolerance of key 1e-05 m; the 'pass' verdict is stated with the error"
+    },
+    {
+     "item": "Second signed error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'fail' verdict stated with the error: False - both are required",
+     "v3_detail": "-0.03 mm = -3e-05 m within abs tolerance of key -3e-05 m; the 'fail' verdict is stated with the error"
+    },
+    {
+     "item": "Return-zero error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "headline 0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+    },
+    {
+     "item": "Overall verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "the overall FAIL and the second reading as its cause are not both stated",
+     "v3_detail": "the overall FAIL identifies the failed second reading as the cause"
+    }
+   ]
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 3,
+   "arm": "A",
+   "sampled": true,
+   "sampled_entry": 45,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Hold criterion",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+     "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+    },
+    {
+     "item": "Shutdown and removal order",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "switch-off then cool then remove order: False; 40 deg C removal threshold stated: True - both are required",
+     "v3_detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
+    }
+   ]
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 2,
+   "arm": "A",
+   "sampled": true,
+   "sampled_entry": 12,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Hold criterion",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+     "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+    }
+   ]
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 2,
+   "arm": "C",
+   "sampled": true,
+   "sampled_entry": 22,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Ordered check sequence",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "ordered sequence (zero, 1.000 mm, 2.000 mm, return): True; no re-zeroing between readings stated: False - both are required",
+     "v3_detail": "zero at unloaded zero, apply and record 1.000 mm, apply and record 2.000 mm, then return to zero and record without re-zeroing"
+    },
+    {
+     "item": "First signed error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "0.01 mm = 1e-05 m within abs tolerance of key 1e-05 m; the 'pass' verdict is stated with the error"
+    },
+    {
+     "item": "Second signed error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'fail' verdict stated with the error: False - both are required",
+     "v3_detail": "-0.03 mm = -3e-05 m within abs tolerance of key -3e-05 m; the 'fail' verdict is stated with the error"
+    },
+    {
+     "item": "Return-zero error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+    },
+    {
+     "item": "Overall verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "the overall FAIL and the second reading as its cause are not both stated",
+     "v3_detail": "the overall FAIL identifies the failed second reading as the cause"
+    }
+   ]
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 3,
+   "arm": "C",
+   "sampled": true,
+   "sampled_entry": 6,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Acceptance criteria",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "0.020 mm nonzero limit stated: False; 0.010 mm return-zero limit stated: True - both are required",
+     "v3_detail": "both inclusive limits (nonzero errors at most 0.020 mm, return zero at most 0.010 mm) are stated"
+    },
+    {
+     "item": "First signed error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "0.01 mm = 1e-05 m within abs tolerance of key 1e-05 m; the 'pass' verdict is stated with the error"
+    },
+    {
+     "item": "Second signed error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'fail' verdict stated with the error: False - both are required",
+     "v3_detail": "-0.03 mm = -3e-05 m within abs tolerance of key -3e-05 m; the 'fail' verdict is stated with the error"
+    },
+    {
+     "item": "Return-zero error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "headline 0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+    },
+    {
+     "item": "Overall verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "the overall FAIL and the second reading as its cause are not both stated",
+     "v3_detail": "the overall FAIL identifies the failed second reading as the cause"
+    }
+   ]
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 2,
+   "arm": "D",
+   "sampled": true,
+   "sampled_entry": 28,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Hold criterion",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+     "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+    }
+   ]
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 1,
+   "arm": "C",
+   "sampled": true,
+   "sampled_entry": 21,
+   "resolution_verdict": "FAIL",
+   "verdict_v2": "PASS",
+   "verdict_v3": "FAIL",
+   "item_flips": [
+    {
+     "item": "Aluminum force",
+     "v2_pass": true,
+     "v3_pass": false,
+     "v2_detail": "12353.0 N = 12353 N within abs tolerance of key 12352.9 N",
+     "v3_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+    },
+    {
+     "item": "Steel force",
+     "v2_pass": true,
+     "v3_pass": false,
+     "v2_detail": "17647.0 N = 17647 N within abs tolerance of key 17647.1 N",
+     "v3_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+    }
+   ]
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 3,
+   "arm": "D",
+   "sampled": true,
+   "sampled_entry": 37,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Hold criterion",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+     "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+    },
+    {
+     "item": "Shutdown and removal order",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "switch-off then cool then remove order: False; 40 deg C removal threshold stated: True - both are required",
+     "v3_detail": "heating is switched off, the coupon cools inside to at most 40 deg C at the coupon probe, and only then is it removed"
+    }
+   ]
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 1,
+   "arm": "A",
+   "sampled": true,
+   "sampled_entry": 26,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Hold criterion",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+     "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+    }
+   ]
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 1,
+   "arm": "D",
+   "sampled": true,
+   "sampled_entry": 32,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Ordered check sequence",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "ordered sequence (zero, 1.000 mm, 2.000 mm, return): True; no re-zeroing between readings stated: False - both are required",
+     "v3_detail": "zero at unloaded zero, apply and record 1.000 mm, apply and record 2.000 mm, then return to zero and record without re-zeroing"
+    },
+    {
+     "item": "Acceptance criteria",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "0.020 mm nonzero limit stated: False; 0.010 mm return-zero limit stated: False - both are required",
+     "v3_detail": "both inclusive limits (nonzero errors at most 0.020 mm, return zero at most 0.010 mm) are stated"
+    },
+    {
+     "item": "Return-zero error and verdict",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "error within tolerance: True; 'pass' verdict stated with the error: False - both are required",
+     "v3_detail": "headline 0.005 mm = 5e-06 m within abs tolerance of key 5e-06 m; the 'pass' verdict is stated with the error"
+    }
+   ]
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 1,
+   "arm": "D",
+   "sampled": true,
+   "sampled_entry": 15,
+   "resolution_verdict": "PASS",
+   "verdict_v2": "FAIL",
+   "verdict_v3": "PASS",
+   "item_flips": [
+    {
+     "item": "Hold criterion",
+     "v2_pass": false,
+     "v3_pass": true,
+     "v2_detail": "600 s stated: True; excursion fails without restart stated: False; inclusive limits stated: True - all are required",
+     "v3_detail": "the 600 s hold inside the inclusive band, with any excursion failing without restart, is stated"
+    }
+   ]
+  }
+ ],
+ "unit_records": [
+  {
+   "question_id": "Q14",
+   "repetition": 1,
+   "arm": "B",
+   "status": "delivered",
+   "sampled_entry": 46,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "6/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 3,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 39,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 2,
+   "arm": "B",
+   "status": "delivered",
+   "sampled_entry": 25,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "3/4",
+   "passed_v3": "4/4",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "4/4"
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 3,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 3,
+   "arm": "B",
+   "status": "delivered",
+   "sampled_entry": 3,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "5/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 2,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 3,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 2,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 1,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 48,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "1/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 2,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 1,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 1,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 2,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 20,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 2,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 8,
+   "resolution_verdict": "FAIL",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "FAIL",
+   "passed_v2": "3/5",
+   "passed_v3": "3/5",
+   "verdict_rescored_v3_amended": "FAIL",
+   "passed_v3_amended": "3/5"
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 1,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 3,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 1,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "3/4",
+   "passed_v3": "4/4",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "4/4"
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 2,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 53,
+   "resolution_verdict": "FAIL",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "FAIL",
+   "passed_v2": "5/5",
+   "passed_v3": "3/5",
+   "verdict_rescored_v3_amended": "FAIL",
+   "passed_v3_amended": "3/5"
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 1,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 50,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "6/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 1,
+   "arm": "B",
+   "status": "delivered",
+   "sampled_entry": 19,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 2,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 2,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 11,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "6/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 1,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 5,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/4",
+   "passed_v3": "4/4",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "4/4"
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 3,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 54,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 3,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 29,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "0/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 2,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 23,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "3/4",
+   "passed_v3": "4/4",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "4/4"
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 3,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 56,
+   "resolution_verdict": "FAIL",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "FAIL",
+   "passed_v2": "0/6",
+   "passed_v3": "5/6",
+   "verdict_rescored_v3_amended": "FAIL",
+   "passed_v3_amended": "5/6"
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 2,
+   "arm": "E",
+   "status": "delivered",
+   "sampled_entry": 44,
+   "resolution_verdict": "FAIL",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "FAIL",
+   "passed_v2": "5/5",
+   "passed_v3": "3/5",
+   "verdict_rescored_v3_amended": "FAIL",
+   "passed_v3_amended": "1/5"
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 3,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 1,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 10,
+   "resolution_verdict": "FAIL",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "FAIL",
+   "passed_v2": "5/5",
+   "passed_v3": "3/5",
+   "verdict_rescored_v3_amended": "FAIL",
+   "passed_v3_amended": "3/5"
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 3,
+   "arm": "C",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "5/5",
+   "passed_v3": "5/5",
+   "verdict_rescored_v3_amended": "FAIL",
+   "passed_v3_amended": "3/5"
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 2,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 1,
+   "arm": "A",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 2,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 35,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 3,
+   "arm": "D",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "FAIL",
+   "passed_v2": "5/5",
+   "passed_v3": "3/5",
+   "verdict_rescored_v3_amended": "FAIL",
+   "passed_v3_amended": "3/5"
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 1,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 40,
+   "resolution_verdict": "FAIL",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "FAIL",
+   "passed_v2": "5/5",
+   "passed_v3": "3/5",
+   "verdict_rescored_v3_amended": "FAIL",
+   "passed_v3_amended": "3/5"
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 1,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 1,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 58,
+   "resolution_verdict": "FAIL",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "FAIL",
+   "passed_v2": "1/6",
+   "passed_v3": "5/6",
+   "verdict_rescored_v3_amended": "FAIL",
+   "passed_v3_amended": "5/6"
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 3,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 3,
+   "arm": "B",
+   "status": "delivered",
+   "sampled_entry": 30,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 3,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 1,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 3,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 38,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 2,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 17,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "1/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 2,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 43,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "0/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 2,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 3,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 47,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 3,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 45,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/4",
+   "passed_v3": "4/4",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "4/4"
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 3,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 1,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 41,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "6/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 2,
+   "arm": "D",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 3,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 2,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 1,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 1,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 1,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 51,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 3,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 16,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 3,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 33,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 3,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 2,
+   "arm": "C",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "6/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 2,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 12,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "3/4",
+   "passed_v3": "4/4",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "4/4"
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 2,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 22,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "1/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 3,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 2,
+   "arm": "A",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 2,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 2,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 34,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 1,
+   "arm": "B",
+   "status": "delivered",
+   "sampled_entry": 52,
+   "resolution_verdict": "FAIL",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "FAIL",
+   "passed_v2": "0/6",
+   "passed_v3": "5/6",
+   "verdict_rescored_v3_amended": "FAIL",
+   "passed_v3_amended": "5/6"
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 3,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 6,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "1/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 3,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 31,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "6/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 3,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 9,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 2,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 57,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 2,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 28,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "3/4",
+   "passed_v3": "4/4",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "4/4"
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 1,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 42,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "6/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 1,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 3,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 14,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "6/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 3,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 1,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 21,
+   "resolution_verdict": "FAIL",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "FAIL",
+   "passed_v2": "5/5",
+   "passed_v3": "3/5",
+   "verdict_rescored_v3_amended": "FAIL",
+   "passed_v3_amended": "3/5"
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 3,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 3,
+   "arm": "A",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "5/5",
+   "passed_v3": "5/5",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "5/5"
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 1,
+   "arm": "C",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 3,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 3,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 37,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/4",
+   "passed_v3": "4/4",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "4/4"
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 2,
+   "arm": "C",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 2,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 13,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q23",
+   "repetition": 2,
+   "arm": "A",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "5/5",
+   "passed_v3": "5/5",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "5/5"
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 1,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 2,
+   "arm": "B",
+   "status": "delivered",
+   "sampled_entry": 55,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 1,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 26,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "3/4",
+   "passed_v3": "4/4",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "4/4"
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 1,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 32,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "3/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 1,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 7,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 3,
+   "arm": "A",
+   "status": "delivered",
+   "sampled_entry": 36,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 1,
+   "arm": "C",
+   "status": "delivered",
+   "sampled_entry": 27,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 2,
+   "arm": "B",
+   "status": "delivered",
+   "sampled_entry": 24,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 2,
+   "arm": "D",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "6/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 2,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q15",
+   "repetition": 1,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 1,
+   "arm": "E",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 3,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 18,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 2,
+   "arm": "C",
+   "status": "incomplete",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 2,
+   "arm": "B",
+   "status": "refusal",
+   "verdict_recorded_v2": null,
+   "verdict_rescored_v3": null,
+   "note": "not delivered: no answer to score, so no verdict under either version - the delivery status is the unit's outcome",
+   "verdict_rescored_v3_amended": null,
+   "passed_v3_amended": null
+  },
+  {
+   "question_id": "Q16",
+   "repetition": 1,
+   "arm": "D",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q10",
+   "repetition": 1,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 15,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "FAIL",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "3/4",
+   "passed_v3": "4/4",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "4/4"
+  },
+  {
+   "question_id": "Q14",
+   "repetition": 3,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 4,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "6/6",
+   "passed_v3": "6/6",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "6/6"
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 1,
+   "arm": "A",
+   "status": "delivered",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q17",
+   "repetition": 1,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 49,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  },
+  {
+   "question_id": "Q6",
+   "repetition": 1,
+   "arm": "D",
+   "status": "delivered",
+   "sampled_entry": 2,
+   "resolution_verdict": "PASS",
+   "verdict_recorded_v2": "PASS",
+   "verdict_rescored_v3": "PASS",
+   "passed_v2": "2/2",
+   "passed_v3": "2/2",
+   "verdict_rescored_v3_amended": "PASS",
+   "passed_v3_amended": "2/2"
+  }
+ ],
+ "amendment_2026_10_10": {
+  "amendment": "2026-10-10, ruled in its final form 2026-10-14, clause-amended 2026-10-14",
+  "rule": "The any-outside headline rule with the operand guard, as the advisor's 2026-10-14 review (ARCH-20261003-119, PART 2) ruled it. The 2026-10-10 review adopted the any-outside rule in place of the first quantity: an item holds only when every quantity the last results section that attributes the item's quantity collects under the unchanged attribution guards falls within the frozen key's tolerance, and the detail names the value that fails it. The 2026-10-14 ruling adds the operand guard that first form lacked: a derivation input is not a stated result, so a quantity that is an operand of arithmetic the answer shows is attributed to no item (the ruling's verbatim text is carried below, and in evals/tier2/versions.json's .3 entry). The guard repairs the first form's one defect - the recorded-correct regression vector 102-Q1, whose SECTION 7: SUMMARY OF RESULTS presents the divider's derivation in the Output Voltage row's Reference cell ('V_out = V_s × R2 / R_total = 12.0 V × 4.00 kΩ / 6.00 kΩ') beside the Value cell's 8.00 V, and whose unguarded rule collected the Reference cell's 12.0 V - a derivation input, the supply voltage the equation works on - as the Output voltage item's stated result, failing the vector 11/12 - and moves nothing else on the run's 71 delivered answers (the measurement below). The attribution guards are unchanged (a token distinctive to the item minus its same-dimension siblings' and none distinctive to a rival, function words never attributing, headings as section delimiters, parenthesized asides, bound words introducing requirements rather than values, the quantity converted to the key dimension's base unit). An answer that presents no results section that attributes the item's quantity is scored on its stated quantities as before - the rule tightens what a presented result counts for, it does not demand one. The 2026-10-14 clause amendment (the amendment verbatim is carried below) then replaces the positional reading of the ruling's last-member sentence the first guarded draft carried - that draft read every member before a line's last '=' as a derivation input, whatever it held, which goes past the ruling and brings back the order-dependence the rule exists to remove ('Aluminum force = 12.4 kN = 12 352.9 N' passed while the order-swapped 'Aluminum force = 12 352.9 N = 12.4 kN' failed, and 'Aluminum force = 13.0 kN = 12 352.9 N' passed on a wrong figure): under the amendment a no-operator member states its figures, so both orders fail the item and the wrong figure fails it. The amendment moves nothing on the run's 71 delivered answers against the guarded form it amends (the measurement below).",
+  "ruling_2026_10_14_verbatim": "A derivation input is not a stated result. In the last results section that attributes the item's quantity, a quantity that is an operand of arithmetic the answer shows is attributed to no item. An operand is a number standing on either side of a binary operator: *, +, a spaced -, or ^ followed by a digit, sign or bracket. A slash divides between bare numbers written without spaces (210/17), or between quantities of different known dimensions (12.0 V / 6.00 k ohm). A slash between quantities of the same dimension, or where one side carries no unit, lists them (61.8 MPa / 176 MPa, 12.35 / 17.65 kN), and they stay stated values. The value an equation produces - the member after its last '=' - is stated unless an operator touches it. The degree sign's normalised '^ deg' is not an exponent, and an unspaced hyphen between numbers is a range, not a minus. Every other quantity is collected as before, under the unchanged attribution guards, and the item fails when any collected quantity lies outside the frozen key's tolerance.",
+  "amendment_2026_10_14_verbatim": "Amendment, 2026-10-14: '=' is not an operator. A clause ends at ';', at a comma or full stop followed by a space, or at the end of the line, and its members are the parts between its '=' signs. A member before the clause's last '=' is arithmetic when it contains an operator, and every quantity in it is an operand. A member with no operator is a stated value, however many '=' follow it: '12.4 kN = 12 352.9 N' states both. A lowercase x with a space on each side multiplies, like * and ×. A ^ inside a unit (mm^2) belongs to the unit and is not an operator.",
+  "trigger": "The advisor's 2026-10-14 review of the scorer branch (ARCH-20261003-119, PART 2), ruling on the contradiction the 2026-10-10 step-3 record reported (convention 18: the measurement was reported as it read, not adjusted): the ruled any-outside rule fails the recorded-correct regression vector 102-Q1 (11/12), because its last results section presents the divider's derivation in the Output Voltage row's Reference cell beside the Value cell's 8.00 V, and the unguarded rule collected the Reference cell's 12.0 V - a derivation input, not a stated result - as the Output voltage item's headline, failing the item on a figure the answer presents as an operand. The ruling: a derivation input is not a stated result. The ruled rule ships as frozen-2026-10-03.3 (PR #171, arch/20261008-scorer-recognition, rebased onto main 3526483 after the 2026-10-14 review's Part 1 merged); the .3 entry in evals/tier2/versions.json carries the ruling verbatim. Round 2 of the same review (the same day): the advisor's probe verified the delivery as claimed, with one HOLD - the implementation's positional '=' rule made every member before the last '=' an input, which goes past the ruling and brings back the order-dependence the rule exists to remove; the advisor's own wording invited the reading, and the fix is the advisor's (the amendment, carried verbatim above). The amended rule re-ships as frozen-2026-10-03.3 on the same PR, pushed with --force-with-lease (owner-ratified); the .3 entry and the tier-3 manifest note carry the amendment verbatim.",
+  "the_operand_guard_vs_the_2026_10_10_draft": "The advisor's probe, reproduced exactly. Across the 71 delivered answers, the operand guard moves exactly one item on one unit - C-Q23-r2's Common extension, FAIL to PASS (2/5 to 3/5 items), the unit's verdict unchanged FAIL. The extension's results table presents the derivation in its Reference cell: '| **Common extension ΔL** | **8.82×10⁻⁴ m (0.882 mm)** | 3/3400 m = 8.8235×10⁻⁴ m |'. Without the guard the bare-slash denominator 3400 m is collected as a stated quantity (far outside the 0.882353 mm key) and fails the item; with the guard the slash's operands are derivation inputs, the equation's product 8.8235×10⁻⁴ m (the member after its last '=') is stated, and the section's collected figures - the presented 0.882 mm and the derived 0.88235 mm - hold. No other unit's verdict or items move under the guard, so the review's condition - 'any move beyond C-Q23-r2's extension item: STOP and report' - is not met.",
+  "the_clause_amendment_vs_the_guarded_form": "The advisor's round-2 probe, reproduced exactly: across the run's 71 delivered answers, the clause amendment moves nothing against the guarded form it amends - 0 verdicts, 0 item counts and 0 items (every unit_record's verdict_rescored_v3_amended and passed_v3_amended re-measured under the amended scorer read identically to the guarded form's, so the guarded form's measurements hold under the amendment unchanged: the operand guard's own one-item move, the two moves against the committed first form, the four review units and the 58/58 all stand as measured). The amendment is a repair of the implementation's reading of the ruling, not a change to what the rule concludes on this run.",
+  "the_four_review_units_beyond_the_sheet": {
+   "expected": {
+    "A-r2": "PASS",
+    "A-r3": "PASS",
+    "C-r3": "FAIL",
+    "D-r3": "FAIL"
+   },
+   "measured": {
+    "A-r2": {
+     "verdict": "PASS",
+     "passed": "5/5",
+     "recorded_v3": "PASS",
+     "force_items": {
+      "Aluminum force": {
+       "pass": true,
+       "detail": "headline 12.35 kN = 12350 N within abs tolerance of key 12352.9 N"
+      },
+      "Steel force": {
+       "pass": true,
+       "detail": "headline 17.65 kN = 17650 N within abs tolerance of key 17647.1 N"
+      }
+     }
+    },
+    "A-r3": {
+     "verdict": "PASS",
+     "passed": "5/5",
+     "recorded_v3": "PASS",
+     "force_items": {
+      "Aluminum force": {
+       "pass": true,
+       "detail": "headline 12.35 kN = 12350 N within abs tolerance of key 12352.9 N"
+      },
+      "Steel force": {
+       "pass": true,
+       "detail": "headline 17.65 kN = 17650 N within abs tolerance of key 17647.1 N"
+      }
+     }
+    },
+    "C-r3": {
+     "verdict": "FAIL",
+     "passed": "3/5",
+     "recorded_v3": "PASS",
+     "force_items": {
+      "Aluminum force": {
+       "pass": false,
+       "detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+      },
+      "Steel force": {
+       "pass": false,
+       "detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+      }
+     }
+    },
+    "D-r3": {
+     "verdict": "FAIL",
+     "passed": "3/5",
+     "recorded_v3": "FAIL",
+     "force_items": {
+      "Aluminum force": {
+       "pass": false,
+       "detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+      },
+      "Steel force": {
+       "pass": false,
+       "detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+      }
+     }
+    }
+   }
+  },
+  "the_58_sampled_entries_vs_the_resolution": "58/58 under the ruled rule (unchanged from the 2026-10-08 measurement under the shipped first-quantity rule - the ruled rule and its guard together move none of the 58)",
+  "units_moved": 2,
+  "moves": [
+   {
+    "question_id": "Q23",
+    "repetition": 2,
+    "arm": "E",
+    "sampled": true,
+    "sampled_entry": 44,
+    "verdict_rescored_v3": "FAIL",
+    "verdict_rescored_v3_amended": "FAIL",
+    "passed_v3": "3/5",
+    "passed_v3_amended": "1/5",
+    "item_flips": [
+     {
+      "item": "Aluminum tensile stress",
+      "v3_pass": true,
+      "amended_pass": false,
+      "v3_detail": "headline 61.8 MPa = 6.18e+07 Pa within abs tolerance of key 6.17647e+07 Pa",
+      "amended_detail": "headline 93.0 MPa = 9.3e+07 Pa outside abs tolerance of key 6.17647e+07 Pa"
+     },
+     {
+      "item": "Steel tensile stress",
+      "v3_pass": true,
+      "amended_pass": false,
+      "v3_detail": "headline 176.0 MPa = 1.76e+08 Pa within abs tolerance of key 1.76471e+08 Pa",
+      "amended_detail": "headline 265.0 MPa = 2.65e+08 Pa outside abs tolerance of key 1.76471e+08 Pa"
+     }
+    ],
+    "reason": "The answer's kill-trigger conditions state their limits as quantities: '(a) Linear elasticity. The request assumes it; no grades are supplied. Trigger: if the aluminum grade has 0.2 % proof strength below 93 MPa (= 1.5 × applied 61.8 MPa) or the steel has yield strength below 265 MPa (= 1.5 × applied 176 MPa)' and '6. PASS — Conditional assumptions carried with explicit kill triggers: elasticity void if Al proof < 93 MPa or steel yield < 265 MPa (1.5× applied)'. A comparison is not an operator, so 93 MPa and 265 MPa are stated values, not derivation inputs, and they attribute to the two tensile-stress items (their contexts name the materials); both lie far outside the keys' tolerances (61.8 ± 0.1 MPa, 176.5 ± 0.5 MPa), so the any-outside rule fails both items on them. Under the shipped first-quantity rule each stress item's headline was the presented in-tolerance figure (61.8 MPa, 176 MPa), so both held; the unit's verdict was already FAIL on the presented rounded forces (12.4/17.6 kN) and stays FAIL, with 1/5 items passing instead of 3/5. The operand guard does not repair this - '<' and 'below' are comparisons, not operators, and the ruling's letter keeps the limit figures stated; whether a kill-trigger limit should attribute to the item it bounds is a verdict-semantics question for the advisor, not a measurement defect - reported as it reads (convention 18)."
+   },
+   {
+    "question_id": "Q23",
+    "repetition": 3,
+    "arm": "C",
+    "sampled": false,
+    "sampled_entry": null,
+    "verdict_rescored_v3": "PASS",
+    "verdict_rescored_v3_amended": "FAIL",
+    "passed_v3": "5/5",
+    "passed_v3_amended": "3/5",
+    "item_flips": [
+     {
+      "item": "Aluminum force",
+      "v3_pass": true,
+      "amended_pass": false,
+      "v3_detail": "headline 12.35 kN = 12350 N within abs tolerance of key 12352.9 N",
+      "amended_detail": "headline 12.4 kN = 12400 N outside abs tolerance of key 12352.9 N"
+     },
+     {
+      "item": "Steel force",
+      "v3_pass": true,
+      "amended_pass": false,
+      "v3_detail": "headline 17.65 kN = 17650 N within abs tolerance of key 17647.1 N",
+      "amended_detail": "headline 17.6 kN = 17600 N outside abs tolerance of key 17647.1 N"
+     }
+    ],
+    "reason": "The answer's final-conclusion table presents each force twice - 'Force in Al bar' as 12.35 kN (Value, precise) and 12.4 kN (Value, rounded, 3 s.f.), and 'Force in steel bar' as 17.65 kN and 17.6 kN. Both figures of each pair are stated values (the presentation collects every quantity the section attributes, and the rounded figures carry no operator), the rounded pair lies outside the keys' tolerances (12.35 ± 0.01 kN, 17.65 ± 0.01 kN), and the any-outside rule fails both force items on the rounded figures - the move the 2026-10-10 review ordered. The precise figures still hold; each item's detail names the failing headline (12.4 kN, 17.6 kN)."
+   }
+  ],
+  "moves_outside_q23": 0,
+  "the_column_order_fixtures": "The scorer's self-test holds 291 fixtures (the 279 the 2026-10-10 rule carried, plus seven, all in the 'Results presentations and the answers' own words' group, and five in the clause-amendment group): the 102-Q1 summary row in both column orders - the Value cell first, as the recorded answer presents it, and the Reference cell first, the same row with its columns swapped - so the verdict cannot depend on the column order the first-quantity rule let decide it; the divider equation in prose ('V_out = 12.0 V × 4.00 k ohm / 6.00 k ohm = 8.00 V', whose operands carry the item's own label inside their attribution window, so the guard is load-bearing: without it the 12.0 V operand attributes and fails the item); a same-dimension slash list ('12.35 kN / 12.4 kN'), which lists the figures and fails the item on its out-of-tolerance member; the degree-caret form ('The final temperature reaches 35.0 °C^ in exactly 120 s', where the caret before a word is not an exponent and 35.0 °C is collected - an earlier results section's out-of-tolerance 50.0 °C makes the break-proof bite); a check line ('Check: the aluminum force 12.4 kN + the steel force 17.6 kN = the bars' combined force of 30.0 kN') beside the stated 12.35/17.65 kN, whose operands are derivation inputs and whose total attributes to no item; and an unspaced range ('The common extension is 0.882-0.883 mm'), whose members are both stated values - the hyphen is a range, not a minus, so the second member is collected (as -0.883 mm) and fails the item, where a minus would have excluded it and passed the item on its first member alone. The five clause-amendment fixtures, each a Q23 working line beside the stated results 'Force in aluminum bar: 12.35 kN; force in steel bar: 17.65 kN.': 'Aluminum force = 12.4 kN = 12 352.9 N' - a no-operator member states both figures however many '=' follow it, so the out-of-tolerance rounded force fails the Aluminum force item, FAIL; 'Aluminum force = 12 352.9 N = 12.4 kN' - the same two figures in the swapped order, FAIL identically: the rule is order-independent; 'Aluminum force = 13.0 kN = 12 352.9 N' - a wrong force in a no-operator member, FAIL; 'Al force = 0.4118 x 30.0 kN = 12.35 kN' - a lowercase x with a space on each side multiplies, so the working member is arithmetic, both its figures are derivation inputs and the stated 12.35 kN holds the item, PASS (the 'Al' token resolves to aluminum under the element-symbol table); and 'Aluminum force = 13.0 kN; check 13.0 + 17.0 = 30.0 kN' - a semicolon ends the clause, so the wrong 13.0 kN is a stated value of its own clause and fails the item, while the check line's arithmetic stays operands, FAIL.",
+  "self_test": "291/291 fixtures hold (evals/tier2/scorer.py --self-test, exit 0).",
+  "verification": "regression_12 12/12 (the 102-Q1 vector passes under the guard); verify_keys 268/268; notation_sweep 52/52 model-answer variants pass and 42/42 wrong-answer variants fail; the 58 sampled entries agree with the advisor's resolution 58/58; the four review units read as the advisor's hand-check (A-r2 PASS 5/5, A-r3 PASS 5/5, C-r3 FAIL 3/5, D-r3 FAIL 3/5); the clause amendment moves 0 verdicts, 0 item counts and 0 items on the 71 delivered answers against the guarded form it amends (the advisor's probe of 0 reproduced).",
+  "break_proofs": [
+   {
+    "break": "the operand guard removed (the derivation filter dropped from the headline collection)",
+    "measured": "regression_12 reads 11/12 - the 102-Q1 vector fails on the Reference cell's 12.0 V ('headline 12.0 V = 12 V outside abs tolerance of key 8 V') - and five fixtures fail (the four operand-guard fixtures - the two column orders, the prose equation, the check line - plus the amendment's spaced-x fixture, which depends on the guard too); the scorer was restored afterward and the suite re-run green"
+   },
+   {
+    "break": "every slash divides (_slash_divides returns True unconditionally)",
+    "measured": "the same-dimension slash-list fixture passes wrongly - both figures become derivation inputs, the headline path attributes nothing, and the whole-answer fallback rescues the in-tolerance 12.35 kN - and it is the only fixture that fails; the scorer was restored afterward and the suite re-run green"
+   },
+   {
+    "break": "'^' is always an exponent (the after-side caret check fires on any caret)",
+    "measured": "the degree-caret fixture fails - the 35.0 °C^ quantity is excluded, the later results section stops attributing the item, and the rule falls back to the earlier section's 50.0 °C ('headline 50.0 deg C = 50 deg C outside abs tolerance of key 35 deg C') - and it is the only fixture that fails; the scorer was restored afterward and the suite re-run green"
+   },
+   {
+    "break": "the positional '=' rule restored (every member before the line's last '=' an input, whatever it holds)",
+    "measured": "three fixtures pass wrongly - the no-operator-member fixture ('Aluminum force = 12.4 kN = 12 352.9 N'), the wrong-figure fixture ('Aluminum force = 13.0 kN = 12 352.9 N') and the semicolon fixture ('Aluminum force = 13.0 kN; check 13.0 + 17.0 = 30.0 kN') - because the positional rule marks the rounded force, the wrong force and the wrong 13.0 kN as derivation inputs, and each item falls back to any in-tolerance figure in the working; the scorer was restored afterward and the suite re-run green"
+   },
+   {
+    "break": "the clause split dropped (the whole line read as one clause)",
+    "measured": "the semicolon fixture passes wrongly, alone - the check line's '13.0 + 17.0 = 30.0 kN' arithmetic swallows the preceding stated '13.0 kN' into its working member, so the wrong figure becomes an operand and the item falls back; the scorer was restored afterward and the suite re-run green"
+   },
+   {
+    "break": "the spaced x dropped from the operator scan",
+    "measured": "the spaced-x fixture fails, alone - 'Al force = 0.4118 x 30.0 kN = 12.35 kN' holds no operator in its working member, both figures become stated values and the out-of-tolerance 30.0 kN fails the Aluminum force item ('item 'Aluminum force': FAIL, expected pass'); the scorer was restored afterward and the suite re-run green"
+   }
+  ],
+  "known_limit": "Three, named per the review's instruction. (1) A same-dimension division inside a formula reads as a list: 'V_out = 6.00 k ohm / 6.00 k ohm = 1.00' states both 6.00 k ohm values - the working member's only operator candidate is the listing slash, so the member holds no operator and both figures are stated values. Neither attributes - no item's dimension matches the ohm - so no verdict on the run turns on it, but the list reading is the ruling's letter, not a case the guard repairs. (The first round's exhibit, 'V_out = 12.0 V × 4.00 k ohm / 6.00 k ohm = 8.00 V' collects the 6.00 k ohm as a stated value, was false under the amendment - the positional '=' rule had masked it - and is repaired here: that working member contains the multiplication, so under the amendment the 6.00 k ohm is a derivation input, as the ruling intended.) (2) A comparison's far side is collected: E-Q23-r2's kill-trigger limits ('below 93 MPa' and '< 265 MPa') stay stated values, and the screen errs toward FAIL on purpose - in 121 every FAIL is hand-read, and only 10 PASS per arm are. (3) A prose label more than 32 characters before its value does not attribute, so the item falls back to the any-quantity rule.",
+  "versions_json": "The .3 entry (frozen-2026-10-03.3) carries the ruling verbatim, the amendment verbatim, the final rule, the three known limits above, the scorer.py sha256 of this delivery and the verification counts; the .2 entry is untouched.",
+  "tier3_manifest_note": "The tier-3 manifest's tier3-7 version_note paragraph is amended to describe the ruled rule (the any-outside headline rule with the operand guard, as the 2026-10-14 clause amendment amends it - the amendment verbatim, the three known limits, the 291-fixture self-test and the 21 break-proofed governing lines); the manifest version stays tier3-7 and the scorer version stays frozen-2026-10-03.3 - the repair's ruled form was never shipped, so the version's description is corrected in place, and a change to either tier-2 versioned file after ratification is a new tier-3 manifest version."
+ }
+}

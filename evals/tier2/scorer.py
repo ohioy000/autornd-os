@@ -185,6 +185,11 @@ def _normalize(text: str) -> str:
     text = re.sub(r"\\mathrm\{([^}]*)\}", r"\1", text)
     text = re.sub(r"\\text\{([^}]*)\}", r"\1", text)
     text = text.replace("\\%", "%")
+    # the inline-math delimiters '\(' and '\)':
+    # delimiters, not parentheses - stripping
+    # them leaves '(0.000 mm reference)' the
+    # only parenthetical a line carries.
+    text = text.replace("\\(", " ").replace("\\)", " ")
     # 6.13592\times10^{-7}, 6.14 x 10^-7 and 6.14*10^7
     # -> 6.14e-7
     text = re.sub(r"(\d)\s*(?:\\times|×|x|\*)\s*10\s*\^\s*"
@@ -206,6 +211,9 @@ def _normalize(text: str) -> str:
     # 30000, so the number extractor sees one number
     # (a separator between digits, followed by exactly
     # three digits and then a non-digit or the end).
+    # The LaTeX spelling '120{,}000' groups the same
+    # way and reads as one number too.
+    text = text.replace("{,}", ",")
     text = re.sub(r"(?<=\d)[,\s](?=\d{3}(?:\D|$))", "",
                   text)
     text = text.replace("\\,", " ").replace("\\;", " ")
@@ -414,6 +422,695 @@ def _key_quantities(item: dict, dimension: str | None = None,
     return quantities[index]
 
 
+# ── The strict-headline rule ─────────────────────────
+#
+# The advisor's resolution of the tier-3 stage-1
+# reading (reading 2's rule, adopted): a numeric
+# item holds only when the answer's headline value
+# for it falls within the frozen key's tolerance.
+# The headline is the quantity the answer presents
+# as its result: the last results section's value
+# for the item, attributed by a token distinctive
+# to that item - its own tokens minus its
+# same-dimension siblings' tokens - so a results
+# table's shared column words ('force', 'stress')
+# attribute to no item, and neither does an
+# aggregate 'total' column. An answer that presents
+# no results section states no headline, and the
+# item is scored on its stated quantities as
+# before: the rule tightens what a presented result
+# counts for, it does not demand one.
+
+_HEADLINE_WORDS = re.compile(
+    r"\b(?:conclusions?|results?|summaries|"
+    r"summary|final\s+answer|deliverables?|"
+    r"reports?)\b", re.IGNORECASE)
+
+# Words that introduce a requirement, not a
+# stated value: a quantity one introduces is
+# a bound the answer holds itself to ('Max
+# drop | 0.20 bar' states the acceptance
+# limit, not the logged drop), so it
+# attributes to no item unless the bound
+# word is part of the item's own name ('an
+# item named Error limit 1 states its own
+# bound).
+_BOUND_WORDS = {
+    "max", "maximum", "min", "minimum",
+    "threshold", "limit", "limits", "peak",
+    "upper", "lower", "bound", "bounds",
+}
+
+# Element symbols the parallel-bars answers
+# subscript their quantities with: '_{al}' and
+# '_al' name the aluminum item's quantities,
+# '_{st}' and '_st' the steel ones.
+_ELEMENT_SYMBOLS = {
+    "al": "aluminum", "aluminium": "aluminum",
+    "st": "steel",
+}
+
+# Function words: they appear in every prose
+# context, so a token they name attributes to
+# no item - 'and' in an item's own name
+# ('Selected heating time and verdict') would
+# otherwise attribute every quantity the answer
+# states '... and ...' to that item.
+_STOPWORDS = {
+    "a", "an", "the", "and", "or", "but",
+    "if", "then", "else", "of", "at", "by",
+    "for", "with", "about", "against",
+    "between", "into", "through", "during",
+    "before", "after", "above", "below", "to",
+    "from", "up", "down", "in", "out", "on",
+    "off", "over", "under", "again", "further",
+    "once", "here", "there", "when", "where",
+    "why", "how", "all", "any", "both", "each",
+    "few", "more", "most", "other", "some",
+    "such", "no", "nor", "not", "only", "own",
+    "same", "so", "than", "too", "very", "can",
+    "will", "just", "should", "now", "is", "are",
+    "was", "were", "be", "been", "being", "have",
+    "has", "had", "having", "do", "does", "did",
+    "doing", "would", "could", "shall", "may",
+    "might", "must", "as", "it", "its", "itself",
+    "this", "that", "these", "those", "i", "you",
+    "he", "she", "we", "they", "them", "his",
+    "her", "their", "our", "your", "my", "me",
+    "him", "us", "what", "which", "who", "whom",
+    "because", "until", "while", "also",
+}
+
+
+def _tokens(text: str) -> set[str]:
+    """The answer's lowercase word tokens, with
+    element symbols read as the material they
+    name and function words dropped. Splitting
+    on every non-alphanumeric character reads
+    'F_{Al}' as {'f', 'al'} and
+    'force-in-aluminium' as its words."""
+    words = set(re.findall(r"[a-z0-9]+",
+                           text.lower()))
+    words -= _STOPWORDS
+    return ((words
+             | {_ELEMENT_SYMBOLS[w]
+                for w in words
+                if w in _ELEMENT_SYMBOLS})
+            - set(_ELEMENT_SYMBOLS))
+
+
+def _headline_sections(answer: str
+                       ) -> list[tuple[str, str]]:
+    """The answer's results sections: (heading,
+    body) pairs, one per heading-shaped line that
+    names a result ('## Final conclusion',
+    '### 3. Conclusion', '8. REPORT FORMAT'). A
+    section runs to the next such heading, so
+    subheadings inside it stay part of it; an
+    answer with no results heading has none."""
+    sections: list[tuple[str, str]] = []
+    heading: str | None = None
+    body: list[str] = []
+    for line in _normalize(answer).splitlines():
+        if (_HEADING.match(line)
+                and _HEADLINE_WORDS.search(line)):
+            if heading is not None:
+                sections.append(
+                    (heading, "\n".join(body)))
+            heading, body = line, []
+        elif heading is not None:
+            body.append(line)
+    if heading is not None:
+        sections.append((heading, "\n".join(body)))
+    return sections
+
+
+def _slash_divides(line: str, slash: int) -> bool:
+    """Whether the slash at line[slash] divides
+    two quantities, or lists them. A slash
+    inside a unit capture ('150 N/mm^2', 'm/s')
+    is part of the unit, not an operator. A
+    slash between bare numbers written without
+    spaces divides ('210/17'). Otherwise a slash
+    divides only between quantities of different
+    known dimensions ('12.0 V / 6.00 k ohm');
+    a slash between quantities of the same
+    dimension, or where one side carries no
+    unit, lists them ('61.8 MPa / 176 MPa',
+    '12.35 / 17.65 kN'), and they stay stated
+    values."""
+    if slash <= 0 or slash + 1 >= len(line):
+        return False
+    # a slash between two letters is inside a
+    # compound unit capture ('N/mm', 'm/s')
+    if line[slash - 1].isalpha():
+        return False
+    # bare numbers written without spaces
+    if (line[slash - 1].isdigit()
+            and line[slash + 1].isdigit()):
+        return True
+    # the known dimension each side carries
+    left = list(_NUMBER.finditer(line[:slash]))
+    if not left:
+        return False
+    left_unit = _unit_behind(
+        line[left[-1].end():slash])
+    right = _NUMBER.search(line, slash + 1)
+    if not right:
+        return False
+    right_unit = _unit_behind(
+        line[right.end():right.end() + 32])
+    left_dim = (_dimension(left_unit)
+                 if left_unit else None)
+    right_dim = (_dimension(right_unit)
+                  if right_unit else None)
+    return (left_dim is not None
+            and right_dim is not None
+            and left_dim != right_dim)
+
+
+def _clause_end(line: str, i: int) -> bool:
+    """Whether position i ends a clause. The
+    amendment (2026-10-14, the advisor's
+    ARCH-20261003-119 PART 2 ruling, ROUND
+    2): a clause ends at ';', at a comma or
+    full stop followed by a space, or at the
+    end of the line."""
+    if line[i] == ";":
+        return True
+    return (line[i] in ",."
+            and i + 1 < len(line)
+            and line[i + 1] == " ")
+
+
+def _clause_of(line: str, pos: int) -> tuple[int, int]:
+    """The (start, end) of the clause
+    containing position pos: the span after
+    the last clause boundary before pos, to
+    the first boundary at or after the start
+    (the line's end when there is none)."""
+    start = 0
+    for i in range(pos):
+        if _clause_end(line, i):
+            start = i + 1
+    for i in range(start, len(line)):
+        if _clause_end(line, i):
+            return start, i
+    return start, len(line)
+
+
+def _member_has_operator(text: str) -> bool:
+    """Whether a clause member contains an
+    operator, under the amendment's rule:
+    '=' is not an operator. A single '*'
+    multiplies (a run of asterisks is
+    markdown emphasis), '+' adds, a 'x'
+    with a space on each side multiplies
+    like '*' and '×', a '-' surrounded by
+    spaces subtracts, a '/' divides when
+    _slash_divides says so, and a '^'
+    raises to a power when a digit, sign or
+    bracket follows it. A '^' inside a unit
+    ('mm^2') belongs to the unit and is not
+    an operator, and neither is a sign
+    inside a number's extent: the scan
+    carves out every _NUMBER match before
+    it looks for operators."""
+    extents = [(m.start(), m.end())
+               for m in _NUMBER.finditer(text)]
+
+    def in_number(i: int) -> bool:
+        return any(a <= i < b for a, b in extents)
+
+    i = 0
+    while i < len(text):
+        c = text[i]
+        if c == "*":
+            run = 1
+            while (i + run < len(text)
+                   and text[i + run] == "*"):
+                run += 1
+            if run == 1:
+                return True
+            i += run
+            continue
+        if c == "+" and not in_number(i):
+            return True
+        if (c == "-" and not in_number(i)
+                and i - 1 >= 0
+                and text[i - 1].isspace()
+                and i + 1 < len(text)
+                and text[i + 1].isspace()):
+            return True
+        if c == "/" and _slash_divides(text, i):
+            return True
+        if c == "^":
+            if (i - 1 >= 0
+                    and text[i - 1].isalpha()
+                    and i + 1 < len(text)
+                    and text[i + 1].isdigit()):
+                # a '^' inside a unit ('mm^2')
+                # belongs to the unit
+                i += 1
+                continue
+            k = i + 1
+            while k < len(text) and text[k].isspace():
+                k += 1
+            if k < len(text) and (
+                    text[k].isdigit()
+                    or text[k] in "+-([{"):
+                return True
+        if (c == "x" and i - 1 >= 0
+                and text[i - 1].isspace()
+                and i + 1 < len(text)
+                and text[i + 1].isspace()):
+            # a lowercase 'x' with a space on
+            # each side multiplies
+            return True
+        i += 1
+    return False
+
+
+def _derivation_input(line: str, m: re.Match) -> bool:
+    """Whether the number a match names is a
+    derivation input: an operand of the
+    arithmetic the answer shows, not a result
+    the line states. The advisor's 2026-10-14
+    review (ARCH-20261003-119, PART 2, step
+    3) adopted this rule for headline
+    attribution: a derivation input is not a
+    stated result, so a quantity that is an
+    operand of arithmetic the answer shows is
+    attributed to no item. An operand is a
+    number standing on either side of a binary
+    operator: '*', '+', a spaced '-', a
+    dividing '/', '^' followed by a digit,
+    sign or bracket, or a lowercase 'x' with
+    a space on each side. A slash divides
+    (and so makes its operands) between bare
+    numbers written without spaces, or between
+    quantities of different known dimensions;
+    it lists them otherwise. The amendment
+    (2026-10-14, same ruling, ROUND 2):
+    '=' is not an operator. A clause ends at
+    ';', at a comma or full stop followed by a
+    space, or at the end of the line, and its
+    members are the parts between its '='
+    signs. A member before the clause's last
+    '=' is arithmetic when it contains an
+    operator, and every quantity in it is an
+    operand; a member with no operator is a
+    stated value, however many '=' follow it
+    ('12.4 kN = 12 352.9 N' states both). A
+    '^' inside a unit ('mm^2') belongs to the
+    unit and is not an operator. The degree
+    sign's normalised '^ deg' is not an
+    exponent, and an unspaced hyphen between
+    numbers is a range, not a minus: the sign
+    is inside the match, so the scan never
+    sees it."""
+    # a number standing just after an operator:
+    # the first non-space character before it
+    i = m.start() - 1
+    while i >= 0 and line[i].isspace():
+        i -= 1
+    if i >= 0:
+        c = line[i]
+        if c in ("*", "+", "^"):
+            # '*2.00', '+2.00' and '^2.00' (the
+            # number is an exponent). A run of
+            # asterisks is markdown emphasis
+            # ('**12.4 kN**'), not multiplication.
+            run = 1
+            while i - run >= 0 and line[i - run] == "*":
+                run += 1
+            if c != "*" or run == 1:
+                return True
+        elif c == "/":
+            if _slash_divides(line, i):
+                return True
+        elif c == "-":
+            # a '-' the match did not take as
+            # its sign is a spaced minus: the
+            # match would have carried a '-'
+            # written against the number itself
+            # ('2.90-3.10'), so this one stands
+            # alone between spaces
+            return True
+        elif c == "x":
+            # a lowercase 'x' with a space on
+            # each side multiplies, like '*'
+            # and '×' (the amendment's rule)
+            if i - 1 >= 0 and line[i - 1].isspace():
+                return True
+    # a number standing just before an operator:
+    # the first non-space character after the
+    # number and its unit capture
+    rest = line[m.end():]
+    unit_m = _UNIT_AFTER.match(rest)
+    extent = m.end() + (
+        unit_m.end() if unit_m else 0)
+    j = extent
+    while j < len(line) and line[j].isspace():
+        j += 1
+    if j < len(line):
+        c = line[j]
+        if c in ("*", "+"):
+            run = 1
+            while (j + run < len(line)
+                   and line[j + run] == "*"):
+                run += 1
+            # a single '*' multiplies; a run of
+            # two or more is markdown emphasis
+            if run == 1:
+                return True
+        elif c == "/":
+            if _slash_divides(line, j):
+                return True
+        elif c == "-":
+            # a '-' followed by a space is a
+            # spaced minus; one against a digit
+            # is the next number's sign in a
+            # list ('2.90 -3.10')
+            if (j + 1 < len(line)
+                    and line[j + 1].isspace()):
+                return True
+        elif c == "^":
+            # '^' raises the number to a power
+            # when a digit, sign or bracket
+            # follows; the degree sign's
+            # normalised '^ deg' is not an
+            # exponent, and neither is a '^'
+            # before any other word
+            k = j + 1
+            while k < len(line) and line[k].isspace():
+                k += 1
+            if k < len(line) and (
+                    line[k].isdigit()
+                    or line[k] in "+-([{"):
+                return True
+        elif c == "x":
+            # a lowercase 'x' with a space on
+            # each side multiplies, like '*'
+            # and '×' (the amendment's rule)
+            if j + 1 < len(line) and line[j + 1].isspace():
+                return True
+    # the clause the match sits in, under the
+    # amendment: its members are the parts
+    # between its '=' signs. A member before
+    # the clause's last '=' is arithmetic when
+    # it contains an operator, and every
+    # quantity in it is an operand; a member
+    # with no operator is a stated value,
+    # however many '=' follow it. A member
+    # after the last '=' is the value the
+    # clause produces: stated, unless an
+    # operator touches it (checked above).
+    cstart, cend = _clause_of(line, m.start())
+    clause = line[cstart:cend]
+    eqs = [k for k, ch in enumerate(clause)
+           if ch == "="]
+    if not eqs:
+        return False
+    offset = m.start() - cstart
+    member_start = 0
+    for k in eqs:
+        if offset < k:
+            break
+        member_start = k + 1
+    if offset > eqs[-1]:
+        return False
+    member_end = len(clause)
+    for k in eqs:
+        if k >= member_start:
+            member_end = k
+            break
+    member = clause[member_start:member_end]
+    return _member_has_operator(member)
+
+
+def _line_quantities(
+        line: str
+) -> list[tuple[float, str, str, bool]]:
+    """The (value, unit, text-before,
+    derivation-input) quadruples a single
+    line states, in reading order. The text
+    before a quantity is the label that
+    introduces it, so only the thirty-two
+    characters immediately before the
+    quantity are kept: a longer reach
+    attributes the quantity to every item
+    named anywhere earlier on the line
+    ('Choose the 1000 W heater: it reaches
+    35 deg C in exactly 120 s' names the
+    selected heater, not the next smaller
+    one). The flag is True when the quantity
+    is an operand of the arithmetic the line
+    shows - a derivation input, not a stated
+    result."""
+    normalized = _word_numbers(_normalize(line))
+    quadruples = []
+    for m in _NUMBER.finditer(normalized):
+        # a quantity inside parentheses is an
+        # aside or a reference the label carries
+        # ('at return-to-zero (0.000 mm
+        # reference): +0.005 mm'), not the
+        # quantity the line states
+        if (normalized[:m.start()].count("(")
+                > normalized[:m.start()].count(")")):
+            continue
+        rest = normalized[m.end():m.end() + 32]
+        before = normalized[max(0, m.start() - 32):
+                            m.start()]
+        quadruples.append((float(m.group(0)),
+                           _unit_behind(rest),
+                           before,
+                           _derivation_input(
+                               normalized, m)))
+    return quadruples
+
+
+def _table_quantities(
+        block: list[str]
+) -> list[tuple[float, str, str, bool]]:
+    """The (value, unit, context,
+    derivation-input) quadruples a markdown
+    table states, in reading order. A cell's
+    context is its row's label, its column's
+    header and the text before the quantity
+    in the cell, so a two-material table
+    attributes each column to the material
+    its header names - and a 'Common /
+    Total' column, whose header names no one
+    material, attributes to no item. The
+    flag carries the cell's own arithmetic:
+    a quantity that is an operand of the
+    arithmetic its cell shows is a
+    derivation input, not a stated result."""
+    rows = [[cell.strip() for cell in
+             line.strip().strip("|").split("|")]
+            for line in block]
+    if len(rows) < 2:
+        return []
+    header, data = rows[0], rows[1:]
+    # the separator row ('|---|---|') states no
+    # quantity and names no column
+    if data and all(
+            re.fullmatch(r"[\s:|-]+", cell)
+            for cell in data[0]):
+        data = data[1:]
+    quadruples = []
+    for row in data:
+        if len(row) < 2:
+            continue
+        label = row[0]
+        for column, cell in enumerate(row[1:], 1):
+            head = (header[column]
+                    if column < len(header) else "")
+            for (value, unit, before,
+                 derivation) in _line_quantities(cell):
+                quadruples.append(
+                    (value, unit,
+                     f"{label} {head} {before}",
+                     derivation))
+    return quadruples
+
+
+def _section_quantities(
+        body: str
+) -> list[tuple[float, str, str, bool]]:
+    """Every quantity a results section's body
+    states, in reading order, with its
+    introducing context: a table cell's row
+    label, column header and the text before
+    the quantity in the cell; a prose line's
+    text before the quantity. No heading is
+    context - a heading is a section
+    delimiter, not a label the answer applies
+    to a quantity ('Final conclusion' must not
+    attribute every quantity in the section to
+    the item 'final ...' names). The flag
+    marks a quantity that is an operand of the
+    arithmetic its line shows."""
+    quadruples: list[tuple[
+        float, str, str, bool]] = []
+    lines = body.splitlines()
+    i = 0
+    while i < len(lines):
+        if lines[i].lstrip().startswith("|"):
+            block: list[str] = []
+            while (i < len(lines)
+                   and lines[i].lstrip().startswith("|")):
+                block.append(lines[i])
+                i += 1
+            quadruples.extend(
+                _table_quantities(block))
+        else:
+            quadruples.extend(
+                _line_quantities(lines[i]))
+            i += 1
+    return quadruples
+
+
+def _same_dimension_siblings(
+        item: dict,
+        dimension: str | None) -> list[dict]:
+    """The key's other items whose quantity
+    shares the item's dimension: the items a
+    results presentation states side by side
+    with this one. The record is found in KEYS
+    by the item's (name, value) pair."""
+    for record in KEYS:
+        if not any(i["item"] == item["item"]
+                   and i["value"] == item["value"]
+                   for i in record["required_items"]):
+            continue
+        siblings = []
+        for other in record["required_items"]:
+            if (other["item"] == item["item"]
+                    and other["value"] == item["value"]):
+                continue
+            quantities = extract_quantities(
+                other["value"])
+            if dimension is not None:
+                quantities = [
+                    q for q in quantities
+                    if _dimension(q[1]) == dimension]
+            if quantities:
+                siblings.append(other)
+        return siblings
+    return []
+
+
+def _distinctive_tokens(item: dict,
+                        dimension: str | None
+                        ) -> set[str]:
+    """The tokens that name this item and no
+    same-dimension sibling: the item's own tokens
+    minus its siblings'."""
+    distinctive = _tokens(item["item"])
+    for other in _same_dimension_siblings(
+            item, dimension):
+        distinctive -= _tokens(other["item"])
+    return distinctive
+
+
+def _headline_values(item: dict, answer: str,
+                     dimension: str | None
+                     ) -> list[tuple[str, float]]:
+    """Every quantity the last results section that
+    attributes the item's quantity attributes to
+    the item, converted to the key dimension's
+    base unit, in reading order. Returns the
+    stated quantity and its base value for each,
+    or an empty list when no results section
+    attributes the item's quantity.
+
+    The advisor's 2026-10-10 review of the
+    eight open PRs (ARCH-20261003-119, step
+    3) adopted this rule in place of the first
+    quantity: the headline was the first
+    quantity the last results section attributed
+    to the item, so a results table presenting
+    both the precise and the rounded figure
+    attributed both to the item and whichever
+    column came first was the headline - the
+    verdict depended on the column order.
+    The attribution guards are unchanged, and the
+    section the rule reads is unchanged - the last
+    results section that attributes the item's
+    quantity, the section the first-quantity rule
+    preferred. A derivation input is not a stated
+    result: a quantity that is an operand of the
+    arithmetic the answer shows is attributed to no
+    item, so the arithmetic a results presentation
+    shows beside the figures it presents - the
+    fraction a cell derives its value from, the
+    check line a section closes with - attributes
+    nothing, and the figures the section presents
+    are the ones that count.
+
+    Attribution is strict: a quantity whose
+    introducing context names a token distinctive
+    to a same-dimension sibling attributes to no
+    item - the context names two items ('time with
+    selected heater') and the answer has not said
+    which one the quantity belongs to."""
+    distinctive = _distinctive_tokens(item, dimension)
+    if not distinctive:
+        return []
+    own = _tokens(item["item"])
+    rivals: set[str] = set()
+    for other in _same_dimension_siblings(
+            item, dimension):
+        rivals |= _distinctive_tokens(
+            other, dimension)
+    key_value, key_unit = _key_quantities(
+        item, dimension, 0)
+    key_dim, _ = _to_base(key_value, key_unit)
+    found: list[tuple[str, float]] = []
+    for heading, body in reversed(
+            _headline_sections(answer)):
+        for (value, unit, context,
+             derivation) in _section_quantities(
+                body):
+            if derivation:
+                # an operand of the arithmetic
+                # the answer shows is a
+                # derivation input, not a
+                # stated result
+                continue
+            stated = _tokens(context)
+            if not (stated & distinctive):
+                continue
+            if stated & rivals:
+                continue
+            # a bound word introduces a
+            # requirement, not the value
+            # the answer states for the
+            # item ('Max drop | 0.20 bar'
+            # is the acceptance limit, not
+            # the logged drop), so the
+            # quantity attributes to no
+            # item - unless the item's own
+            # name carries the bound word,
+            # for then the bound is what
+            # the item states
+            if (stated & _BOUND_WORDS) - own:
+                continue
+            converted = _to_base(value, unit)
+            if converted and converted[0] == key_dim:
+                found.append(
+                    (f"{value} {unit}".strip(),
+                     converted[1]))
+        if found:
+            # the last results section that
+            # attributes the item's quantity
+            # is the section the rule reads
+            break
+    return found
+
+
 def _numeric_item(item: dict, answer: str,
                   dimension: str | None = None,
                   index: int = 0,
@@ -448,6 +1145,38 @@ def _numeric_item(item: dict, answer: str,
             f"tolerance unit {tol_unit} does not match key "
             f"unit {key_unit} on item '{item['item']}'")
         tolerance = (tol_kind, tol_base, "")
+    # The strict-headline rule: when the answer
+    # presents its results, the presented values
+    # are the ones that count - a derivation in
+    # tolerance does not rescue a conclusion the
+    # answer itself rounded out of tolerance, and
+    # every presented value must hold: a results
+    # table that presents both the precise and the
+    # rounded figure holds the item only when both
+    # fall within the key's tolerance, so the
+    # verdict does not depend on the column order.
+    headlines = _headline_values(
+        item, answer, dimension)
+    if headlines:
+        for stated, base in headlines:
+            if not _within(
+                    base, key_base, tolerance):
+                return _fail(
+                    item,
+                    f"headline {stated} = "
+                    f"{base:.6g} {key_dim} outside "
+                    f"{tol_kind} tolerance of key "
+                    f"{key_base:.6g} {key_dim}")
+        stated = " and ".join(
+            s for s, _ in headlines)
+        bases = ", ".join(
+            f"{base:.6g}" for _, base in headlines)
+        return _pass(
+            item,
+            f"headline {stated} = "
+            f"{bases} {key_dim} within "
+            f"{tol_kind} tolerance of key "
+            f"{key_base:.6g} {key_dim}")
     for value, unit in extract_quantities(answer):
         converted = _to_base(value, unit)
         if converted and converted[0] == key_dim:
@@ -849,6 +1578,8 @@ _PROCEDURE_LINE = re.compile(
     r"|[-*+]\s"
     r"|#{1,6}\s*\**\s*step\s+\d+"
     r"|\**\s*step\s+\d+\s*[—:.-]"
+    r"|#{1,6}\s+\d+[.)]?\s"
+    r"|\*\*\s*\d+[.)]?\s"
     r"|\|\s*\d+\s*\|"
     r")",
     re.IGNORECASE)
@@ -1340,6 +2071,21 @@ def _score_q9(answer: str, record: dict) -> list[dict]:
 
 # ── Q10: the cure-check sequence ────────────────────────
 
+# 'cool the coupon inside' is the model's
+# phrasing; the answers say it in their own
+# words - a cooling noun, or the coupon
+# being left/kept/staying inside until the
+# probe reads the removal temperature.
+_COOL_IN_PLACE = (
+    "cool", "cooling", "cooldown", "cool-down",
+    "in situ",
+    r"re:\bleave\s+(?:\w+\s+){0,3}?inside",
+    r"re:\bleft\s+(?:\w+\s+){0,3}?inside",
+    r"re:\bremains?\s+(?:\w+\s+){0,3}?inside",
+    r"re:\bkept\s+(?:\w+\s+){0,3}?inside",
+    r"re:\bstays?\s+(?:\w+\s+){0,3}?inside",
+)
+
 def _score_q10(answer: str, record: dict) -> list[dict]:
     items: list[dict] = []
     low = _normalize(answer).lower()
@@ -1376,8 +2122,28 @@ def _score_q10(answer: str, record: dict) -> list[dict]:
     # 2. the hold criterion
     item = _item_by_name(record, "Hold criterion")
     hold = _has_quantity(quantities, "s", 600.0)
+    # the no-restart rule in the answer's own
+    # words: 'without restart' is one phrasing;
+    # the negation may sit either side of the
+    # restart word ('no restart', 'restarting
+    # ... is prohibited')
+    no_restart = (
+        "without restart" in low
+        or "non-restart" in low
+        or "nonrestart" in low
+        or re.search(
+            r"\b(?:no|not|never|without|cannot|"
+            r"can not|do not|don't|"
+            r"zero tolerance for)\b"
+            r"[^.;:\n]{0,30}?\brestart", low)
+        is not None
+        or re.search(
+            r"\brestart\w*\b[^.;:\n]{0,60}?\b"
+            r"(?:prohibited|forbidden|disallowed|"
+            r"not permitted|banned|barred)", low)
+        is not None)
     if (hold and "excursion" in low
-            and "without restart" in low
+            and no_restart
             and ("inclusive" in low or "<=" in low)):
         items.append(_pass(item, "the 600 s hold inside "
                                  "the inclusive band, with "
@@ -1388,7 +2154,7 @@ def _score_q10(answer: str, record: dict) -> list[dict]:
         items.append(_fail(item, f"600 s stated: {hold}; "
                                  f"excursion fails without "
                                  f"restart stated: "
-                                 f"{'excursion' in low and 'without restart' in low}; "
+                                 f"{'excursion' in low and no_restart}; "
                                  f"inclusive limits stated: "
                                  f"{'inclusive' in low or '<=' in low} - all "
                                  f"are required"))
@@ -1414,8 +2180,9 @@ def _score_q10(answer: str, record: dict) -> list[dict]:
     item = _item_by_name(record,
                          "Shutdown and removal order")
     order = _ordered(answer, (
-        (("switch off", "off"), ("cool",)),
-        (("cool",), ("remove",)),
+        (("switch off", "off"), _COOL_IN_PLACE),
+        (_COOL_IN_PLACE,
+         ("remove", "removal", "retrieve")),
     ))
     if order and has_temp(40.0):
         items.append(_pass(item, "heating is switched off, "
@@ -1553,8 +2320,17 @@ def _score_q14(answer: str, record: dict) -> list[dict]:
     heater = _numeric_item(item, answer, dimension="W",
                            tolerance=("rel", 1e-12, ""))
     time750 = _numeric_item(item, answer, dimension="s")
+    # the failure verdict in the answer's own
+    # words: 'fails' is one phrasing; 'exceeds
+    # the time limit' states the same verdict
+    failure_stated = re.search(
+        r"\b(?:fail(?:s|ed|ure|ing)?|"
+        r"exceeds?|too long|over the limit|"
+        r"outside the limit|beyond the limit|"
+        r"greater than the limit|not met|"
+        r"does not meet|violates?)\b", low)
     if (heater["pass"] and time750["pass"]
-            and "fail" in low):
+            and failure_stated is not None):
         items.append(_pass(item, f"{heater['detail']}; "
                                  f"{time750['detail']}; the "
                                  f"failure verdict is "
@@ -1565,7 +2341,7 @@ def _score_q14(answer: str, record: dict) -> list[dict]:
                                  f"within tolerance: "
                                  f"{time750['pass']}; "
                                  f"failure verdict stated: "
-                                 f"{'fail' in low} - all "
+                                 f"{failure_stated is not None} - all "
                                  f"three are required"))
 
     items.append(_numeric_item(
@@ -1589,31 +2365,99 @@ def _score_q15(answer: str, record: dict) -> list[dict]:
                      word: str) -> bool:
         """Whether the stated error carries its verdict:
         the word appears with the error value, in the
-        same step or within the following text. The
-        error may be stated in any notation the key
-        accepts ('0.010 mm' or '10 um')."""
+        same step or near it. The error may be stated
+        in any notation the key accepts ('0.010 mm' or
+        '10 um'), and the verdict may follow it on the
+        next line of a table or list."""
         for step in _numbered_steps(answer):
             low_step = step.lower()
             if (any(t in low_step for t in targets)
                     and word in low_step):
                 return True
         for target in targets:
-            i = low.find(target)
-            if i >= 0 and word in low[i:i + 48]:
-                return True
+            for m in re.finditer(re.escape(target), low):
+                if word in low[max(0, m.start() - 48):
+                               m.end() + 160]:
+                    return True
         return False
+
+    def limit_stated(value: str,
+                     micro: str) -> bool:
+        """Whether the answer states the inclusive
+        limit on the error magnitude, in any of
+        the notations the answers use: an operator
+        before the value ('<= 0.020 mm'), a band
+        around the reading ('-0.020 mm <= error <=
+        +0.020 mm'), a plus-minus bound ('+/-
+        0.020 mm'), interval arithmetic ('1.000-
+        0.020=0.980 mm'), or - when the answer
+        declares its readings are in millimetres -
+        the bare figure ('<= 0.020')."""
+        patterns = (
+            rf"(?:<=|at most|no more than)\s*"
+            rf"[-+]?\s*{value}\s*mm",
+            rf"(?:<=|at most|no more than)\s*"
+            rf"[-+]?\s*{micro}\s*um",
+            rf"[-+]?\s*{value}\s*(?:mm\s*)?"
+            rf"<=\s*\S+\s*<=\s*[-+]?\s*{value}"
+            rf"\s*mm",
+            rf"[-+]?\s*{micro}\s*(?:um\s*)?"
+            rf"<=\s*\S+\s*<=\s*[-+]?\s*{micro}"
+            rf"\s*um",
+            rf"\+/-\s*{value}\s*mm",
+            rf"\+/-\s*{micro}\s*um",
+            rf"\d\.\d{{3}}\s*[-+]\s*{value}\s*=",
+        )
+        bare = (("mm" in low or "millimetre" in low
+                 or "millimeter" in low)
+                and re.search(
+                    rf"(?:<=|at most|no more than)"
+                    rf"\s*{value}(?![a-z%])", low)
+                is not None)
+        return (any(re.search(p, low) is not None
+                    for p in patterns)
+                or bare)
 
     # 1. the ordered check sequence
     item = _item_by_name(record, "Ordered check sequence")
     order = _ordered(answer, (
         (("zero",), ("1.000", "1 mm")),
         (("1.000", "1 mm"), ("2.000", "2 mm")),
-        (("2.000", "2 mm"), ("return",)),
+        (("2.000", "2 mm"), ("return", "final zero")),
     ))
-    no_readjust = ("without" in low
-                   and ("re-zero" in low
-                        or "readjust" in low
-                        or "adjustment" in low))
+    if not order:
+        # the initial zeroing stated as performed
+        # ('the initial zeroing was performed
+        # correctly') supplies the zero step's place
+        # before the 1.000 mm reading, which the
+        # answer's own reference list states after
+        # it; the remaining steps must still hold.
+        initial_zero = re.search(
+            r"\b(?:initial\s+zero|"
+            r"initial\s+zeroing|"
+            r"zeroed\s+at\s+the\s+initial|"
+            r"zeroing\s+was\s+performed|"
+            r"correctly\s+zeroed|"
+            r"zeroed\s+initially|"
+            r"initially\s+zeroed)\b", low)
+        order = (initial_zero is not None
+                 and _ordered(answer, (
+                     (("1.000", "1 mm"),
+                      ("2.000", "2 mm")),
+                     (("2.000", "2 mm"),
+                      ("return", "final zero")),
+                 )))
+    no_readjust = (
+        ("without" in low
+         and ("re-zero" in low
+              or "readjust" in low
+              or "adjustment" in low))
+        or re.search(
+            r"\b(?:no|not|never|without|cannot|"
+            r"can not|do not|don't)\b"
+            r"[^.;:\n]{0,30}?\b(?:re-zero|"
+            r"rezero|readjust|adjust)", low)
+        is not None)
     if order and no_readjust:
         items.append(_pass(item, "zero at unloaded zero, "
                                  "apply and record 1.000 mm, "
@@ -1631,14 +2475,8 @@ def _score_q15(answer: str, record: dict) -> list[dict]:
 
     # 2. the acceptance criteria
     item = _item_by_name(record, "Acceptance criteria")
-    limit1 = (re.search(r"(?:<=|at most|no more than)\s*"
-                        r"0\.020?\s*mm", low)
-              or re.search(r"(?:<=|at most|no more than)\s*"
-                           r"20\s*um", low))
-    limit2 = (re.search(r"(?:<=|at most|no more than)\s*"
-                        r"0\.010?\s*mm", low)
-              or re.search(r"(?:<=|at most|no more than)\s*"
-                           r"10\s*um", low))
+    limit1 = limit_stated(r"0\.020?", "20")
+    limit2 = limit_stated(r"0\.010?", "10")
     if limit1 and limit2:
         items.append(_pass(item, "both inclusive limits "
                                  "(nonzero errors at most "
@@ -2709,6 +3547,467 @@ def self_test() -> int:
          "5. Logged 3.04 and 1.96 V satisfy all checks: "
          "PASS. Width = 1080 mV.",
          {"Hysteresis width": True}),
+    ])
+    failures += more
+    ran += count
+
+    # Results presentations and the answers' own
+    # words: the strict-headline rule (a presented
+    # result governs over a derivation, and every
+    # presented figure holds - the two Q23
+    # results-row fixtures score the same row
+    # with its columns swapped, the order the
+    # first-quantity rule let decide the verdict),
+    # the operand guard (a derivation input is not
+    # a stated result: the 102-Q1 summary row in
+    # both column orders and its equation in prose,
+    # a same-dimension slash list, the degree
+    # caret, a check line and an unspaced range)
+    # and the amendment's clause rule ('=' is not
+    # an operator: a no-operator member states
+    # its figures however many '=' follow it, a
+    # spaced x multiplies, and a semicolon ends
+    # the clause), and the recognition classes
+    # the tier-3 stage-1 reading's false negatives
+    # named.
+    print("\nResults presentations and the answers' "
+          "own words:")
+    more, count = _fixture([
+        ("Q23 results table within tolerance", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Aluminum | Steel |\n"
+         "| --- | --- | --- |\n"
+         "| Force | 12.35 kN | 17.65 kN |\n"
+         "| Tensile stress | 61.8 MPa | 176 MPa |\n"
+         "| Common extension | 0.882 mm | 0.882 mm |\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": True,
+          "Steel force": True}),
+        ("Q23 results table rounded out of "
+         "tolerance", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Aluminum | Steel |\n"
+         "| --- | --- | --- |\n"
+         "| Force | 12.4 kN | 17.6 kN |\n"
+         "| Tensile stress | 61.8 MPa | 176 MPa |\n"
+         "| Common extension | 0.882 mm | 0.882 mm |\n\n"
+         "The derivation: the aluminum force is "
+         "12.353 kN and the steel force is "
+         "17.647 kN.\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": False,
+          "Steel force": False}),
+        ("Q23 results row, rounded column "
+         "first", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Value (rounded, 3 s.f.) "
+         "| Value (precise) |\n"
+         "| --- | --- | --- |\n"
+         "| Common extension | 0.882 mm | "
+         "0.882 mm |\n"
+         "| Tensile stress in aluminum | "
+         "61.8 MPa | 61.8 MPa |\n"
+         "| Tensile stress in steel | 176 MPa | "
+         "176 MPa |\n"
+         "| Force in aluminum bar | 12.4 kN | "
+         "12.35 kN |\n"
+         "| Force in steel bar | 17.6 kN | "
+         "17.65 kN |\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": False,
+          "Steel force": False,
+          "verdict": "FAIL"}),
+        ("Q23 results row, precise column "
+         "first - the same row with the "
+         "columns swapped", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Value (precise) | Value "
+         "(rounded, 3 s.f.) |\n"
+         "| --- | --- | --- |\n"
+         "| Common extension | 0.882 mm | "
+         "0.882 mm |\n"
+         "| Tensile stress in aluminum | "
+         "61.8 MPa | 61.8 MPa |\n"
+         "| Tensile stress in steel | 176 MPa | "
+         "176 MPa |\n"
+         "| Force in aluminum bar | 12.35 kN | "
+         "12.4 kN |\n"
+         "| Force in steel bar | 17.65 kN | "
+         "17.6 kN |\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": False,
+          "Steel force": False,
+          "verdict": "FAIL"}),
+        ("Q23 results row, both figures within "
+         "tolerance", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Value (precise) | Value "
+         "(rounded, 3 s.f.) |\n"
+         "| --- | --- | --- |\n"
+         "| Common extension | 0.882 mm | "
+         "0.882 mm |\n"
+         "| Tensile stress in aluminum | "
+         "61.8 MPa | 61.8 MPa |\n"
+         "| Tensile stress in steel | 176 MPa | "
+         "176 MPa |\n"
+         "| Force in aluminum bar | 12.35 kN | "
+         "12.353 kN |\n"
+         "| Force in steel bar | 17.65 kN | "
+         "17.647 kN |\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": True,
+          "Steel force": True,
+          "verdict": "PASS"}),
+        ("Q23 derivation only, no results section",
+         "Q23",
+         "## Derivation\n\n"
+         "The aluminum bar carries 12.4 kN and the "
+         "steel bar carries 17.6 kN; the stresses "
+         "are 61.8 MPa and 176 MPa; the common "
+         "extension is 0.882 mm. The precise "
+         "figures are 12.353 kN, 17.647 kN, "
+         "61.765 MPa, 176.47 MPa and 0.8824 mm.\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": True,
+          "Steel force": True}),
+        ("Q23 results table with the total column "
+         "first", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Total | Aluminum | Steel |\n"
+         "| --- | --- | --- | --- |\n"
+         "| Force | 30.0 kN | 12.35 kN | 17.65 kN |\n"
+         "| Tensile stress | - | 61.8 MPa | 176 MPa |\n"
+         "| Common extension | - | 0.882 mm | "
+         "0.882 mm |\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": True,
+          "Steel force": True}),
+        ("Q23 boxed results rounded out of "
+         "tolerance", "Q23",
+         "## Final conclusion\n\n"
+         "\\(\\boxed{F_{Al} = 12.4\\,\\mathrm{kN}}\\)\n"
+         "\\(\\boxed{F_{St} = 17.6\\,\\mathrm{kN}}\\)\n"
+         "\\(\\boxed{\\sigma_{Al} = "
+         "61.8\\,\\mathrm{MPa}}\\)\n"
+         "\\(\\boxed{\\sigma_{St} = "
+         "176\\,\\mathrm{MPa}}\\)\n"
+         "\\(\\boxed{\\delta = "
+         "0.882\\,\\mathrm{mm}}\\)\n\n"
+         "The derivation: the bars carry 12.353 kN "
+         "and 17.647 kN.\n",
+         {"Common extension": True,
+          "Aluminum tensile stress": True,
+          "Steel tensile stress": True,
+          "Aluminum force": False,
+          "Steel force": False}),
+        ("Q5 summary table states the bound "
+         "before the logged value", "Q5",
+         "## Test procedure\n\n"
+         "1. Fill with water through the open "
+         "high-point vent until bubble-free water "
+         "exits.\n"
+         "2. Close the vent; pressurize to 6.00 "
+         "bar gauge.\n"
+         "3. Isolate the hand pump, then start the "
+         "timer.\n"
+         "4. Hold for 300 s without adding water; "
+         "observe for leakage.\n"
+         "5. A test passes only if the pressure "
+         "drop is no more than 0.20 bar and there "
+         "is no visible water leakage during the "
+         "hold.\n\n"
+         "## Numeric values summary\n\n"
+         "| Quantity | Value |\n"
+         "| --- | --- |\n"
+         "| Test pressure | 6.00 bar gauge |\n"
+         "| Hold duration | 300 s |\n"
+         "| Max drop | 0.20 bar |\n"
+         "| Example end pressure | 5.90 bar |\n"
+         "| Example drop | 0.10 bar |\n"
+         "| Zero reference | 0 bar gauge |\n\n"
+         "Arithmetic: 6.00 bar - 5.90 bar = "
+         "0.10 bar, with no visible leakage: "
+         "PASS.\n"
+         "6. Open the release valve, confirm 0 bar "
+         "gauge, then disconnect.",
+         {"First operation: fill and vent": True,
+          "Second operation: close vent": True,
+          "Third operation: establish test "
+          "pressure": True,
+          "Fourth operation: isolate before "
+          "timing": True,
+          "Fifth operation: isolated hold": True,
+          "Acceptance and failure criteria": True,
+          "Logged pressure drop": True,
+          "Logged test verdict": True,
+          "Final operations: assess, "
+          "depressurize, confirm zero, "
+          "disconnect": True}),
+        ("Q10 hold criterion in the answer's own "
+         "words", "Q10",
+         "The cure-check sequence:\n\n"
+         "1. Set the oven to 120 deg C and confirm "
+         "the coupon probe reads the coupon "
+         "temperature.\n"
+         "2. Wait until the probe reads 118 deg C, "
+         "then start the 600 s timer; the band "
+         "118 deg C to 122 deg C is inclusive.\n"
+         "3. Hold for 600 s. Any excursion outside "
+         "the band fails the run and no restart is "
+         "permitted.\n"
+         "4. The log shows an uninterrupted 600 s "
+         "hold, minimum 119 deg C and maximum 121 "
+         "deg C: PASS.\n"
+         "5. Assess the run, switch off the heating, "
+         "and leave the coupon inside until the "
+         "probe reads 40 deg C before removal.\n",
+         {"Setpoint and timer-start order": True,
+          "Hold criterion": True,
+          "Logged verdict": True,
+          "Shutdown and removal order": True}),
+        ("Q10 shutdown in the answer's own words",
+         "Q10",
+         "1. Set the oven to 120 deg C; the coupon "
+         "probe must enter the 118 deg C to 122 deg C "
+         "band before the timer starts.\n"
+         "2. Hold 600 s inside the inclusive band; "
+         "any excursion fails the run without "
+         "restart.\n"
+         "3. The completed log: uninterrupted 600 s, "
+         "minimum 119 deg C, maximum 121 deg C - "
+         "PASS.\n"
+         "4. Switch off the heating elements.\n"
+         "5. Leave the coupon inside the closed oven "
+         "until the probe reads 40 deg C.\n"
+         "6. Retrieve the coupon.\n",
+         {"Setpoint and timer-start order": True,
+          "Hold criterion": True,
+          "Logged verdict": True,
+          "Shutdown and removal order": True}),
+        ("Q14 failure verdict as 'exceeds the time "
+         "limit'", "Q14",
+         "The heater selection:\n\n"
+         "The energy requirement is 120000 J. The "
+         "smallest available heater that reaches "
+         "35 deg C within the time limit is the "
+         "1000 W heater, which takes 120 s and "
+         "passes. The 750 W heater takes 160 s, "
+         "which exceeds the time limit. The selected "
+         "heater delivers 120000 J.\n",
+         {"Required heat": True,
+          "Selected heater": True,
+          "Selected heating time and verdict": True,
+          "Next smaller heater check": True,
+          "Delivered energy": True}),
+        ("Q15 limits as bands, verdicts far from "
+         "the errors", "Q15",
+         "The extensometer check:\n\n"
+         "1. Zero the instrument at the unloaded "
+         "zero.\n"
+         "2. Apply 1.000 mm and record the reading.\n"
+         "3. Apply 2.000 mm and record the reading.\n"
+         "4. Return to zero and record the reading.\n\n"
+         "Errors at the three readings: +0.010 mm at "
+         "1.000 mm, -0.030 mm at 2.000 mm, and "
+         "+0.005 mm at the return to zero. The first "
+         "reading passes its check, the second "
+         "reading fails it, and the return-zero "
+         "reading passes. The failure is the 2.000 mm "
+         "reading, whose error magnitude exceeds the "
+         "allowable limit.\n\n"
+         "Limits are inclusive: -0.020 mm <= error <= "
+         "+0.020 mm for the nonzero readings and "
+         "-0.010 mm <= error <= +0.010 mm for the "
+         "return zero. The instrument was not "
+         "adjusted between the three recorded values. "
+         "Overall: FAIL.\n",
+         {"Ordered check sequence": True,
+          "Acceptance criteria": True,
+          "First signed error and verdict": True,
+          "Second signed error and verdict": True,
+          "Return-zero error and verdict": True,
+          "Overall verdict": True}),
+        ("Q15 no re-zeroing in the answer's own "
+         "words", "Q15",
+         "The extensometer check:\n\n"
+         "1. Zero at the unloaded zero position.\n"
+         "2. Apply 1.000 mm and record the reading.\n"
+         "3. Apply 2.000 mm and record the reading.\n"
+         "4. Final zero reading.\n\n"
+         "The instrument was not adjusted between the "
+         "three recorded values. Errors: +0.010 mm at "
+         "1.000 mm (pass), -0.030 mm at 2.000 mm "
+         "(fail), +0.005 mm at the final zero (pass). "
+         "Limits: nonzero errors at most 0.020 mm; "
+         "return zero at most 0.010 mm. Overall: "
+         "FAIL.\n",
+         {"Ordered check sequence": True,
+          "Acceptance criteria": True,
+          "First signed error and verdict": True,
+          "Second signed error and verdict": True,
+          "Return-zero error and verdict": True,
+          "Overall verdict": True}),
+        ("Q15 initial zeroing stated after the "
+         "reference list", "Q15",
+         "The extensometer check:\n\n"
+         "1. The reference readings: 1.000 mm, then "
+         "2.000 mm, then the final zero reading.\n"
+         "2. The initial zeroing was performed "
+         "correctly.\n"
+         "3. The instrument was not adjusted between "
+         "the three recorded values.\n\n"
+         "Errors: +0.010 mm at 1.000 mm (pass), "
+         "-0.030 mm at 2.000 mm (fail), +0.005 mm at "
+         "the final zero (pass). Limits: nonzero "
+         "errors at most 0.020 mm; return zero at "
+         "most 0.010 mm. Overall: FAIL.\n",
+         {"Ordered check sequence": True,
+          "Acceptance criteria": True,
+          "First signed error and verdict": True,
+          "Second signed error and verdict": True,
+          "Return-zero error and verdict": True,
+          "Overall verdict": True}),
+        ("Q15 steps as bold numbered headings", "Q15",
+         "The extensometer check:\n\n"
+         "**1. Reference displacement: "
+         "\\(1.000\\ \\mathrm{mm}\\)**\n"
+         "**2. Applied displacement: "
+         "\\(2.000\\ \\mathrm{mm}\\)**\n"
+         "**3. Final zero reading: "
+         "\\(0.000\\ \\mathrm{mm}\\)**\n\n"
+         "The initial zeroing was performed correctly, "
+         "and the instrument was not adjusted between "
+         "the three recorded values. Errors: +0.010 mm "
+         "at 1.000 mm (pass), -0.030 mm at 2.000 mm "
+         "(fail), +0.005 mm at the final zero (pass). "
+         "Limits: nonzero errors at most 0.020 mm; "
+         "return zero at most 0.010 mm. Overall: "
+         "FAIL.\n",
+         {"Ordered check sequence": True,
+          "Acceptance criteria": True,
+          "First signed error and verdict": True,
+          "Second signed error and verdict": True,
+          "Return-zero error and verdict": True,
+          "Overall verdict": True}),
+        ("Q1 summary row, value column first",
+         "Q1",
+         "## Summary of results\n\n"
+         "| Quantity | Value | Reference |\n"
+         "| --- | --- | --- |\n"
+         "| Output Voltage | 8.00 V | "
+         "V_out = V_s × R2 / R_total = "
+         "12.0 V × 4.00 kΩ / 6.00 kΩ |\n",
+         {"Output voltage": True}),
+        ("Q1 summary row, reference column "
+         "first - the same row with the "
+         "columns swapped", "Q1",
+         "## Summary of results\n\n"
+         "| Quantity | Reference | Value |\n"
+         "| --- | --- | --- |\n"
+         "| Output Voltage | "
+         "V_out = V_s × R2 / R_total = "
+         "12.0 V × 4.00 kΩ / 6.00 kΩ | 8.00 V |\n",
+         {"Output voltage": True}),
+        ("Q1 divider equation in prose", "Q1",
+         "## Results\n\n"
+         "The output voltage: "
+         "V_out = 12.0 V × 4.00 k ohm / "
+         "6.00 k ohm = 8.00 V.\n",
+         {"Output voltage": True}),
+        ("Q23 force row, a same-dimension "
+         "slash lists the figures", "Q23",
+         "## Final conclusion\n\n"
+         "| Quantity | Value |\n"
+         "| --- | --- |\n"
+         "| Force in aluminum bar | "
+         "12.35 kN / 12.4 kN |\n",
+         {"Aluminum force": False}),
+        ("Q21 final temperature reached, the "
+         "degree caret is not an exponent",
+         "Q21",
+         "## First results\n\n"
+         "The bath's target temperature is "
+         "50.0 °C.\n\n"
+         "## Final results\n\n"
+         "The final temperature reaches "
+         "35.0 °C^ in exactly 120 s.\n",
+         {"Final temperature": True}),
+        ("Q23 check line beside stated forces",
+         "Q23",
+         "## Final conclusion\n\n"
+         "Force in aluminum bar: 12.35 kN; "
+         "force in steel bar: 17.65 kN.\n\n"
+         "Check: the aluminum force 12.4 kN "
+         "+ the steel force 17.6 kN = the "
+         "bars' combined force of 30.0 kN.\n",
+         {"Aluminum force": True,
+          "Steel force": True}),
+        ("Q23 extension as an unspaced range, "
+         "both members stated", "Q23",
+         "## Final conclusion\n\n"
+         "The common extension is "
+         "0.882-0.883 mm.\n",
+         {"Common extension": False}),
+        ("Q23 working line, a no-operator "
+         "member states the rounded force",
+         "Q23",
+         "## Final conclusion\n\n"
+         "Force in aluminum bar: 12.35 kN; "
+         "force in steel bar: 17.65 kN.\n\n"
+         "Aluminum force = 12.4 kN = "
+         "12 352.9 N\n",
+         {"Aluminum force": False,
+          "Steel force": True}),
+        ("Q23 working line, the rounded "
+         "figure after the last '='", "Q23",
+         "## Final conclusion\n\n"
+         "Force in aluminum bar: 12.35 kN; "
+         "force in steel bar: 17.65 kN.\n\n"
+         "Aluminum force = 12 352.9 N = "
+         "12.4 kN\n",
+         {"Aluminum force": False,
+          "Steel force": True}),
+        ("Q23 working line, a wrong force "
+         "in a no-operator member", "Q23",
+         "## Final conclusion\n\n"
+         "Force in aluminum bar: 12.35 kN; "
+         "force in steel bar: 17.65 kN.\n\n"
+         "Aluminum force = 13.0 kN = "
+         "12 352.9 N\n",
+         {"Aluminum force": False,
+          "Steel force": True}),
+        ("Q23 working line, a spaced x "
+         "multiplies the operands", "Q23",
+         "## Final conclusion\n\n"
+         "Force in aluminum bar: 12.35 kN; "
+         "force in steel bar: 17.65 kN.\n\n"
+         "Al force = 0.4118 x 30.0 kN = "
+         "12.35 kN\n",
+         {"Aluminum force": True,
+          "Steel force": True}),
+        ("Q23 working line, a semicolon "
+         "ends the clause", "Q23",
+         "## Final conclusion\n\n"
+         "Force in aluminum bar: 12.35 kN; "
+         "force in steel bar: 17.65 kN.\n\n"
+         "Aluminum force = 13.0 kN; check "
+         "13.0 + 17.0 = 30.0 kN\n",
+         {"Aluminum force": False,
+          "Steel force": True}),
     ])
     failures += more
     ran += count
