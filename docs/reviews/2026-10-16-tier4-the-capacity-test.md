@@ -217,11 +217,16 @@ Readings are paired by question and reported question by question. The threshold
    - It is not one of the arms' pins, which are the standing tier-3 lineup.
    - It shares a family with the cheapest single-call arm and the triage and research tiers. §10's style risk applies to that family.
 4. **Pins:** unchanged (`e0dc92a3aecb`). The owner did not re-pin. A re-pin under G-2 before any paid unit restarts calibration.
-5. **The generation call:** the advisor ran it once, `max_tokens` 60000, worst case about $0.66. Its raw output is kept git-ignored for verification (§4).
+5. **The generation calls.**
+   - **The first call** ran with `max_tokens` 60000 and cost $0.60. It thought aloud inside its output, restarted twice and ended at the token limit. Its last attempt held 5 complete F1 candidates and no F2.
+   - **Verification of those 5** (`evals/results/tier4-pilot-verify.py`, an independent recomputation and a search of each design space):
+     - **T4-01 is infeasible.** Its speed relation gives 4.2 m/s against a 0.42 m/s target, and none of its 6,100 designs passes. It is dropped.
+     - **T4-02 to T4-05 verify.** Each reference passes, each wrong design fails what it claims, and 1–2 designs are feasible per question.
+   - Rules 9 and 10 were added to Appendix A after this, and the 3 F2 candidates are generated in a second call.
 
 ## Appendix A: the generator prompt
 
-The owner pastes this into the generating model unchanged. The output goes to the advisor for verification, not into the repository directly. This is the pilot batch; a growth step reuses the prompt with its own counts and fresh ids.
+The owner pastes this into the generating model unchanged. Rules 9 and 10 were added after the first pilot call (§12, item 5). The output goes to the advisor for verification, not into the repository directly. This is the pilot batch; a growth step reuses the prompt with its own counts and fresh ids.
 
 ```
 You are writing a benchmark of HARD, CLOSED-WORLD engineering design questions. Each must be answerable from the data given, checkable by recomputation, and hard enough that a careful expert working in a single pass has a real chance of getting at least one requirement wrong.
@@ -255,5 +260,6 @@ Rules:
 6. No trick wording, no ambiguity, no missing data, no contradictory data.
 7. F2 corpus pages describe fictional products and firms only. Invent names, so that nothing can be looked up.
 8. Vary the domains: at most 2 candidates per domain.
-9. Output the JSON array only.
+9. Output the JSON array only, once. No commentary, no drafts, no restarts.
+10. Before writing each candidate, compute every requirement for its reference design with the request's own formulas and numbers. A candidate whose reference fails a requirement, or that has no feasible design at all, is invalid: fix it before writing it.
 ```
