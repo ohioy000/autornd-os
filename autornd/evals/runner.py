@@ -25,6 +25,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+import httpx
+
 from autornd.evals.assertions import AssertionResult, RunOutcome, score
 from autornd.evals.scenario import Scenario
 from autornd.graph.adapter import PhaseRunner
@@ -484,6 +486,11 @@ class ScenarioRun:
     # "runner stopped the run: ..." when a bound (deadline, ceiling) ended
     # it from outside. A reader must be able to tell the two apart.
     stop_reason: str | None = None
+    # The ruling of 2026-10-15: the provider answered 402 — the
+    # account's credit is exhausted. The run's own terminal names it;
+    # this flag is the typed surface the tier-3 sweep reads to stop
+    # the sweep and record the units it never started.
+    credit_exhausted: bool = False
     # One entry per build-loop iteration; see PhaseRunner.iterations.
     iterations: list[dict[str, Any]] = field(default_factory=list)
     # Ruling D48 (111's first question, answered): every check that did not
@@ -790,6 +797,12 @@ def _end_on_bound(state, bound: str, detail: str,
     """
     reached_terminal = state.finished
     if executor is not None and not reached_terminal:
+        # The partial-iteration record (the ruling of
+        # 2026-10-15) is written first: the candidate's
+        # approved pointer reads the iteration history, and
+        # the iteration the bound landed in is part of where
+        # the run was.
+        executor.record_partial_iteration(state)
         executor._close_candidate(state)
     state.end("blocked", f"stopped by the {bound}: {detail}")
     if not reached_terminal:
@@ -913,6 +926,7 @@ async def run_scenario(
     started = time.perf_counter()
     error: str | None = None
     stopped_by_budget = False
+    credit_exhausted = False
     try:
         with _isolated_store():
             # The outer backstop. With the watchdog armed this fires only if
@@ -937,6 +951,37 @@ async def run_scenario(
         stopped_by_budget = True
         _end_on_bound(state, "spend ceiling" if error.startswith("stopped at $")
                       else "call ceiling", error, executor)
+    except httpx.HTTPStatusError as exc:
+        # The provider answered 402: the account's
+        # credit is exhausted (the ruling of
+        # 2026-10-15). The workflow never concluded,
+        # so this is not a workflow verdict about the
+        # work; it is a typed terminal naming the
+        # provider's own answer, the way the
+        # ProviderFailure clause names its failure.
+        # The status code is the typed field the
+        # provider's error carries, never the
+        # message's prose (non-negotiable 3).
+        state = _partial_state(executor, scenario.request)
+        error = f"{type(exc).__name__}: {exc}"
+        credit_event = (
+            getattr(getattr(exc, "response", None),
+                    "status_code", None) == 402)
+        # The partial-iteration record (the ruling
+        # of 2026-10-15) is written first, for the
+        # same reason _end_on_bound writes it: the
+        # pointer reads the history the 402 landed
+        # in.
+        executor.record_partial_iteration(state)
+        executor._close_candidate(state)
+        if credit_event:
+            state.end(
+                "blocked",
+                f"provider credit exhausted: {exc}")
+        else:
+            state.end("blocked", f"{error}")
+        state.stop_reason = f"runner stopped the run: {error}"
+        credit_exhausted = credit_event
     except ProviderFailure as exc:
         # A provider that consumed its whole budget and emitted nothing ended
         # the run — the -071 shape. ProviderFailure subclasses RuntimeError,
@@ -953,6 +998,11 @@ async def run_scenario(
         # D51 (7): a provider-failure terminal is not
         # completed — the candidate is kept and the
         # approved pointer computed before the run ends.
+        # The partial-iteration record (the ruling of
+        # 2026-10-15) is written first, for the same
+        # reason _end_on_bound writes it: the pointer
+        # reads the history the failure landed in.
+        executor.record_partial_iteration(state)
         executor._close_candidate(state)
         state.end("blocked",
                   f"provider failure on tier '{exc.function}': {exc}")
@@ -1003,6 +1053,7 @@ async def run_scenario(
         verdicts=verdicts,
         status=str(getattr(state, "status", "") or ""),
         stop_reason=getattr(state, "stop_reason", None),
+        credit_exhausted=credit_exhausted,
         iterations=list(getattr(runner, "iterations", []) or []),
         # Ruling D48: the run-wide unchecked list — the union across the
         # iteration records, which each carry their own (111's first answer).

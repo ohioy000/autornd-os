@@ -118,8 +118,16 @@ def _responses(**overrides) -> dict:
 # unanchored judgment, a note, never blocking. The doubles
 # below that need the review to block carry the anchor: the
 # quote is this file's request's own words.
+# R2 (2026-10-15): the finding says the answer
+# gives something for the ask and is false, so
+# its kind is wrong_fact, and a wrong_fact anchors
+# only through its source_quote — the request's
+# own words, which the answer's fixed 60 s cap
+# contradicts.
 BLOCKING_FINDING = {"lens": "test_engineer", "severity": "high",
                     "detail": "Backoff has no ceiling on reconnect storms.",
+                    "kind": "wrong_fact",
+                    "source_quote": "retry with exponential backoff",
                     "quote": "retry with exponential backoff"}
 
 

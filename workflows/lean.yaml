@@ -85,15 +85,18 @@ nodes:
     max_tokens: validate_max_tokens
     depends_on: [coverage]
 
-  # The same fold, over the judges this shape actually has: lean runs no domain
-  # review and no consistency check, so it folds three rather than four.
+  # The same fold, over the judges this shape actually has: lean runs
+  # no domain review, no consistency check, and — since the ruling of
+  # 2026-10-15 (R1) — no coverage in the fold either, so it folds the
+  # two paid judges. Coverage still runs above: its result is
+  # recorded, and a fail is counted as a coverage_note, but it never
+  # blocks and never reaches a revision.
   - id: judges
     kind: check
     check: judges_agree
     args:
       implement: implement.green
       validate: validate.green
-      coverage: coverage.passed
     depends_on: [implement, coverage, validate]
 
   - id: build_loop

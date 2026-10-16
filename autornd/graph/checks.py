@@ -24,8 +24,10 @@ __all__ = ["CheckResult", "get_check", "registry", "check"]
 from autornd.models.verdicts import (
     BLOCKED_ON_NO_ASK,
     CONSISTENCY_NOTE,
+    COVERAGE_NOTE,
     UNANCHORED_ASK_QUOTE,
     count_normalisation,
+    dissent_kind,
 )
 
 
@@ -259,30 +261,54 @@ def dissent_anchored(
     ask: Any, quote: str, hazard: bool,
     asks: list[Any] | None, request: str,
     answer: str = "", hazard_quote: str = "",
+    kind: str = "", source_quote: str = "",
+    grounding: str = "",
 ) -> bool:
     """Is this dissent anchored? (Ruling D51 (3); the review
-    of 2026-10-14: a hazard anchors only when quoted.)
+    of 2026-10-14: a hazard anchors only when quoted; the
+    ruling of 2026-10-15, R2: a wrong_fact anchors only
+    through its source.)
 
-    Three anchors, all typed — never prose: the ask it
-    concerns, by its number in the anchored asks; a quote of
-    the request's own words, anchored by the same free check
-    the asks pass; or a hazard, and a hazard anchors only
-    through the answer's own words that state or instruct
-    it — `hazard_quote`, anchored against the answer the
-    judge was given. A hazard the judge did not quote is a
-    note, counted as unanchored dissent, not a veto: the
-    bool alone cannot say what the answer does. An omission
-    is never a hazard and never an anchor: if the request
-    asked for what is missing, it is an ask, and the dissent
-    names it by number.
+    The kind decides the anchor, and a dissent that states
+    no kind is read as wrong_fact (dissent_kind). unmet_ask
+    — the answer gives nothing for the ask — anchors by the
+    ask's number in the anchored asks, or by a quote of the
+    request's own words under the same free check the asks
+    pass. hazard anchors only through the answer's own words
+    that state or instruct it — `hazard_quote`, anchored
+    against the answer the judge was given; a hazard the
+    judge did not quote is a note. wrong_fact — the answer
+    gives something for the ask and the judge says it is
+    false — anchors only through `source_quote`: words of
+    the request or of the grounding the judge was given that
+    contradict the answer, verbatim, found by the same free
+    check in the request or in the grounding text. Without
+    an anchored source_quote the claim is a note, counted as
+    unverified_dissent: the run cannot check the claim, so
+    under D51 (5) it is unavailable, never blocking. An
+    omission is never a hazard and never an anchor: if the
+    request asked for what is missing, it is an ask, and
+    the dissent names it by number.
     """
-    if isinstance(ask, int) and not isinstance(ask, bool):
-        if 1 <= ask <= len(asks or []):
+    effective = dissent_kind(kind, hazard)
+    if effective == "hazard":
+        if str(hazard_quote or "").strip():
+            return quote_anchors(hazard_quote, answer)
+        return False
+    if effective == "unmet_ask":
+        if isinstance(ask, int) and not isinstance(ask, bool):
+            if 1 <= ask <= len(asks or []):
+                return True
+        if str(quote or "").strip() and quote_anchors(quote, request):
             return True
-    if str(quote or "").strip() and quote_anchors(quote, request):
-        return True
-    if hazard and str(hazard_quote or "").strip():
-        return quote_anchors(hazard_quote, answer)
+        return False
+    # wrong_fact — the ruling's default kind: the claim
+    # shows its source, or it is a note.
+    if str(source_quote or "").strip():
+        if quote_anchors(source_quote, request):
+            return True
+        if str(grounding or "").strip():
+            return quote_anchors(source_quote, grounding)
     return False
 
 
@@ -962,6 +988,13 @@ def criteria_addressed(
         verb = ("not visibly addressed by"
                 if all(shapes[c] == PRESENCE for c in missed)
                 else "not met by")
+        # Ruling of 2026-10-15 (R1): coverage left the judges'
+        # fold. Its result is still recorded here — the detail
+        # and the data are unchanged — but a fail is counted as
+        # a note, like consistency's since 2026-10-14, so the
+        # run's record says how often it fired while nothing
+        # loops on it and no veto reads it.
+        count_normalisation(COVERAGE_NOTE)
         return Result(
             False,
             f"{len(missed)} of {measured} measurable success criteria are "

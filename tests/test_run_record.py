@@ -120,13 +120,26 @@ class TestR8AndR9TheTerminalIsWrittenAndSaid:
         # Not the watchdog's: this double's build judges never agree, so the
         # build loop exhausts into escalation, which requires a human. The
         # asks double proposes an ask the request carries verbatim, so
-        # coverage really checks — over the fallback ask coverage passes
-        # unchecked (the review of 2026-10-14) and this double's build
-        # would converge and ship.
+        # validate's dissent anchors by its number (R2: an omission is
+        # an unmet_ask). R1 (2026-10-15) moved coverage out of the
+        # fold — this double's summary names none of the ask's words,
+        # so coverage fails every iteration beside validate, recorded
+        # as a coverage_note and holding nothing; before R1 it was
+        # coverage's red alone that exhausted the loop here, and the
+        # double's build converged and shipped the moment coverage
+        # left the fold.
         report, (unit,) = await _units(
             tmp_path, lambda: make_mock_client(_responses(
                 triage={"asks": [{"quote": "the wiring for a 24 VDC sensor",
-                                  "kind": "value"}]})))
+                                  "kind": "value"}]},
+                judge={"green": False,
+                       "red_cause": "the answer omits the ask",
+                       "failed_ask": 1,
+                       "kind": "unmet_ask",
+                       "evidence": [
+                           "ask 1 (the wiring for a 24 VDC "
+                           "sensor): FAIL — the answer leaves "
+                           "the ask out"]})))
         assert unit["status"] == "blocked" and unit["error"] is None
         assert unit["reason"].startswith("Escalation requires human intervention")
         assert unit["watchdog"]["fired"] is False
@@ -139,9 +152,12 @@ class TestR5ThePaceBasisIsWritten:
         # reached. With a 0.05 s reserve and a
         # 1.45 s budget there is not 0.5 s left, so validate is not started.
         # The asks double proposes an ask the request carries verbatim, so
-        # coverage really checks and the build loop iterates to the budget —
-        # over the fallback ask coverage passes unchecked (the review of
-        # 2026-10-14), the build converges, and no judge call is ever
+        # validate's dissent anchors by its number (R2) and the build
+        # loop iterates to the budget on it — R1 (2026-10-15) moved
+        # coverage out of the fold, so coverage's red (this double's
+        # summary names none of the ask's words) is a note that holds
+        # nothing; before R1 it was coverage's red that iterated the
+        # loop here, and the build converged with no judge call ever
         # refused. (domain_review makes no call here: its peer roster is
         # empty, so only validate spends the budget.)
         monkeypatch.setattr(executor_module, "WATCHDOG_RESERVE_SECONDS", 0.05)
@@ -151,7 +167,14 @@ class TestR5ThePaceBasisIsWritten:
                 _responses(triage={"asks": [
                     {"quote": "the wiring for a 24 VDC sensor",
                      "kind": "value"}]},
-                    judge={"ship": False}),
+                    judge={"green": False,
+                           "red_cause": "the answer omits the ask",
+                           "failed_ask": 1,
+                           "kind": "unmet_ask",
+                           "evidence": [
+                               "ask 1 (the wiring for a 24 VDC "
+                               "sensor): FAIL — the answer leaves "
+                               "the ask out"]}),
                 delays={"judge": 0.5}),
             timeout=1.45)
         watchdog = unit["watchdog"]

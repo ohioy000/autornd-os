@@ -205,6 +205,17 @@ class TestTheRunnerActuallyCallsIt:
             async def run(self, request):
                 raise exc
 
+            def record_partial_iteration(self, state):
+                # The real executor records the iteration
+                # the run ended inside, before its judges
+                # ran (the ruling of 2026-10-15), on the
+                # runner that keeps the history — and no-ops
+                # on a runner that keeps none. This double's
+                # run raised before any node executed and
+                # carries no runner at all, so the record is
+                # the real method's no-op, the same as here.
+                return None
+
             def _close_candidate(self, state):
                 # The real executor records the unendorsed
                 # candidate at a terminal that is not completed
@@ -342,6 +353,17 @@ class TestAProviderFailureReachesATypedTerminal:
             async def run(self, request):
                 raise provider_failure
 
+            def record_partial_iteration(self, state):
+                # The real executor records the iteration
+                # the run ended inside, before its judges
+                # ran (the ruling of 2026-10-15), on the
+                # runner that keeps the history — and no-ops
+                # on a runner that keeps none. This double's
+                # run raised before any node executed and
+                # carries no runner at all, so the record is
+                # the real method's no-op, the same as here.
+                return None
+
             def _close_candidate(self, state):
                 # The real executor records the unendorsed
                 # candidate at a terminal that is not completed
@@ -396,6 +418,17 @@ class TestAProviderFailureReachesATypedTerminal:
 
             async def run(self, request):
                 raise ProviderFailure("engineering", "GMICloud", "no text")
+
+            def record_partial_iteration(self, state):
+                # The real executor records the iteration
+                # the run ended inside, before its judges
+                # ran (the ruling of 2026-10-15), on the
+                # runner that keeps the history — and no-ops
+                # on a runner that keeps none. This double's
+                # run raised before any node executed and
+                # carries no runner at all, so the record is
+                # the real method's no-op, the same as here.
+                return None
 
             def _close_candidate(self, state):
                 # The real executor records the unendorsed

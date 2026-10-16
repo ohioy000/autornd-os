@@ -165,14 +165,20 @@ def _make_failing_client(fail_iterations: int = 2, k3_requires_human: bool = Fal
         elif "validate this implementation" in msg:
             validate_count["n"] += 1
             if validate_count["n"] <= fail_iterations:
-                # Ruling D51, THE FOLD: a red with no
-                # anchor is a note, so the simulated
-                # failure must anchor to stay red. The
-                # quote is the request's own words.
+                # Ruling D51, THE FOLD, as R2 (2026-10-15)
+                # amended it: a red that states no kind is
+                # read as a wrong_fact, and a wrong_fact
+                # anchors only through a source_quote — the
+                # request's own words that show the answer
+                # false. The quote is the request's own
+                # words, the anchor the D51 rule always
+                # demanded, carried where the amended rule
+                # reads it.
                 data = {
                     "green": False,
                     "red_cause": "topic_parse_error",
-                    "anchor_quote": request,
+                    "kind": "wrong_fact",
+                    "source_quote": request,
                     "evidence": [f"Iteration {validate_count['n']}: topic fails"],
                 }
             else:

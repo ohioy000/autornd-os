@@ -849,18 +849,32 @@ class TestExecutorMechanics:
         assert "the whole request is the ask" in (
             state.outputs["coverage"]["detail"])
 
-    async def test_drifted_implementation_is_caught_by_a_free_check(self):
-        """A free check now carries the same weight as the paid judges.
+    async def test_drifted_implementation_is_recorded_not_blocked(self):
+        """R1 (2026-10-15): coverage left the judges' fold.
 
-        It used to record the drift and let the run finish anyway, because the
-        exit read validate alone. The fold means a red `coverage` keeps the loop
-        going: an implementation that never mentions the ask does
-        not ship because the validator happened to say green.
-        """
+        It used to carry the same weight as the paid judges:
+        a red `coverage` kept the loop going, and this test
+        proved it — drift did not ship on one judge's green.
+        The ruling of 2026-10-15 repealed that weight:
+        coverage's fail is a note, recorded and counted as a
+        coverage_note, never blocking and never reaching a
+        revision. The drift is still measured — the check
+        still fails and its missed list still names the ask —
+        but only a paid judge's anchored dissent holds the
+        loop now. Convention 17: this test asserted the
+        behaviour the ruling changed; the break-proof is
+        TestTheQ15Shape's misstatement shape in
+        tests/test_d51_acceptance.py, where validate's
+        anchored wrong_fact still catches the same drift."""
         # The ask is anchored in the request (not the fallback)
         # so coverage really checks: over a fallback ask the
         # review of 2026-10-14 made coverage pass unchecked,
-        # and drift is exactly what a checked coverage catches.
+        # and drift is exactly what a checked coverage measures.
+        # The normalisation registry is session-wide — the evals
+        # runner resets it per run — so this test resets it to
+        # count this run's note alone.
+        from autornd.models.verdicts import reset_normalisations
+        reset_normalisations()
         state, _ = await _run({
             **BASE,
             "asks": {"asks": [{"quote": "the exponential backoff cap",
@@ -871,9 +885,12 @@ class TestExecutorMechanics:
             request="Add retry with the exponential backoff cap")
         assert state.outputs["coverage"]["passed"] is False
         # The one anchored ask, and a logging tidy mentions
-        # none of it.
+        # none of it — measured, recorded, counted as a note.
         assert len(state.outputs["coverage"]["missed"]) == 1
-        assert state.status != "completed", "drift must not ship on one judge"
+        assert state.status == "completed"
+        from autornd.models.verdicts import (
+            COVERAGE_NOTE, normalisations_by_kind)
+        assert normalisations_by_kind().get(COVERAGE_NOTE) == 1
 
     async def test_budget_reads_from_settings(self):
         state, runner = await _run(

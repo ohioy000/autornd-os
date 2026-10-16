@@ -312,6 +312,16 @@ class DomainConcern(BaseModel):
     # judge was given; a hazard without them is a note, counted as
     # unanchored dissent.
     hazard_quote: str = ""
+    # Ruling of 2026-10-15 (R2), amending D51 (3): the
+    # dissent's kind — unmet_ask (the answer gives nothing
+    # for the ask), wrong_fact (the answer gives something
+    # for the ask and the judge says it is false), or
+    # hazard. A dissent that states no kind is read as
+    # wrong_fact. A wrong_fact dissent anchors only through
+    # `source_quote`, the request's or the grounding's own
+    # words that contradict the answer, verbatim.
+    kind: str = ""
+    source_quote: str = ""
     critical: bool = False
 
     @model_validator(mode="before")
@@ -333,10 +343,21 @@ class DomainConcern(BaseModel):
                     break
         return data
 
-    @field_validator("detail", "quote", "hazard_quote",
+    @field_validator("detail", "quote", "hazard_quote", "source_quote",
                      mode="before")
     @classmethod
     def _coerce_text(cls, value: Any) -> str:
+        if value is None:
+            return ""
+        return value if isinstance(value, str) else _coerce_str(value)
+
+    @field_validator("kind", mode="before")
+    @classmethod
+    def _coerce_kind(cls, value: Any) -> str:
+        # Stored as stated: the record shows what the judge
+        # declared. The effective kind — what an unstated or
+        # unrecognised kind is read as — is derived at the
+        # point of use, by dissent_kind below.
         if value is None:
             return ""
         return value if isinstance(value, str) else _coerce_str(value)
@@ -450,6 +471,38 @@ UNANCHORED_DISSENT = "unanchored_dissent"
 RED_NO_ANCHOR = "red_with_no_anchor"
 BLOCKED_ON_NO_ASK = "blocked_on_entry_names_no_ask"
 CONSISTENCY_NOTE = "consistency_note"
+# Ruling of 2026-10-15 (R1): coverage left the judges_agree
+# fold. Its result is still recorded — a fail is counted here,
+# a note, never a veto and never a revision trigger — the way
+# consistency did on 2026-10-14.
+COVERAGE_NOTE = "coverage_note"
+# Ruling of 2026-10-15 (R2), amending D51 (3): a wrong_fact
+# dissent — the answer gives something for an ask and the judge
+# says it is false — anchors only through a source_quote that
+# occurs in the request or the grounding the judge was given.
+# Without one it is a note, counted here: the run cannot check
+# the claim, so under D51 (5) it is unavailable, never blocking.
+UNVERIFIED_DISSENT = "unverified_dissent"
+
+
+def dissent_kind(kind: Any, hazard: bool = False) -> str:
+    """The kind a dissent is read as (Ruling of 2026-10-15, R2).
+
+    A dissent that states its kind — unmet_ask, wrong_fact or
+    hazard — is read as it states it. One that states none is
+    read as wrong_fact, the ruling's own default. A hazard the
+    judge marked with the hazard bool but named no kind is read
+    as a hazard, the hazard rule being unchanged. Anything else
+    (an unrecognised word) is read as wrong_fact, so an unknown
+    kind can never widen what a dissent may block on: wrong_fact
+    is the kind that must show its source.
+    """
+    stated = str(kind or "").strip().lower()
+    if stated in ("unmet_ask", "wrong_fact", "hazard"):
+        return stated
+    if hazard:
+        return "hazard"
+    return "wrong_fact"
 
 
 def _count(kind: str) -> None:
@@ -618,6 +671,15 @@ class ValidateVerdict(BaseModel):
     # judge was given; a hazard without them is a note, counted as
     # unanchored dissent, not a veto.
     hazard_quote: str = ""
+    # Ruling of 2026-10-15 (R2), amending D51 (3): the
+    # dissent's kind — unmet_ask, wrong_fact or hazard —
+    # and, for a wrong_fact, the request's or the
+    # grounding's own words that contradict the answer,
+    # verbatim. Stored as stated; the effective kind is
+    # derived by dissent_kind, and a wrong_fact anchors
+    # only through a source_quote the free check finds.
+    kind: str = ""
+    source_quote: str = ""
     # Ruling D51 (5): asks whose verification needs what the run
     # does not have. Unavailable is neither pass nor fail, never
     # blocking, and listed in the run's record.
@@ -628,7 +690,8 @@ class ValidateVerdict(BaseModel):
     def _accept_the_shape_a_serving_returns(cls, value: Any) -> Any:
         return _fold_evidence(value)
 
-    @field_validator("anchor_quote", "hazard_quote", mode="before")
+    @field_validator("anchor_quote", "hazard_quote", "source_quote",
+                     mode="before")
     @classmethod
     def _coerce_anchor_quote(cls, value: Any) -> str:
         if value is None:
@@ -670,6 +733,15 @@ class ReviewFinding(BaseModel):
     # judge was given; a hazard without them is a note, counted as
     # unanchored dissent, not a block.
     hazard_quote: str = ""
+    # Ruling of 2026-10-15 (R2), amending D51 (3): the
+    # dissent's kind — unmet_ask, wrong_fact or hazard —
+    # and, for a wrong_fact, the request's or the
+    # grounding's own words that contradict the answer,
+    # verbatim. Stored as stated; the effective kind is
+    # derived by dissent_kind, and a wrong_fact anchors
+    # only through a source_quote the free check finds.
+    kind: str = ""
+    source_quote: str = ""
 
     @model_validator(mode="before")
     @classmethod
@@ -692,9 +764,18 @@ class ReviewFinding(BaseModel):
         return data
 
     @field_validator("lens", "severity", "detail", "hazard_quote",
-                     mode="before")
+                     "source_quote", mode="before")
     @classmethod
     def coerce_to_text(cls, value: Any) -> Any:
+        if value is None:
+            return ""
+        return value if isinstance(value, str) else _coerce_str(value)
+
+    @field_validator("kind", mode="before")
+    @classmethod
+    def _coerce_kind(cls, value: Any) -> str:
+        # Stored as stated; the effective kind is derived
+        # at the point of use, by dissent_kind.
         if value is None:
             return ""
         return value if isinstance(value, str) else _coerce_str(value)

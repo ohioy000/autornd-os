@@ -50,6 +50,25 @@ UNMET_REQUEST = "Add retry with cache invalidation on every write"
 UNMET_ASK = {"quote": "cache invalidation on every write",
              "kind": "constraint"}
 
+# Ruling of 2026-10-15 (R1): coverage left the
+# judges' fold — its persistent red is a note and
+# no longer exhausts anything. The exhaustion these
+# cases watch is driven by validate's anchored
+# dissent instead: the answer never addresses the
+# anchored ask, and an omission is an unmet_ask
+# (R2, 2026-10-15), which the ask's number anchors.
+# Coverage still fails every iteration beside it —
+# the summary names none of the ask's words — and
+# its fail is recorded and counted as a
+# coverage_note, exactly as R1 requires.
+VALIDATE_UNMET = {"green": False,
+                    "red_cause": "the answer omits the ask",
+                    "failed_ask": 1,
+                    "kind": "unmet_ask",
+                    "evidence": ["ask 1 (cache invalidation on "
+                                 "every write): FAIL — the answer "
+                                 "leaves the ask out"]}
+
 # ARCH-20260923-054: the recovery-succeeds case. The deterministic implement
 # answers failure for the first five attempts and success thereafter, so the
 # build_loop exhausts (5) and the FIRST recovery attempt converges. The
@@ -119,22 +138,33 @@ class TestThreeTerminals:
 
         judges = state.outputs["judges"]
         assert judges["passed"] is True
-        assert judges["abstained_judges"] == {"coverage": 1}
-        assert "empty seat" in judges["detail"]
-        assert "all " not in judges["detail"], (
-            "an abstaining judge must not be recorded as agreeing")
+        # R1 (2026-10-15): coverage left the fold, so
+        # its abstention is a note in coverage's own
+        # record, not a seat in the fold's — the fold
+        # reports unanimity over the two paid judges,
+        # and the empty-seat mechanism it carried is
+        # pinned at the fold's own level in
+        # tests/test_all_judges_exit.py's TestEmptySeat.
+        assert judges.get("abstained_judges") is None
+        assert "all " in judges["detail"]
 
         coverage = state.outputs["coverage"]
         assert coverage["passed"] is True
         assert len(coverage["abstained"]) == 1
 
     async def test_unmet_criteria_exhaust_to_escalated(self):
-        """Case (c): coverage persistently fails → build_loop exhausts →
-        escalation → recovery_loop exhausts → terminal 'escalated'.
+        """Case (c): validate's anchored dissent persists →
+        build_loop exhausts → escalation → recovery_loop
+        exhausts → terminal 'escalated'.
 
-        This is the path that ran 42 calls into a ceiling (B14). Assert it
-        terminates within its declared bounds, names the diagnosis in the
-        reason, and does not reach any call ceiling."""
+        This is the path that ran 42 calls into a ceiling (B14).
+        R1 (2026-10-15) moved coverage out of the fold, so the
+        exhaustion is driven by validate's anchored unmet_ask —
+        coverage fails every iteration beside it (the summary
+        names none of the ask's words) and is recorded as a
+        coverage_note. Assert it terminates within its declared
+        bounds, names the diagnosis in the reason, and does not
+        reach any call ceiling."""
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
@@ -151,7 +181,7 @@ class TestThreeTerminals:
             "implement": IMPL_UNMET,
             "domain_review": {"critical": False},
             "review": {"ship": True},
-            "validate": {"green": True},
+            "validate": VALIDATE_UNMET,
             "escalation": {"requires_human": False,
                            "root_cause_analysis": "Implementation does not "
                            "address caching requirements"},
@@ -189,7 +219,9 @@ class TestThreeTerminals:
 
         judges = state.outputs["judges"]
         assert judges["passed"] is False
-        assert "coverage" in judges["detail"]
+        # The fold reads validate's dissent — coverage's
+        # persistent red is a note out of the fold (R1).
+        assert "validate" in judges["detail"]
 
     async def test_exhausted_terminal_names_unmet_criteria(self):
         """ARCH-20260923-053: case (c)'s terminal quotes the unmet
@@ -215,7 +247,7 @@ class TestThreeTerminals:
             "implement": IMPL_UNMET,
             "domain_review": {"critical": False},
             "review": {"ship": True},
-            "validate": {"green": True},
+            "validate": VALIDATE_UNMET,
             "escalation": {"requires_human": False,
                            "root_cause_analysis": "Implementation does not "
                            "address caching requirements"},
@@ -246,7 +278,7 @@ class TestThreeTerminals:
             "implement": IMPL_UNMET,
             "domain_review": {"critical": False},
             "review": {"ship": True},
-            "validate": {"green": True},
+            "validate": VALIDATE_UNMET,
             "escalation": {"requires_human": False,
                            "root_cause_analysis": "Implementation does not "
                            "address caching requirements"},
@@ -358,7 +390,7 @@ class TestThreeTerminals:
             "implement": IMPL_UNMET,
             "domain_review": {"critical": False},
             "review": {"ship": True},
-            "validate": {"green": True},
+            "validate": VALIDATE_UNMET,
             "escalation": {"requires_human": False,
                            "root_cause_analysis": "Implementation does not "
                            "address caching requirements"},
@@ -402,7 +434,7 @@ class TestThreeTerminals:
             "implement": IMPL_UNMET,
             "domain_review": {"critical": False},
             "review": {"ship": True},
-            "validate": {"green": True},
+            "validate": VALIDATE_UNMET,
             "escalation": {"requires_human": False,
                            "root_cause_analysis": "Implementation does not "
                            "address caching requirements"},
@@ -436,7 +468,7 @@ class TestThreeTerminals:
             "implement": IMPL_UNMET,
             "domain_review": {"critical": False},
             "review": {"ship": True},
-            "validate": {"green": True},
+            "validate": VALIDATE_UNMET,
             "escalation": {"requires_human": False,
                            "root_cause_analysis": "wrong topic"},
         }
@@ -471,6 +503,22 @@ class TestRecoverySucceeds:
                             if ok else IMPL_UNMET["summary"]),
             }
 
+        def validate(state):
+            # The dissent clears when the recovery
+            # attempt carries the fixed summary: the
+            # answer then addresses the anchored ask
+            # the build iterations left out (R1:
+            # validate's anchored unmet_ask is what
+            # exhausts the build loop — coverage's
+            # persistent red is a note since R1 and
+            # holds nothing).
+            return (VALIDATE_UNMET
+                    if attempts["n"] <= SETTINGS["max_iterations"]
+                    else {"green": True, "red_cause": None,
+                          "evidence": [
+                              "ask 1 (cache invalidation on "
+                              "every write): PASS"]})
+
         verdicts = {
             "triage": {"risk": "medium", "domains": ["backend"],
                        "unrecallable": False},
@@ -487,7 +535,7 @@ class TestRecoverySucceeds:
             "implement": implement,
             "domain_review": {"critical": False},
             "review": {"ship": True},
-            "validate": {"green": True},
+            "validate": validate,
             "escalation": {"requires_human": False,
                            "root_cause_analysis": "Implementation does not "
                            "address caching requirements"},

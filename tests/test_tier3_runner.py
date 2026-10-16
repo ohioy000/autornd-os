@@ -49,6 +49,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import hashlib
 import importlib.util
 import json
 import math
@@ -167,6 +168,17 @@ def _tool_call(name: str, arguments: dict[str, Any]
 
 def _provider_failure(detail: str) -> dict[str, Any]:
     return {"provider_failure": detail}
+
+
+def _credit_exhausted() -> dict[str, Any]:
+    """The 402 class: the provider answered that
+    the account's credit is exhausted (the
+    ruling of 2026-10-15). The scripted client
+    raises the same typed error the real client
+    raises, after dispatch, so the guard books
+    the call's worst case as unreconciled
+    liability (D45 (5)) exactly as it would."""
+    return {"credit_exhausted": True}
 
 
 def _correct(question_id: str) -> str:
@@ -978,8 +990,12 @@ class TestCTheGates:
             "serving as TIER3_ARM_A" in d
             and "test/arm-b" in d and "test/arm-a" in d
             for d in missing)
-        # Gate 2, below the ceiling: the refusal names
-        # the amount and the ceiling.
+        # Gate 2, R4 (the ruling of 2026-10-15): the
+        # pin must EQUAL the registered ceiling. A pin
+        # of $10.00 against the $30.00 ceiling is
+        # refused — not for being below, but for not
+        # being the run's own authorization — and the
+        # refusal names both figures.
         tier3 = _settings(
             tier3_servings_ratified=TEST_FINGERPRINT,
             tier3_spend_authorized="10.00")
@@ -987,9 +1003,23 @@ class TestCTheGates:
             tier3, TEST_SERVINGS, TEST_FINGERPRINT,
             pilot=False)
         assert any(
-            "TIER3_SPEND_AUTHORIZED is 10.00, below the "
-            "main run's authorization ceiling $30.00" in d
+            "TIER3_SPEND_AUTHORIZED is 10.00, which is "
+            "not the main run's registered ceiling "
+            "$30.00" in d
+            and "the authorization must equal the ceiling "
+            "of the run it authorises" in d
             for d in missing)
+        # Gate 2, exact equality: the pin at the
+        # registered ceiling clears the spend gate
+        # (R4: the pin names the run's own plan).
+        tier3 = _settings(
+            tier3_servings_ratified=TEST_FINGERPRINT,
+            tier3_spend_authorized="30.00")
+        missing = runner.gate_report(
+            tier3, TEST_SERVINGS, TEST_FINGERPRINT,
+            pilot=False)
+        assert not any(
+            "TIER3_SPEND_AUTHORIZED" in d for d in missing)
         # Gate 2, not a dollar amount at all.
         tier3 = _settings(
             tier3_servings_ratified=TEST_FINGERPRINT,
@@ -999,7 +1029,9 @@ class TestCTheGates:
             pilot=False)
         assert any("not a dollar amount" in d for d in missing)
         # The pilot's own gate: its ceiling, its
-        # authorization, named as the pilot's.
+        # authorization, named as the pilot's, and
+        # R4's equality rule — a $1.00 pin is not
+        # the pilot's $7.50 authorization.
         tier3 = _settings(
             tier3_servings_ratified=TEST_FINGERPRINT,
             tier3_pilot_authorized="1.00")
@@ -1007,8 +1039,8 @@ class TestCTheGates:
             tier3, TEST_SERVINGS, TEST_FINGERPRINT,
             pilot=True)
         assert any(
-            "TIER3_PILOT_AUTHORIZED is 1.00, below the "
-            "pilot's authorization ceiling $7.50" in d
+            "TIER3_PILOT_AUTHORIZED is 1.00, which is "
+            "not the pilot's registered ceiling $7.50" in d
             for d in missing)
         # Break-proof (runner.py, gate_report):
         #     if tier3.tier3_arm_b != tier3.tier3_arm_a:
@@ -1195,13 +1227,17 @@ class TestETheResume:
                     TEST_SERVINGS["E"]):
             # The kill: three units run, the fourth is
             # left in flight, exactly as a process kill
-            # leaves the record.
+            # leaves the record. The dry run's fixture
+            # credit stands in for the account's balance
+            # (the preflight's free GET is mocked here —
+            # the suite makes no network call).
             killed = _run(runner.run_experiment(
                 "main", results_path=path, stop_after=3,
                 client_factory=wiring.client_factory,
                 tool_dispatcher=wiring.tool_dispatcher,
                 scenario_runner=scenario_runner,
-                catalogue=catalogue))
+                catalogue=catalogue,
+                credit=runner.DRY_RUN_CREDIT))
             assert len(killed["records"]) == 3
             assert (len(wiring.clients)
                     + scenario_runner.runs) == 3
@@ -1218,7 +1254,8 @@ class TestETheResume:
                 client_factory=wiring.client_factory,
                 tool_dispatcher=wiring.tool_dispatcher,
                 scenario_runner=scenario_runner,
-                catalogue=catalogue))
+                catalogue=catalogue,
+                credit=runner.DRY_RUN_CREDIT))
         # Every unit recorded exactly once: nothing ran
         # twice, nothing was dropped. The two seams are
         # invoked once per unit that RUNS (arms A-D in
@@ -1550,10 +1587,130 @@ def _entry(serving: str) -> dict[str, Any]:
 
 class TestGThePreflight:
     def test_the_clean_lineup_passes(self):
+        # The clean lineup passes when the preflight
+        # is given what the ruling of 2026-10-15
+        # makes it check: the run's own ceiling and
+        # the account's remaining credit (the free
+        # GET's figure, passed here as a fixture —
+        # the suite makes no network call). A balance
+        # above the ceiling funds the plan.
+        report = runner.run_preflight(
+            TEST_SERVINGS, _fixture_catalogue(),
+            credit=100.00, ceiling=runner.MAIN_CEILING)
+        assert report.refusals == []
+        assert report.reports == []
+        # A call with no ceiling cannot check the
+        # balance against it: the report says so,
+        # rather than guessing (convention 26 — the
+        # instrument states what it did not read).
         report = runner.run_preflight(
             TEST_SERVINGS, _fixture_catalogue())
         assert report.refusals == []
-        assert report.reports == []
+        assert any(
+            "the run's ceiling was not given" in note
+            for note in report.reports), report.reports
+        # The credit check refuses below the ceiling,
+        # naming the shortfall (the ruling's own
+        # refusal), and passes at it.
+        report = runner.run_preflight(
+            TEST_SERVINGS, _fixture_catalogue(),
+            credit=2.23, ceiling=runner.MAIN_CEILING)
+        assert any(
+            "the provider's remaining credit is $2.23, "
+            "below the run's $30.00 ceiling" in refusal
+            and "shortfall $27.77" in refusal
+            for refusal in report.refusals), report.refusals
+        report = runner.run_preflight(
+            TEST_SERVINGS, _fixture_catalogue(),
+            credit=30.00, ceiling=runner.MAIN_CEILING)
+        assert not any(
+            "remaining credit" in refusal
+            for refusal in report.refusals)
+        # The re-measurement's own ceiling (the
+        # ruling of 2026-10-15): the same
+        # instrument reads the run it was asked
+        # about — $2.23 against the $15.00
+        # re-measurement names the re-measurement's
+        # shortfall, not the main run's.
+        report = runner.run_preflight(
+            TEST_SERVINGS, _fixture_catalogue(),
+            credit=2.23, ceiling=runner.REMEASURE_CEILING)
+        assert any(
+            "the provider's remaining credit is $2.23, "
+            "below the run's $15.00 ceiling" in refusal
+            and "shortfall $12.77" in refusal
+            for refusal in report.refusals), report.refusals
+        # A balance that could not be read is no
+        # evidence: the refusal says so, and a paid
+        # run that cannot establish its balance does
+        # not start.
+        report = runner.run_preflight(
+            TEST_SERVINGS, _fixture_catalogue(),
+            credit=None, ceiling=runner.MAIN_CEILING)
+        assert any(
+            "the provider's remaining credit could not "
+            "be read" in refusal
+            for refusal in report.refusals), report.refusals
+
+    def test_the_preflight_validates_only_the_arms_the_mode_runs(
+            self):
+        # The ruling of 2026-10-15: the preflight's
+        # validations cover only the arms the mode
+        # runs. The smoke run the ruling orders runs
+        # arms E and F — so a lineup whose arm A
+        # worst case exceeds its per-unit ceiling
+        # and whose arm B serving lists no tool
+        # support (two main-mode refusals, the
+        # cases above) still funds the smoke plan:
+        # arm B's checks do not run against a mode
+        # that does not run arm B, and no ceiling
+        # changed to make room.
+        catalogue = _fixture_catalogue()
+        for entry in catalogue:
+            if entry["id"] == TEST_SERVINGS["A"]:
+                entry["pricing"] = {
+                    "prompt": f"{FIXTURE_PROMPT_RATE}",
+                    "completion": "0.001"}
+            if entry["id"] == TEST_SERVINGS["B"]:
+                entry["supported_parameters"] = [
+                    "response_format", "max_tokens",
+                    "temperature"]
+        # The main run's validation refuses both.
+        main = runner.run_preflight(
+            TEST_SERVINGS, catalogue,
+            credit=runner.DRY_RUN_CREDIT,
+            ceiling=runner.MAIN_CEILING)
+        assert any(
+            "arm A: the worst case of its" in refusal
+            for refusal in main.refusals), main.refusals
+        assert any(
+            "arm B" in refusal
+            and "does not list tool support" in refusal
+            for refusal in main.refusals), main.refusals
+        # The smoke run's validation — the arms it
+        # runs, E and F, at its own $2.00
+        # authorization — passes the same lineup:
+        # neither arm A's sequence nor arm B's
+        # treatment is its to check.
+        smoke = runner.run_preflight(
+            TEST_SERVINGS, catalogue,
+            credit=runner.SMOKE_CEILING,
+            ceiling=runner.SMOKE_CEILING,
+            arms=("E", "F"))
+        assert smoke.refusals == [], smoke.refusals
+        # Break-proof (runner.py, run_preflight,
+        # cases 1-3): the arm loops read the
+        # default ARMS, not the parameter
+        #     for arm in [a for a in ("A", "B",
+        #     "C", "D") if a in arms]:
+        #     -> for arm in ("A", "B", "C", "D"):
+        # FAILED ...::test_the_preflight_validates_
+        # only_the_arms_the_mode_runs - AssertionError:
+        # smoke.refusals == [] : the arm-A worst case
+        # and the arm-B tool-support refusal fired
+        # against a mode that runs neither arm, so
+        # the preflight validated arms the run never
+        # planned to start.
 
     def test_case_one_refuses_a_worst_case_above_the_ceiling(
             self):
@@ -2711,9 +2868,12 @@ class TestKTheReMeasurePlan:
             self):
         # The re-measurement's spend gate reads the
         # same TIER3_SPEND_AUTHORIZED pin, but names
-        # its own $15.00 ceiling - a refusal that
-        # named the main run's $30.00 would send the
-        # owner to the wrong authorization.
+        # its own $15.00 ceiling and R4's equality
+        # rule - a pin of $10.00 is refused for not
+        # being the re-measurement's authorization,
+        # and a refusal that named the main run's
+        # $30.00 would send the owner to the wrong
+        # authorization.
         tier3 = _settings(
             tier3_servings_ratified=TEST_FINGERPRINT,
             tier3_spend_authorized="10.00")
@@ -2721,9 +2881,9 @@ class TestKTheReMeasurePlan:
             tier3, TEST_SERVINGS, TEST_FINGERPRINT,
             pilot=False, mode="remeasure")
         assert any(
-            "TIER3_SPEND_AUTHORIZED is 10.00, below "
-            "the re-measurement's authorization "
-            "ceiling $15.00" in d for d in missing)
+            "TIER3_SPEND_AUTHORIZED is 10.00, which is "
+            "not the re-measurement's registered ceiling "
+            "$15.00" in d for d in missing)
         # The main run's gate, on the same settings,
         # names the main run's ceiling - the two
         # gates are told apart by what they name.
@@ -2731,11 +2891,64 @@ class TestKTheReMeasurePlan:
             tier3, TEST_SERVINGS, TEST_FINGERPRINT,
             pilot=False)
         assert any(
-            "below the main run's authorization "
-            "ceiling $30.00" in d for d in main)
+            "not the main run's registered ceiling "
+            "$30.00" in d for d in main)
         assert not any(
-            "re-measurement's authorization" in d
+            "re-measurement's registered" in d
             for d in main)
+        # The smoke run's gate (the ruling of
+        # 2026-10-15): the same pin, its own $2.00
+        # ceiling - the smoke run's authorization is
+        # the smoke ceiling, not the re-measurement's
+        # or the main run's.
+        smoke = runner.gate_report(
+            tier3, TEST_SERVINGS, TEST_FINGERPRINT,
+            pilot=False, mode="smoke")
+        assert any(
+            "TIER3_SPEND_AUTHORIZED is 10.00, which is "
+            "not the smoke run's registered ceiling "
+            "$2.00" in d for d in smoke)
+        assert not any(
+            "main run's registered" in d for d in smoke)
+        # The smoke gate cleared: the pin at the
+        # smoke ceiling (R4's equality, the smoke
+        # run's own authorization).
+        tier3 = _settings(
+            tier3_servings_ratified=TEST_FINGERPRINT,
+            tier3_spend_authorized="2.00")
+        smoke = runner.gate_report(
+            tier3, TEST_SERVINGS, TEST_FINGERPRINT,
+            pilot=False, mode="smoke")
+        assert not any(
+            "TIER3_SPEND_AUTHORIZED" in d for d in smoke)
+        # R4's equality, on the re-measurement's own
+        # gate: a pin ABOVE the registered ceiling is
+        # refused exactly as one below it is — the
+        # authorization names the run's own plan, not
+        # a figure that merely funds it. $30.00 is
+        # the main run's authorization, not the
+        # re-measurement's.
+        tier3 = _settings(
+            tier3_servings_ratified=TEST_FINGERPRINT,
+            tier3_spend_authorized="30.00")
+        remeasure = runner.gate_report(
+            tier3, TEST_SERVINGS, TEST_FINGERPRINT,
+            pilot=False, mode="remeasure")
+        assert any(
+            "TIER3_SPEND_AUTHORIZED is 30.00, which "
+            "is not the re-measurement's registered "
+            "ceiling $15.00" in d for d in remeasure)
+        # And the re-measurement's gate cleared: the
+        # pin at its own registered ceiling.
+        tier3 = _settings(
+            tier3_servings_ratified=TEST_FINGERPRINT,
+            tier3_spend_authorized="15.00")
+        remeasure = runner.gate_report(
+            tier3, TEST_SERVINGS, TEST_FINGERPRINT,
+            pilot=False, mode="remeasure")
+        assert not any(
+            "TIER3_SPEND_AUTHORIZED" in d
+            for d in remeasure)
         # Break-proof (runner.py, gate_report):
         #     if mode == "remeasure":
         #     -> if False:
@@ -2791,8 +3004,14 @@ class TestLArmFTheVerifyFirstPath:
         # The scenario's own bound is the registered
         # one: the workflow is the graph, and its
         # call budget is the limit the manifest
-        # registers.
-        assert runner.ARM_F_CALL_LIMIT == 6
+        # registers. R3 (the ruling of 2026-10-15):
+        # at most four model calls after triage and
+        # asks, so the limit is 2 (triage) + the
+        # grounding's maximum (4, read off
+        # build_phase_context's retrieval path) + 4.
+        assert runner.ARM_F_CALL_LIMIT == 10
+        assert (runner.ARM_F_CALL_LIMIT
+                == 2 + runner.GROUNDING_MAX_CALLS + 4)
         # A unit with no revision: one engineering
         # and one judge call after triage and asks -
         # two, well inside the bound.
@@ -3059,16 +3278,28 @@ class TestMTheReMeasureDryRun:
         # The report: the eight tables the manifest's
         # tier3-8 registration lists, beside the
         # metadata they score against (the arms, the
-        # frozen keys and the 3 s.f. widening).
+        # frozen keys and the 3 s.f. widening) and
+        # the not_run count (the ruling of
+        # 2026-10-15: units the sweep never started,
+        # reported beside the tables, outside every
+        # arm's denominator).
         report = remeasurement["report"]
         assert report["tables"] == [
             "arms", "keys", "keys_3sf",
+            "not_run",
             "per_arm", "calibration_q1_q5",
             "paired_against_a_by_question",
             "median_cost_and_latency",
             "f_first_vs_final", "unresolved_candidates",
             "repetition_agreement_vs_correctness",
             "unanchored_blocks"]
+        # The dry run's plan ran whole: no unit was
+        # left not_run (the fixture credit funds the
+        # sweep, and no 402 fires) — read off the
+        # records themselves, not a carried count.
+        assert not any(
+            record.get("status") == "not_run"
+            for record in remeasurement["records"])
         # The order's digest is the guard's
         # reconstruction (criterion (b)).
         order = runner.remeasure_order(runner.REMEASURE_SEED)
@@ -3303,11 +3534,19 @@ class TestOTheReMeasurePreflight:
             self):
         rows = runner.arm_f_worst_case(
             TEST_SERVINGS, _fixture_catalogue())
-        # The three tiers the workflow calls, then
-        # the sequence their counts compose.
+        # The five tiers the workflow calls, then
+        # the sequence their counts compose. R3
+        # (the ruling of 2026-10-15) counts
+        # grounding's maximum — three calls on the
+        # research tier (query expansion, the
+        # briefing, the rerank) and one on the
+        # search tier (the gap lookup), read off
+        # build_phase_context's retrieval path —
+        # beside the triage, engineering and judge
+        # calls the workflow already made.
         assert [row["tier"] for row in rows] == [
-            "triage", "engineering", "judge",
-            "sequence"]
+            "triage", "research", "search",
+            "engineering", "judge", "sequence"]
         # The per-call worst case on a tier is the
         # figure the arm-E table carries: the same
         # standing tiers, the same standing caps.
@@ -3317,20 +3556,32 @@ class TestOTheReMeasurePreflight:
         e_rows = {row["tier"]: row
                   for row in runner.arm_e_worst_case(
                       TEST_SERVINGS, _fixture_catalogue())}
-        for row in rows[:3]:
-            assert row["calls"] == 2
+        # The rerank runs on the ranker tier when
+        # the owner's settings pin one — a pin
+        # outside this experiment's standings; the
+        # research tier is its fallback and the
+        # tier the standings price, so the table's
+        # research row prices the rerank there.
+        counts = {"triage": 2, "research": 3,
+                  "search": 1, "engineering": 2,
+                  "judge": 2}
+        for row in rows[:5]:
+            assert row["calls"] == counts[row["tier"]]
             assert row["unit_ceiling"] == 0.20
             assert row["worst_case"] == pytest.approx(
                 e_rows[row["tier"]]["worst_case"])
             assert row["tier_worst_case"] == pytest.approx(
-                2 * row["worst_case"])
-        # The sequence: six calls, the sum the
+                counts[row["tier"]] * row["worst_case"])
+        # The sequence: ten calls (R3's amended
+        # bound: 2 triage + 3 research + 1 search +
+        # 2 engineering + 2 judge), the sum the
         # counts compose, against the $0.20 ceiling.
-        sequence = rows[3]
-        assert sequence["calls"] == 6
+        sequence = rows[5]
+        assert sequence["calls"] == 10
+        assert sequence["calls"] == runner.ARM_F_CALL_LIMIT
         assert sequence["worst_case"] == pytest.approx(
             sum(row["tier_worst_case"]
-                for row in rows[:3]))
+                for row in rows[:5]))
         # The fixture's rates put every worst case
         # within the ceiling: the preflight passes,
         # and the table says the sequence is
@@ -3350,8 +3601,8 @@ class TestOTheReMeasurePreflight:
                 entry["pricing"]["completion"] = "0.001"
         rows = runner.arm_f_worst_case(
             TEST_SERVINGS, catalogue)
-        assert rows[3]["refuses_even_at_zero_spend"]
-        assert rows[3]["worst_case"] > 0.20
+        assert rows[5]["refuses_even_at_zero_spend"]
+        assert rows[5]["worst_case"] > 0.20
         # Break-proof (runner.py, arm_f_worst_case):
         #     sequence += calls * worst
         #     -> sequence += worst
@@ -3364,3 +3615,393 @@ class TestOTheReMeasurePreflight:
         # count the workflow makes, and a lineup
         # whose sequence exceeded the $0.20 ceiling
         # would have read as within it.
+
+
+# ── (p) The bound-stopped record ────────────
+
+class TestPTheBoundStopRecord:
+    """The record's two D23 fields on a scripted
+    ceiling stop: the unit record carries the run's
+    terminal reason and the runner's stop_reason,
+    verbatim — a unit the call ceiling stopped says
+    why it ended without re-reading the trace."""
+
+    def test_the_record_carries_the_bounds_two_fields(
+            self, fixture_rates):
+        # The scripted stop, written exactly as
+        # run_scenario's CallCeilingExceeded
+        # handler writes it (B18's _end_on_bound):
+        # the workflow's own terminal names the
+        # bound, and the stop-reason names the
+        # runner's hand. Arm E's registered limit
+        # is 40 calls, so the bounded runner's
+        # ceiling is 41 and the 42nd call is the
+        # one that stopped.
+        detail = ("stopped at 42 model calls "
+                    "(ceiling 41); raise max_calls "
+                    "on the scenario if this is "
+                    "expected. By tier: "
+                    "{'triage': 2, 'research': 20, "
+                    "'engineering': 20}")
+        script = _script(arm_e={
+            "tier3_e_Q4_r1": {
+                **runner._no_answer(),
+                "reason": (f"stopped by the call "
+                             f"ceiling: {detail}"),
+                "stop_reason": (f"runner stopped "
+                                  f"the run: {detail}"),
+            }})
+        wiring = _Wiring(script, fixture_rates)
+        result = _run(runner.run_unit(
+            ("Q4", 1, "E"), QUESTIONS, TEST_SERVINGS,
+            None, scenario_runner=wiring.scenario_runner))
+        # The bound stopped the run before its
+        # terminal: an incomplete unit, counted
+        # in its arm's denominator, with no
+        # answer to score.
+        assert result.status == "incomplete"
+        assert result.delivered_kind == "no answer"
+        record = result.record()
+        pipeline = record["pipeline"]
+        # The two fields, verbatim: the workflow's
+        # own terminal, and the runner's own hand.
+        assert pipeline["reason"] == (
+            f"stopped by the call ceiling: {detail}")
+        assert pipeline["stop_reason"] == (
+            f"runner stopped the run: {detail}")
+        # Break-proof (runner.py, DryRunScenarioRunner
+        # and _pipeline_record): the stand-in built
+        # its ScenarioRun without reason and
+        # stop_reason, and the record dropped them
+        #     reason=outcome.get("reason"),
+        #     stop_reason=outcome.get("stop_reason"),
+        #     -> (both lines deleted)
+        # FAILED ...::test_the_record_carries_the_
+        # bounds_two_fields - AssertionError:
+        # assert None == 'stopped by the call
+        # ceiling: ...' : a bound-stopped run's
+        # two fields were dropped from the unit
+        # record, so a reader could not tell the
+        # call ceiling stopped the unit without
+        # re-reading the trace the record exists
+        # to replace.
+
+
+# ── (q) The committed trace ─────────────────
+
+class TestQTheCommittedTrace:
+    """The re-measurement's report over the
+    committed trace (the starved run of
+    2026-10-14, the evidence of record): the
+    revised-units count the ruling's correction
+    states — five, by the ruling's rule — and
+    the five units it names."""
+
+    TRACE = (ROOT / "docs" / "traces"
+             / "20261015T140229Z-tier3-remeasure.jsonl")
+    TRACE_SHA256 = ("33ad32b8b7fdd5c103cff152fba22"
+                    "fa34969503671f7ff7407f4333c62"
+                    "be5a4f")
+
+    def test_the_report_counts_the_five_revised_units(
+            self):
+        # The committed trace is the record the
+        # report reads: its sha256 is the
+        # manifest's, so the test measures the
+        # measurement, not a transcription of it.
+        digest = hashlib.sha256(
+            self.TRACE.read_bytes()).hexdigest()
+        assert digest == self.TRACE_SHA256
+        records = [json.loads(line) for line in
+                   self.TRACE.read_text().splitlines()
+                   if line.strip()]
+        units = [r for r in records
+                 if r.get("record") == "unit"]
+        assert len(units) == 246
+        report = runner.remeasure_report(
+            units, QUESTIONS, list(KEYS.values()))
+        first_vs_final = report["f_first_vs_final"]
+        # The ruling's count: five units revised —
+        # the prediction is tested, not reported.
+        assert first_vs_final["revised_units"] == 5
+        assert first_vs_final["testable"] is True
+        assert first_vs_final["transitions"] == {
+            "right_to_right": 3, "right_to_wrong": 0,
+            "wrong_to_right": 0, "wrong_to_wrong": 2,
+            "no_first_answer": 0}
+        # The five, named — re-derived here by the
+        # ruling's rule, independently of the
+        # report's own loop (a count is re-derived,
+        # never trusted): a unit is revised when it
+        # has two implement outputs, or its final
+        # answer differs from its first implement
+        # summary.
+        revised = []
+        for record in units:
+            if record.get("arm") != "F":
+                continue
+            iterations = list(
+                ((record.get("pipeline") or {})
+                 .get("iterations") or []))
+            answers = [i.get("implement_summary")
+                       for i in iterations
+                       if i.get("implement_summary")]
+            first = answers[0] if answers else None
+            final = record.get("answer")
+            if (len(answers) >= 2
+                    or (first and final
+                        and str(first).strip()
+                        != str(final).strip())):
+                revised.append(
+                    (record["question_id"],
+                     record["repetition"]))
+        assert sorted(revised) == [
+            ("Q10", 1), ("Q10", 2), ("Q19", 1),
+            ("Q23", 1), ("Q9", 2)]
+        # Break-proof (runner.py, remeasure_report,
+        # the revised-units rule):
+        #     two_outputs = len(answers) >= 2
+        #     answer_differs = bool(first and final
+        #         and str(first).strip()
+        #         != str(final).strip())
+        #     if not (two_outputs or answer_differs):
+        #     -> if not two_outputs:
+        # FAILED ...::test_the_report_counts_the_
+        # five_revised_units - AssertionError:
+        # assert 5 == 0 : the rule the ruling
+        # amended counted only the two-output
+        # units, and the five units whose check
+        # forced a change the iteration count
+        # alone did not see were not revised.
+
+
+# ── (r) The credit stop ─────────────────────
+
+class TestRTheCreditStop:
+    """The first 402 stops the sweep (the ruling
+    of 2026-10-15): the unit that drew it is
+    recorded as it ended, and every unit after it
+    is recorded not_run (provider credit) —
+    outside the arm denominators, counted beside
+    the measures — rather than lost the way the
+    starved run's were."""
+
+    def test_a_402_stops_the_sweep(
+            self, tmp_path, fixture_rates):
+        # The smoke run the ruling orders: named
+        # questions, named arms, one repetition —
+        # a small, deterministic plan whose first
+        # unit draws the 402. The order is the
+        # smoke seed's own, read back here so the
+        # script can name the unit that stops.
+        path = tmp_path / "smoke.jsonl"
+        catalogue = _fixture_catalogue()
+        questions = ("Q1", "Q2")
+        order = runner.build_order(
+            runner.SMOKE_SEED,
+            runner.SMOKE_REPETITIONS, ("A",),
+            [QUESTIONS[qid] for qid in questions])
+        first, second = order[0], order[1]
+        script = _script(calls={
+            (first[0], first[1], first[2]): [
+                _credit_exhausted()]})
+        wiring = _Wiring(script, fixture_rates)
+        overrides = {
+            "TIER3_ARM_A": TEST_SERVINGS["A"],
+            "TIER3_ARM_B": TEST_SERVINGS["B"],
+            "TIER3_ARM_C_1": TEST_SERVINGS["C"][0],
+            "TIER3_ARM_C_2": TEST_SERVINGS["C"][1],
+            "TIER3_ARM_D": TEST_SERVINGS["D"],
+            "TIER3_SERVINGS_RATIFIED":
+                TEST_FINGERPRINT,
+            # R4: the authorization names the run's
+            # own plan — the smoke run's registered
+            # $2.00 ceiling, and nothing else.
+            "TIER3_SPEND_AUTHORIZED": "2.00",
+        }
+        with runner._env_overrides(overrides), \
+                runner._harness_pin_overrides(
+                    TEST_SERVINGS["E"]):
+            # The dry run's fixture balance stands
+            # in for the account's (the preflight's
+            # free GET is mocked — the suite makes
+            # no network call).
+            result = _run(runner.run_experiment(
+                "smoke", results_path=path,
+                smoke_questions=questions,
+                smoke_arms=("A",),
+                client_factory=wiring.client_factory,
+                tool_dispatcher=wiring.tool_dispatcher,
+                scenario_runner=wiring.scenario_runner,
+                catalogue=catalogue,
+                credit=runner.DRY_RUN_CREDIT))
+        # The plan held two units; two records
+        # were written, and only one client was
+        # ever built — the second unit never
+        # started.
+        assert result["order_units"] == 2
+        assert len(result["records"]) == 2
+        assert len(wiring.clients) == 1
+        # The unit that drew the 402, recorded as
+        # it ended: incomplete, with the typed
+        # credit event on its record and the
+        # provider's own answer as its stop reason.
+        stopped = result["records"][0]
+        assert (stopped["question_id"],
+                stopped["repetition"],
+                stopped["arm"]) == tuple(first)
+        assert stopped["status"] == "incomplete"
+        assert stopped["credit_exhausted"] is True
+        assert stopped["stop_reason"].startswith(
+            "provider credit exhausted: "
+            "HTTPStatusError:")
+        # The sweep stopped at the first 402: the
+        # unit after it is recorded not_run
+        # (provider credit), with the sweep's own
+        # words as its stop reason — a record of
+        # what happened to the plan, not a lost
+        # unit.
+        not_run = result["records"][1]
+        assert (not_run["question_id"],
+                not_run["repetition"],
+                not_run["arm"]) == tuple(second)
+        assert not_run["status"] == "not_run"
+        assert not_run["stop_reason"] == (
+            "not run: the provider's credit was "
+            "exhausted before this unit started "
+            "(the sweep stopped at the first 402)")
+        # The measures: the not_run unit is counted
+        # beside them, never inside an arm's
+        # denominator — the arm that ran one unit
+        # planned one unit.
+        assert result["measures"]["not_run"] == 1
+        arm_a = result["measures"][
+            "delivered_correctness_per_arm"]["A"]
+        assert arm_a["planned"] == 1
+        # Break-proof (runner.py, run_experiment,
+        # the 402 stop):
+        #     if result.credit_exhausted:
+        #     -> if False:
+        # FAILED ...::test_a_402_stops_the_sweep -
+        # AssertionError: assert 1 == 2 : the sweep
+        # ran on past the 402, so the unit after it
+        # ran against an exhausted account — the
+        # starved run's own failure, repeated.
+
+    def test_a_resume_reruns_the_not_run_unit(
+            self, tmp_path, fixture_rates):
+        # A unit recorded not_run never ran: a
+        # resume after the top-up re-runs it, the
+        # way the runner's own resume treats it —
+        # it is not a record of evidence, so it
+        # is not a record to skip.
+        path = tmp_path / "smoke.jsonl"
+        catalogue = _fixture_catalogue()
+        questions = ("Q1", "Q2")
+        order = runner.build_order(
+            runner.SMOKE_SEED,
+            runner.SMOKE_REPETITIONS, ("A",),
+            [QUESTIONS[qid] for qid in questions])
+        first, second = order[0], order[1]
+        # The first invocation: the first unit
+        # draws the 402, the second is recorded
+        # not_run. The second unit's script is the
+        # correct answer, delivered when the
+        # resumed invocation re-runs it.
+        script = _script(
+            calls={
+                (first[0], first[1], first[2]): [
+                    _credit_exhausted()],
+                (second[0], second[1], second[2]): [
+                    _answer(_correct(second[0]))],
+            })
+        wiring = _Wiring(script, fixture_rates)
+        overrides = {
+            "TIER3_ARM_A": TEST_SERVINGS["A"],
+            "TIER3_ARM_B": TEST_SERVINGS["B"],
+            "TIER3_ARM_C_1": TEST_SERVINGS["C"][0],
+            "TIER3_ARM_C_2": TEST_SERVINGS["C"][1],
+            "TIER3_ARM_D": TEST_SERVINGS["D"],
+            "TIER3_SERVINGS_RATIFIED":
+                TEST_FINGERPRINT,
+            "TIER3_SPEND_AUTHORIZED": "2.00",
+        }
+        with runner._env_overrides(overrides), \
+                runner._harness_pin_overrides(
+                    TEST_SERVINGS["E"]):
+            first_pass = _run(runner.run_experiment(
+                "smoke", results_path=path,
+                smoke_questions=questions,
+                smoke_arms=("A",),
+                client_factory=wiring.client_factory,
+                tool_dispatcher=wiring.tool_dispatcher,
+                scenario_runner=wiring.scenario_runner,
+                catalogue=catalogue,
+                credit=runner.DRY_RUN_CREDIT))
+            assert (first_pass["measures"]["not_run"]
+                    == 1)
+            # The resumed invocation, after the
+            # top-up: the recorded unit is skipped,
+            # the not_run unit runs.
+            resumed = _run(runner.run_experiment(
+                "smoke", results_path=path,
+                smoke_questions=questions,
+                smoke_arms=("A",),
+                client_factory=wiring.client_factory,
+                tool_dispatcher=wiring.tool_dispatcher,
+                scenario_runner=wiring.scenario_runner,
+                catalogue=catalogue,
+                credit=runner.DRY_RUN_CREDIT))
+        # The record is the experiment's, not the
+        # invocation's: the whole file — the unit
+        # the 402 stopped (incomplete), the unit
+        # it never started (not_run), and the
+        # re-run's own line (delivered). The
+        # resumed invocation ran one unit — the
+        # one the first pass never started.
+        assert len(resumed["records"]) == 3
+        rerun = resumed["records"][2]
+        assert (rerun["question_id"],
+                rerun["repetition"],
+                rerun["arm"]) == tuple(second)
+        assert rerun["status"] == "delivered"
+        assert rerun["answer"] == _correct(second[0])
+        # The measure over the whole record: two
+        # planned units, none not_run, one
+        # delivered correct — the resumed unit's
+        # answer is the key's own. The unit's
+        # final record is its state: the not_run
+        # line the 402 wrote is history the
+        # append-only log keeps, not a unit the
+        # record shows ran — the same unit cannot
+        # sit in its arm's denominator and in the
+        # not_run count beside it.
+        assert resumed["measures"]["not_run"] == 0
+        assert resumed["census"].get("not_run", 0) == 0
+        arm_a = resumed["measures"][
+            "delivered_correctness_per_arm"]["A"]
+        assert arm_a["planned"] == 2
+        assert arm_a["delivered_correct"] == 1
+        # The re-measurement's report, computed over
+        # the resumed record: the same final-state
+        # rule — its not_run count is the units
+        # whose last line is not_run, which is none.
+        report = runner.remeasure_report(
+            resumed["records"], QUESTIONS,
+            list(KEYS.values()))
+        assert report["not_run"] == 0
+        assert report["per_arm"]["A"]["planned"] == 2
+        # Break-proof (runner.py, _final_unit_records):
+        #     final[(record["question_id"],
+        #     record["repetition"],
+        #     record["arm"])] = record
+        #     -> final.setdefault((record["question_id"],
+        #     record["repetition"], record["arm"]),
+        #     record)
+        # FAILED ...::test_a_resume_reruns_the_
+        # not_run_unit - AssertionError:
+        # assert 1 == 0 : the census counted the
+        # stale not_run line, so a top-up's re-run
+        # read as a unit that never ran while its
+        # own delivered record sat in the same
+        # arm's denominator.

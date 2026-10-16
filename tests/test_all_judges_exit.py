@@ -42,14 +42,19 @@ class TestTheLoopContinuesWhileAnyJudgeDissents:
             "a red implementation must not ship because validate said green")
         assert runner.ai_calls.count("implement") > 1, "the loop should iterate"
 
-    async def test_coverage_red_but_validate_green_keeps_going(self):
-        """The variant never observed live, now structurally covered.
+    async def test_coverage_red_alone_does_not_keep_the_loop_going(self):
+        """R1 (2026-10-15): coverage left the judges' fold.
 
-        A free check carries the same weight as a paid one: an implementation
-        that never mentions two of its criteria does not ship on a green
-        validator. The ask is anchored in the request — over the fallback
-        ask coverage passes unchecked (the review of 2026-10-14), so this
-        dissent needs a real anchor to be a dissent at all.
+        It used to carry the same weight as a paid judge: a red
+        coverage kept the loop going, and this test proved it. The
+        ruling of 2026-10-15 repealed that — the starved
+        re-measurement held four correct answers back on exactly
+        this check — so coverage's red is now a note: recorded,
+        counted as a coverage_note, never blocking. Convention 17:
+        this test asserted the behaviour the ruling changed; it now
+        asserts the ruled outcome, and the break-proof is
+        test_validate_green_but_implement_red_keeps_going above,
+        where a paid judge's red still holds the loop.
         """
         state, _ = await _run({
             **BASE,
@@ -60,7 +65,13 @@ class TestTheLoopContinuesWhileAnyJudgeDissents:
             "escalation": {"requires_human": True}},
             request="Add retry with the exponential backoff cap")
         assert state.outputs["coverage"]["passed"] is False
-        assert state.status != "completed"
+        # The judges agreed: coverage's fail is a note
+        # out of the fold, so the run completed on the
+        # first iteration.
+        assert state.status == "completed"
+        from autornd.models.verdicts import (
+            COVERAGE_NOTE, normalisations_by_kind)
+        assert normalisations_by_kind().get(COVERAGE_NOTE) == 1
 
     async def test_all_judges_green_exits_first_time(self):
         state, runner = await _run({**BASE, "validate": {"green": True}})
@@ -211,12 +222,14 @@ class TestEveryShippedLoopFoldsItsOwnJudges:
 
     @pytest.mark.parametrize("workflow,loop,until,fold,expected", [
         ("engineering-rnd", "build_loop", "judges.passed == true", "judges",
-         # Consistency still runs in the body and still records
-         # its result — but out of the fold since the review of
-         # 2026-10-14, where a numbers disagreement became a note
-         # (consistency_note), never a veto. The loop's exit does
-         # not turn on it.
-         {"implement", "validate", "coverage"}),
+         # Coverage is deliberately NOT in this fold since the
+         # ruling of 2026-10-15 (R1): its result is still
+         # recorded — the node still runs in the body — and a
+         # fail is counted as a coverage_note, but it never
+         # blocks and never reaches a revision, the way
+         # consistency has been treated since the review of
+         # 2026-10-14. The loop's exit does not turn on either.
+         {"implement", "validate"}),
         # The two loops that can ship re-review first, so they fold review in
         # as well — work ships when everyone who looked at it agrees.
         ("engineering-rnd", "review_rework_loop", "review_fold.passed == true",
@@ -224,7 +237,7 @@ class TestEveryShippedLoopFoldsItsOwnJudges:
         ("engineering-rnd", "recovery_loop", "review_fold.passed == true",
          "review_fold", {"build", "review"}),
         ("lean", "build_loop", "judges.passed == true", "judges",
-         {"implement", "validate", "coverage"}),
+         {"implement", "validate"}),
     ])
     def test_the_fold_matches_the_body(self, workflow, loop, until, fold, expected):
         from autornd.graph.spec import load
