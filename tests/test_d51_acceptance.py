@@ -34,8 +34,10 @@ from autornd.graph.adapter import PhaseRunner
 from autornd.graph.executor import GraphExecutor
 from autornd.graph.spec import load
 from autornd.models.verdicts import (
+    COVERAGE_NOTE,
     RED_NO_ANCHOR,
     UNANCHORED_DISSENT,
+    UNVERIFIED_DISSENT,
     normalisations_by_kind,
     reset_normalisations,
 )
@@ -110,6 +112,13 @@ Q23_ANSWER = ("Common extension 0.882 mm; aluminum stress 61.8 MPa, "
               "force 17.64 kN. The common extension, tensile stress in "
               "each bar, and force carried by each bar.")
 
+# Words the doubles' scoping pass puts into the grounding the
+# judge is given — the empty-store path, where the request
+# analysis lands in the context every judge reads. R2's
+# grounding-anchored cases quote them as their source.
+GROUNDING_WORDS = ("the fixture instruction card "
+                   "requires the zeroing step")
+
 
 @pytest.fixture(autouse=True)
 def _reset_counts():
@@ -118,12 +127,18 @@ def _reset_counts():
     reset_normalisations()
 
 
-def _double(router):
+def _double(router, serve_chat: bool = False):
     """A recording double around `router`: a callable taking
     (user_message, the call log so far) and returning the reply
     dict. Every call is recorded and billed like the real
     client's (convention 7), and every network method the
-    double does not serve is sealed."""
+    double does not serve is sealed.
+
+    `serve_chat` wires `chat` through the same router. The
+    search tier's lookup speaks through `chat`, not
+    `chat_json` (research._lookup), so a run whose grounding
+    reaches its maximum needs it served for that call to be
+    recorded and billed like every other."""
     client = OpenRouterClient(api_key="test")
     calls: list[dict[str, str]] = []
 
@@ -135,24 +150,46 @@ def _double(router):
         client._account(function, response.cost)
         return data, response
 
+    async def chat(function, system_prompt, user_message, **kw):
+        calls.append({"function": function,
+                      "user": user_message})
+        data = router(user_message, calls)
+        response = make_mock_response(data, f"mock-{function}")
+        client._account(function, response.cost)
+        return response
+
     client.chat_json = AsyncMock(side_effect=chat_json)
+    if serve_chat:
+        client.chat = AsyncMock(side_effect=chat)
     seal_double(client)
     client.close = AsyncMock()
     return client, calls
 
 
 async def _drive(workflow: str, router, request: str,
-                 settings: dict | None = None):
+                 settings: dict | None = None,
+                 spec: Any = None,
+                 serve_chat: bool = False,
+                 call_ceiling: int | None = None):
     """One run of the real graph behind the double.
 
     Returns (state, runner, calls) — the terminal state, the phase
     runner (whose `iterations` is the build history the record
     reads), and every model call the run made, prompts included.
-    """
-    client, calls = _double(router)
+
+    `spec` runs a mutated workflow file: the break-proofs that put
+    a check back into a judges' fold load the spec, add the check
+    to the fold's args, and drive that. `serve_chat` serves the
+    search tier's `chat` calls (the grounding's lookup).
+    `call_ceiling` sets the client's own call bound — the
+    break-proof for the call limit ends the run with the client's
+    ceiling exception, not a test assertion."""
+    client, calls = _double(router, serve_chat=serve_chat)
+    if call_ceiling is not None:
+        client.call_ceiling = call_ceiling
     runner = PhaseRunner(client)
     state = await GraphExecutor(
-        load(f"workflows/{workflow}.yaml"), runner,
+        spec or load(f"workflows/{workflow}.yaml"), runner,
         settings or SETTINGS).run(request)
     return state, runner, calls
 
@@ -241,7 +278,9 @@ class TestTheStage1RouteIsClosed:
                 # The criterion-shaped objection: it judges the answer
                 # against criteria the request never asked for, and
                 # names no anchor — no failed ask, no request quote,
-                # no hazard.
+                # no hazard, and (R2, 2026-10-15) no kind and no
+                # source_quote, so it is read as a wrong_fact that
+                # shows no source: an unverified dissent.
                 return {"green": False,
                         "red_cause": ("the answer shows no inline "
                                       "arithmetic and no kill triggers"),
@@ -267,19 +306,23 @@ class TestTheStage1RouteIsClosed:
         assert (state.outputs["implement"].summary
                 == Q23_ANSWER)
         # The dissent was demoted, not obeyed: validate is green in
-        # the record, and the demotion is counted.
+        # the record, and the demotion is counted — an
+        # unverified dissent since R2 (2026-10-15): a red that
+        # states no kind is read as a wrong_fact, and a wrong_fact
+        # that shows no source is a note the run cannot check.
         assert state.outputs["validate"].green is True
-        assert normalisations_by_kind().get(RED_NO_ANCHOR) == 1
+        assert normalisations_by_kind().get(UNVERIFIED_DISSENT) == 1
         # The plan's invented criteria changed nothing: one
         # iteration, one answer.
         assert [(i["iteration"], i["dissenting"])
                 for i in runner.iterations] == [(1, [])]
 
     async def test_break_proof_the_same_dissent_anchored_fails_the_work(self):
-        """Break-proof: give the objection its anchor (a failed ask)
-        and the same script ends escalated with no answer — the
-        outcome main 45b59f1 produced for this very shape, where
-        ANY red failed the work. The test above fails if the
+        """Break-proof: give the objection its anchor (a failed
+        ask, stated as the unmet ask it is) and the same script
+        ends escalated with no answer — the outcome main
+        45b59f1 produced for this very shape, where ANY red
+        failed the work. The test above fails if the
         demotion is reverted, because this is what the run then
         does."""
         routes = self._routes(True)
@@ -289,7 +332,11 @@ class TestTheStage1RouteIsClosed:
             if "validate this implementation" in msg.lower():
                 data = dict(data)
                 # The one line: the anchor the criterion-shaped
-                # objection did not carry.
+                # objection did not carry. R2 (2026-10-15): the
+                # ask number anchors an unmet_ask — the answer
+                # gives nothing for the ask — so the kind is
+                # stated alongside it.
+                data["kind"] = "unmet_ask"
                 data["failed_ask"] = 1
             return data
         state, runner, calls = await _drive(
@@ -374,6 +421,12 @@ class TestTheQ15Shape:
                                     "displacement): FAIL — the answer "
                                     "leaves the step out"]}
                 if anchored:
+                    # The anchor: the ask the work fails. R2
+                    # (2026-10-15): an omission is an
+                    # unmet_ask — the answer gives nothing for
+                    # the ask — and the ask number anchors it,
+                    # unchanged.
+                    red["kind"] = "unmet_ask"
                     red["failed_ask"] = 1
                 return red
             if "review this engineering work" in m:
@@ -426,8 +479,20 @@ class TestTheQ15Shape:
                                     "FAIL — the answer calls the "
                                     "required step optional"]}
                 if anchored:
-                    # The anchor: the ask the work fails.
-                    red["failed_ask"] = 1
+                    # The anchor: the request's own words
+                    # that show the answer false. R2
+                    # (2026-10-15): a misstatement is a
+                    # wrong_fact — the answer gives
+                    # something for the ask and the judge
+                    # says it is false — and a wrong_fact
+                    # anchors only through a source_quote
+                    # the free check finds in the request.
+                    # The words occur in Q15 verbatim ("The
+                    # fixture instruction requires zeroing
+                    # the readout at zero displacement").
+                    red["kind"] = "wrong_fact"
+                    red["source_quote"] = ("zeroing the readout "
+                                           "at zero displacement")
                 return red
             if "review this engineering work" in m:
                 return {"ship": True, "findings": [], "verdict": "Ship."}
@@ -490,27 +555,37 @@ class TestTheQ15Shape:
         assert len(runner.iterations) == 1
         assert "optional on an unloaded fixture" in (
             state.outputs["implement"].summary)
-        assert normalisations_by_kind().get(RED_NO_ANCHOR) == 1
+        # The demotion is an unverified dissent since R2
+        # (2026-10-15): the unanchored red states no kind,
+        # so it is read as a wrong_fact, and a wrong_fact
+        # with no source_quote is a note the run cannot check.
+        assert normalisations_by_kind().get(UNVERIFIED_DISSENT) == 1
 
     async def test_the_omitted_step_is_caught_revised_and_delivered(self):
         """The command's literal (c) script: the first answer
         omits the step ask's words. Validate's anchored failure
         makes it red — and coverage, the free check that judges
-        the asks by construction (D51 (2)), dissents with it,
+        the asks by construction (D51 (2)), fails with it,
         because the ask's words are absent from the answer. The
         revision receives the unmet ask and the failure's
         evidence; the second answer includes the step; the run
-        completes."""
+        completes. Coverage's fail is recorded and counted, but
+        since the ruling of 2026-10-15 (R1) it is a note out of
+        the judges' fold — validate's anchored dissent is the
+        only judge that routes the revision."""
         state, runner, calls = await _drive(
             "engineering-rnd", self._routes_omitting(True), Q15)
         assert state.status == "completed"
         assert "zeroing the readout at zero displacement" in (
             state.outputs["implement"].summary)
-        # Both judges that read the asks dissented on the first
-        # iteration: validate on its anchored failure, coverage
-        # on the ask's absent words.
+        # Validate dissented on the first iteration, anchored
+        # on the unmet ask. Coverage failed the same words
+        # and is recorded red beside it — but out of the
+        # fold since R1, a coverage_note, so the loop read
+        # validate alone.
         assert [i["dissenting"] for i in runner.iterations] == [
             ["coverage", "validate"], []]
+        assert normalisations_by_kind().get(COVERAGE_NOTE) == 1
         # The revision carries the failure and the unmet ask —
         # the ask's own words, and the judge's FAIL line.
         revisions = _revision_prompts(calls)
@@ -520,48 +595,63 @@ class TestTheQ15Shape:
         assert "FAIL" in revisions[0]
         assert TestTheQ15Shape.OMITTED in revisions[0]
 
-    async def test_the_omitted_step_does_not_ship_even_unanchored(self):
-        """The (c) break-proof, measured: strip the anchor, and
-        the omission STILL does not ship — coverage holds the
-        loop on the ask's own words, with no paid judge
-        dissenting at all. The run iterates once on the free
-        check alone, the revision includes the step, and the run
-        completes with the step in the answer and the demotion
-        counted. The command's literal break-proof ('the omission
-        ships') does not hold for a word-omission on this branch,
-        by the ruling's own construction: coverage judges the
-        asks by construction, so an ask whose words are absent is
-        caught before any anchor is consulted. The break-proof
-        that isolates validate's anchor is the misstatement shape
-        above, where the words occur and only the anchor stands
-        between the wrong answer and delivery."""
+    async def test_the_omitted_step_ships_when_nothing_anchors(self):
+        """The (c) counterfactual, as the ruling of 2026-10-15
+        (R1) leaves it: strip the anchor, and the omission
+        SHIPS. Coverage — the free check that judges the asks by
+        construction — still fails on the ask's absent words,
+        but R1 made it a note: out of the judges' fold, counted
+        as a coverage_note, never blocking and never reaching a
+        revision. Validate's unanchored red is demoted the same
+        way (an unverified dissent since R2). Nothing anchors,
+        the judges agree on the first iteration, and the answer
+        that leaves the step out is delivered completed.
+
+        Convention 17: this test asserted the opposite — that
+        coverage held the loop on the ask's own words, so the
+        omission could not ship unanchored. That was the
+        pre-ruling behaviour, and R1 repealed it deliberately:
+        the starved re-measurement held four correct answers
+        back on exactly this check. The test is rewritten to
+        assert the ruled outcome, and the break-proof is the
+        test above, where the anchored validate dissent still
+        catches the same omission."""
         state, runner, calls = await _drive(
             "engineering-rnd", self._routes_omitting(False), Q15)
         assert state.status == "completed"
-        # Coverage held the loop: two iterations, the omission
-        # revised away, the step in the delivered answer.
-        assert len(runner.iterations) == 2
+        # Nothing held the loop: one iteration, the omission
+        # delivered, the step's words absent from the answer.
+        # Coverage's fail is in the record beside the
+        # demoted validate — recorded, as R1 requires, and
+        # counted as a coverage_note, but the fold read
+        # neither, so the judges agreed on the first
+        # iteration.
+        assert len(runner.iterations) == 1
         assert [i["dissenting"] for i in runner.iterations] == [
-            ["coverage"], []]
-        assert "zeroing the readout at zero displacement" in (
+            ["coverage"]]
+        assert "zeroing the readout at zero displacement" not in (
             state.outputs["implement"].summary)
-        # The unanchored red was demoted, not obeyed.
+        # Both demotions counted as the notes they now are.
         assert state.outputs["validate"].green is True
-        assert normalisations_by_kind().get(RED_NO_ANCHOR) == 1
+        assert normalisations_by_kind().get(UNVERIFIED_DISSENT) == 1
+        assert normalisations_by_kind().get(COVERAGE_NOTE) == 1
 
 
 # ── (d) review anchors ──────────────────────────────────────────
 
 class TestReviewAnchors:
-    """The anchor table for review findings (R-e) and domain concerns
-    (R-f). A high finding with no anchor is a note and ships; a
-    finding anchored by ask number, by the request's own words, or
-    by a hazard blocks; a finding whose quote does not occur in the
-    request is a note. Domain review follows the same table for its
-    critical flag."""
+    """The anchor table for review findings (R-e) and domain
+    concerns (R-f), as R2 (2026-10-15) amended it. A high
+    finding with no anchor is a note and ships; a finding
+    anchored by ask number or by the request's own words
+    blocks when its kind is unmet_ask; a wrong_fact blocks
+    only through a source_quote the free check finds in the
+    request or in the grounding the judge was given; a
+    hazard anchors only through the answer's own words. A
+    finding whose quote or source does not occur is a note."""
 
     @staticmethod
-    def _routes(finding):
+    def _routes(finding, grounding: bool = False):
         def reply(msg, calls):
             m = msg.lower()
             if "classify this engineering request" in m:
@@ -597,29 +687,80 @@ class TestReviewAnchors:
                         "requires_human": False,
                         "rulings": [{"dissent": 1, "upheld": True,
                                      "reason": "the finding holds"}]}
+            if ("an engineer is about to plan and carry out"
+                    " the request below" in m):
+                # The scoping pass the empty store runs: its
+                # text is the grounding the judge was given.
+                considerations = ([GROUNDING_WORDS]
+                                  if grounding else [])
+                return {"objective": "state the check's result",
+                        "unknowns": [], "assumptions": [],
+                        "considerations": considerations,
+                        "blocking_unknowns": []}
             return {"findings": [], "queries": [], "brief": ""}
         return reply
 
-    @pytest.mark.parametrize("finding,blocks", [
-        # A high finding with no anchor: a note, recorded, ships.
+    @pytest.mark.parametrize("finding,blocks,note", [
+        # A high finding with no anchor and no kind: a
+        # wrong_fact that shows no source — an
+        # unverified dissent, a note, recorded, ships.
         ({"lens": "backend_engineer", "severity": "high",
           "detail": "the answer does not follow the house style guide"},
-         False),
-        # Anchored by ask number: blocks.
+         False, UNVERIFIED_DISSENT),
+        # An unmet_ask anchored by ask number: blocks.
         ({"lens": "backend_engineer", "severity": "high",
-          "ask": 1,
+          "ask": 1, "kind": "unmet_ask",
           "detail": "the answer leaves the zeroing step out"},
-         True),
-        # Anchored by the request's own words: blocks.
+         True, None),
+        # An unmet_ask anchored by the request's own
+        # words: blocks.
         ({"lens": "backend_engineer", "severity": "high",
           "quote": "zeroing the readout at zero displacement",
+          "kind": "unmet_ask",
           "detail": "the answer leaves this step out"},
-         True),
-        # A quote that does not occur in the request: a note.
+         True, None),
+        # An unmet_ask whose quote does not occur in the
+        # request: an unanchored dissent, a note.
         ({"lens": "backend_engineer", "severity": "high",
           "quote": "a requirement the request never states",
+          "kind": "unmet_ask",
           "detail": "the answer does not meet it"},
-         False),
+         False, UNANCHORED_DISSENT),
+        # R2's own case: a wrong_fact that shows no
+        # source_quote. The claim cannot be checked, so
+        # under D51 (5) it is unavailable — a note,
+        # never blocking. Break-proof: were the kind
+        # alone an anchor (the retired rule), this case
+        # would escalate and the assertion fails.
+        ({"lens": "backend_engineer", "severity": "high",
+          "kind": "wrong_fact",
+          "detail": "the answer states the step as optional"},
+         False, UNVERIFIED_DISSENT),
+        # A wrong_fact whose source_quote is not in the
+        # request or the grounding: still unverifiable,
+        # a note.
+        ({"lens": "backend_engineer", "severity": "high",
+          "kind": "wrong_fact",
+          "source_quote": "a requirement no source states",
+          "detail": "the answer does not meet it"},
+         False, UNVERIFIED_DISSENT),
+        # A wrong_fact whose source_quote occurs in the
+        # request: anchored, blocks.
+        ({"lens": "backend_engineer", "severity": "high",
+          "kind": "wrong_fact",
+          "source_quote": "zeroing the readout at zero displacement",
+          "detail": "the answer calls the required step optional"},
+         True, None),
+        # A wrong_fact whose source_quote occurs in the
+        # grounding the judge was given, not the request:
+        # anchored, blocks. (The double's scoping pass
+        # carries the words, so the grounding is real.)
+        ({"lens": "backend_engineer", "severity": "high",
+          "kind": "wrong_fact",
+          "source_quote": GROUNDING_WORDS,
+          "detail": "the answer skips the zeroing step the "
+                    "instruction card requires"},
+         True, None),
         # The hazard table (the review of 2026-10-14): a
         # hazard anchors only through the answer's own words
         # that state or instruct it, carried in hazard_quote.
@@ -631,14 +772,14 @@ class TestReviewAnchors:
           "hazard": True,
           "detail": "the answer instructs shorting the fixture "
                     "to ground, which would damage the extensometer"},
-         False),
+         False, UNANCHORED_DISSENT),
         # A hazard whose quote is not in the answer: a note.
         ({"lens": "backend_engineer", "severity": "high",
           "hazard": True,
           "hazard_quote": "disconnect the fixture before "
                           "servicing",
           "detail": "the answer omits the service disconnect"},
-         False),
+         False, UNANCHORED_DISSENT),
         # A hazard in the answer's own words: blocks.
         ({"lens": "backend_engineer", "severity": "high",
           "hazard": True,
@@ -646,7 +787,7 @@ class TestReviewAnchors:
                           "without re-zeroing",
           "detail": "the answer's return-to-zero instruction, "
                     "followed as written, damages the fixture"},
-         True),
+         True, None),
         # An omission framed as a hazard: the answer's own
         # words cannot state what is absent, so no quote can
         # anchor — a note.
@@ -654,11 +795,17 @@ class TestReviewAnchors:
           "hazard": True,
           "hazard_quote": "zero the readout before each reading",
           "detail": "the answer omits the per-reading zero"},
-         False),
+         False, UNANCHORED_DISSENT),
     ])
-    async def test_the_finding_table(self, finding, blocks):
+    async def test_the_finding_table(self, finding, blocks, note):
+        # The grounding-anchored case needs the double's
+        # scoping pass to carry the words; every other
+        # case runs on the empty grounding.
+        grounding = finding.get("source_quote") == \
+            GROUNDING_WORDS
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(finding), Q15)
+            "engineering-rnd",
+            self._routes(finding, grounding=grounding), Q15)
         if blocks:
             assert state.status == "escalated"
         else:
@@ -670,19 +817,43 @@ class TestReviewAnchors:
             recorded = state.outputs["review"].findings[0]
             assert recorded.severity == "medium"
             assert recorded.detail == finding["detail"]
-            assert normalisations_by_kind().get(UNANCHORED_DISSENT, 0) >= 1
+            assert normalisations_by_kind().get(note, 0) >= 1
 
-    @pytest.mark.parametrize("concern,blocks", [
-        # An unanchored critical concern: a note, never critical.
+    @pytest.mark.parametrize("concern,blocks,note", [
+        # An unanchored critical concern with no kind: a
+        # wrong_fact that shows no source — an unverified
+        # dissent, a note, never critical.
         ({"detail": "the answer does not follow the house style guide",
-          "critical": True}, False),
-        # Anchored by ask number: critical, and the work goes red.
+          "critical": True}, False, UNVERIFIED_DISSENT),
+        # An unmet_ask anchored by ask number: critical,
+        # and the work goes red.
         ({"detail": "the answer leaves the zeroing step out",
-          "critical": True, "ask": 1}, True),
-        # Anchored by the request's own words: critical.
+          "critical": True, "ask": 1, "kind": "unmet_ask"},
+         True, None),
+        # An unmet_ask anchored by the request's own words:
+        # critical.
         ({"detail": "the answer leaves this step out",
           "critical": True,
-          "quote": "zeroing the readout at zero displacement"}, True),
+          "quote": "zeroing the readout at zero displacement",
+          "kind": "unmet_ask"}, True, None),
+        # R2's own case: a wrong_fact that shows no
+        # source_quote — an unverified dissent, a note.
+        ({"detail": "the answer states the step as optional",
+          "critical": True, "kind": "wrong_fact"},
+         False, UNVERIFIED_DISSENT),
+        # A wrong_fact whose source_quote occurs in the
+        # request: critical, and the work goes red.
+        ({"detail": "the answer calls the required step optional",
+          "critical": True, "kind": "wrong_fact",
+          "source_quote": "zeroing the readout at zero displacement"},
+         True, None),
+        # A wrong_fact whose source_quote occurs in the
+        # grounding the judge was given: critical.
+        ({"detail": "the answer skips the zeroing step the "
+                    "instruction card requires",
+          "critical": True, "kind": "wrong_fact",
+          "source_quote": GROUNDING_WORDS},
+         True, None),
         # The hazard table (the review of 2026-10-14), the
         # same four cases the review-finding table carries:
         # a hazard with no quote is a note — the bool alone
@@ -691,30 +862,36 @@ class TestReviewAnchors:
         # case would escalate and the assertion fails.
         ({"detail": "the answer instructs shorting the fixture to "
                     "ground, which would damage the extensometer",
-          "critical": True, "hazard": True}, False),
+          "critical": True, "hazard": True}, False, UNANCHORED_DISSENT),
         # A hazard whose quote is not in the answer: a note.
         ({"detail": "the answer omits the service disconnect",
           "critical": True, "hazard": True,
           "hazard_quote": "disconnect the fixture before "
-                          "servicing"}, False),
+                          "servicing"}, False, UNANCHORED_DISSENT),
         # A hazard in the answer's own words: critical.
         ({"detail": "the answer's return-to-zero instruction, "
                     "followed as written, damages the fixture",
           "critical": True, "hazard": True,
           "hazard_quote": "returns to zero and records "
-                          "without re-zeroing"}, True),
+                          "without re-zeroing"}, True, None),
         # An omission framed as a hazard: a note.
         ({"detail": "the answer omits the per-reading zero",
           "critical": True, "hazard": True,
           "hazard_quote": "zero the readout before each reading"},
-         False),
+         False, UNANCHORED_DISSENT),
     ])
     async def test_domain_review_follows_the_same_table(self, concern,
-                                                       blocks):
+                                                       blocks, note):
+        # The grounding-anchored cases need the double's
+        # scoping pass to carry the words.
+        grounding = concern.get("source_quote") == \
+            GROUNDING_WORDS
+
         def reply(msg, calls):
             data = TestReviewAnchors._routes(
                 {"lens": "backend_engineer", "severity": "high",
-                 "detail": "unused"})(msg, calls)
+                 "detail": "unused"},
+                grounding=grounding)(msg, calls)
             if "classify this engineering request" in msg.lower():
                 # A second builder, so the peers roster the
                 # domain review draws is not empty: with one
@@ -741,8 +918,9 @@ class TestReviewAnchors:
             # table above: every judge that saw the unanchored
             # critical concern demoted it (the domain peer and
             # the risk-scaled review team), so the count is
-            # the roster's, not one.
-            assert normalisations_by_kind().get(UNANCHORED_DISSENT) >= 1
+            # the roster's, not one — and the kind is the
+            # case's, as the table rows it.
+            assert normalisations_by_kind().get(note, 0) >= 1
 
 
 # ── (g) unavailable is not a fail ─────────────────────────────────
@@ -866,6 +1044,10 @@ class TestEscalationRulesOnEachDissent:
                             "red_cause": "the answer omits the "
                                          "zeroing step",
                             "failed_ask": 1,
+                            # An omission is an unmet_ask
+                            # (R2, 2026-10-15): the ask
+                            # number anchors it.
+                            "kind": "unmet_ask",
                             "evidence": ["ask 1 (zeroing the "
                                          "readout at zero "
                                          "displacement): FAIL — "
@@ -874,6 +1056,9 @@ class TestEscalationRulesOnEachDissent:
                 return {"green": False,
                         "red_cause": "the answer states no verdict",
                         "failed_ask": 2,
+                        # The verdict ask is unmet too: the
+                        # answer gives nothing for it.
+                        "kind": "unmet_ask",
                         "evidence": ["ask 2 (the overall verdict): "
                                      "FAIL — the answer states no "
                                      "verdict"]}
@@ -975,10 +1160,13 @@ class TestTheCandidate:
             if "review this implementation from your domain perspective" in m:
                 return {"concerns": [], "critical": False}
             if "validate this implementation" in m:
-                # A dissent that never clears: anchored, every time.
+                # A dissent that never clears: anchored, every
+                # time. An omission is an unmet_ask (R2,
+                # 2026-10-15): the ask number anchors it.
                 return {"green": False,
                         "red_cause": "the answer omits an ask",
                         "failed_ask": 1,
+                        "kind": "unmet_ask",
                         "evidence": ["ask 1 (the common extension): "
                                      "FAIL — the answer states no "
                                      "figure"]}
@@ -1149,6 +1337,10 @@ class TestVerifyFirst:
                 return {"green": False, "red_cause": "the answer omits "
                                                     "an ask",
                         "failed_ask": 1,
+                        # An omission is an unmet_ask (R2,
+                        # 2026-10-15): the ask number
+                        # anchors it.
+                        "kind": "unmet_ask",
                         "evidence": ["ask 1 (the common extension): FAIL"]}
             return {"green": True, "red_cause": None,
                     "evidence": ["all three asks: PASS"]}
@@ -1173,6 +1365,10 @@ class TestVerifyFirst:
         def validate(calls):
             return {"green": False, "red_cause": "the answer omits an ask",
                     "failed_ask": 1,
+                    # An omission is an unmet_ask (R2,
+                    # 2026-10-15): the ask number
+                    # anchors it.
+                    "kind": "unmet_ask",
                     "evidence": ["ask 1 (the common extension): FAIL"]}
 
         state, runner, calls = await _drive(
@@ -1202,6 +1398,10 @@ class TestVerifyFirst:
                                "evidence": ["all three asks: PASS"]},
                 lambda calls: ({"green": False, "red_cause": "red",
                                 "failed_ask": 1,
+                                # An omission is an unmet_ask
+                                # (R2, 2026-10-15): the ask
+                                # number anchors it.
+                                "kind": "unmet_ask",
                                 "evidence": ["ask 1: FAIL"]}
                                if sum(1 for c in calls
                                       if "validate this implementation"
@@ -1210,6 +1410,7 @@ class TestVerifyFirst:
                                      "evidence": ["all three asks: PASS"]}),
                 lambda calls: {"green": False, "red_cause": "red",
                                "failed_ask": 1,
+                               "kind": "unmet_ask",
                                "evidence": ["ask 1: FAIL"]}):
             state, runner, calls = await _drive(
                 "verify-first", self._routes(validate), Q23)
@@ -1218,3 +1419,575 @@ class TestVerifyFirst:
             assert phases[1] == "asks"
             assert len(phases) - 2 <= 4
             assert len(phases) <= 6
+
+
+# ── the ruling of 2026-10-15, scripted on the starved run's
+#    own units ─────────────────────────────────────────────────────
+# R1, R2 and R3 below are driven end to end through the real
+# graph on the very units the starved re-measurement measured:
+# F-Q10-r1's asks and first answer (R1), Q17-r3's critical
+# finding (R2), and a grounding taken at its maximum (R3).
+# Each carries its break-proof, and where the break-proof is a
+# runnable outcome the test runs it beside the ruled outcome.
+
+# Q10's request, verbatim from the frozen tier-2 questions —
+# the unit the starved re-measurement held back in arm F.
+Q10 = ("Write the cure-check sequence for an adhesive coupon in a "
+       "guarded laboratory oven. The coupon and its temperature "
+       "probe are already installed. The work instruction requires "
+       "setting the oven to $120\\,^{\\circ}\\mathrm{C}$, waiting "
+       "until the coupon temperature enters the inclusive band "
+       "$118$–$122\\,^{\\circ}\\mathrm{C}$, then starting a "
+       "$600\\,\\mathrm{s}$ timer. The coupon must remain inside "
+       "that band throughout the timed hold; any excursion fails "
+       "the run and no restart is permitted. At the end, assess "
+       "the run, switch off heating, and leave the coupon inside "
+       "until its probe reads $\\leq40\\,^{\\circ}\\mathrm{C}$ "
+       "before removal. A completed log records an uninterrupted "
+       "$600\\,\\mathrm{s}$ hold with minimum "
+       "$119\\,^{\\circ}\\mathrm{C}$ and maximum "
+       "$121\\,^{\\circ}\\mathrm{C}$. Include the acceptance "
+       "criteria and this log's verdict.")
+
+# The twelve asks the pipeline's own asks node proposed on
+# F-Q10-r1, each a quote that occurs in the request verbatim, so
+# the free anchoring check keeps every one.
+Q10_ASKS = [
+    ("Write the cure-check sequence for an adhesive coupon in a "
+     "guarded laboratory oven", "step"),
+    ("setting the oven to $120\\,^{\\circ}\\mathrm{C}$", "step"),
+    ("waiting until the coupon temperature enters the inclusive "
+     "band $118$–$122\\,^{\\circ}\\mathrm{C}$", "step"),
+    ("then starting a $600\\,\\mathrm{s}$ timer", "step"),
+    ("The coupon must remain inside that band throughout the "
+     "timed hold", "constraint"),
+    ("any excursion fails the run", "constraint"),
+    ("no restart is permitted", "constraint"),
+    ("assess the run", "step"),
+    ("switch off heating", "step"),
+    ("leave the coupon inside until its probe reads "
+     "$\\leq40\\,^{\\circ}\\mathrm{C}$ before removal", "step"),
+    ("Include the acceptance criteria", "step"),
+    ("this log's verdict", "verdict"),
+]
+
+# F-Q10-r1's first answer, verbatim from the committed trace
+# (docs/traces/20261015T140229Z-tier3-remeasure.jsonl, sha256
+# 33ad32b8…). It states every ask's substance — including the
+# setpoint, as "Set oven controller to 120°C" — but not ask 2's
+# own words, so the free coverage check measures ask 2 at 40% of
+# its terms and fails it. That fail is what the starved run's
+# fold treated as a blocking dissent and held the answer back
+# for: a correct answer kept on the bench while the run recorded
+# no delivery.
+F_Q10_R1_ANSWER = (
+    "CURE-CHECK SEQUENCE — ADHESIVE COUPON IN GUARDED LABORATORY OVEN\n"
+    "Precondition: Coupon and its temperature probe are already "
+    "installed in the guarded oven. Operator wears appropriate "
+    "thermal PPE.\n"
+    "\n"
+    "PROCEDURE (Steps 1–10)\n"
+    "1. Confirm oven guard/door is closed and probe is reading "
+    "coupon temperature (not ambient).\n"
+    "2. Set oven controller to 120°C.\n"
+    "3. Monitor the coupon probe. Wait until the temperature "
+    "enters the inclusive band 118°C ≤ T ≤ 122°C. Do not start "
+    "the timer before entry.\n"
+    "4. Once inside the band, start the 600 s timer. Record "
+    "start time and probe reading.\n"
+    "5. CONSTRAINT — Hold requirement: The coupon must remain "
+    "inside 118°C–122°C inclusive for the entire 600 s timed "
+    "hold.\n"
+    "6. CONSTRAINT — Excursion failure: If the probe reads "
+    "<118°C or >122°C at any point during the hold, the run "
+    "fails immediately. Record the excursion value and time.\n"
+    "7. CONSTRAINT — No restart: A failed run is not restarted; "
+    "do not re-initiate the 600 s hold for this coupon under "
+    "this protocol.\n"
+    "8. At the end of an uninterrupted 600 s hold, assess the "
+    "run: verify timer completed, no excursions occurred, and all "
+    "recorded temperatures are within 118°C–122°C.\n"
+    "9. Switch off oven heating (set controller to off / disable "
+    "heaters).\n"
+    "10. Leave the coupon inside the oven with heating off. "
+    "Monitor the probe until it reads ≤40°C. Only then remove "
+    "the coupon.\n"
+    "\n"
+    "ACCEPTANCE CRITERIA (Ask 11)\n"
+    "- Oven setpoint: 120°C.\n"
+    "- Band entry: 118°C ≤ coupon temperature ≤ 122°C (inclusive) "
+    "before timer start.\n"
+    "- Hold duration: uninterrupted 600 s.\n"
+    "- In-hold temperature: 118°C ≤ T ≤ 122°C at all monitored "
+    "points; zero excursions permitted.\n"
+    "- Failure: any excursion outside the band; no restart "
+    "permitted.\n"
+    "- Post-hold: coupon remains inside until probe reads ≤40°C; "
+    "removal only after that.\n"
+    "- Log assessment: the run is accepted only if the above are "
+    "fully satisfied.\n"
+    "\n"
+    "LOG VERDICT (Ask 12)\n"
+    "Recorded log: uninterrupted 600 s hold; minimum temperature "
+    "119°C; maximum temperature 121°C.\n"
+    "Assessment:\n"
+    "- 119°C ≥ 118°C and 121°C ≤ 122°C → within inclusive band.\n"
+    "- Range 119–121°C contains no excursion outside 118–122°C.\n"
+    "- Hold duration is uninterrupted 600 s.\n"
+    "- Therefore all acceptance criteria are met.\n"
+    "VERDICT: PASS / ACCEPTED. The run complies with the "
+    "cure-check sequence and may be recorded as successful. No "
+    "restart is required (not applicable to a passing run). After "
+    "assessment, heating is switched off and the coupon remains "
+    "inside until ≤40°C per step 10.\n"
+    "\n"
+    "ASSUMPTIONS (not facts; apply unless corrected)\n"
+    "- Human-operated SOP format; automated script adaptation "
+    "would require explicit sampling-rate and interlock "
+    "definitions.\n"
+    "- Cool-down occurs with oven door closed and heaters off; "
+    "active venting is not specified.\n"
+    "- Probe measurement uncertainty/calibration tolerance is not "
+    "applied to the 118–122°C window unless specified "
+    "separately.\n"
+    "- No post-cure mechanical/physical tests (e.g., lap shear, "
+    "visual) are required for this thermal-profile verdict.\n"
+    "- Sampling frequency is assumed adequate to capture any "
+    "brief excursion; the log reports no such events.")
+
+# The revision the R1 break-proof's fold demands: the same answer
+# with step 2 stated as the request states it. Ask 2's term
+# overlap rises from 40% to 60% — the check's floor is half — so
+# the free check accepts the revision.
+F_Q10_R1_REVISED = F_Q10_R1_ANSWER.replace(
+    "2. Set oven controller to 120°C.",
+    "2. Setting the oven to 120°C: set the oven controller to "
+    "120°C.")
+
+
+class TestR1CoverageIsANoteOnTheStarvedRunsOwnUnit:
+    """R1 (the ruling of 2026-10-15), scripted on the unit the
+    starved re-measurement held back: F-Q10-r1's own asks and
+    its own first answer. Coverage fails that answer — ask 2's
+    words are not the answer's words — and the ruling's outcome
+    is that the run completes on the first iteration anyway,
+    delivering the answer, because coverage is a note out of the
+    judges' fold: its result is still recorded (the iteration
+    lists it red) and a fail is counted as a coverage_note, but
+    it never blocks and never reaches a revision. The break-proof
+    is the counterfactual the starved run ran under: coverage
+    back in the fold, and the same script revises."""
+
+    @staticmethod
+    def _routes():
+        def reply(msg, calls):
+            m = msg.lower()
+            if "classify this engineering request" in m:
+                return {"domains": ["backend"], "risk": "medium",
+                        "specialists": ["backend_engineer",
+                                        "test_engineer"],
+                        "summary": "s"}
+            if "list what this request asks" in m:
+                return {"asks": [{"quote": quote, "kind": kind}
+                                 for quote, kind in Q10_ASKS]}
+            if "produce the answer to the following request" in m:
+                return {"done": True, "green": True,
+                        "red_cause": None, "iteration": 1,
+                        "blocked_on": [],
+                        "summary": F_Q10_R1_ANSWER}
+            if "revise your previous implementation" in m:
+                return {"done": True, "green": True,
+                        "red_cause": None, "iteration": 2,
+                        "blocked_on": [],
+                        "summary": F_Q10_R1_REVISED}
+            if "validate this implementation" in m:
+                return {"green": True, "red_cause": None,
+                        "evidence": ["all twelve asks: PASS"]}
+            return {"findings": [], "queries": [], "brief": ""}
+        return reply
+
+    async def test_the_starved_answer_completes_on_iteration_one(self):
+        state, runner, calls = await _drive(
+            "verify-first", self._routes(), Q10)
+        # R1's ruled outcome: the run completes on the first
+        # iteration, delivering the answer the starved run held
+        # back — the answer states every ask's substance.
+        assert state.status == "completed"
+        assert (state.outputs["implement"].summary
+                == F_Q10_R1_ANSWER)
+        assert len(runner.iterations) == 1
+        # Coverage's fail is in the record — the iteration lists
+        # it red, the way R1 requires — but out of the fold:
+        # validate is green, the judges agreed on the first
+        # iteration, and the fail is counted as a coverage_note.
+        assert runner.iterations[0]["dissenting"] == ["coverage"]
+        assert state.outputs["validate"].green is True
+        assert normalisations_by_kind().get(COVERAGE_NOTE) == 1
+
+    async def test_break_proof_coverage_back_in_the_fold_revisions(self):
+        """Break-proof: the counterfactual the starved run ran
+        under. Coverage back in the judges' fold, and the same
+        script revises — the fold reads coverage's red, the
+        revision states ask 2 as the request states it, and the
+        free check accepts it (ask 2 at 60% of its terms). The
+        test above fails if R1 is reverted, because this is what
+        the run then does: two iterations, and a second answer
+        the recorded unit never paid for."""
+        spec = load("workflows/verify-first.yaml")
+        # The fold, as it was before the ruling: coverage's
+        # signal beside implement's and validate's.
+        spec.get("judges").args["coverage"] = "coverage.passed"
+        state, runner, calls = await _drive(
+            "verify-first", self._routes(), Q10, spec=spec)
+        assert state.status == "completed"
+        assert len(runner.iterations) == 2
+        assert runner.iterations[0]["dissenting"] == ["coverage"]
+        assert runner.iterations[1]["dissenting"] == []
+        assert (state.outputs["implement"].summary
+                == F_Q10_R1_REVISED)
+
+
+# Q17's scripted answer: it gives something for both asks — the
+# strength, in the regulation's pounds unit, and the inspection
+# interval — and states the strength as a number the enforceable
+# text does not contain. That is the shape R2's wrong_fact
+# names: the answer gives something for the ask, and the judge
+# says it is false.
+Q17_ANSWER = ("Under 29 CFR § 1910.147 (July 1, 2014 edition), "
+              "the minimum unlocking strength required for "
+              "tagout-device attachment means is 50 pounds (lb). "
+              "The employer must inspect the energy-control "
+              "procedure at least annually — once every 12 months — "
+              "and between inspections whenever a change occurs "
+              "that could affect the procedure's integrity.")
+
+# The words the scripted scoping pass puts into the grounding the
+# judge was given: the enforceable text names no number. They do
+# not occur in the request, so a source_quote of them anchors in
+# the grounding alone — R2's second anchor.
+Q17_GROUNDING_WORDS = ("the enforceable text specifies no numeric "
+                       "unlocking strength")
+
+# Q17-r3's critical finding, verbatim from the committed trace —
+# the dissent the starved run's arm E ended blocked on, under the
+# pre-R2 rule that let an ask number anchor any kind.
+Q17_R3_FINDING = {
+    "lens": "Systems Architect",
+    "severity": "critical",
+    "detail": ("The answer assigns a minimum unlocking strength of "
+               "50 pounds to tagout-device attachment means, but "
+               "29 CFR § 1910.147(c)(5)(iii) does not specify a "
+               "numeric value of 50 pounds in the July 1, 2014 "
+               "edition. The regulation states that tagout devices "
+               "must be 'substantial enough to prevent removal "
+               "without the use of excessive force or unusual "
+               "techniques' and lists design characteristics (e.g., "
+               "non-reusable, self-locking), but it does not "
+               "include any numeric strength requirement such as "
+               "'50 pounds'. The value '50 pounds' appears in "
+               "non-mandatory appendices or guidance documents, not "
+               "in the enforceable text of the standard. Therefore, "
+               "the answer fabricates a regulatory value not present "
+               "in the cited section."),
+    "ask": 2,
+    "quote": "what minimum unlocking strength is required for "
+             "tagout-device attachment means",
+    "hazard": False,
+    "hazard_quote": "",
+}
+
+
+class TestR2TheWrongFactThatShowsItsSource:
+    """R2 (the ruling of 2026-10-15), scripted on Q17-r3's own
+    critical finding: the answer states a 50-pound unlocking
+    strength, and the judge says that is false — a wrong_fact. A
+    wrong_fact anchors only through a source_quote the free check
+    finds in the request or in the grounding the judge was given.
+    Without an anchored source_quote the claim is a note — an
+    unverified dissent, counted, never blocking, unavailable under
+    D51 (5): the run cannot check it. The finding as the record
+    holds it states no kind and no source, so it is read as a
+    wrong_fact and ships as a note; the break-proof is the retired
+    rule, under which the claim anchored itself and the run ended
+    blocked.
+
+    The triage is low-risk: the review team is then the one most
+    relevant reviewer, so the demotion count is the finding's own,
+    not the roster's."""
+
+    @staticmethod
+    def _routes(finding, grounding: bool = False):
+        def reply(msg, calls):
+            m = msg.lower()
+            if "classify this engineering request" in m:
+                return {"domains": ["backend"], "risk": "low",
+                        "specialists": ["backend_engineer",
+                                        "test_engineer"],
+                        "summary": "s"}
+            if "list what this request asks" in m:
+                return {"asks": Q17_ASKS}
+            if "create an implementation plan" in m:
+                return {"ready": True, "blockers": [],
+                        "plan": "State the strength and the interval.",
+                        "cost_estimate": None,
+                        "success_criteria": ["the answer states both"]}
+            if ("review this implementation plan" in m
+                    or "plan produced by systems architect" in m):
+                return {"feasible": True, "concerns": [], "blockers": []}
+            if "implementation for the following plan" in m:
+                return {"done": True, "green": True, "red_cause": None,
+                        "iteration": 1, "blocked_on": [],
+                        "summary": Q17_ANSWER}
+            if "review this implementation from your domain perspective" in m:
+                return {"concerns": [], "critical": False}
+            if "validate this implementation" in m:
+                return {"green": True, "red_cause": None,
+                        "evidence": ["ask 1: PASS", "ask 2: PASS"]}
+            if "review this engineering work" in m:
+                return {"ship": False, "findings": [finding],
+                        "verdict": "Do not ship."}
+            if "attempts all failed validation" in m:
+                return {"root_cause_analysis": "the review blocked",
+                        "architectural_correction": None,
+                        "resolution_directive": "Cite the section.",
+                        "requires_human": True,
+                        "rulings": [{"dissent": 1, "upheld": True,
+                                     "reason": "the finding holds"}]}
+            if ("an engineer is about to plan and carry out"
+                    " the request below" in m):
+                # The scoping pass the empty store runs. The
+                # grounding-anchored case carries the words the
+                # judge was given; every other case runs on the
+                # bare request.
+                considerations = ([Q17_GROUNDING_WORDS]
+                                  if grounding else [])
+                return {"objective": "state the strength and the interval",
+                        "unknowns": [], "assumptions": [],
+                        "considerations": considerations,
+                        "blocking_unknowns": []}
+            return {"findings": [], "queries": [], "brief": ""}
+        return reply
+
+    async def test_the_recorded_finding_ships_as_an_unverified_dissent(self):
+        """The finding as the record holds it: no kind stated, so
+        read as a wrong_fact (R2's default), and no source_quote —
+        the claim shows nothing. The run cannot check it, so under
+        D51 (5) it is unavailable: a note, counted as an
+        unverified dissent, never blocking. The answer the starved
+        run held back is delivered."""
+        state, runner, calls = await _drive(
+            "engineering-rnd", self._routes(Q17_R3_FINDING), Q17)
+        assert state.status == "completed"
+        assert state.outputs["implement"].summary == Q17_ANSWER
+        # The finding was demoted, not obeyed: it is in the record
+        # at the severity the demotion left it, and the demotion is
+        # counted — once, because the low-risk team is one reviewer.
+        recorded = state.outputs["review"].findings[0]
+        assert recorded.severity == "medium"
+        assert recorded.detail == Q17_R3_FINDING["detail"]
+        assert normalisations_by_kind().get(UNVERIFIED_DISSENT) == 1
+
+    async def test_a_source_quote_nowhere_anchored_ships_the_same_way(self):
+        finding = dict(Q17_R3_FINDING, kind="wrong_fact",
+                       source_quote="a requirement no source states")
+        state, runner, calls = await _drive(
+            "engineering-rnd", self._routes(finding), Q17)
+        assert state.status == "completed"
+        assert state.outputs["review"].findings[0].severity == "medium"
+        assert normalisations_by_kind().get(UNVERIFIED_DISSENT) == 1
+
+    async def test_a_source_quote_in_the_grounding_blocks(self):
+        """The finding anchored by its source: the words occur in
+        the grounding the judge was given (the scoping pass put
+        them there), not in the request. Anchored, the critical
+        finding blocks: the review says do not ship, the rework
+        loop cannot clear it, and the escalation's autopsy asks
+        for a human — the run ends blocked, the finding still
+        critical in the record."""
+        finding = dict(Q17_R3_FINDING, kind="wrong_fact",
+                       source_quote=Q17_GROUNDING_WORDS)
+        state, runner, calls = await _drive(
+            "engineering-rnd",
+            self._routes(finding, grounding=True), Q17)
+        assert state.status == "blocked"
+        recorded = state.outputs["review"].findings[0]
+        assert recorded.severity == "critical"
+        assert recorded.source_quote == Q17_GROUNDING_WORDS
+        # Anchored, so nothing was demoted: no unverified dissent.
+        assert normalisations_by_kind().get(UNVERIFIED_DISSENT, 0) == 0
+
+    async def test_break_proof_without_the_source_check_the_claim_blocks(
+            self, monkeypatch):
+        """Break-proof: the retired rule, under which a wrong_fact
+        anchored by its claim alone — no source shown. Drop the
+        source check and the recorded finding, the very one that
+        ships above, blocks: it stays critical, the review says do
+        not ship, and the run ends blocked. The first test fails
+        if R2 is reverted, because this is what the run then does."""
+        import autornd.engine.phases as phases_module
+        real = phases_module.dissent_anchored
+
+        def retired_rule(ask, quote, hazard, asks, request, answer="",
+                         hazard_quote="", kind="", source_quote="",
+                         grounding=""):
+            # The retired rule: the kind anchored the claim, and a
+            # dissent that named no kind was read as a wrong_fact
+            # that anchored itself.
+            if not hazard and (kind or "wrong_fact") == "wrong_fact":
+                return True
+            return real(ask, quote, hazard, asks, request, answer,
+                        hazard_quote, kind, source_quote, grounding)
+
+        monkeypatch.setattr(phases_module, "dissent_anchored",
+                            retired_rule)
+        state, runner, calls = await _drive(
+            "engineering-rnd", self._routes(Q17_R3_FINDING), Q17)
+        assert state.status == "blocked"
+        assert state.outputs["review"].findings[0].severity == "critical"
+
+
+class TestR3TheCallBoundCountsGroundingAtItsMaximum:
+    """R3 (the ruling of 2026-10-15): D51 (8)'s four model calls
+    are counted after triage, asks AND grounding, so the bound is
+    2 + grounding's maximum + 4. This run takes grounding at its
+    maximum — the store holds more chunks than the rerank keeps,
+    so the expansion, the rerank, the briefing and the lookup the
+    briefing's blocking gaps name all fire — and still completes
+    after the revision's check, inside ARM_F_CALL_LIMIT. The
+    break-proof is the pre-amendment bound: at six calls the same
+    script dies at the answer itself, the seventh call, before any
+    check ran — which is what the pre-amendment bound did to every
+    arm-F unit whose grounding reached its maximum."""
+
+    @staticmethod
+    def _routes():
+        def reply(msg, calls):
+            m = msg.lower()
+            if "classify this engineering request" in m:
+                return {"domains": ["backend"], "risk": "medium",
+                        "specialists": ["backend_engineer",
+                                        "test_engineer"],
+                        "summary": "s"}
+            if "list what this request asks" in m:
+                return {"asks": Q23_ASKS}
+            if "write the search queries" in m:
+                return {"queries": ["a query about the request"]}
+            if "rank these documentation excerpts" in m:
+                return {"ranking": [0, 1, 2, 3, 4]}
+            if "write a short grounding briefing" in m:
+                return {"briefing": "a grounding briefing",
+                        "gaps": ["a gap"],
+                        "blocking_gaps": ["a blocking gap"]}
+            if "answer these engineering questions" in m:
+                return {"answer": "a looked-up answer",
+                        "citations": ["a source"]}
+            if "produce the answer to the following request" in m:
+                return {"done": True, "green": True,
+                        "red_cause": None, "iteration": 1,
+                        "blocked_on": [], "summary": Q23_ANSWER}
+            if "revise your previous implementation" in m:
+                return {"done": True, "green": True,
+                        "red_cause": None, "iteration": 2,
+                        "blocked_on": [],
+                        "summary": Q23_ANSWER + " Revised."}
+            if "validate this implementation" in m:
+                red = not any("revise" in c["user"].lower()
+                              for c in calls)
+                if red:
+                    return {"green": False,
+                            "red_cause": "the answer omits an ask",
+                            "failed_ask": 1,
+                            # An omission is an unmet_ask (R2,
+                            # 2026-10-15): the ask number
+                            # anchors it.
+                            "kind": "unmet_ask",
+                            "evidence": ["ask 1 (the common "
+                                         "extension): FAIL"]}
+                return {"green": True, "red_cause": None,
+                        "evidence": ["all three asks: PASS"]}
+            return {"findings": [], "queries": [], "brief": ""}
+        return reply
+
+    @staticmethod
+    def _populate_store(tmp_path):
+        """A store with more chunks than the rerank keeps, so the
+        rerank call itself fires — grounding's second of four
+        calls. Returns the path the suite's store was at, for the
+        caller's finally."""
+        from autornd.config import settings
+        from autornd.knowledge.context import reset_rerank_mode
+        from autornd.knowledge.store import ingest_text
+
+        before = settings.chromadb_path
+        settings.chromadb_path = str(tmp_path / "r3-store")
+        # The rerank mode latches per process; a fresh probe
+        # per run, so the listwise call is made every time.
+        reset_rerank_mode()
+        for i in range(6):
+            ingest_text(
+                f"a distinct documentation chunk about the "
+                f"request's subject, numbered {i}",
+                tag="r3_doc")
+        return before
+
+    async def test_grounding_at_its_maximum_completes_inside_the_bound(
+            self, tmp_path):
+        from autornd.knowledge.store import COLLECTION_NAME  # noqa: F401
+
+        before = self._populate_store(tmp_path)
+        try:
+            state, runner, calls = await _drive(
+                "verify-first", self._routes(), Q23,
+                serve_chat=True)
+        finally:
+            from autornd.config import settings
+            settings.chromadb_path = before
+
+        assert state.status == "completed"
+        # answer, check, revision, check — four phase calls after
+        # triage and asks, as the ruling counts them.
+        assert _phases(calls) == ["triage", "asks", "implement",
+                                  "validate", "implement", "validate"]
+        # Grounding at its maximum: the expansion, the rerank, the
+        # briefing and the lookup the briefing's blocking gaps
+        # named — four calls, each by its prompt's own words.
+        grounding = [c for c in calls if any(
+            marker in c["user"].lower() for marker in (
+                "write the search queries",
+                "rank these documentation excerpts",
+                "write a short grounding briefing",
+                "answer these engineering questions"))]
+        assert len(grounding) == 4
+        # And the whole run inside the amended bound: triage, asks,
+        # grounding's four at their maximum, and the four.
+        from evals.tier3.runner import ARM_F_CALL_LIMIT, GROUNDING_MAX_CALLS
+        assert len(calls) == 10
+        assert len(calls) == ARM_F_CALL_LIMIT
+        assert ARM_F_CALL_LIMIT == 2 + GROUNDING_MAX_CALLS + 4
+
+    async def test_break_proof_the_pre_amendment_bound_ends_at_the_answer(
+            self, tmp_path):
+        """Break-proof: the pre-amendment bound of six. The same
+        script — grounding at its maximum — dies at the answer
+        itself, the seventh call, before any check ran: the bound
+        that did not count grounding's calls ended exactly the
+        runs R3 was written for. The ceiling is the client's own
+        (the double bills through it, convention 7), so the
+        exception is the run's, not the test's."""
+        from autornd.evals.runner import CallCeilingExceeded
+
+        before = self._populate_store(tmp_path)
+        try:
+            with pytest.raises(CallCeilingExceeded) as raised:
+                await _drive(
+                    "verify-first", self._routes(), Q23,
+                    serve_chat=True, call_ceiling=6)
+        finally:
+            from autornd.config import settings
+            settings.chromadb_path = before
+
+        # The seventh call was the answer — triage, asks and
+        # grounding's four are the six the old bound allowed, so
+        # the run ended at the answer itself, before any check.
+        assert "ceiling 6" in str(raised.value)
+        assert "stopped at 7 model calls" in str(raised.value)

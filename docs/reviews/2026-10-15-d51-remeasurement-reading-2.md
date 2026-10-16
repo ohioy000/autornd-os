@@ -85,3 +85,67 @@ pre-registration predicted (~$12.95 expected, $15.00 authorized) needs the
 account funded well above the authorization. Until then, the measurement of
 record is the trace above — a complete, honest record of a run the provider's
 balance ended early.
+
+## Corrections of 2026-10-15 (appended, never a rewrite)
+
+The advisor's review of 2026-10-15 (recorded in
+`.orchestration/responses/ARCH-20261014-121.response.json`,
+`advisor_review_2026_10_15`) ruled on this reading after
+reading the starved run's data. Three of this reading's
+figures the review corrected; each was re-derived from the
+committed trace on 2026-10-15, independently of the report's
+own loop — the revised set and its transitions re-scored with
+the frozen scorer, the means over the answer-delivering
+populations.
+
+**1. Prediction 9 is tested, not untestable — five F units
+revised.** This reading reported zero F units revised under
+the report's then rule (a unit is revised when it has two
+implement outputs). The ruling of 2026-10-15 amends the rule:
+a unit is revised when it has two implement outputs, **or its
+final answer differs from its first implement summary**. Under
+the amended rule the starved run revised five F units: **Q9 r2,
+Q10 r1, Q10 r2, Q19 r1, Q23 r1** — transitions right-to-right
+3 (Q10 r1, Q10 r2, Q23 r1), wrong-to-wrong 2 (Q9 r2, Q19 r1),
+no first answer 0. The old rule counted zero of the five — none
+has two implement outputs — so this reading's "zero revised" was
+correct under the rule it applied; this is the rule's amendment,
+not a miscount of the old one. The check that forced each of
+the five changes was the coverage judgment — the subject of the
+next correction.
+
+**2. The five unanchored coverage blocks are D51 (3) breaches,
+not prediction-3 exhibits.** This reading read them as
+prediction-3 exhibits. Prediction 3's subject is a block,
+failure or loop iteration caused by a judgment with no anchor.
+The trace shows no such judgment: the coverage judgment
+**measured its anchor** — `criteria_addressed`'s Result carries
+the missed asks in its data — but the anchor reader
+(`_anchor_entries`, `autornd/graph/executor.py`) reads only
+`failed_ask`, `anchor_quote` and `hazard`, fields the coverage
+check does not set, so the dissent reached the candidate's open
+dissents unanchored (`{judge: coverage, ask: null, quote: "",
+hazard: false}`) even though the anchor existed in the judgment's
+own output. That is the breach of D51 (3) — a dissent that does
+not carry its anchor — the fix plan repairs: R1 removes coverage
+from the judges' fold (its result is still recorded, a fail
+counted as a coverage_note), and R2 makes every dissent that can
+anchor carry its anchor or be a note. The five units' revisions
+were therefore caused by an unanchored-but-anchorable dissent:
+an implementation defect, recorded here as one, and the
+prediction stands neither confirmed nor falsified by them.
+
+**3. The delivered mean costs are the delivered units' own
+means.** This reading's figures divided the delivered units'
+total cost by the arms' planned-unit counts (75, 75, 75, 21),
+understating the delivered burn by the failure fraction. Over
+the answer-delivering populations: **D $0.046** (20 delivered
+units, mean $0.0457 — this reading said $0.0122), **F $0.035**
+(18 answer-delivering units — 13 shipped and 5 unendorsed
+candidates, mean $0.0349 — this reading said $0.0084), **E′ $0.30**
+(2 answer-delivering units — 1 shipped and 1 approved-not-shipped,
+mean $0.2973 — this reading said $0.0283). A's $0.0081 (12
+delivered) was already the delivered mean and stands. Against
+stage 1's medians (A $0.006418, D $0.012375, E $0.370938):
+D's delivered burn is 3.7× its stage-1 median, and E′ is at
+stage 1's level on a two-unit sample.

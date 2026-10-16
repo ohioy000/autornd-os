@@ -246,14 +246,12 @@ nodes:
     args:
       implement: implement.green
       validate: validate.green
-      # Ruling D46 (3): the whole check output, not just its passed — the fold
-      # must see `checked` so a check that compared nothing is non-blocking
-      # and listed rather than dissenting on a comparison that never happened.
-      coverage: coverage
-      # Consistency is deliberately NOT in this fold since the review of
-      # 2026-10-14: its disagreements are notes, never vetoes. The node
-      # still runs above, its result is still recorded, and a fail is
-      # counted as a consistency_note — but no loop turns on it.
+      # Coverage is deliberately NOT in this fold since the
+      # ruling of 2026-10-15 (R1): its result is still
+      # recorded — the node still runs above — and a fail is
+      # counted as a coverage_note, but it never blocks and
+      # never reaches a revision, the way consistency has
+      # been treated since the review of 2026-10-14.
     depends_on: [implement, coverage, consistency, validate]
 
   - id: build_loop

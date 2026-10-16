@@ -117,7 +117,17 @@ BLOCKING = {"lens": "systems_architect", "severity": "high",
             "detail": "Backoff has no ceiling on reconnect storms.",
             # Ruling D51 (R-e): a finding blocks only
             # when it is anchored — here, by the
-            # request's own words.
+            # request's own words. R2 (2026-10-15):
+            # the finding says the answer gives
+            # something for the ask and is false,
+            # so its kind is wrong_fact, and a
+            # wrong_fact anchors only through its
+            # source_quote — the request's own
+            # demand for exponential backoff, which
+            # the answer's fixed 60 s cap
+            # contradicts.
+            "kind": "wrong_fact",
+            "source_quote": "retry with exponential backoff",
             "quote": "retry with exponential backoff"}
 
 

@@ -72,6 +72,11 @@ class PhaseRunner:
         # implementation actually change between attempts?" was unanswerable
         # from a finished run. This is the history, retained.
         self.iterations: list[dict[str, Any]] = []
+        # The ids of the nodes whose prompt is "implement", seen as they
+        # run — the partial-iteration record (the ruling of 2026-10-15)
+        # finds an iteration's implement verdict by them when the run ends
+        # inside the loop body, before its judges ran.
+        self._implement_nodes: set[str] = set()
         self._spend_at_last_iteration = 0.0
         # Blocking gaps the risk gate declined to look up, kept so the
         # verifiability override can look them up if the plan demands it
@@ -222,6 +227,8 @@ class PhaseRunner:
                 f"phase behind it. Known: "
                 f"{sorted(n[7:] for n in dir(self) if n.startswith('_phase_'))}"
             )
+        if node.prompt == "implement":
+            self._implement_nodes.add(node.id)
         verdict, responses = await handler(node, state)
         self._record(node, verdict, responses, state)
         return verdict
@@ -631,6 +638,51 @@ class PhaseRunner:
             asks=self._anchored_asks(state),
         )
         return verdict, responses
+
+    def record_partial_iteration(
+            self, state: ExecutionState) -> None:
+        """Append the iteration the run ended inside, when its
+        judges never ran.
+
+        The ruling of 2026-10-15 (the records item of the
+        fix plan): an iteration that ends before its judges
+        still appears in `iterations`, with its implement
+        summary. A bound that stops the run mid-loop (the
+        call ceiling, the deadline, the watchdog's cut) used
+        to leave the in-flight iteration unrecorded — the
+        history stopped one iteration short of where the run
+        actually was, and the question "what did the last
+        attempt say?" had no answer. The entry is marked
+        `partial` and `judges_run: false`, so a reader can
+        tell an iteration whose judges ran (the entries
+        `_phase_judges` appends) from one that did not.
+        Nothing is appended outside a loop body, or for an
+        iteration the judges already recorded.
+        """
+        attempt = state.iteration
+        if attempt <= 0:
+            return            # outside a loop body
+        if any(entry.get("iteration") == attempt
+               for entry in self.iterations):
+            return            # the judges recorded this one
+        summary = ""
+        for step in reversed(state.trace):
+            if step.node_id in self._implement_nodes:
+                verdict = state.outputs.get(step.node_id)
+                summary = (
+                    verdict.get("summary", "")
+                    if isinstance(verdict, dict)
+                    else getattr(verdict, "summary", "") or "")
+                break
+        self.iterations.append({
+            "iteration": attempt,
+            "partial": True,
+            "judges_run": False,
+            "dissenting": [],
+            "implement_summary": summary,
+            "note": ("the run ended inside this iteration, "
+                     "before its judges ran"),
+        })
 
     async def _phase_domain_review(self, node: Node, state: ExecutionState):
         implement = state.outputs["implement"]

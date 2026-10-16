@@ -826,6 +826,18 @@ class GraphExecutor:
             "open_dissents": dissenting,
         }
 
+    def record_partial_iteration(
+            self, state: ExecutionState) -> None:
+        """The partial-iteration record (the ruling of
+        2026-10-15), made on the runner that keeps the
+        iteration history. A runner that keeps no
+        history makes the record a no-op, the way the
+        approved pointer's own history check does."""
+        record = getattr(
+            self.runner, "record_partial_iteration", None)
+        if record is not None:
+            record(state)
+
     def _close_candidate(self, state: ExecutionState) -> None:
         """D51 (7) and D38, at a terminal that is not completed.
 
@@ -861,7 +873,12 @@ class GraphExecutor:
         entries = history[self._history_base:]
         agreed_at = None
         for position in range(len(entries) - 1, -1, -1):
-            if entries[position].get("dissenting") == []:
+            # A partial entry (the ruling of 2026-10-15) is an
+            # iteration whose judges never ran: its dissent list
+            # is empty because nothing judged, not because the
+            # judges agreed, so it cannot be the approved one.
+            if (entries[position].get("dissenting") == []
+                    and not entries[position].get("partial")):
                 agreed_at = position
                 break
 
@@ -872,6 +889,11 @@ class GraphExecutor:
         if latest is not None:
             if agreed_at is not None and latest == entries[agreed_at].get("implement_summary"):
                 latest_label = "approved"
+            elif (entries and entries[-1].get("partial")
+                    and latest == entries[-1].get("implement_summary")):
+                # The run ended inside this iteration, before its
+                # judges ran: no judge read the latest implementation.
+                latest_label = "unjudged"
             elif entries and latest == entries[-1].get("implement_summary"):
                 latest_label = "dissented"
             else:
@@ -945,7 +967,11 @@ class GraphExecutor:
         watchdog.billing = ABANDONED_CALL_BILLING if rule == "cancelled" else None
         # D51 (7): the cut is a terminal that is not completed —
         # the candidate is kept and the approved pointer computed
-        # here, as at every other non-completed terminal.
+        # here, as at every other non-completed terminal. The
+        # partial-iteration record (the ruling of 2026-10-15) is
+        # written first: the pointer reads the history, and the
+        # iteration the cut landed in is part of where the run was.
+        self.record_partial_iteration(state)
         self._close_candidate(state)
         state.end("blocked", _watchdog_reason(watchdog))
         watchdog.terminal_seconds = round(self._elapsed(), 4)

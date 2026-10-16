@@ -169,11 +169,44 @@ PILOT_CEILING = 7.50
 REMEASURE_ARMS = ("A", "D", "F", "E")
 REMEASURE_SEED = 20261014
 REMEASURE_CEILING = 15.00
-# Arm F's call bound: triage and asks, then at most 4 model
-# calls after them (answer, check, revision, check) - the
-# verify-first workflow's own max_iterations: 2 bound, which
-# no .env line can widen.
-ARM_F_CALL_LIMIT = 6
+# The smoke run (the ruling of 2026-10-15): the
+# named question ids x the named arms x one
+# repetition, under its own registered ceiling.
+# The smoke run is the check that a fix landed —
+# the cases the starved run lost, re-run once
+# each, small enough to authorize at a glance.
+# Its gate is R4's: the authorization pin must
+# equal this ceiling exactly, the way every
+# other mode's does.
+SMOKE_CEILING = 2.00
+SMOKE_REPETITIONS = 1
+SMOKE_SEED = 20261015
+# Grounding's maximum model calls, read off the code path
+# that builds the context every judge reads
+# (autornd/knowledge/context.py: build_phase_context's
+# retrieval path, load_retrieval_context): expand_queries
+# (the research tier), rerank_chunks (the ranker tier —
+# the research tier when no ranker pin is set), and
+# synthesize_briefing (the research tier), plus the gap
+# lookup research_gaps (the search tier) the briefing's
+# blocking gaps fire — four calls when the store holds
+# content and the briefing names blocking gaps, which is
+# the path's maximum; the empty-store path the eval's
+# isolated store takes makes two (the request analysis
+# and the gap lookup). R3 (2026-10-15): D51 (8) reads
+# "at most four model calls after triage, asks and
+# grounding", so the bound counts them.
+GROUNDING_MAX_CALLS = 4
+
+# Arm F's call bound: triage and asks, then grounding's
+# maximum, then at most 4 model calls after them (answer,
+# check, revision, check) - the verify-first workflow's own
+# max_iterations: 2 bound. R3 (2026-10-15) amended D51 (8):
+# the bound is 2 + grounding's maximum + 4, so a unit whose
+# grounding runs at its maximum and whose check forces one
+# revision completes inside the bound, where the pre-amendment
+# bound of 6 ended it mid-revision at the call ceiling.
+ARM_F_CALL_LIMIT = 2 + GROUNDING_MAX_CALLS + 4
 
 # The stage-1 question selection (the owner's 2026-10-05
 # directive, registered in the manifest as tier3-4): the
@@ -422,9 +455,12 @@ def gate_report(tier3: Tier3Settings, servings: dict[str, Any],
     so a refusal says exactly what the owner must set — before any
     network call (the command's gate text). The spend gate names
     the run's own authorization: the main run's $30.00, the pilot's
-    $7.50, or the re-measurement's $15.00 (the manifest's tier3-8
-    registration), each read from the TIER3_* pin the owner sets in
-    .env.tier3.
+    $7.50, the re-measurement's $15.00 (the manifest's tier3-8
+    registration), or the smoke run's $2.00, each read from the
+    TIER3_* pin the owner sets in .env.tier3. R4 (2026-10-15):
+    the pin must equal the registered ceiling exactly — the
+    authorization names the run's own plan, not a figure above or
+    below it.
     """
     missing: list[str] = []
     if not tier3.tier3_servings_ratified:
@@ -445,6 +481,11 @@ def gate_report(tier3: Tier3Settings, servings: dict[str, Any],
         ceiling = REMEASURE_CEILING
         name = "TIER3_SPEND_AUTHORIZED"
         label = "re-measurement's"
+    elif mode == "smoke":
+        authorization = tier3.tier3_spend_authorized
+        ceiling = SMOKE_CEILING
+        name = "TIER3_SPEND_AUTHORIZED"
+        label = "smoke run's"
     elif pilot:
         authorization = tier3.tier3_pilot_authorized
         ceiling = PILOT_CEILING
@@ -459,15 +500,26 @@ def gate_report(tier3: Tier3Settings, servings: dict[str, Any],
         missing.append(f"{name} is not set")
     else:
         try:
-            if float(authorization) < ceiling:
-                missing.append(
-                    f"{name} is {float(authorization):.2f}, below the "
-                    f"{label} authorization ceiling ${ceiling:.2f}")
+            authorized = float(authorization)
         except ValueError:
             missing.append(
-                f"{name} is {authorization!r}, which is not a dollar "
-                f"amount (the {label} is "
-                f"authorized at ${ceiling:.2f})")
+                f"{name} is {authorization!r}, which is not a "
+                f"dollar amount (the {label} is authorized at "
+                f"${ceiling:.2f})")
+        else:
+            # R4 (2026-10-15): the authorization must EQUAL
+            # the registered ceiling of the run it authorises.
+            # An authorization above the ceiling would spend
+            # past a plan the owner never ratified; one below it
+            # stops the sweep mid-plan. The registered ceiling is
+            # the plan's own figure, so the pin names the run's
+            # exact authorization.
+            if authorized != ceiling:
+                missing.append(
+                    f"{name} is {authorized:.2f}, which is not "
+                    f"the {label} registered ceiling "
+                    f"${ceiling:.2f} — the authorization must "
+                    f"equal the ceiling of the run it authorises")
     return missing
 
 
@@ -534,6 +586,46 @@ _CACHE_COMPONENTS = ("input_cache_read", "input_cache_write")
 _REASONING_COMPONENTS = ("internal_reasoning",)
 _PER_REQUEST_COMPONENTS = ("web_search", "request")
 _MODALITY_COMPONENTS = ("image", "audio", "input_audio_cache")
+
+
+async def fetch_credit() -> float | None:
+    """The provider's remaining credit, in dollars.
+
+    Free (non-negotiable 2): an authenticated GET of
+    the account's credits endpoint, the same figure
+    the provider's own dashboard reads, made before
+    the first paid call. The starved re-measurement
+    (command 121) is the lesson: the sweep discovered
+    the empty account at its first 402, mid-plan, and
+    the units the sweep never started were lost rather
+    than recorded. The preflight reads the balance so
+    a run that cannot be funded never starts.
+
+    None when the balance could not be read — the GET
+    failed, or the endpoint answered no balance. That
+    is not a zero and not an infinity: it is no
+    evidence, and the preflight treats it as a
+    refusal, the way D49 treats an unpriced serving
+    (a paid run that cannot establish its balance
+    does not start)."""
+    headers = {}
+    if harness_settings.openrouter_api_key.strip():
+        headers["Authorization"] = (
+            f"Bearer {harness_settings.openrouter_api_key}")
+    base = harness_settings.openrouter_base_url.rstrip("/")
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(f"{base}/credits",
+                                    headers=headers)
+            resp.raise_for_status()
+            payload = resp.json()
+        data = payload.get("data") or {}
+        remaining = data.get("remaining")
+        if remaining is None:
+            return None
+        return float(remaining)
+    except Exception:
+        return None
 
 
 def catalogue_index(catalogue: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -767,10 +859,15 @@ def _largest_tool_result() -> str:
 
 
 def _arm_servings(arm: str, servings: dict[str, Any]) -> list[str]:
-    """The servings an arm's calls name."""
+    """The servings an arm's calls name.
+
+    Arm F runs arm E's path on arm E's standing
+    tiers (D51 (8)), so the servings its calls name
+    are arm E's — the tier map, the same list arm E's
+    own calls name."""
     if arm == "C":
         return list(servings["C"])
-    if arm == "E":
+    if arm in ("E", "F"):
         return list(servings["E"].values())
     return [servings[arm]]
 
@@ -847,38 +944,57 @@ class PreflightReport:
 
 
 def run_preflight(servings: dict[str, Any],
-                  catalogue: list[dict[str, Any]]) -> PreflightReport:
+                  catalogue: list[dict[str, Any]],
+                  credit: float | None = None,
+                  ceiling: float | None = None,
+                  arms: tuple[str, ...] = ARMS
+                  ) -> PreflightReport:
     """The preflight, before the first unit. Free: it reads the
     catalogue fixture or the free GET's result, and computes.
 
     It refuses to start, and prints the figures, in the command's
-    four cases plus the owner's addition:
+    four cases plus the owner's additions:
 
-    1. the worst case of any of arms A-D over its whole call
-       sequence exceeds the arm's per-unit ceiling;
+    1. the worst case of any of arms A-D the mode runs over
+       its whole call sequence exceeds the arm's per-unit
+       ceiling;
     2. arm B's serving does not list tool support or
        tool_choice support (when the catalogue is blind,
-       the preflight reports that and does not guess);
+       the preflight reports that and does not guess) —
+       only when arm B is one of the mode's arms;
     3. arm B's context window cannot hold its prompt, the largest
-       archived source and max_tokens, bounded in bytes;
-    4. any serving has no catalogue price (D49: an unknown price is
-       not free);
+       archived source and max_tokens, bounded in bytes —
+       arm B's mode alone, as case 2;
+    4. any serving the mode's arms name has no catalogue price
+       (D49: an unknown price is not free);
     5. (the owner's addition) an arm A-D call's registered
        max_tokens exceeds the pinned endpoint's max_completion_tokens
        in the catalogue — the client does not clamp, so the call
        would fail at the provider. Arm E's tiers are reported, not
        refused: arm E runs under the guard as it ships.
+    6. (the ruling of 2026-10-15) the provider's remaining
+       credit, read by the free GET, is below the run's
+       ceiling — the refusal names the shortfall. A balance
+       that could not be read is no evidence, and a paid run
+       that cannot establish its balance does not start.
+
+    The validations cover only the arms the mode runs
+    (the ruling of 2026-10-15): a mode that does not run
+    arm B is not refused by arm B's tool support, and its
+    ceilings are not the ones checked. No ceiling changes —
+    the mode's arms run under the registered per-unit
+    ceilings as they ship.
     """
     report = PreflightReport()
     index = catalogue_index(catalogue)
 
-    # Case 4 first, and for every serving arm E's included: the
-    # worst cases below need rates, and a serving with no price is
-    # refused whatever else is true of it. A variant serving
-    # resolves to the entry that prices it, so a served variant
-    # of a priced base is refused only when that price cannot be
-    # bounded.
-    for arm in ARMS:
+    # Case 4 first, and for every serving the mode's arms
+    # name: the worst cases below need rates, and a serving
+    # with no price is refused whatever else is true of it.
+    # A variant serving resolves to the entry that prices it,
+    # so a served variant of a priced base is refused only
+    # when that price cannot be bounded.
+    for arm in arms:
         for serving in _arm_servings(arm, servings):
             entry = _resolve_entry(index, serving)
             if entry is None:
@@ -892,75 +1008,84 @@ def run_preflight(servings: dict[str, Any],
                     f"({_unboundable_reason(entry)}; D49: an unknown "
                     "price is not free)")
 
-    # Case 1: the worst case of arms A-D over the whole sequence.
-    for arm in ("A", "B", "C", "D"):
+    # Case 1: the worst case of the mode's arms A-D over
+    # the whole sequence.
+    for arm in [a for a in ("A", "B", "C", "D") if a in arms]:
         if any(_resolve_entry(index, serving) is None
                or _unpriced(_resolve_entry(index, serving))
                for serving in _arm_servings(arm, servings)):
             continue       # case 4 already refused this arm
         worst, call_limit = _arm_sequence_worst_case(arm, servings, index)
-        ceiling = ARM_CEILINGS[arm]
-        if worst > ceiling:
+        arm_ceiling = ARM_CEILINGS[arm]
+        if worst > arm_ceiling:
             report.refusals.append(
                 f"arm {arm}: the worst case of its {call_limit}-call "
                 f"sequence is ${worst:.4f}, above its per-unit ceiling "
-                f"${ceiling:.2f} (call limit x each call's worst case at "
+                f"${arm_ceiling:.2f} (call limit x each call's worst case at "
                 f"max_tokens {REGISTERED_MAX_TOKENS}, the largest prompt "
                 f"the call can carry, arm B's largest tool result included)")
 
-    # Case 2: arm B's serving must list tool support, and
-    # tool_choice beside it - R2's final call keeps the
-    # tools declared with tool_choice "none", so an endpoint
-    # that cannot take tool_choice would fail the call the
-    # treatment depends on. Blind is a report, not a guess
-    # (the command's own text). A variant serving reads the
-    # entry that prices it.
-    b_entry = _resolve_entry(index, servings["B"])
-    if b_entry is not None:
-        supported = b_entry.get("supported_parameters")
-        if supported is None:
-            report.reports.append(
-                f"arm B: the catalogue is blind about {servings['B']}'s "
-                "parameters (the entry carries no supported_parameters), "
-                "so tool and tool_choice support is unverified — "
-                "reported, not guessed")
-        else:
-            if "tools" not in supported:
-                report.refusals.append(
-                    f"arm B: {servings['B']} does not list tool "
-                    f"support (supported_parameters: "
-                    f"{', '.join(str(name) for name in supported) or 'none'})")
-            if "tool_choice" not in supported:
-                report.refusals.append(
-                    f"arm B: {servings['B']} does not list "
-                    f"tool_choice support (supported_parameters: "
-                    f"{', '.join(str(name) for name in supported) or 'none'})")
+    # Cases 2 and 3, arm B's mode alone: arm B's
+    # serving must list tool support, and
+    # tool_choice beside it - R2's final call keeps
+    # the tools declared with tool_choice "none", so
+    # an endpoint that cannot take tool_choice would
+    # fail the call the treatment depends on. Blind
+    # is a report, not a guess (the command's own
+    # text). A variant serving reads the entry that
+    # prices it. A mode that does not run arm B is
+    # not validated against arm B's treatment (the
+    # ruling of 2026-10-15: the preflight validates
+    # only the arms the mode runs).
+    if "B" in arms:
+        b_entry = _resolve_entry(index, servings["B"])
+        if b_entry is not None:
+            supported = b_entry.get("supported_parameters")
+            if supported is None:
+                report.reports.append(
+                    f"arm B: the catalogue is blind about {servings['B']}'s "
+                    "parameters (the entry carries no supported_parameters), "
+                    "so tool and tool_choice support is unverified — "
+                    "reported, not guessed")
+            else:
+                if "tools" not in supported:
+                    report.refusals.append(
+                        f"arm B: {servings['B']} does not list tool "
+                        f"support (supported_parameters: "
+                        f"{', '.join(str(name) for name in supported) or 'none'})")
+                if "tool_choice" not in supported:
+                    report.refusals.append(
+                        f"arm B: {servings['B']} does not list "
+                        f"tool_choice support (supported_parameters: "
+                        f"{', '.join(str(name) for name in supported) or 'none'})")
 
-    # Case 3: arm B's context window, bounded in bytes (D45 amendment
-    # (b): a byte-level tokenizer never emits more tokens than bytes,
-    # so the byte length is the conservative token bound the check
-    # needs — the command named the harness's retired CHARS_PER_TOKEN,
-    # and the byte bound is its conservative replacement).
-    if b_entry is not None:
-        context = b_entry.get("context_length")
-        system, base = render_prompt(prompt_text("B"), _largest_question())
-        prompt_bytes = _prompt_bytes(system, base, _largest_tool_result())
-        if context is None:
-            report.reports.append(
-                f"arm B: the catalogue is blind about "
-                f"{servings['B']}'s context length, so the capacity "
-                "check could not run — reported, not guessed")
-        elif prompt_bytes + REGISTERED_MAX_TOKENS > context:
-            report.refusals.append(
-                f"arm B: the largest prompt ({prompt_bytes} bytes, the "
-                f"registered question, the arm B prompt and the largest "
-                f"archived source) plus max_tokens {REGISTERED_MAX_TOKENS} "
-                f"exceeds {servings['B']}'s context window of {context}")
+        # Case 3: arm B's context window, bounded in bytes (D45 amendment
+        # (b): a byte-level tokenizer never emits more tokens than bytes,
+        # so the byte length is the conservative token bound the check
+        # needs — the command named the harness's retired CHARS_PER_TOKEN,
+        # and the byte bound is its conservative replacement).
+        if b_entry is not None:
+            context = b_entry.get("context_length")
+            system, base = render_prompt(prompt_text("B"), _largest_question())
+            prompt_bytes = _prompt_bytes(system, base, _largest_tool_result())
+            if context is None:
+                report.reports.append(
+                    f"arm B: the catalogue is blind about "
+                    f"{servings['B']}'s context length, so the capacity "
+                    "check could not run — reported, not guessed")
+            elif prompt_bytes + REGISTERED_MAX_TOKENS > context:
+                report.refusals.append(
+                    f"arm B: the largest prompt ({prompt_bytes} bytes, the "
+                    f"registered question, the arm B prompt and the largest "
+                    f"archived source) plus max_tokens {REGISTERED_MAX_TOKENS} "
+                    f"exceeds {servings['B']}'s context window of {context}")
 
     # The owner's addition (1): the registered max_tokens against the
-    # endpoint's max_completion_tokens. Arms A-D: a refusal. Arm E's
-    # tiers: a report — arm E runs under the guard as it ships.
-    for arm in ("A", "B", "C", "D"):
+    # endpoint's max_completion_tokens. The mode's arms A-D: a
+    # refusal. Arm E's tiers, when the mode runs a pipeline arm (E
+    # or F runs on them): a report — the pipeline runs under the
+    # guard as it ships.
+    for arm in [a for a in ("A", "B", "C", "D") if a in arms]:
         for serving in _arm_servings(arm, servings):
             entry = _resolve_entry(index, serving)
             if entry is None:
@@ -978,24 +1103,57 @@ def run_preflight(servings: dict[str, Any],
                     f"{REGISTERED_MAX_TOKENS} exceeds {serving}'s "
                     f"max_completion_tokens {cap} — the client does not "
                     "clamp, so the call would fail at the provider")
-    for tier, serving in servings["E"].items():
-        entry = _resolve_entry(index, serving)
-        if entry is None:
-            continue
-        cap = entry.get("max_completion_tokens")
-        standing = _tier_output_cap(tier)
-        if cap is None:
-            report.reports.append(
-                f"arm E/{tier}: the catalogue is blind about "
-                f"{serving}'s max_completion_tokens, so the standing cap "
-                f"{standing} could not be checked against it")
-        elif standing > cap:
-            report.reports.append(
-                f"arm E/{tier}: the standing cap {standing} exceeds "
-                f"{serving}'s max_completion_tokens {cap} — the client "
-                "does not clamp, so a call at the cap would fail at the "
-                "provider (reported, not refused: arm E runs under the "
-                "guard as it ships)")
+    if "E" in arms or "F" in arms:
+        for tier, serving in servings["E"].items():
+            entry = _resolve_entry(index, serving)
+            if entry is None:
+                continue
+            cap = entry.get("max_completion_tokens")
+            standing = _tier_output_cap(tier)
+            if cap is None:
+                report.reports.append(
+                    f"arm E/{tier}: the catalogue is blind about "
+                    f"{serving}'s max_completion_tokens, so the standing cap "
+                    f"{standing} could not be checked against it")
+            elif standing > cap:
+                report.reports.append(
+                    f"arm E/{tier}: the standing cap {standing} exceeds "
+                    f"{serving}'s max_completion_tokens {cap} — the client "
+                    "does not clamp, so a call at the cap would fail at the "
+                    "provider (reported, not refused: arm E runs under the "
+                    "guard as it ships)")
+
+    # Case 6 (the ruling of 2026-10-15): the account's
+    # remaining credit against the run's ceiling, read
+    # by the free GET before the first paid call. An
+    # account below the ceiling cannot fund the plan
+    # the run is about to execute; the refusal names
+    # the shortfall. A balance that could not be read
+    # is no evidence — a paid run that cannot
+    # establish its balance does not start (the
+    # starved re-measurement's lesson: the sweep
+    # discovered the empty account at its first 402,
+    # mid-plan, and the units it never started were
+    # lost rather than recorded).
+    if ceiling is None:
+        report.reports.append(
+            "the run's ceiling was not given, so the credit "
+            "check could not compare the balance against it — "
+            "reported, not guessed")
+    elif credit is None:
+        report.refusals.append(
+            "the provider's remaining credit could not be read "
+            "(the GET of the account's credits endpoint failed "
+            "or answered no balance), so the run cannot "
+            f"establish that its ${ceiling:.2f} ceiling is "
+            "funded — a paid run that cannot establish its "
+            "balance does not start")
+    elif credit < ceiling:
+        report.refusals.append(
+            f"the provider's remaining credit is ${credit:.2f}, "
+            f"below the run's ${ceiling:.2f} ceiling — shortfall "
+            f"${ceiling - credit:.2f} (the account needs a "
+            "top-up before the run starts)")
     return report
 
 
@@ -1078,15 +1236,19 @@ def arm_f_worst_case(servings: dict[str, Any],
     leaves the tiers, the pins, the budgets and the loop
     bounds untouched), so the per-call worst case on a
     tier is the figure the arm-E table carries. What
-    differs is how many calls the workflow makes on it:
-    the triage tier carries the triage and the asks
-    (two calls), and the verify loop runs the answer and
-    the check at most twice (two engineering, two judge)
-    — the registered bound, at most four model calls
-    after triage and asks. The sequence's worst case is
-    the sum those counts compose, against arm F's
-    ceiling; a sequence whose worst case exceeds it
-    refuses even at zero spend, the way the arm-E
+    differs is how many calls the workflow makes on it.
+    R3 (2026-10-15) amended D51 (8): the bound counts
+    grounding's maximum calls, read off
+    build_phase_context's retrieval path — the query
+    expansion, the briefing and the rerank on the
+    research tier (the rerank runs on the ranker tier
+    when the owner's settings pin one, a pin outside
+    this experiment's standings; the research tier is
+    its fallback and the tier the standings price), and
+    the gap lookup on the search tier. The sequence's
+    worst case is the sum those counts compose, against
+    arm F's ceiling; a sequence whose worst case exceeds
+    it refuses even at zero spend, the way the arm-E
     table's rows say. The prompt side is the largest
     prompt this experiment's entry point carries, as the
     arm-E table's is: a floor, with the guard's call-time
@@ -1096,13 +1258,18 @@ def arm_f_worst_case(servings: dict[str, Any],
     question = _largest_question()
     prompt_bytes = _prompt_bytes(question)
     # The verify-first workflow's calls on each tier:
-    # the triage and the asks on the triage tier, the
-    # answer and its revision on the engineering tier,
+    # the triage and the asks on the triage tier;
+    # grounding's maximum — three on the research tier
+    # (query expansion, the briefing, the rerank) and
+    # one on the search tier (the gap lookup); the
+    # answer and its revision on the engineering tier;
     # the check and its re-check on the judge tier.
-    counts = {"triage": 2, "engineering": 2, "judge": 2}
+    counts = {"triage": 2, "research": 3, "search": 1,
+              "engineering": 2, "judge": 2}
     rows: list[dict[str, Any]] = []
     sequence = 0.0
-    for tier in ("triage", "engineering", "judge"):
+    for tier in ("triage", "research", "search",
+                 "engineering", "judge"):
         serving = servings["E"][tier]
         cap = _tier_output_cap(tier)
         calls = counts[tier]
@@ -1151,12 +1318,18 @@ def arm_f_worst_case(servings: dict[str, Any],
     # The bound the workflow's own counts compose: the
     # whole sequence's worst case, against the per-unit
     # ceiling. The bound is declared in the workflow, not
-    # a setting, so no .env line can widen it.
+    # a setting, so no .env line can widen it. R3
+    # (2026-10-15): the amended bound's worst case
+    # exceeds the $0.30 ceiling R3 lets the per-unit
+    # ceiling rise to, so the ceiling did not rise —
+    # the figure is reported, and the per-call guard
+    # remains the run's binding check.
     rows.append({
         "tier": "sequence",
         "serving": ("the verify-first bound: 2 triage + "
-                    "2 engineering + 2 judge"),
-        "calls": 6,
+                    "3 research + 1 search + 2 engineering "
+                    "+ 2 judge"),
+        "calls": ARM_F_CALL_LIMIT,
         "worst_case": sequence,
         "unit_ceiling": ARM_CEILINGS["F"],
         "refuses_even_at_zero_spend": (
@@ -1632,6 +1805,13 @@ class UnitResult:
     calls_after_asks: int | None = None
     stop_reason: str | None = None
     error: str | None = None
+    # The ruling of 2026-10-15: the provider answered
+    # 402 — the account's credit is exhausted. The unit
+    # that drew the 402 is recorded as it ended, and
+    # the sweep stops: the units after it are recorded
+    # not_run (provider credit), outside the arm
+    # denominators, rather than lost.
+    credit_exhausted: bool = False
     unreconciled_liability: float = 0.0
 
     @property
@@ -1673,6 +1853,7 @@ class UnitResult:
             "calls_after_asks": self.calls_after_asks,
             "stop_reason": self.stop_reason,
             "error": self.error,
+            "credit_exhausted": self.credit_exhausted,
             "unreconciled_liability": self.unreconciled_liability,
         }
 
@@ -2085,6 +2266,13 @@ async def run_unit(unit_key: tuple[str, int, str],
                 getattr(run, "retries", {}) or {})
             result.unreconciled_liability = float(
                 getattr(run, "unreconciled_liability", 0.0) or 0.0)
+            # The 402 the pipeline's own handler caught (the
+            # ruling of 2026-10-15): the scenario run carries
+            # the credit event its generic handler ended the
+            # run on, and the unit's record says the sweep
+            # stops here.
+            if getattr(run, "credit_exhausted", False):
+                result.credit_exhausted = True
             # The scenario run's internals (R1): the record
             # used to carry the accounting and drop the
             # pipeline's own story - why it ended the way
@@ -2194,6 +2382,41 @@ async def run_unit(unit_key: tuple[str, int, str],
             result.cost = client.spend
             result.unreconciled_liability = (
                 client.unreconciled_liability)
+    except httpx.HTTPStatusError as exc:
+        # An error status the serving returned. A 402 is
+        # the account's credit exhausted (the ruling of
+        # 2026-10-15): the unit is recorded as it ended,
+        # and the flag says the sweep stops here — the
+        # units after it are recorded not_run (provider
+        # credit), outside the arm denominators, rather
+        # than lost the way the starved re-measurement's
+        # were. The status code is the typed field the
+        # provider's own error carries, never the
+        # message's prose (non-negotiable 3).
+        client = made.get("client")
+        if (getattr(getattr(exc, "response", None),
+                    "status_code", None) == 402):
+            result.status = "incomplete"
+            result.stop_reason = (
+                "provider credit exhausted: "
+                f"{type(exc).__name__}: {exc}")
+            result.credit_exhausted = True
+        else:
+            # Any other error status is a serving
+            # failure, not a credit event: the broken
+            # run's result, as the generic handler
+            # makes it.
+            result.status = "incomplete"
+            result.stop_reason = f"{type(exc).__name__}: {exc}"
+        if client is not None:
+            result.cost = client.spend
+            result.unreconciled_liability = (
+                client.unreconciled_liability)
+        elif run is not None:
+            result.cost = getattr(run, "cost", 0.0) or 0.0
+            result.unreconciled_liability = float(
+                getattr(run, "unreconciled_liability",
+                        0.0) or 0.0)
     except Exception as exc:      # a broken run is a result, not a crash
         result.status = "incomplete"
         result.stop_reason = f"{type(exc).__name__}: {exc}"
@@ -2247,6 +2470,15 @@ def _pipeline_record(run: Any) -> dict[str, Any]:
     asks_anchored = verdicts.get("asks_anchored")
     return {
         "status": getattr(run, "status", None),
+        # The run's terminal sentence and how the runner
+        # stopped it (Ruling D23's two fields), verbatim —
+        # the record of 2026-10-15 carries both, so a unit
+        # record says why it ended without re-reading the
+        # trace. `reason` is the workflow's own terminal;
+        # `stop_reason` is set only when a bound ended the
+        # run from outside.
+        "reason": getattr(run, "reason", None),
+        "stop_reason": getattr(run, "stop_reason", None),
         "plan": (
             {
                 "ready": plan.get("ready"),
@@ -2508,11 +2740,16 @@ class Tier3ResultsLog:
         self._append(record)
 
     def recorded_units(self) -> set[tuple[str, int, str]]:
-        """Every unit with a complete record."""
+        """Every unit with a complete record that is
+        evidence of a run. A unit recorded not_run
+        (the provider's credit was exhausted before it
+        started) is not one — it never ran, so a resume
+        re-runs it rather than skipping it."""
         return {
             (r["question_id"], r["repetition"], r["arm"])
             for r in self._existing
-            if r.get("record") == "unit"}
+            if r.get("record") == "unit"
+            and r.get("status") != "not_run"}
 
     def all_units(self) -> list[dict[str, Any]]:
         """Every unit record in the file, re-read from
@@ -2585,6 +2822,31 @@ def _effective_verdict(record: dict[str, Any],
             or "NOT_SCORED")
 
 
+def _final_unit_records(records: list[dict[str, Any]]
+                        ) -> list[dict[str, Any]]:
+    """Each unit's final record, in the order its
+    first line appears.
+
+    The log is append-only, so the record keeps
+    every line — but a unit can hold two lines:
+    the ``not_run`` line a 402 wrote and the line
+    a resumed run appended when the top-up re-ran
+    it. The unit's state is its last line; a census
+    that counted the stale one would report a unit
+    as never run that the record shows ran — the
+    same unit in an arm's denominator and in the
+    ``not_run`` count beside it. The record keeps
+    the history (``run_experiment`` returns the raw
+    lines); the measures state the final state."""
+    final: dict[tuple[str, int, str],
+                dict[str, Any]] = {}
+    for record in records:
+        final[(record["question_id"],
+               record["repetition"],
+               record["arm"])] = record
+    return list(final.values())
+
+
 def compute_measures(records: list[dict[str, Any]],
                      readings: dict[tuple[str, int, str],
                                          str] | None = None
@@ -2592,7 +2854,19 @@ def compute_measures(records: list[dict[str, Any]],
     """The manifest's five success measures, over the unit
     records. The denominator is the planned units, so an
     incomplete, refused or timed-out unit is 0 delivered,
-    never dropped."""
+    never dropped. A unit recorded not_run (the provider's
+    credit was exhausted before it started) never ran: it
+    sits outside every arm's denominator, counted beside
+    the measures as ``not_run``."""
+    # Each unit's final record: a resumed run re-runs
+    # the units a 402 recorded not_run, and those
+    # units' final lines are the lines the re-run
+    # wrote (see _final_unit_records).
+    records = _final_unit_records(records)
+    not_run = sum(1 for record in records
+                  if record.get("status") == "not_run")
+    records = [record for record in records
+               if record.get("status") != "not_run"]
     arms = sorted({record["arm"] for record in records})
     planned_per_arm: dict[str, int] = {}
     for record in records:
@@ -2701,6 +2975,7 @@ def compute_measures(records: list[dict[str, Any]],
             "units": len(records),
             "by_status": by_status,
         },
+        "not_run": not_run,
     }
 
 
@@ -2874,7 +3149,10 @@ def failure_census(records: list[dict[str, Any]]) -> dict[str, int]:
     """Every failure class, counted. The census is the
     dry run's proof that each class the command names is
     included at least once, and each is counted in its
-    arm's denominator."""
+    arm's denominator. Each unit's final record is the
+    unit's class — a resumed run's re-run of a not_run
+    unit is a unit that ran (see _final_unit_records)."""
+    records = _final_unit_records(records)
     census: dict[str, int] = {}
     for record in records:
         census[record["status"]] = census.get(record["status"], 0) + 1
@@ -3005,13 +3283,27 @@ def remeasure_report(records: list[dict[str, Any]],
     own records. ``records`` are the unit records the run
     wrote (``result.record()``); ``questions`` the frozen
     set as a dict by id (or a list of the same); ``keys``
-    the frozen keys."""
+    the frozen keys. Each unit's final record is its row —
+    a resumed run's re-run of a not_run unit is a unit
+    that ran (see _final_unit_records)."""
     keys_3sf = _keys_at_3sf(keys)
     if isinstance(questions, dict):
         question_map = questions
     else:
         question_map = {q["id"]: q for q in questions}
     arms = REMEASURE_ARMS
+    # A unit recorded not_run (the provider's credit
+    # was exhausted before it started) never ran: it
+    # is outside every table's counts, reported
+    # beside them as ``not_run``. A not_run unit has
+    # no answer, no cost and no latency — counting
+    # it as planned work would understate every rate
+    # the tables report.
+    records = _final_unit_records(records)
+    not_run = sum(1 for r in records
+                  if r.get("status") == "not_run")
+    records = [r for r in records
+               if r.get("status") != "not_run"]
 
     # Table 1 — per-arm delivered-correct of planned
     # units, key-strict (primary) and 3 s.f. side by
@@ -3097,12 +3389,15 @@ def remeasure_report(records: list[dict[str, Any]],
 
     # Table 4 — median cost and median latency per arm,
     # over the units that ran (a skipped unit never
-    # started, so it has no cost or latency to median).
+    # started, so it has no cost or latency to median;
+    # a not_run unit never started either — the
+    # not_run records are already excluded above).
     medians: dict[str, Any] = {}
     for arm in arms:
         arm_records = [r for r in records
                        if r.get("arm") == arm
-                       and r.get("status") != "skipped"]
+                       and r.get("status")
+                       not in ("skipped", "not_run")]
         costs = [float(r.get("cost") or 0.0)
                  for r in arm_records]
         seconds = [float(r.get("seconds") or 0.0)
@@ -3136,13 +3431,31 @@ def remeasure_report(records: list[dict[str, Any]],
         answers = [i.get("implement_summary")
                    for i in iterations
                    if i.get("implement_summary")]
-        if len(answers) < 2:
-            # One iteration: the check passed (or the
-            # run ended) before any revision, so this
-            # unit is not in the prediction's population.
+        first = answers[0] if answers else None
+        final = record.get("answer")
+        # The ruling of 2026-10-15: a unit is revised
+        # when it has two implement outputs, or its
+        # final answer differs from its first implement
+        # summary. The second disjunct is what the
+        # starved run measured: five units whose check
+        # forced a change the iteration count alone did
+        # not see — the verify-first workflow records
+        # one iteration per loop pass, and the
+        # delivered answer is the run's last word, not
+        # the summary the iteration carried. The old
+        # rule (two outputs alone) counted none of the
+        # five on the committed trace; this rule counts
+        # exactly them.
+        two_outputs = len(answers) >= 2
+        answer_differs = bool(
+            first and final
+            and str(first).strip() != str(final).strip())
+        if not (two_outputs or answer_differs):
+            # The check passed (or the run ended) before
+            # any revision, so this unit is not in the
+            # prediction's population.
             continue
         revised += 1
-        first, final = answers[0], record.get("answer")
         if not first or not final:
             transitions["no_first_answer"] += 1
             continue
@@ -3303,6 +3616,7 @@ def remeasure_report(records: list[dict[str, Any]],
         "keys_3sf": ("the frozen keys with Q23's two "
                      "force items widened to ±0.05 kN "
                      "(K1, not ruled)"),
+        "not_run": not_run,
         "per_arm": per_arm,
         "calibration_q1_q5": calibration,
         "paired_against_a_by_question": pairing,
@@ -3371,8 +3685,11 @@ async def run_experiment(
         scenario_runner: Any = None,
         pipeline_client_factory: Any = None,
         catalogue: list[dict[str, Any]] | None = None,
+        credit: float | None = None,
         deadline_overrides: dict[tuple[str, int, str],
                                       float] | None = None,
+        smoke_questions: tuple[str, ...] = (),
+        smoke_arms: tuple[str, ...] = (),
         ) -> dict[str, Any]:
     """One experiment run: the gates, the free preflight,
     then every unit of the plan in the recorded order, under
@@ -3380,15 +3697,27 @@ async def run_experiment(
 
     The gates and the preflight come before any network
     call, and a refusal names each missing gate or each
-    refusal case. On a restart with the same manifest
-    version and order digest, every unit already recorded
-    is skipped and nothing runs twice or out of order; the
-    unit in flight at the interruption is charged its full
-    ceiling against the sweep as unreconciled liability,
-    then re-run.
+    refusal case. The preflight reads the account's
+    remaining credit (the free GET) against the run's
+    own ceiling — ``credit`` passes the figure the dry
+    run's fixture carries, a real run reads the account.
+    On a restart with the same manifest version and order
+    digest, every unit already recorded is skipped and
+    nothing runs twice or out of order; the unit in flight
+    at the interruption is charged its full ceiling against
+    the sweep as unreconciled liability, then re-run. A
+    unit recorded not_run (the provider's credit was
+    exhausted before it started) is re-run by a resume:
+    it never ran, so it is not a record of evidence.
+
+    The smoke run (mode "smoke") runs the named question
+    ids (``smoke_questions``) x the named arms
+    (``smoke_arms``) x one repetition, under the smoke
+    ceiling's own gate.
     """
     pilot = mode == "pilot"
     remeasure = mode == "remeasure"
+    smoke = mode == "smoke"
     tier3 = Tier3Settings()
     servings = resolve_servings(tier3)
     fingerprint = servings_fingerprint(servings)
@@ -3401,22 +3730,42 @@ async def run_experiment(
             "the ratification gates are not cleared",
             servings, fingerprint, missing)
 
-    # The free preflight, before the first unit.
+    authorization = (REMEASURE_CEILING if remeasure
+                     else PILOT_CEILING if pilot
+                     else SMOKE_CEILING if smoke
+                     else MAIN_CEILING)
+
+    # The free preflight, before the first unit: the
+    # account's remaining credit against the run's own
+    # ceiling, and every validation the mode's arms
+    # run under. The dry run passes the fixture's
+    # balance; a real run reads the account.
     if catalogue is None:
         catalogue = await fetch_catalogue(
             confirm={serving for serving in _all_servings(servings)})
-    report = run_preflight(servings, catalogue)
+    if credit is None:
+        credit = await fetch_credit()
+    report = run_preflight(servings, catalogue,
+                           credit=credit,
+                           ceiling=authorization,
+                           arms=(REMEASURE_ARMS if remeasure
+                                 else PILOT_ARMS if pilot
+                                 else tuple(smoke_arms) if smoke
+                                 else ARMS))
     if report.refusals:
         raise ExperimentRefused(
             "the preflight refused to start",
             servings, fingerprint, report.refusals)
 
     arms = (REMEASURE_ARMS if remeasure
-            else PILOT_ARMS if pilot else ARMS)
-    repetitions = (REPITIONS if remeasure or not pilot
+            else PILOT_ARMS if pilot
+            else tuple(smoke_arms) if smoke else ARMS)
+    repetitions = (SMOKE_REPETITIONS if smoke
+                   else REPITIONS if remeasure or not pilot
                    else PILOT_REPETITIONS)
     seed = (REMEASURE_SEED if remeasure
-            else PILOT_SEED if pilot else SEED)
+            else PILOT_SEED if pilot
+            else SMOKE_SEED if smoke else SEED)
     # The staged plan's stage-1 main run enumerates over
     # the seven selected questions (the selection rule the
     # manifest registers); the pilot and a stage-2 run
@@ -3426,18 +3775,38 @@ async def run_experiment(
     # arm E over stage 1's seven, three repetitions each,
     # interleaved and shuffled once with the registered
     # seed (the guard test reconstructs the order
-    # independently and compares the digest).
+    # independently and compares the digest). The smoke
+    # plan is its own too: the named questions, the named
+    # arms, one repetition — enumerated and shuffled with
+    # the smoke seed, so the order's digest records the
+    # plan the run executed.
     if remeasure:
         order = remeasure_order(seed)
+    elif smoke:
+        if not smoke_questions or not smoke_arms:
+            raise ExperimentRefused(
+                "the smoke run names no questions or no arms",
+                servings, fingerprint,
+                ["the smoke run runs named question ids x "
+                 "named arms x one repetition; both were "
+                 "not given"])
+        named = [question for question in load_questions()
+                 if question["id"] in set(smoke_questions)]
+        unknown = sorted(set(smoke_questions)
+                         - {question["id"]
+                            for question in named})
+        if unknown:
+            raise ExperimentRefused(
+                "the smoke run names questions the frozen "
+                "set does not carry", servings, fingerprint,
+                [f"unknown question ids: {', '.join(unknown)}"])
+        order = build_order(seed, repetitions, arms, named)
     else:
         order_questions = (load_questions() if pilot
                            else stage1_questions())
         order = build_order(seed, repetitions, arms,
                             order_questions)
     digest = order_digest(order)
-    authorization = (REMEASURE_CEILING if remeasure
-                     else PILOT_CEILING if pilot
-                     else MAIN_CEILING)
 
     path = (Path(results_path) if results_path is not None
             else default_results_path(mode))
@@ -3469,7 +3838,9 @@ async def run_experiment(
         "arm_c_check_attempts": ARM_C_CHECK_ATTEMPTS,
         "arm_e_call_limit": ARM_E_CALL_LIMIT,
         "arm_f_call_limit": (ARM_F_CALL_LIMIT
-                             if remeasure else None),
+                             if remeasure or (
+                                 smoke and "F" in arms)
+                             else None),
         # The re-measurement's registered plan, as the
         # header names it: the interleaved order's seed,
         # the authorisation, and the pre-registration's
@@ -3535,6 +3906,29 @@ async def run_experiment(
         log.unit(result.record())
         records.append(result.record())
         started += 1
+        if result.credit_exhausted:
+            # The first 402 stops the sweep. Every
+            # unit after this one is recorded not_run
+            # (provider credit) — outside the arm
+            # denominators, counted by the report —
+            # rather than lost: the record states
+            # what happened to the plan, and a
+            # resume after a top-up re-runs them.
+            for rest in order[index + 1:]:
+                key = tuple(rest)
+                if key in recorded:
+                    continue
+                not_run = UnitResult(
+                    question_id=key[0], repetition=key[1],
+                    arm=key[2], status="not_run",
+                    serving=_serving_record(key[2], servings),
+                    stop_reason=(
+                        "not run: the provider's credit was "
+                        "exhausted before this unit started "
+                        "(the sweep stopped at the first 402)"))
+                log.unit(not_run.record())
+                records.append(not_run.record())
+            break
     # The unit this invocation left in flight (the kill's
     # exhibit), read back the way a restart reads it.
     left_in_flight = (log.in_flight() if killed_at is not None
@@ -3605,6 +3999,12 @@ DRY_RUN_SERVINGS = {
 # stops after this many units, the next unit is left in
 # flight, and the run is resumed to the end.
 DRY_RUN_KILL_AFTER = 40
+# The dry run's fixture credit: a balance above every
+# mode's registered ceiling, so the preflight's credit
+# check (the ruling of 2026-10-15) passes without a
+# network GET — the dry run makes no real call. A real
+# run reads the account's own remaining credit.
+DRY_RUN_CREDIT = 100.00
 
 # The fixture catalogue's rates, per token: the prompt
 # side and the completion side. The dry run's scripted
@@ -4421,6 +4821,22 @@ class DryRunClient(OpenRouterClient):
                 raise ProviderFailure(
                     function, None,
                     outcome["provider_failure"])
+            if outcome.get("credit_exhausted"):
+                # The 402 class: the provider answered
+                # with an insufficient-credit status after
+                # dispatch, so the guard books the call's
+                # worst case as unreconciled liability
+                # (D45 (5): an error status that is not
+                # retried) and re-raises, exactly as the
+                # real client's raise path does.
+                raise httpx.HTTPStatusError(
+                    "Insufficient credits: please add "
+                    "credits to continue",
+                    request=httpx.Request(
+                        "POST",
+                        "https://openrouter.ai/api/v1/"
+                        "chat/completions"),
+                    response=httpx.Response(402))
             prompt_tokens = outcome.get("prompt_tokens", 900)
             completion_tokens = outcome.get(
                 "completion_tokens", 1200)
@@ -4509,6 +4925,14 @@ class DryRunScenarioRunner:
                 "providers_by_tier", {}),
             verdicts=outcome.get("verdicts", {}),
             status=outcome.get("status", ""),
+            # The bound's two fields (D23), carried
+            # like every other row the stand-in can
+            # express: a scripted ceiling stop names
+            # its terminal in `reason` and the
+            # runner's own hand in `stop_reason`, and
+            # the unit record carries both verbatim.
+            reason=outcome.get("reason"),
+            stop_reason=outcome.get("stop_reason"),
             iterations=outcome.get("iterations", []),
             watchdog=outcome.get("watchdog"),
             tokens_by_tier=outcome.get("tokens_by_tier", {}),
@@ -4638,6 +5062,7 @@ async def dry_run() -> dict[str, Any]:
             tool_dispatcher=tool_dispatcher,
             scenario_runner=scenario_runner,
             catalogue=catalogue,
+            credit=DRY_RUN_CREDIT,
             deadline_overrides=deadline_overrides)
         # …then resumed to the end, on the same results file.
         resumed = await run_experiment(
@@ -4646,6 +5071,7 @@ async def dry_run() -> dict[str, Any]:
             tool_dispatcher=tool_dispatcher,
             scenario_runner=scenario_runner,
             catalogue=catalogue,
+            credit=DRY_RUN_CREDIT,
             deadline_overrides=deadline_overrides)
         # The 50-unit pilot.
         pilot = await run_experiment(
@@ -4653,7 +5079,8 @@ async def dry_run() -> dict[str, Any]:
             client_factory=client_factory,
             tool_dispatcher=tool_dispatcher,
             scenario_runner=scenario_runner,
-            catalogue=catalogue)
+            catalogue=catalogue,
+            credit=DRY_RUN_CREDIT)
         # The re-measurement: the 246-unit plan under the
         # re-measurement's own script — its failure-class
         # exhibits, its D51 record exhibits and its
@@ -4670,16 +5097,28 @@ async def dry_run() -> dict[str, Any]:
             in remeasure_script._deadlines.items()}
         remeasure_path = (RESULTS_DIR
                           / "dryrun-tier3-remeasure.jsonl")
-        remeasurement = await run_experiment(
-            "remeasure", results_path=remeasure_path,
-            client_factory=_dry_run_client_factory(
-                remeasure_script, rates, remeasure_context),
-            tool_dispatcher=_dry_run_tool_dispatcher(
-                remeasure_script, remeasure_context),
-            scenario_runner=DryRunScenarioRunner(
-                remeasure_script),
-            catalogue=catalogue,
-            deadline_overrides=remeasure_overrides)
+        # R4 (the ruling of 2026-10-15): the
+        # authorization pin must equal the run's own
+        # registered ceiling, so the re-measurement's
+        # dry run runs under its own $15.00 pin — the
+        # $30.00 pin the block carries is the main
+        # run's authorization, and a pin that named
+        # the main run's figure would refuse the
+        # re-measurement's gate.
+        with _env_overrides(
+                {"TIER3_SPEND_AUTHORIZED":
+                     f"{REMEASURE_CEILING:.2f}"}):
+            remeasurement = await run_experiment(
+                "remeasure", results_path=remeasure_path,
+                client_factory=_dry_run_client_factory(
+                    remeasure_script, rates, remeasure_context),
+                tool_dispatcher=_dry_run_tool_dispatcher(
+                    remeasure_script, remeasure_context),
+                scenario_runner=DryRunScenarioRunner(
+                    remeasure_script),
+                catalogue=catalogue,
+                credit=DRY_RUN_CREDIT,
+                deadline_overrides=remeasure_overrides)
 
     # The reading sheets and the five measures, both ways.
     questions = {q["id"]: q for q in load_questions()}
@@ -4879,6 +5318,16 @@ async def _cli(argv: list[str] | None = None) -> int:
         help="check the re-measurement's gates "
              "(TIER3_SPEND_AUTHORIZED against the "
              "re-measurement's $15.00 ceiling)")
+    preflight_p.add_argument(
+        "--smoke", action="store_true",
+        help="check the smoke run's gates "
+             "(TIER3_SPEND_AUTHORIZED against the "
+             "smoke run's $2.00 ceiling)")
+    preflight_p.add_argument(
+        "--arms", default=None, metavar="ARMS",
+        help="with --smoke: the comma-separated arms "
+             "the smoke run will run, so the preflight "
+             "validates the arms the mode runs")
     sub.add_parser("worst-case",
                    help="the arm-E worst-case table (free)")
     for name, help_text in (
@@ -4889,6 +5338,21 @@ async def _cli(argv: list[str] | None = None) -> int:
         command_p = sub.add_parser(name, help=help_text)
         command_p.add_argument("--results-file", default=None,
                                metavar="PATH")
+    smoke_p = sub.add_parser(
+        "smoke",
+        help="the smoke run: named question ids x named "
+             "arms x one repetition (paid, the $2.00 "
+             "smoke ceiling)")
+    smoke_p.add_argument(
+        "--questions", required=True, metavar="IDS",
+        help="comma-separated question ids from the "
+             "frozen set (e.g. Q9,Q10,Q19,Q23)")
+    smoke_p.add_argument(
+        "--arms", required=True, metavar="ARMS",
+        help="comma-separated arms (e.g. F,F,F,F or "
+             "F,F,F,F,E,E)")
+    smoke_p.add_argument("--results-file", default=None,
+                           metavar="PATH")
     sub.add_parser("dry-run",
                    help="the mocked dry runs, main, pilot "
                         "and re-measurement (free)")
@@ -4907,13 +5371,24 @@ async def _cli(argv: list[str] | None = None) -> int:
         tier3 = Tier3Settings()
         servings = resolve_servings(tier3)
         fingerprint = servings_fingerprint(servings)
+        mode = ("smoke" if args.smoke
+                else "remeasure" if args.remeasure
+                else "main")
+        if args.smoke and not args.arms:
+            print("the smoke preflight names no arms: "
+                  "--smoke needs --arms, the arms the "
+                  "smoke run will run (the preflight "
+                  "validates the arms the mode runs)")
+            return REFUSED_EXIT
+        smoke_arms = (tuple(
+            a.strip() for a in args.arms.split(",")
+            if a.strip()) if args.smoke else ())
         print("servings map:")
         print(json.dumps(servings, indent=2, sort_keys=True))
         print(f"servings fingerprint: {fingerprint}\n")
         missing = gate_report(
             tier3, servings, fingerprint, pilot=args.pilot,
-            mode=("remeasure" if args.remeasure
-                  else "main"))
+            mode=mode)
         if missing:
             print("the ratification gates are not cleared — "
                   "refusing before any network call:")
@@ -4923,16 +5398,28 @@ async def _cli(argv: list[str] | None = None) -> int:
         print("the ratification gates hold\n")
         catalogue = await fetch_catalogue(
             confirm={serving for serving in _all_servings(servings)})
-        report = run_preflight(servings, catalogue)
+        if args.smoke:
+            # The smoke run's preflight: the same free
+            # checks, over the arms the smoke run runs,
+            # with the account's remaining credit read
+            # against the smoke ceiling.
+            report = run_preflight(
+                servings, catalogue,
+                credit=await fetch_credit(),
+                ceiling=SMOKE_CEILING,
+                arms=smoke_arms)
+        else:
+            report = run_preflight(servings, catalogue)
         _print_preflight_findings(report)
         _print_worst_case(arm_e_worst_case(servings, catalogue))
-        if args.remeasure:
-            # The re-measurement's arm F: the
-            # verify-first workflow's calls on the
-            # standing tiers, against its own $0.20
-            # per-unit ceiling — each arm's worst
-            # case within its ceiling, as the
-            # manifest's tier3-8 registration
+        if args.remeasure or (args.smoke
+                              and "F" in smoke_arms):
+            # The re-measurement's arm F — and the smoke
+            # run's, when it runs F: the verify-first
+            # workflow's calls on the standing tiers,
+            # against its own $0.20 per-unit ceiling —
+            # each arm's worst case within its ceiling,
+            # as the manifest's tier3-8 registration
             # registers the preflight.
             print()
             print("arm F, the verify-first workflow's "
@@ -4983,6 +5470,47 @@ async def _cli(argv: list[str] | None = None) -> int:
             print(json.dumps(remeasure_report(
                 result["records"], result["questions"],
                 result["keys"]), indent=2, default=str))
+        return 0
+
+    if args.command == "smoke":
+        # The smoke run (the ruling of 2026-10-15):
+        # the named question ids x the named arms x
+        # one repetition, under the $2.00 smoke
+        # ceiling. The report over its records
+        # carries the per-unit detail the advisor
+        # reads: every dissent with its kind and
+        # anchors, and the reason each unit ended.
+        questions = tuple(
+            q.strip() for q in args.questions.split(",")
+            if q.strip())
+        arms = tuple(
+            a.strip() for a in args.arms.split(",")
+            if a.strip())
+        try:
+            result = await run_experiment(
+                "smoke", results_path=args.results_file,
+                smoke_questions=questions,
+                smoke_arms=arms)
+        except ExperimentRefused as exc:
+            print(exc)
+            if exc.servings is not None:
+                print("\nservings map:")
+                print(json.dumps(exc.servings, indent=2,
+                                 sort_keys=True))
+                print(f"servings fingerprint: {exc.fingerprint}")
+            print("\nthe experiment refused to start before "
+                  "any paid call")
+            return REFUSED_EXIT
+        print(result["summary"])
+        print()
+        print(json.dumps(result["measures"], indent=2,
+                         default=str))
+        print()
+        print("the smoke run's report (the re-measurement's "
+              "tables, over the smoke records):")
+        print(json.dumps(remeasure_report(
+            result["records"], result["questions"],
+            result["keys"]), indent=2, default=str))
         return 0
 
     if args.command == "dry-run":

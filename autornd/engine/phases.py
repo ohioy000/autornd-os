@@ -22,8 +22,10 @@ from autornd.models.verdicts import (
     DomainConcern,
     RED_NO_ANCHOR,
     UNANCHORED_DISSENT,
+    UNVERIFIED_DISSENT,
     Ask,
     count_normalisation,
+    dissent_kind,
     domain_key,
     Domain,
     DoubleCheckVerdict,
@@ -633,6 +635,7 @@ Judge the answer against the request from your domain. A concern can be critical
 - it names the ask it concerns, by number, and what the answer states or omits against it; or
 - it quotes the request's own words, exactly, for something the answer gets wrong or leaves out; or
 - it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment. Quote those words of the answer.
+If the answer gives something for an ask and you say it is false, set kind: wrong_fact and quote, in source_quote, the words of the request or of the provided sources that show it is false. If you cannot quote them, it is a note.
 An omission is never a hazard. If the request asked for what is missing, quote the request; if it did not, it is a note, and a note is never critical.
 
 Return JSON with:
@@ -642,6 +645,8 @@ Return JSON with:
   - quote: the request's own words, verbatim, when the concern is anchored by them
   - hazard: true only when the concern is a hazard
   - hazard_quote: when hazard is true, the answer's own words that state or instruct it, verbatim
+  - kind: the concern's kind — unmet_ask (the answer gives nothing for the ask), wrong_fact (the answer gives something for the ask and you say it is false), or hazard
+  - source_quote: for wrong_fact, the request's or the sources' own words that contradict the answer, verbatim
   - critical: true only when the concern is anchored and blocks the work
 - critical: true if any concern is a hard blocker that would cause failure
 
@@ -695,11 +700,18 @@ async def run_domain_review(
                 continue
             if concern.critical and not dissent_anchored(
                     concern.ask, concern.quote, concern.hazard,
-                    asks, request, summary, concern.hazard_quote):
+                    asks, request, summary, concern.hazard_quote,
+                    concern.kind, concern.source_quote, context):
                 # A note, never critical — a judgment that names no
                 # anchor carries no information about the request
-                # (convention 21).
-                count_normalisation(UNANCHORED_DISSENT)
+                # (convention 21). R2 (2026-10-15): a wrong_fact
+                # that shows no source is an unverified dissent —
+                # the run cannot check the claim, so under D51 (5)
+                # it is unavailable — and counts as its own kind.
+                if dissent_kind(concern.kind, concern.hazard) == "wrong_fact":
+                    count_normalisation(UNVERIFIED_DISSENT)
+                else:
+                    count_normalisation(UNANCHORED_DISSENT)
                 concern.critical = False
             concerns.append(concern)
             if concern.critical:
@@ -1060,6 +1072,7 @@ For each ask, decide:
 - unavailable: deciding it needs something you do not have, such as a source text, a measurement or an execution. Judge what the answer states as far as you can and say what you could not check. Unavailable is not a failure.
 
 Where the arithmetic is present, do it and show it. If the answer gets wrong, or leaves out, something the request asks for that the list lacks, quote the request's own words for it, exactly: that counts as a failed ask. Anything else you notice is a note for evidence; it cannot make this red.
+If the answer gives something for an ask and you say it is false, set kind: wrong_fact and quote, in source_quote, the words of the request or of the provided sources that show it is false. If you cannot quote them, it is a note.
 {checks_block}
 
 Return JSON with:
@@ -1069,6 +1082,8 @@ Return JSON with:
 - anchor_quote: the request's own words, verbatim, for what the answer gets wrong or leaves out, when the failure is not one ask's number
 - hazard: true only when the answer states or instructs something that would, followed as written, injure a person or damage equipment
 - hazard_quote: when hazard is true, the answer's own words that state or instruct it, verbatim
+- kind: the dissent's kind — unmet_ask (the answer gives nothing for the ask), wrong_fact (the answer gives something for the ask and you say it is false), or hazard
+- source_quote: for wrong_fact, the request's or the sources' own words that contradict the answer, verbatim
 - unavailable_asks: numbers of the asks whose verification needs something you do not have — a source text, a measurement or an execution. Unavailable is neither pass nor fail, and never blocks
 - evidence: one line per ask, at most 25 words each, naming the ask,
   the verdict, and the specific thing you saw. Not an essay — the finding is the
@@ -1095,8 +1110,16 @@ Original request:
     if wants_red and not dissent_anchored(
             data.get("failed_ask"), data.get("anchor_quote"),
             data.get("hazard"), asks, request,
-            implement.summary, data.get("hazard_quote")):
-        count_normalisation(RED_NO_ANCHOR)
+            implement.summary, data.get("hazard_quote"),
+            data.get("kind"), data.get("source_quote"), context):
+        # R2 (2026-10-15): a wrong_fact red that shows no
+        # source is an unverified dissent — the run cannot
+        # check the claim, so under D51 (5) it is
+        # unavailable — and counts as its own kind.
+        if dissent_kind(data.get("kind"), bool(data.get("hazard"))) == "wrong_fact":
+            count_normalisation(UNVERIFIED_DISSENT)
+        else:
+            count_normalisation(RED_NO_ANCHOR)
         data["green"] = True
         data["red_cause"] = None
     verdict = ValidateVerdict(**data)
@@ -1134,6 +1157,7 @@ Judge the answer against the request. A finding can block only if it is anchored
 - it names the ask it concerns, by number, and what the answer states or omits against it; or
 - it quotes the request's own words, exactly, for something the answer gets wrong or leaves out; or
 - it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment. Quote those words of the answer.
+If the answer gives something for an ask and you say it is false, set kind: wrong_fact and quote, in source_quote, the words of the request or of the provided sources that show it is false. If you cannot quote them, it is a note.
 An omission is never a hazard. If the request asked for what is missing, quote the request; if it did not, it is a note.
 Use severity critical or high only for an anchored finding. Everything else is a note, at severity medium or low, and cannot block.
 
@@ -1149,6 +1173,8 @@ Return JSON with:
   - quote: the request's own words, verbatim, when the finding is anchored by them
   - hazard: true only when the finding is a hazard
   - hazard_quote: when hazard is true, the answer's own words that state or instruct it, verbatim
+  - kind: the finding's kind — unmet_ask (the answer gives nothing for the ask), wrong_fact (the answer gives something for the ask and you say it is false), or hazard
+  - source_quote: for wrong_fact, the request's or the sources' own words that contradict the answer, verbatim
 - ship: true if safe to ship with no blocking findings
 - verdict: one-sentence synthesis
 
@@ -1221,8 +1247,18 @@ Original request:
             if finding.severity in ("critical", "high") and not dissent_anchored(
                     finding.ask, finding.quote, finding.hazard,
                     asks, request, implement.summary,
-                    finding.hazard_quote):
-                count_normalisation(UNANCHORED_DISSENT)
+                    finding.hazard_quote, finding.kind,
+                    finding.source_quote, context):
+                # R2 (2026-10-15): a wrong_fact that
+                # shows no source is an unverified
+                # dissent — the run cannot check the
+                # claim, so under D51 (5) it is
+                # unavailable — and counts as its own
+                # kind.
+                if dissent_kind(finding.kind, finding.hazard) == "wrong_fact":
+                    count_normalisation(UNVERIFIED_DISSENT)
+                else:
+                    count_normalisation(UNANCHORED_DISSENT)
                 finding.severity = "medium"
             all_findings.append(finding.model_dump())
             if finding.severity in ("critical", "high"):
