@@ -1,6 +1,6 @@
 # Tier 4: the capacity test (proposed Ruling D52)
 
-**Status:** proposed by the advisor on 2026-10-16. The owner's budget direction of the same date is "test small and keep improving like we have", so the record is staged (§5): a pilot of at most $7, then fixes, then capped growth steps, each on the owner's go. Nothing runs or spends until the owner approves §12.
+**Status:** proposed by the advisor on 2026-10-16; the owner's decisions are in §12. The owner's budget direction of the same date is "test small and keep improving like we have", so the record is staged (§5): a pilot of at most $7, then fixes, then capped growth steps, each on the owner's go. Nothing runs or spends until the owner approves §12.
 
 **Decision it serves:** whether the pipeline's structure (grounding, a plan, check-and-revise loops and review) recovers answers a single call misses, on work hard enough for a single call to miss. That is success bar S2 (value) from the D51 record §2. No run has tested it yet.
 
@@ -209,12 +209,15 @@ Readings are paired by question and reported question by question. The threshold
 | 7. Fix what the pilot exposed | executor, advisor review | $0 |
 | 8. Growth steps: a fresh batch each, the requirement checker, two blind readings, §7–§8 registered | owner's go each time | cap about $10 each |
 
-## 12. The owner's decisions
+## 12. The owner's decisions (2026-10-16)
 
-1. **The design:** approve, or amend the families or arms.
-2. **Budget:** given 2026-10-16: test small and grow. The pilot is capped at $7 in total; each growth step at about $10, on the owner's go.
-3. **Generator:** which model runs Appendix A. It must not be one of the arms' pins.
-4. **Pins:** unchanged (`e0dc92a3aecb`), or re-pin first under G-2.
+1. **The design:** the owner proceeds on it as staged, by instruction (the budget direction and the generator choice below).
+2. **Budget:** "test small and keep improving like we have". The pilot is capped at $7 in total; each growth step at about $10, on the owner's go.
+3. **Generator:** `google/gemini-4-argon`, by the owner's instruction.
+   - It is not one of the arms' pins, which are the standing tier-3 lineup.
+   - It shares a family with the cheapest single-call arm and the triage and research tiers. §10's style risk applies to that family.
+4. **Pins:** unchanged (`e0dc92a3aecb`). The owner did not re-pin. A re-pin under G-2 before any paid unit restarts calibration.
+5. **The generation call:** the advisor ran it once, `max_tokens` 60000, worst case about $0.66. Its raw output is kept git-ignored for verification (§4).
 
 ## Appendix A: the generator prompt
 
