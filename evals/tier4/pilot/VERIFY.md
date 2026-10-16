@@ -1,7 +1,11 @@
 # Tier-4 pilot batch: verification
 
 Advisor, 2026-10-16. Design: `docs/reviews/2026-10-16-tier4-the-capacity-test.md` (proposed D52).
-**Status:** verified; awaiting the owner's freeze (D44). After the freeze, `candidates.json` and `corpus/` stay byte-identical; a change is a new version.
+**Status: FROZEN on 2026-10-17** by the owner's instruction to merge PR #186 ("u merge"), which is the sign-off of the design and the freeze of this batch (D44).
+- `candidates.json`: sha256 `9c9109826431778bd203eddfe0ba12887b53434f33e3d656f4bb589cd216b634`.
+- `corpus/*.md`, concatenated in name order: sha256 `1d27d491195edec184141ba3f8882c27ab509fa3bb7551f7404055fe9f78f1d9`.
+
+Both stay byte-identical from here on; a change is a new version, reported side by side.
 
 ## Provenance
 

@@ -1,6 +1,6 @@
-# Tier 4: the capacity test (proposed Ruling D52)
+# Tier 4: the capacity test (Ruling D52)
 
-**Status:** proposed by the advisor on 2026-10-16; the owner's decisions are in §12. The owner's budget direction of the same date is "test small and keep improving like we have", so the record is staged (§5): a pilot of at most $7, then fixes, then capped growth steps, each on the owner's go. Nothing runs or spends until the owner approves §12.
+**Status:** Ruling D52, signed off by the owner on 2026-10-17 by the instruction to merge PR #186. The pilot batch is frozen (`evals/tier4/pilot/VERIFY.md`). The owner's decisions are in §12. The owner's budget direction of the same date is "test small and keep improving like we have", so the record is staged (§5): a pilot of at most $7, then fixes, then capped growth steps, each on the owner's go. Nothing runs or spends until the owner approves §12.
 
 **Decision it serves:** whether the pipeline's structure (grounding, a plan, check-and-revise loops and review) recovers answers a single call misses, on work hard enough for a single call to miss. That is success bar S2 (value) from the D51 record §2. No run has tested it yet.
 
