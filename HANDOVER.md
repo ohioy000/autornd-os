@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1481 · **Date of this snapshot:** 2026-10-16, counts re-derived against the tree under test
+**Tests:** 1490 · **Date of this snapshot:** 2026-10-16, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -319,7 +319,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      80 files, 1481 tests
+tests/                      80 files, 1490 tests
 
 ```
 
@@ -724,7 +724,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1481 total)
+### 3.7 Test distribution (1490 total)
 
 
 | file | n | file | n |
@@ -765,8 +765,8 @@ is revoked and the warning re-opens with a date.
 | test_spend_guard.py | 16 | test_structural_roles.py | 13 |
 | test_sweep_budget.py | 21 | test_terminal_on_bound.py | 21 |
 | test_tier2_keys.py | 17 | test_tier2_regression.py | 6 |
-| test_tier3_manifest.py | 34 | test_tier3_runner.py | 46 |
-| test_trace_durability.py | 7 | test_transient_tls_retry.py | 14 |
+| test_tier3_manifest.py | 34 | test_tier3_runner.py | 48 |
+| test_trace_durability.py | 7 | test_transient_tls_retry.py | 21 |
 | test_triage.py | 10 | test_verdicts.py | 49 |
 | test_watchdog.py | 23 | test_workflow.py | 4 |
 
@@ -809,7 +809,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1481/1481 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1490/1490 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

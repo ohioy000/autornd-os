@@ -148,11 +148,18 @@ DEADLINE_SECONDS = 1800.0
 # sweep's cap carries, is $30.00 (MAIN_CEILING below). The
 # pilot composes to the $7.50 pilot authorization (25 units
 # per pilot arm). The re-measurement's ceilings compose to
-# $48.00 (75 + 75 + 75 + 21 units at $0.10/$0.20/$0.20/
+# $55.50 (75 + 75 + 75 + 21 units at $0.10/$0.20/$0.30/
 # $0.50) against the owner's $15.00 authorization
-# (REMEASURE_CEILING below).
+# (REMEASURE_CEILING below). Arm F's ceiling is $0.30 by
+# R6 (the close-out, 2026-10-16): the smoke re-measurement
+# measured F's Q10 first pass at $0.095, and a revision
+# reserves about $0.134 (engineering) plus $0.009 (judge),
+# so at the previous $0.20 a unit whose first pass cost
+# what Q10's did would have its revision refused by the
+# per-call guard - the $0.30 admits the revision the
+# workflow's own two-iteration bound makes.
 ARM_CEILINGS = {"A": 0.10, "B": 0.50, "C": 0.50, "D": 0.20,
-                "E": 0.50, "F": 0.20}
+                "E": 0.50, "F": 0.30}
 MAIN_CEILING = 30.00
 PILOT_CEILING = 7.50
 

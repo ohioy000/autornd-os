@@ -247,7 +247,7 @@ class TestTheVersions:
         assert versions["scorer"] in frozen, (
             "the manifest names a scorer version the version "
             "record does not hold")
-        assert versions["manifest"] == "tier3-8"
+        assert versions["manifest"] == "tier3-9"
         # tier3-5 registers the advisor's R2 (the stage-1
         # report's repair list, 2026-10-06): arm B's final
         # call keeps the tools declared with tool_choice
@@ -271,7 +271,7 @@ class TestTheVersions:
         # frozen set's twenty-five questions, arm E'
         # over stage 1's seven, three repetitions each,
         # seed 20261014), arm F as verify-first through
-        # arm E's path at $0.20 a unit and at most four
+        # arm E's path at $0.30 a unit and at most four
         # model calls after triage and asks, arm E' as
         # arm E unchanged on stage 1's seven at $0.50 a
         # unit, the $15.00 authorization, the frozen
@@ -279,6 +279,23 @@ class TestTheVersions:
         # record's section 9 predictions and section 7
         # decision table, copied verbatim with their
         # sha256, committed before any paid unit.
+        # tier3-9 registers the close-out rulings
+        # (the advisor's review of 2026-10-16, in the
+        # 121 response): R5 - a server disconnect
+        # before any response (httpx.RemoteProtocolError)
+        # is a transport failure, not a verdict, so it
+        # joins the retried kinds with the transient
+        # TLS alert's bounded retries (a dispatched
+        # attempt that disconnects keeps its worst case
+        # as unreconciled liability, by identity); R6 -
+        # arm F's per-unit ceiling raised to $0.30 (the
+        # smoke's F Q10 first pass cost $0.095, and a
+        # revision reserves about $0.134 engineering
+        # plus $0.009 judge, so at $0.20 the revision
+        # would be refused), the per-unit ceilings now
+        # composing to $55.50 against the unchanged
+        # $15.00 authorization; the pre-registration
+        # untouched (convention 7).
         note = versions["version_note"]
         assert "tier3-6" in note
         assert "tier3-5" in note
@@ -286,6 +303,9 @@ class TestTheVersions:
         assert "serving_error" in note
         assert "tier3-7" in note
         assert "tier3-8" in note
+        assert "tier3-9" in note
+        assert "$55.50" in note
+        assert "$0.30 per unit" in note
         assert ".env.tier3" in note
         # The tier-2 freeze itself: the signoff the owner ratified.
         assert TIER2_MANIFEST["dataset_version"] == "frozen-2026-10-03"

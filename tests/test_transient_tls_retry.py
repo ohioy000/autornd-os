@@ -1,5 +1,6 @@
-"""A transient TLS record-MAC alert is a condition of the
-connection, and it is retryable.
+"""Transient conditions of the connection are retryable:
+a TLS record-MAC alert, and - since R5 - a server
+disconnect.
 
 **The measurement this exists for.** On 2026-10-04 (the golden
 probe's fourth sample) the engineering call died on a raw
@@ -12,6 +13,17 @@ on retry. The 429 loop already retries the one transient class
 the client knew about; this repairs the other one, bounded,
 backed off and counted, so the record reconciles every retry by
 class.
+
+**R5 (2026-10-16, the close-out of the smoke re-measurement).**
+The smoke's Q16 unit blocked at its first call on the serving
+closing the connection before answering - ``httpx
+.RemoteProtocolError`` - unretried, while the same condition is
+a transport failure of the connection, not a verdict about the
+serving: the next attempt on the same pin answers. The close-out
+ruling joins the disconnect to the alert's bounded retries, with
+the same D45 accounting (a dispatched attempt that disconnects
+keeps its own worst case as unreconciled liability, by identity)
+and its own counted class in the reconciliation.
 
 These tests simulate the condition end to end rather than
 asserting the shape of the fix (convention 22).
@@ -46,6 +58,23 @@ def _wrapped_alert():
     request = httpx.Request("POST", "https://example.invalid/x")
     wrapped = httpx.ReadError("read", request=request)
     wrapped.__cause__ = _alert()
+    return wrapped
+
+
+def _disconnect():
+    """The measured failure, as it surfaced: the serving
+    closed the connection before answering, which httpx
+    raises as a RemoteProtocolError."""
+    return httpx.RemoteProtocolError(
+        "Server disconnected without sending a response")
+
+
+def _wrapped_disconnect():
+    """The same disconnect behind an httpx transport error
+    - the serving can close the connection mid-read."""
+    request = httpx.Request("POST", "https://example.invalid/x")
+    wrapped = httpx.ReadError("read", request=request)
+    wrapped.__cause__ = _disconnect()
     return wrapped
 
 
@@ -293,6 +322,137 @@ class TestATransientTLSAlertIsRetried:
             0.05, abs=1e-6)
 
 
+class TestAServerDisconnectIsRetried:
+    """R5 (2026-10-16, the close-out of the smoke
+    re-measurement): the serving closed the connection
+    before answering - ``httpx.RemoteProtocolError`` -
+    a transport failure of the connection, not a verdict
+    about the serving, so it joins the alert's retried
+    kinds with the same bounded backoff, the same D45
+    liability accounting and its own counted class.
+    Simulated end to end on the real chat() dispatch
+    (convention 22)."""
+
+    async def test_a_disconnect_that_clears_completes_the_call(
+            self, monkeypatch, no_sleep):
+        """The smoke's Q16 shape: the first post
+        disconnects, the retry succeeds - the call
+        completes instead of blocking on the failure."""
+        http = _Http([_disconnect(), _ok()])
+        client = _client_with(http, monkeypatch)
+        out = await client.chat(function="engineering", system_prompt="s",
+                                user_message="u")
+        assert out.content == "{}"
+        assert http.calls == 2, "the retry did not happen"
+        assert no_sleep == [orm._TRANSIENT_TLS_BACKOFF_S], (
+            "backoff not applied once")
+        assert client.retries_by_kind.get("server_disconnect") == 1, (
+            "the retry was not counted by class")
+
+    async def test_a_disconnect_behind_a_transport_error_is_retried(
+            self, monkeypatch, no_sleep):
+        """The disconnect can ride in an httpx error's
+        chain - the serving closing the connection
+        mid-read - the same condition, retried the
+        same way."""
+        http = _Http([_wrapped_disconnect(), _ok()])
+        client = _client_with(http, monkeypatch)
+        out = await client.chat(function="engineering", system_prompt="s",
+                                user_message="u")
+        assert out.content == "{}"
+        assert http.calls == 2, "the chained disconnect was not retried"
+
+    async def test_a_retried_disconnect_books_the_failed_attempt_s_liability(
+            self, monkeypatch, no_sleep, rates):
+        """D45/D47: the disconnect arrives before any
+        response, but the attempt was dispatched - the
+        generation may have been billed - so the failed
+        attempt keeps its own worst case as unreconciled
+        liability before the retry leaves, by identity."""
+        http = _Http([_disconnect(), _ok()])
+        client = _client_with(http, monkeypatch)
+        model = client.get_model("engineering")
+        rates[model] = (0.0, 1e-5)      # 5,000 tokens -> $0.05
+        client.spend_ceiling = 0.20     # room for both attempts
+        out = await client.chat(function="engineering", system_prompt="s",
+                                user_message="u", model=model,
+                                max_tokens=5_000)
+        assert out.content == "{}"
+        assert http.calls == 2, "the retry did not happen"
+        assert client.unreconciled_liability == pytest.approx(
+            0.05, abs=1e-6), (
+            "the failed attempt's worst case was not booked")
+        assert client.failed_after_dispatch[-1]["kind"] == "transport_error"
+        # The retry reconciled: its actual cost is booked,
+        # the failed attempt's worst case stays on the
+        # hook for the rest of the run, and both
+        # reservations are released - one entry per
+        # dispatched attempt, reservations balanced.
+        assert client.spend == pytest.approx(0.001, abs=1e-6)
+        assert client.reserved == pytest.approx(0.0)
+
+    async def test_a_retry_that_does_not_fit_is_refused(
+            self, monkeypatch, no_sleep, rates):
+        """The failed attempt's worst case is on the hook,
+        so the retry is re-checked against what remains -
+        refused, not retried, when it does not fit. The
+        D45 re-check binds the disconnect like the alert."""
+        http = _Http([_disconnect(), _ok()])
+        client = _client_with(http, monkeypatch)
+        model = client.get_model("engineering")
+        rates[model] = (0.0, 1e-5)      # 5,000 tokens -> $0.05
+        client.spend_ceiling = 0.08     # 0.05 booked, 0.03 left
+        with pytest.raises(orm.SpendGuardRefused):
+            await client.chat(function="engineering", system_prompt="s",
+                              user_message="u", model=model,
+                              max_tokens=5_000)
+        assert http.calls == 1, "the retry was made despite the ceiling"
+        assert not no_sleep, "no backoff without a retry"
+        assert client.unreconciled_liability == pytest.approx(
+            0.05, abs=1e-6), "the failed attempt's worst case was not booked"
+
+    async def test_backoff_grows_and_the_attempts_are_bounded(
+            self, monkeypatch, no_sleep, rates):
+        http = _Http([_disconnect()] * 10)
+        client = _client_with(http, monkeypatch)
+        model = client.get_model("engineering")
+        rates[model] = (0.0, 1e-5)      # 5,000 tokens -> $0.05
+        client.spend_ceiling = 0.20     # room for both attempts
+        with pytest.raises(httpx.RemoteProtocolError):
+            await client.chat(function="engineering", system_prompt="s",
+                              user_message="u", model=model,
+                              max_tokens=5_000)
+        assert http.calls == orm._TRANSIENT_TLS_ATTEMPTS, (
+            "a pinned tier cannot fall back, so this must not retry forever")
+        assert no_sleep == [orm._TRANSIENT_TLS_BACKOFF_S]
+        # Both dispatched attempts keep their worst cases (D45),
+        # and the ledger records both as transport failures -
+        # the disconnect's kind, not the alert's.
+        assert client.unreconciled_liability == pytest.approx(
+            0.10, abs=1e-6)
+        assert [f["kind"] for f in client.failed_after_dispatch] == [
+            "transport_error", "transport_error"]
+
+    async def test_a_transport_error_of_another_class_is_not_retried(
+            self, monkeypatch, no_sleep):
+        """Typed matching: a transport error that is not a
+        disconnect - a read failure with no disconnect in
+        its chain - is a different failure with its own
+        accounting, and retrying it would spend the same
+        worst case twice. Hard rule 2's class guard: the
+        matcher keys on the disconnect's type, not on being
+        a transport error and not on the message."""
+        request = httpx.Request("POST", "https://example.invalid/x")
+        read_error = httpx.ReadError("read", request=request)
+        http = _Http([read_error, _ok()])
+        client = _client_with(http, monkeypatch)
+        with pytest.raises(httpx.ReadError):
+            await client.chat(function="engineering", system_prompt="s",
+                              user_message="u")
+        assert http.calls == 1, "another transport error must not be retried"
+        assert not no_sleep, "no backoff without a retry"
+
+
 class TestABackoffInterruptedBeforeTheRetryDispatches:
     """The 2026-10-10 review's probe: an interruption landing in
     the retry's backoff. The retry never left this process, so
@@ -431,3 +591,10 @@ class TestTheRetryIsReconciled:
         retry total includes without opening this file."""
         report = OpenRouterClient(api_key="test").retry_reconciliation()
         assert "transient_tls" in report["excluded_from_rejection_counters"]
+
+    def test_the_server_disconnect_class_is_named_as_excluded(self):
+        """R5's class, named alongside the alert's - the
+        reconciliation's by_kind says which transient
+        condition each retry was."""
+        report = OpenRouterClient(api_key="test").retry_reconciliation()
+        assert "server_disconnect" in report["excluded_from_rejection_counters"]

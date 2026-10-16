@@ -275,6 +275,30 @@ def _is_transient_tls_alert(exc: BaseException) -> bool:
     return False
 
 
+def _is_server_disconnect(exc: BaseException) -> bool:
+    """A server disconnect before any response, matched by type.
+
+    R5 (2026-10-16, the close-out of the smoke re-measurement's
+    Q16 block): the serving closed the connection before answering —
+    ``httpx.RemoteProtocolError`` — a transport failure, not a
+    verdict about the serving, so it joins the retried kinds with
+    the transient TLS alert's bounded retries. The smoke's Q16 unit
+    blocked on exactly this shape at its first call, unretried.
+    Matched by type, never by message text (hard rule 2): the
+    message is prose a serving could echo on any error, and an
+    httpx error of another class is a different failure with its
+    own accounting.
+    """
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if isinstance(current, httpx.RemoteProtocolError):
+            return True
+        current = current.__cause__ or current.__context__
+    return False
+
+
 class SpendGuardRefused(BudgetExceeded):
     """F3: a call whose worst case could not fit the remaining budget was not
     made. Typed, so the record names the tier, model, worst case and what
@@ -620,6 +644,10 @@ class OpenRouterClient:
     # states every retry by class — a retry the record cannot
     # name is a blind spot a reader inherits (convention 26).
     RETRY_TRANSIENT_TLS = "transient_tls"
+    # The server-disconnect retry (R5, 2026-10-16): the same
+    # counting, for its own class — the reconciliation's
+    # by_kind names which transient condition each retry was.
+    RETRY_SERVER_DISCONNECT = "server_disconnect"
 
     def _count_retry(self, kind: str) -> None:
         self.retries_by_kind[kind] = self.retries_by_kind.get(kind, 0) + 1
@@ -644,26 +672,32 @@ class OpenRouterClient:
             # excludes without reading this file.
             "excluded_from_rejection_counters": [
                 self.RETRY_EMPTY_REPLY, self.RETRY_PARSE_FAILURE,
-                self.RETRY_TRANSIENT_TLS],
+                self.RETRY_TRANSIENT_TLS,
+                self.RETRY_SERVER_DISCONNECT],
         }
 
-    async def _post_retrying_transient_tls(
+    async def _post_retrying_transient_faults(
             self, client: httpx.AsyncClient, path: str,
             payload: dict[str, Any], model: str, function: str,
             prompt_bytes: int, max_tokens: int,
             reservation_holder: list[Any]
             ) -> httpx.Response:
-        """POST, retrying the transient TLS record-MAC alert.
+        """POST, retrying the connection's transient conditions.
 
-        The alert is a condition of the connection, not a
-        verdict about the serving, so the retry is a fresh
-        attempt of the same request. Bounded and backed off
-        like the 429 loop above, and counted by class, so
-        the record reconciles every retry.
+        Two conditions retry, each matched by type: the TLS
+        record-MAC alert (a condition of the connection's
+        record layer) and the server disconnect (R5: the
+        serving closed the connection before answering — a
+        transport failure, not a verdict about the serving).
+        The retry is a fresh attempt of the same request.
+        Bounded and backed off like the 429 loop above, and
+        counted by class, so the record reconciles every
+        retry.
 
-        D45: the alert arrives while the response is being
-        read, so the generation was likely complete and
-        billed. Before the retry leaves, the failed attempt
+        D45: both conditions arrive while the response is
+        being read or before it begins, so the generation
+        was likely dispatched — the money may have been
+        spent. Before the retry leaves, the failed attempt
         keeps its own worst case as unreconciled liability,
         and the retry is re-checked against the remaining
         ceiling — refusing instead of retrying when it does
@@ -677,8 +711,9 @@ class OpenRouterClient:
         holder instead (see _RETRY_NEVER_DISPATCHED):
         the retry's reservation is released and the call
         site's accounting books nothing for it. An
-        exhausted alert still raises, and that accounting
-        books the last attempt's worst case as before.
+        exhausted condition still raises, and that
+        accounting books the last attempt's worst case as
+        before.
         `except Exception` on purpose: a cancellation is a
         BaseException and must reach the watchdog's cut
         untried.
@@ -687,7 +722,13 @@ class OpenRouterClient:
             try:
                 return await client.post(path, json=payload)
             except Exception as exc:
-                if not _is_transient_tls_alert(exc):
+                if _is_transient_tls_alert(exc):
+                    retry_kind = self.RETRY_TRANSIENT_TLS
+                    condition = "transient TLS alert"
+                elif _is_server_disconnect(exc):
+                    retry_kind = self.RETRY_SERVER_DISCONNECT
+                    condition = "server disconnect"
+                else:
                     raise
                 if attempt + 1 >= _TRANSIENT_TLS_ATTEMPTS:
                     raise
@@ -696,13 +737,14 @@ class OpenRouterClient:
                 reservation_holder[0] = self._guard_spend(
                     function, model, prompt_bytes, max_tokens)
                 self._in_flight += 1
-                self._count_retry(self.RETRY_TRANSIENT_TLS)
+                self._count_retry(retry_kind)
                 delay = _TRANSIENT_TLS_BACKOFF_S * (2 ** attempt)
                 logger.warning(
-                    "transient TLS alert (%s) for %s (attempt "
-                    "%d/%d) — a condition of the connection, "
-                    "retrying in %.1fs",
-                    type(exc).__name__, model, attempt + 1,
+                    "%s (%s) for %s (attempt "
+                    "%d/%d) — a condition of the "
+                    "connection, retrying in %.1fs",
+                    condition, type(exc).__name__, model,
+                    attempt + 1,
                     _TRANSIENT_TLS_ATTEMPTS, delay,
                 )
                 try:
@@ -845,7 +887,7 @@ class OpenRouterClient:
         reservation_holder = [reservation]
         try:
             client = await self._get_client()
-            resp = await self._post_retrying_transient_tls(
+            resp = await self._post_retrying_transient_faults(
                 client, "/chat/completions", payload, model,
                 function, prompt_bytes, max_tokens,
                 reservation_holder)
@@ -855,7 +897,7 @@ class OpenRouterClient:
                     model, resp.text[:300],
                 )
                 payload.pop("response_format", None)
-                resp = await self._post_retrying_transient_tls(
+                resp = await self._post_retrying_transient_faults(
                     client, "/chat/completions", payload, model,
                     function, prompt_bytes, max_tokens,
                     reservation_holder)
@@ -869,7 +911,7 @@ class OpenRouterClient:
                     model, attempt, _RATE_LIMIT_ATTEMPTS, delay, resp.text[:200],
                 )
                 await asyncio.sleep(delay)
-                resp = await self._post_retrying_transient_tls(
+                resp = await self._post_retrying_transient_faults(
                     client, "/chat/completions", payload, model,
                     function, prompt_bytes, max_tokens,
                     reservation_holder)
@@ -908,7 +950,7 @@ class OpenRouterClient:
                 # condition of the connection, retried and
                 # accounted the same way (the 2026-10-10
                 # review's fourth post site).
-                resp = await self._post_retrying_transient_tls(
+                resp = await self._post_retrying_transient_faults(
                     client, "/chat/completions", payload, model,
                     function, prompt_bytes, max_tokens,
                     reservation_holder)

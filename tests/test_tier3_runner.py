@@ -3280,6 +3280,316 @@ class TestLArmFTheVerifyFirstPath:
         # upheld.
 
 
+# ── (l2) R6: arm F's per-unit ceiling admits the revision ─
+
+# The ruling's rates (R6, the close-out, 2026-10-16):
+# a revision reserves about $0.134 on the engineering
+# tier - its own max_tokens, the plan's 32768 - and
+# $0.009 on the judge tier - its own max_tokens, the
+# judge's 8000. The worst-case table the real guard
+# reads, at the ruling's figures.
+R6_ENGINEERING_RATE = 0.134 / 32_768
+R6_JUDGE_RATE = 0.009 / 8_000
+R6_JUDGE_PIN = "test-provider/test-judge"
+
+# The scripted F unit's two answers: the first pass's
+# - the check objects to it - and the revision's.
+R6_FIRST_ANSWER = (
+    "The answer names the two concentrations the "
+    "request asks about, with the comparison "
+    "operators and the concentration basis.")
+R6_REVISED_ANSWER = (
+    "The revised answer states both concentrations "
+    "with their operators and the basis.")
+
+
+def _r6_verdict(payload: dict[str, Any],
+                completion_tokens: int = 1200
+                ) -> dict[str, Any]:
+    """One scripted outcome, as the dry run's own
+    shapes carry it."""
+    return {"content": json.dumps(payload),
+            "finish_reason": "stop",
+            "prompt_tokens": 900,
+            "completion_tokens": completion_tokens}
+
+
+def _r6_script() -> list[dict[str, Any]]:
+    """The smoke's F unit, scripted: a first pass that
+    books $0.095 at the ruling's rates (the engineering
+    answer at the smoke's F Q10 measured figure, the
+    judge's check at its own worst case), a check whose
+    dissent anchors on the fallback ask (an empty asks
+    verdict makes the whole request ask #1), and the
+    revision and second check the workflow's own
+    two-iteration bound makes."""
+    # The first answer's engineering call books about
+    # $0.086; beside the judge's $0.009 check, the
+    # first pass is the $0.095 the ruling measured.
+    first_tokens = round(0.086 / R6_ENGINEERING_RATE)
+    return [
+        _r6_verdict({
+            "domains": ["backend"], "risk": "low",
+            "specialists": ["backend_engineer"],
+            "summary": "backend tooling, low risk"}),
+        _r6_verdict({"asks": []}),
+        _r6_verdict({"queries": ["the request's own subject"]}),
+        _r6_verdict({
+            "objective": "the request's objective",
+            "unknowns": ["an interface the request does not name"],
+            "blocking_unknowns": [],
+            "assumptions": ["the usual assumption"],
+            "considerations": ["the usual consideration"]}),
+        _r6_verdict({
+            "done": True, "green": True, "red_cause": None,
+            "blocked_on": [],
+            "summary": R6_FIRST_ANSWER},
+            completion_tokens=first_tokens),
+        _r6_verdict({
+            "green": False,
+            "red_cause": "the answer states no concentration",
+            "failed_ask": 1,
+            "evidence": ["ask 1: FAIL - the answer states no figure"],
+            "kind": "unmet_ask"},
+            completion_tokens=8_000),
+        _r6_verdict({
+            "done": True, "green": True, "red_cause": None,
+            "blocked_on": [],
+            "summary": R6_REVISED_ANSWER}),
+        _r6_verdict({
+            "green": True, "red_cause": None,
+            "evidence": ["ask 1: PASS - both concentrations stated"]}),
+    ]
+
+
+class _R6PipelineClient(runner.DryRunClient):
+    """The scripted pipeline client, with every call's
+    cost recorded beside the inherited real billing -
+    the first pass's $0.095 is the sum of the calls the
+    script makes before the check objects."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.costs: list[float] = []
+
+    async def chat(
+            self, function: str, system_prompt: str,
+            user_message: str,
+            response_format: dict[str, Any] | None = None,
+            temperature: float = 0.3,
+            max_tokens: int = 16_384,
+            model: str | None = None,
+            tools: list[dict[str, Any]] | None = None,
+            tool_choice: str | None = None,
+    ) -> runner.ModelResponse:
+        response = await super().chat(
+            function, system_prompt, user_message,
+            response_format=response_format,
+            temperature=temperature, max_tokens=max_tokens,
+            model=model, tools=tools,
+            tool_choice=tool_choice)
+        self.costs.append(response.cost)
+        return response
+
+
+@pytest.fixture
+def r6_ceiling(monkeypatch):
+    """The close-out's environment for one F unit
+    through the REAL run_scenario path (the dry run's
+    stand-in is not in play): the judge pin the owner's
+    run carries - the manifest registers a serving for
+    every pipeline tier, the judge included, and the
+    suite's own environment leaves the judge pin unset,
+    so judging nodes would fall back to the engineering
+    model and the two rates the ruling names would
+    collapse into one - and the ruling's rates in the
+    real pricing table, the real guard's worst-case
+    read, both restored afterwards."""
+    from autornd.config import settings as _harness_settings
+    from autornd.routing import openrouter as _openrouter
+    monkeypatch.setattr(_harness_settings, "model_judge",
+                          R6_JUDGE_PIN)
+    saved_models = dict(
+        _openrouter.OpenRouterClient.FUNCTION_MODELS)
+    _openrouter.rebuild_function_models()
+    rates: dict[str, tuple[float, float]] = {
+        "test-provider/test-triage": (0.0, 0.0),
+        "test-provider/test-research": (0.0, 0.0),
+        "test-provider/test-search": (0.0, 0.0),
+        "test-provider/test-engineering": (
+            0.0, R6_ENGINEERING_RATE),
+        R6_JUDGE_PIN: (0.0, R6_JUDGE_RATE),
+    }
+    saved_pricing = dict(_openrouter._model_pricing)
+    _openrouter._model_pricing = {
+        model: tuple(rate) for model, rate in rates.items()}
+    try:
+        yield rates
+    finally:
+        _openrouter._model_pricing = saved_pricing
+        _openrouter.OpenRouterClient.FUNCTION_MODELS = (
+            saved_models)
+
+
+class TestL2ArmFThePerUnitCeiling:
+    """R6 (the close-out, 2026-10-16): arm F's
+    per-unit ceiling is $0.30, and the per-call guard
+    is the enforcement. The smoke's F Q10 first pass
+    cost $0.095; a revision reserves about $0.134
+    (engineering) plus $0.009 (judge), so at the
+    previous $0.20 the guard would refuse the revision.
+    Both tests drive the REAL run_scenario path with a
+    scripted client that bills through the real guard -
+    convention 22: the condition the ruling names is
+    simulated end to end, not the shape of the fix."""
+
+    def _unit(self, rates: dict[str, tuple[float, float]],
+              unit: tuple[str, int, str] = ("Q2", 1, "F")
+              ) -> tuple[Any, _R6PipelineClient]:
+        script = runner.DryRunScript()
+        script._calls[unit] = _r6_script()
+        clients: list[_R6PipelineClient] = []
+
+        def pipeline_client_factory():
+            # The factory run_scenario's BoundedRunner
+            # calls, with no arguments: the pipeline
+            # builds its own clients (the seam the runner
+            # documents), and the guard wraps it with the
+            # scenario's ceiling and the sweep's per-unit
+            # cap - the per-call guard every pipeline call
+            # passes through.
+            client = _R6PipelineClient(
+                script, unit, "test/arm-e-engineering",
+                rates, 0, 0)
+            clients.append(client)
+            return client
+
+        result = _run(runner.run_unit(
+            unit, QUESTIONS, TEST_SERVINGS, None,
+            spec_f=runner._verify_first_spec(),
+            pipeline_client_factory=pipeline_client_factory))
+        return result, clients[-1]
+
+    def test_the_registered_ceiling_admits_the_revision(
+            self, r6_ceiling):
+        # R6's registration: at the $0.30 the manifest
+        # now carries, a unit whose first pass cost
+        # what the smoke's F Q10 did completes its
+        # revision and its second check, and ships.
+        result, client = self._unit(r6_ceiling)
+        assert result.status == "delivered"
+        assert result.delivered_kind == "shipped"
+        assert result.delivered
+        assert result.answer == R6_REVISED_ANSWER
+        # The smoke's F Q10 first pass, reproduced at
+        # the ruling's rates: the engineering answer
+        # (about $0.086) beside the judge's check at
+        # its own worst case ($0.009).
+        assert sum(client.costs[:6]) == pytest.approx(
+            0.095, abs=1e-5)
+        assert client.costs[5] == pytest.approx(0.009)
+        # The revision and the second check completed:
+        # eight calls in all - triage, the asks, the
+        # grounding's two free calls, then the
+        # workflow's own four (answer, check, revision,
+        # check) - and the revised answer is the one
+        # the unit ships.
+        assert client.calls == 8
+        assert result.record()["calls_after_asks"] == 6
+        # The whole unit fits the registered ceiling:
+        # the first pass, the revision's engineering
+        # call and the second check.
+        assert client.spend == pytest.approx(
+            0.095 + 1_200 * R6_ENGINEERING_RATE
+            + 1_200 * R6_JUDGE_RATE, abs=1e-4)
+        assert client.spend < 0.30
+        # The guard's accounting is balanced: every
+        # reservation released, no attempt left on the
+        # hook, no retry, no blind call.
+        assert client.reserved == pytest.approx(0.0)
+        assert client.unreconciled_liability == pytest.approx(
+            0.0)
+        assert client.retries_by_kind == {}
+        assert client.spend_guard_blind == []
+        # Break-proof (runner.py, _arm_f):
+        #     timeout=deadline, max_spend=ARM_CEILINGS["F"],
+        #     budget=budget)
+        #     -> max_spend=ARM_CEILINGS["D"]
+        # FAILED
+        # ...::test_the_registered_ceiling_admits_the_revision
+        # - AssertionError: assert 'unendorsed candidate' ==
+        # 'shipped' : arm D's $0.20 is not arm F's ceiling,
+        # so the revision the ruling admits would be refused
+        # and the unit would end on the unendorsed candidate -
+        # the registered ceiling would not be the one the
+        # guard enforced.
+
+    def test_the_pre_ruling_ceiling_refuses_the_revision(
+            self, r6_ceiling, monkeypatch):
+        # The break-proof, and the ruling's own
+        # measurement: at the pre-R6 $0.20 the guard
+        # refuses the revision - the first pass's
+        # $0.095 leaves $0.105, the revision's worst
+        # case is $0.134 - and the unit ends escalated
+        # and unresolved, its candidate kept, never
+        # delivered (D51 (7)).
+        monkeypatch.setattr(runner, "ARM_CEILINGS",
+                            {**runner.ARM_CEILINGS,
+                             "F": 0.20})
+        result, client = self._unit(r6_ceiling)
+        assert result.status == "delivered"
+        assert result.delivered_kind == "unendorsed candidate"
+        assert not result.delivered
+        # The candidate the terminal kept is the
+        # unrevised first answer - the revision was
+        # never dispatched.
+        assert result.answer == R6_FIRST_ANSWER
+        assert client.calls == 6
+        assert client.spend == pytest.approx(
+            0.095, abs=1e-5)
+        # The iteration the refusal landed in is
+        # recorded partial, its judges never run.
+        iterations = result.record()["pipeline"][
+            "iterations"]
+        assert len(iterations) == 2
+        assert iterations[1]["partial"] is True
+        assert iterations[1]["judges_run"] is False
+        assert iterations[1]["implement_summary"] == (
+            R6_FIRST_ANSWER)
+        # The record names the bound: the revision's
+        # worst case against what the first pass left.
+        pipeline = result.record()["pipeline"]
+        assert pipeline["reason"] == (
+            "stopped by the spend ceiling: stopped at "
+            "$0.0950 before a call (ceiling $0.2000): the "
+            "engineering call to test-provider/test-engineering "
+            "could cost up to $0.1340, and $0.1050 remained")
+        assert pipeline["stop_reason"] == (
+            "runner stopped the run: stopped at $0.0950 "
+            "before a call (ceiling $0.2000): the "
+            "engineering call to test-provider/test-engineering "
+            "could cost up to $0.1340, and $0.1050 remained")
+        # Break-proof (autornd/routing/openrouter.py,
+        # _guard_spend):
+        #     worst = ((prompt_bytes
+        #               + CHAT_TEMPLATE_ALLOWANCE_BYTES)
+        #              * prompt_rate
+        #              + max_tokens * completion_rate
+        #              + _model_per_request.get(model, 0.0))
+        #     -> + 0
+        # FAILED
+        # ...::test_the_pre_ruling_ceiling_refuses_the_
+        # revision - AssertionError: assert 'shipped' ==
+        # 'unendorsed candidate' : with the completion
+        # side unbounded, the revision's worst case
+        # collapses to the prompt side (free at the
+        # ruling's rates) and the guard admits the
+        # revision at $0.20, so the unit ships and the
+        # refusal this test reads never fires - the
+        # guard would be blind to the worst case the
+        # ruling's figures are about.
+
+
 # ── (m) The re-measurement's dry run ───────────
 
 class TestMTheReMeasureDryRun:
@@ -3645,7 +3955,7 @@ class TestOTheReMeasurePreflight:
                   "judge": 2}
         for row in rows[:5]:
             assert row["calls"] == counts[row["tier"]]
-            assert row["unit_ceiling"] == 0.20
+            assert row["unit_ceiling"] == runner.ARM_CEILINGS["F"]
             assert row["worst_case"] == pytest.approx(
                 e_rows[row["tier"]]["worst_case"])
             assert row["tier_worst_case"] == pytest.approx(
@@ -3653,7 +3963,10 @@ class TestOTheReMeasurePreflight:
         # The sequence: ten calls (R3's amended
         # bound: 2 triage + 3 research + 1 search +
         # 2 engineering + 2 judge), the sum the
-        # counts compose, against the $0.20 ceiling.
+        # counts compose, against the per-unit
+        # ceiling (R6, the close-out of 2026-10-16:
+        # $0.30, the revision the workflow's own
+        # two-iteration bound makes admitted).
         sequence = rows[5]
         assert sequence["calls"] == 10
         assert sequence["calls"] == runner.ARM_F_CALL_LIMIT
@@ -3665,10 +3978,11 @@ class TestOTheReMeasurePreflight:
         # and the table says the sequence is
         # refusable above the headroom the ceiling
         # leaves.
-        assert sequence["worst_case"] <= 0.20
+        assert sequence["worst_case"] <= runner.ARM_CEILINGS["F"]
         assert not sequence["refuses_even_at_zero_spend"]
         assert sequence["refusable_above_spend"] == (
-            pytest.approx(0.20 - sequence["worst_case"]))
+            pytest.approx(runner.ARM_CEILINGS["F"]
+                          - sequence["worst_case"]))
         # A punitive completion rate on the judge
         # tier puts the sequence over the ceiling,
         # and the table says so: refused even at
@@ -3680,7 +3994,7 @@ class TestOTheReMeasurePreflight:
         rows = runner.arm_f_worst_case(
             TEST_SERVINGS, catalogue)
         assert rows[5]["refuses_even_at_zero_spend"]
-        assert rows[5]["worst_case"] > 0.20
+        assert rows[5]["worst_case"] > runner.ARM_CEILINGS["F"]
         # Break-proof (runner.py, arm_f_worst_case):
         #     sequence += calls * worst
         #     -> sequence += worst
@@ -3691,8 +4005,8 @@ class TestOTheReMeasurePreflight:
         # the preflight would have printed arm F's
         # worst case under its true figure by the
         # count the workflow makes, and a lineup
-        # whose sequence exceeded the $0.20 ceiling
-        # would have read as within it.
+        # whose sequence exceeded the per-unit
+        # ceiling would have read as within it.
 
 
 # ── (p) The bound-stopped record ────────────
