@@ -698,6 +698,27 @@ class ValidateVerdict(BaseModel):
             return ""
         return value if isinstance(value, str) else _coerce_str(value)
 
+    @field_validator("kind", mode="before")
+    @classmethod
+    def _coerce_kind(cls, value: Any) -> str:
+        # Stored as stated: the record shows what the judge
+        # declared. The effective kind — what an unstated or
+        # unrecognised kind is read as — is derived at the
+        # point of use, by dissent_kind. A judge that answers
+        # "kind": null has stated no kind, and the ruling
+        # reads an unstated kind as wrong_fact: the parse
+        # carries it, never crashes on it. Measured live on
+        # the smoke run's first unit (2026-10-16): the
+        # validate judge, finding nothing false in a correct
+        # answer, answered kind: null and the string-typed
+        # field refused it before the ruling's fallback could
+        # read it, blocking the unit on the parse. The domain
+        # concern and the review finding already coerce the
+        # same null; this is the third model R2 armed.
+        if value is None:
+            return ""
+        return value if isinstance(value, str) else _coerce_str(value)
+
     @model_validator(mode="after")
     def _green_from_red_cause(self):
         return _resolve_green(self)
