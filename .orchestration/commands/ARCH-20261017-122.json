@@ -1,0 +1,85 @@
+{
+  "command_id": "ARCH-20261017-122",
+  "parent_id": "ARCH-20261014-121",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "The frozen tier-4 pilot batch can be run: a calibration mode and a pilot mode, with the F2 corpus profile and arm D holding the corpus pages, under the registered ceilings and gates, proven by a mocked dry run. Free work; no paid call.",
+
+  "evidence": [
+    "Ruling D52, signed off by the owner 2026-10-17 by the merge of PR #186: docs/reviews/2026-10-16-tier4-the-capacity-test.md, §5 (pilot), §6 (arms, limits), §11 step 2 (this command).",
+    "The frozen batch: evals/tier4/pilot/candidates.json sha256 9c9109826431778bd203eddfe0ba12887b53434f33e3d656f4bb589cd216b634 (T4-02 to T4-05 F1, T4-06 F2); evals/tier4/pilot/corpus/*.md concatenated in name order, sha256 1d27d491195edec184141ba3f8882c27ab509fa3bb7551f7404055fe9f78f1d9; VERIFY.md; verify.py.",
+    "The corpus-profile precedent: profiles/cupline.yaml and docs/cupline/manifest.json ('global' documents load into every request's grounding under the profile; autornd/knowledge/context.py load_docs_context).",
+    "The machinery to reuse: evals/tier3/runner.py's arms A, D, F and E, its gate (R4, exact), credit preflight, 402 breaker, fit-rule budget, resume, records and reading sheet (#181-#185)."
+  ],
+
+  "scope": {
+    "include": [
+      "evals/tier4/runner.py and evals/tier4/README.md (new)",
+      "evals/tier3/runner.py: only what importing its machinery needs; tier-3 behaviour unchanged, its tests untouched and green",
+      "profiles/tier4.yaml and docs/tier4/ (new: manifest.json plus byte-identical copies of evals/tier4/pilot/corpus/*.md)",
+      "tests/test_tier4_*.py (new)",
+      ".orchestration/responses/",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "evals/tier4/pilot/: frozen (D44); read only",
+      "evals/tier2/: frozen keys, questions and scorer",
+      "autornd/ and workflows/: no harness change; tier 4 measures the harness as it stands (D52 §9)",
+      ".env*: the owner's (G-3)"
+    ]
+  },
+
+  "constraints": [
+    "FREE. No paid call. The calibration and the pilot each wait for the owner's gate after this merges.",
+    "MODEL-VISIBLE TEXT: an arm sees the candidate's `request` only, plus, for arm D on F2, the corpus pages. Never requirements, reference_design, worked_solution, wrong_designs or difficulty_rationale.",
+    "ARM D ON F2 (D-pages): user message = request + '\\n\\nReference documents:\\n\\n' + the three corpus pages, verbatim and in name order, each preceded by its file name. The system prompt is arm D's own (evals/tier3/prompts/arm_d.md), unchanged. Arms A and D on F1 use the tier-3 arm prompts unchanged.",
+    "PROFILES: F2 units of arms F and E run with AUTORND_PROFILE=tier4. F1 units of every arm run without it, so no corpus text reaches an F1 question. Arm A does not run on F2.",
+    "CALIBRATION MODE: 9 units, one repetition each. A on T4-02..T4-05, D on T4-02..T4-05, D-pages on T4-06. Registered ceiling $2.00.",
+    "PILOT MODE: named question ids (at most 4, from the frozen batch only) x their family's arms x 1 repetition. F1 arms A, D, F, E; F2 arms D-pages, F, E. Registered ceiling $5.00.",
+    "LIMITS: per-unit ceilings A $0.10, D $0.30, F $0.40, E $1.50; deadline 3600 s per unit; seeded interleaved order with its digest in the results header. If a measured worst case exceeds an arm's ceiling, STOP and report the figure; do not raise it.",
+    "GATE: TIER3_SPEND_AUTHORIZED in .env.tier3 must equal the mode's registered ceiling (R4): 2.00 for calibration, 5.00 for the pilot. Pins unchanged: servings fingerprint e0dc92a3aecb, refused otherwise.",
+    "FREEZE GUARD: both modes refuse to start unless candidates.json and the corpus hash to the evidence's sha256 values, and docs/tier4/ pages are byte-identical to evals/tier4/pilot/corpus/.",
+    "RECORDS: the results header carries the batch sha256, the corpus sha256, the mode, the order digest and the servings fingerprint. Each unit carries question id, family, arm, profile, the exact user message's sha256, and the tier-3 unit record fields (status, answer, candidate, iterations, reason, stop_reason, calls, cost, seconds).",
+    "READING SHEET: arm-blind, one entry per answered unit, listing the question's requirement statements for the reader. The pilot is read by the advisor alone (D52 §5); the sheet is still arm-blind.",
+    "Do not build the requirement checker. It starts at the first growth step (D52 §3).",
+    "A harness defect found in the dry run is a STOP-and-report, not a fix."
+  ],
+
+  "acceptance_criteria": [
+    "(a) Leakage guard. For every unit of both modes, mocked: the arm's user message equals the candidate's request exactly (A, D on F1; the scenario request for F, E); D-pages equals request + the registered separator + the pages exactly. A test asserts that no requirement statement, reference value string or worked-solution sentence occurs in any F1 message. Break-proof: append the requirements to the message and the test fails.",
+    "(b) Profile isolation. Mocked context: an F2 unit of F/E grounds with all three pages; an F1 unit grounds with none. Break-proof: run F1 under the tier4 profile and the test fails.",
+    "(c) Freeze guard. Both modes refuse on a one-byte change to candidates.json, to a corpus page, or to a docs/tier4 copy, naming the file. Break-proof shown.",
+    "(d) Plan. Calibration plans exactly 9 units as constrained. The pilot refuses more than 4 ids, an id outside the batch, and an F2 id with arm A.",
+    "(e) Gate and preflight. Calibration refuses at TIER3_SPEND_AUTHORIZED=5.00 and accepts 2.00; the pilot the reverse. The credit preflight refuses below the mode's ceiling (mocked balance). The preflight prints each arm's per-call and per-unit worst case at the live catalogue's shape (fixture rates in tests).",
+    "(f) Mocked dry run of both modes: zero spend; records carry every field in RECORDS; the reading sheet is generated, arm-blind; at least one failure class (refusal, deadline, provider failure, budget stop) appears per mode.",
+    "(g) Tier-3 unchanged: every existing tier-3 test passes unmodified.",
+    "(h) Suite green before and after, counts re-derived, network guard 0, CI 5/5, PR opened."
+  ],
+
+  "verification": [
+    {"command": ".venv/bin/python3 -I evals/tier4/pilot/verify.py", "expected": "Unchanged output: T4-01 dropped (0 of 6100), T4-02..T4-06 each 'fails []', feasible 2/1/1/1/1."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; count before and after."}
+  ],
+
+  "rollback": "Revert the PR. Nothing outside evals/tier4/, profiles/tier4.yaml, docs/tier4/ and tests/test_tier4_*.py changes behaviour.",
+
+  "deliverable": "One PR: the runner modes, the profile and corpus copies, the tests with their break-proofs, the dry-run record, and the response DONE. Then STOP for the owner's calibration gate.",
+
+  "assumptions": [
+    "The tier-3 arms' machinery can be imported without changing its behaviour. If it cannot, STOP and report what blocks it."
+  ],
+
+  "questions": [],
+
+  "preconditions": [
+    {"command": "test -f docs/reviews/2026-10-16-tier4-the-capacity-test.md && grep -c 'Ruling D52, signed off' docs/reviews/2026-10-16-tier4-the-capacity-test.md", "expected": "1 - D52 is signed off on main."},
+    {"command": "sha256sum evals/tier4/pilot/candidates.json | cut -c1-16", "expected": "9c9109826431778b"},
+    {"command": "cat evals/tier4/pilot/corpus/*.md | sha256sum | cut -c1-16", "expected": "1d27d491195edec1"},
+    {"command": "pgrep -af 'evals[./]tier3[./]runner|evals[./]tier4[./]runner|uvicor[n] autornd' || echo none", "expected": "none"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; report the count."}
+  ]
+}
