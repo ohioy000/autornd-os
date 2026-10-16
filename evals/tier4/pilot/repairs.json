@@ -1,0 +1,23 @@
+[
+ {
+  "id": "T4-03",
+  "field": "request",
+  "from": "\rho",
+  "to": "\\rho",
+  "why": "the generator wrote \"\\rho\" unescaped in JSON, so it decoded to a carriage return plus \"ho\""
+ },
+ {
+  "id": "T4-06",
+  "field": "request",
+  "from": "must not exceed a 10.0 K temperature rise across the load",
+  "to": "is sized for exactly a 10.0 K temperature rise across the load",
+  "why": "R1 sizes the flow at exactly 10.0 K (properties at the 40.0 degC mean, Rule 1.1); \"must not exceed\" admitted higher flows whose mean temperature falls between table rows the corpus gives no interpolation rule for"
+ },
+ {
+  "id": "T4-06",
+  "field": "difficulty_rationale",
+  "from": "(truncated)",
+  "to": "(not provided)",
+  "why": "the second call ended at its token limit inside this field; metadata only, never shown to an arm"
+ }
+]
