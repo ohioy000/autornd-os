@@ -1,0 +1,10 @@
+{
+  "command_id": "ARCH-20261017-122",
+  "executed": false,
+  "head_before": "9f60447",
+  "head_after": null,
+  "status": "IN_PROGRESS",
+  "results": [],
+  "deviations": [],
+  "questions_for_advisor": []
+}
