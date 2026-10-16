@@ -1,0 +1,499 @@
+[
+ {
+  "id": "T4-02",
+  "family": "F1",
+  "domain": "electrical",
+  "request": "Design a synchronous buck converter stepping $V_{in} = 48.0\\text{ V}$ down to $V_{out} = 12.0\\text{ V}$ at $I_{out} = 25.0\\text{ A}$ in ambient $T_a = 58.0\\text{ }^\\circ\\text{C}$. Choose switching frequency $f_{sw} \\in \\{150, 200, 250, 300\\}\\text{ kHz}$, one dual-MOSFET module (used for both switches), one inductor, and the number of parallel output capacitors $N_c \\in \\{2, 3, 4, 5, 6\\}$ (each capacitor has $C_u = 47\\text{ }\\mu\\text{F}$, ESR $R_{esr,u} = 12\\text{ m}\\Omega$, cost $\\$0.65$).\n\nMOSFET catalogue ($V_{dr} = 10\\text{ V}$):\n- Q1: $R_{ds} = 4.2\\text{ m}\\Omega$, $Q_g = 38\\text{ nC}$, $t_{sw} = 14\\text{ ns}$, $R_{\\theta JA} = 11.0\\text{ K/W}$, cost $\\$3.80$\n- Q2: $R_{ds} = 3.0\\text{ m}\\Omega$, $Q_g = 54\\text{ nC}$, $t_{sw} = 18\\text{ ns}$, $R_{\\theta JA} = 9.5\\text{ K/W}$, cost $\\$4.90$\n- Q3: $R_{ds} = 2.2\\text{ m}\\Omega$, $Q_g = 78\\text{ nC}$, $t_{sw} = 24\\text{ ns}$, $R_{\\theta JA} = 8.5\\text{ K/W}$, cost $\\$6.40$\n\nInductor catalogue ($P_{core} = k_c (f_{sw}/100\\text{ kHz})^{1.5} (\\Delta I_L)^{2.0}$ in W, with $\\Delta I_L$ in A):\n- L1: $L = 4.7\\text{ }\\mu\\text{H}$, $R_{dc} = 2.8\\text{ m}\\Omega$, $I_{sat} = 34.0\\text{ A}$, $k_c = 0.012$, cost $\\$4.20$\n- L2: $L = 6.8\\text{ }\\mu\\text{H}$, $R_{dc} = 3.6\\text{ m}\\Omega$, $I_{sat} = 31.0\\text{ A}$, $k_c = 0.015$, cost $\\$4.80$\n- L3: $L = 10.0\\text{ }\\mu\\text{H}$, $R_{dc} = 4.9\\text{ m}\\Omega$, $I_{sat} = 29.0\\text{ A}$, $k_c = 0.018$, cost $\\$5.60$\n- L4: $L = 15.0\\text{ }\\mu\\text{H}$, $R_{dc} = 6.8\\text{ m}\\Omega$, $I_{sat} = 28.0\\text{ A}$, $k_c = 0.022$, cost $\\$6.50$\n\nFormulas & Constraints ($D = V_{out}/V_{in} = 0.25$):\n1. Inductor ripple $\\Delta I_L = \\frac{V_{out}(1 - D)}{L f_{sw}} \\le 7.50\\text{ A}$ and peak current $I_{pk} = I_{out} + \\Delta I_L / 2 \\le 0.90 I_{sat}$.\n2. Peak-to-peak output voltage ripple $\\Delta V_{out} = \\Delta I_L \\sqrt{\\left(\\frac{R_{esr,u}}{N_c}\\right)^2 + \\left(\\frac{1}{8 f_{sw} N_c C_u}\\right)^2} \\le 30.0\\text{ mV}$.\n3. Total MOSFET module loss $P_{mos} = I_{rms,tot}^2 R_{ds} + 0.5 V_{in} I_{out} t_{sw} f_{sw} + 2 Q_g V_{dr} f_{sw}$, where $I_{rms,tot}^2 = I_{out}^2 + \\Delta I_L^2 / 12$. Module junction temperature $T_j = T_a + P_{mos} R_{\\theta JA} \\le 105.0\\text{ }^\\circ\\text{C}$.\n4. Inductor loss $P_{ind} = I_{rms,tot}^2 R_{dc} + P_{core}$. Converter efficiency $\\eta = \\frac{V_{out} I_{out}}{V_{out} I_{out} + P_{mos} + P_{ind}} \\ge 97.00\\%$.\n5. Total BOM cost $= \\text{cost}(Q) + \\text{cost}(L) + 0.65 N_c \\le \\$12.50$.\n\nEnd with a table headed Results with these rows: MOSFET_ID (string), Inductor_ID (string), f_sw (kHz), N_c (-), dI_L (A), I_pk (A), dV_out (mV), P_mos (W), P_ind (W), T_j (degC), eta (%), Cost (USD).",
+  "requirements": [
+   {
+    "id": "R1",
+    "statement": "Catalogue choices for MOSFET_ID, Inductor_ID, f_sw, and N_c are valid.",
+    "check": "MOSFET_ID in {'Q1','Q2','Q3'} and Inductor_ID in {'L1','L2','L3','L4'} and f_sw in {150,200,250,300} and N_c in {2,3,4,5,6}",
+    "tolerance": "exact"
+   },
+   {
+    "id": "R2",
+    "statement": "Inductor current ripple dI_L <= 7.50 A and peak inductor current I_pk <= 0.90 * I_sat.",
+    "check": "dI_L == 9.0 / (L_uH * f_sw_kHz * 1e-3) and dI_L <= 7.50 and I_pk == 25.0 + dI_L/2 and I_pk <= 0.90 * I_sat",
+    "tolerance": "0.02 absolute"
+   },
+   {
+    "id": "R3",
+    "statement": "Output voltage ripple dV_out <= 30.0 mV.",
+    "check": "dV_out == 1000 * dI_L * sqrt((0.012 / N_c)^2 + (1 / (8 * f_sw_kHz * 1e3 * N_c * 47e-6))^2) and dV_out <= 30.0",
+    "tolerance": "0.1 absolute"
+   },
+   {
+    "id": "R4",
+    "statement": "MOSFET module junction temperature T_j <= 105.0 degC.",
+    "check": "T_j == 58.0 + P_mos * R_thetaJA and T_j <= 105.0",
+    "tolerance": "0.2 absolute"
+   },
+   {
+    "id": "R5",
+    "statement": "Converter efficiency eta >= 97.00%.",
+    "check": "eta == 100 * 300.0 / (300.0 + P_mos + P_ind) and eta >= 97.00",
+    "tolerance": "0.02 absolute"
+   },
+   {
+    "id": "R6",
+    "statement": "Total BOM cost <= $12.50.",
+    "check": "Cost == cost_Q + cost_L + 0.65 * N_c and Cost <= 12.50",
+    "tolerance": "0.01 absolute"
+   }
+  ],
+  "reference_design": {
+   "MOSFET_ID": "Q2",
+   "Inductor_ID": "L2",
+   "f_sw": 250,
+   "N_c": 3,
+   "dI_L": 5.29,
+   "I_pk": 27.65,
+   "dV_out": 28.3,
+   "P_mos": 4.85,
+   "P_ind": 3.92,
+   "T_j": 104.09,
+   "eta": 97.16,
+   "Cost": 11.65
+  },
+  "worked_solution": "1. Inductor & switching frequency screening ($V_{out}(1-D) = 9.0\\text{ V}$):\n   - Try L2 ($L = 6.8\\text{ }\\mu\\text{H}, R_{dc} = 3.6\\text{ m}\\Omega, I_{sat} = 31.0\\text{ A}, 0.90 I_{sat} = 27.90\\text{ A}$):\n   - At $f_{sw} = 200\\text{ kHz}$, $\\Delta I_L = 9.0 / (6.8 \\times 0.20) = 6.618\\text{ A}$, giving $I_{pk} = 28.309\\text{ A} > 27.90\\text{ A}$ (fails 10% saturation derating).\n   - At $f_{sw} = 250\\text{ kHz}$, $\\Delta I_L = 9.0 / (6.8 \\times 0.25) = 5.2941\\text{ A} \\le 7.50\\text{ A}$, and $I_{pk} = 25.0 + 2.6471 = 27.647\\text{ A} \\le 27.90\\text{ A}$ (margin $0.91\\%$). \n2. Output capacitor selection at $f_{sw} = 250\\text{ kHz}$:\n   - Single-cap impedance: $\\sqrt{12^2 + (1000 / (8 \\times 250\\times 10^3 \\times 47\\times 10^{-6}))^2} = \\sqrt{144 + 113.175} = 16.037\\text{ m}\\Omega$.\n   - With $N_c = 3$: $\\Delta V_{out} = 5.2941 \\times (16.037 / 3) = 28.30\\text{ mV} \\le 30.0\\text{ mV}$ ($N_c = 2$ gives $42.45\\text{ mV} > 30.0\\text{ mV}$).\n3. MOSFET losses and junction temperature ($I_{rms,tot}^2 = 25^2 + 5.2941^2 / 12 = 627.336\\text{ A}^2$):\n   - Try Q2 ($R_{ds} = 3.0\\text{ m}\\Omega, Q_g = 54\\text{ nC}, t_{sw} = 18\\text{ ns}, R_{\\theta JA} = 9.5\\text{ K/W}$):\n   - $P_{mos} = 627.336(0.003) + 0.5(48)(25)(18\\times 10^{-9})(250\\times 10^3) + 2(54\\times 10^{-9})(10)(250\\times 10^3) = 1.8820 + 2.7000 + 0.2700 = 4.8520\\text{ W}$.\n   - $T_j = 58.0 + 4.8520 \\times 9.5 = 104.09\\text{ }^\\circ\\text{C} \\le 105.0\\text{ }^\\circ\\text{C}$ (margin $0.87\\%$). (Note: Q1 gives $P_{mos} = 4.925\\text{ W}$ and $T_j = 112.17\\text{ }^\\circ\\text{C} > 105.0\\text{ }^\\circ\\text{C}$.)\n4. Inductor losses and efficiency:\n   - $P_{ind} = 627.336(0.0036) + 0.015(2.5)^{1.5}(5.2941)^2 = 2.2584 + 1.6618 = 3.9202\\text{ W}$.\n   - $\\eta = 100 \\times 300 / (300 + 4.8520 + 3.9202) = 97.16\\% \\ge 97.00\\%$.\n5. BOM Cost $= 4.90 + 4.80 + 3(0.65) = \\$11.65 \\le \\$12.50$ (Q3 would cost $\\$13.15 > \\$12.50$).",
+  "wrong_designs": [
+   {
+    "values": {
+     "MOSFET_ID": "Q2",
+     "Inductor_ID": "L2",
+     "f_sw": 200,
+     "N_c": 3,
+     "dI_L": 6.62,
+     "I_pk": 28.31,
+     "dV_out": 37.82,
+     "P_mos": 4.26,
+     "P_ind": 3.52,
+     "T_j": 98.47,
+     "eta": 97.47,
+     "Cost": 11.65
+    },
+    "failed_requirements": [
+     "R2",
+     "R3"
+    ],
+    "reason": "Choosing f_sw = 200 kHz with L2 lowers losses and keeps I_pk = 28.31 A below I_sat = 31.0 A, but violates the 0.90*I_sat derating limit (27.90 A) and pushes output voltage ripple to 37.82 mV > 30.0 mV."
+   },
+   {
+    "values": {
+     "MOSFET_ID": "Q1",
+     "Inductor_ID": "L2",
+     "f_sw": 250,
+     "N_c": 3,
+     "dI_L": 5.29,
+     "I_pk": 27.65,
+     "dV_out": 28.3,
+     "P_mos": 4.92,
+     "P_ind": 3.92,
+     "T_j": 112.17,
+     "eta": 97.14,
+     "Cost": 10.55
+    },
+    "failed_requirements": [
+     "R4"
+    ],
+    "reason": "Selecting Q1 saves $1.10 and has lower switching loss than Q2, so total P_mos is nearly identical (4.92 W vs 4.85 W), but Q1's higher thermal resistance (11.0 K/W vs 9.5 K/W) pushes T_j to 112.17 degC > 105.0 degC."
+   }
+  ],
+  "difficulty_rationale": "At f_sw=250 kHz with Q2 and L2, both the peak inductor current (27.65 A vs 27.90 A derated limit, 0.91% margin) and MOSFET junction temperature (104.09 degC vs 105.0 degC limit, 0.87% margin) sit within 1% of failure."
+ },
+ {
+  "id": "T4-03",
+  "family": "F1",
+  "domain": "fluid",
+  "request": "Design a closed-loop glycol-water cooling circuit ($\\rho = 1045\\text{ kg/m}^3$, $\\mu = 0.0032\\text{ Pa}\\cdot\\text{s}$, vapor pressure $P_{vap} = 18.0\\text{ kPa}$, $g = 9.81\\text{ m/s}^2$) circulating a fixed flow rate $Q = 0.0120\\text{ m}^3\\text{/s}$ from an expansion tank (liquid surface pressure $P_{tank} = 95.0\\text{ kPa}$, elevation $z_0 = 0\\text{ m}$) to a pump at elevation $z_p = 2.40\\text{ m}$ via a suction line of length $L_s = 6.0\\text{ m}$ and fitting loss coefficient $K_s = 2.2$, and returning through a discharge loop so that the total pipe length (suction + discharge) is $L_{tot} = 90.0\\text{ m}$ and total fitting loss coefficient (suction + discharge, excluding control valve) is $K_{tot} = 14.5$.\n\nSelect a uniform pipe inner diameter $D \\in \\{0.065, 0.075, 0.085, 0.095\\}\\text{ m}$ (pipe cost $c_{pipe} = 380 D^2 + 12.0\\text{ USD/m}$) and one pump from this catalogue ($Q$ in $\\text{m}^3\\text{/s}$):\n- P1: $\\Delta P_{pump} = 260 - 650,000 Q^2\\text{ kPa}$, $\\eta_p = 0.74$, $\\text{NPSH}_r = 1.25 + 12,000 Q^2\\text{ m}$, cost $\\$1450$\n- P2: $\\Delta P_{pump} = 285 - 720,000 Q^2\\text{ kPa}$, $\\eta_p = 0.78$, $\\text{NPSH}_r = 1.45 + 14,000 Q^2\\text{ m}$, cost $\\$1680$\n- P3: $\\Delta P_{pump} = 330 - 800,000 Q^2\\text{ kPa}$, $\\eta_p = 0.76$, $\\text{NPSH}_r = 2.25 + 16,000 Q^2\\text{ m}$, cost $\\$1890$\n\nFormulas & Constraints:\n1. Pipe velocity $v = 4 Q / (\\pi D^2) \\le 3.00\\text{ m/s}$ (erosion limit). Darcy friction factor $f = 0.3164 Re^{-0.25} + 0.0035$, where $Re = \\rho v D / \\mu$.\n2. Loop friction pressure drop $\\Delta P_{sys} = \\left(f \\frac{L_{tot}}{D} + K_{tot}\\right) \\frac{\\rho v^2}{2000}\\text{ kPa}$. A return throttling valve absorbs $\\Delta P_{valve} = \\Delta P_{pump} - \\Delta P_{sys}$, which must satisfy $8.0\\text{ kPa} \\le \\Delta P_{valve} \\le 35.0\\text{ kPa}$ (for control authority without valve cavitation).\n3. Suction line pressure loss $\\Delta P_{suc} = \\left(f \\frac{L_s}{D} + K_s\\right) \\frac{\\rho v^2}{2000}\\text{ kPa}$. Available NPSH is $\\text{NPSH}_a = \\frac{1000(P_{tank} - P_{vap} - \\Delta P_{suc})}{\\rho g} - z_p$, and must satisfy $\\text{NPSH}_a \\ge 1.03\\,\\text{NPSH}_r$.\n4. Pump shaft power $P_{shaft} = \\frac{1000 Q \\Delta P_{pump}}{\\eta_p} \\le 2900\\text{ W}$ and total capital cost $= \\text{pump cost} + c_{pipe} L_{tot} \\le \\$3000$.\n\nEnd with a table headed Results with these rows: Pump_ID (string), D (m), v (m/s), Re (-), f (-), dP_sys (kPa), dP_valve (kPa), NPSH_a (m), NPSH_r (m), P_shaft (W), Cost (USD).",
+  "requirements": [
+   {
+    "id": "R1",
+    "statement": "Catalogue choices for Pump_ID and pipe diameter D are valid, and pipe velocity v <= 3.00 m/s.",
+    "check": "Pump_ID in {'P1','P2','P3'} and D in {0.065,0.075,0.085,0.095} and v == 4*0.0120/(pi*D^2) and v <= 3.00",
+    "tolerance": "0.01 absolute"
+   },
+   {
+    "id": "R2",
+    "statement": "Valve pressure drop dP_valve is between 8.0 kPa and 35.0 kPa.",
+    "check": "dP_valve == dP_pump - dP_sys and 8.0 <= dP_valve <= 35.0",
+    "tolerance": "0.2 absolute"
+   },
+   {
+    "id": "R3",
+    "statement": "Available NPSH_a is at least 1.03 times required NPSH_r.",
+    "check": "NPSH_a >= 1.03 * NPSH_r",
+    "tolerance": "0.02 absolute"
+   },
+   {
+    "id": "R4",
+    "statement": "Pump shaft power P_shaft <= 2900 W.",
+    "check": "P_shaft == 1000 * 0.0120 * dP_pump / eta_p and P_shaft <= 2900.0",
+    "tolerance": "2.0 absolute"
+   },
+   {
+    "id": "R5",
+    "statement": "Total capital cost <= $3000.",
+    "check": "Cost == pump_cost + (380*D^2 + 12.0)*90.0 and Cost <= 3000.0",
+    "tolerance": "0.5 absolute"
+   }
+  ],
+  "reference_design": {
+   "Pump_ID": "P2",
+   "D": 0.075,
+   "v": 2.72,
+   "Re": 66527.1,
+   "f": 0.0232,
+   "dP_sys": 163.23,
+   "dP_valve": 18.09,
+   "NPSH_a": 3.59,
+   "NPSH_r": 3.47,
+   "P_shaft": 2789.54,
+   "Cost": 2952.38
+  },
+  "worked_solution": "1. Pipe diameter selection for $Q = 0.0120\\text{ m}^3\\text{/s}$:\n   - $D = 0.065\\text{ m}$ gives $v = 4(0.0120)/(\\pi \\times 0.065^2) = 3.616\\text{ m/s} > 3.00\\text{ m/s}$ (eliminated).\n   - Try $D = 0.075\\text{ m}$: $A = 0.004417865\\text{ m}^2$, $v = 2.71624\\text{ m/s} \\le 3.00\\text{ m/s}$.\n   - Dynamic pressure $q = \\frac{1}{2} \\rho v^2 / 1000 = 0.5 \\times 1045 \\times 2.71624^2 / 1000 = 3.8550\\text{ kPa}$.\n   - $Re = 1045 \\times 2.71624 \\times 0.075 / 0.0032 = 66,527.1$.\n   - $f = 0.3164 (66,527.1)^{-0.25} + 0.0035 = 0.019702 + 0.0035 = 0.023202$.\n2. Loop and suction pressure drops for $D = 0.075\\text{ m}$:\n   - $\\Delta P_{sys} = (0.023202 \\times 90.0 / 0.075 + 14.5) \\times 3.8550 = 42.3424 \\times 3.8550 = 163.23\\text{ kPa}$.\n   - $\\Delta P_{suc} = (0.023202 \\times 6.0 / 0.075 + 2.2) \\times 3.8550 = 4.05616 \\times 3.8550 = 15.637\\text{ kPa}$.\n   - $\\text{NPSH}_a = \\frac{1000(95.0 - 18.0 - 15.637)}{1045 \\times 9.81} - 2.40 = \\frac{61,363}{10,251.45} - 2.40 = 5.9858 - 2.40 = 3.586\\text{ m}$.\n3. Pump selection at $Q = 0.0120\\text{ m}^3\\text{/s}$ ($Q^2 = 0.000144\\text{ m}^6\\text{/s}^2$):\n   - P1: $\\Delta P_{pump} = 260 - 650,000(0.000144) = 166.40\\text{ kPa} \\implies \\Delta P_{valve} = 166.40 - 163.23 = 3.17\\text{ kPa} < 8.0\\text{ kPa}$ (insufficient valve authority).\n   - P2: $\\Delta P_{pump} = 285 - 720,000(0.000144) = 181.32\\text{ kPa} \\implies \\Delta P_{valve} = 181.32 - 163.23 = 18.09\\text{ kPa} \\in [8.0, 35.0]\\text{ kPa}$.\n   - Check NPSH for P2: $\\text{NPSH}_r = 1.45 + 14,000(0.000144) = 3.466\\text{ m}$. Ratio $\\text{NPSH}_a / \\text{NPSH}_r = 3.586 / 3.466 = 1.0346 \\ge 1.030$ (margin $0.45\\%$). \n4. Power and cost for $(P2, D=0.075\\text{ m})$:\n   - $P_{shaft} = 1000 \\times 0.0120 \\times 181.32 / 0.78 = 2789.54\\text{ W} \\le 2900\\text{ W}$ (margin $3.81\\%$). \n   - $c_{pipe} = 380(0.075)^2 + 12.0 = 14.1375\\text{ USD/m}$.\n   - $\\text{Cost} = 1680 + 14.1375 \\times 90.0 = 1680 + 1272.375 = \\$2952.38 \\le \\$3000$ (margin $1.59\\%$).",
+  "wrong_designs": [
+   {
+    "values": {
+     "Pump_ID": "P1",
+     "D": 0.075,
+     "v": 2.72,
+     "Re": 66527.1,
+     "f": 0.0232,
+     "dP_sys": 163.23,
+     "dP_valve": 3.17,
+     "NPSH_a": 3.59,
+     "NPSH_r": 2.98,
+     "P_shaft": 2698.38,
+     "Cost": 2722.38
+    },
+    "failed_requirements": [
+     "R2"
+    ],
+    "reason": "Choosing P1 with D = 0.075 m provides enough pump head to overcome loop friction (166.40 kPa > 163.23 kPa) at lower cost and power, but leaves only 3.17 kPa across the control valve, violating the 8.0 kPa minimum valve authority."
+   },
+   {
+    "values": {
+     "Pump_ID": "P1",
+     "D": 0.085,
+     "v": 2.11,
+     "Re": 58700.4,
+     "f": 0.0238,
+     "dP_sys": 92.13,
+     "dP_valve": 74.27,
+     "NPSH_a": 4.35,
+     "NPSH_r": 2.98,
+     "P_shaft": 2698.38,
+     "Cost": 2799.51
+    },
+    "failed_requirements": [
+     "R2"
+    ],
+    "reason": "Upsizing the pipe to D = 0.085 m with P1 cuts loop friction drop to 92.13 kPa and improves NPSH margin, but forces the throttling valve to burn 74.27 kPa, exceeding the 35.0 kPa valve cavitation limit."
+   }
+  ],
+  "difficulty_rationale": "With D = 0.075 m and P2, the suction cavitation ratio NPSH_a / NPSH_r = 1.0346 clears the 1.03 requirement by only 0.45%, capital cost ($2952.38) is within 1.6% of $3000, and shaft power (2789.5 W) is within 3.8% of 2900 W."
+ },
+ {
+  "id": "T4-04",
+  "family": "F1",
+  "domain": "thermal",
+  "request": "Design a forced-air aluminum plate-fin heat sink cooling $Q_{tot} = 720\\text{ W}$ in inlet air at $T_{in} = 35.0\\text{ }^\\circ\\text{C}$ ($\\rho_a = 1.14\\text{ kg/m}^3$, $c_p = 1007\\text{ J/(kg}\\cdot\\text{K)}$, $k_a = 0.0268\\text{ W/(m}\\cdot\\text{K)}$, $\\nu = 1.65\\times 10^{-5}\\text{ m}^2\\text{/s}$, $Pr = 0.71$). The heat sink base has width $W = 0.180\\text{ m}$, flow length $L = 0.250\\text{ m}$, base thickness $t_b = 0.008\\text{ m}$, fin height $H = 0.045\\text{ m}$, fin thickness $t_f = 0.0015\\text{ m}$, thermal conductivity $k_s = 205\\text{ W/(m}\\cdot\\text{K)}$, and density $\\rho_{Al} = 2700\\text{ kg/m}^3$.\n\nChoose the number of fins $N_f \\in \\{26, 30, 34, 38, 42\\}$ and one fan ($\\Delta P_{fan}(\\dot{V}) = P_0 - S_0 \\dot{V}^2$ in Pa, with $\\dot{V}$ in $\\text{m}^3\\text{/s}$):\n- F1: $P_0 = 95\\text{ Pa}$, $S_0 = 18,000\\text{ Pa}\\cdot\\text{s}^2/\\text{m}^6$, $P_{elec} = 18\\text{ W}$, noise $= 46\\text{ dBA}$\n- F2: $P_0 = 140\\text{ Pa}$, $S_0 = 22,000\\text{ Pa}\\cdot\\text{s}^2/\\text{m}^6$, $P_{elec} = 28\\text{ W}$, noise $= 51\\text{ dBA}$\n- F3: $P_0 = 195\\text{ Pa}$, $S_0 = 26,000\\text{ Pa}\\cdot\\text{s}^2/\\text{m}^6$, $P_{elec} = 42\\text{ W}$, noise $= 57\\text{ dBA}$\n\nFormulas & Constraints:\n1. Channel gap $s = (W - N_f t_f)/(N_f - 1)$, hydraulic diameter $D_h = 2 s H / (s + H)$, flow area $A_{flow} = (N_f - 1) s H$.\n2. Sink pressure drop $\\Delta P_{sink} = K_{loss} \\frac{1}{2} \\rho_a u_{ch}^2$, where $u_{ch} = \\dot{V} / A_{flow}$ and $K_{loss} = 1.45 + 0.085(L/D_h)$. Operating flow rate $\\dot{V}$ satisfies $\\Delta P_{fan}(\\dot{V}) = \\Delta P_{sink}(\\dot{V})$.\n3. Turbulent flow is required: $Re_{Dh} = u_{ch} D_h / \\nu \\ge 2300$. Nusselt number $Nu = 0.023 Re_{Dh}^{0.8} Pr^{0.4}$, $h = Nu k_a / D_h$.\n4. Fin efficiency $\\eta_f = \\tanh(m_f H)/(m_f H)$ with $m_f = \\sqrt{2 h / (k_s t_f)}$; effective area $A_{eff} = (N_f - 1) s L + 2 N_f H L \\eta_f$.\n5. Total thermal resistance (including caloric air heating and base conduction) is $R_{th} = \\frac{1}{\\rho_a c_p \\dot{V} (1 - \\exp(-h A_{eff}/(\\rho_a c_p \\dot{V})))} + \\frac{t_b}{k_s W L}$. Mean base temperature $T_b = T_{in} + Q_{tot} R_{th} \\le 70.0\\text{ }^\\circ\\text{C}$.\n6. Fan noise $\\le 53\\text{ dBA}$ and heat sink mass $m_{sink} = \\rho_{Al} L (W t_b + N_f H t_f) \\le 2.60\\text{ kg}$.\n\nEnd with a table headed Results with these rows: Fan_ID (string), N_f (-), D_h (mm), V_dot (m^3/s), Re_Dh (-), h (W/m^2*K), eta_f (-), A_eff (m^2), R_th (K/W), T_b (degC), m_sink (kg).",
+  "requirements": [
+   {
+    "id": "R1",
+    "statement": "Catalogue selections for Fan_ID and N_f are valid, and fan noise <= 53 dBA.",
+    "check": "Fan_ID in {'F1','F2','F3'} and N_f in {26,30,34,38,42} and fan_noise <= 53",
+    "tolerance": "exact"
+   },
+   {
+    "id": "R2",
+    "statement": "Operating volume flow rate V_dot balances fan pressure and sink pressure drop, and channel Reynolds number Re_Dh >= 2300.",
+    "check": "V_dot == sqrt(P_0 / (S_0 + 0.5 * 1.14 * K_loss / A_flow^2)) and Re_Dh == (V_dot / A_flow) * D_h / 1.65e-5 and Re_Dh >= 2300",
+    "tolerance": "5.0 absolute"
+   },
+   {
+    "id": "R3",
+    "statement": "Heat transfer coefficient h, fin efficiency eta_f, effective area A_eff, and total thermal resistance R_th match the governing equations.",
+    "check": "R_th == 1 / (1.14 * 1007 * V_dot * (1 - exp(-h * A_eff / (1.14 * 1007 * V_dot)))) + 0.008 / (205 * 0.180 * 0.250)",
+    "tolerance": "0.0005 absolute"
+   },
+   {
+    "id": "R4",
+    "statement": "Mean base temperature T_b <= 70.0 degC.",
+    "check": "T_b == 35.0 + 720.0 * R_th and T_b <= 70.0",
+    "tolerance": "0.15 absolute"
+   },
+   {
+    "id": "R5",
+    "statement": "Heat sink mass m_sink <= 2.60 kg.",
+    "check": "m_sink == 2700 * 0.250 * (0.180 * 0.008 + N_f * 0.045 * 0.0015) and m_sink <= 2.60",
+    "tolerance": "0.01 absolute"
+   }
+  ],
+  "reference_design": {
+   "Fan_ID": "F2",
+   "N_f": 34,
+   "D_h": 7.19,
+   "V_dot": 0.0381,
+   "Re_Dh": 2860.6,
+   "h": 43.44,
+   "eta_f": 0.845,
+   "A_eff": 0.678,
+   "R_th": 0.0475,
+   "T_b": 69.2,
+   "m_sink": 2.52
+  },
+  "worked_solution": "1. Fan screening: F3 has noise $= 57\\text{ dBA} > 53\\text{ dBA}$ (eliminated). F1 has insufficient pressure ($T_b > 75\\text{ }^\\circ\\text{C}$ for all $N_f$). Select F2 ($P_0 = 140\\text{ Pa}, S_0 = 22,000\\text{ Pa}\\cdot\\text{s}^2/\\text{m}^6$, noise $= 51\\text{ dBA} \\le 53\\text{ dBA}$).\n2. Mass constraint screening: $m_{sink} = 675(0.00144 + 0.0000675 N_f) \\le 2.60\\text{ kg} \\implies N_f \\le 35.7$. Thus $N_f \\in \\{26, 30, 34\\}$.\n3. Evaluate $N_f = 34$:\n   - $s = (0.180 - 34 \\times 0.0015) / 33 = 0.0039091\\text{ m}$.\n   - $D_h = 2(0.0039091)(0.045) / (0.0039091 + 0.045) = 0.0071933\\text{ m} = 7.193\\text{ mm}$.\n   - $A_{flow} = 33 \\times 0.0039091 \\times 0.045 = 0.0058050\\text{ m}^2$.\n   - $K_{loss} = 1.45 + 0.085(0.250 / 0.0071933) = 4.4041$.\n   - Hydraulic resistance factor $0.5 \\rho_a K_{loss} / A_{flow}^2 = 0.5(1.14)(4.4041) / (0.0058050)^2 = 74,495.7\\text{ Pa}\\cdot\\text{s}^2/\\text{m}^6$.\n   - $\\dot{V} = \\sqrt{140 / (22,000 + 74,495.7)} = 0.038090\\text{ m}^3\\text{/s}$.\n   - $u_{ch} = 0.038090 / 0.0058050 = 6.5616\\text{ m/s}$; $Re_{Dh} = 6.5616 \\times 0.0071933 / 1.65\\times 10^{-5} = 2860.6 \\ge 2300$.\n4. Heat transfer for $N_f = 34$:\n   - $Nu = 0.023 (2860.6)^{0.8} (0.71)^{0.4} = 11.660$; $h = 11.660 \\times 0.0268 / 0.0071933 = 43.441\\text{ W/(m}^2\\cdot\\text{K)}$.\n   - $m_f = \\sqrt{2(43.441)/(205 \\times 0.0015)} = 16.809\\text{ m}^{-1}$; $m_f H = 0.75641$; $\\eta_f = \\tanh(0.75641)/0.75641 = 0.84472$.\n   - $A_{eff} = 0.129(0.250) + 2(34)(0.045)(0.250)(0.84472) = 0.67846\\text{ m}^2$.\n   - $\\dot{C} = 1.14 \\times 1007 \\times 0.038090 = 43.726\\text{ W/K}$; $NTU = 43.441 \\times 0.67846 / 43.726 = 0.67404$.\n   - $R_{th} = \\frac{1}{43.726(1 - e^{-0.67404})} + \\frac{0.008}{205 \\times 0.180 \\times 0.250} = 0.046638 + 0.000867 = 0.047505\\text{ K/W}$.\n   - $T_b = 35.0 + 720(0.047505) = 69.20\\text{ }^\\circ\\text{C} \\le 70.0\\text{ }^\\circ\\text{C}$ (margin $1.14\\%$). \n   - $m_{sink} = 2700 \\times 0.250 \\times (0.00144 + 34 \\times 0.045 \\times 0.0015) = 2.521\\text{ kg} \\le 2.60\\text{ kg}$ (margin $3.03\\%$).",
+  "wrong_designs": [
+   {
+    "values": {
+     "Fan_ID": "F2",
+     "N_f": 30,
+     "D_h": 8.05,
+     "V_dot": 0.0398,
+     "Re_Dh": 3260.4,
+     "h": 43.22,
+     "eta_f": 0.846,
+     "A_eff": 0.606,
+     "R_th": 0.0502,
+     "T_b": 71.15,
+     "m_sink": 2.34
+    },
+    "failed_requirements": [
+     "R4"
+    ],
+    "reason": "Choosing N_f = 30 reduces sink mass and increases airflow V_dot, and if an engineer omits the caloric air temperature rise factor 1/(rho*c_p*V_dot*(1 - exp(-NTU))) in favor of 1/(h*A_eff), they compute T_b = 63.1 degC, whereas actual T_b = 71.15 degC > 70.0 degC."
+   },
+   {
+    "values": {
+     "Fan_ID": "F2",
+     "N_f": 38,
+     "D_h": 6.48,
+     "V_dot": 0.0361,
+     "Re_Dh": 2498.5,
+     "h": 43.43,
+     "eta_f": 0.845,
+     "A_eff": 0.751,
+     "R_th": 0.0457,
+     "T_b": 67.89,
+     "m_sink": 2.7
+    },
+    "failed_requirements": [
+     "R5"
+    ],
+    "reason": "Increasing fin count to N_f = 38 lowers base temperature T_b to 67.89 degC, but pushes heat sink mass to 2.70 kg, exceeding the 2.60 kg mass limit."
+   }
+  ],
+  "difficulty_rationale": "Only N_f = 34 with Fan F2 satisfies both the 70.0 degC base temperature limit (69.20 degC, 1.14% margin) and the 2.60 kg mass limit (2.52 kg, 3.0% margin); omitting the caloric air temperature rise factor 1 - exp(-NTU) makes N_f = 30 appear to pass by a wide margin."
+ },
+ {
+  "id": "T4-05",
+  "family": "F1",
+  "domain": "structural",
+  "request": "Design a cantilevered tubular steel jib boom of length $L = 3.20\\text{ m}$ ($E = 210\\text{ GPa}$, $G = 80.8\\text{ GPa}$, $\\rho = 7850\\text{ kg/m}^3$, $g = 9.81\\text{ m/s}^2$) with a rigid tip bracket of horizontal lateral offset $e = 0.45\\text{ m}$. A vertical downward load $P = 11.5\\text{ kN}$ acts at the offset $e$ (producing bending and torsion), and a horizontal lateral load $F_y = 2.8\\text{ kN}$ acts at the tip centerline.\n\nSelect one circular hollow section ($D_o$, wall thickness $t$, inner diameter $D_i = D_o - 2t$) and one steel grade:\n- Sections: S1 ($160 \\times 6\\text{ mm}$), S2 ($180 \\times 6\\text{ mm}$), S3 ($180 \\times 8\\text{ mm}$), S4 ($200 \\times 6\\text{ mm}$), S5 ($200 \\times 8\\text{ mm}$)\n- Grades: G1 ($\\sigma_y = 275\\text{ MPa}$, $\\$2.40/\\text{kg}$), G2 ($\\sigma_y = 355\\text{ MPa}$, $\\$2.85/\\text{kg}$), G3 ($\\sigma_y = 460\\text{ MPa}$, $\\$3.50/\\text{kg}$)\n\nFormulas & Constraints ($A = \\frac{\\pi}{4}(D_o^2 - D_i^2)$, $I = \\frac{\\pi}{64}(D_o^4 - D_i^4)$, $J = 2I$, $Z = 2I/D_o$, boom mass $m_b = \\rho A L$):\n1. Local buckling slenderness: $D_o / t \\le 0.068 (E / \\sigma_y)$.\n2. Root moments: vertical $M_y = P L + \\frac{1}{2} m_b g L$, lateral $M_z = F_y L$, resultant $M_{root} = \\sqrt{M_y^2 + M_z^2}$, torque $T = P e$. Root von Mises stress $\\sigma_{vm} = \\sqrt{\\sigma_b^2 + 3 \\tau^2} \\le \\sigma_y / 1.50$, where $\\sigma_b = M_{root}/Z$ and $\\tau = T/(2Z)$.\n3. Total vertical deflection at the offset load point: $\\delta_v = \\frac{P L^3}{3 E I} + \\frac{m_b g L^3}{8 E I} + \\frac{e T L}{G J} \\le 39.0\\text{ mm}$.\n4. Fundamental vertical natural frequency $f_1 = \\frac{1}{2\\pi} \\sqrt{k_{eff} / m_{tip}} \\ge 2.50\\text{ Hz}$, where $k_{eff} = \\left(\\frac{L^3}{3 E I} + \\frac{e^2 L}{G J}\\right)^{-1}$ and $m_{tip} = P/g + 0.24 m_b$.\n5. Boom material cost $= c_m m_b \\le \\$285.00$.\n\nEnd with a table headed Results with these rows: Section_ID (string), Grade_ID (string), m_b (kg), M_root (N*m), sigma_vm (MPa), delta_v (mm), f_1 (Hz), Cost (USD).",
+  "requirements": [
+   {
+    "id": "R1",
+    "statement": "Catalogue selections for Section_ID and Grade_ID are valid, and local buckling slenderness D_o / t <= 0.068 * (E / sigma_y) holds.",
+    "check": "Section_ID in {'S1','S2','S3','S4','S5'} and Grade_ID in {'G1','G2','G3'} and (D_o / t) <= 0.068 * (210000.0 / sigma_y)",
+    "tolerance": "exact"
+   },
+   {
+    "id": "R2",
+    "statement": "Root von Mises stress sigma_vm <= sigma_y / 1.50.",
+    "check": "sigma_vm == sqrt((M_root / Z)^2 + 3 * (5175.0 / (2 * Z))^2) / 1e6 and sigma_vm <= sigma_y / 1.50",
+    "tolerance": "0.5 absolute"
+   },
+   {
+    "id": "R3",
+    "statement": "Total vertical deflection delta_v at the offset load point is at most 39.0 mm.",
+    "check": "delta_v == 1000 * (11500 * 3.2^3 / (3 * E * I) + m_b * 9.81 * 3.2^3 / (8 * E * I) + 0.45 * 5175 * 3.2 / (G * J)) and delta_v <= 39.0",
+    "tolerance": "0.1 absolute"
+   },
+   {
+    "id": "R4",
+    "statement": "Fundamental natural frequency f_1 >= 2.50 Hz.",
+    "check": "f_1 == (1 / (2 * pi)) * sqrt(1 / ((3.2^3 / (3 * E * I) + 0.45^2 * 3.2 / (G * J)) * (11500 / 9.81 + 0.24 * m_b))) and f_1 >= 2.50",
+    "tolerance": "0.01 absolute"
+   },
+   {
+    "id": "R5",
+    "statement": "Boom material cost <= $285.00.",
+    "check": "Cost == c_m * m_b and Cost <= 285.00",
+    "tolerance": "0.5 absolute"
+   }
+  ],
+  "reference_design": {
+   "Section_ID": "S4",
+   "Grade_ID": "G2",
+   "m_b": 91.86,
+   "M_root": 39277.5,
+   "sigma_vm": 229.57,
+   "delta_v": 38.43,
+   "f_1": 2.55,
+   "Cost": 261.8
+  },
+  "worked_solution": "1. Section properties and deflection screening:\n   - Compare S3 ($180 \\times 8\\text{ mm}$) vs S4 ($200 \\times 6\\text{ mm}$):\n     - S3 has $I = 1.60206\\times 10^{-5}\\text{ m}^4$, $Z = 1.78007\\times 10^{-4}\\text{ m}^3$, $m_b = 108.59\\text{ kg}$. Its total deflection is $\\delta_v = 37.34 + 1.30 + 2.88 = 41.51\\text{ mm} > 39.0\\text{ mm}$ and $f_1 = 2.46\\text{ Hz} < 2.50\\text{ Hz}$ (eliminated).\n     - S5 ($200 \\times 8\\text{ mm}$) has $m_b = 121.20\\text{ kg}$, costing at least $121.20 \\times 2.40 = \\$290.88 > \\$285.00$ (eliminated).\n   - Select S4 ($D_o = 0.200\\text{ m}, t = 0.006\\text{ m}, D_i = 0.188\\text{ m}$):\n     - $A = \\frac{\\pi}{4}(0.200^2 - 0.188^2) = 0.00365681\\text{ m}^2$; $m_b = 7850 \\times 0.00365681 \\times 3.20 = 91.859\\text{ kg}$.\n     - $I = \\frac{\\pi}{64}(0.200^4 - 0.188^4) = 1.72199\\times 10^{-5}\\text{ m}^4$; $J = 3.44398\\times 10^{-5}\\text{ m}^4$; $Z = 1.72199\\times 10^{-4}\\text{ m}^3$.\n2. Grade selection and local buckling check for S4 ($D_o / t = 33.33$):\n   - G1 ($\\sigma_y = 275\\text{ MPa}$): $\\sigma_y / 1.50 = 183.33\\text{ MPa}$ (too weak).\n   - G3 ($\\sigma_y = 460\\text{ MPa}$): slenderness limit $0.068(210,000 / 460) = 31.04 < 33.33$ (fails local buckling) and cost $= 91.859 \\times 3.50 = \\$321.51 > \\$285$.\n   - Select G2 ($\\sigma_y = 355\\text{ MPa}$): slenderness limit $0.068(210,000 / 355) = 40.23 \\ge 33.33$, allowable stress $\\sigma_y / 1.50 = 236.67\\text{ MPa}$.\n3. Stress check for $(S4, G2)$:\n   - $M_y = 11,500(3.20) + 0.5(91.859 \\times 9.81)(3.20) = 36,800 + 1441.8 = 38,241.8\\text{ N}\\cdot\\text{m}$.\n   - $M_z = 2800(3.20) = 8960.0\\text{ N}\\cdot\\text{m}$; $M_{root} = \\sqrt{38,241.8^2 + 8960.0^2} = 39,277.5\\text{ N}\\cdot\\text{m}$.\n   - $T = 11,500 \\times 0.45 = 5175.0\\text{ N}\\cdot\\text{m}$.\n   - $\\sigma_b = 39,277.5 / 1.72199\\times 10^{-4} = 228.09\\text{ MPa}$; $\\tau = 5175.0 / (2 \\times 1.72199\\times 10^{-4}) = 15.03\\text{ MPa}$.\n   - $\\sigma_{vm} = \\sqrt{228.09^2 + 3(15.03)^2} = 229.57\\text{ MPa} \\le 236.67\\text{ MPa}$ (margin $3.00\\%$). \n4. Deflection, natural frequency, and cost:\n   - $E I = 3.61618\\times 10^6\\text{ N}\\cdot\\text{m}^2$; $G J = 2.78274\\times 10^6\\text{ N}\\cdot\\text{m}^2$.\n   - $\\delta_v = 34.736 + 1.021 + 2.678 = 38.435\\text{ mm} \\le 39.0\\text{ mm}$ (margin $1.45\\%$). \n   - $k_{eff} = (3.01880\\times 10^{-6} + 0.23286\\times 10^{-6})^{-1} = 307,535\\text{ N/m}$; $m_{tip} = 1172.27 + 22.05 = 1194.32\\text{ kg}$.\n   - $f_1 = \\frac{1}{2\\pi}\\sqrt{307,535 / 1194.32} = 2.554\\text{ Hz} \\ge 2.50\\text{ Hz}$ (margin $2.15\\%$). \n   - $\\text{Cost} = 2.85 \\times 91.859 = \\$261.80 \\le \\$285.00$.",
+  "wrong_designs": [
+   {
+    "values": {
+     "Section_ID": "S3",
+     "Grade_ID": "G1",
+     "m_b": 108.59,
+     "M_root": 39534.3,
+     "sigma_vm": 223.63,
+     "delta_v": 41.51,
+     "f_1": 2.46,
+     "Cost": 260.62
+    },
+    "failed_requirements": [
+     "R2",
+     "R3",
+     "R4"
+    ],
+    "reason": "Section S3 (180x8) has a larger section modulus Z than S4 (200x6), so an engineer who checks only pure tip-load bending deflection (37.34 mm <= 39.0 mm) may pick S3, overlooking that its smaller moment of inertia I causes total deflection (with torsion and self-weight) to hit 41.51 mm > 39.0 mm and f_1 to drop to 2.46 Hz < 2.50 Hz."
+   },
+   {
+    "values": {
+     "Section_ID": "S4",
+     "Grade_ID": "G3",
+     "m_b": 91.86,
+     "M_root": 39277.5,
+     "sigma_vm": 229.57,
+     "delta_v": 38.43,
+     "f_1": 2.55,
+     "Cost": 321.51
+    },
+    "failed_requirements": [
+     "R1",
+     "R5"
+    ],
+    "reason": "Upgrading S4 to high-strength steel G3 (460 MPa) increases stress margin, but tightens the local wall buckling limit 0.068*(E/sigma_y) to 31.04 < D_o/t = 33.33 and pushes material cost to $321.51 > $285.00."
+   }
+  ],
+  "difficulty_rationale": "Section S3 (180x8) has a higher section modulus Z than S4 (200x6) yet a lower moment of inertia I, creating a classic structural trap where S3 passes pure bending deflection (37.3 mm) but fails once bracket torsion and self-weight are included (41.51 mm vs 38.43 mm for S4, 1.45% below the 39.0 mm limit)."
+ },
+ {
+  "id": "T4-06",
+  "family": "F2",
+  "domain": "fluid",
+  "request": "Design a closed-loop dielectric coolant pumping and filtration skid using Vortexia Fluidics components to cool a 144.0 kW electronics cold plate. The KryoSol-45 coolant enters the cold plate at 35.0 °C and is sized for exactly a 10.0 K temperature rise across the load. The loop uses smooth-bore VortaTube fluoropolymer piping with a suction line (expansion tank to pump inlet) of length 8.0 m and fitting loss coefficient sum K_s = 2.50, and a discharge return line of length 72.0 m and fitting loss coefficient sum K_d = 11.50. At the design flow rate, the cold plate imposes a fixed hydraulic pressure drop of 65.0 kPa.\n\nThe nitrogen-blanketed expansion tank is maintained at an absolute gas pressure of 95.0 kPa(abs), and the pump suction inlet centerline sits 0.50 m above the tank liquid surface (suction lift). You must select:\n1. A pipe size from the VortaTube series.\n2. A duplex inline filter from the FiltraCore series capable of at least 5 μm filtration, sized for the fouled condition.\n3. A centrifugal pump from the VX-Pump series and its discrete VFD operating frequency (50, 55, or 60 Hz).\n\nAll Vortexia Fluidics sizing rules for fluid velocity limits, Allowable Operating Region (AOR), cavitation margin, fouled filter resistance, and viscosity corrections must be satisfied, and the pump shaft power must not exceed the skid's 3.40 kW VFD electrical drive rating.\n\nEnd with a table headed Results with these rows: selected_pipe (-), selected_filter (-), selected_pump (-), vfd_frequency_Hz (Hz), volumetric_flow_m3_h (m3/h), fluid_velocity_m_s (m/s), reynolds_number (-), fouled_filter_dp_kPa (kPa), total_system_head_m (m), pump_available_head_m (m), npsh_available_m (m), pump_shaft_power_kW (kW).",
+  "requirements": [
+   {
+    "id": "R1",
+    "statement": "Coolant volumetric flow rate Q must be sized at the mean loop temperature (40.0 °C) to remove 144.0 kW with a 10.0 K temperature rise, and pipe velocity v in the selected VortaTube size must remain between 2.00 m/s and 3.20 m/s.",
+    "check": "volumetric_flow_m3_h == 3600 * (144000 / (c_p_40C * 10.0)) / rho_40C and fluid_velocity_m_s == (volumetric_flow_m3_h / 3600) / (pi * (D_pipe / 2)^2) and 2.00 <= fluid_velocity_m_s <= 3.20 and selected_pipe == 'VT-50'",
+    "tolerance": "exact for selected_pipe; +/- 0.02 m3/h for volumetric_flow_m3_h; +/- 0.02 m/s for fluid_velocity_m_s"
+   },
+   {
+    "id": "R2",
+    "statement": "The selected FiltraCore unit must have a filtration rating of 5 μm or finer, a maximum flow rating at least equal to Q, and its fouled pressure drop must be evaluated at 2.0 times the clean pressure drop corrected for KryoSol-45 viscosity and density at 40.0 °C.",
+    "check": "rating_um(selected_filter) <= 5 and Q_max_filter(selected_filter) >= volumetric_flow_m3_h and fouled_filter_dp_kPa == 2.0 * (C_f * (mu_40C / 0.001) * volumetric_flow_m3_h + B_f * (rho_40C / 1000) * volumetric_flow_m3_h^2)",
+    "tolerance": "+/- 0.15 kPa"
+   },
+   {
+    "id": "R3",
+    "statement": "Total system head H_sys (sum of total piping friction and minor losses over 80.0 m and K_tot = 14.0, cold plate drop of 65.0 kPa, and fouled filter drop, converted to head of KryoSol-45) must not exceed the pump available head H_pump at the chosen VFD frequency.",
+    "check": "total_system_head_m == (dp_pipe_kPa + 65.0 + fouled_filter_dp_kPa) * 1000 / (rho_40C * 9.81) and pump_available_head_m == H_0 * (vfd_frequency_Hz / 50)^2 - A_H * volumetric_flow_m3_h^2 and pump_available_head_m >= total_system_head_m and selected_filter == 'FC-300'",
+    "tolerance": "exact for selected_filter; +/- 0.10 m for heads"
+   },
+   {
+    "id": "R4",
+    "statement": "The operating flow rate Q must lie within the pump's Allowable Operating Region (0.70 * Q_BEP(f) <= Q <= 1.20 * Q_BEP(f)) at the selected VFD frequency.",
+    "check": "0.70 * (Q_BEP_50 * (vfd_frequency_Hz / 50)) <= volumetric_flow_m3_h <= 1.20 * (Q_BEP_50 * (vfd_frequency_Hz / 50)) and selected_pump == 'VX-200' and vfd_frequency_Hz == 55",
+    "tolerance": "exact"
+   },
+   {
+    "id": "R5",
+    "statement": "Available net positive suction head NPSH_A (accounting for tank pressure, vapor pressure at 40.0 °C, 0.50 m suction lift, and suction line pressure loss) must be at least 1.20 times the pump's required NPSH_R at the operating point.",
+    "check": "npsh_available_m == (95.0 - P_v_40C - dp_suction_kPa) * 1000 / (rho_40C * 9.81) - 0.50 and npsh_available_m >= 1.20 * (N_0 * (vfd_frequency_Hz / 50)^1.5 + A_N * volumetric_flow_m3_h^2)",
+    "tolerance": "+/- 0.03 m"
+   },
+   {
+    "id": "R6",
+    "statement": "Pump shaft input power P_shaft (computed at the pump operating point (Q, H_pump) using the viscosity-corrected efficiency eta_p) must not exceed the 3.40 kW VFD drive rating.",
+    "check": "pump_shaft_power_kW == (rho_40C * 9.81 * (volumetric_flow_m3_h / 3600) * pump_available_head_m) / (1000 * eta_p) and pump_shaft_power_kW <= 3.40",
+    "tolerance": "+/- 0.03 kW"
+   }
+  ],
+  "reference_design": {
+   "selected_pipe": "VT-50",
+   "selected_filter": "FC-300",
+   "selected_pump": "VX-200",
+   "vfd_frequency_Hz": 55,
+   "volumetric_flow_m3_h": 21.6,
+   "fluid_velocity_m_s": 3.06,
+   "reynolds_number": 76394,
+   "fouled_filter_dp_kPa": 53.08,
+   "total_system_head_m": 31.19,
+   "pump_available_head_m": 32.09,
+   "npsh_available_m": 3.06,
+   "pump_shaft_power_kW": 3.21
+  },
+  "worked_solution": "1. Mean Coolant Temperature and Properties:\nCold plate inlet T_in = 35.0 °C, temperature rise dT = 10.0 K -> outlet T_out = 45.0 °C.\nPer Vortexia Rule 1.1, evaluate KryoSol-45 properties at mean loop temperature T_mean = (35.0 + 45.0)/2 = 40.0 °C:\n- Density rho = 1200 kg/m3\n- Specific heat c_p = 2000 J/(kg·K)\n- Dynamic viscosity mu = 2.40 mPa·s = 0.00240 Pa·s\n- Vapor pressure P_v = 22.0 kPa(abs)\n\n2. Required Flow Rate:\n- Mass flow rate m_dot = P_th / (c_p * dT) = 144000 / (2000 * 10.0) = 7.20 kg/s.\n- Volumetric flow rate Q = m_dot / rho = 7.20 / 1200 = 0.00600 m3/s = 21.60 m3/h.\n\n3. Piping Selection (VortaTube Series):\nVelocity must satisfy 2.00 m/s <= v <= 3.20 m/s:\n- VT-32 (D = 0.032 m): A = 8.0425e-4 m2 -> v = 7.460 m/s (> 3.20 m/s, fails).\n- VT-40 (D = 0.040 m): A = 1.2566e-3 m2 -> v = 4.775 m/s (> 3.20 m/s, fails).\n- VT-50 (D = 0.050 m): A = pi * 0.025^2 = 1.963495e-3 m2 -> v = 0.00600 / 1.963495e-3 = 3.0558 m/s (valid, 4.51% margin below 3.20 m/s).\n- VT-65 (D = 0.065 m): A = 3.3183e-3 m2 -> v = 1.808 m/s (< 2.00 m/s, fails).\nSelect VT-50.\n\n4. Pipe Reynolds Number and Pressure Drops:\n- Re = rho * v * D / mu = 1200 * 3.055775 * 0.050 / 0.00240 = 76394.4.\n- Friction factor f = 0.3164 / Re^0.25 = 0.3164 / (76394.37)^0.25 = 0.3164 / 16.62535 = 0.019031.\n- Dynamic pressure q_dyn = 0.5 * rho * v^2 = 0.5 * 1200 * (3.055775)^2 = 5602.66 Pa = 5.6027 kPa.\n- Suction line pressure loss (L_s = 8.0 m, K_s = 2.50):\n  dp_suction = (f * (L_s / D) + K_s) * q_dyn = (0.019031 * (8.0 / 0.050) + 2.50) * 5.60266 = (3.0450 + 2.50) * 5.60266 = 31.067 kPa.\n- Total piping pressure loss (L_tot = 80.0 m, K_tot = 14.0):\n  dp_pipe = (f * (L_tot / D) + K_tot) * q_dyn = (0.019031 * (80.0 / 0.050) + 14.0) * 5.60266 = 44.450 * 5.60266 = 249.04 kPa.\n\n5. NPSH Available:\n- Specific weight gamma = rho * g = 1200 * 9.81 = 11772 N/m3 = 11.772 kPa/m.\n- NPSH_A = (P_tank - P_v - dp_suction) / gamma - h_s = (95.0 - 22.0 - 31.067) / 11.772 - 0.50 = 41.933 / 11.772 - 0.50 = 3.5621 - 0.50 = 3.062 m.\n\n6. Filter Selection (FiltraCore Series) and System Head:\nCandidates with filtration rating <= 5 um and Q_max >= 21.60 m3/h are FC-200 and FC-300 (FC-100 has Q_max = 18.0 m3/h; FC-250 has 10 um rating).\nWith mu/mu_ref = 2.40 and rho/rho_ref = 1.20 at Q = 21.60 m3/h (Q^2 = 466.56):\n- FC-200 (C_f = 0.50, B_f = 0.025):\n  dp_clean = 0.50 * 2.40 * 21.60 + 0.025 * 1.20 * 466.56 = 25.920 + 13.997 = 39.917 kPa.\n  dp_fouled = 2.0 * 39.917 = 79.834 kPa.\n  dp_tot(FC-200) = 249.038 + 65.0 + 79.834 = 393.87 kPa -> H_sys = 393.87 / 11.772 = 33.46 m.\n- FC-300 (C_f = 0.35, B_f = 0.015):\n  dp_clean = 0.35 * 2.40 * 21.60 + 0.015 * 1.20 * 466.56 = 18.144 + 8.398 = 26.542 kPa.\n  dp_fouled = 2.0 * 26.542 = 53.084 kPa.\n  dp_tot(FC-300) = 249.038 + 65.0 + 53.084 = 367.12 kPa -> H_sys = 367.12 / 11.772 = 31.19 m.\n\n7. Pump and VFD Frequency Selection (VX-Pump Series):\nCheck AOR (0.70 * Q_BEP(s) <= 21.60 <= 1.20 * Q_BEP(s)):\n- VX-100 (Q_BEP,50 = 12.0 m3/h): max AOR flow at 60 Hz is 1.20 * 14.4 = 17.28 m3/h < 21.60 m3/h (fails).\n- VX-300 (Q_BEP,50 = 32.0 m3/h): min AOR flow at 50 Hz is 0.70 * 32.0 = 22.40 m3/h > 21.60 m3/h (fails).\n- VX-400 (Q_BEP,50 = 45.0 m3/h): min AOR flow at 50 Hz is 31.50 m3/h (fails).\n- VX-200 (Q_BEP,50 = 20.0 m3/h, H_0 = 32.50 m, A_H = 0.0155, N_0 = 1.35 m, A_N = 0.0018):\n  * At 50 Hz (s = 1.0): H_pump = 32.50 - 0.0155 * 466.56 = 25.27 m (< 31.19 m, fails head).\n  * At 60 Hz (s = 1.2): NPSH_R = 1.35 * (1.2)^1.5 + 0.0018 * 466.56 = 1.7746 + 0.8398 = 2.614 m -> 1.20 * NPSH_R = 3.137 m > NPSH_A = 3.062 m (fails cavitation margin, and shaft power is 3.98 kW > 3.40 kW).\n  * At 55 Hz (s = 1.1): Q_BEP = 22.0 m3/h (AOR: 15.4 to 26.4 m3/h, passes).\n    H_pump = 32.50 * (1.1)^2 - 0.0155 * 466.56 = 39.325 - 7.232 = 32.093 m.\n    Since H_pump = 32.09 m, FC-200 (H_sys = 33.46 m) cannot be used, so FC-300 (H_sys = 31.19 m <= 32.09 m, margin 2.91%) is required.\n    NPSH_R = 1.35 * (1.1)^1.5 + 0.0018 * 466.56 = 1.5575 + 0.8398 = 2.397 m -> 1.20 * NPSH_R = 2.877 m <= NPSH_A = 3.062 m (passes).\n\n8. Efficiency and Shaft Power for VX-200 at 55 Hz:\n- Clear-water efficiency eta_w = 0.760 - 0.50 * (21.60 / 22.0 - 1)^2 = 0.760 - 0.000165 = 0.75983.\n- Viscosity correction factor C_mu = 1 - 0.05 * (2.40 / 1.00 - 1) = 0.930.\n- Corrected efficiency eta_p = 0.930 * 0.75983 = 0.70665.\n- Shaft power P_shaft = (1200 * 9.81 * 0.00600 * 32.0933) / (1000 * 0.70665) = 3.208 kW <= 3.40 kW.",
+  "wrong_designs": [
+   {
+    "values": {
+     "selected_pipe": "VT-50",
+     "selected_filter": "FC-200",
+     "selected_pump": "VX-200",
+     "vfd_frequency_Hz": 60,
+     "volumetric_flow_m3_h": 21.6,
+     "fluid_velocity_m_s": 3.06,
+     "reynolds_number": 76394,
+     "fouled_filter_dp_kPa": 79.83,
+     "total_system_head_m": 33.46,
+     "pump_available_head_m": 39.57,
+     "npsh_available_m": 3.06,
+     "pump_shaft_power_kW": 3.98
+    },
+    "failed_requirements": [
+     "R3",
+     "R4",
+     "R5",
+     "R6"
+    ],
+    "rationale": "Selects the smaller FC-200 filter (which increases system head to 33.46 m) and steps the VX-200 VFD up to 60 Hz to overcome the added head; however, at 60 Hz the required NPSH_R rises to 2.614 m (1.20 * NPSH_R = 3.14 m > NPSH_A = 3.06 m, violating R5) and shaft power reaches 3.98 kW (> 3.40 kW limit, violating R6)."
+   },
+   {
+    "values": {
+     "selected_pipe": "VT-50",
+     "selected_filter": "FC-200",
+     "selected_pump": "VX-200",
+     "vfd_frequency_Hz": 55,
+     "volumetric_flow_m3_h": 21.6,
+     "fluid_velocity_m_s": 3.06,
+     "reynolds_number": 76394,
+     "fouled_filter_dp_kPa": 39.92,
+     "total_system_head_m": 29.8,
+     "pump_available_head_m": 32.09,
+     "npsh_available_m": 3.06,
+     "pump_shaft_power_kW": 2.98
+    },
+    "failed_requirements": [
+     "R2",
+     "R3",
+     "R6"
+    ],
+    "rationale": "Uses the clean filter pressure drop (39.92 kPa) instead of the fouled filter pressure drop (79.83 kPa) for FC-200 and omits the C_mu = 0.93 viscosity derating on pump efficiency, falsely concluding that FC-200 passes with VX-200 at 55 Hz."
+   }
+  ],
+  "corpus_pages": [
+   {
+    "title": "Vortexia Fluidics Engineering Manual — Section 1: KryoSol-45 Coolant & VortaTube Piping",
+    "content": "# 1. KryoSol-45 Dielectric Coolant Properties\n\n**Rule 1.1 (Reference Temperature):** All fluid properties in a closed thermal loop must be evaluated at the arithmetic mean loop temperature $T_{\\text{mean}} = \\frac{1}{2}(T_{\\text{in}} + T_{\\text{out}})$.\n\n| Temp ($^\\circ\\text{C}$) | Density $\\rho$ ($\\text{kg/m}^3$) | Specific Heat $c_p$ ($\\text{J/(kg}\\cdot\\text{K)}$) | Dynamic Viscosity $\\mu$ ($\\text{mPa}\\cdot\\text{s}$) | Vapor Pressure $P_v$ ($\\text{kPa(abs)}$) |\n|---|---|---|---|---|\n| 30.0 | 1215 | 1960 | 3.10 | 14.5 |\n| 35.0 | 1208 | 1980 | 2.72 | 18.0 |\n| 40.0 | 1200 | 2000 | 2.40 | 22.0 |\n| 45.0 | 1192 | 2020 | 2.12 | 26.8 |\n| 50.0 | 1185 | 2040 | 1.88 | 32.5 |\n\n---\n\n# 2. VortaTube Smooth-Bore Fluoropolymer Piping\n\n| Model | Inner Diameter $D$ ($\\text{m}$) | Max Working Pressure ($\\text{kPa}$) |\n|---|---|---|\n| `VT-32` | 0.032 | 1000 |\n| `VT-40` | 0.040 | 1000 |\n| `VT-50` | 0.050 | 850 |\n| `VT-65` | 0.065 | 700 |\n\n**Rule 2.1 (Velocity Window):** In KryoSol-45 loops, bulk fluid velocity $v = \\frac{Q}{\\pi (D/2)^2}$ (using $\\pi = 3.14159265$) must satisfy:\n- $v \\ge 2.00\\text{ m/s}$ (to prevent micro-bubble holdup in horizontal runs)\n- $v \\le 3.20\\text{ m/s}$ (to prevent electrostatic charge accumulation)\n\n**Rule 2.2 (Pipe Friction Loss):** VortaTube piping is hydraulically smooth. For turbulent flow ($4000 \\le Re \\le 10^5$, where $Re = \\frac{\\rho v D}{\\mu}$), the Darcy friction factor is:\n$$f = \\frac{0.3164}{Re^{0.25}}$$\nPressure drop across a line segment of length $L$ and minor loss coefficient sum $K$ is:\n$$\\Delta P = \\left(f \\frac{L}{D} + K\\right) \\frac{1}{2} \\rho v^2$$"
+   },
+   {
+    "title": "Vortexia Fluidics Engineering Manual — Section 2: FiltraCore Duplex Inline Filters",
+    "content": "# 3. FiltraCore Duplex Filter Catalogue\n\n| Filter Model | Filtration Rating ($\\mu\\text{m}$) | Max Flow $Q_{\\max}$ ($\\text{m}^3/\\text{h}$) | Laminar Coeff $C_f$ ($\\text{kPa}/(\\text{m}^3/\\text{h})$) | Turbulent Coeff $B_f$ ($\\text{kPa}/(\\text{m}^3/\\text{h})^2$) |\n|---|---|---|---|---|\n| `FC-100` | 3 | 18.0 | 0.80 | 0.040 |\n| `FC-200` | 5 | 25.0 | 0.50 | 0.025 |\n| `FC-250` | 10 | 30.0 | 0.30 | 0.015 |\n| `FC-300` | 5 | 35.0 | 0.35 | 0.015 |\n\n**Rule 3.1 (Clean and Fouled Filter Pressure Drop):**\nFor a fluid with dynamic viscosity $\\mu$ and density $\\rho$ at volumetric flow rate $Q$ (in $\\text{m}^3/\\text{h}$), the clean filter pressure drop (in $\\text{kPa}$) is:\n$$\\Delta P_{\\text{filter,clean}} = C_f \\left(\\frac{\\mu}{\\mu_{\\text{ref}}}\\right) Q + B_f \\left(\\frac{\\rho}{\\rho_{\\text{ref}}}\\right) Q^2$$\nwhere $\\mu_{\\text{ref}} = 1.00\\text{ mPa}\\cdot\\text{s} = 0.00100\\text{ Pa}\\cdot\\text{s}$ and $\\rho_{\\text{ref}} = 1000\\text{ kg/m}^3$.\n\n**Rule 3.2 (Fouled Sizing Margin):** All system head calculations must size the pump for the end-of-life fouled filter condition:\n$$\\Delta P_{\\text{filter,fouled}} = 2.0 \\times \\Delta P_{\\text{filter,clean}}$$"
+   },
+   {
+    "title": "Vortexia Fluidics Engineering Manual — Section 3: VX-Pump Centrifugal Pumps & VFD Drives",
+    "content": "# 4. VX-Pump Series Catalogue (Reference Speed $f_0 = 50\\text{ Hz}$)\n\nAllowed discrete VFD frequency settings: $f_{\\text{VFD}} \\in \\{50, 55, 60\\}\\text{ Hz}$. Define speed ratio $s = f_{\\text{VFD}} / 50$.\n\n| Pump Model | $Q_{\\text{BEP,50}}$ ($\\text{m}^3/\\text{h}$) | Shutoff Head $H_0$ ($\\text{m}$) | Head Coeff $A_H$ ($\\text{m}/(\\text{m}^3/\\text{h})^2$) | Base NPSH $N_0$ ($\\text{m}$) | NPSH Coeff $A_N$ ($\\text{m}/(\\text{m}^3/\\text{h})^2$) | Peak Water Eff $\\eta_{\\max}$ (-) | Eff Roll-off $k_\\eta$ (-) |\n|---|---|---|---|---|---|---|---|---|\n| `VX-100` | 12.0 | 22.00 | 0.0350 | 1.10 | 0.0030 | 0.720 | 0.55 |\n| `VX-200` | 20.0 | 32.50 | 0.0155 | 1.35 | 0.0018 | 0.760 | 0.50 |\n| `VX-300` | 32.0 | 44.00 | 0.0080 | 1.80 | 0.0010 | 0.790 | 0.45 |\n| `VX-400` | 45.0 | 55.00 | 0.0050 | 2.30 | 0.0006 | 0.810 | 0.45 |\n\n**Rule 4.1 (Pump Curves and Allowable Operating Region):**\nWith $Q$ in $\\text{m}^3/\\text{h}$ and $g = 9.81\\text{ m/s}^2$:\n- Best efficiency flow rate at speed ratio $s$: $Q_{\\text{BEP}}(s) = Q_{\\text{BEP,50}} \\cdot s$\n- **Allowable Operating Region (AOR):** The operating flow $Q$ must satisfy $0.70 \\cdot Q_{\\text{BEP}}(s) \\le Q \\le 1.20 \\cdot Q_{\\text{BEP}}(s)$.\n- Available pump head: $H_{\\text{pump}}(Q, s) = H_0 s^2 - A_H Q^2$ (must satisfy $H_{\\text{pump}} \\ge H_{\\text{sys}}$, where $H_{\\text{sys}} = \\frac{\\Delta P_{\\text{pipe}} + \\Delta P_{\\text{load}} + \\Delta P_{\\text{filter,fouled}}}{\\rho g}$).\n- Required NPSH: $NPSH_R(Q, s) = N_0 s^{1.5} + A_N Q^2$.\n\n**Rule 4.2 (Cavitation Margin):**\nAvailable NPSH at the pump inlet with suction lift $h_s$ (where $h_s > 0$ when pump is above tank liquid level) is:\n$$NPSH_A = \\frac{P_{\\text{tank}} - P_v - \\Delta P_{\\text{suction}}}{\\rho g} - h_s$$\nSafe operation requires $NPSH_A \\ge 1.20 \\times NPSH_R$.\n\n**Rule 4.3 (Viscosity Correction and Shaft Power):**\nClear-water efficiency is $\\eta_w = \\eta_{\\max} - k_\\eta \\left(\\frac{Q}{Q_{\\text{BEP}}(s)} - 1\\right)^2$.\nFor fluids with $\\mu > 1.00\\text{ mPa}\\cdot\\text{s}$, hydraulic efficiency is $\\eta_p = C_\\mu \\cdot \\eta_w$, where:\n$$C_\\mu = 1 - 0.05 \\left(\\frac{\\mu}{1.00\\text{ mPa}\\cdot\\text{s}} - 1\\right)$$\nPump shaft input power (in $\\text{kW}$, with discharge throttling valve absorbing $H_{\\text{pump}} - H_{\\text{sys}}$) is:\n$$P_{\\text{shaft}} = \\frac{\\rho g (Q / 3600) H_{\\text{pump}}}{1000 \\cdot \\eta_p}$$"
+   }
+  ],
+  "difficulty_rationale": "(not provided: the generation call ended at its token limit inside this field)"
+ }
+]
