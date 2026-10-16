@@ -622,7 +622,19 @@ async def fetch_credit() -> float | None:
         data = payload.get("data") or {}
         remaining = data.get("remaining")
         if remaining is None:
-            return None
+            # The endpoint answers with the account's
+            # totals and no remaining figure (measured
+            # 2026-10-16: {"data": {"total_credits":
+            # 135.95, "total_usage": 118.948...}} —
+            # the figures the provider's own dashboard
+            # shows), so the remaining credit is the
+            # difference. A payload carrying neither
+            # shape answered no balance.
+            total = data.get("total_credits")
+            usage = data.get("total_usage")
+            if total is None or usage is None:
+                return None
+            remaining = float(total) - float(usage)
         return float(remaining)
     except Exception:
         return None

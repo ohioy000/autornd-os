@@ -49,6 +49,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import functools
 import hashlib
 import importlib.util
 import json
@@ -60,6 +61,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import httpx
 import pytest
 from pydantic import ValidationError
 
@@ -2011,6 +2013,82 @@ class TestGThePreflight:
         # standing cap, so the figures would have
         # understated every tier's worst case by the
         # cap they were meant to bound.
+
+    def test_the_credit_read_answers_the_endpoint_s_shape(
+            self, monkeypatch):
+        # Convention 22: an instrument's test simulates
+        # the condition it watches, end to end. The
+        # account's credits endpoint answers with the
+        # totals and no "remaining" field (measured
+        # 2026-10-16: {"data": {"total_credits": 135.95,
+        # "total_usage": 118.948...}}), so the read
+        # computes the difference - the figure the
+        # provider's own dashboard shows. The transport
+        # is mocked at the layer the instrument reads
+        # (httpx's own MockTransport, the suite's
+        # idiom), so no socket is opened and the
+        # guard's closed world holds.
+        def _totals(request):
+            return httpx.Response(200, json={"data": {
+                "total_credits": 135.95,
+                "total_usage": 118.948013434}})
+
+        monkeypatch.setattr(
+            runner.httpx, "AsyncClient",
+            functools.partial(
+                httpx.AsyncClient,
+                transport=httpx.MockTransport(_totals)))
+        assert asyncio.run(runner.fetch_credit()) == (
+            pytest.approx(17.001986566))
+
+        # The shape the read was first written against
+        # still answers.
+        def _remaining(request):
+            return httpx.Response(200, json={"data": {
+                "remaining": 2.00}})
+
+        monkeypatch.setattr(
+            runner.httpx, "AsyncClient",
+            functools.partial(
+                httpx.AsyncClient,
+                transport=httpx.MockTransport(_remaining)))
+        assert asyncio.run(runner.fetch_credit()) == 2.00
+
+        # A payload carrying neither shape, and a GET
+        # the endpoint refuses, are both no balance -
+        # the refusal the preflight makes, never a
+        # zero (convention 26: no evidence is never
+        # reported as a reading).
+        def _empty(request):
+            return httpx.Response(200, json={"data": {}})
+
+        monkeypatch.setattr(
+            runner.httpx, "AsyncClient",
+            functools.partial(
+                httpx.AsyncClient,
+                transport=httpx.MockTransport(_empty)))
+        assert asyncio.run(runner.fetch_credit()) is None
+
+        def _refused(request):
+            return httpx.Response(401, json={})
+
+        monkeypatch.setattr(
+            runner.httpx, "AsyncClient",
+            functools.partial(
+                httpx.AsyncClient,
+                transport=httpx.MockTransport(_refused)))
+        assert asyncio.run(runner.fetch_credit()) is None
+        # Break-proof (runner.py, fetch_credit, the
+        # totals branch):
+        #     remaining = float(total) - float(usage)
+        #     -> return None
+        # FAILED ...::test_the_credit_read_answers_
+        # the_endpoint_s_shape - AssertionError:
+        # assert None == 17.001986566 : the read
+        # answered the endpoint's real shape as no
+        # balance, so a funded account refused every
+        # run - the exact failure the 2026-10-16
+        # preflight showed before the repair.
 
 
 # ── (g2) The worst-case bound's own repair ──────────
