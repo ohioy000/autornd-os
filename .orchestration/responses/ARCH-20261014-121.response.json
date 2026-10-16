@@ -233,7 +233,7 @@
       "pr_url": "https://github.com/ohioy000/autornd-os/pull/185",
       "commits": {
         "work": "575a0e4",
-        "record": null
+        "record": "f877cab"
       },
       "note": "commits.record is this record's own commit; a commit cannot carry its own sha, so the follow-up commit on this branch names it. CI (5 checks) awaited before the owner's merge, under the owner's standing grant."
     }
