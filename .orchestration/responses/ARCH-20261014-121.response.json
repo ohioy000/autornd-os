@@ -92,8 +92,12 @@
     "the_verification": "The live read now reports $17.001986565999985; the smoke preflight holds (exit 0) - the R4 gate (TIER3_SPEND_AUTHORIZED 2.00 equals the smoke run's registered $2.00 ceiling), the credit check ($17.00 against the $2.00 ceiling), and the arm validations for the arms the smoke runs (F and E only; arm F's table reports the amended bound's worst case $0.7261, refused even at zero spend, the per-call guard remaining the binding check). The suite re-derived to 1480 (the count guards re-derived in the README and HANDOVER, convention 24).",
     "repair_delivery": {
       "branch": "arch/20261016-credit-read",
-      "pr": null,
-      "commits": {}
+      "pr": 182,
+      "pr_url": "https://github.com/ohioy000/autornd-os/pull/182",
+      "commits": {
+        "work": "5ffe2e2",
+        "record": "0daa918"
+      }
     }
   }
 }
