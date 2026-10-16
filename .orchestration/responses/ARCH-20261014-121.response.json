@@ -7,13 +7,34 @@
   "head_after": "89645e8",
   "opened": "2026-10-15, before any work on this command started",
   "preconditions": [
-    {"n": 1, "result": "PASS: the parent response .orchestration/responses/ARCH-20261010-120.response.json exists, status DONE."},
-    {"n": 2, "result": "PASS, COUNT: consistency-as-judge count over the three shipped workflows: 0 (the #176 follow-up landed)."},
-    {"n": 3, "result": "PASS, COUNT: grep -c 'frozen-2026-10-03.3' evals/tier2/versions.json: 1."},
-    {"n": 4, "result": "PASS: the D51 record's section 9 sha256 prefix d0406b0a7e8cbc41 and section 7 prefix 64961cd5cd2b69a4, re-derived with the record's own section-extraction rule (the sections are 1611 and 1686 bytes)."},
-    {"n": 5, "result": "PASS: the stage-1 trace docs/traces/20261005T215237Z-tier3-run.jsonl sha256 prefix d406f0fd59a7f499."},
-    {"n": 6, "result": "PASS, READINGS: no autornd or evals run in flight."},
-    {"n": 7, "result": "PASS, COUNT: 1445 passed in 98.10s, network guard 0 (the suite at head_before)."}
+    {
+      "n": 1,
+      "result": "PASS: the parent response .orchestration/responses/ARCH-20261010-120.response.json exists, status DONE."
+    },
+    {
+      "n": 2,
+      "result": "PASS, COUNT: consistency-as-judge count over the three shipped workflows: 0 (the #176 follow-up landed)."
+    },
+    {
+      "n": 3,
+      "result": "PASS, COUNT: grep -c 'frozen-2026-10-03.3' evals/tier2/versions.json: 1."
+    },
+    {
+      "n": 4,
+      "result": "PASS: the D51 record's section 9 sha256 prefix d0406b0a7e8cbc41 and section 7 prefix 64961cd5cd2b69a4, re-derived with the record's own section-extraction rule (the sections are 1611 and 1686 bytes)."
+    },
+    {
+      "n": 5,
+      "result": "PASS: the stage-1 trace docs/traces/20261005T215237Z-tier3-run.jsonl sha256 prefix d406f0fd59a7f499."
+    },
+    {
+      "n": 6,
+      "result": "PASS, READINGS: no autornd or evals run in flight."
+    },
+    {
+      "n": 7,
+      "result": "PASS, COUNT: 1445 passed in 98.10s, network guard 0 (the suite at head_before)."
+    }
   ],
   "baseline_suite": "1445 passed before (literal, guard 0); 1459 passed after",
   "results": {
@@ -110,8 +131,12 @@
     "the_rerun": "The smoke re-runs after this repair merges: a fresh invocation (a new results file - the resume semantics skip only the units a path already recorded, and the fresh timestamped path records none of them), F on Q9, Q10, Q19, Q23 and E' on Q16, Q17, once each, under the $2.00 ceiling. The account's remaining credit ($17.00 at the last read) funds it; the pin (2.00) and the ceiling (the registered $2.00) already hold R4's equality gate.",
     "repair_delivery": {
       "branch": "arch/20261016-validate-null-kind",
-      "pr": null,
-      "commits": {}
+      "pr": 183,
+      "pr_url": "https://github.com/ohioy000/autornd-os/pull/183",
+      "commits": {
+        "work": "3afd599",
+        "record": "d18a778"
+      }
     }
   }
 }
