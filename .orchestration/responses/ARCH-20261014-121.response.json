@@ -4,7 +4,7 @@
   "status": "DONE",
   "executed": true,
   "head_before": "421e6b3",
-  "head_after": "89645e8",
+  "head_after": "53ce4a6",
   "opened": "2026-10-15, before any work on this command started",
   "preconditions": [
     {
@@ -69,7 +69,8 @@
   "questions_for_advisor": [
     "The re-run ruling: the nine predictions stand untested on a 52-delivered sample biased to the plan's early interleaved order (predictions 8 and 9 have no revisions to read at all). Does the advisor rule a full 246-unit re-run once the owner tops up the provider account - the executor's reading 2 recommends it - or a partial reading of the 52? The pre-registered decision table (D51 record section 7) was written for a complete run; the advisor rules how it applies to a starved one.",
     "The owner's .env.tier3 carried TIER3_SPEND_AUTHORIZED=30 against the command's 'must equal 15.00'. The gate cleared it (at-least semantics) and the cap stayed $15.00, so the run was inside its registered ceiling - but the command's literal wording was not met. Ruling requested: is at-least the intended authorization semantics for the re-measurement's gate, or should the line be corrected to 15.00 before the re-run?",
-    "The owner changed plans on 2026-10-15: rather than the ruled-up arm-B ceiling and the re-run, the failed run's report results were exported to git (docs/results/, this branch). The $0.54 ceiling ruling stands unimplemented and the re-run is shelved; the two questions above remain open. If the advisor rules the re-run, the executor will implement the ceiling ruling (ARM_CEILINGS in runner.py and the manifest version_note registration) before launching it, and the preflight's whole-map validation means the ruling is required for the start even though arm B does not run."
+    "The owner changed plans on 2026-10-15: rather than the ruled-up arm-B ceiling and the re-run, the failed run's report results were exported to git (docs/results/, this branch). The $0.54 ceiling ruling stands unimplemented and the re-run is shelved; the two questions above remain open. If the advisor rules the re-run, the executor will implement the ceiling ruling (ARM_CEILINGS in runner.py and the manifest version_note registration) before launching it, and the preflight's whole-map validation means the ruling is required for the start even though arm B does not run.",
+    "The Q16 block: the serving disconnected at the unit's first call (RemoteProtocolError: Server disconnected without sending a response) and the pipeline blocked unretried - the retried kinds are empty_reply, parse_failure and transient_tls, and the empty-reply wrapper that recovered Q17's empty content (attempt 1 of 3) did not cover a disconnect. The unit recorded the block honestly (0 calls, $0.00, terminal blocked, nothing billed), so nothing in the six answers is lost to a harness defect; but the same serving produced both a retried failure class (Q17's empty reply) and an unretried one (Q16's disconnect). Ruling requested: does a disconnect join the retried kinds? That is retry wiring - instrument repair, the executor's to implement with an end-to-end test - but it changes what a Q16 re-run would conclude, so it is the advisor's call. If ruled, Q16 re-runs under the same '$2.00' ceiling."
   ],
   "delivery_state": {
     "branch": "arch/20261015-121-the-record",
@@ -128,7 +129,7 @@
     "the_defect": "R2 added kind and source_quote to three models (DomainConcern, ValidateVerdict, ReviewFinding) but armed only two of them with the null-coercing field validator: DomainConcern and ReviewFinding coerce a null kind to the empty string (stored as stated, the effective kind derived at the point of use by dissent_kind); ValidateVerdict's kind stayed a plain str, so the live judge's null - the well-formed-enough output of a judge with nothing false to report - crashed the parse. The suite never simulated the live shape: the R2 acceptance tests scripted an absent key (the default applies), not an explicit null (convention 22: the test did not simulate the condition the instrument watches).",
     "the_repair": "The same _coerce_kind field validator DomainConcern and ReviewFinding already carry, on ValidateVerdict: a null kind is stored as stated (empty), never crashes the parse, and dissent_kind() reads it as the wrong_fact the ruling makes it. Instrument repair, the executor's domain - crash-proofing a phase against well-formed-enough model output; the ruling's semantics are unchanged (an unstated kind is still read as wrong_fact, a wrong_fact still anchors only through a source_quote the free check finds).",
     "the_test": "test_the_null_kind_the_live_judge_answers (tests/test_d51_acceptance.py, TestTheStage1RouteIsClosed) - the scripted criterion-shaped objection now answers 'kind': null, the live judge's shape, and the run completes with the dissent counted unverified_dissent 1. Break-proof recorded: the validator deleted -> FAILED with pydantic ValidationError '1 validation error for ValidateVerdict - Input should be a valid string [input_value=None]' at the parse site (autornd/engine/phases.py:1125) - the smoke run's own first unit, measured live.",
-    "the_rerun": "The smoke re-runs after this repair merges: a fresh invocation (a new results file - the resume semantics skip only the units a path already recorded, and the fresh timestamped path records none of them), F on Q9, Q10, Q19, Q23 and E' on Q16, Q17, once each, under the $2.00 ceiling. The account's remaining credit ($17.00 at the last read) funds it; the pin (2.00) and the ceiling (the registered $2.00) already hold R4's equality gate.",
+    "the_rerun": "The smoke re-runs after this repair merges: a fresh invocation (a new results file - the resume semantics skip only the units a path already recorded, and the fresh timestamped path records none of them), F on Q9, Q10, Q19, Q23 and E' on Q16, Q17, once each, under the $2.00 ceiling. The account's remaining credit ($17.00 at the last read) funds it; the pin (2.00) and the ceiling (the registered $2.00) already hold R4's equality gate. It ran 2026-10-16 after PR #183 merged: six units, five delivered (all shipped), Q16 incomplete on a serving disconnect - the per-unit report, every dissent with its kind and anchors, and the reason each unit ended are in smoke_rerun_2026_10_16 on this response.",
     "repair_delivery": {
       "branch": "arch/20261016-validate-null-kind",
       "pr": 183,
@@ -138,5 +139,85 @@
         "record": "d18a778"
       }
     }
+  },
+  "smoke_rerun_2026_10_16": {
+    "the_plan": "The fresh re-measurement the fix plan ordered, run 2026-10-16 after PR #183 (the null-kind repair) merged to main (b92ecd6). Two invocations of the smoke mode, each its own gate, credit preflight and '$2.00' sweep budget, each writing a fresh timestamped results path (the resume semantics skip only units a path already recorded): arm F on Q9, Q10, Q19, Q23 (order sha256 858de23f9f8286bca6578751ce8f7797093d933ba6862cc61455cd55460746f7, 4 units) and arm E' on Q16, Q17 (order sha256 fdb0bb577ed3a1ca499879fce7b61260aee127beb1defe2603db2540cb560ee5, 2 units). Seed 20261015, one repetition, the ratified pin set (servings fingerprint e0dc92a3aecb, the same as the stopped first run), arm_f_call_limit 10 (R3's bound: 2 + grounding's maximum 4 + 4), arm_e_call_limit 40. Launched from the owner's checkout at main b92ecd6 with TIER3_SPEND_AUTHORIZED=2.00 (the owner's one-line G-3 grant of 2026-10-15; R4's equality gate held at both invocations, authorization_ceiling 2.0 in both trace headers), the credit preflight reading $17.001986565999985 (total_credits 135.95 minus total_usage 118.948013434, the endpoint's totals-only shape the credit-read repair computes). No git operations while it wrote.",
+    "invocation_1_arm_F": {
+      "results": "docs/traces/20261016T071246Z-tier3-smoke.jsonl",
+      "sha256": "c950e678637956af1b5c1a109f868f8c828904ac9c84026d52bb5cfbe1cec49f",
+      "lines": 9,
+      "workflow": "verify-first",
+      "summary": "4 units, 4 delivered - all shipped - delivered correctness 2/4 against the frozen scorer keys, $0.174753 spent, $0.0000 unreconciled liability, 388 s wall clock (mean 97.0 s, max 197.8 s), credit not exhausted."
+    },
+    "units_F": [
+      {
+        "unit": "Q19 r1 F",
+        "status": "delivered, shipped",
+        "cost": "$0.021538, 6 calls, 52.5 s",
+        "revised": "no - one iteration, no rework review; the answer is the first candidate",
+        "dissents": "none. Both judges (implement, validate) agree - the judges verdict is green, 'all 2 judges agree'; validate green with no red cause; coverage passed; consistency passed. No notes, no open dissents. (This is the unit that blocked on the validate judge's 'kind': null in the first run of 2026-10-16 05:52Z; this run the judges agreed and the unit completed - and had the judge answered null again, the repaired coercer would have carried it as an unverified-dissent note instead of blocking the parse.)",
+        "scorer": "5/6 - Organization fails ('0 section headings (3 required); themes present: [True, True, True]'); the three resistance/current items pass (330.0 ohm and 0.02 A; 270.0 ohm and 24.4 mA with the too-high failure stated; 390.0 ohm and 16.9 mA)",
+        "ended": "pipeline completed - the workflow reached its terminal inside one iteration"
+      },
+      {
+        "unit": "Q23 r1 F",
+        "status": "delivered, shipped",
+        "cost": "$0.036265, 6 calls, 82.9 s",
+        "revised": "no - one iteration",
+        "dissents": "the coverage judge dissented (coverage_passed false, zero abstentions) - counted as coverage_note under R1: coverage is a note, its result is recorded, a fail is counted, and it never blocks or reaches a revision. One ask quote failed to anchor (unanchored_ask_quote). The validate judge is green with four evidence lines, all PASS (linear elasticity; no temperature change; tensile stress in each bar; force carried by each bar). No open dissents.",
+        "scorer": "5/5 PASS - common extension 0.00088235 m; aluminum tensile stress 6.17647e7 Pa; steel tensile stress 1.76471e8 Pa; aluminum force 12352.9 N; steel force 17647.1 N",
+        "ended": "pipeline completed"
+      },
+      {
+        "unit": "Q9 r1 F",
+        "status": "delivered, shipped",
+        "cost": "$0.022228, 6 calls, 54.6 s",
+        "revised": "no - one iteration",
+        "dissents": "the coverage judge dissented - counted as coverage_note (R1), with two coverage abstentions; one ask quote failed to anchor (unanchored_ask_quote)",
+        "scorer": "3/5 - 'Next lower stiffness check' fails (8.00 N/mm within tolerance: True; 15.0 mm within tolerance: True; failure verdict stated: False - all three are required) and Organization fails (0 section headings). Selected stiffness (10.0 N/mm), selected extension and verdict (12.0 mm, the limit-equality pass stated) and stored elastic energy (720.0 N-mm) pass",
+        "ended": "pipeline completed"
+      },
+      {
+        "unit": "Q10 r1 F",
+        "status": "delivered, shipped",
+        "cost": "$0.094722, 7 calls, 198.2 s",
+        "revised": "no - one iteration",
+        "dissents": "the coverage judge dissented - counted as coverage_note (R1); every ask quote anchored this unit (no unanchored_ask_quote)",
+        "scorer": "4/4 PASS",
+        "ended": "pipeline completed"
+      }
+    ],
+    "invocation_2_arm_E": {
+      "results": "docs/traces/20261016T071922Z-tier3-smoke.jsonl",
+      "sha256": "ac277801ccfb176c7f048fe074932c3f09a110d24f6377fccd63c60361c2478a",
+      "lines": 5,
+      "workflow": "engineering-rnd",
+      "summary": "2 units, 1 delivered, 1 incomplete - delivered correctness 1/2 - $0.062756 spent, $0.0000 unreconciled liability, 771 s wall clock (mean 385.4 s, max 710.1 s)"
+    },
+    "units_E": [
+      {
+        "unit": "Q17 r1 E",
+        "status": "delivered, shipped",
+        "cost": "$0.062756, 13 calls (11 after asks), 710.1 s; by tier: triage $0.009276, research $0.006429, architecture $0.011926, engineering $0.031225, judge $0.003900",
+        "revised": "no - one iteration, no rework review",
+        "serving_fault_survived": "the architecture tier (xiaomi/mimo-v2.6-pro:exacto) returned empty content once (finish_reason=error, 24111 completion tokens against max_tokens 32768); the empty-reply wrapper retried (attempt 1 of 3) and the unit completed - one unattributed empty_reply retry, excluded from the rejection counters",
+        "dissents": "the review recorded twelve findings, quorate (3 of 3 reviewers assigned and completed, none not reviewed): six typed wrong_fact - five on ask 2 ('what minimum unlocking strength is required for tagout-device attachment means') and one on ask 3 ('how frequently must the employer inspect the energy-control procedure') - each of the six quoting 29 CFR 1910.147(c)(7)(ii) or (c)(6)(i) as its source_quote (the 50-pound requirement; the answer's 'non-reusable', 'self-locking', 'non-releasable' descriptors and the cable-tie comparison, which the regulation does not state; the answer's attribution of the 50-pound requirement to the attachment means generally; the '365 days; 366 days' precision the regulation does not state), one of the six carrying hazard: true with an empty hazard_quote; and six typed note. All twelve findings are at medium or low severity, so none reached the blocking decision - D51's fold: the blocking decision rests on the anchored findings alone, and a medium finding never blocks. Five dissents across the run were counted unverified_dissent (R2: wrong_fact claims whose source quotes could not be anchored against the request and the run's grounding - the knowledge store is empty, so the free quote check has no grounding text to anchor against; the run cannot check the claim, so under D51 (5) it is unavailable, never blocking) and one ask quote failed to anchor (unanchored_ask_quote). No open dissents; nothing reached a revision.",
+        "judges": "green, both agree; validate green with four evidence lines, all PASS (the regulation and edition cited; minimum unlocking strength 50 lb; annual inspection; strength in pounds). Feasibility: two reviewed, no blockers. Triage: safety domain, critical risk",
+        "scorer": "2/2 PASS",
+        "ended": "'advisory review: shipped' - the pipeline completed and the advisory review shipped the answer"
+      },
+      {
+        "unit": "Q16 r1 E",
+        "status": "incomplete, no answer",
+        "cost": "$0.000000, 0 calls, 60.6 s",
+        "revised": "n/a - no answer was produced",
+        "dissents": "none - no phase completed a call; no notes, no open dissents",
+        "serving": "the lineup was pinned: triage and research google/gemini-3.8-flash (Google AI Studio), search perplexity/sonar, architecture xiaomi/mimo-v2.6-pro:exacto (Xiaomi), engineering thinkingmachines/inkling:exacto (Together), judge qwen/qwen3-235b-a22b-2507:exacto (Google), escalation moonshotai/kimi-k3:exacto",
+        "ended": "the pipeline blocked at its first call - 'stopped by the unhandled error: RemoteProtocolError: Server disconnected without sending a response' - terminal status blocked, 'the pipeline ended without an answer'. No retries (retries_by_kind.total 0: the disconnect is not among the retried kinds - empty_reply, parse_failure and transient_tls are, and the empty-reply wrapper that recovered Q17's empty content did not cover a disconnect), no finish reasons, no tier costs, credit not exhausted, $0.00 unreconciled"
+      }
+    ],
+    "the_totals": "6 units planned, 5 delivered (all shipped), 1 incomplete; $0.237509 spent across the two '$2.00' ceilings; no unit revised - every unit reached its terminal inside one iteration (f_first_vs_final records revised_units 0, and the prediction is reported, not tested, until five units revise); no credit exhaustion; no unreconciled liability",
+    "the_q16_block": "A serving fact, not a measurement defect: the provider disconnected at Q16's first call and the pipeline blocked unretried. The unit recorded the block honestly - 0 calls, $0.00, terminal blocked, nothing billed - so nothing in the six answers is lost to a harness defect. But the same serving produced both a retried failure class (Q17's empty reply, recovered at attempt 1 of 3) and an unretried one (Q16's disconnect). Whether a disconnect joins the retried kinds is retry wiring - instrument repair, the executor's to implement with an end-to-end test (convention 22) - but it changes what a Q16 re-run would conclude, so it is the advisor's call. If ruled, Q16 re-runs under the same '$2.00' ceiling.",
+    "what_the_advisor_reads": "The six answers. Arm F (verify-first): Q23 and Q10 fully correct (5/5 and 4/4 against the frozen keys); Q19 and Q9 delivered and shipped but not fully correct (5/6 and 3/5 - Q19's answer carries no section headings; Q9's answer omits the next-lower-stiffness failure verdict and the headings). Arm E' (engineering-rnd): Q17 fully correct (2/2) but the review disputes its descriptive claims - six wrong_fact findings say the answer states the attachment means must be 'non-reusable', 'self-locking' and 'non-releasable', compares them to a nylon cable tie, attributes the 50-pound requirement to the attachment means generally, and adds leap-year precision to the annual inspection - none of which the cited regulation states; under R2 those findings are unanchored (the store is empty), so they are notes and did not block. Q16: no answer - the serving disconnected."
   }
 }
