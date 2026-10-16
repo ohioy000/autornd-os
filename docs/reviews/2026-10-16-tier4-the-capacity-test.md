@@ -1,6 +1,6 @@
 # Tier 4: the capacity test (proposed Ruling D52)
 
-**Status:** proposed by the advisor on 2026-10-16 and awaiting the owner's sign-off. Nothing here runs or spends until the owner approves §12.
+**Status:** proposed by the advisor on 2026-10-16. The owner's budget direction of the same date is "test small and keep improving like we have", so the record is staged (§5): a pilot of at most $7, then fixes, then capped growth steps, each on the owner's go. Nothing runs or spends until the owner approves §12.
 
 **Decision it serves:** whether the pipeline's structure (grounding, a plan, check-and-revise loops and review) recovers answers a single call misses, on work hard enough for a single call to miss. That is success bar S2 (value) from the D51 record §2. No run has tested it yet.
 
@@ -54,9 +54,11 @@ There are two families.
 
   The checker is never the reported result. Prediction P8 measures how often it agrees with the readings.
 
+  The checker is built from the first growth step on (§5). The pilot is graded by the advisor's reading alone.
+
 ## 4. Building the set
 
-1. **The owner runs the generator prompt** (Appendix A) on a model that is not one of the arms' pins. It produces 20 candidates: 12 F1 and 8 F2. Each candidate carries:
+1. **The owner runs the generator prompt** (Appendix A) on a model that is not one of the arms' pins. It produces a batch of candidates, 8 for the pilot (5 F1 and 3 F2). Each candidate carries:
    - the request;
    - the requirements, with their checks;
    - a reference design and a worked solution;
@@ -70,17 +72,39 @@ There are two families.
    - no ambiguity.
 
    A candidate that fails verification is dropped or returned for a fix, never fixed silently.
-3. **The owner freezes the verified set** (D44). From then on, requests, requirements and corpus stay byte-identical. A change is a new version, reported side by side.
+3. **The owner freezes each verified batch** (D44). From then on, its requests, requirements and corpus stay byte-identical. A change is a new version, reported side by side.
+4. **Pilot questions never enter the measurement of record.** The harness may be fixed in response to them, so the record uses a fresh batch.
 
-## 5. Calibration: keep only questions with headroom
+## 5. Small steps: the pilot first, then growth
 
-- **F1:** the cheapest and the strongest single calls answer each F1 candidate once. A question is kept if, read by hand, either fails it.
-- **F2:** the strongest single call answers each F2 candidate once, **with the corpus pages handed to it in the prompt** (oracle retrieval). A question is kept if that call fails it, so F2 measures what structure adds beyond having the data. A single call without the pages cannot answer F2 by construction, so that comparison is not made.
-- **Target:** 10 kept questions, at least 6 F1 and at least 4 F2. If fewer than 8 qualify, the set is too easy. Regenerate harder; the bar is never lowered.
-- **Selection bias:** the main run uses fresh repetitions, and calibration answers are never pooled into the result. The main run's single-call rate on the kept questions is reported, so any regression to the mean is visible.
-- **Cost:** about $3 (cap $5).
+The owner's direction (2026-10-16): test small and keep improving. Tier 4 grows in steps, each capped and each on the owner's go, and each step's lessons are fixed before the next one spends.
 
-## 6. The measurement
+**Step 1: the pilot (at most $7).**
+- **Batch:** 8 generated candidates, 5 F1 and 3 F2, verified (§4).
+- **Calibration (cap $2):**
+  - F1: the cheapest and the strongest single calls answer each candidate once;
+  - F2: the strongest single call answers each candidate once, with the corpus pages in its prompt (oracle retrieval);
+  - a question is kept if, read by hand, a single call fails it.
+- **Pilot run (cap $5):** up to 4 kept questions (3 F1 and 1 F2 where they qualify), once each, through every arm in §6. That is at most 15 units.
+- **Grading:** the advisor's reading only. The pilot gives no verdict.
+- **The pilot answers three questions:**
+  1. Do hard generated questions defeat a single call at all? At least half of the 8 should.
+  2. Does every arm complete its units without an apparatus failure?
+  3. Can every answer be graded against its requirements?
+
+**Step 2: fix what the pilot exposed** (free, the executor's PRs, reviewed by probe). If fewer than half the candidates defeated a single call, the next batch is generated harder; the bar is never lowered.
+
+**Step 3 and on: growth steps (cap about $10 each, the owner's go each time).**
+- Each step adds a fresh verified batch and repetitions, at the per-unit costs the pilot measured.
+- From the first growth step on:
+  - the requirement checker (§3) is built;
+  - the readings are two and blind;
+  - §7–§8 are registered by sha256 before any unit of that step runs.
+- The measurement of record is the growth steps' units together. Steps are added until each arm has 20 units on kept questions, about 10 questions × 2 repetitions, or until a step's data already settles §8.
+
+**Selection bias:** every step uses fresh repetitions; calibration answers are never pooled into a result; and each step reports the single-call rate on its kept questions, so any regression to the mean is visible.
+
+## 6. The arms
 
 The arms use the standing pins (tier-3 fingerprint `e0dc92a3aecb`) unless the owner re-pins first under G-2.
 
@@ -99,13 +123,6 @@ The arms use the standing pins (tier-3 fingerprint `e0dc92a3aecb`) unless the ow
 | E vs F-first | plan, loops and review, with the same tiers and grounding |
 | F-final vs F-first | what one check-and-revise adds (prediction 9 of D51, finally with headroom) |
 
-**Plan:**
-- 10 questions × 2 repetitions:
-  - F1: 6 × 2 × 4 arms = 48 units;
-  - F2: 4 × 2 × 3 arms = 24 units;
-  - 72 units in total.
-- Seeded interleaved order, its digest registered.
-
 **Limits:**
 - Deadline: 3600 s per unit.
 - Per-unit ceilings, which the preflight sets from measured worst cases and which may rise only with the figures:
@@ -114,23 +131,21 @@ The arms use the standing pins (tier-3 fingerprint `e0dc92a3aecb`) unless the ow
   |---|---|---|---|---|
   | ceiling | $0.10 | $0.30 | $0.40 | $1.50 |
 
-**Cost:**
-- Expected about $15–25: the pipeline is most of it, at about $0.50–1.00 per hard unit.
-- Authorisation cap $30.
-
-**Apparatus,** all repaired before this run (#181–#185):
+**Apparatus,** all repaired before tier 4 (#181–#185):
 - the credit preflight;
 - the stop at the first out-of-credit error, with resume;
 - the exact spend gate;
 - retries for disconnects and TLS alerts;
 - terminal reasons in every record.
 
-## 7. Predictions (pre-registered)
+The pilot measures the real per-unit cost of each arm on hard questions. Each growth step is sized from that measurement.
 
-Each is reported as it reads. None is edited after this section is committed (convention 7).
+## 7. Predictions (for the measurement of record)
 
-- **P1 Headroom.** At least 8 of the 20 candidates defeat the calibration's single call.
-- **P2 The bar.** On the 10 kept questions, D holds at most 13 of 20 units in the main run.
+Registered by sha256 before the first growth step's first unit. The thresholds are written for 20 units per arm and may be restated once, from the pilot's measured costs and sizes, before that registration, never after (convention 7). The pilot is exploratory and tests none of them.
+
+- **P1 Headroom.** At least half of each batch's candidates defeat the calibration's single call.
+- **P2 The bar.** On kept questions, D holds at most 13 of 20 units.
 - **P3 Structure adds value.** E holds at least D + 3 units (of 20).
 - **P4 The check helps.** F revises at least 4 units, and those revisions go wrong-to-right more often than right-to-wrong.
 - **P5 Beyond retrieval.** On F2, E holds at least D + 2 units (of 8). D holds the pages, so this is structure, not lookup.
@@ -138,7 +153,7 @@ Each is reported as it reads. None is edited after this section is committed (co
 - **P7 Economy.** E's cost per held answer is at most 30× D's, and its median latency at most 20× D's.
 - **P8 The screen.** The requirement checker agrees with the resolved readings on at least 90% of units.
 
-## 8. The decision this run makes
+## 8. The decision the measurement of record makes
 
 | outcome | what it means | next |
 |---|---|---|
@@ -147,9 +162,9 @@ Each is reported as it reads. None is edited after this section is committed (co
 | F-final ≥ E − 1 at no more than 1/5 of E's cost | The smallest structure does the job. | Verify-first is the hard-question lane; the full pipeline narrows or retires. |
 | \|E − D\| ≤ 2 | Structure does not pay at these pins. | The product is a single call with verify-first's check as a flag. The pipeline is redesigned before any more spend on it. |
 | E ≤ D − 3 | Structure harms even on hard work. | Retire the full pipeline. Verify-first stays only where it holds at least D. |
-| P1 fails | The questions are too easy. | Regenerate harder. No main run. |
+| P1 fails | The questions are too easy. | Regenerate harder before the next step. |
 
-With 10 questions the readings are paired by question and reported question by question. The thresholds are sized for 20 units per arm and are not tests of significance.
+Readings are paired by question and reported question by question. The thresholds are sized for 20 units per arm and are not tests of significance. A pilot or growth step whose data is lopsided may settle a row before 20 units, and the owner may stop there.
 
 ## 9. Fairness to the pipeline
 
@@ -186,34 +201,34 @@ With 10 questions the readings are paired by question and reported question by q
 | step | who | cost |
 |---|---|---|
 | 1. Sign off this design, or amend it | owner | — |
-| 2. Command 122: tier-4 tooling. The dataset format, the requirement checker, the verify script, the corpus profile, calibration and main modes, D-with-pages and the reading sheet | executor | $0 |
-| 3. Run the generator prompt (Appendix A), in parallel with step 2 | owner | the owner's own model |
+| 2. Command 122: pilot tooling. The tier-4 dataset format, a verify script (the reference design passes and each wrong design fails), the fictional corpus profile, tier-4 questions in the calibration and named-unit modes, and D-with-pages | executor | $0 |
+| 3. Run the generator prompt (Appendix A) for the pilot batch of 8, in parallel with step 2 | owner | the owner's own model |
 | 4. Verify every candidate | advisor | $0 |
-| 5. Calibration | owner's gate | about $3 (cap $5) |
-| 6. Freeze the 10; pre-register §7–§8 by sha256; mocked dry run of all 72 units | executor, owner signoff | $0 |
-| 7. The main run, 72 units | owner's gate | about $15–25 (cap $30) |
-| 8. Two blind readings, resolution, verdict against §8 | executor (reading 2, first), advisor (reading 1) | $0 |
+| 5. Pilot calibration | owner's gate | cap $2 |
+| 6. Pilot run, at most 15 units, and the advisor's reading | owner's gate | cap $5 |
+| 7. Fix what the pilot exposed | executor, advisor review | $0 |
+| 8. Growth steps: a fresh batch each, the requirement checker, two blind readings, §7–§8 registered | owner's go each time | cap about $10 each |
 
 ## 12. The owner's decisions
 
-1. **The design:** approve, or amend the families, size or arms.
-2. **Budget:** calibration cap $5; main-run cap $30. A smaller first pass is possible at 6 questions × 2 repetitions, cap $20.
+1. **The design:** approve, or amend the families or arms.
+2. **Budget:** given 2026-10-16: test small and grow. The pilot is capped at $7 in total; each growth step at about $10, on the owner's go.
 3. **Generator:** which model runs Appendix A. It must not be one of the arms' pins.
 4. **Pins:** unchanged (`e0dc92a3aecb`), or re-pin first under G-2.
 
 ## Appendix A: the generator prompt
 
-The owner pastes this into the generating model unchanged. The output goes to the advisor for verification, not into the repository directly.
+The owner pastes this into the generating model unchanged. The output goes to the advisor for verification, not into the repository directly. This is the pilot batch; a growth step reuses the prompt with its own counts and fresh ids.
 
 ```
 You are writing a benchmark of HARD, CLOSED-WORLD engineering design questions. Each must be answerable from the data given, checkable by recomputation, and hard enough that a careful expert working in a single pass has a real chance of getting at least one requirement wrong.
 
-Produce exactly 20 candidates as one JSON array:
-- 12 of family "F1" (all data in the request);
-- 8 of family "F2" (the data lives in fictional corpus pages you also write).
+Produce exactly 8 candidates as one JSON array:
+- 5 of family "F1" (all data in the request);
+- 3 of family "F2" (the data lives in fictional corpus pages you also write).
 
 Each candidate is an object with these fields:
-- id: "T4-01" ... "T4-20"
+- id: "T4-01" ... "T4-08"
 - family: "F1" or "F2"
 - domain: mechanical, electrical, fluid, thermal, structural, or controls
 - request: the question exactly as a user would ask it, at most 350 words, SI units. It must end with: "End with a table headed Results with these rows: <row names and units>."
@@ -236,6 +251,6 @@ Rules:
 5. Several designs may pass. The requirements alone decide, never "match the reference".
 6. No trick wording, no ambiguity, no missing data, no contradictory data.
 7. F2 corpus pages describe fictional products and firms only. Invent names, so that nothing can be looked up.
-8. Vary the domains: at most 4 candidates per domain.
+8. Vary the domains: at most 2 candidates per domain.
 9. Output the JSON array only.
 ```
