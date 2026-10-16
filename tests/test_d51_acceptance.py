@@ -317,6 +317,46 @@ class TestTheStage1RouteIsClosed:
         assert [(i["iteration"], i["dissenting"])
                 for i in runner.iterations] == [(1, [])]
 
+    async def test_the_null_kind_the_live_judge_answers(self):
+        """The live shape the smoke run's first unit measured
+        (2026-10-16): the validate judge, finding nothing false
+        in a correct answer, answered "kind": null — an explicit
+        null, not an absent key — and the string-typed field
+        refused it before the ruling's fallback could read it,
+        blocking the unit on the parse. The field now coerces
+        the null the way the domain concern and the review
+        finding already do: stored as stated (empty), the
+        effective kind derived at the point of use, so the
+        dissent is the note the ruling makes it."""
+        routes = self._routes(True)
+
+        def null_kind(msg, calls):
+            data = routes(msg, calls)
+            if ("validate this implementation" in msg.lower()
+                    and isinstance(data, dict)
+                    and data.get("green") is False):
+                data = dict(data, kind=None)
+            return data
+
+        state, runner, calls = await _drive(
+            "engineering-rnd", null_kind, Q23)
+        assert state.status == "completed"
+        assert state.outputs["validate"].green is True
+        assert normalisations_by_kind().get(UNVERIFIED_DISSENT) == 1
+        assert [(i["iteration"], i["dissenting"])
+                for i in runner.iterations] == [(1, [])]
+        # Break-proof (verdicts.py, ValidateVerdict._coerce_kind):
+        #     if value is None:
+        #         return ""
+        #     -> (the two lines deleted)
+        # FAILED tests/test_d51_acceptance.py::TestTheStage1RouteIs
+        # Closed::test_the_null_kind_the_live_judge_answers -
+        # ValidationError: 1 validation error for ValidateVerdict
+        # kind: Input should be a valid string [input_value=None] :
+        # the parse refused the null the live judge answered, and
+        # the unit blocked on the crash instead of completing — the
+        # smoke run's own first unit, measured live.
+
     async def test_break_proof_the_same_dissent_anchored_fails_the_work(self):
         """Break-proof: give the objection its anchor (a failed
         ask, stated as the unmet ask it is) and the same script
