@@ -41,7 +41,9 @@ The criteria, as the command orders them:
     scenario ids generalize still keys the tier-3 dry run's own
     ids to the same workflows;
 (h) the provider pins (R7) - the mapping, the empty-entry rule,
-    the idempotency, the install-and-restore context;
+    the idempotency, the install-and-restore context, and the
+    serving-mismatch comparison (on the provider's name, not
+    the string form each side writes it in), with its break-proof;
 (i) the batch registration (R9) - every registered figure, the
     sha256 conventions, the missing-field refusal;
 (j) the paid path's pin source (R7) - the ratified
@@ -1782,6 +1784,88 @@ class TestHProviderPins:
         # accounting records the serving under that function.
         assert runner._arm_pin_key("D-pages") == (
             f"tier4_arm_{runner.ceiling_key('D-pages').lower()}")
+
+    def test_the_serving_mismatch_compares_the_provider_not_the_form(
+            self):
+        """The R7 comparison names the provider that served,
+        on the provider's name - not on the string form each
+        side writes it in. The live response names the
+        provider bare ("InferenceNet"); the owner's order
+        line writes the call-time specifier
+        ("inference-net/fp4") - a form the repo measured
+        2026-09-30 never matching the bare name raw
+        (autornd/preflight.py, _base_provider). Measured
+        live 2026-10-17: the batch-2 calibration's two
+        D-pages units, both served by the pinned
+        InferenceNet, were both flagged serving_mismatch on
+        exactly that gap.
+
+        Break-proof: revert the comparison to raw sets
+        (set(served) <= set(pin)) and the first asserts
+        fail - the live forms mismatch, and a correctly
+        served unit would be thrown out of the readable
+        counts as mis-served."""
+        batch = PILOT
+        servings = runner.DRY_RUN_SERVINGS
+        catalogue = runner._dry_run_catalogue(servings)
+        rates = _rates(catalogue)
+        context = tier3._DryRunContext()
+        questions = batch.questions()
+        budget = runner.SweepBudget(
+            cap=batch.calibration_ceiling)
+        # The owner's real pin form on the dry run's line:
+        # the D arm's entry is the call-time specifier the
+        # owner ratified, not the dry run's serving id.
+        pin_line = runner.DRY_RUN_PROVIDER_ORDER.replace(
+            f"tier3_arm_d:{servings['D']}",
+            "tier3_arm_d:inference-net/fp4")
+        overrides = {
+            "TIER3_ARM_A": servings["A"],
+            "TIER3_ARM_B": servings["B"],
+            "TIER3_ARM_C_1": servings["C"][0],
+            "TIER3_ARM_C_2": servings["C"][1],
+            "TIER3_ARM_D": servings["D"],
+            "TIER3_SERVINGS_RATIFIED": (
+                runner._servings_fingerprint(servings)),
+            "TIER3_SPEND_AUTHORIZED": (
+                f"{batch.calibration_ceiling:.2f}"),
+        }
+        def _unit_with_provider(provider):
+            script = tier3.DryRunScript()
+            script._calls[("T4-06", 1, "D-pages")] = [{
+                "content": "an answer",
+                "finish_reason": "stop",
+                "provider": provider,
+                "prompt_tokens": 900,
+                "completion_tokens": 1200}]
+            calls: list[dict[str, Any]] = []
+            with runner._env_overrides(overrides), \
+                    runner._harness_pin_overrides(
+                        servings["E"]), \
+                    runner.tier4_pins(pin_line):
+                runner._install_rates(catalogue)
+                factory = _recording_factory(
+                    script, rates, context, calls)
+                dispatcher = (
+                    runner._dry_run_tool_dispatcher(
+                        script, context))
+                return asyncio.run(runner.run_tier4_unit(
+                    ("T4-06", 1, "D-pages"), questions,
+                    servings, budget, client_factory=factory,
+                    tool_dispatcher=dispatcher,
+                    batch=batch))
+        # The live response's form: the bare provider name
+        # the pinned order line's specifier names. Served by
+        # the pinned provider - no mismatch.
+        served = _unit_with_provider("InferenceNet")
+        assert served.serving_pins == ["inference-net/fp4"]
+        assert served.providers_by_tier == {
+            "tier4_arm_d": ["InferenceNet"]}
+        assert served.serving_mismatch is False
+        # A provider outside the pin still mismatches - the
+        # ruling's semantics, on the normalized name.
+        mis_served = _unit_with_provider("Google AI Studio")
+        assert mis_served.serving_mismatch is True
 
 
 # ── (i) The batch registration (R9) ─────────────────────
