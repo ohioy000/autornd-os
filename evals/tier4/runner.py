@@ -37,8 +37,11 @@ The single-call arms (A, D, D-pages) run on the owner's ratified
 provider pins (R7): the ``tier3_arm_a`` and ``tier3_arm_d`` entries
 of OPENROUTER_PROVIDER_ORDER, mapped onto the tier-4 arms' own
 function names, so the providers the owner ratified for arms A and D
-serve the tier-4 arms that bill under their own labels. Every unit
-records the provider that served each call; a unit served by any
+serve the tier-4 arms that bill under their own labels. The ratified
+line is read from the paid runners' own config file (``.env.tier3``),
+where the owner ratified those entries — the ambient line the routing
+layer reads from ``.env`` registers no ``tier3_arm_*`` entries. Every
+unit records the provider that served each call; a unit served by any
 other provider is recorded ``serving_mismatch``, kept in the record
 and not read as a result. The single-call arms run with the
 manifest's single-call max_tokens (R8: 32768, the cap the pipeline's
@@ -109,6 +112,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from dotenv import dotenv_values
 
 # The repository root, and the tier-3 runner imported by path.
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -1093,6 +1097,28 @@ def tier4_pins(line: str | None = None):
         yield
     finally:
         harness_settings.openrouter_provider_order = previous
+
+
+def _ratified_provider_order(env_file: Path | None = None) -> str:
+    """The owner's ratified provider-order line, read from the
+    paid runners' own config file (R7).
+
+    The routing layer reads OPENROUTER_PROVIDER_ORDER from the
+    ambient environment and .env — the workflow tiers' pins,
+    which register no tier3_arm_a/tier3_arm_d entries. The
+    owner ratified the single-call arms' pins on the paid
+    runners' line, in .env.tier3 (G-3: the owner's file), and
+    an ambient export of the same variable would shadow a
+    pydantic-settings read of the file — so the tier-4 paid
+    path reads the file directly, and the R7 mapping re-keys
+    the entries the owner actually ratified, wherever the run
+    is launched from. An absent file or line reads as empty,
+    and the preflight refuses the arm: an unpinned arm never
+    falls to the line's general list, which is what served
+    the void calibration."""
+    values = dotenv_values(
+        str(env_file) if env_file is not None else ".env.tier3")
+    return (values.get("OPENROUTER_PROVIDER_ORDER") or "").strip()
 
 
 def _arm_pin_key(arm: str) -> str:
@@ -2838,8 +2864,18 @@ async def _cli(argv: list[str] | None = None) -> int:
     # single-call arm's chat read the same line).
     mode, question_ids = _mode_and_ids(args)
     batch = load_batch(args.batch)
-    with tier4_pins():
-        tier3_settings = Tier3Settings()
+    tier3_settings = Tier3Settings()
+    # The ratified arm pins live on the paid runners' own
+    # OPENROUTER_PROVIDER_ORDER line, in .env.tier3 — not on
+    # the ambient line the routing layer reads from .env, which
+    # registers no tier3_arm_a/tier3_arm_d entries (measured
+    # 2026-10-17: the live preflight refused arm D-pages on
+    # exactly that gap, at zero spend). The mapping re-keys the
+    # ratified line, so the pin case below and every single-call
+    # arm's chat read the pins the owner ratified (R7); the
+    # ambient export would shadow a settings read of the same
+    # name, so the line is read from the file itself.
+    with tier4_pins(_ratified_provider_order()):
         servings = _resolve_servings(tier3_settings)
         fingerprint = _servings_fingerprint(servings)
         authorization = (batch.calibration_ceiling
