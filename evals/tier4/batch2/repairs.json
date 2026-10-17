@@ -1,0 +1,64 @@
+[
+ {
+  "id": "T4-15",
+  "field": "reference_design",
+  "from": {
+   "Section": "VM-C180",
+   "A (mm2)": 1080,
+   "r_y (mm)": 31.1,
+   "r_0 (mm)": 95.3,
+   "N_cr_y (kN)": 240.3,
+   "N_cr_T (kN)": 398.9,
+   "N_cr_TF (kN)": 339.2,
+   "lambda_bar": 1.063,
+   "chi": 0.56,
+   "N_b_Rd (kN)": 197.4,
+   "Utilization": 0.583
+  },
+  "to": {
+   "Section": "VM-C180",
+   "A (mm2)": 1080,
+   "r_y (mm)": 38.73,
+   "r_0 (mm)": 98.06,
+   "N_cr_y (kN)": 373.1,
+   "N_cr_T (kN)": 345.1,
+   "N_cr_TF (kN)": 312.2,
+   "lambda_bar": 1.108,
+   "chi": 0.5303,
+   "N_b_Rd (kN)": 187.1,
+   "Utilization": 0.615
+  },
+  "why": "the generator's reference values contradict its own corpus (e.g. r_y 31.1 mm where sqrt(I_y/A) = 38.7 mm; N_cr,y 240.3 kN where pi^2 E I_y / L^2 = 373.1 kN); recomputed with verify.py t415. The selected section, VM-C180, stands"
+ },
+ {
+  "id": "T4-16",
+  "field": "reference_design",
+  "from": {
+   "Model": "KV-100-250",
+   "D_trim (mm)": 225,
+   "v_pipe (m/s)": 3.041,
+   "f_Darcy": 0.0185,
+   "H_sys (m)": 41.82,
+   "NPSH_A (m)": 3.35,
+   "NPSH_R_corr (m)": 2.05,
+   "H_pump (m)": 42.19,
+   "eta_pump": 0.752,
+   "P_shaft (kW)": 15.82,
+   "P_motor_derated (kW)": 19.36
+  },
+  "to": {
+   "Model": "KV-100-250",
+   "D_trim (mm)": 228,
+   "v_pipe (m/s)": 3.042,
+   "f_Darcy": 0.0181,
+   "H_sys (m)": 43.1,
+   "NPSH_A (m)": 2.364,
+   "NPSH_R_corr (m)": 1.435,
+   "H_pump (m)": 43.47,
+   "eta_pump": 0.758,
+   "P_shaft (kW)": 16.18,
+   "P_motor_derated (kW)": 19.36
+  },
+  "why": "the generator's figures contradict its own corpus (D_trim 225 where the minimum integer trim reaching H_sys is 228 mm; H_sys 41.82 vs 43.10 m; NPSH_A 3.35 vs 2.364 m; its trap text quotes NPSH_R0 2.15 m where the table gives 1.48 m); recomputed with verify.py t416. The selected model, KV-100-250, stands"
+ }
+]
