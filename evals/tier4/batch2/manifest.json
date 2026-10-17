@@ -1,0 +1,49 @@
+{
+ "batch": "batch2",
+ "status": "verified, awaiting the owner freeze",
+ "generator": "google/gemini-4-argon",
+ "generator_prompt": "evals/tier4/batch2/generator-v2.txt",
+ "candidates": "evals/tier4/batch2/candidates.json",
+ "candidates_sha256": "d49afe00c5980691204a5327c88fec1c77243ae1e615fc2a095822a8599eab67",
+ "corpus": {
+  "T4-15": {
+   "pages": [
+    "evals/tier4/batch2/corpus/T4-15-1.md"
+   ],
+   "sha256": "997c95fb96cac4ff164cca2d7cdd8401a1a9ac349b25644274899cdab0f4bbc5"
+  },
+  "T4-16": {
+   "pages": [
+    "evals/tier4/batch2/corpus/T4-16-1.md"
+   ],
+   "sha256": "90957b2a039192cd9389d077693dc46a0e0a5e675a75b7524cddee85d10984e9"
+  }
+ },
+ "families": {
+  "T4-15": "F2",
+  "T4-16": "F2"
+ },
+ "calibration": {
+  "units": "D-pages on T4-15 and T4-16, one repetition",
+  "ceiling_usd": 1.0
+ },
+ "pilot": {
+  "ceiling_usd": 5.0,
+  "arms": {
+   "F2": [
+    "D-pages",
+    "F",
+    "E"
+   ]
+  }
+ },
+ "per_unit_ceilings_usd": {
+  "A": 0.15,
+  "D": 0.4,
+  "D-pages": 0.4,
+  "F": 0.4,
+  "E": 1.5
+ },
+ "deadline_seconds": 3600,
+ "single_call_max_tokens": 32768
+}

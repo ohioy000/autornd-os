@@ -1,0 +1,34 @@
+You are writing a benchmark of HARD engineering design questions for expert practitioners. The difficulty must come from engineering judgment: choosing the right model, load case and governing failure mode. It must not come from arithmetic. Every question must still be checkable by recomputation.
+
+Produce exactly {N} candidates as one JSON array, all of family "{F}".
+{FAMILY_NOTE}
+
+Each candidate is an object with these fields:
+- id: {IDS}
+- family: "{F}"
+- domain: mechanical, electrical, fluid, thermal, structural, or controls
+- request: the question exactly as a user would ask it, at most 300 words, SI units.
+  - State the situation, materials, loads, environment, catalogues and requirements in engineering terms.
+  - DO NOT state the equations or name the method.
+  - It must end with: "End with a table headed Results with these rows: <row names and units>."
+- requirements: 4 to 8 objects, each with:
+  - id;
+  - statement: plain engineering words;
+  - method: the standard textbook method that decides it, written as equations over the Results values and the given data;
+  - tolerance.
+- robustness: for each requirement, the other standard methods an expert might reasonably use (another correlation, another code formula), and a confirmation that every catalogue option passes or fails that requirement the same way under each of them.
+- trap: the one modelling decision a careful expert working in a single pass is most likely to get wrong, and the design that results when it is missed. Examples: a governing failure mode that is not the first one checked; a load case or effect commonly forgotten; a derating or interaction that flips the choice.
+- reference_design: the Results values of one design that passes every requirement.
+- worked_solution: the full derivation of the reference design, every intermediate value shown.
+- wrong_designs: 2 objects, each with values, the requirement ids it fails and why. At least one must be the design you get when the trap is missed.
+- corpus_pages: F2 only. 1 to 3 markdown documents of fictional catalogue data and the maker's own rules (derating tables, application limits), never textbook physics.
+
+Rules:
+1. Closed-world data: every number needed is in the request (or, for F2, in the corpus pages). The physics is standard textbook engineering, which the answerer must supply.
+2. Finite catalogues, so checks are exact. At least 8 dependent computed quantities.
+3. The trap must change the selected design: a design chosen while missing the trap fails at least one requirement.
+4. Margins: under every method named in robustness, the reference passes every requirement by at least 3%, and the trap design fails by at least 3%.
+5. No trick wording, no ambiguity, no missing or contradictory data. Name any assumption the answerer must make, without naming the method.
+6. F2 corpus pages use invented products and firms only. Vary the domains: at most 2 candidates per domain.
+7. Before writing each candidate, compute every requirement for its reference design and its trap design under each method you name. A candidate that does not hold is invalid: fix it before writing it.
+8. Output the JSON array only, once. No commentary, no drafts, no restarts.
