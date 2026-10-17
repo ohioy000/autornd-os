@@ -1937,17 +1937,23 @@ async def _registered_call(client: OpenRouterClient, function: str,
                            response_format: dict[str, Any] | None = None,
                            tools: list[dict[str, Any]] | None = None,
                            tool_choice: str | None = None,
+                           max_tokens: int = REGISTERED_MAX_TOKENS,
                            ) -> ModelResponse:
     """One registered call: the arm's serving named directly,
     the registered max_tokens and temperature, the tools
     the call offers, and the tool_choice the call sets
     (arm B's final call keeps the tools declared with
-    tool_choice "none")."""
+    tool_choice "none").
+
+    ``max_tokens`` defaults to the registered cap; a caller
+    that registers its own cap (tier 4's single-call arms,
+    R8) passes it through — the call is the same call at a
+    different completion budget."""
     return await client.chat(
         function, system, user,
         response_format=response_format,
         temperature=REGISTERED_TEMPERATURE,
-        max_tokens=REGISTERED_MAX_TOKENS,
+        max_tokens=max_tokens,
         model=serving,
         tools=tools,
         tool_choice=tool_choice,
@@ -1976,7 +1982,8 @@ def _unit_client(unit_key: tuple[str, int, str], arm: str,
 
 async def _arm_single(arm: str, question: str, serving: str,
                       client: OpenRouterClient,
-                      function_prefix: str = "tier3"
+                      function_prefix: str = "tier3",
+                      max_tokens: int = REGISTERED_MAX_TOKENS
                       ) -> tuple[str | None,
                                   list[str | None]]:
     """Arms A and D: one call, the request only. No tools, no
@@ -1987,11 +1994,13 @@ async def _arm_single(arm: str, question: str, serving: str,
     ``function_prefix`` names the experiment the call bills
     to ("tier3" as it ships; tier 4's runner imports this
     executor and bills its own calls "tier4"). The treatment
-    is the same either way.
-    """
+    is the same either way. ``max_tokens`` defaults to the
+    registered cap; tier 4's single-call arms register their
+    own (R8) and pass it through."""
     system, user = render_prompt(prompt_text(arm), question)
     response = await _registered_call(
-        client, f"{function_prefix}_arm_{arm.lower()}", serving, system, user)
+        client, f"{function_prefix}_arm_{arm.lower()}", serving,
+        system, user, max_tokens=max_tokens)
     return response.content, [response.finish_reason]
 
 

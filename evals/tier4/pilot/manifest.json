@@ -1,0 +1,43 @@
+{
+ "batch": "pilot",
+ "status": "FROZEN 2026-10-16 (D44); the manifest written 2026-10-17 (R9, command ARCH-20261017-122's fixes) so the batch registers itself the way every frozen batch does. The candidates and the corpus are byte-identical to the freeze; the manifest registers their sha256 values, the families, the modes' ceilings, the per-unit ceilings (R8's ruling: A $0.15, D and D-pages $0.40), the deadline and the single-call max_tokens (R8's ruling: 32768). The generator's provenance is not registered here: the freeze predates the manifest and the candidates carry no generator field.",
+ "candidates": "evals/tier4/pilot/candidates.json",
+ "candidates_sha256": "9c9109826431778bd203eddfe0ba12887b53434f33e3d656f4bb589cd216b634",
+ "corpus": {
+  "T4-06": {
+   "pages": [
+    "evals/tier4/pilot/corpus/T4-06-vortexia-1.md",
+    "evals/tier4/pilot/corpus/T4-06-vortexia-2.md",
+    "evals/tier4/pilot/corpus/T4-06-vortexia-3.md"
+   ],
+   "sha256": "1d27d491195edec184141ba3f8882c27ab509fa3bb7551f7404055fe9f78f1d9"
+  }
+ },
+ "families": {
+  "T4-02": "F1",
+  "T4-03": "F1",
+  "T4-04": "F1",
+  "T4-05": "F1",
+  "T4-06": "F2"
+ },
+ "calibration": {
+  "units": "A and D on every F1 question, D-pages on every F2 question, one repetition",
+  "ceiling_usd": 2.0
+ },
+ "pilot": {
+  "ceiling_usd": 5.0,
+  "arms": {
+   "F1": ["A", "D", "F", "E"],
+   "F2": ["D-pages", "F", "E"]
+  }
+ },
+ "per_unit_ceilings_usd": {
+  "A": 0.15,
+  "D": 0.4,
+  "D-pages": 0.4,
+  "F": 0.4,
+  "E": 1.5
+ },
+ "deadline_seconds": 3600,
+ "single_call_max_tokens": 32768
+}
