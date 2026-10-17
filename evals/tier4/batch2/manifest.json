@@ -1,6 +1,6 @@
 {
  "batch": "batch2",
- "status": "verified, awaiting the owner freeze",
+ "status": "FROZEN 2026-10-17 by the owner's instruction to merge PR #188 (\"u merge\"), the freeze of batch 2 (D44)",
  "generator": "google/gemini-4-argon",
  "generator_prompt": "evals/tier4/batch2/generator-v2.txt",
  "candidates": "evals/tier4/batch2/candidates.json",

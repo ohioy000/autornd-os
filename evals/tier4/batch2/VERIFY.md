@@ -1,7 +1,11 @@
 # Tier-4 batch 2: verification
 
 Advisor, 2026-10-17. Design: `docs/reviews/2026-10-16-tier4-the-capacity-test.md` (Ruling D52).
-**Status:** verified; awaiting the owner's freeze (D44). Registered in `manifest.json`: sha256s, ceilings, arms.
+**Status: FROZEN on 2026-10-17** by the owner's instruction to merge PR #188 ("u merge") (D44).
+- `candidates.json`: sha256 `d49afe00c5980691204a5327c88fec1c77243ae1e615fc2a095822a8599eab67`.
+- Corpus pages: sha256s per question in `manifest.json`.
+
+The batch stays byte-identical from here on; a change is a new version.
 
 ## Why a second batch
 
