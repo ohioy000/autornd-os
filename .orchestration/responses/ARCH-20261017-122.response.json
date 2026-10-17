@@ -58,10 +58,12 @@
   ],
   "delivery_state": {
     "branch": "arch/20261017-122-tier4-pilot-tooling",
-    "pr": null
+    "pr": 187,
+    "url": "https://github.com/ohioy000/autornd-os/pull/187"
   },
   "commits": {
     "in_progress": "2245205",
-    "work": "e6a2c3f"
+    "work": "e6a2c3f",
+    "response": "320de0e"
   }
 }
