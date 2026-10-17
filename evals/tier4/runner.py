@@ -43,7 +43,12 @@ where the owner ratified those entries — the ambient line the routing
 layer reads from ``.env`` registers no ``tier3_arm_*`` entries. Every
 unit records the provider that served each call; a unit served by any
 other provider is recorded ``serving_mismatch``, kept in the record
-and not read as a result. The single-call arms run with the
+and not read as a result. The comparison is on the provider's name,
+not the string form each side writes it in — the response names the
+provider bare (``InferenceNet``) while the order line writes the
+call-time specifier (``inference-net/fp4``), normalized the way
+``autornd/preflight.py`` has measured since 2026-09-30. The
+single-call arms run with the
 manifest's single-call max_tokens (R8: 32768, the cap the pipeline's
 implement call already has); a unit whose answer ends on finish
 ``length`` is recorded truncated, flagged on the reading sheet and
@@ -142,6 +147,7 @@ from autornd.knowledge.context import (  # noqa: E402
     DOCS_DIR, load_docs_context)
 from autornd.routing.openrouter import (   # noqa: E402
     provider_order_for)
+from autornd import preflight              # noqa: E402
 
 # The tier-3 machinery this runner reuses, named at module scope so
 # the call sites below read as what they are.
@@ -1602,10 +1608,26 @@ async def run_tier4_unit(
             served = sorted(client.providers_by_function.get(
                 _arm_pin_key(arm), ()))
             result.serving_pins = list(pin)
+            # The comparison is on the provider's name, not
+            # on the string form each side writes it in: the
+            # response names the provider bare ("InferenceNet")
+            # while the owner's order line writes the call-time
+            # specifier ("inference-net/fp4"), a form the repo
+            # measured 2026-09-30 never matching the bare name
+            # raw (autornd/preflight.py, _base_provider). The
+            # quant is a routing request the response does not
+            # echo, so the provider identity is what R7's
+            # comparison verifies. Measured live 2026-10-17:
+            # the batch-2 calibration's two D-pages units, both
+            # served by the pinned InferenceNet, were flagged
+            # serving_mismatch on exactly that gap.
             result.serving_mismatch = (
                 bool(served)
                 and (not pin
-                     or not set(served) <= set(pin)))
+                     or not {preflight._base_provider(p)
+                             for p in served}
+                         <= {preflight._base_provider(p)
+                             for p in pin}))
         if run is not None:
             # Arms E and F: the pipeline run's own accounting, and
             # its internals (R1) — why it ended the way it did.
@@ -2416,9 +2438,16 @@ def build_calibration_dry_run_script(
             _budget_stop_call(_dry_run_answer("T4-02"),
                               batch.calibration_ceiling)]
     if ("T4-05", 1, "A") in planned:
+        # The mis-served provider is a bare name (the
+        # form a response names a provider in), not a
+        # dryrun/ serving id: the comparison normalizes
+        # the pin's call-time qualifier away
+        # (_base_provider), so a "dryrun/<anything>"
+        # provider normalizes to the pinned provider
+        # itself and would not exhibit the class.
         script._calls[("T4-05", 1, "A")] = [
             _unpinned_call(_dry_run_answer("T4-05"),
-                           "dryrun/unpinned")]
+                           "Wafer")]
     if ("T4-06", 1, "D-pages") in planned:
         script._calls[("T4-06", 1, "D-pages")] = [
             _truncated_call(_dry_run_answer("T4-06"))]

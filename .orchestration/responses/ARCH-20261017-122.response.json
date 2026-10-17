@@ -147,5 +147,72 @@
     "questions_for_advisor": [
       "None new. The two questions from advisor_review_2026_10_17 stand as answered there; this repair needed no ruling."
     ]
+  },
+  "batch2_calibration_run_2026_10_17": {
+    "what": "The paid batch-2 calibration the owner authorized (TIER3_SPEND_AUTHORIZED=1.00, set by the owner in .env.tier3, mtime 2026-10-17 15:43:14).",
+    "preflight": "Clean from the owner's checkout after the pin-source repair: freeze guard holds, ratification gates hold (fingerprint e0dc92a3aecb), arm D-pages pinned to inference-net/fp4 (R7, re-keyed from the owner's ratified tier3_arm_d line), worst case $0.3919 against the $0.40 per-unit ceiling (within), at the registered max_tokens 32768 (R8). Exit 0, before any network call.",
+    "run": {
+      "command": "evals/tier4/runner.py run calibration --batch evals/tier4/batch2",
+      "launched": "2026-10-17T21:09:11Z, from the owner's checkout /home/jb/autornd-os",
+      "wall_clock_seconds": 1144,
+      "planned_units": 2,
+      "spent_usd": 0.7546,
+      "authorization_usd": 1.0,
+      "unreconciled_liability_usd": 0.0,
+      "records": "evals/results/20261017T210922Z-tier4-calibration-batch2.jsonl",
+      "unit_T4-15": {
+        "status": "delivered",
+        "cost_usd": 0.362881248,
+        "serving": "moonshotai/kimi-k3:exacto",
+        "providers_by_tier": {
+          "tier4_arm_d": [
+            "InferenceNet"
+          ]
+        },
+        "serving_pins": [
+          "inference-net/fp4"
+        ],
+        "truncated": false,
+        "answer": "delivered in full (the channel-strut design: elastic buckling equations, candidate screening table, the torsional-flexural eigenvalue)"
+      },
+      "unit_T4-16": {
+        "status": "refusal",
+        "stop_reason": "the serving returned an empty reply (finish_reason: 'length')",
+        "cost_usd": 0.39167,
+        "serving": "moonshotai/kimi-k3:exacto",
+        "providers_by_tier": {
+          "tier4_arm_d": [
+            "InferenceNet"
+          ]
+        },
+        "serving_pins": [
+          "inference-net/fp4"
+        ],
+        "truncated": true,
+        "finish_reasons": [
+          "length"
+        ],
+        "seconds": 423.918,
+        "note": "the call consumed the full 32768-token cap and returned empty content - the void calibration's truncation class, now at the 32768 cap instead of 8000; recorded and excluded from the readable counts (R8)"
+      }
+    },
+    "measured_reading": "One delivered unit (T4-15, $0.3629, a complete answer, served by the pinned InferenceNet) and one refusal (T4-16, $0.3917, an empty reply at the 32768 cap). n=1 readable. The D-pages arm delivers at the registered cap on the owner's ratified pin; the second corpus's call returned empty at the cap - a provider/model behaviour at 32768 tokens, recorded as a fact, not diagnosed (convention 18).",
+    "run_summary_as_printed": "The run's own summary said '1 delivered, 1 refusal; readable 0/2' - both units flagged serving_mismatch. That flag was an instrument artifact, repaired in the same session (see serving_mismatch_form_repair_2026_10_17 below): both units were served by the pinned provider (providers_by_tier names InferenceNet, the response's name for the pinned inference-net). The corrected reading is 1 readable delivered unit (T4-15). The record on disk carries the raw evidence (providers_by_tier, serving_pins) from which the corrected reading is derivable; the record itself is not rewritten.",
+    "retries_observed": "Unit T4-15's first attempt was closed by the provider mid-call (TCP CLOSE_WAIT); the harness's server-disconnect retry (R5, 2026-10-16) re-dispatched on a fresh connection, re-reserved the call and re-checked the remaining ceiling (D45), and the retried call delivered. The retry machinery behaved as designed at zero extra booked cost beyond the one delivered call."
+  },
+  "serving_mismatch_form_repair_2026_10_17": {
+    "what": "Instrument repair (executor's lane, no ruling needed): the R7 serving_mismatch comparison compared the provider the response names against the pin as raw strings.",
+    "diagnosis": "The live batch-2 calibration flagged BOTH D-pages units serving_mismatch, although both were served by the pinned provider: the response names the provider bare ('InferenceNet') while the owner's order line writes the call-time specifier ('inference-net/fp4'), and the comparison was set(served) <= set(pin) on the raw forms. The repo measured this exact non-match on 2026-09-30 (autornd/preflight.py, _base_provider: 'pins like inference-net/fp4 never match the bare endpoint names (InferenceNet) the endpoints route returns') - the preflight gate already normalizes both sides; the tier-4 comparison did not. The R7 comparison is new (the tier-3 runner records providers but computes no mismatch), so no paid tier-4 unit had exercised it before this run: the dry run's scripted outcomes carry the pin string itself as the provider, which matches raw, so only a live call could expose the gap.",
+    "classification": "Instrument repair per AGENTS.md: 'fixing a measurement that reports something other than what it observed.' The ruling's semantics are untouched - a unit served by any other provider still mismatches (the normalized names differ); only the name-form normalization is added, reusing the repo's own measured _base_provider. No verdict field changed meaning, no loop wiring, no prompt text.",
+    "repair": "evals/tier4/runner.py: the comparison normalizes both sides with autornd/preflight.py's _base_provider (the measured 2026-09-30 normalization: the pin's call-time qualifier stripped, separators/case folded). The dry run's mis-served exhibit's provider changed from 'dryrun/unpinned' to 'Wafer': under the normalized comparison a 'dryrun/<anything>' provider normalizes to the pinned provider itself (the qualifier is stripped), so the old fixture string no longer named a provider outside the pin - the exhibit must name a genuinely different provider to keep simulating the void calibration's defect class. The exhibit's test is unchanged.",
+    "tests": [
+      "tests/test_tier4_runner.py, TestHProviderPins::test_the_serving_mismatch_compares_the_provider_not_the_form (criteria (h) extended): a D-pages unit driven end to end with the owner's real pin form ('inference-net/fp4') and the live response's bare provider name ('InferenceNet') records no mismatch and the pin it served on; a unit served by 'Google AI Studio' still records serving_mismatch. Break-proof: revert the comparison to raw sets and the first asserts fail - the live forms mismatch.",
+      "test_tier4_runner.py: 53 -> 54; full suite 1544 -> 1545 passed, network guard 0; counts re-derived in README.md and HANDOVER.md (badge, tree, prose, header, 3.7, pass count, distribution row)."
+    ],
+    "found_weakness_not_repaired": "The dry run's resume reads results files written by an older runner whose record shape differs (the owner's checkout carried pilot dry-run records from 2026-10-16 21:05, before R7 added serving_pins/serving_mismatch; the resumed records lack the fields and the record-field tests fail until the gitignored artifacts are deleted and the dry run re-runs). CI is unaffected (fresh checkout). Left unrepaired in this change: the resume guard that refuses records of another record shape is a behaviour question for the advisor, not a measurement fix; recorded here as execution found it.",
+    "questions_for_advisor": [
+      "The corrected reading of the batch-2 calibration is n=1 readable (T4-15 delivered, $0.3629; T4-16 an empty reply at the 32768 cap, $0.3917, recorded and excluded). The $1.00 authorization is spent. A second sample (a re-run for n=2, worst case another $0.80) is the owner's 'repeat > 1' gate - a logged departure carrying its cost - and needs a fresh gate line; the executor does not decide it.",
+      "The record on disk for the batch-2 run carries serving_mismatch: true on both units, computed by the pre-repair comparison. The record is not rewritten (it is the measurement record); the raw evidence (providers_by_tier: ['InferenceNet'], serving_pins: ['inference-net/fp4']) supports the corrected reading. If the advisor wants the flag's semantics widened to verify the quant (fp4) as well as the provider, that is a ruling - the response does not echo which quant served, so the instrument cannot verify it today."
+    ]
   }
 }
