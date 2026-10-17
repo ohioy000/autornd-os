@@ -1177,7 +1177,10 @@ def run_preflight(servings: dict[str, Any],
 
 
 def arm_e_worst_case(servings: dict[str, Any],
-                     catalogue: list[dict[str, Any]]) -> list[dict[str, Any]]:
+                     catalogue: list[dict[str, Any]],
+                     prompt_floor: str | None = None,
+                     unit_ceiling: float | None = None
+                     ) -> list[dict[str, Any]]:
     """The owner's addition (2): the worst case per call for each arm
     E tier under the ratified lineup and the standing caps, against
     the $0.50 per-unit ceiling, with the guard's own formula and the
@@ -1194,9 +1197,17 @@ def arm_e_worst_case(servings: dict[str, Any],
     endpoint confirms is served — is priced at its base entry's
     published rate, and the row says which entry priced it. A flat
     per-request charge is added once per call.
+
+    ``prompt_floor`` replaces the largest question with the caller's
+    own floor text, and ``unit_ceiling`` the per-unit ceiling the rows
+    check against — tier 4's runner imports this table with the
+    capacity test's own prompts (an F2 request carries its corpus
+    grounding above it) and its own per-unit ceiling. Both defaults
+    keep tier 3's table exactly as it ships.
     """
     index = catalogue_index(catalogue)
-    question = _largest_question()
+    question = (_largest_question() if prompt_floor is None
+                else prompt_floor)
     prompt_bytes = _prompt_bytes(question)
     rows: list[dict[str, Any]] = []
     for tier in PIPELINE_TIERS:
@@ -1220,7 +1231,8 @@ def arm_e_worst_case(servings: dict[str, Any],
         per_request = _per_request_charge(entry)
         worst = worst_case_cost(prompt_rate, completion_rate,
                                 prompt_bytes, cap, per_request)
-        ceiling = ARM_CEILINGS["E"]
+        ceiling = (ARM_CEILINGS["E"] if unit_ceiling is None
+                   else unit_ceiling)
         # The guard refuses the call when the worst case exceeds what
         # remains, so the call is refusable once the unit has spent
         # more than the ceiling minus the worst case.
@@ -1243,12 +1255,22 @@ def arm_e_worst_case(servings: dict[str, Any],
 
 
 def arm_f_worst_case(servings: dict[str, Any],
-                     catalogue: list[dict[str, Any]]
+                     catalogue: list[dict[str, Any]],
+                     prompt_floor: str | None = None,
+                     unit_ceiling: float | None = None
                      ) -> list[dict[str, Any]]:
     """The re-measurement's arm F: the worst case per
     call on each standing tier the verify-first workflow
     calls, with the workflow's own call count on that
     tier, against the $0.20 per-unit ceiling.
+
+    ``prompt_floor`` replaces the largest question with
+    the caller's own floor text, and ``unit_ceiling`` the
+    per-unit ceiling the rows and the sequence check
+    against — tier 4's runner imports this table with the
+    capacity test's own prompts and its own per-unit
+    ceiling. Both defaults keep tier 3's table exactly
+    as it ships.
 
     Arm F runs arm E's path on arm E's standing tiers —
     the same pins, the same standing caps (D51 (8)
@@ -1274,7 +1296,8 @@ def arm_f_worst_case(servings: dict[str, Any],
     computation the binding check.
     """
     index = catalogue_index(catalogue)
-    question = _largest_question()
+    question = (_largest_question() if prompt_floor is None
+                else prompt_floor)
     prompt_bytes = _prompt_bytes(question)
     # The verify-first workflow's calls on each tier:
     # the triage and the asks on the triage tier;
@@ -1285,6 +1308,8 @@ def arm_f_worst_case(servings: dict[str, Any],
     # the check and its re-check on the judge tier.
     counts = {"triage": 2, "research": 3, "search": 1,
               "engineering": 2, "judge": 2}
+    ceiling = (ARM_CEILINGS["F"] if unit_ceiling is None
+               else unit_ceiling)
     rows: list[dict[str, Any]] = []
     sequence = 0.0
     for tier in ("triage", "research", "search",
@@ -1327,10 +1352,10 @@ def arm_f_worst_case(servings: dict[str, Any],
             "priced_as": entry["id"],
             "worst_case": worst,
             "tier_worst_case": calls * worst,
-            "unit_ceiling": ARM_CEILINGS["F"],
-            "refuses_even_at_zero_spend": worst > ARM_CEILINGS["F"],
+            "unit_ceiling": ceiling,
+            "refuses_even_at_zero_spend": worst > ceiling,
             "refusable_above_spend": max(
-                0.0, ARM_CEILINGS["F"] - worst),
+                0.0, ceiling - worst),
             "endpoint_max_completion_tokens": entry.get(
                 "max_completion_tokens"),
         })
@@ -1350,11 +1375,11 @@ def arm_f_worst_case(servings: dict[str, Any],
                     "+ 2 judge"),
         "calls": ARM_F_CALL_LIMIT,
         "worst_case": sequence,
-        "unit_ceiling": ARM_CEILINGS["F"],
+        "unit_ceiling": ceiling,
         "refuses_even_at_zero_spend": (
-            sequence > ARM_CEILINGS["F"]),
+            sequence > ceiling),
         "refusable_above_spend": max(
-            0.0, ARM_CEILINGS["F"] - sequence),
+            0.0, ceiling - sequence),
     })
     return rows
 
@@ -1950,15 +1975,23 @@ def _unit_client(unit_key: tuple[str, int, str], arm: str,
 
 
 async def _arm_single(arm: str, question: str, serving: str,
-                      client: OpenRouterClient) -> tuple[str | None,
-                                                          list[str | None]]:
+                      client: OpenRouterClient,
+                      function_prefix: str = "tier3"
+                      ) -> tuple[str | None,
+                                  list[str | None]]:
     """Arms A and D: one call, the request only. No tools, no
     workflow, no retrieval — the two arms differ only in the
     serving, so the A-vs-D gap is a serving gap, not a
-    treatment gap."""
+    treatment gap.
+
+    ``function_prefix`` names the experiment the call bills
+    to ("tier3" as it ships; tier 4's runner imports this
+    executor and bills its own calls "tier4"). The treatment
+    is the same either way.
+    """
     system, user = render_prompt(prompt_text(arm), question)
     response = await _registered_call(
-        client, f"tier3_arm_{arm.lower()}", serving, system, user)
+        client, f"{function_prefix}_arm_{arm.lower()}", serving, system, user)
     return response.content, [response.finish_reason]
 
 
@@ -2099,11 +2132,21 @@ async def _arm_e(question: str, question_id: str, repetition: int,
                  spec, settings_lookup_dict: dict[str, Any],
                  client_factory: Any,
                  scenario_runner: Any = None,
+                 scenario_prefix: str = "tier3",
+                 unit_ceiling: float | None = None,
                  ) -> tuple[Any, str | None, str]:
     """Arm E (D50 (3)): the question enters as a request
     through the full harness workflow under the standing pins,
     with the common deadline as its timeout so D38's watchdog
     ends the run by its own terminal.
+
+    ``scenario_prefix`` names the experiment the scenario
+    record carries ("tier3" as it ships; tier 4's runner
+    imports this executor and names its own scenarios), and
+    ``unit_ceiling`` the per-unit ceiling the run's spend is
+    capped at (arm E's registered ceiling as it ships; tier 4
+    registers its own for the same treatment). Both defaults
+    keep tier 3's behaviour exactly as it shipped.
 
     Delivered means a completed terminal's
     ``verdicts.implement.summary``, read the way the record
@@ -2117,7 +2160,7 @@ async def _arm_e(question: str, question_id: str, repetition: int,
     never counted as delivered.
     """
     scenario = Scenario(
-        id=f"tier3_e_{question_id}_r{repetition}",
+        id=f"{scenario_prefix}_e_{question_id}_r{repetition}",
         request=question,
         description=(f"tier-3 arm E unit: question {question_id}, "
                      f"repetition {repetition}, the current pipeline "
@@ -2129,7 +2172,9 @@ async def _arm_e(question: str, question_id: str, repetition: int,
     runner = scenario_runner or run_scenario
     run = await runner(
         scenario, spec, client_factory, settings_lookup_dict,
-        timeout=deadline, max_spend=ARM_CEILINGS["E"], budget=budget)
+        timeout=deadline,
+        max_spend=(ARM_CEILINGS["E"] if unit_ceiling is None
+                   else unit_ceiling), budget=budget)
     unit = {
         "status": getattr(run, "status", None),
         "verdicts": getattr(run, "verdicts", None),
@@ -2146,12 +2191,20 @@ async def _arm_f(question: str, question_id: str, repetition: int,
                  spec, settings_lookup_dict: dict[str, Any],
                  client_factory: Any,
                  scenario_runner: Any = None,
+                 scenario_prefix: str = "tier3",
+                 unit_ceiling: float | None = None,
                  ) -> tuple[Any, str | None, str]:
     """Arm F (D51 (8)): verify-first through arm E's
     path — the same boundary arm E runs (the scenario,
     the deadline, the delivery reader, the accounting,
     the record), with Ruling D51 (8)'s verify-first
     workflow as the graph instead of the standing one.
+
+    ``scenario_prefix`` and ``unit_ceiling`` name the
+    experiment the scenario record carries and the
+    per-unit ceiling the run's spend is capped at, the
+    way arm E's parameters do; both default to tier 3's
+    own, so tier 3's behaviour is unchanged.
 
     The workflow answers once and checks against the
     asks: triage, the asks and their anchoring check,
@@ -2166,7 +2219,7 @@ async def _arm_f(question: str, question_id: str, repetition: int,
     with its candidate kept under D51 (7).
     """
     scenario = Scenario(
-        id=f"tier3_f_{question_id}_r{repetition}",
+        id=f"{scenario_prefix}_f_{question_id}_r{repetition}",
         request=question,
         description=(f"tier-3 arm F unit: question {question_id}, "
                      f"repetition {repetition}, the verify-first "
@@ -2178,7 +2231,9 @@ async def _arm_f(question: str, question_id: str, repetition: int,
     runner = scenario_runner or run_scenario
     run = await runner(
         scenario, spec, client_factory, settings_lookup_dict,
-        timeout=deadline, max_spend=ARM_CEILINGS["F"], budget=budget)
+        timeout=deadline,
+        max_spend=(ARM_CEILINGS["F"] if unit_ceiling is None
+                   else unit_ceiling), budget=budget)
     unit = {
         "status": getattr(run, "status", None),
         "verdicts": getattr(run, "verdicts", None),
@@ -4923,10 +4978,13 @@ class DryRunScenarioRunner:
                 scenario=scenario, results=[], calls=0,
                 seconds=0.0, error=budget.skip(max_spend),
                 was_skipped=True)
-        # The scenario's id names its arm: tier3_e_* runs
-        # the standing workflow, tier3_f_* the verify-first
-        # one (arm F's scenario, as _arm_f builds it).
-        if scenario.id.startswith("tier3_f_"):
+        # The scenario's id names its arm: an *_e_ id runs
+        # the standing workflow, an *_f_ id the verify-first
+        # one (arm F's scenario, as _arm_f builds it). The
+        # prefix names the experiment — tier3's dry run, tier
+        # 4's own — so the suffix names the workflow for any
+        # prefix the arm executors build.
+        if "_f_" in scenario.id:
             outcome = self._script.arm_f_outcome(scenario.id)
         else:
             outcome = self._script.arm_e_outcome(scenario.id)
