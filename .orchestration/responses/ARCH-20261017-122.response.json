@@ -62,9 +62,9 @@
   "url": "https://github.com/ohioy000/autornd-os/pull/189"
  },
  "commits": {
-  "in_progress": "2245205",
-  "work": "e6a2c3f",
-  "response": "320de0e"
+  "work": "40f39e5",
+  "traces": "49763eb",
+  "response": "fa53dfb"
  },
  "advisor_review_2026_10_17": {
   "directive": "TIER-4 RUNNER FIXES (before any further paid tier-4 unit)",
@@ -73,7 +73,12 @@
   "prior_delivery": {
    "branch": "arch/20261017-122-tier4-pilot-tooling",
    "pr": 187,
-   "url": "https://github.com/ohioy000/autornd-os/pull/187"
+   "url": "https://github.com/ohioy000/autornd-os/pull/187",
+   "commits": {
+    "in_progress": "2245205",
+    "work": "e6a2c3f",
+    "response": "320de0e"
+   }
   },
   "the_evidence": "The void calibration, both runs (evals/results/20261017T011425Z-tier4-calibration.jsonl and 20261017T021010Z-tier4-calibration.jsonl, $0.54 each, $1.08 together): 8 of 9 answers ended 'length' at max_tokens 8000 — hidden reasoning used most of the budget — and every arm-D call was served by Wafer (mxfp4, $24/M) while arm A was served by Google. Cause: the functions are named tier4_arm_a/d while the owner's provider order in .env.tier3 is keyed tier3_arm_a/d, so the pins never applied. Arm D cost $0.19 per call against its $0.0966 worst case. Both traces are committed to docs/traces/ with their sha256 values (20261017T011425Z: 3cb1120358df4f31b1c403f458ac0001a536b6569bb99cdc8d5a828fef3d1e46; 20261017T021010Z: 1c8e22fdd5c55687ee130190223af13934b180b9db121a823161ce1e4d1489ab) and the note 'void: 8/9 truncated at 8000 tokens; single-call arms served by unpinned providers; not read as results'.",
   "rulings": {
@@ -115,7 +120,7 @@
   "commits": {
    "work": "40f39e5",
    "traces": "49763eb",
-   "response": null
+   "response": "fa53dfb"
   },
   "the_stop": "The directive's stop is satisfied: the PR is opened and the work stops there. No paid call was made at any point — the dry run's clients are mocks and the live paths were never exercised. The batch-2 calibration waits for the owner's gate line TIER3_SPEND_AUTHORIZED=1.00 in .env.tier3, and both modes refuse to start until the line reads exactly the mode's registered ceiling."
  }
