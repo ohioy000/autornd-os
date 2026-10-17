@@ -43,7 +43,11 @@ The criteria, as the command orders them:
 (h) the provider pins (R7) - the mapping, the empty-entry rule,
     the idempotency, the install-and-restore context;
 (i) the batch registration (R9) - every registered figure, the
-    sha256 conventions, the missing-field refusal.
+    sha256 conventions, the missing-field refusal;
+(j) the paid path's pin source (R7) - the ratified
+    line read from the paid runners' own .env.tier3
+    file, not the ambient line the routing layer
+    reads from .env, with its break-proof.
 """
 
 from __future__ import annotations
@@ -1065,6 +1069,138 @@ class TestEGateAndPreflight:
                     for refusal in report.refusals)
         assert any("tier4_arm_d" in refusal
                     for refusal in report.refusals)
+
+
+# ── (j) The paid path's pin source (R7) ──────────────
+
+class TestPinSource:
+    """The tier-4 paid path's pin source (R7): the
+    ratified provider-order line is read from the paid
+    runners' own config file (.env.tier3), where the
+    owner ratified the tier3_arm_a/tier3_arm_d entries -
+    not from the ambient line the routing layer reads
+    from .env, which registers no tier3_arm_* entries.
+
+    Measured 2026-10-17: the live preflight refused arm
+    D-pages on exactly that gap, at zero spend - the
+    owner's .env line carries the workflow tiers' pins
+    and no arm entries, while the .env.tier3 line the
+    owner ratified carries both."""
+
+    AMBIENT = (
+        "triage:google-ai-studio,engineering:together,"
+        "architecture:xiaomi/fp8,escalation:inference-net/fp4,"
+        "search:Perplexity,research:google-ai-studio,"
+        "ranker:Fireworks,premium:,judge:google-vertex/us-south1")
+    RATIFIED = (
+        AMBIENT
+        + ",tier3_arm_a:google-ai-studio,"
+          "tier3_arm_b:google-ai-studio,"
+          "tier3_arm_c_1:together,"
+          "tier3_arm_c_2:inference-net/fp4,"
+          "tier3_arm_d:inference-net/fp4")
+
+    def test_the_ratified_line_is_read_from_the_file(
+            self, tmp_path, monkeypatch):
+        """The paid runners' config file is the pin
+        source: an ambient export of the same variable -
+        the .env line the routing layer reads, which
+        registers no tier3_arm entries - does not shadow
+        the file's ratified line, and an absent file
+        reads as empty.
+
+        Break-proof: change the helper to read the
+        ambient environment (or any pydantic-settings
+        read of the name, which the export shadows), and
+        the first assert fails - the ambient line carries
+        no tier3_arm_d entry to map."""
+        monkeypatch.setenv(
+            "OPENROUTER_PROVIDER_ORDER", self.AMBIENT)
+        env_file = tmp_path / ".env.tier3"
+        env_file.write_text(
+            "TIER3_SPEND_AUTHORIZED=1.00\n"
+            f"OPENROUTER_PROVIDER_ORDER={self.RATIFIED}\n",
+            encoding="utf-8")
+        assert runner._ratified_provider_order(
+            env_file) == self.RATIFIED
+        assert runner._ratified_provider_order(
+            tmp_path / "absent.env") == ""
+
+    def test_the_paid_path_pins_the_arms_from_the_ratified_file(
+            self, tmp_path, monkeypatch):
+        """The paid path's pin case, end to end: under
+        the ambient line the routing layer reads (the
+        owner's real .env shape - the workflow tiers'
+        pins and no tier3_arm entries) the single-call
+        arms are unpinned and the preflight refuses them
+        - the live refusal, reproduced at zero spend;
+        under the ratified line read from the paid
+        runners' own file, the arms carry the owner's
+        ratified pins and the pin case prints them (R7).
+
+        Break-proof: wire the paid path's tier4_pins()
+        to the ambient line again - the live defect this
+        repair fixes - and the second block of asserts
+        fails: the pins resolve empty and the preflight
+        refuses the arms, as it did live."""
+        servings = runner.DRY_RUN_SERVINGS
+        catalogue = runner._dry_run_catalogue(servings)
+        monkeypatch.setenv(
+            "OPENROUTER_PROVIDER_ORDER", self.AMBIENT)
+        env_file = tmp_path / ".env.tier3"
+        env_file.write_text(
+            "TIER3_SPEND_AUTHORIZED=2.00\n"
+            f"OPENROUTER_PROVIDER_ORDER={self.RATIFIED}\n",
+            encoding="utf-8")
+        saved = runner.harness_settings.openrouter_provider_order
+        try:
+            # The ambient line alone: the mapping re-keys
+            # nothing, the arms are unpinned, and the
+            # preflight refuses them - an unpinned arm
+            # never falls to the general list (R7).
+            runner.harness_settings.openrouter_provider_order = (
+                self.AMBIENT)
+            with runner.tier4_pins():
+                assert runner._arm_pin("A") == []
+                assert runner._arm_pin("D-pages") == []
+                report = runner.tier4_preflight(
+                    servings, catalogue,
+                    credit=runner.DRY_RUN_CREDIT,
+                    ceiling=PILOT.calibration_ceiling,
+                    arms=("A", "D", "D-pages"),
+                    questions=QUESTIONS,
+                    mode="calibration", batch=PILOT)
+            for arm in ("A", "D", "D-pages"):
+                assert any(
+                    f"arm {arm}: no provider pin" in refusal
+                    for refusal in report.refusals), (
+                    arm, report.refusals)
+            # The ratified line, read from the file: the
+            # arms carry the owner's ratified pins and
+            # the pin case prints them.
+            with runner.tier4_pins(
+                    runner._ratified_provider_order(env_file)):
+                assert runner._arm_pin("A") == [
+                    "google-ai-studio"]
+                assert runner._arm_pin("D") == [
+                    "inference-net/fp4"]
+                assert runner._arm_pin("D-pages") == [
+                    "inference-net/fp4"]
+                report = runner.tier4_preflight(
+                    servings, catalogue,
+                    credit=runner.DRY_RUN_CREDIT,
+                    ceiling=PILOT.calibration_ceiling,
+                    arms=("A", "D", "D-pages"),
+                    questions=QUESTIONS,
+                    mode="calibration", batch=PILOT)
+        finally:
+            runner.harness_settings.openrouter_provider_order = (
+                saved)
+        assert report.refusals == []
+        printed = "\n".join(report.reports)
+        assert "arm A: pinned to google-ai-studio" in printed
+        assert "arm D: pinned to inference-net/fp4" in printed
+        assert "arm D-pages: pinned to inference-net/fp4" in printed
 
 
 # ── (f) The mocked dry run ─────────────────────────────
