@@ -1,52 +1,71 @@
-"""The tier-4 pilot tooling (Ruling D52, command ARCH-20261017-122).
+"""The tier-4 runner (Ruling D52, command ARCH-20261017-122;
+the runner's fixes ruled 2026-10-17, recorded as
+advisor_review_2026_10_17 in the command's response).
 
 Tier 4 is the capacity test: does the pipeline's structure recover
 answers a single call misses, on work hard enough for a single call
-to miss it? The frozen pilot batch (evals/tier4/pilot/candidates.json,
-D44) carries five questions — four F1 (everything given but hard) and
-one F2 (the data lives in a fictional corpus profile) — and this
-runner makes the batch runnable in two modes under the registered
-ceilings and gates, proven by a mocked dry run:
+to miss it? Every frozen batch registers itself in its own
+manifest.json (R9) — the sha256 of its candidates and of each F2
+question's corpus pages, its families, its calibration and pilot
+ceilings, its per-unit ceilings, its deadline and its single-call
+max_tokens — and this runner reads them all from the manifest, so a
+new frozen batch is a directory and a manifest, never a code change:
 
-* the calibration mode — nine units, one repetition each: arm A on
-  T4-02..T4-05, arm D on T4-02..T4-05, arm D-pages on T4-06 — the
-  two single-call arms on the F1 questions, and arm D holding the
-  corpus pages on the F2 one, under the $2.00 registered ceiling;
-* the pilot mode — the named question ids (at most four, from the
-  frozen batch only) x their family's arms x one repetition: F1 arms
-  A, D, F, E; F2 arms D-pages, F, E — under the $5.00 registered
-  ceiling.
+* the pilot batch (evals/tier4/pilot/, D44) — five questions, four
+  F1 (everything given but hard) and one F2 (the data lives in a
+  fictional corpus), run in two modes under the $2.00 and $5.00
+  ceilings its manifest registers;
+* batch 2 (evals/tier4/batch2/, D44's second freeze) — two F2
+  questions, its calibration the two D-pages units under the $1.00
+  ceiling its manifest registers.
 
 The model-visible text is the candidate's ``request`` only — plus,
-for arm D on F2 (D-pages), the three corpus pages, verbatim and in
-name order, each preceded by its file name, under the registered
-separator. Never the requirements, the reference design, the worked
-solution, the wrong designs or the difficulty rationale: the leakage
-guard below asserts it, with its break-proof, for every unit of both
-modes. The F2 units of arms F and E run under the tier-4 corpus
-profile (``AUTORND_PROFILE=tier4`` — ``profiles/tier4.yaml``, whose
-manifest's globals are the corpus pages), so the pipeline's own
-grounding node loads the corpus into every request that reads it; the
-F1 units of every arm run without it, so no corpus text reaches an
-F1 question. Arm A does not run on F2.
+for arm D on F2 (D-pages), that question's own corpus pages,
+verbatim and in the manifest's listed order, each preceded by its
+file name, under the registered separator. Never the requirements,
+the reference design, the worked solution, the wrong designs or the
+difficulty rationale: the leakage guard below asserts it, with its
+break-proof, for every unit of every mode of every batch. Every F2
+unit of arms F and E grounds with its own question's pages and no
+other's (R9): a question whose pages are the tier-4 corpus profile's
+corpus runs under that profile, and any other question runs under a
+per-question grounding profile whose manifest lists its own pages —
+two F2 questions in one batch never share a page. Arm A does not run
+on F2.
 
-Every figure the record carries is registered here: the per-unit
-ceilings (A $0.10, D $0.30, F $0.40, E $1.50), the 3600-second
-deadline, the two mode ceilings, the seeds, the manifest version, the
-batch and corpus sha256 values the freeze guard holds the batch to.
-The gates are the owner's: TIER3_SPEND_AUTHORIZED in .env.tier3 must
-equal the mode's registered ceiling exactly (R4), and the servings map
-is the owner's standing pins, fingerprint e0dc92a3aecb, refused
-otherwise. Both modes refuse to start unless the freeze guard holds —
-candidates.json and the corpus hash to the evidence's sha256 values,
-and docs/tier4/ carries byte-identical copies of the corpus pages.
+The single-call arms (A, D, D-pages) run on the owner's ratified
+provider pins (R7): the ``tier3_arm_a`` and ``tier3_arm_d`` entries
+of OPENROUTER_PROVIDER_ORDER, mapped onto the tier-4 arms' own
+function names, so the providers the owner ratified for arms A and D
+serve the tier-4 arms that bill under their own labels. Every unit
+records the provider that served each call; a unit served by any
+other provider is recorded ``serving_mismatch``, kept in the record
+and not read as a result. The single-call arms run with the
+manifest's single-call max_tokens (R8: 32768, the cap the pipeline's
+implement call already has); a unit whose answer ends on finish
+``length`` is recorded truncated, flagged on the reading sheet and
+not read as a result.
 
-    python3 evals/tier4/runner.py preflight [calibration|pilot --ids IDS]
-    python3 evals/tier4/runner.py plan [calibration|pilot --ids IDS]
-    python3 evals/tier4/runner.py worst-case
-    python3 evals/tier4/runner.py dry-run      # both modes, mocked, free
+Every figure the record carries comes from the batch's manifest: the
+per-unit ceilings, the deadline, the modes' ceilings, the
+single-call max_tokens. The seeds, the registered separator and the
+manifest version are this runner's own constants, named here and in
+the results header. The gates are the owner's: TIER3_SPEND_AUTHORIZED
+in .env.tier3 must equal the mode's registered ceiling exactly (R4),
+and the servings map is the owner's standing pins, fingerprint
+e0dc92a3aecb, refused otherwise. Every mode of every batch refuses to
+start unless the freeze guard holds — the candidates hash to the
+manifest's registered sha256, each question's corpus pages hash to
+the manifest's registered sha256 over the pages concatenated in the
+listed order, and every corpus page the tier-4 profile's manifest
+mirrors in docs/tier4/ is byte-identical to the frozen page itself.
+
+    python3 evals/tier4/runner.py preflight [calibration|pilot --ids IDS] [--batch DIR]
+    python3 evals/tier4/runner.py plan [calibration|pilot --ids IDS] [--batch DIR]
+    python3 evals/tier4/runner.py worst-case [--batch DIR]
+    python3 evals/tier4/runner.py dry-run [--batch DIR]   # mocked, free
     python3 evals/tier4/runner.py reading-sheet RESULTS_FILE
-    python3 evals/tier4/runner.py run calibration|pilot --ids IDS   # paid
+    python3 evals/tier4/runner.py run calibration|pilot --ids IDS [--batch DIR]  # paid
 
 The dry run is free by construction: the real machinery — the freeze
 guard, the gates, the plan and its seeded order, the preflight, the
@@ -54,15 +73,20 @@ arm executors, the deadline, the fit-rule budget, the records, the
 reading sheet — with the model-serving layer mocked the way the tier-3
 dry run mocks it (a scripted client that bills through the real guard
 and accounting, a fixture catalogue, a stand-in at the pipeline
-boundary for arms E and F). No network, no spend. The calibration and
-the pilot themselves wait for the owner's gate line.
+boundary for arms E and F). No network, no spend. The dry run covers
+both modes of the pilot batch and of batch 2. The paid modes wait for
+the owner's gate line naming the mode's registered ceiling exactly.
 
 The tier-3 runner (evals/tier3/runner.py) is imported by path, the
 way the tests import it: evals/ is not an installed package. The arm
 executors, the unit client, the worst-case tables, the preflight's
 catalogue classes, the results log, the failure census and the dry
-run's doubles are its; tier 4 registers its own ceilings, seeds,
-scenario ids, function labels and prompt floors on top of them.
+run's doubles are its; tier 4 registers its own seeds, scenario ids,
+function labels, prompt floors and — since the fixes — its provider
+mapping on top of them. The tier-3 changes the import needs are two
+additive ``max_tokens`` parameters (``_registered_call``,
+``_arm_single``), defaulting to the registered cap: tier 3's
+behaviour is unchanged, and its tests pass unmodified.
 """
 
 from __future__ import annotations
@@ -70,9 +94,11 @@ from __future__ import annotations
 import argparse
 import asyncio
 import contextlib
+import functools
 import hashlib
 import importlib.util
 import json
+import os
 import random
 import re
 import sys
@@ -104,9 +130,14 @@ if tier3 is None:
     sys.modules["tier3_runner"] = tier3
     _TIER3_SPEC.loader.exec_module(tier3)
 
+from autornd.config import settings as harness_settings  # noqa: E402
 from autornd.profiles import (          # noqa: E402
-    DEFAULT_PROFILE, get_profile, load_profile, set_profile)
-from autornd.knowledge.context import load_docs_context  # noqa: E402
+    DEFAULT_PROFILE, ProjectProfile, get_profile, load_profile,
+    set_profile)
+from autornd.knowledge.context import (  # noqa: E402
+    DOCS_DIR, load_docs_context)
+from autornd.routing.openrouter import (   # noqa: E402
+    provider_order_for)
 
 # The tier-3 machinery this runner reuses, named at module scope so
 # the call sites below read as what they are.
@@ -155,18 +186,17 @@ worst_case_cost = tier3.worst_case_cost
 
 __all__ = [
     "CALIBRATION_ARMS_F1", "CALIBRATION_ARMS_F2",
-    "CALIBRATION_CEILING", "CALIBRATION_SEED",
-    "PILOT_ARMS_F1", "PILOT_ARMS_F2", "PILOT_CEILING",
-    "PILOT_ID_LIMIT", "PILOT_SEED", "PAGES_SEPARATOR",
-    "TIER4_CEILINGS", "TIER4_DEADLINE_SECONDS",
-    "TIER4_MANIFEST_VERSION", "TIER4_PROFILE",
-    "BATCH_DATASET_VERSION", "REFUSED_EXIT",
-    "ExperimentRefused", "Tier3ResultsLog", "UnitResult",
-    "calibration_plan", "check_freeze", "corpus_context",
-    "corpus_pages", "d_pages_message", "export_tier4_reading_sheet",
-    "leakage_findings", "model_visible_message", "pilot_plan",
-    "run_tier4_experiment", "run_tier4_unit", "tier4_dry_run",
-    "tier4_gate_report", "tier4_preflight", "tier4_summarize",
+    "CALIBRATION_SEED", "PILOT_ID_LIMIT", "PILOT_SEED",
+    "PAGES_SEPARATOR", "TIER4_MANIFEST_VERSION",
+    "TIER4_PROFILE", "DEFAULT_BATCH_DIR", "REFUSED_EXIT",
+    "ExperimentRefused", "Tier3ResultsLog", "Tier4Batch",
+    "UnitResult", "calibration_plan", "check_freeze",
+    "corpus_context", "corpus_pages", "d_pages_message",
+    "export_tier4_reading_sheet", "leakage_findings",
+    "load_batch", "model_visible_message", "pilot_plan",
+    "question_profile", "run_tier4_experiment",
+    "run_tier4_unit", "tier4_dry_run", "tier4_gate_report",
+    "tier4_pins", "tier4_preflight", "tier4_summarize",
     "unit_profile",
 ]
 
@@ -174,25 +204,19 @@ __all__ = [
 #
 # Every constant here is a registered parameter: a value a unit's
 # outcome depends on, so it is named in this file and the results
-# header rather than buried in a call site.
-
-# The per-unit authorization ceilings the command registers. D-pages
-# carries arm D's ceiling: it is arm D's treatment with the corpus
-# pages in the user message, so its spend bound is arm D's own.
-TIER4_CEILINGS = {"A": 0.10, "D": 0.30, "F": 0.40, "E": 1.50}
-TIER4_DEADLINE_SECONDS = 3600.0
-
-# The two modes' registered ceilings (the gate's R4 figures).
-CALIBRATION_CEILING = 2.00
-PILOT_CEILING = 5.00
+# header rather than buried in a call site. Everything a frozen
+# batch registers — its families, its calibration and pilot
+# ceilings, its per-unit ceilings, its deadline and its
+# single-call max_tokens — lives in the batch's own
+# manifest.json (R9) and is read from it by ``load_batch``
+# below, never hardcoded here.
 
 # The calibration mode's arms, by family: A and D on the F1
-# questions, D-pages on the F2 one. Arm A does not run on F2.
+# questions, D-pages on the F2 one (R9's calibration rule —
+# the one rule every batch's calibration plans by). Arm A does
+# not run on F2.
 CALIBRATION_ARMS_F1 = ("A", "D")
 CALIBRATION_ARMS_F2 = ("D-pages",)
-# The pilot mode's arms, by family.
-PILOT_ARMS_F1 = ("A", "D", "F", "E")
-PILOT_ARMS_F2 = ("D-pages", "F", "E")
 
 # The seeds the two modes' interleaved orders are shuffled with —
 # registered, so the order's digest in the results header is the
@@ -203,151 +227,344 @@ PILOT_SEED = 20261018
 # The pilot's registered limit on named question ids.
 PILOT_ID_LIMIT = 4
 
-# The corpus profile the F2 units of arms F and E run under.
+# The corpus profile the pilot batch's F2 question grounds under
+# (``AUTORND_PROFILE=tier4`` — ``profiles/tier4.yaml``, whose
+# docs dir mirrors the pilot batch's corpus pages, the freeze
+# guard's byte-identity check). An F2 question whose pages are
+# not this profile's corpus runs under a per-question grounding
+# profile (R9) — see ``question_profile``.
 TIER4_PROFILE = "tier4"
 
 # The results record's identity: the manifest version the log's
-# resume keys on, and the frozen batch's dataset version.
+# resume keys on. The dataset version is the batch's own —
+# ``tier4-<batch>`` — carried from the batch, not a constant.
 TIER4_MANIFEST_VERSION = "tier4-1"
-BATCH_DATASET_VERSION = "tier4-pilot-2026-10-16"
 
 # The registered separator between the request and the corpus pages
 # in arm D's F2 user message (the command's ARM D ON F2 constraint).
 PAGES_SEPARATOR = "\n\nReference documents:\n\n"
 
-# The frozen batch and the corpus, and the sha256 values the
-# evidence (the command file) registers them at — the freeze
-# guard's constants. A mode refuses to start unless the tree still
-# hashes to these figures.
-PILOT_DIR = TIER4 / "pilot"
-BATCH_PATH = PILOT_DIR / "candidates.json"
-CORPUS_DIR = PILOT_DIR / "corpus"
+# The default batch (the pilot batch, D44) and the tier-4
+# profile's docs dir, whose manifest.json lists the pilot
+# corpus pages as global documents.
+DEFAULT_BATCH_DIR = TIER4 / "pilot"
 DOCS_TIER4 = ROOT / "docs" / "tier4"
-REGISTERED_BATCH_SHA256 = (
-    "9c9109826431778bd203eddfe0ba12887b53434f33e3d656f4bb589"
-    "cd216b634")
-REGISTERED_CORPUS_SHA256 = (
-    "1d27d491195edec184141ba3f8882c27ab509fa3bb7551f7404055fe"
-    "9f78f1d9")
 
 # The exit code a refusal returns (the tier-3 CLI's convention).
 REFUSED_EXIT = 3
 
-# The F1 and F2 question ids of the frozen batch, in the batch's
-# own order.
-F1_QUESTION_IDS = ("T4-02", "T4-03", "T4-04", "T4-05")
-F2_QUESTION_IDS = ("T4-06",)
-
 
 # ── The frozen batch and the corpus ─────────────────────
 
-def load_candidates() -> list[dict[str, Any]]:
-    """The frozen pilot batch, as it stands on disk."""
-    return json.loads(BATCH_PATH.read_text(encoding="utf-8"))
+@dataclass(frozen=True)
+class Tier4Batch:
+    """A frozen batch's own registration, read from its
+    manifest.json (R9): the sha256 of its candidates and of
+    each F2 question's corpus pages, its families, its
+    calibration and pilot ceilings, its per-unit ceilings,
+    its deadline and its single-call max_tokens.
+
+    A frozen batch is a directory and a manifest; the runner
+    reads every registered figure from it, so a new frozen
+    batch is data, never a code change. A question's pages
+    are the manifest's listed paths, in the listed order —
+    the order the D-pages message and the corpus sha256 read
+    them in."""
+    name: str
+    path: Path
+    manifest_path: Path
+    candidates_path: Path
+    candidates_sha256: str
+    corpus: dict[str, tuple[Path, ...]]
+    corpus_sha256: dict[str, str]
+    families: dict[str, str]
+    calibration_ceiling: float
+    pilot_ceiling: float
+    pilot_arms: dict[str, tuple[str, ...]]
+    per_unit_ceilings: dict[str, float]
+    deadline_seconds: float
+    single_call_max_tokens: int
+    batch_dir: str
+
+    @property
+    def f1_ids(self) -> tuple[str, ...]:
+        """The batch's F1 question ids, in the manifest's own
+        order."""
+        return tuple(question_id for question_id, family
+                     in self.families.items()
+                     if family == "F1")
+
+    @property
+    def f2_ids(self) -> tuple[str, ...]:
+        """The batch's F2 question ids, in the manifest's own
+        order."""
+        return tuple(question_id for question_id, family
+                     in self.families.items()
+                     if family == "F2")
+
+    @property
+    def dataset_version(self) -> str:
+        """The batch's dataset version — its own name, so one
+        batch's records never carry another batch's version."""
+        return f"tier4-{self.name}"
+
+    def corpus_pages(self, question_id: str
+                     ) -> list[tuple[str, str]]:
+        """The question's corpus pages: (file name, content),
+        in the manifest's listed order."""
+        return [(path.name, path.read_text(encoding="utf-8"))
+                for path in self.corpus.get(question_id, ())]
+
+    def load_candidates(self) -> list[dict[str, Any]]:
+        """The batch's candidates, as they stand on disk."""
+        return json.loads(
+            self.candidates_path.read_text(encoding="utf-8"))
+
+    def questions(self) -> dict[str, dict[str, Any]]:
+        """The batch's candidates keyed by question id."""
+        return {candidate["id"]: candidate
+                for candidate in self.load_candidates()}
 
 
-def candidate_index() -> dict[str, dict[str, Any]]:
-    """The batch keyed by question id."""
-    return {candidate["id"]: candidate
-            for candidate in load_candidates()}
+def _read_batch(path: Path) -> Tier4Batch:
+    """Read one batch's manifest into its registration.
+
+    A manifest that does not register a field the runner
+    needs is not a frozen batch — it refuses to load, naming
+    the field, rather than running on a figure the batch
+    never registered."""
+    manifest_path = path / "manifest.json"
+    manifest = json.loads(
+        manifest_path.read_text(encoding="utf-8"))
+
+    def registered(field: str) -> Any:
+        value = manifest.get(field)
+        if value is None:
+            raise ValueError(
+                f"{manifest_path}: the batch's manifest does "
+                f"not register {field!r} (R9: every frozen "
+                "batch registers itself)")
+        return value
+
+    def resolve(registered_path: str) -> Path:
+        """A manifest-registered path: absolute as it stands;
+        repo-relative when the repository carries it (the
+        frozen batches' own convention — the manifest names
+        the candidates and corpus pages the way the repo
+        lays them out); else relative to the batch's own
+        directory (a synthetic batch's manifest)."""
+        candidate = Path(registered_path)
+        if candidate.is_absolute():
+            return candidate
+        rooted = ROOT / candidate
+        return rooted if rooted.exists() else path / candidate
+
+    corpus: dict[str, tuple[Path, ...]] = {}
+    corpus_sha256: dict[str, str] = {}
+    for question_id, entry in registered("corpus").items():
+        pages = entry.get("pages")
+        if not pages:
+            raise ValueError(
+                f"{manifest_path}: the corpus entry for "
+                f"{question_id!r} registers no pages")
+        corpus[question_id] = tuple(
+            resolve(page) for page in pages)
+        digest = entry.get("sha256")
+        if not digest:
+            raise ValueError(
+                f"{manifest_path}: the corpus entry for "
+                f"{question_id!r} registers no sha256")
+        corpus_sha256[question_id] = digest
+    calibration = registered("calibration")
+    pilot = registered("pilot")
+    return Tier4Batch(
+        name=str(registered("batch")),
+        path=path,
+        manifest_path=manifest_path,
+        candidates_path=resolve(registered("candidates")),
+        candidates_sha256=str(registered("candidates_sha256")),
+        corpus=corpus,
+        corpus_sha256=corpus_sha256,
+        families={str(question_id): str(family)
+                  for question_id, family
+                  in registered("families").items()},
+        calibration_ceiling=float(calibration["ceiling_usd"]),
+        pilot_ceiling=float(pilot["ceiling_usd"]),
+        pilot_arms={str(family): tuple(arms)
+                    for family, arms
+                    in (pilot.get("arms") or {}).items()},
+        per_unit_ceilings={
+            str(arm): float(ceiling) for arm, ceiling
+            in registered("per_unit_ceilings_usd").items()},
+        deadline_seconds=float(registered("deadline_seconds")),
+        single_call_max_tokens=int(
+            registered("single_call_max_tokens")),
+        batch_dir=(str(path.relative_to(ROOT))
+                   if path.is_relative_to(ROOT) else str(path)),
+    )
 
 
-def corpus_pages() -> list[tuple[str, str]]:
-    """The corpus pages in name order: (file name, content).
+@functools.lru_cache(maxsize=None)
+def _load_batch_cached(path: str) -> Tier4Batch:
+    return _read_batch(Path(path))
 
-    The order is the sorted file names, the way the evidence's
-    concatenation and the D-pages message read them."""
-    return [(path.name, path.read_text(encoding="utf-8"))
-            for path in sorted(CORPUS_DIR.glob("*.md"))]
+
+def load_batch(path: str | Path | None = None) -> Tier4Batch:
+    """A frozen batch's registration: the batch at ``path``,
+    or the pilot batch (the default every mode runs when no
+    ``--batch`` names another)."""
+    return _load_batch_cached(
+        str(Path(path).resolve() if path is not None
+            else DEFAULT_BATCH_DIR.resolve()))
 
 
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def batch_sha256() -> str:
-    """The sha256 of candidates.json's bytes, as it stands."""
-    return sha256_bytes(BATCH_PATH.read_bytes())
+def batch_sha256(batch: Tier4Batch | None = None) -> str:
+    """The sha256 of the batch's candidates.json bytes, as
+    they stand on disk."""
+    return sha256_bytes(
+        (batch or load_batch()).candidates_path.read_bytes())
 
 
-def corpus_sha256() -> str:
-    """The sha256 of the corpus pages concatenated in name order.
-
-    The evidence's figure: ``cat evals/tier4/pilot/corpus/*.md |
-    sha256sum`` — the pages' bytes, no separator, name order."""
+def corpus_sha256(question_id: str,
+                  batch: Tier4Batch | None = None) -> str:
+    """The sha256 of the question's corpus pages concatenated
+    in the manifest's listed order — the manifest's own
+    convention (the pages' bytes, no separator, listed
+    order): ``cat <the listed pages> | sha256sum``."""
     digest = hashlib.sha256()
-    for _name, content in corpus_pages():
-        digest.update(content.encode("utf-8"))
+    for page in (batch or load_batch()).corpus.get(
+            question_id, ()):
+        digest.update(page.read_bytes())
     return digest.hexdigest()
 
 
-def check_freeze() -> list[str]:
+@functools.lru_cache(maxsize=None)
+def _mirrored_pages() -> frozenset[str]:
+    """The corpus page names the tier-4 profile's docs
+    manifest mirrors in docs/tier4/ — the pages the freeze
+    guard's byte-identity check covers (the pilot batch's
+    registration, command 122's acceptance criterion (c)).
+    A question whose pages are not mirrored grounds through
+    its own per-question manifest (R9), and its pages are
+    the frozen pages themselves — nothing to mirror."""
+    manifest = DOCS_TIER4 / "manifest.json"
+    if not manifest.exists():
+        return frozenset()
+    try:
+        listed = json.loads(
+            manifest.read_text(encoding="utf-8")).get(
+                "global", [])
+    except (OSError, ValueError):
+        return frozenset()
+    return frozenset(Path(entry).name for entry in listed)
+
+
+def check_freeze(batch: Tier4Batch | None = None) -> list[str]:
     """The freeze guard's refusals, each naming the file that drifted.
 
-    Empty means the guard holds: candidates.json hashes to the
-    evidence's sha256, the corpus concatenated in name order hashes
-    to the evidence's sha256, and every page docs/tier4/ carries is
-    byte-identical to the corpus page it copies. A mode refuses to
+    Empty means the guard holds: the candidates hash to the
+    manifest's registered sha256, each question's corpus pages
+    hash to the manifest's registered sha256 over the pages
+    concatenated in the listed order, and every corpus page the
+    tier-4 profile's manifest mirrors in docs/tier4/ is
+    byte-identical to the frozen page itself. A mode refuses to
     start on any refusal here — the run's evidence is the frozen
     batch, and a batch that moved under the run is a different
     experiment from the one the ceilings and the reading were
     registered for."""
+    batch = batch or load_batch()
     refusals: list[str] = []
-    measured = batch_sha256()
-    if measured != REGISTERED_BATCH_SHA256:
+    if not batch.candidates_path.exists():
         refusals.append(
-            f"{BATCH_PATH}: sha256 {measured} is not the frozen "
-            f"batch's registered sha256 "
-            f"{REGISTERED_BATCH_SHA256} — the batch moved under the "
-            "run (the freeze guard, command 122)")
-    measured = corpus_sha256()
-    if measured != REGISTERED_CORPUS_SHA256:
-        refusals.append(
-            f"{CORPUS_DIR}: the corpus pages concatenated in name "
-            f"order hash to {measured}, not the registered corpus "
-            f"sha256 {REGISTERED_CORPUS_SHA256} — the corpus moved "
-            "under the run (the freeze guard, command 122)")
-    for name, _content in corpus_pages():
-        corpus_page = CORPUS_DIR / name
-        docs_copy = DOCS_TIER4 / name
-        if (not docs_copy.exists()
-                or docs_copy.read_bytes() != corpus_page.read_bytes()):
+            f"{batch.candidates_path}: the batch's candidates "
+            "are not on disk — the freeze guard cannot hash "
+            "what is not there")
+    else:
+        measured = batch_sha256(batch)
+        if measured != batch.candidates_sha256:
             refusals.append(
-                f"{docs_copy}: not byte-identical to its corpus "
-                f"page {corpus_page} — the profile's grounding copy "
-                "must be the frozen page itself (the freeze guard, "
-                "command 122)")
+                f"{batch.candidates_path}: sha256 {measured} is "
+                f"not the frozen batch's registered sha256 "
+                f"{batch.candidates_sha256} — the batch moved "
+                "under the run (the freeze guard, R9)")
+    for question_id, pages in batch.corpus.items():
+        missing = [str(page) for page in pages
+                   if not page.exists()]
+        if missing:
+            refusals.append(
+                f"{question_id}: the registered corpus pages "
+                "are not on disk — the freeze guard cannot hash "
+                "what is not there: " + ", ".join(missing))
+            continue
+        measured = corpus_sha256(question_id, batch)
+        if measured != batch.corpus_sha256[question_id]:
+            refusals.append(
+                f"{question_id}: the corpus pages "
+                + ", ".join(str(page) for page in pages)
+                + " concatenated in the manifest's listed order "
+                f"hash to {measured}, not the registered "
+                f"sha256 {batch.corpus_sha256[question_id]} — "
+                "the corpus moved under the run (the freeze "
+                "guard, R9)")
+        # The docs/tier4 mirror: a page the tier-4 profile's
+        # manifest lists must be byte-identical to the frozen
+        # page it copies — the profile's grounding copy is the
+        # frozen page itself, never a retelling of it.
+        for page in pages:
+            if page.name not in _mirrored_pages():
+                continue
+            docs_copy = DOCS_TIER4 / page.name
+            if (not docs_copy.exists()
+                    or docs_copy.read_bytes() != page.read_bytes()):
+                refusals.append(
+                    f"{docs_copy}: not byte-identical to its "
+                    f"corpus page {page} — the profile's "
+                    "grounding copy must be the frozen page "
+                    "itself (the freeze guard)")
     return refusals
 
 
 # ── The model-visible text ──────────────────────────────
 
-def d_pages_message(candidate: dict[str, Any]) -> str:
+def d_pages_message(candidate: dict[str, Any],
+                    batch: Tier4Batch | None = None) -> str:
     """Arm D's F2 user message: the request, the registered
-    separator, and the three corpus pages verbatim and in name
-    order, each preceded by its file name."""
+    separator, and the question's own corpus pages verbatim and
+    in the manifest's listed order, each preceded by its file
+    name (R9: D-pages carries its own question's pages, and no
+    other question's)."""
     pages = "\n\n".join(
-        f"{name}\n\n{content}" for name, content in corpus_pages())
+        f"{name}\n\n{content}"
+        for name, content in (batch or load_batch()).corpus_pages(
+            candidate["id"]))
     return candidate["request"] + PAGES_SEPARATOR + pages
 
 
 def model_visible_message(arm: str,
-                          candidate: dict[str, Any]) -> str:
+                          candidate: dict[str, Any],
+                          batch: Tier4Batch | None = None) -> str:
     """The model-visible text the arm's treatment carries: the
-    candidate's request only, plus, for arm D on F2, the corpus
-    pages under the registered separator. Never the requirements,
-    the reference design, the worked solution, the wrong designs or
-    the difficulty rationale — the leakage guard below asserts it."""
+    candidate's request only, plus, for arm D on F2, the
+    question's own corpus pages under the registered separator.
+    Never the requirements, the reference design, the worked
+    solution, the wrong designs or the difficulty rationale —
+    the leakage guard below asserts it."""
     if arm == "D-pages":
-        return d_pages_message(candidate)
+        return d_pages_message(candidate, batch)
     return candidate["request"]
 
 
-def message_sha256(arm: str, candidate: dict[str, Any]) -> str:
+def message_sha256(arm: str, candidate: dict[str, Any],
+                   batch: Tier4Batch | None = None) -> str:
     """The sha256 of the exact user message the unit's treatment
     carries — the figure the unit record reports."""
     return sha256_bytes(
-        model_visible_message(arm, candidate).encode("utf-8"))
+        model_visible_message(arm, candidate,
+                              batch).encode("utf-8"))
 
 
 # The leakage guard. A string an arm must never see is evidence of
@@ -446,29 +663,152 @@ def leakage_findings(message: str,
 
 # ── The profile selection ───────────────────────────────
 
-def unit_profile(family: str, arm: str) -> str | None:
-    """The profile the unit runs under (the command's PROFILES
-    constraint): the tier-4 corpus profile for an F2 unit of arm F
-    or E — the pipeline's own grounding node loads the corpus into
-    the requests that read it — and the process default for every
-    other unit, so no corpus text reaches an F1 question. Arm D on
-    F2 (D-pages) carries the pages in its user message and runs the
-    single-call treatment, so it runs under the default too."""
-    if family == "F2" and arm in ("E", "F"):
-        return TIER4_PROFILE
-    return None
+class QuestionProfile(ProjectProfile):
+    """An F2 question's own grounding profile (R9): the
+    tier-4 profile's vocabulary, with the docs dir this
+    question's grounding manifest lives at.
+
+    ``get_docs_dir`` is the one hook ``load_docs_context``
+    resolves a profile's manifest through, so a profile
+    that names a scratch dir grounds on that dir's
+    manifest — and nothing else. The scratch manifest
+    lists the question's frozen corpus pages and no other
+    question's, so an F2 unit of arm F or E grounds with
+    its own question's pages and no other's."""
+
+    def __init__(self, name: str, docs_dir: Path,
+                 description: str = "") -> None:
+        super().__init__(name=name, description=description)
+        self.docs_dir = docs_dir
+
+    def get_docs_dir(self) -> str:
+        return str(self.docs_dir)
+
+
+@functools.lru_cache(maxsize=None)
+def _mirrored_manifest() -> tuple[str, ...]:
+    """The ordered global entries of the tier-4 profile's
+    docs manifest (docs/tier4/manifest.json) — the pages
+    the tier-4 profile grounds on, in its own order."""
+    manifest = DOCS_TIER4 / "manifest.json"
+    if not manifest.exists():
+        return ()
+    try:
+        listed = json.loads(
+            manifest.read_text(encoding="utf-8")).get(
+                "global", [])
+    except (OSError, ValueError):
+        return ()
+    return tuple(str(entry) for entry in listed)
+
+
+@functools.lru_cache(maxsize=None)
+def _tier4_corpus_pages() -> tuple[tuple[str, str], ...]:
+    """The corpus pages the tier-4 profile grounds on:
+    (file name, content), in the mirror's own order. A
+    frozen question whose pages equal these runs under
+    the shipped tier-4 profile itself — byte-identical
+    grounding — and any other question grounds on its
+    own pages (R9)."""
+    return tuple(
+        (Path(entry).name,
+         (DOCS_DIR / entry).read_text(encoding="utf-8"))
+        for entry in _mirrored_manifest())
+
+
+_GROUNDING_PROFILES: dict[str, QuestionProfile] = {}
+
+
+def _grounding_profile(question_id: str,
+                       batch: Tier4Batch | None = None
+                       ) -> QuestionProfile:
+    """The per-question grounding profile for a question
+    whose pages the tier-4 profile does not mirror (R9):
+    a scratch manifest under the results dir lists the
+    question's frozen pages — and only those — and the
+    profile reads it.
+
+    The scratch dir is gitignored run output, regenerated
+    from the frozen pages on every run, so a page edit
+    cannot ground a unit: the freeze guard refuses the
+    run before the profile is ever built."""
+    batch = batch or load_batch()
+    key = f"{batch.name}/{question_id}"
+    profile = _GROUNDING_PROFILES.get(key)
+    if profile is not None:
+        return profile
+    docs_dir = (RESULTS_DIR / "tier4-grounding"
+                / batch.name / question_id)
+    manifest = {
+        "global": [
+            os.path.relpath(page, DOCS_DIR)
+            for page in batch.corpus[question_id]
+        ],
+    }
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    (docs_dir / "manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n",
+        encoding="utf-8")
+    profile = QuestionProfile(
+        name=f"Tier4 {batch.name} {question_id}",
+        docs_dir=docs_dir)
+    _GROUNDING_PROFILES[key] = profile
+    return profile
+
+
+def question_profile(question_id: str,
+                     batch: Tier4Batch | None = None
+                     ) -> ProjectProfile | None:
+    """The profile a question grounds under, or ``None``
+    when the question grounds on nothing (every F1
+    question). A question whose frozen pages are the
+    tier-4 profile's own corpus pages — the pilot batch's
+    T4-06 — runs under the shipped tier-4 profile, so its
+    grounding is byte-identical to the pre-manifest
+    runner's; every other F2 question grounds on its own
+    pages through its per-question profile (R9)."""
+    batch = batch or load_batch()
+    if batch.families.get(question_id) != "F2":
+        return None
+    pages = tuple(batch.corpus_pages(question_id))
+    if pages == _tier4_corpus_pages():
+        return load_profile(TIER4_PROFILE)
+    return _grounding_profile(question_id, batch)
+
+
+def unit_profile(question_id: str, arm: str,
+                 batch: Tier4Batch | None = None
+                 ) -> ProjectProfile | None:
+    """The profile the unit runs under (the command's
+    PROFILES constraint): the question's own grounding
+    profile for an F2 unit of arm F or E — the pipeline's
+    own grounding node loads the question's pages into
+    the requests that read it — and the process default
+    for every other unit, so no corpus text reaches an F1
+    question. Arm D on F2 (D-pages) carries the pages in
+    its user message and runs the single-call treatment,
+    so it runs under the default too."""
+    batch = batch or load_batch()
+    if batch.families.get(question_id) != "F2":
+        return None
+    if arm not in ("E", "F"):
+        return None
+    return question_profile(question_id, batch)
 
 
 @contextlib.contextmanager
-def _profile_selected(name: str | None):
-    """Run under the named profile, restoring the previous one.
+def _profile_selected(profile: ProjectProfile | None):
+    """Run under the named profile, restoring the previous
+    one.
 
-    ``set_profile`` is the profile mechanism's own resolution path —
-    the one ``AUTORND_PROFILE`` drives through ``get_profile()`` —
-    so a unit's grounding reads the profile the unit registered,
-    whatever the process's environment says."""
+    ``set_profile`` is the profile mechanism's own
+    resolution path — the one ``AUTORND_PROFILE`` drives
+    through ``get_profile()`` — so a unit's grounding
+    reads the profile the unit registered, whatever the
+    process's environment says."""
     previous = get_profile()
-    set_profile(load_profile(name) if name else DEFAULT_PROFILE)
+    set_profile(profile if profile is not None
+                else DEFAULT_PROFILE)
     try:
         yield
     finally:
@@ -476,31 +816,48 @@ def _profile_selected(name: str | None):
 
 
 def corpus_context() -> str:
-    """The grounding context the tier-4 profile carries: the corpus
-    pages, exactly as ``load_docs_context`` loads them under
-    ``AUTORND_PROFILE=tier4``."""
-    with _profile_selected(TIER4_PROFILE):
+    """The grounding context the tier-4 profile carries:
+    the corpus pages, exactly as ``load_docs_context``
+    loads them under ``AUTORND_PROFILE=tier4``."""
+    with _profile_selected(load_profile(TIER4_PROFILE)):
+        return load_docs_context([], [])
+
+
+def question_grounding_context(question_id: str,
+                               batch: Tier4Batch | None = None
+                               ) -> str:
+    """The grounding context a question's pipeline calls
+    read: the question's own pages for an F2 question,
+    nothing for an F1 question (the default manifest's
+    globals are empty)."""
+    profile = question_profile(question_id, batch)
+    if profile is None:
+        return ""
+    with _profile_selected(profile):
         return load_docs_context([], [])
 
 
 def prompt_floor(arms: tuple[str, ...],
-                 questions: dict[str, dict[str, Any]]) -> str:
+                 questions: dict[str, dict[str, Any]],
+                 batch: Tier4Batch | None = None) -> str:
     """The largest prompt the mode's pipeline calls can carry.
 
     For arms E and F the entry point is the scenario request, and
     the pipeline's own node prompts sit above it — the grounding
-    node loads the corpus context into every request an F2 question
-    reads, and an F1 question grounds on nothing (the default
-    manifest's globals are empty). The floor is the largest request
-    with its grounding context, the way the tier-3 tables read the
-    largest question: a floor, with the guard's call-time
+    node loads the question's own pages into every request an F2
+    question reads, and an F1 question grounds on nothing (the
+    default manifest's globals are empty). The floor is the largest
+    request with its grounding context, the way the tier-3 tables
+    read the largest question: a floor, with the guard's call-time
     computation the binding check."""
-    context = corpus_context()
     floors: list[str] = []
     for candidate in questions.values():
         request = candidate["request"]
         if candidate["family"] == "F2":
-            floors.append(request + "\n\n" + context)
+            floors.append(
+                request + "\n\n"
+                + question_grounding_context(
+                    candidate["id"], batch))
         else:
             floors.append(request)
     return max(floors, key=lambda text: len(text.encode("utf-8")))
@@ -525,31 +882,50 @@ def tier4_order(seed: int, units: list[list[Any]]) -> list[list[Any]]:
     return shuffled
 
 
-def calibration_plan() -> list[list[Any]]:
-    """The calibration mode's nine units, in the seeded interleaved
-    order: arm A on T4-02..T4-05, arm D on T4-02..T4-05, arm
-    D-pages on T4-06, one repetition each."""
+def candidate_index(batch: Tier4Batch | None = None
+                    ) -> dict[str, dict[str, Any]]:
+    """The batch's candidates keyed by question id."""
+    return (batch or load_batch()).questions()
+
+
+def calibration_plan(batch: Tier4Batch | None = None
+                     ) -> list[list[Any]]:
+    """The calibration mode's units, in the seeded interleaved
+    order: arm A on every F1 question, arm D on every F1
+    question, arm D-pages on every F2 question, one repetition
+    each (R9: the plan's questions are the batch's own — the
+    batch's families decide which questions are F1 and which
+    are F2, so a new frozen batch calibrates itself)."""
+    batch = batch or load_batch()
     units: list[list[Any]] = [
         [question_id, 1, arm]
-        for question_id in F1_QUESTION_IDS
+        for question_id in batch.f1_ids
         for arm in CALIBRATION_ARMS_F1
     ]
     units.extend([question_id, 1, arm]
-                 for question_id in F2_QUESTION_IDS
+                 for question_id in batch.f2_ids
                  for arm in CALIBRATION_ARMS_F2)
     return tier4_order(CALIBRATION_SEED, units)
 
 
-def family_arms(family: str, mode: str) -> tuple[str, ...]:
-    """The arms the mode runs on a question of this family."""
-    if family == "F2":
-        return (CALIBRATION_ARMS_F2 if mode == "calibration"
-                else PILOT_ARMS_F2)
-    return (CALIBRATION_ARMS_F1 if mode == "calibration"
-            else PILOT_ARMS_F1)
+def family_arms(family: str, mode: str,
+                batch: Tier4Batch | None = None
+                ) -> tuple[str, ...]:
+    """The arms the mode runs on a question of this family.
+    The calibration arms are the runner's own registration
+    (A and D on F1, D-pages on F2); the pilot's arms per
+    family are the batch's own registration (R9), so a batch
+    that runs an arm in a mode the pilot does not is data,
+    not a code change."""
+    if mode == "calibration":
+        return (CALIBRATION_ARMS_F2 if family == "F2"
+                else CALIBRATION_ARMS_F1)
+    return (batch or load_batch()).pilot_arms.get(
+        family, ())
 
 
 def pilot_plan(question_ids: list[str],
+               batch: Tier4Batch | None = None,
                arms: tuple[str, ...] | None = None
                ) -> tuple[list[list[Any]], list[str]]:
     """The pilot mode's plan: the named question ids x their
@@ -562,19 +938,20 @@ def pilot_plan(question_ids: list[str],
     constraint, refused rather than silently skipped). ``arms`` is
     the caller's own restriction of the arms per id; unset, each id
     runs its family's arms."""
+    batch = batch or load_batch()
     refusals: list[str] = []
     if len(question_ids) > PILOT_ID_LIMIT:
         refusals.append(
             f"the pilot names {len(question_ids)} question ids; "
             f"its registered limit is {PILOT_ID_LIMIT} "
             "(PILOT_ID_LIMIT)")
-    candidates = candidate_index()
+    candidates = candidate_index(batch)
     for question_id in question_ids:
         if question_id not in candidates:
             refusals.append(
                 f"question id {question_id!r} is not in the frozen "
-                f"batch ({BATCH_PATH}) — the pilot runs the frozen "
-                "batch's questions only")
+                f"batch ({batch.candidates_path}) — the pilot runs "
+                "the frozen batch's questions only")
     if refusals:
         return [], refusals
     if len(set(question_ids)) != len(question_ids):
@@ -588,13 +965,13 @@ def pilot_plan(question_ids: list[str],
     for question_id in question_ids:
         family = candidates[question_id]["family"]
         for arm in (arms if arms is not None
-                    else family_arms(family, "pilot")):
-            if arm not in family_arms(family, "pilot"):
+                    else family_arms(family, "pilot", batch)):
+            if arm not in family_arms(family, "pilot", batch):
                 refusals.append(
                     f"arm {arm} does not run on a question of family "
                     f"{family} ({question_id}'s family runs "
-                    + ", ".join(family_arms(family, "pilot"))
-                    + " — the command's family arms)")
+                    + ", ".join(family_arms(family, "pilot", batch))
+                    + " — the batch's registered family arms)")
                 continue
             units.append([question_id, 1, arm])
     if refusals:
@@ -615,8 +992,9 @@ def tier4_gate_report(tier3_settings: Tier3Settings,
     standing pins (arm E's per-tier lineup included), ratified by
     fingerprint — the same map tier 3 runs under, refused otherwise.
     The spend gate is R4's: TIER3_SPEND_AUTHORIZED must equal the
-    mode's registered ceiling exactly — the calibration's $2.00, the
-    pilot's $5.00 — an authorization above the ceiling would spend
+    mode's registered ceiling exactly — the calibration mode's
+    registered ceiling, the pilot's — an authorization above the
+    ceiling would spend
     past a plan the owner never ratified, one below it stops the
     sweep mid-plan. Arms B and C do not run in tier 4, so their
     treatment gates (arm B's pin equal to arm A's) are not tier 4's
@@ -651,6 +1029,89 @@ def tier4_gate_report(tier3_settings: Tier3Settings,
     return missing
 
 
+# ── The provider pins (R7) ─────────────────────────────
+
+def _map_tier4_pins(raw: str) -> str:
+    """The owner's provider-order line, extended with the tier-4
+    single-call arms' pins (R7): the ``tier3_arm_a`` and
+    ``tier3_arm_d`` entries re-keyed to the tier-4 functions the
+    single-call arms bill to.
+
+    The owner's line is a ratification (G-2), and the single-call
+    arms are the same workloads on the same servings, so the
+    mapping copies the ratification onto the tier-4 functions
+    rather than asking for a second one — the void calibration's
+    defect was precisely that the tier-4 functions matched no key
+    and fell to the line's general list. A tier3 entry with no
+    provider maps to an explicitly empty tier-4 entry — unpinned,
+    and refused by the preflight — because an absent key would
+    fall to the general list, which is what served the void
+    calibration. A line that already carries the tier-4 entries is
+    re-mapped, so the mapping is idempotent over its own output."""
+    per_tier: dict[str, str] = {}
+    kept: list[str] = []
+    for entry in raw.split(","):
+        name, separator, provider = entry.partition(":")
+        if not entry.strip():
+            continue
+        if separator and name.strip().lower() in (
+                "tier4_arm_a", "tier4_arm_d"):
+            # A previous mapping's entries: re-keyed below, so the
+            # mapping is idempotent over a line it already mapped.
+            continue
+        kept.append(entry.strip())
+        if separator:
+            per_tier[name.strip().lower()] = provider.strip()
+    return ",".join(
+        kept + [
+            f"tier4_arm_a:{per_tier.get('tier3_arm_a', '')}",
+            f"tier4_arm_d:{per_tier.get('tier3_arm_d', '')}",
+        ])
+
+
+@contextlib.contextmanager
+def tier4_pins(line: str | None = None):
+    """Run with the tier-4 single-call arms pinned to the owner's
+    ratified tier-3 pins (R7).
+
+    The provider-order line the harness settings carry — the
+    owner's standing line, or ``line`` — is extended by the
+    mapping and installed on the harness settings singleton for
+    the run's duration (the same mechanism the tier-3 dry run's
+    pin overrides use), and restored afterwards. The routing
+    layer reads the singleton per call, so every single-call
+    arm's chat carries its pin's provider order, and the unit
+    record's serving figures name the providers that actually
+    served."""
+    raw = (line if line is not None
+           else (harness_settings.openrouter_provider_order
+                 or ""))
+    mapped = _map_tier4_pins(raw)
+    previous = harness_settings.openrouter_provider_order
+    harness_settings.openrouter_provider_order = mapped
+    try:
+        yield
+    finally:
+        harness_settings.openrouter_provider_order = previous
+
+
+def _arm_pin_key(arm: str) -> str:
+    """The tier-4 function an arm's single call bills to."""
+    return f"tier4_arm_{ceiling_key(arm).lower()}"
+
+
+def _arm_pin(arm: str) -> list[str]:
+    """The providers an arm's single call is pinned to (R7),
+    resolved through the provider-order line the run installed.
+
+    Empty is an arm with no pin: the mapping installs an
+    explicitly empty entry when the owner's line registers no
+    tier3 counterpart, so an empty resolution is a refusal —
+    never a fall to the line's general list, which is what
+    served the void calibration."""
+    return provider_order_for(_arm_pin_key(arm))
+
+
 # ── The preflight ───────────────────────────────────────
 
 def _arm_servings(arm: str,
@@ -667,12 +1128,16 @@ def _arm_servings(arm: str,
 def _single_call_worst_case(
         arm: str, floor_message: str,
         servings: dict[str, Any],
-        index: dict[str, dict[str, Any]]) -> float:
+        index: dict[str, dict[str, Any]],
+        max_tokens: int = tier3.REGISTERED_MAX_TOKENS
+        ) -> float:
     """The worst case of a single-call arm's one call, at the guard's
-    own formula: the registered max_tokens against the arm's serving's
+    own formula: the call's max_tokens against the arm's serving's
     rates, the prompt side the largest message the arm carries. Arm
     D-pages' message is the largest text any tier-4 arm carries —
-    the request with the corpus pages inlined."""
+    the request with the corpus pages inlined. The tier-4
+    single-call arms run at the batch's registered max_tokens (R8),
+    so a tier-4 worst case is computed at that cap, not tier 3's."""
     serving = _resolve_serving(arm, servings)
     prompt_rate, completion_rate = _rates(
         index, serving, f"arm {arm}")
@@ -683,7 +1148,7 @@ def _single_call_worst_case(
     return _worst_case_cost(
         prompt_rate, completion_rate,
         _prompt_bytes(system, user),
-        tier3.REGISTERED_MAX_TOKENS, per_request)
+        max_tokens, per_request)
 
 
 def _resolve_serving(arm: str,
@@ -698,7 +1163,9 @@ def tier4_preflight(
         credit: float | None,
         ceiling: float,
         arms: tuple[str, ...],
-        questions: dict[str, dict[str, Any]]
+        questions: dict[str, dict[str, Any]],
+        mode: str = "pilot",
+        batch: Tier4Batch | None = None,
         ) -> PreflightReport:
     """The tier-4 preflight, before the first unit. Free: it reads
     the catalogue fixture or the free GET's result, and computes.
@@ -710,8 +1177,8 @@ def tier4_preflight(
        (D49: an unknown price is not free), or is not in the
        catalogue at all;
     2. a single-call arm (A, D, D-pages) whose call's worst case —
-       the registered max_tokens at the largest message the arm
-       carries, the guard's own formula — exceeds its per-unit
+       the batch's registered max_tokens at the largest message the
+       arm carries, the guard's own formula — exceeds its per-unit
        ceiling: the call would be refused at zero spend, so the arm
        cannot run. The figure is the figure the command's LIMITS
        constraint names: STOP and report it, do not raise the
@@ -731,7 +1198,13 @@ def tier4_preflight(
        the mode's ceiling — the refusal names the shortfall. A
        balance that could not be read is no evidence, and a paid run
        that cannot establish its balance does not start.
+
+    The per-unit ceilings, the deadline and the single-call
+    max_tokens are the batch's own registrations (R9), so every
+    figure the preflight prints is the figure the batch registered,
+    for whichever batch the mode runs.
     """
+    batch = batch or load_batch()
     report = PreflightReport()
     index = _catalogue_index(catalogue)
 
@@ -754,6 +1227,45 @@ def tier4_preflight(
     if report.refusals:
         return report
 
+    # Case 1b (R7): each single-call arm's provider pin, and the
+    # pipeline arms' per-tier orders, informationally. A single-call
+    # arm's chat carries its pin's provider order; an arm with no pin
+    # would run on the line's general list — exactly what served the
+    # void calibration — and the mode refuses to start.
+    for arm in ("A", "D", "D-pages"):
+        if arm not in arms:
+            continue
+        pin = _arm_pin(arm)
+        if pin:
+            report.reports.append(
+                f"arm {arm}: pinned to " + ", ".join(pin)
+                + f" (R7: the owner's ratified "
+                f"{'tier3_arm_a' if arm == 'A' else 'tier3_arm_d'} "
+                "pin, re-keyed to the tier-4 function the arm "
+                "bills to)")
+        else:
+            report.refusals.append(
+                f"arm {arm}: no provider pin — the provider-order "
+                f"line registers no {_arm_pin_key(arm)} entry (R7: "
+                "the single-call arms run on the owner's ratified "
+                "tier3_arm_a/tier3_arm_d pins, and an arm with no "
+                "pin would run on the line's general list — what "
+                "served the void calibration)")
+    if report.refusals:
+        return report
+    for arm in ("E", "F"):
+        if arm not in arms:
+            continue
+        # Arm F runs arm E's path on arm E's tiers, so its
+        # lineup is the E entry of the servings map.
+        lineup = servings["E" if arm == "F" else arm]
+        for tier, serving in lineup.items():
+            report.reports.append(
+                f"arm {arm}/{tier}: the serving {serving}'s provider "
+                "order is "
+                + (", ".join(provider_order_for(tier))
+                   or "unpinned — the line's general list"))
+
     # Case 2: each single-call arm's one call, at the largest
     # message the arm carries among the mode's questions.
     for arm in ("A", "D", "D-pages"):
@@ -763,21 +1275,25 @@ def tier4_preflight(
             (model_visible_message(arm, candidate)
              for candidate in questions.values()),
             key=lambda text: len(text.encode("utf-8")))
-        worst = _single_call_worst_case(arm, floor, servings, index)
-        arm_ceiling = TIER4_CEILINGS[ceiling_key(arm)]
+        worst = _single_call_worst_case(
+            arm, floor, servings, index,
+            batch.single_call_max_tokens)
+        arm_ceiling = batch.per_unit_ceilings[ceiling_key(arm)]
         report.reports.append(
             f"arm {arm}: one call, the largest message the mode "
             f"carries — worst case ${worst:.4f} against the "
             f"${arm_ceiling:.2f} per-unit ceiling "
             f"({'refused even at zero spend' if worst > arm_ceiling else 'within the ceiling'}; "
             "the prompt side is the largest message, a floor — the "
-            "guard computes the real bytes at call time)")
+            "guard computes the real bytes at call time; the "
+            "call runs at the batch's registered max_tokens "
+            f"{batch.single_call_max_tokens} (R8))")
         if worst > arm_ceiling:
             report.refusals.append(
                 f"arm {arm}: the worst case of its one call is "
                 f"${worst:.4f}, above its per-unit ceiling "
                 f"${arm_ceiling:.2f} (the registered max_tokens "
-                f"{tier3.REGISTERED_MAX_TOKENS} at the largest "
+                f"{batch.single_call_max_tokens} at the largest "
                 f"message the arm carries) — STOP and report the "
                 "figure; the ceiling is not raised")
 
@@ -786,11 +1302,11 @@ def tier4_preflight(
     # reported — the preflight prints each arm's per-call and
     # per-unit worst case at the catalogue's shape — and a row
     # that refuses even at zero spend refuses the mode.
-    floor = prompt_floor(arms, questions)
+    floor = prompt_floor(arms, questions, batch)
     if "F" in arms:
         for row in tier3.arm_f_worst_case(
                 servings, catalogue, prompt_floor=floor,
-                unit_ceiling=TIER4_CEILINGS["F"]):
+                unit_ceiling=batch.per_unit_ceilings["F"]):
             if row.get("unknown"):
                 report.refusals.append(
                     f"arm F/{row['tier']}: {row['serving']} — no "
@@ -813,7 +1329,7 @@ def tier4_preflight(
             report.reports.append(
                 f"arm F/{row['tier']}: {row['serving']} — "
                 f"{figures} against the "
-                f"${TIER4_CEILINGS['F']:.2f} per-unit ceiling "
+                f"${batch.per_unit_ceilings['F']:.2f} per-unit ceiling "
                 f"({'refused even at zero spend' if row['refuses_even_at_zero_spend'] else 'within the ceiling'}; "
                 "the prompt side is the largest prompt, a floor — "
                 "the guard computes the real bytes at call time)")
@@ -822,12 +1338,12 @@ def tier4_preflight(
                     f"arm F/{row['tier']}: the worst case "
                     f"${row['worst_case']:.4f} refuses even at zero "
                     f"spend, above the "
-                    f"${TIER4_CEILINGS['F']:.2f} per-unit ceiling "
+                    f"${batch.per_unit_ceilings['F']:.2f} per-unit ceiling "
                     "(the ceiling is not raised)")
     if "E" in arms:
         for row in tier3.arm_e_worst_case(
                 servings, catalogue, prompt_floor=floor,
-                unit_ceiling=TIER4_CEILINGS["E"]):
+                unit_ceiling=batch.per_unit_ceilings["E"]):
             if row.get("unknown"):
                 report.refusals.append(
                     f"arm E/{row['tier']}: {row['serving']} — no "
@@ -837,7 +1353,7 @@ def tier4_preflight(
             report.reports.append(
                 f"arm E/{row['tier']}: {row['serving']} — "
                 f"worst case per call ${row['worst_case']:.4f} "
-                f"against the ${TIER4_CEILINGS['E']:.2f} per-unit "
+                f"against the ${batch.per_unit_ceilings['E']:.2f} per-unit "
                 f"ceiling "
                 f"({'refused even at zero spend' if row['refuses_even_at_zero_spend'] else 'within the ceiling'}; "
                 "the prompt side is the largest prompt, a floor — "
@@ -851,7 +1367,7 @@ def tier4_preflight(
                     f"arm E/{row['tier']}: the worst case "
                     f"${row['worst_case']:.4f} refuses even at zero "
                     f"spend, above the "
-                    f"${TIER4_CEILINGS['E']:.2f} per-unit ceiling "
+                    f"${batch.per_unit_ceilings['E']:.2f} per-unit ceiling "
                     "(the ceiling is not raised)")
 
     # Case 5: the account's remaining credit against the mode's
@@ -864,17 +1380,10 @@ def tier4_preflight(
     elif credit < ceiling:
         report.refusals.append(
             f"the provider's remaining credit ${credit:.2f} is below "
-            f"the {mode_name(ceiling)}'s registered ceiling "
+            f"the {mode}'s registered ceiling "
             f"${ceiling:.2f} (shortfall "
             f"${ceiling - credit:.2f})")
     return report
-
-
-def mode_name(ceiling: float) -> str:
-    """The mode's name, for a refusal that names its ceiling."""
-    return ("calibration" if ceiling == CALIBRATION_CEILING
-            else "pilot" if ceiling == PILOT_CEILING
-            else f"the ${ceiling:.2f}-ceiling")
 
 
 # ── The unit executor ───────────────────────────────────
@@ -888,23 +1397,26 @@ async def _tier4_execute_arm(
         spec_f: Any = None,
         pipeline_client_factory: Any = None,
         client_holder: dict[str, Any] | None = None,
+        batch: Tier4Batch | None = None,
         ) -> dict[str, Any]:
     """Dispatch to the arm's executor and shape its payload — the
     tier-3 executor's own dispatch, at the tier-4 registrations:
-    the tier-4 ceilings, the tier-4 scenario ids and function
-    labels, and D-pages as arm D's single call carrying the corpus
-    pages in its user message.
+    the batch's per-unit ceilings, the tier-4 scenario ids and
+    function labels, and D-pages as arm D's single call carrying
+    the corpus pages in its user message. The single-call arms'
+    one call runs at the batch's registered max_tokens (R8).
 
     ``client_holder`` receives the unit's client as soon as it
     exists, so the unit's record carries the figures the client
     booked (spend, unreconciled liability) even when a call fails
     mid-flight — the manifest's outstanding-liability rule."""
+    batch = batch or load_batch()
     unit_key = (question_id, repetition, arm)
     if arm in ("A", "D", "D-pages"):
         serving = servings[ceiling_key(arm)]
         client = _unit_client(
             unit_key, arm, serving,
-            TIER4_CEILINGS[ceiling_key(arm)], 1,
+            batch.per_unit_ceilings[ceiling_key(arm)], 1,
             factory=client_factory)
         if client_holder is not None:
             client_holder["client"] = client
@@ -914,7 +1426,8 @@ async def _tier4_execute_arm(
         # experiment's own function label.
         answer, finish_reasons = await _arm_single(
             ceiling_key(arm), message, serving, client,
-            function_prefix="tier4")
+            function_prefix="tier4",
+            max_tokens=batch.single_call_max_tokens)
         return {"answer": answer, "client": client,
                 "calls": client.calls,
                 "finish_reasons": finish_reasons}
@@ -935,7 +1448,7 @@ async def _tier4_execute_arm(
         arm_spec, _settings_lookup(), pipeline_factory,
         scenario_runner=scenario_runner,
         scenario_prefix="tier4",
-        unit_ceiling=TIER4_CEILINGS[arm])
+        unit_ceiling=batch.per_unit_ceilings[arm])
     calls_after_asks = sum(
         calls for tier, calls in
         (getattr(run, "calls_by_tier", {}) or {}).items()
@@ -956,7 +1469,7 @@ async def run_tier4_unit(
         questions: dict[str, dict[str, Any]],
         servings: dict[str, Any],
         budget: SweepBudget | None,
-        deadline: float = TIER4_DEADLINE_SECONDS,
+        deadline: float | None = None,
         deadline_overrides: dict[tuple[str, int, str],
                                  float] | None = None,
         client_factory: Any = None,
@@ -965,6 +1478,7 @@ async def run_tier4_unit(
         spec: Any = None,
         spec_f: Any = None,
         pipeline_client_factory: Any = None,
+        batch: Tier4Batch | None = None,
         ) -> UnitResult:
     """One tier-4 unit, end to end: the arm's treatment under the
     mode's deadline inside ``_isolated_store()`` and under the unit's
@@ -979,19 +1493,30 @@ async def run_tier4_unit(
     decision with the same fit rule. The failure classes are the
     tier-3 unit's own: a refusal, a serving error, a deadline, an
     incomplete unit, a skipped unit, each counted in its arm's
-    denominator, never dropped.
+    denominator, never dropped. The single-call arms' one call runs
+    at the batch's registered max_tokens (R8) on the pin in force
+    (R7): a call served by any provider outside the pin — or served
+    at all with no pin in force — is flagged serving_mismatch on
+    the record, and a 'length' finish is flagged truncated; both
+    show on the reading sheet, and a flagged unit is not read as a
+    result.
     """
+    batch = batch or load_batch()
+    if deadline is None:
+        deadline = batch.deadline_seconds
     question_id, repetition, arm = unit_key
     candidate = questions[question_id]
     family = candidate["family"]
-    message = model_visible_message(arm, candidate)
+    message = model_visible_message(arm, candidate, batch)
     result = UnitResult(
         question_id=question_id, repetition=repetition, arm=arm,
         status="incomplete",
         serving=_serving_record(ceiling_key(arm), servings))
     effective_deadline = (deadline_overrides or {}).get(
         unit_key, deadline)
-    profile_name = unit_profile(family, arm) or "default"
+    profile = unit_profile(question_id, arm, batch)
+    profile_name = (profile.name if profile is not None
+                    else "default")
 
     # The fit rule, decided before any client exists. Arms E and F's
     # run_scenario makes the same decision inside itself, with the
@@ -999,10 +1524,10 @@ async def run_tier4_unit(
     # harness's sweeps compose them.
     if (arm not in ("E", "F") and budget is not None
             and not budget.can_start(
-                TIER4_CEILINGS[ceiling_key(arm)])):
+                batch.per_unit_ceilings[ceiling_key(arm)])):
         result.status = "skipped"
         result.stop_reason = budget.skip(
-            TIER4_CEILINGS[ceiling_key(arm)])
+            batch.per_unit_ceilings[ceiling_key(arm)])
         return result
 
     started = time.perf_counter()
@@ -1011,9 +1536,8 @@ async def run_tier4_unit(
     made: dict[str, Any] = {}
     try:
         with isolate():
-            with _profile_selected(profile_name
-                                   if profile_name != "default"
-                                   else None):
+            with _profile_selected(
+                    profile if profile is not None else None):
                 payload = await asyncio.wait_for(
                     _tier4_execute_arm(
                         arm, message, question_id, repetition,
@@ -1024,7 +1548,8 @@ async def run_tier4_unit(
                         spec=spec, spec_f=spec_f,
                         pipeline_client_factory=(
                             pipeline_client_factory),
-                        client_holder=made),
+                        client_holder=made,
+                        batch=batch),
                     effective_deadline)
         client = payload.get("client")
         run = payload.get("run")
@@ -1034,6 +1559,27 @@ async def run_tier4_unit(
         result.tool_invocations = payload.get("tool_invocations", [])
         result.truncated = any(
             reason == "length" for reason in result.finish_reasons)
+        # R7: the serving the arm's single call actually ran
+        # on, against the pin in force. A unit served by any
+        # provider outside its pin — or served at all with no
+        # pin in force, the void calibration's defect — is a
+        # serving mismatch: recorded, and not read as a
+        # result. A unit nothing served (a failure before any
+        # reply) carries no mismatch: it failed, it was not
+        # mis-served. Arms E and F's pipeline tiers carry
+        # their own ratified pins (the tier-3 gates ratify
+        # the servings map), and their per-tier providers are
+        # recorded above.
+        if (arm in ("A", "D", "D-pages")
+                and client is not None):
+            pin = _arm_pin(arm)
+            served = sorted(client.providers_by_function.get(
+                _arm_pin_key(arm), ()))
+            result.serving_pins = list(pin)
+            result.serving_mismatch = (
+                bool(served)
+                and (not pin
+                     or not set(served) <= set(pin)))
         if run is not None:
             # Arms E and F: the pipeline run's own accounting, and
             # its internals (R1) — why it ended the way it did.
@@ -1118,9 +1664,10 @@ async def run_tier4_unit(
             # liability, the conservative bound on what the unit may
             # have spent.
             if budget is not None:
-                budget.record(TIER4_CEILINGS[ceiling_key(arm)])
+                budget.record(
+                    batch.per_unit_ceilings[ceiling_key(arm)])
                 result.unreconciled_liability += (
-                    TIER4_CEILINGS[ceiling_key(arm)])
+                    batch.per_unit_ceilings[ceiling_key(arm)])
     except (tier3.ProviderFailure, tier3.SpendGuardRefused,
             tier3.BudgetExceeded) as exc:
         # A provider that consumed its budget and emitted nothing, or
@@ -1203,12 +1750,19 @@ def tier4_unit_record(result: UnitResult,
     iterations and reason surfaced where the command's RECORDS
     constraint names them. A pipeline figure that never ran is None,
     not an empty shell (convention 28: no evidence is a different
-    claim from a measured zero)."""
+    claim from a measured zero). The R7/R8 flags ride here too: the
+    serving pins in force and whether the unit was served outside
+    them, and the truncated flag the tier-3 record already carries —
+    a flagged unit is not read as a result."""
     record = result.record()
     record["family"] = candidate["family"]
     record["profile"] = profile_name
     record["message_sha256"] = sha256_bytes(
         message.encode("utf-8"))
+    record["serving_pins"] = getattr(
+        result, "serving_pins", None)
+    record["serving_mismatch"] = bool(
+        getattr(result, "serving_mismatch", False))
     pipeline = record.get("pipeline")
     record["candidate"] = (pipeline or {}).get("candidate")
     record["iterations"] = (pipeline or {}).get("iterations")
@@ -1218,17 +1772,32 @@ def tier4_unit_record(result: UnitResult,
 
 # ── The experiment driver ───────────────────────────────
 
-def default_results_path(mode: str) -> Path:
-    """evals/results/<utc-timestamp>-tier4-<mode>.jsonl"""
+def default_results_path(mode: str,
+                         batch: Tier4Batch | None = None
+                         ) -> Path:
+    """evals/results/<utc-timestamp>-tier4-<mode>.jsonl —
+    the default batch's own path; another batch's name joins
+    the stem, so two batches' runs never write the same
+    file."""
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    return RESULTS_DIR / f"{stamp}-tier4-{mode}.jsonl"
+    batch = batch or load_batch()
+    suffix = (f"-{batch.name}" if batch.name != "pilot"
+              else "")
+    return RESULTS_DIR / f"{stamp}-tier4-{mode}{suffix}.jsonl"
 
 
-def mode_arms(mode: str) -> tuple[str, ...]:
-    """Every arm the mode can run, in the plan's own order."""
+def mode_arms(mode: str,
+              batch: Tier4Batch | None = None
+              ) -> tuple[str, ...]:
+    """Every arm the mode can run, in the plan's own order:
+    the calibration's registered arms, or the batch's own
+    pilot registration, deduplicated."""
     if mode == "calibration":
         return CALIBRATION_ARMS_F1 + CALIBRATION_ARMS_F2
-    return PILOT_ARMS_F1 + PILOT_ARMS_F2
+    return tuple(dict.fromkeys(
+        arm for arms
+        in (batch or load_batch()).pilot_arms.values()
+        for arm in arms))
 
 
 async def run_tier4_experiment(
@@ -1243,31 +1812,61 @@ async def run_tier4_experiment(
         credit: float | None = None,
         deadline_overrides: dict[tuple[str, int, str],
                                       float] | None = None,
+        batch: Tier4Batch | None = None,
         ) -> dict[str, Any]:
     """One tier-4 experiment run: the freeze guard, the gates, the
     plan, the free preflight, then every unit of the plan in the
     seeded interleaved order, under the sweep budget, each recorded
     as it finishes.
 
-    The freeze guard, the gates and the preflight come before any
-    network call, and a refusal names each missing gate, each
-    drifted file and each refusal case. On a 402 the sweep stops:
-    every unit after it is recorded not_run (provider credit),
-    outside the arm denominators, the way the tier-3 run records
-    them. The records carry the header's batch and corpus sha256
-    values, the mode, the order digest and the servings fingerprint,
-    and each unit's family, arm, profile, message sha256 and
-    tier-3 unit fields.
+    The whole run executes under the provider pins in force (R7):
+    the owner's provider-order line, extended by the mapping with
+    the ``tier4_arm_a``/``tier4_arm_d`` entries the single-call
+    arms bill to, installed on the harness settings for the run's
+    duration — so the preflight's pin case and every single-call
+    arm's chat read the same line, and the run restores the line it
+    found. The batch's own registrations supply every figure: the
+    mode's ceiling, the per-unit ceilings, the deadline and the
+    single-call max_tokens (R8, R9).
     """
+    batch = batch or load_batch()
+    with tier4_pins():
+        return await _run_tier4_experiment(
+            mode, question_ids=question_ids,
+            results_path=results_path,
+            client_factory=client_factory,
+            tool_dispatcher=tool_dispatcher,
+            scenario_runner=scenario_runner,
+            pipeline_client_factory=pipeline_client_factory,
+            catalogue=catalogue, credit=credit,
+            deadline_overrides=deadline_overrides,
+            batch=batch)
+
+
+async def _run_tier4_experiment(
+        mode: str,
+        question_ids: list[str] | None = None,
+        results_path: str | Path | None = None,
+        client_factory: Any = None,
+        tool_dispatcher: Any = None,
+        scenario_runner: Any = None,
+        pipeline_client_factory: Any = None,
+        catalogue: list[dict[str, Any]] | None = None,
+        credit: float | None = None,
+        deadline_overrides: dict[tuple[str, int, str],
+                                      float] | None = None,
+        batch: Tier4Batch | None = None,
+        ) -> dict[str, Any]:
     tier3_settings = Tier3Settings()
     servings = _resolve_servings(tier3_settings)
     fingerprint = _servings_fingerprint(servings)
-    authorization = (CALIBRATION_CEILING if mode == "calibration"
-                     else PILOT_CEILING)
+    authorization = (batch.calibration_ceiling
+                     if mode == "calibration"
+                     else batch.pilot_ceiling)
 
     # The freeze guard: the batch and the corpus as they stand are
     # the ones the evidence registered.
-    freeze = check_freeze()
+    freeze = check_freeze(batch)
     if freeze:
         raise ExperimentRefused(
             "the freeze guard refused to start",
@@ -1281,25 +1880,27 @@ async def run_tier4_experiment(
             "the ratification gates are not cleared",
             servings, fingerprint, missing)
 
-    # The plan: the calibration's nine units, or the pilot's named
-    # ids x their family's arms.
+    # The plan: the calibration's units — every F1 question x A
+    # and D, every F2 question x D-pages — or the pilot's named
+    # ids x their family's arms, from the batch's own families
+    # and pilot registration.
     if mode == "calibration":
-        order = calibration_plan()
+        order = calibration_plan(batch)
         questions = {question_id: candidate
                      for question_id, candidate
-                     in candidate_index().items()
-                     if question_id in F1_QUESTION_IDS
-                     or question_id in F2_QUESTION_IDS}
-        named_ids = list(F1_QUESTION_IDS + F2_QUESTION_IDS)
+                     in candidate_index(batch).items()
+                     if question_id in batch.f1_ids
+                     or question_id in batch.f2_ids}
+        named_ids = list(batch.f1_ids + batch.f2_ids)
     else:
-        order, refusals = pilot_plan(question_ids or [])
+        order, refusals = pilot_plan(question_ids or [], batch)
         if refusals:
             raise ExperimentRefused(
                 "the pilot plan refused to start",
                 servings, fingerprint, refusals)
         questions = {question_id: candidate
                      for question_id, candidate
-                     in candidate_index().items()
+                     in candidate_index(batch).items()
                      if question_id in set(question_ids or [])}
         named_ids = list(question_ids or [])
     arms = tuple(sorted({unit[2] for unit in order}))
@@ -1313,21 +1914,25 @@ async def run_tier4_experiment(
         credit = await _fetch_credit()
     report = tier4_preflight(
         servings, catalogue, credit=credit, ceiling=authorization,
-        arms=arms, questions=questions)
+        arms=arms, questions=questions, mode=mode, batch=batch)
     if report.refusals:
         raise ExperimentRefused(
             "the preflight refused to start",
             servings, fingerprint, report.refusals)
 
     path = (Path(results_path) if results_path is not None
-            else default_results_path(mode))
+            else default_results_path(mode, batch))
     log = Tier3ResultsLog(path, config={
         "record": "header",
         "mode": mode,
         "manifest_version": TIER4_MANIFEST_VERSION,
-        "dataset_version": BATCH_DATASET_VERSION,
-        "batch_sha256": batch_sha256(),
-        "corpus_sha256": corpus_sha256(),
+        "dataset_version": batch.dataset_version,
+        "batch": batch.name,
+        "batch_dir": batch.batch_dir,
+        "batch_sha256": batch_sha256(batch),
+        "corpus_sha256": {
+            question_id: corpus_sha256(question_id, batch)
+            for question_id in batch.corpus},
         "seed": (CALIBRATION_SEED if mode == "calibration"
                  else PILOT_SEED),
         "question_ids": named_ids,
@@ -1337,11 +1942,11 @@ async def run_tier4_experiment(
         "order_units": len(order),
         "servings": servings,
         "servings_fingerprint": fingerprint,
-        "ceilings": dict(TIER4_CEILINGS),
+        "ceilings": dict(batch.per_unit_ceilings),
         "authorization_ceiling": authorization,
-        "max_tokens": tier3.REGISTERED_MAX_TOKENS,
+        "max_tokens": batch.single_call_max_tokens,
         "temperature": tier3.REGISTERED_TEMPERATURE,
-        "deadline_seconds": TIER4_DEADLINE_SECONDS,
+        "deadline_seconds": batch.deadline_seconds,
         "pins": {name: getattr(tier3_settings, name) for name in (
             "tier3_arm_a", "tier3_arm_d", "tier3_servings_ratified",
             "tier3_spend_authorized")},
@@ -1360,7 +1965,7 @@ async def run_tier4_experiment(
     in_flight = log.in_flight()
     charged = 0.0
     if in_flight is not None:
-        charged = TIER4_CEILINGS[ceiling_key(in_flight[2])]
+        charged = batch.per_unit_ceilings[ceiling_key(in_flight[2])]
         budget.record(charged)
 
     started = 0
@@ -1376,15 +1981,17 @@ async def run_tier4_experiment(
             tool_dispatcher=tool_dispatcher,
             scenario_runner=scenario_runner,
             spec=spec, spec_f=spec_f,
-            pipeline_client_factory=pipeline_client_factory)
+            pipeline_client_factory=pipeline_client_factory,
+            batch=batch)
         # The tier-4 record: the unit's own fields, plus the family,
         # the profile and the message sha256 the command's RECORDS
         # constraint names.
         candidate = questions[key[0]]
+        profile = unit_profile(key[0], key[2], batch)
         record = tier4_unit_record(
             result, candidate, key[2],
-            unit_profile(candidate["family"], key[2]) or "default",
-            model_visible_message(key[2], candidate))
+            profile.name if profile is not None else "default",
+            model_visible_message(key[2], candidate, batch))
         log.unit(record)
         records.append(record)
         started += 1
@@ -1410,10 +2017,10 @@ async def run_tier4_experiment(
                     questions[rest_key[0]]["family"])
                 not_run_record["profile"] = (
                     unit_profile(
-                        questions[rest_key[0]]["family"],
-                        rest_key[2]) or "default")
+                        rest_key[0], rest_key[2], batch)
+                    or "default")
                 not_run_record["message_sha256"] = message_sha256(
-                    rest_key[2], questions[rest_key[0]])
+                    rest_key[2], questions[rest_key[0]], batch)
                 log.unit(not_run_record)
                 records.append(not_run_record)
             break
@@ -1470,11 +2077,15 @@ def _by_status(records: list[dict[str, Any]]) -> dict[str, int]:
 def tier4_summarize(records: list[dict[str, Any]],
                     title: str) -> str:
     """The run summary: per arm, the units by status, the delivered
-    count, the spend and the latency; then the totals. Every failure
-    class is in its arm's denominator. Tier 4's primary measure is
-    the two blind hand readings against the requirement statements
-    (D52 §5) — the scorer is not a measure here, so no correctness
-    fraction is claimed."""
+    count, the readable count, the spend and the latency; then the
+    totals. Every failure class is in its arm's denominator. Tier 4's
+    primary measure is the two blind hand readings against the
+    requirement statements (D52 §5) — the scorer is not a measure
+    here, so no correctness fraction is claimed.
+
+    A unit is readable when it delivered an answer that is neither
+    truncated (a 'length' finish, R8) nor served outside its pin
+    (R7): a flagged unit is recorded, and not read as a result."""
     lines = [title]
     for arm in sorted({r["arm"] for r in records}):
         arm_records = [r for r in records if r["arm"] == arm]
@@ -1485,10 +2096,19 @@ def tier4_summarize(records: list[dict[str, Any]],
         status_line = ", ".join(
             f"{count} {status}" for status, count
             in sorted(by_status.items()))
+        delivered = sum(
+            1 for r in arm_records
+            if r.get("status") == "delivered")
+        readable = sum(
+            1 for r in arm_records
+            if r.get("status") == "delivered"
+            and not r.get("truncated")
+            and not r.get("serving_mismatch"))
         lines.append(
             f"arm {arm}: {len(arm_records)} units — {status_line}; "
-            f"delivered {sum(1 for r in arm_records if r.get('status') == 'delivered')}"
+            f"delivered {delivered}"
             f"/{len(arm_records)}; "
+            f"readable {readable}/{len(arm_records)}; "
             f"${sum(r.get('cost', 0.0) for r in arm_records):.4f}; "
             f"{sum(r.get('seconds', 0.0) for r in arm_records):.0f}s")
     totals = _by_status(records)
@@ -1518,7 +2138,11 @@ def export_tier4_reading_sheet(
     entry, so a reading cannot lean on the arm. Each entry carries
     everything a reading needs: the question's id, its family, its
     request, its requirement statements (the statements the reading
-    grades the answer against), and the delivered answer. The tier-3
+    grades the answer against), and the delivered answer — beside
+    the two flags that stop a unit being read as a result (R7, R8):
+    a truncated answer (a 'length' finish) and a serving mismatch
+    (a provider outside the pin in force). The flags carry no arm
+    information, so the sheet stays arm-blind. The tier-3
     sheet samples because its plans run hundreds of units; the tier-4
     plans run at most sixteen, so every answered unit is an entry.
     """
@@ -1537,6 +2161,9 @@ def export_tier4_reading_sheet(
                 for requirement in candidate.get(
                     "requirements", [])],
             "answer": record.get("answer"),
+            "truncated": bool(record.get("truncated")),
+            "serving_mismatch": bool(
+                record.get("serving_mismatch")),
             "reading_1": None,
             "reading_2": None,
             "resolution": None,
@@ -1579,6 +2206,21 @@ DRY_RUN_SERVINGS = {
     "E": {tier: f"dryrun/{tier}" for tier in tier3.PIPELINE_TIERS},
 }
 
+# The dry run's provider-order line: the pin lineup the
+# mocked run installs on the harness settings (the owner's
+# standing line's shape, with the dry run's own servings),
+# so the single-call arms' calls carry a provider order the
+# way the owner's run does and the preflight's pin case
+# holds. The tier3_arm_a/tier3_arm_d entries are the ones
+# the R7 mapping re-keys to the tier-4 functions; the
+# pipeline tiers are the tiers arms E and F run on, each
+# pinned to its dryrun serving.
+DRY_RUN_PROVIDER_ORDER = ",".join(
+    [f"tier3_arm_a:{DRY_RUN_SERVINGS['A']}",
+     f"tier3_arm_d:{DRY_RUN_SERVINGS['D']}"]
+    + [f"{tier}:{DRY_RUN_SERVINGS['E'][tier]}"
+       for tier in tier3.PIPELINE_TIERS])
+
 # The dry run's fixture credit: a balance above every mode's
 # registered ceiling, so the preflight's credit check passes without
 # a network GET — the dry run makes no real call.
@@ -1610,13 +2252,17 @@ def _ceiling_call(ceiling: float, answer: str) -> dict[str, Any]:
             "completion_tokens": 0}
 
 
-def _at_tier4_ceiling(arm: str, answer: str) -> dict[str, Any]:
+def _at_tier4_ceiling(arm: str, answer: str,
+                      batch: Tier4Batch | None = None
+                      ) -> dict[str, Any]:
     """A pipeline run that used a hair under its per-unit ceiling (the
     pilot dry run's E and F default): the workflow's own profile,
-    priced at the tier-4 ceiling with the tiers' shares held."""
+    priced at the batch's registered per-unit ceiling with the
+    tiers' shares held."""
     outcome = _shipped(
         answer, profile=("verify-first" if arm == "F" else "standing"))
-    ceiling = TIER4_CEILINGS[arm] * 0.999
+    ceiling = ((batch or load_batch()).per_unit_ceilings[arm]
+               * 0.999)
     scale = ceiling / outcome["cost"]
     outcome["cost"] = ceiling
     outcome["cost_by_tier"] = {
@@ -1643,18 +2289,60 @@ def _budget_stop_call(answer: str,
             "completion_tokens": completion_tokens}
 
 
+def _unpinned_call(answer: str, provider: str) -> dict[str, Any]:
+    """A single call served by a provider outside every
+    pin (the void calibration's defect, scripted): the
+    call delivers, but the unit's record carries the
+    serving_mismatch flag (R7) — recorded, and not read
+    as a result."""
+    call = _answer_call(answer)
+    call["provider"] = provider
+    return call
+
+
+def _truncated_call(answer: str) -> dict[str, Any]:
+    """A single call that ended on ``length`` (the void
+    calibration's defect, scripted): the call delivers,
+    but the unit's record carries the truncated flag
+    (R8) — recorded, and not read as a result."""
+    return _answer_call(answer, finish_reason="length")
+
+
 def _default_call(question_id: str) -> dict[str, Any]:
     """The dry run's default single call: the stand-in answer at the
     fixture's default token counts."""
     return _answer_call(_dry_run_answer(question_id))
 
 
-def build_calibration_dry_run_script() -> tier3.DryRunScript:
-    """The calibration dry run's script: the nine units' defaults —
-    every unit answers its stand-in answer through its arm's
-    registered treatment — then the failure-class exhibits the command
-    orders, one of each, each keyed to a unit the calibration's plan
-    actually runs:
+def _pilot_dry_run_ids(batch: Tier4Batch) -> list[str]:
+    """The question ids the pilot dry run names: the ids its
+    failure-class exhibits key — when the batch's plan runs
+    those units — plus the batch's F2 questions, so every
+    family's treatments run, capped at the pilot's registered
+    id limit. The pilot batch's own selection (its three
+    exhibit-keyed F1 questions and its F2 question) is this
+    rule's output, not a special case."""
+    planned = {unit_key[0] for unit_key
+               in calibration_plan(batch)}
+    selected = [question_id for question_id
+                in ("T4-02", "T4-03", "T4-04")
+                if question_id in planned]
+    for question_id in batch.f2_ids:
+        if question_id not in selected:
+            selected.append(question_id)
+    return selected[:PILOT_ID_LIMIT]
+
+
+def build_calibration_dry_run_script(
+        batch: Tier4Batch | None = None
+        ) -> tier3.DryRunScript:
+    """The calibration dry run's script: the plan's units'
+    defaults — every unit answers its stand-in answer through
+    its arm's registered treatment — then the failure-class
+    exhibits the command orders, one of each, each keyed to a
+    unit the calibration's plan actually runs (a batch whose
+    plan does not run the keyed unit — batch 2's, whose F2
+    questions carry no exhibit — gets the defaults only):
 
     * a refusal (T4-03, 1, A): a serving that chose to answer
       nothing — its empty reply still bills the call;
@@ -1665,71 +2353,102 @@ def build_calibration_dry_run_script() -> tier3.DryRunScript:
       budget and emitted nothing, after dispatch, booked the way the
       real client books a failed call;
     * a budget stop (T4-02, 1, D): one call booking just under the
-      $2.00 authorization, which the unit's own $0.30 ceiling
+      mode's authorization, which the unit's own per-unit ceiling
       refuses after the call — the sweep books the booked figure and
-      the fit rule stops every unit after it.
+      the fit rule stops every unit after it;
+    * a serving mismatch (T4-05, 1, A): a call the line served from
+      outside the arm's pin — the void calibration's defect class,
+      delivered and flagged serving_mismatch (R7), not read as a
+      result;
+    * a truncation (T4-06, 1, D-pages): a call that ended on
+      ``length`` — the void calibration's other defect class,
+      delivered and flagged truncated (R8), not read as a result.
     """
+    batch = batch or load_batch()
     script = tier3.DryRunScript()
-    for unit_key in calibration_plan():
-        question_id, _repetition, arm = tuple(unit_key)
-        script._calls[tuple(unit_key)] = [
+    planned = {tuple(unit_key)
+               for unit_key in calibration_plan(batch)}
+    for unit_key in planned:
+        question_id = unit_key[0]
+        script._calls[unit_key] = [
             _default_call(question_id)]
-    # The failure-class exhibits, one each.
-    script._calls[("T4-03", 1, "A")] = [_answer_call("")]
-    script._calls[("T4-04", 1, "D")] = [
-        _answer_call(_dry_run_answer("T4-04"), sleep=0.25)]
-    script._deadlines[("T4-04", 1, "D")] = 0.05
-    script._calls[("T4-05", 1, "D")] = [
-        _provider_failure_call(
-            "scripted: the serving consumed its budget and "
-            "emitted nothing")]
-    script._calls[("T4-02", 1, "D")] = [
-        _budget_stop_call(_dry_run_answer("T4-02"),
-                          CALIBRATION_CEILING)]
+    # The failure-class exhibits, one each — only when the
+    # batch's plan runs the unit they key.
+    if ("T4-03", 1, "A") in planned:
+        script._calls[("T4-03", 1, "A")] = [_answer_call("")]
+    if ("T4-04", 1, "D") in planned:
+        script._calls[("T4-04", 1, "D")] = [
+            _answer_call(_dry_run_answer("T4-04"), sleep=0.25)]
+        script._deadlines[("T4-04", 1, "D")] = 0.05
+    if ("T4-05", 1, "D") in planned:
+        script._calls[("T4-05", 1, "D")] = [
+            _provider_failure_call(
+                "scripted: the serving consumed its budget and "
+                "emitted nothing")]
+    if ("T4-02", 1, "D") in planned:
+        script._calls[("T4-02", 1, "D")] = [
+            _budget_stop_call(_dry_run_answer("T4-02"),
+                              batch.calibration_ceiling)]
+    if ("T4-05", 1, "A") in planned:
+        script._calls[("T4-05", 1, "A")] = [
+            _unpinned_call(_dry_run_answer("T4-05"),
+                           "dryrun/unpinned")]
+    if ("T4-06", 1, "D-pages") in planned:
+        script._calls[("T4-06", 1, "D-pages")] = [
+            _truncated_call(_dry_run_answer("T4-06"))]
     return script
 
 
-def build_pilot_dry_run_script() -> tier3.DryRunScript:
+def build_pilot_dry_run_script(
+        batch: Tier4Batch | None = None
+        ) -> tier3.DryRunScript:
     """The pilot dry run's script: every unit of the pilot's plan
     books a hair under its per-unit ceiling — the dry run exercises
-    the sweep's fit rule at the registered ceilings — then the
-    failure-class exhibits, one of each, keyed to units the plan
-    runs:
+    the sweep's fit rule at the batch's registered ceilings — then
+    the failure-class exhibits, one of each, keyed to units the
+    plan runs (a batch whose plan does not run the keyed unit gets
+    the defaults only):
 
     * a deadline (T4-03, 1, A), a refusal (T4-02, 1, A) and a
       provider failure (T4-04, 1, D), each as the calibration's are;
     * a budget stop, composed: the ceiling-tail defaults exhaust the
-      $5.00 authorization inside the plan, so the units after the
+      mode's authorization inside the plan, so the units after the
       crossing skip through the fit rule — the budget-stop class on
       the real rule, at the registered ceilings.
     """
+    batch = batch or load_batch()
     script = tier3.DryRunScript()
     order, _refusals = pilot_plan(
-        ["T4-02", "T4-03", "T4-04", "T4-06"])
+        _pilot_dry_run_ids(batch), batch)
+    planned = {tuple(unit_key) for unit_key in order}
     for unit_key in order:
         question_id, _repetition, arm = tuple(unit_key)
         if arm in ("A", "D", "D-pages"):
             script._calls[tuple(unit_key)] = [
-                _ceiling_call(TIER4_CEILINGS[
-                    ceiling_key(arm)],
+                _ceiling_call(
+                    batch.per_unit_ceilings[ceiling_key(arm)],
                     _dry_run_answer(question_id))]
         else:
             scenario_id = f"tier4_{arm.lower()}_{question_id}_r1"
             if arm == "F":
                 script._arm_f[scenario_id] = _at_tier4_ceiling(
-                    "F", _dry_run_answer(question_id))
+                    "F", _dry_run_answer(question_id), batch)
             else:
                 script._arm_e[scenario_id] = _at_tier4_ceiling(
-                    "E", _dry_run_answer(question_id))
-    # The failure-class exhibits, one each.
-    script._calls[("T4-03", 1, "A")] = [
-        _answer_call(_dry_run_answer("T4-03"), sleep=0.25)]
-    script._deadlines[("T4-03", 1, "A")] = 0.05
-    script._calls[("T4-02", 1, "A")] = [_answer_call("")]
-    script._calls[("T4-04", 1, "D")] = [
-        _provider_failure_call(
-            "scripted: the serving consumed its budget and "
-            "emitted nothing")]
+                    "E", _dry_run_answer(question_id), batch)
+    # The failure-class exhibits, one each — only when the
+    # batch's plan runs the unit they key.
+    if ("T4-03", 1, "A") in planned:
+        script._calls[("T4-03", 1, "A")] = [
+            _answer_call(_dry_run_answer("T4-03"), sleep=0.25)]
+        script._deadlines[("T4-03", 1, "A")] = 0.05
+    if ("T4-02", 1, "A") in planned:
+        script._calls[("T4-02", 1, "A")] = [_answer_call("")]
+    if ("T4-04", 1, "D") in planned:
+        script._calls[("T4-04", 1, "D")] = [
+            _provider_failure_call(
+                "scripted: the serving consumed its budget and "
+                "emitted nothing")]
     return script
 
 
@@ -1795,14 +2514,23 @@ class Tier4DryRunScenarioRunner(tier3.DryRunScenarioRunner):
 async def _tier4_dry_run_mode(
         mode: str, script: tier3.DryRunScript,
         question_ids: list[str] | None = None,
+        batch: Tier4Batch | None = None,
         ) -> dict[str, Any]:
     """One mode's mocked dry run: the real runner, the mocked
     serving layer, the mode's own authorization pin (R4 — the pin
-    names the mode's own registered ceiling), at zero spend."""
+    names the mode's own registered ceiling), at zero spend.
+
+    The dry run installs its own provider-order line (R7) — the
+    pin lineup the mocked servings stand for — so the single-call
+    arms' calls carry a provider order the way the owner's run
+    does, and the preflight's pin case holds. The run's own pin
+    context re-maps the line (idempotently) and restores it."""
+    batch = batch or load_batch()
     servings = DRY_RUN_SERVINGS
     fingerprint = _servings_fingerprint(servings)
-    authorization = (CALIBRATION_CEILING if mode == "calibration"
-                     else PILOT_CEILING)
+    authorization = (batch.calibration_ceiling
+                     if mode == "calibration"
+                     else batch.pilot_ceiling)
     overrides = {
         "TIER3_ARM_A": servings["A"],
         "TIER3_ARM_B": servings["B"],
@@ -1820,9 +2548,12 @@ async def _tier4_dry_run_mode(
     deadline_overrides = {
         key: seconds for key, seconds in script._deadlines.items()}
     context = tier3._DryRunContext()
-    path = RESULTS_DIR / f"dryrun-tier4-{mode}.jsonl"
+    suffix = (f"-{batch.name}" if batch.name != "pilot"
+              else "")
+    path = RESULTS_DIR / f"dryrun-tier4{suffix}-{mode}.jsonl"
     with _env_overrides(overrides), \
-            _harness_pin_overrides(servings["E"]):
+            _harness_pin_overrides(servings["E"]), \
+            tier4_pins(DRY_RUN_PROVIDER_ORDER):
         _install_rates(catalogue)
         client_factory = _dry_run_client_factory(
             script, rates, context)
@@ -1836,7 +2567,8 @@ async def _tier4_dry_run_mode(
             scenario_runner=scenario_runner,
             catalogue=catalogue,
             credit=DRY_RUN_CREDIT,
-            deadline_overrides=deadline_overrides)
+            deadline_overrides=deadline_overrides,
+            batch=batch)
 
 
 def _install_rates(catalogue: list[dict[str, Any]]) -> int:
@@ -1846,34 +2578,52 @@ def _install_rates(catalogue: list[dict[str, Any]]) -> int:
     return tier3._install_dry_run_rates(catalogue)
 
 
-async def tier4_dry_run() -> dict[str, Any]:
-    """The mocked dry runs of both modes (the command's acceptance
-    criterion (f)): the calibration's nine units and the pilot's
-    sixteen, through the real runner with mocked clients — no
-    network, no spend.
+async def tier4_dry_run(
+        batches: tuple[str | Path | None, ...] = (
+                None, TIER4 / "batch2"),
+        ) -> dict[str, Any]:
+    """The mocked dry runs of both modes of every named batch
+    (the command's acceptance criterion (f)) — the default pair
+    is the pilot batch and batch 2 — through the real runner
+    with mocked clients: no network, no spend.
 
     Every failure class the command names is included at least once
-    per mode: a refusal, a deadline, a provider failure, and a
-    budget stop (the calibration's booked by one call that takes the
-    sweep to the authorization's edge; the pilot's composed by the
-    ceiling-tail defaults exhausting the authorization inside the
-    plan). The reading sheet is generated for each mode from its own
-    records, arm-blind, one entry per answered unit.
+    per mode of a batch whose plan runs the unit it keys: a refusal,
+    a deadline, a provider failure, and a budget stop (the
+    calibration's booked by one call that takes the sweep to the
+    authorization's edge; the pilot's composed by the ceiling-tail
+    defaults exhausting the authorization inside the plan). A batch
+    whose plan does not run the keyed units — batch 2's calibration
+    plan is its two F2 questions — runs its units' defaults only.
+    The reading sheet is generated for each mode of each batch from
+    its own records, arm-blind, one entry per answered unit.
     """
-    calibration = await _tier4_dry_run_mode(
-        "calibration", build_calibration_dry_run_script())
-    pilot = await _tier4_dry_run_mode(
-        "pilot", build_pilot_dry_run_script(),
-        question_ids=["T4-02", "T4-03", "T4-04", "T4-06"])
-    sheets: dict[str, dict[str, Any]] = {}
-    for mode, result in (("calibration", calibration),
-                         ("pilot", pilot)):
-        sheet_path = RESULTS_DIR / f"dryrun-tier4-{mode}.sheet.json"
-        sheets[mode] = export_tier4_reading_sheet(
-            result["records"], result["questions"],
-            sheet_path, result["seed"], mode)
-    return {"calibration": calibration, "pilot": pilot,
-            "reading_sheets": sheets}
+    outcomes: dict[str, dict[str, Any]] = {}
+    sheets: dict[str, dict[str, dict[str, Any]]] = {}
+    for batch_path in batches:
+        batch = load_batch(batch_path)
+        calibration = await _tier4_dry_run_mode(
+            "calibration",
+            build_calibration_dry_run_script(batch),
+            batch=batch)
+        pilot = await _tier4_dry_run_mode(
+            "pilot",
+            build_pilot_dry_run_script(batch),
+            question_ids=_pilot_dry_run_ids(batch),
+            batch=batch)
+        outcomes[batch.name] = {"calibration": calibration,
+                                "pilot": pilot}
+        for mode, result in (("calibration", calibration),
+                             ("pilot", pilot)):
+            suffix = (f"-{batch.name}"
+                      if batch.name != "pilot" else "")
+            sheet_path = RESULTS_DIR / (
+                f"dryrun-tier4{suffix}-{mode}.sheet.json")
+            sheets.setdefault(batch.name, {})[mode] = (
+                export_tier4_reading_sheet(
+                    result["records"], result["questions"],
+                    sheet_path, result["seed"], mode))
+    return {"batches": outcomes, "reading_sheets": sheets}
 
 
 # ── The CLI ─────────────────────────────────────────────
@@ -1958,20 +2708,36 @@ async def _cli(argv: list[str] | None = None) -> int:
         command_p = sub.add_parser(name, help=help_text)
         command_p.add_argument(
             "mode", choices=("calibration", "pilot"),
-            help="the mode: calibration ($2.00, nine units) or "
-                 "pilot ($5.00, the named question ids x their "
+            help="the mode: calibration (every F1 question x "
+                 "A and D, every F2 question x D-pages) or "
+                 "pilot (the named question ids x their "
                  "family's arms)")
         command_p.add_argument(
             "--ids", default=None, metavar="IDS",
             help="pilot only: the comma-separated question ids from "
                  "the frozen batch (at most four)")
+        command_p.add_argument(
+            "--batch", default=None, metavar="DIR",
+            help="the frozen batch's directory "
+                 f"(default {DEFAULT_BATCH_DIR})")
         command_p.add_argument("--results-file", default=None,
                                metavar="PATH")
-    sub.add_parser("worst-case",
-                   help="the per-arm worst-case tables at the fixture "
-                        "catalogue's shape (free)")
-    sub.add_parser("dry-run",
-                   help="the mocked dry runs of both modes (free)")
+    worst_p = sub.add_parser(
+        "worst-case",
+        help="the per-arm worst-case tables at the fixture "
+             "catalogue's shape (free)")
+    worst_p.add_argument(
+        "--batch", default=None, metavar="DIR",
+        help="the frozen batch's directory "
+             f"(default {DEFAULT_BATCH_DIR})")
+    dry_p = sub.add_parser(
+        "dry-run",
+        help="the mocked dry runs of both modes of every "
+             "named batch (free)")
+    dry_p.add_argument(
+        "--batch", default=None, metavar="DIR",
+        help="one frozen batch's directory; unset, the pilot "
+             "batch and batch 2")
     sheet_p = sub.add_parser(
         "reading-sheet",
         help="export the reading sheet from a results file")
@@ -1987,7 +2753,13 @@ async def _cli(argv: list[str] | None = None) -> int:
         unit_records = [record for record in records
                         if record.get("record") == "unit"]
         header = (records[0] if records else {})
-        questions = candidate_index()
+        # The batch the records ran: the header's own
+        # registration, so a reading sheet reads the batch's
+        # questions, not the default batch's.
+        batch_dir = header.get("batch_dir")
+        batch = (load_batch(ROOT / batch_dir)
+                 if batch_dir else load_batch())
+        questions = candidate_index(batch)
         mode = header.get("mode", "pilot")
         seed = header.get("seed", PILOT_SEED)
         sheet = export_tier4_reading_sheet(
@@ -2001,40 +2773,49 @@ async def _cli(argv: list[str] | None = None) -> int:
     if args.command == "worst-case":
         # The fixture catalogue's shape, so the table is readable
         # without a network call; a real preflight reads the live
-        # catalogue's own rates.
+        # catalogue's own rates. The figures are the batch's own
+        # registrations.
+        batch = load_batch(args.batch)
         catalogue = _dry_run_catalogue(DRY_RUN_SERVINGS)
-        floor = prompt_floor(mode_arms("pilot"), candidate_index())
+        floor = prompt_floor(mode_arms("pilot", batch),
+                             candidate_index(batch))
         print("arm A: one call — worst case per call and per unit "
               "are the same figure (a single-call arm)")
         index = _catalogue_index(catalogue)
         for arm in ("A", "D", "D-pages"):
             floor_message = max(
-                (model_visible_message(arm, candidate)
-                 for candidate in candidate_index().values()),
+                (model_visible_message(arm, candidate, batch)
+                 for candidate in candidate_index(batch).values()),
                 key=lambda text: len(text.encode("utf-8")))
-            worst = _single_call_worst_case(arm, floor_message, DRY_RUN_SERVINGS, index)
+            worst = _single_call_worst_case(
+                arm, floor_message, DRY_RUN_SERVINGS, index,
+                batch.single_call_max_tokens)
             print(f"arm {arm}: one call, the largest message the "
                   f"batch carries — worst case ${worst:.4f} against "
-                  f"the ${TIER4_CEILINGS[ceiling_key(arm)]:.2f} "
-                  f"per-unit ceiling")
-        print("arm F, at the tier-4 prompt floor and the $0.40 "
+                  f"the ${batch.per_unit_ceilings[ceiling_key(arm)]:.2f} "
+                  f"per-unit ceiling (at the batch's registered "
+                  f"max_tokens {batch.single_call_max_tokens})")
+        print(f"arm F, at the tier-4 prompt floor and the "
+              f"${batch.per_unit_ceilings['F']:.2f} "
               "per-unit ceiling:")
         _print_worst_case("F", tier3.arm_f_worst_case(
             DRY_RUN_SERVINGS, catalogue, prompt_floor=floor,
-            unit_ceiling=TIER4_CEILINGS["F"]),
-            TIER4_CEILINGS["F"])
-        print("arm E, at the tier-4 prompt floor and the $1.50 "
+            unit_ceiling=batch.per_unit_ceilings["F"]),
+            batch.per_unit_ceilings["F"])
+        print(f"arm E, at the tier-4 prompt floor and the "
+              f"${batch.per_unit_ceilings['E']:.2f} "
               "per-unit ceiling:")
         _print_worst_case("E", tier3.arm_e_worst_case(
             DRY_RUN_SERVINGS, catalogue, prompt_floor=floor,
-            unit_ceiling=TIER4_CEILINGS["E"]),
-            TIER4_CEILINGS["E"])
+            unit_ceiling=batch.per_unit_ceilings["E"]),
+            batch.per_unit_ceilings["E"])
         return 0
 
     if args.command == "plan":
         mode, question_ids = _mode_and_ids(args)
-        order = (calibration_plan() if mode == "calibration"
-                 else pilot_plan(question_ids or [])[0])
+        batch = load_batch(args.batch)
+        order = (calibration_plan(batch) if mode == "calibration"
+                 else pilot_plan(question_ids or [], batch)[0])
         print(f"the {mode}'s plan: {len(order)} units, seed "
               f"{(CALIBRATION_SEED if mode == 'calibration' else PILOT_SEED)}, "
               f"order sha256 {_order_digest(order)}")
@@ -2043,67 +2824,76 @@ async def _cli(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "dry-run":
-        result = await tier4_dry_run()
-        for mode in ("calibration", "pilot"):
-            outcome = result[mode]
-            print(outcome["summary"])
-            print(f"records: {outcome['path']}")
+        batches = ((args.batch,) if args.batch
+                   else (None, TIER4 / "batch2"))
+        result = await tier4_dry_run(batches=batches)
+        for name, outcome in result["batches"].items():
+            for mode in ("calibration", "pilot"):
+                print(outcome[mode]["summary"])
+                print(f"records: {outcome[mode]['path']}")
         return 0
 
-    # preflight and run share the gate-and-preflight path.
+    # preflight and run share the gate-and-preflight path, under
+    # the provider pins in force (R7: the pin case and every
+    # single-call arm's chat read the same line).
     mode, question_ids = _mode_and_ids(args)
-    tier3_settings = Tier3Settings()
-    servings = _resolve_servings(tier3_settings)
-    fingerprint = _servings_fingerprint(servings)
-    authorization = (CALIBRATION_CEILING if mode == "calibration"
-                     else PILOT_CEILING)
-    print("servings map:")
-    print(json.dumps(servings, indent=2, sort_keys=True))
-    print(f"servings fingerprint: {fingerprint}\n")
-    freeze = check_freeze()
-    if freeze:
-        print("the freeze guard refused to start — the batch on "
-              "disk is not the frozen batch the evidence registered:")
-        for refusal in freeze:
-            print(f"  [FREEZE] {refusal}")
-        return REFUSED_EXIT
-    print("the freeze guard holds\n")
-    missing = tier4_gate_report(
-        tier3_settings, servings, fingerprint, authorization, mode)
-    if missing:
-        print("the ratification gates are not cleared — refusing "
-              "before any network call:")
-        for gate in missing:
-            print(f"  [GATE] {gate}")
-        return REFUSED_EXIT
-    print("the ratification gates hold\n")
-    if mode == "pilot" and not question_ids:
-        print("the pilot names no question ids: --ids names at most "
-              f"{PILOT_ID_LIMIT} question ids from the frozen batch "
-              "(e.g. --ids T4-02,T4-03,T4-04,T4-06)")
-        return REFUSED_EXIT
-    catalogue = await _fetch_catalogue(
-        confirm={serving for serving in _all_servings(servings)})
-    report = tier4_preflight(
-        servings, catalogue, credit=await _fetch_credit(),
-        ceiling=authorization,
-        arms=(tuple(sorted(
-            {unit[2] for unit in (
-                calibration_plan() if mode == "calibration"
-                else pilot_plan(question_ids)[0])}))),
-        questions=(candidate_index() if mode == "calibration"
-                   else {question_id: candidate
-                         for question_id, candidate
-                         in candidate_index().items()
-                         if question_id in set(question_ids)}))
-    _print_preflight_findings(report)
-    if report.refusals:
-        return REFUSED_EXIT
-    if args.command == "preflight":
-        return 0
-    result = await run_tier4_experiment(
-        mode, question_ids=question_ids,
-        results_path=args.results_file)
+    batch = load_batch(args.batch)
+    with tier4_pins():
+        tier3_settings = Tier3Settings()
+        servings = _resolve_servings(tier3_settings)
+        fingerprint = _servings_fingerprint(servings)
+        authorization = (batch.calibration_ceiling
+                         if mode == "calibration"
+                         else batch.pilot_ceiling)
+        print("servings map:")
+        print(json.dumps(servings, indent=2, sort_keys=True))
+        print(f"servings fingerprint: {fingerprint}\n")
+        freeze = check_freeze(batch)
+        if freeze:
+            print("the freeze guard refused to start — the batch on "
+                  "disk is not the frozen batch the evidence registered:")
+            for refusal in freeze:
+                print(f"  [FREEZE] {refusal}")
+            return REFUSED_EXIT
+        print("the freeze guard holds\n")
+        missing = tier4_gate_report(
+            tier3_settings, servings, fingerprint, authorization, mode)
+        if missing:
+            print("the ratification gates are not cleared — refusing "
+                  "before any network call:")
+            for gate in missing:
+                print(f"  [GATE] {gate}")
+            return REFUSED_EXIT
+        print("the ratification gates hold\n")
+        if mode == "pilot" and not question_ids:
+            print("the pilot names no question ids: --ids names at most "
+                  f"{PILOT_ID_LIMIT} question ids from the frozen batch "
+                  "(e.g. --ids T4-02,T4-03,T4-04,T4-06)")
+            return REFUSED_EXIT
+        catalogue = await _fetch_catalogue(
+            confirm={serving for serving in _all_servings(servings)})
+        report = tier4_preflight(
+            servings, catalogue, credit=await _fetch_credit(),
+            ceiling=authorization,
+            arms=(tuple(sorted(
+                {unit[2] for unit in (
+                    calibration_plan(batch) if mode == "calibration"
+                    else pilot_plan(question_ids, batch)[0])}))),
+            questions=(candidate_index(batch)
+                       if mode == "calibration"
+                       else {question_id: candidate
+                             for question_id, candidate
+                             in candidate_index(batch).items()
+                             if question_id in set(question_ids)}),
+            mode=mode, batch=batch)
+        _print_preflight_findings(report)
+        if report.refusals:
+            return REFUSED_EXIT
+        if args.command == "preflight":
+            return 0
+        result = await run_tier4_experiment(
+            mode, question_ids=question_ids,
+            results_path=args.results_file, batch=batch)
     print(result["summary"])
     print(f"records: {result['path']}")
     return 0
