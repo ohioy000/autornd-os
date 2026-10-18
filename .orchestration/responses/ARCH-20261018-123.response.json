@@ -1,0 +1,44 @@
+{
+  "command_id": "ARCH-20261018-123",
+  "status": "IN_PROGRESS",
+  "executed": false,
+  "head_before": "c99eacd4f556a78c0419d06db3bccd50afa42554",
+  "head_after": null,
+  "results": {},
+  "deviations": [],
+  "questions_for_advisor": [],
+  "preconditions_ran": [
+    {
+      "command": "grep -c 'Ruling D53, issued by the advisor' docs/reviews/2026-10-18-d53-the-recompute-vote.md",
+      "expected": "1",
+      "observed": "1",
+      "outcome": "present"
+    },
+    {
+      "command": "test -f .orchestration/responses/ARCH-20261017-122.response.json && echo ok",
+      "expected": "ok",
+      "observed": "ok",
+      "outcome": "present"
+    },
+    {
+      "command": "ls docs/traces/20261018T180951Z-tier4-calibration-batch5.jsonl docs/traces/20261018T181158Z-recompute-vote-samples.json docs/traces/20261018T192122Z-recompute-vote-samples.json docs/traces/20261018T035714Z-recompute-vote-samples.json | wc -l",
+      "expected": "4",
+      "observed": "4",
+      "outcome": "present"
+    },
+    {
+      "command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none",
+      "expected": "none",
+      "observed": "none",
+      "outcome": "present"
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass; report the count",
+      "observed": "1552 passed in 140.01s; network guard: 0 non-loopback attempt(s) recorded",
+      "outcome": "present"
+    }
+  ],
+  "suite_count_before": 1552,
+  "notes": "All five preconditions ran before any code was written; none was blind (each searched the subject where it lives or enumerated completely). The parent response ARCH-20261017-122.response.json exists, so the parent check passes. The response is committed IN_PROGRESS before the work starts, per the channel rule."
+}
