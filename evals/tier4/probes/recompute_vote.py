@@ -24,15 +24,20 @@ import recompute_check as rc  # noqa: E402
 
 N = int(os.environ.get("VOTE_N", "3"))
 FUNCTION, MODEL, MAX_TOKENS = "research", "google/gemini-3.8-flash", 32768
-BATCHES = {"batch2": ROOT / "evals/tier4/batch2", "batch3": ROOT / "evals/tier4/batch3"}
+BATCHES = {"batch2": ROOT / "evals/tier4/batch2", "batch3": ROOT / "evals/tier4/batch3", "batch4": ROOT / "evals/tier4/batch4"}
 KEY_ROWS = {
     "T4-15": ["Section", "N_cr_TF (kN)", "lambda_bar", "N_b_Rd (kN)"],
     "T4-21": ["Model", "RMS Output Torque (N·m)", "Derated Thermal Torque Limit (N·m)", "Peak Motor Torque (N·m)"],
     "T4-22": ["Model", "Required Cv at Max Flow", "Allowable Incipient Pressure Drop dP_ic (kPa)"],
     "T4-23": ["Model", "Corrected Pressure Drop (kPa)", "Coolant Outlet Temp (°C)", "Peak Baseplate Temp (°C)"],
     "T4-24": ["Bank Configuration", "Derated Working Voltage Limit (V)", "Effective Ripple Current per Capacitor (A_rms)", "Core Hot-Spot Temp (°C)"],
+    "T4-32": ["selected_model", "I_allow_A", "Ith_allow_A"],
+    "T4-33": ["selected_model", "Q_del_m3_s", "H_del_m", "P_shaft_kW", "NPSHr_visc_m"],
+    "T4-34": ["selected_model", "R_req_K_per_W", "R_sa_K_per_W"],
 }
-QUESTIONS = {"T4-15": "batch2", "T4-21": "batch3", "T4-22": "batch3", "T4-23": "batch3", "T4-24": "batch3"}
+QUESTIONS = {"T4-15": "batch2", "T4-21": "batch3", "T4-22": "batch3", "T4-23": "batch3", "T4-24": "batch3",
+             "T4-32": "batch4", "T4-33": "batch4", "T4-34": "batch4"}
+ONLY = [q for q in os.environ.get("VOTE_ONLY", "").split(",") if q]
 
 
 def majority(values, is_id):
@@ -55,6 +60,8 @@ async def sample():
     client.spend_ceiling = 2.00
     out = {}
     for q, bname in QUESTIONS.items():
+        if ONLY and q not in ONLY:
+            continue
         cand = rc.load(BATCHES[bname] / "candidates.json")[q]
         corpus = rc.pages(BATCHES[bname], q)
         rows = rc.rows_of(cand["request"])
