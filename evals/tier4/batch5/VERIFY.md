@@ -48,4 +48,4 @@ T4-43's cheaper CP-50 fails on NPSH (6.4 > 5.5 m), so the trap is not the only d
 
 **Flag:** T4-41's power row reads two ways: 2162 W at the end of the acceleration, or 1962 W steady. Every option passes either way, and the row is not a key row in the vote probe.
 
-**Calibration:** D-pages on T4-41 to T4-43, ceiling $1.20 (3 × the $0.40 per-unit ceiling). It is blocked until the owner raises the API key's limit: the remaining limit cannot cover one kimi-k3 call's 32768-token worst case ($0.39).
+**Calibration:** D-pages on T4-41 to T4-43, ceiling $1.20 (3 × the $0.40 per-unit ceiling). It waited on the API key's limit, then ran on 2026-10-18 after the owner raised it. Kimi-k3 failed T4-42 and passed T4-41 and T4-43. See `docs/reviews/2026-10-18-tier4-batch5-unstated-traps.md`.
