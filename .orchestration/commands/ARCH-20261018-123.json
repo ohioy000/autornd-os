@@ -1,0 +1,88 @@
+{
+  "command_id": "ARCH-20261018-123",
+  "parent_id": "ARCH-20261017-122",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Implement Ruling D53 phase 1: an optional recompute tier, typed results on the answer, a recompute node of three blind samples, a free recompute_vote check, and a new workflow answer-and-recompute whose flag is a note on the delivery. Free work; no paid call.",
+
+  "evidence": [
+    "Ruling D53: docs/reviews/2026-10-18-d53-the-recompute-vote.md, §2 (the ruling, items 1 to 6), §4 (limits), §6 (not ruled).",
+    "The measured vote: evals/tier4/probes/recompute_vote.py (the majority rule) and evals/tier4/probes/recompute_check.py (ident, TOL = 0.03, parse_table).",
+    "The recorded answers and samples, in docs/traces/: the pilot 20261018T022735Z-tier4-pilot-batch2.jsonl (05e5f56f); the calibrations 20261018T034225Z (batch 3), 20261018T164435Z (batch 4), 20261018T180951Z (batch 5), 20261018T185019Z (batch 6); the vote samples 20261018T035714Z, 20261018T164638Z, 20261018T181158Z, 20261018T192122Z; the T4-42 repeats 20261018T193358Z-repeat-T4-42.json (33c1e1c2).",
+    "The skip precedent: autornd/graph/adapter.py _phase_doublecheck (Ruling D48 (3): a check that did not run carries no approval-shaped value).",
+    "The workflow precedent: workflows/verify-first.yaml (triage, asks, asks_anchored, context, one implement with no plan, blocked_check, blocked_gate, coverage and consistency as notes)."
+  ],
+
+  "scope": {
+    "include": [
+      "autornd/config.py: model_recompute (optional tier, ships empty) and recompute_max_tokens (default 32768, with a comment citing the tier-4 vote samples)",
+      "autornd/models/verdicts.py: ResultValue, RecomputeVerdict, ImplementVerdict.results",
+      "autornd/engine/phases.py: run_recompute; the implement prompt's results instruction",
+      "autornd/graph/adapter.py: _phase_recompute",
+      "autornd/graph/checks.py: @check('recompute_vote') and its private identity helper",
+      "workflows/answer-and-recompute.yaml (new)",
+      ".env.example: MODEL_RECOMPUTE= (empty placeholder)",
+      "tests/test_recompute_vote.py (new) and the fixtures it reads",
+      ".orchestration/responses/",
+      "HANDOVER.md, README.md, AGENTS.md: counts and the new workflow and tier"
+    ],
+    "exclude": [
+      "workflows/engineering-rnd.yaml and workflows/verify-first.yaml: unchanged (D53 §2 (6))",
+      "evals/: frozen batches, keys and scorers; the probes are read-only references",
+      "autornd/database.py: no schema change (hard rule 12). If one is needed, STOP and report",
+      ".env and .env.tier3: the owner's (G-3)"
+    ]
+  },
+
+  "constraints": [
+    "FREE. No paid call. Every test is provider-free, and the network guard stays at 0.",
+    "TIER: model_recompute is optional, like model_premium. Importing autornd with it unset works. When it is unset, _phase_recompute returns {skipped: true, flagged: false, reason: <plain sentence>} and makes no call. recompute_vote reads a skip as skipped, never as passed.",
+    "RESULTS: ResultValue = {ask: str, value: float | str, unit: str = ''}. ImplementVerdict.results: list[ResultValue] defaults to empty. A null results field coerces to empty, and a null unit to ''. Existing recorded ImplementVerdicts must still parse.",
+    "IMPLEMENT PROMPT, in answer-and-recompute only: after the asks, add 'In results, give one entry for each ask of kind value or verdict listed above: ask = its number, value = the final number or the identifier you chose, unit = the unit of the number (empty for an identifier). These are the values your summary states.' Gate the addition on the node's args (for example args: {results: true}), so engineering-rnd and verify-first prompts stay byte-identical.",
+    "RECOMPUTE NODE: args {samples: 3}, declared in YAML. Each sample is one separate call on the recompute tier.",
+    "RECOMPUTE PROMPT: system 'You are a careful senior engineer.' User: the request; the grounding context; the anchored asks of kind value and verdict, numbered as in the answer; then 'Compute the answer yourself. Return JSON with results: one entry per listed ask, {ask: its number, value: your final number or the identifier you chose, unit: the unit of the number, empty for an identifier}.'",
+    "RECOMPUTE ISOLATION: no sample's messages contain the implement summary, its results, the plan or another sample's output.",
+    "ACCOUNTING: each sample goes through the client's reservation path, which reserves its worst case and releases it by identity (D45, D47). Add no new post site.",
+    "VOTE: identity values compare after dropping case, spacing and punctuation, with '×' and a count's 'x' read as a separator (recompute_check.ident without its 'in parallel' special case). Numbers compare within relative tolerance 0.03, only when the units are equal after normalise_key; otherwise the ask is no_consensus. The majority is a value matched by >= 2 of the samples that answered the ask. A disagreement is a majority that differs from the answer. flagged = at least one disagreement. Fewer than 2 parseable samples, or no answer result naming an anchored ask, makes the vote unchecked with flagged false. Output: flagged, skipped, unchecked, disagreements [{ask, answer, majority, support}], no_consensus [ask], samples_parsed.",
+    "FLAG = NOTE: the vote never blocks, routes or revises, and the run's status is decided without it. The vote's output is in the run's outputs and in the delivery the API returns.",
+    "NEVER PARSE ENGLISH: the vote reads typed fields only.",
+    "A defect found in existing harness code while doing this is a STOP-and-report, not a fix."
+  ],
+
+  "acceptance_criteria": [
+    "(a) Schema. ImplementVerdict without results parses (results == []); with null results parses to []; ResultValue with a null unit parses to ''. Break-proof: make results required and a recorded verdict from docs/traces fails to parse.",
+    "(b) Skip. With model_recompute unset, a mocked answer-and-recompute run makes zero recompute calls, and the vote is {skipped: true, flagged: false}. Break-proof: return flagged-false-and-not-skipped from the skip branch and the test fails.",
+    "(c) Isolation. Mocked: every recompute sample's system and user messages contain neither the implement summary nor any results value string. Break-proof: append the summary to the recompute message and the test fails.",
+    "(d) Accounting. Mocked client: three samples make three reservations, each released by its own identity. A sample that fails after dispatch keeps its own worst case as unreconciled liability. Break-proof shown.",
+    "(e) The vote on real recorded answers. Build a fixture from docs/traces: each tier-4 answer the records scored, converted to ResultValue lists with recompute_check.parse_table and the probe's KEY_ROWS, and the matching vote samples. At least: kimi's T4-42 calibration answer and repeat 3 (wrong); F's T4-15 from the pilot (wrong); the batch-3 four and the batch-4, batch-5 and batch-6 kimi answers (correct); the T4-42 repeats 1 and 2 (correct). The check's flags match recompute_vote.score's on each answer. That includes repeat 1's false flag on the ambiguous row 'current compared with I_n', recorded in D53 §1: the check reproduces it rather than hiding it. If an answer the records name cannot be found in docs/traces, STOP and report which.",
+    "(f) Vote rules, unit tests: identity normalisation ('VL-42' == 'vl 42'); the 3% tolerance edge (2.9% agrees, 3.1% disagrees); a unit mismatch gives no_consensus, not a flag; a 1-1-1 split gives no_consensus; 1 parseable sample gives unchecked. Each rule with a break-proof.",
+    "(g) Workflow. workflows/answer-and-recompute.yaml loads. A mocked run delivers with the vote in its outputs: once flagged (the answer differs from a 2-of-3 majority), once not. In both, the run's status equals that of a run with the vote nodes removed.",
+    "(h) Unchanged: engineering-rnd and verify-first implement prompts are byte-identical to main's (a test compares rendered prompts), and every existing test passes unmodified.",
+    "(i) Docs: .env.example carries MODEL_RECOMPUTE= empty; tests/test_docs.py passes (no model names). Counts re-derived from pytest --collect-only in HANDOVER.md, README.md and AGENTS.md.",
+    "(j) Suite green before and after, network guard 0, CI 5/5, PR opened."
+  ],
+
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/test_recompute_vote.py -q", "expected": "All pass."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; network guard: 0; report the count before and after."}
+  ],
+
+  "rollback": "Revert the PR. Nothing outside the new workflow, the optional tier and the default-empty results field changes behaviour.",
+
+  "deliverable": "One PR: the tier, schemas, node, check, workflow, prompts, tests with their break-proofs, docs and counts, and the response DONE. Then STOP. Routing on a flag waits on D53 §7.",
+
+  "assumptions": [
+    "The client can make three separate calls within one node. If a node can return only one ModelResponse, record all three in the phase's response list the way rosters do. If neither works, STOP and report.",
+    "The API's delivery carries the run's outputs. If it does not, add only the vote's output to it and say so in deviations."
+  ],
+
+  "questions": [],
+
+  "preconditions": [
+    {"command": "grep -c 'Ruling D53, issued by the advisor' docs/reviews/2026-10-18-d53-the-recompute-vote.md", "expected": "1 - D53 is on main."},
+    {"command": "test -f .orchestration/responses/ARCH-20261017-122.response.json && echo ok", "expected": "ok"},
+    {"command": "ls docs/traces/20261018T180951Z-tier4-calibration-batch5.jsonl docs/traces/20261018T181158Z-recompute-vote-samples.json docs/traces/20261018T192122Z-recompute-vote-samples.json docs/traces/20261018T035714Z-recompute-vote-samples.json | wc -l", "expected": "4"},
+    {"command": "pgrep -af 'evals[./]tier[34][./]runner|repeat_unit|recompute_vote|uvicor[n] autornd' || echo none", "expected": "none"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; report the count."}
+  ]
+}
