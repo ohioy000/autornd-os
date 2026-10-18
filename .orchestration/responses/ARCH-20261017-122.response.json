@@ -294,5 +294,25 @@
       "The n=2 reading is in: the D-pages arm delivers at the 32768 cap on the pinned provider (3/4 delivered; one empty-reply-at-cap). If the calibration's conclusion is to rest on n=2, it does; if a third sample is wanted (another $0.80 worst case), that is another owner repeat>1 order.",
       "The provider's stalls (multi-minute, twice in unit 1) are facts about the apparatus at the 32768 cap. Whether the tier-4 per-unit deadline (3600s) remains the right bound for a single 32768-token call - given the observed 18-22 minute wall clocks - is a ruling if the advisor wants the deadline re-derived; the executor does not change it (it is a registered figure, R9)."
     ]
+  },
+  "batch2_calibration_traces_2026_10_17": {
+    "what": "The two batch-2 calibration runs' JSONLs, committed to docs/traces/ under their results-file names - the repo's discipline that every live run cited anywhere commits its trace (the void calibration's traces were committed in PR #189; the pilot batch's live calibration traces and the smoke re-measurement's traces are committed the same way).",
+    "traces": [
+      {
+        "path": "docs/traces/20261017T210922Z-tier4-calibration-batch2.jsonl",
+        "sha256": "9fc93b29865f783a8971040ca2c2e0f143f134565386d0dbfc0f4ec783d9cd01",
+        "run": "the batch-2 calibration of 2026-10-17 21:09 UTC (run 1, n=1 per unit): 2 units, $0.7546 of the $1.00 authorization, $0.0000 unreconciled liability, 1144 s - T4-15 delivered ($0.3629) and T4-16 an empty reply at the 32768 cap ($0.3917, recorded and excluded per R8)."
+      },
+      {
+        "path": "docs/traces/20261017T234014Z-tier4-calibration-batch2.jsonl",
+        "sha256": "d4f56720e24d8d184fc7f304e91909e02acc6bf58617a6d6c38c5b600aa9a18d",
+        "run": "the owner-ordered n=2 re-run of 2026-10-17 23:40 UTC: 2 units, 2 delivered, readable 2/2, $0.7527 of the $1.00 authorization, $0.0000 unreconciled liability, 2457 s - T4-15 delivered ($0.3779, a 6169-char answer) and T4-16 delivered ($0.3748, a 6437-char answer, finish_reason=stop)."
+      }
+    ],
+    "why": "The runs are cited in this response (sections batch2_calibration_run_2026_10_17 and batch2_rerun_n2_2026_10_17); the gitignored results files in evals/results/ are not the durable record. The committed copies carry the runs' own bytes, sha256-pinned here and in the commit message, so the n=2 reading is checkable against the tree (convention 24: the commitment is generated from the files, not hand-stamped).",
+    "check": "sha256sum docs/traces/20261017T210922Z-tier4-calibration-batch2.jsonl -> 9fc93b29…; sha256sum docs/traces/20261017T234014Z-tier4-calibration-batch2.jsonl -> d4f56720… The trace-scanning guards (test_serving_ledger, test_trace_durability, test_preregistration_precedence, test_prohibition_phrasing) pass with the traces in the tree: the tier-4 header carries servings (not the models/provider_order keys the ledger derives from), so the derived ledger is unchanged.",
+    "questions_for_advisor": [
+      "The tier-4 trace header carries no written_at field - none of the recent traces do (tier-3 or tier-4), only the older docs/preregistration-*.md-era traces carry it, so a tier-4 run cannot be precedence-checked the way the old pairs are. If the advisor wants the tier-4 pre-registration discipline to be machine-checkable, adding written_at to the results header is instrument repair (the executor's lane) - a ruling on whether to do it, not on what it concludes."
+    ]
   }
 }
