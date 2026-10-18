@@ -1953,3 +1953,104 @@ class TestIBatchRegistration:
         with pytest.raises(ValueError) as refused:
             runner.load_batch(tmp_path / "holey")
         assert "deadline_seconds" in str(refused.value)
+
+class TestKSingleUseAuthorization:
+    """R11 (the advisor's review of 2026-10-18): one authorisation
+    pays for one run. Measured 2026-10-17: the pilot batch's
+    calibration ran twice under one unchanged gate line, because the
+    exact gate (R4) checks the amount, not whether it was spent."""
+
+    def _env(self, tmp_path, amount="1.00"):
+        env = tmp_path / ".env.tier3"
+        env.write_text(f"TIER3_SPEND_AUTHORIZED={amount}\n",
+                       encoding="utf-8")
+        return env
+
+    def test_a_second_run_under_one_authorisation_refuses(self, tmp_path):
+        """The second claim names the run that spent the first.
+
+        Break-proof: make `claim_authorization` return None
+        unconditionally, and the second claim is not refused."""
+        env = self._env(tmp_path)
+        claims = tmp_path / "claims"
+        first = runner.claim_authorization(
+            claims, "pilot", "batch2", "5.00", env, tmp_path / "run-1.jsonl")
+        second = runner.claim_authorization(
+            claims, "pilot", "batch2", "5.00", env, tmp_path / "run-2.jsonl")
+        assert first is None
+        assert second is not None and "run-1.jsonl" in second
+
+    def test_the_same_run_resuming_keeps_its_claim(self, tmp_path):
+        """A resume writes to the same results file: it is the same
+        run, so its own claim does not refuse it."""
+        env = self._env(tmp_path)
+        claims = tmp_path / "claims"
+        path = tmp_path / "run-1.jsonl"
+        assert runner.claim_authorization(
+            claims, "pilot", "batch2", "5.00", env, path) is None
+        assert runner.claim_authorization(
+            claims, "pilot", "batch2", "5.00", env, path) is None
+
+    def test_re_setting_the_line_authorises_another_run(self, tmp_path):
+        """The owner re-authorises by re-setting the line; the new
+        modification time keys a new claim."""
+        import os as _os
+        env = self._env(tmp_path)
+        claims = tmp_path / "claims"
+        assert runner.claim_authorization(
+            claims, "pilot", "batch2", "5.00", env, tmp_path / "a.jsonl") is None
+        stat = env.stat()
+        _os.utime(env, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1_000_000_000))
+        assert runner.claim_authorization(
+            claims, "pilot", "batch2", "5.00", env, tmp_path / "b.jsonl") is None
+
+    def test_two_concurrent_launches_claim_exactly_once(self, tmp_path):
+        """The claim is an exclusive create: of many simultaneous
+        launchers, exactly one holds it.
+
+        Break-proof: open the marker without O_EXCL, and more than
+        one launcher claims."""
+        import threading
+        env = self._env(tmp_path)
+        claims = tmp_path / "claims"
+        barrier = threading.Barrier(8)
+        results: list[str | None] = []
+        lock = threading.Lock()
+
+        def launch(i):
+            barrier.wait()
+            outcome = runner.claim_authorization(
+                claims, "pilot", "batch2", "5.00", env, tmp_path / f"run-{i}.jsonl")
+            with lock:
+                results.append(outcome)
+
+        threads = [threading.Thread(target=launch, args=(i,)) for i in range(8)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        assert sum(1 for outcome in results if outcome is None) == 1
+
+    def test_the_runner_refuses_a_second_paid_run_end_to_end(
+            self, tmp_path, monkeypatch):
+        """Through the real runner (mocked serving layer, a named
+        claim directory): the second run of the calibration under
+        the same authorisation refuses before its first call, naming
+        the first run's records.
+
+        Break-proof: delete the `if claim_dir is not None:` block in
+        `_run_tier4_experiment`, and the second run executes."""
+        monkeypatch.setattr(runner, "TIER3_ENV_FILE", self._env(tmp_path))
+        claims = tmp_path / "claims"
+        script = runner.build_calibration_dry_run_script(BATCH2)
+        first = asyncio.run(runner._tier4_dry_run_mode(
+            "calibration", script, batch=BATCH2, claim_dir=claims,
+            results_path=tmp_path / "first.jsonl"))
+        assert first["records"]
+        with pytest.raises(runner.ExperimentRefused) as refused:
+            asyncio.run(runner._tier4_dry_run_mode(
+                "calibration", runner.build_calibration_dry_run_script(BATCH2),
+                batch=BATCH2, claim_dir=claims,
+                results_path=tmp_path / "second.jsonl"))
+        assert "first.jsonl" in str(refused.value)
+        assert refused.value.reason == "the authorisation was already spent"

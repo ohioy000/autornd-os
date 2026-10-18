@@ -1105,6 +1105,61 @@ def tier4_pins(line: str | None = None):
         harness_settings.openrouter_provider_order = previous
 
 
+# The paid runners' own config file (G-3: the owner's), read for the
+# ratified pin line (R7) and keyed by the authorisation claim (R11).
+TIER3_ENV_FILE = Path(".env.tier3")
+
+# R11 (the advisor's review of 2026-10-18): one authorisation pays for
+# one run. Measured 2026-10-17: the pilot batch's calibration ran twice
+# under one unchanged TIER3_SPEND_AUTHORIZED=2.00 (01:14Z and 02:10Z,
+# $1.0832 + $1.0839), two launchers each passing the exact gate (R4),
+# which checks the amount, not whether it was already spent.
+CLAIM_DIR = RESULTS_DIR / ".authorizations"
+
+
+def claim_authorization(claim_dir: Path, mode: str, batch_name: str,
+                        amount: str, env_file: Path,
+                        results_path: Path) -> str | None:
+    """Claim the run's authorisation before its first paid call (R11).
+
+    The claim is keyed by the mode, the batch, the authorised amount
+    and the config file's modification time, so the owner
+    re-authorises by re-setting the line. It is an exclusive create,
+    so two concurrent launchers cannot both claim. A claim already
+    held by the same results file is the same run resuming, and is
+    allowed. Returns None when the run holds the claim, else the
+    refusal naming the run that spent it."""
+    try:
+        mtime = env_file.stat().st_mtime_ns
+    except OSError:
+        mtime = 0
+    key = hashlib.sha256(
+        f"{mode}|{batch_name}|{amount}|{mtime}".encode()).hexdigest()
+    claim_dir.mkdir(parents=True, exist_ok=True)
+    marker = claim_dir / f"{mode}-{batch_name}-{key[:16]}.claim"
+    record = {"mode": mode, "batch": batch_name, "amount": amount,
+              "results_path": str(results_path),
+              "claimed_at": datetime.now(timezone.utc).isoformat()}
+    try:
+        fd = os.open(marker, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        try:
+            held = json.loads(marker.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            held = {}
+        if held.get("results_path") == str(results_path):
+            return None
+        return (f"TIER3_SPEND_AUTHORIZED={amount} for the {mode} of "
+                f"batch {batch_name} was already spent by the run "
+                f"recording to {held.get('results_path', '?')} "
+                f"(claimed {held.get('claimed_at', '?')}); one "
+                "authorisation pays for one run (R11) - re-set the "
+                "line in .env.tier3 to authorise another")
+    with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        json.dump(record, handle)
+    return None
+
+
 def _ratified_provider_order(env_file: Path | None = None) -> str:
     """The owner's ratified provider-order line, read from the
     paid runners' own config file (R7).
@@ -1123,7 +1178,7 @@ def _ratified_provider_order(env_file: Path | None = None) -> str:
     falls to the line's general list, which is what served
     the void calibration."""
     values = dotenv_values(
-        str(env_file) if env_file is not None else ".env.tier3")
+        str(env_file) if env_file is not None else str(TIER3_ENV_FILE))
     return (values.get("OPENROUTER_PROVIDER_ORDER") or "").strip()
 
 
@@ -1861,6 +1916,7 @@ async def run_tier4_experiment(
         deadline_overrides: dict[tuple[str, int, str],
                                       float] | None = None,
         batch: Tier4Batch | None = None,
+        claim_dir: Path | None = None,
         ) -> dict[str, Any]:
     """One tier-4 experiment run: the freeze guard, the gates, the
     plan, the free preflight, then every unit of the plan in the
@@ -1888,7 +1944,7 @@ async def run_tier4_experiment(
             pipeline_client_factory=pipeline_client_factory,
             catalogue=catalogue, credit=credit,
             deadline_overrides=deadline_overrides,
-            batch=batch)
+            batch=batch, claim_dir=claim_dir)
 
 
 async def _run_tier4_experiment(
@@ -1904,6 +1960,7 @@ async def _run_tier4_experiment(
         deadline_overrides: dict[tuple[str, int, str],
                                       float] | None = None,
         batch: Tier4Batch | None = None,
+        claim_dir: Path | None = None,
         ) -> dict[str, Any]:
     tier3_settings = Tier3Settings()
     servings = _resolve_servings(tier3_settings)
@@ -1970,6 +2027,26 @@ async def _run_tier4_experiment(
 
     path = (Path(results_path) if results_path is not None
             else default_results_path(mode, batch))
+
+    # R11: one authorisation pays for one run. A run on the live
+    # serving layer (no mocked client, runner or pipeline factory)
+    # claims its authorisation here, after every free check and
+    # before its first paid call; a caller may name a claim
+    # directory to exercise the claim with mocks.
+    if (claim_dir is None and client_factory is None
+            and scenario_runner is None
+            and pipeline_client_factory is None):
+        claim_dir = CLAIM_DIR
+    if claim_dir is not None:
+        spent = claim_authorization(
+            Path(claim_dir), mode, batch.name,
+            str(tier3_settings.tier3_spend_authorized),
+            TIER3_ENV_FILE, path)
+        if spent:
+            raise ExperimentRefused(
+                "the authorisation was already spent",
+                servings, fingerprint, [spent])
+
     log = Tier3ResultsLog(path, config={
         "record": "header",
         "mode": mode,
@@ -2570,6 +2647,8 @@ async def _tier4_dry_run_mode(
         mode: str, script: tier3.DryRunScript,
         question_ids: list[str] | None = None,
         batch: Tier4Batch | None = None,
+        claim_dir: Path | None = None,
+        results_path: Path | None = None,
         ) -> dict[str, Any]:
     """One mode's mocked dry run: the real runner, the mocked
     serving layer, the mode's own authorization pin (R4 — the pin
@@ -2605,7 +2684,8 @@ async def _tier4_dry_run_mode(
     context = tier3._DryRunContext()
     suffix = (f"-{batch.name}" if batch.name != "pilot"
               else "")
-    path = RESULTS_DIR / f"dryrun-tier4{suffix}-{mode}.jsonl"
+    path = (Path(results_path) if results_path is not None
+            else RESULTS_DIR / f"dryrun-tier4{suffix}-{mode}.jsonl")
     with _env_overrides(overrides), \
             _harness_pin_overrides(servings["E"]), \
             tier4_pins(DRY_RUN_PROVIDER_ORDER):
@@ -2623,7 +2703,7 @@ async def _tier4_dry_run_mode(
             catalogue=catalogue,
             credit=DRY_RUN_CREDIT,
             deadline_overrides=deadline_overrides,
-            batch=batch)
+            batch=batch, claim_dir=claim_dir)
 
 
 def _install_rates(catalogue: list[dict[str, Any]]) -> int:
