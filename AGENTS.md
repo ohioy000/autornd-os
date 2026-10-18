@@ -189,7 +189,7 @@ checked against the tree is not evidence.**
 - **⚠️ Meter epoch:** cost accounting was broken before commit `b4cd89f` (research, context and
   rerank calls bypassed it). **Any cost figure predating `b4cd89f` is understated by 2.6×–295×.
   Never cite one.** Re-measure.
-- **Current shape:** 81 test files; `graph/` is the engine, workflows are **YAML data**, experiments
+- **Current shape:** 82 test files; `graph/` is the engine, workflows are **YAML data**, experiments
   live in root `evals/` with runner code in `autornd/evals/`; `engine/workflow.py` is the API entry.
 - **Discipline:** read before search (at most three discovery calls before opening a file in full);
   parallel reads are fine, parallel writes and side effects are not; when a call starts repeating,

@@ -32,6 +32,7 @@ from autornd.models.verdicts import (
     EscalationVerdict,
     ImplementVerdict,
     PlanVerdict,
+    RecomputeVerdict,
     ReviewFinding,
     ReviewVerdict,
     RiskLevel,
@@ -849,6 +850,7 @@ async def run_implement(
     considerations: list[str] | None = None,
     max_tokens: int | None = None,
     asks: list[Any] | None = None,
+    results: bool = False,
 ) -> tuple[ImplementVerdict, list[ModelResponse]]:
     # Ruling D33: on every iteration after the first, implement REVISES its own
     # prior artifact rather than regenerating from the plan. The fixer must see
@@ -931,6 +933,20 @@ CONSIDERATIONS A REVIEWER RAISED (not requirements — weigh them; nothing is ju
     plan_block = (
         f"\nPlan:\n{plan.plan}\n" if plan else ""
     )
+    # Ruling D53: the answer-and-recompute workflow's implement node
+    # states its results as typed values, so the recompute vote can
+    # compare the answer against blind recomputation field by field.
+    # The instruction is gated on the node's args (args: {results: true}
+    # in workflows/answer-and-recompute.yaml): every other workflow's
+    # implement prompt is byte-identical to what it was without it.
+    results_instruction = ""
+    if results:
+        results_instruction = (
+            "In results, give one entry for each ask of kind value or "
+            "verdict listed above: ask = its number, value = the final "
+            "number or the identifier you chose, unit = the unit of the "
+            "number (empty for an identifier). These are the values your "
+            "summary states.")
     # The blocked_on sentence below is RULED text (Ruling D51 (h),
     # replacing Blueprint 016 B2's sentence by this ruling) — it is
     # carried verbatim by instruction and is not to be paraphrased.
@@ -943,7 +959,7 @@ CONSIDERATIONS A REVIEWER RAISED (not requirements — weigh them; nothing is ju
 {plan_block}
 The asks, quoted from the request — the answer is judged against these and nothing else:
 {render_asks(asks)}
-
+{results_instruction}
 If an ask cannot be honestly answered with the grounding available, name it by its number in blocked_on rather than producing something that answers it on paper.
 Answer the request, and include the plan's falsifiers, kill triggers or assumption tables only if the request asks for them.
 {open_points_block}{feasibility_block}
@@ -1029,6 +1045,79 @@ Original request:
         verdict.green = True
         verdict.red_cause = None
     return verdict, responses
+
+
+def _render_recompute_asks(asks: list[Any] | None) -> str:
+    """The anchored asks of kind value and verdict, at their own
+    numbers (Ruling D53).
+
+    The numbers the answer's results use — the anchored asks'
+    own — not a renumbered list: a result naming ask 4 names
+    ask 4 whether or not the asks before it were of another
+    kind. Step, constraint and format asks are left out: the
+    recompute computes values and verdicts, and the vote
+    compares what it can state.
+    """
+    lines: list[str] = []
+    for ask in asks or []:
+        kind = _ask_field(ask, "kind")
+        kind = str(getattr(kind, "value", kind) or "").strip().lower()
+        if kind not in ("value", "verdict"):
+            continue
+        quote = str(_ask_field(ask, "quote") or "").strip()
+        if not quote:
+            continue
+        lines.append(f"{_ask_field(ask, 'number')}. {quote} [{kind}]")
+    return "\n".join(lines)
+
+
+async def run_recompute(
+    client: OpenRouterClient,
+    request: str,
+    context: str = "",
+    asks: list[Any] | None = None,
+    max_tokens: int | None = None,
+    samples: int = 3,
+) -> tuple[dict[str, Any], list[ModelResponse]]:
+    """The recompute node (Ruling D53): blind recomputation.
+
+    `samples` separate calls on the recompute tier, each one
+    recomputing the anchored asks of kind value and verdict from
+    the request and the grounding alone. Isolation is structural,
+    not enforced: the prompt is built from the request, the
+    context and the asks, and nothing else — no sample sees the
+    answer, its results, the plan or another sample's output,
+    because none of them is an input to this phase. The vote is
+    the check downstream; this phase only computes.
+
+    Each call goes through the client's reservation path like
+    every other call (D45, D47): its worst case is reserved
+    before dispatch and released by its own identity on
+    reconciliation, so three samples reserve three worst cases.
+    """
+    context_block = f"\n\nProject context:\n{context}" if context else ""
+    prompt = f"""\
+{request}{context_block}
+
+The asks, quoted from the request — compute each one yourself:
+{_render_recompute_asks(asks)}
+
+Compute the answer yourself. Return JSON with results: one entry per listed ask, {{"ask": its number, "value": your final number or the identifier you chose, "unit": the unit of the number, empty for an identifier}}."""
+
+    responses: list[ModelResponse] = []
+    sample_results: list[dict[str, Any]] = []
+    for _ in range(samples):
+        data, response = await client.chat_json(
+            function="recompute",
+            system_prompt="You are a careful senior engineer.",
+            user_message=prompt,
+            schema=RecomputeVerdict,
+            max_tokens=max_tokens or settings.recompute_max_tokens,
+        )
+        responses.append(response)
+        sample_results.append(dict(data))
+    return ({"skipped": False, "reason": "",
+             "samples": sample_results}, responses)
 
 
 async def run_validate(

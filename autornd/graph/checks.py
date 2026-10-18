@@ -17,6 +17,7 @@ to be *wrong* in a way you could point at. Anything requiring judgement is an
 from __future__ import annotations
 
 import re
+from collections import Counter
 from typing import Any, Callable, Protocol
 
 __all__ = ["CheckResult", "get_check", "registry", "check"]
@@ -28,6 +29,7 @@ from autornd.models.verdicts import (
     UNANCHORED_ASK_QUOTE,
     count_normalisation,
     dissent_kind,
+    normalise_key,
 )
 
 
@@ -1177,4 +1179,282 @@ def totals_reconcile(text: str, tolerance: float = 0.01) -> Result:
         f"stated total {claimed} does not match the sum of its parts "
         f"({round(summed, 4)}, from {len(parts)} values)",
         checked=True, claimed=claimed, summed=round(summed, 4),
+    )
+
+
+# ── the recompute vote (Ruling D53) ─────────────────────────────────
+
+# The vote's tolerance, as the tier-4 probe measured it
+# (evals/tier4/probes/recompute_vote.py, TOL): two numbers
+# agree within 3% of the candidate's own magnitude.
+_RECOMPUTE_TOL = 0.03
+
+
+def _recompute_ident(text: Any) -> str:
+    """An identifier, normalised for the vote.
+
+    recompute_check.ident (evals/tier4/probes/
+    recompute_check.py), the rule Ruling D53 §2 (4) adopts:
+    case, spacing and punctuation dropped, the words
+    'in parallel' dropped (a configuration stated with them
+    is the configuration stated without them — the recorded
+    T4-24 answer says '5 × EPC-1200-60 in parallel' against
+    samples' '5 × EPC-1200-60', and the probe's measurement
+    reads them as one selection), and the multiplication
+    sign and a count's 'x' (5 x EPC) read as separators.
+    'VL-42' and 'vl 42' are one identifier.
+    """
+    t = str(text).upper().replace("IN PARALLEL", "").replace("×", " ")
+    t = re.sub(r"^\s*(\d+)\s*X\s+", r"\1 ", t)
+    return re.sub(r"[^A-Z0-9]", "", t)
+
+
+def _recompute_number(text: Any) -> float | None:
+    """The number a value states, or None if it states none.
+
+    The probe's num(): a number is itself, and text states
+    its first number, commas read as thousands separators.
+    A bool is neither — it is an identifier-shaped answer.
+    """
+    if isinstance(text, bool):
+        return None
+    if isinstance(text, (int, float)):
+        return float(text)
+    m = re.search(r"-?\d+(?:\.\d+)?(?:[eE]-?\d+)?",
+                  str(text).replace(",", ""))
+    return float(m.group()) if m else None
+
+
+def _recompute_field(entry: Any, key: str) -> Any:
+    """A field off a result entry, whichever shape it arrives in.
+
+    The answer's results are ResultValue models; a sample's
+    results are the dicts its reply parsed into. Both carry
+    ask, value and unit.
+    """
+    if isinstance(entry, dict):
+        return entry.get(key)
+    return getattr(entry, key, None)
+
+
+def _sample_results(sample: Any) -> Any:
+    """A sample's results list, whichever shape the sample arrives in."""
+    if isinstance(sample, dict):
+        return sample.get("results")
+    return getattr(sample, "results", None)
+
+
+def _recompute_ask_index(asks: list[Any]) -> dict[str, int]:
+    """The anchored asks' quotes, normalised, keyed by number."""
+    return {
+        _normalise_quote(str(_ask_field(a, "quote") or "")):
+            _ask_field(a, "number")
+        for a in (asks or [])
+        if str(_ask_field(a, "quote") or "").strip()
+    }
+
+
+def _recompute_names(named: Any, number: Any,
+                     quote_index: dict[str, int]) -> bool:
+    """Does this result entry name the anchored ask at `number`?
+
+    The way blocked_on does (D51 (5)): by its number, or by
+    its quote — the anchored ask's own words, verbatim under
+    the normalisation the checks apply.
+    """
+    if isinstance(named, int) and not isinstance(named, bool):
+        return named == number
+    if isinstance(named, str) and named.strip():
+        return quote_index.get(_normalise_quote(named)) == number
+    return False
+
+
+def _recompute_majority(values: list[Any],
+                        identity: bool) -> tuple[Any, int] | None:
+    """The value at least 2 of the samples agree on, or None.
+
+    The tier-4 probe's majority(), ported: identifiers agree
+    exactly, after normalisation; numbers agree within the
+    tolerance, and the majority is the mean of the agreeing
+    group — the first group of at least two, in the order
+    the samples answered. The second element is the group's
+    size, the majority's support.
+    """
+    vals = [v for v in values if v is not None]
+    if identity:
+        counts: Counter[str] = Counter(_recompute_ident(v)
+                                       for v in vals)
+        top = counts.most_common(1)
+        if top and top[0][1] >= 2:
+            return top[0][0], top[0][1]
+        return None
+    nums = [n for n in (_recompute_number(v) for v in vals)
+            if n is not None]
+    for a in nums:
+        agree = [b for b in nums
+                 if abs(a - b) <= _RECOMPUTE_TOL * max(abs(a), 1e-9)]
+        if len(agree) >= 2:
+            return sum(agree) / len(agree), len(agree)
+    return None
+
+
+@check("recompute_vote")
+def recompute_vote(results: list[Any], samples: list[Any],
+                   asks: list[Any], request: str,
+                   skipped: bool = False,
+                   reason: str = "") -> Result:
+    """The recompute vote (Ruling D53): does a majority of blind
+    recomputations agree with the answer?
+
+    The samples recomputed the anchored asks of kind value and
+    verdict from the request and the grounding alone. This check
+    compares, for each ask the answer's results name, the answer's
+    value against the samples' majority — the value at least 2 of
+    the samples that answered the ask matched. A verdict ask, or
+    any ask whose values in play are stated as text, compares as
+    identifiers; numbers compare within the tolerance, and only
+    when the units are equal after normalise_key — an ask whose
+    units differ has no consensus to compare against.
+
+    The vote is a note (D53 §2 (5)): it never blocks, routes or
+    revises, and the run's status is decided without it. A flag is
+    recorded here and in the delivery, and nothing reads it.
+    `passed` is false exactly when the vote found a disagreement —
+    the finding is the check's own answer, not a gate — and a skip
+    is never a pass: it is recorded as skipped, with the reason the
+    node gave. Fewer than two parseable samples, or an answer whose
+    results name no anchored ask, leaves the vote unchecked.
+    """
+    # A skip is a skip, never a pass: the tier is not configured,
+    # no sample ran, and the vote compared nothing.
+    if skipped:
+        return Result(
+            False,
+            "recompute vote did not run — "
+            + (str(reason).strip()
+               or "no model configured for the recompute tier"),
+            checked=False, skipped=True, flagged=False,
+            unchecked=False, disagreements=[], no_consensus=[],
+            samples_parsed=0,
+        )
+
+    quote_index = _recompute_ask_index(asks)
+    # A sample is parseable when its results are a list — an empty
+    # one is a sample that stated nothing, which is a shape it
+    # parsed, not a failure to.
+    parsed = [s for s in (samples or [])
+              if isinstance(_sample_results(s), list)]
+    samples_parsed = len(parsed)
+
+    # The anchored asks of kind value or verdict that the answer's
+    # results name — the asks the samples were given, so the only
+    # ones the vote can compare. The first entry naming an ask is
+    # the answer's entry for it.
+    wanted: dict[int, Any] = {}
+    for entry in (results or []):
+        named = _recompute_field(entry, "ask")
+        for ask in (asks or []):
+            number = _ask_field(ask, "number")
+            kind = str(getattr(_ask_field(ask, "kind"), "value",
+                               _ask_field(ask, "kind")) or ""
+                       ).strip().lower()
+            if kind not in ("value", "verdict"):
+                continue
+            if _recompute_names(named, number, quote_index):
+                wanted.setdefault(number, entry)
+                break
+
+    # Fewer than two parseable samples, or no answer result naming
+    # an anchored ask: the vote compared nothing (D46 (3)) —
+    # unchecked, and flagged false.
+    if samples_parsed < 2 or not wanted:
+        why = (f"fewer than 2 parseable samples ({samples_parsed} "
+               "parsed)" if samples_parsed < 2
+               else "no answer result names an anchored ask")
+        return Result(
+            True,
+            f"recompute vote unchecked — {why}",
+            checked=False, skipped=False, flagged=False,
+            unchecked=True, disagreements=[], no_consensus=[],
+            samples_parsed=samples_parsed,
+        )
+
+    disagreements: list[dict[str, Any]] = []
+    no_consensus: list[int] = []
+    for number in sorted(wanted):
+        answer = wanted[number]
+        ask = next(a for a in (asks or [])
+                   if _ask_field(a, "number") == number)
+        kind = str(getattr(_ask_field(ask, "kind"), "value",
+                           _ask_field(ask, "kind")) or ""
+                   ).strip().lower()
+        answer_value = _recompute_field(answer, "value")
+        # One value per sample that answered this ask.
+        sample_values: list[Any] = []
+        sample_units: list[str] = []
+        for sample in parsed:
+            for entry in (_sample_results(sample) or []):
+                if _recompute_names(_recompute_field(entry, "ask"),
+                                    number, quote_index):
+                    sample_values.append(
+                        _recompute_field(entry, "value"))
+                    sample_units.append(
+                        str(_recompute_field(entry, "unit") or ""))
+                    break
+        # Identity or numbers: a verdict ask, or any value in play
+        # stated as text, compares as an identifier.
+        identity = kind == "verdict" or any(
+            isinstance(v, (str, bool))
+            for v in [answer_value, *sample_values])
+        if not identity:
+            # Numbers compare only when the units are equal after
+            # normalise_key; otherwise the ask is no consensus.
+            units = {normalise_key(u) for u in
+                     ([str(_recompute_field(answer, "unit") or "")]
+                      + sample_units)}
+            if len(units) > 1:
+                no_consensus.append(number)
+                continue
+        majority, support = _recompute_majority(sample_values, identity) \
+            or (None, 0)
+        if majority is None:
+            no_consensus.append(number)
+            continue
+        differs = (_recompute_ident(answer_value) != majority
+                   if identity else
+                   (_recompute_number(answer_value) is not None
+                    and abs(_recompute_number(answer_value)
+                            - majority)
+                    > _RECOMPUTE_TOL * max(abs(majority), 1e-9)))
+        if differs:
+            disagreements.append({
+                "ask": number,
+                "answer": answer_value,
+                "majority": majority,
+                "support": support,
+            })
+
+    flagged = bool(disagreements)
+    if flagged:
+        detail = (
+            f"recompute vote flagged {len(disagreements)} of "
+            f"{len(wanted)} voted ask(s): "
+            + "; ".join(
+                f"ask {d['ask']}: answer {d['answer']!r} vs "
+                f"majority {d['majority']!r} "
+                f"({d['support']} of {samples_parsed} samples)"
+                for d in disagreements))
+    else:
+        detail = (f"recompute vote: no disagreement — "
+                  f"{samples_parsed} sample(s) voted on "
+                  f"{len(wanted)} ask(s)")
+    if no_consensus:
+        detail += ("; no consensus on ask(s) "
+                   + ", ".join(str(n) for n in no_consensus))
+    return Result(
+        not flagged,
+        detail,
+        checked=True, skipped=False, flagged=flagged,
+        unchecked=False, disagreements=disagreements,
+        no_consensus=no_consensus, samples_parsed=samples_parsed,
     )

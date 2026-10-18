@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1552 · **Date of this snapshot:** 2026-10-18, counts re-derived against the tree under test
+**Tests:** 1611 · **Date of this snapshot:** 2026-10-18, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -310,6 +310,12 @@ workflows/
   triage-only.yaml          2 nodes — triage + grounding (research measurement)
   triage-classify.yaml   ★  1 node — triage alone. Exists so calibration costs
                             ~$0.00002/call instead of a full workflow.
+  answer-and-recompute.yaml  11 nodes — Ruling D53: the asks, one answer
+                            with typed results, three blind recompute
+                            samples on the optional recompute tier, and a
+                            recompute_vote whose flag is a note on the
+                            delivery. Not the standing workflow; nothing
+                            routes to it.
 
 evals/
   scenarios/*.yaml          17 core scenarios (default suite)
@@ -319,7 +325,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      81 files, 1552 tests
+tests/                      82 files, 1611 tests
 
 ```
 
@@ -669,7 +675,7 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 # a QUALITY control, not just availability.
 OPENROUTER_PROVIDER_ORDER=
 
-# ── model tiers: 6 required, 2 optional. NO defaults ship. ───────────────
+# ── model tiers: 6 required, 3 optional. NO defaults ship. ───────────────
 MODEL_TRIAGE=<vendor/model>          # cheap, reliably valid JSON
 MODEL_ENGINEERING=<vendor/model>     # implement, validate, review, feasibility
 MODEL_ARCHITECTURE=<vendor/model>    # plan, critical review
@@ -684,6 +690,12 @@ MODEL_PREMIUM=                       # optional. Two consumers, two behaviours:
                                      #   second opinion, `independent_model()`);
                                      #   the dashboard Double Check button 404s and
                                      #   does not appear (`api/routes.py:287,313`).
+MODEL_RECOMPUTE=                     # optional. Three blind samples recompute the
+                                     #   answer's typed results on the
+                                     #   answer-and-recompute workflow; a recompute_vote
+                                     #   flag is a note on the delivery, never a block.
+                                     #   Empty, the recompute node skips and the vote
+                                     #   records the skip.
 
 # ── budgets (every value below was set from a measurement — see §6) ──────
 MAX_ITERATIONS=5
@@ -724,7 +736,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1552 total)
+### 3.7 Test distribution (1611 total)
 
 
 | file | n | file | n |
@@ -752,24 +764,24 @@ is revoked and the warning re-opens with a date.
 | test_prior_artifact_revision.py | 3 | test_profiles.py | 23 |
 | test_prohibition_phrasing.py | 20 | test_prohibition_scenario.py | 15 |
 | test_protocol_file.py | 20 | test_rate_limit_retry.py | 13 |
-| test_regrounding.py | 18 | test_rejection_counter.py | 7 |
-| test_repeat_and_fit_rule.py | 15 | test_research.py | 37 |
-| test_response_files.py | 2 | test_results_log.py | 10 |
-| test_retry_reconciliation.py | 13 | test_review_composition.py | 28 |
-| test_review_quorum.py | 3 | test_rework_loop.py | 20 |
-| test_routing.py | 74 | test_run_record.py | 7 |
-| test_runtime_dependencies.py | 1 | test_schema_wiring.py | 16 |
-| test_scope_rule.py | 3 | test_serving_ledger.py | 7 |
-| test_settings.py | 23 | test_settings_map.py | 5 |
-| test_shipped_examples.py | 15 | test_specialists.py | 11 |
-| test_spend_guard.py | 16 | test_structural_roles.py | 13 |
-| test_sweep_budget.py | 21 | test_terminal_on_bound.py | 21 |
-| test_tier2_keys.py | 17 | test_tier2_regression.py | 6 |
-| test_tier3_manifest.py | 34 | test_tier3_runner.py | 64 |
-| test_tier4_runner.py | 61 | test_trace_durability.py | 7 |
-| test_transient_tls_retry.py | 21 | test_triage.py | 10 |
-| test_verdicts.py | 49 | test_watchdog.py | 23 |
-| test_workflow.py | 4 |
+| test_recompute_vote.py | 59 | test_regrounding.py | 18 |
+| test_rejection_counter.py | 7 | test_repeat_and_fit_rule.py | 15 |
+| test_research.py | 37 | test_response_files.py | 2 |
+| test_results_log.py | 10 | test_retry_reconciliation.py | 13 |
+| test_review_composition.py | 28 | test_review_quorum.py | 3 |
+| test_rework_loop.py | 20 | test_routing.py | 74 |
+| test_run_record.py | 7 | test_runtime_dependencies.py | 1 |
+| test_schema_wiring.py | 16 | test_scope_rule.py | 3 |
+| test_serving_ledger.py | 7 | test_settings.py | 23 |
+| test_settings_map.py | 5 | test_shipped_examples.py | 15 |
+| test_specialists.py | 11 | test_spend_guard.py | 16 |
+| test_structural_roles.py | 13 | test_sweep_budget.py | 21 |
+| test_terminal_on_bound.py | 21 | test_tier2_keys.py | 17 |
+| test_tier2_regression.py | 6 | test_tier3_manifest.py | 34 |
+| test_tier3_runner.py | 64 | test_tier4_runner.py | 61 |
+| test_trace_durability.py | 7 | test_transient_tls_retry.py | 21 |
+| test_triage.py | 10 | test_verdicts.py | 49 |
+| test_watchdog.py | 23 | test_workflow.py | 4 |
 ---
 
 ## 4. ACTIVE CONTEXT & WORKING MEMORY
@@ -809,7 +821,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1552/1552 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1611/1611 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

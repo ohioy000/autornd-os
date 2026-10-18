@@ -363,6 +363,52 @@ class DomainConcern(BaseModel):
         return value if isinstance(value, str) else _coerce_str(value)
 
 
+# ── Typed results (Ruling D53) ───────────────────────────────
+#
+# The answer's results, stated as typed values the recompute vote
+# can check. One entry per ask of kind value or verdict: the ask
+# named by its number or its quote — the way blocked_on does
+# (D51 (5)) — the value (a number, or the identifier chosen for
+# a verdict ask), and the value's unit, empty for an identifier.
+class ResultValue(BaseModel):
+    ask: int | str
+    value: float | str
+    unit: str = ""
+
+    @field_validator("unit", mode="before")
+    @classmethod
+    def _coerce_unit(cls, value: Any) -> str:
+        # A null unit is no unit — a bare number or an identifier —
+        # not a missing field.
+        if value is None:
+            return ""
+        return value if isinstance(value, str) else _coerce_str(value)
+
+
+class RecomputeVerdict(BaseModel):
+    """One blind recompute sample's verdict: its typed results.
+
+    Ruling D53: the sample computed the anchored asks of kind value
+    and verdict from the request and the grounding alone — never
+    seeing the answer, its results, the plan or another sample's
+    output — so what it states is an independent computation of the
+    same asks, and the vote compares it with the answer field by
+    field. An empty results list is a sample that stated nothing:
+    parseable, and answering no ask.
+    """
+
+    results: list[ResultValue] = Field(default_factory=list)
+
+    @field_validator("results", mode="before")
+    @classmethod
+    def _coerce_results(cls, value: Any) -> Any:
+        # A null results field is no results — the sample stated
+        # nothing — not a malformed verdict.
+        if value is None:
+            return []
+        return value
+
+
 class ImplementVerdict(BaseModel):
     # Required, and staying required: nothing else in the verdict implies
     # whether the work is finished. The 006 death on this class predated the
@@ -397,6 +443,15 @@ class ImplementVerdict(BaseModel):
     # to declare itself red. An entry that names no ask is a note,
     # counted, and routes nowhere.
     blocked_on: list[BlockedOnAsk] = Field(default_factory=list)
+    # Ruling D53: the answer's typed results — one entry per ask of
+    # kind value or verdict, naming the ask by its number or its
+    # quote — so the recompute vote can compare the answer against
+    # blind recomputation, field by field. Defaulted, not required:
+    # every recorded ImplementVerdict predates the field and must
+    # still parse, and an answer that states its results only in
+    # prose has nothing to vote on (the vote is then unchecked,
+    # never passed).
+    results: list[ResultValue] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _green_from_red_cause(self):
@@ -408,6 +463,15 @@ class ImplementVerdict(BaseModel):
         if v is None:
             return v
         return _coerce_str(v)
+
+    @field_validator("results", mode="before")
+    @classmethod
+    def _coerce_results(cls, value: Any) -> Any:
+        # A null results field is no results — the answer stated
+        # none — not a malformed verdict.
+        if value is None:
+            return []
+        return value
 
 
 # ── Validate ──

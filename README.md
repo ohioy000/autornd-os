@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1552%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1611%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -245,7 +245,7 @@ The sequence of phases is data, not code. A workflow is a graph of nodes in YAML
 
 Conditions are a deliberately small language — one comparison over a dotted path — rather than `eval`, because a workflow file is configuration and configuration must not execute code.
 
-Four workflows ship:
+Six workflows ship:
 
 | workflow | shape |
 |---|---|
@@ -254,6 +254,7 @@ Four workflows ship:
 | `triage-only` | classification and grounding, two calls, for measuring triage quality cheaply |
 | `verify-first` | Ruling D51 (8): no plan — answer once on the engineering tier from the request and its asks, check against the asks, one revision if a judge dissents, escalated if the dissent survives. Not the standing workflow; nothing routes to it |
 | `triage-classify` | one node — triage alone. A calibration sweep costs a fraction of a cent per call instead of a whole workflow, which is what makes running one over dozens of scenarios affordable |
+| `answer-and-recompute` | Ruling D53: the asks, one answer on the engineering tier with typed results, then three blind recompute samples on the optional recompute tier and a free `recompute_vote` — a note on the delivery that flags an answer whose key figures a majority of the samples recomputed differently. Set `MODEL_RECOMPUTE` to enable it; empty, the recompute node skips and the vote records the skip |
 
 Select with `AUTORND_WORKFLOW`. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
 
@@ -304,6 +305,7 @@ AutoRnD routes each phase to a named tier and will not start until every require
 | **Ranker** | orders retrieved documentation by usefulness. Without it, retrieval falls back to embedding distance |
 | **Premium** | the independent pass on work that cannot be recalled. Falls back to the architecture tier when empty |
 | **Judge** | reviews the implementation — domain review, validate, review — on a different model from the one that produced it, so a producer's blind spots do not grade themselves. Falls back to the engineering tier when empty. Capped by `JUDGE_MAX_TOKENS` |
+| **Recompute** | blind recomputation: three separate samples recompute an answer's key figures from the request alone, and a free check votes them against the answer's typed results — a flag is a note on the delivery, never a block. Runs only on the `answer-and-recompute` workflow; empty, the recompute node skips and the vote records the skip. Capped by `RECOMPUTE_MAX_TOKENS` |
 
 ### Choose non-reasoning models for the tiers that fill a schema
 
@@ -812,11 +814,11 @@ autornd/
   specialists/            # Specialist registry + profile-driven prompts
   routing/openrouter.py   # Multi-model client, rerank, model validation
   api/                    # REST endpoints, auth, dashboard
-workflows/                # engineering-rnd, lean, triage-only, triage-classify, verify-first
+workflows/                # engineering-rnd, lean, triage-only, triage-classify, verify-first, answer-and-recompute
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 1552 tests
+tests/                    # 1611 tests
 
 ```
 
@@ -862,7 +864,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-1552 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds. The suite is hermetic wherever it runs — its settings are forced to placeholders and a session guard refuses every non-loopback connection — so it reads the same green on a machine that holds your .env and in CI.
+1611 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds. The suite is hermetic wherever it runs — its settings are forced to placeholders and a session guard refuses every non-loopback connection — so it reads the same green on a machine that holds your .env and in CI.
 
 
 The graph tests are the load-bearing ones: node shape, gate routing, loop bounds and the all-judges exit are all decidable without a provider. An earlier hardcoded sequencer was kept alongside the graph as an equivalence reference and has been retired — once gates could route on failure, a linear engine could no longer represent the pipeline it was supposed to be checking.

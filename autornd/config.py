@@ -48,6 +48,13 @@ class Settings(BaseSettings):
     # Optional: unset means those nodes fall back to the engineering tier (the
     # prior homogeneous behaviour), so nothing breaks when it is empty.
     model_judge: str = ""
+    # The recompute tier (Ruling D53): blind recomputation of an
+    # answer's typed results, as three samples on the
+    # answer-and-recompute workflow, voted into a note that never
+    # blocks, routes or revises. Optional like the premium tier:
+    # unset means the recompute node skips — a skip is recorded,
+    # never read as a pass — and the workflow runs without it.
+    model_recompute: str = ""
 
     # Pin which upstream serves requests, comma separated, highest first. Empty
     # means the provider decides, which favours availability over
@@ -107,6 +114,18 @@ class Settings(BaseSettings):
     # premium judge model's per-token rate from running away across the
     # high-frequency review nodes (Ruling D35).
     judge_max_tokens: int = 8000
+
+    # Ceiling for the recompute tier's samples (Ruling D53). A
+    # sample recomputes the answer's key figures from the request
+    # and the grounding alone — a full calculation, not a verdict —
+    # so it is plan-sized, not judge-sized. The tier-4 vote samples
+    # (the probe that measured the vote: evals/tier4/probes/
+    # recompute_vote.py over docs/traces/20261018T*Z-recompute-vote-
+    # samples.json) ran at 32768 and produced complete JSON results
+    # at that cap; a reasoning sample spends the budget thinking
+    # before it emits, so a tight cap returns an empty reply with
+    # finish_reason=length rather than a short one.
+    recompute_max_tokens: int = 32768
 
     # Budget for one lookup, which carries every blocking gap at once.
     #
@@ -182,6 +201,7 @@ class Settings(BaseSettings):
         "validate_max_tokens", "search_max_tokens",
         "search_max_tokens_consequential",
         "review_rework_attempts", "plan_max_tokens", "judge_max_tokens",
+        "recompute_max_tokens",
     }
 
     # The suite never reads the owner's .env (ARCH-20261002-112): with
@@ -246,6 +266,13 @@ class Settings(BaseSettings):
             raise ValueError(f"Premium model ID must contain '/' (got '{v}')")
         return v
 
+    @field_validator("model_recompute")
+    @classmethod
+    def validate_recompute_model(cls, v: str) -> str:
+        if v and "/" not in v:
+            raise ValueError(f"Recompute model ID must contain '/' (got '{v}')")
+        return v
+
     @field_validator("log_level")
     @classmethod
     def validate_log_level(cls, v: str) -> str:
@@ -271,6 +298,8 @@ _OPTIONAL_TIERS = {
     "model_premium": "independent Double Check review",
     "model_judge": "heterogeneous judge for domain_review/validate/review — "
                    "falls back to the engineering tier when unset",
+    "model_recompute": "blind recompute samples for the recompute vote "
+                       "— the node skips when unset",
 }
 
 

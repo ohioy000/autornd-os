@@ -53,6 +53,7 @@ PLACEHOLDERS: dict[str, str] = {
     "MODEL_RANKER": "",
     "MODEL_PREMIUM": "",
     "MODEL_JUDGE": "",
+    "MODEL_RECOMPUTE": "",
     # everything else — the declared defaults
     "DATABASE_URL": "sqlite+aiosqlite:///./autornd.db",
     "API_HOST": "127.0.0.1",
@@ -64,6 +65,7 @@ PLACEHOLDERS: dict[str, str] = {
     "ESCALATION_MAX_TOKENS": "16384",
     "VALIDATE_MAX_TOKENS": "8000",
     "JUDGE_MAX_TOKENS": "8000",
+    "RECOMPUTE_MAX_TOKENS": "32768",
     "SEARCH_MAX_TOKENS": "1500",
     "SEARCH_MAX_TOKENS_CONSEQUENTIAL": "4000",
     "ESCALATION_RECOVERY_ATTEMPTS": "3",
