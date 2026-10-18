@@ -45,4 +45,4 @@ T4-53 and T4-58 were also checked by a second standard method, with the same ver
   They are kept so the headroom rate is estimated over the whole batch.
 - **T4-52's hidden requirement text** writes the acceleration formula wrongly but uses the right value (39.27 rad/s²).
 
-**Calibration:** D-pages on the seven kept questions, ceiling $2.80 (7 × the $0.40 per-unit ceiling).
+**Calibration:** D-pages on the seven kept questions, ceiling $2.80 (7 × the $0.40 per-unit ceiling). It ran on 2026-10-18 ($0.96): kimi-k3 solved all seven. See `docs/reviews/2026-10-18-tier4-batch6-headroom-rate.md`.
