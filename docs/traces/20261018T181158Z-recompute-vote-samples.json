@@ -1,0 +1,82 @@
+{
+ "model": "google/gemini-3.8-flash",
+ "n": 3,
+ "samples": {
+  "T4-41": [
+   {
+    "selected model": "WR-260",
+    "mass (kg)": 33,
+    "output torque demand (N\u00b7m)": 1729.6,
+    "output speed demand (rpm)": 11.94,
+    "radial load demand (N)": 8648,
+    "output power demand (W)": 2162
+   },
+   {
+    "selected model": "WR-260",
+    "mass (kg)": 33,
+    "output torque demand (N\u00b7m)": 1729.6,
+    "output speed demand (rpm)": 11.94,
+    "radial load demand (N)": 8648,
+    "output power demand (W)": 2162
+   },
+   {
+    "selected model": "WR-260",
+    "mass (kg)": 33,
+    "output torque demand (N\u00b7m)": 1729.6,
+    "output speed demand (rpm)": 11.94,
+    "radial load demand (N)": 8648,
+    "output power demand (W)": 2162
+   }
+  ],
+  "T4-42": [
+   {
+    "selected model": "VL-42",
+    "price (EUR)": 640,
+    "motor line current (A)": 28.64,
+    "current compared with I_n (A)": 40.5,
+    "I_n (A)": 46
+   },
+   {
+    "selected model": "VL-42",
+    "price (EUR)": 640,
+    "motor line current (A)": 28.64,
+    "current compared with I_n (A)": 40.5,
+    "I_n (A)": 46
+   },
+   {
+    "selected model": "VL-42",
+    "price (EUR)": 640,
+    "motor line current (A)": 28.64,
+    "current compared with I_n (A)": 40.5,
+    "I_n (A)": 46
+   }
+  ],
+  "T4-43": [
+   {
+    "selected model": "CP-40",
+    "price (EUR)": 1720,
+    "required head (m)": 56.33,
+    "shaft power (kW)": 10.08,
+    "duty flow (L/s)": 18,
+    "NPSH margin (m)": 1.3
+   },
+   {
+    "selected model": "CP-40",
+    "price (EUR)": 1720,
+    "required head (m)": 56.33,
+    "shaft power (kW)": 10.08,
+    "duty flow (L/s)": 18,
+    "NPSH margin (m)": 1.3
+   },
+   {
+    "selected model": "CP-40",
+    "price (EUR)": 1720,
+    "required head (m)": 56.33,
+    "shaft power (kW)": 10.08,
+    "duty flow (L/s)": 18,
+    "NPSH margin (m)": 1.3
+   }
+  ]
+ },
+ "spend": 0.073521
+}
