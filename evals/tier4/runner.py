@@ -1273,8 +1273,8 @@ def tier4_preflight(
     3. arm F: the verify-first workflow's per-call worst cases on
        the standing tiers (the tier-3 table, at the tier-4 prompt
        floor and the tier-4 ceiling) — a call that refuses even at
-       zero spend, or a sequence whose worst case exceeds the
-       per-unit ceiling, refuses the mode;
+       zero spend refuses the mode; the composed sequence is
+       reported, not refused (R6: the per-call guard binds);
     4. arm E: the standing pipeline's per-call worst cases on the
        standing tiers — a call that refuses even at zero spend
        refuses the mode. Arm E's sequence is the pipeline's own,
@@ -1413,14 +1413,30 @@ def tier4_preflight(
                 figures = (f"the sequence's worst case, "
                            f"its bound of {calls} calls "
                            f"composed: ${row['worst_case']:.4f}")
+            verdict = ("reported, not refused: the per-call guard "
+                       "binds (R6)"
+                       if row.get("tier") == "sequence"
+                       and row.get("refuses_even_at_zero_spend")
+                       else "refused even at zero spend"
+                       if row.get("refuses_even_at_zero_spend")
+                       else "within the ceiling")
             report.reports.append(
                 f"arm F/{row['tier']}: {row['serving']} — "
                 f"{figures} against the "
                 f"${batch.per_unit_ceilings['F']:.2f} per-unit ceiling "
-                f"({'refused even at zero spend' if row['refuses_even_at_zero_spend'] else 'within the ceiling'}; "
+                f"({verdict}; "
                 "the prompt side is the largest prompt, a floor — "
                 "the guard computes the real bytes at call time)")
-            if row.get("refuses_even_at_zero_spend"):
+            # R6 (the advisor's review of 2026-10-16), carried to
+            # tier 4 on 2026-10-18: the per-call guard binds, so
+            # the composed sequence row is a report, never a
+            # refusal - as arm E's sequence already is. Measured
+            # 2026-10-18: batch 2's pilot preflight refused arm F
+            # on the composed bound ($0.7452 for 10 calls) while
+            # every call fit its $0.40 ceiling. A single tier's
+            # calls that cannot fit still refuse.
+            if (row.get("refuses_even_at_zero_spend")
+                    and row.get("tier") != "sequence"):
                 report.refusals.append(
                     f"arm F/{row['tier']}: the worst case "
                     f"${row['worst_case']:.4f} refuses even at zero "
