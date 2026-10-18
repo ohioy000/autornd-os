@@ -82,7 +82,7 @@
     {"command": "grep -c 'Ruling D53, issued by the advisor' docs/reviews/2026-10-18-d53-the-recompute-vote.md", "expected": "1 - D53 is on main."},
     {"command": "test -f .orchestration/responses/ARCH-20261017-122.response.json && echo ok", "expected": "ok"},
     {"command": "ls docs/traces/20261018T180951Z-tier4-calibration-batch5.jsonl docs/traces/20261018T181158Z-recompute-vote-samples.json docs/traces/20261018T192122Z-recompute-vote-samples.json docs/traces/20261018T035714Z-recompute-vote-samples.json | wc -l", "expected": "4"},
-    {"command": "pgrep -af 'evals[./]tier[34][./]runner|repeat_unit|recompute_vote|uvicor[n] autornd' || echo none", "expected": "none"},
+    {"command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none", "expected": "none"},
     {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; report the count."}
   ]
 }
