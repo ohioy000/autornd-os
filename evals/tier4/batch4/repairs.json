@@ -1,0 +1,8 @@
+{
+ "repairs": [],
+ "flags": [
+  {
+   "flag": "Every trap is a rule the corpus states explicitly: these are rule-application questions, expected to be easier than batch 3. Kept to test whether the cheap single call's strength holds on questions written by a non-Gemini generator."
+  }
+ ]
+}

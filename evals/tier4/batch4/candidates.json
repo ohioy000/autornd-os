@@ -1,0 +1,1068 @@
+[
+ {
+  "id": "T4-31",
+  "family": "F2",
+  "domain": "mechanical",
+  "request": "Select an ND-Flex coupling for a reversing servo axis from the Nordling catalogue, using only the Nordling selection rules. Continuous torque is 25 N·m and peak torque is 55 N·m. Peaks occur once per minute. Shaft speed is 4200 min⁻¹. Angular misalignment is 0.9°. Ambient temperature is 30 °C. Coupling mass must not exceed 1.0 kg. Choose the lowest-price model that passes every rule; if prices were equal, choose the lower mass. End with a table headed Results with these rows: selected_model, T_req_Nm, T_allow_Nm, speed_margin_per_min, misalignment_margin_deg, mass_kg, price_EUR.",
+  "requirements": [
+   {
+    "id": "R1_torque",
+    "statement": "Speed-derated allowable torque must be at least the service-factored basis torque, with the basis equal to peak torque because peaks occur 60 times per hour.",
+    "method": "T_req = 1.5*55 = 82.5 N·m; f_n = 1 - 0.0015*(4200-3000) = 0.82; T_allow = T_cat*0.82; pass if T_allow >= 82.5. Margin = (T_allow-82.5)/82.5.",
+    "tolerance": "0.5% relative on torques; model id exact"
+   },
+   {
+    "id": "R2_speed",
+    "statement": "Catalogue maximum speed must be at least 4200 min⁻¹.",
+    "method": "speed_margin = n_max - 4200; pass if n_max >= 4200. Relative margin = (n_max-4200)/4200.",
+    "tolerance": "exact on catalogue speeds"
+   },
+   {
+    "id": "R3_misalignment",
+    "statement": "Catalogue angular misalignment must be at least 0.9°.",
+    "method": "misalignment_margin = alpha_max - 0.9; pass if alpha_max >= 0.9. Relative margin = (alpha_max-0.9)/0.9.",
+    "tolerance": "exact on catalogue angles"
+   },
+   {
+    "id": "R4_mass",
+    "statement": "Coupling mass must not exceed 1.0 kg.",
+    "method": "pass if mass <= 1.0. Relative margin = (1.0-mass)/1.0.",
+    "tolerance": "exact on catalogue masses"
+   }
+  ],
+  "trap": "Using continuous torque as T_basis (25 N·m) because the nameplate continuous rating is what a single-pass selection usually multiplies by the service factor, instead of the peak torque required when peaks exceed 10 per hour.",
+  "option_table": {
+   "correct": {
+    "ND-C20": {
+     "R1_torque": {
+      "T_allow_Nm": 32.8,
+      "T_req_Nm": 82.5,
+      "margin": -0.6024,
+      "pass": false
+     },
+     "R2_speed": {
+      "n_max": 6000,
+      "margin": 0.1429,
+      "pass": true
+     },
+     "R3_misalignment": {
+      "alpha_max_deg": 1.5,
+      "margin": 0.6667,
+      "pass": true
+     },
+     "R4_mass": {
+      "mass_kg": 0.35,
+      "margin": 0.65,
+      "pass": true
+     }
+    },
+    "ND-C35": {
+     "R1_torque": {
+      "T_allow_Nm": 57.4,
+      "T_req_Nm": 82.5,
+      "margin": -0.3042,
+      "pass": false
+     },
+     "R2_speed": {
+      "n_max": 5500,
+      "margin": 0.3095,
+      "pass": true
+     },
+     "R3_misalignment": {
+      "alpha_max_deg": 1.2,
+      "margin": 0.3333,
+      "pass": true
+     },
+     "R4_mass": {
+      "mass_kg": 0.55,
+      "margin": 0.45,
+      "pass": true
+     }
+    },
+    "ND-C50": {
+     "R1_torque": {
+      "T_allow_Nm": 90.2,
+      "T_req_Nm": 82.5,
+      "margin": 0.0933,
+      "pass": true
+     },
+     "R2_speed": {
+      "n_max": 4800,
+      "margin": 0.1429,
+      "pass": true
+     },
+     "R3_misalignment": {
+      "alpha_max_deg": 1.0,
+      "margin": 0.1111,
+      "pass": true
+     },
+     "R4_mass": {
+      "mass_kg": 0.8,
+      "margin": 0.2,
+      "pass": true
+     }
+    },
+    "ND-C80": {
+     "R1_torque": {
+      "T_allow_Nm": 147.6,
+      "T_req_Nm": 82.5,
+      "margin": 0.7891,
+      "pass": true
+     },
+     "R2_speed": {
+      "n_max": 4000,
+      "margin": -0.0476,
+      "pass": false
+     },
+     "R3_misalignment": {
+      "alpha_max_deg": 1.5,
+      "margin": 0.6667,
+      "pass": true
+     },
+     "R4_mass": {
+      "mass_kg": 1.1,
+      "margin": -0.1,
+      "pass": false
+     }
+    }
+   },
+   "trap_missed": {
+    "ND-C20": {
+     "R1_torque": {
+      "T_allow_Nm": 32.8,
+      "T_req_Nm": 37.5,
+      "margin": -0.1253,
+      "pass": false
+     },
+     "R2_speed": {
+      "n_max": 6000,
+      "margin": 0.1429,
+      "pass": true
+     },
+     "R3_misalignment": {
+      "alpha_max_deg": 1.5,
+      "margin": 0.6667,
+      "pass": true
+     },
+     "R4_mass": {
+      "mass_kg": 0.35,
+      "margin": 0.65,
+      "pass": true
+     }
+    },
+    "ND-C35": {
+     "R1_torque": {
+      "T_allow_Nm": 57.4,
+      "T_req_Nm": 37.5,
+      "margin": 0.5307,
+      "pass": true
+     },
+     "R2_speed": {
+      "n_max": 5500,
+      "margin": 0.3095,
+      "pass": true
+     },
+     "R3_misalignment": {
+      "alpha_max_deg": 1.2,
+      "margin": 0.3333,
+      "pass": true
+     },
+     "R4_mass": {
+      "mass_kg": 0.55,
+      "margin": 0.45,
+      "pass": true
+     }
+    },
+    "ND-C50": {
+     "R1_torque": {
+      "T_allow_Nm": 90.2,
+      "T_req_Nm": 37.5,
+      "margin": 1.4053,
+      "pass": true
+     },
+     "R2_speed": {
+      "n_max": 4800,
+      "margin": 0.1429,
+      "pass": true
+     },
+     "R3_misalignment": {
+      "alpha_max_deg": 1.0,
+      "margin": 0.1111,
+      "pass": true
+     },
+     "R4_mass": {
+      "mass_kg": 0.8,
+      "margin": 0.2,
+      "pass": true
+     }
+    },
+    "ND-C80": {
+     "R1_torque": {
+      "T_allow_Nm": 147.6,
+      "T_req_Nm": 37.5,
+      "margin": 2.936,
+      "pass": true
+     },
+     "R2_speed": {
+      "n_max": 4000,
+      "margin": -0.0476,
+      "pass": false
+     },
+     "R3_misalignment": {
+      "alpha_max_deg": 1.5,
+      "margin": 0.6667,
+      "pass": true
+     },
+     "R4_mass": {
+      "mass_kg": 1.1,
+      "margin": -0.1,
+      "pass": false
+     }
+    }
+   }
+  },
+  "reference_design": {
+   "selected_model": "ND-C50",
+   "T_req_Nm": 82.5,
+   "T_allow_Nm": 90.2,
+   "speed_margin_per_min": 600,
+   "misalignment_margin_deg": 0.1,
+   "mass_kg": 0.8,
+   "price_EUR": 165
+  },
+  "worked_solution": "Peaks per hour = 60, which is greater than 10, so T_basis = 55 N·m, not 25 N·m. Ks = 1.5, so T_req = 82.5 N·m. Speed excess = 4200-3000 = 1200 min⁻¹. Derating fraction = 0.0015*1200 = 0.18, so f_n = 0.82. Ambient 30 °C is below 40 °C, so no further thermal factor. T_allow = 0.82*T_cat: ND-C20 32.8, ND-C35 57.4, ND-C50 90.2, ND-C80 147.6 N·m. Torque pass only for ND-C50 and ND-C80. Speed margins: 1800, 1300, 600, -200 min⁻¹, so ND-C80 fails speed by 4.76%. Misalignment margins: 0.6, 0.3, 0.1, 0.6°. Masses 0.35, 0.55, 0.80, 1.10 kg, so ND-C80 also fails mass by 10%. The only all-pass model is ND-C50. Its torque margin is (90.2-82.5)/82.5 = 9.33%, speed margin 14.29%, misalignment margin 11.11%, mass margin 20%. Price 165 EUR. ND-C20 and ND-C35 are cheaper and fail torque. Methods checked: the maker product f_n = 1-0.0015*(n-3000) and the equivalent statement '0.15% per min⁻¹' are the same arithmetic; no ISO coupling rating was substituted because the maker forbids handbook factors in place of these rules. Both readings give the same pass/fail set.",
+  "wrong_designs": [
+   {
+    "values": {
+     "selected_model": "ND-C35",
+     "T_req_Nm": 37.5,
+     "T_allow_Nm": 57.4,
+     "speed_margin_per_min": 1300,
+     "misalignment_margin_deg": 0.3,
+     "mass_kg": 0.55,
+     "price_EUR": 120
+    },
+    "failed_requirement_ids": [
+     "R1_torque"
+    ],
+    "why": "This is the lowest-price model if T_basis is taken as the continuous 25 N·m, giving T_req = 37.5 N·m. Under the correct peak basis, T_allow 57.4 N·m is 30.4% below 82.5 N·m."
+   },
+   {
+    "values": {
+     "selected_model": "ND-C20",
+     "T_req_Nm": 82.5,
+     "T_allow_Nm": 32.8,
+     "speed_margin_per_min": 1800,
+     "misalignment_margin_deg": 0.6,
+     "mass_kg": 0.35,
+     "price_EUR": 85
+    },
+    "failed_requirement_ids": [
+     "R1_torque"
+    ],
+    "why": "Lowest catalogue price, but even the trap torque of 37.5 N·m exceeds T_allow 32.8 N·m, and the correct torque is short by 60.2%."
+   }
+  ],
+  "corpus_pages": [
+   {
+    "title": "Nordling Drive Components — ND-Flex selection rules",
+    "text": "# Nordling Drive Components\n## ND-Flex servo couplings\nT_cat is the nominal torque at coupling speed up to 3000 min⁻¹ and ambient up to 40 °C. It is not a selection torque. Do not replace these rules with a generic coupling service-factor table.\n\n| Model | Price EUR | T_cat N·m | n_max min⁻¹ | alpha_max deg | Mass kg |\n| ND-C20 | 85 | 40 | 6000 | 1.5 | 0.35 |\n| ND-C35 | 120 | 70 | 5500 | 1.2 | 0.55 |\n| ND-C50 | 165 | 110 | 4800 | 1.0 | 0.80 |\n| ND-C80 | 210 | 180 | 4000 | 1.5 | 1.10 |\n\n### Rules\n1. Reversing servo duty with moderate shock: service factor Ks = 1.5.\n2. If torque peaks occur more often than 10 times per hour, T_basis is the peak torque. Otherwise T_basis is the continuous torque. T_req = Ks * T_basis.\n3. If speed n > 3000 min⁻¹, T_allow = T_cat * (1 - 0.0015*(n - 3000)). If n <= 3000, T_allow = T_cat. No separate ambient factor applies at or below 40 °C.\n4. Accept a model only if T_allow >= T_req, n_max >= application speed, alpha_max >= application angular misalignment, and mass <= the stated mass limit.\n5. Among accepted models choose the lowest price, then the lowest mass."
+   }
+  ]
+ },
+ {
+  "id": "T4-32",
+  "family": "F2",
+  "domain": "electrical",
+  "request": "Select a Helion HC contactor for a 400 V squirrel-cage motor with a full-load current of 32 A, started direct-on-line. The contactor is mounted in an unventilated IP54 enclosure. Ambient temperature is 50 °C. Site altitude is 500 m. Use only the Helion selection rules and choose the lowest-price model that passes every rule. End with a table headed Results with these rows: selected_model, I_allow_A, Ith_allow_A, altitude_margin_m, price_EUR.",
+  "requirements": [
+   {
+    "id": "R1_ac3",
+    "statement": "Enclosure- and ambient-derated AC-3 current must be at least 32 A.",
+    "method": "f_amb = 1 - 0.015*(50-40) = 0.85; f_enc = 0.85; I_allow = I_AC3*0.85*0.85 = I_AC3*0.7225; pass if I_allow >= 32. Margin = (I_allow-32)/32.",
+    "tolerance": "0.5% relative on currents; model id exact"
+   },
+   {
+    "id": "R2_ith",
+    "statement": "Derated thermal current must be at least 1.25 times full-load current.",
+    "method": "I_th_req = 1.25*32 = 40 A; Ith_allow = Ith*0.7225; pass if Ith_allow >= 40. Margin = (Ith_allow-40)/40.",
+    "tolerance": "0.5% relative on currents"
+   },
+   {
+    "id": "R3_voltage",
+    "statement": "Rated operational voltage must be at least 400 V.",
+    "method": "pass if Ue >= 400. Margin = (Ue-400)/400.",
+    "tolerance": "exact"
+   },
+   {
+    "id": "R4_altitude",
+    "statement": "Catalogue altitude limit must be at least 500 m.",
+    "method": "pass if H_max >= 500. Margin = (H_max-500)/500.",
+    "tolerance": "exact"
+   }
+  ],
+  "trap": "Applying the ambient derating but omitting the mandatory 0.85 unventilated-enclosure factor, which is the factor most often treated as already built into the catalogue AC-3 number.",
+  "option_table": {
+   "correct": {
+    "HC-25": {
+     "R1_ac3": {
+      "I_allow_A": 18.0625,
+      "margin": -0.4355,
+      "pass": false
+     },
+     "R2_ith": {
+      "Ith_allow_A": 28.9,
+      "margin": -0.2775,
+      "pass": false
+     },
+     "R3_voltage": {
+      "Ue_V": 690,
+      "margin": 0.725,
+      "pass": true
+     },
+     "R4_altitude": {
+      "H_max_m": 2000,
+      "margin": 3.0,
+      "pass": true
+     }
+    },
+    "HC-40": {
+     "R1_ac3": {
+      "I_allow_A": 28.9,
+      "margin": -0.0969,
+      "pass": false
+     },
+     "R2_ith": {
+      "Ith_allow_A": 43.35,
+      "margin": 0.0838,
+      "pass": true
+     },
+     "R3_voltage": {
+      "Ue_V": 690,
+      "margin": 0.725,
+      "pass": true
+     },
+     "R4_altitude": {
+      "H_max_m": 2000,
+      "margin": 3.0,
+      "pass": true
+     }
+    },
+    "HC-50": {
+     "R1_ac3": {
+      "I_allow_A": 36.125,
+      "margin": 0.1289,
+      "pass": true
+     },
+     "R2_ith": {
+      "Ith_allow_A": 57.8,
+      "margin": 0.445,
+      "pass": true
+     },
+     "R3_voltage": {
+      "Ue_V": 690,
+      "margin": 0.725,
+      "pass": true
+     },
+     "R4_altitude": {
+      "H_max_m": 2000,
+      "margin": 3.0,
+      "pass": true
+     }
+    },
+    "HC-65": {
+     "R1_ac3": {
+      "I_allow_A": 46.9625,
+      "margin": 0.4676,
+      "pass": true
+     },
+     "R2_ith": {
+      "Ith_allow_A": 72.25,
+      "margin": 0.8063,
+      "pass": true
+     },
+     "R3_voltage": {
+      "Ue_V": 690,
+      "margin": 0.725,
+      "pass": true
+     },
+     "R4_altitude": {
+      "H_max_m": 2000,
+      "margin": 3.0,
+      "pass": true
+     }
+    }
+   },
+   "trap_missed": {
+    "HC-25": {
+     "R1_ac3": {
+      "I_allow_A": 21.25,
+      "margin": -0.3359,
+      "pass": false
+     },
+     "R2_ith": {
+      "Ith_allow_A": 34.0,
+      "margin": -0.15,
+      "pass": false
+     },
+     "R3_voltage": {
+      "Ue_V": 690,
+      "margin": 0.725,
+      "pass": true
+     },
+     "R4_altitude": {
+      "H_max_m": 2000,
+      "margin": 3.0,
+      "pass": true
+     }
+    },
+    "HC-40": {
+     "R1_ac3": {
+      "I_allow_A": 34.0,
+      "margin": 0.0625,
+      "pass": true
+     },
+     "R2_ith": {
+      "Ith_allow_A": 51.0,
+      "margin": 0.275,
+      "pass": true
+     },
+     "R3_voltage": {
+      "Ue_V": 690,
+      "margin": 0.725,
+      "pass": true
+     },
+     "R4_altitude": {
+      "H_max_m": 2000,
+      "margin": 3.0,
+      "pass": true
+     }
+    },
+    "HC-50": {
+     "R1_ac3": {
+      "I_allow_A": 42.5,
+      "margin": 0.3281,
+      "pass": true
+     },
+     "R2_ith": {
+      "Ith_allow_A": 68.0,
+      "margin": 0.7,
+      "pass": true
+     },
+     "R3_voltage": {
+      "Ue_V": 690,
+      "margin": 0.725,
+      "pass": true
+     },
+     "R4_altitude": {
+      "H_max_m": 2000,
+      "margin": 3.0,
+      "pass": true
+     }
+    },
+    "HC-65": {
+     "R1_ac3": {
+      "I_allow_A": 55.25,
+      "margin": 0.7266,
+      "pass": true
+     },
+     "R2_ith": {
+      "Ith_allow_A": 85.0,
+      "margin": 1.125,
+      "pass": true
+     },
+     "R3_voltage": {
+      "Ue_V": 690,
+      "margin": 0.725,
+      "pass": true
+     },
+     "R4_altitude": {
+      "H_max_m": 2000,
+      "margin": 3.0,
+      "pass": true
+     }
+    }
+   }
+  },
+  "reference_design": {
+   "selected_model": "HC-50",
+   "I_allow_A": 36.125,
+   "Ith_allow_A": 57.8,
+   "altitude_margin_m": 1500,
+   "price_EUR": 76
+  },
+  "worked_solution": "Ambient excess = 10 °C, so f_amb = 1 - 0.015*10 = 0.85. Unventilated IP54 enclosure adds f_enc = 0.85. Combined factor = 0.7225. I_allow = 0.7225*I_AC3: HC-25 18.0625 A, HC-40 28.9 A, HC-50 36.125 A, HC-65 46.9625 A. Against 32 A, HC-25 fails by 43.55% and HC-40 fails by 9.69%. HC-50 margin = (36.125-32)/32 = 12.89%. HC-65 also passes AC-3 but costs more. I_th_req = 40 A. Ith_allow = 0.7225*Ith: 28.9, 43.35, 57.8, 72.25 A. HC-25 fails thermal current; HC-40 passes thermal current but already failed AC-3, so AC-3 governs. Ue = 690 V on every model, margin 72.5% over 400 V. Altitude limit 2000 m, margin 1500 m over 500 m. Lowest price among full passes is HC-50 at 76 EUR. Methods checked: comparison to published AC-3, to Ith, and to AC-1 is not interchangeable; the maker requires AC-3 for this motor duty and a separate Ith check. A generic IEC temperature table was not substituted for the stated 0.015 per °C factor. Omitting only the enclosure factor still leaves the same voltage and altitude verdicts and does not make HC-40 acceptable on AC-3.",
+  "wrong_designs": [
+   {
+    "values": {
+     "selected_model": "HC-40",
+     "I_allow_A": 34.0,
+     "Ith_allow_A": 51.0,
+     "altitude_margin_m": 1500,
+     "price_EUR": 58
+    },
+    "failed_requirement_ids": [
+     "R1_ac3"
+    ],
+    "why": "Lowest price if the enclosure factor is omitted, because 40*0.85 = 34 A meets 32 A. With both factors, I_allow is 28.9 A, 9.69% below 32 A."
+   },
+   {
+    "values": {
+     "selected_model": "HC-25",
+     "I_allow_A": 18.0625,
+     "Ith_allow_A": 28.9,
+     "altitude_margin_m": 1500,
+     "price_EUR": 42
+    },
+    "failed_requirement_ids": [
+     "R1_ac3",
+     "R2_ith"
+    ],
+    "why": "Cheapest model. Its Ith of 40 A looks adequate if used raw against 32 A, but both derated AC-3 and derated thermal current fail."
+   }
+  ],
+  "corpus_pages": [
+   {
+    "title": "Helion Controls — HC contactor catalogue and selection rules",
+    "text": "# Helion Controls\n## HC contactors\nCurrents are valid at 40 °C ambient, open mounting, altitude up to 2000 m. Do not replace the factors below with a generic contactor derating curve.\n\n| Model | Price EUR | I_AC3 A | Ith A | Ue V | H_max m |\n| HC-25 | 42 | 25 | 40 | 690 | 2000 |\n| HC-40 | 58 | 40 | 60 | 690 | 2000 |\n| HC-50 | 76 | 50 | 80 | 690 | 2000 |\n| HC-65 | 99 | 65 | 100 | 690 | 2000 |\n\n### Rules\n1. Direct-on-line switching of a squirrel-cage motor shall be checked against I_AC3, not against Ith and not against an AC-1 rating. The AC-3 value already covers a start up to 8 times full-load current for at most 10 s.\n2. Above 40 °C, I_amb = I_AC3 * (1 - 0.015*(T_amb - 40)). Apply the same multiplier to Ith.\n3. In an unventilated IP54 enclosure, multiply the ambient-derated current by 0.85. This enclosure factor is not included in the catalogue currents.\n4. Derated Ith must be at least 1.25 times motor full-load current.\n5. Ue must be at least the system voltage, and H_max must be at least the site altitude. No extra altitude factor applies at or below 2000 m.\n6. Choose the lowest price among models that pass every rule."
+   }
+  ]
+ },
+ {
+  "id": "T4-33",
+  "family": "F2",
+  "domain": "fluid",
+  "request": "Select a Pellam PP pump for 0.006 m³/s at 30 m head. Liquid viscosity is 200 mm²/s and specific gravity is 0.90. Available NPSH is 4.5 m. Shaft power available from the motor is 6.0 kW. Use only the Pellam selection rules and choose the lowest-price model that passes every rule. End with a table headed Results with these rows: selected_model, Q_del_m3_s, H_del_m, P_shaft_kW, NPSHr_visc_m, price_EUR.",
+  "requirements": [
+   {
+    "id": "R1_flow",
+    "statement": "Viscosity-corrected delivered flow must be at least 0.006 m³/s.",
+    "method": "Q_del = 0.82*Q_cat; pass if Q_del >= 0.006. Margin = (Q_del-0.006)/0.006.",
+    "tolerance": "0.5% relative"
+   },
+   {
+    "id": "R2_head",
+    "statement": "Viscosity-corrected delivered head must be at least 30 m.",
+    "method": "H_del = 0.90*H_cat; pass if H_del >= 30. Margin = (H_del-30)/30.",
+    "tolerance": "0.5% relative"
+   },
+   {
+    "id": "R3_power",
+    "statement": "Viscosity- and gravity-corrected shaft power must not exceed 6.0 kW.",
+    "method": "P_shaft = P_cat*0.90/0.70; pass if P_shaft <= 6.0. Margin = (6.0-P_shaft)/6.0.",
+    "tolerance": "0.5% relative"
+   },
+   {
+    "id": "R4_npsh",
+    "statement": "Available NPSH must cover the viscosity-increased NPSHr plus 0.5 m.",
+    "method": "NPSHr_visc = 1.15*NPSHr; pass if 4.5 >= NPSHr_visc + 0.5. Margin = (4.5 - NPSHr_visc - 0.5)/(NPSHr_visc + 0.5).",
+    "tolerance": "0.5% relative"
+   }
+  ],
+  "trap": "Selecting on the water catalogue ratings for flow and head, and on uncorrected shaft power and NPSHr, instead of the mandatory viscosity factors for 200 mm²/s.",
+  "option_table": {
+   "correct": {
+    "PP-1": {
+     "R1_flow": {
+      "Q_del_m3_s": 0.00533,
+      "margin": -0.1117,
+      "pass": false
+     },
+     "R2_head": {
+      "H_del_m": 28.8,
+      "margin": -0.04,
+      "pass": false
+     },
+     "R3_power": {
+      "P_shaft_kW": 3.8571,
+      "margin": 0.3571,
+      "pass": true
+     },
+     "R4_npsh": {
+      "NPSHr_visc_m": 2.53,
+      "required_m": 3.03,
+      "margin": 0.4851,
+      "pass": true
+     }
+    },
+    "PP-2": {
+     "R1_flow": {
+      "Q_del_m3_s": 0.006396,
+      "margin": 0.066,
+      "pass": true
+     },
+     "R2_head": {
+      "H_del_m": 32.4,
+      "margin": 0.08,
+      "pass": true
+     },
+     "R3_power": {
+      "P_shaft_kW": 5.1429,
+      "margin": 0.1429,
+      "pass": true
+     },
+     "R4_npsh": {
+      "NPSHr_visc_m": 2.99,
+      "required_m": 3.49,
+      "margin": 0.2894,
+      "pass": true
+     }
+    },
+    "PP-3": {
+     "R1_flow": {
+      "Q_del_m3_s": 0.00779,
+      "margin": 0.2983,
+      "pass": true
+     },
+     "R2_head": {
+      "H_del_m": 36.0,
+      "margin": 0.2,
+      "pass": true
+     },
+     "R3_power": {
+      "P_shaft_kW": 7.0714,
+      "margin": -0.1786,
+      "pass": false
+     },
+     "R4_npsh": {
+      "NPSHr_visc_m": 3.45,
+      "required_m": 3.95,
+      "margin": 0.1392,
+      "pass": true
+     }
+    },
+    "PP-4": {
+     "R1_flow": {
+      "Q_del_m3_s": 0.00984,
+      "margin": 0.64,
+      "pass": true
+     },
+     "R2_head": {
+      "H_del_m": 40.5,
+      "margin": 0.35,
+      "pass": true
+     },
+     "R3_power": {
+      "P_shaft_kW": 9.6429,
+      "margin": -0.6071,
+      "pass": false
+     },
+     "R4_npsh": {
+      "NPSHr_visc_m": 3.91,
+      "required_m": 4.41,
+      "margin": 0.0204,
+      "pass": true
+     }
+    }
+   },
+   "trap_missed": {
+    "PP-1": {
+     "R1_flow": {
+      "Q_del_m3_s": 0.0065,
+      "margin": 0.0833,
+      "pass": true
+     },
+     "R2_head": {
+      "H_del_m": 32.0,
+      "margin": 0.0667,
+      "pass": true
+     },
+     "R3_power": {
+      "P_shaft_kW": 3.0,
+      "margin": 0.5,
+      "pass": true
+     },
+     "R4_npsh": {
+      "NPSHr_visc_m": 2.2,
+      "required_m": 2.7,
+      "margin": 0.6667,
+      "pass": true
+     }
+    },
+    "PP-2": {
+     "R1_flow": {
+      "Q_del_m3_s": 0.0078,
+      "margin": 0.3,
+      "pass": true
+     },
+     "R2_head": {
+      "H_del_m": 36.0,
+      "margin": 0.2,
+      "pass": true
+     },
+     "R3_power": {
+      "P_shaft_kW": 4.0,
+      "margin": 0.3333,
+      "pass": true
+     },
+     "R4_npsh": {
+      "NPSHr_visc_m": 2.6,
+      "required_m": 3.1,
+      "margin": 0.4516,
+      "pass": true
+     }
+    },
+    "PP-3": {
+     "R1_flow": {
+      "Q_del_m3_s": 0.0095,
+      "margin": 0.5833,
+      "pass": true
+     },
+     "R2_head": {
+      "H_del_m": 40.0,
+      "margin": 0.3333,
+      "pass": true
+     },
+     "R3_power": {
+      "P_shaft_kW": 5.5,
+      "margin": 0.0833,
+      "pass": true
+     },
+     "R4_npsh": {
+      "NPSHr_visc_m": 3.0,
+      "required_m": 3.5,
+      "margin": 0.2857,
+      "pass": true
+     }
+    },
+    "PP-4": {
+     "R1_flow": {
+      "Q_del_m3_s": 0.012,
+      "margin": 1.0,
+      "pass": true
+     },
+     "R2_head": {
+      "H_del_m": 45.0,
+      "margin": 0.5,
+      "pass": true
+     },
+     "R3_power": {
+      "P_shaft_kW": 7.5,
+      "margin": -0.25,
+      "pass": false
+     },
+     "R4_npsh": {
+      "NPSHr_visc_m": 3.4,
+      "required_m": 3.9,
+      "margin": 0.1538,
+      "pass": true
+     }
+    }
+   }
+  },
+  "reference_design": {
+   "selected_model": "PP-2",
+   "Q_del_m3_s": 0.006396,
+   "H_del_m": 32.4,
+   "P_shaft_kW": 5.1429,
+   "NPSHr_visc_m": 2.99,
+   "price_EUR": 1280
+  },
+  "worked_solution": "Viscosity 200 mm²/s is inside the 100 to 250 mm²/s band, so Cq = 0.82, Ch = 0.90, Ceff = 0.70, and NPSHr multiplier = 1.15. Q_del = 0.82*Q_cat: PP-1 0.00533, PP-2 0.006396, PP-3 0.00779, PP-4 0.00984 m³/s. PP-1 is 11.17% short of 0.006 m³/s. PP-2 flow margin is 6.60%. H_del = 0.90*H_cat: 28.8, 32.4, 36.0, 40.5 m. PP-1 head is 4.0% short of 30 m. PP-2 head margin is 8.0%. P_shaft = P_cat*0.90/0.70: 3.8571, 5.1429, 7.0714, 9.6429 kW. PP-2 power margin against 6.0 kW is 14.29%. PP-3 exceeds 6.0 kW by 17.86% and PP-4 by 60.71%. NPSHr_visc = 1.15*NPSHr: 2.53, 2.99, 3.45, 3.91 m. Required NPSH = those values plus 0.5 m: 3.03, 3.49, 3.95, 4.41 m. All are below 4.5 m; PP-2 margin is (4.5-3.49)/3.49 = 28.94%. Only PP-2 passes every rule. Price 1280 EUR. PP-1 is cheaper and fails flow and head. Methods checked: maker factors only. An affinity-law speed change was not used because speed is fixed by the catalogue rating and the maker forbids generic viscosity charts. Checking P_cat*SG without dividing by Ceff is a different omission and still would not make PP-3 the correct choice; with the mandated Ceff, PP-3 fails power and PP-2 passes.",
+  "wrong_designs": [
+   {
+    "values": {
+     "selected_model": "PP-1",
+     "Q_del_m3_s": 0.0065,
+     "H_del_m": 32.0,
+     "P_shaft_kW": 3.0,
+     "NPSHr_visc_m": 2.2,
+     "price_EUR": 980
+    },
+    "failed_requirement_ids": [
+     "R1_flow",
+     "R2_head"
+    ],
+    "why": "Lowest price on raw water ratings: 0.0065 m³/s and 32 m both clear the duty, and 3.0 kW is within 6.0 kW. Correct delivered flow 0.00533 m³/s is 11.17% low and head 28.8 m is 4.0% low."
+   },
+   {
+    "values": {
+     "selected_model": "PP-3",
+     "Q_del_m3_s": 0.00779,
+     "H_del_m": 36.0,
+     "P_shaft_kW": 7.0714,
+     "NPSHr_visc_m": 3.45,
+     "price_EUR": 1540
+    },
+    "failed_requirement_ids": [
+     "R3_power"
+    ],
+    "why": "Next larger pump clears corrected flow and head, but shaft power 7.0714 kW exceeds 6.0 kW by 17.86%."
+   }
+  ],
+  "corpus_pages": [
+   {
+    "title": "Pellam Process Pumps — PP series water ratings and viscosity rules",
+    "text": "# Pellam Process Pumps\n## PP series\nCatalogue Q_cat, H_cat, P_cat and NPSHr are water ratings at the published speed and at the stated duty point. Do not apply a generic viscosity chart or an affinity-law speed change in place of the factors below.\n\n| Model | Price EUR | Q_cat m³/s | H_cat m | P_cat kW | NPSHr m |\n| PP-1 | 980 | 0.0065 | 32 | 3.0 | 2.2 |\n| PP-2 | 1280 | 0.0078 | 36 | 4.0 | 2.6 |\n| PP-3 | 1540 | 0.0095 | 40 | 5.5 | 3.0 |\n| PP-4 | 1890 | 0.0120 | 45 | 7.5 | 3.4 |\n\n### Rules for viscosity 100 to 250 mm²/s inclusive\n1. Cq = 0.82, Ch = 0.90, Ceff = 0.70.\n2. Delivered flow Q_del = Cq * Q_cat. Delivered head H_del = Ch * H_cat.\n3. Shaft power P_shaft = P_cat * specific_gravity / Ceff.\n4. NPSHr_visc = 1.15 * NPSHr. Available NPSH must be at least NPSHr_visc + 0.5 m.\n5. Accept only if Q_del and H_del meet the duty, P_shaft does not exceed available shaft power, and the NPSH inequality is met.\n6. Choose the lowest price among accepted models."
+   }
+  ]
+ },
+ {
+  "id": "T4-34",
+  "family": "F2",
+  "domain": "thermal",
+  "request": "Select a Varmex VX heatsink for a device dissipating 100 W. The base temperature must not exceed 86 °C in a 30 °C ambient. The sink is mounted horizontally with the fins facing up, and the standard dry pad is fitted. Available length is 120 mm. Mass must not exceed 1.0 kg. Use only the Varmex selection rules and choose the lowest-price model that passes every rule. End with a table headed Results with these rows: selected_model, R_req_K_per_W, R_sa_K_per_W, length_mm, mass_kg, price_EUR.",
+  "requirements": [
+   {
+    "id": "R1_resistance",
+    "statement": "Orientation-adjusted sink resistance plus the pad must not exceed the resistance allowed by the base-temperature limit.",
+    "method": "R_req = (86-30)/100 = 0.56 K/W; R_sa = 1.25*R_cat + 0.05; pass if R_sa <= 0.56. Margin = (0.56-R_sa)/0.56.",
+    "tolerance": "0.5% relative"
+   },
+   {
+    "id": "R2_length",
+    "statement": "Catalogue length must not exceed 120 mm.",
+    "method": "pass if length <= 120. Margin = (120-length)/120.",
+    "tolerance": "exact on catalogue lengths"
+   },
+   {
+    "id": "R3_mass",
+    "statement": "Mass must not exceed 1.0 kg.",
+    "method": "pass if mass <= 1.0. Margin = (1.0-mass)/1.0.",
+    "tolerance": "exact on catalogue masses"
+   },
+   {
+    "id": "R4_power_band",
+    "statement": "Dissipation must lie in the 20 W to 150 W band for which R_cat is valid.",
+    "method": "pass if 20 <= 100 <= 150. Upper margin = (150-100)/150. The band is a property of the series, so every model has the same result.",
+    "tolerance": "exact"
+   }
+  ],
+  "trap": "Using the published vertical-fin thermal resistance and forgetting the 1.25 horizontal-mount multiplier, while still adding the dry-pad resistance.",
+  "option_table": {
+   "correct": {
+    "VX-180": {
+     "R1_resistance": {
+      "R_sa_K_per_W": 0.925,
+      "R_req_K_per_W": 0.56,
+      "margin": -0.6518,
+      "pass": false
+     },
+     "R2_length": {
+      "length_mm": 100,
+      "margin": 0.1667,
+      "pass": true
+     },
+     "R3_mass": {
+      "mass_kg": 0.4,
+      "margin": 0.6,
+      "pass": true
+     },
+     "R4_power_band": {
+      "P_W": 100,
+      "margin_to_upper": 0.3333,
+      "pass": true
+     }
+    },
+    "VX-250": {
+     "R1_resistance": {
+      "R_sa_K_per_W": 0.675,
+      "R_req_K_per_W": 0.56,
+      "margin": -0.2054,
+      "pass": false
+     },
+     "R2_length": {
+      "length_mm": 110,
+      "margin": 0.0833,
+      "pass": true
+     },
+     "R3_mass": {
+      "mass_kg": 0.62,
+      "margin": 0.38,
+      "pass": true
+     },
+     "R4_power_band": {
+      "P_W": 100,
+      "margin_to_upper": 0.3333,
+      "pass": true
+     }
+    },
+    "VX-320": {
+     "R1_resistance": {
+      "R_sa_K_per_W": 0.525,
+      "R_req_K_per_W": 0.56,
+      "margin": 0.0625,
+      "pass": true
+     },
+     "R2_length": {
+      "length_mm": 115,
+      "margin": 0.0417,
+      "pass": true
+     },
+     "R3_mass": {
+      "mass_kg": 0.88,
+      "margin": 0.12,
+      "pass": true
+     },
+     "R4_power_band": {
+      "P_W": 100,
+      "margin_to_upper": 0.3333,
+      "pass": true
+     }
+    },
+    "VX-400": {
+     "R1_resistance": {
+      "R_sa_K_per_W": 0.4,
+      "R_req_K_per_W": 0.56,
+      "margin": 0.2857,
+      "pass": true
+     },
+     "R2_length": {
+      "length_mm": 118,
+      "margin": 0.0167,
+      "pass": true
+     },
+     "R3_mass": {
+      "mass_kg": 1.15,
+      "margin": -0.15,
+      "pass": false
+     },
+     "R4_power_band": {
+      "P_W": 100,
+      "margin_to_upper": 0.3333,
+      "pass": true
+     }
+    }
+   },
+   "trap_missed": {
+    "VX-180": {
+     "R1_resistance": {
+      "R_sa_K_per_W": 0.75,
+      "R_req_K_per_W": 0.56,
+      "margin": -0.3393,
+      "pass": false
+     },
+     "R2_length": {
+      "length_mm": 100,
+      "margin": 0.1667,
+      "pass": true
+     },
+     "R3_mass": {
+      "mass_kg": 0.4,
+      "margin": 0.6,
+      "pass": true
+     },
+     "R4_power_band": {
+      "P_W": 100,
+      "margin_to_upper": 0.3333,
+      "pass": true
+     }
+    },
+    "VX-250": {
+     "R1_resistance": {
+      "R_sa_K_per_W": 0.55,
+      "R_req_K_per_W": 0.56,
+      "margin": 0.0179,
+      "pass": true
+     },
+     "R2_length": {
+      "length_mm": 110,
+      "margin": 0.0833,
+      "pass": true
+     },
+     "R3_mass": {
+      "mass_kg": 0.62,
+      "margin": 0.38,
+      "pass": true
+     },
+     "R4_power_band": {
+      "P_W": 100,
+      "margin_to_upper": 0.3333,
+      "pass": true
+     }
+    },
+    "VX-320": {
+     "R1_resistance": {
+      "R_sa_K_per_W": 0.43,
+      "R_req_K_per_W": 0.56,
+      "margin": 0.2321,
+      "pass": true
+     },
+     "R2_length": {
+      "length_mm": 115,
+      "margin": 0.0417,
+      "pass": true
+     },
+     "R3_mass": {
+      "mass_kg": 0.88,
+      "margin": 0.12,
+      "pass": true
+     },
+     "R4_power_band": {
+      "P_W": 100,
+      "margin_to_upper": 0.3333,
+      "pass": true
+     }
+    },
+    "VX-400": {
+     "R1_resistance": {
+      "R_sa_K_per_W": 0.33,
+      "R_req_K_per_W": 0.56,
+      "margin": 0.4107,
+      "pass": true
+     },
+     "R2_length": {
+      "length_mm": 118,
+      "margin": 0.0167,
+      "pass": true
+     },
+     "R3_mass": {
+      "mass_kg": 1.15,
+      "margin": -0.15,
+      "pass": false
+     },
+     "R4_power_band": {
+      "P_W": 100,
+      "margin_to_upper": 0.3333,
+      "pass": true
+     }
+    }
+   }
+  },
+  "reference_design": {
+   "selected_model": "VX-320",
+   "R_req_K_per_W": 0.56,
+   "R_sa_K_per_W": 0.525,
+   "length_mm": 115,
+   "mass_kg": 0.88,
+   "price_EUR": 36
+  },
+  "worked_solution": "Allowed temperature rise = 86-30 = 56 °C. R_req = 56/100 = 0.56 K/W. Horizontal fins-up multiplier is 1.25 and the fitted pad adds 0.05 K/W, so R_sa = 1.25*R_cat + 0.05. VX-180: 0.875+0.05 = 0.925 K/W. VX-250: 0.625+0.05 = 0.675 K/W, which exceeds 0.56 by 20.54%. VX-320: 0.475+0.05 = 0.525 K/W, margin (0.56-0.525)/0.56 = 6.25%. VX-400: 0.35+0.05 = 0.400 K/W, which passes resistance. Lengths 100, 110, 115, 118 mm all are within 120 mm; VX-320 length margin is 4.17%. Masses 0.40, 0.62, 0.88, 1.15 kg; VX-400 fails mass by 15%, VX-320 mass margin is 12%. Dissipation 100 W is inside 20 to 150 W, upper margin 33.3%, for every model. The only all-pass model is VX-320 at 36 EUR. VX-180 and VX-250 are cheaper and fail resistance. Methods checked: R_req = rise/power is the only definition consistent with the stated temperatures. A Nusselt-number recalculation of free-convection resistance was not used because the maker requires R_cat. Putting the pad inside or outside the 1.25 multiplier is not allowed; the rule is R_sa = 1.25*R_cat + 0.05. That reading and a check of the resulting temperature rise P*R_sa = 52.5 °C against 56 °C give the same verdicts.",
+  "wrong_designs": [
+   {
+    "values": {
+     "selected_model": "VX-250",
+     "R_req_K_per_W": 0.56,
+     "R_sa_K_per_W": 0.55,
+     "length_mm": 110,
+     "mass_kg": 0.62,
+     "price_EUR": 27
+    },
+    "failed_requirement_ids": [
+     "R1_resistance"
+    ],
+    "why": "Lowest price if the vertical rating is used with the pad only: 0.50+0.05 = 0.55 K/W, which is under 0.56 K/W. With the horizontal multiplier, R_sa is 0.675 K/W, 20.54% above 0.56 K/W."
+   },
+   {
+    "values": {
+     "selected_model": "VX-400",
+     "R_req_K_per_W": 0.56,
+     "R_sa_K_per_W": 0.4,
+     "length_mm": 118,
+     "mass_kg": 1.15,
+     "price_EUR": 48
+    },
+    "failed_requirement_ids": [
+     "R3_mass"
+    ],
+    "why": "Resistance is adequate, but mass 1.15 kg exceeds the 1.0 kg limit by 15%, and it is not the lowest-price passing model."
+   }
+  ],
+  "corpus_pages": [
+   {
+    "title": "Varmex Thermal — VX heatsink catalogue and application rules",
+    "text": "# Varmex Thermal\n## VX extruded heatsinks\nR_cat is the sink-to-ambient thermal resistance in free air with fins vertical, still air, and dissipation from 20 W to 150 W. Do not recalculate R_cat from a convection correlation.\n\n| Model | Price EUR | R_cat K/W | Length mm | Mass kg |\n| VX-180 | 18 | 0.70 | 100 | 0.40 |\n| VX-250 | 27 | 0.50 | 110 | 0.62 |\n| VX-320 | 36 | 0.38 | 115 | 0.88 |\n| VX-400 | 48 | 0.28 | 118 | 1.15 |\n\n### Rules\n1. Required resistance is (maximum base temperature - ambient temperature) / dissipation.\n2. Horizontal mounting with fins facing up: multiply R_cat by 1.25. Vertical fins use 1.00. No other orientation factor is published.\n3. The standard dry pad is always fitted on this series and adds 0.05 K/W after the orientation multiplier. R_sa = orientation_factor * R_cat + 0.05.\n4. Accept only if R_sa is not greater than the required resistance, length is not greater than the available length, mass is not greater than the stated mass limit, and dissipation is from 20 W to 150 W inclusive.\n5. Choose the lowest price among accepted models, then the lowest mass."
+   }
+  ]
+ }
+]
