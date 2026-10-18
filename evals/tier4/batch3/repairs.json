@@ -1,0 +1,37 @@
+{
+ "repairs": [
+  {
+   "id": "T4-21",
+   "field": "reference_design",
+   "from": {
+    "Model": "KGD-90-10",
+    "Ratio": 10,
+    "Mass (kg)": 7.0,
+    "Peak Output Torque (N·m)": 85.0,
+    "RMS Output Torque (N·m)": 72.44,
+    "Derated Thermal Torque Limit (N·m)": 77.49,
+    "Equivalent Radial Load (N)": 2880,
+    "Bearing Life L10h (h)": 18574,
+    "Peak Motor Torque (N·m)": 15.1
+   },
+   "to": {
+    "Model": "KGD-90-10",
+    "Ratio": 10,
+    "Mass (kg)": 7.0,
+    "Peak Output Torque (N·m)": 85.0,
+    "RMS Output Torque (N·m)": 72.45,
+    "Derated Thermal Torque Limit (N·m)": 77.49,
+    "Equivalent Radial Load (N)": 2880,
+    "Bearing Life L10h (h)": 23710,
+    "Peak Motor Torque (N·m)": 15.11
+   },
+   "why": "recomputed from the corpus rules with verify.py t421 (the generator's L10h 18574 h is 23710 h); the selection KGD-90-10 stands"
+  }
+ ],
+ "flags": [
+  {
+   "id": "T4-22",
+   "flag": "The corpus states two travel laws: section 2.3's two-slope characteristic and a 'mandatory' summary (512R for R <= 0.05; 100R for R > 0.50) that leaves 0.05 < R <= 0.50 to the two-slope law. The correct selection (VFC-9100-M) and the F_L trap (VFC-9080-S) are the same under either reading; the missed-K_m trap selects VFC-9080-M only under the 'mandatory' reading. Travel figures are graded under either reading. The corpus is left as generated."
+  }
+ ]
+}

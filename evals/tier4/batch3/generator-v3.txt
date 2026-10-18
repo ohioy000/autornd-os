@@ -1,0 +1,31 @@
+You are writing a benchmark of HARD engineering design questions for expert practitioners. The difficulty must come from engineering judgment: the governing failure mode, the right reading of a code or a maker's rule, a load case or effect commonly missed. It must not come from arithmetic. Every question must be checkable by recomputation.
+
+Produce exactly 4 candidates as one JSON array, all of family "F2". The request names a fictional product line and states the duty and requirements. The catalogue data and the maker's own rules (derating, application limits, selection rules) live only in corpus pages you also write. The textbook physics and design-code methods stay with the answerer.
+
+Each candidate is an object with these fields:
+- id: "T4-21", "T4-22", "T4-23", "T4-24"
+- family: "F2"
+- domain: mechanical, electrical, fluid, thermal, structural, or controls. Use 4 different domains.
+- request: the question exactly as a user would ask it, at most 300 words, SI units.
+  - Never state the equations, and never name the governing mode.
+  - It ends with: "End with a table headed Results with these rows: <row names and units>."
+- requirements: 4 to 8 objects, each with:
+  - id;
+  - statement;
+  - method: the equations over the Results values and the given data;
+  - tolerance.
+- trap: the one judgment a careful expert working in a single pass is most likely to get wrong.
+- option_table: for EVERY catalogue option, EVERY requirement's computed value and pass/fail, twice: once with the correct method, and once with the trap missed. Show the numbers.
+- reference_design: the Results values of the correct selection.
+- worked_solution: the full derivation, every intermediate value shown.
+- wrong_designs: 2 objects (values, failed requirement ids, why). The first is exactly the selection a solver makes when the trap is missed.
+- corpus_pages: 1 to 2 markdown documents of fictional catalogue data and maker's rules. Invented firms and products only. Never textbook physics.
+
+Rules:
+1. Closed-world data: every number needed is in the request or the corpus pages.
+2. The selection rule (lightest, cheapest, lowest power...) must pick a DIFFERENT option when the trap is missed. The option picked with the trap missed must fail at least one requirement under the correct method by at least 3%.
+3. Under the correct method, at least one cheaper or lighter option fails; the reference passes every requirement by at least 3%. The option_table must show this.
+4. Several standard methods may exist for a requirement. The verdicts in option_table must not depend on which standard method is used; say which methods you checked.
+5. No trick wording, no ambiguity, no missing or contradictory data. The corpus's notation must be self-consistent and defined.
+6. Before writing each candidate, compute the whole option_table. A candidate whose table does not satisfy rules 2 and 3 is invalid: fix it before writing it.
+7. Output the JSON array only, once. No commentary, no drafts, no restarts.
