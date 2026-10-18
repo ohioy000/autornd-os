@@ -1,0 +1,82 @@
+{
+ "model": "google/gemini-3.8-flash",
+ "n": 3,
+ "samples": {
+  "T4-32": [
+   {
+    "selected_model": "HC-50",
+    "I_allow_A": 36.125,
+    "Ith_allow_A": 57.8,
+    "altitude_margin_m": 1500,
+    "price_EUR": 76
+   },
+   {
+    "selected_model": "HC-50",
+    "I_allow_A": 36.125,
+    "Ith_allow_A": 57.8,
+    "altitude_margin_m": 1500,
+    "price_EUR": 76
+   },
+   {
+    "selected_model": "HC-50",
+    "I_allow_A": 36.125,
+    "Ith_allow_A": 57.8,
+    "altitude_margin_m": 1500,
+    "price_EUR": 76
+   }
+  ],
+  "T4-33": [
+   {
+    "selected_model": "PP-2",
+    "Q_del_m3_s": 0.006396,
+    "H_del_m": 32.4,
+    "P_shaft_kW": 5.143,
+    "NPSHr_visc_m": 2.99,
+    "price_EUR": 1280
+   },
+   {
+    "selected_model": "PP-2",
+    "Q_del_m3_s": 0.006396,
+    "H_del_m": 32.4,
+    "P_shaft_kW": 5.143,
+    "NPSHr_visc_m": 2.99,
+    "price_EUR": 1280
+   },
+   {
+    "selected_model": "PP-2",
+    "Q_del_m3_s": 0.006396,
+    "H_del_m": 32.4,
+    "P_shaft_kW": 5.14,
+    "NPSHr_visc_m": 2.99,
+    "price_EUR": 1280
+   }
+  ],
+  "T4-34": [
+   {
+    "selected_model": "VX-320",
+    "R_req_K_per_W": 0.56,
+    "R_sa_K_per_W": 0.525,
+    "length_mm": 115,
+    "mass_kg": 0.88,
+    "price_EUR": 36
+   },
+   {
+    "selected_model": "VX-320",
+    "R_req_K_per_W": 0.56,
+    "R_sa_K_per_W": 0.525,
+    "length_mm": 115,
+    "mass_kg": 0.88,
+    "price_EUR": 36
+   },
+   {
+    "selected_model": "VX-320",
+    "R_req_K_per_W": 0.56,
+    "R_sa_K_per_W": 0.525,
+    "length_mm": 115,
+    "mass_kg": 0.88,
+    "price_EUR": 36
+   }
+  ]
+ },
+ "spend": 0.06507750000000001
+}
