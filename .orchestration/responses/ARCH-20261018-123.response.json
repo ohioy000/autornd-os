@@ -33,7 +33,20 @@
       "pr": 208,
       "url": "https://github.com/ohioy000/autornd-os/pull/208",
       "head": "73a27f9fcaf6a9d1128889e8fd01b784e7424d13",
-      "state": "open"
+      "state": "open",
+      "ci": "5/5 success"
+    },
+    "ci": {
+      "check_runs": 5,
+      "conclusion": "all success",
+      "jobs": [
+        "docker",
+        "test (3.11)",
+        "test (3.12)",
+        "test (3.13)",
+        "editable-install"
+      ],
+      "commit": "6361b53"
     }
   },
   "deviations": [
