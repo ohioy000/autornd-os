@@ -1,0 +1,63 @@
+{
+ "batch": "batch3",
+ "status": "FROZEN 2026-10-18 by the advisor on the owner's instruction ('B then C, full permission'), the freeze of batch 3 (D44)",
+ "generator": "google/gemini-4-argon",
+ "generator_prompt": "evals/tier4/batch3/generator-v3.txt",
+ "candidates": "evals/tier4/batch3/candidates.json",
+ "candidates_sha256": "5ad86a59868b34d6d653ce70c089ed8fe38bffd0fc193b534a88c64fdf886219",
+ "corpus": {
+  "T4-21": {
+   "pages": [
+    "evals/tier4/batch3/corpus/T4-21-1.md"
+   ],
+   "sha256": "739c2f5db5fd908b74376ddd64148c2a5b3199d939f7ce8948b8453c2b2b2e61"
+  },
+  "T4-22": {
+   "pages": [
+    "evals/tier4/batch3/corpus/T4-22-1.md"
+   ],
+   "sha256": "af4de52b5caf22ddbe4800b0dea80fe80bbe3af2e90e56ee4b2cf3c61ff04e74"
+  },
+  "T4-23": {
+   "pages": [
+    "evals/tier4/batch3/corpus/T4-23-1.md"
+   ],
+   "sha256": "ea7f9847d39db18c68f9a57d3a42b40bc5079ee62deb8be8fffd2d9b7e17a927"
+  },
+  "T4-24": {
+   "pages": [
+    "evals/tier4/batch3/corpus/T4-24-1.md"
+   ],
+   "sha256": "b88a3c747cfc1fcb2a57a083ca2af155de07d484e12396f701930eacefdc1bb9"
+  }
+ },
+ "families": {
+  "T4-21": "F2",
+  "T4-22": "F2",
+  "T4-23": "F2",
+  "T4-24": "F2"
+ },
+ "calibration": {
+  "units": "D-pages on T4-21, T4-22, T4-23 and T4-24, one repetition",
+  "ceiling_usd": 2.0
+ },
+ "pilot": {
+  "ceiling_usd": 5.0,
+  "arms": {
+   "F2": [
+    "D-pages",
+    "F",
+    "E"
+   ]
+  }
+ },
+ "per_unit_ceilings_usd": {
+  "A": 0.15,
+  "D": 0.4,
+  "D-pages": 0.4,
+  "F": 0.4,
+  "E": 1.5
+ },
+ "deadline_seconds": 3600,
+ "single_call_max_tokens": 32768
+}
