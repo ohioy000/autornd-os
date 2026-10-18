@@ -1,0 +1,88 @@
+{
+ "batch": "batch6",
+ "status": "FROZEN 2026-10-18 by the advisor on the owner's instruction ('2 first, full permission') (D44)",
+ "generator": "x-ai/grok-4.7",
+ "generator_prompt": [
+  "evals/tier4/batch6/generator-v4.1-A.txt",
+  "evals/tier4/batch6/generator-v4.1-B.txt"
+ ],
+ "candidates": "evals/tier4/batch6/candidates.json",
+ "candidates_sha256": "10b829e8101e20a438461573784c7b6ecfe591205f6b36243cb847c1fd44d5c8",
+ "corpus": {
+  "T4-51": {
+   "pages": [
+    "evals/tier4/batch6/corpus/T4-51-1.md"
+   ],
+   "sha256": "b1042dfae891f0b7da65fcc77315699ed56e884874f290de055c1b97ca3710d5"
+  },
+  "T4-52": {
+   "pages": [
+    "evals/tier4/batch6/corpus/T4-52-1.md"
+   ],
+   "sha256": "a599f08e08f4a2ea3c219a6bbbb5310b8c61ef21b9b3fb8c4cdce4222716fe50"
+  },
+  "T4-53": {
+   "pages": [
+    "evals/tier4/batch6/corpus/T4-53-1.md"
+   ],
+   "sha256": "bbb3b5366c6d3913762f18741a6a156b2dc4a3917fca2a8e2657fe182a5ea7c7"
+  },
+  "T4-55": {
+   "pages": [
+    "evals/tier4/batch6/corpus/T4-55-1.md"
+   ],
+   "sha256": "141105ba00027e54dbd7cb5ad97569fb3afa36995be95da5b62ce55c7e633cb5"
+  },
+  "T4-56": {
+   "pages": [
+    "evals/tier4/batch6/corpus/T4-56-1.md"
+   ],
+   "sha256": "bf7c8dc5bcee541589508ffd70b059e934af732b79b455f807c0e3395a11d1f7"
+  },
+  "T4-57": {
+   "pages": [
+    "evals/tier4/batch6/corpus/T4-57-1.md",
+    "evals/tier4/batch6/corpus/T4-57-2.md"
+   ],
+   "sha256": "e20cf91a3fe869a3ae7233325568c3d5cf19be6d062d135b1b68caf1b2e0938c"
+  },
+  "T4-58": {
+   "pages": [
+    "evals/tier4/batch6/corpus/T4-58-1.md"
+   ],
+   "sha256": "458705fa839fbe1e881f66526340b19689ca2aacccae15862918b6058180d066"
+  }
+ },
+ "families": {
+  "T4-51": "F2",
+  "T4-52": "F2",
+  "T4-53": "F2",
+  "T4-55": "F2",
+  "T4-56": "F2",
+  "T4-57": "F2",
+  "T4-58": "F2"
+ },
+ "calibration": {
+  "units": "D-pages on T4-51, T4-52, T4-53, T4-55, T4-56, T4-57 and T4-58, one repetition",
+  "ceiling_usd": 2.8
+ },
+ "pilot": {
+  "ceiling_usd": 5.0,
+  "arms": {
+   "F2": [
+    "D-pages",
+    "F",
+    "E"
+   ]
+  }
+ },
+ "per_unit_ceilings_usd": {
+  "A": 0.15,
+  "D": 0.4,
+  "D-pages": 0.4,
+  "F": 0.4,
+  "E": 1.5
+ },
+ "deadline_seconds": 3600,
+ "single_call_max_tokens": 32768
+}

@@ -25,7 +25,7 @@ import recompute_check as rc  # noqa: E402
 N = int(os.environ.get("VOTE_N", "3"))
 FUNCTION, MODEL, MAX_TOKENS = "research", "google/gemini-3.8-flash", 32768
 BATCHES = {"batch2": ROOT / "evals/tier4/batch2", "batch3": ROOT / "evals/tier4/batch3", "batch4": ROOT / "evals/tier4/batch4",
-           "batch5": ROOT / "evals/tier4/batch5"}
+           "batch5": ROOT / "evals/tier4/batch5", "batch6": ROOT / "evals/tier4/batch6"}
 KEY_ROWS = {
     "T4-15": ["Section", "N_cr_TF (kN)", "lambda_bar", "N_b_Rd (kN)"],
     "T4-21": ["Model", "RMS Output Torque (N·m)", "Derated Thermal Torque Limit (N·m)", "Peak Motor Torque (N·m)"],
@@ -38,10 +38,18 @@ KEY_ROWS = {
     "T4-41": ["selected model", "output torque demand (N·m)", "radial load demand (N)"],
     "T4-42": ["selected model", "motor line current (A)", "current compared with I_n (A)"],
     "T4-43": ["selected model", "required head (m)", "NPSH margin (m)"],
+    "T4-51": ["jacket", "heat loss W/m", "outer surface temperature °C"],
+    "T4-52": ["drive", "peak torque N·m", "rms torque N·m"],
+    "T4-53": ["cable", "voltage drop V"],
+    "T4-55": ["Motor", "Torque (N·m)"],
+    "T4-56": ["Bar", "Stress (MPa)"],
+    "T4-57": ["Pump", "NPSH available (m)"],
+    "T4-58": ["Reactor", "Voltage drop (%)"],
 }
 QUESTIONS = {"T4-15": "batch2", "T4-21": "batch3", "T4-22": "batch3", "T4-23": "batch3", "T4-24": "batch3",
              "T4-32": "batch4", "T4-33": "batch4", "T4-34": "batch4",
-             "T4-41": "batch5", "T4-42": "batch5", "T4-43": "batch5"}
+             "T4-41": "batch5", "T4-42": "batch5", "T4-43": "batch5",
+             **{q: "batch6" for q in ("T4-51", "T4-52", "T4-53", "T4-55", "T4-56", "T4-57", "T4-58")}}
 ONLY = [q for q in os.environ.get("VOTE_ONLY", "").split(",") if q]
 
 
