@@ -2054,3 +2054,39 @@ class TestKSingleUseAuthorization:
                 results_path=tmp_path / "second.jsonl"))
         assert "first.jsonl" in str(refused.value)
         assert refused.value.reason == "the authorisation was already spent"
+
+
+class TestLArmFSequenceIsAReport:
+    """R6 carried to tier 4 (2026-10-18): arm F's composed sequence
+    worst case is reported, not refused, because the per-call guard
+    binds. A single tier whose calls cannot fit still refuses."""
+
+    def _rows(self, sequence_refuses, tier_refuses):
+        return [
+            {"tier": "engineering", "serving": "probe/eng", "worst_case": 0.1369,
+             "tier_worst_case": 0.2739, "calls": 2, "refuses_even_at_zero_spend": tier_refuses},
+            {"tier": "sequence", "serving": "verify-first bound", "worst_case": 0.7452,
+             "tier_worst_case": None, "calls": 10, "refuses_even_at_zero_spend": sequence_refuses},
+        ]
+
+    def _preflight(self, monkeypatch, rows):
+        monkeypatch.setattr(runner.tier3, "arm_f_worst_case", lambda *a, **k: rows)
+        servings = runner.DRY_RUN_SERVINGS
+        with runner.tier4_pins(runner.DRY_RUN_PROVIDER_ORDER):
+            return runner.tier4_preflight(
+                servings, runner._dry_run_catalogue(servings),
+                credit=runner.DRY_RUN_CREDIT, ceiling=BATCH2.pilot_ceiling,
+                arms=("F",), questions=BATCH2.questions(), mode="pilot", batch=BATCH2)
+
+    def test_a_sequence_over_the_ceiling_is_reported_not_refused(self, monkeypatch):
+        """Break-proof: drop `and row.get("tier") != "sequence"` from
+        the arm-F refusal, and this test fails - the preflight
+        refuses the pilot at zero spend, as it did on 2026-10-18."""
+        report = self._preflight(monkeypatch, self._rows(True, False))
+        assert not any(r.startswith("arm F/") for r in report.refusals), report.refusals
+        assert any("arm F/sequence" in line and "reported, not refused" in line
+                   for line in report.reports), report.reports
+
+    def test_a_tier_whose_calls_cannot_fit_still_refuses(self, monkeypatch):
+        report = self._preflight(monkeypatch, self._rows(False, True))
+        assert any(r.startswith("arm F/engineering") for r in report.refusals), report.refusals
