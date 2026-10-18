@@ -27,7 +27,14 @@
     "workflow_criterion_g": "workflows/answer-and-recompute.yaml loads (11 nodes); a mocked run delivers with the vote in its outputs once flagged (answer 100.0 vs 2-of-3 majority 200.0) and once not (200.0 vs 200.0/200.0/201.0, majority 200.33 within tolerance); in both the run's status equals that of a run with the vote nodes removed",
     "skip_criterion_b": "with model_recompute unset the recompute node makes zero calls and returns {skipped: true, flagged: false, reason: 'no model configured for the recompute tier — the recompute samples did not run'}; the vote reads the skip as skipped, never as passed",
     "docs_criterion_i": ".env.example carries MODEL_RECOMPUTE= (empty) and RECOMPUTE_MAX_TOKENS=32768; tests/test_docs.py passes; counts re-derived from pytest --collect-only (1611 tests, 82 files) in HANDOVER.md, README.md and AGENTS.md, with the new workflow and tier named where those documents list them",
-    "no_paid_call": "every test is provider-free; the network guard read 0 non-loopback attempts in both suite runs"
+    "no_paid_call": "every test is provider-free; the network guard read 0 non-loopback attempts in both suite runs",
+    "delivery_state": {
+      "branch": "arch/20261018-d53-recompute-vote",
+      "pr": 208,
+      "url": "https://github.com/ohioy000/autornd-os/pull/208",
+      "head": "73a27f9fcaf6a9d1128889e8fd01b784e7424d13",
+      "state": "open"
+    }
   },
   "deviations": [
     {
