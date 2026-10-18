@@ -228,5 +228,71 @@
     "questions_for_advisor": [
       "None new. The owner answered the n=2 question by ordering the re-run; the run's outcome will be recorded in batch2_rerun_n2_2026_10_17 when it completes."
     ]
+  },
+  "batch2_rerun_n2_2026_10_17": {
+    "what": "The outcome of the owner-ordered n=2 re-run (the repeat>1 departure recorded in batch2_rerun_n2_departure_2026_10_17, pre-registered and merged as f925e70 before the paid call).",
+    "run": {
+      "launched": "2026-10-17T23:40:14Z, from the owner's checkout /home/jb/autornd-os",
+      "wall_clock_seconds": 2457,
+      "planned_units": 2,
+      "spent_usd": 0.7527,
+      "authorization_usd": 1.0,
+      "unreconciled_liability_usd": 0.0,
+      "records": "evals/results/20261017T234014Z-tier4-calibration-batch2.jsonl",
+      "unit_T4-15": {
+        "status": "delivered",
+        "finish_reasons": [
+          "stop"
+        ],
+        "truncated": false,
+        "serving_mismatch": false,
+        "serving": "moonshotai/kimi-k3:exacto",
+        "providers_by_tier": {
+          "tier4_arm_d": [
+            "InferenceNet"
+          ]
+        },
+        "serving_pins": [
+          "inference-net/fp4"
+        ],
+        "cost_usd": 0.377860928,
+        "seconds": 1120.711,
+        "answer_chars": 6169,
+        "retries_by_kind": {}
+      },
+      "unit_T4-16": {
+        "status": "delivered",
+        "finish_reasons": [
+          "stop"
+        ],
+        "truncated": false,
+        "serving_mismatch": false,
+        "serving": "moonshotai/kimi-k3:exacto",
+        "providers_by_tier": {
+          "tier4_arm_d": [
+            "InferenceNet"
+          ]
+        },
+        "serving_pins": [
+          "inference-net/fp4"
+        ],
+        "cost_usd": 0.37484024,
+        "seconds": 1336.425,
+        "answer_chars": 6437,
+        "retries_by_kind": {}
+      }
+    },
+    "the_n2_reading": "Across the two runs (each a fresh timestamped results file, the full 2-unit plan executed per invocation): T4-15 delivered in both runs ($0.3629 + $0.3779, complete answers) - 2/2. T4-16 was an empty reply at the 32768 cap in run 1 ($0.3917, recorded and excluded per R8) and delivered in run 2 ($0.3748, a 6437-char answer, finish_reason=stop) - 1/2 delivered, 1 refusal. The D-pages arm delivers at the registered cap on the owner's ratified pin: 3 of 4 units delivered; the single refusal was the empty-reply-at-cap class. The calibration's central question - whether the arm delivers reliably at 32768 tokens on the pinned provider - reads: yes, with one observed empty-reply-at-cap (a provider/model behaviour at the cap, recorded as a fact, not diagnosed - convention 18).",
+    "prediction_scorecard": "Pre-registered before the paid call: 'if both units behave like this morning's, expected spend is ~$0.75 and the reading is 1 delivered + 1 empty-reply-at-cap again; if the T4-16 class was the coin flip, the reading is 2 delivered.' The spend prediction was accurate ($0.7527 actual vs ~$0.75 predicted); the reading followed the coin-flip branch - 2 delivered - so the T4-16 empty reply was the flip, not a stable behaviour. Reported as measured, not adjusted to the prediction (convention 7).",
+    "instrument_proof": "The serving_mismatch name-form repair (aaba2d2, PR 191) is proven live: both re-run units carry serving_mismatch=false with providers_by_tier ['InferenceNet'] against serving_pins ['inference-net/fp4'] - the normalized comparison reads the pinned serving correctly, where the pre-repair comparison printed 'readable 0/2' on this morning's identically-served units. The run summary read 'readable 2/2'.",
+    "observed_facts": "Both units ran long (1120.7s and 1336.4s vs the registered 3600s per-unit deadline - within it): the provider streamed in bursts with multi-minute stalls (observed directly on the process: rchar frozen for ~11 minutes on unit 1, then a re-dispatched request on a second connection and resumed streaming). The records carry retries_by_kind={} - no retry was recorded by the instrument; the wall clock is the fact the record states. No unit hit the deadline; no unit was truncated; no unit was mis-served.",
+    "total_spend_both_runs": "$0.7546 (run 1) + $0.7527 (run 2) = $1.5073 across the two $1.00 authorizations, each within its own authorization and each with $0.0000 unreconciled liability.",
+    "deviations": [
+      "None beyond the logged departure itself (the repetition, bought under the owner's repeat>1 gate)."
+    ],
+    "questions_for_advisor": [
+      "The n=2 reading is in: the D-pages arm delivers at the 32768 cap on the pinned provider (3/4 delivered; one empty-reply-at-cap). If the calibration's conclusion is to rest on n=2, it does; if a third sample is wanted (another $0.80 worst case), that is another owner repeat>1 order.",
+      "The provider's stalls (multi-minute, twice in unit 1) are facts about the apparatus at the 32768 cap. Whether the tier-4 per-unit deadline (3600s) remains the right bound for a single 32768-token call - given the observed 18-22 minute wall clocks - is a ruling if the advisor wants the deadline re-derived; the executor does not change it (it is a registered figure, R9)."
+    ]
   }
 }
