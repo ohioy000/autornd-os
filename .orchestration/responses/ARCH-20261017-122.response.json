@@ -58,6 +58,11 @@
       },
       "the_advisors_reading": "F's answer selects VM-C180, the correct section, but couples torsion with minor-axis flexure (N_cr,y 373.1 kN), giving N_cr,TF 229.3 kN against the correct 312.16 (coupling with flexure about the axis of symmetry, N_cr,x 1255.1 kN), lambda 1.293 against 1.108, and N_b,Rd 151.7 kN against 187.06. R4 to R6 do not hold: the unit fails. It is the same error the strong single call made in both calibration runs: two different answering models read EN 1993-1-3's y-y (axis of symmetry) as the corpus's y (minor axis). The check did not catch it. Its one dissent was false, and it approved the revision with the error intact.",
       "what_the_pilot_shows": "On the one question with headroom, no arm produced a correct answer. The only answer delivered came from verify-first, carrying the single call's error, and its check raised a false objection and missed the real one. The pipeline did not reach a plan: its architecture serving exhausted 32768 tokens three times. The strong single call exhausted the same cap once in three tries on T4-15. Reasoning-budget exhaustion at 32768 tokens is a failure class on these questions. The pilot gives no verdict (D52 section 5)."
+    },
+    "batch3_calibration_2026_10_18": {
+      "run": "run calibration --batch evals/tier4/batch3, launched by the advisor (owner: 'B then C, full permission'), TIER3_SPEND_AUTHORIZED=2.00 (claimed, R11): 4 units, $0.9683, $0.0000 unreconciled liability, 2320 s, all served by InferenceNet (the pin). Trace docs/traces/20261018T034225Z-tier4-calibration-batch3.jsonl (sha256 eb31aabbc20978bc…).",
+      "the_advisors_reading": "D-pages correct on all four: T4-21 KGD-90-10, T4-22 VFC-9100-M, T4-23 TVC-250-AL, T4-24 5 x EPC-1200-60, every key value matching evals/tier4/batch3/verify.py. No batch-3 question has headroom against the strong single call; none goes to a pilot.",
+      "findings_record": "docs/reviews/2026-10-18-tier4-pilot-and-recompute-findings.md"
     }
   },
   "deviations": [
