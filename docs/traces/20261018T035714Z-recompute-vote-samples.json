@@ -1,0 +1,170 @@
+{
+ "model": "google/gemini-3.8-flash",
+ "n": 3,
+ "samples": {
+  "T4-15": [
+   {
+    "Section": "VM-C180",
+    "A (mm2)": 1080,
+    "r_y (mm)": 38.73,
+    "r_0 (mm)": 98.06,
+    "N_cr_y (kN)": 373.07,
+    "N_cr_T (kN)": 345.14,
+    "N_cr_TF (kN)": 312.17,
+    "lambda_bar": 1.11,
+    "chi": 0.53,
+    "N_b_Rd (kN)": 187.06,
+    "Utilization": 0.615
+   },
+   {
+    "Section": "VM-C180",
+    "A (mm2)": 1080,
+    "r_y (mm)": 38.73,
+    "r_0 (mm)": 98.06,
+    "N_cr_y (kN)": 373.07,
+    "N_cr_T (kN)": 345.14,
+    "N_cr_TF (kN)": 312.16,
+    "lambda_bar": 1.11,
+    "chi": 0.53,
+    "N_b_Rd (kN)": 187.05,
+    "Utilization": 0.615
+   },
+   {
+    "Section": "VM-C180",
+    "A (mm2)": 1080,
+    "r_y (mm)": 38.73,
+    "r_0 (mm)": 98.06,
+    "N_cr_y (kN)": 373.07,
+    "N_cr_T (kN)": 345.14,
+    "N_cr_TF (kN)": 312.16,
+    "lambda_bar": 1.11,
+    "chi": 0.53,
+    "N_b_Rd (kN)": 187.05,
+    "Utilization": 0.615
+   }
+  ],
+  "T4-21": [
+   {
+    "Model": "KGD-90-10",
+    "Ratio": 10,
+    "Mass (kg)": 7.0,
+    "Peak Output Torque (N\u00b7m)": 85.0,
+    "RMS Output Torque (N\u00b7m)": 72.45,
+    "Derated Thermal Torque Limit (N\u00b7m)": 77.49,
+    "Equivalent Radial Load (N)": 2880,
+    "Bearing Life L10h (h)": 23709,
+    "Peak Motor Torque (N\u00b7m)": 15.11
+   },
+   {
+    "Model": "KGD-90-10",
+    "Ratio": 10,
+    "Mass (kg)": 7.0,
+    "Peak Output Torque (N\u00b7m)": 85.0,
+    "RMS Output Torque (N\u00b7m)": 72.45,
+    "Derated Thermal Torque Limit (N\u00b7m)": 77.49,
+    "Equivalent Radial Load (N)": 2880,
+    "Bearing Life L10h (h)": 23710,
+    "Peak Motor Torque (N\u00b7m)": 15.11
+   },
+   {
+    "Model": "KGD-90-10",
+    "Ratio": 10,
+    "Mass (kg)": 7.0,
+    "Peak Output Torque (N\u00b7m)": 85.0,
+    "RMS Output Torque (N\u00b7m)": 72.45,
+    "Derated Thermal Torque Limit (N\u00b7m)": 77.49,
+    "Equivalent Radial Load (N)": 2880,
+    "Bearing Life L10h (h)": 23803,
+    "Peak Motor Torque (N\u00b7m)": 15.11
+   }
+  ],
+  "T4-22": [
+   {
+    "Model": "VFC-9100-M",
+    "Nominal Size DN (mm)": 100,
+    "Mass (kg)": 79.0,
+    "Piping Geometry Factor Fp": 0.964,
+    "Required Cv at Max Flow": 60.72,
+    "Travel at Max Flow (%)": 75.91,
+    "Travel at Min Flow (%)": 12.89,
+    "Allowable Incipient Pressure Drop dP_ic (kPa)": 1065.0
+   },
+   {
+    "Model": "VFC-9100-M",
+    "Nominal Size DN (mm)": 100,
+    "Mass (kg)": 79.0,
+    "Piping Geometry Factor Fp": 0.964,
+    "Required Cv at Max Flow": 60.72,
+    "Travel at Max Flow (%)": 75.91,
+    "Travel at Min Flow (%)": 12.89,
+    "Allowable Incipient Pressure Drop dP_ic (kPa)": 1064.95
+   },
+   {
+    "Model": "VFC-9100-M",
+    "Nominal Size DN (mm)": 100,
+    "Mass (kg)": 79.0,
+    "Piping Geometry Factor Fp": 0.964,
+    "Required Cv at Max Flow": 60.72,
+    "Travel at Max Flow (%)": 75.91,
+    "Travel at Min Flow (%)": 12.89,
+    "Allowable Incipient Pressure Drop dP_ic (kPa)": 1064.98
+   }
+  ],
+  "T4-23": [
+   {
+    "Model": "TVC-250-AL",
+    "Mass (kg)": 1.85,
+    "Channel Velocity (m/s)": 1.56,
+    "Corrected Pressure Drop (kPa)": 35.58,
+    "Coolant Outlet Temp (\u00b0C)": 48.57,
+    "Peak Baseplate Temp (\u00b0C)": 91.31
+   },
+   {
+    "Model": "TVC-250-AL",
+    "Mass (kg)": 1.85,
+    "Channel Velocity (m/s)": 1.56,
+    "Corrected Pressure Drop (kPa)": 35.59,
+    "Coolant Outlet Temp (\u00b0C)": 48.57,
+    "Peak Baseplate Temp (\u00b0C)": 91.31
+   },
+   {
+    "Model": "TVC-250-AL",
+    "Mass (kg)": 1.85,
+    "Channel Velocity (m/s)": 1.56,
+    "Corrected Pressure Drop (kPa)": 35.73,
+    "Coolant Outlet Temp (\u00b0C)": 48.57,
+    "Peak Baseplate Temp (\u00b0C)": 91.31
+   }
+  ],
+  "T4-24": [
+   {
+    "Bank Configuration": "5 \u00d7 EPC-1200-60",
+    "Total Bank Cost (USD)": 650,
+    "Total Capacitance (\u00b5F)": 300.0,
+    "Derated Working Voltage Limit (V)": 1038.0,
+    "Peak Operating Voltage (V)": 1035.0,
+    "Effective Ripple Current per Capacitor (A_rms)": 42.0,
+    "Core Hot-Spot Temp (\u00b0C)": 94.2
+   },
+   {
+    "Bank Configuration": "5 \u00d7 EPC-1200-60",
+    "Total Bank Cost (USD)": 650,
+    "Total Capacitance (\u00b5F)": 300.0,
+    "Derated Working Voltage Limit (V)": 1038.0,
+    "Peak Operating Voltage (V)": 1035.0,
+    "Effective Ripple Current per Capacitor (A_rms)": 42.0,
+    "Core Hot-Spot Temp (\u00b0C)": 94.24
+   },
+   {
+    "Bank Configuration": "5 \u00d7 EPC-1200-60",
+    "Total Bank Cost (USD)": 650,
+    "Total Capacitance (\u00b5F)": 300.0,
+    "Derated Working Voltage Limit (V)": 1038.0,
+    "Peak Operating Voltage (V)": 1035.0,
+    "Effective Ripple Current per Capacitor (A_rms)": 42.0,
+    "Core Hot-Spot Temp (\u00b0C)": 94.2
+   }
+  ]
+ },
+ "spend": 0.5389867500000001
+}

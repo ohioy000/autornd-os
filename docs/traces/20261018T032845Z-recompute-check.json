@@ -1,0 +1,210 @@
+{
+ "checkers": [
+  [
+   "research",
+   "google/gemini-3.8-flash"
+  ],
+  [
+   "judge",
+   "qwen/qwen3-235b-a22b-2507:exacto"
+  ]
+ ],
+ "tol": 0.03,
+ "checker_outputs": {
+  "google/gemini-3.8-flash|T4-15": {
+   "Section": "VM-C180",
+   "A (mm2)": 1080,
+   "r_y (mm)": 38.73,
+   "r_0 (mm)": 98.06,
+   "N_cr_y (kN)": 373.07,
+   "N_cr_T (kN)": 345.14,
+   "N_cr_TF (kN)": 312.17,
+   "lambda_bar": 1.11,
+   "chi": 0.53,
+   "N_b_Rd (kN)": 187.06,
+   "Utilization": 0.615
+  },
+  "google/gemini-3.8-flash|T4-16": {
+   "Model": "KV-100-250",
+   "D_trim (mm)": 228,
+   "v_pipe (m/s)": 3.04,
+   "f_Darcy": 0.0181,
+   "H_sys (m)": 43.1,
+   "NPSH_A (m)": 2.36,
+   "NPSH_R_corr (m)": 1.44,
+   "H_pump (m)": 43.47,
+   "eta_pump": 0.758,
+   "P_shaft (kW)": 16.18,
+   "P_motor_derated (kW)": 19.36
+  },
+  "google/gemini-3.8-flash|T4-04": {
+   "Fan_ID (string)": "F2",
+   "N_f (-)": 34,
+   "D_h (mm)": 7.19,
+   "V_dot (m^3/s)": 0.0381,
+   "Re_Dh (-)": 2861,
+   "h (W/m^2*K)": 43.5,
+   "eta_f (-)": 0.845,
+   "A_eff (m^2)": 0.678,
+   "R_th (K/W)": 0.0475,
+   "T_b (degC)": 69.2,
+   "m_sink (kg)": 2.52
+  },
+  "qwen/qwen3-235b-a22b-2507:exacto|T4-15": {
+   "_error": "HTTPStatusError: 404 from chat/completions: No endpoints found for qwen/qwen3-235b-a22b-2507:exacto. Every candidate endpoint was removed during routing: Filter by Context Length removed deepinfra/fp8"
+  },
+  "qwen/qwen3-235b-a22b-2507:exacto|T4-16": {
+   "_error": "HTTPStatusError: 404 from chat/completions: No endpoints found for qwen/qwen3-235b-a22b-2507:exacto. Every candidate endpoint was removed during routing: Filter by Context Length removed deepinfra/fp8"
+  },
+  "qwen/qwen3-235b-a22b-2507:exacto|T4-04": {
+   "_error": "HTTPStatusError: 404 from chat/completions: No endpoints found for qwen/qwen3-235b-a22b-2507:exacto. Every candidate endpoint was removed during routing: Filter by Context Length removed deepinfra/fp8"
+  }
+ },
+ "results": [
+  {
+   "answer": "20261017T210922Z D-pages",
+   "question": "T4-15",
+   "truth": "wrong",
+   "checker": "google/gemini-3.8-flash",
+   "flagged": true,
+   "diffs": [
+    [
+     "N_cr_TF (kN)",
+     228.986,
+     312.17
+    ],
+    [
+     "N_b_Rd (kN)",
+     151.603,
+     187.06
+    ]
+   ]
+  },
+  {
+   "answer": "20261017T210922Z D-pages",
+   "question": "T4-15",
+   "truth": "wrong",
+   "checker": "qwen/qwen3-235b-a22b-2507:exacto",
+   "flagged": null,
+   "diffs": null
+  },
+  {
+   "answer": "20261017T234014Z D-pages",
+   "question": "T4-15",
+   "truth": "wrong",
+   "checker": "google/gemini-3.8-flash",
+   "flagged": true,
+   "diffs": [
+    [
+     "N_cr_TF (kN)",
+     228.986,
+     312.17
+    ],
+    [
+     "lambda_bar",
+     1.293962,
+     1.11
+    ],
+    [
+     "N_b_Rd (kN)",
+     151.603,
+     187.06
+    ]
+   ]
+  },
+  {
+   "answer": "20261017T234014Z D-pages",
+   "question": "T4-15",
+   "truth": "wrong",
+   "checker": "qwen/qwen3-235b-a22b-2507:exacto",
+   "flagged": null,
+   "diffs": null
+  },
+  {
+   "answer": "20261017T234014Z D-pages",
+   "question": "T4-16",
+   "truth": "correct",
+   "checker": "google/gemini-3.8-flash",
+   "flagged": false,
+   "diffs": []
+  },
+  {
+   "answer": "20261017T234014Z D-pages",
+   "question": "T4-16",
+   "truth": "correct",
+   "checker": "qwen/qwen3-235b-a22b-2507:exacto",
+   "flagged": null,
+   "diffs": null
+  },
+  {
+   "answer": "20261018T022735Z F",
+   "question": "T4-15",
+   "truth": "wrong",
+   "checker": "google/gemini-3.8-flash",
+   "flagged": true,
+   "diffs": [
+    [
+     "N_cr_TF (kN)",
+     229.3,
+     312.17
+    ],
+    [
+     "lambda_bar",
+     1.29,
+     1.11
+    ],
+    [
+     "N_b_Rd (kN)",
+     151.7,
+     187.06
+    ]
+   ]
+  },
+  {
+   "answer": "20261018T022735Z F",
+   "question": "T4-15",
+   "truth": "wrong",
+   "checker": "qwen/qwen3-235b-a22b-2507:exacto",
+   "flagged": null,
+   "diffs": null
+  },
+  {
+   "answer": "20261017T021010Z D",
+   "question": "T4-04",
+   "truth": "correct",
+   "checker": "google/gemini-3.8-flash",
+   "flagged": false,
+   "diffs": []
+  },
+  {
+   "answer": "20261017T021010Z D",
+   "question": "T4-04",
+   "truth": "correct",
+   "checker": "qwen/qwen3-235b-a22b-2507:exacto",
+   "flagged": null,
+   "diffs": null
+  },
+  {
+   "answer": "verified reference",
+   "question": "T4-15",
+   "truth": "correct",
+   "checker": "google/gemini-3.8-flash",
+   "flagged": false,
+   "diffs": []
+  },
+  {
+   "answer": "verified reference",
+   "question": "T4-15",
+   "truth": "correct",
+   "checker": "qwen/qwen3-235b-a22b-2507:exacto",
+   "flagged": null,
+   "diffs": null
+  }
+ ],
+ "spend": 0.121941,
+ "providers": {
+  "research": [
+   "Google AI Studio"
+  ]
+ }
+}
