@@ -1,0 +1,1279 @@
+[
+ {
+  "id": "T4-51",
+  "family": "F2",
+  "domain": "thermal",
+  "request": "Calder Insulation's Kestrel jacket line is to cover a horizontal steel pipe whose outer diameter is 120 mm. The metal outer surface is held at 200 °C. Ambient air is 25 °C. Use an external surface coefficient of 8.0 W/m²·K, already combining convection and radiation. The jacket must reject no more than 80 W per metre of pipe, the outer jacket surface must not exceed 50 °C, the radial build must not exceed 60 mm, and the installed mass must not exceed 3.0 kg/m. Choose the lowest-cost jacket that meets the duty. Catalogue data are the only product data. End with a table headed Results with these rows: jacket, heat loss W/m, outer surface temperature °C, cost EUR/m.",
+  "requirements": [
+   {
+    "id": "R1",
+    "statement": "Heat loss at the duty is at most 80 W/m.",
+    "method": "q = 2*pi*(200-25)/(ln(ro/ri)/k + 1/(8*ro)) with ri = 0.060 m and ro = ri + thickness. k = k_20*(1+b*((200+Ts)/2-20)) and Ts = 25 + q/(2*pi*ro*8), solved together. Pass if q <= 80.",
+    "tolerance": "±2% on q"
+   },
+   {
+    "id": "R2",
+    "statement": "Outer jacket surface temperature is at most 50 °C.",
+    "method": "Ts from the same solution as R1. Pass if Ts <= 50.",
+    "tolerance": "±1 °C"
+   },
+   {
+    "id": "R3",
+    "statement": "Radial build does not exceed 60 mm.",
+    "method": "Pass if catalogue thickness <= 60 mm.",
+    "tolerance": "exact"
+   },
+   {
+    "id": "R4",
+    "statement": "Installed mass does not exceed 3.0 kg/m.",
+    "method": "Pass if catalogue mass <= 3.0 kg/m.",
+    "tolerance": "exact"
+   }
+  ],
+  "trap": {
+   "judgment": "Layer conductivity has to be taken at the mean temperature of the insulation, not at the 20 °C catalogue measurement temperature.",
+   "source": "reference condition",
+   "why_missed": "The conduction calculation has an obvious conductivity sitting in the product row. The temperature coefficient is easy to treat as a footnote and leave unused in a single pass.",
+   "not_stated": "Corpus: 'Conductivity k20 is the measured value at 20 °C. The coefficient b is the fractional change of conductivity per kelvin relative to 20 °C.' Request: 'The metal outer surface is held at 200 °C.' Neither sentence says which temperature the conduction calculation must use, nor does the corpus give a selection rule that substitutes for that judgment."
+  },
+  "option_table": {
+   "correct_method": [
+    {
+     "option": "KJ-20",
+     "q_W_per_m": 158.3,
+     "Ts_C": 64.4,
+     "thickness_mm": 20,
+     "mass_kg_per_m": 1.1,
+     "cost_EUR_per_m": 14,
+     "R1": "fail",
+     "R2": "fail",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "KJ-40",
+     "q_W_per_m": 93.89,
+     "Ts_C": 43.68,
+     "thickness_mm": 40,
+     "mass_kg_per_m": 2.0,
+     "cost_EUR_per_m": 26,
+     "R1": "fail",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "KJ-55",
+     "q_W_per_m": 58.42,
+     "Ts_C": 35.1,
+     "thickness_mm": 55,
+     "mass_kg_per_m": 2.6,
+     "cost_EUR_per_m": 39,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "KJ-70",
+     "q_W_per_m": 54.92,
+     "Ts_C": 33.41,
+     "thickness_mm": 70,
+     "mass_kg_per_m": 3.4,
+     "cost_EUR_per_m": 52,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "fail",
+     "R4": "fail"
+    }
+   ],
+   "trap_missed_k_at_20C": [
+    {
+     "option": "KJ-20",
+     "q_W_per_m": 125.6,
+     "Ts_C": 56.23,
+     "thickness_mm": 20,
+     "mass_kg_per_m": 1.1,
+     "cost_EUR_per_m": 14,
+     "R1": "fail",
+     "R2": "fail",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "KJ-40",
+     "q_W_per_m": 71.22,
+     "Ts_C": 39.17,
+     "thickness_mm": 40,
+     "mass_kg_per_m": 2.0,
+     "cost_EUR_per_m": 26,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "KJ-55",
+     "q_W_per_m": 51.34,
+     "Ts_C": 33.88,
+     "thickness_mm": 55,
+     "mass_kg_per_m": 2.6,
+     "cost_EUR_per_m": 39,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "KJ-70",
+     "q_W_per_m": 46.39,
+     "Ts_C": 32.1,
+     "thickness_mm": 70,
+     "mass_kg_per_m": 3.4,
+     "cost_EUR_per_m": 52,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "fail",
+     "R4": "fail"
+    }
+   ],
+   "selection_correct": "KJ-55",
+   "selection_trap_missed": "KJ-40",
+   "methods_checked": "Same pass/fail, with at least 3% margin, using k at the mean of pipe and outer surface, k at the mean of pipe and ambient (112.5 °C), and k at the pipe temperature (200 °C). KJ-40 heat loss is 93.9, 91.8 and 110.4 W/m. KJ-55 heat loss is 58.4, 56.7 and 64.3 W/m."
+  },
+  "reference_design": {
+   "jacket": "KJ-55",
+   "heat_loss_W_per_m": 58.42,
+   "outer_surface_temperature_C": 35.1,
+   "cost_EUR_per_m": 39
+  },
+  "worked_solution": "ri = 0.060 m. ro = 0.060 + t. q = 2*pi*175 / (ln(ro/ri)/k + 1/(8*ro)), Ts = 25 + q/(2*pi*ro*8), Tm = (200+Ts)/2, k = k20*(1+b*(Tm-20)). KJ-20: ro=0.080, ln=0.287682. Converged k=0.05345, q=158.3 W/m, Ts=64.4 °C. Fails R1 and R2. KJ-40: ro=0.100, ln=0.510826. Iteration: Tm=121.84 °C, k=0.048831, conduction resistance 10.462 K·m/W, surface resistance 1.250, total 11.712, q=93.89 W/m, Ts=43.68 °C. Fails R1 by 17%. KJ-55: ro=0.115, ln=0.650587, surface resistance 1.08696. Tm=117.55 °C, k=0.036682, total resistance 18.823, q=58.42 W/m, Ts=35.10 °C. Margins: heat loss 27%, surface 30%, build 8%, mass 13%. KJ-70: ro=0.130, ln=0.77319, q=54.92 W/m, Ts=33.41 °C, but thickness 70 mm and mass 3.4 kg/m fail. Lowest cost among fully passing jackets is KJ-55. Using k20 only, KJ-40 gives q=71.22 W/m and Ts=39.17 °C and would be chosen, but that understates the duty heat loss.",
+  "wrong_designs": [
+   {
+    "values": {
+     "jacket": "KJ-40",
+     "heat_loss_W_per_m": 71.22,
+     "outer_surface_temperature_C": 39.17,
+     "cost_EUR_per_m": 26
+    },
+    "failed_requirement_ids": [
+     "R1"
+    ],
+    "why": "This is the lowest-cost jacket if conductivity is left at the 20 °C catalogue value. At the layer mean temperature the heat loss is 93.89 W/m, 17% over 80 W/m."
+   },
+   {
+    "values": {
+     "jacket": "KJ-20",
+     "heat_loss_W_per_m": 158.3,
+     "outer_surface_temperature_C": 64.4,
+     "cost_EUR_per_m": 14
+    },
+    "failed_requirement_ids": [
+     "R1",
+     "R2"
+    ],
+    "why": "Cheapest catalogue row. Heat loss and surface temperature both exceed the duty limits."
+   }
+  ],
+  "corpus_pages": [
+   {
+    "title": "Calder Insulation Kestrel jackets, catalogue sheet K-14",
+    "markdown": "# Calder Insulation — Kestrel jackets\n\nPrefabricated pipe jackets. Dimensions are radial build on the stated pipe. Mass is the installed mass per metre of pipe.\n\nConductivity k20 is the measured value at 20 °C. The coefficient b is the fractional change of conductivity per kelvin relative to 20 °C, so that a conductivity reported at temperature T (°C) is k20*(1+b*(T-20)).\n\n| Jacket | Thickness mm | k20 W/m·K | b 1/K | Mass kg/m | Cost EUR/m |\n| --- | --- | --- | --- | --- | --- |\n| KJ-20 | 20 | 0.040 | 0.0030 | 1.1 | 14 |\n| KJ-40 | 40 | 0.036 | 0.0035 | 2.0 | 26 |\n| KJ-55 | 55 | 0.032 | 0.0015 | 2.6 | 39 |\n| KJ-70 | 70 | 0.034 | 0.0020 | 3.4 | 52 |\n\nJackets listed for pipe outer diameter 120 mm. Prices are supply cost per metre of pipe."
+   }
+  ]
+ },
+ {
+  "id": "T4-52",
+  "family": "F2",
+  "domain": "controls",
+  "request": "A Helion Motion Arc geared servo is to index a turntable. The table inertia is 1.20 kg·m². Coulomb friction at the table is 4.0 N·m and always opposes motion. Each move is rest to rest through 90° in 0.40 s with a symmetric triangular speed profile, followed by a dwell; the cycle is 2.0 s. The motor peak torque must not exceed the catalogue peak, the cycle rms torque must not exceed the catalogue continuous torque, motor speed must not exceed the catalogue maximum, and torque at the gearbox output must not exceed the catalogue output rating. Losses in the gearing are negligible. Select the lowest-cost drive. End with a table headed Results with these rows: drive, peak torque N·m, rms torque N·m, peak speed rad/s, cost EUR.",
+  "requirements": [
+   {
+    "id": "R1",
+    "statement": "Peak torque at the motor shaft does not exceed the catalogue peak torque.",
+    "method": "alpha_table = 2*(pi/2)/(0.40^2) = 39.270 rad/s². alpha_m = N*alpha_table. T_acc = (Jm + 1.20/N^2)*alpha_m + 4.0/N. Pass if T_acc <= T_peak.",
+    "tolerance": "±2% on torque"
+   },
+   {
+    "id": "R2",
+    "statement": "RMS motor torque over the 2.0 s cycle does not exceed the catalogue continuous torque.",
+    "method": "T_dec = (Jm + 1.20/N^2)*alpha_m - 4.0/N. T_rms = sqrt((T_acc^2 + T_dec^2)*0.20/2.0). Pass if T_rms <= T_cont.",
+    "tolerance": "±2% on torque"
+   },
+   {
+    "id": "R3",
+    "statement": "Peak motor speed does not exceed the catalogue maximum.",
+    "method": "omega_m = N*2*(pi/2)/0.40. Pass if omega_m <= n_max*2*pi/60.",
+    "tolerance": "±1%"
+   },
+   {
+    "id": "R4",
+    "statement": "Gearbox output torque does not exceed the catalogue output rating.",
+    "method": "T_out = T_acc*N. Pass if T_out <= T_out_max.",
+    "tolerance": "±2%"
+   }
+  ],
+  "trap": {
+   "judgment": "Table inertia is carried by the motor as J/N², and it dominates the acceleration torque.",
+   "source": "implied load case",
+   "why_missed": "The catalogue already lists a motor torque rating and a ratio, so a one-pass sizing uses friction divided by ratio plus rotor inertia. The table inertia is left on the load side of the ratio.",
+   "not_stated": "Corpus: 'Ratio N is motor-shaft revolutions per output revolution. Torque ratings are at the motor shaft. Jm is the motor rotor inertia.' Request: 'The table inertia is 1.20 kg·m².' Neither sentence states that the table inertia is divided by N², and the corpus has no application rule that performs that step."
+  },
+  "option_table": {
+   "correct_method": [
+    {
+     "option": "A20",
+     "T_acc_Nm": 5.183,
+     "T_rms_Nm": 2.147,
+     "omega_rad_s": 78.54,
+     "T_out_Nm": 51.83,
+     "cost": 610,
+     "R1": "fail",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "A40",
+     "T_acc_Nm": 2.674,
+     "T_rms_Nm": 1.11,
+     "omega_rad_s": 157.08,
+     "T_out_Nm": 53.48,
+     "cost": 470,
+     "R1": "fail",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "A60",
+     "T_acc_Nm": 1.999,
+     "T_rms_Nm": 0.836,
+     "omega_rad_s": 235.62,
+     "T_out_Nm": 59.96,
+     "cost": 690,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "A80",
+     "T_acc_Nm": 1.906,
+     "T_rms_Nm": 0.809,
+     "omega_rad_s": 314.16,
+     "T_out_Nm": 76.26,
+     "cost": 880,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    }
+   ],
+   "trap_missed_load_inertia_omitted": [
+    {
+     "option": "A20",
+     "T_acc_Nm": 0.471,
+     "T_rms_Nm": 0.145,
+     "omega_rad_s": 78.54,
+     "T_out_Nm": 4.71,
+     "cost": 610,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "A40",
+     "T_acc_Nm": 0.318,
+     "T_rms_Nm": 0.098,
+     "omega_rad_s": 157.08,
+     "T_out_Nm": 6.36,
+     "cost": 470,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "A60",
+     "T_acc_Nm": 0.428,
+     "T_rms_Nm": 0.144,
+     "omega_rad_s": 235.62,
+     "T_out_Nm": 12.83,
+     "cost": 690,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "A80",
+     "T_acc_Nm": 0.728,
+     "T_rms_Nm": 0.246,
+     "omega_rad_s": 314.16,
+     "T_out_Nm": 29.13,
+     "cost": 880,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    }
+   ],
+   "selection_correct": "A60",
+   "selection_trap_missed": "A40",
+   "methods_checked": "Verdicts are unchanged if friction is omitted on both accel and decel, or added in the same sense on both. A40 inertia torque alone is 2.474 N·m against a 2.40 N·m peak (fail by 3.1%). A60 inertia torque alone is 1.865 N·m against 3.50 N·m (pass by 47%). Speed and output-rating verdicts do not depend on the inertia split."
+  },
+  "reference_design": {
+   "drive": "A60",
+   "peak_torque_Nm": 1.999,
+   "rms_torque_Nm": 0.836,
+   "peak_speed_rad_s": 235.62,
+   "cost_EUR": 690
+  },
+  "worked_solution": "Move angle pi/2 rad in 0.40 s, triangular speed: peak table speed 7.854 rad/s, table acceleration 39.270 rad/s², accel and decel each 0.20 s. Motor acceleration is N times the table acceleration. Motor torque uses J = Jm + 1.20/N² and friction 4/N. A20: J=0.01218, alpha_m=392.70, T_acc=5.183 N·m > 4.80, T_rms=2.147, speed 78.54 rad/s, output 51.8 N·m. Fails peak by 8%. A40: J=0.00315, alpha_m=785.40, T_acc=2.674 N·m > 2.40 (fail by 11%), T_dec=2.274, T_rms=1.110, speed 157.08 rad/s, output 53.5 N·m. A60: J=0.0015833, alpha_m=1178.1, inertia torque 1.865, T_acc=1.999 N·m (43% under 3.50), T_dec=1.732, T_rms=0.836 (54% under 1.80), speed 235.62 rad/s against 418.9 rad/s, output 60.0 N·m against 90. A80 also passes at higher cost. Lowest-cost pass is A60. Omitting table inertia makes A40 peak torque 0.318 N·m, so A40 would be selected and then exceeds its peak by 11%.",
+  "wrong_designs": [
+   {
+    "values": {
+     "drive": "A40",
+     "peak_torque_Nm": 0.318,
+     "rms_torque_Nm": 0.098,
+     "peak_speed_rad_s": 157.08,
+     "cost_EUR": 470
+    },
+    "failed_requirement_ids": [
+     "R1"
+    ],
+    "why": "Lowest cost if table inertia is not brought across the ratio. With J/N² included the peak motor torque is 2.674 N·m, 11% above the 2.40 N·m peak rating."
+   },
+   {
+    "values": {
+     "drive": "A20",
+     "peak_torque_Nm": 5.183,
+     "rms_torque_Nm": 2.147,
+     "peak_speed_rad_s": 78.54,
+     "cost_EUR": 610
+    },
+    "failed_requirement_ids": [
+     "R1"
+    ],
+    "why": "Next cheaper drive after A40 still has too little ratio. Peak motor torque 5.183 N·m exceeds 4.80 N·m by 8%."
+   }
+  ],
+  "corpus_pages": [
+   {
+    "title": "Helion Motion Arc geared servos, sheet HM-Arc-3",
+    "markdown": "# Helion Motion — Arc geared servos\n\nIntegral gearbox and servo motor. Ratio N is motor-shaft revolutions per output revolution. Torque ratings are at the motor shaft. Jm is the motor rotor inertia. Output rating is the torque limit at the gearbox output shaft. Maximum speed is motor-shaft speed.\n\n| Drive | N | Jm kg·m² | Continuous torque N·m | Peak torque N·m | Maximum speed rpm | Output rating N·m | Cost EUR |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| A20 | 10 | 0.00018 | 2.50 | 4.80 | 3000 | 80 | 610 |\n| A40 | 20 | 0.00015 | 1.50 | 2.40 | 3000 | 80 | 470 |\n| A60 | 30 | 0.00025 | 1.80 | 3.50 | 4000 | 90 | 690 |\n| A80 | 40 | 0.00040 | 2.20 | 5.00 | 5000 | 120 | 880 |\n\nPeak torque may be used for the acceleration interval. Continuous torque is the thermal rms limit. Gearing loss is not included in the ratings."
+   }
+  ]
+ },
+ {
+  "id": "T4-53",
+  "family": "F2",
+  "domain": "electrical",
+  "request": "A three-phase feeder from a Harton Vanta copper cable is to carry 180 A at 400 V line-to-line over 40 m. The load power factor is 0.85 lagging. Voltage drop must not exceed 3% of 400 V, and the load must not exceed the catalogue ampacity. The board prospective short-circuit current is 12 kA and the breaker total clearing time is 0.8 s. Conductor properties and insulation temperature limits are on the Harton sheet. Select the lowest-cost cable. End with a table headed Results with these rows: cable, ampacity A, voltage drop V, cost EUR/m.",
+  "requirements": [
+   {
+    "id": "R1",
+    "statement": "Catalogue ampacity is at least the 180 A load.",
+    "method": "Pass if catalogue ampacity >= 180 A.",
+    "tolerance": "exact"
+   },
+   {
+    "id": "R2",
+    "statement": "Line voltage drop at 180 A does not exceed 12 V.",
+    "method": "dV = sqrt(3)*180*(R*0.85 + X*sin(arccos(0.85)))*0.040 with catalogue R and X in ohm/km. Pass if dV <= 12.",
+    "tolerance": "±2%"
+   },
+   {
+    "id": "R3",
+    "statement": "Conductor temperature at the end of the 12 kA, 0.8 s fault does not exceed 250 °C.",
+    "method": "Adiabatic copper heating from 90 °C with the catalogue resistivity, temperature coefficient, density and specific heat. Pass if Tf <= 250 °C.",
+    "tolerance": "±3% on (Tf - 90)"
+   },
+   {
+    "id": "R4",
+    "statement": "The selected section is one of the catalogue sections.",
+    "method": "Pass if the reported cable is a catalogue row. Used so every option has a fourth checked field; all four rows pass.",
+    "tolerance": "exact"
+   }
+  ],
+  "trap": {
+   "judgment": "The fault, not the continuous ampacity, governs the section. The 12 kA clearing event heats the conductor adiabatically.",
+   "source": "governing mode",
+   "why_missed": "Ampacity and voltage drop both clear the smallest cable, and those are the checks a feeder sizing closes on. The fault current is read as board data for the breaker rather than as a conductor heating case.",
+   "not_stated": "Corpus: 'Insulation temperature limits: 90 °C continuous, 250 °C short-time.' Request: 'The board prospective short-circuit current is 12 kA and the breaker total clearing time is 0.8 s.' Neither sentence states that the cable section is set by fault heating, and the sheet gives no withstand column or sizing rule."
+  },
+  "option_table": {
+   "correct_method": [
+    {
+     "option": "V50",
+     "ampacity_A": 196,
+     "voltage_drop_V": 5.19,
+     "Tf_C": 573,
+     "cost": 9.2,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "fail",
+     "R4": "pass"
+    },
+    {
+     "option": "V70",
+     "ampacity_A": 246,
+     "voltage_drop_V": 3.86,
+     "Tf_C": 282,
+     "cost": 13.4,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "fail",
+     "R4": "pass"
+    },
+    {
+     "option": "V95",
+     "ampacity_A": 301,
+     "voltage_drop_V": 2.98,
+     "Tf_C": 183,
+     "cost": 18.6,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "V120",
+     "ampacity_A": 352,
+     "voltage_drop_V": 2.47,
+     "Tf_C": 146,
+     "cost": 24.0,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    }
+   ],
+   "trap_missed_fault_heating_not_applied": [
+    {
+     "option": "V50",
+     "ampacity_A": 196,
+     "voltage_drop_V": 5.19,
+     "Tf_C": 90,
+     "cost": 9.2,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "V70",
+     "ampacity_A": 246,
+     "voltage_drop_V": 3.86,
+     "Tf_C": 90,
+     "cost": 13.4,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "V95",
+     "ampacity_A": 301,
+     "voltage_drop_V": 2.98,
+     "Tf_C": 90,
+     "cost": 18.6,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    },
+    {
+     "option": "V120",
+     "ampacity_A": 352,
+     "voltage_drop_V": 2.47,
+     "Tf_C": 90,
+     "cost": 24.0,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    }
+   ],
+   "selection_correct": "V95",
+   "selection_trap_missed": "V50",
+   "methods_checked": "IEC adiabatic form gives k = 142.3 A·s^0.5/mm² and Smin = 75.4 mm². Energy balance with resistivity at the mean of 90 °C and 250 °C gives Smin = 75.9 mm². V70 fails both by 7 to 8%. V95 passes both by 25%. Voltage-drop approximations that drop the reactive term still leave every cable under 6 V against 12 V."
+  },
+  "reference_design": {
+   "cable": "V95",
+   "ampacity_A": 301,
+   "voltage_drop_V": 2.98,
+   "cost_EUR_per_m": 18.6
+  },
+  "worked_solution": "Ampacity and voltage drop use the catalogue. sin(arccos(0.85)) = 0.5268. R at 90 °C is the catalogue value. dV = sqrt(3)*180*(R*0.85+X*0.5268)*0.040 gives 5.19, 3.86, 2.98 and 2.47 V, all under 12 V. All ampacities exceed 180 A. Fault heating: rho20 = 1.724e-8 ohm·m, alpha = 0.00393 /K, beta = 1/alpha - 20 = 234.45 °C, Qc = 8890*385 = 3.42265e6 J/m³·K. k = sqrt(Qc*(beta+20)/rho20 * ln((beta+250)/(beta+90))) = 1.423e8 A/m² = 142.3 A·s^0.5/mm². I*sqrt(t) = 12000*sqrt(0.8) = 10733 A·s^0.5. Smin = 75.4 mm². End temperature from ln((beta+Tf)/(beta+90)) = (I²t)*rho20/(S²*Qc*(beta+20)). V50: Tf = 573 °C. V70: Tf = 282 °C, 13% over 250 °C. V95: Tf = 183 °C, 27% under 250 °C. V120: Tf = 146 °C, higher cost. Lowest-cost cable that also finishes the fault below 250 °C is V95. Matching ampacity and voltage drop only selects V50.",
+  "wrong_designs": [
+   {
+    "values": {
+     "cable": "V50",
+     "ampacity_A": 196,
+     "voltage_drop_V": 5.19,
+     "cost_EUR_per_m": 9.2
+    },
+    "failed_requirement_ids": [
+     "R3"
+    ],
+    "why": "Cheapest cable that covers 180 A and the voltage-drop limit. A 12 kA fault cleared in 0.8 s ends at 573 °C, far above 250 °C."
+   },
+   {
+    "values": {
+     "cable": "V70",
+     "ampacity_A": 246,
+     "voltage_drop_V": 3.86,
+     "cost_EUR_per_m": 13.4
+    },
+    "failed_requirement_ids": [
+     "R3"
+    ],
+    "why": "Next section still has adiabatic end temperature 282 °C, 13% above 250 °C."
+   }
+  ],
+  "corpus_pages": [
+   {
+    "title": "Harton Cable Vanta copper singles, sheet HV-2",
+    "markdown": "# Harton Cable — Vanta single-core copper\n\nInstalled in free air, 40 °C ambient. Ampacity is the continuous current for that arrangement. R and X are per conductor at 90 °C conductor temperature, trefoil.\n\nCopper: electrical resistivity at 20 °C is 1.724e-8 ohm·m. Resistance temperature coefficient is 0.00393 per kelvin from 20 °C. Density 8890 kg/m³. Specific heat 385 J/kg·K.\n\nInsulation temperature limits: 90 °C continuous, 250 °C short-time.\n\n| Cable | Section mm² | Ampacity A | R ohm/km | X ohm/km | Cost EUR/m |\n| --- | --- | --- | --- | --- | --- |\n| V50 | 50 | 196 | 0.4397 | 0.080 | 9.2 |\n| V70 | 70 | 246 | 0.3140 | 0.080 | 13.4 |\n| V95 | 95 | 301 | 0.2314 | 0.080 | 18.6 |\n| V120 | 120 | 352 | 0.1832 | 0.080 | 24.0 |"
+   }
+  ]
+ },
+ {
+  "id": "T4-55",
+  "family": "F2",
+  "domain": "mechanical",
+  "request": "Select the cheapest Kestrel motor from Northline Drives for a belt-driven mixer. The process shaft runs at 3600 rpm and requires a steady torque of 15 N·m. The motor pulley pitch diameter is 240 mm and the process-shaft pulley pitch diameter is 80 mm. Belt-drive efficiency is 0.96. The motor must be able to drive the mixer at this duty. Rated current shall not exceed 16 A and mass shall not exceed 40 kg. Use only the Kestrel catalogue. End with a table headed Results with these rows: Motor, Torque (N·m), Speed (rpm), Current (A), Price (EUR).",
+  "requirements": [
+   {
+    "id": "R_torque",
+    "statement": "Catalogue rated torque is at least the torque the motor shaft must deliver.",
+    "method": "Speed ratio = 240/80 = 3. Motor-shaft torque = 15 * 3 / 0.96 = 46.875 N·m. Pass if rated_torque >= Results.Torque, with Results.Torque equal to 46.875 N·m.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_speed",
+    "statement": "Catalogue rated speed is at least 1100 rpm.",
+    "method": "Pass if rated_speed >= 1100 rpm. Results.Speed is the motor rated speed.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_current",
+    "statement": "Catalogue rated current does not exceed 16 A.",
+    "method": "Pass if rated_current <= 16 A. Results.Current is that rated current.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_mass",
+    "statement": "Catalogue mass does not exceed 40 kg.",
+    "method": "Pass if mass_kg <= 40.",
+    "tolerance": "1%"
+   }
+  ],
+  "trap": {
+   "judgment": "The process torque must be reflected to the motor shaft by the speed ratio and the belt efficiency; catalogue torque is compared with 46.875 N·m, not with 15 N·m.",
+   "source": "implied load case",
+   "why_missed": "The stated 15 N·m is the only torque in the duty, and it sits in the same units as the catalogue torque column. In one pass the pulley diameters are used only to confirm that a 1200 rpm motor matches 3600 rpm at the mixer, and the catalogue torque is matched directly to 15 N·m.",
+   "not_stated": "The request says the process shaft 'requires a steady torque of 15 N·m' and gives the two pitch diameters and the efficiency as duty data. The catalogue defines rated torque as the torque available at the motor shaft at rated speed. None of those sentences says to multiply the process torque by the diameter ratio or to divide by belt efficiency."
+  },
+  "option_table": [
+   {
+    "option": "K-20",
+    "correct": {
+     "demand_torque_Nm": 46.875,
+     "rated_torque_Nm": 22,
+     "R_torque": "fail",
+     "shortfall": "53.1%",
+     "rated_speed_rpm": 1200,
+     "R_speed": "pass",
+     "rated_current_A": 5.5,
+     "R_current": "pass",
+     "mass_kg": 18,
+     "R_mass": "pass"
+    },
+    "trap_missed": {
+     "demand_torque_Nm": 15,
+     "rated_torque_Nm": 22,
+     "R_torque": "pass",
+     "margin": "46.7%",
+     "R_speed": "pass",
+     "R_current": "pass",
+     "R_mass": "pass"
+    }
+   },
+   {
+    "option": "K-40",
+    "correct": {
+     "demand_torque_Nm": 46.875,
+     "rated_torque_Nm": 40,
+     "R_torque": "fail",
+     "shortfall": "14.7%",
+     "rated_speed_rpm": 1200,
+     "R_speed": "pass",
+     "rated_current_A": 9.6,
+     "R_current": "pass",
+     "mass_kg": 28,
+     "R_mass": "pass"
+    },
+    "trap_missed": {
+     "demand_torque_Nm": 15,
+     "rated_torque_Nm": 40,
+     "R_torque": "pass",
+     "margin": "166%",
+     "R_speed": "pass",
+     "R_current": "pass",
+     "R_mass": "pass"
+    }
+   },
+   {
+    "option": "K-55",
+    "correct": {
+     "demand_torque_Nm": 46.875,
+     "rated_torque_Nm": 55,
+     "R_torque": "pass",
+     "margin": "17.3%",
+     "rated_speed_rpm": 1200,
+     "R_speed": "pass",
+     "margin_speed": "9.1%",
+     "rated_current_A": 13.2,
+     "R_current": "pass",
+     "margin_current": "17.5%",
+     "mass_kg": 36,
+     "R_mass": "pass",
+     "margin_mass": "10%"
+    },
+    "trap_missed": {
+     "demand_torque_Nm": 15,
+     "R_torque": "pass",
+     "R_speed": "pass",
+     "R_current": "pass",
+     "R_mass": "pass"
+    }
+   },
+   {
+    "option": "K-75",
+    "correct": {
+     "demand_torque_Nm": 46.875,
+     "rated_torque_Nm": 75,
+     "R_torque": "pass",
+     "margin": "60.0%",
+     "rated_speed_rpm": 1200,
+     "R_speed": "pass",
+     "rated_current_A": 18.1,
+     "R_current": "fail",
+     "over": "13.1%",
+     "mass_kg": 48,
+     "R_mass": "fail",
+     "over_mass": "20%"
+    },
+    "trap_missed": {
+     "demand_torque_Nm": 15,
+     "R_torque": "pass",
+     "R_speed": "pass",
+     "R_current": "fail",
+     "R_mass": "fail"
+    }
+   }
+  ],
+  "reference_design": {
+   "Motor": "K-55",
+   "Torque (N·m)": 46.875,
+   "Speed (rpm)": 1200,
+   "Current (A)": 13.2,
+   "Price (EUR)": 1280
+  },
+  "worked_solution": "Pitch diameters fix the speed ratio: ω_process/ω_motor = 240/80 = 3. Motor speed = 3600/3 = 1200 rpm, which matches every Kestrel rated speed. Power is conserved except for belt loss, so motor-shaft torque = 15 × 3 / 0.96 = 46.875 N·m. The same demand is obtained from power: process power = 15 × 3600 × 2π/60 = 5654.9 W; motor output = 5654.9/0.96 = 5890.5 W; torque = 5890.5/(1200 × 2π/60) = 46.875 N·m. Both the torque-reflection and power-reflection methods were checked; they give the same demand and the same pass/fail on every option. K-20 rated 22 N·m is short by 53.1%. K-40 rated 40 N·m is short by 14.7%. K-55 rated 55 N·m has 17.3% spare torque, current 13.2 A is 17.5% under 16 A, mass 36 kg is 10% under 40 kg, price 1280 EUR. K-75 meets torque but its 18.1 A exceeds 16 A by 13.1% and its 48 kg exceeds 40 kg by 20%. Cheapest pass is K-55. Matching catalogue torque to 15 N·m instead selects K-20, which cannot supply 46.875 N·m.",
+  "wrong_designs": [
+   {
+    "values": {
+     "Motor": "K-20",
+     "Torque (N·m)": 15,
+     "Speed (rpm)": 1200,
+     "Current (A)": 5.5,
+     "Price (EUR)": 640
+    },
+    "failed_requirement_ids": [
+     "R_torque"
+    ],
+    "why": "Trap missed: process torque was compared directly with catalogue torque. K-20 is the cheapest motor that then appears to pass, but 22 N·m is 53% below the 46.875 N·m the belt demands at the motor shaft."
+   },
+   {
+    "values": {
+     "Motor": "K-40",
+     "Torque (N·m)": 46.875,
+     "Speed (rpm)": 1200,
+     "Current (A)": 9.6,
+     "Price (EUR)": 910
+    },
+    "failed_requirement_ids": [
+     "R_torque"
+    ],
+    "why": "Correct load path but the next size down. Rated torque 40 N·m is 14.7% below 46.875 N·m."
+   }
+  ],
+  "corpus_pages": [
+   {
+    "title": "Northline Drives — Kestrel motor catalogue",
+    "markdown": "# Northline Drives\n## Kestrel three-phase motors\n\nRated voltage is 400 V. Rated torque is the continuous torque available at the motor shaft at the rated speed. Rated current is the line current at that torque. Mass is the motor mass.\n\n| Model | Rated speed (rpm) | Rated torque (N·m) | Rated current (A) | Mass (kg) | Price (EUR) |\n|---|---:|---:|---:|---:|---:|\n| K-20 | 1200 | 22 | 5.5 | 18 | 640 |\n| K-40 | 1200 | 40 | 9.6 | 28 | 910 |\n| K-55 | 1200 | 55 | 13.2 | 36 | 1280 |\n| K-75 | 1200 | 75 | 18.1 | 48 | 1710 |\n"
+   }
+  ]
+ },
+ {
+  "id": "T4-56",
+  "family": "F2",
+  "domain": "structural",
+  "request": "Select the lightest Plainflat bar from Calder Sections for a static tie. The tie carries a static tensile force of 90 kN. Each end is a clevis; an 18 mm diameter pin passes through one hole in the bar on the bar centreline. The tensile stress shall not exceed 155 MPa. Bar length is 1.5 m. Width shall be at least 40 mm and thickness at least 6 mm. Mass shall not exceed 20 kg. Use only the Plainflat catalogue. End with a table headed Results with these rows: Bar, Stress (MPa), Mass (kg), Width (mm).",
+  "requirements": [
+   {
+    "id": "R_stress",
+    "statement": "Tensile stress does not exceed 155 MPa.",
+    "method": "Anet = (width_mm - 18) * thickness_mm. Stress = 90000 / Anet, with Anet in mm² and stress in N/mm². Pass if Results.Stress <= 155.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_width",
+    "statement": "Width is at least 40 mm.",
+    "method": "Pass if width_mm >= 40. Results.Width is the catalogue width.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_thickness",
+    "statement": "Thickness is at least 6 mm.",
+    "method": "Pass if thickness_mm >= 6.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_mass",
+    "statement": "Mass does not exceed 20 kg.",
+    "method": "Mass = width_mm * thickness_mm * 1e-6 * 1.5 * 7850. Pass if mass <= 20 kg.",
+    "tolerance": "1%"
+   }
+  ],
+  "trap": {
+   "judgment": "With a pin hole on the load path, the tensile stress is the force divided by the net area (width minus hole diameter) times thickness, not by the catalogue section area.",
+   "source": "governing mode",
+   "why_missed": "The catalogue section area is the ready-made divisor for a tensile stress check, and 90 kN over that area already sits near the 155 MPa limit. The hole is read as a clevis detail rather than as the section that sets the stress, so the gross-area stress is the value reported in one pass.",
+   "not_stated": "The request says an 18 mm pin passes through one hole and that the tensile stress shall not exceed 155 MPa. The catalogue defines section area as width times thickness. None of those sentences says to subtract the hole, names a net section, or says which area the stress uses."
+  },
+  "option_table": [
+   {
+    "option": "PF-60x10",
+    "correct": {
+     "width_mm": 60,
+     "thickness_mm": 10,
+     "Anet_mm2": 420,
+     "stress_MPa": 214.29,
+     "R_stress": "fail",
+     "over": "38.2%",
+     "R_width": "pass",
+     "R_thickness": "pass",
+     "mass_kg": 7.065,
+     "R_mass": "pass"
+    },
+    "trap_missed": {
+     "Ag_mm2": 600,
+     "stress_MPa": 150.0,
+     "R_stress": "pass",
+     "margin": "3.2%",
+     "R_width": "pass",
+     "R_thickness": "pass",
+     "mass_kg": 7.065,
+     "R_mass": "pass"
+    }
+   },
+   {
+    "option": "PF-70x10",
+    "correct": {
+     "width_mm": 70,
+     "thickness_mm": 10,
+     "Anet_mm2": 520,
+     "stress_MPa": 173.08,
+     "R_stress": "fail",
+     "over": "11.7%",
+     "R_width": "pass",
+     "R_thickness": "pass",
+     "mass_kg": 8.243,
+     "R_mass": "pass"
+    },
+    "trap_missed": {
+     "Ag_mm2": 700,
+     "stress_MPa": 128.57,
+     "R_stress": "pass",
+     "margin": "17.1%",
+     "R_width": "pass",
+     "R_thickness": "pass",
+     "mass_kg": 8.243,
+     "R_mass": "pass"
+    }
+   },
+   {
+    "option": "PF-80x10",
+    "correct": {
+     "width_mm": 80,
+     "thickness_mm": 10,
+     "Anet_mm2": 620,
+     "stress_MPa": 145.16,
+     "R_stress": "pass",
+     "margin": "6.3%",
+     "R_width": "pass",
+     "margin_width": "100%",
+     "R_thickness": "pass",
+     "mass_kg": 9.42,
+     "R_mass": "pass",
+     "margin_mass": "52.9%"
+    },
+    "trap_missed": {
+     "Ag_mm2": 800,
+     "stress_MPa": 112.5,
+     "R_stress": "pass",
+     "R_width": "pass",
+     "R_thickness": "pass",
+     "mass_kg": 9.42,
+     "R_mass": "pass"
+    }
+   },
+   {
+    "option": "PF-80x12",
+    "correct": {
+     "width_mm": 80,
+     "thickness_mm": 12,
+     "Anet_mm2": 744,
+     "stress_MPa": 120.97,
+     "R_stress": "pass",
+     "margin": "22.0%",
+     "R_width": "pass",
+     "R_thickness": "pass",
+     "mass_kg": 11.304,
+     "R_mass": "pass"
+    },
+    "trap_missed": {
+     "Ag_mm2": 960,
+     "stress_MPa": 93.75,
+     "R_stress": "pass",
+     "R_width": "pass",
+     "R_thickness": "pass",
+     "mass_kg": 11.304,
+     "R_mass": "pass"
+    }
+   }
+  ],
+  "reference_design": {
+   "Bar": "PF-80x10",
+   "Stress (MPa)": 145.16,
+   "Mass (kg)": 9.42,
+   "Width (mm)": 80
+  },
+  "worked_solution": "Static tension on a ductile bar with one hole across the width is the average force on the net area. Anet = (b - 18) t. Stress = 90000/Anet. A concentration factor is not used for this static check; AISC net-section rupture and Eurocode net-section tension use that same net area, and both reject PF-60x10 and PF-70x10 and accept PF-80x10 and PF-80x12. Hole-clearance variants were not introduced because no clearance is given. PF-60x10: Anet = 420 mm², stress = 214.29 MPa, 38.2% over 155. PF-70x10: Anet = 520 mm², stress = 173.08 MPa, 11.7% over. PF-80x10: Anet = 620 mm², stress = 145.16 MPa, 6.3% under 155. Mass = 80×10×1e-6×1.5×7850 = 9.42 kg, 52.9% under 20 kg. Width and thickness limits are satisfied with large margin. PF-80x12 stress = 120.97 MPa but mass = 11.304 kg, so it is heavier. Lightest pass is PF-80x10. Using catalogue section area instead gives 150.0 MPa on PF-60x10, which is under 155, and that lighter bar is then selected; its net-section stress is 214.29 MPa.",
+  "wrong_designs": [
+   {
+    "values": {
+     "Bar": "PF-60x10",
+     "Stress (MPa)": 150.0,
+     "Mass (kg)": 7.065,
+     "Width (mm)": 60
+    },
+    "failed_requirement_ids": [
+     "R_stress"
+    ],
+    "why": "Trap missed: stress was force over catalogue section area. PF-60x10 is the lightest bar that then appears to pass, but the holed section is at 214.29 MPa, 38% over 155 MPa."
+   },
+   {
+    "values": {
+     "Bar": "PF-70x10",
+     "Stress (MPa)": 173.08,
+     "Mass (kg)": 8.243,
+     "Width (mm)": 70
+    },
+    "failed_requirement_ids": [
+     "R_stress"
+    ],
+    "why": "Net area used, but the next lighter bar still has only 520 mm² net. Stress 173.08 MPa is 11.7% over 155 MPa."
+   }
+  ],
+  "corpus_pages": [
+   {
+    "title": "Calder Sections — Plainflat bars",
+    "markdown": "# Calder Sections\n## Plainflat series\n\nBars are supplied in the length ordered. Section area is width times thickness. Mass density of the bar steel is 7850 kg/m³.\n\n| Model | Width (mm) | Thickness (mm) | Section area (mm²) |\n|---|---:|---:|---:|\n| PF-60x10 | 60 | 10 | 600 |\n| PF-70x10 | 70 | 10 | 700 |\n| PF-80x10 | 80 | 10 | 800 |\n| PF-80x12 | 80 | 12 | 960 |\n"
+   }
+  ]
+ },
+ {
+  "id": "T4-57",
+  "family": "F2",
+  "domain": "fluid",
+  "request": "Select the cheapest Helion pump from Meridian Pumps for Solvex-80 at 80°C. The duty flow is 18 L/s and the pump head is 22 m. The free surface is held at 101.3 kPa absolute and sits 2.5 m above the impeller centreline. Suction-line loss at the duty flow is 1.2 m of liquid. Suction bore is 200 mm. Gravitational acceleration is 9.81 m/s². Available net positive suction head shall be at least 1.15 times the catalogue NPSHr. Pump shaft power shall not exceed 15 kW. The pump temperature limit shall be at least 80°C. Use the Helion catalogue and the Solvex-80 property table. End with a table headed Results with these rows: Pump, NPSH available (m), Head (m), Flow (L/s), Price (EUR).",
+  "requirements": [
+   {
+    "id": "R_flow",
+    "statement": "Catalogue flow is at least 18 L/s.",
+    "method": "Pass if catalogue_flow_L_s >= 18. Results.Flow is the catalogue flow.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_head",
+    "statement": "Catalogue head is at least 22 m.",
+    "method": "Pass if catalogue_head_m >= 22. Results.Head is the catalogue head.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_npsh",
+    "statement": "Available net positive suction head is at least 1.15 times catalogue NPSHr.",
+    "method": "At 80°C, density = 820 kg/m³ and vapour pressure = 45.0 kPa. NPSHa = (101300 - 45000)/(820*9.81) + 2.5 - 1.2 = 8.299 m. Pass if Results.NPSH available >= 1.15 * NPSHr.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_power",
+    "statement": "Catalogue shaft power does not exceed 15 kW.",
+    "method": "Pass if shaft_power_kW <= 15.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_temp",
+    "statement": "Catalogue temperature limit is at least 80°C.",
+    "method": "Pass if temperature_limit_C >= 80.",
+    "tolerance": "1%"
+   }
+  ],
+  "trap": {
+   "judgment": "Suction head must be evaluated with the Solvex-80 density and vapour pressure at 80°C. The 20°C row understates vapour pressure and overstates the available suction head.",
+   "source": "reference condition",
+   "why_missed": "The geometric suction head, 2.5 m minus 1.2 m, plus atmospheric head, already looks larger than the catalogue NPSHr values. The property table is entered at its first row, 20°C, where vapour pressure is only 2 kPa, and the 80°C row is not brought back into the suction-head sum.",
+   "not_stated": "The request states the liquid, 80°C, the free-surface pressure, the elevation and the suction loss, and the 1.15 NPSHr ratio. The property table lists density and vapour pressure at 20°C and at 80°C. The pump page defines NPSHr as a head in metres of liquid. None of those sentences says which temperature row to use, or that vapour pressure changes the suction head."
+  },
+  "option_table": [
+   {
+    "option": "H-210",
+    "correct": {
+     "flow_L_s": 20,
+     "R_flow": "pass",
+     "margin_flow": "11.1%",
+     "head_m": 26,
+     "R_head": "pass",
+     "margin_head": "18.2%",
+     "NPSHa_m": 8.299,
+     "NPSHr_m": 10.0,
+     "required_NPSHa_m": 11.5,
+     "R_npsh": "fail",
+     "shortfall": "27.8%",
+     "power_kW": 4.0,
+     "R_power": "pass",
+     "temp_C": 120,
+     "R_temp": "pass"
+    },
+    "trap_missed": {
+     "NPSHa_m": 13.07,
+     "required_NPSHa_m": 11.5,
+     "R_npsh": "pass",
+     "margin": "13.7%",
+     "R_flow": "pass",
+     "R_head": "pass",
+     "R_power": "pass",
+     "R_temp": "pass"
+    }
+   },
+   {
+    "option": "H-240",
+    "correct": {
+     "flow_L_s": 21,
+     "R_flow": "pass",
+     "head_m": 28,
+     "R_head": "pass",
+     "NPSHa_m": 8.299,
+     "NPSHr_m": 8.5,
+     "required_NPSHa_m": 9.775,
+     "R_npsh": "fail",
+     "shortfall": "15.1%",
+     "power_kW": 5.5,
+     "R_power": "pass",
+     "temp_C": 120,
+     "R_temp": "pass"
+    },
+    "trap_missed": {
+     "NPSHa_m": 13.07,
+     "required_NPSHa_m": 9.775,
+     "R_npsh": "pass",
+     "margin": "33.7%",
+     "R_flow": "pass",
+     "R_head": "pass",
+     "R_power": "pass",
+     "R_temp": "pass"
+    }
+   },
+   {
+    "option": "H-280",
+    "correct": {
+     "flow_L_s": 24,
+     "R_flow": "pass",
+     "margin_flow": "33.3%",
+     "head_m": 30,
+     "R_head": "pass",
+     "margin_head": "36.4%",
+     "NPSHa_m": 8.299,
+     "NPSHr_m": 6.4,
+     "required_NPSHa_m": 7.36,
+     "R_npsh": "pass",
+     "margin": "12.8%",
+     "power_kW": 7.5,
+     "R_power": "pass",
+     "margin_power": "50%",
+     "temp_C": 120,
+     "R_temp": "pass",
+     "margin_temp": "50%"
+    },
+    "trap_missed": {
+     "NPSHa_m": 13.07,
+     "required_NPSHa_m": 7.36,
+     "R_npsh": "pass",
+     "R_flow": "pass",
+     "R_head": "pass",
+     "R_power": "pass",
+     "R_temp": "pass"
+    }
+   },
+   {
+    "option": "H-320",
+    "correct": {
+     "flow_L_s": 30,
+     "R_flow": "pass",
+     "head_m": 32,
+     "R_head": "pass",
+     "NPSHa_m": 8.299,
+     "NPSHr_m": 5.5,
+     "required_NPSHa_m": 6.325,
+     "R_npsh": "pass",
+     "margin": "31.2%",
+     "power_kW": 9.0,
+     "R_power": "pass",
+     "temp_C": 120,
+     "R_temp": "pass"
+    },
+    "trap_missed": {
+     "NPSHa_m": 13.07,
+     "required_NPSHa_m": 6.325,
+     "R_npsh": "pass",
+     "R_flow": "pass",
+     "R_head": "pass",
+     "R_power": "pass",
+     "R_temp": "pass"
+    }
+   }
+  ],
+  "reference_design": {
+   "Pump": "H-280",
+   "NPSH available (m)": 8.299,
+   "Head (m)": 30,
+   "Flow (L/s)": 24,
+   "Price (EUR)": 4550
+  },
+  "worked_solution": "Duty properties are the 80°C row: ρ = 820 kg/m³, pv = 45.0 kPa. NPSHa = (101300 − 45000)/(820 × 9.81) + 2.5 − 1.2 = 56300/8044.2 + 1.3 = 6.9988 + 1.3 = 8.2988 m, reported as 8.299 m. Suction velocity in the 200 mm bore is 0.018/(π × 0.1²) = 0.573 m/s, and v²/2g = 0.017 m. Adding or omitting that kinetic head changes NPSHa by 0.2% and does not change any verdict. Using ρ at 80°C with pv at 20°C gives 7.974 m and still fails H-210 and H-240 and passes H-280. The missed-trap suction head uses the 20°C row: (101300 − 2000)/(860 × 9.81) + 1.3 = 13.070 m. Required NPSHa is 1.15 × NPSHr. H-210 needs 11.50 m and is short by 27.8% on the correct head. H-240 needs 9.775 m and is short by 15.1%. H-280 needs 7.36 m; 8.299 m is 12.8% above that. Flow 24 L/s is 33% above 18 L/s. Head 30 m is 36% above 22 m. Power 7.5 kW is half of 15 kW. Temperature limit 120°C is 50% above 80°C. H-320 also passes and costs more. Cheapest pass is H-280 at 4550 EUR. The 20°C suction head makes H-210 look acceptable (13.070 > 11.50) and that is the cheapest apparent pass.",
+  "wrong_designs": [
+   {
+    "values": {
+     "Pump": "H-210",
+     "NPSH available (m)": 13.07,
+     "Head (m)": 26,
+     "Flow (L/s)": 20,
+     "Price (EUR)": 2400
+    },
+    "failed_requirement_ids": [
+     "R_npsh"
+    ],
+    "why": "Trap missed: suction head used the 20°C density and vapour pressure. H-210 is then the cheapest pump that appears to clear 1.15 × NPSHr, but at 80°C the available head is 8.299 m against 11.50 m required, 28% short."
+   },
+   {
+    "values": {
+     "Pump": "H-240",
+     "NPSH available (m)": 8.299,
+     "Head (m)": 28,
+     "Flow (L/s)": 21,
+     "Price (EUR)": 3100
+    },
+    "failed_requirement_ids": [
+     "R_npsh"
+    ],
+    "why": "Correct fluid properties, but 1.15 × 8.5 m = 9.775 m is still 15.1% above the 8.299 m available."
+   }
+  ],
+  "corpus_pages": [
+   {
+    "title": "Meridian Pumps — Helion catalogue",
+    "markdown": "# Meridian Pumps\n## Helion end-suction pumps\n\nHead and NPSHr are in metres of the pumped liquid at the stated flow. Shaft power is the power at the pump shaft. Temperature limit is the maximum liquid temperature.\n\n| Model | Flow (L/s) | Head (m) | NPSHr (m) | Shaft power (kW) | Temperature limit (°C) | Price (EUR) |\n|---|---:|---:|---:|---:|---:|---:|\n| H-210 | 20 | 26 | 10.0 | 4.0 | 120 | 2400 |\n| H-240 | 21 | 28 | 8.5 | 5.5 | 120 | 3100 |\n| H-280 | 24 | 30 | 6.4 | 7.5 | 120 | 4550 |\n| H-320 | 30 | 32 | 5.5 | 9.0 | 120 | 5900 |\n"
+   },
+   {
+    "title": "Meridian Fluids — Solvex-80 properties",
+    "markdown": "# Meridian Fluids\n## Solvex-80\n\nDensity and vapour pressure are absolute-pressure properties of the liquid.\n\n| Temperature (°C) | Density (kg/m³) | Vapour pressure (kPa) |\n|---:|---:|---:|\n| 20 | 860 | 2.0 |\n| 80 | 820 | 45.0 |\n"
+   }
+  ]
+ },
+ {
+  "id": "T4-58",
+  "family": "F2",
+  "domain": "electrical",
+  "request": "Select the cheapest Bay reactor from Lumenford for a 400 V, 50 Hz feeder. The load is 75 kVA at power factor 0.8 lagging. The voltage drop through the reactor at that load shall not exceed 3.0%. Rated current shall be at least the load current. Rated voltage shall be at least 380 V and rated frequency at least 50 Hz. Use only the Bay reactor catalogue. End with a table headed Results with these rows: Reactor, Voltage drop (%), Current (A), Price (EUR).",
+  "requirements": [
+   {
+    "id": "R_drop",
+    "statement": "Voltage drop at the duty load does not exceed 3.0%.",
+    "method": "Load power factor 0.8 lagging, so sin of the current angle = 0.6. With resistance negligible, voltage drop in percent = 100 * x * (75/100) * 0.6, where x is the catalogue per-unit reactance on the 100 kVA base. Pass if Results.Voltage drop <= 3.0.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_current",
+    "statement": "Rated current is at least the load current.",
+    "method": "Load current = 75000 / (sqrt(3) * 400) = 108.25 A. Pass if rated_current >= 108.25 A. Results.Current is the catalogue rated current.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_voltage",
+    "statement": "Rated voltage is at least 380 V.",
+    "method": "Pass if rated_voltage_V >= 380.",
+    "tolerance": "1%"
+   },
+   {
+    "id": "R_frequency",
+    "statement": "Rated frequency is at least 50 Hz.",
+    "method": "Pass if rated_frequency_Hz >= 50.",
+    "tolerance": "1%"
+   }
+  ],
+  "trap": {
+   "judgment": "The catalogue per-unit reactance is on a 100 kVA base, so the load per-unit current is 75/100 before it multiplies x. Treating x as own-base per-unit understates the drop of every reactor rated above 100 kVA.",
+   "source": "notation",
+   "why_missed": "A per-unit reactance column on a reactor data sheet is, by the usual catalogue convention, already on that reactor's own rated kilovolt-amperes. In one pass x is multiplied by 75/S_rated and by sin of the power-factor angle, and the base note is not applied.",
+   "not_stated": "The catalogue says 'x is the per-unit reactance on a base of 100 kVA at rated voltage' and that winding resistance is negligible. The request states the load kilovolt-amperes, power factor and the 3.0% drop limit. None of those sentences compares the column with an own-base value or gives a voltage-drop formula."
+  },
+  "option_table": [
+   {
+    "option": "B-160",
+    "correct": {
+     "x_100": 0.08,
+     "voltage_drop_pct": 3.6,
+     "R_drop": "fail",
+     "over": "20.0%",
+     "rated_current_A": 230.9,
+     "load_current_A": 108.25,
+     "R_current": "pass",
+     "rated_voltage_V": 400,
+     "R_voltage": "pass",
+     "rated_frequency_Hz": 50,
+     "R_frequency": "pass"
+    },
+    "trap_missed": {
+     "voltage_drop_pct": 2.25,
+     "R_drop": "pass",
+     "margin": "25.0%",
+     "R_current": "pass",
+     "R_voltage": "pass",
+     "R_frequency": "pass"
+    }
+   },
+   {
+    "option": "B-200",
+    "correct": {
+     "x_100": 0.075,
+     "voltage_drop_pct": 3.375,
+     "R_drop": "fail",
+     "over": "12.5%",
+     "rated_current_A": 288.7,
+     "R_current": "pass",
+     "R_voltage": "pass",
+     "R_frequency": "pass"
+    },
+    "trap_missed": {
+     "voltage_drop_pct": 1.688,
+     "R_drop": "pass",
+     "margin": "43.8%",
+     "R_current": "pass",
+     "R_voltage": "pass",
+     "R_frequency": "pass"
+    }
+   },
+   {
+    "option": "B-320",
+    "correct": {
+     "x_100": 0.055,
+     "voltage_drop_pct": 2.475,
+     "R_drop": "pass",
+     "margin": "17.5%",
+     "rated_current_A": 461.9,
+     "load_current_A": 108.25,
+     "R_current": "pass",
+     "margin_current": "327%",
+     "rated_voltage_V": 400,
+     "R_voltage": "pass",
+     "margin_voltage": "5.3%",
+     "rated_frequency_Hz": 50,
+     "R_frequency": "pass"
+    },
+    "trap_missed": {
+     "voltage_drop_pct": 0.773,
+     "R_drop": "pass",
+     "R_current": "pass",
+     "R_voltage": "pass",
+     "R_frequency": "pass"
+    }
+   },
+   {
+    "option": "B-500",
+    "correct": {
+     "x_100": 0.04,
+     "voltage_drop_pct": 1.8,
+     "R_drop": "pass",
+     "margin": "40.0%",
+     "rated_current_A": 721.7,
+     "R_current": "pass",
+     "R_voltage": "pass",
+     "R_frequency": "pass"
+    },
+    "trap_missed": {
+     "voltage_drop_pct": 0.36,
+     "R_drop": "pass",
+     "R_current": "pass",
+     "R_voltage": "pass",
+     "R_frequency": "pass"
+    }
+   }
+  ],
+  "reference_design": {
+   "Reactor": "B-320",
+   "Voltage drop (%)": 2.475,
+   "Current (A)": 461.9,
+   "Price (EUR)": 4500
+  },
+  "worked_solution": "Load current = 75000/(√3 × 400) = 108.25 A. Every Bay reactor is above that current, at 400 V and 50 Hz. Catalogue x is on 100 kVA, and resistance is zero. Load per-unit current on that base is 75/100 = 0.75. For a lagging power factor of 0.8, sin φ = 0.6, so the fractional drop is x × 0.75 × 0.6 = 0.45 x. In percent: B-160 = 3.60, B-200 = 3.375, B-320 = 2.475, B-500 = 1.80. The exact series-reactor magnitude |Vs/Vl| − 1 was also checked: B-160 = 3.71%, B-200 = 3.47%, B-320 = 2.53%, B-500 = 1.82%. Pass/fail against 3.0% is the same under both methods, and B-320 remains more than 3% inside the limit (15.7% on the exact value, 17.5% on the approximation). B-160 is 20% over on the approximation and 23.7% over on the exact value. B-200 is 12.5% over on the approximation and 15.8% over on the exact value. Cheapest pass is B-320 at 4500 EUR. Treating x as own-base per-unit gives drops of 2.25%, 1.69%, 0.77% and 0.36%. B-160 then appears to pass and is the cheapest such choice; its correct drop is 3.60%.",
+  "wrong_designs": [
+   {
+    "values": {
+     "Reactor": "B-160",
+     "Voltage drop (%)": 2.25,
+     "Current (A)": 230.9,
+     "Price (EUR)": 2000
+    },
+    "failed_requirement_ids": [
+     "R_drop"
+    ],
+    "why": "Trap missed: x was applied on the reactor's own 160 kVA. The drop then looks like 2.25%, so B-160 is the cheapest reactor that appears to pass. On the 100 kVA base the drop is 3.60%, 20% over 3.0%."
+   },
+   {
+    "values": {
+     "Reactor": "B-200",
+     "Voltage drop (%)": 3.375,
+     "Current (A)": 288.7,
+     "Price (EUR)": 2800
+    },
+    "failed_requirement_ids": [
+     "R_drop"
+    ],
+    "why": "Base conversion done, but x of 0.075 still gives 3.375%, which is 12.5% over 3.0%."
+   }
+  ],
+  "corpus_pages": [
+   {
+    "title": "Lumenford — Bay reactor catalogue",
+    "markdown": "# Lumenford\n## Bay series reactors\n\nx is the per-unit reactance on a base of 100 kVA at rated voltage. Winding resistance is negligible. Rated current is the continuous line current.\n\n| Model | Rated voltage (V) | Rated frequency (Hz) | Rated current (A) | Rated kilovolt-amperes (kVA) | x | Price (EUR) |\n|---|---:|---:|---:|---:|---:|---:|\n| B-160 | 400 | 50 | 230.9 | 160 | 0.080 | 2000 |\n| B-200 | 400 | 50 | 288.7 | 200 | 0.075 | 2800 |\n| B-320 | 400 | 50 | 461.9 | 320 | 0.055 | 4500 |\n| B-500 | 400 | 50 | 721.7 | 500 | 0.040 | 6100 |\n"
+   }
+  ]
+ }
+]

@@ -1,0 +1,35 @@
+{
+ "repairs": [
+  {
+   "id": "T4-55",
+   "field": "request",
+   "from": "The motor must be able to deliver the torque and speed the drive imposes on the motor shaft.",
+   "to": "The motor must be able to drive the mixer at this duty.",
+   "why": "Generator v4.1 rule 8 forbids a request sentence that hints at the trap. 'The torque and speed the drive imposes on the motor shaft' tells the solver to reflect the process torque through the belt, which is the step the trap tests. The values and the selection are unchanged."
+  }
+ ],
+ "flags": [
+  {
+   "id": "T4-52",
+   "flag": "The requirement text writes the table acceleration as 2*(pi/2)/0.40^2, which is 19.6 rad/s^2, but uses 39.27 rad/s^2. That is the correct value for a triangular profile (4*theta/T^2), and verify.py uses it. The requirements are never shown to an arm. The generator's 'trap missed' column also leaves out the table inertia entirely rather than failing to divide it by N^2. Not dividing by N^2 makes every drive fail, so the trap as computed is an omission. It is expected to be easy."
+  },
+  {
+   "id": "T4-55, T4-56, T4-57",
+   "flag": "Valid, but the traps are basic: torque reflected through a 3:1 belt, the net section at a pin hole, and fluid properties at the stated 80 degC rather than at 20 degC. They are kept to estimate the headroom rate across the whole batch, not only on hard questions."
+  },
+  {
+   "id": "T4-53",
+   "flag": "The adiabatic fault-heating calculation (V95 183 degC, V70 282 degC, against 250 degC) and the IEC 60364-4-43 k-factor check (k = 143, minimum 75.1 mm^2) select the same section, so the verdict does not depend on the method."
+  },
+  {
+   "id": "T4-58",
+   "flag": "The approximate drop (I*X*sin(phi)) and the exact phasor drop give the same verdicts: B-160 3.60/3.71%, B-200 3.38/3.47%, B-320 2.48/2.53%."
+  }
+ ],
+ "dropped": [
+  {
+   "id": "T4-54",
+   "why": "Rule 2 fails. With the 20 kPa gauge reading taken as absolute, NPSH available is 1.60 m and no pump passes: Lark-340 and Lark-420 fail NPSH, and Lark-090 fails head (22 < 28 m) either way. So missing the trap leaves no feasible pump rather than a different selection, and that warns the solver. The generator's 'trap missed' design, Lark-090, fails head under both methods."
+  }
+ ]
+}
