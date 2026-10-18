@@ -31,5 +31,6 @@ def best(t):
     return min(ok, key=lambda k: ok[k][0]) if ok else None
 
 if __name__ == '__main__':
-    for name, fn in (('T4-31', t431), ('T4-32', t432), ('T4-33', t433), ('T4-34', t434)):
+    print('T4-31 (dropped): the corpus factor at 4200 min^-1 is', round(1 - 0.0015 * (4200 - 3000), 3), '- negative, so no option passes')
+    for name, fn in (('T4-32', t432), ('T4-33', t433), ('T4-34', t434)):
         print(name, 'correct:', best(fn()), '| trap missed:', best(fn(True)))

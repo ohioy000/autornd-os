@@ -4,5 +4,11 @@
   {
    "flag": "Every trap is a rule the corpus states explicitly: these are rule-application questions, expected to be easier than batch 3. Kept to test whether the cheap single call's strength holds on questions written by a non-Gemini generator."
   }
+ ],
+ "dropped": [
+  {
+   "id": "T4-31",
+   "why": "The corpus rule T_allow = T_cat * (1 - 0.0015*(n - 3000)) gives a negative factor (1 - 1.8 = -0.8) at the stated 4200 min^-1, so no option can pass. The generator's own option table used 0.82, which is 1 - 0.00015*1200. The question is broken as generated, and the advisor's first hand check accepted the 0.82 without recomputing it; verify.py caught it before the freeze merged."
+  }
  ]
 }

@@ -4,14 +4,8 @@
  "generator": "x-ai/grok-4.7",
  "generator_prompt": "evals/tier4/batch4/generator-v3.txt",
  "candidates": "evals/tier4/batch4/candidates.json",
- "candidates_sha256": "4fcf4bb29c9bca41bec04f7d515168f788298d335e9f52d2d74e731448de28df",
+ "candidates_sha256": "28f26d0f1f254f083c0adbb883440f66a6f16d9735c85d9c4416714e2ec25f28",
  "corpus": {
-  "T4-31": {
-   "pages": [
-    "evals/tier4/batch4/corpus/T4-31-1.md"
-   ],
-   "sha256": "393982d25e52b42c0894d4d77c320f2cd3b3288602a91b7ba946416c74ba0445"
-  },
   "T4-32": {
    "pages": [
     "evals/tier4/batch4/corpus/T4-32-1.md"
@@ -32,14 +26,13 @@
   }
  },
  "families": {
-  "T4-31": "F2",
   "T4-32": "F2",
   "T4-33": "F2",
   "T4-34": "F2"
  },
  "calibration": {
-  "units": "D-pages on T4-31 to T4-34, one repetition",
-  "ceiling_usd": 1.6
+  "units": "D-pages on T4-32, T4-33 and T4-34, one repetition",
+  "ceiling_usd": 1.2
  },
  "pilot": {
   "ceiling_usd": 5.0,
