@@ -1,0 +1,578 @@
+[
+ {
+  "id": "T4-41",
+  "family": "F2",
+  "domain": "mechanical",
+  "request": "Select a Helion Hoist Works WR winch reducer for a vertical hoist. The rope winds on a drum of pitch radius 0.20 m keyed to the reducer output, and the rope force acts radially on that output shaft. The suspended mass is 800 kg. Hoisting speed is 0.25 m/s. From brake release the hook reaches 0.25 m/s in 0.25 s and thereafter rises at constant speed. Take g = 9.81 m/s². Use only the WR catalogue. Choose the lightest unit that can deliver the output torque, output speed, radial load and output power of this duty. End with a table headed Results with these rows: selected model, mass (kg), output torque demand (N·m), output speed demand (rpm), radial load demand (N), output power demand (W).",
+  "requirements": [
+   {
+    "id": "R1",
+    "statement": "Catalogue maximum output torque is at least the output torque demand.",
+    "method": "a=0.25/0.25; T=800*(9.81+a)*0.20; pass if T_max/T>=1",
+    "tolerance": "0.02 relative on T"
+   },
+   {
+    "id": "R2",
+    "statement": "Catalogue maximum output speed is at least the output speed demand.",
+    "method": "n=0.25/(2*pi*0.20)*60; pass if n_max/n>=1",
+    "tolerance": "0.02 relative on n"
+   },
+   {
+    "id": "R3",
+    "statement": "Catalogue allowable radial load is at least the rope-force demand.",
+    "method": "F=800*(9.81+a) with a=1.0 m/s^2; pass if F_r/F>=1",
+    "tolerance": "0.02 relative on F"
+   },
+   {
+    "id": "R4",
+    "statement": "Catalogue maximum output power is at least the output power demand.",
+    "method": "P=T*0.25/0.20; pass if P_max/P>=1",
+    "tolerance": "0.02 relative on P"
+   }
+  ],
+  "trap": {
+   "judgment": "The governing output torque and radial load occur while the hook is speeding up, so the rope force is m*(g+a), not the steady hoisting force m*g.",
+   "source": "implied load case",
+   "why_missed": "A one-pass sizing uses the steady suspended weight and treats the 0.25 s figure as a speed note rather than an acceleration of the mass reflected as extra output torque and radial load.",
+   "not_stated": "The request says the hook \"reaches 0.25 m/s in 0.25 s and thereafter rises at constant speed\" and that the unit must \"deliver the output torque, output speed, radial load and output power of this duty.\" The catalogue defines T_max, n_max, F_r and P_max only as reducer limits. None of those sentences states that the speeding-up interval adds m*a to the rope force, or names inertia torque."
+  },
+  "option_table": [
+   {
+    "option": "WR-180",
+    "correct": {
+     "T_demand_Nm": 1729.6,
+     "T_max_Nm": 1480,
+     "R1_ratio": 0.856,
+     "R1": "fail",
+     "n_demand_rpm": 11.94,
+     "R2_ratio": 2.68,
+     "R2": "pass",
+     "F_demand_N": 8648,
+     "F_r_N": 8000,
+     "R3_ratio": 0.925,
+     "R3": "fail",
+     "P_demand_W": 2162,
+     "R4_ratio": 1.3,
+     "R4": "pass"
+    },
+    "trap_missed": {
+     "T_demand_Nm": 1569.6,
+     "R1_ratio": 0.943,
+     "R1": "fail",
+     "n_demand_rpm": 11.94,
+     "R2": "pass",
+     "F_demand_N": 7848,
+     "R3_ratio": 1.019,
+     "R3": "pass",
+     "P_demand_W": 1962,
+     "R4": "pass"
+    }
+   },
+   {
+    "option": "WR-220",
+    "correct": {
+     "T_demand_Nm": 1729.6,
+     "T_max_Nm": 1620,
+     "R1_ratio": 0.937,
+     "R1": "fail",
+     "n_demand_rpm": 11.94,
+     "R2_ratio": 2.51,
+     "R2": "pass",
+     "F_demand_N": 8648,
+     "F_r_N": 9500,
+     "R3_ratio": 1.099,
+     "R3": "pass",
+     "P_demand_W": 2162,
+     "R4_ratio": 1.62,
+     "R4": "pass"
+    },
+    "trap_missed": {
+     "T_demand_Nm": 1569.6,
+     "R1_ratio": 1.032,
+     "R1": "pass",
+     "n_demand_rpm": 11.94,
+     "R2": "pass",
+     "F_demand_N": 7848,
+     "R3_ratio": 1.21,
+     "R3": "pass",
+     "P_demand_W": 1962,
+     "R4_ratio": 1.78,
+     "R4": "pass"
+    }
+   },
+   {
+    "option": "WR-260",
+    "correct": {
+     "T_demand_Nm": 1729.6,
+     "T_max_Nm": 1900,
+     "R1_ratio": 1.099,
+     "R1": "pass",
+     "n_demand_rpm": 11.94,
+     "R2_ratio": 2.35,
+     "R2": "pass",
+     "F_demand_N": 8648,
+     "F_r_N": 12000,
+     "R3_ratio": 1.388,
+     "R3": "pass",
+     "P_demand_W": 2162,
+     "R4_ratio": 1.85,
+     "R4": "pass"
+    },
+    "trap_missed": {
+     "T_demand_Nm": 1569.6,
+     "R1_ratio": 1.211,
+     "R1": "pass",
+     "n_demand_rpm": 11.94,
+     "R2": "pass",
+     "F_demand_N": 7848,
+     "R3_ratio": 1.529,
+     "R3": "pass",
+     "P_demand_W": 1962,
+     "R4_ratio": 2.04,
+     "R4": "pass"
+    }
+   },
+   {
+    "option": "WR-310",
+    "correct": {
+     "T_demand_Nm": 1729.6,
+     "T_max_Nm": 2500,
+     "R1_ratio": 1.446,
+     "R1": "pass",
+     "n_demand_rpm": 11.94,
+     "R2_ratio": 2.01,
+     "R2": "pass",
+     "F_demand_N": 8648,
+     "F_r_N": 15000,
+     "R3_ratio": 1.735,
+     "R3": "pass",
+     "P_demand_W": 2162,
+     "R4_ratio": 2.31,
+     "R4": "pass"
+    },
+    "trap_missed": {
+     "T_demand_Nm": 1569.6,
+     "R1_ratio": 1.593,
+     "R1": "pass",
+     "n_demand_rpm": 11.94,
+     "R2": "pass",
+     "F_demand_N": 7848,
+     "R3_ratio": 1.911,
+     "R3": "pass",
+     "P_demand_W": 1962,
+     "R4_ratio": 2.55,
+     "R4": "pass"
+    }
+   }
+  ],
+  "reference_design": {
+   "selected_model": "WR-260",
+   "mass_kg": 33,
+   "output_torque_demand_Nm": 1729.6,
+   "output_speed_demand_rpm": 11.94,
+   "radial_load_demand_N": 8648,
+   "output_power_demand_W": 2162
+  },
+  "worked_solution": "a = 0.25/0.25 = 1.00 m/s^2. Rope force while speeding up is F = 800*(9.81+1.00) = 8648 N. Output torque T = 8648*0.20 = 1729.6 N·m. omega = 0.25/0.20 = 1.25 rad/s, so n = 1.25*60/(2*pi) = 11.94 rpm and P = 1729.6*1.25 = 2162 W. Steady hoisting would be only 7848 N, 1569.6 N·m and 1962 W, which is not the governing interval. Checked ratios with pi = 3.1416; a 0.1% change in pi does not flip any verdict. WR-180 fails R1 and R3. WR-220 has T_max/T = 1620/1729.6 = 0.937 and fails R1 by 6.3%, while F, n and P pass. WR-260: 1900/1729.6 = 1.099, 28/11.94 = 2.35, 12000/8648 = 1.388, 4000/2162 = 1.85, all at least 3% above the limit, mass 33 kg. WR-310 also passes but mass 45 kg. Lightest passing unit is WR-260. Methods checked: rigid-body force and moment on the output shaft; no drum inertia (drum mass is not given) and no efficiency correction (ratings are output ratings). Both leave the same pass/fail table.",
+  "wrong_designs": [
+   {
+    "values": {
+     "selected_model": "WR-220",
+     "mass_kg": 24,
+     "output_torque_demand_Nm": 1569.6,
+     "output_speed_demand_rpm": 11.94,
+     "radial_load_demand_N": 7848,
+     "output_power_demand_W": 1962
+    },
+    "failed_requirement_ids": [
+     "R1"
+    ],
+    "why": "Steady weight only: T = 800*9.81*0.20 = 1569.6 N·m and 1620/1569.6 = 1.032, so WR-220 looks acceptable and is the lightest such unit. Under the speeding-up force it is 6.3% short on torque."
+   },
+   {
+    "values": {
+     "selected_model": "WR-180",
+     "mass_kg": 19,
+     "output_torque_demand_Nm": 1729.6,
+     "output_speed_demand_rpm": 11.94,
+     "radial_load_demand_N": 8648,
+     "output_power_demand_W": 2162
+    },
+    "failed_requirement_ids": [
+     "R1",
+     "R3"
+    ],
+    "why": "Lightest catalogue unit, but 1480/1729.6 = 0.856 on torque and 8000/8648 = 0.925 on radial load."
+   }
+  ],
+  "corpus_pages": [
+   "# Helion Hoist Works — WR winch reducers\n\nOutput-shaft limits for vertical-hoist service. Symbols: T_max maximum output torque (N·m); n_max maximum output speed (rpm); F_r allowable radial load at the output shaft (N); P_max maximum output power (W); mass in kg; price in EUR.\n\n| model | T_max | n_max | F_r | P_max | mass | price |\n| --- | --- | --- | --- | --- | --- | --- |\n| WR-180 | 1480 | 32 | 8000 | 2800 | 19 | 1600 |\n| WR-220 | 1620 | 30 | 9500 | 3500 | 24 | 1800 |\n| WR-260 | 1900 | 28 | 12000 | 4000 | 33 | 2400 |\n| WR-310 | 2500 | 24 | 15000 | 5000 | 45 | 2200 |"
+  ]
+ },
+ {
+  "id": "T4-42",
+  "family": "F2",
+  "domain": "electrical",
+  "request": "Select a Nordline VL inverter for a three-phase induction motor. The motor delivers 15 kW at 400 V line-to-line and 50 Hz, with power factor 0.84 and efficiency 0.90. The supply is 400 V, 50 Hz. Use only the VL catalogue. Choose the lowest-price unit whose supply window covers the supply voltage, whose output frequency covers 50 Hz, whose rated power covers 15 kW, and whose output-current rating covers the motor current. End with a table headed Results with these rows: selected model, price (EUR), motor line current (A), current compared with I_n (A), I_n (A).",
+  "requirements": [
+   {
+    "id": "R1",
+    "statement": "Inverter current rating covers the motor crest current.",
+    "method": "I_rms=15000/(sqrt(3)*400*0.84*0.90); I_crest=sqrt(2)*I_rms; pass if I_n/I_crest>=1",
+    "tolerance": "0.02 relative on I_crest"
+   },
+   {
+    "id": "R2",
+    "statement": "Supply voltage lies in the catalogue supply window.",
+    "method": "pass if U_min<=400<=U_max",
+    "tolerance": "exact inclusive"
+   },
+   {
+    "id": "R3",
+    "statement": "Output frequency window covers 50 Hz.",
+    "method": "pass if f_min<=50<=f_max",
+    "tolerance": "exact inclusive"
+   },
+   {
+    "id": "R4",
+    "statement": "Rated output power covers 15 kW.",
+    "method": "pass if P_n/15>=1",
+    "tolerance": "0.02 relative"
+   }
+  ],
+  "trap": {
+   "judgment": "The catalogue symbol I_n is the amplitude of the permissible current sinusoid, while the motor current from power, voltage, power factor and efficiency is an RMS line current and must be multiplied by sqrt(2) before it is compared with I_n.",
+   "source": "notation",
+   "why_missed": "Inverter nameplate current is almost always an RMS current, so a one-pass selection compares the calculated RMS motor current directly with the I_n column.",
+   "not_stated": "The catalogue says \"I_n is the amplitude of the permissible sinusoidal output current, in amperes\" and never mentions RMS, a crest factor, or a conversion. The request says the rating must \"cover the motor current\" and does not say peak, crest, RMS or root-two."
+  },
+  "option_table": [
+   {
+    "option": "VL-25",
+    "correct": {
+     "I_rms_A": 28.64,
+     "I_crest_A": 40.5,
+     "I_n_A": 33,
+     "R1_ratio": 0.815,
+     "R1": "fail",
+     "R2": "pass",
+     "R3": "pass",
+     "P_n_kW": 18,
+     "R4_ratio": 1.2,
+     "R4": "pass"
+    },
+    "trap_missed": {
+     "I_compared_A": 28.64,
+     "R1_ratio": 1.152,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    }
+   },
+   {
+    "option": "VL-36",
+    "correct": {
+     "I_rms_A": 28.64,
+     "I_crest_A": 40.5,
+     "I_n_A": 38,
+     "R1_ratio": 0.938,
+     "R1": "fail",
+     "R2": "pass",
+     "R3": "pass",
+     "P_n_kW": 18.5,
+     "R4_ratio": 1.233,
+     "R4": "pass"
+    },
+    "trap_missed": {
+     "I_compared_A": 28.64,
+     "R1_ratio": 1.327,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    }
+   },
+   {
+    "option": "VL-42",
+    "correct": {
+     "I_rms_A": 28.64,
+     "I_crest_A": 40.5,
+     "I_n_A": 46,
+     "R1_ratio": 1.136,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "P_n_kW": 22,
+     "R4_ratio": 1.467,
+     "R4": "pass"
+    },
+    "trap_missed": {
+     "I_compared_A": 28.64,
+     "R1_ratio": 1.606,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    }
+   },
+   {
+    "option": "VL-60",
+    "correct": {
+     "I_rms_A": 28.64,
+     "I_crest_A": 40.5,
+     "I_n_A": 62,
+     "R1_ratio": 1.531,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "P_n_kW": 30,
+     "R4_ratio": 2.0,
+     "R4": "pass"
+    },
+    "trap_missed": {
+     "I_compared_A": 28.64,
+     "R1_ratio": 2.165,
+     "R1": "pass",
+     "R2": "pass",
+     "R3": "pass",
+     "R4": "pass"
+    }
+   }
+  ],
+  "reference_design": {
+   "selected_model": "VL-42",
+   "price_EUR": 640,
+   "motor_line_current_A": 28.64,
+   "current_compared_with_I_n_A": 40.5,
+   "I_n_A": 46
+  },
+  "worked_solution": "I_rms = 15000/(sqrt(3)*400*0.84*0.90). sqrt(3)=1.7320508, so denominator = 1.7320508*400*0.756 = 523.772, and I_rms = 28.638 A. I_crest = 1.4142136*28.638 = 40.50 A. VL-25: 33/40.50 = 0.815, fails R1 by 18.5%. VL-36: 38/40.50 = 0.938, fails R1 by 6.2%. VL-42: 46/40.50 = 1.136, and 400 is inside 380–480 (5.0% above the lower edge and 20% below the upper edge), 50 Hz is inside 0–60 Hz, 22/15 = 1.467. VL-60 also passes but costs 890 EUR against 640 EUR. Lowest price that passes is VL-42. If I_n is misread as RMS, VL-25 has 33/28.64 = 1.152 and is the cheapest apparent pass. Methods checked: the three-phase power equation with RMS line voltage and RMS line current, and the crest relation for a sinusoid. A two-wattmeter reading of the same power gives the same RMS current. No overload multiple is stated, so none is applied. Verdicts are unchanged.",
+  "wrong_designs": [
+   {
+    "values": {
+     "selected_model": "VL-25",
+     "price_EUR": 410,
+     "motor_RMS_current_A": 28.64,
+     "motor_crest_current_A": 28.64,
+     "inverter_current_rating_used_A": 33
+    },
+    "failed_requirement_ids": [
+     "R1"
+    ],
+    "why": "RMS motor current compared directly with I_n selects the cheapest unit, VL-25. The sinusoid amplitude is 40.50 A, and 33 A is 18.5% low."
+   },
+   {
+    "values": {
+     "selected_model": "VL-36",
+     "price_EUR": 520,
+     "motor_RMS_current_A": 28.64,
+     "motor_crest_current_A": 40.5,
+     "inverter_current_rating_used_A": 38
+    },
+    "failed_requirement_ids": [
+     "R1"
+    ],
+    "why": "Next cheaper unit after VL-25. 38/40.50 = 0.938, still 6.2% short on crest current."
+   }
+  ],
+  "corpus_pages": [
+   "# Nordline Drives — VL voltage-source inverters\n\nSymbols used in this list: I_n is the amplitude of the permissible sinusoidal output current, in amperes. U_min and U_max are the line-to-line supply window, in volts. f_min and f_max are the output-frequency window, in hertz. P_n is the rated output power, in kW. price is in EUR. mass is in kg.\n\n| model | I_n | U_min | U_max | f_min | f_max | P_n | price | mass |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| VL-25 | 33 | 380 | 480 | 0 | 60 | 18 | 410 | 5.2 |\n| VL-36 | 38 | 380 | 480 | 0 | 60 | 18.5 | 520 | 6.1 |\n| VL-42 | 46 | 380 | 480 | 0 | 60 | 22 | 640 | 7.4 |\n| VL-60 | 62 | 380 | 480 | 0 | 60 | 30 | 890 | 9.6 |"
+  ]
+ },
+ {
+  "id": "T4-43",
+  "family": "F2",
+  "domain": "fluid",
+  "request": "Select a Calder CP end-suction pump to move a light solvent. Duty flow is 18 L/s and the required pressure rise is 420 kPa. At the duty temperature the solvent density is 760 kg/m³ and its dynamic viscosity is 0.9 mPa·s. Available NPSH at the pump inlet is 5.5 m. Take g = 9.81 m/s². Use only the CP catalogue. Choose the lowest-price pump that meets the flow, the pressure rise, the shaft power and the NPSH of this duty. End with a table headed Results with these rows: selected model, price (EUR), required head (m), shaft power (kW), duty flow (L/s), NPSH margin (m).",
+  "requirements": [
+   {
+    "id": "R1",
+    "statement": "Rated flow is at least 18 L/s.",
+    "method": "pass if Q_Lps/18>=1",
+    "tolerance": "0.02 relative"
+   },
+   {
+    "id": "R2",
+    "statement": "Manometric head is at least the head equivalent of 420 kPa in the duty fluid.",
+    "method": "H=420000/(760*9.81); pass if H_m/H>=1. Catalogue metres of fluid are the developed head.",
+    "tolerance": "0.02 relative on H"
+   },
+   {
+    "id": "R3",
+    "statement": "Motor rated power is at least the pump shaft power at the duty pressure rise.",
+    "method": "Pshaft=0.018*420000/eta; pass if Pmot_kW*1000/Pshaft>=1",
+    "tolerance": "0.02 relative on Pshaft"
+   },
+   {
+    "id": "R4",
+    "statement": "NPSHr does not exceed available NPSH.",
+    "method": "pass if NPSHa/NPSHr>=1 with NPSHa=5.5 m",
+    "tolerance": "0.02 relative"
+   }
+  ],
+  "trap": {
+   "judgment": "A centrifugal pump's catalogue head in metres of fluid is the head to compare with the duty, and the duty head is Δp/(ρ_duty g). Using the water density printed for the test converts 420 kPa into too few metres.",
+   "source": "reference condition",
+   "why_missed": "The curve sheet is headed with the water test density, and a one-pass conversion of the stated pressure rise uses that nearby density instead of the solvent density.",
+   "not_stated": "The catalogue says performance is \"measured on water at 20 °C\" and lists \"test-fluid density 998 kg/m³\" beside \"H_m manometric head at rated flow, metres of fluid.\" The request states the solvent density and the pressure rise. Neither text says which density converts pressure to head, and neither says that metres of head carry from the test fluid to the solvent."
+  },
+  "option_table": [
+   {
+    "option": "CP-20",
+    "correct": {
+     "Q_Lps": 20,
+     "R1_ratio": 1.111,
+     "R1": "pass",
+     "H_req_m": 56.33,
+     "H_m": 46,
+     "R2_ratio": 0.817,
+     "R2": "fail",
+     "Pshaft_kW": 9.69,
+     "Pmot_kW": 12,
+     "R3_ratio": 1.238,
+     "R3": "pass",
+     "NPSHr_m": 3.0,
+     "R4_ratio": 1.833,
+     "R4": "pass"
+    },
+    "trap_missed": {
+     "H_req_m": 42.9,
+     "R2_ratio": 1.072,
+     "R2": "pass",
+     "R1": "pass",
+     "Pshaft_kW": 9.69,
+     "R3": "pass",
+     "R4": "pass"
+    }
+   },
+   {
+    "option": "CP-40",
+    "correct": {
+     "Q_Lps": 22,
+     "R1_ratio": 1.222,
+     "R1": "pass",
+     "H_req_m": 56.33,
+     "H_m": 62,
+     "R2_ratio": 1.101,
+     "R2": "pass",
+     "Pshaft_kW": 10.08,
+     "Pmot_kW": 15,
+     "R3_ratio": 1.488,
+     "R3": "pass",
+     "NPSHr_m": 4.2,
+     "R4_ratio": 1.31,
+     "R4": "pass"
+    },
+    "trap_missed": {
+     "H_req_m": 42.9,
+     "R2_ratio": 1.446,
+     "R2": "pass",
+     "R1": "pass",
+     "Pshaft_kW": 10.08,
+     "R3": "pass",
+     "R4": "pass"
+    }
+   },
+   {
+    "option": "CP-50",
+    "correct": {
+     "Q_Lps": 25,
+     "R1_ratio": 1.389,
+     "R1": "pass",
+     "H_req_m": 56.33,
+     "H_m": 70,
+     "R2_ratio": 1.243,
+     "R2": "pass",
+     "Pshaft_kW": 10.8,
+     "Pmot_kW": 18,
+     "R3_ratio": 1.667,
+     "R3": "pass",
+     "NPSHr_m": 6.4,
+     "R4_ratio": 0.859,
+     "R4": "fail"
+    },
+    "trap_missed": {
+     "H_req_m": 42.9,
+     "R2_ratio": 1.632,
+     "R2": "pass",
+     "R1": "pass",
+     "Pshaft_kW": 10.8,
+     "R3": "pass",
+     "R4_ratio": 0.859,
+     "R4": "fail"
+    }
+   },
+   {
+    "option": "CP-80",
+    "correct": {
+     "Q_Lps": 28,
+     "R1_ratio": 1.556,
+     "R1": "pass",
+     "H_req_m": 56.33,
+     "H_m": 75,
+     "R2_ratio": 1.331,
+     "R2": "pass",
+     "Pshaft_kW": 11.45,
+     "Pmot_kW": 22,
+     "R3_ratio": 1.921,
+     "R3": "pass",
+     "NPSHr_m": 3.8,
+     "R4_ratio": 1.447,
+     "R4": "pass"
+    },
+    "trap_missed": {
+     "H_req_m": 42.9,
+     "R2_ratio": 1.749,
+     "R2": "pass",
+     "R1": "pass",
+     "Pshaft_kW": 11.45,
+     "R3": "pass",
+     "R4": "pass"
+    }
+   }
+  ],
+  "reference_design": {
+   "selected_model": "CP-40",
+   "price_EUR": 1720,
+   "required_head_m": 56.33,
+   "shaft_power_kW": 10.08,
+   "duty_flow_Lps": 18,
+   "NPSH_margin_m": 1.3
+  },
+  "worked_solution": "H = 420000/(760*9.81) = 420000/7455.6 = 56.33 m. The water-test density would give 420000/(998*9.81) = 42.90 m, which is the wrong demand. Shaft power depends on duty pressure, flow and efficiency, not on that density choice: Pshaft = 0.018*420000/eta. CP-20: eta 0.78, Pshaft 9.692 kW against a 12 kW motor (ratio 1.238), flow 20/18 = 1.111, NPSH 5.5/3.0 = 1.833, but head 46/56.33 = 0.817, fail by 18.3%. CP-50: head 70/56.33 = 1.243 and power 18/10.80 = 1.667, but NPSHr 6.4 m exceeds 5.5 m, ratio 0.859, fail by 14%. CP-40: flow 22/18 = 1.222, head 62/56.33 = 1.101, Pshaft = 7.560/0.75 = 10.08 kW, motor ratio 15/10.08 = 1.488, NPSH margin 5.5-4.2 = 1.30 m, ratio 1.310. All four are at least 3% above the limit. CP-80 also passes and costs 2100 EUR. Lowest passing price is CP-40 at 1720 EUR. Methods checked: Δp = ρ g H with duty density, and hydraulic power Q Δp. A viscous correction at 0.9 mPa·s against a 1.0 mPa·s water test is under 2% on head and does not flip CP-20 (18% short) or CP-40 (10% margin). Comparing catalogue head converted to pressure with 998 kg/m³ is the same mistake as the 42.90 m demand and is not used.",
+  "wrong_designs": [
+   {
+    "values": {
+     "selected_model": "CP-20",
+     "price_EUR": 980,
+     "required_head_m": 42.9,
+     "shaft_power_kW": 9.69,
+     "duty_flow_Lps": 18,
+     "NPSH_margin_m": 2.5
+    },
+    "failed_requirement_ids": [
+     "R2"
+    ],
+    "why": "Pressure converted with the test-fluid density 998 kg/m³ gives 42.90 m. CP-20 develops 46 m and is the cheapest unit that then appears to pass. On the solvent the required head is 56.33 m, and 46 m is 18.3% low."
+   },
+   {
+    "values": {
+     "selected_model": "CP-50",
+     "price_EUR": 1490,
+     "required_head_m": 56.33,
+     "shaft_power_kW": 10.8,
+     "duty_flow_Lps": 18,
+     "NPSH_margin_m": -0.9
+    },
+    "failed_requirement_ids": [
+     "R4"
+    ],
+    "why": "Cheaper than CP-40 and adequate on head, flow and power, but NPSHr 6.4 m against 5.5 m available, 14% short."
+   }
+  ],
+  "corpus_pages": [
+   "# Calder Pump Co. — CP end-suction pumps\n\nPerformance measured on water at 20 °C. Test-fluid density 998 kg/m³. Test-fluid dynamic viscosity 1.0 mPa·s.\n\nSymbols: Q_Lps rated flow (L/s); H_m manometric head at rated flow, metres of fluid; eta pump efficiency at rated flow; NPSHr_m net positive suction head required (m); Pmot_kW motor rated power (kW); price in EUR; mass in kg.\n\n| model | Q_Lps | H_m | eta | NPSHr_m | Pmot_kW | price | mass |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n| CP-20 | 20 | 46 | 0.78 | 3.0 | 12 | 980 | 26 |\n| CP-40 | 22 | 62 | 0.75 | 4.2 | 15 | 1720 | 38 |\n| CP-50 | 25 | 70 | 0.70 | 6.4 | 18 | 1490 | 44 |\n| CP-80 | 28 | 75 | 0.66 | 3.8 | 22 | 2100 | 55 |"
+  ]
+ }
+]

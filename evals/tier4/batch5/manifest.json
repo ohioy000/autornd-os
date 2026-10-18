@@ -1,0 +1,56 @@
+{
+ "batch": "batch5",
+ "status": "FROZEN 2026-10-18 by the advisor on the owner's instruction ('1 first, full permission') (D44)",
+ "generator": "x-ai/grok-4.7",
+ "generator_prompt": "evals/tier4/batch5/generator-v4.txt",
+ "candidates": "evals/tier4/batch5/candidates.json",
+ "candidates_sha256": "bc2770e567bf4dabd8bebeae552319166f37d25c1e508d925df42965fae6eca2",
+ "corpus": {
+  "T4-41": {
+   "pages": [
+    "evals/tier4/batch5/corpus/T4-41-1.md"
+   ],
+   "sha256": "244d48cbf8cbd2ad830f3b22e9ef4820843247e3a6e5019721ed17b0fd348f22"
+  },
+  "T4-42": {
+   "pages": [
+    "evals/tier4/batch5/corpus/T4-42-1.md"
+   ],
+   "sha256": "73e768df5a1a09c7ff985758672bde51f5445e6338ccc13f5fd135c4a29b8d48"
+  },
+  "T4-43": {
+   "pages": [
+    "evals/tier4/batch5/corpus/T4-43-1.md"
+   ],
+   "sha256": "134dd64d4a01592deaa3a18a3cbe9e1dcf296252da6593633f4831f51543bb9c"
+  }
+ },
+ "families": {
+  "T4-41": "F2",
+  "T4-42": "F2",
+  "T4-43": "F2"
+ },
+ "calibration": {
+  "units": "D-pages on T4-41, T4-42 and T4-43, one repetition",
+  "ceiling_usd": 1.2
+ },
+ "pilot": {
+  "ceiling_usd": 5.0,
+  "arms": {
+   "F2": [
+    "D-pages",
+    "F",
+    "E"
+   ]
+  }
+ },
+ "per_unit_ceilings_usd": {
+  "A": 0.15,
+  "D": 0.4,
+  "D-pages": 0.4,
+  "F": 0.4,
+  "E": 1.5
+ },
+ "deadline_seconds": 3600,
+ "single_call_max_tokens": 32768
+}

@@ -1,0 +1,41 @@
+{
+ "repairs": [
+  {
+   "id": "T4-42",
+   "field": "request",
+   "from": "End with a table headed Results with these rows: selected model, price (EUR), motor RMS current (A), motor crest current (A), inverter current rating used (A).",
+   "to": "End with a table headed Results with these rows: selected model, price (EUR), motor line current (A), current compared with I_n (A), I_n (A).",
+   "why": "Generator v4 rule 8 forbids any sentence of the request that hints at the trap. The Results rows 'motor RMS current' and 'motor crest current' name the RMS-to-amplitude conversion the trap tests. The neutral rows ask for the current the solver compared with I_n, which is 28.64 A with the trap missed and 40.5 A without it."
+  },
+  {
+   "id": "T4-42",
+   "field": "reference_design",
+   "from": {
+    "selected_model": "VL-42",
+    "price_EUR": 640,
+    "motor_RMS_current_A": 28.64,
+    "motor_crest_current_A": 40.5,
+    "inverter_current_rating_used_A": 46
+   },
+   "to": {
+    "selected_model": "VL-42",
+    "price_EUR": 640,
+    "motor_line_current_A": 28.64,
+    "current_compared_with_I_n_A": 40.5,
+    "I_n_A": 46
+   },
+   "why": "re-keyed to the repaired Results rows; the values are unchanged"
+  }
+ ],
+ "flags": [
+  {
+   "flag": "T4-41's power row is read two ways: 2162 W at the end of the acceleration, or 1962 W at steady speed. Every option passes power either way, so the selection does not depend on it, and the row is not a key row."
+  }
+ ],
+ "dropped": [
+  {
+   "id": "T4-44",
+   "why": "Two defects. (1) The Results rows include 'buckling factor of safety', which names the trap (rule 8). (2) The verdict depends on the method (rule 4): PS-3 at L/r 135 has a buckling factor of safety of 3.02 on the Euler load and 2.65 under AISC E3, both passing 2.5, but 2.32 under EC3 curve b and 2.13 under curve c, both failing, and then the answer becomes PS-4. The catalogue gives no section type to fix the curve. Repairing it would mean changing catalogue data, which no earlier batch has done, and its trap (check buckling on a 4 m post) is the most basic of the four."
+  }
+ ]
+}
