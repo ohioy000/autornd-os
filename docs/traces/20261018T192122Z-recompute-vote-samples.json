@@ -1,0 +1,156 @@
+{
+ "model": "google/gemini-3.8-flash",
+ "n": 3,
+ "samples": {
+  "T4-51": [
+   {
+    "jacket": "KJ-55",
+    "heat loss W/m": 58.4,
+    "outer surface temperature \u00b0C": 35.1,
+    "cost EUR/m": 39
+   },
+   {
+    "jacket": "KJ-55",
+    "heat loss W/m": 58.4,
+    "outer surface temperature \u00b0C": 35.1,
+    "cost EUR/m": 39
+   },
+   {
+    "jacket": "KJ-55",
+    "heat loss W/m": 58.42,
+    "outer surface temperature \u00b0C": 35.11,
+    "cost EUR/m": 39
+   }
+  ],
+  "T4-52": [
+   {
+    "drive": "A60",
+    "peak torque N\u00b7m": 2.0,
+    "rms torque N\u00b7m": 0.84,
+    "peak speed rad/s": 235.62,
+    "cost EUR": 690
+   },
+   {
+    "drive": "A60",
+    "peak torque N\u00b7m": 2.0,
+    "rms torque N\u00b7m": 0.84,
+    "peak speed rad/s": 235.6,
+    "cost EUR": 690
+   },
+   {
+    "drive": "A60",
+    "peak torque N\u00b7m": 2.0,
+    "rms torque N\u00b7m": 0.84,
+    "peak speed rad/s": 235.6,
+    "cost EUR": 690
+   }
+  ],
+  "T4-53": [
+   {
+    "cable": "V95",
+    "ampacity A": 301,
+    "voltage drop V": 2.98,
+    "cost EUR/m": 18.6
+   },
+   {
+    "cable": "V95",
+    "ampacity A": 301,
+    "voltage drop V": 2.98,
+    "cost EUR/m": 18.6
+   },
+   {
+    "cable": "V95",
+    "ampacity A": 301,
+    "voltage drop V": 2.98,
+    "cost EUR/m": 18.6
+   }
+  ],
+  "T4-55": [
+   {
+    "Motor": "K-55",
+    "Torque (N\u00b7m)": 55,
+    "Speed (rpm)": 1200,
+    "Current (A)": 13.2,
+    "Price (EUR)": 1280
+   },
+   {
+    "Motor": "K-55",
+    "Torque (N\u00b7m)": 55,
+    "Speed (rpm)": 1200,
+    "Current (A)": 13.2,
+    "Price (EUR)": 1280
+   },
+   {
+    "Motor": "K-55",
+    "Torque (N\u00b7m)": 55,
+    "Speed (rpm)": 1200,
+    "Current (A)": 13.2,
+    "Price (EUR)": 1280
+   }
+  ],
+  "T4-56": [
+   {
+    "Bar": "PF-80x10",
+    "Stress (MPa)": 145.16,
+    "Mass (kg)": 9.42,
+    "Width (mm)": 80
+   },
+   {
+    "Bar": "PF-80x10",
+    "Stress (MPa)": 145.16,
+    "Mass (kg)": 9.42,
+    "Width (mm)": 80
+   },
+   {
+    "Bar": "PF-80x10",
+    "Stress (MPa)": 145.16,
+    "Mass (kg)": 9.42,
+    "Width (mm)": 80
+   }
+  ],
+  "T4-57": [
+   {
+    "Pump": "H-280",
+    "NPSH available (m)": 8.3,
+    "Head (m)": 30,
+    "Flow (L/s)": 24,
+    "Price (EUR)": 4550
+   },
+   {
+    "Pump": "H-280",
+    "NPSH available (m)": 8.3,
+    "Head (m)": 30,
+    "Flow (L/s)": 24,
+    "Price (EUR)": 4550
+   },
+   {
+    "Pump": "H-280",
+    "NPSH available (m)": 8.3,
+    "Head (m)": 30,
+    "Flow (L/s)": 24,
+    "Price (EUR)": 4550
+   }
+  ],
+  "T4-58": [
+   {
+    "Reactor": "B-500",
+    "Voltage drop (%)": 3.0,
+    "Current (A)": 721.7,
+    "Price (EUR)": 6100
+   },
+   {
+    "Reactor": "B-320",
+    "Voltage drop (%)": 2.48,
+    "Current (A)": 461.9,
+    "Price (EUR)": 4500
+   },
+   {
+    "Reactor": "B-320",
+    "Voltage drop (%)": 2.48,
+    "Current (A)": 461.9,
+    "Price (EUR)": 4500
+   }
+  ]
+ },
+ "spend": 0.39653925
+}
