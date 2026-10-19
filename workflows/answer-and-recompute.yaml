@@ -1,0 +1,148 @@
+name: answer-and-recompute
+description: >
+  Ruling D53: answer once, check against the asks, then
+  recompute the answer's typed results blind — three
+  samples on the recompute tier, voted into a note. No
+  plan, no judge, no loop: the plan is reasoning, not a
+  yardstick, and the vote never blocks, routes or revises.
+  Triage, grounding, the asks, one answer on the engineering
+  tier from the request and the asks alone (stating its
+  results as typed values, args: {results: true}), the
+  honest-refusal gate, the free checks, the recompute and
+  its vote. A flag is a note on the delivery, nothing more.
+
+nodes:
+  # ── classify ────────────────────────────────────────────────────
+  - id: triage
+    kind: ai
+    tier: triage
+    prompt: triage
+    schema: TriageVerdict
+
+  # Ruling D51 (1): the asks node, on the triage tier. A model
+  # proposes what the request asks, quoted verbatim, each with its
+  # kind; the free check below keeps only what occurs in the
+  # request and counts every other quote as not anchored.
+  - id: asks
+    kind: ai
+    tier: triage
+    prompt: asks
+    schema: AsksVerdict
+    depends_on: [triage]
+
+  - id: asks_anchored
+    kind: check
+    check: asks_anchored
+    args:
+      asks: asks.asks
+      request: request
+    depends_on: [asks]
+
+  # Grounding, assembled deterministically — the same node as
+  # engineering-rnd's, because it is the same job.
+  - id: context
+    kind: check
+    check: build_context
+    depends_on: [asks_anchored]
+
+  # ── answer ───────────────────────────────────────────────────────
+  # The one answer, on the engineering tier, from the request and
+  # the asks with no plan. The implement prompt omits its 'Plan:'
+  # section here: the task line reads 'Produce the answer to the
+  # following request.' Ruling D53: args: {results: true} adds the
+  # results instruction — one typed entry per ask of kind value or
+  # verdict — which the recompute vote compares against. The
+  # instruction is gated on this arg, so no other workflow's
+  # implement prompt changes.
+  - id: implement
+    kind: ai
+    tier: engineering
+    specialist: lead
+    prompt: implement
+    schema: ImplementVerdict
+    max_tokens: plan_max_tokens    # the deliverable is plan-sized; 16k truncated it twice (073, 075)
+    depends_on: [context]
+    args:
+      results: true
+
+  # Ruling D51 (5): the implementer's honest-refusal channel. An
+  # entry that names an ask ends the run blocked — this workflow
+  # has no escalation sub-graph to route to, and an unmet ask is a
+  # terminal fact, not an iteration. An entry naming no ask is a
+  # note: counted, never blocking, routed nowhere.
+  - id: blocked_check
+    kind: check
+    check: blocked_on_unmet
+    args:
+      blocked_on: implement.blocked_on
+      asks: asks_anchored.anchored
+      request: request
+    depends_on: [implement]
+
+  - id: blocked_gate
+    kind: gate
+    condition: blocked_check.passed == true
+    depends_on: [blocked_check]
+    on_fail: blocked
+    on_fail_reason: "Implementation blocked on an ask it cannot satisfy"
+
+  # The free checks, before the recompute. If the implementation
+  # does not even mention an anchored ask, no recompute is needed
+  # to know the answer is incomplete — but the run completes
+  # either way: these checks are notes, and the vote is a note on
+  # top of them.
+  - id: coverage
+    kind: check
+    check: criteria_addressed
+    args:
+      criteria: asks_anchored.quotes
+      text: implement.summary
+      # The review of 2026-10-14: when nothing anchors, the ask
+      # is the whole request, and word presence cannot judge a
+      # whole request — coverage is passed and unchecked, a note.
+      fallback: asks_anchored.fallback
+    depends_on: [implement]
+
+  # Ruling D51 (4): the reference is the request's stated figures,
+  # never a plan — there is no plan here at all.
+  - id: consistency
+    kind: check
+    check: numbers_consistent
+    args:
+      reference: request
+      implementation: implement.summary
+    depends_on: [implement]
+
+  # ── recompute ────────────────────────────────────────────────────
+  # Three blind samples on the recompute tier, each one a separate
+  # call, each recomputing the anchored asks of kind value and
+  # verdict from the request and the grounding alone. No sample
+  # sees the answer, its results, the plan or another sample's
+  # output. When the recompute tier is not configured the node
+  # skips and records the skip; the vote reads a skip as skipped,
+  # never as passed.
+  - id: recompute
+    kind: ai
+    tier: recompute
+    prompt: recompute
+    schema: RecomputeVerdict
+    args:
+      samples: 3
+    max_tokens: recompute_max_tokens    # a full calculation, not a verdict — plan-sized
+    depends_on: [consistency]
+
+  # The vote. A note, never a gate: it never blocks, routes or
+  # revises, and the run's status is decided without it. A flag is
+  # recorded in the run's outputs and in the delivery the API
+  # returns, and nothing reads it.
+  - id: recompute_vote
+    kind: check
+    check: recompute_vote
+    args:
+      results: implement.results
+      samples: recompute.samples
+      asks: asks_anchored.anchored
+      request: request
+      skipped: recompute.skipped
+      reason: recompute.reason
+    depends_on: [recompute]

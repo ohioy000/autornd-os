@@ -242,6 +242,8 @@ class PhaseRunner:
             return await self._reground_lookup(state)
         if node.check == "blocked_on_unmet":
             return self._blocked_on_unmet(node, state)
+        if node.check == "recompute_vote":
+            return await self._recompute_vote_check(node, state)
         if node.check not in registry:
             raise KeyError(
                 f"node '{node.id}' names unknown check '{node.check}'; "
@@ -386,6 +388,29 @@ class PhaseRunner:
                 "evidence": [f"blocked: {b}" for b in result.data["blocked"]],
                 "blocked_on": list(result.data["blocked"]),
             })
+        return result
+
+    async def _recompute_vote_check(
+            self, node: Node, state: ExecutionState) -> Result:
+        """The recompute vote (Ruling D53), persisted for the delivery.
+
+        The vote is a registered check like any other — free,
+        deterministic, reading typed fields — with one addition. The
+        API's delivery returns the run's persisted phases, and a
+        check's output is not otherwise persisted (only AI nodes
+        write phase rows), so the vote's own output is written
+        through the phase channel here, on a zero-cost response, so
+        the flag the vote found is what the delivery carries. Nothing
+        routes on it (D53 §2 (5)): the write is a record, not a gate.
+        """
+        result = get_check("recompute_vote")(**resolve_args(node, state))
+        if self.on_phase:
+            self.on_phase(
+                node.id, dict(result.data),
+                [ModelResponse(content="", model="",
+                               prompt_tokens=0, completion_tokens=0,
+                               cost=0.0)],
+                state.iteration)
         return result
 
     # ── phases ────────────────────────────────────────────────────────────
@@ -636,6 +661,12 @@ class PhaseRunner:
             # Ruling D51 (2): the answer is judged against the
             # asks, and the implementer reads them too.
             asks=self._anchored_asks(state),
+            # Ruling D53: only the answer-and-recompute workflow's
+            # implement node asks for typed results (its args carry
+            # results: true). Every other workflow's implement prompt
+            # is byte-identical to what it was — the instruction is
+            # gated on this arg, not on the workflow's name.
+            results=bool(node.args.get("results", False)),
         )
         return verdict, responses
 
@@ -884,3 +915,32 @@ class PhaseRunner:
             asks=self._anchored_asks(state),
         )
         return verdict, [response]
+
+    async def _phase_recompute(self, node: Node, state: ExecutionState):
+        """The recompute node (Ruling D53): blind recomputation.
+
+        `samples` separate calls on the recompute tier — three,
+        as the workflow declares — each one recomputing the
+        anchored asks of kind value and verdict from the request
+        and the grounding alone. The tier is optional, like the
+        premium tier: when no model is configured for it, the
+        node skips and records the skip. The skip carries an
+        empty samples list, so `recompute.samples` resolves
+        whatever happened, and the vote downstream reads the
+        skip as skipped, never as passed.
+        """
+        if self.client.recompute_model() is None:
+            return {
+                "skipped": True,
+                "flagged": False,
+                "reason": ("no model configured for the recompute "
+                           "tier — the recompute samples did not run"),
+                "samples": [],
+            }, []
+        verdict, responses = await phases.run_recompute(
+            self.client, state.request, self.context,
+            self._anchored_asks(state),
+            max_tokens=self._max_tokens(node),
+            samples=int(node.args.get("samples", 3)),
+        )
+        return verdict, responses

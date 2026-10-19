@@ -376,6 +376,12 @@ class OpenRouterClient:
         # review/rework_review. Dropped when unset so resolve_model falls back to
         # the engineering tier — the prior homogeneous behaviour.
         **({"judge": settings.model_judge} if settings.model_judge else {}),
+        # Ruling D53: the recompute tier serves the recompute node's blind
+        # samples. Dropped when unset — the node then skips (the adapter
+        # reads recompute_model() and records the skip), so a recompute can
+        # never silently fall back to the engineering tier.
+        **({"recompute": settings.model_recompute}
+           if settings.model_recompute else {}),
     }
 
     def __init__(self, api_key: str | None = None, base_url: str | None = None):
@@ -808,6 +814,18 @@ class OpenRouterClient:
         if not candidate or candidate == settings.model_engineering:
             return None
         return candidate
+
+    def recompute_model(self) -> str | None:
+        """The recompute tier's model, or None when it is not configured.
+
+        Ruling D53: the recompute node's own skip test. The tier is
+        optional like the premium tier; unset means the node skips and
+        records the skip — a recompute that fell back to the engineering
+        tier would not be blind to nothing in particular, but it would
+        silently run on the model that produced the answer, which is
+        not what the vote measures.
+        """
+        return self.FUNCTION_MODELS.get("recompute")
 
     async def chat(
         self,
@@ -1522,4 +1540,8 @@ def rebuild_function_models() -> None:
         # Ruling D35: same optional-tier contract as FUNCTION_MODELS above —
         # unset drops `judge` so judging nodes fall back to engineering.
         **({"judge": settings.model_judge} if settings.model_judge else {}),
+        # Ruling D53: same optional-tier contract — unset drops `recompute`
+        # so the recompute node skips rather than falling back.
+        **({"recompute": settings.model_recompute}
+           if settings.model_recompute else {}),
     }

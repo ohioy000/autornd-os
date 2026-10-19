@@ -1,0 +1,108 @@
+{
+  "command_id": "ARCH-20261018-123",
+  "status": "DONE",
+  "executed": true,
+  "head_before": "c99eacd4f556a78c0419d06db3bccd50afa42554",
+  "head_after": "d502abb",
+  "results": {
+    "suite": {
+      "before": "1552 passed in 140.01s, network guard: 0",
+      "after": "1611 passed in 137.80s, network guard: 0",
+      "new": "59 tests in tests/test_recompute_vote.py, each with its break-proof"
+    },
+    "replay_criterion_e": {
+      "answers_scored": 21,
+      "wrong_flagged": 3,
+      "wrong_labels": [
+        "pilot-batch2 arm F (T4-15): N_cr_TF 229.3 vs 312.1633, lambda_bar 1.29 vs 1.11, N_b_Rd 151.7 vs 187.0533",
+        "batch5 kimi T4-42: selection VL-25 vs majority VL42 (support 3); 'current compared with I_n (A)' 4.36 vs 40.5 (support 3)",
+        "T4-42 repeat 3: the same two rows"
+      ],
+      "false_flag_reproduced": "T4-42 repeat 1 (correct answer, flagged): ask 3 'current compared with I_n (A)', answer -5.5 vs majority 40.5, support 3",
+      "method": "the check's flags compared against recompute_vote.score computed with the probe's own primitives (rc.parse_table / find / num / ident / TOL, rv.majority), on fixtures built from docs/traces"
+    },
+    "vote_rules_criterion_f": "identity normalisation ('VL-42' == 'vl 42'), the 3% tolerance edge (2.9% agrees, 3.1% disagrees), unit mismatch -> no_consensus (not a flag), a 1-1-1 split -> no_consensus, 1 parseable sample -> unchecked — each with its break-proof",
+    "accounting_criterion_d": "three samples make three reservations, each released by its own identity (in-flight snapshots prove [1,1,1] with identical worst cases computed from the sent messages); a sample failing after dispatch keeps its own worst case as unreconciled_liability and records failed_after_dispatch (kind error_status)",
+    "prompts_criterion_h": "engineering-rnd and verify-first implement prompts byte-identical to main's — golden prompts captured from the pre-change code pin both shapes; the results instruction is gated on the node's args {results: true} and is present, positioned after the asks and before the blocked_on sentence, only when the arg is set",
+    "workflow_criterion_g": "workflows/answer-and-recompute.yaml loads (11 nodes); a mocked run delivers with the vote in its outputs once flagged (answer 100.0 vs 2-of-3 majority 200.0) and once not (200.0 vs 200.0/200.0/201.0, majority 200.33 within tolerance); in both the run's status equals that of a run with the vote nodes removed",
+    "skip_criterion_b": "with model_recompute unset the recompute node makes zero calls and returns {skipped: true, flagged: false, reason: 'no model configured for the recompute tier — the recompute samples did not run'}; the vote reads the skip as skipped, never as passed",
+    "docs_criterion_i": ".env.example carries MODEL_RECOMPUTE= (empty) and RECOMPUTE_MAX_TOKENS=32768; tests/test_docs.py passes; counts re-derived from pytest --collect-only (1611 tests, 82 files) in HANDOVER.md, README.md and AGENTS.md, with the new workflow and tier named where those documents list them",
+    "no_paid_call": "every test is provider-free; the network guard read 0 non-loopback attempts in both suite runs",
+    "delivery_state": {
+      "branch": "arch/20261018-d53-recompute-vote",
+      "pr": 208,
+      "url": "https://github.com/ohioy000/autornd-os/pull/208",
+      "head": "73a27f9fcaf6a9d1128889e8fd01b784e7424d13",
+      "state": "open",
+      "ci": "5/5 success"
+    },
+    "ci": {
+      "check_runs": 5,
+      "conclusion": "all success",
+      "jobs": [
+        "docker",
+        "test (3.11)",
+        "test (3.12)",
+        "test (3.13)",
+        "editable-install"
+      ],
+      "commit": "6361b53"
+    }
+  },
+  "deviations": [
+    {
+      "what": "The vote's output is persisted for the delivery through the phase channel (PhaseRunner.on_phase) with a zero-cost, empty-model ModelResponse, in _recompute_vote_check.",
+      "why": "The command's assumption 2: 'The API's delivery carries the run's outputs. If it does not, add only the vote's output to it and say so in deviations.' It does not carry check outputs — only AI nodes write phase rows — so without this the flag the vote finds would never reach the delivery the API returns, contradicting constraint 10 ('The vote's output is in the run's outputs and in the delivery the API returns'). The write is a record, not a call: the response it carries bills nothing."
+    },
+    {
+      "what": "tests/conftest.py PLACEHOLDERS gained MODEL_RECOMPUTE and RECOMPUTE_MAX_TOKENS.",
+      "why": "test_hermetic_suite's guard requires set(PLACEHOLDERS) == {name.upper() for name in Settings.model_fields} minus its NOT_SETTINGS; the two new Settings fields made that set red. The entries force the hermetic suite's settings to placeholders like every other optional tier's. Not named in the command's scope list, but the suite cannot be green without it."
+    },
+    {
+      "what": "ResultValue.ask is `int | str`, not the constraint's literal `ask: str`.",
+      "why": "The ruling (§2 (3)) says ask 'names an anchored ask by its number or its quote, the way blocked_on does (D51 (5))', and BlockedOnAsk.ask is `int | str | None`. The recompute prompt instructs 'ask = its number', the recorded samples' results carry numbers, and pydantic rejects an int for a plain str — a strict str would fail the very fixture the command's criterion (e) requires. The constraint's literal type is the anomaly; the ruling's citation governs."
+    },
+    {
+      "what": "_recompute_ident keeps recompute_check.ident's 'in parallel' special case; the constraint's parenthetical '(recompute_check.ident without its in parallel special case)' was not followed.",
+      "why": "The command contradicts itself here, and the acceptance criteria decide it. Criterion (e) requires 'the check's flags match recompute_vote.score's on each answer', the GOAL's DONE WHEN requires 'the replay reproduces the probe's flags on every recorded answer', and the ruling §2 (4) says identity comparison 'is the rule of evals/tier4/probes/recompute_check.py ident'. The probe's ident drops the words 'in parallel' — and the recorded T4-24 answer says '5 × EPC-1200-60 in parallel' against the samples' '5 × EPC-1200-60', a correct answer the probe scores as agreement. Without the special case the check flags that correct answer where the probe does not, failing criterion (e) on that answer. The special case exists for exactly this recorded data. Implemented the probe-identical rule (the special case present), which is the only reading under which the command's own acceptance criteria hold; the divergence is documented in _recompute_ident's docstring."
+    }
+  ],
+  "questions_for_advisor": [
+    "Constraint 9's parenthetical says identity comparison runs 'without its in parallel special case', but criterion (e), the DONE WHEN and Ruling D53 §2 (4) all adopt recompute_check.ident as it stands — special case included — and the recorded T4-24 answer ('5 × EPC-1200-60 in parallel' vs samples' '5 × EPC-1200-60') is a correct answer that only the special case scores as agreement. I implemented the probe-identical rule. Confirm the ruling's citation governs (the current behaviour), or rule the stricter ident and accept that T4-24 flags as a second false flag on a correct answer — a one-line change to _recompute_ident and its test follows either way."
+  ],
+  "preconditions_ran": [
+    {
+      "command": "grep -c 'Ruling D53, issued by the advisor' docs/reviews/2026-10-18-d53-the-recompute-vote.md",
+      "expected": "1",
+      "observed": "1",
+      "outcome": "present"
+    },
+    {
+      "command": "test -f .orchestration/responses/ARCH-20261017-122.response.json && echo ok",
+      "expected": "ok",
+      "observed": "ok",
+      "outcome": "present"
+    },
+    {
+      "command": "ls docs/traces/20261018T180951Z-tier4-calibration-batch5.jsonl docs/traces/20261018T181158Z-recompute-vote-samples.json docs/traces/20261018T192122Z-recompute-vote-samples.json docs/traces/20261018T035714Z-recompute-vote-samples.json | wc -l",
+      "expected": "4",
+      "observed": "4",
+      "outcome": "present"
+    },
+    {
+      "command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none",
+      "expected": "none",
+      "observed": "none",
+      "outcome": "present"
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass; report the count",
+      "observed": "1552 passed in 140.01s; network guard: 0 non-loopback attempt(s) recorded",
+      "outcome": "present"
+    }
+  ],
+  "suite_count_before": 1552,
+  "suite_count_after": 1611,
+  "notes": "All five preconditions ran before any code was written; none was blind. The response was committed IN_PROGRESS (31b855b) before the work started. No paid call was made; the network guard read 0 in both suite runs. The branch is a descendant of origin/arch/20261018-d53-recompute-vote (the advisor's ruling branch, merged to main as PR #206), so the push is a fast-forward."
+}
