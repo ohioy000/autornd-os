@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1611 · **Date of this snapshot:** 2026-10-18, counts re-derived against the tree under test
+**Tests:** 1622 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -325,7 +325,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      82 files, 1611 tests
+tests/                      82 files, 1622 tests
 
 ```
 
@@ -736,7 +736,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1611 total)
+### 3.7 Test distribution (1622 total)
 
 
 | file | n | file | n |
@@ -748,7 +748,7 @@ is revoked and the warning re-opens with a date.
 | test_budget_transparency.py | 11 | test_citation_demand.py | 12 |
 | test_command_template.py | 38 | test_coverage_shapes.py | 46 |
 | test_d51_acceptance.py | 48 | test_direct_baseline.py | 6 |
-| test_doc_corpora.py | 9 | test_docs.py | 11 |
+| test_doc_corpora.py | 9 | test_docs.py | 22 |
 | test_engine.py | 9 | test_env_ignore.py | 7 |
 | test_evals.py | 73 | test_evidence_shape.py | 14 |
 | test_failure_path_terminal.py | 18 | test_figure_parsing.py | 10 |
@@ -821,7 +821,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1611/1611 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1622/1622 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

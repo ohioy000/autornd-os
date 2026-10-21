@@ -2,12 +2,12 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1611%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1622%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
 
-You describe an engineering objective. AutoRnD grounds it in your documentation, looks up what your documentation does not cover and cites the sources, plans the work, builds it, checks it against criteria written in advance, and either finishes or tells you exactly what stopped it.
+You describe an engineering objective. AutoRnD grounds it in your documentation, looks up what your documentation does not cover, answers it, checks the answer against what the request asked, and either delivers it or tells you exactly what stopped it.
 
 It starts from engineering R&D, but nothing in it is specific to engineering. The mechanisms are a workflow you define, a research phase that establishes what is actually known, checks that cost nothing, and evals that tell you whether a change helped.
 
@@ -19,36 +19,53 @@ It starts from engineering R&D, but nothing in it is specific to engineering. Th
 
 ### What this is
 
-A working multi-model agentic harness for engineering R&D: seven
-workflows (engineering-rnd, lean, triage-only, triage-classify,
-verify-first, plan-probe,
-independent-check-probe) that drive a request through grounding, planning,
-building, validation, review and escalation, reaching a typed terminal on a
-live run. Measured: one live completed run, 9 calls, six cents, validate 6/6,
-review ship:true — with the limits beside it: quality is measured as
-termination, not correctness; six tiers require configuration; auth is open
-by default.
+A multi-model agentic harness for engineering R&D. A workflow, defined in a
+YAML file, drives a request through grounding, an answer, free deterministic
+checks and optional model checks, and ends in a typed status: delivered,
+escalated with a diagnosis, or blocked with the reason. It talks to any
+OpenAI-compatible endpoint, and you choose every model.
+
+It is a research harness as much as a product. What it has been measured to
+do, and not to do, is under [Status](#status).
 
 ### Scope
 
-For engineering objectives stated in prose: grounding in your docs, outward
-lookup with sources, planning against pre-written criteria, implementation as
-structured text, validation, risk-scaled review, escalation with a diagnosis.
-It produces artifacts as text — plans, designs, calculations — and explicitly
-does not compile, run, deploy, or edit files. No streaming, no roles, no
-coverage tooling; see Limitations.
+For engineering objectives stated in prose: grounding in your documents,
+outward lookup with sources, answers as structured text, checks against what
+the request asked, and escalation with a diagnosis when a check fails. It
+produces written work — designs, calculations, procedures, plans — and does not
+compile, run, deploy or edit files. See [Limitations](#limitations).
+
+### Status
+
+The harness measures itself, and the results so far are mixed. Read them
+before relying on any workflow:
+
+- **On closed engineering questions, one call to a capable model is hard to
+  beat.** The full multi-phase workflow has not beaten it on any question set
+  measured so far, and it costs many times more.
+- **Model judges have not caught a real error.** Every judge dissent read by
+  hand so far was false.
+- **Independent recomputation has.** Several cheap, blind recomputes and a
+  majority vote flagged every wrong answer measured. That is why the
+  `answer-and-recompute` workflow exists.
+- **Research cites what the search provider returns.** It does not yet fetch a
+  source and confirm that a quoted passage is in it.
+
+Every run, its trace and its figures are recorded with a date under
+[`docs/reviews/`](docs/reviews/) and [`docs/traces/`](docs/traces/), and
+`HANDOVER.md` §6 keeps the measured facts. This README describes mechanisms and
+points to those records rather than restating their figures, so it cannot fall
+behind them.
 
 ### How it was built
 
-By agents operating under a written protocol (`AGENTS.md`), with a
-deliberate division of labour: an advisory model with read-only access to
-the public history rules on what the harness concludes, and coding agents
-with write access execute — the two meet only through versioned
-command/response files (`.orchestration/`), never through shared state.
-Commit trailers credit the coding agents; the advisory role is evidenced by
-the channel, not by a name in history. The project is therefore both a
-working program and a worked record of how agents can produce one: the
-command channel, the serving ledger and the conventions are the evidence.
+By agents working under a written protocol (`AGENTS.md`). An advisory model
+rules on what the harness concludes and reviews the work, and coding agents
+implement it. The two meet through versioned command and response files in
+`.orchestration/`, never through shared state. The project is both a working
+program and a worked record of how agents can produce one: the command channel,
+the serving ledger and the conventions are the evidence.
 
 ---
 
@@ -103,16 +120,15 @@ What is left for a model is judgement, which is what models are for. The rest is
 
 Every prompt states this contract in both directions: producing phases are told their response *is* the deliverable, and assessing phases are told that "it has not been run" is not a defect. Without both halves stated, a capable model asked to "implement" correctly reports that it cannot reach your filesystem, the validator correctly rejects an implementation that does not exist, and the loop burns every iteration before escalating.
 
-The same reasoning shapes the plan: **success criteria must be verifiable by reading the implementation.** `reconnect loop applies exponential backoff capped at 60s with jitter` can be checked. `reconnects within 30s in production` cannot, and will stall the loop forever. A plan that cannot state real criteria must return `ready: false` with the reason.
+The same reasoning sets the yardstick: **the request is what the answer is judged against.** Before anything is judged, the run quotes what the request asks — values, verdicts, steps, constraints, format — and a free check keeps only the quotes that really occur in it. Checks and judges then test the answer against those asks, never against criteria a planner wrote, and a judge that fails the work must name the ask it failed. A request too underspecified to work on stops early, with the reason.
 
 ## Research
 
 ### Search is the expensive tier — treat it that way
 
-Once every call was actually priced, search turned out to be **61% of a full
-workflow** and **98% of a grounding run** ($0.72 of $0.74 across eight
-sectors). Nothing else comes close, so four things bound it, in the order they
-take effect:
+Once every call was actually priced, search turned out to be the largest share
+of a workflow's cost by far, so four things bound it, in the order they take
+effect:
 
 - **Low-risk work does not look anything up.** A wrong answer in copy,
   configuration or presentation costs a correction, not a board revision. The
@@ -138,49 +154,30 @@ take effect:
 
 ### The token budget is the dial, and it is measured
 
-One measured search model billed **$15.00 per million output tokens plus about
-$0.007 a request**, and filled whatever cap it was given (2907 of 3000). At a
-3000-token cap the fee is 13% of the cost and tokens are 87% — so "it is priced
-per call, give it the maximum" is the opposite of what the billing does. Check
-your own model's rates; the shape of the result is what transfers, not the
-number.
+Search models tend to bill per request *and* per output token, and to fill
+whatever cap they are given, so the token cap rather than the request fee
+decides most of a lookup's cost. Accuracy tracks the same budget: in the
+grounding evals, more output tokens recovered more of the published figures,
+close to linearly. Tokens buy figures, so the budget is a dial rather than waste
+to trim, and it scales with consequence:
 
-Accuracy tracks that budget almost linearly. Graded against published figures
-across the eight `evals/grounding` sectors:
-
-| total output tokens | figures recovered | search cost, 8 sectors |
+| risk | lookup | budget |
 |---|---|---|
-| ~4800 (4 separate lookups) | 7/8 | $0.72 |
-| ~2900 | 5/8 | $0.32 |
-| ~1400 | 3/8 | $0.17 |
-
-**Dated figures — read the design with them.** They were recorded 2026-09-13
-(`1be3293`), under the per-sector lookup design in which a workflow could make
-up to four separate lookups. `36b1bf8`, the same day, bundled every blocking
-gap into one request per workflow (`MAX_LOOKUPS = 1`) — one request carrying
-every gap, the design the code runs today. So the lookup counts and the cost
-column belong to the older design; what transfers is the shape of the curve.
-Roughly one sector per 800 tokens in those measurements.
-
-Tokens buy figures, so the budget is a dial rather than waste to trim — which
-is why it scales with consequence:
-
-| risk | lookup | budget | cost |
-|---|---|---|---|
-| low | none | — | $0 |
-| medium | one | `SEARCH_MAX_TOKENS` (1500) | ~$0.03 |
-| high, critical | one | `SEARCH_MAX_TOKENS_CONSEQUENTIAL` (4000) | ~$0.07 |
+| low | none | — |
+| medium | one | `SEARCH_MAX_TOKENS` |
+| high, critical | one | `SEARCH_MAX_TOKENS_CONSEQUENTIAL` |
 
 Set both to the same number for a flat budget. Re-measure after changing
 either: `--scenarios evals/grounding` grades against the published figures and
-reports spend per tier, so the trade is a table rather than an argument.
+reports spend per tier, so the trade is a table rather than an argument. The
+defaults are in `.env.example`; the dated measurements behind them are in
+`HANDOVER.md` §6.3.
 
-Run `python -m autornd.evals.cli --max-spend 0.50` on anything that touches this
+Run the evals with a spend cap (`--max-spend`) on anything that touches this
 tier. Reports break spend down per tier, so you can see where it went:
 
 ```
-spend by tier: search $0.0885, engineering $0.0332, architecture $0.0216,
-               research $0.0020, triage $0.0001
+spend by tier: search …, engineering …, architecture …, research …, triage …
 ```
 
 
@@ -245,16 +242,18 @@ The sequence of phases is data, not code. A workflow is a graph of nodes in YAML
 
 Conditions are a deliberately small language — one comparison over a dotted path — rather than `eval`, because a workflow file is configuration and configuration must not execute code.
 
-Six workflows ship:
+The workflows that ship, one file each in `workflows/` (`tests/test_docs.py` checks this table against the directory):
 
 | workflow | shape |
 |---|---|
-| `engineering-rnd` | the full team: feasibility, domain review, escalation, risk-scaled review |
+| `engineering-rnd` | the full team: plan, feasibility, a build loop with domain review and judges, risk-scaled review, escalation |
 | `lean` | plan, build, verify. No review team, no escalation — but it keeps the free checks |
+| `verify-first` | no plan: the request's asks, one answer, the free checks and one judge. One revision if the judge names a failed ask; escalated if the dissent survives |
+| `answer-and-recompute` | the request's asks, one answer with typed results, then blind recompute samples on the optional recompute tier and a free vote. A disagreement is a note on the delivery, never a block; with the recompute tier empty, the vote records a skip |
 | `triage-only` | classification and grounding, two calls, for measuring triage quality cheaply |
-| `verify-first` | Ruling D51 (8): no plan — answer once on the engineering tier from the request and its asks, check against the asks, one revision if a judge dissents, escalated if the dissent survives. Not the standing workflow; nothing routes to it |
 | `triage-classify` | one node — triage alone. A calibration sweep costs a fraction of a cent per call instead of a whole workflow, which is what makes running one over dozens of scenarios affordable |
-| `answer-and-recompute` | Ruling D53: the asks, one answer on the engineering tier with typed results, then three blind recompute samples on the optional recompute tier and a free `recompute_vote` — a note on the delivery that flags an answer whose key figures a majority of the samples recomputed differently. Set `MODEL_RECOMPUTE` to enable it; empty, the recompute node skips and the vote records the skip |
+| `plan-probe` | triage, grounding and the plan alone — a probe for whether a usable plan comes back, at what token cost and from which serving |
+| `independent-check-probe` | one pass that reaches the independent check and nothing else — a probe, not a shape to ship work through |
 
 Select with `AUTORND_WORKFLOW`. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
 
@@ -267,21 +266,21 @@ Writing the sequence down also forced out rules that had been implicit in code: 
 
 ## Deterministic Checks
 
-A `check` node runs a function instead of a model call. Free, instant, and correct about what it measures — three properties no prompt has. Five ship:
+A `check` node runs a function instead of a model call: free, instant, and exact about what it measures. Checks register by name in `autornd/graph/checks.py`, and a workflow file names the ones it runs. Some of them (`tests/test_docs.py` checks that each one named here is registered):
 
-| check | catches |
+| check | what it does |
 |---|---|
-| `criteria_addressed` | work that does not visibly address a success criterion |
-| `numbers_consistent` | the plan saying 60s where the implementation says 600s |
-| `totals_reconcile` | parts that do not sum to a stated total |
-| `judges_agree` | a loop exiting while any judge it produced is still red |
-| `blocked_on_unmet` | an implementer refusing on a criterion the plan itself demands — routed to escalation rather than iterated against |
+| `asks_anchored` | keeps only the asks a model quoted that really occur in the request; when none do, the whole request is the one ask |
+| `blocked_on_unmet` | ends the run blocked when the implementer refuses on an ask it cannot satisfy |
+| `judges_agree` | folds every judge's verdict, so a loop cannot exit while one of them is still red |
+| `criteria_addressed` | does the answer visibly address each ask? |
+| `numbers_consistent` | does the answer contradict a figure the request states? |
+| `totals_reconcile` | do the parts sum to a stated total? |
+| `recompute_vote` | does a majority of blind recomputes agree with the answer's typed results? |
 
-They run **before** the paid validator, so an implementation that never mentions a criterion costs nothing to reject.
+**A check either decides or notes, and the workflow file says which.** A gate that reads its result can end or route the run; otherwise the result is recorded and counted, and never blocks. Checks that compare words — does the answer mention this ask? — are notes in the shipped workflows, because on real answers they failed correct work written in LaTeX, in paraphrase or under unexpected headings. Checks that compare typed values are the ones a gate can trust.
 
-They are calibrated rather than assumed. Measured against realistic implementation text, criteria that are genuinely addressed score 71–100% of their terms and unaddressed ones score 0–33%, so the 50% threshold sits in the gap. The case most worth catching — text that names every topic while committing to nothing — scores under 33% and fails.
-
-Their limits are documented and tested rather than papered over. **Term overlap cannot see negation**: an implementation stating it *removed* the backoff scores highly against a criterion requiring backoff. That gap belongs to `numbers_consistent`, which catches the contradiction. And no check can tell you a plan's own numbers are physically wrong — that is research's job.
+Their limits are tested rather than papered over. **Word matching cannot see negation**: an answer stating it *removed* the backoff scores highly against an ask requiring backoff. And no check can tell you that a figure is physically wrong — that is what research and recomputation are for.
 
 ## Model Tiers
 
@@ -305,7 +304,7 @@ AutoRnD routes each phase to a named tier and will not start until every require
 | **Ranker** | orders retrieved documentation by usefulness. Without it, retrieval falls back to embedding distance |
 | **Premium** | the independent pass on work that cannot be recalled. Falls back to the architecture tier when empty |
 | **Judge** | reviews the implementation — domain review, validate, review — on a different model from the one that produced it, so a producer's blind spots do not grade themselves. Falls back to the engineering tier when empty. Capped by `JUDGE_MAX_TOKENS` |
-| **Recompute** | blind recomputation: three separate samples recompute an answer's key figures from the request alone, and a free check votes them against the answer's typed results — a flag is a note on the delivery, never a block. Runs only on the `answer-and-recompute` workflow; empty, the recompute node skips and the vote records the skip. Capped by `RECOMPUTE_MAX_TOKENS` |
+| **Recompute** | blind recomputation: separate samples recompute an answer's key figures from the request, without seeing the answer, and a free check votes them against the answer's typed results — a flag is a note on the delivery, never a block. Runs only on the `answer-and-recompute` workflow; empty, the recompute node skips and the vote records the skip. Capped by `RECOMPUTE_MAX_TOKENS` |
 
 ### Choose non-reasoning models for the tiers that fill a schema
 
@@ -339,9 +338,9 @@ it is still a failed run, so:
   window between them impossible. Judge a tier by the job, not by the model's
   reputation.
 - **Escalation** is the one tier where reasoning earns its keep — it reads a
-  long failure log and is rarely called, so it ships with a 16k budget.
-- **Validate** is capped separately (`VALIDATE_MAX_TOKENS`, default 8000)
-  because it judges work rather than redoing it. An unbounded validator once
+  long failure log and is rarely called, so it ships with a larger budget.
+- **Validate** is capped separately (`VALIDATE_MAX_TOKENS`) because it judges
+  work rather than redoing it. An unbounded validator once
   produced 15k output tokens for a green/red verdict. 3000 proved too tight for
   a reasoning model, which is how that default was found.
 
@@ -363,19 +362,13 @@ one id is routed across many of them. Measured on a single 108-call sweep, the
 triage tier was served by **five** providers: Alibaba, AtlasCloud, DigitalOcean,
 OpenInference and StreamLake.
 
-That is not cosmetic. The same 36-sector calibration suite, the same prompt, the
-same scenarios:
-
-| provider | sectors passing | cost | wall clock |
-|---|---|---|---|
-| StreamLake (pinned) | 33/36 | $0.0185 | 1102s |
-| unpinned, five mixed | 30/36 | $0.0135 | 853s |
-| OpenInference (pinned) | 28/36 | $0.0015 | 303s |
-
-Twelve times the price bought five sectors of accuracy and cost 3.6x the
-latency. And the cheap serving did not fail randomly — it under-classified risk
-on `water_treatment`, `building_services` and `legal_ops`, every repetition,
-which is the dangerous direction.
+That is not cosmetic. On the same 36-sector calibration suite, with the same
+prompt and the same scenarios, the best pinned serving passed more sectors than
+the unpinned mix, and the cheapest pinned serving passed the fewest — at a
+fraction of the price and the latency. And the cheap serving did not fail
+randomly: it under-classified risk on `water_treatment`, `building_services`
+and `legal_ops`, every repetition, which is the dangerous direction. The
+figures are in `HANDOVER.md` §6.1.
 
 This is the one place where **frugal and accurate are not the same lever.**
 Taking a question away from a model is free accuracy. Buying a cheaper serving
@@ -388,8 +381,7 @@ So:
   score is partly a record of who answered, which is how a 35/36 became a 29/36
   with no code change in between.
 - **Running work that matters?** Pin, and choose on measured quality rather than
-  price. `--scenarios evals/scenarios/wide` scores a provider in ten minutes for
-  under two cents.
+  price. `--scenarios evals/scenarios/wide` scores a provider in minutes, cheaply.
 - **Leave it unset** only when availability beats reproducibility.
 
 Pins are per tier, because they have to be — tiers run different models and no
@@ -413,7 +405,7 @@ a tier named with an empty value opts out of that default.
 
 ## Engineering Specialists
 
-Seven specialists, each with a domain, a system prompt, and a tier:
+The shipped roster, each with a domain, a system prompt and a tier (`tests/test_docs.py` checks this table against the registry):
 
 | Specialist | Domain |
 |---|---|
@@ -430,7 +422,7 @@ Triage assigns them per workflow. Every specialist's grounding can be overridden
 ### The roster is a default, not a limit
 
 `roles:` in your profile declares the roles your team actually has, and triage
-is offered the shipped seven plus yours. A role nobody declared still resolves —
+is offered the shipped roster plus yours. A role nobody declared still resolves —
 it becomes a generalist carrying that role's name, logged once so you know to
 declare it — because failing a whole workflow over a role name is worse than
 acting as the role and saying so.
@@ -494,7 +486,7 @@ readings are genuinely defensible — occupational noise exposure is both a
 health limit and a regulated one — is left off with the reason recorded, rather
 than written as `risk_at_most: critical`, which asserts nothing.
 
-Validation adapts too: it injects checks for the domains a request actually touches, as lenses for judging the stated criteria rather than as extra criteria of their own. A copy change is never asked whether its pin assignments conflict.
+Validation adapts too: it injects checks for the domains a request actually touches, as lenses for judging the request's asks rather than as extra asks of their own. A copy change is never asked whether its pin assignments conflict.
 
 ## Escalation Autopsy
 
@@ -549,9 +541,9 @@ a stored result can be priced against its serving months later without
 re-running anything. Results are gitignored: they reach the repo only by
 deliberate commit.
 
-**Spend is bounded twice.** `--max-spend` caps one scenario-run, which is a repetition rather than an invocation — 36 scenarios at 3 repetitions with `--max-spend 0.25` is a $27 ceiling, not a $0.25 one. `--max-spend-sweep` caps the whole invocation: every scenario, every repetition and every compared workflow against one budget. It defaults to **$1.00** and takes `none` to disable. Set both and the sweep cap is exact — a unit that cannot be guaranteed to fit is never started, so nothing is killed part-way. Set only the sweep cap and the crossing unit is stopped by the client's own ceiling instead, which overshoots by however many calls were already in flight. Units that never start are skipped with their reason and excluded from the pass rate, so a truncated sweep reports honest partial results and exits zero.
+**Spend is bounded twice.** `--max-spend` caps one scenario-run, which is a repetition rather than an invocation — 36 scenarios at 3 repetitions is 108 scenario-runs, so `--max-spend` sets 108 caps, not one. `--max-spend-sweep` caps the whole invocation: every scenario, every repetition and every compared workflow against one budget. It has a default, and takes `none` to disable. Set both and the sweep cap is exact — a unit that cannot be guaranteed to fit is never started, so nothing is killed part-way. Set only the sweep cap and the crossing unit is stopped by the client's own ceiling instead, which overshoots by however many calls were already in flight. Units that never start are skipped with their reason and excluded from the pass rate, so a truncated sweep reports honest partial results and exits zero.
 
-Splitting triage into its own workflow is what made triage quality measurable: **30 seconds and a hundredth of a cent**, against sixteen minutes for a full-pipeline sweep. That is what caught safety-relevant hardware being classified below `high` risk three times in five.
+Splitting triage into its own workflow is what made triage quality measurable: **seconds and a fraction of a cent**, against many minutes for a full-pipeline sweep. That is what caught safety-relevant hardware being classified below `high` risk three times in five.
 
 ## Prerequisites
 
@@ -615,14 +607,11 @@ MODEL_ESCALATION=         # required
 MODEL_RESEARCH=           # required
 MODEL_SEARCH=             # required
 
-MODEL_RANKER=             # optional
-MODEL_PREMIUM=            # optional, enables Double Check
+# Optional tiers (MODEL_RANKER and the others under Model Tiers) turn
+# their feature off when empty.
 
 AUTORND_WORKFLOW=engineering-rnd
-MAX_ITERATIONS=5                      # 1-20
-VALIDATE_MAX_TOKENS=8000
-SEARCH_MAX_TOKENS=1500                # medium-risk lookup budget
-SEARCH_MAX_TOKENS_CONSEQUENTIAL=4000  # high and critical
+# Limits: MAX_ITERATIONS and the *_MAX_TOKENS caps. Defaults in .env.example.
 
 API_HOST=127.0.0.1        # containers need 0.0.0.0
 ```
@@ -709,7 +698,7 @@ The store ships empty. Until you ingest something, research scopes requests rath
 
 **The problem it solves:** parallel specialists produce contradictory designs — one plans a polling architecture while another plans an event-driven one. The validator rejects the merged result and the loop spends every iteration on irreconcilable designs.
 
-One domain lead implements alone, producing something coherent. The other builders then review it in parallel with a scoped prompt: *review from your domain perspective, flag concerns, do not produce an alternative design.* Any critical concern flips the implementation red and is passed to the validator.
+One domain lead implements alone, producing something coherent. The other builders then review it in parallel with a scoped prompt: *review from your domain perspective, flag concerns, do not produce an alternative design.* A concern flips the implementation red only when it is critical and names the ask it fails; any other concern is recorded as a note.
 
 ## Double Check
 
@@ -729,7 +718,7 @@ API_KEY=                 # optional static bearer token for programmatic access
 
 **Auth priority:** a valid JWT scopes workflows to that user; otherwise an `API_KEY` match grants anonymous access; otherwise the caller must be on loopback. With neither `API_KEY` nor `JWT_SECRET` configured the API serves loopback callers only — remote requests are refused with 403 and a sentence naming the fix — unless `ALLOW_UNAUTHENTICATED_REMOTE=1` is set, which is logged at startup and reported by `/api/health`. `/api/health` is served to everyone either way.
 
-**Accounts are created from this machine only** (Ruling D47): `POST /api/auth/register` serves loopback callers under every authentication setting. A remote caller is served with a credential the owner issued — the `API_KEY`, or a token for an account created from this machine — or under the override; configuring `JWT_SECRET` lets existing accounts log in, it does not open registration to anyone. `REGISTRATION_ENABLED=false` turns registration off entirely.
+**Accounts are created from this machine only:** `POST /api/auth/register` serves loopback callers under every authentication setting. A remote caller is served with a credential the owner issued — the `API_KEY`, or a token for an account created from this machine — or under the override; configuring `JWT_SECRET` lets existing accounts log in, it does not open registration to anyone. `REGISTRATION_ENABLED=false` turns registration off entirely.
 
 **The run cap is per process.** `MAX_CONCURRENT_RUNS` bounds the runs one uvicorn process has in flight (the documented command and the Docker image run one). A multi-worker deployment would need a shared store, which nothing here builds.
 
@@ -778,7 +767,7 @@ curl -X POST http://localhost:8100/api/workflows/sync \
   -d '{"request": "Route the voltage from the PCB to the laser sensor on the cup-style food packaging machine"}'
 ```
 
-Triage classifies it `hardware`, risk `high`, and assigns a hardware engineer, a test engineer and the architect. Research briefs from your documentation, finds it does not specify the sensor's supply range, looks that up and cites the datasheet. The architect plans against both, with success criteria that can be checked by reading. The lead implements; the other builders review it; the free checks confirm every criterion is addressed and that no value contradicts the plan; the test engineer validates. Review scales to the risk level.
+Triage classifies it `hardware`, risk `high`, and assigns a hardware engineer, a test engineer and the architect. Research briefs from your documentation, finds it does not specify the sensor's supply range, looks that up with a citation. The run quotes what the request asks; the architect plans and the lead implements; the other builders review it; the free checks compare the answer with the request's own figures; the test engineer validates it against the asks. Review scales to the risk level.
 
 If the request had been too underspecified to plan — as a battery-threshold change with no stated chemistry was in testing — the architect returns `ready: false`, and the workflow blocks in two calls with the reason attached, rather than discovering it five iterations later.
 
@@ -814,11 +803,11 @@ autornd/
   specialists/            # Specialist registry + profile-driven prompts
   routing/openrouter.py   # Multi-model client, rerank, model validation
   api/                    # REST endpoints, auth, dashboard
-workflows/                # engineering-rnd, lean, triage-only, triage-classify, verify-first, answer-and-recompute
+workflows/                # the shipped workflow files (see Workflows Are Files)
 evals/scenarios/          # Scenario definitions
 profiles/                 # Profile YAML
 docs/                     # Your documentation, per profile
-tests/                    # 1611 tests
+tests/                    # the test suite
 
 ```
 
@@ -826,35 +815,15 @@ tests/                    # 1611 tests
 
 AutoRnD publishes no dollar figures. Prices change, and they depend entirely on models you chose — multiply the call counts by your provider's rates and check its usage dashboard for the truth.
 
-Model calls for a single-iteration workflow:
+**Calls are a function of the workflow file and the triage risk,** and they are derived rather than estimated: drive any workflow against the scripted test client (`tests/test_evals.py`) and it reports its calls, for nothing, in under a second. The shape that follows from the shipped files:
 
-| Risk | Total | Triage | Plan | Feasibility | Implement | Domain review | Validate | Review |
-|---|---|---|---|---|---|---|---|---|
-| Low | 6 | 1 | 1 | 1 | 1 | — | 1 | 1 |
-| Medium | 8 | 1 | 1 | 2 | 1 | — | 1 | 2 |
-| High | 14 | 1 | 1 | 3 | 1 | 2 | 1 | 5 |
-| Critical | 18 | 1 | 1 | 4 | 1 | 3 | 1 | 7 |
+- **Review scales hardest with risk.** Critical work runs the most reviewers and low-risk work one, so risk classification is a cost decision as much as a quality one.
+- **Research adds a small fixed overhead:** two research-tier calls — one to write the retrieval queries, one to brief from what came back, or to scope the request when nothing matched — plus at most one outward lookup, because every blocking gap rides in a single request. Low-risk work makes no lookup. A ranker tier adds one call when retrieval returns material.
+- **Retries and escalation add more.** Every loop is bounded, so the worst case is finite and the eval runner can cap it.
+- **The engineering tier dominates** the full workflow's bill: it runs implement, validate, feasibility and most of review.
+- **Output tokens are the expensive half, and they are also latency.** An unbounded validator once produced 15,000 output tokens for a green/red verdict, taking three minutes. `VALIDATE_MAX_TOKENS` exists because of that.
 
-Research adds a small fixed overhead on top of that: **two research-tier calls** — one to write the retrieval queries, one to brief from what came back, or to scope the request instead when nothing matched — plus **at most one outward lookup**. Not one per gap: every blocking gap rides in a single request, because the fee is charged per request rather than per question. Low-risk work makes no lookup at all, so it adds two calls rather than three.
-
-| Risk | Phases | + research | Typical total |
-|---|---|---|---|
-| Low | 6 | 2 | **8** |
-| Medium | 8 | 3 | **11** |
-| High | 14 | 3 | **17** |
-| Critical | 18 | 3 | **21** |
-
-Those research figures were derived the same way as the workflow comparison above — the graph driven against billing doubles with an isolated knowledge store, free, in under a second — rather than estimated. Both grounding shapes cost the same two calls: with documentation ingested the second call is a briefing, with an empty store it is a scoping analysis. Configuring a ranker tier adds one more call when retrieval returns material; without one, ordering falls back to embedding distance and costs nothing.
-
-Retries and escalation add further: a medium-risk workflow failing validation three times costs 14 phase calls, and one exhausting the loop and recovering through escalation costs 19.
-
-Three things follow, and they are the levers worth pulling:
-
-- **The engineering tier dominates.** At every risk level it runs implement, validate, feasibility and most of review.
-- **Review scales hardest with risk.** Critical work runs seven reviewers where low-risk runs one, so risk classification is a cost decision as much as a quality one.
-- **Output tokens are the expensive half, and they are also latency.** Measured live, an unbounded validator produced 15,000 output tokens for a green/red verdict, taking three minutes. `VALIDATE_MAX_TOKENS` exists because of that.
-
-**Latency.** Feasibility, domain review and final review run in parallel, so wall-clock tracks the critical path rather than the call count: six to seven sequential round trips for a single-iteration workflow. Harness overhead is negligible — tens of milliseconds — so effectively all wall-clock is provider latency. Measured across live runs, calls averaged roughly a minute each with reasoning models in the architecture and escalation tiers, which puts a full workflow in minutes rather than seconds.
+**Latency.** Independent phases run in parallel, so wall-clock tracks the critical path rather than the call count. Harness overhead is negligible — tens of milliseconds — so effectively all wall-clock is provider latency. Measured across live runs, calls averaged roughly a minute each with reasoning models in the architecture and escalation tiers, which puts a full workflow in minutes rather than seconds.
 
 **Variance is large.** The same request has measured 7 calls and 68 seconds on one run and 21 calls and 663 seconds on another. Treat any single run as an anecdote, which is why evals repeat.
 
@@ -864,7 +833,7 @@ Three things follow, and they are the levers worth pulling:
 .venv/bin/python3 -m pytest tests/ -q
 ```
 
-1611 tests. Most make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds. The suite is hermetic wherever it runs — its settings are forced to placeholders and a session guard refuses every non-loopback connection — so it reads the same green on a machine that holds your .env and in CI.
+Most tests make no model call, which is deliberate: the shape of a workflow, its gates and loops, the deterministic checks, the eval scoring and the condition language are all decidable without a provider, so a full regression sweep is free and finishes in seconds. The suite is hermetic wherever it runs — its settings are forced to placeholders and a session guard refuses every non-loopback connection — so it reads the same green on a machine that holds your .env and in CI.
 
 
 The graph tests are the load-bearing ones: node shape, gate routing, loop bounds and the all-judges exit are all decidable without a provider. An earlier hardcoded sequencer was kept alongside the graph as an equivalence reference and has been retired — once gates could route on failure, a linear engine could no longer represent the pipeline it was supposed to be checking.
@@ -884,17 +853,21 @@ uvicorn autornd.main:app --host 127.0.0.1 --port 8100
 ## Limitations
 
 - **No code execution.** AutoRnD produces structured text. It does not compile, run, or deploy anything.
-- **Checks cannot see negation.** `criteria_addressed` scores term overlap, so an implementation stating it *removed* something scores highly against a criterion requiring it. `numbers_consistent` covers the numeric case; the general case is a known gap.
+- **Word-matching checks cannot see negation or paraphrase.** An answer stating it *removed* something scores highly against an ask requiring it. That is why those checks are notes; the typed-value checks and the recompute vote are what a gate can trust.
+- **Research does not verify its sources yet.** Citations come from the search provider; the harness does not fetch the source or confirm that a quoted passage is in it.
+- **The recompute vote cannot see an omission,** such as a missing step or section, which has no value to disagree on. Nor can it see an error that every sample shares.
 - **Research can be wrong.** It cites its sources, which makes it checkable rather than infallible — and that is the point. Verifiability is the product.
 - **Quality follows the models you choose.** Cheap tiers give cheap results.
 - **No role-based access.** Per-user isolation exists; admin/user roles and team permissions do not.
 - **No streaming.** `/api/workflows/sync` blocks. Use the async endpoint and poll for long runs.
-- **Review reworks, within bounds.** A `ship: false` verdict routes the work back through implement, validate and a fresh review — up to `review_rework_attempts` (default 2) — and exhausted rework escalates with the findings in the failure log. Review and implement can disagree indefinitely, so every disagreement path is bounded and ends in escalation or a human.
+- **Review reworks, within bounds.** A `ship: false` verdict routes the work back through implement, validate and a fresh review — up to `review_rework_attempts` — and exhausted rework escalates with the findings in the failure log. Review and implement can disagree indefinitely, so every disagreement path is bounded and ends in escalation or a human.
 - **Costs are real.** Every workflow calls a paid API. Set `MAX_ITERATIONS` conservatively and watch your provider's spend.
 
 ## Contributing
 
 PRs welcome. The architecture is modular — add specialists, providers, phases, checks, workflows or review composition rules without touching the sequencer. New deterministic checks are especially welcome: anything with a right answer belongs in a check rather than a prompt.
+
+**Keeping this README true.** It describes mechanisms. It does not restate counts, prices, defaults or ruling numbers: those live in the files themselves, in `.env.example`, and in the dated records under `docs/reviews/` and `HANDOVER.md` §6. Where it does list something the repository defines — workflows, tiers, checks, specialists — `tests/test_docs.py` checks the list against its source, and the test count in the badge is checked against the suite. Add a figure to this file only if a test derives it.
 
 ## License
 
