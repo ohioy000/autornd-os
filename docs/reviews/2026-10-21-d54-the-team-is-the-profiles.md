@@ -2,6 +2,8 @@
 
 **Status: signed off by the owner on 2026-10-21, as written: `general` is the default. Command `ARCH-20261021-125` carries it to the executor.**
 
+*Refinement, 2026-10-21, made while writing the executor's step-by-step prompt; no change of substance. §2 (2)'s six framing names are fixed as 19 exact keys in `.orchestration/prompts/ARCH-20261021-125.md`, Task 2. The practitioner and examples fields are split by where each is used, and the request key is `request_kind`. General's `sources` is the list itself, "the governing rules and standards, official specifications, and original publications", because it follows "authoritative sources —" in the lookup prompt. Both shipped profiles are named "AutoRnD", so the docs directory stays as it is today.*
+
 This withdraws the D54 sketched in `Dunce-Arch-Self-Assesment.md` §5 (3), which would have retired the pipeline on the strength of closed-question scores. That sketch measured the wrong thing. The goal is a general harness, one that works for any team and is not tuned to be good at one thing (the owner, 2026-10-21). Cost and quality are measured once the harness's core problems are fixed. This ruling fixes the first of those problems.
 
 ## 1. The problem

@@ -4,14 +4,13 @@
   "priority": "P1",
   "status": "PROPOSED",
   "objective": "Implement Ruling D54, the team is the profile's. The code ships no team, and every prompt renders from the active profile's framing. The engineering team moves unchanged into profiles/engineering.yaml, which renders every prompt byte-identical to main's. A neutral profiles/general.yaml becomes the default. Triage is offered the active profile's vocabulary only. Free work; no paid call.",
-
   "evidence": [
+    "THE STEP-BY-STEP PROMPT: .orchestration/prompts/ARCH-20261021-125.md. It is fine-tuned for the executor: 14 ordered tasks, each with its exact files, its find/replace text, a CHECK command and the EXPECT it must print. Where this file and the prompt differ in detail, the prompt governs; this file states the rules and the acceptance.",
     "Ruling D54, signed off by the owner on 2026-10-21 as written: docs/reviews/2026-10-21-d54-the-team-is-the-profiles.md. §1 lists every site, §2 is the ruling, §3 the proofs, §4 the default change.",
     "The profile mechanism this builds on: autornd/profiles.py (ProjectProfile, domains, roles, structural_roles, role_that_checks_work, role_that_holds_system_view; B14) and profiles/studio.yaml (a team that is not engineering).",
     "Golden-prompt precedent: tests/test_recompute_vote.py TestGoldenPrompts (command 123), which captured rendered prompts from the pre-change code.",
     "The live role-injection path: autornd/engine/phases.py lines 120-145 (the profile's structural roles). engine/workflow.py _enforce_triage_composition is called only by tests/test_review_composition.py TestTriageEnforcement."
   ],
-
   "scope": {
     "include": [
       "autornd/profiles.py: the framing block, base:, the general default, loading",
@@ -21,10 +20,11 @@
       "autornd/models/verdicts.py: only if needed. The Domain and SpecialistRole classes may stay as types",
       "evals/tier3/ and evals/tier4/ runners: only to select the engineering base for their treatments, so every message they send stays byte-identical",
       "tests/conftest.py: the AUTORND_PROFILE placeholder becomes engineering",
-      "tests/test_profile_framing.py (new), plus golden fixtures under tests/fixtures/",
+      "tests/test_profile_framing.py and tests/prompt_capture.py (new), the golden fixtures under tests/fixtures/prompts/, and the existing tests D54 invalidates, changed only under rule (A) or (B) of THE SUITE",
       ".env.example: AUTORND_PROFILE= with a comment saying empty means general and engineering means the engineering team",
-      "README.md, HANDOVER.md, AGENTS.md: the profile text and the counts",
-      ".orchestration/responses/"
+      "README.md, HANDOVER.md, AGENTS.md, CLAUDE.md, .claude/context/testing.md: the profile text and every stated test count; tests/test_docs.py's roster guard",
+      ".orchestration/responses/",
+      ".orchestration/prompts/: read only"
     ],
     "exclude": [
       "workflows/*.yaml: unchanged, names included. Whether to rename engineering-rnd belongs to the workflow-per-request ruling",
@@ -34,57 +34,71 @@
       ".env and .env.tier3: the owner's (G-3)"
     ]
   },
-
   "constraints": [
     "FREE. No paid call. Every test is provider-free, and the network guard stays at 0.",
-    "GOLDEN FIRST: the branch's first commit, before any other change, captures from main's code the rendered system and user message of every prompt in D54 §1. That means run_triage, run_asks, run_plan, run_plan_feasibility, build_domain_review_prompt, run_implement (with and without results), run_recompute, run_validate, run_review, run_doublecheck, run_escalation_autopsy, the context.py ranking, query-expansion, briefing, rerank and request-scoping prompts, the research lookup, and every shipped role's system prompt from specialists/registry.py. Capture them on fixed representative inputs, as fixtures.",
-    "FRAMING: the profile's framing block has team, work, practitioner, sources, deliverables and examples (D54 §2 (2)). You may add a field when a prompt needs a word those six do not carry. Name each added field in deviations. No field holds a whole prompt.",
+    "GOLDEN FIRST: the branch's first code commit, before any harness change, captures the rendered system and user message of every prompt site from main's code. That is the 16 model-calling functions listed in the prompt's Task 1, plus every specialist's system prompt. Capture four fixtures: no profile (today's engineering team), example, cupline and tier4. Use fixed inputs that contain none of the scan words.",
+    "FRAMING: the profile's framing block has exactly the 19 keys in the prompt's Task 2 table, with the engineering and general values given there verbatim. They refine D54 §2 (2)'s six names: the practitioner and examples fields are split by where each is used. The key is request_kind, not request, because request is already a template placeholder. No field holds a whole prompt.",
     "ENGINEERING IS UNCHANGED: under profiles/engineering.yaml, and under example, cupline and tier4 (base: engineering), every captured prompt renders byte-identical to its fixture. engineering.yaml declares today's seven domains in today's order, with today's lenses and leads, today's seven role templates, and structural_roles checks_work: test_engineer and holds_system_view: systems_architect.",
-    "GENERAL RENDERING: under general, each prompt is its engineering rendering with each framing value substituted. No sentence is added. A sentence whose content is only an engineering example (the pasteuriser, partition and interlock sentence; ERP and EIRP) lives in examples, and is absent under general. A clause that offers a list the profile does not have (triage's 'Prefer these: …' with no subjects or roles) is omitted, and the 'name it yourself' sentence stays. List every omitted clause and every grammar fix-up in deviations.",
-    "GENERAL PROFILE, verbatim: team 'a team'; work 'the work'; practitioner 'a competent practitioner in the field'; sources 'primary sources: the governing rules and standards, official specifications, and original publications'; no domains; no examples. Its roles: lead {name 'Lead', tier engineering, expertise 'Does the work the request asks for, in full.'}; reviewer {name 'Reviewer', tier engineering, expertise 'Checks the work against what the request asked, and names what is wrong or missing.'}; planner {name 'Planner', tier architecture, expertise 'Holds the whole view: what the request needs, in what order, and what it depends on.'}. structural_roles: checks_work reviewer, holds_system_view planner. deliverables 'the document, the plan, the procedure, the analysis, the calculation'.",
+    "GENERAL RENDERING: under general, each prompt is its engineering rendering with each framing value substituted, and nothing else added. Exactly two clauses are re-worded when the profile offers no list: the triage domains bullet and the triage specialists bullet, each with the exact text given in the prompt's Task 4, rows 4 and 5.",
+    "GENERAL PROFILE, verbatim, as in the prompt's Task 2: name 'AutoRnD'; framing from the table's GENERAL column (sources 'the governing rules and standards, official specifications, and original publications'); no domains; roles lead, reviewer and planner with the given names, tiers and expertise; structural_roles checks_work reviewer, holds_system_view planner. profiles/engineering.yaml also has name 'AutoRnD', so both keep today's docs directory, docs/autornd/.",
     "TRIAGE VOCABULARY: triage is offered the active profile's domains and roles only. Shipped defaults are never added on top. Under engineering that is today's lists in today's order.",
     "STRUCTURAL ROLES: the plan and feasibility steps take their architect from profile.role_that_holds_system_view(). The validate persona is profile.role_that_checks_work(). The builder filter in graph/adapter.py and the fallback lead compare against the profile's roles, not the shipped literals.",
     "BASE: a profile may declare base: <profile name>. The base's framing, domains, roles and structural_roles apply, and the profile's own declarations replace the base's under the same key. One level only: a base that declares a base is refused with a plain error naming both.",
-    "DEFAULT: AUTORND_PROFILE unset loads profiles/general.yaml. A profile that declares no framing gets general's framing, and one that declares no structural roles gets general's (D54 §2 (6)), unless its base supplies them. A named profile that does not exist keeps today's behaviour: a warning, then the default, which is now general.",
+    "DEFAULT: DEFAULT_PROFILE is the general profile, loaded at import. AUTORND_PROFILE unset loads it. A framing key or structural slot a profile does not declare comes from general (D54 §2 (6)), unless its base supplies it. A named profile that does not exist keeps today's behaviour: a warning, then the default.",
     "DEAD CODE: engine/workflow.py _enforce_triage_composition has no production caller. Remove it and the five TestTriageEnforcement tests, and name in the response the live-path tests that cover the same two rules. If you find a production caller, STOP and report it.",
-    "EVALS: the tier-3 and tier-4 runners' treatments must not change. Their process-default and per-question profiles take base: engineering. If any frozen treatment's message would change, STOP and report which.",
-    "THE SUITE: in tests/conftest.py PLACEHOLDERS, AUTORND_PROFILE is 'engineering', so the existing tests keep running on the engineering team. New tests select general or studio explicitly.",
+    "EVALS: the tier-3 and tier-4 treatments must not change. tier4.yaml takes base: engineering. The tier-4 runner's fallback profile is load_profile('engineering'), and its QuestionProfile copies the engineering team. The tier-3 runner pins load_profile('engineering') at the start of main(). If any tier-3 or tier-4 test changes, STOP.",
+    "THE SUITE: in tests/conftest.py PLACEHOLDERS, AUTORND_PROFILE is 'engineering', and an autouse fixture resets the profile and reloads the specialists after every test. An existing test may change only (A) to select the engineering profile explicitly, when it relied on 'no profile means engineering', with no expected value changed; or (B) to expect the general fallback, when it asserted the old default itself. Every changed test is listed in the response with its mark. Any other failing test: STOP. More than 30 changed tests: STOP.",
     "NEVER PARSE ENGLISH: nothing routes on a framing value. Framing is text that is rendered, never tested.",
     "A defect found in existing harness code while doing this is a STOP-and-report, not a fix."
   ],
-
   "acceptance_criteria": [
-    "(a) Golden. The fixtures are the branch's first commit, captured from main's code. Under engineering, example, cupline and tier4, every fixture's prompt renders byte-identical. Break-proof: change one framing value in engineering.yaml and the test fails.",
-    "(b) No leak. Run every workflow in workflows/ end to end behind a recording double (route every prompt, including the grounding, research and recompute prompts), under general and under studio. Scan every system and user message sent, case-insensitively, for: engineer, engineers, engineering, firmware, hardware, backend, frontend, datasheet, datasheets, pasteuriser, EIRP. None appears. Studio's own declared text is exempt only where studio declared it. Break-proof: put 'engineering' back into the triage prompt and the test fails.",
+    "(a) Golden. The four fixtures are the branch's first code commit, captured from main's code. Under engineering, example, cupline and tier4, the capture equals that profile's own fixture, every key and every byte. Break-proof: change one framing value in engineering.yaml and the test fails.",
+    "(b) No leak. Under general and under studio, no system or user message captured from the 16 prompt sites or the specialists matches /engineer|firmware|hardware|backend|frontend|datasheet|pasteuris|EIRP/i. A call-site test (an ast scan of autornd/ for chat_json, chat and run(client calls) proves the capture covers every model-calling function. Break-proofs: put 'engineering' back into the triage prompt; add an uncaptured call site.",
     "(c) Triage vocabulary. Under studio, the offered subjects and roles are exactly studio's. Under general, none, the 'Prefer these' clauses are absent, and 'name it yourself' is present. Under engineering, today's lists. Break-proof: add the shipped Domain members back and the studio test fails.",
     "(d) Structural roles. Under studio, high risk adds editor, multiple subjects add strategist, the plan's system prompt is the strategist's, and validate's is the editor's. Under general the same with reviewer and planner. Under engineering, today's. Each has a break-proof.",
-    "(e) No literals. A test scans autornd/ for code references to SpecialistRole.<MEMBER> and Domain.<MEMBER>, and expects none outside autornd/models/verdicts.py. Break-proof: a reference added to phases.py fails it.",
+    "(e) No literals. A test scans autornd/ for SpecialistRole.<MEMBER> and Domain.<MEMBER> and finds none outside autornd/models/verdicts.py. Break-proof: a reference added to phases.py fails it.",
     "(f) Default and base. With AUTORND_PROFILE unset, get_profile() is general. base: engineering lays a profile's own keys over engineering's. A base with a base is refused with the plain error.",
     "(g) Evals unchanged. The tier-3 and tier-4 runners' existing message-hash and freeze tests pass unmodified.",
-    "(h) Docs. .env.example carries AUTORND_PROFILE= with its comment. The README's profile and roster text says general is the default and engineering is a profile, and its guards in tests/test_docs.py pass (the roster guard checks against the engineering profile's roles). Counts are re-derived from pytest --collect-only in HANDOVER.md, README.md and AGENTS.md.",
-    "(i) Suite green before and after, network guard 0, CI 5/5, PR opened. Every existing test passes unmodified except the five removed under DEAD CODE."
+    "(h) Docs. .env.example carries AUTORND_PROFILE= with its comment. The README's specialists and profile text says general is the default and engineering is a profile. The roster guard in tests/test_docs.py checks against load_profile('engineering').roles. Counts are re-derived from pytest --collect-only in every count-bearing file (HANDOVER.md, README.md, AGENTS.md, CLAUDE.md, .claude/context/testing.md).",
+    "(i) Suite green before and after, network guard 0, CI 5/5, PR opened. Every existing test passes unmodified, except the five removed under DEAD CODE and those changed under rule (A) or (B), each listed in the response."
   ],
-
   "verification": [
-    {"command": ".venv/bin/python3 -m pytest tests/test_profile_framing.py -q", "expected": "All pass."},
-    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; network guard: 0; report the count before and after."}
+    {
+      "command": ".venv/bin/python3 -m pytest tests/test_profile_framing.py -q",
+      "expected": "All pass."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass; network guard: 0; report the count before and after."
+    }
   ],
-
   "rollback": "Revert the PR. With AUTORND_PROFILE=engineering, behaviour is unchanged by construction (criterion (a)).",
-
   "deliverable": "One PR with the golden fixtures as its first commit, the profiles, the framing in every prompt site, the tests with their break-proofs, the docs and counts, and the response marked DONE. Then STOP.",
-
   "assumptions": [
-    "Every prompt in D54 §1 can render from profile fields without changing its engineering bytes. If one cannot, STOP and report it with the bytes that would change."
+    "Every prompt in D54 §1 can render from profile fields without changing its engineering bytes. If one cannot, STOP and report it with the bytes that would change.",
+    "A test that builds ProjectProfile(...) in code and expects engineering roles falls under rule (A). That is expected, not a defect."
   ],
-
   "questions": [],
-
   "preconditions": [
-    {"command": "grep -c 'signed off by the owner on 2026-10-21' docs/reviews/2026-10-21-d54-the-team-is-the-profiles.md", "expected": "1 - D54 is signed off on main."},
-    {"command": "test -f .orchestration/responses/ARCH-20261021-124.response.json && grep -c '\"status\": \"DONE\"' .orchestration/responses/ARCH-20261021-124.response.json", "expected": "1 - command 124 is delivered."},
-    {"command": "grep -c 'advisory' autornd/graph/spec.py", "expected": "at least 1 - command 124's PR is merged; branch from main after it."},
-    {"command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none", "expected": "none"},
-    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; report the count."}
+    {
+      "command": "grep -c 'signed off by the owner on 2026-10-21' docs/reviews/2026-10-21-d54-the-team-is-the-profiles.md",
+      "expected": "1 - D54 is signed off on main."
+    },
+    {
+      "command": "test -f .orchestration/responses/ARCH-20261021-124.response.json && grep -c '\"status\": \"DONE\"' .orchestration/responses/ARCH-20261021-124.response.json",
+      "expected": "1 - command 124 is delivered."
+    },
+    {
+      "command": "grep -c 'advisory' autornd/graph/spec.py",
+      "expected": "at least 1 - command 124's PR is merged; branch from main after it."
+    },
+    {
+      "command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none",
+      "expected": "none"
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "All pass; report the count."
+    }
   ]
 }
