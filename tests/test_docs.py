@@ -314,3 +314,142 @@ class TestUnguardedCountsStayDeleted:
         assert text.strip(), f"{name} read empty; the check saw nothing"
         found = self.COUNT.findall(text)
         assert not found, f"{name} states an unguarded test count again: {found}"
+
+
+# ── The README's lists, derived rather than kept ─────────────────────────────
+#
+# 2026-10-21: an outside reader found the README contradicting itself four
+# ways. Its scope named seven workflows and its table "six ship", while eight
+# files sat in workflows/. It said "publishes no dollar figures" beside a dozen
+# of them. It said auth was open by default, a sentence D45 had made false on
+# 2026-10-02. And it cited ruling numbers a reader cannot look up. None of
+# those lines had a guard, so each drifted the way the badge did in 2026-09.
+# The fix states mechanisms in the README and checks every list that stays
+# against the thing it lists.
+
+def _section(text: str, heading: str) -> str:
+    """The body of one `## heading` section, up to the next `## `."""
+    start = text.index(f"\n## {heading}\n")
+    end = text.find("\n## ", start + 1)
+    return text[start:end if end != -1 else len(text)]
+
+
+def _first_cells(text: str, lead: str) -> list[str]:
+    """The first cell of each body row of the table that follows `lead`."""
+    after = text[text.index(lead):].splitlines()[1:]
+    rows: list[str] = []
+    for line in after:
+        if not line.strip():
+            if rows:
+                break
+            continue
+        if not line.startswith("|"):
+            break
+        cell = line.split("|")[1].strip()
+        if set(cell) <= {"-", ":", " "}:
+            continue
+        rows.append(cell)
+    return rows[1:]  # the header row
+
+
+def _workflow_drift(readme: str) -> list[str]:
+    listed = {c.strip("`") for c in _first_cells(
+        _section(readme, "Workflows Are Files"), "The workflows that ship")}
+    shipped = {p.stem for p in (ROOT / "workflows").glob("*.yaml")}
+    return ([f"workflows/{w}.yaml is not in the README table" for w in sorted(shipped - listed)]
+            + [f"the README lists {w}, which is not a file in workflows/" for w in sorted(listed - shipped)])
+
+
+def _tier_drift(readme: str) -> list[str]:
+    from autornd.config import _OPTIONAL_TIERS, _TIER_HELP
+
+    tiers = _section(readme, "Model Tiers")
+    wrong = []
+    for lead, source in (("**Required**", _TIER_HELP), ("**Optional**", _OPTIONAL_TIERS)):
+        listed = {c.strip("*").strip().lower() for c in _first_cells(tiers, lead)}
+        configured = {k.removeprefix("model_") for k in source}
+        if listed != configured:
+            wrong.append(f"{lead} tiers: README {sorted(listed)}, config {sorted(configured)}")
+    return wrong
+
+
+def _check_drift(readme: str) -> list[str]:
+    from autornd.graph.checks import registry
+
+    named = [c.strip("`") for c in _first_cells(
+        _section(readme, "Deterministic Checks"), "Some of them")]
+    assert named, "the check table read empty; the guard saw nothing"
+    return [f"the README names check {c!r}, which is not registered" for c in named
+            if c not in registry]
+
+
+def _roster_drift(readme: str) -> list[str]:
+    from autornd.models.verdicts import SpecialistRole, normalise_key
+
+    listed = {normalise_key(c) for c in _first_cells(
+        _section(readme, "Engineering Specialists"), "The shipped roster")}
+    shipped = {normalise_key(r) for r in SpecialistRole}
+    return ([f"role {r} is not in the README roster" for r in sorted(shipped - listed)]
+            + [f"the README roster lists {r}, which is not a shipped role" for r in sorted(listed - shipped)])
+
+
+# A dollar amount; and a ruling number or the word a reader would search for.
+_DOLLARS = re.compile(r"\$\s?\d")
+_RULING = re.compile(r"\bD\d{2}\b|\bRuling\b")
+
+
+class TestTheReadmeListsAreTheRealThing:
+    """Every list the README keeps is compared with what it lists."""
+
+    @staticmethod
+    def _readme() -> str:
+        return (ROOT / "README.md").read_text(encoding="utf-8")
+
+    def test_the_workflow_table_is_the_workflows_directory(self):
+        assert not _workflow_drift(self._readme())
+
+    def test_the_tier_tables_are_the_configured_tiers(self):
+        assert not _tier_drift(self._readme())
+
+    def test_every_check_the_readme_names_is_registered(self):
+        assert not _check_drift(self._readme())
+
+    def test_the_specialist_table_is_the_shipped_roster(self):
+        assert not _roster_drift(self._readme())
+
+    def test_the_readme_states_no_dollar_figures(self):
+        found = _DOLLARS.findall(self._readme())
+        assert not found, f"the README states dollar figures again: {found}"
+
+    def test_the_readme_cites_no_ruling_numbers(self):
+        found = _RULING.findall(self._readme())
+        assert not found, f"the README cites rulings a reader cannot look up: {found}"
+
+
+class TestTheReadmeListGuardsWouldCatchDrift:
+    """Each guard above, shown failing on the drift it exists for."""
+
+    @staticmethod
+    def _readme() -> str:
+        return (ROOT / "README.md").read_text(encoding="utf-8")
+
+    def test_a_dropped_workflow_row_is_caught(self):
+        text = re.sub(r"^\| `plan-probe` \|.*\n", "", self._readme(), flags=re.M)
+        assert _workflow_drift(text) == ["workflows/plan-probe.yaml is not in the README table"]
+
+    def test_a_dropped_optional_tier_is_caught(self):
+        text = re.sub(r"^\| \*\*Recompute\*\* \|.*\n", "", self._readme(), flags=re.M)
+        assert _tier_drift(text) and "recompute" in _tier_drift(text)[0]
+
+    def test_an_unregistered_check_is_caught(self):
+        text = self._readme().replace("| `totals_reconcile` |", "| `totals_balance` |")
+        assert _check_drift(text) == ["the README names check 'totals_balance', which is not registered"]
+
+    def test_a_dropped_specialist_is_caught(self):
+        text = re.sub(r"^\| Supply Chain \|.*\n", "", self._readme(), flags=re.M)
+        assert _roster_drift(text) == ["role supply_chain is not in the README roster"]
+
+    def test_a_dollar_figure_and_a_ruling_number_are_caught(self):
+        assert _DOLLARS.findall("a run cost $0.06")
+        assert _RULING.findall("see Ruling D53")
+        assert not _DOLLARS.findall("costs are in dollars")
