@@ -1,6 +1,6 @@
 # D54: the team is the profile's (advisor, 2026-10-21)
 
-**Status: proposed. It awaits the owner's sign-off, and no command is issued until then.**
+**Status: signed off by the owner on 2026-10-21, as written: `general` is the default. Command `ARCH-20261021-125` carries it to the executor.**
 
 This withdraws the D54 sketched in `Dunce-Arch-Self-Assesment.md` §5 (3), which would have retired the pipeline on the strength of closed-question scores. That sketch measured the wrong thing. The goal is a general harness, one that works for any team and is not tuned to be good at one thing (the owner, 2026-10-21). Cost and quality are measured once the harness's core problems are fixed. This ruling fixes the first of those problems.
 
