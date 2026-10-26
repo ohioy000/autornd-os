@@ -5,12 +5,18 @@
   "head_before": "fefc97bed74aeb78d9e6cd203a20853a440b8d3a",
   "head_after": null,
   "results": {
-    "task": 0,
-    "step": 5,
+    "task": 4,
+    "step": "phases framing rendered from the profile; repairs applied and CHECK run",
     "response_status": "IN_PROGRESS",
     "suite_count": 1622
   },
-  "deviations": [],
+  "deviations": [
+    {
+      "task": 4,
+      "what": "Repaired function-local profile setup in autornd/engine/phases.py: re-added the framing/get_profile block before run_asks' prompt (was missing), added it before run_recompute's prompt (was missing), and removed the duplicated block in run_plan (was second, after context_block).",
+      "why": "TASK 4 step 'Inside each function, call f = framing() and profile = get_profile() once, at the top' had left run_asks and run_recompute without the block and run_plan with two."
+    }
+  ],
   "questions_for_advisor": [
     "Command 124 (ARCH-20261021-124) has no response file and its implementation has not landed, so the TASK 0 gate failed; the owner overruled the stop and directed continuation to the whole prompt."
   ],
@@ -48,5 +54,5 @@
   ],
   "suite_count_before": 1622,
   "suite_count_after": 1622,
-  "notes": "TASK 0 completed per the owner's directive not to stop until the whole prompt is complete. Gate at step 1 failed (advisory absent); owner overruled the stop; proceeded through TASK 0 step 5 and wrote this IN_PROGRESS response."
+  "notes": "TASK 0 completed per the owner's directive not to stop until the whole prompt is complete. Gate at step 1 failed (advisory absent); owner overruled the stop; proceeded through TASK 0 step 5 and wrote this IN_PROGRESS response. TASK 4: CHECK on tests/test_profile_framing.py + tests/test_triage.py -> 10 passed, 1 skipped (the skip is test_write_golden_fixture without WRITE_GOLDEN). One-off CHECK on tests/ -k 'triage or plan or review or implement or recompute or doublecheck or escalation' -> FAILED; root cause identified as the D54 transition itself (profile-driven triage prompt now renders 'Classify this {f['request_kind']}' -> 'Classify this request.' under the now-general DEFAULT_PROFILE, so the scripted router marker 'classify this engineering request' no longer matches). Anticipated by TASK 9 (suite isolation pins AUTORND_PROFILE=engineering) and handled by TASK 10; not fixed out of TASK 4 scope."
 }
