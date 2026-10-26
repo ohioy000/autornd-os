@@ -103,23 +103,6 @@ def load_docs_context(
 # recovers the precision, and costs one call per workflow.
 RERANK_CANDIDATES = 20
 
-RERANK_PROMPT = """\
-Rank these documentation excerpts by how directly they help an engineer carry
-out the request below. Judge usefulness for this specific task, not general
-topical similarity: a excerpt that states a constraint, an interface, or a
-value the work must respect outranks one that merely mentions the same subject.
-
-Request:
-{query}
-
-Excerpts:
-{excerpts}
-
-Return JSON with:
-- ranking: list of excerpt numbers, most useful first, length {keep}. Omit any
-  excerpt that would not actually inform the work, even if that returns fewer
-  than {keep} entries."""
-
 
 def _rank_tier() -> str | None:
     """Which tier ranks retrieved context, if any.
@@ -156,7 +139,7 @@ def reset_rerank_mode() -> None:
 RERANK_CANDIDATES = 20
 
 RERANK_PROMPT = """\
-Rank these documentation excerpts by how directly they help an engineer carry
+Rank these documentation excerpts by how directly they help {practitioner} carry
 out the request below. Judge usefulness for this specific task, not general
 topical similarity: an excerpt stating a constraint, an interface, or a value
 the work must respect outranks one merely mentioning the same subject.
@@ -174,7 +157,7 @@ Return JSON with:
 
 
 QUERY_PROMPT = """\
-An engineer is about to work on the request below. Write the search queries
+{Practitioner} is about to work on the request below. Write the search queries
 that would pull the most useful material out of this project's documentation.
 
 Target what the work will actually need settled — interfaces it must match,
@@ -260,7 +243,7 @@ def criteria_demand_verification(criteria: list[str]) -> bool:
 
 
 BRIEFING_PROMPT = """\
-Write a short grounding briefing for an engineer about to start this request,
+Write a short grounding briefing for {practitioner} about to start this request,
 using only the project documentation excerpts below.
 
 State what the documentation establishes that bears on this work: constraints
@@ -295,14 +278,16 @@ async def expand_queries(client, request: str) -> list[str]:
     """
     if client is None or not settings.model_research:
         return [request]
+    from autornd.profiles import framing
+    f = framing()
     try:
         data, _ = await client.chat_json(
             function="research",
             system_prompt=(
-                "You write search queries that retrieve engineering "
-                "documentation. Respond with JSON only."
+                f"You write search queries that retrieve {f['documentation']}. "
+                f"Respond with JSON only."
             ),
-            user_message=QUERY_PROMPT.format(request=request),
+            user_message=QUERY_PROMPT.format(request=request, **framing()),
             temperature=0.0,
         )
         queries = [q for q in data.get("queries", []) if isinstance(q, str) and q.strip()]
@@ -352,16 +337,18 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
     if client is None or not settings.model_research or not chunks:
         return raw
 
+    from autornd.profiles import framing
+    f = framing()
     excerpts = "\n\n".join(f"[{c['tag']}] {c['text']}" for c in chunks)
     try:
         data, _ = await client.chat_json(
             function="research",
             system_prompt=(
-                "You brief engineers from project documentation. You never "
-                "invent facts the documentation does not contain. "
-                "Respond with JSON only."
+                f"You brief {f['practitioners']} from project documentation. You never "
+                f"invent facts the documentation does not contain. "
+                f"Respond with JSON only."
             ),
-            user_message=BRIEFING_PROMPT.format(request=request, excerpts=excerpts),
+            user_message=BRIEFING_PROMPT.format(request=request, excerpts=excerpts, **framing()),
             temperature=0.1,
         )
         briefing = (data.get("briefing") or "").strip()
@@ -415,6 +402,10 @@ async def rerank_chunks(
     never be the thing that fails a workflow — and must not quietly cost a call
     per workflow either.
     """
+    from autornd.profiles import framing, get_profile
+    f = framing()
+    profile = get_profile()
+
     global _rerank_mode
 
     tier = _rank_tier()
@@ -466,10 +457,10 @@ async def rerank_chunks(
             function=tier,
             system_prompt=(
                 "You rank reference material by usefulness for a specific "
-                "engineering task. Respond with JSON only."
+                f"{f['task']}. Respond with JSON only."
             ),
             user_message=RERANK_PROMPT.format(
-                query=query, excerpts=excerpts, keep=keep
+                query=query, excerpts=excerpts, keep=keep, **framing()
             ),
             temperature=0.0,
         )
@@ -528,7 +519,7 @@ async def load_retrieval_context(query: str, n_results: int = 5, client=None,
 
 
 SCOPING_PROMPT = """\
-An engineer is about to plan and carry out the request below. There is no
+{Practitioner} is about to plan and carry out the request below. There is no
 project documentation available, so your job is to scope the work rather than
 to report facts about the project.
 
@@ -537,7 +528,7 @@ Do exactly three things, and invent nothing:
 1. Restate the objective precisely, in one or two sentences.
 2. List what the request leaves unspecified that the work genuinely needs
    settled — interfaces, limits, targets, formats, environments.
-3. List the assumptions a competent engineer would proceed on anyway, written
+3. List the assumptions {competent_practitioner} would proceed on anyway, written
    so a reader can challenge each one.
 
 Never state a project fact you were not given. An unknown belongs in the
@@ -577,21 +568,22 @@ async def analyze_request(client, request: str) -> tuple[str, list[str]]:
     if client is None or not settings.model_research:
         return "", []
 
-    from autornd.profiles import get_profile
-
-    profile_ctx = get_profile().build_context()
+    from autornd.profiles import framing, get_profile
+    f = framing()
+    profile = get_profile()
+    profile_ctx = profile.build_context()
     profile_block = f"\nProject profile:\n{profile_ctx}\n" if profile_ctx else ""
 
     try:
         data, _ = await client.chat_json(
             function="research",
             system_prompt=(
-                "You scope engineering requests. You surface what is unknown "
-                "rather than filling it in, and you never assert project facts "
-                "you were not given. Respond with JSON only."
+                f"You scope {f['request_kind']}s. You surface what is unknown "
+                f"rather than filling it in, and you never assert project facts "
+                f"you were not given. Respond with JSON only."
             ),
             user_message=SCOPING_PROMPT.format(
-                request=request, profile_block=profile_block
+                request=request, profile_block=profile_block, **framing()
             ),
             temperature=0.1,
         )
