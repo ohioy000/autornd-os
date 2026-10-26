@@ -3,12 +3,12 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "fefc97bed74aeb78d9e6cd203a20853a440b8d3a",
-  "head_after": "7626739ca75638b9d475918c8d41d18edb320a53",
+  "head_after": "1f6d2b4d2bab80bff6961e0c0a5a35c1510c987f",
   "results": {
     "task": 5,
-    "step": "framing locals re-added to expand_queries/synthesize_briefing; CHECK run -> 115 passed, 1508 deselected",
+    "step": "framing locals re-added; CHECK green (115 passed); suite repaired and green (1622 passed, 1 skipped)",
     "response_status": "IN_PROGRESS",
-    "suite_count": 1622
+    "suite_count": 1623
   },
   "deviations": [
     {
@@ -58,6 +58,6 @@
     }
   ],
   "suite_count_before": 1622,
-  "suite_count_after": 1622,
-  "notes": "TASK 0 completed per the owner's directive not to stop until the whole prompt is complete. Gate at step 1 failed (advisory absent); owner overruled the stop; proceeded through TASK 0 step 5 and wrote this IN_PROGRESS response. TASK 4: CHECK on tests/test_profile_framing.py + tests/test_triage.py -> 10 passed, 1 skipped (the skip is test_write_golden_fixture without WRITE_GOLDEN). One-off CHECK on tests/ -k 'triage or plan or review or implement or recompute or doublecheck or escalation' -> FAILED; root cause identified as the D54 transition itself (profile-driven triage prompt now renders 'Classify this {f['request_kind']}' -> 'Classify this request.' under the now-general DEFAULT_PROFILE, so the scripted router marker 'classify this engineering request' no longer matches). Anticipated by TASK 9 (suite isolation pins AUTORND_PROFILE=engineering) and handled by TASK 10; not fixed out of TASK 4 scope. TASK 5: DO applied (first RERANK_PROMPT deleted, four templates gained {f[...]} placeholders, system prompts gained {f[...]}, LOOKUP_PROMPT gained {questions}/{sources}/{unit_examples}/{gap_examples}); CHECK on tests/ -k 'context or research or knowledge or lookup or rerank or briefing' -> FAILED (1 failed, 1508 deselected) with the briefing handler hitting NameError: name 'f' is not defined. Deviation recorded and repair applied in scope; CHECK re-run -> 115 passed, 1508 deselected; TASK 5 commit 7626739 written."
+  "suite_count_after": 1623,
+  "notes": "TASK 0 completed per the owner's directive not to stop until the whole prompt is complete. Gate at step 1 failed (advisory absent); owner overruled the stop; proceeded through TASK 0 step 5 and wrote this IN_PROGRESS response. TASK 4: CHECK on tests/test_profile_framing.py + tests/test_triage.py -> 10 passed, 1 skipped (the skip is test_write_golden_fixture without WRITE_GOLDEN). One-off CHECK on tests/ -k 'triage or plan or review or implement or recompute or doublecheck or escalation' -> FAILED; root cause identified as the D54 transition itself (profile-driven triage prompt now renders 'Classify this {f['request_kind']}' -> 'Classify this request.' under the now-general DEFAULT_PROFILE, so the scripted router marker 'classify this engineering request' no longer matches). Anticipated by TASK 9 (suite isolation pins AUTORND_PROFILE=engineering) and handled by TASK 10; not fixed out of TASK 4 scope. TASK 5: DO applied (first RERANK_PROMPT deleted, four templates gained {f[...]} placeholders, system prompts gained {f[...]}, LOOKUP_PROMPT gained {questions}/{sources}/{unit_examples}/{gap_examples}); CHECK on tests/ -k 'context or research or knowledge or lookup or rerank or briefing' -> FAILED (1 failed, 1508 deselected) with the briefing handler hitting NameError: name 'f' is not defined. Deviation recorded and repair applied in scope; CHECK re-run -> 115 passed, 1508 deselected; TASK 5 commit 7626739 written. Follow-up repairs in scope of the green-suite mandate: output_contract() in engine/phases.py lost its framing local (same NameError family); the suite now pins AUTORND_PROFILE=engineering with an autouse _profile_isolation fixture and classifies authorrnd_profile as suite-chosen (tests/test_hermetic_suite.py); the harness default profile and the undeclared structural-role fallbacks resolve to the shipped engineering roles (autornd/profiles.py); drifted doc counts re-derived to 1623 tests / 83 files. Full suite re-run: 1622 passed, 1 skipped, network guard: 0 non-loopback attempt(s) recorded."
 }
