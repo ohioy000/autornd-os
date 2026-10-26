@@ -1,0 +1,41 @@
+# The docs directory is named after the project, so this keeps today's docs/autornd/.
+name: "AutoRnD"
+
+framing:
+  team: "a team"
+  request_kind: "request"
+  request_analyst: "a request analyst"
+  work: "work"
+  implementation: "implementation"
+  deliverables: "the document, the plan, the procedure, the analysis, the calculation"
+  practitioner: "a practitioner"
+  practitioners: "practitioners"
+  competent_practitioner: "a practitioner in the field"
+  senior_practitioner: "a careful senior practitioner in the field"
+  independent_reviewer: "an independent senior reviewer"
+  task: "task"
+  documentation: "documentation"
+  questions: "questions"
+  sources: "the governing rules and standards, official specifications, and original publications"
+  unrecallable_examples: "a mass migration, a public release, a shipped product"
+  role_example: "lead"
+  unit_examples: ""
+  gap_examples: ""
+
+roles:
+  lead:
+    name: "Lead"
+    tier: engineering
+    expertise: "Does the work the request asks for, in full."
+  reviewer:
+    name: "Reviewer"
+    tier: engineering
+    expertise: "Checks the work against what the request asked, and names what is wrong or missing."
+  planner:
+    name: "Planner"
+    tier: architecture
+    expertise: "Holds the whole view: what the request needs, in what order, and what it depends on."
+
+structural_roles:
+  checks_work: reviewer
+  holds_system_view: planner

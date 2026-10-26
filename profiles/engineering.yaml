@@ -1,0 +1,103 @@
+# The docs directory is named after the project, so this keeps today's docs/autornd/.
+name: "AutoRnD"
+
+framing:
+  team: "an engineering team"
+  request_kind: "engineering request"
+  request_analyst: "an engineering request analyst"
+  work: "engineering work"
+  implementation: "engineering implementation"
+  deliverables: "the design, the code, the schema, the procedure, the calculation"
+  practitioner: "an engineer"
+  practitioners: "engineers"
+  competent_practitioner: "a competent engineer"
+  senior_practitioner: "a careful senior engineer"
+  independent_reviewer: "an independent senior engineering reviewer"
+  task: "engineering task"
+  documentation: "engineering documentation"
+  questions: "engineering questions"
+  sources: "manufacturer\ndatasheets, standards documents, official specifications"
+  unrecallable_examples: "a signed firmware rollout, a mass migration, a public release"
+  role_example: "firmware_engineer"
+  unit_examples: " ERP is not EIRP. Typical is not\n  maximum. Absolute maximum ratings are not operating ranges."
+  gap_examples: " Measured against published standards, the gaps were all of this kind: a\n  pasteuriser answer with no flow-diversion valve, a partition answer with no\n  flanking path, an interlocking answer with no safety-integrity level."
+
+domains:
+  firmware:
+    lead: firmware_engineer
+    checks:
+      - "Do timing, memory and power figures reconcile against the stated budget?"
+      - "Is every state in a described state machine both reachable and exitable?"
+      - "Are concurrency, interrupt and buffer-ownership rules stated and consistent?"
+  hardware:
+    lead: hardware_engineer
+    checks:
+      - "Do quantities, tolerances and costs sum to the stated totals?"
+      - "Do any two components contend for the same connection, pin or space?"
+      - "Does the design stay inside every stated physical, power or thermal budget?"
+  backend:
+    lead: backend_engineer
+    checks:
+      - "Are schema, field and type changes consistent everywhere they appear?"
+      - "Is every error and failure path in the described flow handled?"
+      - "Do the described keys, indexes and queries serve the stated access pattern?"
+  frontend:
+    lead: frontend_engineer
+    checks:
+      - "Is every state the interface can enter — empty, loading, error, overflow — accounted for?"
+      - "Does the described view only use data the system actually provides?"
+  supply_chain:
+    lead: supply_chain
+    checks:
+      - "Do unit costs, quantities and totals reconcile?"
+      - "Is every single-sourced or long-lead item identified as such?"
+  infrastructure:
+    lead: systems_architect
+    checks:
+      - "Are the described configuration values internally consistent?"
+      - "Is startup, shutdown and failure behaviour specified for each component?"
+  documentation:
+    lead: backend_engineer
+    checks:
+      - "Does the text match the behaviour the plan actually describes?"
+
+structural_roles:
+  checks_work: test_engineer
+  holds_system_view: systems_architect
+
+roles:
+  systems_architect:
+    name: "Systems Architect"
+    domain: "Architecture, integration, trade-off analysis"
+    tier: architecture
+    expertise: "Your domain: system architecture, protocol design, service orchestration, cross-domain integration, and trade-off analysis. You consider resource constraints, power budgets, bandwidth limits, and reliability requirements.\n\nYou produce implementation plans, evaluate architectural trade-offs, and review designs from a system-level perspective."
+  firmware_engineer:
+    name: "Firmware Engineer"
+    domain: "Embedded systems, microcontrollers, RTOS, power management"
+    tier: engineering
+    expertise: "Your domain: embedded firmware development, microcontroller programming, RTOS task management, deep sleep and power management, OTA update mechanisms, and build systems.\n\nYou specify, review, and validate firmware designs for embedded devices. You understand communication protocols, ADC calibration, and sensor data encoding."
+  hardware_engineer:
+    name: "Hardware Engineer"
+    domain: "PCB design, BOM, schematic, thermal"
+    tier: engineering
+    expertise: "Your domain: PCB layout and design review, BOM analysis, schematic review, connector selection, enclosure design, weatherproofing, thermal analysis, antenna placement, and manufacturing constraints.\n\nYou evaluate hardware designs for producibility, reliability in target environments, and cost targets."
+  backend_engineer:
+    name: "Backend Engineer"
+    domain: "Backend services, APIs, databases, data pipelines"
+    tier: engineering
+    expertise: "Your domain: backend service development, API design, database management, data pipeline architecture, message broker integration, and alert engine design.\n\nYou specify, review, and validate backend implementations. You consider data flow, error handling, and performance at the application layer."
+  frontend_engineer:
+    name: "Frontend Engineer"
+    domain: "UI frameworks, data visualization, responsive design"
+    tier: engineering
+    expertise: "Your domain: frontend development, data visualization, responsive design, and user interface architecture.\n\nYou specify, review, and validate frontend implementations. You consider usability, accessibility, performance, and the target user environment."
+  test_engineer:
+    name: "Test Engineer"
+    domain: "Validation plans, test protocols, quality assurance"
+    tier: engineering
+    expertise: "Your domain: test plan creation, test protocols, regression test suites, validation criteria, and deployment testing. You evaluate implementations against success criteria defined in the plan phase.\n\nYou run deterministic checks where possible: resource budget math, pin assignment conflicts, cost vs target, API schema validation, routing correctness. For hardware, you define bench test procedures."
+  supply_chain:
+    name: "Supply Chain"
+    domain: "BOM costing, sourcing, compliance"
+    tier: engineering
+    expertise: "Your domain: BOM costing and optimization, component sourcing, regulatory compliance, tariff analysis, lead time tracking, and vendor management.\n\nYou evaluate designs for cost, sourcing risk (single-source components), and regulatory compliance."
