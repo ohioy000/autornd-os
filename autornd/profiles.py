@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import functools
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -65,20 +66,34 @@ class ProjectProfile:
     # Undeclared means the shipped default, so a profile that says nothing
     # behaves exactly as it did before B14.
     structural_roles: dict[str, str] = field(default_factory=dict)
+    framing: dict[str, str] = field(default_factory=dict)
+    base: str = ""
+    role_order: list[str] = field(default_factory=list)
 
     def role_that_checks_work(self) -> str:
         """Who is added when risk is high enough that somebody must check."""
-        from autornd.models.verdicts import SpecialistRole, role_key
+        from autornd.models.verdicts import role_key
         declared = (self.structural_roles or {}).get("checks_work")
         return role_key(declared) if declared else role_key(
-            SpecialistRole.TEST_ENGINEER)
+            _general().structural_roles["checks_work"])
 
     def role_that_holds_system_view(self) -> str:
         """Who is added when the work spans domains, or when nobody else fits."""
-        from autornd.models.verdicts import SpecialistRole, role_key
+        from autornd.models.verdicts import role_key
         declared = (self.structural_roles or {}).get("holds_system_view")
         return role_key(declared) if declared else role_key(
-            SpecialistRole.SYSTEMS_ARCHITECT)
+            _general().structural_roles["holds_system_view"])
+
+    def frame(self, key: str) -> str:
+        """A framing value: this profile's own, else the general profile's (D54 §2 (6))."""
+        if key in self.framing:
+            return str(self.framing[key])
+        return str(_general().framing[key])
+
+    def ordered_roles(self) -> list[str]:
+        """Role keys in declared order: the base's if there is a base, else this profile's own."""
+        from autornd.models.verdicts import role_key
+        return [role_key(r) for r in (self.role_order or list(self.roles))]
 
     def build_context(self) -> str:
         if not self.description and not self.stack:
@@ -153,12 +168,7 @@ class ProjectProfile:
         return self.name.lower().replace(" ", "_")
 
 
-DEFAULT_PROFILE = ProjectProfile()
-
-_active_profile: ProjectProfile | None = None
-
-
-def load_profile(name: str) -> ProjectProfile:
+def _read(name: str) -> ProjectProfile:
     path = PROFILES_DIR / f"{name}.yaml"
     if not path.exists():
         path = PROFILES_DIR / f"{name}.yml"
@@ -172,11 +182,54 @@ def load_profile(name: str) -> ProjectProfile:
         site_url=data.get("site_url", ""),
         stack=data.get("stack", []),
         constraints=data.get("constraints", []),
-        specialists=data.get("specialists", {}),
+        specialists=data.get("specialists", {}) or {},
         domains=data.get("domains", {}) or {},
         roles=data.get("roles", {}) or {},
         structural_roles=data.get("structural_roles", {}) or {},
+        framing=data.get("framing", {}) or {},
+        base=data.get("base", "") or "",
     )
+
+
+def apply_base(profile: ProjectProfile, base_name: str) -> ProjectProfile:
+    from autornd.models.verdicts import role_key
+
+    base = _read(base_name)
+    if base.base:
+        raise ValueError(
+            f"Profile {profile.name!r} names base {base_name!r}, which names its own "
+            f"base {base.base!r}; a base may not have a base (D54).")
+    return replace(
+        profile,
+        framing={**base.framing, **profile.framing},
+        domains={**base.domains, **profile.domains},
+        roles={**base.roles, **profile.roles},
+        structural_roles={**base.structural_roles, **profile.structural_roles},
+        role_order=[role_key(r) for r in base.roles],
+        base=base_name)
+
+
+def load_profile(name: str) -> ProjectProfile:
+    p = _read(name)
+    return apply_base(p, p.base) if p.base else p
+
+
+@functools.lru_cache(maxsize=1)
+def _general() -> ProjectProfile:
+    return _read("general")
+
+
+def framing() -> dict[str, str]:
+    """Every framing value for the active profile, plus 'Practitioner' capitalised."""
+    profile = get_profile()
+    values = {key: profile.frame(key) for key in _general().framing}
+    values["Practitioner"] = values["practitioner"][:1].upper() + values["practitioner"][1:]
+    return values
+
+
+DEFAULT_PROFILE = _general()
+
+_active_profile: ProjectProfile | None = None
 
 
 def list_profiles() -> list[str]:
