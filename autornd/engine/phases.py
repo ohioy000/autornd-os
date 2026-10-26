@@ -55,6 +55,7 @@ logger = logging.getLogger(__name__)
 # rejects, burning the entire iteration budget and escalating a healthy
 # request. Every producing prompt states this contract explicitly.
 def output_contract() -> str:
+    from autornd.profiles import framing
     f = framing()
     return f"""\
 You have no repository, file system, shell, or build tools, and you are not \

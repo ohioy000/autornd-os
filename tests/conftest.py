@@ -75,7 +75,7 @@ PLACEHOLDERS: dict[str, str] = {
     "ALLOW_UNAUTHENTICATED_REMOTE": "false",
     "CHROMADB_PATH": _CHROMA_TMP,
     "REGISTRATION_ENABLED": "true",
-    "AUTORND_PROFILE": "",
+    "AUTORND_PROFILE": "engineering",
     "AUTORND_WORKFLOW": "engineering-rnd",
 }
 for _name, _value in PLACEHOLDERS.items():
@@ -230,6 +230,23 @@ def _no_network_attempts(request):
         pytest.fail(
             f"{request.node.nodeid} attempted network access: {fresh}",
             pytrace=False)
+
+
+@pytest.fixture(autouse=True)
+def _profile_isolation():
+    """Pin the profile the suite runs under (D54).
+
+    The prompts render from the profile's framing, so a run under the
+    neutral default renders neutral prose while the yardstick workflow is
+    the engineering one. Pin the profile here; a test that sets its own
+    overrides it for the test and resets it afterwards.
+    """
+    from autornd.profiles import get_profile, load_profile, set_profile
+
+    previous = get_profile()
+    set_profile(load_profile("engineering"))
+    yield
+    set_profile(previous)
 
 
 # ── 3. The test database: one in-memory engine shared per test ──────────────
