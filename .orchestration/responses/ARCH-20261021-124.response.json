@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "5163e60750e8575fa40837c9fb36cbf7e419e763",
-  "head_after": "5163e60750e8575fa40837c9fb36cbf7e419e763",
+  "head_after": "febfd16a249ccd032a5f83bee115b47b57663275",
   "results": {
-    "task": 0,
-    "step": "branch exec/20261021-124-advisory-nodes made from origin/main; Task 0 CHECK matches EXPECT; suite 1627 passed, 1 skipped"
+    "task": 1,
+    "step": "advisory field on Node done; Task 1 CHECK matches EXPECT (94 passed, network guard 0)"
   },
   "preconditions_ran": [
     {
