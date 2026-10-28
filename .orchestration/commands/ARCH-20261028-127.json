@@ -1,0 +1,85 @@
+{
+  "command_id": "ARCH-20261028-127",
+  "parent_id": "ARCH-20261021-124",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Implement Ruling D55, signed off by the owner on 2026-10-28 with the rename full-team: a request may name an offered workflow, every run records which workflow ran, the run gate keys on the workflow, and engineering-rnd is renamed full-team with no alias. Free work; no paid call. Issued after command 124, and it starts from main with 124 merged.",
+
+  "evidence": [
+    "THE TASK FILE: .orchestration/prompts/ARCH-20261028-127.md. It has 9 ordered tasks, each with exact edits, a CHECK and its EXPECT. The advisor replayed every task on a copy of main with 124 merged on 2026-10-28, and each EXPECT is the output it saw. Where this file and the task file differ in detail, the task file governs.",
+    "THE STARTUP PROMPT: .orchestration/prompts/STARTUP.md. A new executor reads it first. It gives the roles, the work loop and the rules.",
+    "Ruling D55, signed off 2026-10-28: docs/reviews/2026-10-21-d55-a-workflow-per-request.md. Its status block records the sign-off and two details the advisor ruled while writing this command: the rename keeps the graph (the name line and the offered lines change, every other byte is the old file's), and the doublecheck's gate key uses the name 'doublecheck'.",
+    "The code it changes: autornd/engine/workflow.py workflow_path() and WorkflowEngine.execute; autornd/api/routes.py WorkflowRequest, _RunGate, _admit_run, the two submit routes and the doublecheck; autornd/config.py autornd_workflow; autornd/graph/spec.py WorkflowSpec and parse.",
+    "The record channel it reuses: autornd/graph/adapter.py _recompute_vote_check writes a check's output through on_phase on a zero-cost response. The workflow record goes the same way. No DB schema change.",
+    "G-3: the owner's .env sets no AUTORND_WORKFLOW (checked by the advisor on 2026-10-28, by count only), so the rename needs no edit there."
+  ],
+
+  "scope": {
+    "include": [
+      "workflows/engineering-rnd.yaml moved to workflows/full-team.yaml; its name line, and offered: true",
+      "workflows/lean.yaml, verify-first.yaml, answer-and-recompute.yaml: offered: true; and comments or descriptions that name the flagship",
+      "workflows/independent-check-probe.yaml, plan-probe.yaml: comments that name the flagship",
+      "autornd/config.py, autornd/engine/workflow.py, autornd/api/routes.py, autornd/graph/spec.py",
+      "autornd/evals/cli.py, autornd/graph/executor.py, evals/tier3/runner.py: comments and the docstring that name the flagship",
+      "evals/scenarios/ambiguous_request.yaml, evals/scenarios/unrecallable_rollout.yaml: the workflow: line only",
+      "evals/datasets/technical-sets.yaml: one comment",
+      "tests/: the rename in the files the task file lists, one changed test in tests/test_api.py, and a new tests/test_workflow_choice.py",
+      "README.md, HANDOVER.md (outside §6), AGENTS.md, CLAUDE.md, .env.example, .claude/context/workflows-and-profiles.md",
+      ".orchestration/responses/"
+    ],
+    "exclude": [
+      "Historical records keep the old name: docs/reviews/, docs/traces/, docs/probes/, docs/provenance/, docs/preregistration-*, docs/handover-review.md, .orchestration/commands/ and prompts/, evals/tier3/manifest.json, evals/tier3/README.md, HANDOVER.md §6",
+      "Every node of every workflow: unchanged. No prompt text changes",
+      "evals/tier2/ and tests/fixtures/: frozen",
+      "autornd/database.py: no schema change. If one is needed, STOP and report",
+      ".env and .env.tier3: the owner's (G-3). Do not read them"
+    ]
+  },
+
+  "constraints": [
+    "STARTUP FIRST: the executor reads .orchestration/prompts/STARTUP.md before Task 0, and its rules hold for every task.",
+    "FREE. No paid call. Every test is provider-free, and the network guard stays at 0.",
+    "A NAME, NEVER A PATH: the API looks the name up as a key among the offered files' stems. A path, an instrument, an unknown name and a file that does not load are refused alike: HTTPException(422) with a plain sentence that lists the offered names. The old name's sentence also gives the new one.",
+    "REFUSED BEFORE THE GATE: the name is checked before _admit_run, so a refused submission holds no slot and leaves no row (D45 (6)).",
+    "THE DEFAULT: a request that names no workflow runs AUTORND_WORKFLOW, exactly as today, and its gate key uses the default's name. The default stays full-team (D55 §2 (8)).",
+    "THE RECORD: every API run writes one zero-cost phase record, workflow, with the workflow's name and the sha256 of its file, before any node runs.",
+    "THE GATE: a duplicate is the same caller, request text and workflow. The doublecheck's key uses the name doublecheck. The concurrency cap and the spend ceiling are unchanged.",
+    "NO ALIAS: engineering-rnd resolves nowhere. RENAMED_WORKFLOWS in autornd/config.py words the refusal only. A setting that would resolve to engineering-rnd inside workflows/ is refused at startup with the new name.",
+    "NEVER PARSE ENGLISH: nothing tests a refusal's words for control flow; WorkflowNotOffered is the type.",
+    "A defect found in existing harness code while doing this is a STOP-and-report, not a fix."
+  ],
+
+  "acceptance_criteria": [
+    "(a) Choice. A mocked sync run naming verify-first runs that graph (no plan phase), and its workflow record names verify-first with that file's sha256. An unnamed run records full-team, and with AUTORND_WORKFLOW=lean records lean. Break-proof: ignore the field, and the named run records the default.",
+    "(b) Refusals. ../workflows/lean, /etc/passwd, triage-only, nonexistent and engineering-rnd are each refused with 422 on both submit routes, with a sentence listing the four offered names; the old name's sentence gives full-team. No refused request creates a row, holds a slot or builds a client. Each refusal has a break-proof.",
+    "(c) Offered. GET /api/workflows/offered lists exactly full-team's, lean's, verify-first's and answer-and-recompute's names and descriptions. Every file that declares offered: true loads. GET /api/workflows/{id} still returns a run. offered must be true or false.",
+    "(d) Duplicates. The same request under two workflows is admitted twice, at once; the same request under one workflow twice is refused with 409.",
+    "(e) The rename. full-team.yaml is the old file with its name line and the offered lines changed, proved by the old file's sha256. The old name is refused at startup. No current file names engineering-rnd outside the records and the refusal, and a test keeps that list. The tier-3 and tier-4 tests pass unmodified.",
+    "(f) Unchanged elsewhere. Every existing test passes, changed only by the rename the task file's sed command makes, except TestOneRowPerSubmission.test_the_submitted_id_runs_finishes_and_stays_one_row, which counts the workflow record apart, as the task file gives it.",
+    "(g) Counts re-derived from pytest --collect-only in HANDOVER.md, README.md and AGENTS.md; tests/test_docs.py passes.",
+    "(h) Suite green before and after, network guard 0, CI 5/5, PR opened."
+  ],
+
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/test_workflow_choice.py tests/test_api.py -q", "expected": "65 passed."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "1669 passed, 1 skipped; network guard: 0. 1647 collected before, 1670 after."}
+  ],
+
+  "rollback": "Revert the PR. The rename is a file move and text; no schema change, and no record is rewritten.",
+
+  "deliverable": "One PR from branch exec/20261028-127-workflow-per-request, made from main with 124 merged: the rename, the offered flag, the API field and route, the workflow record, the gate key, the tests with their break-proofs and the counts, and the response marked DONE. Then STOP.",
+
+  "assumptions": [
+    "The phase channel can carry a record written before the first node. If it cannot without restructuring execute, STOP and report the shape you would need."
+  ],
+
+  "questions": [],
+
+  "preconditions": [
+    {"command": "test -f tests/test_advisory_nodes.py && echo 124 merged", "expected": "124 merged - command 124 is on main."},
+    {"command": "grep -c 'signed off by the owner on 2026-10-28' docs/reviews/2026-10-21-d55-a-workflow-per-request.md", "expected": "1 - D55 is signed off."},
+    {"command": "test -f .orchestration/prompts/ARCH-20261028-127.md && echo ok", "expected": "ok - the task file is on main."},
+    {"command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none", "expected": "none"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "1646 passed, 1 skipped; 1647 collected."}
+  ]
+}

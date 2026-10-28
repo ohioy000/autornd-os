@@ -6,6 +6,9 @@
   "objective": "Repair D53 §2 (5) as the review of #208 found it broken: nothing that happens inside the recompute (a failed sample, a refused sample, a watchdog cut) may change a run's status. Add a reusable node mark, advisory: true, for checks that may only add a note. Rule the coder's ident question: drop the 'in parallel' special case. Free work; no paid call.",
 
   "evidence": [
+    "THE TASK FILE: .orchestration/prompts/ARCH-20261021-124.md. It has 11 ordered tasks, each with exact edits, a CHECK and its EXPECT. The advisor replayed every task on a copy of main on 2026-10-28, and each EXPECT is the output it saw. Where this file and the task file differ in detail, the task file governs.",
+    "THE STARTUP PROMPT: .orchestration/prompts/STARTUP.md. A new executor reads it first. It gives the roles, the work loop and the rules.",
+    "AMENDED 2026-10-28 by the advisor: the task file added; acceptance (e) names the four existing tests the replay found changing (the issue named one); counts and preconditions brought to main after D54 (1628 collected). Nothing ruled has changed.",
     "The review: docs/reviews/2026-10-21-review-208-d53-phase1.md, §2 (the two defects, with the probe) and §3 (the ident ruling).",
     "Ruling D53 §2 (5): docs/reviews/2026-10-18-d53-the-recompute-vote.md. The vote never blocks, routes or revises, and the run's status is decided without it.",
     "The failing paths: autornd/engine/phases.py run_recompute (three chat_json calls with nothing around them); autornd/graph/executor.py _watched (a cut at any node ends the run through _cut) and _refuse_to_start (a pre-start refusal at any node ends the run).",
@@ -35,6 +38,7 @@
   },
 
   "constraints": [
+    "STARTUP FIRST: the executor reads .orchestration/prompts/STARTUP.md before Task 0, and its rules hold for every task.",
     "FREE. No paid call. Every test is provider-free, and the network guard stays at 0.",
     "SAMPLE FAILURE: in run_recompute, a sample whose call raises an Exception (not a BaseException such as CancelledError) is recorded as {failed: true, error: '<ExceptionType>: <message>' cut to 200 characters} in samples, and the next sample still runs. The phase returns the responses of the samples that completed. A failed sample's spend and its unreconciled liability stay as the client recorded them.",
     "THE VOTE ON FAILED SAMPLES: a failed sample is not parseable. The vote's output gains samples_failed: int. When fewer than 2 samples are parseable the vote is unchecked with flagged false, as now, and its reason names how many samples failed, as a plain sentence.",
@@ -49,9 +53,9 @@
   "acceptance_criteria": [
     "(a) A failed sample. In the mocked answer-and-recompute run of tests/test_recompute_vote.py (answer 100, samples 200 200 200), make the second recompute call raise ValueError, and separately BudgetExceeded. The run completes, its status equals the same run's with the recompute and recompute_vote nodes removed, and the vote has samples_parsed 2 and samples_failed 1, and is flagged (2 of 3 still form a majority). Break-proof: remove the per-sample handling and the test fails.",
     "(b) Two failed samples. The second and third calls raise. The run completes, and the vote is unchecked with flagged false, samples_failed 2, and a reason naming the two failures. Break-proof shown.",
-    "(c) A watchdog cut. Run the same mocked workflow under GraphExecutor(time_budget=1.5, reserve_seconds=0.0), with recompute calls that sleep 3 s. The run's status equals that of the run with the recompute nodes removed (completed). The recompute's StepRecord is cancelled, its output is skipped with a reason naming the cut, and recompute_vote reads skipped. Break-proof: remove advisory: true from the workflow file and the run ends blocked by the watchdog.",
+    "(c) A watchdog cut. Run the same mocked workflow under GraphExecutor(time_budget=1.5, reserve_seconds=0.0), with recompute calls that sleep 3 s. The run's status equals that of the run with the recompute nodes removed (completed). The recompute's StepRecord is cancelled, its output is skipped with a reason naming the cut, and recompute_vote reads skipped. Break-proof: set advisory to false in the workflow file and the run ends blocked by the watchdog.",
     "(d) A pre-start refusal. A recompute whose pace says it cannot finish in the time left is not started. Its output is skipped with a reason, and the run completes. Break-proof shown.",
-    "(e) Unchanged elsewhere. A non-advisory AI node that raises still ends the run as today, and a non-advisory node cut by the watchdog still ends it blocked, each with a test on a small spec. advisory: true on a gate or a loop raises SpecError. Every existing test passes unmodified, except the replay test changed under (f).",
+    "(e) Unchanged elsewhere. A non-advisory AI node that raises still ends the run as today, and a non-advisory node cut by the watchdog still ends it blocked, each with a test on a small spec. advisory: true on a gate or a loop raises SpecError. Every existing test passes unmodified except four in tests/test_recompute_vote.py, each given exactly by the task file: TestAccounting.test_a_sample_failing_after_dispatch_keeps_its_worst_case, which asserted that the phase raises and now asserts that the failed sample is recorded and the third sample runs, with its accounting asserts unchanged; and the three that name T4-24 under (f): TestTheSkip.test_breakproof_the_same_inputs_not_skipped_vote, TestTheReplay.test_the_check_reproduces_the_probe_flag and TestTheReplay.test_every_correct_answer_is_unflagged.",
     "(f) Ident. 'VL-42' equals 'vl 42'; '5 × EPC-1200-60 in parallel' does not equal '5 × EPC-1200-60'. The replay test (TestTheReplay) still matches recompute_vote.score on every recorded answer except T4-24. There it expects the shipped check to flag the correct answer while the probe does not, and a comment cites docs/reviews/2026-10-21-review-208-d53-phase1.md §3. If any other recorded answer changes its flag, STOP and report which.",
     "(g) The probe of the review, docs/reviews/2026-10-21-review-208-d53-phase1.md §2, run as tests: all three rows read the same status with and without the vote.",
     "(h) Counts re-derived from pytest --collect-only in HANDOVER.md, README.md and AGENTS.md; tests/test_docs.py passes.",
@@ -59,13 +63,13 @@
   ],
 
   "verification": [
-    {"command": ".venv/bin/python3 -m pytest tests/test_recompute_vote.py tests/test_advisory_nodes.py -q", "expected": "All pass."},
-    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; network guard: 0; report the count before and after."}
+    {"command": ".venv/bin/python3 -m pytest tests/test_recompute_vote.py tests/test_advisory_nodes.py -q", "expected": "78 passed."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "1646 passed, 1 skipped; network guard: 0. 1628 collected before, 1647 after."}
   ],
 
   "rollback": "Revert the PR. Only the answer-and-recompute workflow marks a node advisory, so no other workflow's behaviour changes.",
 
-  "deliverable": "One PR with the advisory mark, the per-sample handling, the ident change, the tests with their break-proofs and the counts, and the response marked DONE. Then STOP.",
+  "deliverable": "One PR from branch exec/20261021-124-advisory-nodes, made from main, with the advisory mark, the per-sample handling, the ident change, the tests with their break-proofs and the counts, and the response marked DONE. Then STOP.",
 
   "assumptions": [
     "The executor can store a node's output when its work raised. If doing so means restructuring the step beyond the advisory branch, STOP and report the shape you would need."
@@ -76,8 +80,9 @@
   "preconditions": [
     {"command": "test -f docs/reviews/2026-10-21-review-208-d53-phase1.md && echo ok", "expected": "ok - the review is on main."},
     {"command": "test -f .orchestration/responses/ARCH-20261018-123.response.json && echo ok", "expected": "ok"},
+    {"command": "test -f .orchestration/prompts/ARCH-20261021-124.md && echo ok", "expected": "ok - the task file is on main."},
     {"command": "grep -c 'IN PARALLEL' autornd/graph/checks.py", "expected": "1 - the special case this command removes is still there."},
     {"command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none", "expected": "none"},
-    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "All pass; report the count (1622 at the time of issue)."}
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "1627 passed, 1 skipped; 1628 collected."}
   ]
 }

@@ -1,6 +1,10 @@
 # D55: a workflow per request (advisor, 2026-10-21)
 
-**Status: proposed. It awaits the owner's sign-off, and no command is issued until then.**
+**Status: signed off by the owner on 2026-10-28, as written, with the rename `full-team`.** Command ARCH-20261028-127 carries it, after command ARCH-20261021-124. The two details below are the advisor's, made while writing the command.
+
+**Two details, ruled by the advisor on 2026-10-28.**
+- **The rename keeps the graph, not every byte.** §3 (5) says `full-team.yaml` is byte-identical to `engineering-rnd.yaml`. But §2 (2) adds `offered: true` to that same file, and the file's own first line is `name: engineering-rnd`. The runners record that line as the run's workflow (`evals/tier3/runner.py`, `evals/tier4/runner.py`, `autornd/evals/runner.py`), so a copy that kept it would write the old name into every new record. So `full-team.yaml` is the old file with two changes: `name: full-team`, and the `offered` lines. A test proves every other byte with the old file's sha256. The graph arm E ran is unchanged, and no hash covers the file.
+- **The doublecheck's gate key.** §2 (6) keys the run gate by workflow. The doublecheck is not a workflow run, so its key uses the name `doublecheck`. A second doublecheck of the same run is still a duplicate. A doublecheck no longer collides with a new run of the same request text, which it did only by accident.
 
 This is step 3 of the generality-first order the owner approved on 2026-10-21. A general harness serves many kinds of work, and different work needs different amounts of process. A one-line check and a multi-part design should not run the same 31 steps. The workflows are already files, but today a request cannot choose one.
 
