@@ -1,0 +1,38 @@
+{
+  "command_id": "ARCH-20261028-126",
+  "status": "IN_PROGRESS",
+  "executed": true,
+  "head_before": "fa5192e6ae5b43a6d9c6d5bd3b935da077232c01",
+  "head_after": "fa5192e6ae5b43a6d9c6d5bd3b935da077232c01",
+  "results": {
+    "task": 0,
+    "step": "started: branch, tip, working-tree status and running processes checked against Task 0's EXPECT; nothing changed yet"
+  },
+  "preconditions_ran": [
+    {
+      "command": "cd /home/jb/autornd-os && git branch --show-current && git log --oneline -1 && git status --short",
+      "expected": "branch exec/20261021-125-team-is-the-profile; tip fa5192e; status lists exactly the six modified files (125 response, phases.py, review_composition.py, workflow.py, adapter.py, test_review_composition.py) and ?? .qwen/",
+      "observed": "exec/20261021-125-team-is-the-profile\nfa5192e Specialists are built only from the profile's roles; the output contract renders from framing (D54 §2 (1))\n M .orchestration/responses/ARCH-20261021-125.response.json\n M autornd/engine/phases.py\n M autornd/engine/review_composition.py\n M autornd/engine/workflow.py\n M autornd/graph/adapter.py\n M tests/test_review_composition.py\n?? .qwen/",
+      "outcome": "pass"
+    },
+    {
+      "command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none",
+      "expected": "none",
+      "observed": "none",
+      "outcome": "pass"
+    },
+    {
+      "command": "cd /home/jb/autornd-os && grep -c 'signed off by the owner on 2026-10-21' docs/reviews/2026-10-21-d54-the-team-is-the-profiles.md",
+      "expected": "1. D54 is signed off.",
+      "observed": "1",
+      "outcome": "pass"
+    }
+  ],
+  "suite_count_before": 1623,
+  "suite_count_after": 0,
+  "tests_changed": [],
+  "break_proofs": [],
+  "deviations": [],
+  "questions_for_advisor": [],
+  "notes": "suite not run at start: the tree holds 125's uncommitted Task 7, so it is red until Task 8, as the task file says. The command's second precondition (the ruling is signed off, grep -c) was also run and is listed above; its fourth precondition (the full suite) is the one this note covers."
+}
