@@ -1,12 +1,12 @@
 {
   "command_id": "ARCH-20261021-124",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "executed": true,
   "head_before": "5163e60750e8575fa40837c9fb36cbf7e419e763",
-  "head_after": "bbea7fe233283c87dd948573600f2d8bb36b7524",
+  "head_after": "17f6d300fa48a9fa4e785c49d307d9268ddc6675",
   "results": {
-    "task": 9,
-    "step": "counts re-derived to 1647 tests in 84 files; Task 9 CHECK matches EXPECT (1647 collected; 1646 passed, 1 skipped; network guard 0)"
+    "task": 10,
+    "step": "branch pushed, PR 220 opened, CI 5/5 pass on 17f6d300fa48a9fa4e785c49d307d9268ddc6675 (run 40783497729); full suite 1646 passed, 1 skipped, 1647 collected, network guard 0; response set to DONE"
   },
   "preconditions_ran": [
     {
@@ -72,7 +72,13 @@
   ],
   "suite_count_before": 1628,
   "suite_count_after": 1647,
-  "tests_changed": [],
+  "tests_changed": [
+    "tests/test_recompute_vote.py::TestAccounting::test_a_sample_failing_after_dispatch_keeps_its_worst_case (changed: asserts the failed sample is recorded and the third runs, accounting asserts unchanged)",
+    "tests/test_recompute_vote.py::TestTheSkip::test_breakproof_the_same_inputs_not_skipped_vote (changed: picks the first correct answer that is not T4-24)",
+    "tests/test_recompute_vote.py::TestTheReplay::test_the_check_reproduces_the_probe_flag (changed: for batch3 kimi T4-24 the check flags ask 1 and the probe does not)",
+    "tests/test_recompute_vote.py::TestTheReplay::test_every_correct_answer_is_unflagged (changed: skips T4-24 as well as T4-42 repeat 1; 15 of the 17 correct answers)",
+    "tests/test_advisory_nodes.py (new, 19 tests)"
+  ],
   "break_proofs": [
     {
       "break": "8.1 the per-sample catch in run_recompute no longer catches (except Exception -> except ZeroDivisionError)",
@@ -126,5 +132,10 @@
   ],
   "deviations": [],
   "questions_for_advisor": [],
-  "notes": "Work is in /home/jb/autornd-os, where the task file's Task 0 places it. The checkout was on exec/20261021-125-team-is-the-profile with a clean tree before the switch. The new branch was made with the task's own command (git switch -c ... origin/main), so git set its upstream to origin/main; Task 10 pushes with an explicit branch name and -u, which re-points it. Task 8: the breaks were driven by a scratch script outside the repo that applied each find/replace once (it stops if the find is not in the file exactly once; each was), ran the task's CHECK with PYTHONDONTWRITEBYTECODE set, and undid the break with git checkout -- <file>. Each break's failed list equals the task's EXPECT."
+  "notes": "Work is in /home/jb/autornd-os, where the task file's Task 0 places it. The checkout was on exec/20261021-125-team-is-the-profile with a clean tree before the switch. The new branch was made with the task's own command (git switch -c ... origin/main), so git set its upstream to origin/main; Task 10 pushes with an explicit branch name and -u, which re-points it. Task 8: the breaks were driven by a scratch script outside the repo that applied each find/replace once (it stops if the find is not in the file exactly once; each was), ran the task's CHECK with PYTHONDONTWRITEBYTECODE set, and undid the break with git checkout -- <file>. Each break's failed list equals the task's EXPECT. Task 10: pushed exec/20261021-124-advisory-nodes and opened PR 220 against main. CI on 17f6d300fa48a9fa4e785c49d307d9268ddc6675 (run 40783497729, event pull_request, conclusion success): docker pass 1m10s, editable-install pass 51s, test (3.11) pass 2m7s, test (3.12) pass 2m54s, test (3.13) pass 2m45s. No code changed after Task 9's commit bbea7fe (the tip tested is the Task 9 response commit, which changed only this file), so the Task 9 full-suite reading (1646 passed, 1 skipped, 1647 collected, network guard 0) is the reading for the tip CI tested. head_after is that tip; the PR head is one response-only commit later, because a commit cannot name its own sha. Task 9's seven one-line edits were applied by a scratch script outside the repo that checked each find occurred exactly once before writing; the text is the task's. No defect outside the task was found, and no CHECK differed from its EXPECT.",
+  "delivery_state": {
+    "branch": "exec/20261021-124-advisory-nodes",
+    "pr": 220,
+    "url": "https://github.com/ohioy000/autornd-os/pull/220"
+  }
 }
