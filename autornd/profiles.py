@@ -74,17 +74,15 @@ class ProjectProfile:
         """Who is added when risk is high enough that somebody must check."""
         from autornd.models.verdicts import role_key
         declared = (self.structural_roles or {}).get("checks_work")
-        if declared:
-            return role_key(declared)
-        return role_key(DEFAULT_PROFILE.structural_roles["checks_work"])
+        return role_key(declared) if declared else role_key(
+            _general().structural_roles["checks_work"])
 
     def role_that_holds_system_view(self) -> str:
         """Who is added when the work spans domains, or when nobody else fits."""
         from autornd.models.verdicts import role_key
         declared = (self.structural_roles or {}).get("holds_system_view")
-        if declared:
-            return role_key(declared)
-        return role_key(DEFAULT_PROFILE.structural_roles["holds_system_view"])
+        return role_key(declared) if declared else role_key(
+            _general().structural_roles["holds_system_view"])
 
     def frame(self, key: str) -> str:
         """A framing value: this profile's own, else the general profile's (D54 §2 (6))."""
@@ -229,11 +227,7 @@ def framing() -> dict[str, str]:
     return values
 
 
-# The harness's default project is the shipped engineering one: the yardstick
-# workflow is engineering-rnd, and the pre-B14 regression guards pin the
-# structural defaults to it. `general` stays available as a named neutral
-# profile; it is the framing fallback, not the default.
-DEFAULT_PROFILE = _read("engineering")
+DEFAULT_PROFILE = _general()
 
 _active_profile: ProjectProfile | None = None
 
