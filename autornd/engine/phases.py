@@ -238,9 +238,9 @@ async def run_triage(
         )
     prompt = f"""\
 Classify this {f['request_kind']}. Return JSON with:
-- domains: {domains_block}
+{domains_block}
 - risk: one of [{', '.join(r.value for r in RiskLevel)}]
-- specialists: {specialists_block}
+{specialists_block}
 - unrecallable: true when a wrong answer cannot be taken back once released —
   {f['unrecallable_examples']}. Scale alone is
   not the test; the test is whether it can be recalled.
