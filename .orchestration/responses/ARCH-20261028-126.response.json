@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "fa5192e6ae5b43a6d9c6d5bd3b935da077232c01",
-  "head_after": "ce198efabca2d8bbe01fb579b48dae2902371fcf",
+  "head_after": "bb710067227922b67697a2541c756a503e5e7d16",
   "results": {
-    "task": 3,
-    "step": "default profile is general again (ce198ef); CHECK matched EXPECT: git diff 5575eeb -- autornd/profiles.py is empty, 230:DEFAULT_PROFILE = _general()"
+    "task": 4,
+    "step": "suite isolation as 125's Task 9 gave it (bb71006); CHECK matched EXPECT: 32 passed in 15.45s"
   },
   "preconditions_ran": [
     {
