@@ -119,6 +119,15 @@ class Node:
     on_exhausted: str | None = None          # node id to run next
     on_exhausted_status: str | None = None   # terminal status to end with
 
+    # ── advisory (ARCH-20261021-124) ──
+    # A node whose output may only add a note. When its work raises, or the
+    # watchdog cuts or refuses it, the run stores the node's skip output and
+    # continues: nothing that happens inside it may change the run's status.
+    # The recompute (D53 §2 (5)) is the first; the review of #208 found a
+    # failed sample and a watchdog cut there each turning a completed run
+    # into a blocked one.
+    advisory: bool = False
+
     @property
     def is_loop(self) -> bool:
         return bool(self.body)
@@ -314,6 +323,7 @@ def _parse_node(raw: dict[str, Any]) -> Node:
         max_iterations=raw.get("max_iterations"),
         on_exhausted=raw.get("on_exhausted"),
         on_exhausted_status=raw.get("on_exhausted_status"),
+        advisory=raw.get("advisory", False),
     )
 
     if kind is NodeKind.AI and not node.is_loop:
@@ -325,6 +335,14 @@ def _parse_node(raw: dict[str, Any]) -> Node:
         _require(raw, "condition", node_id)
     if node.is_loop and not node.until:
         raise SpecError(f"loop node '{node_id}' needs an 'until' condition")
+    if not isinstance(node.advisory, bool):
+        raise SpecError(
+            f"node '{node_id}' sets advisory to {node.advisory!r}; it must be "
+            f"true or false")
+    if node.advisory and (kind is NodeKind.GATE or node.is_loop):
+        raise SpecError(
+            f"node '{node_id}' is a {'loop' if node.is_loop else 'gate'} and "
+            f"cannot be advisory; only ai and check nodes can")
 
     return node
 
