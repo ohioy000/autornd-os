@@ -579,7 +579,9 @@ class TestAccounting:
         """D45 (5): the request left this process, so the money may
         have been spent and no actual cost will ever arrive — the
         sample's own reservation becomes unreconciled liability,
-        with the failure's kind recorded."""
+        with the failure's kind recorded. ARCH-20261021-124: the
+        failed sample is recorded, not raised, and the next sample
+        still runs."""
         sent: list[list[dict[str, str]]] = []
         dispatched: list[int] = []
 
@@ -595,16 +597,18 @@ class TestAccounting:
                 body["model"])
 
         client = _accounting_client(handler, monkeypatch)
-        with pytest.raises(httpx.HTTPStatusError):
-            await phases.run_recompute(
-                client, REQUEST, GROUNDING, ASKS, samples=3,
-                max_tokens=1000)
-        # The first sample reconciled; the second failed after
-        # dispatch; the third never left. The call count is
-        # what reconciled — the failed sample's record is the
-        # failed_after_dispatch entry below, and the third
-        # made no call at all.
-        assert client.calls_by_function["recompute"] == 1
+        verdict, responses = await phases.run_recompute(
+            client, REQUEST, GROUNDING, ASKS, samples=3,
+            max_tokens=1000)
+        # The first and third samples reconciled; the second failed
+        # after dispatch and is recorded in its place. The call count
+        # is what reconciled — the failed sample's record is the
+        # failed_after_dispatch entry below.
+        assert len(sent) == 3
+        assert len(responses) == 2
+        assert verdict["samples"][1]["failed"] is True
+        assert verdict["samples"][1]["error"].startswith("HTTPStatusError: ")
+        assert client.calls_by_function["recompute"] == 2
         assert len(client.failed_after_dispatch) == 1
         entry = client.failed_after_dispatch[0]
         assert entry["function"] == "recompute"
