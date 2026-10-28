@@ -18,6 +18,8 @@ You do not design, rule or interpret. If the task file does not say to do it, do
 4. The command: `.orchestration/commands/<id>.json`. It states the rules and the acceptance.
 5. The task file: `.orchestration/prompts/<id>.md`. It governs the detail.
 
+If your branch is older than `main`, these files may not be on your disk. Read them from `main` without switching branch: `git fetch origin && git show origin/main:<path>`.
+
 ## The loop, for every task
 
 1. Read the whole task before you change anything.
