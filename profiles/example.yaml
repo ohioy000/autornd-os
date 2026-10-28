@@ -1,3 +1,4 @@
+base: engineering
 name: "SmartFactory"
 description: "IoT monitoring platform for small manufacturing facilities"
 site_url: "https://example.com"

@@ -5695,6 +5695,11 @@ async def _cli(argv: list[str] | None = None) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # D54: tier-3 measures the harness's engineering team; pin it, whatever AUTORND_PROFILE says.
+    from autornd.profiles import load_profile, set_profile
+    from autornd.specialists.registry import reload_specialists
+    set_profile(load_profile("engineering"))
+    reload_specialists()
     return asyncio.run(_cli(argv))
 
 
