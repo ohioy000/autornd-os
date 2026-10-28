@@ -1335,7 +1335,7 @@ def recompute_vote(results: list[Any], samples: list[Any],
                or "no model configured for the recompute tier"),
             checked=False, skipped=True, flagged=False,
             unchecked=False, disagreements=[], no_consensus=[],
-            samples_parsed=0,
+            samples_parsed=0, samples_failed=0,
         )
 
     quote_index = _recompute_ask_index(asks)
@@ -1345,6 +1345,10 @@ def recompute_vote(results: list[Any], samples: list[Any],
     parsed = [s for s in (samples or [])
               if isinstance(_sample_results(s), list)]
     samples_parsed = len(parsed)
+    # A failed sample (ARCH-20261021-124) is recorded by the recompute as
+    # {failed: true, error}; it states no results, so it never parses.
+    samples_failed = sum(1 for s in (samples or [])
+                         if isinstance(s, dict) and s.get("failed") is True)
 
     # The anchored asks of kind value or verdict that the answer's
     # results name — the asks the samples were given, so the only
@@ -1368,15 +1372,16 @@ def recompute_vote(results: list[Any], samples: list[Any],
     # an anchored ask: the vote compared nothing (D46 (3)) —
     # unchecked, and flagged false.
     if samples_parsed < 2 or not wanted:
+        failed = f", {samples_failed} failed" if samples_failed else ""
         why = (f"fewer than 2 parseable samples ({samples_parsed} "
-               "parsed)" if samples_parsed < 2
+               f"parsed{failed})" if samples_parsed < 2
                else "no answer result names an anchored ask")
         return Result(
             True,
             f"recompute vote unchecked — {why}",
             checked=False, skipped=False, flagged=False,
             unchecked=True, disagreements=[], no_consensus=[],
-            samples_parsed=samples_parsed,
+            samples_parsed=samples_parsed, samples_failed=samples_failed,
         )
 
     disagreements: list[dict[str, Any]] = []
@@ -1457,4 +1462,5 @@ def recompute_vote(results: list[Any], samples: list[Any],
         checked=True, skipped=False, flagged=flagged,
         unchecked=False, disagreements=disagreements,
         no_consensus=no_consensus, samples_parsed=samples_parsed,
+        samples_failed=samples_failed,
     )
