@@ -7,13 +7,14 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from autornd.engine.phases import DOMAIN_LEAD_MAP, run_implement
+from autornd.engine.phases import lead_for_domain, run_implement
 from autornd.models.verdicts import (
     Domain,
     ImplementVerdict,
     PlanVerdict,
     SpecialistRole,
 )
+from autornd.profiles import load_profile
 from autornd.routing.openrouter import OpenRouterClient
 from autornd.specialists.base import Specialist
 from tests.conftest import make_mock_response
@@ -41,16 +42,16 @@ def _make_plan() -> PlanVerdict:
 class TestDomainLeadMap:
     def test_all_domains_mapped(self):
         for domain in Domain:
-            assert domain in DOMAIN_LEAD_MAP
+            assert load_profile("engineering").get_domain_lead(domain.value)
 
     def test_firmware_maps_to_firmware_engineer(self):
-        assert DOMAIN_LEAD_MAP[Domain.FIRMWARE] == SpecialistRole.FIRMWARE_ENGINEER
+        assert lead_for_domain(Domain.FIRMWARE) == SpecialistRole.FIRMWARE_ENGINEER
 
     def test_hardware_maps_to_hardware_engineer(self):
-        assert DOMAIN_LEAD_MAP[Domain.HARDWARE] == SpecialistRole.HARDWARE_ENGINEER
+        assert lead_for_domain(Domain.HARDWARE) == SpecialistRole.HARDWARE_ENGINEER
 
     def test_infrastructure_maps_to_architect(self):
-        assert DOMAIN_LEAD_MAP[Domain.INFRASTRUCTURE] == SpecialistRole.SYSTEMS_ARCHITECT
+        assert lead_for_domain(Domain.INFRASTRUCTURE) == SpecialistRole.SYSTEMS_ARCHITECT
 
 
 @pytest.mark.asyncio

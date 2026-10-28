@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "fa5192e6ae5b43a6d9c6d5bd3b935da077232c01",
-  "head_after": "d291a54b7938c500b1f2bed185605dd9f264e006",
+  "head_after": "e48cdb4e461d7f31ceda3a2c8413116e293c1f46",
   "results": {
-    "task": 7,
-    "step": "nine break-proofs run against d291a54 (Task 6 committed); each named test seen failing; each break undone with git checkout -- <file> and the tree clean after it"
+    "task": 8,
+    "step": "tests D54 invalidates changed as the task lists, marks (A) and (B) in tests_changed; CHECK matched EXPECT: 3 failed (the three count guards), 1624 passed, 1 skipped in 146.75s, network guard 0"
   },
   "preconditions_ran": [
     {
@@ -30,7 +30,26 @@
   ],
   "suite_count_before": 1623,
   "suite_count_after": 0,
-  "tests_changed": [],
+  "tests_changed": [
+    "tests/test_lead_review.py::TestDomainLeadMap::test_all_domains_mapped (A)",
+    "tests/test_lead_review.py::TestDomainLeadMap::test_firmware_maps_to_firmware_engineer (A)",
+    "tests/test_lead_review.py::TestDomainLeadMap::test_hardware_maps_to_hardware_engineer (A)",
+    "tests/test_lead_review.py::TestDomainLeadMap::test_infrastructure_maps_to_architect (A)",
+    "tests/test_structural_roles.py::TestAnUndeclaredProfileIsUnchanged::test_the_defaults_are_the_general_roles (B), renamed from test_the_defaults_are_the_shipped_engineering_roles",
+    "tests/test_structural_roles.py::TestAnUndeclaredProfileIsUnchanged::test_triage_still_gets_a_test_engineer_at_high_risk (A)",
+    "tests/test_structural_roles.py::TestAnUndeclaredProfileIsUnchanged::test_triage_still_gets_an_architect_on_multiple_domains (A)",
+    "tests/test_structural_roles.py::TestAnUndeclaredProfileIsUnchanged::test_the_review_team_is_unchanged_at_every_risk (A)",
+    "tests/test_structural_roles.py::TestAnUndeclaredProfileIsUnchanged::test_an_empty_structural_roles_map_is_the_same_as_none (B)",
+    "tests/test_structural_roles.py::TestPartialDeclaration::test_declaring_one_slot_leaves_the_other_at_its_default (B)",
+    "tests/test_hermetic_suite.py::SUITE_CHOSEN (A)"
+  ],
+  "tests_removed": [
+    "tests/test_review_composition.py::TestTriageEnforcement::test_high_risk_adds_test_engineer (removed in Task 1, 1bacaaa)",
+    "tests/test_review_composition.py::TestTriageEnforcement::test_critical_risk_adds_test_engineer (removed in Task 1, 1bacaaa)",
+    "tests/test_review_composition.py::TestTriageEnforcement::test_multi_domain_adds_architect (removed in Task 1, 1bacaaa)",
+    "tests/test_review_composition.py::TestTriageEnforcement::test_no_duplicate_when_already_present (removed in Task 1, 1bacaaa)",
+    "tests/test_review_composition.py::TestTriageEnforcement::test_low_risk_single_domain_unchanged (removed in Task 1, 1bacaaa)"
+  ],
   "break_proofs": [
     {
       "break": "1 profiles/engineering.yaml",
@@ -71,5 +90,5 @@
   ],
   "deviations": [],
   "questions_for_advisor": [],
-  "notes": "suite not run at start: the tree holds 125's uncommitted Task 7, so it is red until Task 8, as the task file says. The command's second precondition (the ruling is signed off, grep -c) was also run and is listed above; its fourth precondition (the full suite) is the one this note covers. Task 7: besides the named test, other tests of the same file also failed under four breaks, which the task allows: row 2 also test_no_engineering_word_reaches_a_model_under_studio; row 4 also test_engineering_prompts_are_byte_identical, test_no_engineering_word_reaches_a_model_under_general and test_no_engineering_word_reaches_a_model_under_studio; row 5 also the same two leak tests; row 8 also test_engineering_prompts_are_byte_identical. The breaks were driven by a scratch script outside the repo that applied each find/replace exactly once, ran the task's pytest line with PYTHONDONTWRITEBYTECODE set, and undid the break with git checkout -- <file>."
+  "notes": "suite not run at start: the tree holds 125's uncommitted Task 7, so it is red until Task 8, as the task file says. The command's second precondition (the ruling is signed off, grep -c) was also run and is listed above; its fourth precondition (the full suite) is the one this note covers. Task 7: besides the named test, other tests of the same file also failed under four breaks, which the task allows: row 2 also test_no_engineering_word_reaches_a_model_under_studio; row 4 also test_engineering_prompts_are_byte_identical, test_no_engineering_word_reaches_a_model_under_general and test_no_engineering_word_reaches_a_model_under_studio; row 5 also the same two leak tests; row 8 also test_engineering_prompts_are_byte_identical. The breaks were driven by a scratch script outside the repo that applied each find/replace exactly once, ran the task's pytest line with PYTHONDONTWRITEBYTECODE set, and undid the break with git checkout -- <file>. Task 8: marks follow command 125. (A) selects the engineering profile explicitly where the test relied on no profile meaning engineering; (B) expects the general fallback where the test asserted the old default itself. tests/test_hermetic_suite.py::SUITE_CHOSEN was changed earlier by commit 1f6d2b4 and is recorded here only. tests_removed is a key this response adds to list the five tests Task 1 removed (TestTriageEnforcement, which tested the dead _enforce_triage_composition); the task asks for them to be listed but names no field. Their live rules are tested by tests/test_structural_roles.py and by tests/test_profile_framing.py::TestTheProfileOwnsTheTeam::test_structural_roles_follow_the_profile."
 }
