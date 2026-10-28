@@ -166,6 +166,11 @@ def _recorded_answers() -> list[tuple[str, str, str, str]]:
 
 
 ANSWERS = _recorded_answers()
+# The review of #208, §3 (docs/reviews/2026-10-21-review-208-d53-phase1.md):
+# the shipped check no longer drops the words 'in parallel', so this correct
+# answer, '5 × EPC-1200-60 in parallel' against the samples' '5 × EPC-1200-60',
+# is a recorded false flag. The probe, which drops the words, does not flag it.
+T4_24 = "batch3 kimi T4-24"
 # The STOP condition, mechanized: the command names these answers,
 # so a record that does not carry them fails collection here, not
 # silently later (convention 28 — no evidence is never no problem).
@@ -426,7 +431,7 @@ class TestTheSkip:
         and the vote differ on checked and skipped, not only
         on the flag."""
         label, question, answer_text, truth = next(
-            a for a in ANSWERS if a[3] == "correct")
+            a for a in ANSWERS if a[3] == "correct" and a[0] != T4_24)
         result = recompute_vote(
             results=_answer_results(answer_text, question),
             samples=_sample_results(_raw_samples(question), question),
@@ -648,6 +653,13 @@ class TestTheReplay:
             request=_request_of(question))
         probe_flagged, probe_diffs = _probe_flag(
             answer_text, question, raw_samples)
+        if label == T4_24:
+            # The review of #208, §3: the check flags the selection
+            # row, which the probe reads as one selection.
+            assert probe_flagged is False
+            assert result.data["flagged"] is True
+            assert {d["ask"] for d in result.data["disagreements"]} == {1}
+            return
         assert result.data["flagged"] == probe_flagged
         # The disagreements are the probe's diffs, at the asks' own
         # numbers — not merely the same boolean.
@@ -731,16 +743,17 @@ class TestTheReplay:
             assert disagreements[3]["support"] == 3
 
     def test_every_correct_answer_is_unflagged(self):
-        """The 16 of the 17 correct answers the vote reads
+        """The 15 of the 17 correct answers the vote reads
         cleanly — the controls the record carries: no
         disagreement, no consensus failure, on any row.
-        T4-42 repetition 1, the seventeenth, is correct
-        and flagged on the ambiguous 'current compared
-        with I_n (A)' row — the recorded false flag,
-        pinned by test_the_false_flag_is_the_ambiguous_row
-        above."""
+        T4-42 repetition 1 is correct and flagged on the
+        ambiguous 'current compared with I_n (A)' row — the
+        recorded false flag, pinned by
+        test_the_false_flag_is_the_ambiguous_row above.
+        T4-24 is correct and flagged on 'in parallel' (the
+        review of #208, §3), pinned by the replay above."""
         for label, question, answer_text, truth in ANSWERS:
-            if truth != "correct" or label == "T4-42 repeat 1":
+            if truth != "correct" or label in ("T4-42 repeat 1", T4_24):
                 continue
             result = recompute_vote(
                 results=_answer_results(answer_text, question),

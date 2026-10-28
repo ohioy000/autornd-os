@@ -1195,16 +1195,17 @@ def _recompute_ident(text: Any) -> str:
 
     recompute_check.ident (evals/tier4/probes/
     recompute_check.py), the rule Ruling D53 §2 (4) adopts:
-    case, spacing and punctuation dropped, the words
-    'in parallel' dropped (a configuration stated with them
-    is the configuration stated without them — the recorded
-    T4-24 answer says '5 × EPC-1200-60 in parallel' against
-    samples' '5 × EPC-1200-60', and the probe's measurement
-    reads them as one selection), and the multiplication
-    sign and a count's 'x' (5 x EPC) read as separators.
-    'VL-42' and 'vl 42' are one identifier.
+    case, spacing and punctuation dropped, and the
+    multiplication sign and a count's 'x' (5 x EPC) read as
+    separators. 'VL-42' and 'vl 42' are one identifier.
+
+    The probe also dropped the words 'in parallel'. The check
+    does not: a shipped check carries no subject's vocabulary
+    (the review of #208, §3). So the recorded T4-24 answer,
+    '5 × EPC-1200-60 in parallel' against the samples'
+    '5 × EPC-1200-60', is a recorded false flag here.
     """
-    t = str(text).upper().replace("IN PARALLEL", "").replace("×", " ")
+    t = str(text).upper().replace("×", " ")
     t = re.sub(r"^\s*(\d+)\s*X\s+", r"\1 ", t)
     return re.sub(r"[^A-Z0-9]", "", t)
 
