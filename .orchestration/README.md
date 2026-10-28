@@ -6,6 +6,11 @@ Where they differ, `AGENTS.md` wins.
 - `COMMAND_TEMPLATE.json` — the canonical command, ready to copy.
 - `commands/<command_id>.json` — work out, written by the advisor.
 - `responses/<command_id>.response.json` — work back, written by the executor.
+- `prompts/<command_id>.md` — the task file: the command as ordered tasks, each
+  with exact edits, a CHECK and its EXPECT. Written by the advisor; it governs
+  the detail.
+- `prompts/STARTUP.md` — what a new executor agent reads first, before any
+  command: who does what, the work loop, and the rules.
 
 ### Channel states: new, CARRIED, PUSHED, STRANDED, MERGED
 
