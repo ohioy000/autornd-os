@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "fa5192e6ae5b43a6d9c6d5bd3b935da077232c01",
-  "head_after": "bb710067227922b67697a2541c756a503e5e7d16",
+  "head_after": "07ace2293f0a239a74724492ee8220f2dbe06093",
   "results": {
-    "task": 4,
-    "step": "suite isolation as 125's Task 9 gave it (bb71006); CHECK matched EXPECT: 32 passed in 15.45s"
+    "task": 5,
+    "step": "example, cupline and tier4 take base engineering; tier-3 and tier-4 runners pin the engineering team (07ace22); CHECK matched EXPECT: base counts 1/1/1/0, DEFAULT_PROFILE count 0 in the tier-4 runner, 183 passed in 26.79s"
   },
   "preconditions_ran": [
     {
