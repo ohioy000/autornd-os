@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "fa5192e6ae5b43a6d9c6d5bd3b935da077232c01",
-  "head_after": "e48cdb4e461d7f31ceda3a2c8413116e293c1f46",
+  "head_after": "35e16ee0dcc57bcbb92171246081358baa621dab",
   "results": {
     "task": 8,
-    "step": "tests D54 invalidates changed as the task lists, marks (A) and (B) in tests_changed; CHECK matched EXPECT: 3 failed (the three count guards), 1624 passed, 1 skipped in 146.75s, network guard 0"
+    "step": "tests D54 invalidates changed as the task lists (35e16ee), marks (A) and (B) in tests_changed; CHECK matched EXPECT: 3 failed (the three count guards), 1624 passed, 1 skipped in 146.75s, network guard 0"
   },
   "preconditions_ran": [
     {
