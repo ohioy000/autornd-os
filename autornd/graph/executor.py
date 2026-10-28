@@ -110,6 +110,9 @@ class StepRecord:
     # True when the D38 watchdog cut this node mid-flight. Its `seconds` are
     # then the time it ran before the cut, not a completed call's duration.
     cancelled: bool = False
+    # True when an advisory node's work raised (ARCH-20261021-124). The run
+    # stored the node's skip output and went on; `reason` says what raised.
+    failed: bool = False
 
 
 @dataclass
@@ -166,6 +169,10 @@ class WatchdogRecord:
     # run and one that never had an agreed iteration to point at.
     approved: dict[str, Any] | None = None
     slow_calls: list[dict[str, Any]] = field(default_factory=list)
+    # The cuts the watchdog made at advisory nodes (ARCH-20261021-124): the
+    # same rule, pace and basis as a cut that ends the run, recorded here
+    # instead, because these did not end it. `fired` stays false for them.
+    advisory_cuts: list[dict[str, Any]] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -667,15 +674,25 @@ class GraphExecutor:
         no call can finish, and starting one only to cancel it at once would
         bill a request for nothing.
         """
-        if self.time_budget is None:
+        refused = self._pre_start(node, tier)
+        if refused is None:
             return False
-        available = self._available()
-        pace, basis = self._pace_for(node.id, tier)
-        if available > 0 and (pace is None or pace <= available):
-            return False
+        available, pace, basis = refused
         self._cut(state, "not_started", node, tier,
                   available=available, pace=pace, basis=basis)
         return True
+
+    def _pre_start(self, node: Node, tier: str | None
+                   ) -> tuple[float, float | None, str | None] | None:
+        """The pre-start rule's finding, without acting on it: None when
+        the call may start, else the time available, the pace and its basis."""
+        if self.time_budget is None:
+            return None
+        available = self._available()
+        pace, basis = self._pace_for(node.id, tier)
+        if available > 0 and (pace is None or pace <= available):
+            return None
+        return available, pace, basis
 
     def _pace_for(self, node_id: str, tier: str | None
                   ) -> tuple[float | None, str | None]:
@@ -696,6 +713,8 @@ class GraphExecutor:
         False when the watchdog ended the run. With no budget this is a bare
         await: no timer is entered, so an unbudgeted run behaves as before.
         """
+        if node.advisory:
+            return await self._watched_advisory(work, node, state, record)
         if self.time_budget is None:
             await work(node, state)
             return True
@@ -714,6 +733,88 @@ class GraphExecutor:
                       available=granted, pace=pace, basis=basis)
             return False
         return True
+
+    async def _watched_advisory(self, work, node: Node, state: ExecutionState,
+                                record: StepRecord) -> bool:
+        """Run an advisory node's work (ARCH-20261021-124). Always True.
+
+        The same watchdog as `_watched`, with one difference: whatever
+        happens inside the node, the run goes on. When the work raises, or
+        the watchdog cuts it, the node's skip output is stored under its id,
+        so the nodes that read it read a skip, never a pass. Nothing tests
+        the reason's words; the skip is the typed field `skipped`.
+        """
+        granted = None if self.time_budget is None else self._available()
+        try:
+            if granted is None:
+                await work(node, state)
+            else:
+                async with asyncio.timeout(max(granted, 0.0)) as guard:
+                    await work(node, state)
+        except Exception as exc:
+            if (isinstance(exc, TimeoutError) and granted is not None
+                    and guard.expired()):
+                record.cancelled = True
+                pace, basis = self._pace_for(node.id, record.tier)
+                self._advisory_cut(state, "cancelled", node, record.tier,
+                                   granted, pace, basis)
+                self._store_skip(node, state, record, (
+                    "the watchdog cut this advisory node mid-call; the run "
+                    "went on without it"))
+                return True
+            record.failed = True
+            self._store_skip(node, state, record, (
+                f"this advisory node raised {type(exc).__name__}: {exc}"
+            )[:200])
+            logger.warning("advisory node %s raised %s: %s; the run goes on",
+                           node.id, type(exc).__name__, exc)
+        return True
+
+    def _advisory_not_started(self, node: Node, state: ExecutionState,
+                              tier: str | None) -> bool:
+        """The pre-start rule at an advisory node: True when it refused.
+
+        The refusal is recorded, as a skipped step and an advisory cut, and
+        the run goes on. The next node that is not advisory and makes a
+        call meets the pre-start rule as it always has.
+        """
+        refused = self._pre_start(node, tier)
+        if refused is None:
+            return False
+        available, pace, basis = refused
+        record = StepRecord(node.id, node.kind.value, state.iteration,
+                            skipped=True, tier=tier)
+        state.trace.append(record)
+        self._advisory_cut(state, "not_started", node, tier,
+                           available, pace, basis)
+        self._store_skip(node, state, record, (
+            "the watchdog did not start this advisory node: its call could "
+            "not finish in the time left"))
+        return True
+
+    def _advisory_cut(self, state: ExecutionState, rule: str, node: Node,
+                      tier: str | None, available: float,
+                      pace: float | None, basis: str | None) -> None:
+        """Record a cut at an advisory node with the fields `_cut` records
+        for a cut that ends the run, without ending it."""
+        state.watchdog.advisory_cuts.append({
+            "rule": rule, "node": node.id, "iteration": state.iteration,
+            "tier": tier, "serving_configured": self._configured_serving(tier),
+            "elapsed_seconds": round(self._elapsed(), 4),
+            "available_seconds": round(available, 4),
+            "pace_seconds": pace, "pace_basis": basis,
+            "billing": ABANDONED_CALL_BILLING if rule == "cancelled" else None,
+        })
+        logger.info("watchdog: %s at advisory node %s; the run goes on",
+                    rule, node.id)
+
+    def _store_skip(self, node: Node, state: ExecutionState,
+                    record: StepRecord, reason: str) -> None:
+        """Store the node's skip output, from the runner when it has one."""
+        record.reason = reason
+        make = getattr(self.runner, "skip_output", None)
+        state.outputs[node.id] = (make(node, reason) if make is not None
+                                  else {"skipped": True, "reason": reason})
 
     def _after_step(self, node: Node, record: StepRecord, completed: bool,
                     calls_before: int | None,
@@ -1098,9 +1199,12 @@ class GraphExecutor:
         # A1 (ARCH-20260930-100): only a node that will make a call is judged.
         # A node that makes none cannot overrun, and naming it misattributes
         # the cause: 098 run 1 named domain_review, which had no peers to ask.
-        if (node.kind is NodeKind.AI and self._makes_call(node, state)
-                and self._refuse_to_start(node, state, tier)):
-            return False
+        if node.kind is NodeKind.AI and self._makes_call(node, state):
+            if node.advisory:
+                if self._advisory_not_started(node, state, tier):
+                    return True
+            elif self._refuse_to_start(node, state, tier):
+                return False
 
         record = StepRecord(node.id, node.kind.value, state.iteration, tier=tier)
         state.trace.append(record)
