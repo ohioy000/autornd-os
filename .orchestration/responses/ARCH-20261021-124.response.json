@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "5163e60750e8575fa40837c9fb36cbf7e419e763",
-  "head_after": "6573c171eb52d735f1a6c23f4c57028f293372a4",
+  "head_after": "6edea7c3abba90599b6e2bd8aafe219a5abb85fe",
   "results": {
-    "task": 3,
-    "step": "recompute_vote reports samples_failed; Task 3 CHECK matches EXPECT (5, 59 passed, network guard 0)"
+    "task": 4,
+    "step": "recompute ident keeps 'in parallel'; Task 4 CHECK matches EXPECT (0, 59 passed, network guard 0); no recorded answer other than T4-24 changed its flag"
   },
   "preconditions_ran": [
     {
