@@ -36,6 +36,7 @@ If your branch is older than `main`, these files may not be on your disk. Read t
 1. Do the tasks in order. Never start a later task early, even to make a CHECK pass.
 2. Change only the files the task names, and only the text it names.
 3. Stage files by name: `git add <file> <file>`. Never `git add -A` or `git add .`.
+   - If your session adds attribution lines (a `Co-Authored-By` trailer on a commit, or a closing line on a PR body), keep them. They are not a deviation. The COMMIT line stays the first line of the message.
 4. Never edit `.orchestration/commands/` or `.orchestration/prompts/`. They are the advisor's.
 
 ### A failing CHECK is a STOP
@@ -66,7 +67,7 @@ If your branch is older than `main`, these files may not be on your disk. Read t
 - **Tests:** `.venv/bin/python3 -m pytest tests/ -q`. Plain `pytest` is not on PATH.
 - **The full suite** takes about 2 to 3 minutes. It must end with `network guard: 0 non-loopback attempt(s) recorded`.
 - **Test counts:** `.venv/bin/python3 -m pytest tests/ --collect-only -q | tail -1`.
-- **GitHub:** `gh pr create`, then `gh pr checks <number>`.
+- **GitHub:** `gh pr create`, then `gh pr checks <number>`. The gh here is 2.4.0, which has no `--watch` flag. To wait for CI, run `gh pr checks <number>` every 20 seconds until no check says `pending`.
 - **CI:** 5 checks, all of which must pass: docker, editable-install, test (3.11), test (3.12) and test (3.13).
 
 ## The response file

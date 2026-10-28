@@ -2,6 +2,15 @@
 
 **Status: signed off by the owner on 2026-10-21, as written: `general` is the default. Command `ARCH-20261021-125` carries it to the executor.**
 
+**Delivered 2026-10-28** by commands 125 and 126 in PR #217 (merge `132b9c9`). The advisor verified it by probe before merging:
+- the golden fixtures, re-captured from main's own code, are unchanged;
+- the code is identical to the advisor's replay of the task file;
+- the suite gives 1627 passed and 1 skipped, with the network guard at 0;
+- in fresh processes, an unset or unknown `AUTORND_PROFILE` gives the general team (lead, reviewer, planner), while `engineering` and `studio` each give their own team;
+- the tier-4 question profile copies the engineering team, even under a general process.
+
+**For the owner (G-3):** `.env` sets no `AUTORND_PROFILE`, so your runs now use the general team. Add `AUTORND_PROFILE=engineering` to keep the engineering team.
+
 *Refinement, 2026-10-21, made while writing the executor's step-by-step prompt; no change of substance. §2 (2)'s six framing names are fixed as 19 exact keys in `.orchestration/prompts/ARCH-20261021-125.md`, Task 2. The practitioner and examples fields are split by where each is used, and the request key is `request_kind`. General's `sources` is the list itself, "the governing rules and standards, official specifications, and original publications", because it follows "authoritative sources —" in the lookup prompt. Both shipped profiles are named "AutoRnD", so the docs directory stays as it is today.*
 
 This withdraws the D54 sketched in `Dunce-Arch-Self-Assesment.md` §5 (3), which would have retired the pipeline on the strength of closed-question scores. That sketch measured the wrong thing. The goal is a general harness, one that works for any team and is not tuned to be good at one thing (the owner, 2026-10-21). Cost and quality are measured once the harness's core problems are fixed. This ruling fixes the first of those problems.
