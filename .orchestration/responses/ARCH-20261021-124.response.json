@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "5163e60750e8575fa40837c9fb36cbf7e419e763",
-  "head_after": "febfd16a249ccd032a5f83bee115b47b57663275",
+  "head_after": "db98c893df03a0c86ac4fa7bb56980fa7da746bd",
   "results": {
-    "task": 1,
-    "step": "advisory field on Node done; Task 1 CHECK matches EXPECT (94 passed, network guard 0)"
+    "task": 2,
+    "step": "failed recompute sample recorded, next sample runs; Task 2 CHECK matches EXPECT (59 passed, network guard 0)"
   },
   "preconditions_ran": [
     {
