@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "5163e60750e8575fa40837c9fb36cbf7e419e763",
-  "head_after": "6edea7c3abba90599b6e2bd8aafe219a5abb85fe",
+  "head_after": "9c5151229ef4d9e2624cec7e4b65b880c756cad4",
   "results": {
-    "task": 4,
-    "step": "recompute ident keeps 'in parallel'; Task 4 CHECK matches EXPECT (0, 59 passed, network guard 0); no recorded answer other than T4-24 changed its flag"
+    "task": 5,
+    "step": "executor runs an advisory node without letting it end the run; Task 5 CHECK matches EXPECT (176 passed, network guard 0)"
   },
   "preconditions_ran": [
     {
