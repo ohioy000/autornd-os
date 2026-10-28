@@ -1,12 +1,12 @@
 {
   "command_id": "ARCH-20261028-126",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "executed": true,
   "head_before": "fa5192e6ae5b43a6d9c6d5bd3b935da077232c01",
-  "head_after": "916c692ae9dd3dfab501d3392a616eaa531c34b5",
+  "head_after": "25194ad3602024db66b3625111768e85a1391ef6",
   "results": {
-    "task": 9,
-    "step": "docs and counts re-derived to 1628 (916c692); CHECK matched EXPECT: 1628 tests collected in 0.94s; full suite 1627 passed, 1 skipped in 156.47s (0:02:36); network guard 0; the three count guards pass again"
+    "task": 10,
+    "step": "branch pushed, PR 217 opened, CI 5/5 pass on 25194ad (run 40762614066); full suite 1627 passed, 1 skipped, 1628 collected, network guard 0; response set to DONE"
   },
   "preconditions_ran": [
     {
@@ -29,7 +29,7 @@
     }
   ],
   "suite_count_before": 1623,
-  "suite_count_after": 0,
+  "suite_count_after": 1628,
   "tests_changed": [
     "tests/test_lead_review.py::TestDomainLeadMap::test_all_domains_mapped (A)",
     "tests/test_lead_review.py::TestDomainLeadMap::test_firmware_maps_to_firmware_engineer (A)",
@@ -88,7 +88,25 @@
       "failed": "FAILED tests/test_profile_framing.py::TestDefaultAndBase::test_a_base_with_a_base_is_refused"
     }
   ],
-  "deviations": [],
-  "questions_for_advisor": [],
-  "notes": "suite not run at start: the tree holds 125's uncommitted Task 7, so it is red until Task 8, as the task file says. The command's second precondition (the ruling is signed off, grep -c) was also run and is listed above; its fourth precondition (the full suite) is the one this note covers. Task 7: besides the named test, other tests of the same file also failed under four breaks, which the task allows: row 2 also test_no_engineering_word_reaches_a_model_under_studio; row 4 also test_engineering_prompts_are_byte_identical, test_no_engineering_word_reaches_a_model_under_general and test_no_engineering_word_reaches_a_model_under_studio; row 5 also the same two leak tests; row 8 also test_engineering_prompts_are_byte_identical. The breaks were driven by a scratch script outside the repo that applied each find/replace exactly once, ran the task's pytest line with PYTHONDONTWRITEBYTECODE set, and undid the break with git checkout -- <file>. Task 8: marks follow command 125. (A) selects the engineering profile explicitly where the test relied on no profile meaning engineering; (B) expects the general fallback where the test asserted the old default itself. tests/test_hermetic_suite.py::SUITE_CHOSEN was changed earlier by commit 1f6d2b4 and is recorded here only. tests_removed is a key this response adds to list the five tests Task 1 removed (TestTriageEnforcement, which tested the dead _enforce_triage_composition); the task asks for them to be listed but names no field. Their live rules are tested by tests/test_structural_roles.py and by tests/test_profile_framing.py::TestTheProfileOwnsTheTeam::test_structural_roles_follow_the_profile."
+  "deviations": [
+    {
+      "task": 10,
+      "what": "Waited for CI by running `gh pr checks 217` every 20 seconds until no check was pending, instead of running `gh pr checks 217 --watch`.",
+      "why": "The gh on this machine is 2.4.0, which has no --watch flag: `gh pr checks 217 --watch` prints `unknown flag: --watch`. STARTUP.md and the task file name that flag, so they cannot be followed literally on this machine."
+    },
+    {
+      "task": "all",
+      "what": "Every commit this executor made has a second paragraph after the COMMIT line: a blank line, then `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. The PR body is the task's text plus a blank line and a closing line `🤖 Generated with [Claude Code](https://claude.com/claude-code)`. The first line of each task commit is the COMMIT line, unchanged.",
+      "why": "The session's standing instructions require those attribution lines on commit messages and PR descriptions. The task file asks for the COMMIT line as the message and gives an exact PR body, so these lines are additions it did not ask for."
+    }
+  ],
+  "questions_for_advisor": [
+    "Should the executor leave out the attribution lines (the Co-Authored-By trailer on commits, the closing line of the PR body) when a task file gives an exact COMMIT line or PR body? This run added them, as the deviations list says, and every commit it made and the PR body carry them. If they should not be there, say so and the next executor will omit them."
+  ],
+  "delivery_state": {
+    "branch": "exec/20261021-125-team-is-the-profile",
+    "pr": 217,
+    "url": "https://github.com/ohioy000/autornd-os/pull/217"
+  },
+  "notes": "suite not run at start: the tree holds 125's uncommitted Task 7, so it is red until Task 8, as the task file says. The command's second precondition (the ruling is signed off, grep -c) was also run and is listed above; its fourth precondition (the full suite) is the one this note covers. Task 7: besides the named test, other tests of the same file also failed under four breaks, which the task allows: row 2 also test_no_engineering_word_reaches_a_model_under_studio; row 4 also test_engineering_prompts_are_byte_identical, test_no_engineering_word_reaches_a_model_under_general and test_no_engineering_word_reaches_a_model_under_studio; row 5 also the same two leak tests; row 8 also test_engineering_prompts_are_byte_identical. The breaks were driven by a scratch script outside the repo that applied each find/replace exactly once, ran the task's pytest line with PYTHONDONTWRITEBYTECODE set, and undid the break with git checkout -- <file>. Task 8: marks follow command 125. (A) selects the engineering profile explicitly where the test relied on no profile meaning engineering; (B) expects the general fallback where the test asserted the old default itself. tests/test_hermetic_suite.py::SUITE_CHOSEN was changed earlier by commit 1f6d2b4 and is recorded here only. tests_removed is a key this response adds to list the five tests Task 1 removed (TestTriageEnforcement, which tested the dead _enforce_triage_composition); the task asks for them to be listed but names no field. Their live rules are tested by tests/test_structural_roles.py and by tests/test_profile_framing.py::TestTheProfileOwnsTheTeam::test_structural_roles_follow_the_profile. Task 10: pushed exec/20261021-125-team-is-the-profile and opened PR 217 against main. CI on 25194ad3602024db66b3625111768e85a1391ef6 (run 40762614066, event pull_request, conclusion success): docker pass 1m5s, editable-install pass 34s, test (3.11) pass 2m34s, test (3.12) pass 2m31s, test (3.13) pass 2m42s. GitHub reported the PR mergeable (true, clean). No code changed after Task 9's commit 916c692 (git diff --stat 916c692 HEAD showed only this response file), so the Task 9 full-suite reading (1627 passed, 1 skipped, 1628 collected, network guard 0) is the reading for the tip CI tested. head_after is that tip; the PR head is one response-only commit later, because a commit cannot name its own sha. Main had advanced since this branch was cut by three advisor commits (command 126, its task file, STARTUP.md and a few lines in .orchestration/README.md). The work was done in /home/jb/autornd-os, where the task file and command place the branch; no branch was switched in either checkout."
 }
