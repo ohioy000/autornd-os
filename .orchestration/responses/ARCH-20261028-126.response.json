@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "fa5192e6ae5b43a6d9c6d5bd3b935da077232c01",
-  "head_after": "b6ca37e210e00cfcf39ce9e9471f8cfc05abe450",
+  "head_after": "ce198efabca2d8bbe01fb579b48dae2902371fcf",
   "results": {
-    "task": 2,
-    "step": "triage prompt prints the domains and specialists labels once (b6ca37e); CHECK matched EXPECT: 241:{domains_block}, 243:{specialists_block}"
+    "task": 3,
+    "step": "default profile is general again (ce198ef); CHECK matched EXPECT: git diff 5575eeb -- autornd/profiles.py is empty, 230:DEFAULT_PROFILE = _general()"
   },
   "preconditions_ran": [
     {
