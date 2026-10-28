@@ -384,11 +384,12 @@ def _check_drift(readme: str) -> list[str]:
 
 
 def _roster_drift(readme: str) -> list[str]:
-    from autornd.models.verdicts import SpecialistRole, normalise_key
+    from autornd.models.verdicts import normalise_key
+    from autornd.profiles import load_profile
 
     listed = {normalise_key(c) for c in _first_cells(
-        _section(readme, "Engineering Specialists"), "The shipped roster")}
-    shipped = {normalise_key(r) for r in SpecialistRole}
+        _section(readme, "Specialists"), "The engineering profile's roster")}
+    shipped = {normalise_key(r) for r in load_profile("engineering").roles}
     return ([f"role {r} is not in the README roster" for r in sorted(shipped - listed)]
             + [f"the README roster lists {r}, which is not a shipped role" for r in sorted(listed - shipped)])
 
