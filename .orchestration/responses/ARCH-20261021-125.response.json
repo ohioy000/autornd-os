@@ -1,13 +1,14 @@
 {
   "command_id": "ARCH-20261021-125",
-  "status": "IN_PROGRESS",
+  "status": "PARTIAL",
+  "continued_by": "ARCH-20261028-126",
   "executed": true,
   "head_before": "fefc97bed74aeb78d9e6cd203a20853a440b8d3a",
-  "head_after": "1f6d2b4d2bab80bff6961e0c0a5a35c1510c987f",
+  "head_after": "fa5192e6ae5b43a6d9c6d5bd3b935da077232c01",
   "results": {
-    "task": 5,
-    "step": "framing locals re-added; CHECK green (115 passed); suite repaired and green (1622 passed, 1 skipped)",
-    "response_status": "IN_PROGRESS",
+    "task": 6,
+    "step": "specialist roster now built from the profile; CHECK green (11 passed); task commit fa5192e written",
+    "response_status": "PARTIAL",
     "suite_count": 1623
   },
   "deviations": [

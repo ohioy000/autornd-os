@@ -18,7 +18,7 @@ from autornd.knowledge.context import build_phase_context
 from autornd.models.verdicts import (
     domain_key,
     Domain, EscalationVerdict, ImplementVerdict, PlanVerdict,
-    ReviewVerdict, RiskLevel, SpecialistRole, TriageVerdict, ValidateVerdict,
+    ReviewVerdict, TriageVerdict, ValidateVerdict,
 )
 from autornd.models.workflow import PhaseResult, Workflow, WorkflowStatus
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
@@ -279,16 +279,6 @@ class WorkflowEngine:
         return ("progress write lost for: "
                 + ", ".join(self._lost_progress)
                 + " (that node's phase record was not saved)")
-
-    @staticmethod
-    def _enforce_triage_composition(verdict: TriageVerdict) -> None:
-        """Enforce doc-specified rules the LLM might omit."""
-        if verdict.risk in (RiskLevel.CRITICAL, RiskLevel.HIGH):
-            if SpecialistRole.TEST_ENGINEER not in verdict.specialists:
-                verdict.specialists.append(SpecialistRole.TEST_ENGINEER)
-        if len(verdict.domains) > 1:
-            if SpecialistRole.SYSTEMS_ARCHITECT not in verdict.specialists:
-                verdict.specialists.append(SpecialistRole.SYSTEMS_ARCHITECT)
 
     async def _run_plan(
         self, workflow: Workflow, triage: TriageVerdict, context: str = ""

@@ -12,13 +12,7 @@ decides how much scrutiny is added on top rather than who exists.
 
 from __future__ import annotations
 
-from autornd.models.verdicts import RiskLevel, SpecialistRole, role_key
-
-# The shipped defaults for the two structural slots. B14 made the slots
-# profile-declarable; these remain what an undeclared profile resolves to, so
-# an engineering project's review teams are unchanged.
-ARCHITECT = role_key(SpecialistRole.SYSTEMS_ARCHITECT)
-TESTER = role_key(SpecialistRole.TEST_ENGINEER)
+from autornd.models.verdicts import RiskLevel, role_key
 
 
 def _slots() -> tuple[str, str]:
@@ -34,15 +28,16 @@ def _slots() -> tuple[str, str]:
     profile = get_profile()
     return profile.role_that_checks_work(), profile.role_that_holds_system_view()
 
-# Deterministic ordering: shipped roles in their declared order, then anything
-# else alphabetically. A review team that reorders between runs makes two
+
+# Deterministic ordering: the profile's declared order, then anything else
+# alphabetically. A review team that reorders between runs makes two
 # identical runs look different.
-_SHIPPED_ORDER = [role_key(r) for r in SpecialistRole]
-
-
 def _ordered(team: set[str]) -> list[str]:
-    shipped = [r for r in _SHIPPED_ORDER if r in team]
-    extra = sorted(team - set(_SHIPPED_ORDER))
+    from autornd.profiles import get_profile
+
+    order = get_profile().ordered_roles()
+    shipped = [r for r in order if r in team]
+    extra = sorted(team - set(order))
     return shipped + extra
 
 

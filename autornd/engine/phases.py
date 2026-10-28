@@ -36,7 +36,6 @@ from autornd.models.verdicts import (
     ReviewFinding,
     ReviewVerdict,
     RiskLevel,
-    SpecialistRole,
     TriageVerdict,
     role_key,
     ValidateVerdict,
@@ -44,7 +43,7 @@ from autornd.models.verdicts import (
 from autornd.knowledge.context import build_phase_context
 from autornd.routing.openrouter import BudgetExceeded, ModelResponse, OpenRouterClient
 from autornd.specialists.base import Specialist
-from autornd.specialists.registry import get_specialist, get_specialists
+from autornd.specialists.registry import get_specialist
 
 logger = logging.getLogger(__name__)
 
@@ -149,22 +148,18 @@ def enforce_triage_composition(verdict: TriageVerdict) -> None:
 
 
 def _domain_vocabulary() -> str:
-    """The domains to offer triage: the shipped defaults plus the profile's own.
+    """The domains to offer triage: the profile's own.
 
     Offered, not enforced. Forcing a closed list is what turned civil
     engineering into "hardware" and a latency budget into "firmware".
     """
     from autornd.profiles import get_profile
 
-    names = [d.value for d in Domain]
-    for extra in get_profile().domain_vocabulary():
-        if extra not in names:
-            names.append(extra)
-    return ", ".join(names)
+    return ", ".join(get_profile().domain_vocabulary())
 
 
 def _role_vocabulary() -> str:
-    """The roles to offer triage: the shipped roster plus the profile's own.
+    """The roles to offer triage: the profile's own.
 
     Offered, not enforced — for the same reason the domains are. Asked to staff
     a firmware signing-key rotation, triage returned `infrastructure_engineer`,
@@ -173,11 +168,7 @@ def _role_vocabulary() -> str:
     """
     from autornd.profiles import get_profile
 
-    names = [r.value for r in SpecialistRole]
-    for extra in get_profile().role_vocabulary():
-        if extra not in names:
-            names.append(extra)
-    return ", ".join(names)
+    return ", ".join(get_profile().role_vocabulary())
 
 
 def _ask_field(ask: Any, key: str) -> Any:
@@ -436,7 +427,7 @@ The asks, quoted from the request:
 Request:
 {request}"""
 
-    architect = get_specialist(SpecialistRole.SYSTEMS_ARCHITECT)
+    architect = get_specialist(profile.role_that_holds_system_view())
     data, response = await client.chat_json(
         function="architecture",
         system_prompt=architect.system_prompt,
@@ -466,8 +457,8 @@ async def run_plan_feasibility(
     from autornd.profiles import framing, get_profile
     f = framing()
     profile = get_profile()
-    architect_role = SpecialistRole.SYSTEMS_ARCHITECT
-    reviewers = [s for s in specialists if s.role != architect_role]
+    architect_role = profile.role_that_holds_system_view()
+    reviewers = [s for s in specialists if role_key(s.role) != architect_role]
     if not reviewers:
         return [], []
 
@@ -513,45 +504,6 @@ Original request:
     return responses, all_blockers
 
 
-# Checks a reviewer can actually settle by reading a written implementation:
-# arithmetic that either reconciles or does not, and structural properties that
-# are either present or absent. Injected only for the domains a request touches
-# — asking about connector pinouts on a copy change is how a validator learns
-# to ignore this section.
-DOMAIN_CHECKS: dict[Domain, tuple[str, ...]] = {
-    Domain.HARDWARE: (
-        "Do quantities, tolerances and costs sum to the stated totals?",
-        "Do any two components contend for the same connection, pin or space?",
-        "Does the design stay inside every stated physical, power or thermal budget?",
-    ),
-    Domain.FIRMWARE: (
-        "Do timing, memory and power figures reconcile against the stated budget?",
-        "Is every state in a described state machine both reachable and exitable?",
-        "Are concurrency, interrupt and buffer-ownership rules stated and consistent?",
-    ),
-    Domain.BACKEND: (
-        "Are schema, field and type changes consistent everywhere they appear?",
-        "Is every error and failure path in the described flow handled?",
-        "Do the described keys, indexes and queries serve the stated access pattern?",
-    ),
-    Domain.FRONTEND: (
-        "Is every state the interface can enter — empty, loading, error, overflow — accounted for?",
-        "Does the described view only use data the system actually provides?",
-    ),
-    Domain.INFRASTRUCTURE: (
-        "Are the described configuration values internally consistent?",
-        "Is startup, shutdown and failure behaviour specified for each component?",
-    ),
-    Domain.SUPPLY_CHAIN: (
-        "Do unit costs, quantities and totals reconcile?",
-        "Is every single-sourced or long-lead item identified as such?",
-    ),
-    Domain.DOCUMENTATION: (
-        "Does the text match the behaviour the plan actually describes?",
-    ),
-}
-
-
 # Applied when a domain has no checks of its own — which, before profiles could
 # declare them, was every domain outside the seven shipped ones. Validation was
 # reaching those with no lenses at all.
@@ -577,8 +529,7 @@ def build_domain_checks(domains: list[object]) -> str:
     profile = get_profile()
     seen: list[str] = []
     for domain in domains:
-        specific = tuple(DOMAIN_CHECKS.get(domain_key(domain), ())) \
-            + profile.get_domain_checks(domain)
+        specific = profile.get_domain_checks(domain)
         for check in specific or GENERIC_CHECKS:
             if check not in seen:
                 seen.append(check)
@@ -593,30 +544,16 @@ def build_domain_checks(domains: list[object]) -> str:
     )
 
 
-DOMAIN_LEAD_MAP: dict[Domain, SpecialistRole] = {
-    Domain.FIRMWARE: SpecialistRole.FIRMWARE_ENGINEER,
-    Domain.HARDWARE: SpecialistRole.HARDWARE_ENGINEER,
-    Domain.BACKEND: SpecialistRole.BACKEND_ENGINEER,
-    Domain.FRONTEND: SpecialistRole.FRONTEND_ENGINEER,
-    Domain.SUPPLY_CHAIN: SpecialistRole.SUPPLY_CHAIN,
-    Domain.INFRASTRUCTURE: SpecialistRole.SYSTEMS_ARCHITECT,
-    Domain.DOCUMENTATION: SpecialistRole.BACKEND_ENGINEER,
-}
-
-
 def lead_for_domain(domain: object) -> str:
     """Which specialist leads this domain, as a normalised role name.
 
-    Profile vocabulary first, then the shipped defaults, then the architect —
-    which is the right answer for a domain nobody has mapped, since
-    cross-domain and unfamiliar work is exactly what that role is for. An
-    unrecognised domain must never raise: triage is allowed to name a subject
-    this harness has never seen.
+    A profile-declared lead is returned as declared; a domain nobody mapped
+    resolves to the profile's system-level view, which is the right answer for
+    cross-domain and unfamiliar work. An unrecognised domain must never raise:
+    triage is allowed to name a subject this harness has never seen.
 
-    A profile-declared lead is returned as declared. Validating it against the
-    shipped enum here is what made a profile mapping `legal_ops` to `paralegal`
-    silently review with the architect instead — the roster is a default, not a
-    limit, and the registry resolves a declared or undeclared role either way.
+    The roster is a default, not a limit, and the registry resolves a declared
+    or undeclared role either way.
     """
     from autornd.models.verdicts import domain_key, role_key
     from autornd.profiles import get_profile
@@ -627,10 +564,7 @@ def lead_for_domain(domain: object) -> str:
     if declared:
         return role_key(declared)
 
-    for domain, role in DOMAIN_LEAD_MAP.items():
-        if domain_key(domain) == key:
-            return role_key(role)
-    return role_key(SpecialistRole.SYSTEMS_ARCHITECT)
+    return get_profile().role_that_holds_system_view()
 
 
 def select_lead(
@@ -1175,10 +1109,10 @@ async def run_validate(
     function: str | None = None,
     asks: list[Any] | None = None,
 ) -> tuple[ValidateVerdict, ModelResponse]:
-    test_eng = get_specialist(SpecialistRole.TEST_ENGINEER)
     from autornd.profiles import framing, get_profile
     f = framing()
     profile = get_profile()
+    test_eng = get_specialist(profile.role_that_checks_work())
     context_block = f"\n\nProject context:\n{context}" if context else ""
     checks_block = build_domain_checks(domains or [])
     concerns_block = ""
