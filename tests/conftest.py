@@ -75,6 +75,7 @@ PLACEHOLDERS: dict[str, str] = {
     "ALLOW_UNAUTHENTICATED_REMOTE": "false",
     "CHROMADB_PATH": _CHROMA_TMP,
     "REGISTRATION_ENABLED": "true",
+    # D54: the existing suite describes the engineering team; new tests select general or studio explicitly.
     "AUTORND_PROFILE": "engineering",
     "AUTORND_WORKFLOW": "engineering-rnd",
 }
@@ -234,19 +235,12 @@ def _no_network_attempts(request):
 
 @pytest.fixture(autouse=True)
 def _profile_isolation():
-    """Pin the profile the suite runs under (D54).
-
-    The prompts render from the profile's framing, so a run under the
-    neutral default renders neutral prose while the yardstick workflow is
-    the engineering one. Pin the profile here; a test that sets its own
-    overrides it for the test and resets it afterwards.
-    """
-    from autornd.profiles import get_profile, load_profile, set_profile
-
-    previous = get_profile()
-    set_profile(load_profile("engineering"))
+    """No test leaks its profile, or the specialists built from it, into the next (D54)."""
     yield
-    set_profile(previous)
+    from autornd.profiles import reset_profile
+    from autornd.specialists.registry import reload_specialists
+    reset_profile()
+    reload_specialists()
 
 
 # ── 3. The test database: one in-memory engine shared per test ──────────────
