@@ -1,0 +1,109 @@
+{
+  "command_id": "ARCH-20261028-126",
+  "parent_id": "ARCH-20261021-125",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Finish Ruling D54, the team is the profile's, which command 125 started and did not finish. Continue on 125's branch, fix the four defects the advisor found in its work, and deliver one PR. Free work; no paid call.",
+  "evidence": [
+    "THE TASK FILE: .orchestration/prompts/ARCH-20261028-126.md. It has 11 ordered tasks, each with exact edits, a CHECK and its EXPECT. The advisor replayed every task on a copy of the branch on 2026-10-28, and each EXPECT is the output it saw. Where this file and the task file differ in detail, the task file governs.",
+    "THE STARTUP PROMPT: .orchestration/prompts/STARTUP.md. A new executor reads it first. It gives the roles, the work loop and the rules.",
+    "Ruling D54, signed off by the owner on 2026-10-21: docs/reviews/2026-10-21-d54-the-team-is-the-profiles.md. Command 125 and its task file .orchestration/prompts/ARCH-20261021-125.md carry it in full; this command keeps their substance.",
+    "Command 125's state, checked by the advisor on 2026-10-28. Branch exec/20261021-125-team-is-the-profile, tip fa5192e, not pushed. 125's Tasks 0-6 are committed. 125's Task 7 is done in the working tree, uncommitted, in five code and test files, and its CHECK grep is clean.",
+    "Defect 1: the triage template prints '- domains: {domains_block}' and '- specialists: {specialists_block}', while each block already starts with its label. Engineering's triage user message no longer equals tests/fixtures/prompts/engineering.json; the other 25 engineering keys do.",
+    "Defect 2: commit 1f6d2b4 set DEFAULT_PROFILE = _read('engineering') in autornd/profiles.py, against D54 §2 (4) and (6) and command 125's DEFAULT constraint. It was recorded in the response notes, not as a deviation.",
+    "Defect 3: commit 1f6d2b4's _profile_isolation fixture in tests/conftest.py pins engineering and restores the previous profile, but never reloads the specialists. That is not the fixture 125's Task 9 gave.",
+    "Defect 4: tests/prompt_capture.py has no SITE_FUNCTIONS (125's Task 1), and passes engineering roles to the plan, feasibility, domain_review, implement and review sites. Under general and studio, those synthesized specialists put 'engineer', 'firmware' and 'backend' into the captured prompts, which the harness did not write.",
+    "With the four fixes: all four golden fixtures match byte for byte; general and studio show no scan word; the full suite is 1627 passed, 1 skipped, 1628 collected, network guard 0. The nine break-proofs each fail their named test.",
+    "Command 124 is not merged. The owner directed on 2026-10-25 that 125 proceed without it (recorded in the 125 response, questions_for_advisor). This command does not wait for 124; 124 stays open."
+  ],
+  "scope": {
+    "include": [
+      "autornd/engine/phases.py: the triage template (Task 2), plus 125's Task 7 work as it stands",
+      "autornd/engine/review_composition.py, autornd/engine/workflow.py, autornd/graph/adapter.py: 125's Task 7 work as it stands",
+      "autornd/profiles.py: restore the general default (Task 3)",
+      "profiles/example.yaml, profiles/cupline.yaml, profiles/tier4.yaml: base: engineering",
+      "evals/tier3/runner.py and evals/tier4/runner.py: pin the engineering team only",
+      "tests/conftest.py, tests/prompt_capture.py, tests/test_profile_framing.py, tests/test_review_composition.py, tests/test_lead_review.py, tests/test_structural_roles.py, tests/test_docs.py",
+      ".env.example, .claude/context/workflows-and-profiles.md",
+      ".orchestration/responses/: the new 126 response, and 125's response status only",
+      "HANDOVER.md",
+      "README.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/context/testing.md"
+    ],
+    "exclude": [
+      "tests/fixtures/prompts/: the golden fixtures, captured from main's code, are never rewritten. Do not run WRITE_GOLDEN=1",
+      "workflows/*.yaml: unchanged. Renaming engineering-rnd belongs to D55",
+      "autornd/config.py: the tier names are job names, not prompt text",
+      "evals/ frozen data: batches, keys, scorers, corpora",
+      "autornd/database.py: no schema change. If one is needed, STOP and report",
+      "profiles/studio.yaml: it takes no base",
+      ".orchestration/commands/ and .orchestration/prompts/: the advisor's; read only",
+      ".env and .env.tier3: the owner's (G-3)"
+    ]
+  },
+  "constraints": [
+    "FREE. No paid call. Every test is provider-free, and the network guard stays at 0.",
+    "STARTUP FIRST: the executor reads .orchestration/prompts/STARTUP.md before Task 0, and its rules hold for every task.",
+    "SAME BRANCH: continue on exec/20261021-125-team-is-the-profile in /home/jb/autornd-os. Do not branch again, rebase, stash, reset or force-push.",
+    "IN ORDER: the tasks run in the task file's order. A CHECK that differs from its EXPECT is a STOP, never a repair.",
+    "RULED VALUES ARE NOT TEST KNOBS: DEFAULT_PROFILE is the general profile (D54 §2 (4)), and an undeclared framing key or structural slot falls back to general (§2 (6)). Nothing is changed to engineering to make a test pass.",
+    "ENGINEERING IS UNCHANGED: under engineering, example, cupline and tier4, every captured prompt equals its golden fixture, every key and every byte.",
+    "GOLDEN FIXTURES ARE FROZEN: tests/fixtures/prompts/*.json are never rewritten.",
+    "THE SUITE: only the tests Task 8 names may change, each marked (A) or (B) as command 125 defines them. Any other failing test is a STOP.",
+    "NEVER PARSE ENGLISH: nothing routes on a framing value.",
+    "A defect found in existing code that the task file does not describe is a STOP-and-report, not a fix."
+  ],
+  "acceptance_criteria": [
+    "(a) Golden. test_engineering_prompts_are_byte_identical passes for engineering, example, cupline and tier4. Break-proof: change team in engineering.yaml and it fails.",
+    "(b) No leak. Under general and studio, with neutral seats, no captured message matches /engineer|firmware|hardware|backend|frontend|datasheet|pasteuris|EIRP/i. The call-site test's AST scan equals SITE_FUNCTIONS. Break-proofs: put 'engineering' back into the triage prompt; add an uncaptured call site.",
+    "(c) Triage vocabulary. Under studio, the offered lists are exactly studio's. Under general, 'Name each domain yourself' is present and the role list is lead, reviewer, planner. Break-proof: re-add the shipped Domain members.",
+    "(d) Structural roles. Under studio: editor at high risk, strategist on two domains, the plan's system prompt is the strategist's and validate's is the editor's. Under general: the same with reviewer and planner. Break-proof: hard-code test_engineer in run_validate.",
+    "(e) No literals. No SpecialistRole.<MEMBER> or Domain.<MEMBER> in autornd/ outside autornd/models/verdicts.py. Break-proof: a comment line naming one in phases.py.",
+    "(f) Default and base. With AUTORND_PROFILE unset, the profile is general. base: engineering lays a profile's own keys over engineering's. A base with a base is refused. Each has a break-proof.",
+    "(g) Evals unchanged. The tier-3 and tier-4 tests pass unmodified.",
+    "(h) Docs. .env.example, README.md, the roster guard, HANDOVER.md and .claude/context/workflows-and-profiles.md say general is the default and engineering is a profile. Counts are re-derived: 1628 collected.",
+    "(i) Suite green at the end (1627 passed, 1 skipped), network guard 0, CI 5/5, PR opened. The response is DONE, lists every changed test with its mark and every break-proof, and has every departure under deviations."
+  ],
+  "verification": [
+    {
+      "command": ".venv/bin/python3 -m pytest tests/test_profile_framing.py -q",
+      "expected": "10 passed, 1 skipped."
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "1627 passed, 1 skipped; network guard: 0."
+    }
+  ],
+  "rollback": "Revert the PR. Under AUTORND_PROFILE=engineering, behaviour equals main's by construction (criterion (a)).",
+  "deliverable": {
+    "branch": "exec/20261021-125-team-is-the-profile",
+    "pr": true,
+    "title": "D54: the team is the profile's (commands 125 and 126)",
+    "commit_style": "one commit per task, with the task file's COMMIT line as the message"
+  },
+  "assumptions": [
+    "The tree in /home/jb/autornd-os is exactly as Task 0's EXPECT describes. If it is not, STOP: the advisor's replay does not apply to a different tree.",
+    "The owner's 2026-10-25 direction to go on without command 124 still stands. If the owner says otherwise, STOP."
+  ],
+  "questions": [],
+  "preconditions": [
+    {
+      "command": "git -C /home/jb/autornd-os branch --show-current && git -C /home/jb/autornd-os log --oneline -1",
+      "expected": "exec/20261021-125-team-is-the-profile, at fa5192e. Otherwise STOP."
+    },
+    {
+      "command": "grep -c 'signed off by the owner on 2026-10-21' docs/reviews/2026-10-21-d54-the-team-is-the-profiles.md",
+      "expected": "1. D54 is signed off."
+    },
+    {
+      "command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none",
+      "expected": "none"
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q",
+      "expected": "Not run at start: the tree holds 125's uncommitted Task 7 and is red until Task 8, as the task file says. The suite is run in Tasks 8 and 9."
+    }
+  ]
+}
