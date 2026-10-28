@@ -86,6 +86,28 @@ CHUNKS = [
     {"tag": "t", "text": "The reconnect path's timer is sized by the request alone."},
 ]
 
+# The 16 model-calling functions capture_all reaches. The call-site test
+# proves no other function in autornd/ calls a model.
+SITE_FUNCTIONS = frozenset({
+    "run_triage", "run_asks", "run_plan", "run_plan_feasibility",
+    "run_domain_review", "run_implement", "run_recompute", "run_validate",
+    "run_review", "run_doublecheck", "run_escalation_autopsy",
+    "expand_queries", "rerank_chunks", "synthesize_briefing",
+    "analyze_request", "_lookup",
+})
+
+# The specialist each seat is given. ENGINEERING_SEATS are the ones the golden
+# fixtures were captured with. NEUTRAL_SEATS name no engineering role, so the
+# leak scans under general and studio see only what the harness itself writes.
+ENGINEERING_SEATS: dict[str, object] = {
+    "plan": SpecialistRole.SYSTEMS_ARCHITECT,
+    "feasibility": SpecialistRole.FIRMWARE_ENGINEER,
+    "domain_review": SpecialistRole.TEST_ENGINEER,
+    "implement": SpecialistRole.BACKEND_ENGINEER,
+    "review": SpecialistRole.SYSTEMS_ARCHITECT,
+}
+NEUTRAL_SEATS: dict[str, object] = {seat: "lead" for seat in ENGINEERING_SEATS}
+
 CALLS: list[dict[str, str]] = []
 
 
@@ -197,8 +219,9 @@ def recording_client() -> OpenRouterClient:
     return client
 
 
-async def capture_all() -> dict[str, dict[str, str]]:
+async def capture_all(seats: dict[str, object] | None = None) -> dict[str, dict[str, str]]:
     """Capture every prompt site once, plus every specialist's prompt."""
+    seats = seats or ENGINEERING_SEATS
     client = recording_client()
     captured: dict[str, dict[str, str]] = {}
 
@@ -220,7 +243,7 @@ async def capture_all() -> dict[str, dict[str, str]]:
         client,
         REQUEST,
         triage,
-        get_specialists([SpecialistRole.SYSTEMS_ARCHITECT]),
+        get_specialists([seats["plan"]]),
         tier=None,
         context=CONTEXT,
         max_tokens=None,
@@ -233,7 +256,7 @@ async def capture_all() -> dict[str, dict[str, str]]:
         REQUEST,
         triage,
         plan,
-        get_specialists([SpecialistRole.FIRMWARE_ENGINEER]),
+        get_specialists([seats["feasibility"]]),
         context=CONTEXT,
     )
     take("feasibility")
@@ -242,7 +265,7 @@ async def capture_all() -> dict[str, dict[str, str]]:
         client,
         REQUEST,
         SUMMARY,
-        get_specialists([SpecialistRole.TEST_ENGINEER]),
+        get_specialists([seats["domain_review"]]),
         context=CONTEXT,
         function=None,
         asks=ASKS,
@@ -253,7 +276,7 @@ async def capture_all() -> dict[str, dict[str, str]]:
         client,
         REQUEST,
         None,
-        get_specialists([SpecialistRole.BACKEND_ENGINEER]),
+        get_specialists([seats["implement"]]),
         iteration=1,
         context=CONTEXT,
         asks=ASKS,
@@ -265,7 +288,7 @@ async def capture_all() -> dict[str, dict[str, str]]:
         client,
         REQUEST,
         None,
-        get_specialists([SpecialistRole.BACKEND_ENGINEER]),
+        get_specialists([seats["implement"]]),
         iteration=1,
         context=CONTEXT,
         asks=ASKS,
@@ -295,7 +318,7 @@ async def capture_all() -> dict[str, dict[str, str]]:
         REQUEST,
         TRIAGE_MEDIUM,
         IMPLEMENT,
-        get_specialists([SpecialistRole.SYSTEMS_ARCHITECT]),
+        get_specialists([seats["review"]]),
         context=CONTEXT,
         max_tokens=None,
         function=None,
@@ -308,7 +331,7 @@ async def capture_all() -> dict[str, dict[str, str]]:
         REQUEST,
         TRIAGE_HIGH,
         IMPLEMENT,
-        get_specialists([SpecialistRole.SYSTEMS_ARCHITECT]),
+        get_specialists([seats["review"]]),
         context=CONTEXT,
         max_tokens=None,
         function=None,
