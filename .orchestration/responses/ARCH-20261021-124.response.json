@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "5163e60750e8575fa40837c9fb36cbf7e419e763",
-  "head_after": "9c5151229ef4d9e2624cec7e4b65b880c756cad4",
+  "head_after": "94a9945b1b3d5fc0c288b8af5ca853d040ccbe25",
   "results": {
-    "task": 5,
-    "step": "executor runs an advisory node without letting it end the run; Task 5 CHECK matches EXPECT (176 passed, network guard 0)"
+    "task": 6,
+    "step": "recompute node marked advisory; Task 6 CHECK matches EXPECT (advisory: true at line 132, 66 passed, network guard 0)"
   },
   "preconditions_ran": [
     {
