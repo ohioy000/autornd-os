@@ -5,8 +5,8 @@
   "head_before": "5163e60750e8575fa40837c9fb36cbf7e419e763",
   "head_after": "dced88ab708f8d8dd36f7495beff1e7f6fbac807",
   "results": {
-    "task": 7,
-    "step": "tests/test_advisory_nodes.py written; Task 7 CHECK matches EXPECT (37 passed, network guard 0)"
+    "task": 8,
+    "step": "five break-proofs run; each failed exactly the tests Task 8 EXPECT names; each undone with git checkout -- <file>; git status --short printed only '?? .qwen/' after each"
   },
   "preconditions_ran": [
     {
@@ -73,8 +73,58 @@
   "suite_count_before": 1628,
   "suite_count_after": 0,
   "tests_changed": [],
-  "break_proofs": [],
+  "break_proofs": [
+    {
+      "break": "8.1 the per-sample catch in run_recompute no longer catches (except Exception -> except ZeroDivisionError)",
+      "file": "autornd/engine/phases.py",
+      "failed": [
+        "tests/test_advisory_nodes.py::TestAFailedSample::test_a_failed_sample_is_recorded_and_the_run_completes[value_error]",
+        "tests/test_advisory_nodes.py::TestAFailedSample::test_a_failed_sample_is_recorded_and_the_run_completes[budget_exceeded]",
+        "tests/test_advisory_nodes.py::TestAFailedSample::test_two_failed_samples_leave_the_vote_unchecked",
+        "tests/test_recompute_vote.py::TestAccounting::test_a_sample_failing_after_dispatch_keeps_its_worst_case"
+      ],
+      "result": "4 failed, 74 passed"
+    },
+    {
+      "break": "8.2 the recompute node is no longer advisory (advisory: true -> advisory: false)",
+      "file": "workflows/answer-and-recompute.yaml",
+      "failed": [
+        "tests/test_advisory_nodes.py::TestTheWatchdog::test_a_cut_recompute_is_skipped_and_the_run_completes",
+        "tests/test_advisory_nodes.py::TestTheWatchdog::test_a_refused_recompute_is_skipped_and_the_run_completes",
+        "tests/test_advisory_nodes.py::TestTheReviewProbe::test_the_status_is_the_same_with_and_without_the_vote[watchdog_cut]",
+        "tests/test_advisory_nodes.py::TestUnchangedElsewhere::test_only_the_recompute_is_advisory_in_the_shipped_workflows"
+      ],
+      "result": "4 failed, 74 passed"
+    },
+    {
+      "break": "8.3 _watched no longer sends advisory work to _watched_advisory (if node.advisory -> if False)",
+      "file": "autornd/graph/executor.py",
+      "failed": [
+        "tests/test_advisory_nodes.py::TestTheWatchdog::test_a_cut_recompute_is_skipped_and_the_run_completes",
+        "tests/test_advisory_nodes.py::TestTheReviewProbe::test_the_status_is_the_same_with_and_without_the_vote[watchdog_cut]",
+        "tests/test_advisory_nodes.py::TestUnchangedElsewhere::test_an_advisory_node_that_raises_stores_its_skip"
+      ],
+      "result": "3 failed, 75 passed"
+    },
+    {
+      "break": "8.4 _execute no longer routes an advisory node through _advisory_not_started (if node.advisory -> if False)",
+      "file": "autornd/graph/executor.py",
+      "failed": [
+        "tests/test_advisory_nodes.py::TestTheWatchdog::test_a_refused_recompute_is_skipped_and_the_run_completes"
+      ],
+      "result": "1 failed, 77 passed"
+    },
+    {
+      "break": "8.5 _recompute_ident drops 'in parallel' again (.replace(\"IN PARALLEL\", \"\") restored)",
+      "file": "autornd/graph/checks.py",
+      "failed": [
+        "tests/test_advisory_nodes.py::TestTheIdent::test_in_parallel_is_part_of_the_identifier",
+        "tests/test_recompute_vote.py::TestTheReplay::test_the_check_reproduces_the_probe_flag[batch3 kimi T4-24]"
+      ],
+      "result": "2 failed, 76 passed"
+    }
+  ],
   "deviations": [],
   "questions_for_advisor": [],
-  "notes": "Work is in /home/jb/autornd-os, where the task file's Task 0 places it. The checkout was on exec/20261021-125-team-is-the-profile with a clean tree before the switch. The new branch was made with the task's own command (git switch -c ... origin/main), so git set its upstream to origin/main; Task 10 pushes with an explicit branch name and -u, which re-points it."
+  "notes": "Work is in /home/jb/autornd-os, where the task file's Task 0 places it. The checkout was on exec/20261021-125-team-is-the-profile with a clean tree before the switch. The new branch was made with the task's own command (git switch -c ... origin/main), so git set its upstream to origin/main; Task 10 pushes with an explicit branch name and -u, which re-points it. Task 8: the breaks were driven by a scratch script outside the repo that applied each find/replace once (it stops if the find is not in the file exactly once; each was), ran the task's CHECK with PYTHONDONTWRITEBYTECODE set, and undid the break with git checkout -- <file>. Each break's failed list equals the task's EXPECT."
 }
