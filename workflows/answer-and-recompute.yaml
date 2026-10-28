@@ -126,6 +126,10 @@ nodes:
     tier: recompute
     prompt: recompute
     schema: RecomputeVerdict
+    # Advisory (ARCH-20261021-124): if the recompute raises, or the
+    # watchdog cuts or refuses it, it stores its skip and the run goes
+    # on. The run's status is decided without it (D53 §2 (5)).
+    advisory: true
     args:
       samples: 3
     max_tokens: recompute_max_tokens    # a full calculation, not a verdict — plan-sized
