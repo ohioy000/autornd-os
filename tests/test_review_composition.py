@@ -4,7 +4,6 @@ import pytest
 
 from autornd.engine.phases import lead_for_domain
 from autornd.engine.review_composition import get_review_team
-from autornd.engine.workflow import WorkflowEngine
 from autornd.models.verdicts import Domain, RiskLevel, SpecialistRole, TriageVerdict
 
 
@@ -103,59 +102,6 @@ class TestReviewComposition:
         args = (RiskLevel.CRITICAL, ["hardware", "legal_ops"],
                 ["paralegal", "hardware_engineer"])
         assert get_review_team(*args) == get_review_team(*args)
-
-
-class TestTriageEnforcement:
-    def test_high_risk_adds_test_engineer(self):
-        verdict = TriageVerdict(
-            domains=[Domain.FIRMWARE],
-            risk=RiskLevel.HIGH,
-            specialists=[SpecialistRole.FIRMWARE_ENGINEER],
-            summary="test",
-        )
-        WorkflowEngine._enforce_triage_composition(verdict)
-        assert SpecialistRole.TEST_ENGINEER in verdict.specialists
-
-    def test_critical_risk_adds_test_engineer(self):
-        verdict = TriageVerdict(
-            domains=[Domain.HARDWARE],
-            risk=RiskLevel.CRITICAL,
-            specialists=[SpecialistRole.HARDWARE_ENGINEER],
-            summary="test",
-        )
-        WorkflowEngine._enforce_triage_composition(verdict)
-        assert SpecialistRole.TEST_ENGINEER in verdict.specialists
-
-    def test_multi_domain_adds_architect(self):
-        verdict = TriageVerdict(
-            domains=[Domain.FIRMWARE, Domain.BACKEND],
-            risk=RiskLevel.MEDIUM,
-            specialists=[SpecialistRole.FIRMWARE_ENGINEER, SpecialistRole.BACKEND_ENGINEER],
-            summary="test",
-        )
-        WorkflowEngine._enforce_triage_composition(verdict)
-        assert SpecialistRole.SYSTEMS_ARCHITECT in verdict.specialists
-
-    def test_no_duplicate_when_already_present(self):
-        verdict = TriageVerdict(
-            domains=[Domain.FIRMWARE],
-            risk=RiskLevel.HIGH,
-            specialists=[SpecialistRole.FIRMWARE_ENGINEER, SpecialistRole.TEST_ENGINEER],
-            summary="test",
-        )
-        WorkflowEngine._enforce_triage_composition(verdict)
-        assert verdict.specialists.count(SpecialistRole.TEST_ENGINEER) == 1
-
-    def test_low_risk_single_domain_unchanged(self):
-        verdict = TriageVerdict(
-            domains=[Domain.FRONTEND],
-            risk=RiskLevel.LOW,
-            specialists=[SpecialistRole.FRONTEND_ENGINEER],
-            summary="test",
-        )
-        original = list(verdict.specialists)
-        WorkflowEngine._enforce_triage_composition(verdict)
-        assert verdict.specialists == original
 
 
 class TestUnrecognisedDomains:

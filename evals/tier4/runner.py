@@ -141,7 +141,7 @@ if tier3 is None:
 
 from autornd.config import settings as harness_settings  # noqa: E402
 from autornd.profiles import (          # noqa: E402
-    DEFAULT_PROFILE, ProjectProfile, get_profile, load_profile,
+    ProjectProfile, get_profile, load_profile,
     set_profile)
 from autornd.knowledge.context import (  # noqa: E402
     DOCS_DIR, load_docs_context)
@@ -689,6 +689,14 @@ class QuestionProfile(ProjectProfile):
     def __init__(self, name: str, docs_dir: Path,
                  description: str = "") -> None:
         super().__init__(name=name, description=description)
+        # D54: the tier-4 treatment is the engineering team.
+        engineering = load_profile("engineering")
+        self.framing = dict(engineering.framing)
+        self.domains = dict(engineering.domains)
+        self.roles = dict(engineering.roles)
+        self.structural_roles = dict(engineering.structural_roles)
+        self.role_order = list(engineering.roles)
+        self.base = "engineering"
         self.docs_dir = docs_dir
 
     def get_docs_dir(self) -> str:
@@ -818,7 +826,7 @@ def _profile_selected(profile: ProjectProfile | None):
     process's environment says."""
     previous = get_profile()
     set_profile(profile if profile is not None
-                else DEFAULT_PROFILE)
+                else load_profile("engineering"))
     try:
         yield
     finally:

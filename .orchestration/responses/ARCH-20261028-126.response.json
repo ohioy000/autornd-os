@@ -1,0 +1,112 @@
+{
+  "command_id": "ARCH-20261028-126",
+  "status": "DONE",
+  "executed": true,
+  "head_before": "fa5192e6ae5b43a6d9c6d5bd3b935da077232c01",
+  "head_after": "25194ad3602024db66b3625111768e85a1391ef6",
+  "results": {
+    "task": 10,
+    "step": "branch pushed, PR 217 opened, CI 5/5 pass on 25194ad (run 40762614066); full suite 1627 passed, 1 skipped, 1628 collected, network guard 0; response set to DONE"
+  },
+  "preconditions_ran": [
+    {
+      "command": "cd /home/jb/autornd-os && git branch --show-current && git log --oneline -1 && git status --short",
+      "expected": "branch exec/20261021-125-team-is-the-profile; tip fa5192e; status lists exactly the six modified files (125 response, phases.py, review_composition.py, workflow.py, adapter.py, test_review_composition.py) and ?? .qwen/",
+      "observed": "exec/20261021-125-team-is-the-profile\nfa5192e Specialists are built only from the profile's roles; the output contract renders from framing (D54 §2 (1))\n M .orchestration/responses/ARCH-20261021-125.response.json\n M autornd/engine/phases.py\n M autornd/engine/review_composition.py\n M autornd/engine/workflow.py\n M autornd/graph/adapter.py\n M tests/test_review_composition.py\n?? .qwen/",
+      "outcome": "pass"
+    },
+    {
+      "command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none",
+      "expected": "none",
+      "observed": "none",
+      "outcome": "pass"
+    },
+    {
+      "command": "cd /home/jb/autornd-os && grep -c 'signed off by the owner on 2026-10-21' docs/reviews/2026-10-21-d54-the-team-is-the-profiles.md",
+      "expected": "1. D54 is signed off.",
+      "observed": "1",
+      "outcome": "pass"
+    }
+  ],
+  "suite_count_before": 1623,
+  "suite_count_after": 1628,
+  "tests_changed": [
+    "tests/test_lead_review.py::TestDomainLeadMap::test_all_domains_mapped (A)",
+    "tests/test_lead_review.py::TestDomainLeadMap::test_firmware_maps_to_firmware_engineer (A)",
+    "tests/test_lead_review.py::TestDomainLeadMap::test_hardware_maps_to_hardware_engineer (A)",
+    "tests/test_lead_review.py::TestDomainLeadMap::test_infrastructure_maps_to_architect (A)",
+    "tests/test_structural_roles.py::TestAnUndeclaredProfileIsUnchanged::test_the_defaults_are_the_general_roles (B), renamed from test_the_defaults_are_the_shipped_engineering_roles",
+    "tests/test_structural_roles.py::TestAnUndeclaredProfileIsUnchanged::test_triage_still_gets_a_test_engineer_at_high_risk (A)",
+    "tests/test_structural_roles.py::TestAnUndeclaredProfileIsUnchanged::test_triage_still_gets_an_architect_on_multiple_domains (A)",
+    "tests/test_structural_roles.py::TestAnUndeclaredProfileIsUnchanged::test_the_review_team_is_unchanged_at_every_risk (A)",
+    "tests/test_structural_roles.py::TestAnUndeclaredProfileIsUnchanged::test_an_empty_structural_roles_map_is_the_same_as_none (B)",
+    "tests/test_structural_roles.py::TestPartialDeclaration::test_declaring_one_slot_leaves_the_other_at_its_default (B)",
+    "tests/test_hermetic_suite.py::SUITE_CHOSEN (A)"
+  ],
+  "tests_removed": [
+    "tests/test_review_composition.py::TestTriageEnforcement::test_high_risk_adds_test_engineer (removed in Task 1, 1bacaaa)",
+    "tests/test_review_composition.py::TestTriageEnforcement::test_critical_risk_adds_test_engineer (removed in Task 1, 1bacaaa)",
+    "tests/test_review_composition.py::TestTriageEnforcement::test_multi_domain_adds_architect (removed in Task 1, 1bacaaa)",
+    "tests/test_review_composition.py::TestTriageEnforcement::test_no_duplicate_when_already_present (removed in Task 1, 1bacaaa)",
+    "tests/test_review_composition.py::TestTriageEnforcement::test_low_risk_single_domain_unchanged (removed in Task 1, 1bacaaa)"
+  ],
+  "break_proofs": [
+    {
+      "break": "1 profiles/engineering.yaml",
+      "failed": "FAILED tests/test_profile_framing.py::TestEngineeringIsUnchanged::test_engineering_prompts_are_byte_identical"
+    },
+    {
+      "break": "2 autornd/engine/phases.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestNothingEngineeringLeaks::test_no_engineering_word_reaches_a_model_under_general"
+    },
+    {
+      "break": "3 autornd/engine/phases.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestNothingEngineeringLeaks::test_every_model_call_site_is_captured"
+    },
+    {
+      "break": "4 autornd/engine/phases.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestTheProfileOwnsTheTeam::test_triage_is_offered_the_profiles_own_list"
+    },
+    {
+      "break": "5 autornd/engine/phases.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestTheProfileOwnsTheTeam::test_structural_roles_follow_the_profile"
+    },
+    {
+      "break": "6 autornd/engine/phases.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestTheProfileOwnsTheTeam::test_no_shipped_role_or_domain_literal_in_code"
+    },
+    {
+      "break": "7 autornd/profiles.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestDefaultAndBase::test_default_is_general"
+    },
+    {
+      "break": "8 autornd/profiles.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestDefaultAndBase::test_base_lays_own_keys_over_the_base"
+    },
+    {
+      "break": "9 autornd/profiles.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestDefaultAndBase::test_a_base_with_a_base_is_refused"
+    }
+  ],
+  "deviations": [
+    {
+      "task": 10,
+      "what": "Waited for CI by running `gh pr checks 217` every 20 seconds until no check was pending, instead of running `gh pr checks 217 --watch`.",
+      "why": "The gh on this machine is 2.4.0, which has no --watch flag: `gh pr checks 217 --watch` prints `unknown flag: --watch`. STARTUP.md and the task file name that flag, so they cannot be followed literally on this machine."
+    },
+    {
+      "task": "all",
+      "what": "Every commit this executor made has a second paragraph after the COMMIT line: a blank line, then `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. The PR body is the task's text plus a blank line and a closing line `🤖 Generated with [Claude Code](https://claude.com/claude-code)`. The first line of each task commit is the COMMIT line, unchanged.",
+      "why": "The session's standing instructions require those attribution lines on commit messages and PR descriptions. The task file asks for the COMMIT line as the message and gives an exact PR body, so these lines are additions it did not ask for."
+    }
+  ],
+  "questions_for_advisor": [
+    "Should the executor leave out the attribution lines (the Co-Authored-By trailer on commits, the closing line of the PR body) when a task file gives an exact COMMIT line or PR body? This run added them, as the deviations list says, and every commit it made and the PR body carry them. If they should not be there, say so and the next executor will omit them."
+  ],
+  "delivery_state": {
+    "branch": "exec/20261021-125-team-is-the-profile",
+    "pr": 217,
+    "url": "https://github.com/ohioy000/autornd-os/pull/217"
+  },
+  "notes": "suite not run at start: the tree holds 125's uncommitted Task 7, so it is red until Task 8, as the task file says. The command's second precondition (the ruling is signed off, grep -c) was also run and is listed above; its fourth precondition (the full suite) is the one this note covers. Task 7: besides the named test, other tests of the same file also failed under four breaks, which the task allows: row 2 also test_no_engineering_word_reaches_a_model_under_studio; row 4 also test_engineering_prompts_are_byte_identical, test_no_engineering_word_reaches_a_model_under_general and test_no_engineering_word_reaches_a_model_under_studio; row 5 also the same two leak tests; row 8 also test_engineering_prompts_are_byte_identical. The breaks were driven by a scratch script outside the repo that applied each find/replace exactly once, ran the task's pytest line with PYTHONDONTWRITEBYTECODE set, and undid the break with git checkout -- <file>. Task 8: marks follow command 125. (A) selects the engineering profile explicitly where the test relied on no profile meaning engineering; (B) expects the general fallback where the test asserted the old default itself. tests/test_hermetic_suite.py::SUITE_CHOSEN was changed earlier by commit 1f6d2b4 and is recorded here only. tests_removed is a key this response adds to list the five tests Task 1 removed (TestTriageEnforcement, which tested the dead _enforce_triage_composition); the task asks for them to be listed but names no field. Their live rules are tested by tests/test_structural_roles.py and by tests/test_profile_framing.py::TestTheProfileOwnsTheTeam::test_structural_roles_follow_the_profile. Task 10: pushed exec/20261021-125-team-is-the-profile and opened PR 217 against main. CI on 25194ad3602024db66b3625111768e85a1391ef6 (run 40762614066, event pull_request, conclusion success): docker pass 1m5s, editable-install pass 34s, test (3.11) pass 2m34s, test (3.12) pass 2m31s, test (3.13) pass 2m42s. GitHub reported the PR mergeable (true, clean). No code changed after Task 9's commit 916c692 (git diff --stat 916c692 HEAD showed only this response file), so the Task 9 full-suite reading (1627 passed, 1 skipped, 1628 collected, network guard 0) is the reading for the tip CI tested. head_after is that tip; the PR head is one response-only commit later, because a commit cannot name its own sha. Main had advanced since this branch was cut by three advisor commits (command 126, its task file, STARTUP.md and a few lines in .orchestration/README.md). The work was done in /home/jb/autornd-os, where the task file and command place the branch; no branch was switched in either checkout."
+}

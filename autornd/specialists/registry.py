@@ -1,110 +1,30 @@
-"""Engineering specialists with profile-driven system prompts."""
+"""Specialists, built from the active profile's roles."""
 
 from __future__ import annotations
 
 import logging
 
-from autornd.models.verdicts import SpecialistRole, role_key
+from autornd.models.verdicts import role_key
 from autornd.specialists.base import Specialist
 
 logger = logging.getLogger(__name__)
 
-_PROMPT_TEMPLATES: dict[SpecialistRole, dict] = {
-    SpecialistRole.SYSTEMS_ARCHITECT: {
-        "name": "Systems Architect",
-        "domain": "Architecture, integration, trade-off analysis",
-        "router_function": "architecture",
-        "expertise": (
-            "Your domain: system architecture, protocol design, service orchestration, "
-            "cross-domain integration, and trade-off analysis. You consider resource "
-            "constraints, power budgets, bandwidth limits, and reliability requirements.\n\n"
-            "You produce implementation plans, evaluate architectural trade-offs, and "
-            "review designs from a system-level perspective."
-        ),
-    },
-    SpecialistRole.FIRMWARE_ENGINEER: {
-        "name": "Firmware Engineer",
-        "domain": "Embedded systems, microcontrollers, RTOS, power management",
-        "router_function": "engineering",
-        "expertise": (
-            "Your domain: embedded firmware development, microcontroller programming, "
-            "RTOS task management, deep sleep and power management, OTA update mechanisms, "
-            "and build systems.\n\n"
-            "You specify, review, and validate firmware designs for embedded devices. You understand "
-            "communication protocols, ADC calibration, and sensor data encoding."
-        ),
-    },
-    SpecialistRole.HARDWARE_ENGINEER: {
-        "name": "Hardware Engineer",
-        "domain": "PCB design, BOM, schematic, thermal",
-        "router_function": "engineering",
-        "expertise": (
-            "Your domain: PCB layout and design review, BOM analysis, schematic review, "
-            "connector selection, enclosure design, weatherproofing, thermal analysis, "
-            "antenna placement, and manufacturing constraints.\n\n"
-            "You evaluate hardware designs for producibility, reliability in target "
-            "environments, and cost targets."
-        ),
-    },
-    SpecialistRole.BACKEND_ENGINEER: {
-        "name": "Backend Engineer",
-        "domain": "Backend services, APIs, databases, data pipelines",
-        "router_function": "engineering",
-        "expertise": (
-            "Your domain: backend service development, API design, database management, "
-            "data pipeline architecture, message broker integration, and alert engine design.\n\n"
-            "You specify, review, and validate backend implementations. You consider data flow, "
-            "error handling, and performance at the application layer."
-        ),
-    },
-    SpecialistRole.FRONTEND_ENGINEER: {
-        "name": "Frontend Engineer",
-        "domain": "UI frameworks, data visualization, responsive design",
-        "router_function": "engineering",
-        "expertise": (
-            "Your domain: frontend development, data visualization, responsive design, "
-            "and user interface architecture.\n\n"
-            "You specify, review, and validate frontend implementations. You consider usability, "
-            "accessibility, performance, and the target user environment."
-        ),
-    },
-    SpecialistRole.TEST_ENGINEER: {
-        "name": "Test Engineer",
-        "domain": "Validation plans, test protocols, quality assurance",
-        "router_function": "engineering",
-        "expertise": (
-            "Your domain: test plan creation, test protocols, regression test suites, "
-            "validation criteria, and deployment testing. You evaluate implementations "
-            "against success criteria defined in the plan phase.\n\n"
-            "You run deterministic checks where possible: resource budget math, pin "
-            "assignment conflicts, cost vs target, API schema validation, routing "
-            "correctness. For hardware, you define bench test procedures."
-        ),
-    },
-    SpecialistRole.SUPPLY_CHAIN: {
-        "name": "Supply Chain",
-        "domain": "BOM costing, sourcing, compliance",
-        "router_function": "engineering",
-        "expertise": (
-            "Your domain: BOM costing and optimization, component sourcing, regulatory "
-            "compliance, tariff analysis, lead time tracking, and vendor management.\n\n"
-            "You evaluate designs for cost, sourcing risk (single-source components), "
-            "and regulatory compliance."
-        ),
-    },
-}
 
 # Stated on every specialist's system prompt. Without it the role framing
 # ("you specify firmware", "you review designs") leaves a model free to assume
 # it should be editing a repository, and it answers that it cannot — which the
 # validate phase then reads as a failed implementation.
-SPECIALIST_OUTPUT_CONTRACT = (
-    "You work entirely in writing. You have no repository, file system, shell "
-    "or build tools, and you never need them: your written output is the "
-    "deliverable that a human or a downstream system applies. Produce the "
-    "engineering work itself, in full, rather than reporting on what you would "
-    "do or noting that you lack access."
-)
+def specialist_output_contract() -> str:
+    from autornd.profiles import framing
+
+    f = framing()
+    return (
+        "You work entirely in writing. You have no repository, file system, shell "
+        "or build tools, and you never need them: your written output is the "
+        "deliverable that a human or a downstream system applies. Produce the "
+        "engineering work itself, in full, rather than reporting on what you would "
+        "do or noting that you lack access."
+    ).replace("engineering work", f["work"])
 
 
 # Keyed on the normalised role name, not the enum, because the roster is open:
@@ -133,7 +53,7 @@ def _build_prompt(role: object, template: dict) -> str:
         parts.append(f"\n{specialist_ctx}")
 
     parts.append(f"\n{template['expertise']}")
-    parts.append(f"\n{SPECIALIST_OUTPUT_CONTRACT}")
+    parts.append(f"\n{specialist_output_contract()}")
     parts.append("\nAlways respond with valid JSON matching the schema requested in the user message.")
 
     return "\n".join(parts)
@@ -170,11 +90,7 @@ def _title(key: str) -> str:
 
 def _build_specialists() -> dict[str, Specialist]:
     result: dict[str, Specialist] = {}
-    templates: dict[str, dict] = {
-        role_key(role): template for role, template in _PROMPT_TEMPLATES.items()
-    }
-    # Profile roles are layered last, so a project can refine a shipped role as
-    # well as add one.
+    templates: dict[str, dict] = {}
     templates.update(_profile_templates())
     for key, template in templates.items():
         result[key] = Specialist(

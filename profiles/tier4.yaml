@@ -2,8 +2,8 @@
 
 # Select with AUTORND_PROFILE=tier4. Changes nothing but the docs
 # directory: no domains, roles, checks, constraints or structural
-# roles, so the shipped engineering vocabulary applies exactly as
-# without a profile. The docs directory resolves from the name
+# roles, so the engineering profile's vocabulary applies through
+# `base: engineering` (D54). The docs directory resolves from the name
 # (profiles.py: get_docs_dir lower-cases the name, spaces to
 # underscores) to docs/tier4/, whose manifest.json lists the
 # frozen pilot batch's corpus pages as global documents — the F2
@@ -11,5 +11,6 @@
 # profile (autornd/knowledge/context.py: load_docs_context). The
 # pages are byte-identical copies of evals/tier4/pilot/corpus/
 # (the freeze guard, command 122's acceptance criterion (c)).
+base: engineering
 name: "Tier4"
 description: "Fictional corpus profile for the tier-4 capacity test (D52): the Vortexia Fluidics pilot corpus only. Describes no real firm or product."

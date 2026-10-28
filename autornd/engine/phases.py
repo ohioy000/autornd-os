@@ -36,7 +36,6 @@ from autornd.models.verdicts import (
     ReviewFinding,
     ReviewVerdict,
     RiskLevel,
-    SpecialistRole,
     TriageVerdict,
     role_key,
     ValidateVerdict,
@@ -44,7 +43,7 @@ from autornd.models.verdicts import (
 from autornd.knowledge.context import build_phase_context
 from autornd.routing.openrouter import BudgetExceeded, ModelResponse, OpenRouterClient
 from autornd.specialists.base import Specialist
-from autornd.specialists.registry import get_specialist, get_specialists
+from autornd.specialists.registry import get_specialist
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +53,10 @@ logger = logging.getLogger(__name__)
 # changes" produces an empty implementation that validate then correctly
 # rejects, burning the entire iteration budget and escalating a healthy
 # request. Every producing prompt states this contract explicitly.
-OUTPUT_CONTRACT = """\
+def output_contract() -> str:
+    from autornd.profiles import framing
+    f = framing()
+    return f"""\
 You have no repository, file system, shell, or build tools, and you are not \
 expected to. Nothing you write is executed or applied automatically.
 
@@ -62,7 +64,10 @@ Your response IS the deliverable. Produce the actual engineering work as text \
 — the design, the code, the schema, the procedure, the calculation — in enough \
 detail that a competent engineer could apply it directly. Never reply that you \
 are unable to make changes or lack access: describing the work precisely is \
-the task."""
+the task.""".replace("engineering work", f["work"]).replace(
+    "the design, the code, the schema, the procedure, the calculation",
+    f["deliverables"],
+).replace("a competent engineer", f["competent_practitioner"])
 
 # The mirror of the above for the assessing phases. Without it, validators
 # reject work for "not having been executed", which is never achievable here.
@@ -143,22 +148,18 @@ def enforce_triage_composition(verdict: TriageVerdict) -> None:
 
 
 def _domain_vocabulary() -> str:
-    """The domains to offer triage: the shipped defaults plus the profile's own.
+    """The domains to offer triage: the profile's own.
 
     Offered, not enforced. Forcing a closed list is what turned civil
     engineering into "hardware" and a latency budget into "firmware".
     """
     from autornd.profiles import get_profile
 
-    names = [d.value for d in Domain]
-    for extra in get_profile().domain_vocabulary():
-        if extra not in names:
-            names.append(extra)
-    return ", ".join(names)
+    return ", ".join(get_profile().domain_vocabulary())
 
 
 def _role_vocabulary() -> str:
-    """The roles to offer triage: the shipped roster plus the profile's own.
+    """The roles to offer triage: the profile's own.
 
     Offered, not enforced — for the same reason the domains are. Asked to staff
     a firmware signing-key rotation, triage returned `infrastructure_engineer`,
@@ -167,11 +168,7 @@ def _role_vocabulary() -> str:
     """
     from autornd.profiles import get_profile
 
-    names = [r.value for r in SpecialistRole]
-    for extra in get_profile().role_vocabulary():
-        if extra not in names:
-            names.append(extra)
-    return ", ".join(names)
+    return ", ".join(get_profile().role_vocabulary())
 
 
 def _ask_field(ask: Any, key: str) -> Any:
@@ -210,18 +207,42 @@ def render_asks(asks: list[Any] | None) -> str:
 async def run_triage(
     client: OpenRouterClient, request: str
 ) -> tuple[TriageVerdict, ModelResponse]:
+    from autornd.profiles import framing, get_profile
+    f = framing()
+    profile = get_profile()
+    domain_vocabulary = _domain_vocabulary()
+    if domain_vocabulary:
+        domains_block = (
+            f"- domains: applicable domains. Prefer these: {domain_vocabulary}.\n"
+            "  If none of them genuinely fits the subject, name the domain yourself in one or\n"
+            "  two lowercase words rather than forcing the closest available label."
+        )
+    else:
+        domains_block = (
+            "- domains: applicable domains. Name each domain yourself in one or two\n"
+            "  lowercase words."
+        )
+    specialists_vocabulary = _role_vocabulary()
+    if specialists_vocabulary:
+        specialists_block = (
+            "- specialists: who to assign. A specialist is a person's function on the team,\n"
+            "  not a subject — the subject goes in `domains`. Prefer these:\n"
+            f"  {specialists_vocabulary}. If none of them covers the function this work needs,\n"
+            "  name the role in one or two lowercase words."
+        )
+    else:
+        specialists_block = (
+            "- specialists: who to assign. A specialist is a person's function on the team,\n"
+            "  not a subject — the subject goes in `domains`. Name each role yourself in\n"
+            "  one or two lowercase words."
+        )
     prompt = f"""\
-Classify this engineering request. Return JSON with:
-- domains: applicable domains. Prefer these: {_domain_vocabulary()}.
-  If none of them genuinely fits the subject, name the domain yourself in one or
-  two lowercase words rather than forcing the closest available label.
+Classify this {f['request_kind']}. Return JSON with:
+{domains_block}
 - risk: one of [{', '.join(r.value for r in RiskLevel)}]
-- specialists: who to assign. A specialist is a person's function on the team,
-  not a subject — the subject goes in `domains`. Prefer these:
-  {_role_vocabulary()}. If none of them covers the function this work needs,
-  name the role in one or two lowercase words.
+{specialists_block}
 - unrecallable: true when a wrong answer cannot be taken back once released —
-  a signed firmware rollout, a mass migration, a public release. Scale alone is
+  {f['unrecallable_examples']}. Scale alone is
   not the test; the test is whether it can be recalled.
 - summary: one-line classification
 
@@ -270,15 +291,15 @@ low or medium.
 
 Do not escalate because a subject sounds technical, expensive or unfamiliar.
 
-Always include test_engineer for high/critical risk.
-Always include systems_architect for multi-domain requests.
+Always include {profile.role_that_checks_work()} for high/critical risk.
+Always include {profile.role_that_holds_system_view()} for multi-domain requests.
 
 Request:
 {request}"""
 
     data, response = await client.chat_json(
         function="triage",
-        system_prompt="You are a triage classifier for an engineering team. Respond with JSON only.",
+        system_prompt=f"You are a triage classifier for {f['team']}. Respond with JSON only.",
         user_message=prompt,
        schema=TriageVerdict,
     )
@@ -301,6 +322,9 @@ async def run_asks(
     criteria. Quoting is what a cheap model is good at; anchoring is
     what a substring check cannot get wrong.
     """
+    from autornd.profiles import framing, get_profile
+    f = framing()
+    profile = get_profile()
     prompt = f"""\
 List what this request asks the answer to give or to satisfy.
 
@@ -320,7 +344,7 @@ Request:
 
     data, response = await client.chat_json(
         function="triage",
-        system_prompt="You are an engineering request analyst. Respond with JSON only.",
+        system_prompt=f"You are {f['request_analyst']}. Respond with JSON only.",
         user_message=prompt,
         schema=AsksVerdict,
     )
@@ -338,6 +362,9 @@ async def run_plan(
     max_tokens: int | None = None,
     asks: list[Any] | None = None,
 ) -> tuple[PlanVerdict, ModelResponse]:
+    from autornd.profiles import framing, get_profile
+    f = framing()
+    profile = get_profile()
     specialist_names = ", ".join(s.name for s in specialists)
     # Grounding is assembled once per workflow by its own node and passed in.
     # Rebuilding it here ran the whole research pipeline a second time —
@@ -348,9 +375,9 @@ async def run_plan(
         )
     context_block = f"\n\nProject context:\n{context}" if context else ""
     prompt = f"""\
-Create an implementation plan for this engineering request.
+Create an implementation plan for this {f['request_kind']}.
 
-{OUTPUT_CONTRACT}
+{output_contract()}
 
 Triage classification:
 - Domains: {', '.join(domain_key(d) for d in triage.domains)}
@@ -400,7 +427,7 @@ The asks, quoted from the request:
 Request:
 {request}"""
 
-    architect = get_specialist(SpecialistRole.SYSTEMS_ARCHITECT)
+    architect = get_specialist(profile.role_that_holds_system_view())
     data, response = await client.chat_json(
         function="architecture",
         system_prompt=architect.system_prompt,
@@ -427,8 +454,11 @@ async def run_plan_feasibility(
     reviewers named) — Ruling D46 (2): the concerns are this phase's own
     output now; the plan's blockers stay the architect's.
     """
-    architect_role = SpecialistRole.SYSTEMS_ARCHITECT
-    reviewers = [s for s in specialists if s.role != architect_role]
+    from autornd.profiles import framing, get_profile
+    f = framing()
+    profile = get_profile()
+    architect_role = profile.role_that_holds_system_view()
+    reviewers = [s for s in specialists if role_key(s.role) != architect_role]
     if not reviewers:
         return [], []
 
@@ -441,7 +471,7 @@ async def run_plan_feasibility(
 Review this implementation plan from your specialist perspective for feasibility.
 {context_block}
 
-Plan produced by Systems Architect:
+Plan produced by {get_specialist(get_profile().role_that_holds_system_view()).name}:
 {plan.plan}
 
 {bom_block}Return JSON with:
@@ -474,45 +504,6 @@ Original request:
     return responses, all_blockers
 
 
-# Checks a reviewer can actually settle by reading a written implementation:
-# arithmetic that either reconciles or does not, and structural properties that
-# are either present or absent. Injected only for the domains a request touches
-# — asking about connector pinouts on a copy change is how a validator learns
-# to ignore this section.
-DOMAIN_CHECKS: dict[Domain, tuple[str, ...]] = {
-    Domain.HARDWARE: (
-        "Do quantities, tolerances and costs sum to the stated totals?",
-        "Do any two components contend for the same connection, pin or space?",
-        "Does the design stay inside every stated physical, power or thermal budget?",
-    ),
-    Domain.FIRMWARE: (
-        "Do timing, memory and power figures reconcile against the stated budget?",
-        "Is every state in a described state machine both reachable and exitable?",
-        "Are concurrency, interrupt and buffer-ownership rules stated and consistent?",
-    ),
-    Domain.BACKEND: (
-        "Are schema, field and type changes consistent everywhere they appear?",
-        "Is every error and failure path in the described flow handled?",
-        "Do the described keys, indexes and queries serve the stated access pattern?",
-    ),
-    Domain.FRONTEND: (
-        "Is every state the interface can enter — empty, loading, error, overflow — accounted for?",
-        "Does the described view only use data the system actually provides?",
-    ),
-    Domain.INFRASTRUCTURE: (
-        "Are the described configuration values internally consistent?",
-        "Is startup, shutdown and failure behaviour specified for each component?",
-    ),
-    Domain.SUPPLY_CHAIN: (
-        "Do unit costs, quantities and totals reconcile?",
-        "Is every single-sourced or long-lead item identified as such?",
-    ),
-    Domain.DOCUMENTATION: (
-        "Does the text match the behaviour the plan actually describes?",
-    ),
-}
-
-
 # Applied when a domain has no checks of its own — which, before profiles could
 # declare them, was every domain outside the seven shipped ones. Validation was
 # reaching those with no lenses at all.
@@ -538,8 +529,7 @@ def build_domain_checks(domains: list[object]) -> str:
     profile = get_profile()
     seen: list[str] = []
     for domain in domains:
-        specific = tuple(DOMAIN_CHECKS.get(domain_key(domain), ())) \
-            + profile.get_domain_checks(domain)
+        specific = profile.get_domain_checks(domain)
         for check in specific or GENERIC_CHECKS:
             if check not in seen:
                 seen.append(check)
@@ -554,30 +544,16 @@ def build_domain_checks(domains: list[object]) -> str:
     )
 
 
-DOMAIN_LEAD_MAP: dict[Domain, SpecialistRole] = {
-    Domain.FIRMWARE: SpecialistRole.FIRMWARE_ENGINEER,
-    Domain.HARDWARE: SpecialistRole.HARDWARE_ENGINEER,
-    Domain.BACKEND: SpecialistRole.BACKEND_ENGINEER,
-    Domain.FRONTEND: SpecialistRole.FRONTEND_ENGINEER,
-    Domain.SUPPLY_CHAIN: SpecialistRole.SUPPLY_CHAIN,
-    Domain.INFRASTRUCTURE: SpecialistRole.SYSTEMS_ARCHITECT,
-    Domain.DOCUMENTATION: SpecialistRole.BACKEND_ENGINEER,
-}
-
-
 def lead_for_domain(domain: object) -> str:
     """Which specialist leads this domain, as a normalised role name.
 
-    Profile vocabulary first, then the shipped defaults, then the architect —
-    which is the right answer for a domain nobody has mapped, since
-    cross-domain and unfamiliar work is exactly what that role is for. An
-    unrecognised domain must never raise: triage is allowed to name a subject
-    this harness has never seen.
+    A profile-declared lead is returned as declared; a domain nobody mapped
+    resolves to the profile's system-level view, which is the right answer for
+    cross-domain and unfamiliar work. An unrecognised domain must never raise:
+    triage is allowed to name a subject this harness has never seen.
 
-    A profile-declared lead is returned as declared. Validating it against the
-    shipped enum here is what made a profile mapping `legal_ops` to `paralegal`
-    silently review with the architect instead — the roster is a default, not a
-    limit, and the registry resolves a declared or undeclared role either way.
+    The roster is a default, not a limit, and the registry resolves a declared
+    or undeclared role either way.
     """
     from autornd.models.verdicts import domain_key, role_key
     from autornd.profiles import get_profile
@@ -588,10 +564,7 @@ def lead_for_domain(domain: object) -> str:
     if declared:
         return role_key(declared)
 
-    for domain, role in DOMAIN_LEAD_MAP.items():
-        if domain_key(domain) == key:
-            return role_key(role)
-    return role_key(SpecialistRole.SYSTEMS_ARCHITECT)
+    return get_profile().role_that_holds_system_view()
 
 
 def select_lead(
@@ -852,6 +825,9 @@ async def run_implement(
     asks: list[Any] | None = None,
     results: bool = False,
 ) -> tuple[ImplementVerdict, list[ModelResponse]]:
+    from autornd.profiles import framing, get_profile
+    f = framing()
+    profile = get_profile()
     # Ruling D33: on every iteration after the first, implement REVISES its own
     # prior artifact rather than regenerating from the plan. The fixer must see
     # the artifact that contains the failure it is told to fix — the diagnosis
@@ -955,7 +931,7 @@ CONSIDERATIONS A REVIEWER RAISED (not requirements — weigh them; nothing is ju
     implement_prompt = f"""\
 {task_line} This is iteration {iteration}.
 
-{OUTPUT_CONTRACT}
+{output_contract()}
 {plan_block}
 The asks, quoted from the request — the answer is judged against these and nothing else:
 {render_asks(asks)}
@@ -1095,6 +1071,9 @@ async def run_recompute(
     before dispatch and released by its own identity on
     reconciliation, so three samples reserve three worst cases.
     """
+    from autornd.profiles import framing, get_profile
+    f = framing()
+    profile = get_profile()
     context_block = f"\n\nProject context:\n{context}" if context else ""
     prompt = f"""\
 {request}{context_block}
@@ -1109,7 +1088,7 @@ Compute the answer yourself. Return JSON with results: one entry per listed ask,
     for _ in range(samples):
         data, response = await client.chat_json(
             function="recompute",
-            system_prompt="You are a careful senior engineer.",
+            system_prompt=f"You are {f['senior_practitioner']}.",
             user_message=prompt,
             schema=RecomputeVerdict,
             max_tokens=max_tokens or settings.recompute_max_tokens,
@@ -1130,7 +1109,10 @@ async def run_validate(
     function: str | None = None,
     asks: list[Any] | None = None,
 ) -> tuple[ValidateVerdict, ModelResponse]:
-    test_eng = get_specialist(SpecialistRole.TEST_ENGINEER)
+    from autornd.profiles import framing, get_profile
+    f = framing()
+    profile = get_profile()
+    test_eng = get_specialist(profile.role_that_checks_work())
     context_block = f"\n\nProject context:\n{context}" if context else ""
     checks_block = build_domain_checks(domains or [])
     concerns_block = ""
@@ -1226,12 +1208,15 @@ async def run_review(
     function: str | None = None,
     asks: list[Any] | None = None,
 ) -> tuple[ReviewVerdict, list[ModelResponse]]:
+    from autornd.profiles import framing, get_profile
+    f = framing()
+    profile = get_profile()
     adversarial = triage.risk in (RiskLevel.CRITICAL, RiskLevel.HIGH)
     review_mode = "ADVERSARIAL — actively search for failure modes" if adversarial else "COLLABORATIVE"
     context_block = f"\n\nProject context:\n{context}" if context else ""
 
     prompt = f"""\
-Review this engineering work from your specialist lens.
+Review this {f['work']} from your specialist lens.
 
 {ASSESSMENT_CONTRACT}
 {context_block}
@@ -1255,7 +1240,7 @@ Implementation summary:
 
 Return JSON with:
 - findings: list of objects, each with:
-  - lens: your specialist role (e.g. "firmware_engineer")
+  - lens: your specialist role (e.g. "{f['role_example']}")
   - severity: one of [critical, high, medium, low]
   - detail: specific finding
   - ask: the number of the ask the finding concerns, when it names one
@@ -1388,15 +1373,18 @@ async def run_doublecheck(
     context: str = "",
     asks: list[Any] | None = None,
 ) -> tuple[DoubleCheckVerdict, ModelResponse]:
+    from autornd.profiles import framing, get_profile
+    f = framing()
+    profile = get_profile()
     context_block = f"\n\nProject context:\n{context}" if context else ""
     system_prompt = (
-        "You are an independent senior engineering reviewer. "
+        f"You are {f['independent_reviewer']}. "
         "You have NOT seen any previous review of this work. "
         "Evaluate this implementation for correctness, safety, and completeness. "
         "Be thorough and adversarial — look for failure modes, edge cases, and spec violations."
     )
     user_message = f"""\
-Review this engineering implementation independently.
+Review this {f['implementation']} independently.
 
 {ASSESSMENT_CONTRACT}
 {context_block}
@@ -1501,3 +1489,4 @@ Original Request:
     )
     verdict = EscalationVerdict(**data)
     return verdict, response
+

@@ -83,8 +83,7 @@ MAX_LOOKUPS = 1
 REUSE_DISTANCE = 0.35
 
 LOOKUP_PROMPT = """\
-Answer these engineering questions from authoritative sources — manufacturer
-datasheets, standards documents, official specifications.
+Answer these {questions} from authoritative sources — {sources}.
 
 {question}
 
@@ -93,15 +92,12 @@ on an assumption about it, so a partial answer leaves the work blocked.
 
 Rules:
 - Give the figures, with their units exactly as the source states them.
-- Distinguish units that are commonly confused. ERP is not EIRP. Typical is not
-  maximum. Absolute maximum ratings are not operating ranges.
+- Distinguish units that are commonly confused.{unit_examples}
 - Name the source document for every figure.
 - Name the standard or code that governs this class of work, even when the
   question does not mention one.
 - Add what a practitioner would expect to see that the question did not ask
-  for. Measured against published standards, the gaps were all of this kind: a
-  pasteuriser answer with no flow-diversion valve, a partition answer with no
-  flanking path, an interlocking answer with no safety-integrity level. The
+  for.{gap_examples} The
   person asking usually does not know what they left out.
 - If authoritative sources disagree, say so and give both.
 - If you cannot find it, say so plainly. An admitted gap is useful; a plausible
@@ -235,13 +231,16 @@ def _recall(question: str) -> Finding | None:
 async def _lookup(client, request: str, question: str,
                   max_tokens: int | None = None) -> tuple[str, list[str], str]:
     """One search-backed lookup. Returns (answer, citations, model)."""
+    from autornd.profiles import framing, get_profile
+    f = framing()
+    profile = get_profile()
     response = await client.chat(
         function="search",
         system_prompt=(
-            "You answer engineering questions from authoritative sources and "
-            "cite them. You never present a guess as a specification."
+            f"You answer {f['questions']} from authoritative sources and "
+            f"cite them. You never present a guess as a specification."
         ),
-        user_message=LOOKUP_PROMPT.format(question=question)
+        user_message=LOOKUP_PROMPT.format(question=question, **framing())
         + f"\n\nThis is being looked up in service of: {request}",
         temperature=0.0,
         max_tokens=max_tokens or settings.search_max_tokens,

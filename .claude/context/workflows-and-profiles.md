@@ -79,8 +79,9 @@ structural_roles:       # who checks the work, who holds the system-level view
   shipped domains, so before profiles could declare these, work in any other
   subject was judged by an engineering lens.
 - **`structural_roles` are declared, not hardcoded.** Undeclared resolves to the
-  shipped engineering roles, so every engineering project behaves byte-identically —
-  4 regression guards pin that.
+  general profile's roles (`reviewer`, `planner`). The engineering team is
+  `profiles/engineering.yaml`, and `tests/test_profile_framing.py` pins its prompts
+  byte-identical to main's before D54.
 - **Private corpora never enter this repo.** `profiles/milkhouse.yaml` is
   gitignored. Doc corpora used for testing generalization live in `docs/<corpus>/`
   with a `manifest.json` and are guarded by `tests/test_doc_corpora.py`.

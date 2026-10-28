@@ -75,7 +75,8 @@ PLACEHOLDERS: dict[str, str] = {
     "ALLOW_UNAUTHENTICATED_REMOTE": "false",
     "CHROMADB_PATH": _CHROMA_TMP,
     "REGISTRATION_ENABLED": "true",
-    "AUTORND_PROFILE": "",
+    # D54: the existing suite describes the engineering team; new tests select general or studio explicitly.
+    "AUTORND_PROFILE": "engineering",
     "AUTORND_WORKFLOW": "engineering-rnd",
 }
 for _name, _value in PLACEHOLDERS.items():
@@ -230,6 +231,16 @@ def _no_network_attempts(request):
         pytest.fail(
             f"{request.node.nodeid} attempted network access: {fresh}",
             pytrace=False)
+
+
+@pytest.fixture(autouse=True)
+def _profile_isolation():
+    """No test leaks its profile, or the specialists built from it, into the next (D54)."""
+    yield
+    from autornd.profiles import reset_profile
+    from autornd.specialists.registry import reload_specialists
+    reset_profile()
+    reload_specialists()
 
 
 # ── 3. The test database: one in-memory engine shared per test ──────────────

@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1622%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1628%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -78,7 +78,7 @@ the serving ledger and the conventions are the evidence.
 - [Workflows Are Files](#workflows-are-files)
 - [Deterministic Checks](#deterministic-checks)
 - [Model Tiers](#model-tiers)
-- [Engineering Specialists](#engineering-specialists)
+- [Specialists](#specialists)
 - [Review Team Composition](#review-team-composition)
 - [Escalation Autopsy](#escalation-autopsy)
 - [Evals](#evals)
@@ -403,9 +403,9 @@ a tier named with an empty value opts out of that default.
     "triage.risk == 'low'": engineering
 ```
 
-## Engineering Specialists
+## Specialists
 
-The shipped roster, each with a domain, a system prompt and a tier (`tests/test_docs.py` checks this table against the registry):
+The engineering profile's roster (`profiles/engineering.yaml`), each with a domain, a system prompt and a tier (`tests/test_docs.py` checks this table against that profile):
 
 | Specialist | Domain |
 |---|---|
@@ -422,7 +422,7 @@ Triage assigns them per workflow. Every specialist's grounding can be overridden
 ### The roster is a default, not a limit
 
 `roles:` in your profile declares the roles your team actually has, and triage
-is offered the shipped roster plus yours. A role nobody declared still resolves —
+is offered your profile's roster only. A role nobody declared still resolves —
 it becomes a generalist carrying that role's name, logged once so you know to
 declare it — because failing a whole workflow over a role name is worse than
 acting as the role and saying so.
@@ -625,6 +625,8 @@ The bind address defaults to loopback. AutoRnD has no rate limiting and spends r
 ## Project Profiles
 
 AutoRnD ships with no domain assumptions. You bring the context.
+
+**The team is the profile's.** With `AUTORND_PROFILE` unset, the harness runs [`profiles/general.yaml`](profiles/general.yaml): a neutral team of a lead, a reviewer and a planner, with no subject list. `AUTORND_PROFILE=engineering` runs the engineering team, [`profiles/engineering.yaml`](profiles/engineering.yaml). A profile can set `base: engineering` to build on that team and add its own subjects and roles. Every prompt takes its team words from the profile's `framing:` block.
 
 Two worked profiles are tracked. [`profiles/example.yaml`](profiles/example.yaml) is an industrial IoT project; [`profiles/studio.yaml`](profiles/studio.yaml) is a content studio, and exists to show the same machinery running a team that is not a team of engineers — every domain and role in it is one this harness does not ship, and none of it needed a code change. Both are commented as teaching files.
 

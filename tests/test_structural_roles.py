@@ -22,10 +22,12 @@ import pytest
 from autornd.engine.review_composition import get_review_team
 from autornd.engine.phases import enforce_triage_composition
 from autornd.models.verdicts import RiskLevel, SpecialistRole, TriageVerdict, role_key
-from autornd.profiles import DEFAULT_PROFILE, ProjectProfile, set_profile
+from autornd.profiles import DEFAULT_PROFILE, ProjectProfile, load_profile, set_profile
 
 TESTER = role_key(SpecialistRole.TEST_ENGINEER)
 ARCHITECT = role_key(SpecialistRole.SYSTEMS_ARCHITECT)
+# D54: the engineering team is a profile; "no profile" is the general team.
+ENGINEERING = load_profile("engineering")
 
 
 @pytest.fixture(autouse=True)
@@ -50,18 +52,19 @@ def _triage(risk=RiskLevel.HIGH, domains=("backend",), specialists=()):
 class TestAnUndeclaredProfileIsUnchanged:
     """The regression guard. Everything below must read as it did pre-B14."""
 
-    def test_the_defaults_are_the_shipped_engineering_roles(self):
-        assert DEFAULT_PROFILE.role_that_checks_work() == TESTER
-        assert DEFAULT_PROFILE.role_that_holds_system_view() == ARCHITECT
+    def test_the_defaults_are_the_general_roles(self):
+        # D54 §2 (6): an undeclared slot falls back to the general profile
+        assert DEFAULT_PROFILE.role_that_checks_work() == "reviewer"
+        assert DEFAULT_PROFILE.role_that_holds_system_view() == "planner"
 
     def test_triage_still_gets_a_test_engineer_at_high_risk(self):
-        set_profile(DEFAULT_PROFILE)
+        set_profile(ENGINEERING)
         v = _triage(risk=RiskLevel.HIGH)
         enforce_triage_composition(v)
         assert TESTER in [role_key(s) for s in v.specialists]
 
     def test_triage_still_gets_an_architect_on_multiple_domains(self):
-        set_profile(DEFAULT_PROFILE)
+        set_profile(ENGINEERING)
         v = _triage(risk=RiskLevel.LOW, domains=("backend", "frontend"))
         enforce_triage_composition(v)
         assert ARCHITECT in [role_key(s) for s in v.specialists]
@@ -70,7 +73,7 @@ class TestAnUndeclaredProfileIsUnchanged:
         """Pinned against the pre-B14 rosters, computed by hand from the rules:
         low returns the single most relevant reviewer; medium adds the checker;
         high adds the system view as well."""
-        set_profile(DEFAULT_PROFILE)
+        set_profile(ENGINEERING)
         assert get_review_team(RiskLevel.LOW, ["backend"], ["backend_engineer"]) \
             == ["backend_engineer"]
         assert get_review_team(RiskLevel.MEDIUM, ["backend"], ["backend_engineer"]) \
@@ -81,9 +84,10 @@ class TestAnUndeclaredProfileIsUnchanged:
     def test_an_empty_structural_roles_map_is_the_same_as_none(self):
         set_profile(ProjectProfile(name="Bare", structural_roles={}))
         bare = get_review_team(RiskLevel.HIGH, ["backend"], ["backend_engineer"])
-        set_profile(DEFAULT_PROFILE)
+        set_profile(ProjectProfile(name="None"))
         assert bare == get_review_team(RiskLevel.HIGH, ["backend"], ["backend_engineer"])
-        assert TESTER in bare and ARCHITECT in bare
+        # D54 §2 (6): an undeclared slot falls back to the general profile
+        assert "reviewer" in bare and "planner" in bare
 
 
 class TestADeclaredProfileGetsItsOwnRoles:
@@ -129,7 +133,8 @@ class TestPartialDeclaration:
         set_profile(ProjectProfile(name="Half",
                                    structural_roles={"checks_work": "editor"}))
         team = get_review_team(RiskLevel.HIGH, ["backend"], ["backend_engineer"])
-        assert "editor" in team and ARCHITECT in team and TESTER not in team
+        # D54 §2 (6): an undeclared slot falls back to the general profile
+        assert "editor" in team and "planner" in team and TESTER not in team
 
 
 class TestThePydanticBypassIsGone:

@@ -30,7 +30,8 @@ from autornd.knowledge.context import (
     build_phase_context,
     criteria_demand_verification,
 )
-from autornd.models.verdicts import Domain, SpecialistRole
+from autornd.models.verdicts import Domain, role_key
+from autornd.profiles import get_profile
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
 from autornd.specialists.base import Specialist
 from autornd.specialists.registry import get_specialists
@@ -135,12 +136,13 @@ class PhaseRunner:
     def _builders(self, state: ExecutionState) -> list[Specialist]:
         """Who produces the implementation.
 
-        The test engineer validates the work, so it does not build it or review
-        the build — that would be marking its own homework. If triage assigned
-        nobody else, it builds after all rather than leaving the roster empty.
+        The role that checks the work does not build it or review the build —
+        that would be marking its own homework. If triage assigned nobody else,
+        it builds after all rather than leaving the roster empty.
         """
         assigned = self._triage(state).specialists
-        builders = [s for s in assigned if s != SpecialistRole.TEST_ENGINEER]
+        checker = get_profile().role_that_checks_work()
+        builders = [s for s in assigned if role_key(s) != checker]
         return get_specialists(builders or assigned)
 
     def _resolve_who(self, node: Node, state: ExecutionState) -> list[Specialist]:
