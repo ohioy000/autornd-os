@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "fa5192e6ae5b43a6d9c6d5bd3b935da077232c01",
-  "head_after": "09fc9ce86c34e94318bb04ac7f5048385c260348",
+  "head_after": "d291a54b7938c500b1f2bed185605dd9f264e006",
   "results": {
-    "task": 6,
-    "step": "capture helper gains SITE_FUNCTIONS and seats; test_profile_framing.py replaced (09fc9ce); CHECK matched EXPECT: 10 passed, 1 skipped in 0.55s; tests/fixtures/ unchanged; WRITE_GOLDEN not run"
+    "task": 7,
+    "step": "nine break-proofs run against d291a54 (Task 6 committed); each named test seen failing; each break undone with git checkout -- <file> and the tree clean after it"
   },
   "preconditions_ran": [
     {
@@ -31,8 +31,45 @@
   "suite_count_before": 1623,
   "suite_count_after": 0,
   "tests_changed": [],
-  "break_proofs": [],
+  "break_proofs": [
+    {
+      "break": "1 profiles/engineering.yaml",
+      "failed": "FAILED tests/test_profile_framing.py::TestEngineeringIsUnchanged::test_engineering_prompts_are_byte_identical"
+    },
+    {
+      "break": "2 autornd/engine/phases.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestNothingEngineeringLeaks::test_no_engineering_word_reaches_a_model_under_general"
+    },
+    {
+      "break": "3 autornd/engine/phases.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestNothingEngineeringLeaks::test_every_model_call_site_is_captured"
+    },
+    {
+      "break": "4 autornd/engine/phases.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestTheProfileOwnsTheTeam::test_triage_is_offered_the_profiles_own_list"
+    },
+    {
+      "break": "5 autornd/engine/phases.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestTheProfileOwnsTheTeam::test_structural_roles_follow_the_profile"
+    },
+    {
+      "break": "6 autornd/engine/phases.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestTheProfileOwnsTheTeam::test_no_shipped_role_or_domain_literal_in_code"
+    },
+    {
+      "break": "7 autornd/profiles.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestDefaultAndBase::test_default_is_general"
+    },
+    {
+      "break": "8 autornd/profiles.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestDefaultAndBase::test_base_lays_own_keys_over_the_base"
+    },
+    {
+      "break": "9 autornd/profiles.py",
+      "failed": "FAILED tests/test_profile_framing.py::TestDefaultAndBase::test_a_base_with_a_base_is_refused"
+    }
+  ],
   "deviations": [],
   "questions_for_advisor": [],
-  "notes": "suite not run at start: the tree holds 125's uncommitted Task 7, so it is red until Task 8, as the task file says. The command's second precondition (the ruling is signed off, grep -c) was also run and is listed above; its fourth precondition (the full suite) is the one this note covers."
+  "notes": "suite not run at start: the tree holds 125's uncommitted Task 7, so it is red until Task 8, as the task file says. The command's second precondition (the ruling is signed off, grep -c) was also run and is listed above; its fourth precondition (the full suite) is the one this note covers. Task 7: besides the named test, other tests of the same file also failed under four breaks, which the task allows: row 2 also test_no_engineering_word_reaches_a_model_under_studio; row 4 also test_engineering_prompts_are_byte_identical, test_no_engineering_word_reaches_a_model_under_general and test_no_engineering_word_reaches_a_model_under_studio; row 5 also the same two leak tests; row 8 also test_engineering_prompts_are_byte_identical. The breaks were driven by a scratch script outside the repo that applied each find/replace exactly once, ran the task's pytest line with PYTHONDONTWRITEBYTECODE set, and undid the break with git checkout -- <file>."
 }
