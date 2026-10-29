@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "3d7150d750c7341e8385bc628f1989b516872e90",
-  "head_after": "634c04a368d8d5e3967450877a5b71851f5e907d",
+  "head_after": "48062d34289d15d5ca880d2f85b8cf09592dfa87",
   "results": {
-    "task": 1,
-    "step": "engineering-rnd renamed full-team; Task 1 CHECK matches EXPECT (leftover list as expected, rename check done, 1646 passed, 1 skipped, network guard 0)"
+    "task": 2,
+    "step": "offered flag on WorkflowSpec and four workflow files; Task 2 CHECK matches EXPECT (4 offered lines at 15, 9, 12, 15; 101 passed, network guard 0)"
   },
   "preconditions_ran": [
     {
