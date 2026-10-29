@@ -282,7 +282,7 @@ class TestWorkflowEngine:
             # reach: the gap the blockers name is looked up, and the
             # suite may not reach the provider (ARCH-20261002-112).
             # No answer is the same outcome a failed lookup produces.
-            return "", [], "mock"
+            return "", [], "mock", []
 
         monkeypatch.setattr(
             "autornd.knowledge.research._lookup", _no_lookup)

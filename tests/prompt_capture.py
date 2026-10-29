@@ -374,7 +374,7 @@ async def capture_all(seats: dict[str, object] | None = None) -> dict[str, dict[
     scoping, unknowns = await knowledge_context.analyze_request(client, REQUEST)
     take("scoping")
 
-    answer, citations, model = await research._lookup(
+    answer, citations, model, quotes = await research._lookup(
         client, REQUEST, "the backoff cap in seconds", max_tokens=None,
     )
     take("lookup")
