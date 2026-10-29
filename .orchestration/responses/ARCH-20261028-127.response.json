@@ -1,0 +1,80 @@
+{
+  "command_id": "ARCH-20261028-127",
+  "status": "IN_PROGRESS",
+  "executed": true,
+  "head_before": "3d7150d750c7341e8385bc628f1989b516872e90",
+  "head_after": "3d7150d750c7341e8385bc628f1989b516872e90",
+  "results": {
+    "task": 0,
+    "step": "branch exec/20261028-127-workflow-per-request made from origin/main with 124 merged; Task 0 CHECK matches EXPECT; suite 1646 passed, 1 skipped"
+  },
+  "preconditions_ran": [
+    {
+      "command": "cd /home/jb/autornd-os && git status --short  (before the switch)",
+      "expected": "?? .qwen/",
+      "observed": "?? .qwen/",
+      "outcome": "pass"
+    },
+    {
+      "command": "git branch --show-current",
+      "expected": "exec/20261028-127-workflow-per-request",
+      "observed": "exec/20261028-127-workflow-per-request",
+      "outcome": "pass"
+    },
+    {
+      "command": "test \"$(git rev-parse HEAD)\" = \"$(git rev-parse origin/main)\" && echo \"at origin/main\"",
+      "expected": "at origin/main",
+      "observed": "at origin/main",
+      "outcome": "pass"
+    },
+    {
+      "command": "git status --short",
+      "expected": "?? .qwen/",
+      "observed": "?? .qwen/",
+      "outcome": "pass"
+    },
+    {
+      "command": "test -f tests/test_advisory_nodes.py && echo 124 merged",
+      "expected": "124 merged",
+      "observed": "124 merged",
+      "outcome": "pass"
+    },
+    {
+      "command": "grep -c 'signed off by the owner on 2026-10-28' docs/reviews/2026-10-21-d55-a-workflow-per-request.md",
+      "expected": "1",
+      "observed": "1",
+      "outcome": "pass"
+    },
+    {
+      "command": "test -f .orchestration/prompts/ARCH-20261028-127.md && echo task file ok",
+      "expected": "task file ok",
+      "observed": "task file ok",
+      "outcome": "pass"
+    },
+    {
+      "command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none",
+      "expected": "none",
+      "observed": "none",
+      "outcome": "pass"
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ --collect-only -q 2>/dev/null | tail -1",
+      "expected": "1647 tests collected in ...s",
+      "observed": "1647 tests collected in 1.20s",
+      "outcome": "pass"
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q 2>&1 | grep -E \"^FAILED|^ERROR tests|^[0-9]+ (passed|failed)|network guard\" | sed 's/ - .*//'",
+      "expected": "network guard: 0 non-loopback attempt(s) recorded / 1646 passed, 1 skipped in ...s",
+      "observed": "network guard: 0 non-loopback attempt(s) recorded\n1646 passed, 1 skipped in 160.10s (0:02:40)",
+      "outcome": "pass"
+    }
+  ],
+  "suite_count_before": 1647,
+  "suite_count_after": 0,
+  "tests_changed": [],
+  "break_proofs": [],
+  "deviations": [],
+  "questions_for_advisor": [],
+  "notes": "The first start of this command stopped at Task 0, because command 124 was not yet merged (PR 220 was open; origin/main 5163e60 had no tests/test_advisory_nodes.py, collected 1628 and passed 1627). That BLOCKED response was committed locally as 4702c8a and never pushed. The owner then said 124 was merged (#220) and told the coder to start again from Task 0, using git switch -C instead of git switch -c because the branch already existed. This run did that: git switch -C exec/20261028-127-workflow-per-request origin/main moved the branch from 4702c8a to origin/main 3d7150d (the merge of #220). The BLOCKED commit is no longer on the branch and was not pushed. Work is in /home/jb/autornd-os, where the task file's Task 0 places it. The new branch's upstream is origin/main (git sets it from the start point), so Task 8 pushes with an explicit branch name and -u."
+}
