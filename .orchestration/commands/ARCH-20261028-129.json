@@ -1,0 +1,79 @@
+{
+  "command_id": "ARCH-20261028-129",
+  "parent_id": "ARCH-20261028-128",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Implement Ruling D57, the convergence repairs, and the D56 amendment. A revision receives the anchored dissents and nothing else. The independent check vetoes only on an anchored issue. A run that ends without a delivered answer gives the API caller its candidate. The record says whether the build judges agreed on each answer and how long it was. A fetch connects to the address its check approved. Free work; no paid call and no real fetch.",
+
+  "evidence": [
+    "THE TASK FILE: .orchestration/prompts/ARCH-20261028-129.md. It has 10 ordered tasks, each with exact edits, a CHECK and its EXPECT. The advisor replayed every task from the task file's own text on a copy of main on 2026-10-28, and each EXPECT is the output it saw. Where this file and the task file differ in detail, the task file governs.",
+    "THE STARTUP PROMPT: .orchestration/prompts/STARTUP.md. A new executor reads it first.",
+    "Ruling D57: docs/reviews/2026-10-28-d57-the-convergence-repairs.md. Section 1 lists the gaps, each shown by a provider-free probe on main at 2705e4d. Notes reach a revision as demands (coverage.missed and every review finding, the latter twice). The independent check vetoes with no anchor. The API path drops the executor's candidate. D38's pointer reads an empty dissent list that still names notes.",
+    "The D56 amendment: docs/reviews/2026-10-28-d56-a-finding-checked-against-its-source.md section 5. A fetch connects to the checked address, with the name in the Host header and as the TLS server name, and trusts nothing from the environment.",
+    "The code it changes: autornd/graph/adapter.py (the revision's inputs, the failure log, the iteration record); autornd/graph/executor.py (the pointer); autornd/engine/phases.py (run_doublecheck); autornd/models/verdicts.py (DoubleCheckVerdict); autornd/engine/workflow.py (the candidate record); autornd/api/routes.py (WorkflowDetail.candidate); autornd/knowledge/fetch.py (the pinned connection).",
+    "Convention 18: no call is added. The independent check's prompt grows by 1,417 bytes and every call reserves from its own prompt's bytes, so the budgets stand unchanged (D57 section 4)."
+  ],
+
+  "scope": {
+    "include": [
+      "autornd/graph/adapter.py, autornd/graph/executor.py, autornd/engine/phases.py, autornd/engine/workflow.py, autornd/api/routes.py, autornd/knowledge/fetch.py",
+      "autornd/models/verdicts.py: DoubleCheckVerdict only",
+      "tests/test_convergence.py (new); tests/test_source_check.py, tests/test_iteration_dissent.py, tests/test_engine.py, tests/test_failure_path_terminal.py as the task file gives them",
+      "tests/fixtures/prompts/*.json: re-captured by WRITE_GOLDEN=1, the doublecheck site's D57 block the only change",
+      "README.md, HANDOVER.md, AGENTS.md",
+      ".orchestration/responses/"
+    ],
+    "exclude": [
+      "Any real fetch or provider call. The network guard stays at 0",
+      "autornd/database.py: no schema change. If one is needed, STOP and report",
+      "workflows/*.yaml: unchanged. The plan gate is the owner's question (D57 section 6), not this command's",
+      "evals/: unchanged",
+      "docs/reviews/ and the other records; .orchestration/ except the response file",
+      ".env and .env.tier3: the owner's (G-3). Do not read them"
+    ]
+  },
+
+  "constraints": [
+    "STARTUP FIRST: the executor reads .orchestration/prompts/STARTUP.md before Task 0, and its rules hold for every task.",
+    "FREE. No paid call and no real fetch. The network guard stays at 0.",
+    "TYPED, NEVER PROSE: what blocks is decided by typed fields (severity after run_review's demotion; dissent_anchored on an issue's fields). Nothing reads a judge's prose to decide.",
+    "THE NOTES ARE KEPT: every note that leaves a revision's input stays in the failure log under notes or review_notes. Dropping a note from the record is a STOP.",
+    "BYTES EXACT: copy every find and replace block character for character, including non-ASCII characters; the task file writes the one non-breaking space as the escape \\u00a0 so no editor changes it. A copy that differs by any character is a deviation to report.",
+    "No workflow file changes. A change to the plan gate is out of scope.",
+    "A defect found in existing harness code while doing this is a STOP-and-report, not a fix."
+  ],
+
+  "acceptance_criteria": [
+    "(a) A revision receives only the anchored dissents: no coverage miss, no review note, no repr, no validate lines unless validate dissents; the notes are in the failure log. Break-proofs 7.1 to 7.5.",
+    "(b) The independent check vetoes only on an anchored issue; an unanchored issue is a note, counted; its own ship: false with no anchored issue ships; an anchored issue is critical. Break-proofs 7.6 and 7.7.",
+    "(c) A correct first answer on unrecallable work ships past an unanchored objection from every judge, with no revision. Break-proof 7.6.",
+    "(d) A run that ends without a delivered answer records a candidate phase and GET /api/workflows/{id} returns it, with the agreed answer when it differs from the last; a completed run has none. Break-proofs 7.8 to 7.11.",
+    "(e) Each judged iteration records agreed and answer_chars; the pointer reads agreed; every build fold is implement and validate. Break-proofs 7.12 to 7.15.",
+    "(f) A fetch sends its request to the checked address with the name in the Host header and as the TLS server name, and trusts nothing from the environment. Break-proofs 7.16 to 7.18.",
+    "(g) Unchanged elsewhere. Every existing test passes, changed only as the task file gives: two in tests/test_iteration_dissent.py, one each in tests/test_engine.py and tests/test_failure_path_terminal.py, the restored no-break space in tests/test_source_check.py, and the four fixtures re-captured with only the doublecheck prompt's D57 block changed.",
+    "(h) Counts re-derived from pytest --collect-only in HANDOVER.md, README.md and AGENTS.md; tests/test_docs.py passes. Suite green before and after, network guard 0, CI 5/5, PR opened."
+  ],
+
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/test_convergence.py tests/test_source_check.py -q", "expected": "65 passed."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "1734 passed, 1 skipped; network guard: 0. 1716 collected before, 1735 after."}
+  ],
+
+  "rollback": "Revert the PR. No schema change. Candidate phase records written meanwhile stay in the database as ordinary phase rows and are no longer read.",
+
+  "deliverable": "One PR from branch exec/20261028-129-convergence, made from main: the revision's inputs, the independent check's anchor, the candidate on the API path, the record's agreed and length, the pinned fetch, the tests with their break-proofs, the docs and counts, and the response marked DONE. Then STOP.",
+
+  "assumptions": [
+    "The independent check's serving can return issues as objects. If it returns bare strings, every issue is a note and the check never vetoes; the measurement of record will show it, and that is a finding, not a defect to repair in this command."
+  ],
+
+  "questions": [],
+
+  "preconditions": [
+    {"command": "test -f tests/test_source_check.py && echo 128 merged", "expected": "128 merged - command 128 is on main."},
+    {"command": "grep -c '^\\*\\*Status: ruled by the advisor on 2026-10-28' docs/reviews/2026-10-28-d57-the-convergence-repairs.md", "expected": "1 - D57 is ruled."},
+    {"command": "test -f .orchestration/prompts/ARCH-20261028-129.md && echo task file ok", "expected": "task file ok - the task file is on main."},
+    {"command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none", "expected": "none"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "1715 passed, 1 skipped; 1716 collected."}
+  ]
+}
