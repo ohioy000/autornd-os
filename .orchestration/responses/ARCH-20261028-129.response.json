@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "0c9deb81f72a333bc09d2d71444b7456e6588f71",
-  "head_after": "05323f83551df873c1bec0b364e250065fa9a9d4",
+  "head_after": "e684cb9362572255796435a8f3e59b47baa5bbc7",
   "results": {
-    "task": 7,
-    "step": "Tasks 1-7 done; every CHECK matched its EXPECT (112, 17+171/1 skipped fixtures proof, 97, 177, 85, 17 passed); 18 break-proofs each failed exactly its EXPECT and were undone; Task 8 next"
+    "task": 8,
+    "step": "Tasks 1-8 done; full suite 1735 collected, 1734 passed, 1 skipped, network guard 0; Task 9 (push, PR, CI) next"
   },
   "preconditions_ran": [
     {
@@ -65,8 +65,19 @@
     }
   ],
   "suite_count_before": 1716,
-  "suite_count_after": 0,
-  "tests_changed": [],
+  "suite_count_after": 1735,
+  "tests_changed": [
+    "tests/test_iteration_dissent.py::test_a_consistency_only_failure_is_logged_naming_the_judge: changed by D57 (1), Task 1",
+    "tests/test_iteration_dissent.py::test_one_entry_per_iteration_not_two: changed by D57 (1), Task 1",
+    "tests/test_failure_path_terminal.py::test_rework_implement_receives_review_findings_and_converges: changed by D57 (1), Task 1",
+    "tests/test_engine.py::TestASkippedIndependentCheckRecordsNoShip::test_a_run_that_vetoes_blocks_with_its_findings: changed by D57 (2), Task 2",
+    "tests/fixtures/prompts/cupline.json: re-captured, Task 2",
+    "tests/fixtures/prompts/engineering.json: re-captured, Task 2",
+    "tests/fixtures/prompts/example.json: re-captured, Task 2",
+    "tests/fixtures/prompts/tier4.json: re-captured, Task 2",
+    "tests/test_source_check.py: the Host header, the escape, two new tests, Task 5",
+    "tests/test_convergence.py: new, 17 tests"
+  ],
   "break_proofs": [
     {
       "break": "7.1: coverage's misses reach the revision again",
