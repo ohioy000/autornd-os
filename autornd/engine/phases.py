@@ -1085,14 +1085,26 @@ Compute the answer yourself. Return JSON with results: one entry per listed ask,
 
     responses: list[ModelResponse] = []
     sample_results: list[dict[str, Any]] = []
-    for _ in range(samples):
-        data, response = await client.chat_json(
-            function="recompute",
-            system_prompt=f"You are {f['senior_practitioner']}.",
-            user_message=prompt,
-            schema=RecomputeVerdict,
-            max_tokens=max_tokens or settings.recompute_max_tokens,
-        )
+    for number in range(1, samples + 1):
+        try:
+            data, response = await client.chat_json(
+                function="recompute",
+                system_prompt=f"You are {f['senior_practitioner']}.",
+                user_message=prompt,
+                schema=RecomputeVerdict,
+                max_tokens=max_tokens or settings.recompute_max_tokens,
+            )
+        except Exception as exc:
+            # ARCH-20261021-124: a failed sample is recorded and the next one
+            # still runs, because nothing inside the recompute may change the
+            # run's status (D53 §2 (5)). Its spend and any unreconciled
+            # liability stay exactly as the client booked them (D45, D47).
+            logger.warning("recompute sample %d failed: %s: %s",
+                           number, type(exc).__name__, exc)
+            sample_results.append({
+                "failed": True,
+                "error": f"{type(exc).__name__}: {exc}"[:200]})
+            continue
         responses.append(response)
         sample_results.append(dict(data))
     return ({"skipped": False, "reason": "",

@@ -25,6 +25,7 @@ from autornd.graph.spec import (
     FANOUT_REVIEWERS,
     LEAD,
     Node,
+    NodeKind,
 )
 from autornd.knowledge.context import (
     build_phase_context,
@@ -917,6 +918,20 @@ class PhaseRunner:
             asks=self._anchored_asks(state),
         )
         return verdict, [response]
+
+    def skip_output(self, node: Node, reason: str) -> dict[str, Any]:
+        """What an advisory node stores when its work did not finish
+        (ARCH-20261021-124): the node's own skip shape, so whatever reads it
+        reads a skip, never a pass. The recompute's is the shape it skips
+        with when its tier is unset, with the reason naming what happened.
+        """
+        if node.prompt == "recompute":
+            return {"skipped": True, "flagged": False, "reason": reason,
+                    "samples": []}
+        if node.kind is NodeKind.CHECK:
+            return {"skipped": True, "passed": False, "detail": reason,
+                    "reason": reason}
+        return {"skipped": True, "reason": reason}
 
     async def _phase_recompute(self, node: Node, state: ExecutionState):
         """The recompute node (Ruling D53): blind recomputation.
