@@ -43,6 +43,23 @@ edits `.env` and standing config, and a finding that waits on one says so (**G-3
 needs the owner's authorisation, stated before the spend.** Work arrives and returns through
 `.orchestration/` — see `.claude/context/records-and-roles.md`.
 
+## Arch to Coder — the owner's standard
+
+The architect (advisor) thinks; the coder (executor) works. The task-file format is in `AGENTS.md`,
+"How a command is written".
+
+1. **The architect does the hard work.** The coder follows exact tasks and never has to work
+   anything out.
+2. **Every command is a task file:** ordered tasks, each with exact find → replace text, a CHECK,
+   its real EXPECT and a commit. Complete and self-contained, never "...".
+3. **Write simply,** to the owner and to the coder.
+4. **Write the next command without being asked.**
+5. **Keep the style.** Do not change the prompt style, the task-file format or the rules as a
+   whole. Fix one problem in place. A change to the style or the rules is the owner's.
+6. **Do not redo a full delivery.** If it matches the task file byte for byte and CI is green,
+   merge it. No suite re-run, no new probes.
+7. **Merge through a PR on green; never push to main.**
+
 ## Naming conventions
 
 - **Modules:** `snake_case.py`, one concern per module, grouped by job — `graph/`, `engine/`,
