@@ -3,6 +3,10 @@
 `AGENTS.md` is the protocol and governs authority; this file governs **shape**.
 Where they differ, `AGENTS.md` wins.
 
+Commands, task files and responses travel through the shared GitHub repository,
+`https://github.com/ohioy000/autornd-os`. Read them from `origin/main` or your own branch there, never from
+another agent's folder.
+
 - `COMMAND_TEMPLATE.json` — the canonical command, ready to copy.
 - `commands/<command_id>.json` — work out, written by the advisor.
 - `responses/<command_id>.response.json` — work back, written by the executor.

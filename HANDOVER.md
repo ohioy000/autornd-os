@@ -1,6 +1,6 @@
 # AutoRnD-OS — Project State & Handover Document
 
-**Repo:** `github.com/ohioy000/autornd-os` (public)
+**Repo:** `github.com/ohioy000/autornd-os` (public), the shared repository every agent works through; its `main` is the truth.
 **Tests:** 1735 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.

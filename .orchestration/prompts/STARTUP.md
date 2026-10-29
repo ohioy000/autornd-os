@@ -12,6 +12,8 @@ You do not design, rule or interpret. If the task file does not say to do it, do
 
 ## Your folder
 
+We all work through one shared GitHub repository: `https://github.com/ohioy000/autornd-os`. Its `main` is the truth. Fetch from it, push your branch to it, and deliver by pull request.
+
 Work only in `/home/jb/autornd-os_clone`. Start your session there, and run every command and CHECK there. Its `.venv` is already installed.
 
 `/home/jb/autornd-os` is the advisor's folder. Never work, switch branch or commit in it. If a task file says `cd /home/jb/autornd-os`, STOP and report it.
