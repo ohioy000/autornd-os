@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1647%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1670%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -255,7 +255,7 @@ The workflows that ship, one file each in `workflows/` (`tests/test_docs.py` che
 | `plan-probe` | triage, grounding and the plan alone — a probe for whether a usable plan comes back, at what token cost and from which serving |
 | `independent-check-probe` | one pass that reaches the independent check and nothing else — a probe, not a shape to ship work through |
 
-Select with `AUTORND_WORKFLOW`. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
+Select the server's default with `AUTORND_WORKFLOW`. A request may name one of the first four itself (see [API](#api)); the probes are for measuring and cannot be named. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
 
 | | happy path | never converges |
 |---|---|---|
@@ -746,6 +746,7 @@ Model ids, database URL, host/port, ChromaDB path and auth secrets are read-only
 | POST | `/api/workflows/sync` | Submit and block until complete |
 | POST | `/api/workflows` | Submit asynchronously |
 | GET | `/api/workflows` | List (scoped to the caller) |
+| GET | `/api/workflows/offered` | The workflows a request may name, with what each one does |
 | GET | `/api/workflows/{id}` | Detail with phase verdicts (scoped to the owner) |
 | GET | `/api/workflows/{id}/doublecheck/estimate` | Projected cost |
 | POST | `/api/workflows/{id}/doublecheck` | Run the premium review |
@@ -758,6 +759,8 @@ Model ids, database URL, host/port, ChromaDB path and auth secrets are read-only
 | GET | `/api/episodes` | Workflow outcome history |
 | GET | `/api/health` | Health plus per-tier model verification |
 | GET | `/api/knowledge/stats` | Knowledge store stats |
+
+A submission may name its workflow: `{"request": "...", "workflow": "verify-first"}`. Only the offered workflows can be named, `full-team`, `lean`, `verify-first` and `answer-and-recompute`, as `GET /api/workflows/offered` lists them. Any other name, or a path, is refused with 422 and the list, before anything runs. A request that names none runs `AUTORND_WORKFLOW`. Every run records which workflow ran, with its file's sha256, as its first phase, `workflow`.
 
 Every workflow response carries an `error` field: `null` on a healthy run, and otherwise why the run stopped — an infrastructure fault, a plan the architect judged unready, or an escalation needing a human. A blocked workflow always says why.
 
