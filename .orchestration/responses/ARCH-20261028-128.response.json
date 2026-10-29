@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "bb29d164361a89d8fc35b5b05e023f30c86726cc",
-  "head_after": "b86c1aa491d04e1e4de97e3ef8440ffe0f8848e0",
+  "head_after": "2fbb6626b126aeb634b479abcb0489bf38ebdbf7",
   "results": {
-    "task": 6,
-    "step": "Tasks 1-6 done; 24 break-proofs each failed exactly its EXPECT and were undone (tree clean after each); Task 7 next"
+    "task": 7,
+    "step": "Tasks 1-7 done; full suite 1716 collected, 1715 passed, 1 skipped, network guard 0; Task 8 (push, PR, CI) next"
   },
   "preconditions_ran": [
     {
@@ -65,8 +65,20 @@
     }
   ],
   "suite_count_before": 1670,
-  "suite_count_after": 0,
-  "tests_changed": [],
+  "suite_count_after": 1716,
+  "tests_changed": [
+    "tests/test_research.py::TestOnlyCitedFactsBecomeKnowledge::test_a_cited_finding_with_no_found_passage_is_not_stored (renamed from test_a_cited_finding_is_stored): changed by D56, Task 3",
+    "tests/test_research.py::TestRenderFindings::test_unverified_findings_are_called_out_in_the_header: changed by D56, Task 3",
+    "tests/test_research.py::TestRecallBeforeSearch::test_only_researched_material_is_recalled: changed by D56, Task 3 (tag research-quoted)",
+    "tests/test_research.py (import of Quote): Task 3",
+    "tests/prompt_capture.py: four return values, Task 3",
+    "tests/test_engine.py: four return values, Task 3",
+    "tests/fixtures/prompts/cupline.json: re-captured, Task 4",
+    "tests/fixtures/prompts/engineering.json: re-captured, Task 4",
+    "tests/fixtures/prompts/example.json: re-captured, Task 4",
+    "tests/fixtures/prompts/tier4.json: re-captured, Task 4",
+    "tests/test_source_check.py: new, 46 tests"
+  ],
   "break_proofs": [
     {
       "break": "6.1: the typed reply's quotes are ignored",
