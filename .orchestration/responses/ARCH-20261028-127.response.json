@@ -1,12 +1,12 @@
 {
   "command_id": "ARCH-20261028-127",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "executed": true,
   "head_before": "3d7150d750c7341e8385bc628f1989b516872e90",
-  "head_after": "d425b33128267510484e847d872997fc0fbefa7b",
+  "head_after": "254928b708f3a25778a3c73769446513e7a1a49a",
   "results": {
-    "task": 7,
-    "step": "docs and counts: 1670 tests in 85 files; Task 7 CHECK matches EXPECT (1670 collected; 1669 passed, 1 skipped; network guard 0)"
+    "task": 8,
+    "step": "branch pushed, PR 221 opened, CI 5/5 pass on 254928b708f3a25778a3c73769446513e7a1a49a (run 40800486739); full suite 1669 passed, 1 skipped, 1670 collected, network guard 0; response set to DONE"
   },
   "preconditions_ran": [
     {
@@ -72,7 +72,36 @@
   ],
   "suite_count_before": 1647,
   "suite_count_after": 1670,
-  "tests_changed": [],
+  "tests_changed": [
+    "tests/test_api.py::TestOneRowPerSubmission::test_the_submitted_id_runs_finishes_and_stays_one_row (changed, Task 3)",
+    "tests/test_176_review.py (rename only, Task 1)",
+    "tests/test_all_judges_exit.py (rename only, Task 1)",
+    "tests/test_all_workflows_terminate.py (rename only, Task 1)",
+    "tests/test_blocked_on.py (rename only, Task 1)",
+    "tests/test_d51_acceptance.py (rename only, Task 1)",
+    "tests/test_docs.py (rename only, Task 1)",
+    "tests/test_evals.py (rename only, Task 1)",
+    "tests/test_failure_path_terminal.py (rename only, Task 1)",
+    "tests/test_graph.py (rename only, Task 1)",
+    "tests/test_judge_tier.py (rename only, Task 1)",
+    "tests/test_live_wiring.py (rename only, Task 1)",
+    "tests/test_phase_timing.py (rename only, Task 1)",
+    "tests/test_preflight_gate.py (rename only, Task 1)",
+    "tests/test_recompute_vote.py (rename only, Task 1)",
+    "tests/test_regrounding.py (rename only, Task 1)",
+    "tests/test_rejection_counter.py (rename only, Task 1)",
+    "tests/test_repeat_and_fit_rule.py (rename only, Task 1)",
+    "tests/test_results_log.py (rename only, Task 1)",
+    "tests/test_review_quorum.py (rename only, Task 1)",
+    "tests/test_rework_loop.py (rename only, Task 1)",
+    "tests/test_run_record.py (rename only, Task 1)",
+    "tests/test_settings_map.py (rename only, Task 1)",
+    "tests/test_spend_guard.py (rename only, Task 1)",
+    "tests/test_sweep_budget.py (rename only, Task 1)",
+    "tests/test_watchdog.py (rename only, Task 1)",
+    "tests/conftest.py (rename only, Task 1)",
+    "tests/test_workflow_choice.py (new, 23 tests)"
+  ],
   "break_proofs": [
     {
       "break": "6.1 the request's workflow field is ignored (if body.workflow is None -> if True)",
@@ -220,5 +249,10 @@
   ],
   "deviations": [],
   "questions_for_advisor": [],
-  "notes": "The first start of this command stopped at Task 0, because command 124 was not yet merged (PR 220 was open; origin/main 5163e60 had no tests/test_advisory_nodes.py, collected 1628 and passed 1627). That BLOCKED response was committed locally as 4702c8a and never pushed. The owner then said 124 was merged (#220) and told the coder to start again from Task 0, using git switch -C instead of git switch -c because the branch already existed. This run did that: git switch -C exec/20261028-127-workflow-per-request origin/main moved the branch from 4702c8a to origin/main 3d7150d (the merge of #220). The BLOCKED commit is no longer on the branch and was not pushed. Work is in /home/jb/autornd-os, where the task file's Task 0 places it. The new branch's upstream is origin/main (git sets it from the start point), so Task 8 pushes with an explicit branch name and -u. Task 6: the breaks were driven by a scratch script outside the repo that applied each find/replace once (it stops if the find is not in the file exactly once; each was), ran the task's CHECK with PYTHONDONTWRITEBYTECODE set, and undid the break with git checkout -- <file>. Each break's failed list equals the task's EXPECT."
+  "notes": "The first start of this command stopped at Task 0, because command 124 was not yet merged (PR 220 was open; origin/main 5163e60 had no tests/test_advisory_nodes.py, collected 1628 and passed 1627). That BLOCKED response was committed locally as 4702c8a and never pushed. The owner then said 124 was merged (#220) and told the coder to start again from Task 0, using git switch -C instead of git switch -c because the branch already existed. This run did that: git switch -C exec/20261028-127-workflow-per-request origin/main moved the branch from 4702c8a to origin/main 3d7150d (the merge of #220). The BLOCKED commit is no longer on the branch and was not pushed. Work is in /home/jb/autornd-os, where the task file's Task 0 places it. The new branch's upstream is origin/main (git sets it from the start point), so Task 8 pushes with an explicit branch name and -u. Task 6: the breaks were driven by a scratch script outside the repo that applied each find/replace once (it stops if the find is not in the file exactly once; each was), ran the task's CHECK with PYTHONDONTWRITEBYTECODE set, and undid the break with git checkout -- <file>. Each break's failed list equals the task's EXPECT. Task 8: pushed exec/20261028-127-workflow-per-request and opened PR 221 against main. CI on 254928b708f3a25778a3c73769446513e7a1a49a (run 40800486739, event pull_request, conclusion success): docker pass 1m15s, editable-install pass 39s, test (3.11) pass 3m15s, test (3.12) pass 2m54s, test (3.13) pass 2m41s. No code changed after Task 7's commit d425b33 (the tip tested is Task 7's response commit, which changed only this file), so the Task 7 full-suite reading (1669 passed, 1 skipped, 1670 collected, network guard 0) is the reading for the tip CI tested. head_after is that tip; the PR head is one response-only commit later, because a commit cannot name its own sha. The text edits of Tasks 1, 2, 3, 4 and 7 were applied by scratch scripts outside the repo that checked each find occurred exactly once (Task 7: as a whole line) before writing; the text is the task's. No defect outside the task was found, and no CHECK differed from its EXPECT after the restart.",
+  "delivery_state": {
+    "branch": "exec/20261028-127-workflow-per-request",
+    "pr": 221,
+    "url": "https://github.com/ohioy000/autornd-os/pull/221"
+  }
 }
