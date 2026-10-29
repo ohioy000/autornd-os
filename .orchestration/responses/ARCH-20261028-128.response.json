@@ -1,0 +1,26 @@
+{
+  "command_id": "ARCH-20261028-128",
+  "status": "IN_PROGRESS",
+  "executed": true,
+  "head_before": "bb29d164361a89d8fc35b5b05e023f30c86726cc",
+  "head_after": "bb29d164361a89d8fc35b5b05e023f30c86726cc",
+  "results": {"task": 0, "step": "branch exec/20261028-128-source-check made from origin/main; suite 1669 passed, 1 skipped"},
+  "preconditions_ran": [
+    {"command": "git branch --show-current", "expected": "exec/20261028-128-source-check", "observed": "exec/20261028-128-source-check", "outcome": "pass"},
+    {"command": "test \"$(git rev-parse HEAD)\" = \"$(git rev-parse origin/main)\" && echo \"at origin/main\"", "expected": "at origin/main", "observed": "at origin/main", "outcome": "pass"},
+    {"command": "git status --short", "expected": "?? .qwen/", "observed": "?? .qwen/", "outcome": "pass"},
+    {"command": "grep -c '^\\*\\*Status: ruled by the advisor on 2026-10-28' docs/reviews/2026-10-28-d56-a-finding-checked-against-its-source.md", "expected": "1", "observed": "1", "outcome": "pass"},
+    {"command": "test -f .orchestration/prompts/ARCH-20261028-128.md && echo task file ok", "expected": "task file ok", "observed": "task file ok", "outcome": "pass"},
+    {"command": "test -f tests/test_workflow_choice.py && echo 127 merged", "expected": "127 merged", "observed": "127 merged", "outcome": "pass"},
+    {"command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none", "expected": "none", "observed": "none", "outcome": "pass"},
+    {"command": ".venv/bin/python3 -m pytest tests/ --collect-only -q | tail -1", "expected": "1670 tests collected in ...s", "observed": "1670 tests collected in 0.95s", "outcome": "pass"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q (filtered)", "expected": "network guard: 0 non-loopback attempt(s) recorded / 1669 passed, 1 skipped in ...s", "observed": "network guard: 0 non-loopback attempt(s) recorded / 1669 passed, 1 skipped in 170.83s (0:02:50)", "outcome": "pass"}
+  ],
+  "suite_count_before": 1670,
+  "suite_count_after": 0,
+  "tests_changed": [],
+  "break_proofs": [],
+  "deviations": [],
+  "questions_for_advisor": [],
+  "notes": "Branch made with git switch -c ... origin/main, so its upstream is origin/main; Task 8 pushes with -u."
+}
