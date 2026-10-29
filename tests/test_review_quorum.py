@@ -30,7 +30,7 @@ from autornd.routing.openrouter import BudgetExceeded
 from autornd.specialists.registry import get_specialists
 from tests.conftest import make_mock_client
 
-SPEC = load("workflows/engineering-rnd.yaml")
+SPEC = load("workflows/full-team.yaml")
 SETTINGS = {"max_iterations": 2, "escalation_recovery_attempts": 1,
             "review_rework_attempts": 1}
 REVIEW_PROMPT = "ship: true if safe to ship"

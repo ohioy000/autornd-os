@@ -12,11 +12,15 @@ Shipped shapes:
 
 | file | what it is |
 |---|---|
-| `engineering-rnd.yaml` | the flagship, 25 nodes |
+| `full-team.yaml` | the flagship, 25 nodes |
 | `lean.yaml` | cheapest shape that still checks its work — plan, build, verify, stop |
 | `triage-classify.yaml` / `triage-only.yaml` | classification only |
 | `plan-probe.yaml` | plan-phase probes |
 | `independent-check-probe.yaml` | a minimal workflow built to reach `independent_check` live; kept as the regression shape |
+
+`offered: true` at the top of a file lets a request name it (D55). The four that produce a
+deliverable declare it: `full-team`, `lean`, `verify-first`, `answer-and-recompute`. The
+probes do not, so only `AUTORND_WORKFLOW` and the eval runners can run them.
 
 A node (`autornd/graph/spec.py:76`, loader at `:292`):
 

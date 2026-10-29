@@ -1,5 +1,5 @@
 id: unrecallable_rollout
-workflow: engineering-rnd
+workflow: full-team
 description: >
   The only scenario that reaches the independent pass, and the reason it exists.
   A signed firmware rollout harms nobody and breaches no regulation, so it

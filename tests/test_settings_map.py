@@ -49,7 +49,7 @@ class TestEveryNamedLoopBoundIsInTheSharedMap:
         assert WORKFLOWS, "no workflows/*.yaml found beside the tests"
         bounds = _setting_named_bounds()
         assert bounds, "no workflow names a loop bound by setting; the guard checks nothing"
-        assert ("engineering-rnd.yaml", "review_rework_loop",
+        assert ("full-team.yaml", "review_rework_loop",
                 "review_rework_attempts") in bounds
 
     def test_every_setting_a_shipped_workflow_names_is_carried(self):

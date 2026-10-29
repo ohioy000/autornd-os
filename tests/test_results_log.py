@@ -185,7 +185,7 @@ class TestAFailedRunKeepsWhatItCompleted:
         log = ResultsLog(tmp_path / "r.jsonl")
         await run_repeated(
             [parse({"id": "s", "request": "Add retry"})],
-            load("workflows/engineering-rnd.yaml"),
+            load("workflows/full-team.yaml"),
             exploding_client, SETTINGS, repeat=1, results_log=log)
         log.close()
 

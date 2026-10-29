@@ -1,6 +1,6 @@
 """Every workflow reaches a terminal — breadth beyond the proven pipeline.
 
-ARCH-20260925-061. Only engineering-rnd had been driven end to end (cases
+ARCH-20260925-061. Only full-team had been driven end to end (cases
 (a)–(c) in test_failure_path_terminal.py, case (d) recovery-succeeds). The
 tree holds six workflow files; this file drives the other five provider-free
 through the same ScriptedRunner harness and asserts each reaches `completed`.

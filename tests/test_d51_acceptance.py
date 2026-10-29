@@ -300,7 +300,7 @@ class TestTheStage1RouteIsClosed:
 
     async def test_the_answer_ships_and_the_dissent_is_a_note(self):
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(True), Q23)
+            "full-team", self._routes(True), Q23)
         # The ruled outcome: completed, the answer delivered.
         assert state.status == "completed"
         assert (state.outputs["implement"].summary
@@ -339,7 +339,7 @@ class TestTheStage1RouteIsClosed:
             return data
 
         state, runner, calls = await _drive(
-            "engineering-rnd", null_kind, Q23)
+            "full-team", null_kind, Q23)
         assert state.status == "completed"
         assert state.outputs["validate"].green is True
         assert normalisations_by_kind().get(UNVERIFIED_DISSENT) == 1
@@ -380,7 +380,7 @@ class TestTheStage1RouteIsClosed:
                 data["failed_ask"] = 1
             return data
         state, runner, calls = await _drive(
-            "engineering-rnd", anchored, Q23)
+            "full-team", anchored, Q23)
         assert state.status == "escalated"
         # No answer is delivered: the candidate is kept, unendorsed.
         assert state.candidate is not None
@@ -541,7 +541,7 @@ class TestTheQ15Shape:
 
     async def test_the_misstated_step_is_caught_revised_and_delivered(self):
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(anchored=True), Q15)
+            "full-team", self._routes(anchored=True), Q15)
         assert state.status == "completed"
         # The wrongness was fixed: the step is stated as
         # required, not optional.
@@ -564,7 +564,7 @@ class TestTheQ15Shape:
         validate evidence — and nothing the request does not ask
         for."""
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(anchored=True), Q15)
+            "full-team", self._routes(anchored=True), Q15)
         revisions = _revision_prompts(calls)
         assert len(revisions) == 1
         revision = revisions[0]
@@ -588,7 +588,7 @@ class TestTheQ15Shape:
         cannot catch this shape, so only the anchor stands between
         the wrong answer and delivery."""
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(anchored=False), Q15)
+            "full-team", self._routes(anchored=False), Q15)
         assert state.status == "completed"
         # The wrong answer shipped: no revision was ever made.
         assert _revision_prompts(calls) == []
@@ -614,7 +614,7 @@ class TestTheQ15Shape:
         the judges' fold — validate's anchored dissent is the
         only judge that routes the revision."""
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes_omitting(True), Q15)
+            "full-team", self._routes_omitting(True), Q15)
         assert state.status == "completed"
         assert "zeroing the readout at zero displacement" in (
             state.outputs["implement"].summary)
@@ -657,7 +657,7 @@ class TestTheQ15Shape:
         test above, where the anchored validate dissent still
         catches the same omission."""
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes_omitting(False), Q15)
+            "full-team", self._routes_omitting(False), Q15)
         assert state.status == "completed"
         # Nothing held the loop: one iteration, the omission
         # delivered, the step's words absent from the answer.
@@ -844,7 +844,7 @@ class TestReviewAnchors:
         grounding = finding.get("source_quote") == \
             GROUNDING_WORDS
         state, runner, calls = await _drive(
-            "engineering-rnd",
+            "full-team",
             self._routes(finding, grounding=grounding), Q15)
         if blocks:
             assert state.status == "escalated"
@@ -946,7 +946,7 @@ class TestReviewAnchors:
                     in msg.lower():
                 return {"concerns": [concern], "critical": concern["critical"]}
             return data
-        state, runner, calls = await _drive("engineering-rnd", reply, Q15)
+        state, runner, calls = await _drive("full-team", reply, Q15)
         if blocks:
             assert state.status == "escalated"
         else:
@@ -1021,7 +1021,7 @@ class TestUnavailableIsNotAFail:
             return {"findings": [], "queries": [], "brief": ""}
 
         state, runner, calls = await _drive(
-            "engineering-rnd", reply, Q17)
+            "full-team", reply, Q17)
         # Never blocks: the run completes with the answer delivered.
         assert state.status == "completed"
         # And the record lists the ask whose verification was
@@ -1129,7 +1129,7 @@ class TestEscalationRulesOnEachDissent:
             return {"findings": [], "queries": [], "brief": ""}
 
         state, runner, calls = await _drive(
-            "engineering-rnd", reply, Q15)
+            "full-team", reply, Q15)
         # The ruling let the revision through: the run completes.
         assert state.status == "completed"
         # The build loop exhausted its five attempts before the
@@ -1224,7 +1224,7 @@ class TestTheCandidate:
 
     async def test_an_exhausted_run_keeps_its_unendorsed_candidate(self):
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(), Q23)
+            "full-team", self._routes(), Q23)
         assert state.status == "escalated"
         # The candidate: the last answer, unendorsed, with its open
         # dissent and its anchor — the ask the dissent names.
@@ -1248,7 +1248,7 @@ class TestTheCandidate:
         not shipped'; an unendorsed candidate reads 'unendorsed
         candidate'. Neither is delivered."""
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(), Q23)
+            "full-team", self._routes(), Q23)
         unit = {
             "status": state.status,
             "verdicts": state.outputs,
@@ -1338,12 +1338,12 @@ class TestVerifyFirst:
         assert [n.id for n in spec.execution_order()] == [
             "triage", "asks", "asks_anchored", "context", "verify_loop"]
         # Not the standing workflow, and nothing routes to it:
-        # the configured default resolves to engineering-rnd, and
+        # the configured default resolves to full-team, and
         # no shipped workflow names this one.
         from autornd.config import settings
-        assert (settings.autornd_workflow or "engineering-rnd") \
-            == "engineering-rnd"
-        for workflow in ("engineering-rnd", "lean"):
+        assert (settings.autornd_workflow or "full-team") \
+            == "full-team"
+        for workflow in ("full-team", "lean"):
             text = (Path(__file__).parent.parent / "workflows"
                     / f"{workflow}.yaml").read_text(encoding="utf-8")
             assert "verify-first" not in text
@@ -1816,7 +1816,7 @@ class TestR2TheWrongFactThatShowsItsSource:
         unverified dissent, never blocking. The answer the starved
         run held back is delivered."""
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(Q17_R3_FINDING), Q17)
+            "full-team", self._routes(Q17_R3_FINDING), Q17)
         assert state.status == "completed"
         assert state.outputs["implement"].summary == Q17_ANSWER
         # The finding was demoted, not obeyed: it is in the record
@@ -1831,7 +1831,7 @@ class TestR2TheWrongFactThatShowsItsSource:
         finding = dict(Q17_R3_FINDING, kind="wrong_fact",
                        source_quote="a requirement no source states")
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(finding), Q17)
+            "full-team", self._routes(finding), Q17)
         assert state.status == "completed"
         assert state.outputs["review"].findings[0].severity == "medium"
         assert normalisations_by_kind().get(UNVERIFIED_DISSENT) == 1
@@ -1847,7 +1847,7 @@ class TestR2TheWrongFactThatShowsItsSource:
         finding = dict(Q17_R3_FINDING, kind="wrong_fact",
                        source_quote=Q17_GROUNDING_WORDS)
         state, runner, calls = await _drive(
-            "engineering-rnd",
+            "full-team",
             self._routes(finding, grounding=True), Q17)
         assert state.status == "blocked"
         recorded = state.outputs["review"].findings[0]
@@ -1881,7 +1881,7 @@ class TestR2TheWrongFactThatShowsItsSource:
         monkeypatch.setattr(phases_module, "dissent_anchored",
                             retired_rule)
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(Q17_R3_FINDING), Q17)
+            "full-team", self._routes(Q17_R3_FINDING), Q17)
         assert state.status == "blocked"
         assert state.outputs["review"].findings[0].severity == "critical"
 

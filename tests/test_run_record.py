@@ -25,7 +25,7 @@ from autornd.graph import executor as executor_module
 from autornd.graph.spec import load
 from tests.conftest import make_mock_client
 
-SPEC = load("workflows/engineering-rnd.yaml")
+SPEC = load("workflows/full-team.yaml")
 SETTINGS = {"max_iterations": 5, "escalation_recovery_attempts": 1,
             "review_rework_attempts": 2}
 REQUEST = "Specify the wiring for a 24 VDC sensor on a 3 ft 22 AWG run"

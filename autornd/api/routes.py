@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel, EmailStr, Field
@@ -14,7 +15,10 @@ from sqlalchemy.orm import selectinload
 from autornd.api.auth import _is_loopback
 from autornd.config import settings
 from autornd.database import get_session
-from autornd.engine.workflow import WorkflowEngine
+from autornd.engine.workflow import (
+    WorkflowEngine, WorkflowNotOffered, offered_workflows, requested_workflow,
+    workflow_path,
+)
 from autornd.models.workflow import PhaseResult, Workflow, WorkflowStatus
 from autornd.routing.openrouter import OpenRouterClient
 
@@ -36,32 +40,36 @@ def _caller_key(request: Request) -> tuple:
 class _RunGate:
     """Ruling D45 (6): a per-run ceiling bounds one run, not a caller who
     submits many. At most `settings.max_concurrent_runs` API runs in flight at
-    once, and never twice the same request text from the same caller.
+    once, and never twice the same request text through the same workflow
+    from the same caller. Ruling D55 (6) added the workflow: the same request
+    run through two workflows, to compare them, is two runs.
 
     Admission is refused BEFORE a Workflow row exists — a refused submission
     must leave nothing behind — and released when the run it admitted ends,
     whatever way it ends."""
 
     def __init__(self) -> None:
-        self._in_flight: dict[tuple, set[str]] = {}
+        self._in_flight: dict[tuple, set[tuple[str, str]]] = {}
 
     def count(self) -> int:
-        return sum(len(texts) for texts in self._in_flight.values())
+        return sum(len(runs) for runs in self._in_flight.values())
 
-    def admit(self, caller: tuple, request_text: str) -> str | None:
+    def admit(self, caller: tuple, request_text: str,
+              workflow: str) -> str | None:
         """None when admitted (and registered); else 'duplicate' or 'cap'."""
         mine = self._in_flight.setdefault(caller, set())
-        if request_text in mine:
+        if (request_text, workflow) in mine:
             return "duplicate"
         if self.count() >= settings.max_concurrent_runs:
             return "cap"
-        mine.add(request_text)
+        mine.add((request_text, workflow))
         return None
 
-    def release(self, caller: tuple, request_text: str) -> None:
+    def release(self, caller: tuple, request_text: str,
+                workflow: str) -> None:
         mine = self._in_flight.get(caller)
         if mine:
-            mine.discard(request_text)
+            mine.discard((request_text, workflow))
             if not mine:
                 self._in_flight.pop(caller, None)
 
@@ -69,15 +77,15 @@ class _RunGate:
 _run_gate = _RunGate()
 
 
-def _admit_run(request: Request, request_text: str) -> tuple:
+def _admit_run(request: Request, request_text: str, workflow: str) -> tuple:
     """Register an API run with the gate or refuse it with a sentence."""
     caller = _caller_key(request)
-    verdict = _run_gate.admit(caller, request_text)
+    verdict = _run_gate.admit(caller, request_text, workflow)
     if verdict == "duplicate":
         raise HTTPException(
             409,
-            "This request is already running for this caller; wait for it to "
-            "finish or submit different work.")
+            "This request is already running through this workflow for this "
+            "caller; wait for it to finish or submit different work.")
     if verdict == "cap":
         raise HTTPException(
             429,
@@ -185,6 +193,26 @@ async def get_me(request: Request):
 
 class WorkflowRequest(BaseModel):
     request: str
+    # Ruling D55 (1): the name of an offered workflow, as GET
+    # /api/workflows/offered lists them. Unset runs the configured default.
+    workflow: str | None = None
+
+
+def _requested_workflow(body: WorkflowRequest) -> tuple[str, str | None]:
+    """The workflow a submission runs: its name for the gate, and its file.
+
+    Called before the gate, so a refused name holds no slot and leaves no row
+    (Ruling D45 (6), D55 (3)). A request that names none runs the configured
+    default, under that default's name, so naming the default is the same
+    run as naming nothing.
+    """
+    if body.workflow is None:
+        return Path(workflow_path()).stem, None
+    try:
+        path = requested_workflow(body.workflow)
+    except WorkflowNotOffered as exc:
+        raise HTTPException(422, str(exc)) from None
+    return body.workflow, path
 
 
 class WorkflowSummary(BaseModel):
@@ -243,7 +271,8 @@ async def submit_workflow(
     # is not admitted must leave nothing behind. Ruling D47: a slot admitted
     # is a slot released — if the commit or the scheduling raises, the gate is
     # restored before the error reaches the caller.
-    caller = _admit_run(request, body.request)
+    name, path = _requested_workflow(body)
+    caller = _admit_run(request, body.request, name)
     try:
         workflow = Workflow(
             request=body.request,
@@ -253,9 +282,10 @@ async def submit_workflow(
         session.add(workflow)
         await session.commit()
 
-        background.add_task(_run_workflow_bg, workflow.id, caller, body.request)
+        background.add_task(_run_workflow_bg, workflow.id, caller,
+                            body.request, name, path)
     except BaseException:
-        _run_gate.release(caller, body.request)
+        _run_gate.release(caller, body.request, name)
         raise
 
     return {
@@ -264,7 +294,8 @@ async def submit_workflow(
     }
 
 
-async def _run_workflow_bg(workflow_id: int, caller: tuple, request_text: str):
+async def _run_workflow_bg(workflow_id: int, caller: tuple, request_text: str,
+                           name: str, path: str | None):
     from autornd.database import async_session
 
     try:
@@ -278,11 +309,12 @@ async def _run_workflow_bg(workflow_id: int, caller: tuple, request_text: str):
             try:
                 # The row the caller was handed is the row the run writes —
                 # one submission, one record (ARCH-20261002-109).
-                await engine.execute(workflow.request, workflow=workflow)
+                await engine.execute(workflow.request, workflow=workflow,
+                                     workflow_file=path)
             finally:
                 await client.close()
     finally:
-        _run_gate.release(caller, request_text)
+        _run_gate.release(caller, request_text, name)
 
 
 @router.post("/workflows/sync")
@@ -292,7 +324,8 @@ async def submit_workflow_sync(
     session: AsyncSession = Depends(get_session),
 ):
     """Execute a workflow synchronously and return the full result."""
-    caller = _admit_run(request, body.request)
+    name, path = _requested_workflow(body)
+    caller = _admit_run(request, body.request, name)
 
     try:
         workflow = Workflow(
@@ -303,16 +336,17 @@ async def submit_workflow_sync(
         session.add(workflow)
         await session.commit()
     except BaseException:
-        _run_gate.release(caller, body.request)
+        _run_gate.release(caller, body.request, name)
         raise
 
     client = _bound_client()
     engine = WorkflowEngine(client, session)
     try:
-        workflow = await engine.execute(body.request, workflow=workflow)
+        workflow = await engine.execute(body.request, workflow=workflow,
+                                        workflow_file=path)
     finally:
         await client.close()
-        _run_gate.release(caller, body.request)
+        _run_gate.release(caller, body.request, name)
 
     await session.refresh(workflow, ["phases"])
     return {"data": _detail(workflow)}
@@ -336,6 +370,16 @@ async def list_workflows(
         "data": [_summarize(w) for w in workflows],
         "meta": {"count": len(workflows), "limit": limit, "offset": offset},
     }
+
+
+@router.get("/workflows/offered")
+async def list_offered_workflows():
+    """The workflows a request may name, with what each one is (Ruling D55
+    (4)). Declared before /workflows/{workflow_id}, so that route is
+    unchanged."""
+    return {"data": [
+        {"name": name, "description": spec.description.strip()}
+        for name, spec in offered_workflows().items()]}
 
 
 async def _load_owned_workflow(
@@ -459,9 +503,11 @@ async def run_doublecheck_endpoint(
     # Ruling D47 (2): the doublecheck can spend, so it passes the same run
     # gate as the submit paths and counts against max_concurrent_runs — no
     # caller multiplies the per-run bounds by calling this many times at once.
-    # The dedupe key is the workflow's own request text: a second doublecheck
-    # of a workflow the caller already has in flight is a duplicate (409).
-    caller = _admit_run(request, workflow.request)
+    # The dedupe key is the workflow's own request text, under the name
+    # "doublecheck" (Ruling D55 (6) keys the gate by workflow too): a second
+    # doublecheck of a workflow the caller already has in flight is a
+    # duplicate (409).
+    caller = _admit_run(request, workflow.request, "doublecheck")
     try:
         client = _bound_client()
         try:
@@ -491,7 +537,7 @@ async def run_doublecheck_endpoint(
             }
         }
     finally:
-        _run_gate.release(caller, workflow.request)
+        _run_gate.release(caller, workflow.request, "doublecheck")
 
 
 # ── Settings endpoints ──

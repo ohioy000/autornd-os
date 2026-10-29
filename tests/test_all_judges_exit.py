@@ -221,7 +221,7 @@ class TestEveryShippedLoopFoldsItsOwnJudges:
     here that drifts when a body changes."""
 
     @pytest.mark.parametrize("workflow,loop,until,fold,expected", [
-        ("engineering-rnd", "build_loop", "judges.passed == true", "judges",
+        ("full-team", "build_loop", "judges.passed == true", "judges",
          # Coverage is deliberately NOT in this fold since the
          # ruling of 2026-10-15 (R1): its result is still
          # recorded — the node still runs in the body — and a
@@ -232,9 +232,9 @@ class TestEveryShippedLoopFoldsItsOwnJudges:
          {"implement", "validate"}),
         # The two loops that can ship re-review first, so they fold review in
         # as well — work ships when everyone who looked at it agrees.
-        ("engineering-rnd", "review_rework_loop", "review_fold.passed == true",
+        ("full-team", "review_rework_loop", "review_fold.passed == true",
          "review_fold", {"build", "review"}),
-        ("engineering-rnd", "recovery_loop", "review_fold.passed == true",
+        ("full-team", "recovery_loop", "review_fold.passed == true",
          "review_fold", {"build", "review"}),
         ("lean", "build_loop", "judges.passed == true", "judges",
          {"implement", "validate"}),

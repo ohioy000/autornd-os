@@ -16,20 +16,20 @@ from autornd.routing.openrouter import OpenRouterClient
 
 class TestJudgeRouting:
     def test_the_judging_nodes_route_to_the_judge_tier(self):
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         tier = {n.id: n.tier for n in spec.nodes if n.kind.value == "ai"}
         for node in ("domain_review", "validate", "review", "rework_review"):
             assert tier[node] == "judge", f"{node} should judge on the judge tier"
 
     def test_production_nodes_stay_on_engineering(self):
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         tier = {n.id: n.tier for n in spec.nodes if n.kind.value == "ai"}
         # The producer and the plan-pressure-test are not the judge.
         assert tier["implement"] == "engineering"
         assert tier["feasibility"] == "engineering"
 
     def test_the_judge_nodes_are_capped_by_judge_max_tokens(self):
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         mt = {n.id: n.max_tokens for n in spec.nodes if n.kind.value == "ai"}
         for node in ("domain_review", "validate", "review", "rework_review"):
             assert mt[node] == "judge_max_tokens", f"{node} must use the judge cap"

@@ -158,11 +158,11 @@ class TestShippedWorkflow:
     pipeline the engine actually runs."""
 
     def test_loads(self):
-        spec = load("workflows/engineering-rnd.yaml")
-        assert spec.name == "engineering-rnd"
+        spec = load("workflows/full-team.yaml")
+        assert spec.name == "full-team"
 
     def test_top_level_order_is_the_documented_pipeline(self):
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         # D37: plan runs inside regrounding_loop (a loop owns its body, so
         # plan/feasibility no longer sit on the top-level schedule); the
         # rest of the pipeline order is unchanged. Ruling D51 (1): the
@@ -182,7 +182,7 @@ class TestShippedWorkflow:
         """It exists only for work that cannot be recalled, and it must see the
         review it is meant to be independent of — so it runs after it, and it
         must never run unconditionally, since the premium tier costs the most."""
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         node = spec.get("independent_check")
         assert node.when == "triage.unrecallable"
         # Not "premium": that key is dropped from FUNCTION_MODELS when unset and
@@ -196,7 +196,7 @@ class TestShippedWorkflow:
     def test_free_nodes_run_before_the_paid_validator(self):
         """The cheap checks exist to avoid a model call, so they must not be
         scheduled after the model call they are meant to pre-empt."""
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         body = spec.get("build_loop").body
         assert body.index("coverage") < body.index("validate")
         assert body.index("consistency") < body.index("validate")
@@ -208,7 +208,7 @@ class TestShippedWorkflow:
         only — inside the escalation sub-graph it would re-enter it. The check
         itself runs in all three; the other two route nowhere, they terminate
         (`blocked_terminal`, pinned in tests/test_blocked_on.py)."""
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         body = spec.get("build_loop").body
         assert body.index("blocked_check") == body.index("implement") + 1
         assert body.index("blocked_gate") == body.index("blocked_check") + 1
@@ -220,7 +220,7 @@ class TestShippedWorkflow:
         need the client or the runner's state, which a pure registry function
         has no access to. All three are special-cased in PhaseRunner.run_check
         beside each other, so all three are excluded here by name."""
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         for node in spec.nodes:
             if node.kind is NodeKind.CHECK and node.check not in (
                     "build_context", "verify_grounding", "reground_context_lookup"):
@@ -576,7 +576,7 @@ class _PaceDouble(BookingRunner):
 
 
 async def _run(verdicts, settings=None, request="Add retry"):
-    spec = load("workflows/engineering-rnd.yaml")
+    spec = load("workflows/full-team.yaml")
     runner = ScriptedRunner(verdicts)
     state = await GraphExecutor(spec, runner, settings or SETTINGS).run(request)
     return state, runner
@@ -943,7 +943,7 @@ class TestTheStepRecordNamesTheTierThatServed:
     """
 
     async def test_a_low_risk_plan_step_names_the_booked_tier(self):
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         runner = BookingRunner(LOW_RISK_HAPPY)
         executor = GraphExecutor(spec, runner, SETTINGS)
         state = await executor.run("Add retry")
@@ -959,7 +959,7 @@ class TestTheStepRecordNamesTheTierThatServed:
             "engineering"
 
     async def test_every_step_names_the_function_that_served_it(self):
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         runner = BookingRunner(LOW_RISK_HAPPY)
         state = await GraphExecutor(spec, runner, SETTINGS).run(
             "Add retry")

@@ -318,6 +318,6 @@ class TestTheGraphCannotLoopForever:
         dependencies happened to be satisfied — the same rule escalation has."""
         from autornd.graph.spec import load
 
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         assert "review_rework_loop" not in [n.id for n in spec.execution_order()]
         assert "review_rework_loop" in spec.handoff_reachable()

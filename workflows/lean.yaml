@@ -5,8 +5,11 @@ description: >
   and stop. For low-risk work where the full team is more process than the
   change deserves.
 
-  Written to be compared against engineering-rnd.yaml: same request, same
+  Written to be compared against full-team.yaml: same request, same
   models, different shape.
+
+# Ruling D55 (2): a request may name this workflow.
+offered: true
 
 nodes:
   - id: triage
@@ -15,7 +18,7 @@ nodes:
     prompt: triage
     schema: TriageVerdict
 
-  # Ruling D51 (1): the asks node, as in engineering-rnd —
+  # Ruling D51 (1): the asks node, as in full-team —
   # the request's asks, quoted, then anchored by the free
   # check that keeps only what occurs in the request. The
   # anchored asks are this shape's only yardstick too.

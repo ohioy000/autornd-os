@@ -4,7 +4,7 @@ description: >
 
   The independent pass has never executed inside a live full workflow (B6). The
   wiring is proven by test and the tier is proven by a direct live call, but
-  nine attempts at a full engineering-rnd run each stopped somewhere earlier —
+  nine attempts at a full full-team run each stopped somewhere earlier —
   a planning stub, a silent engineering model, a build loop that would not
   converge, a schema that lost a review, and finally a plan that blocked
   correctly. Most of those exits are the pipeline working, which is exactly why
@@ -26,7 +26,7 @@ nodes:
 
   - {id: context, kind: check, check: build_context, depends_on: [triage]}
 
-  # No tier_when here. engineering-rnd drops a low-risk plan to the cheaper
+  # No tier_when here. full-team drops a low-risk plan to the cheaper
   # tier, but this probe wants the same planning tier every run, because a
   # probe whose shape changes with the request measures two things at once.
   - id: plan

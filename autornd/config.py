@@ -1,7 +1,13 @@
 import os
+from pathlib import Path
 
 from pydantic import ValidationError, field_validator
 from pydantic_settings import BaseSettings
+
+# Ruling D55 (7): a workflow renamed, old name to new. Used only to word the
+# refusal of an old name, in the setting and in a request. It never resolves
+# one: there is no alias.
+RENAMED_WORKFLOWS = {"engineering-rnd": "full-team"}
 
 
 class Settings(BaseSettings):
@@ -193,7 +199,9 @@ class Settings(BaseSettings):
     autornd_profile: str = ""
 
     # Which workflow graph to run. A bare name resolves inside workflows/.
-    autornd_workflow: str = "engineering-rnd"
+    # A request may name an offered workflow instead (Ruling D55); this is
+    # the one a request that names none runs.
+    autornd_workflow: str = "full-team"
 
     RUNTIME_MUTABLE: set[str] = {
         "max_iterations", "escalation_max_tokens", "escalation_recovery_attempts",
@@ -280,6 +288,22 @@ class Settings(BaseSettings):
         if v.upper() not in valid:
             raise ValueError(f"log_level must be one of {valid}")
         return v.upper()
+
+    @field_validator("autornd_workflow")
+    @classmethod
+    def validate_workflow(cls, v: str) -> str:
+        # Ruling D55 (7): a setting that would resolve to an old name inside
+        # workflows/ is refused at startup with the new one, instead of
+        # failing at the first run on a missing file. An existing file named
+        # by its path is the owner's own and is used as it is.
+        path = Path(v)
+        renamed = RENAMED_WORKFLOWS.get(path.stem)
+        if renamed and not (path.suffix and path.exists()):
+            raise ValueError(
+                f"AUTORND_WORKFLOW names '{path.stem}', which is now named "
+                f"'{renamed}'. Set AUTORND_WORKFLOW={renamed}, or leave it "
+                f"unset.")
+        return v
 
 
 # Tiers that run on every workflow. AutoRnD will not start without them.

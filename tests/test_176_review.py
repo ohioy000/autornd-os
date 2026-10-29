@@ -226,7 +226,7 @@ class TestTheQ14ScriptedRun:
     async def test_completes_on_iteration_one_in_engineering_rnd(
             self):
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(ENTRY3_ANSWER),
+            "full-team", self._routes(ENTRY3_ANSWER),
             Q14_REQUEST, SETTINGS)
         assert state.status == "completed"
         assert state.outputs["implement"].summary == ENTRY3_ANSWER
@@ -262,7 +262,7 @@ class TestTheQ14ScriptedRun:
                   "State the backoff."
         answer = "The retry backoff is 90 seconds."
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(answer), request,
+            "full-team", self._routes(answer), request,
             SETTINGS)
         assert state.status == "completed"
         # The record is honest: the iteration lists the
@@ -402,7 +402,7 @@ class TestTheHazardNeedsItsQuote:
     ])
     async def test_the_validate_hazard_table(self, red, ends):
         state, runner, calls = await _drive(
-            "engineering-rnd", self._routes(red), Q15)
+            "full-team", self._routes(red), Q15)
         assert state.status == ends
         if ends == "completed":
             # The unanchored hazard was demoted to a note:

@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public)
-**Tests:** 1647 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
+**Tests:** 1670 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -295,12 +295,12 @@ autornd/
     runner.py            ★  BoundedRunner, per-tier reporting, repetitions
     cli.py                  `python -m autornd.evals.cli`
   api/
-    routes.py               16 endpoints (§3.5); `/` dashboard is on main.py
+    routes.py               17 endpoints (§3.5); `/` dashboard is on main.py
     auth.py                 JWT + API key middleware
     templates/dashboard.html  single-file chat + workflows + settings UI
 
 workflows/
-  engineering-rnd.yaml   ★★ the flagship pipeline, 31 nodes, 4 loops (§3.1)
+  full-team.yaml         ★★ the flagship pipeline, 31 nodes, 4 loops (§3.1)
   lean.yaml                 12 nodes — cheaper variant, one loop
   verify-first.yaml        12 nodes — Ruling D51 (8): no plan node;
                             the asks are the yardstick, one revision
@@ -325,7 +325,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      84 files, 1647 tests
+tests/                      85 files, 1670 tests
 
 ```
 
@@ -467,7 +467,7 @@ idempotent across phases.
 
 ## 3. CURRENT STATE & SOURCE OF TRUTH
 
-### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (31 nodes)
+### 3.1 `workflows/full-team.yaml` — the flagship pipeline (31 nodes)
 
 **The file is the source of truth; this table is generated from it.** A
 hand-copied YAML lived here for twelve blueprints and drifted — it still
@@ -645,6 +645,7 @@ GET    /api/auth/me
 POST   /api/workflows                202  (async, background)
 POST   /api/workflows/sync                (blocking)
 GET    /api/workflows
+GET    /api/workflows/offered             the workflows a request may name (D55)
 GET    /api/workflows/{id}
 GET    /api/workflows/{id}/doublecheck/estimate
 POST   /api/workflows/{id}/doublecheck
@@ -714,7 +715,7 @@ CHROMADB_PATH=./chromadb_data
 API_KEY=<SERVICE_API_KEY_PLACEHOLDER>
 JWT_SECRET=<JWT_SECRET_PLACEHOLDER>
 REGISTRATION_ENABLED=true
-AUTORND_WORKFLOW=engineering-rnd
+AUTORND_WORKFLOW=full-team
 AUTORND_PROFILE=                     # loads profiles/<name>.yaml
 ```
 
@@ -736,7 +737,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1647 total)
+### 3.7 Test distribution (1670 total)
 
 
 | file | n | file | n |
@@ -783,6 +784,7 @@ is revoked and the warning re-opens with a date.
 | test_triage.py | 10 | test_verdicts.py | 49 |
 | test_watchdog.py | 23 | test_workflow.py | 4 |
 | test_profile_framing.py | 11 | test_advisory_nodes.py | 19 |
+| test_workflow_choice.py | 23 | | |
 ---
 
 ## 4. ACTIVE CONTEXT & WORKING MEMORY
@@ -822,7 +824,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1647/1647 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1670/1670 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
@@ -1886,7 +1888,7 @@ cd ~/projects/autornd-os
 # ~$0.15-0.45 and 3-20 min per trace. PIN THE TIERS or the reading is noise.
 OPENROUTER_PROVIDER_ORDER="triage:Alibaba,architecture:StreamLake,engineering:GMICloud" \
 .venv/bin/python3 -m autornd.evals.cli \
-  --scenarios evals/scenarios/convergence --workflow engineering-rnd \
+  --scenarios evals/scenarios/convergence --workflow full-team \
   --repeat 1 --timeout 3600 --max-spend 0.75 --max-spend-sweep 3.00 \
   --results-file docs/traces/my-run.jsonl
 
@@ -1894,7 +1896,7 @@ uvicorn autornd.main:app --reload --port 8100            # API + dashboard
 ```
 
 **Read these four files, in this order, to understand the system:**
-`workflows/engineering-rnd.yaml` → `autornd/graph/spec.py` →
+`workflows/full-team.yaml` → `autornd/graph/spec.py` →
 `autornd/engine/phases.py` (the risk guide especially) →
 `autornd/routing/openrouter.py` (accounting, budgets, provider pinning).
 

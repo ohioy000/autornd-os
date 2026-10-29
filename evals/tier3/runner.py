@@ -172,7 +172,7 @@ PILOT_CEILING = 7.50
 # and C do not run. Arm F is Ruling D51 (8)'s verify-first
 # workflow through arm E's path; arm E' is arm E unchanged -
 # the standing workflow, which after #176 is D51's
-# engineering-rnd.
+# full-team.
 REMEASURE_ARMS = ("A", "D", "F", "E")
 REMEASURE_SEED = 20261014
 REMEASURE_CEILING = 15.00
@@ -1842,7 +1842,7 @@ class UnitResult:
     # the tokens by tier and the watchdog's typed record.
     pipeline: dict[str, Any] | None = None
     # Arms E and F: the workflow the unit ran (the standing
-    # engineering-rnd for E, verify-first for F) and the model
+    # full-team for E, verify-first for F) and the model
     # calls after triage and asks - the figure the re-
     # measurement's criterion (c) bounds at 4 for arm F.
     workflow: str | None = None
@@ -2702,7 +2702,7 @@ async def _execute_arm(arm: str, question: str, question_id: str,
     # a separate seam from the arms A-D factory above,
     # which names the arm's serving per unit. Arm E runs
     # the standing workflow (the harness's own
-    # engineering-rnd after D51, #176); arm F runs the
+    # full-team after D51, #176); arm F runs the
     # same path through the verify-first workflow (D51
     # (8)), whose build loop is bounded to two
     # iterations — triage and asks, then at most four

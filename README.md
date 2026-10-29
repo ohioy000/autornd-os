@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1647%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1670%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -246,7 +246,7 @@ The workflows that ship, one file each in `workflows/` (`tests/test_docs.py` che
 
 | workflow | shape |
 |---|---|
-| `engineering-rnd` | the full team: plan, feasibility, a build loop with domain review and judges, risk-scaled review, escalation |
+| `full-team` | the full team: plan, feasibility, a build loop with domain review and judges, risk-scaled review, escalation |
 | `lean` | plan, build, verify. No review team, no escalation — but it keeps the free checks |
 | `verify-first` | no plan: the request's asks, one answer, the free checks and one judge. One revision if the judge names a failed ask; escalated if the dissent survives |
 | `answer-and-recompute` | the request's asks, one answer with typed results, then blind recompute samples on the optional recompute tier and a free vote. A disagreement is a note on the delivery, never a block; with the recompute tier empty, the vote records a skip |
@@ -255,11 +255,11 @@ The workflows that ship, one file each in `workflows/` (`tests/test_docs.py` che
 | `plan-probe` | triage, grounding and the plan alone — a probe for whether a usable plan comes back, at what token cost and from which serving |
 | `independent-check-probe` | one pass that reaches the independent check and nothing else — a probe, not a shape to ship work through |
 
-Select with `AUTORND_WORKFLOW`. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
+Select the server's default with `AUTORND_WORKFLOW`. A request may name one of the first four itself (see [API](#api)); the probes are for measuring and cannot be named. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
 
 | | happy path | never converges |
 |---|---|---|
-| `engineering-rnd` | 11 calls | 18 calls |
+| `full-team` | 11 calls | 18 calls |
 | `lean` | **8 calls** | **15 calls** |
 
 Writing the sequence down also forced out rules that had been implicit in code: the test engineer validates the work and so does not build it or review the build (the `builders` and `peers` rosters), feasibility only reviews a plan the architect declared ready, and escalation runs because a loop gave up rather than because its dependencies happened to be satisfied.
@@ -515,7 +515,7 @@ Every assertion is a set or integer comparison — no judge, no cost, millisecon
 
 ```bash
 python -m autornd.evals.cli --repeat 5
-python -m autornd.evals.cli --compare engineering-rnd lean
+python -m autornd.evals.cli --compare full-team lean
 ```
 
 **Evals repeat by default, because models are stochastic.** The same triage request passed on one run and failed on the next, so a single result is an anecdote. Reports give a pass rate and name the flaky assertion:
@@ -610,7 +610,7 @@ MODEL_SEARCH=             # required
 # Optional tiers (MODEL_RANKER and the others under Model Tiers) turn
 # their feature off when empty.
 
-AUTORND_WORKFLOW=engineering-rnd
+AUTORND_WORKFLOW=full-team
 # Limits: MAX_ITERATIONS and the *_MAX_TOKENS caps. Defaults in .env.example.
 
 API_HOST=127.0.0.1        # containers need 0.0.0.0
@@ -746,6 +746,7 @@ Model ids, database URL, host/port, ChromaDB path and auth secrets are read-only
 | POST | `/api/workflows/sync` | Submit and block until complete |
 | POST | `/api/workflows` | Submit asynchronously |
 | GET | `/api/workflows` | List (scoped to the caller) |
+| GET | `/api/workflows/offered` | The workflows a request may name, with what each one does |
 | GET | `/api/workflows/{id}` | Detail with phase verdicts (scoped to the owner) |
 | GET | `/api/workflows/{id}/doublecheck/estimate` | Projected cost |
 | POST | `/api/workflows/{id}/doublecheck` | Run the premium review |
@@ -758,6 +759,8 @@ Model ids, database URL, host/port, ChromaDB path and auth secrets are read-only
 | GET | `/api/episodes` | Workflow outcome history |
 | GET | `/api/health` | Health plus per-tier model verification |
 | GET | `/api/knowledge/stats` | Knowledge store stats |
+
+A submission may name its workflow: `{"request": "...", "workflow": "verify-first"}`. Only the offered workflows can be named, `full-team`, `lean`, `verify-first` and `answer-and-recompute`, as `GET /api/workflows/offered` lists them. Any other name, or a path, is refused with 422 and the list, before anything runs. A request that names none runs `AUTORND_WORKFLOW`. Every run records which workflow ran, with its file's sha256, as its first phase, `workflow`.
 
 Every workflow response carries an `error` field: `null` on a healthy run, and otherwise why the run stopped — an infrastructure fault, a plan the architect judged unready, or an escalation needing a human. A blocked workflow always says why.
 
