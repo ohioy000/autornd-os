@@ -1,0 +1,79 @@
+{
+  "command_id": "ARCH-20261029-130",
+  "parent_id": "ARCH-20261028-129",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Implement Ruling D58: a plan that is not ready still stops the run, and now asks the requester. Its blockers come back typed as the run's questions, GET /api/workflows/{id} returns them, and POST /api/workflows/{id}/answers starts a new run of the same workflow with the answers in its request. Free work; no paid call and no schema change.",
+
+  "evidence": [
+    "THE TASK FILE: .orchestration/prompts/ARCH-20261029-130.md. It has 10 ordered tasks, each with exact edits, a CHECK and its EXPECT. The advisor replayed every task from the task file's own text on a copy of main on 2026-10-29, and each EXPECT is the output it saw. Where this file and the task file differ in detail, the task file governs.",
+    "THE STARTUP PROMPT: .orchestration/prompts/STARTUP.md. A new executor reads it first.",
+    "Ruling D58: docs/reviews/2026-10-29-d58-a-plan-that-is-not-ready-asks.md. Section 1 says what is wrong: a not-ready plan ends the run blocked and asks nothing in a typed form; the blockers live only in the reason string, and the requester has no way to answer and go on. Section 3 says where each change goes.",
+    "The code it changes: autornd/graph/spec.py (Node.asks_requester); autornd/graph/executor.py (ExecutionState.questions, _decide_gate, _asked); autornd/engine/workflow.py (the questions record); autornd/api/routes.py (WorkflowDetail.questions, _last_record, the answers route); workflows/full-team.yaml and workflows/lean.yaml (one line on plan_ready).",
+    "Convention 18: no call is added. Answering starts a new run, which is admitted and bounded like every other run (D58 section 6)."
+  ],
+
+  "scope": {
+    "include": [
+      "autornd/graph/spec.py, autornd/graph/executor.py, autornd/engine/workflow.py, autornd/api/routes.py",
+      "workflows/full-team.yaml and workflows/lean.yaml: the plan_ready gate only",
+      "tests/test_plan_asks.py (new); tests/test_workflow_choice.py as the task file gives it",
+      "README.md, HANDOVER.md, AGENTS.md",
+      ".orchestration/responses/"
+    ],
+    "exclude": [
+      "Any real provider call. The network guard stays at 0",
+      "autornd/database.py and autornd/models/: no schema change. If one is needed, STOP and report",
+      "autornd/evals/: unchanged. The eval runner's record does not write the questions yet (D58 section 5)",
+      "Every other workflow file and every other node of full-team.yaml and lean.yaml",
+      "The plan prompt: prompt text that steers judgment needs its own ruling (D58 section 5)",
+      "docs/reviews/ and the other records; .orchestration/ except the response file",
+      ".env and .env.tier3: the owner's (G-3). Do not read them"
+    ]
+  },
+
+  "constraints": [
+    "STARTUP FIRST: the executor reads .orchestration/prompts/STARTUP.md before Task 0, and its rules hold for every task.",
+    "THE CLONE: every task runs in /home/jb/autornd-os_clone. Task 0 starts there.",
+    "FREE. No paid call. The network guard stays at 0.",
+    "TYPED, NEVER PROSE: the questions are the plan's typed blockers, read through a dotted path. Nothing reads the reason string to find them.",
+    "THE STATUS DOES NOT CHANGE: a not-ready plan still ends the run blocked with the reason it has today. The questions are a record field beside it.",
+    "A REFUSAL LEAVES NOTHING: every refusal of the answers route comes before the run gate, so it holds no slot and leaves no row.",
+    "BYTES EXACT: copy every find and replace block character for character. A copy that differs by any character is a deviation to report.",
+    "A defect found in existing harness code while doing this is a STOP-and-report, not a fix."
+  ],
+
+  "acceptance_criteria": [
+    "(a) A not-ready plan's run ends blocked with its reason unchanged, and GET /api/workflows/{id} returns its blockers as questions, empty ones dropped, in full-team and in lean. Break-proofs 7.2 to 7.4, 7.8 and 7.9.",
+    "(b) A ready plan's run has no questions, and a gate with nothing to ask asks nothing. Break-proof 7.5.",
+    "(c) Answering starts a new run of the same workflow; its request carries each question and answer, its plan prompt contains them, and its answers record names the parent. Break-proofs 7.14 to 7.17.",
+    "(d) The refusals: 404 for a missing run or another caller's, 409 for a run that asked nothing or whose workflow is not recorded, 422 for a wrong number of answers or an empty one, each leaving no row and holding no slot. Break-proofs 7.10 to 7.13 and 7.19.",
+    "(e) The spec refuses asks_requester on a node that is not a gate; a missing path or a value that is not a list raises. Break-proofs 7.1, 7.6 and 7.7.",
+    "(f) Every workflow with a plan_ready gate declares asks_requester: plan.blockers. Break-proof 7.18.",
+    "(g) Unchanged elsewhere. Every existing test passes, changed only as the task file gives: one test in tests/test_workflow_choice.py.",
+    "(h) Counts re-derived from pytest --collect-only in HANDOVER.md, README.md and AGENTS.md; tests/test_docs.py passes. Suite green before and after, network guard 0, CI 5/5, PR opened."
+  ],
+
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/test_plan_asks.py tests/test_workflow_choice.py -q", "expected": "44 passed."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "1755 passed, 1 skipped; network guard: 0. 1735 collected before, 1756 after."}
+  ],
+
+  "rollback": "Revert the PR. No schema change. Questions and answers records written meanwhile stay in the database as ordinary phase rows and are no longer read; runs started by an answer stay ordinary runs.",
+
+  "deliverable": "One PR from branch exec/20261029-130-plan-asks, made from main: the gate's ask, the questions on the API path, the answers route, the two workflow lines, the tests with their break-proofs, the docs and counts, and the response marked DONE. Then STOP.",
+
+  "assumptions": [
+    "A plan's blockers are written as things the planner needs to know. If they read as statements rather than questions, the requester still sees them typed and can answer them; asking the plan prompt to phrase them as questions is a separate ruling (D58 section 5)."
+  ],
+
+  "questions": [],
+
+  "preconditions": [
+    {"command": "test -f .orchestration/responses/ARCH-20261028-129.response.json && echo 129 delivered", "expected": "129 delivered - the parent's response is on main."},
+    {"command": "grep -c '^\\*\\*Status: ruled by the advisor on 2026-10-29' docs/reviews/2026-10-29-d58-a-plan-that-is-not-ready-asks.md", "expected": "1 - D58 is ruled."},
+    {"command": "test -f .orchestration/prompts/ARCH-20261029-130.md && echo task file ok", "expected": "task file ok - the task file is on main."},
+    {"command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none", "expected": "none"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "1734 passed, 1 skipped; 1735 collected."}
+  ]
+}
