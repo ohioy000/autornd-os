@@ -1,0 +1,81 @@
+{
+  "command_id": "ARCH-20261028-128",
+  "parent_id": "ARCH-20261028-127",
+  "priority": "P1",
+  "status": "PROPOSED",
+  "objective": "Implement Ruling D56: a lookup's answer quotes the passage it rests on; the harness fetches each quoted page from public addresses only, records the version it read, and looks for the passage in it; a question whose quoted passage was not found is asked once more; only a found passage is stored and recalled. Free work; no paid call and no real fetch.",
+
+  "evidence": [
+    "THE TASK FILE: .orchestration/prompts/ARCH-20261028-128.md. It has 9 ordered tasks, each with exact edits, a CHECK and its EXPECT. The advisor replayed every task from the task file's own text on a copy of main on 2026-10-28, and each EXPECT is the output it saw. Where this file and the task file differ in detail, the task file governs.",
+    "THE STARTUP PROMPT: .orchestration/prompts/STARTUP.md. A new executor reads it first.",
+    "Ruling D56: docs/reviews/2026-10-28-d56-a-finding-checked-against-its-source.md. Section 1 lists the gaps, each checked by the advisor against main on 2026-10-28: citations are provider annotations and nothing fetches a page; Finding.grounded means only that a URL was attached; MAX_LOOKUPS = 1 with no second look; _remember files a multi-part answer under citations[0]; REUSE_DISTANCE's comment says squared L2 on a cosine collection.",
+    "The code it changes: autornd/knowledge/research.py (the lookup, the check, the second round, the store and recall); autornd/knowledge/context.py _record_lookup; autornd/models/verdicts.py (LookupVerdict, QuotedPassage); autornd/routing/openrouter.py (a public extract_json); a new autornd/knowledge/fetch.py.",
+    "Preflight: the lookup stays a plain chat on the search tier, so sent_parameters('search') is unchanged and a pinned search serving still passes (G-2). tests/test_preflight_gate.py guards it unchanged.",
+    "Convention 18: the time budget and the spend ceiling are re-derived in autornd/config.py's comments, both unchanged, with the arithmetic."
+  ],
+
+  "scope": {
+    "include": [
+      "autornd/knowledge/fetch.py (new), autornd/knowledge/research.py, autornd/knowledge/context.py",
+      "autornd/models/verdicts.py: LookupVerdict and QuotedPassage, appended",
+      "autornd/routing/openrouter.py: extract_json, a public name for the client's JSON extraction, nothing else",
+      "autornd/config.py: the comments on run_time_budget_seconds and run_spend_ceiling_usd only; no value changes",
+      "tests/test_source_check.py (new); tests/test_research.py, tests/prompt_capture.py, tests/test_engine.py as the task file gives them",
+      "tests/fixtures/prompts/*.json: re-captured by WRITE_GOLDEN=1, the lookup site's D56 block the only change",
+      "README.md, HANDOVER.md, AGENTS.md, .claude/context/cost-and-budgets.md",
+      ".orchestration/responses/"
+    ],
+    "exclude": [
+      "Any real fetch or provider call. Every test serves its pages through httpx.MockTransport and resolves names through a stub",
+      "autornd/database.py: no schema change. If one is needed, STOP and report",
+      "evals/: unchanged",
+      "docs/reviews/ and the other records; .orchestration/ except the response file",
+      ".env and .env.tier3: the owner's (G-3). Do not read them"
+    ]
+  },
+
+  "constraints": [
+    "STARTUP FIRST: the executor reads .orchestration/prompts/STARTUP.md before Task 0, and its rules hold for every task.",
+    "FREE. No paid call and no real fetch. The network guard stays at 0.",
+    "TYPED, NEVER PROSE: the quotes are fields of LookupVerdict. A reply not in the format is kept whole as the answer with no quotes, and counted by untyped_replies(); nothing reads quotes out of prose.",
+    "PUBLIC ADDRESSES ONLY: a fetch refuses any scheme but http and https, and any host with a loopback, private or link-local address, at every redirect. This is a security line, not a tuning value.",
+    "FOUND IS NOT CORRECT: the docs and the rendered findings say a found passage shows the words are on the page, not that the answer follows from them.",
+    "ONE MORE LOOK AT MOST: a second request goes only to questions whose answer quoted a passage and had none found. An answer that quoted nothing is not asked again.",
+    "RULED VALUES: REUSE_DISTANCE 0.175, MIN_QUOTE_CHARS 20, MAX_ROUNDS 2, MAX_FETCHES 8, FETCH_TIMEOUT_SECONDS 10, FETCH_MAX_BYTES 2000000, MAX_REDIRECTS 3. Changing one to make a test pass is a STOP.",
+    "A defect found in existing harness code while doing this is a STOP-and-report, not a fix."
+  ],
+
+  "acceptance_criteria": [
+    "(a) Typed reply. A JSON reply's answer and quotes are fields. A prose reply, or JSON without an answer field, is kept whole as the answer with no quotes, marked unverified, and counted. The lookup is one plain chat on the search tier. Break-proofs 6.1 to 6.3.",
+    "(b) Fetch. Only http/https with a host is fetched; a host with any non-public address is refused before any request; every redirect is checked, at most 3 followed; 404, a PDF, a page over 2 MB and a slow page each fail with their reason; a fetch never raises; a fetched page records its final address, time, sha256, Last-Modified and ETag; HTML is read without script or style. Break-proofs 6.4 to 6.12.",
+    "(c) Quote check. Spacing, case, quote marks and dashes read alike; a changed or missing word is not found; under 20 characters checks nothing; a found passage is rendered with its page, time and sha256; a bundle names the questions left unverified; at most 8 pages a lookup. Break-proofs 6.13 to 6.16.",
+    "(d) One more look. A question whose quoted passage was not found is asked once more, with AGAIN_PROMPT, alone with the others not found; a checked question is not asked again; a reply that quoted nothing is not asked again; there is no third round; an all-found lookup costs one request. Break-proofs 6.17 and 6.18.",
+    "(e) What is kept. Each found passage is stored once, under its own page, with its question and version, tagged research-quoted; a passage not found is not stored; recall reads only research-quoted; a hit at cosine distance 0.2 is not reused and one at 0.1 is; a recalled passage is not asked again or marked unverified. Break-proofs 6.19 to 6.23.",
+    "(f) The record. The grounding record's quotes counts and asked_again match what the check did, end to end through build_phase_context. Break-proof 6.24.",
+    "(g) Unchanged elsewhere. Every existing test passes, changed only as the task file gives: three in tests/test_research.py, one line each in tests/prompt_capture.py and tests/test_engine.py, and the four fixtures re-captured with only the lookup prompt's D56 block changed. tests/test_preflight_gate.py passes unchanged.",
+    "(h) Counts re-derived from pytest --collect-only in HANDOVER.md, README.md and AGENTS.md; tests/test_docs.py passes. Suite green before and after, network guard 0, CI 5/5, PR opened."
+  ],
+
+  "verification": [
+    {"command": ".venv/bin/python3 -m pytest tests/test_source_check.py tests/test_research.py -q", "expected": "83 passed."},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "1715 passed, 1 skipped; network guard: 0. 1670 collected before, 1716 after."}
+  ],
+
+  "rollback": "Revert the PR. No schema change. Entries stored under research-quoted stay in the store and are no longer recalled; entries stored under research before D56 are recalled again.",
+
+  "deliverable": "One PR from branch exec/20261028-128-source-check, made from main: the typed reply, the fetch, the quote check, the second round, the store and recall, the record, the tests with their break-proofs, the budgets' comments, the docs and counts, and the response marked DONE. Then STOP.",
+
+  "assumptions": [
+    "The search serving can return the typed format. If it does not, every answer is kept whole and marked unverified, which is what the measurement of record will show; that is a finding, not a defect to repair in this command."
+  ],
+
+  "questions": [],
+
+  "preconditions": [
+    {"command": "test -f tests/test_workflow_choice.py && echo 127 merged", "expected": "127 merged - command 127 is on main."},
+    {"command": "grep -c '^\\*\\*Status: ruled by the advisor on 2026-10-28' docs/reviews/2026-10-28-d56-a-finding-checked-against-its-source.md", "expected": "1 - D56 is ruled."},
+    {"command": "test -f .orchestration/prompts/ARCH-20261028-128.md && echo task file ok", "expected": "task file ok - the task file is on main."},
+    {"command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none", "expected": "none"},
+    {"command": ".venv/bin/python3 -m pytest tests/ -q", "expected": "1669 passed, 1 skipped; 1670 collected."}
+  ]
+}
