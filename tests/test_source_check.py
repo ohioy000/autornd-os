@@ -42,9 +42,13 @@ CELL = "Charge each cell to 3.65 V and no higher, at 25 C."
 
 
 def _served(pages: dict[str, tuple[int, dict[str, str], bytes]], seen=None):
-    """A transport serving `pages`, keyed by address, recording each GET."""
+    """A transport serving `pages`, keyed by address, recording each GET.
+
+    The fetch connects to the checked address and names the page in the
+    Host header (D56, amended), so the address a page is served under is
+    rebuilt from that header."""
     def handler(request: httpx.Request) -> httpx.Response:
-        url = str(request.url)
+        url = str(request.url.copy_with(netloc=request.headers["host"].encode()))
         if seen is not None:
             seen.append(url)
         status, headers, body = pages.get(url, (404, {}, b"not here"))
@@ -218,7 +222,7 @@ class TestTheQuoteCheck:
     @pytest.mark.parametrize("quote", [
         PASSAGE,
         "  the MAXIMUM radiated power in this band\nis 25 mW e.r.p.  ",
-        "“The maximum radiated power in this band is 25 mW e.r.p.”",
+        "\u201cThe maximum radiated power in this band is 25\u00a0mW e.r.p.\u201d",
     ])
     def test_spacing_case_and_quote_marks_are_read_alike(self, quote):
         page = "Short range devices\nThe maximum radiated power in this band is 25 mW e.r.p.\n"
@@ -393,3 +397,42 @@ def test_a_finding_built_the_old_way_is_one_unverified_question():
     finding = Finding("q", "a", ["https://x/y"])
     assert finding.unchecked() == [1] and finding.to_ask_again() == []
     assert Quote(1, "t", "u").status == "unchecked"
+
+
+class TestTheFetchConnectsToTheAddressItChecked:
+    """D56, amended 2026-10-28: the check resolves the name once a hop, and
+    the request goes to the address the check approved. The first version
+    let the connection resolve the name again, so a name that answered one
+    way to the check and another to the connection got through."""
+
+    async def test_the_request_goes_to_the_checked_address(self, monkeypatch):
+        sent: list[httpx.Request] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            sent.append(request)
+            return httpx.Response(200, headers={"content-type": "text/plain"},
+                                  content=PASSAGE.encode())
+
+        monkeypatch.setattr(fetch, "_transport", httpx.MockTransport(handler))
+        source = await fetch.fetch_source(PAGE)
+        assert source.status == "fetched" and source.final_url == PAGE
+        (request,) = sent
+        assert request.url.host == "93.184.216.34"
+        assert request.headers["host"] == "standards.example.org"
+        assert request.extensions["sni_hostname"] == "standards.example.org"
+
+    async def test_nothing_is_taken_from_the_environment(self, monkeypatch):
+        """No proxy, which would resolve the name itself, and no .netrc
+        credentials. httpx ignores the environment's proxies whenever a test
+        transport is set, so the setting is read where the client is made."""
+        made: list[dict] = []
+        real = httpx.AsyncClient
+
+        def client(*args, **kwargs):
+            made.append(kwargs)
+            return real(*args, **kwargs)
+
+        monkeypatch.setattr(fetch.httpx, "AsyncClient", client)
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
+        assert (await fetch.fetch_source(PAGE)).status == "fetched"
+        assert [kwargs["trust_env"] for kwargs in made] == [False]
