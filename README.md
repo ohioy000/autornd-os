@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1670%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1716%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -49,8 +49,10 @@ before relying on any workflow:
 - **Independent recomputation has.** Several cheap, blind recomputes and a
   majority vote flagged every wrong answer measured. That is why the
   `answer-and-recompute` workflow exists.
-- **Research cites what the search provider returns.** It does not yet fetch a
-  source and confirm that a quoted passage is in it.
+- **Research checks each answer's quote against its page.** Every answer
+  quotes the passage it rests on; the harness fetches the page and looks for
+  the passage in it. A found passage shows the words are on the page, not that
+  the answer follows from them, and a PDF cannot be read yet.
 
 Every run, its trace and its figures are recorded with a date under
 [`docs/reviews/`](docs/reviews/) and [`docs/traces/`](docs/traces/), and
@@ -194,15 +196,18 @@ brief from your documentation  ──▶  what it does not cover  (the gaps)
                                               │
                             the gaps become the search queries
                                               │
-                          search ──▶ findings, with citations
+                search ──▶ answers, each quoting the page it rests on
+                                              │
+              each page fetched, each quoted passage looked for in it
                                               │
                     ingested, so the next workflow has them locally
 ```
 
 Nothing is searched that the briefing had not already established was missing, and a fact is looked up once. Two disciplines are enforced rather than hoped for:
 
-- **A finding carries its sources or it is marked unverified.** An uncited answer is exactly the failure mode this exists to prevent.
-- **Unverified findings are shown to you and never stored.** A guess must not quietly become permanent context that later runs treat as established.
+- **An answer is checked against its page or marked unverified.** Each answer quotes the passage it rests on. The harness fetches the page, records which version it read (when, and the sha256 of the bytes), and looks for the passage in it, read alike for spacing, case, quote marks and dashes but not for a single changed word. A citation alone is the provider's word; a found passage is the page's. A question whose passage is not found is asked once more, and what is still not found is marked unverified.
+- **Only a found passage is stored.** Unverified answers are shown to you and never stored: a guess must not quietly become permanent context that later runs treat as established.
+- **A fetch reads public web pages only.** No other scheme, and no loopback, private or link-local address, redirects included. HTML and plain text are read; a PDF is not yet, so its answer stays unverified.
 
 One failed lookup does not sink a workflow — three facts out of four beats aborting, and the missing one stays visible as a gap. Lookups are bounded.
 
@@ -692,7 +697,7 @@ python -m autornd.cli stats
 python -m autornd.cli query "laser sensor wiring" -n 5
 ```
 
-Retrieval pulls a wide candidate set and ranks it down, because embedding distance reliably finds material *about* the right subject and is much worse at ordering it. Research findings are ingested alongside your documents, tagged `research`, so a looked-up fact is local afterwards.
+Retrieval pulls a wide candidate set and ranks it down, because embedding distance reliably finds material *about* the right subject and is much worse at ordering it. Research findings are ingested alongside your documents: each passage found in its page, with the page's address and the version read, tagged `research-quoted`, so a looked-up fact is local afterwards.
 
 The store ships empty. Until you ingest something, research scopes requests rather than grounding them.
 
@@ -800,7 +805,8 @@ autornd/
     phases.py             # Phase implementations, output contracts
     review_composition.py # Risk-based review team selection
   knowledge/
-    research.py           # Outward lookups, citations, persistence
+    research.py           # Outward lookups, the quote check, persistence
+    fetch.py              # Fetches a quoted page and records its version
     context.py            # Grounding: retrieve, rank, brief, research
     store.py              # ChromaDB ingestion + retrieval
     episodic.py           # Workflow outcome memory
@@ -823,7 +829,7 @@ AutoRnD publishes no dollar figures. Prices change, and they depend entirely on 
 **Calls are a function of the workflow file and the triage risk,** and they are derived rather than estimated: drive any workflow against the scripted test client (`tests/test_evals.py`) and it reports its calls, for nothing, in under a second. The shape that follows from the shipped files:
 
 - **Review scales hardest with risk.** Critical work runs the most reviewers and low-risk work one, so risk classification is a cost decision as much as a quality one.
-- **Research adds a small fixed overhead:** two research-tier calls — one to write the retrieval queries, one to brief from what came back, or to scope the request when nothing matched — plus at most one outward lookup, because every blocking gap rides in a single request. Low-risk work makes no lookup. A ranker tier adds one call when retrieval returns material.
+- **Research adds a small fixed overhead:** two research-tier calls — one to write the retrieval queries, one to brief from what came back, or to scope the request when nothing matched — plus one outward lookup, because every blocking gap rides in a single request, and a second only for the questions whose quoted passage was not found in its page. Fetching the pages makes no provider call. Low-risk work makes no lookup. A ranker tier adds one call when retrieval returns material.
 - **Retries and escalation add more.** Every loop is bounded, so the worst case is finite and the eval runner can cap it.
 - **The engineering tier dominates** the full workflow's bill: it runs implement, validate, feasibility and most of review.
 - **Output tokens are the expensive half, and they are also latency.** An unbounded validator once produced 15,000 output tokens for a green/red verdict, taking three minutes. `VALIDATE_MAX_TOKENS` exists because of that.

@@ -168,12 +168,25 @@ class Settings(BaseSettings):
     # bound rather than None. 1800 measured 2026-10-02: 098's three runs had
     # 1,800 s budgets and reached judge-approved answers at 15.6 and 20.7
     # minutes. The owner may change it in .env (G-3).
+    #
+    # Ruling D56 re-derived it, unchanged. A lookup now fetches its quoted
+    # pages, together, in at most 10 s a round, and may ask once more: at most
+    # two rounds a lookup and three lookups a run, so 60 s of fetching and
+    # three more search calls. That fits the 558 s between 20.7 minutes and
+    # this bound while a search call takes under about 160 s; the measurement
+    # of record checks it.
     run_time_budget_seconds: float | None = 1800.0
 
     # Ruling D45 (2): the API run's spend ceiling, in USD. Runs measured
     # since 102 cost $0.02 to $0.19 end to end, so 0.50 is several whole runs
     # of headroom and still a bound on an unwatched endpoint. The owner may
     # change it in .env (G-3).
+    #
+    # Ruling D56 re-derived it, unchanged. A fetch makes no provider call. A
+    # second search request goes only to questions whose quoted passage was
+    # not found: one a lookup, three a run, about $0.067 each at the
+    # consequential budget, so at most about $0.20 on top of the measured
+    # runs, still inside 0.50.
     run_spend_ceiling_usd: float = 0.50
 
     # Ruling D45 (6): how many API runs may be in flight at once. A per-run
