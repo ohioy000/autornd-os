@@ -5,6 +5,9 @@ description: >
   implement/validate, review — so it is the baseline any variant is measured
   against. Copy it and change it: that is the point of it being a file.
 
+# Ruling D55 (2): a request may name this workflow.
+offered: true
+
 nodes:
   # ── classify ────────────────────────────────────────────────────────────
   - id: triage

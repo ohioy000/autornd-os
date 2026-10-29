@@ -8,6 +8,9 @@ description: >
   Written to be compared against full-team.yaml: same request, same
   models, different shape.
 
+# Ruling D55 (2): a request may name this workflow.
+offered: true
+
 nodes:
   - id: triage
     kind: ai

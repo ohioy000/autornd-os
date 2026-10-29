@@ -138,6 +138,10 @@ class WorkflowSpec:
     name: str
     nodes: list[Node]
     description: str = ""
+    # Ruling D55 (2): true when a request may name this workflow. The
+    # workflows that produce a deliverable declare it; the instruments,
+    # built to measure one stage, do not.
+    offered: bool = False
 
     def __post_init__(self) -> None:
         self._by_id = {n.id: n for n in self.nodes}
@@ -402,7 +406,14 @@ def parse(data: dict[str, Any]) -> WorkflowSpec:
                 f"on_exhausted_status; it can hand off or end, not both"
             )
 
-    spec = WorkflowSpec(name=name, nodes=nodes, description=data.get("description", ""))
+    offered = data.get("offered", False)
+    if not isinstance(offered, bool):
+        raise SpecError(
+            f"workflow '{name}' sets offered to {offered!r}; it must be true "
+            f"or false")
+    spec = WorkflowSpec(name=name, nodes=nodes,
+                        description=data.get("description", ""),
+                        offered=offered)
     spec.execution_order()  # surface cycles at load time, not mid-run
     # And the same guarantee for every routing target: the sub-graph a closed
     # gate or an exhausted loop hands off to must be orderable. Before this a

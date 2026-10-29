@@ -11,6 +11,9 @@ description: >
   honest-refusal gate, the free checks, the recompute and
   its vote. A flag is a note on the delivery, nothing more.
 
+# Ruling D55 (2): a request may name this workflow.
+offered: true
+
 nodes:
   # ── classify ────────────────────────────────────────────────────
   - id: triage
