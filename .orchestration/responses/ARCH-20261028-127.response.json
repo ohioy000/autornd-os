@@ -5,8 +5,8 @@
   "head_before": "3d7150d750c7341e8385bc628f1989b516872e90",
   "head_after": "1bf34a57b8a44d0415251dec5ace807cd7fb6c1d",
   "results": {
-    "task": 5,
-    "step": "tests/test_workflow_choice.py written; Task 5 CHECK matches EXPECT (65 passed, network guard 0)"
+    "task": 6,
+    "step": "thirteen break-proofs run; each failed exactly the tests Task 6 EXPECT names; each undone with git checkout -- <file>; git status --short printed only '?? .qwen/' after each"
   },
   "preconditions_ran": [
     {
@@ -73,8 +73,152 @@
   "suite_count_before": 1647,
   "suite_count_after": 0,
   "tests_changed": [],
-  "break_proofs": [],
+  "break_proofs": [
+    {
+      "break": "6.1 the request's workflow field is ignored (if body.workflow is None -> if True)",
+      "file": "autornd/api/routes.py",
+      "failed": [
+        "tests/test_workflow_choice.py::TestTheRequestChoosesItsWorkflow::test_a_named_workflow_runs_and_is_recorded",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[../workflows/lean-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[../workflows/lean-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[/etc/passwd-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[/etc/passwd-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[triage-only-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[triage-only-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[nonexistent-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[nonexistent-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[engineering-rnd-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[engineering-rnd-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestTheDuplicateNamesTheWorkflow::test_the_same_request_runs_under_two_workflows_at_once"
+      ],
+      "result": "12 failed, 53 passed"
+    },
+    {
+      "break": "6.2 a path is read for its stem, so ../workflows/lean runs lean",
+      "file": "autornd/engine/workflow.py",
+      "failed": [
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[../workflows/lean-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[../workflows/lean-/api/workflows/sync]"
+      ],
+      "result": "2 failed, 63 passed"
+    },
+    {
+      "break": "6.3 an existing file named by its path is accepted",
+      "file": "autornd/engine/workflow.py",
+      "failed": [
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[/etc/passwd-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[/etc/passwd-/api/workflows/sync]"
+      ],
+      "result": "2 failed, 63 passed"
+    },
+    {
+      "break": "6.4 every workflow is offered, instruments too (if spec.offered -> if True)",
+      "file": "autornd/engine/workflow.py",
+      "failed": [
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[../workflows/lean-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[../workflows/lean-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[/etc/passwd-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[/etc/passwd-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[triage-only-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[triage-only-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[nonexistent-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[nonexistent-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[engineering-rnd-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[engineering-rnd-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestTheOfferedList::test_the_four_are_listed_with_their_descriptions"
+      ],
+      "result": "11 failed, 54 passed"
+    },
+    {
+      "break": "6.5 an unknown name falls back to the default",
+      "file": "autornd/engine/workflow.py",
+      "failed": [
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[../workflows/lean-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[../workflows/lean-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[/etc/passwd-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[/etc/passwd-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[triage-only-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[triage-only-/api/workflows/sync]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[nonexistent-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[nonexistent-/api/workflows/sync]"
+      ],
+      "result": "8 failed, 57 passed"
+    },
+    {
+      "break": "6.6 the old name becomes an alias",
+      "file": "autornd/engine/workflow.py",
+      "failed": [
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[engineering-rnd-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[engineering-rnd-/api/workflows/sync]"
+      ],
+      "result": "2 failed, 63 passed"
+    },
+    {
+      "break": "6.7 the name is checked after the slot is taken, in the async submit",
+      "file": "autornd/api/routes.py",
+      "failed": [
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[../workflows/lean-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[/etc/passwd-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[triage-only-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[nonexistent-/api/workflows]",
+        "tests/test_workflow_choice.py::TestARefusedNameLeavesNothing::test_the_name_is_refused_with_the_offered_names[engineering-rnd-/api/workflows]"
+      ],
+      "result": "5 failed, 60 passed"
+    },
+    {
+      "break": "6.8 the gate ignores the workflow",
+      "file": "autornd/api/routes.py",
+      "failed": [
+        "tests/test_workflow_choice.py::TestTheDuplicateNamesTheWorkflow::test_the_gate_keys_on_the_workflow",
+        "tests/test_workflow_choice.py::TestTheDuplicateNamesTheWorkflow::test_the_same_request_runs_under_two_workflows_at_once"
+      ],
+      "result": "2 failed, 63 passed"
+    },
+    {
+      "break": "6.9 the workflow record is not written",
+      "file": "autornd/engine/workflow.py",
+      "failed": [
+        "tests/test_workflow_choice.py::TestTheRequestChoosesItsWorkflow::test_a_named_workflow_runs_and_is_recorded",
+        "tests/test_workflow_choice.py::TestTheRequestChoosesItsWorkflow::test_an_unnamed_run_uses_the_configured_default",
+        "tests/test_api.py::TestOneRowPerSubmission::test_the_submitted_id_runs_finishes_and_stays_one_row"
+      ],
+      "result": "3 failed, 62 passed"
+    },
+    {
+      "break": "6.10 one byte of the flagship changes (two spaces in the description)",
+      "file": "workflows/full-team.yaml",
+      "failed": [
+        "tests/test_workflow_choice.py::TestTheRename::test_full_team_is_the_old_file_under_its_new_name"
+      ],
+      "result": "1 failed, 64 passed"
+    },
+    {
+      "break": "6.11 the setting no longer refuses the old name",
+      "file": "autornd/config.py",
+      "failed": [
+        "tests/test_workflow_choice.py::TestTheRename::test_the_old_name_is_refused_at_startup[engineering-rnd]",
+        "tests/test_workflow_choice.py::TestTheRename::test_the_old_name_is_refused_at_startup[workflows/engineering-rnd.yaml]"
+      ],
+      "result": "2 failed, 63 passed"
+    },
+    {
+      "break": "6.12 a current file names the old name (a comment)",
+      "file": "autornd/engine/workflow.py",
+      "failed": [
+        "tests/test_workflow_choice.py::TestTheRename::test_no_current_file_names_the_old_name"
+      ],
+      "result": "1 failed, 64 passed"
+    },
+    {
+      "break": "6.13 offered may be anything (isinstance check disabled)",
+      "file": "autornd/graph/spec.py",
+      "failed": [
+        "tests/test_workflow_choice.py::TestTheOfferedList::test_offered_must_be_true_or_false"
+      ],
+      "result": "1 failed, 64 passed"
+    }
+  ],
   "deviations": [],
   "questions_for_advisor": [],
-  "notes": "The first start of this command stopped at Task 0, because command 124 was not yet merged (PR 220 was open; origin/main 5163e60 had no tests/test_advisory_nodes.py, collected 1628 and passed 1627). That BLOCKED response was committed locally as 4702c8a and never pushed. The owner then said 124 was merged (#220) and told the coder to start again from Task 0, using git switch -C instead of git switch -c because the branch already existed. This run did that: git switch -C exec/20261028-127-workflow-per-request origin/main moved the branch from 4702c8a to origin/main 3d7150d (the merge of #220). The BLOCKED commit is no longer on the branch and was not pushed. Work is in /home/jb/autornd-os, where the task file's Task 0 places it. The new branch's upstream is origin/main (git sets it from the start point), so Task 8 pushes with an explicit branch name and -u."
+  "notes": "The first start of this command stopped at Task 0, because command 124 was not yet merged (PR 220 was open; origin/main 5163e60 had no tests/test_advisory_nodes.py, collected 1628 and passed 1627). That BLOCKED response was committed locally as 4702c8a and never pushed. The owner then said 124 was merged (#220) and told the coder to start again from Task 0, using git switch -C instead of git switch -c because the branch already existed. This run did that: git switch -C exec/20261028-127-workflow-per-request origin/main moved the branch from 4702c8a to origin/main 3d7150d (the merge of #220). The BLOCKED commit is no longer on the branch and was not pushed. Work is in /home/jb/autornd-os, where the task file's Task 0 places it. The new branch's upstream is origin/main (git sets it from the start point), so Task 8 pushes with an explicit branch name and -u. Task 6: the breaks were driven by a scratch script outside the repo that applied each find/replace once (it stops if the find is not in the file exactly once; each was), ran the task's CHECK with PYTHONDONTWRITEBYTECODE set, and undid the break with git checkout -- <file>. Each break's failed list equals the task's EXPECT."
 }
