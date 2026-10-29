@@ -212,6 +212,26 @@ class WorkflowEngine:
 
         try:
             state = await executor.run(request)
+            # Ruling D57 (3): the unendorsed candidate reaches the caller.
+            # The executor keeps it at every terminal that is not completed
+            # once an implementation exists (D51 (7)); this path dropped
+            # it, so an API caller saw the status and never the answer.
+            # It goes through the phase channel on a zero-cost response,
+            # as the workflow record does, with D38's pointer to the last
+            # answer the build judges agreed on, and that answer when it
+            # is not the last one. No DB schema change.
+            if state.candidate is not None:
+                approved = (state.watchdog.approved
+                            if state.watchdog is not None else None)
+                record = {**state.candidate, "approved": approved}
+                if approved and approved.get("latest_differs"):
+                    record["approved_answer"] = (
+                        runner.iterations[approved["index"]]
+                        ["implement_summary"])
+                on_phase("candidate", record,
+                         [ModelResponse(content="", model="", prompt_tokens=0,
+                                        completion_tokens=0, cost=0.0)],
+                         0)
             # Drain the progress writers first: the node writes are what
             # advance the row's status while the run is in flight, and none of
             # them may land after the terminal below.
