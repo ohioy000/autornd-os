@@ -905,7 +905,12 @@ class ReviewVerdict(BaseModel):
 class DoubleCheckVerdict(BaseModel):
     ship: bool
     confidence: str = Field(description="high, medium, or low")
-    critical_issues: list[str] = Field(default_factory=list)
+    # Ruling D57 (2): an issue is a ReviewFinding, so it carries its anchor
+    # in the same typed fields a review finding does. A bare string still
+    # loads, as its detail, and anchors nothing. run_doublecheck keeps here
+    # only the anchored issues and moves the rest to notes.
+    critical_issues: list[ReviewFinding] = Field(default_factory=list)
+    notes: list[ReviewFinding] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
     verdict: str
 

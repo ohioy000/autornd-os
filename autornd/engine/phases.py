@@ -1404,14 +1404,28 @@ Review this {f['implementation']} independently.
 The asks, quoted from the request:
 {render_asks(asks)}
 
+An issue can block only if it is anchored:
+- it names the ask it concerns, by number, and what the answer states or omits against it; or
+- it quotes the request's own words, exactly, for something the answer gets wrong or leaves out; or
+- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment. Quote those words of the answer.
+If the answer gives something for an ask and you say it is false, set kind: wrong_fact and quote, in source_quote, the words of the request or of the provided sources that show it is false. If you cannot quote them, it is a recommendation.
+An omission is never a hazard. If the request asked for what is missing, quote the request; if it did not, it is a recommendation.
+
 Implementation summary:
 {implement.summary}
 
 Return JSON with:
 - ship: true if safe to ship with no blocking issues
 - confidence: "high", "medium", or "low"
-- critical_issues: list of critical issues found (empty if none)
-- recommendations: list of improvement recommendations
+- critical_issues: list of the anchored issues found (empty if none), each an object with:
+  - detail: the issue
+  - ask: the number of the ask the issue concerns, when it names one
+  - quote: the request's own words, verbatim, when the issue is anchored by them
+  - hazard: true only when the issue is a hazard
+  - hazard_quote: when hazard is true, the answer's own words that state or instruct it, verbatim
+  - kind: the issue's kind — unmet_ask (the answer gives nothing for the ask), wrong_fact (the answer gives something for the ask and you say it is false), or hazard
+  - source_quote: for wrong_fact, the request's or the sources' own words that contradict the answer, verbatim
+- recommendations: list of improvement recommendations; these never block
 - verdict: one-sentence final assessment
 
 Original request:
@@ -1424,6 +1438,28 @@ Original request:
         schema=DoubleCheckVerdict,
     )
     verdict = DoubleCheckVerdict(**data)
+    # Ruling D57 (2): the independent check vetoes only on an anchored
+    # issue, the rule run_review applies to a finding (D51 (3), R2). An
+    # issue with no anchor is a note, counted; the check's own ship: false
+    # with no anchored issue is a note too, so the raw field is not a
+    # channel into the veto.
+    anchored: list[Any] = []
+    notes = list(verdict.notes)
+    for issue in verdict.critical_issues:
+        if dissent_anchored(issue.ask, issue.quote, issue.hazard,
+                            asks, request, implement.summary,
+                            issue.hazard_quote, issue.kind,
+                            issue.source_quote, context):
+            # Every kept issue is critical: that is what blocks.
+            anchored.append(issue.model_copy(update={"severity": "critical"}))
+            continue
+        if dissent_kind(issue.kind, issue.hazard) == "wrong_fact":
+            count_normalisation(UNVERIFIED_DISSENT)
+        else:
+            count_normalisation(UNANCHORED_DISSENT)
+        notes.append(issue)
+    verdict = verdict.model_copy(update={
+        "ship": not anchored, "critical_issues": anchored, "notes": notes})
     return verdict, response
 
 

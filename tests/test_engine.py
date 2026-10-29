@@ -455,9 +455,15 @@ class TestASkippedIndependentCheckRecordsNoShip:
         from autornd.config import settings
 
         monkeypatch.setattr(settings, "model_premium", "test/premium-model")
+        # Ruling D57 (2): the veto holds only on an anchored issue, here
+        # the request's own words. The unanchored form ships, guarded in
+        # tests/test_convergence.py.
         state = await self._drive_probe(monkeypatch, {
             "ship": False, "confidence": "high",
-            "critical_issues": ["R7 value contradicts the schematic"],
+            "critical_issues": [{
+                "detail": "R7 value contradicts the schematic",
+                "quote": "Roll signed firmware to 40,000 devices",
+                "kind": "unmet_ask"}],
             "recommendations": [], "verdict": "Do not ship."})
 
         assert state.status == "blocked"
