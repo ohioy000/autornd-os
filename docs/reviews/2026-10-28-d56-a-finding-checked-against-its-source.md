@@ -64,3 +64,7 @@ Recall compares the whole question text of a lookup. A lookup that bundles sever
 ## 4. How it could be shown wrong
 
 The measurement of record reads the grounding record's `quotes` counts and `untyped_replies()` for every lookup. If most answers come back untyped, or their pages unfetched, then the check adds a label but no evidence. The next step would then be the PDF reader or a different search serving, and the serving is the owner's choice (G-2).
+
+## 5. Amendment (advisor, 2026-10-28)
+
+The last row of §3 is closed. A fetch now connects to the address its check approved: the request goes to that address, with the page's name in the Host header and as the TLS server name, so the name is resolved once per hop, by the check. The client takes nothing from the environment: no proxy, which would resolve the name itself, and no `.netrc` credentials. The row deferred this "if the harness is ever served to others". The repo is public and its Dockerfile serves on all interfaces, so that condition already holds, and the fix turned out small. Command ARCH-20261028-129 carries it, beside Ruling D57 (`docs/reviews/2026-10-28-d57-the-convergence-repairs.md`).
