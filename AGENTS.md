@@ -217,7 +217,8 @@ to work anything out: it follows exact tasks and does not design or interpret (o
 ## Practical notes
 
 - **Opening a session:** follow `docs/successor-prompt.md` (the owner pastes it) in order, run the
-  suite, report the count, and change nothing until the owner confirms.
+  suite, report the count, and change nothing until the owner confirms. A new architect starts with
+  `.orchestration/prompts/STARTUP-ARCHITECT.md`; a new executor with `.orchestration/prompts/STARTUP.md`.
 - **⚠️ Meter epoch:** cost accounting was broken before commit `b4cd89f` (research, context and
   rerank calls bypassed it). **Any cost figure predating `b4cd89f` is understated by 2.6×–295×.
   Never cite one.** Re-measure.

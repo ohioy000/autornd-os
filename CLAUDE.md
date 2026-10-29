@@ -50,7 +50,7 @@ needs the owner's authorisation, stated before the spend.** Work arrives and ret
 ## Arch to Coder — the owner's standard
 
 The architect (advisor) thinks; the coder (executor) works. The task-file format is in `AGENTS.md`,
-"How a command is written".
+"How a command is written". A new architect starts with `.orchestration/prompts/STARTUP-ARCHITECT.md`.
 
 1. **The architect does the hard work.** The coder follows exact tasks and never has to work
    anything out.
