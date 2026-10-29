@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "0c9deb81f72a333bc09d2d71444b7456e6588f71",
-  "head_after": "0c9deb81f72a333bc09d2d71444b7456e6588f71",
+  "head_after": "05323f83551df873c1bec0b364e250065fa9a9d4",
   "results": {
-    "task": 0,
-    "step": "branch exec/20261028-129-convergence made from origin/main; suite 1715 passed, 1 skipped"
+    "task": 7,
+    "step": "Tasks 1-7 done; every CHECK matched its EXPECT (112, 17+171/1 skipped fixtures proof, 97, 177, 85, 17 passed); 18 break-proofs each failed exactly its EXPECT and were undone; Task 8 next"
   },
   "preconditions_ran": [
     {
@@ -67,7 +67,168 @@
   "suite_count_before": 1716,
   "suite_count_after": 0,
   "tests_changed": [],
-  "break_proofs": [],
+  "break_proofs": [
+    {
+      "break": "7.1: coverage's misses reach the revision again",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestARevisionReceivesOnlyTheAnchoredDissents::test_a_coverage_miss_does_not_reach_the_revision"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.2: a coverage note is a cause again",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestARevisionReceivesOnlyTheAnchoredDissents::test_a_coverage_miss_does_not_reach_the_revision",
+        "FAILED tests/test_iteration_dissent.py::test_one_entry_per_iteration_not_two"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.3: a consistency note is a cause again",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_iteration_dissent.py::test_a_consistency_only_failure_is_logged_naming_the_judge",
+        "FAILED tests/test_iteration_dissent.py::test_one_entry_per_iteration_not_two"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.4: every review finding reaches the rework",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestARevisionReceivesOnlyTheAnchoredDissents::test_a_review_note_does_not_reach_the_rework"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.5: validate's lines reach a revision when validate passed",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestARevisionReceivesOnlyTheAnchoredDissents::test_validate_evidence_reaches_a_revision_only_when_validate_dissents"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.6: the independent check's own ship decides",
+      "file": "autornd/engine/phases.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_an_unanchored_issue_is_a_note_and_the_work_ships",
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_an_unanchored_unmet_ask_is_an_unanchored_dissent",
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_do_not_ship_with_no_issue_ships",
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_an_issue_naming_its_ask_vetoes",
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_a_wrong_fact_without_its_source_is_unverified",
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_a_hazard_anchors_only_through_the_answers_words",
+        "FAILED tests/test_convergence.py::TestACorrectDraftShips::test_a_correct_first_answer_ships_past_every_note"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.7: a quote of the request does not anchor an issue",
+      "file": "autornd/engine/phases.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_an_issue_quoting_the_request_vetoes",
+        "FAILED tests/test_engine.py::TestASkippedIndependentCheckRecordsNoShip::test_a_run_that_vetoes_blocks_with_its_findings"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.8: the candidate is not recorded",
+      "file": "autornd/engine/workflow.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_a_run_that_ends_blocked_returns_its_last_answer",
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_the_agreed_answer_is_returned_when_the_last_differs"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.9: the agreed answer is not recorded",
+      "file": "autornd/engine/workflow.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_the_agreed_answer_is_returned_when_the_last_differs"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.10: the detail does not return the candidate",
+      "file": "autornd/api/routes.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_a_run_that_ends_blocked_returns_its_last_answer",
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_the_agreed_answer_is_returned_when_the_last_differs"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.11: the detail reads another record as the candidate",
+      "file": "autornd/api/routes.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_a_run_that_ends_blocked_returns_its_last_answer",
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_the_agreed_answer_is_returned_when_the_last_differs",
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_a_completed_run_has_no_candidate"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.12: agreed reads the implementer alone",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_a_run_that_ends_blocked_returns_its_last_answer",
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_the_agreed_answer_is_returned_when_the_last_differs",
+        "FAILED tests/test_convergence.py::TestTheRecord::test_each_iteration_records_its_answer_length"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.13: the length is not recorded",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheRecord::test_each_iteration_records_its_answer_length"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.14: the pointer reads the dissent list again",
+      "file": "autornd/graph/executor.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheRecord::test_an_answer_agreed_beside_a_coverage_note_is_agreed"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.15: a build fold gains a judge",
+      "file": "workflows/full-team.yaml",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_a_run_that_ends_blocked_returns_its_last_answer",
+        "FAILED tests/test_convergence.py::TestEveryBuildFoldIsTheSame::test_every_build_fold_is_implement_and_validate"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.16: the request goes to the name",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetchConnectsToTheAddressItChecked::test_the_request_goes_to_the_checked_address"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.17: the TLS server name is not the page's",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetchConnectsToTheAddressItChecked::test_the_request_goes_to_the_checked_address"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.18: the environment's proxy and .netrc are trusted",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetchConnectsToTheAddressItChecked::test_nothing_is_taken_from_the_environment"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    }
+  ],
   "deviations": [],
   "questions_for_advisor": [],
   "notes": "Branch made with git switch -c ... origin/main, so its upstream is origin/main; Task 9 pushes with -u."
