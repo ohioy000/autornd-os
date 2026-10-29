@@ -10,13 +10,18 @@ Read this first, every time you start, before any command. Then read the command
 
 You do not design, rule or interpret. If the task file does not say to do it, do not do it.
 
+## Your folder
+
+Work only in `/home/jb/autornd-os_clone`. Start your session there, and run every command and CHECK there. Its `.venv` is already installed.
+
+`/home/jb/autornd-os` is the advisor's folder. Never work, switch branch or commit in it. If a task file says `cd /home/jb/autornd-os`, STOP and report it.
+
 ## Read these before the first task
 
-1. `CLAUDE.md`: how code is written here.
-2. `AGENTS.md`: the protocol. Where anything differs, `AGENTS.md` wins.
-3. `.claude/context/records-and-roles.md`: the short version of the roles.
-4. The command: `.orchestration/commands/<id>.json`. It states the rules and the acceptance.
-5. The task file: `.orchestration/prompts/<id>.md`. It governs the detail.
+1. The command: `.orchestration/commands/<id>.json`. It states the rules and the acceptance.
+2. The task file: `.orchestration/prompts/<id>.md`. It governs the detail.
+
+That is all you need. `CLAUDE.md` and `AGENTS.md` are the advisor's background. Read a part of them only when a task names it.
 
 If your branch is older than `main`, these files may not be on your disk. Read them from `main` without switching branch: `git fetch origin && git show origin/main:<path>`.
 
@@ -35,6 +40,7 @@ If your branch is older than `main`, these files may not be on your disk. Read t
 
 1. Do the tasks in order. Never start a later task early, even to make a CHECK pass.
 2. Change only the files the task names, and only the text it names.
+   - Copy each find and replace block byte for byte. Keep an escape such as ` ` exactly as written. Never type the character it stands for: command 128 lost one that way, and nobody saw it until review.
 3. Stage files by name: `git add <file> <file>`. Never `git add -A` or `git add .`.
    - If your session adds attribution lines (a `Co-Authored-By` trailer on a commit, or a closing line on a PR body), keep them. They are not a deviation. The COMMIT line stays the first line of the message.
 4. Never edit `.orchestration/commands/` or `.orchestration/prompts/`. They are the advisor's.
@@ -59,7 +65,7 @@ If your branch is older than `main`, these files may not be on your disk. Read t
 14. Never read, print or edit `.env` or `.env.tier3`. Never put a key in a file, a commit or a message.
 15. Never push to `main`. Never merge your own PR. Never force-push.
 16. Never `git stash`, `git reset --hard`, `git clean` or `git rebase`. Never delete a branch or a worktree. To undo a change to one file, use `git checkout -- <file>`, and only after the task's own work in that file is committed.
-17. Never commit `.qwen/`.
+17. Never commit `.qwen/` or `plugins/`. Keep your helper scripts outside the repo, and never run one written for an earlier command: in command 129 an old helper rewrote command 128's response file.
 18. When the command is done, STOP. Never start another command.
 
 ## How to run things
