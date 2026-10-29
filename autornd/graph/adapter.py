@@ -684,6 +684,8 @@ class PhaseRunner:
             "judges_run": False,
             "dissenting": [],
             "implement_summary": summary,
+            "agreed": False,
+            "answer_chars": len(summary),
             "note": ("the run ended inside this iteration, "
                      "before its judges ran"),
         })
@@ -807,6 +809,12 @@ class PhaseRunner:
             "implement_green": implement.green,
             "implement_red_cause": implement.red_cause,
             "implement_summary": implement.summary,
+            # Ruling D57 (4): whether the build fold agreed on this answer
+            # (every workflow's build fold is implement and validate,
+            # guarded in tests/test_convergence.py), and the answer's
+            # length, so the record shows a revision growing.
+            "agreed": bool(implement.green and verdict.green),
+            "answer_chars": len(implement.summary or ""),
             "domain_concerns": list(implement.domain_concerns or []),
             "validate_green": verdict.green,
             "validate_red_cause": verdict.red_cause,
