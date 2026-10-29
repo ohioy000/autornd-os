@@ -319,7 +319,20 @@ def _record_lookup(record: dict | None, asked: list[str], findings: list,
         "findings_chars": len(rendered),
         "bound_chars": GROUNDING_LOOKUP_RECORD_CHARS,
         "truncated": len(rendered) > GROUNDING_LOOKUP_RECORD_CHARS,
+        # Ruling D56 (6): what the quote check found, passage by passage,
+        # and how many lookups asked again. A reading of the check, not of
+        # whether the answers are right.
+        "quotes": _quote_counts(findings),
+        "asked_again": sum(1 for f in findings if getattr(f, "round", 1) > 1),
     })
+
+
+def _quote_counts(findings: list) -> dict[str, int]:
+    counts = {"found": 0, "not_found": 0, "unfetched": 0, "too_short": 0}
+    for finding in findings:
+        for quote in getattr(finding, "quotes", None) or []:
+            counts[quote.status] = counts.get(quote.status, 0) + 1
+    return counts
 
 
 async def synthesize_briefing(client, request: str, chunks: list[dict],

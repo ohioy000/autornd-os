@@ -55,11 +55,13 @@ Search was **61% of a full workflow** and **98% of a grounding run**. The gate:
 ```
 risk == low                  → 0 lookups, $0
 no blocking gap marked       → 0 lookups, $0
-otherwise                    → EXACTLY 1 bundled request carrying every gap
+otherwise                    → 1 bundled request carrying every gap
   medium                     → SEARCH_MAX_TOKENS (1500)
   high / critical            → SEARCH_MAX_TOKENS_CONSEQUENTIAL
-store already answers a gap  → free (recall before search, distance ≤ 0.35)
-MAX_LOOKUPS = 1
+  a quoted passage not found → 1 more request, those questions only (D56)
+store already answers a gap  → free (recall before search, cosine distance ≤ 0.175)
+MAX_LOOKUPS = 1, MAX_ROUNDS = 2
+page fetches                 → no provider call; ≤ 8 pages a lookup, together, 10 s
 ```
 
 Measured effect: **$0.0999 → $0.0562 per workflow (−44%)** across 36 sectors.

@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from autornd.knowledge.research import (
-    MAX_LOOKUPS, Finding, render_findings, research_gaps,
+    MAX_LOOKUPS, Finding, Quote, render_findings, research_gaps,
 )
 from autornd.routing.openrouter import ModelResponse
 
@@ -163,7 +163,10 @@ class TestResearchGaps:
 
 @pytest.mark.asyncio
 class TestOnlyCitedFactsBecomeKnowledge:
-    async def test_a_cited_finding_is_stored(self, monkeypatch):
+    async def test_a_cited_finding_with_no_found_passage_is_not_stored(
+            self, monkeypatch):
+        """Ruling D56 (5): a citation is the provider's word. Only a passage
+        found in its page is kept; tests/test_source_check.py stores one."""
         from autornd import config
         import autornd.knowledge.research as research
 
@@ -172,8 +175,9 @@ class TestOnlyCitedFactsBecomeKnowledge:
         monkeypatch.setattr(research, "ingest_text",
                             lambda text, tag, source="": stored.append((tag, source)))
         client = client_returning(reply("3.65 V", ["https://eve.com/ds.pdf"]))
-        await research_gaps(client, "req", GAPS[:1])
-        assert stored and stored[0][0] == "research"
+        findings = await research_gaps(client, "req", GAPS[:1])
+        assert len(findings) == 1 and findings[0].grounded
+        assert stored == []
 
     async def test_an_uncited_finding_is_shown_but_not_stored(self, monkeypatch):
         """Worth telling the operator; not worth becoming permanent context
@@ -210,11 +214,14 @@ class TestRenderFindings:
         assert render_findings([]) == ""
 
     def test_unverified_findings_are_called_out_in_the_header(self):
+        found = Quote(1, "The cutoff is 3.65 V per cell.", "https://x/y",
+                      status="found", fetched_at="2026-10-28T00:00:00Z",
+                      sha256="ab" * 32)
         out = render_findings([
-            Finding("q1", "a1", ["https://x/y.pdf"]),
-            Finding("q2", "a2", []),
+            Finding("q1", "a1", ["https://x/y"], quotes=[found]),
+            Finding("q2", "a2", ["https://x/z.pdf"]),
         ])
-        assert "1 of 2 could not be sourced" in out
+        assert "1 of 2 have answers no passage found in its page backs" in out
         assert "do not treat those as specifications" in out
 
     def test_the_header_says_why_these_were_looked_up(self):
@@ -274,7 +281,7 @@ class TestRecallBeforeSearch:
         monkeypatch.setattr("autornd.knowledge.research.retrieve", fake_retrieve)
         client = client_returning(reply("A: x", ["https://example.org/x.pdf"]))
         await research_gaps(client, "r", ["a gap"])
-        assert seen["where"] == {"tag": "research"}
+        assert seen["where"] == {"tag": "research-quoted"}
 
     @pytest.mark.asyncio
     async def test_a_recalled_finding_is_not_stored_again(self, monkeypatch):

@@ -1335,6 +1335,15 @@ _PER_REQUEST_COMPONENTS = ("web_search", "request")
 _MODALITY_COMPONENTS = ("image", "audio", "input_audio_cache")
 
 
+def extract_json(text: str) -> dict[str, Any]:
+    """The JSON object in a model's reply, found as chat_json finds it.
+
+    Ruling D56 (1): the search lookup is a plain chat whose reply is typed,
+    so it reads its reply the way every JSON call does.
+    """
+    return OpenRouterClient._extract_json(text)
+
+
 def _prices_what_the_guard_cannot_bound(pricing: dict[str, Any]) -> bool:
     """Does this catalogue entry carry a charge the worst-case bound
     cannot bound?

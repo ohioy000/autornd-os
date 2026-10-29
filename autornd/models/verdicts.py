@@ -960,3 +960,29 @@ class EscalationVerdict(BaseModel):
     # the escalation does not uphold is a note about the work, not
     # a fact about the request, and the revision is not spent on it.
     rulings: list[EscalationRuling] = Field(default_factory=list)
+
+
+class QuotedPassage(BaseModel):
+    """One passage a lookup quoted, and the page it says it is on (Ruling D56 (1)).
+
+    `question` is the question's number in the lookup, counted from 1. The
+    harness fetches `url` and looks for `text` in it; nothing here is taken
+    on the model's word.
+    """
+
+    question: int = 1
+    text: str
+    url: str
+
+
+class LookupVerdict(BaseModel):
+    """A search lookup's reply (Ruling D56 (1)).
+
+    `answer` is the prose every phase reads, as before. `quotes` are what the
+    answer rests on, each to be found in its own page before the answer to
+    its question counts as checked. An empty answer is a lookup that found
+    nothing.
+    """
+
+    answer: str = ""
+    quotes: list[QuotedPassage] = Field(default_factory=list)

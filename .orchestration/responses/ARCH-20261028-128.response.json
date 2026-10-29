@@ -1,0 +1,316 @@
+{
+  "command_id": "ARCH-20261028-128",
+  "status": "DONE",
+  "executed": true,
+  "head_before": "bb29d164361a89d8fc35b5b05e023f30c86726cc",
+  "head_after": "5c717026d1fe941d5d47e551ff9bdeb9ed63dc0f",
+  "results": {
+    "task": 8,
+    "step": "All tasks done; PR 223 open; CI 5/5 on 5c71702 (run 40813673020)"
+  },
+  "preconditions_ran": [
+    {
+      "command": "git branch --show-current",
+      "expected": "exec/20261028-128-source-check",
+      "observed": "exec/20261028-128-source-check",
+      "outcome": "pass"
+    },
+    {
+      "command": "test \"$(git rev-parse HEAD)\" = \"$(git rev-parse origin/main)\" && echo \"at origin/main\"",
+      "expected": "at origin/main",
+      "observed": "at origin/main",
+      "outcome": "pass"
+    },
+    {
+      "command": "git status --short",
+      "expected": "?? .qwen/",
+      "observed": "?? .qwen/",
+      "outcome": "pass"
+    },
+    {
+      "command": "grep -c '^\\*\\*Status: ruled by the advisor on 2026-10-28' docs/reviews/2026-10-28-d56-a-finding-checked-against-its-source.md",
+      "expected": "1",
+      "observed": "1",
+      "outcome": "pass"
+    },
+    {
+      "command": "test -f .orchestration/prompts/ARCH-20261028-128.md && echo task file ok",
+      "expected": "task file ok",
+      "observed": "task file ok",
+      "outcome": "pass"
+    },
+    {
+      "command": "test -f tests/test_workflow_choice.py && echo 127 merged",
+      "expected": "127 merged",
+      "observed": "127 merged",
+      "outcome": "pass"
+    },
+    {
+      "command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none",
+      "expected": "none",
+      "observed": "none",
+      "outcome": "pass"
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ --collect-only -q | tail -1",
+      "expected": "1670 tests collected in ...s",
+      "observed": "1670 tests collected in 0.95s",
+      "outcome": "pass"
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q (filtered)",
+      "expected": "network guard: 0 non-loopback attempt(s) recorded / 1669 passed, 1 skipped in ...s",
+      "observed": "network guard: 0 non-loopback attempt(s) recorded / 1669 passed, 1 skipped in 170.83s (0:02:50)",
+      "outcome": "pass"
+    }
+  ],
+  "suite_count_before": 1670,
+  "suite_count_after": 1716,
+  "tests_changed": [
+    "tests/test_research.py::TestOnlyCitedFactsBecomeKnowledge::test_a_cited_finding_with_no_found_passage_is_not_stored (renamed from test_a_cited_finding_is_stored): changed by D56, Task 3",
+    "tests/test_research.py::TestRenderFindings::test_unverified_findings_are_called_out_in_the_header: changed by D56, Task 3",
+    "tests/test_research.py::TestRecallBeforeSearch::test_only_researched_material_is_recalled: changed by D56, Task 3 (tag research-quoted)",
+    "tests/test_research.py (import of Quote): Task 3",
+    "tests/prompt_capture.py: four return values, Task 3",
+    "tests/test_engine.py: four return values, Task 3",
+    "tests/fixtures/prompts/cupline.json: re-captured, Task 4",
+    "tests/fixtures/prompts/engineering.json: re-captured, Task 4",
+    "tests/fixtures/prompts/example.json: re-captured, Task 4",
+    "tests/fixtures/prompts/tier4.json: re-captured, Task 4",
+    "tests/test_source_check.py: new, 46 tests"
+  ],
+  "break_proofs": [
+    {
+      "break": "6.1: the typed reply's quotes are ignored",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheReplyIsTyped::test_the_answer_and_its_quotes_are_fields",
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_a_found_passage_checks_its_answer",
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_a_passage_not_found_leaves_its_answer_unverified[served0-not_found]",
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_a_passage_not_found_leaves_its_answer_unverified[served1-unfetched]",
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_a_bundle_names_the_questions_left_unverified",
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_pages_fetched_per_lookup_are_bounded",
+        "FAILED tests/test_source_check.py::TestAskedOnceMore::test_a_passage_not_found_is_asked_again_once",
+        "FAILED tests/test_source_check.py::TestAskedOnceMore::test_there_is_no_third_round",
+        "FAILED tests/test_source_check.py::TestOnlyAFoundPassageIsKept::test_each_found_passage_is_stored_under_its_own_page",
+        "FAILED tests/test_source_check.py::TestTheRecord::test_the_grounding_record_counts_what_the_check_found"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.2: a parsed reply with no answer field is taken as typed",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheReplyIsTyped::test_a_reply_not_in_the_format_is_kept_whole_and_counted[{\"figure\": \"25 mW\"}]"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.3: an untyped reply is not counted",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheReplyIsTyped::test_a_reply_not_in_the_format_is_kept_whole_and_counted[25 mW e.r.p., per ETSI EN 300 220.]",
+        "FAILED tests/test_source_check.py::TestTheReplyIsTyped::test_a_reply_not_in_the_format_is_kept_whole_and_counted[{\"figure\": \"25 mW\"}]"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.4: other schemes are fetched",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetch::test_only_a_web_address_with_a_host_is_fetched[ftp://example.org/x]",
+        "FAILED tests/test_source_check.py::TestTheFetch::test_only_a_web_address_with_a_host_is_fetched[gopher://example.org/]"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.5: a private address is fetched",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetch::test_a_name_on_a_private_network_is_refused[127.0.0.1]",
+        "FAILED tests/test_source_check.py::TestTheFetch::test_a_name_on_a_private_network_is_refused[10.0.0.5]",
+        "FAILED tests/test_source_check.py::TestTheFetch::test_a_name_on_a_private_network_is_refused[192.168.1.1]",
+        "FAILED tests/test_source_check.py::TestTheFetch::test_a_name_on_a_private_network_is_refused[169.254.169.254]",
+        "FAILED tests/test_source_check.py::TestTheFetch::test_a_name_on_a_private_network_is_refused[::1]",
+        "FAILED tests/test_source_check.py::TestTheFetch::test_a_name_on_a_private_network_is_refused[fd00::1]",
+        "FAILED tests/test_source_check.py::TestTheFetch::test_every_redirect_is_checked_like_the_first"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.6: a redirect is not checked",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetch::test_every_redirect_is_checked_like_the_first"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.7: redirects are not bounded",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetch::test_redirects_are_bounded"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.8: any content type is read",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetch::test_a_page_that_cannot_be_read_says_why[served1-content type application/pdf is not read as text]",
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_a_passage_not_found_leaves_its_answer_unverified[served1-unfetched]"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.9: a fetch has no time limit",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetch::test_a_slow_page_is_given_up_on"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.10: a fetch error is raised",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetch::test_a_fetch_never_raises"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.11: a page's script is read as its text",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetch::test_html_is_read_as_the_text_a_reader_sees"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.12: the version read is not recorded",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetch::test_a_fetch_records_the_version_it_read",
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_a_found_passage_checks_its_answer",
+        "FAILED tests/test_source_check.py::TestOnlyAFoundPassageIsKept::test_each_found_passage_is_stored_under_its_own_page"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.13: case is not read alike",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_spacing_case_and_quote_marks_are_read_alike[  the MAXIMUM radiated power in this band\\nis 25 mW e.r.p.  ]"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.14: a passage counts when its start is on the page",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_a_changed_or_missing_word_is_not_found[The maximum radiated power in this band is 25 mW e.i.r.p.]",
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_a_changed_or_missing_word_is_not_found[The maximum radiated power ... is 25 mW e.r.p.]",
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_a_bundle_names_the_questions_left_unverified"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.15: a short passage is checked",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_a_short_quote_checks_nothing"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.16: pages fetched per lookup are not bounded",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheQuoteCheck::test_pages_fetched_per_lookup_are_bounded"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.17: nothing is asked again",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestAskedOnceMore::test_a_passage_not_found_is_asked_again_once",
+        "FAILED tests/test_source_check.py::TestAskedOnceMore::test_there_is_no_third_round",
+        "FAILED tests/test_source_check.py::TestTheRecord::test_the_grounding_record_counts_what_the_check_found"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.18: a reply that quoted nothing is asked again",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheReplyIsTyped::test_a_reply_not_in_the_format_is_kept_whole_and_counted[25 mW e.r.p., per ETSI EN 300 220.]",
+        "FAILED tests/test_source_check.py::TestTheReplyIsTyped::test_a_reply_not_in_the_format_is_kept_whole_and_counted[{\"figure\": \"25 mW\"}]",
+        "FAILED tests/test_source_check.py::TestAskedOnceMore::test_a_reply_that_quoted_nothing_is_not_asked_again",
+        "FAILED tests/test_source_check.py::test_a_finding_built_the_old_way_is_one_unverified_question",
+        "FAILED tests/test_research.py::TestResearchGaps::test_every_gap_rides_in_one_request",
+        "FAILED tests/test_research.py::TestResearchGaps::test_lookups_are_bounded",
+        "FAILED tests/test_research.py::TestRecallBeforeSearch::test_a_distant_hit_does_not_count",
+        "FAILED tests/test_research.py::TestRecallBeforeSearch::test_a_store_failure_falls_back_to_searching"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.19: a passage not found is stored",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestOnlyAFoundPassageIsKept::test_each_found_passage_is_stored_under_its_own_page"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.20: a passage is stored under the first citation",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestOnlyAFoundPassageIsKept::test_each_found_passage_is_stored_under_its_own_page"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.21: unchecked findings are recalled",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestOnlyAFoundPassageIsKept::test_only_checked_material_is_recalled",
+        "FAILED tests/test_research.py::TestRecallBeforeSearch::test_only_researched_material_is_recalled"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.22: the reuse distance is the squared-L2 number",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestOnlyAFoundPassageIsKept::test_only_a_near_restatement_is_reused[0.2-False]"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.23: a recalled finding is marked unverified",
+      "file": "autornd/knowledge/research.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestOnlyAFoundPassageIsKept::test_a_recalled_passage_is_not_asked_again_or_marked"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "6.24: the record does not count the check",
+      "file": "autornd/knowledge/context.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheRecord::test_the_grounding_record_counts_what_the_check_found"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    }
+  ],
+  "deviations": [],
+  "questions_for_advisor": [],
+  "notes": "head_after is the tip CI tested; the PR head is one response-only commit later. CI on 5c71702: docker 55s, editable-install 32s, test 3.11 2m35s, 3.12 2m54s, 3.13 2m56s, all pass. Full suite at Task 7: 1716 collected, 1715 passed, 1 skipped, network guard 0. The branch was made with git switch -c ... origin/main, so its upstream was origin/main; Task 8 pushed with -u. Edits in Tasks 3 and 7 and the Task 6 breaks were applied by scripts that took each find and replace block verbatim from the task file and asserted each find occurred exactly once; no CHECK differed from its EXPECT.",
+  "delivery_state": {
+    "branch": "exec/20261028-128-source-check",
+    "pr": 223,
+    "url": "https://github.com/ohioy000/autornd-os/pull/223"
+  }
+}
