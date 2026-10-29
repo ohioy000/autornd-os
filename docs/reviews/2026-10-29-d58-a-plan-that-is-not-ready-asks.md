@@ -1,6 +1,8 @@
 # D58: a plan that is not ready asks the requester (advisor, 2026-10-29)
 
-**Status: drafted by the advisor on 2026-10-29, on the owner's direction under D37.** Command ARCH-20261029-130 will carry it. Its task file is not written yet. It is free work: no paid call, no `.env` change, and no DB schema change.
+**Status: ruled by the advisor on 2026-10-29, on the owner's direction under D37.** Command ARCH-20261029-130 carries it, with its task file `.orchestration/prompts/ARCH-20261029-130.md`. It is free work: no paid call, no `.env` change, and no DB schema change.
+
+Writing the task file settled five details the draft left open. Each is in §2 below: `state.questions` holds the gate's id beside its list; a gate left with nothing to ask asks nothing; a value that is not a list raises; answers are trimmed; and a run whose record does not say which workflow it ran cannot be answered.
 
 **The owner's direction (2026-10-29), under D37:** the plan gate stays, and "it should ask for human input and/or clarification for anything deemed not ready".
 
@@ -11,15 +13,15 @@
 - The requester has no way to answer and go on. They must write a new request by hand.
 - When a gate closes, the executor records only `{"passed": false}` (`_decide_gate` in `autornd/graph/executor.py`). Nothing typed says that the run needs answers from the requester.
 
-## 2. The ruling (draft)
+## 2. The ruling
 
-> **(1) A gate can name what it asks the requester.** A gate node may carry `asks_requester: <dotted.path>`. The path resolves the way a condition's path does, and a missing path raises. When that gate ends the run, the executor sets `state.questions` to that list, with empty entries dropped. It is a record field, like `state.candidate`, never a status. Only a gate may carry the key, and the spec refuses it anywhere else.
+> **(1) A gate can name what it asks the requester.** A gate node may carry `asks_requester: <dotted.path>`. The path resolves the way a condition's path does, and a missing path raises. When that gate ends the run, the executor sets `state.questions` to `{"gate": <node id>, "questions": [...]}`, the list with empty entries dropped. A gate left with nothing to ask asked nothing: `state.questions` stays `None`. A value that is not a list raises, as a missing path does. It is a record field, like `state.candidate`, never a status. Only a gate may carry the key, and the spec refuses it anywhere else.
 >
 > **(2) The plan gate asks.** `plan_ready` in `workflows/full-team.yaml` and `workflows/lean.yaml` gains `asks_requester: plan.blockers`. The status stays `blocked` and the reason stays as it is.
 >
-> **(3) The caller sees the questions.** The API path records them as a zero-cost phase record, `questions`, holding `{"gate": <node id>, "questions": [...]}`, the way D57's `candidate` record is written. `GET /api/workflows/{id}` returns `questions`: the list, or `null` when the run asked nothing.
+> **(3) The caller sees the questions.** The API path records `state.questions` as a zero-cost phase record, `questions`, holding `{"gate": <node id>, "questions": [...]}`, the way D57's `candidate` record is written. `GET /api/workflows/{id}` returns `questions`: the list, or `null` when the run asked nothing.
 >
-> **(4) The requester answers.** `POST /api/workflows/{id}/answers` takes `{"answers": ["...", ...]}`, one answer per question, in order. It starts a new run of the same workflow, named by the parent's `workflow` record (D55). The new run is admitted exactly as `POST /api/workflows` admits a run. Its request is the parent's request followed by:
+> **(4) The requester answers.** `POST /api/workflows/{id}/answers` takes `{"answers": ["...", ...]}`, one answer per question, in order, each trimmed of surrounding space. It starts a new run of the same workflow, named by the parent's `workflow` record (D55). The new run is admitted exactly as `POST /api/workflows` admits a run. Its request is the parent's request followed by:
 >
 >     Answers from the requester:
 >     1. Q: <question 1>
@@ -28,9 +30,12 @@
 > The new run records a zero-cost phase record, `answers`, holding `{"answers_for": <parent id>, "questions": [...], "answers": [...]}`. The reply is 202 with the new run's summary. Refusals, each a plain sentence:
 > - another caller's run, or a missing one: 404;
 > - a run that asked no questions: 409;
+> - a run whose record does not say which workflow it ran: 409;
 > - a wrong number of answers, or an empty one: 422.
 >
-> **(5) Nothing else changes.** The eval runner and the CLI have no requester to ask. They see `blocked` as they do today, and the record carries the questions.
+> Every refusal comes before the run gate, so it holds no slot and leaves no row (D45 (6)).
+>
+> **(5) Nothing else changes.** The eval runner and the CLI have no requester to ask. They see `blocked` as they do today, and `state.questions` carries the questions. The eval runner's record does not write them yet (§5).
 
 **Why a new run and not a resume:** a new run needs no saved executor state and no schema change, and it is checked from the top like any other run. The answers become part of the request, so the judges can quote them as anchors (D51 (3)).
 
@@ -39,11 +44,12 @@
 | file | change |
 |---|---|
 | `autornd/graph/spec.py` | `Node.asks_requester: str \| None`, read where `on_fail_reason` is read; refused on any kind but `gate` |
-| `autornd/graph/executor.py` | `ExecutionState.questions: list[str] \| None = None`; set in `_decide_gate` when a gate with `asks_requester` ends the run |
+| `autornd/graph/executor.py` | `ExecutionState.questions: dict[str, Any] \| None = None`; set in `_decide_gate` by a new `_asked` when a gate with `asks_requester` ends the run |
 | `autornd/engine/workflow.py` | after `executor.run`, beside the `candidate` record: write the `questions` record when `state.questions` is set |
-| `autornd/api/routes.py` | `WorkflowDetail.questions`; `_detail` reads the last `questions` record; new route `POST /workflows/{workflow_id}/answers`, through `_requested_workflow`, `_admit_run` and `_run_workflow_bg` as `submit_workflow` uses them |
-| `workflows/full-team.yaml`, `workflows/lean.yaml` | one line on `plan_ready`: `asks_requester: plan.blockers` |
+| `autornd/api/routes.py` | `WorkflowDetail.questions`; `_last_record` reads the newest record of a name, for `_detail` and the new route; `AnswersRequest`, `_answered_request` and the route `POST /workflows/{workflow_id}/answers`, through `_requested_workflow`, `_admit_run` and `_run_workflow_bg` as `submit_workflow` uses them |
+| `workflows/full-team.yaml`, `workflows/lean.yaml` | one line on `plan_ready`, `asks_requester: plan.blockers`, with its comment |
 | `tests/test_plan_asks.py` | new; see §4 |
+| `tests/test_workflow_choice.py` | `test_full_team_is_the_old_file_under_its_new_name` also sets aside D58's lines, as it sets aside D55's |
 | `README.md`, `HANDOVER.md`, `AGENTS.md` | the API paragraph, and the counts re-derived from collection |
 
 ## 4. What proves it, provider-free
@@ -52,7 +58,7 @@
 - A ready plan's run has no `questions`.
 - Answering starts a new run of the same workflow. Its request carries each question and answer, its plan prompt contains the answers, and its `answers` record names the parent.
 - The refusals: 404, 409 and 422, each leaving no row and holding no admission slot.
-- The spec refuses `asks_requester` on a node that is not a gate. A missing path raises.
+- The spec refuses `asks_requester` on a node that is not a gate. A missing path raises, and so does a value that is not a list. A gate with nothing to ask asks nothing.
 - A sync guard: every workflow with a `plan_ready` gate declares `asks_requester`.
 
 Each test gets a break-proof in the command's task file.
@@ -65,6 +71,7 @@ Each test gets a break-proof in the command's task file.
 | Resuming the same run | Needs saved executor state. A new run is simpler and checked from the top. |
 | Telling the plan prompt to write its blockers as questions | Prompt text that steers judgment needs its own ruling. |
 | Showing the questions on the dashboard | Not needed for the API caller. |
+| Writing the questions into the eval runner's record | No measurement reads them yet. It is one field in `autornd/evals/runner.py` when one does. |
 
 ## 6. Budgets (convention 18)
 
