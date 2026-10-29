@@ -687,10 +687,11 @@ class TestReworkCarriesFindings:
             "passed": False, "routed_to": "review_rework_loop",
             "reason": "Review found blocking issues"}
         entry.outputs["coverage"] = {"missed": []}
-        probe = PhaseRunner.__new__(PhaseRunner)
-        import inspect
-        src = inspect.getsource(probe._phase_implement)
-        assert "rework_extra" in src, "the rework channel exists in assembly"
+        # Ruling D57 (1) retired rework_extra, the second copy of every
+        # finding: the blocking findings reach the rework through the
+        # failure log alone, guarded end to end, prompt read, in
+        # tests/test_convergence.py. This test read the function's source
+        # for the word, which a comment naming the retired channel passes.
         review = entry.outputs["review"]
         gate_out = entry.outputs["review_clean"]
         findings = review.get("findings")
