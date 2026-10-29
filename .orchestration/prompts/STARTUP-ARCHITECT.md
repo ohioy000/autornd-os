@@ -28,8 +28,22 @@ Read this first, every time you start as the architect of AutoRnD-OS. It is all 
 Update this section whenever the queue changes. As of 2026-10-29:
 
 - **Done:** steps 1 to 5 of the generality-first order the owner approved on 2026-10-21. The last was D57, the convergence repairs, delivered by command 129 (#225).
-- **Next: command 130.** The owner's direction under D37 (2026-10-29): a plan that is not ready still stops the run, and must ask the human for input or clarification. Today it ends "blocked: Plan not ready". It asks nothing, and the human has no way to answer and go on.
+- **Next: command 130, which carries D58.** The design is drafted in `docs/reviews/2026-10-29-d58-a-plan-that-is-not-ready-asks.md`: a plan that is not ready still stops the run, and now asks the requester. Its blockers come back as typed `questions`, and `POST /api/workflows/{id}/answers` starts a new run with the answers. The ruling's §3 says where each change goes, and §7 is the workflow diagram. Write the task file from it: Task 0 starts in the clone.
 - **Then:** write up the measurement of record (step 6) as a proposal only. The owner said "we are not there yet". No spend.
+
+## How the work moves
+
+```mermaid
+flowchart LR
+  O(["Owner"]) -- "direction, sign-off, money" --> A["Architect: /home/jb/autornd-os"]
+  A -- "ruling + command + task file: arch/ branch, PR, merge" --> GH[("GitHub main: ohioy000/autornd-os")]
+  A -- "one-line handover" --> O
+  O -- "pastes the line" --> C["Coder: /home/jb/autornd-os_clone"]
+  GH -- "fetch" --> C
+  C -- "exec/ branch: PR + response file" --> GH
+  GH -- "byte check against the task file, CI green" --> A
+  A -- "merge, then the next command" --> GH
+```
 
 ## The loop, for every command
 
