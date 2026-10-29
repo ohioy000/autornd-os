@@ -13,8 +13,8 @@ vendor. **`HANDOVER.md` is the state of record; its §6 measured facts set nearl
 
 | role | owns | in practice |
 |---|---|---|
-| **advisor** | designs and **rules**: any change to what the harness *concludes* | writes rulings and commands; reviews every delivery by probe; merges verified PRs; never pushes to main, never edits `.env` |
-| **executor** | **measures and implements**: a ruled design, instrument repair, and what the measurement said — including when it contradicts the ruling | opens the response first, works on a branch, proves each fix with a break-proof, re-derives every count, opens the PR |
+| **advisor** | designs and **rules**: any change to what the harness *concludes* | writes rulings, and each command as an exact task file; reviews each delivery against its task file; merges verified PRs; never pushes to main, never edits `.env` |
+| **executor** | **measures and implements**: a ruled design, instrument repair, and what the measurement said — including when it contradicts the ruling | follows the task file exactly, task by task; opens the response first, works on a branch, proves each fix with a break-proof, re-derives every count, opens the PR |
 | **owner** | money, serving pins, standing config; the only one who edits `.env` | authorises every paid run before the spend; ratifies pins and key versions |
 
 **A new executor proposes; it does not rule.** Where a ruling is silent and the answer changes what
@@ -114,11 +114,15 @@ tree.
 
 ## How the advisor reviews
 
-- **By probe, not by reading.** For every property a ruling promises, a small provider-free script
+- **Probes come before handover.** For every property a ruling promises, a small provider-free script
   tries to break it in a scratch worktree — network blocked, placeholder keys, the worktree's own
-  code first on `sys.path` — derived from the ruling's falsifier, not the command's test list.
-  Exhibits: 108–111 met every acceptance criterion with CI green and probes found four real defects;
-  the 2026-10-10 round found three more (#160, #168, #171).
+  code first on `sys.path` — derived from the ruling's falsifier, not the command's test list, while
+  the task file can still change. Exhibits: 108–111 met every acceptance criterion with CI green and
+  probes found four real defects; the 2026-10-10 round found three more (#160, #168, #171).
+- **A full delivery is not redone.** When a delivery matches its task file byte for byte and CI is
+  green, the advisor merges it. The suite is not re-run and the probes are not repeated; only a
+  deviation is reviewed by probe. Exhibit: commands 124, 127, 128 and 129 were delivered in full,
+  and re-checking them found nothing the byte comparison had not.
 - **A defect is a hold with the exact change required**, as a complete prompt with the evidence
   quoted. **Every fix names the measurement it serves**; other apparatus work is parked, and after a
   behaviour change lands only run-blocking fixes go in until it is re-measured.
@@ -181,6 +185,29 @@ was done differently, because nothing was done. Exhibit: a command once cited an
 that never happened; the executor falsified every artifact against the tree first
 (`.orchestration/responses/ARCH-20260921-002.response.json`). **A command whose evidence cannot be
 checked against the tree is not evidence.**
+
+### How a command is written — the owner's standard
+
+The advisor thinks; the executor works. The advisor does the hard work, so the executor never has
+to work anything out: it follows exact tasks and does not design or interpret (owner, 2026-10-25).
+
+- **Every command has a task file,** `.orchestration/prompts/<command_id>.md`, committed with its
+  command JSON. The JSON points at the task file, and the task file governs the detail.
+- **Direct and sectional** (owner, 2026-10-14): a short purpose, the rules for every task, then
+  TASK 0 (branch, preconditions, response `IN_PROGRESS`) to TASK N (finish), then the STOP
+  conditions.
+- **Each task is fine-tuned** (owner, 2026-10-21): FILES; DO, with exact find → replace text; CHECK,
+  an exact command; EXPECT, its exact output; COMMIT, the message. Exact strings, never "...".
+- **Complete and self-contained,** with the evidence quoted; never a delta to append (owner,
+  2026-10-10).
+- **Every EXPECT is real:** the advisor replays the task file from its own text on a fresh copy of
+  main and records each CHECK's output before handover.
+- **Plain words, short sentences** (owner, 2026-10-25).
+- **The owner hands it over in one line:** "Read `.orchestration/prompts/STARTUP.md`, then do
+  `.orchestration/prompts/<command_id>.md` task by task."
+- **The style is fixed.** The advisor does not change the task-file format, the prompt style or these
+  rules as a whole. A problem gets one fix, in place. A change to the style or the rules is the
+  owner's to make (owner, 2026-10-29: such changes make the project harder and cost more tokens).
 
 ## Practical notes
 
