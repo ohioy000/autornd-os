@@ -16,7 +16,7 @@ names what fired, and the terminal points at the last implementation the
 build judges agreed on. A run with no budget behaves exactly as before.
 
 **How these tests are built (convention 22).** Every one drives the real
-GraphExecutor over the real `workflows/engineering-rnd.yaml` with the real
+GraphExecutor over the real `workflows/full-team.yaml` with the real
 PhaseRunner, through `make_mock_client`, whose calls take a declared time
 and still bill. Nothing here stands in for the adapter or the executor.
 Delays and budgets are milliseconds, with each margin set so that a slow
@@ -45,7 +45,7 @@ from autornd.graph.spec import load
 from autornd.routing.openrouter import OpenRouterClient
 from tests.conftest import make_mock_client
 
-SPEC = load("workflows/engineering-rnd.yaml")
+SPEC = load("workflows/full-team.yaml")
 SETTINGS = {"max_iterations": 5, "escalation_recovery_attempts": 3,
             "review_rework_attempts": 2}
 REQUEST = "Add retry with exponential backoff to the MQTT client"

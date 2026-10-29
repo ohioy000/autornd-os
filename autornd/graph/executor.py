@@ -33,7 +33,7 @@ __all__ = ["ExecutionState", "GraphExecutor", "NodeRunner", "StepRecord",
 # guess (convention 1).
 #
 # Measured 2026-09-30 on the real path (real GraphExecutor, real
-# engineering-rnd.yaml, real PhaseRunner, a billing double whose judge call
+# full-team.yaml, real PhaseRunner, a billing double whose judge call
 # sleeps past the cut), in two passes of 30 cuts each:
 #   cut point to the terminal written: max 0.0027 s, median 0.0012-0.0015 s
 #   cut point to executor.run() returning: max 0.0031 s

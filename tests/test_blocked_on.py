@@ -151,7 +151,7 @@ class TestTheWiring:
     def test_it_sits_right_after_implement_in_the_build_loop(self):
         from autornd.graph.spec import load
 
-        body = load("workflows/engineering-rnd.yaml").get("build_loop").body
+        body = load("workflows/full-team.yaml").get("build_loop").body
         assert body.index("blocked_check") == body.index("implement") + 1
         assert body.index("blocked_gate") == body.index("blocked_check") + 1
 
@@ -162,7 +162,7 @@ class TestTheWiring:
         exhaustion ends `escalated`, the honest terminal."""
         from autornd.graph.spec import load
 
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         for loop in ("recovery_loop", "review_rework_loop"):
             assert "blocked_gate" not in spec.get(loop).body, loop
 
@@ -172,7 +172,7 @@ class TestTheWiring:
         implementation met no gate at all on those paths and shipped."""
         from autornd.graph.spec import TERMINAL_STATUSES, load
 
-        spec = load("workflows/engineering-rnd.yaml")
+        spec = load("workflows/full-team.yaml")
         for loop in ("recovery_loop", "review_rework_loop"):
             body = spec.get(loop).body
             assert body.index("blocked_check") == body.index("implement") + 1, loop

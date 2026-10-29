@@ -150,7 +150,7 @@ class TestTheGuardOnARealRun:
         path = tmp_path / "units.jsonl"
         scenario = parse({"id": "guard", "request": "MQTT backoff", "timeout": 60})
         with _isolated_store(), ResultsLog(path, {"suite": "guard"}) as log:
-            await run_repeated([scenario], load("workflows/engineering-rnd.yaml"),
+            await run_repeated([scenario], load("workflows/full-team.yaml"),
                                factory, {"max_iterations": 1,
                                          "escalation_recovery_attempts": 1,
                                          "review_rework_attempts": 1},

@@ -104,7 +104,7 @@ class TestTheClockIsInstrumented:
                 return await super().run_ai(node, state)
 
         runner = Exploding({**BASE, "validate": {"green": True}})
-        executor = GraphExecutor(load("workflows/engineering-rnd.yaml"), runner,
+        executor = GraphExecutor(load("workflows/full-team.yaml"), runner,
                                  {"max_iterations": 5,
                                   "escalation_recovery_attempts": 3,
                                   "review_rework_attempts": 2})

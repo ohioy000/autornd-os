@@ -12,7 +12,7 @@ Shipped shapes:
 
 | file | what it is |
 |---|---|
-| `engineering-rnd.yaml` | the flagship, 25 nodes |
+| `full-team.yaml` | the flagship, 25 nodes |
 | `lean.yaml` | cheapest shape that still checks its work — plan, build, verify, stop |
 | `triage-classify.yaml` / `triage-only.yaml` | classification only |
 | `plan-probe.yaml` | plan-phase probes |

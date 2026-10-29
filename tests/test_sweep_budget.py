@@ -10,7 +10,7 @@ Every double here bills through `client._account`, per convention 9. A free
 double cannot test a spend ceiling at all, which is the point of the rule.
 
 Per-unit call counts used below were measured, not assumed:
-`triage-classify` is 1 call, `engineering-rnd` is 11 under these
+`triage-classify` is 1 call, `full-team` is 11 under these
 doubles. Ruling D51 (1) added the asks node, which rides the
 triage function: that tier's call count went from 1 to 2 a unit
 and the whole unit from 10 to 11 — re-measured, not assumed
@@ -94,7 +94,7 @@ def units(n: int, prefix: str = "s"):
 
 
 TRIAGE_CLASSIFY = "workflows/triage-classify.yaml"
-FULL = "workflows/engineering-rnd.yaml"
+FULL = "workflows/full-team.yaml"
 
 
 @pytest.mark.asyncio

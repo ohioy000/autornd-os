@@ -5,7 +5,7 @@ run that made 42 calls against a 41-call ceiling and produced no terminal. The
 graph now bounds every loop, routes the exhaustion to escalation, and names the
 diagnosis and the bound in the terminal reason. This file proves it.
 
-All three cases drive the full ``engineering-rnd`` workflow end to end through
+All three cases drive the full ``full-team`` workflow end to end through
 ``ScriptedRunner``, which returns canned verdicts for AI nodes and runs real
 checks. No provider, no network, no spend.
 """
@@ -546,7 +546,7 @@ class TestRecoverySucceeds:
         assert state.status == "completed", (
             f"recovery should converge, got {state.status}: {state.reason}")
         assert state.reason == "advisory review: shipped", (
-            "D22: engineering-rnd's review is advisory-labelled like lean's; "
+            "D22: full-team's review is advisory-labelled like lean's; "
             "the run completes and the review outcome is stated")
         assert "escalation" in state.path, "the escalation node ran"
 
@@ -720,7 +720,7 @@ class TestReworkCarriesFindings:
         as input? Answer, quoted from the workflow file: the recovery_loop
         body is `[implement, blocked_check, blocked_terminal, domain_review,
         coverage, consistency, validate, judges, rework_review, review_fold]`
-        (`workflows/engineering-rnd.yaml:206`) — the same implement node with
+        (`workflows/full-team.yaml:206`) — the same implement node with
         the same prompt, and no node in the body reads `escalation.*`,
         `coverage.missed`, or `judges.dissenting`. Recovery re-runs the
         implement node with the same context; the dissent and the unmet
@@ -732,7 +732,7 @@ class TestReworkCarriesFindings:
 
         workflow = yaml.safe_load(
             (Path(__file__).resolve().parents[1]
-             / "workflows" / "engineering-rnd.yaml").read_text())
+             / "workflows" / "full-team.yaml").read_text())
         recovery = next(n for n in workflow["nodes"]
                         if n["id"] == "recovery_loop")
         assert recovery["body"][0] == "implement"

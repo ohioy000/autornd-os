@@ -39,7 +39,7 @@ def workflow_path() -> str:
     """The graph to run. A name resolves inside workflows/; a path is used as-is."""
     from pathlib import Path
 
-    configured = settings.autornd_workflow or "engineering-rnd"
+    configured = settings.autornd_workflow or "full-team"
     candidate = Path(configured)
     if candidate.suffix and candidate.exists():
         return str(candidate)

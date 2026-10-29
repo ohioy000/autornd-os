@@ -122,7 +122,7 @@ def test_the_counter_reaches_the_unit_record(tmp_path):
         rejections_by_provider={"Wafer": 3},
     )
     log = ResultsLog(tmp_path / "units.jsonl")
-    log.record(run, workflow="engineering-rnd", repetition=1)
+    log.record(run, workflow="full-team", repetition=1)
 
     unit = [json.loads(line) for line in (tmp_path / "units.jsonl").read_text()
             .splitlines()][-1]

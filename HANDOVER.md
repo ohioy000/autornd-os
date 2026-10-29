@@ -300,7 +300,7 @@ autornd/
     templates/dashboard.html  single-file chat + workflows + settings UI
 
 workflows/
-  engineering-rnd.yaml   ★★ the flagship pipeline, 31 nodes, 4 loops (§3.1)
+  full-team.yaml         ★★ the flagship pipeline, 31 nodes, 4 loops (§3.1)
   lean.yaml                 12 nodes — cheaper variant, one loop
   verify-first.yaml        12 nodes — Ruling D51 (8): no plan node;
                             the asks are the yardstick, one revision
@@ -467,7 +467,7 @@ idempotent across phases.
 
 ## 3. CURRENT STATE & SOURCE OF TRUTH
 
-### 3.1 `workflows/engineering-rnd.yaml` — the flagship pipeline (31 nodes)
+### 3.1 `workflows/full-team.yaml` — the flagship pipeline (31 nodes)
 
 **The file is the source of truth; this table is generated from it.** A
 hand-copied YAML lived here for twelve blueprints and drifted — it still
@@ -714,7 +714,7 @@ CHROMADB_PATH=./chromadb_data
 API_KEY=<SERVICE_API_KEY_PLACEHOLDER>
 JWT_SECRET=<JWT_SECRET_PLACEHOLDER>
 REGISTRATION_ENABLED=true
-AUTORND_WORKFLOW=engineering-rnd
+AUTORND_WORKFLOW=full-team
 AUTORND_PROFILE=                     # loads profiles/<name>.yaml
 ```
 
@@ -1886,7 +1886,7 @@ cd ~/projects/autornd-os
 # ~$0.15-0.45 and 3-20 min per trace. PIN THE TIERS or the reading is noise.
 OPENROUTER_PROVIDER_ORDER="triage:Alibaba,architecture:StreamLake,engineering:GMICloud" \
 .venv/bin/python3 -m autornd.evals.cli \
-  --scenarios evals/scenarios/convergence --workflow engineering-rnd \
+  --scenarios evals/scenarios/convergence --workflow full-team \
   --repeat 1 --timeout 3600 --max-spend 0.75 --max-spend-sweep 3.00 \
   --results-file docs/traces/my-run.jsonl
 
@@ -1894,7 +1894,7 @@ uvicorn autornd.main:app --reload --port 8100            # API + dashboard
 ```
 
 **Read these four files, in this order, to understand the system:**
-`workflows/engineering-rnd.yaml` → `autornd/graph/spec.py` →
+`workflows/full-team.yaml` → `autornd/graph/spec.py` →
 `autornd/engine/phases.py` (the risk guide especially) →
 `autornd/routing/openrouter.py` (accounting, budgets, provider pinning).
 

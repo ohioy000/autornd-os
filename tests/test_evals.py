@@ -228,7 +228,7 @@ class TestRunner:
         scenario = parse({"id": "s", "request": "Add retry", "expect": {
             "domains_include": ["backend"], "risk": "medium",
             "status": "completed", "converge_within": 1, "max_calls": 14}})
-        run = await run_scenario(scenario, load("workflows/engineering-rnd.yaml"),
+        run = await run_scenario(scenario, load("workflows/full-team.yaml"),
                                  lambda: make_client(scripted()), SETTINGS)
         assert run.passed, [str(f) for f in run.failures]
         assert run.calls > 0
@@ -236,7 +236,7 @@ class TestRunner:
     async def test_failures_name_the_actual_value(self):
         scenario = parse({"id": "s", "request": "Add retry",
                           "expect": {"risk": "critical"}})
-        run = await run_scenario(scenario, load("workflows/engineering-rnd.yaml"),
+        run = await run_scenario(scenario, load("workflows/full-team.yaml"),
                                  lambda: make_client(scripted()), SETTINGS)
         assert not run.passed
         assert run.failures[0].got == "medium"
@@ -246,7 +246,7 @@ class TestRunner:
         stopped it: a bound that only limits iterations does not limit spend."""
         scenario = parse({"id": "s", "request": "Add retry",
                           "expect": {"max_calls": 3}})
-        run = await run_scenario(scenario, load("workflows/engineering-rnd.yaml"),
+        run = await run_scenario(scenario, load("workflows/full-team.yaml"),
                                  lambda: make_client(scripted(green=False)), SETTINGS)
         assert not run.passed
         assert "ceiling" in (run.error or "")
@@ -268,7 +268,7 @@ class TestRunner:
         # the watchdog.
         scenario = parse({"id": "s", "request": "Add retry", "expect": {"risk": "medium"}})
         run = await run_scenario(
-            scenario, load("workflows/engineering-rnd.yaml"),
+            scenario, load("workflows/full-team.yaml"),
             lambda: make_client(scripted(), delay=0.05), SETTINGS, timeout=0.01)
         assert not run.passed
         assert run.status == "blocked"
@@ -280,7 +280,7 @@ class TestRunner:
             raise RuntimeError("provider down")
 
         scenario = parse({"id": "s", "request": "r", "expect": {"risk": "medium"}})
-        run = await run_scenario(scenario, load("workflows/engineering-rnd.yaml"),
+        run = await run_scenario(scenario, load("workflows/full-team.yaml"),
                                  lambda: make_client(explode), SETTINGS)
         assert not run.passed
         assert "provider down" in run.error
@@ -290,7 +290,7 @@ class TestRunner:
             parse({"id": "ok", "request": "r", "expect": {"risk": "medium"}}),
             parse({"id": "nope", "request": "r", "expect": {"risk": "critical"}}),
         ]
-        report = await run_suite(scenarios, load("workflows/engineering-rnd.yaml"),
+        report = await run_suite(scenarios, load("workflows/full-team.yaml"),
                                  lambda: make_client(scripted()), SETTINGS)
         assert report.total == 2 and report.passed == 1
         rendered = report.render()
@@ -302,7 +302,7 @@ class TestRunner:
         shape is cheaper, scored against the same expectations."""
         scenarios = [parse({"id": "s", "request": "Add retry",
                             "expect": {"status": "completed"}})]
-        full = await run_suite(scenarios, load("workflows/engineering-rnd.yaml"),
+        full = await run_suite(scenarios, load("workflows/full-team.yaml"),
                                lambda: make_client(scripted()), SETTINGS)
         lean = await run_suite(scenarios, load("workflows/lean.yaml"),
                                lambda: make_client(scripted()), SETTINGS)
@@ -318,7 +318,7 @@ class TestRepetitions:
     async def test_a_consistent_scenario_passes_every_repetition(self):
         scenario = parse({"id": "s", "request": "r", "expect": {"risk": "medium"}})
         report = await run_repeated(
-            [scenario], load("workflows/engineering-rnd.yaml"),
+            [scenario], load("workflows/full-team.yaml"),
             lambda: make_client(scripted()), SETTINGS, repeat=3)
         result = report.results[0]
         assert result.passed and result.passes == 3 and result.rate == 1.0

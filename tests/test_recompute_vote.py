@@ -1193,7 +1193,7 @@ ENGINEERING_RND = (
 
 
 class TestGoldenPrompts:
-    """The implement prompts of engineering-rnd and verify-first are
+    """The implement prompts of full-team and verify-first are
     byte-identical to main's (D53 §2 (4), criterion (h)): the
     results instruction is gated on the implement node's args, and
     with the arg unset the prompt is unchanged, byte for byte."""

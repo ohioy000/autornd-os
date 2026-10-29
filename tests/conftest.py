@@ -77,7 +77,7 @@ PLACEHOLDERS: dict[str, str] = {
     "REGISTRATION_ENABLED": "true",
     # D54: the existing suite describes the engineering team; new tests select general or studio explicitly.
     "AUTORND_PROFILE": "engineering",
-    "AUTORND_WORKFLOW": "engineering-rnd",
+    "AUTORND_WORKFLOW": "full-team",
 }
 for _name, _value in PLACEHOLDERS.items():
     os.environ[_name] = _value

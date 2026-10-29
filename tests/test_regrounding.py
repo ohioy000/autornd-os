@@ -130,7 +130,7 @@ def _base(overrides=None, risk="medium"):
 
 
 async def _run(verdicts, settings=None):
-    spec = load("workflows/engineering-rnd.yaml")
+    spec = load("workflows/full-team.yaml")
     runner = BillingScriptedRunner(verdicts)
     state = await GraphExecutor(spec, runner, settings or SETTINGS).run("D37 probe")
     return state, runner
@@ -316,7 +316,7 @@ class TestRegroundingEdge:
             unrecallable=False, summary="backend change, recallable")
         state.iteration = 1
         from autornd.graph.spec import load as _load
-        node = _load("workflows/engineering-rnd.yaml").get("plan")
+        node = _load("workflows/full-team.yaml").get("plan")
         verdict = await runner.run_ai(node, state)
         assert verdict.ready is True
         assert runner.assumptions_declared == [{
@@ -343,7 +343,7 @@ class TestRegroundingEdge:
             "passed": True, "fresh": ["container topology: shared or per-worker?"]}
         state.outputs["context"] = {"asked": [], "rounds": 0}
         from autornd.graph.spec import load as _load
-        node = _load("workflows/engineering-rnd.yaml").get("reground_lookup")
+        node = _load("workflows/full-team.yaml").get("reground_lookup")
         before = client.calls
         result = await runner.run_check(node, state)
         assert result.passed is True

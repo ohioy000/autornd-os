@@ -246,7 +246,7 @@ The workflows that ship, one file each in `workflows/` (`tests/test_docs.py` che
 
 | workflow | shape |
 |---|---|
-| `engineering-rnd` | the full team: plan, feasibility, a build loop with domain review and judges, risk-scaled review, escalation |
+| `full-team` | the full team: plan, feasibility, a build loop with domain review and judges, risk-scaled review, escalation |
 | `lean` | plan, build, verify. No review team, no escalation — but it keeps the free checks |
 | `verify-first` | no plan: the request's asks, one answer, the free checks and one judge. One revision if the judge names a failed ask; escalated if the dissent survives |
 | `answer-and-recompute` | the request's asks, one answer with typed results, then blind recompute samples on the optional recompute tier and a free vote. A disagreement is a note on the delivery, never a block; with the recompute tier empty, the vote records a skip |
@@ -259,7 +259,7 @@ Select with `AUTORND_WORKFLOW`. Copy one and change it — that is the point of 
 
 | | happy path | never converges |
 |---|---|---|
-| `engineering-rnd` | 11 calls | 18 calls |
+| `full-team` | 11 calls | 18 calls |
 | `lean` | **8 calls** | **15 calls** |
 
 Writing the sequence down also forced out rules that had been implicit in code: the test engineer validates the work and so does not build it or review the build (the `builders` and `peers` rosters), feasibility only reviews a plan the architect declared ready, and escalation runs because a loop gave up rather than because its dependencies happened to be satisfied.
@@ -515,7 +515,7 @@ Every assertion is a set or integer comparison — no judge, no cost, millisecon
 
 ```bash
 python -m autornd.evals.cli --repeat 5
-python -m autornd.evals.cli --compare engineering-rnd lean
+python -m autornd.evals.cli --compare full-team lean
 ```
 
 **Evals repeat by default, because models are stochastic.** The same triage request passed on one run and failed on the next, so a single result is an anecdote. Reports give a pass rate and name the flaky assertion:
@@ -610,7 +610,7 @@ MODEL_SEARCH=             # required
 # Optional tiers (MODEL_RANKER and the others under Model Tiers) turn
 # their feature off when empty.
 
-AUTORND_WORKFLOW=engineering-rnd
+AUTORND_WORKFLOW=full-team
 # Limits: MAX_ITERATIONS and the *_MAX_TOKENS caps. Defaults in .env.example.
 
 API_HOST=127.0.0.1        # containers need 0.0.0.0

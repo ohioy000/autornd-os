@@ -1,4 +1,4 @@
-name: engineering-rnd
+name: full-team
 description: >
   The default AutoRnD pipeline, written as a graph. This reproduces the
   sequence that used to be hardcoded in the engine — triage, plan, feasibility,

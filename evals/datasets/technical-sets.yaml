@@ -34,7 +34,7 @@
 #
 # HOW TO USE IT
 #   * As runnable scenarios: each item maps to an eval Scenario — take `id`,
-#     `request`, and `workflow` (default engineering-rnd). The current
+#     `request`, and `workflow` (default full-team). The current
 #     `evals.scenario` schema cannot express the `grading` rubric (word bands,
 #     section counts, must-contain calculations, banned phrases, refusal traps),
 #     so those are graded by a separate rubric checker over the PRODUCED

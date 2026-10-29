@@ -172,7 +172,7 @@ class TestTheWarningReachesTheOperator:
         monkeypatch.setattr(
             "sys.argv",
             ["prog", "--scenarios", "evals/scenarios/generalization/gen_marketing_claims.yaml",
-             "--workflow", "engineering-rnd", "--repeat", "2",
+             "--workflow", "full-team", "--repeat", "2",
              "--max-spend", "0.50", "--max-spend-sweep", "0.50"],
         )
         try:

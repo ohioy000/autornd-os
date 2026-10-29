@@ -59,7 +59,7 @@ needs the owner's authorisation, stated before the spend.** Work arrives and ret
 - **Vocabulary terms** (domains, specialist roles) go through `normalise_key()` (`models/verdicts.py`)
   before any comparison. **Never compare raw model output to a literal.**
 - **Workflow and profile identifiers** are YAML filename stems used on the CLI:
-  `workflows/engineering-rnd.yaml`; `profiles/studio.yaml` selected by `AUTORND_PROFILE=studio`.
+  `workflows/full-team.yaml`; `profiles/studio.yaml` selected by `AUTORND_PROFILE=studio`.
 
 ## Core code patterns
 

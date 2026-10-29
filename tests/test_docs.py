@@ -149,7 +149,7 @@ class TestTheReadmeYamlExcerptIsTheRealThing:
     and it fails.
     """
 
-    WORKFLOW = "workflows/engineering-rnd.yaml"
+    WORKFLOW = "workflows/full-team.yaml"
 
     @staticmethod
     def _excerpt() -> list[dict]:
@@ -189,7 +189,7 @@ class TestTheWorkflowComparisonTableIsTheRealThing:
 
     The table under *Workflows Are Files* says what two shapes cost against the
     same expectations. It said `11`/`24` and `8`/`15` while the harness it
-    describes reported `10`/`17` and `7`/`14` — the engineering-rnd
+    describes reported `10`/`17` and `7`/`14` — the full-team
     never-converges figure was out by seven, which is a whole rework loop. The
     provenance of the old numbers is recorded nowhere, so they could not be
     reconciled, only re-measured (convention 18: a reading is a reading).
@@ -223,7 +223,7 @@ class TestTheWorkflowComparisonTableIsTheRealThing:
     def _table() -> dict[str, tuple[int, int]]:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         rows = re.findall(
-            r"^\|\s*`(engineering-rnd|lean)`\s*\|\s*\*{0,2}(\d+) calls\*{0,2}\s*"
+            r"^\|\s*`(full-team|lean)`\s*\|\s*\*{0,2}(\d+) calls\*{0,2}\s*"
             r"\|\s*\*{0,2}(\d+) calls\*{0,2}\s*\|$",
             readme, re.MULTILINE)
         assert len(rows) == 2, (
@@ -248,8 +248,8 @@ class TestTheWorkflowComparisonTableIsTheRealThing:
     async def test_lean_is_still_the_cheaper_shape_on_both_arms(self):
         """The table's actual argument, independent of the exact figures."""
         claimed = self._table()
-        assert claimed["lean"][0] < claimed["engineering-rnd"][0]
-        assert claimed["lean"][1] < claimed["engineering-rnd"][1]
+        assert claimed["lean"][0] < claimed["full-team"][0]
+        assert claimed["lean"][1] < claimed["full-team"][1]
 
 
 class TestCIAsksAboutStateNotOnlyEvents:

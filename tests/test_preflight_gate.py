@@ -111,7 +111,7 @@ def sweep(monkeypatch, tmp_path):
 
     async def run(*extra: str) -> int:
         monkeypatch.setattr(sys, "argv", [
-            "cli", "--scenarios", str(suite), "--workflow", "engineering-rnd",
+            "cli", "--scenarios", str(suite), "--workflow", "full-team",
             "--repeat", "1", "--results-file", str(results), *extra])
         return await cli.main()
 

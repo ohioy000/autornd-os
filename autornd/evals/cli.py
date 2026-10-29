@@ -2,7 +2,7 @@
 
     python -m autornd.evals.cli                          # default workflow
     python -m autornd.evals.cli --workflow lean
-    python -m autornd.evals.cli --compare engineering-rnd lean
+    python -m autornd.evals.cli --compare full-team lean
 
 Uses live models, so it costs money. Every run is bounded by the scenario's
 max_calls and a wall-clock timeout; nothing here can run away.

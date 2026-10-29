@@ -39,7 +39,7 @@ nodes:
     depends_on: [asks]
 
   # Grounding, assembled deterministically — the same node as
-  # engineering-rnd's, because it is the same job.
+  # full-team's, because it is the same job.
   - id: context
     kind: check
     check: build_context

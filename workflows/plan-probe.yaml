@@ -11,7 +11,7 @@ description: >
   question is only whether a usable one comes back, at what token cost, from
   which serving.
 
-  No `tier_when` on the plan node, deliberately: engineering-rnd drops low-risk
+  No `tier_when` on the plan node, deliberately: full-team drops low-risk
   planning to the cheaper tier, which is right for production and wrong here —
   a probe whose tier changes with the request measures two things at once.
 

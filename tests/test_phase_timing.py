@@ -70,7 +70,7 @@ class SlowScriptedRunner:
 
 
 async def _timed_run(verdicts):
-    spec = load("workflows/engineering-rnd.yaml")
+    spec = load("workflows/full-team.yaml")
     runner = SlowScriptedRunner(verdicts)
     state = await GraphExecutor(spec, runner, SETTINGS).run("Add retry")
     return state, runner
