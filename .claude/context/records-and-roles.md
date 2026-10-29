@@ -2,6 +2,7 @@
 
 Load when deciding whether a change is yours to make, or when recording one.
 The full protocol is `AGENTS.md` (currently also at `thisisnottheCLAUDE.md`).
+All work travels through the shared GitHub repository, `https://github.com/ohioy000/autornd-os`; its `main` is the truth.
 
 ## Three roles
 

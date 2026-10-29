@@ -9,6 +9,11 @@ this file, then `HANDOVER.md`, then the last two sections of `docs/handover-revi
 AutoRnD-OS is a multi-model agentic harness for engineering R&D; tiers are named by *job*, never by
 vendor. **`HANDOVER.md` is the state of record; its §6 measured facts set nearly every constant.**
 
+**We work through one shared GitHub repository, `https://github.com/ohioy000/autornd-os`.** Its `main` is the only source of
+truth. Each agent works in its own folder (the advisor in `/home/jb/autornd-os`, the executor in
+`/home/jb/autornd-os_clone`), fetches from GitHub, pushes its branch there and delivers by pull
+request. Nothing passes between the folders except through GitHub.
+
 ## Who decides what
 
 | role | owns | in practice |

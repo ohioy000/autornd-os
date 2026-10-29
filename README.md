@@ -883,7 +883,7 @@ uvicorn autornd.main:app --host 127.0.0.1 --port 8100
 
 ## Contributing
 
-PRs welcome. The architecture is modular — add specialists, providers, phases, checks, workflows or review composition rules without touching the sequencer. New deterministic checks are especially welcome: anything with a right answer belongs in a check rather than a prompt.
+PRs welcome, through this GitHub repository, `https://github.com/ohioy000/autornd-os`, against `main`. The architecture is modular — add specialists, providers, phases, checks, workflows or review composition rules without touching the sequencer. New deterministic checks are especially welcome: anything with a right answer belongs in a check rather than a prompt.
 
 **Keeping this README true.** It describes mechanisms. It does not restate counts, prices, defaults or ruling numbers: those live in the files themselves, in `.env.example`, and in the dated records under `docs/reviews/` and `HANDOVER.md` §6. Where it does list something the repository defines — workflows, tiers, checks, specialists — `tests/test_docs.py` checks the list against its source, and the test count in the badge is checked against the suite. Add a figure to this file only if a test derives it.
 

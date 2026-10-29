@@ -9,6 +9,10 @@ either ships a written deliverable or escalates with a diagnosis. Python 3.11+ /
 Pydantic v2 / SQLAlchemy 2 async + aiosqlite / ChromaDB, talking to any OpenAI-compatible endpoint
 (`autornd/routing/openrouter.py`).
 
+**We work through one shared GitHub repository, `https://github.com/ohioy000/autornd-os`; its `main` is the truth.** Fetch
+from it, push branches to it, and deliver by pull request. The advisor's folder is
+`/home/jb/autornd-os`; the coder's is `/home/jb/autornd-os_clone` (see `AGENTS.md`).
+
 > **This file is how code is written here. `AGENTS.md` is the protocol** — who decides what, the
 > permission boundary, the G-gates, the command channel, how deliveries are reviewed. **Read
 > `AGENTS.md` before changing anything that alters what the harness concludes.** There is exactly one

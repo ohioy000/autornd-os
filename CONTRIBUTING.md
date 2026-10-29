@@ -152,6 +152,8 @@ review of a records retention schedule.
 
 ## Pull Requests
 
+- All work goes through this GitHub repository, `https://github.com/ohioy000/autornd-os`: branch from `main`,
+  push the branch, and open a pull request against `main`
 - Keep PRs focused — one feature or fix per PR
 - Add tests for new functionality
 - Update the README if you're adding user-facing features
