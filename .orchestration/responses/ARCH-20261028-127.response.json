@@ -3,10 +3,10 @@
   "status": "IN_PROGRESS",
   "executed": true,
   "head_before": "3d7150d750c7341e8385bc628f1989b516872e90",
-  "head_after": "30a7de4b78f38615211de6adea9586c1cacb2bfe",
+  "head_after": "1bf34a57b8a44d0415251dec5ace807cd7fb6c1d",
   "results": {
-    "task": 4,
-    "step": "API takes a workflow name, refuses others before the gate, lists offered workflows, gate keys on the workflow; Task 4 CHECK matches EXPECT (65 passed, network guard 0)"
+    "task": 5,
+    "step": "tests/test_workflow_choice.py written; Task 5 CHECK matches EXPECT (65 passed, network guard 0)"
   },
   "preconditions_ran": [
     {
