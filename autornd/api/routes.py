@@ -243,6 +243,10 @@ class PhaseDetail(BaseModel):
 
 class WorkflowDetail(WorkflowSummary):
     phases: list[PhaseDetail]
+    # Ruling D57 (3): a run that ended without a delivered answer keeps its
+    # last one, unendorsed, with its open dissents. None when the run
+    # completed or ended before any answer existed.
+    candidate: dict | None = None
 
 
 def _summarize(w: Workflow) -> WorkflowSummary:
@@ -416,7 +420,10 @@ async def get_workflow(
 
 def _detail(w: Workflow) -> WorkflowDetail:
     phases = sorted(w.phases, key=lambda p: p.created_at)
+    candidate = next((json.loads(p.verdict_json) for p in reversed(phases)
+                      if p.phase == "candidate"), None)
     return WorkflowDetail(
+        candidate=candidate,
         id=w.id,
         request=w.request,
         status=w.status.value,

@@ -213,7 +213,8 @@ class PhaseRunner:
             causes = [c for c in (current.get("red_cause"),
                                   entry.get("red_cause")) if c]
             current["red_cause"] = "; ".join(causes)
-            for key in ("evidence", "blocked_on", "review_findings"):
+            for key in ("evidence", "blocked_on", "review_findings",
+                        "notes", "review_notes"):
                 extra = entry.get(key) or []
                 if extra:
                     current[key] = list(current.get(key) or []) + list(extra)
@@ -579,47 +580,17 @@ class PhaseRunner:
     async def _phase_implement(self, node: Node, state: ExecutionState):
         lead = self._resolve_who(node, state)
         last = self.failure_log[-1] if self.failure_log else {}
-        # Ruling D21: on a recovery iteration the implement phase receives
-        # the previous iteration's unmet criteria quoted. The coverage node's
-        # output is last-write-wins, so at recovery time it still holds the
-        # final build-loop verdict — the failure being recovered from. Empty
-        # on build iterations (no prior coverage output) and on workflows
-        # without a coverage node, so those prompts read no new text.
-        coverage = state.outputs.get("coverage") or {}
-        if isinstance(coverage, dict):
-            missed = coverage.get("missed") or []
-        else:
-            missed = list(getattr(coverage, "missed", None) or [])
-        # Ruling D24: on a rework iteration implement receives the incoming
-        # review's findings plus the gate's reason, through the same
-        # unmet_criteria channel — one mechanism, two sources. The review
-        # verdict that failed review_clean is what exists when the rework
-        # input assembles (the loop's own rework_review is its judge, not
-        # its input). Empty on build iterations (no review output yet).
-        review = state.outputs.get("review")
-        rework_extra: list[str] = []
-        gate_reason = ""
-        gate_out = state.outputs.get("review_clean")
-        if isinstance(gate_out, dict) and gate_out.get("routed_to") == "review_rework_loop":
-            gate_reason = str(gate_out.get("reason") or "")
-            findings = None
-            if isinstance(review, dict):
-                findings = review.get("findings") or review.get("detail")
-            else:
-                findings = getattr(review, "findings",
-                                   getattr(review, "detail", None))
-            if isinstance(findings, list):
-                for f in findings:
-                    if isinstance(f, dict):
-                        d = str(f.get("detail") or f.get("text") or "").strip()
-                        if d:
-                            rework_extra.append(d)
-                    elif str(f).strip():
-                        rework_extra.append(str(f).strip())
-            elif findings and str(findings).strip():
-                rework_extra.append(str(findings).strip())
-            if gate_reason.strip():
-                rework_extra.append(f"Gate: {gate_reason.strip()}")
+        # Ruling D57 (1): a revision receives the anchored dissents and
+        # nothing else, as D51 (3) rules. Two channels used to carry notes
+        # in as demands. D21's read of `coverage.missed` sent coverage's
+        # misses under "satisfy each one" on every iteration after the
+        # first, though coverage has been a note since R1 (2026-10-15).
+        # D24's rework_extra sent every review finding, notes included, a
+        # second time and as an object's repr. Both are gone. What failed
+        # arrives through the failure log, whose writers keep the notes
+        # under their own keys (`notes`, `review_notes`) for the autopsy
+        # and the record, and the escalation's directive addresses only
+        # the dissents it upheld (D51 (6)).
         # Ruling D33: hand implement its own prior artifact so it revises rather
         # than regenerates. state.outputs["implement"] holds the previous
         # iteration's verdict until this phase overwrites it (executor writes the
@@ -655,7 +626,6 @@ class PhaseRunner:
             # time while the rest sat in the log unread.
             evidence=last.get("evidence"),
             review_findings=last.get("review_findings"),
-            unmet_criteria=[str(m) for m in missed] + rework_extra,
             resolution_directive=self.resolution_directive,
             context=self.context,
             primary_domain=None,      # the lead is already resolved
@@ -714,6 +684,8 @@ class PhaseRunner:
             "judges_run": False,
             "dissenting": [],
             "implement_summary": summary,
+            "agreed": False,
+            "answer_chars": len(summary),
             "note": ("the run ended inside this iteration, "
                      "before its judges ran"),
         })
@@ -791,16 +763,25 @@ class PhaseRunner:
         if not verdict.green:
             refusals.append(
                 f"validate: {verdict.red_cause or 'red'}")
+        # Ruling D57 (1): coverage and consistency are notes (R1; the
+        # review of 2026-10-14). They stay in the log under their own key,
+        # for the autopsy and the record; the cause a revision reads names
+        # only the fold's own judges.
+        notes: list[str] = []
         if coverage_passed is False:
-            refusals.append(_judge_line("coverage", coverage))
+            notes.append(_judge_line("coverage", coverage))
         if consistency_passed is False:
-            refusals.append(_judge_line("consistency", consistency))
-        if refusals:
+            notes.append(_judge_line("consistency", consistency))
+        if refusals or notes:
             self._log_failure({
                 "iteration": state.iteration,
                 "implement_summary": implement.summary,
                 "red_cause": "; ".join(refusals),
-                "evidence": list(verdict.evidence or []),
+                "notes": notes,
+                # Validate's lines are a dissent's evidence only when
+                # validate dissents.
+                "evidence": (list(verdict.evidence or [])
+                             if not verdict.green else []),
                 # B3's invariant: the autopsy reads the failure log, so an
                 # honest refusal travels with it — escalation must be able to
                 # see what the implementer said it could not satisfy.
@@ -828,6 +809,12 @@ class PhaseRunner:
             "implement_green": implement.green,
             "implement_red_cause": implement.red_cause,
             "implement_summary": implement.summary,
+            # Ruling D57 (4): whether the build fold agreed on this answer
+            # (every workflow's build fold is implement and validate,
+            # guarded in tests/test_convergence.py), and the answer's
+            # length, so the record shows a revision growing.
+            "agreed": bool(implement.green and verdict.green),
+            "answer_chars": len(implement.summary or ""),
             "domain_concerns": list(implement.domain_concerns or []),
             "validate_green": verdict.green,
             "validate_red_cause": verdict.red_cause,
@@ -868,12 +855,26 @@ class PhaseRunner:
         # blocked the run sat unread — the same defect as §15.1's evidence, one
         # phase later.
         if not verdict.ship:
+            # Ruling D57 (1): run_review demotes every unanchored critical
+            # or high finding to medium before it decides, so the findings
+            # still at critical or high are exactly the ones that blocked.
+            # Only those reach the revision; the rest are notes, kept for
+            # the autopsy and the record. The cause is stated from typed
+            # fields, not from the reviewers' prose verdicts.
+            blocking = [f.model_dump() for f in verdict.findings
+                        if f.severity in ("critical", "high")]
             self._log_failure({
                 "iteration": state.iteration,
                 "implement_summary": state.outputs["implement"].summary,
-                "red_cause": f"Review blocked: {verdict.verdict}".strip(),
+                "red_cause": (
+                    f"Review blocked on {len(blocking)} anchored finding(s)"
+                    if blocking else
+                    f"Review did not complete: {verdict.reviewers_completed}"
+                    f" of {verdict.reviewers_assigned} reviewers"),
                 "evidence": [],
-                "review_findings": [f.model_dump() for f in verdict.findings],
+                "review_findings": blocking,
+                "review_notes": [f.model_dump() for f in verdict.findings
+                                 if f.severity not in ("critical", "high")],
             })
         return verdict, responses
 

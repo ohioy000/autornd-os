@@ -1,0 +1,251 @@
+{
+  "command_id": "ARCH-20261028-129",
+  "status": "DONE",
+  "executed": true,
+  "head_before": "0c9deb81f72a333bc09d2d71444b7456e6588f71",
+  "head_after": "58c139e391444bb20f2b4ba9ba98f89da27ad1fc",
+  "results": {
+    "task": 9,
+    "step": "All tasks done; PR 225 open; CI 5/5 on 58c139e (run 40895803930)"
+  },
+  "preconditions_ran": [
+    {
+      "command": "git branch --show-current",
+      "expected": "exec/20261028-129-convergence",
+      "observed": "exec/20261028-129-convergence",
+      "outcome": "pass"
+    },
+    {
+      "command": "test \"$(git rev-parse HEAD)\" = \"$(git rev-parse origin/main)\" && echo \"at origin/main\"",
+      "expected": "at origin/main",
+      "observed": "at origin/main",
+      "outcome": "pass"
+    },
+    {
+      "command": "git status --short",
+      "expected": "?? .qwen/",
+      "observed": "?? .qwen/",
+      "outcome": "pass"
+    },
+    {
+      "command": "grep -c '^\\*\\*Status: ruled by the advisor on 2026-10-28' docs/reviews/2026-10-28-d57-the-convergence-repairs.md",
+      "expected": "1",
+      "observed": "1",
+      "outcome": "pass"
+    },
+    {
+      "command": "test -f .orchestration/prompts/ARCH-20261028-129.md && echo task file ok",
+      "expected": "task file ok",
+      "observed": "task file ok",
+      "outcome": "pass"
+    },
+    {
+      "command": "test -f tests/test_source_check.py && echo 128 merged",
+      "expected": "128 merged",
+      "observed": "128 merged",
+      "outcome": "pass"
+    },
+    {
+      "command": "pgrep -af 'evals[./]tier[34][./]runner|repeat[_]unit|recompute[_]vote|uvicor[n] autornd' || echo none",
+      "expected": "none",
+      "observed": "none",
+      "outcome": "pass"
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ --collect-only -q | tail -1",
+      "expected": "1716 tests collected in ...s",
+      "observed": "1716 tests collected in 0.99s",
+      "outcome": "pass"
+    },
+    {
+      "command": ".venv/bin/python3 -m pytest tests/ -q (filtered)",
+      "expected": "network guard: 0 non-loopback attempt(s) recorded / 1715 passed, 1 skipped in ...s",
+      "observed": "network guard: 0 non-loopback attempt(s) recorded / 1715 passed, 1 skipped in 168.95s (0:02:48)",
+      "outcome": "pass"
+    }
+  ],
+  "suite_count_before": 1716,
+  "suite_count_after": 1735,
+  "tests_changed": [
+    "tests/test_iteration_dissent.py::test_a_consistency_only_failure_is_logged_naming_the_judge: changed by D57 (1), Task 1",
+    "tests/test_iteration_dissent.py::test_one_entry_per_iteration_not_two: changed by D57 (1), Task 1",
+    "tests/test_failure_path_terminal.py::test_rework_implement_receives_review_findings_and_converges: changed by D57 (1), Task 1",
+    "tests/test_engine.py::TestASkippedIndependentCheckRecordsNoShip::test_a_run_that_vetoes_blocks_with_its_findings: changed by D57 (2), Task 2",
+    "tests/fixtures/prompts/cupline.json: re-captured, Task 2",
+    "tests/fixtures/prompts/engineering.json: re-captured, Task 2",
+    "tests/fixtures/prompts/example.json: re-captured, Task 2",
+    "tests/fixtures/prompts/tier4.json: re-captured, Task 2",
+    "tests/test_source_check.py: the Host header, the escape, two new tests, Task 5",
+    "tests/test_convergence.py: new, 17 tests"
+  ],
+  "break_proofs": [
+    {
+      "break": "7.1: coverage's misses reach the revision again",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestARevisionReceivesOnlyTheAnchoredDissents::test_a_coverage_miss_does_not_reach_the_revision"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.2: a coverage note is a cause again",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestARevisionReceivesOnlyTheAnchoredDissents::test_a_coverage_miss_does_not_reach_the_revision",
+        "FAILED tests/test_iteration_dissent.py::test_one_entry_per_iteration_not_two"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.3: a consistency note is a cause again",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_iteration_dissent.py::test_a_consistency_only_failure_is_logged_naming_the_judge",
+        "FAILED tests/test_iteration_dissent.py::test_one_entry_per_iteration_not_two"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.4: every review finding reaches the rework",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestARevisionReceivesOnlyTheAnchoredDissents::test_a_review_note_does_not_reach_the_rework"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.5: validate's lines reach a revision when validate passed",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestARevisionReceivesOnlyTheAnchoredDissents::test_validate_evidence_reaches_a_revision_only_when_validate_dissents"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.6: the independent check's own ship decides",
+      "file": "autornd/engine/phases.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_an_unanchored_issue_is_a_note_and_the_work_ships",
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_an_unanchored_unmet_ask_is_an_unanchored_dissent",
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_do_not_ship_with_no_issue_ships",
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_an_issue_naming_its_ask_vetoes",
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_a_wrong_fact_without_its_source_is_unverified",
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_a_hazard_anchors_only_through_the_answers_words",
+        "FAILED tests/test_convergence.py::TestACorrectDraftShips::test_a_correct_first_answer_ships_past_every_note"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.7: a quote of the request does not anchor an issue",
+      "file": "autornd/engine/phases.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheIndependentCheckNeedsAnAnchor::test_an_issue_quoting_the_request_vetoes",
+        "FAILED tests/test_engine.py::TestASkippedIndependentCheckRecordsNoShip::test_a_run_that_vetoes_blocks_with_its_findings"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.8: the candidate is not recorded",
+      "file": "autornd/engine/workflow.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_a_run_that_ends_blocked_returns_its_last_answer",
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_the_agreed_answer_is_returned_when_the_last_differs"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.9: the agreed answer is not recorded",
+      "file": "autornd/engine/workflow.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_the_agreed_answer_is_returned_when_the_last_differs"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.10: the detail does not return the candidate",
+      "file": "autornd/api/routes.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_a_run_that_ends_blocked_returns_its_last_answer",
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_the_agreed_answer_is_returned_when_the_last_differs"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.11: the detail reads another record as the candidate",
+      "file": "autornd/api/routes.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_a_run_that_ends_blocked_returns_its_last_answer",
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_the_agreed_answer_is_returned_when_the_last_differs",
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_a_completed_run_has_no_candidate"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.12: agreed reads the implementer alone",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_a_run_that_ends_blocked_returns_its_last_answer",
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_the_agreed_answer_is_returned_when_the_last_differs",
+        "FAILED tests/test_convergence.py::TestTheRecord::test_each_iteration_records_its_answer_length"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.13: the length is not recorded",
+      "file": "autornd/graph/adapter.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheRecord::test_each_iteration_records_its_answer_length"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.14: the pointer reads the dissent list again",
+      "file": "autornd/graph/executor.py",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheRecord::test_an_answer_agreed_beside_a_coverage_note_is_agreed"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.15: a build fold gains a judge",
+      "file": "workflows/full-team.yaml",
+      "failed_tests": [
+        "FAILED tests/test_convergence.py::TestTheCandidateReachesTheCaller::test_a_run_that_ends_blocked_returns_its_last_answer",
+        "FAILED tests/test_convergence.py::TestEveryBuildFoldIsTheSame::test_every_build_fold_is_implement_and_validate"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.16: the request goes to the name",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetchConnectsToTheAddressItChecked::test_the_request_goes_to_the_checked_address"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.17: the TLS server name is not the page's",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetchConnectsToTheAddressItChecked::test_the_request_goes_to_the_checked_address"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    },
+    {
+      "break": "7.18: the environment's proxy and .netrc are trusted",
+      "file": "autornd/knowledge/fetch.py",
+      "failed_tests": [
+        "FAILED tests/test_source_check.py::TestTheFetchConnectsToTheAddressItChecked::test_nothing_is_taken_from_the_environment"
+      ],
+      "outcome": "failed exactly the tests the task's EXPECT lists; undone with git checkout -- <file>; git status --short printed only '?? .qwen/'"
+    }
+  ],
+  "deviations": [],
+  "questions_for_advisor": [],
+  "notes": "head_after is the tip CI tested; the PR head is one response-only commit later. CI on 58c139e: docker 57s, editable-install 42s, test 3.11 2m47s, 3.12 3m3s, 3.13 2m54s, all pass. Full suite at Task 8: 1735 collected, 1734 passed, 1 skipped, network guard 0. Branch made with git switch -c ... origin/main, so its upstream was origin/main; Task 9 pushed with -u. Every edit, the new test file and the break-proofs were applied by scripts that took each find and replace block byte for byte from the task file and asserted each find occurred exactly once; the \\u00a0 escape in tests/test_source_check.py is present as written. One slip, caught before any commit: after Task 8 I ran an old scratch helper (written for command 128) that rewrote .orchestration/responses/ARCH-20261028-128.response.json in the working tree. I restored it with git checkout -- on that one file, before committing, and confirmed it is identical to origin/main. It is in no commit of this branch.",
+  "delivery_state": {
+    "branch": "exec/20261028-129-convergence",
+    "pr": 225,
+    "url": "https://github.com/ohioy000/autornd-os/pull/225"
+  }
+}

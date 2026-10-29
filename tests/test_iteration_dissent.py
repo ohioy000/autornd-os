@@ -141,9 +141,10 @@ async def test_a_check_that_compared_nothing_is_listed_in_the_record():
 
 @pytest.mark.asyncio
 async def test_a_consistency_only_failure_is_logged_naming_the_judge():
-    """(e) Ruling D46 (4): the fold refuses convergence on a coverage miss or
-    a consistency conflict too, and the next attempt is told why — whether or
-    not validate and implement are red (review B finding 9)."""
+    """(e) Ruling D46 (4), as D57 (1) amends it: a consistency-only failure
+    is still logged naming the judge, but as a note. Consistency has been a
+    note since the review of 2026-10-14, so the cause the next attempt reads
+    names no judge, and the note stays in the log for the autopsy."""
     state = _state(coverage_passed=True, consistency_passed=False,
                    implement_green=True)
     runner = PhaseRunner(client=OpenRouterClient(api_key="test"))
@@ -157,9 +158,8 @@ async def test_a_consistency_only_failure_is_logged_naming_the_judge():
         await runner._phase_validate(Node(id="validate", kind="ai"), state)
     assert len(runner.failure_log) == 1
     entry = runner.failure_log[0]
-    assert "consistency" in entry["red_cause"], entry["red_cause"]
-    assert "validate" not in entry["red_cause"]
-    assert "implement" not in entry["red_cause"]
+    assert [n.split(":")[0] for n in entry["notes"]] == ["consistency"]
+    assert entry["red_cause"] == "", entry["red_cause"]
 
 
 @pytest.mark.asyncio
@@ -181,6 +181,9 @@ async def test_one_entry_per_iteration_not_two():
         await runner._phase_validate(node, state)
     assert len(runner.failure_log) == 1
     entry = runner.failure_log[0]
-    assert "coverage" in entry["red_cause"]
-    assert "consistency" in entry["red_cause"]
+    # Ruling D57 (1): the fold's judge is the cause; the two notes are
+    # logged beside it, folded into the same entry.
     assert "implement" in entry["red_cause"]
+    assert "coverage" not in entry["red_cause"]
+    assert {n.split(":")[0] for n in entry["notes"]} == {
+        "coverage", "consistency"}

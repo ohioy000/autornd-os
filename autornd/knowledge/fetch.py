@@ -9,9 +9,10 @@ so a later reader can tell whether the page has changed since.
 The addresses come from model output, and a page can steer a model, so a fetch
 refuses anything that is not a public web address: no other scheme, no
 loopback, private or link-local network. Each redirect is checked the same way.
-The check resolves the name before the request and the request resolves it
-again, so a name that changes its answer between the two is not caught; the
-harness runs on the owner's machine, and this closes the plain case.
+The request goes to the address the check approved, with the name in the Host
+header and the TLS server name, so the name is resolved once per hop: a name
+that answers one way to the check and another to the connection cannot pass
+(D56, amended 2026-10-28; the first version resolved it twice).
 """
 
 from __future__ import annotations
@@ -91,14 +92,21 @@ async def fetch_source(url: str) -> Source:
 
 async def _fetch(url: str) -> Source:
     current = url
+    # trust_env=False: no proxy from the environment, which would resolve
+    # the name itself, and no .netrc credentials sent to a quoted page.
     async with httpx.AsyncClient(transport=_transport, follow_redirects=False,
-                                 timeout=FETCH_TIMEOUT_SECONDS,
+                                 timeout=FETCH_TIMEOUT_SECONDS, trust_env=False,
                                  headers={"User-Agent": USER_AGENT}) as client:
         for _ in range(MAX_REDIRECTS + 1):
-            status, reason = await _check_address(current)
+            status, reason, address = await _check_address(current)
             if status:
                 return Source(url, status, reason, final_url=current)
-            async with client.stream("GET", current) as response:
+            name = httpx.URL(current)
+            async with client.stream(
+                    "GET",
+                    name.copy_with(host=address, username=None, password=None),
+                    headers={"Host": name.netloc.decode("ascii")},
+                    extensions={"sni_hostname": name.host}) as response:
                 if response.is_redirect:
                     current = urljoin(current, response.headers.get("location", ""))
                     continue
@@ -145,24 +153,27 @@ async def _addresses(host: str) -> list[str]:
     return [info[4][0] for info in infos]
 
 
-async def _check_address(url: str) -> tuple[str, str]:
-    """("", "") when `url` may be fetched; else the status and the reason."""
+async def _check_address(url: str) -> tuple[str, str, str]:
+    """("", "", address) when `url` may be fetched, with the checked address
+    to connect to; else the status, the reason and ""."""
     parts = urlsplit(url)
     if parts.scheme not in ("http", "https"):
-        return "refused", f"scheme {parts.scheme or 'none'!r} is not http or https"
+        return ("refused",
+                f"scheme {parts.scheme or 'none'!r} is not http or https", "")
     host = parts.hostname
     if not host:
-        return "refused", "the address names no host"
+        return "refused", "the address names no host", ""
     try:
         addresses = await _addresses(host)
     except OSError as exc:
-        return "failed", f"{host} does not resolve: {exc}"
+        return "failed", f"{host} does not resolve: {exc}", ""
     if not addresses:
-        return "failed", f"{host} does not resolve"
+        return "failed", f"{host} does not resolve", ""
     for address in addresses:
         if not ipaddress.ip_address(address.split("%")[0]).is_global:
-            return "refused", f"{host} resolves to {address}, not a public address"
-    return "", ""
+            return ("refused",
+                    f"{host} resolves to {address}, not a public address", "")
+    return "", "", addresses[0].split("%")[0]
 
 
 class _Text(HTMLParser):

@@ -978,7 +978,12 @@ class GraphExecutor:
             # iteration whose judges never ran: its dissent list
             # is empty because nothing judged, not because the
             # judges agreed, so it cannot be the approved one.
-            if (entries[position].get("dissenting") == []
+            # Ruling D57 (4): agreed is the build fold's agreement, the
+            # entry's own `agreed`. The dissent list also names coverage
+            # and consistency, notes since R1 and the review of 2026-10-14,
+            # so an empty list undercounted: an answer the judges agreed on
+            # beside a coverage note read as never agreed.
+            if (entries[position].get("agreed") is True
                     and not entries[position].get("partial")):
                 agreed_at = position
                 break
