@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from autornd.config import settings, settings_lookup
+from autornd.config import RENAMED_WORKFLOWS, settings, settings_lookup
 from autornd.engine.phases import (
     run_escalation_autopsy, run_implement, run_plan,
     run_plan_feasibility, run_review, run_triage, run_validate,
 )
 from autornd.engine.review_composition import get_review_team
+from autornd.graph.spec import WorkflowSpec
 from autornd.knowledge.context import build_phase_context
 from autornd.models.verdicts import (
     domain_key,
@@ -35,16 +38,65 @@ _TERMINAL = (
 )
 
 
-def workflow_path() -> str:
-    """The graph to run. A name resolves inside workflows/; a path is used as-is."""
-    from pathlib import Path
+# The shipped workflow files, found from the package and not from the working
+# directory. That is why the Dockerfile installs editable (CLAUDE.md).
+WORKFLOWS_DIR = Path(__file__).resolve().parent.parent.parent / "workflows"
 
+
+class WorkflowNotOffered(ValueError):
+    """A request named a workflow it may not name (Ruling D55 (3))."""
+
+
+def workflow_path() -> str:
+    """The configured graph. A name resolves inside workflows/; a path is used as-is."""
     configured = settings.autornd_workflow or "full-team"
     candidate = Path(configured)
     if candidate.suffix and candidate.exists():
         return str(candidate)
-    root = Path(__file__).resolve().parent.parent.parent / "workflows"
-    return str(root / f"{candidate.stem}.yaml")
+    return str(WORKFLOWS_DIR / f"{candidate.stem}.yaml")
+
+
+def offered_workflows() -> dict[str, WorkflowSpec]:
+    """The workflows a request may name (Ruling D55 (2)), by file stem.
+
+    Every file in workflows/ that loads and declares `offered: true`. A file
+    that does not load is not offered, and the reason is logged.
+    """
+    from autornd.graph.spec import load as load_spec
+
+    offered: dict[str, WorkflowSpec] = {}
+    for path in sorted(WORKFLOWS_DIR.glob("*.yaml")):
+        try:
+            spec = load_spec(path)
+        except ValueError as exc:
+            logger.warning("workflow %s does not load, so it is not offered: %s",
+                           path.name, exc)
+            continue
+        if spec.offered:
+            offered[path.stem] = spec
+    return offered
+
+
+def requested_workflow(name: str) -> str:
+    """The file of the offered workflow a request names.
+
+    A name, never a path (Ruling D55 (3)). `name` is looked up as a key, so
+    a path, an instrument, an unknown name and a file that does not load are
+    all refused alike: WorkflowNotOffered, with a sentence that lists the
+    offered names. An old name is refused with its new one; there is no alias.
+    """
+    offered = offered_workflows()
+    if name in offered:
+        return str(WORKFLOWS_DIR / f"{name}.yaml")
+    choices = ", ".join(offered)
+    renamed = RENAMED_WORKFLOWS.get(name)
+    if renamed:
+        raise WorkflowNotOffered(
+            f"The workflow '{name}' is now named '{renamed}'. A request can "
+            f"name one of: {choices}.")
+    raise WorkflowNotOffered(
+        f"No workflow a request can name is called '{name}'. A request can "
+        f"name one of: {choices}.")
 
 
 class WorkflowEngine:
@@ -72,8 +124,9 @@ class WorkflowEngine:
         request: str,
         workflow: Workflow | None = None,
         user_id: int | None = None,
+        workflow_file: str | None = None,
     ) -> Workflow:
-        """Run the configured workflow graph.
+        """Run the configured workflow graph, or the one a request named.
 
         The sequence used to live in a hardcoded method here. It now lives in a
         YAML file, which is what makes the shape of a workflow something you can
@@ -86,6 +139,10 @@ class WorkflowEngine:
         it in, so the id the caller polls is the id the run writes. Passing no
         row keeps working — the row is created here, with `user_id` when one is
         known (ARCH-20261002-109).
+
+        `workflow_file` is the file of an offered workflow the request named,
+        which the API has already checked (Ruling D55). None runs the
+        configured default.
         """
         import asyncio
 
@@ -131,7 +188,17 @@ class WorkflowEngine:
             chain[0] = asyncio.create_task(_write_in_order())
 
         runner = PhaseRunner(self.client, on_phase=on_phase)
-        spec = load_spec(workflow_path())
+        path = workflow_file or workflow_path()
+        spec = load_spec(path)
+        # Ruling D55 (5): which workflow ran, recorded before anything else,
+        # through the phase channel on a zero-cost response, as the recompute
+        # vote's record is. No DB schema change.
+        on_phase("workflow",
+                 {"name": spec.name,
+                  "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()},
+                 [ModelResponse(content="", model="", prompt_tokens=0,
+                                completion_tokens=0, cost=0.0)],
+                 0)
         # Ruling D38: the API path gets the watchdog through the same executor
         # the eval runner uses. Unset (the default) means no budget, and the
         # run behaves as it did before. A watchdog end is the workflow's own

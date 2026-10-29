@@ -334,9 +334,13 @@ class TestOneRowPerSubmission:
             f"{len(rows)} Workflow rows for one submission")
 
         # Nothing written twice: the phase rows never outnumber the paid
-        # calls whose responses they record.
+        # calls whose responses they record. Ruling D55 (5): the one
+        # `workflow` record is written on a zero-cost response and records
+        # no call, so it is counted apart.
+        assert [p.phase for p in db_phases].count("workflow") == 1
         calls = clients[0].calls_by_function
-        for model, n in Counter(p.model_used for p in db_phases).items():
+        for model, n in Counter(p.model_used for p in db_phases
+                                if p.phase != "workflow").items():
             function = model.removeprefix("mock-")
             assert n <= calls.get(function, 0), (
                 f"{n} phase rows recorded for {model} but only "
