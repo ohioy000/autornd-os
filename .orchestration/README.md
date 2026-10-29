@@ -13,6 +13,7 @@ another agent's folder.
 - `prompts/<command_id>.md` — the task file: the command as ordered tasks, each
   with exact edits, a CHECK and its EXPECT. Written by the advisor; it governs
   the detail.
+- `prompts/STARTUP-ARCHITECT.md` — what a new architect agent reads first.
 - `prompts/STARTUP.md` — what a new executor agent reads first, before any
   command: who does what, the work loop, and the rules.
 
