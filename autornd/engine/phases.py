@@ -15,7 +15,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from autornd.config import settings
-from autornd.graph.checks import dissent_anchored, quote_anchors
+from autornd.graph.checks import dissent_anchored
 from autornd.models.verdicts import (
     AsksVerdict,
     BlockedOnAsk,
@@ -1013,9 +1013,11 @@ Original request:
     # the implementer's own words for the record.
     if not verdict.green and not any(
             c.critical for c in verdict.domain_concerns) and not any(
+            # An entry names its ask in `ask`: a number, or the ask's
+            # quote. BlockedOnAsk has no `quote` field; reading one
+            # raised AttributeError on a red answer with a plain-sentence
+            # blocker, and ended a paid run (audit of 2026-11-11).
             b.ask is not None
-            or (bool(str(b.quote).strip())
-                and quote_anchors(str(b.quote), request))
             for b in verdict.blocked_on):
         count_normalisation(UNANCHORED_DISSENT)
         verdict.green = True

@@ -466,3 +466,120 @@ class TestEveryBuildFoldIsTheSame:
         for name, args in folds.items():
             assert args == {"implement": "implement.green",
                             "validate": "validate.green"}, name
+
+
+# ── the answer, the vote and the sources reach the caller ────────────
+
+def _raises(m, revised):
+    raise RuntimeError("the provider dropped the reply")
+
+
+@pytest.mark.asyncio
+class TestTheAnswerReachesTheCaller:
+    """Audit of 2026-11-11: GET returned phases and no answer, a run that
+    failed on an error kept no draft, and a red answer with a plain-sentence
+    blocker ended the run on an AttributeError."""
+
+    async def test_a_completed_run_returns_its_answer(self, db_session):
+        engine = WorkflowEngine(_engine_client(_router()), db_session)
+        workflow = await engine.execute(Q15)
+        await db_session.refresh(workflow, ["phases"])
+        assert workflow.status is WorkflowStatus.COMPLETED
+        assert _detail(workflow).answer == CORRECT
+
+    async def test_a_run_that_did_not_complete_has_no_answer(self, db_session):
+        """Its last answer is the candidate, never `answer`: nothing
+        unendorsed is handed over under the delivered answer's name."""
+        engine = WorkflowEngine(_engine_client(_router({
+            "validate": _never_agreed})), db_session)
+        workflow = await engine.execute(Q15)
+        await db_session.refresh(workflow, ["phases"])
+        assert workflow.status is not WorkflowStatus.COMPLETED
+        detail = _detail(workflow)
+        assert detail.answer is None
+        assert detail.candidate["answer"] == CORRECT
+
+    async def test_a_run_that_fails_on_an_error_keeps_its_draft(self, db_session):
+        engine = WorkflowEngine(_engine_client(_router({
+            "validate": _raises})), db_session)
+        workflow = await engine.execute(Q15)
+        await db_session.refresh(workflow, ["phases"])
+        assert workflow.status is WorkflowStatus.BLOCKED
+        assert "the provider dropped the reply" in workflow.error
+        detail = _detail(workflow)
+        assert detail.answer is None
+        assert detail.candidate is not None
+        assert detail.candidate["answer"] == CORRECT
+        assert detail.candidate["endorsed"] is False
+
+    async def test_an_error_before_any_answer_leaves_no_draft(self, db_session):
+        engine = WorkflowEngine(_engine_client(_router({
+            "implement": _raises})), db_session)
+        workflow = await engine.execute(Q15)
+        await db_session.refresh(workflow, ["phases"])
+        assert workflow.status is WorkflowStatus.BLOCKED
+        assert "the provider dropped the reply" in workflow.error
+        assert _detail(workflow).candidate is None
+
+    async def test_a_red_answer_with_a_plain_blocker_does_not_end_the_run(
+            self, db_session):
+        """The entry names no ask, so it is a note and the answer goes on
+        to its judges. Reading a field the entry does not have raised."""
+        def implement(m, revised):
+            return {"done": True, "green": False,
+                    "red_cause": "one figure is not in the datasheet",
+                    "iteration": 1, "summary": CORRECT,
+                    "blocked_on": ["the datasheet does not give the figure"]}
+
+        engine = WorkflowEngine(_engine_client(_router({
+            "implement": implement})), db_session)
+        workflow = await engine.execute(Q15)
+        assert "AttributeError" not in (workflow.error or "")
+        assert workflow.status is WorkflowStatus.COMPLETED, workflow.error
+
+
+class TestTheRecordsBesideTheAnswer:
+    def _workflow(self, *phases):
+        import json
+        from datetime import datetime, timedelta, timezone
+        from types import SimpleNamespace
+        start = datetime(2026, 11, 11, tzinfo=timezone.utc)
+        return SimpleNamespace(
+            id=1, request="r", status=WorkflowStatus.COMPLETED, error=None,
+            risk_level="low", iteration=1, total_cost=0.0,
+            unreconciled_liability=0.0, created_at=start, updated_at=start,
+            phases=[SimpleNamespace(
+                phase=name, iteration=1, verdict_json=json.dumps(verdict),
+                model_used="", cost=0.0,
+                created_at=start + timedelta(seconds=n))
+                for n, (name, verdict) in enumerate(phases)])
+
+    def test_the_last_vote_and_every_lookup_are_returned(self):
+        detail = _detail(self._workflow(
+            ("sources", {"lookup": "grounding", "findings": [{"question": "q"}]}),
+            ("implement", {"summary": "first"}),
+            ("recompute_vote", {"flagged": True}),
+            ("implement", {"summary": "second"}),
+            ("recompute_vote", {"flagged": False, "unchecked": True}),
+            ("sources", {"lookup": "verification", "findings": []})))
+        assert detail.answer == "second"
+        assert detail.recompute_vote == {"flagged": False, "unchecked": True}
+        assert [s["lookup"] for s in detail.sources] == ["grounding", "verification"]
+
+    def test_a_run_with_neither_says_so(self):
+        detail = _detail(self._workflow(("implement", {"summary": "a"})))
+        assert detail.recompute_vote is None and detail.sources == []
+
+    def test_a_lookup_writes_its_sources_through_the_phase_channel(self):
+        from types import SimpleNamespace
+        from autornd.graph.adapter import PhaseRunner
+        written = []
+        runner = PhaseRunner(AsyncMock(), on_phase=lambda *a: written.append(a))
+        state = SimpleNamespace(iteration=2)
+        runner._record_sources("grounding", [], state)
+        assert written == [], "no finding, no record"
+        runner._record_sources("grounding", [{"question": "q"}], state)
+        (node, verdict, responses, iteration), = written
+        assert node == "sources" and iteration == 2
+        assert verdict == {"lookup": "grounding", "findings": [{"question": "q"}]}
+        assert [r.cost for r in responses] == [0.0]

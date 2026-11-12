@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import unicodedata
 from dataclasses import dataclass, field
 
@@ -76,6 +77,22 @@ def reset_untyped_replies() -> None:
     global _untyped_replies
     _untyped_replies = 0
 
+
+# Quotes dropped because one was malformed (no text, no address, a number
+# that is not one), counted since process start. The rest of the reply is
+# kept: one bad quote used to void the whole reply's typed reading, so every
+# good quote beside it went unchecked (audit of 2026-11-11).
+_dropped_quotes = 0
+
+
+def dropped_quotes() -> int:
+    return _dropped_quotes
+
+
+def reset_dropped_quotes() -> None:
+    global _dropped_quotes
+    _dropped_quotes = 0
+
 # A budget stop is a decision, not a failure. Every handler below exists so a
 # lookup that breaks does not take the workflow with it, and each one would
 # otherwise swallow the ceiling that was meant to end the run — leaving the
@@ -84,7 +101,8 @@ def reset_untyped_replies() -> None:
 # permanently mark a working rerank API as unsupported. §6.8 records that exact
 # bug from the last time an exception type was caught too widely.
 
-__all__ = ["Finding", "Quote", "quote_found", "research_gaps"]
+__all__ = ["Finding", "Quote", "quote_found", "research_gaps",
+           "source_records"]
 
 # One request per workflow.
 #
@@ -179,18 +197,30 @@ _SAME_CHARACTER = str.maketrans({
     "\u201c": '"', "\u201d": '"', "\u201e": '"', "\u201f": '"', "\u2033": '"',
     "\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-", "\u2014": "-",
     "\u2212": "-", "\u00ad": None,
+    # Zero-width characters: printed by pages, never by a model quoting them.
+    "\u200b": None, "\u200c": None, "\u200d": None, "\u2060": None,
+    "\ufeff": None,
 })
+
+
+# A page's own reference marks ("[3]", "[12]") sit inside sentences a model
+# quotes without them, and the other way round. Not words of the passage.
+_REFERENCE_MARK = re.compile(r"\[\d{1,3}\]")
 
 
 def _normalise(text: str) -> str:
     """Text as the quote check compares it: one form for each character,
-    one space for each run of whitespace, and no case."""
+    one space for each run of whitespace, no case, and no reference marks."""
     text = unicodedata.normalize("NFKC", text).translate(_SAME_CHARACTER)
+    text = _REFERENCE_MARK.sub("", text)
     return " ".join(text.split()).casefold()
 
 
 def _passage(quote: str) -> str:
-    return _normalise(quote).strip(" \"'")
+    # The closing mark of a sentence is where a model and a page most often
+    # differ (a quote ended with a full stop the page follows with a comma),
+    # and it changes no word, so it is not compared.
+    return _normalise(quote).strip(" \"'").rstrip(".,;:").rstrip(" \"'")
 
 
 def quote_found(quote: str, page: str) -> bool:
@@ -475,9 +505,10 @@ async def _lookup(client, request: str, question: str,
     content = (response.content or "").strip()
     try:
         data = extract_json(content)
-        if "answer" not in data:
+        if not isinstance(data, dict) or "answer" not in data:
             raise ValueError("the reply has no answer field")
-        verdict = LookupVerdict.model_validate(data)
+        verdict = LookupVerdict(answer=str(data.get("answer") or ""),
+                                quotes=_valid_quotes(data.get("quotes")))
     except ValueError as exc:
         # Convention 21: a reply in prose loses no word of its answer, so it
         # is kept whole as the answer, with no quotes, which marks it
@@ -494,6 +525,61 @@ async def _lookup(client, request: str, question: str,
         response.model,
         verdict.quotes,
     )
+
+
+def _valid_quotes(raw: object) -> list[QuotedPassage]:
+    """The quotes of a reply that are well formed, each judged on its own.
+
+    A malformed quote is dropped and counted; it never costs the reply its
+    answer or its other quotes.
+    """
+    global _dropped_quotes
+    if not isinstance(raw, list):
+        if raw is not None:
+            _dropped_quotes += 1
+        return []
+    kept: list[QuotedPassage] = []
+    for item in raw:
+        try:
+            quote = QuotedPassage.model_validate(item)
+            if not quote.text.strip() or not quote.url.strip():
+                raise ValueError("a quote needs its text and its address")
+            kept.append(quote)
+        except ValueError as exc:
+            _dropped_quotes += 1
+            logger.warning("Dropped a malformed quote from a lookup reply: %s",
+                           str(exc)[:200])
+    return kept
+
+
+# The most of one quoted passage a source record carries.
+SOURCE_RECORD_QUOTE_CHARS = 600
+
+
+def source_records(findings: list[Finding]) -> list[dict]:
+    """What each lookup read, as plain data for the run's record.
+
+    One entry per finding: the question, the round, whether it was recalled
+    from the store, the provider's own citations, and every quote with what
+    the check found. "found" means the words are on the page fetched, not
+    that the answer follows from them.
+    """
+    return [{
+        "question": f.question,
+        "round": f.round,
+        "recalled": f.recalled,
+        "unverified_questions": f.unchecked(),
+        "citations": list(f.citations),
+        "quotes": [{
+            "question": q.question,
+            "text": q.text[:SOURCE_RECORD_QUOTE_CHARS],
+            "url": q.url,
+            "status": q.status,
+            "reason": q.reason,
+            "fetched_at": q.fetched_at,
+            "sha256": q.sha256,
+        } for q in f.quotes],
+    } for f in findings]
 
 
 def _remember(finding: Finding) -> None:

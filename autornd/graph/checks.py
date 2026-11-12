@@ -17,6 +17,7 @@ to be *wrong* in a way you could point at. Anything requiring judgement is an
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections import Counter
 from typing import Any, Callable, Protocol
 
@@ -1226,6 +1227,82 @@ def _recompute_number(text: Any) -> float | None:
     return float(m.group()) if m else None
 
 
+# A value written as text that is only a number: "140", "1,500", "1.5e3",
+# "-5.5". Optionally followed by its unit ("140 MPa"), which the entry's own
+# unit field then need not repeat.
+_NUMERIC_TEXT = re.compile(
+    r"^\s*([-+\u2212]?\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*"
+    r"([^\s\d][^\s]{0,11})?\s*$")
+
+
+def _recompute_numeric(value: Any) -> tuple[float, str] | None:
+    """The number a result value states, with any unit written beside it.
+
+    A model writes a number as 140, as "140" and as "140 MPa" alike. All
+    three are the number 140: read as text they compared as identifiers,
+    so "140" against a sample's 140.0 was flagged as a disagreement
+    (audit of 2026-11-11). None when the value is not just a number: a
+    bool, an identifier such as "VL-42", or a sentence.
+    """
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value), ""
+    m = _NUMERIC_TEXT.match(str(value))
+    if not m:
+        return None
+    try:
+        number = float(m.group(1).replace(",", "").replace("\u2212", "-"))
+    except ValueError:
+        return None
+    return number, (m.group(2) or "")
+
+
+# Units the vote converts before it compares, as (quantity, factor to the
+# quantity's base unit). Spelling is exact and case matters: mW and MW are
+# nine orders apart. A unit not listed here is compared by its spelling, as
+# before. Not measured: the units engineering answers state most.
+_UNIT_PREFIXES = {"": 1.0, "G": 1e9, "M": 1e6, "k": 1e3, "m": 1e-3,
+                  "\u00b5": 1e-6, "u": 1e-6, "n": 1e-9, "p": 1e-12}
+_UNIT_BASES = {"N": "force", "Pa": "pressure", "W": "power", "V": "voltage",
+               "A": "current", "\u03a9": "resistance", "Hz": "frequency",
+               "J": "energy", "F": "capacitance", "H": "inductance",
+               "s": "time", "g": "mass", "m": "length", "Nm": "torque",
+               "N.m": "torque", "Wh": "energy_wh", "VA": "apparent_power"}
+_UNIT_TABLE: dict[str, tuple[str, float]] = {
+    prefix + base: (quantity, factor)
+    for base, quantity in _UNIT_BASES.items()
+    for prefix, factor in _UNIT_PREFIXES.items()
+}
+_UNIT_TABLE.update({
+    "cm": ("length", 1e-2), "kg": ("mass", 1e3), "t": ("mass", 1e6),
+    "min": ("time", 60.0), "h": ("time", 3600.0),
+    "N/mm2": ("pressure", 1e6), "N/m2": ("pressure", 1.0),
+    "bar": ("pressure", 1e5), "mbar": ("pressure", 1e2),
+    "%": ("ratio", 1e-2), "fraction": ("ratio", 1.0),
+    "Nmm": ("torque", 1e-3), "N.mm": ("torque", 1e-3),
+})
+
+
+def _recompute_unit(unit: Any) -> tuple[str, float]:
+    """A unit as (quantity, factor to its base), or its spelling at factor 1.
+
+    One spelling for each way a unit is commonly written: no spaces, no
+    caret, superscripts as digits, the middle dot as a full stop, mu as the
+    micro sign, "ohm" as the sign. An unknown unit keeps its normalised
+    spelling as its own quantity, so it still agrees with itself.
+    """
+    text = unicodedata.normalize("NFC", str(unit or "")).strip()
+    text = (text.replace(" ", "").replace("^", "").replace("\u00b2", "2")
+            .replace("\u00b3", "3").replace("\u00b7", ".")
+            .replace("\u22c5", ".").replace("*", ".")
+            .replace("\u03bc", "\u00b5"))
+    text = re.sub(r"(?i)ohms?$", "\u03a9", text)
+    if text in _UNIT_TABLE:
+        return _UNIT_TABLE[text]
+    return f"unit:{normalise_key(text)}", 1.0
+
+
 def _recompute_field(entry: Any, key: str) -> Any:
     """A field off a result entry, whichever shape it arrives in.
 
@@ -1407,31 +1484,52 @@ def recompute_vote(results: list[Any], samples: list[Any],
                     sample_units.append(
                         str(_recompute_field(entry, "unit") or ""))
                     break
-        # Identity or numbers: a verdict ask, or any value in play
-        # stated as text, compares as an identifier.
-        identity = kind == "verdict" or any(
-            isinstance(v, (str, bool))
-            for v in [answer_value, *sample_values])
-        if not identity:
-            # Numbers compare only when the units are equal after
-            # normalise_key; otherwise the ask is no consensus.
-            units = {normalise_key(u) for u in
-                     ([str(_recompute_field(answer, "unit") or "")]
-                      + sample_units)}
-            if len(units) > 1:
+        # Identity or numbers. A verdict ask compares as an identifier.
+        # A value ask compares as numbers when the answer states a number,
+        # however it is written: 140, "140" and "140 MPa" are one value.
+        # A sample that states no number for such an ask states nothing
+        # the vote can compare, and is left out.
+        answer_number = _recompute_numeric(answer_value)
+        identity = kind == "verdict" or answer_number is None
+        if identity:
+            majority, support = _recompute_majority(
+                sample_values, True) or (None, 0)
+            if majority is None:
                 no_consensus.append(number)
                 continue
-        majority, support = _recompute_majority(sample_values, identity) \
-            or (None, 0)
-        if majority is None:
-            no_consensus.append(number)
-            continue
-        differs = (_recompute_ident(answer_value) != majority
-                   if identity else
-                   (_recompute_number(answer_value) is not None
-                    and abs(_recompute_number(answer_value)
-                            - majority)
-                    > _RECOMPUTE_TOL * max(abs(majority), 1e-9)))
+            differs = _recompute_ident(answer_value) != majority
+        else:
+            # Every value is converted to the answer's unit before the
+            # numbers are compared, so 5 kN agrees with 5000 N and
+            # differs from 5 N. A value with no unit is read as already
+            # in that unit. A sample in a unit of another quantity is
+            # left out. When the answer states no unit, the samples'
+            # most common unit is the one compared in.
+            answer_unit = (str(_recompute_field(answer, "unit") or "")
+                           or answer_number[1])
+            stated: list[tuple[float, str]] = []
+            for value, unit in zip(sample_values, sample_units):
+                numeric = _recompute_numeric(value)
+                if numeric is not None:
+                    stated.append((numeric[0], unit or numeric[1]))
+            common = Counter(u for _, u in stated if u).most_common(1)
+            reference = answer_unit or (common[0][0] if common else "")
+            quantity, to_base = _recompute_unit(reference)
+            converted: list[float] = []
+            for value, unit in stated:
+                if not unit or not reference:
+                    converted.append(value)
+                    continue
+                q, factor = _recompute_unit(unit)
+                if q == quantity:
+                    converted.append(value * factor / to_base)
+            majority, support = _recompute_majority(
+                converted, False) or (None, 0)
+            if majority is None:
+                no_consensus.append(number)
+                continue
+            differs = (abs(answer_number[0] - majority)
+                       > _RECOMPUTE_TOL * max(abs(majority), 1e-9))
         if differs:
             disagreements.append({
                 "ask": number,
@@ -1441,6 +1539,19 @@ def recompute_vote(results: list[Any], samples: list[Any],
             })
 
     flagged = bool(disagreements)
+    # D46 (3): a vote that compared nothing says so. When no voted ask
+    # reached a majority, nothing was compared; that used to be recorded
+    # as checked, with "no disagreement" (audit of 2026-11-11).
+    if len(no_consensus) == len(wanted):
+        return Result(
+            True,
+            "recompute vote unchecked — no consensus among the samples "
+            "on ask(s) " + ", ".join(str(n) for n in no_consensus),
+            checked=False, skipped=False, flagged=False,
+            unchecked=True, disagreements=[],
+            no_consensus=no_consensus, samples_parsed=samples_parsed,
+            samples_failed=samples_failed,
+        )
     if flagged:
         detail = (
             f"recompute vote flagged {len(disagreements)} of "

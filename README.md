@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1735%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1763%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -52,7 +52,7 @@ before relying on any workflow:
 - **Research checks each answer's quote against its page.** Every answer
   quotes the passage it rests on; the harness fetches the page and looks for
   the passage in it. A found passage shows the words are on the page, not that
-  the answer follows from them, and a PDF cannot be read yet.
+  the answer follows from them. A PDF is read through its text layer.
 - **A judge blocks only by pointing at the request.** Validate, the domain
   reviewer, review and the independent check can each stop an answer only with
   an anchor: an ask, the request's own words, or, for a hazard, the answer's
@@ -212,7 +212,7 @@ Nothing is searched that the briefing had not already established was missing, a
 
 - **An answer is checked against its page or marked unverified.** Each answer quotes the passage it rests on. The harness fetches the page, records which version it read (when, and the sha256 of the bytes), and looks for the passage in it, read alike for spacing, case, quote marks and dashes but not for a single changed word. A citation alone is the provider's word; a found passage is the page's. A question whose passage is not found is asked once more, and what is still not found is marked unverified.
 - **Only a found passage is stored.** Unverified answers are shown to you and never stored: a guess must not quietly become permanent context that later runs treat as established.
-- **A fetch reads public web pages only.** No other scheme, and no loopback, private or link-local address, redirects included. The request goes to the address that was checked, so a name cannot answer one way to the check and another to the connection. HTML and plain text are read; a PDF is not yet, so its answer stays unverified.
+- **A fetch reads public web pages only.** No other scheme, and no loopback, private or link-local address, redirects included. The request goes to the address that was checked, so a name cannot answer one way to the check and another to the connection. HTML and plain text are read; a PDF is read through its text layer, so a scanned PDF stays unverified. A page that answers with a prove-you-are-a-person challenge is recorded as not read.
 
 One failed lookup does not sink a workflow — three facts out of four beats aborting, and the missing one stays visible as a gap. Lookups are bounded.
 
@@ -774,7 +774,7 @@ A submission may name its workflow: `{"request": "...", "workflow": "verify-firs
 
 Every workflow response carries an `error` field: `null` on a healthy run, and otherwise why the run stopped — an infrastructure fault, a plan the architect judged unready, or an escalation needing a human. A blocked workflow always says why.
 
-A run that ends without a delivered answer still keeps the one it wrote. `GET /api/workflows/{id}` returns it as `candidate`: the last answer, marked unendorsed, with the dissents still open against it, and, when an earlier answer was the last one the build judges agreed on, that answer too. A completed run has no candidate; its answer is the delivered one.
+A run that ends without a delivered answer still keeps the one it wrote. `GET /api/workflows/{id}` returns it as `candidate`: the last answer, marked unendorsed, with the dissents still open against it, and, when an earlier answer was the last one the build judges agreed on, that answer too. A completed run has no candidate; its answer is the delivered one, returned as `answer`. Beside it come `recompute_vote`, the vote's last record when a vote ran, and `sources`: for each lookup, the pages it quoted, whether each was fetched, and whether its quote was found there. A run stopped by an unexpected error keeps its candidate too.
 
 ## Worked Example
 
@@ -872,7 +872,7 @@ uvicorn autornd.main:app --host 127.0.0.1 --port 8100
 
 - **No code execution.** AutoRnD produces structured text. It does not compile, run, or deploy anything.
 - **Word-matching checks cannot see negation or paraphrase.** An answer stating it *removed* something scores highly against an ask requiring it. That is why those checks are notes; the typed-value checks and the recompute vote are what a gate can trust.
-- **Research does not verify its sources yet.** Citations come from the search provider; the harness does not fetch the source or confirm that a quoted passage is in it.
+- **A found quote is not a checked answer.** The harness fetches each quoted page and looks for the passage in it, and the result is returned with the run as `sources`. That shows the words are on the page; it does not show the answer follows from them. A page behind a login, a challenge or a scan cannot be read, and its answer stays unverified.
 - **The recompute vote cannot see an omission,** such as a missing step or section, which has no value to disagree on. Nor can it see an error that every sample shares.
 - **Research can be wrong.** It cites its sources, which makes it checkable rather than infallible — and that is the point. Verifiability is the product.
 - **Quality follows the models you choose.** Cheap tiers give cheap results.

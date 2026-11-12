@@ -19,8 +19,10 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import io
 import ipaddress
 import logging
+import re
 import socket
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -47,10 +49,33 @@ MAX_REDIRECTS = 3
 # per question; past this many the rest are recorded unfetched.
 MAX_FETCHES = 8
 
-# What can be read as text. A PDF cannot yet: it is recorded unfetched with
-# its content type, so the gap shows.
+# What can be read as text. A PDF is read through pypdf: standards bodies
+# and makers publish datasheets and codes as PDF, and before this every one
+# of them was recorded unfetched (audit of 2026-11-11). A scanned PDF has no
+# text layer and is recorded failed, so the gap shows.
 HTML_TYPES = ("text/html", "application/xhtml+xml")
 TEXT_TYPES = ("text/plain", "text/markdown")
+PDF_TYPES = ("application/pdf",)
+
+# The eCFR's reader page answers an automated client with a "Request Access"
+# challenge, HTTP 200; its renderer API returns the same section as HTML
+# (read live 2026-11-11: the section text came back and its quote was
+# found). A section address is fetched through the API instead.
+_ECFR_SECTION = re.compile(
+    r"^https?://(?:www\.)?ecfr\.gov/current/title-(?P<title>\d+)/"
+    r"(?:[^?#]*/)?section-(?P<part>\d+)\.(?P<section>[\w.-]+?)/?(?:[?#].*)?$",
+    re.IGNORECASE)
+
+# A page that asks the reader to prove they are a person. It arrives as HTTP
+# 200 with a little text, so without this it was recorded as fetched and
+# every quote read as "not found in the page" when the page was never read.
+_CHALLENGE_MARKS = ("captcha", "request access", "verify you are human",
+                    "are you a robot", "unusual traffic",
+                    "enable javascript and cookies")
+# A real page that mentions one of the marks is longer than this. Not
+# measured: the eCFR challenge page read on 2026-11-11 was about 900
+# characters of text.
+CHALLENGE_MAX_CHARS = 2500
 
 USER_AGENT = "AutoRnD-OS source check"
 
@@ -90,8 +115,34 @@ async def fetch_source(url: str) -> Source:
         return Source(url, "failed", f"{type(exc).__name__}: {exc}"[:200])
 
 
+def readable_address(url: str) -> str:
+    """The address to fetch for `url`: itself, or a route known to return
+    the same text to an automated client."""
+    match = _ECFR_SECTION.match(url.strip())
+    if match:
+        return ("https://www.ecfr.gov/api/renderer/v1/content/enhanced/current/"
+                f"title-{match['title']}?part={match['part']}"
+                f"&section={match['part']}.{match['section']}")
+    return url
+
+
+def challenge_page(text: str) -> bool:
+    """Is this the text of a prove-you-are-a-person page, not of a source?"""
+    if len(text) > CHALLENGE_MAX_CHARS:
+        return False
+    folded = text.casefold()
+    return any(mark in folded for mark in _CHALLENGE_MARKS)
+
+
+def pdf_text(raw: bytes) -> str:
+    """The text layer of a PDF, pages in order. Raises when it cannot be read."""
+    from pypdf import PdfReader
+    reader = PdfReader(io.BytesIO(raw))
+    return "\n".join(page.extract_text() or "" for page in reader.pages)
+
+
 async def _fetch(url: str) -> Source:
-    current = url
+    current = readable_address(url)
     # trust_env=False: no proxy from the environment, which would resolve
     # the name itself, and no .netrc credentials sent to a quoted page.
     async with httpx.AsyncClient(transport=_transport, follow_redirects=False,
@@ -115,7 +166,7 @@ async def _fetch(url: str) -> Source:
                                   final_url=current)
                 content_type = (response.headers.get("content-type", "")
                                 .split(";")[0].strip().lower())
-                if content_type not in HTML_TYPES + TEXT_TYPES:
+                if content_type not in HTML_TYPES + TEXT_TYPES + PDF_TYPES:
                     return Source(url, "failed",
                                   f"content type {content_type or 'none'} is not "
                                   f"read as text", final_url=current,
@@ -128,13 +179,35 @@ async def _fetch(url: str) -> Source:
                                       f"larger than {FETCH_MAX_BYTES} bytes",
                                       final_url=current, content_type=content_type)
                 raw = bytes(body)
-                try:
-                    text = raw.decode(response.charset_encoding or "utf-8",
-                                      errors="replace")
-                except LookupError:
-                    text = raw.decode("utf-8", errors="replace")
-                if content_type in HTML_TYPES:
-                    text = html_text(text)
+                if content_type in PDF_TYPES:
+                    try:
+                        # Off the event loop: a large PDF takes seconds.
+                        text = await asyncio.to_thread(pdf_text, raw)
+                    except Exception as exc:
+                        return Source(url, "failed",
+                                      f"the PDF could not be read: "
+                                      f"{type(exc).__name__}"[:200],
+                                      final_url=current,
+                                      content_type=content_type)
+                    if not text.strip():
+                        return Source(url, "failed",
+                                      "the PDF has no text layer",
+                                      final_url=current,
+                                      content_type=content_type)
+                else:
+                    try:
+                        text = raw.decode(response.charset_encoding or "utf-8",
+                                          errors="replace")
+                    except LookupError:
+                        text = raw.decode("utf-8", errors="replace")
+                    if content_type in HTML_TYPES:
+                        text = html_text(text)
+                    if challenge_page(text):
+                        return Source(url, "failed",
+                                      "the page asked for proof of a person "
+                                      "(a challenge page), so it was not read",
+                                      final_url=current,
+                                      content_type=content_type)
                 return Source(
                     url, "fetched", final_url=current,
                     fetched_at=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),

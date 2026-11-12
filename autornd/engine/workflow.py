@@ -220,18 +220,7 @@ class WorkflowEngine:
             # as the workflow record does, with D38's pointer to the last
             # answer the build judges agreed on, and that answer when it
             # is not the last one. No DB schema change.
-            if state.candidate is not None:
-                approved = (state.watchdog.approved
-                            if state.watchdog is not None else None)
-                record = {**state.candidate, "approved": approved}
-                if approved and approved.get("latest_differs"):
-                    record["approved_answer"] = (
-                        runner.iterations[approved["index"]]
-                        ["implement_summary"])
-                on_phase("candidate", record,
-                         [ModelResponse(content="", model="", prompt_tokens=0,
-                                        completion_tokens=0, cost=0.0)],
-                         0)
+            self._record_candidate(state, runner, on_phase)
             # Drain the progress writers first: the node writes are what
             # advance the row's status while the run is in flight, and none of
             # them may land after the terminal below.
@@ -254,6 +243,22 @@ class WorkflowEngine:
                 p for p in (_base, self._lost_note()) if p) or None
         except Exception as exc:
             logger.exception("Workflow %d failed", workflow.id)
+            # A run that fails on an unexpected error keeps its answer, as
+            # every other unfinished run does (D51 (7), D57 (3)). The
+            # executor's state survives the exception; this path used to
+            # ignore it, so one failed reply after the judges had agreed
+            # left the caller an error and no draft (audit of 2026-11-11).
+            # Recording the candidate must never hide the error it follows.
+            try:
+                failed = getattr(executor, "state", None)
+                if failed is not None:
+                    executor.record_partial_iteration(failed)
+                    executor._close_candidate(failed)
+                    self._record_candidate(failed, runner, on_phase)
+            except Exception:
+                logger.exception(
+                    "Workflow %d: the candidate could not be recorded "
+                    "after the failure", workflow.id)
             await self._flush_phases(workflow, pending_saves, chain)
             # The failed terminal reconciles the same figures. A
             # call can be accounted and its phase write never
@@ -295,6 +300,27 @@ class WorkflowEngine:
                     workflow, triage, plan, implement, review)
 
         return workflow
+
+    @staticmethod
+    def _record_candidate(state, runner, on_phase) -> None:
+        """Write the unendorsed candidate through the phase channel.
+
+        One writer for both ways a run ends without a delivered answer: a
+        terminal the executor reached, and an exception.
+        """
+        if state.candidate is None:
+            return
+        approved = (state.watchdog.approved
+                    if state.watchdog is not None else None)
+        record = {**state.candidate, "approved": approved}
+        if approved and approved.get("latest_differs"):
+            record["approved_answer"] = (
+                runner.iterations[approved["index"]]
+                ["implement_summary"])
+        on_phase("candidate", record,
+                 [ModelResponse(content="", model="", prompt_tokens=0,
+                                completion_tokens=0, cost=0.0)],
+                 0)
 
     async def _flush_phases(
         self, workflow: Workflow, saves: list[dict], chain: list | None = None

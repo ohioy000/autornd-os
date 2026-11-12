@@ -247,6 +247,16 @@ class WorkflowDetail(WorkflowSummary):
     # last one, unendorsed, with its open dissents. None when the run
     # completed or ended before any answer existed.
     candidate: dict | None = None
+    # The answer itself, so a caller need not dig it out of the phases: the
+    # last implement summary, and only when the run completed. A run that
+    # ended any other way has no delivered answer; its draft is `candidate`.
+    answer: str | None = None
+    # The recompute vote's last record (Ruling D53), a note beside the
+    # answer: flagged, unchecked or agreed. None when no vote ran.
+    recompute_vote: dict | None = None
+    # What each lookup read (Ruling D56): per question, the pages quoted,
+    # whether each was fetched and whether its quote was found there.
+    sources: list[dict] = Field(default_factory=list)
 
 
 def _summarize(w: Workflow) -> WorkflowSummary:
@@ -422,8 +432,19 @@ def _detail(w: Workflow) -> WorkflowDetail:
     phases = sorted(w.phases, key=lambda p: p.created_at)
     candidate = next((json.loads(p.verdict_json) for p in reversed(phases)
                       if p.phase == "candidate"), None)
+    verdicts = [(p.phase, json.loads(p.verdict_json)) for p in phases]
+    answer = None
+    if w.status.value == "completed":
+        answer = next((v.get("summary") for name, v in reversed(verdicts)
+                       if name == "implement" and isinstance(v, dict)), None)
+    vote = next((v for name, v in reversed(verdicts)
+                 if name == "recompute_vote"), None)
+    sources = [v for name, v in verdicts if name == "sources"]
     return WorkflowDetail(
         candidate=candidate,
+        answer=answer,
+        recompute_vote=vote,
+        sources=sources,
         id=w.id,
         request=w.request,
         status=w.status.value,
