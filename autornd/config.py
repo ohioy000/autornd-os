@@ -213,8 +213,11 @@ class Settings(BaseSettings):
 
     # Which workflow graph to run. A bare name resolves inside workflows/.
     # A request may name an offered workflow instead (Ruling D55); this is
-    # the one a request that names none runs.
-    autornd_workflow: str = "full-team"
+    # the one a request that names none runs. answer-and-recompute, on the
+    # owner's decision of 2026-11-12: the audit of 2026-11-11 found that a
+    # judge in full-team cannot block an answer on a wrong number, so the
+    # default no longer pays for judges. full-team stays offered by name.
+    autornd_workflow: str = "answer-and-recompute"
 
     RUNTIME_MUTABLE: set[str] = {
         "max_iterations", "escalation_max_tokens", "escalation_recovery_attempts",

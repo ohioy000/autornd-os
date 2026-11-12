@@ -32,6 +32,9 @@ SUITE_CHOSEN = {
     "model_triage", "model_engineering", "model_architecture",
     "model_escalation", "model_research", "model_search",
     "chromadb_path", "autornd_profile",
+    # The suite describes the full team, the workflow with every phase;
+    # the shipped default is answer-and-recompute (owner, 2026-11-12).
+    "autornd_workflow",
 }
 
 # Not a setting: the class-annotated set of runtime-mutable names, which

@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1763%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1765%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -265,7 +265,7 @@ The workflows that ship, one file each in `workflows/` (`tests/test_docs.py` che
 | `plan-probe` | triage, grounding and the plan alone — a probe for whether a usable plan comes back, at what token cost and from which serving |
 | `independent-check-probe` | one pass that reaches the independent check and nothing else — a probe, not a shape to ship work through |
 
-Select the server's default with `AUTORND_WORKFLOW`. A request may name one of the first four itself (see [API](#api)); the probes are for measuring and cannot be named. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
+Select the server's default with `AUTORND_WORKFLOW`; unset, it is `answer-and-recompute`, which runs no judges, and its recompute step is skipped unless `MODEL_RECOMPUTE` is set. A request may name one of the first four itself (see [API](#api)); the probes are for measuring and cannot be named. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
 
 | | happy path | never converges |
 |---|---|---|
@@ -620,7 +620,7 @@ MODEL_SEARCH=             # required
 # Optional tiers (MODEL_RANKER and the others under Model Tiers) turn
 # their feature off when empty.
 
-AUTORND_WORKFLOW=full-team
+AUTORND_WORKFLOW=answer-and-recompute   # the default; set MODEL_RECOMPUTE for its vote
 # Limits: MAX_ITERATIONS and the *_MAX_TOKENS caps. Defaults in .env.example.
 
 API_HOST=127.0.0.1        # containers need 0.0.0.0
