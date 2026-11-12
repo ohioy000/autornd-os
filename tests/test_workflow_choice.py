@@ -231,3 +231,25 @@ class TestTheRename:
         if "engineering-rnd" in before + after:
             found.append("HANDOVER.md, outside §6")
         assert not found, f"these name engineering-rnd: {found}"
+
+
+class TestTheShippedDefault:
+    """Owner's decision of 2026-11-12, after the audit of 2026-11-11: a
+    request that names no workflow runs the one with no judges."""
+
+    def test_the_declared_default_is_answer_and_recompute(self):
+        from autornd.config import Settings
+        assert Settings.model_fields["autornd_workflow"].default == (
+            "answer-and-recompute")
+
+    def test_the_default_is_offered_and_has_no_judge(self, monkeypatch):
+        from autornd.config import Settings, settings
+        from autornd.engine.workflow import offered_workflows, workflow_path
+        name = Settings.model_fields["autornd_workflow"].default
+        spec = offered_workflows()[name]
+        prompts = {node.prompt for node in spec.nodes}
+        assert not prompts & {"validate", "review", "domain_review",
+                              "doublecheck"}
+        # An empty setting falls back to the same file, not to the old one.
+        monkeypatch.setattr(settings, "autornd_workflow", "")
+        assert workflow_path().endswith(f"{name}.yaml")

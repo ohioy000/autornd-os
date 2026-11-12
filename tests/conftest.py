@@ -77,6 +77,9 @@ PLACEHOLDERS: dict[str, str] = {
     "REGISTRATION_ENABLED": "true",
     # D54: the existing suite describes the engineering team; new tests select general or studio explicitly.
     "AUTORND_PROFILE": "engineering",
+    # The suite's own choice, not the shipped default: full-team has every
+    # phase, so it is what the existing tests drive (owner, 2026-11-12: the
+    # default a request runs is answer-and-recompute).
     "AUTORND_WORKFLOW": "full-team",
 }
 for _name, _value in PLACEHOLDERS.items():

@@ -49,7 +49,7 @@ class WorkflowNotOffered(ValueError):
 
 def workflow_path() -> str:
     """The configured graph. A name resolves inside workflows/; a path is used as-is."""
-    configured = settings.autornd_workflow or "full-team"
+    configured = settings.autornd_workflow or "answer-and-recompute"
     candidate = Path(configured)
     if candidate.suffix and candidate.exists():
         return str(candidate)
