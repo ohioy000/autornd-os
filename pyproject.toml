@@ -20,6 +20,9 @@ dependencies = [
     # across three Python versions while `pip install -e .` produced an
     # install with no JWT library at all.
     "pyjwt>=2.8.0",
+    # knowledge/fetch.py reads a quoted PDF's text layer with it, so a quote
+    # from a datasheet or a standard published as PDF can be checked.
+    "pypdf>=4.0.0",
 ]
 
 [project.optional-dependencies]

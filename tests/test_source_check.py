@@ -64,6 +64,32 @@ def _text(body: str) -> tuple[int, dict[str, str], bytes]:
     return 200, {"content-type": "text/plain"}, body.encode()
 
 
+def _pdf(text: str) -> tuple[int, dict[str, str], bytes]:
+    """A one-page PDF whose text layer is `text` (empty: a page with none)."""
+    stream = (f"BT /F1 12 Tf 72 720 Td ({text}) Tj ET".encode()
+              if text else b"")
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+        b"/Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+        b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    out = bytearray(b"%PDF-1.4\n")
+    offsets = []
+    for number, body in enumerate(objects, 1):
+        offsets.append(len(out))
+        out += b"%d 0 obj\n" % number + body + b"\nendobj\n"
+    xref = len(out)
+    out += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objects) + 1)
+    for offset in offsets:
+        out += b"%010d 00000 n \n" % offset
+    out += (b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n"
+            % (len(objects) + 1, xref))
+    return 200, {"content-type": "application/pdf"}, bytes(out)
+
+
 @pytest.fixture(autouse=True)
 def _offline(monkeypatch):
     """Names resolve to a public documentation address, the store is empty
@@ -77,8 +103,10 @@ def _offline(monkeypatch):
     monkeypatch.setattr(research, "ingest_text", lambda *a, **k: 0)
     monkeypatch.setattr(config.settings, "model_search", "vendor/search")
     research.reset_untyped_replies()
+    research.reset_dropped_quotes()
     yield
     research.reset_untyped_replies()
+    research.reset_dropped_quotes()
 
 
 def _reply(answer: str = "25 mW e.r.p.", quotes=(), citations=(PAGE,)) -> ModelResponse:
@@ -189,8 +217,8 @@ class TestTheFetch:
 
     @pytest.mark.parametrize("served, reason", [
         ((404, {}, b"gone"), "HTTP 404"),
-        ((200, {"content-type": "application/pdf"}, b"%PDF-1.7"),
-         "content type application/pdf is not read as text"),
+        ((200, {"content-type": "application/zip"}, b"PK"),
+         "content type application/zip is not read as text"),
         ((200, {"content-type": "text/plain"}, b"x" * (fetch.FETCH_MAX_BYTES + 1)),
          f"larger than {fetch.FETCH_MAX_BYTES} bytes"),
     ])
@@ -267,7 +295,7 @@ class TestTheQuoteCheck:
     async def test_a_bundle_names_the_questions_left_unverified(self, monkeypatch):
         monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(), OTHER: _text(CELL)}))
         finding, = await research_gaps(_client(_reply(quotes=[
-            (1, PASSAGE, PAGE), (2, "Charge each cell to 3.65 V and no higher.", OTHER)])),
+            (1, PASSAGE, PAGE), (2, "Charge each cell to 3.60 V and no higher.", OTHER)])),
             "a radio", ["The EU 868 MHz limit", "The LiFePO4 cutoff", "The duty cycle"])
         assert finding.checked() == {1} and finding.unchecked() == [2, 3]
         assert ("No quoted passage was found in its page for questions 2, 3 — treat "
@@ -436,3 +464,123 @@ class TestTheFetchConnectsToTheAddressItChecked:
         monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
         assert (await fetch.fetch_source(PAGE)).status == "fetched"
         assert [kwargs["trust_env"] for kwargs in made] == [False]
+
+
+class TestOneBadQuoteCostsOnlyItself:
+    """Audit of 2026-11-11: one malformed quote used to void the reply's
+    typed reading, so the answer was kept as raw JSON and every good quote
+    beside it went unchecked."""
+
+    @pytest.mark.parametrize("bad", [
+        {"question": 1, "text": PASSAGE},                 # no address
+        {"question": "first", "text": PASSAGE, "url": PAGE},
+        {"question": 1, "text": "  ", "url": PAGE},
+        "not an object",
+    ])
+    async def test_the_answer_and_the_good_quotes_are_kept(self, monkeypatch, bad):
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
+        content = json.dumps({"answer": "25 mW e.r.p.", "quotes": [
+            bad, {"question": 1, "text": PASSAGE, "url": PAGE}]})
+        client = _client(ModelResponse(content=content, model="m", prompt_tokens=1,
+                                       completion_tokens=1, cost=0.0, citations=[PAGE]))
+        finding, = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
+        assert finding.answer == "25 mW e.r.p."
+        assert [q.status for q in finding.quotes] == ["found"]
+        assert research.dropped_quotes() == 1
+        assert research.untyped_replies() == 0
+
+    async def test_quotes_that_are_not_a_list_leave_the_answer(self):
+        content = json.dumps({"answer": "25 mW e.r.p.", "quotes": "none"})
+        client = _client(ModelResponse(content=content, model="m", prompt_tokens=1,
+                                       completion_tokens=1, cost=0.0, citations=[PAGE]))
+        finding, = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
+        assert finding.answer == "25 mW e.r.p." and finding.quotes == []
+        assert research.dropped_quotes() == 1
+
+
+class TestTheQuoteCheckReadsPastPrinting:
+    @pytest.mark.parametrize("quote, page", [
+        # The quote ends its sentence where the page goes on.
+        ("The maximum radiated power in this band is 25 mW e.r.p.",
+         "The maximum radiated power in this band is 25 mW e.r.p, with a 1% duty cycle."),
+        # The page carries a reference mark the quote left out.
+        ("The maximum radiated power in this band is 25 mW e.r.p.",
+         "The maximum radiated power[3] in this band is 25 mW e.r.p."),
+        # The page prints a zero-width space inside a word.
+        ("The maximum radiated power in this band is 25 mW e.r.p.",
+         "The maxi\u200bmum radiated power in this band is 25 mW e.r.p."),
+    ])
+    def test_a_closing_mark_a_reference_mark_and_a_hidden_character_change_no_word(
+            self, quote, page):
+        assert quote_found(quote, page)
+
+    def test_a_changed_figure_is_still_not_found(self):
+        """Break-proof for the three above: they loosen printing, not words."""
+        assert not quote_found(
+            "The maximum radiated power in this band is 25 mW e.r.p.",
+            "The maximum radiated power[3] in this band is 250 mW e.r.p.")
+
+
+class TestWhatTheFetchCanRead:
+    async def test_a_pdf_is_read_through_its_text_layer(self, monkeypatch):
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _pdf(PASSAGE)}))
+        finding, = await research_gaps(
+            _client(_reply(quotes=[(1, PASSAGE, PAGE)])), "a radio", ["The EU 868 MHz limit"])
+        assert finding.quotes[0].status == "found"
+
+    @pytest.mark.parametrize("served, reason", [
+        (_pdf(""), "the PDF has no text layer"),
+        ((200, {"content-type": "application/pdf"}, b"%PDF-1.7 broken"),
+         "the PDF could not be read"),
+    ])
+    async def test_a_pdf_with_no_text_says_so(self, monkeypatch, served, reason):
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: served}))
+        source = await fetch.fetch_source(PAGE)
+        assert source.status == "failed" and source.reason.startswith(reason)
+
+    async def test_a_challenge_page_is_not_a_page_read(self, monkeypatch):
+        """ecfr.gov answered HTTP 200 with this on 2026-11-11, and the quote
+        was recorded "not found in the page" when no page had been read."""
+        wall = _html("<html><body><h1>Request Access</h1><p>Please complete "
+                     "the CAPTCHA to continue.</p></body></html>")
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: wall}))
+        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
+        finding, = await research_gaps(
+            _client(_reply(quotes=[(1, PASSAGE, PAGE)])), "a radio", ["The EU 868 MHz limit"])
+        quote, = finding.quotes
+        assert quote.status == "unfetched" and "challenge page" in quote.reason
+
+    def test_a_long_page_that_names_a_captcha_is_a_page(self):
+        assert fetch.challenge_page("Request Access")
+        assert not fetch.challenge_page(
+            "This standard covers CAPTCHA design. " + "word " * 1000)
+
+    async def test_an_ecfr_section_is_read_through_the_renderer(self, monkeypatch):
+        reader = "https://www.ecfr.gov/current/title-47/chapter-I/subchapter-A/part-15/subpart-C/section-15.247"
+        api = ("https://www.ecfr.gov/api/renderer/v1/content/enhanced/current/"
+               "title-47?part=15&section=15.247")
+        assert fetch.readable_address(reader) == api
+        assert fetch.readable_address(PAGE) == PAGE
+        seen: list[str] = []
+        monkeypatch.setattr(fetch, "_transport", _served({api: _html()}, seen))
+        source = await fetch.fetch_source(reader)
+        assert source.status == "fetched" and seen == [api]
+        assert source.url == reader and source.final_url == api
+
+
+class TestTheSourcesAreReturned:
+    async def test_a_lookup_record_names_each_page_and_what_was_found(self, monkeypatch):
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
+        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
+        findings = await research_gaps(_client(_reply(quotes=[
+            (1, PASSAGE, PAGE), (2, "Not on the page, this sentence.", PAGE)])),
+            "a radio", ["The EU 868 MHz limit", "The duty cycle"])
+        record, = research.source_records(findings)
+        assert record["round"] == 1 and record["recalled"] is False
+        assert record["citations"] == [PAGE]
+        assert record["unverified_questions"] == [2]
+        assert [(q["question"], q["url"], q["status"]) for q in record["quotes"]] == [
+            (1, PAGE, "found"), (2, PAGE, "not_found")]
+        found = record["quotes"][0]
+        assert found["text"] == PASSAGE and found["sha256"] and found["fetched_at"]
+        json.dumps(record)   # plain data: it goes through the phase channel

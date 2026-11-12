@@ -817,24 +817,28 @@ class TestVoteRules:
     def test_a_majority_forms_within_the_tolerance(self):
         """The formation edge: two samples 2.9% apart form a majority
         of two (the mean of the agreeing group); two samples 3.1%
-        apart form none — the ask is no consensus, not a flag."""
+        apart form none — the ask is no consensus, not a flag. With
+        its only ask uncompared, the vote compared nothing and says so
+        (audit of 2026-11-11: it used to read as a vote that agreed)."""
         result = _vote(101.45, [100.0, 102.9, 500.0])
         assert result.data["flagged"] is False
         assert result.data["no_consensus"] == []
         result = _vote(100.0, [100.0, 103.1, 500.0])
         assert result.data["flagged"] is False
-        assert result.data["unchecked"] is False
+        assert result.data["unchecked"] is True
+        assert result.data["checked"] is False
         assert result.data["no_consensus"] == [1]
 
-    def test_a_unit_mismatch_is_no_consensus_not_a_flag(self):
-        """Numbers compare only when the units are equal after
-        normalise_key; otherwise the ask has no consensus to compare
-        against — a disagreement of units is not a disagreement of
-        values."""
+    def test_units_of_another_quantity_are_no_consensus_not_a_flag(self):
+        """Numbers compare only in one unit. Samples in a unit of
+        another quantity cannot be converted, so the ask has no
+        consensus to compare against — a disagreement of units is not
+        a disagreement of values."""
         result = _vote(100.0, [100.0, 100.0, 100.0],
-                       answer_unit="kN", sample_unit="N")
+                       answer_unit="kN", sample_unit="MPa")
         assert result.data["flagged"] is False
         assert result.data["no_consensus"] == [1]
+        assert result.data["unchecked"] is True
         # Break-proof: the same values in the same unit compare, and
         # a value that differs by more than the tolerance flags —
         # the unit gate is what suppressed the comparison, not a
@@ -842,6 +846,54 @@ class TestVoteRules:
         result = _vote(100.0, [200.0, 200.0, 200.0],
                        answer_unit="kN", sample_unit="kN")
         assert result.data["flagged"] is True
+
+    def test_units_of_one_quantity_are_converted_before_comparing(self):
+        """Audit of 2026-11-11: 140 kN against three samples of
+        140000 N read as no consensus, so a right answer in another
+        prefix went uncompared and a wrong one unflagged. Units of one
+        quantity are converted to the answer's unit first."""
+        result = _vote(140.0, [140000.0, 140000.0, 140000.0],
+                       answer_unit="kN", sample_unit="N")
+        assert result.data["flagged"] is False
+        assert result.data["no_consensus"] == []
+        result = _vote(250.0, [250.0, 250.0, 250.0],
+                       answer_unit="MPa", sample_unit="N/mm2")
+        assert result.data["flagged"] is False
+        assert result.data["no_consensus"] == []
+        # Break-proof: the same figure in another prefix is another
+        # value, and flags. This is the old test's input: 100 kN is
+        # not 100 N.
+        result = _vote(100.0, [100.0, 100.0, 100.0],
+                       answer_unit="kN", sample_unit="N")
+        assert result.data["flagged"] is True
+
+    def test_a_unit_prefix_keeps_its_case(self):
+        """mW and MW are nine orders apart; the conversion must not
+        fold them into one unit."""
+        result = _vote(25.0, [25.0, 25.0, 25.0],
+                       answer_unit="mW", sample_unit="MW")
+        assert result.data["flagged"] is True
+        result = _vote(25.0, [25.0, 25.0, 25.0],
+                       answer_unit="mW", sample_unit="mW")
+        assert result.data["flagged"] is False
+
+    def test_a_number_written_as_text_is_a_number(self):
+        """Audit of 2026-11-11: the answer's "140" against samples of
+        140.0 took the identity path and flagged a right answer."""
+        result = _vote("140", [140.0, 140.0, 140.0])
+        assert result.data["flagged"] is False
+        assert result.data["no_consensus"] == []
+        result = _vote(140.0, ["140", "140.0", "1.4e2"])
+        assert result.data["flagged"] is False
+        # Break-proof: a different number in text still flags.
+        result = _vote("150", [140.0, 140.0, 140.0])
+        assert result.data["flagged"] is True
+
+    def test_a_sample_with_no_unit_is_read_in_the_answers_unit(self):
+        result = _vote(140.0, [140.0, 140.0, 140.0],
+                       answer_unit="kN", sample_unit="")
+        assert result.data["flagged"] is False
+        assert result.data["no_consensus"] == []
 
     def test_a_three_way_split_has_no_consensus(self):
         """A 1-1-1 split: no value matched by 2 of the samples, so

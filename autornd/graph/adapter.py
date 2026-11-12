@@ -276,6 +276,7 @@ class PhaseRunner:
             grounding_lookup=lookup,
         )
         self.deferred_gaps = deferred
+        self._record_sources("grounding", lookup.get("sources") or [], state)
         # HISTORY IS WHAT WAS ASKED (Ruling D37): the novelty check compares
         # round two against the questions round one looked up — the expansion
         # queries above — not against deferred_gaps, which were declined and
@@ -329,13 +330,16 @@ class PhaseRunner:
         demanded = criteria_demand_verification(criteria)
         looked_up = 0
         if demanded and self.deferred_gaps and not self.verification_lookup_done:
-            from autornd.knowledge.research import render_findings, research_gaps
+            from autornd.knowledge.research import (
+                render_findings, research_gaps, source_records)
 
             findings = await research_gaps(
                 self.client, state.request, list(self.deferred_gaps),
                 max_tokens=settings.search_max_tokens,
             )
             looked_up = len(findings)
+            self._record_sources("verification",
+                                 source_records(findings), state)
             if findings:
                 self.context = (self.context + "\n\n"
                                 + render_findings(findings)).strip()
@@ -393,6 +397,25 @@ class PhaseRunner:
                 "blocked_on": list(result.data["blocked"]),
             })
         return result
+
+    def _record_sources(self, lookup: str, records: list[dict],
+                        state: ExecutionState) -> None:
+        """What a lookup read, written through the phase channel.
+
+        A check's output is not otherwise persisted, so the pages a lookup
+        quoted, and what the quote check found in each, never reached the
+        delivery (audit of 2026-11-11). Written as the recompute vote is: a
+        record on a zero-cost response, which nothing routes on. Nothing is
+        written when no lookup returned a finding.
+        """
+        if not records or not self.on_phase:
+            return
+        self.on_phase(
+            "sources", {"lookup": lookup, "findings": records},
+            [ModelResponse(content="", model="",
+                           prompt_tokens=0, completion_tokens=0,
+                           cost=0.0)],
+            state.iteration)
 
     async def _recompute_vote_check(
             self, node: Node, state: ExecutionState) -> Result:
@@ -523,7 +546,8 @@ class PhaseRunner:
         Rounds run count up to exactly 1; there is no path that calls this
         twice.
         """
-        from autornd.knowledge.research import render_findings, research_gaps
+        from autornd.knowledge.research import (
+            render_findings, research_gaps, source_records)
         from autornd.knowledge.context import worth_a_lookup
 
         fresh = state.outputs.get("reground_context") or {}
@@ -536,6 +560,7 @@ class PhaseRunner:
                 self.client, state.request, novel,
                 max_tokens=settings.search_max_tokens,
             )
+            self._record_sources("regrounding", source_records(findings), state)
             if findings:
                 self.context = (self.context + "\n\n"
                                 + render_findings(findings)).strip()

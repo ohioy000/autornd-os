@@ -265,28 +265,37 @@ async function sendChat() {
 function renderResult(w) {
   let html = '<span class="msg-status ' + w.status + '">' + w.status.toUpperCase() + '</span> ';
   html += '<strong>Workflow #' + w.id + '</strong>';
+  if (w.error) html += '<div style="color:#db5f5f;margin-top:.4rem">' + esc(w.error) + '</div>';
+  if (w.answer) {
+    html += '<div style="margin-top:.6rem;white-space:pre-wrap"><strong>Answer</strong><br>' + esc(w.answer) + '</div>';
+  } else if (w.candidate && w.candidate.summary) {
+    html += '<div style="margin-top:.6rem;white-space:pre-wrap"><strong>Draft, not endorsed</strong><br>' + esc(w.candidate.summary) + '</div>';
+  }
+  if (w.recompute_vote && (w.recompute_vote.flagged || w.recompute_vote.unchecked)) {
+    html += '<div style="color:#ffdd55;margin-top:.4rem">Recompute vote: ' + (w.recompute_vote.flagged ? 'flagged' : 'nothing compared') + '</div>';
+  }
 
   if (w.phases && w.phases.length) {
     html += '<div style="margin-top:.6rem">';
     w.phases.forEach(p => {
       const v = typeof p.verdict === 'string' ? JSON.parse(p.verdict) : p.verdict;
       html += '<div style="margin:.4rem 0">';
-      html += '<span class="phase-tag">' + p.phase + '</span> ';
+      html += '<span class="phase-tag">' + esc(p.phase) + '</span> ';
 
       if (p.phase === 'triage') {
-        html += (v.summary || '') + ' <span style="font-size:.75rem;color:#888">[' + (v.risk || '') + ']</span>';
+        html += esc(v.summary || '') + ' <span style="font-size:.75rem;color:#888">[' + esc(v.risk || '') + ']</span>';
       } else if (p.phase === 'plan') {
         const planText = typeof v.plan === 'string' ? v.plan : JSON.stringify(v.plan);
-        html += v.ready ? planText.slice(0, 300) : '<span style="color:#db5f5f">Blocked: ' + (v.blockers || []).join(', ') + '</span>';
+        html += v.ready ? esc(planText.slice(0, 300)) : '<span style="color:#db5f5f">Blocked: ' + esc((v.blockers || []).map(b => typeof b === 'string' ? b : JSON.stringify(b)).join(', ')) + '</span>';
         if (planText.length > 300) html += '...';
       } else if (p.phase === 'plan_feasibility') {
         if (v.blockers && v.blockers.length) {
-          html += '<span style="color:#db5f5f">Blockers: ' + v.blockers.join(', ') + '</span>';
+          html += '<span style="color:#db5f5f">Blockers: ' + esc(v.blockers.map(b => typeof b === 'string' ? b : JSON.stringify(b)).join(', ')) + '</span>';
         } else {
           html += '<span style="color:#88cc88">Feasible</span>';
         }
       } else if (p.phase === 'implement') {
-        html += esc((v.summary || '').slice(0, 200));
+        html += '<span style="white-space:pre-wrap">' + esc(v.summary || '') + '</span>';
       } else if (p.phase === 'validate') {
         html += v.green ? '<span style="color:#88cc88">PASS</span>' : '<span style="color:#db5f5f">FAIL: ' + esc(v.red_cause || '') + '</span>';
         if (v.evidence && v.evidence.length) {
@@ -298,7 +307,7 @@ function renderResult(w) {
         if (v.findings && v.findings.length) {
           v.findings.forEach(f => {
             const sevCls = (f.severity === 'low' || f.severity === 'medium') ? f.severity : '';
-            html += '<div class="finding ' + sevCls + '">[' + (f.severity || '?') + '] ' + esc(f.detail) + '</div>';
+            html += '<div class="finding ' + sevCls + '">[' + esc(f.severity || '?') + '] ' + esc(f.detail) + '</div>';
           });
         }
       } else if (p.phase === 'escalation') {
@@ -377,9 +386,9 @@ async function loadDetail(id) {
   const w = json.data;
   const det = document.getElementById('detail');
   det.innerHTML = '<h2>Workflow #' + w.id + ' &mdash; ' + esc(w.request.slice(0,80)) + '</h2>'
-    + '<p style="margin:.5rem 0;font-size:.85rem;color:#888">Status: <span class="badge badge-' + w.status + '">' + w.status + '</span> | Risk: ' + (w.risk_level||'-') + ' | Iterations: ' + w.iteration + ' | Cost: $' + w.total_cost.toFixed(4) + '</p>'
+    + '<p style="margin:.5rem 0;font-size:.85rem;color:#888">Status: <span class="badge badge-' + esc(w.status) + '">' + esc(w.status) + '</span> | Risk: ' + esc(w.risk_level||'-') + ' | Iterations: ' + w.iteration + ' | Cost: $' + w.total_cost.toFixed(4) + '</p>'
     + '<div class="phase-list">' + w.phases.map(p =>
-      '<div class="phase-card"><h3>' + p.phase + ' (iter ' + p.iteration + ') &mdash; ' + (p.model_used||'?') + ' &mdash; $' + p.cost.toFixed(6) + '</h3>'
+      '<div class="phase-card"><h3>' + esc(p.phase) + ' (iter ' + p.iteration + ') &mdash; ' + esc(p.model_used||'?') + ' &mdash; $' + p.cost.toFixed(6) + '</h3>'
       + '<pre>' + esc(JSON.stringify(p.verdict, null, 2)) + '</pre></div>'
     ).join('') + '</div>';
 }

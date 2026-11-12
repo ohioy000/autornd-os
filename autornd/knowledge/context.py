@@ -324,7 +324,14 @@ def _record_lookup(record: dict | None, asked: list[str], findings: list,
         # whether the answers are right.
         "quotes": _quote_counts(findings),
         "asked_again": sum(1 for f in findings if getattr(f, "round", 1) > 1),
+        # What was read, page by page, so the delivery can show it.
+        "sources": _source_records(findings),
     })
+
+
+def _source_records(findings: list) -> list[dict]:
+    from autornd.knowledge.research import Finding, source_records
+    return source_records([f for f in findings if isinstance(f, Finding)])
 
 
 def _quote_counts(findings: list) -> dict[str, int]:
