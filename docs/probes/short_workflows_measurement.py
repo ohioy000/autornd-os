@@ -10,10 +10,19 @@ database, and appends one JSON line per unit to OUT_DIR/shard-SHARD.jsonl,
 flushed as the unit ends. A shard starts no unit once its own spend has
 reached MAX_SPEND. The scorer is the tier-2 screen, never the result (D50).
 Paid: it needs the owner's word and an amount before it is run.
+
+Two settings choose the questions and the workflows; unset, the run is the
+tier-2 run of 2026-11-13 exactly. MEASURE_SET is tier2, golden or tier4:
+golden asks evals/golden's six questions and its side test, screened by the
+golden scorer and, where the question is also tier-2's, by tier-2's; tier4
+asks the frozen tier-4 questions with their own catalogue pages, as tier-4's
+D-pages arm sends them, and has no screen: the reading is the result.
+MEASURE_WORKFLOWS is a comma list of workflow names.
 """
 from __future__ import annotations
 
 import asyncio
+import importlib.util
 import json
 import os
 import shutil
@@ -31,6 +40,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{OUT}/shard-{SHARD}.db"
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "evals" / "tier2"))
+sys.path.insert(0, str(ROOT / "evals" / "golden"))
 
 import logging  # noqa: E402
 
@@ -40,6 +50,7 @@ from sqlalchemy import select  # noqa: E402
 from sqlalchemy.orm import selectinload  # noqa: E402
 
 import autornd.main  # noqa: E402,F401  registers every table
+import score as golden_score  # noqa: E402
 import scorer  # noqa: E402
 from autornd import database  # noqa: E402
 from autornd.api.routes import _detail  # noqa: E402
@@ -48,8 +59,56 @@ from autornd.engine.workflow import WORKFLOWS_DIR, WorkflowEngine  # noqa: E402
 from autornd.models.workflow import Workflow  # noqa: E402
 from autornd.routing.openrouter import OpenRouterClient  # noqa: E402
 
-WORKFLOWS = ("answer-and-recompute", "verify-first")
-QUESTIONS = json.loads((ROOT / "evals/tier2/questions.json").read_text())
+SET = os.environ.get("MEASURE_SET", "tier2")
+WORKFLOWS = tuple(w for w in os.environ.get(
+    "MEASURE_WORKFLOWS", "answer-and-recompute,verify-first").split(",") if w)
+TIER2 = json.loads((ROOT / "evals/tier2/questions.json").read_text())
+TIER4_BATCHES = ("pilot", "batch2", "batch3", "batch4", "batch5", "batch6")
+
+
+def _questions() -> list[dict]:
+    if SET == "tier2":
+        return TIER2
+    if SET == "golden":
+        keys = json.loads((ROOT / "evals/golden/keys.json").read_text())
+        return [{"id": q["id"], "shape": q["shape"], "question": q["request"],
+                 "key": q} for q in keys["golden"] + [keys["side_test"]]]
+    if SET == "tier4":
+        spec = importlib.util.spec_from_file_location(
+            "tier4_runner", ROOT / "evals" / "tier4" / "runner.py")
+        tier4 = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = tier4   # its dataclasses look themselves up
+        spec.loader.exec_module(tier4)
+        out = []
+        for name in TIER4_BATCHES:
+            batch = tier4.load_batch(ROOT / "evals" / "tier4" / name)
+            for candidate in json.loads(batch.candidates_path.read_text()):
+                pages = candidate.get("corpus_pages")
+                out.append({"id": candidate["id"], "shape": candidate["family"],
+                            "question": tier4.d_pages_message(candidate, batch)
+                            if pages else candidate["request"]})
+        return out
+    raise SystemExit(f"MEASURE_SET {SET!r} is not tier2, golden or tier4")
+
+
+QUESTIONS = _questions()
+
+
+def screen(question: dict, text: str) -> dict | None:
+    """The screen's verdict on an answer: never the result (D50)."""
+    if SET == "tier2":
+        return scorer.score(question["id"], text)
+    if SET == "golden":
+        key = question["key"]
+        held = golden_score.score(
+            key, text, "core_items" if "core_items" in key else "items")
+        out = {"golden": held, "golden_holds": all(held.values())}
+        # Golden Q1 to Q5 are tier-2's Q1 to Q5 word for word (compared
+        # 2026-11-13), so the two screens can stand side by side.
+        if question["id"] in ("Q1", "Q2", "Q3", "Q4", "Q5"):
+            out["tier2"] = scorer.score(question["id"], text)
+        return out
+    return None
 
 
 def units() -> list[tuple[int, str, dict, int]]:
@@ -93,7 +152,7 @@ async def _run_unit(workflow: str, question: dict, repeat: int) -> dict:
         answer = detail.answer or ""
         candidate = detail.candidate if isinstance(detail.candidate, dict) else {}
         scored_text = answer or str(candidate.get("summary") or "")
-        verdict = scorer.score(question["id"], scored_text) if scored_text else None
+        verdict = screen(question, scored_text) if scored_text else None
         triage = next((p.verdict for p in detail.phases if p.phase == "triage"), {})
         record.update({
             "status": detail.status, "error": detail.error,
@@ -129,8 +188,11 @@ async def main() -> None:
                 "research", "search", "ranker", "judge", "recompute",
                 "decision")},
             "provider_order": settings.openrouter_provider_order,
+            "set": SET,
             "dataset_version": scorer.MANIFEST["dataset_version"],
             "scorer_version": scorer.SCORER_VERSION,
+            "golden_keys_version": json.loads(
+                (ROOT / "evals/golden/keys.json").read_text())["version"],
             "workflows": WORKFLOWS, "repeats": REPEATS, "shards": SHARDS,
             "max_spend_per_shard": MAX_SPEND,
         }, indent=1))
