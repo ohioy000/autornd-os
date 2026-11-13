@@ -785,6 +785,42 @@ def _vote(answer_value, sample_values, kind="value",
 class TestVoteRules:
     """The vote's comparison rules, unit by unit (D53 §2 (9))."""
 
+    def test_a_sentence_against_numbers_is_not_comparable_not_a_flag(self):
+        """The live fence run of 2026-11-13, as recorded: the answer wrote
+        two asks' values as one sentence, two samples wrote 1, and the vote
+        flagged an answer that was right. Ruled by the owner the same day:
+        not comparable, and unchecked when nothing else was compared."""
+        sentence = ("902-928 MHz (US ISM band); 1 W (30 dBm) conducted "
+                    "output power, 6 dBi maximum antenna directional gain")
+        result = _vote(sentence, [1, 1, "902-928 MHz"])
+        assert result.data["flagged"] is False
+        assert result.data["not_comparable"] == [1]
+        assert result.data["unchecked"] is True
+        assert result.data["checked"] is False
+        assert "not a number" in result.detail
+        # Beside an ask that was compared, the vote is checked and says so.
+        result = recompute_vote(
+            results=[{"ask": 1, "value": sentence, "unit": ""},
+                     {"ask": 2, "value": 5, "unit": "V"}],
+            samples=[{"results": [{"ask": 1, "value": 1, "unit": "W"},
+                                  {"ask": 2, "value": 5, "unit": "V"}]}] * 3,
+            asks=[{"number": 1, "quote": "the ask", "kind": "value"},
+                  {"number": 2, "quote": "the other", "kind": "value"}],
+            request="the ask and the other")
+        assert result.data["checked"] is True
+        assert result.data["flagged"] is False
+        assert result.data["not_comparable"] == [1]
+        assert "not comparable on ask(s) 1" in result.detail
+
+    def test_identifiers_and_verdicts_still_compare_as_identifiers(self):
+        """The rule is narrow: text against text is compared as before, a
+        verdict is always an identifier, and a wrong number still flags."""
+        assert _vote("VL-42", ["VL-43", "VL-43", "VL-43"]).data["flagged"] is True
+        assert _vote("no", [1, 1, 1], kind="verdict").data["flagged"] is True
+        assert _vote(157, [168, 168, 168]).data["flagged"] is True
+        # One numeric sample of three is not a majority of numbers.
+        assert _vote("VL-42", ["VL-43", "VL-43", 7]).data["not_comparable"] == []
+
     def test_an_ask_named_by_its_number_as_text_is_that_ask(self):
         """The live SX1276 answer of 2026-11-12, as recorded: 157 dB
         under ask "1", three samples at 168 dB under ask 1. A number
@@ -1461,3 +1497,18 @@ class TestWiring:
         text = (ROOT / ".env.example").read_text()
         assert "MODEL_RECOMPUTE=" in text
         assert "RECOMPUTE_MAX_TOKENS=32768" in text
+
+
+def test_an_ask_the_vote_could_not_compare_is_a_caution():
+    """Beside a compared ask the vote is checked; the reader is still told
+    which ask was left out and why."""
+    from autornd.api.routes import _cautions
+    vote = {"checked": True, "flagged": False, "unchecked": False,
+            "skipped": False, "disagreements": [], "no_consensus": [3],
+            "not_comparable": [2]}
+    out = _cautions(vote, [{"findings": [{"quotes": [{"status": "found"}]}]}], True)
+    assert out == [
+        "The recompute vote reached no majority on ask 3; that part of the "
+        "answer was not compared.",
+        "The recompute vote could not compare ask 2: the answer did not "
+        "state it as a single value."]

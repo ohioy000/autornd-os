@@ -291,10 +291,15 @@ def _cautions(vote: dict | None, sources: list[dict],
         elif vote.get("unchecked") or not vote.get("checked"):
             out.append("The recompute vote compared nothing, so no figure "
                        "in this answer was recomputed independently.")
-        elif vote.get("no_consensus"):
-            asks = ", ".join(map(str, vote["no_consensus"]))
-            out.append(f"The recompute vote reached no majority on ask "
-                       f"{asks}; that part of the answer was not compared.")
+        else:
+            if vote.get("no_consensus"):
+                asks = ", ".join(map(str, vote["no_consensus"]))
+                out.append(f"The recompute vote reached no majority on ask "
+                           f"{asks}; that part of the answer was not compared.")
+            if vote.get("not_comparable"):
+                asks = ", ".join(map(str, vote["not_comparable"]))
+                out.append(f"The recompute vote could not compare ask {asks}: "
+                           f"the answer did not state it as a single value.")
     findings = [f for s in sources for f in s.get("findings") or []]
     if not findings:
         out.append("No lookup ran: figures and citations in this answer "

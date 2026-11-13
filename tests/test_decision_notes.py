@@ -113,6 +113,47 @@ class TestTheClientCall:
         assert client._in_flight == 0
         assert client.spend == 0.0
 
+    async def test_a_busy_model_is_asked_again_and_booked_once(
+            self, decision_tier, monkeypatch):
+        """Live 2026-11-13: "Model busy, retry later" lost one call's notes."""
+        waits: list[float] = []
+
+        async def sleep(seconds):
+            waits.append(seconds)
+
+        monkeypatch.setattr(openrouter.asyncio, "sleep", sleep)
+        busy = _Transport({"detail": "Model busy, retry later"}, status=429)
+        good = _Transport(_reply(q={"type": "noul", "noul": 0.5}))
+
+        class Flaky:
+            is_closed = False
+            posts = 0
+
+            async def post(self, path, json=None):
+                Flaky.posts += 1
+                return await (busy if Flaky.posts == 1 else good).post(path, json)
+
+        client = OpenRouterClient(api_key="test")
+        client._client = Flaky()
+        answers, _ = await client.decide({}, {"q": {"type": "noul"}})
+        assert answers["q"]["noul"] == 0.5 and Flaky.posts == 2
+        assert waits == [openrouter._RATE_LIMIT_BACKOFF_S]
+        assert client.calls_by_function == {"decision": 1}
+        assert client._in_flight == 0
+
+    async def test_a_model_that_stays_busy_fails_after_the_bound(
+            self, decision_tier, monkeypatch):
+        async def sleep(seconds):
+            return None
+
+        monkeypatch.setattr(openrouter.asyncio, "sleep", sleep)
+        client = OpenRouterClient(api_key="test")
+        client._client = _Transport({"detail": "busy"}, status=429)
+        with pytest.raises(Exception):
+            await client.decide({}, {"q": {"type": "noul"}})
+        assert len(client._client.posts) == openrouter._RATE_LIMIT_ATTEMPTS
+        assert client._in_flight == 0
+
     def test_there_is_no_fallback_model(self, monkeypatch):
         monkeypatch.delitem(OpenRouterClient.FUNCTION_MODELS, "decision",
                             raising=False)
@@ -145,6 +186,14 @@ class TestTheNotes:
         assert state["quotes"] == {"0": {"question": "What is the cap?",
                                          "passage": "The cap is 60 s."}}
         assert notes["questions_asked"] == 4
+
+    async def test_a_quote_is_read_against_its_own_question(self):
+        sources = [{"lookup": "grounding", "findings": [{
+            "question": "The first question",
+            "quotes": [{"status": "found", "text": "A passage.", "url": "u",
+                        "question_text": "The second question"}]}]}]
+        _, (state, _), _ = await self._notes({}, sources=sources)
+        assert state["quotes"]["0"]["question"] == "The second question"
 
     async def test_each_answer_is_recorded_as_its_probability(self):
         notes, _, _ = await self._notes({
