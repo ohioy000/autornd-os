@@ -142,6 +142,11 @@ UNITS: dict[str, tuple[str, float]] = {
     # temperature (base deg C; kelvin carries an
     # offset, not a factor: 308.15 K = 35.0 deg C)
     "degc": ("deg C", 1.0), "celsius": ("deg C", 1.0),
+    # frozen-2026-10-03.4: the bare 'C' after a number, as
+    # the bare 'K' is kelvin below. Q10 answer-and-recompute
+    # r3 of 2026-11-13 wrote '120 C', '118.0-122.0 C' and
+    # '<=40 C' throughout and lost all three temperatures.
+    "c": ("deg C", 1.0),
     "degreescelsius": ("deg C", 1.0),
     "degreecelsius": ("deg C", 1.0),
     "k": ("deg C", 1.0, -273.15),
@@ -195,6 +200,17 @@ def _normalize(text: str) -> str:
     text = re.sub(r"(\d)\s*(?:\\times|×|x|\*)\s*10\s*\^\s*"
                     r"\{?\s*(-?\d+)\s*\}?", r"\1e\2", text)
     text = text.replace("\\times", " * ")
+    # A repeating decimal's ellipsis does not part a
+    # number from its unit: '24.444\ldots mA', '24.444...
+    # mA' and '24.444… mA' are 24.444 mA. frozen-2026-10-03.4:
+    # the remeasure's Q19 D r2 wrote both rejected currents
+    # so and lost their milliamps.
+    text = re.sub(r"(\d)\s*(?:\\ldots|\\dots|\.\.\.|…)", r"\1",
+                  text)
+    # \cdot between two units is the middle dot: 'N\cdot m'
+    # is N m (the spaces LaTeX allows around it go too, so
+    # one separator is left for the unit reader).
+    text = re.sub(r"\s*\\cdot\s*", "·", text)
     # 3×10⁻⁵, 3 x 10⁻⁵ and 3*10⁻⁵ -> 3e-5: the
     # exponent in unicode superscripts, joined to its
     # mantissa before the superscript characters are
@@ -245,6 +261,18 @@ def _normalize(text: str) -> str:
                      "ω": " ohm ", "°": " deg",
                      "−": "-", "⊕": " xor "}.items():
         text = text.replace(uni, asc)
+    # A product of units written with an asterisk or a
+    # full stop, straight after a number, reads as the
+    # spaced product: '500 N*m', '500 N.m', '0.500 kN.m'
+    # and '1.44e5 N*m^2' are N m, kN m and N m^2, not a
+    # force of N with '*m' left over. frozen-2026-10-03.4:
+    # the 2026-11-13 tier-2 run wrote Q18's 500 N m and
+    # Q24's 12.0 N m this way in four right answers, and
+    # the tier-3 remeasure's Q18 A r1 wrote N\cdot m. Only
+    # letters touch the mark, so '2.5' and '2 * 3' keep
+    # their meaning, and '5 m. The' keeps its full stop.
+    text = re.sub(r"(\d\s*[A-Za-z]{1,3})[*.]([A-Za-z]{1,3})"
+                  r"(?![A-Za-z])", r"\1 \2", text)
     return text
 
 
@@ -461,6 +489,19 @@ _BOUND_WORDS = {
     "upper", "lower", "bound", "bounds",
 }
 
+# A comparison closing a quantity's context: what
+# follows is the bound a value is held to, so it
+# attributes to no item. frozen-2026-10-03.4: Q5's
+# right answers of 2026-11-13 and the remeasure wrote
+# 'within the 0.20 bar limit' and 'A drop greater
+# than 0.20 bar FAILS' in their results sections, and
+# the 0.20 bar was read as the logged 0.10 bar drop.
+_COMPARED = re.compile(
+    r"(?:\b(?:within|under|over|above|below|beyond|"
+    r"exceed(?:s|ing)?|(?:greater|more|less|fewer|"
+    r"higher|lower)\s+than|at\s+(?:most|least))"
+    r"(?:\s+the)?|<=|>=|<|>)\s*$")
+
 # Element symbols the parallel-bars answers
 # subscript their quantities with: '_{al}' and
 # '_al' name the aluminum item's quantities,
@@ -533,7 +574,7 @@ def _headline_sections(answer: str
     body: list[str] = []
     for line in _normalize(answer).splitlines():
         if (_HEADING.match(line)
-                and _HEADLINE_WORDS.search(line)):
+                and _HEADLINE_WORDS.search(_heading_part(line))):
             if heading is not None:
                 sections.append(
                     (heading, "\n".join(body)))
@@ -543,6 +584,30 @@ def _headline_sections(answer: str
     if heading is not None:
         sections.append((heading, "\n".join(body)))
     return sections
+
+
+def _heading_part(line: str) -> str:
+    """The part of a heading-shaped line that is its
+    heading. frozen-2026-10-03.4: a numbered line that runs
+    on into a sentence is a step, not a heading, and a bold
+    run-in label is its bold text alone. Q5's procedures of
+    2026-11-13 numbered steps such as '10. Assess the result
+    against the acceptance criteria. PASS requires ...' and
+    '**Step 20 - Close out the log:** sign, date, file.
+    Report any FAIL ...', and each read as a results section
+    whose body held the 0.20 bar limit, so four right
+    answers failed their logged drop."""
+    stripped = line.strip()
+    if stripped.startswith("#"):
+        return stripped
+    bold = re.match(r"\*\*([^*]+)\*\*", stripped)
+    if bold:
+        return bold.group(1)
+    numbered = re.match(r"\d+\.\s+(.*)$", stripped)
+    if numbered and re.search(r"[A-Za-z)][.!?](?:\s|$)",
+                              numbered.group(1)):
+        return ""
+    return stripped
 
 
 def _slash_divides(line: str, slash: int) -> bool:
@@ -1098,6 +1163,12 @@ def _headline_values(item: dict, answer: str,
             # the item states
             if (stated & _BOUND_WORDS) - own:
                 continue
+            # a comparison introduces a bound too: the
+            # quantity it is measured against, not the one
+            # measured ('within the 0.20 bar limit', 'a
+            # drop greater than 0.20 bar fails')
+            if _COMPARED.search(context.lower()):
+                continue
             converted = _to_base(value, unit)
             if converted and converted[0] == key_dim:
                 found.append(
@@ -1266,6 +1337,11 @@ _CONDITIONAL = re.compile(
 # or labeled ('Heading: ...'). A heading is a
 # whole line, so a bullet or a step line that
 # merely starts with a marker is not one.
+# frozen-2026-10-03.4 adds two forms the 2026-11-13
+# runs wrote and the rule missed: a named section
+# ('Section 1 — Energy requirement', 'PART 2: ...')
+# and a line set between rules ('=== SECTION 1 ===',
+# '--- 1. SELECTED DIMENSIONS ---').
 _HEADING = re.compile(
     r"^(#{1,6}\s+\S"
     r"|\d+\.\s+[A-Z]"
@@ -1273,7 +1349,73 @@ _HEADING = re.compile(
     r"|__[^_]+__"
     r"|\*[^*\n]+\*"
     r"|_[^_\n]+_"
-    r"|[Hh]eading:\s*\S)")
+    r"|[Hh]eading:\s*\S"
+    r"|(?:[Ss]ection|SECTION|[Pp]art|PART)\s+\d+[A-Za-z]?"
+    r"\s*(?:[—–:.)\-]|$)"
+    r"|[-=~]{2,}\s*\S[^\n]*?\S\s*[-=~]{2,}\s*$)")
+# A plain title line: words alone on their line,
+# with no figure, no sentence or label punctuation
+# and no '=' ('Selected dimensions', 'Volume and
+# mass of selected strip'), a trailing aside in
+# parentheses set apart. Counted as a section only
+# where an item counts sections, and only between
+# a blank line (or the start) and a line of text.
+_PLAIN_TITLE = re.compile(
+    r"^[A-Z][A-Za-z'’/&,\- —–]*[A-Za-z]$")
+
+
+def _section_heads(answer: str) -> list[str]:
+    """The answer's section headings, for an item that
+    counts sections: every heading-shaped line, and
+    every plain title line that opens a block."""
+    lines = answer.splitlines()
+    heads: list[str] = []
+    for index, raw in enumerate(lines):
+        line = raw.strip()
+        if not line:
+            continue
+        if _HEADING.match(line):
+            heads.append(line)
+            continue
+        title = re.sub(r"\s*\([^)]*\)\s*$", "", line)
+        opens = (index == 0 or not lines[index - 1].strip())
+        followed = (index + 1 < len(lines)
+                    and bool(lines[index + 1].strip()))
+        if (opens and followed and len(title) <= 80
+                and len(title.split()) >= 2
+                and _PLAIN_TITLE.match(title)):
+            heads.append(line)
+    return heads
+
+
+# A verdict in the answer's own words. Q14's failure
+# check read these words first ('fails' is one phrasing;
+# 'exceeds the time limit' states the same verdict).
+# frozen-2026-10-03.4 adds 'rejected' and lends the list
+# to Q9's next-lower spring, whose right answers of the
+# 2026-11-13 run and the 2026-10-16 smoke wrote 'exceeds
+# 12.0 mm limit; rejected' and never 'fails'; and it adds
+# the pass words beside 'pass' for the selections that
+# meet their limit at equality - Q14 verify-first r3 of
+# that run 'satisfies t <= 120 s', exactly at the limit,
+# 'which the requirement explicitly permits'.
+_FAILURE_STATED = re.compile(
+    r"\b(?:fail(?:s|ed|ure|ing)?|"
+    r"exceeds?|too long|over the limit|"
+    r"outside the limit|beyond the limit|"
+    r"greater than the limit|not met|"
+    r"does not meet|violates?|reject(?:s|ed)?)\b")
+_PASS_STATED = re.compile(
+    r"pass|\b(?:meets?|satisf(?:ies|y|ied)|"
+    r"permit(?:s|ted)?|accept(?:s|ed|able)?)\b")
+
+
+def _beside(low: str, figure: str, words: str) -> bool:
+    """Whether one line of the answer carries both the
+    figure and one of the words: a verdict said beside
+    the number it judges, not somewhere in the text."""
+    return any(re.search(figure, line) and re.search(words, line)
+               for line in low.splitlines())
 
 
 def _leakage_absent(low: str) -> bool:
@@ -1403,31 +1545,50 @@ def _score_q3(answer: str, record: dict) -> list[dict]:
 
 def _selected_thickness(answer: str) -> float | None:
     """The thickness the answer selects, in metres, from a
-    selection context: a line naming 'thickness', or a line
-    that selects. Rejection contexts (the next thinner strip
-    and its failure) do not count as selections."""
+    selection context: a sentence naming 'thickness', or a
+    sentence that selects. Rejection contexts (the next
+    thinner strip and its failure) do not count as
+    selections.
+
+    frozen-2026-10-03.4: the context is a sentence, not a
+    line, and the fixed width and length are never read as
+    the thickness. Three right answers of 2026-11-13 lost
+    their 3.00 mm: one line stated all three dimensions and
+    then 'does not exceed the 100 MPa allowable', so the
+    whole line read as a rejection; and 'V = width x
+    thickness x length = 20.0 mm x 3.00 mm x 500 mm' and
+    'Selected strip in one line: 20.0 mm x 3.00 mm x 500
+    mm' read the width as the selection."""
     selection: float | None = None
     for line in _normalize(answer).splitlines():
-        low = line.lower()
-        rejects = any(w in low for w in
-                      ("fail", "exceed", "reject", "next thinner",
-                       "gives", "too thin"))
-        if "thickness" in low and not rejects:
-            at = low.find("thickness")
-            for value, unit in extract_quantities(line[at:]):
+        for sentence in re.split(r"(?<=[.!?])\s+", line):
+            low = sentence.lower()
+            if any(w in low for w in
+                   ("fail", "exceed", "reject", "next thinner",
+                    "gives", "too thin")):
+                continue
+            if "thickness" in low:
+                text = sentence[low.find("thickness"):]
+            elif any(w in low for w in
+                     ("select", "chose", "choose")):
+                text = sentence
+            else:
+                continue
+            for value, unit in extract_quantities(text):
                 converted = _to_base(value, unit)
-                if converted and converted[0] == "m":
-                    selection = converted[1]
-                    break
-        elif (any(w in low for w in
-                  ("select", "chose", "choose"))
-              and not rejects):
-            for value, unit in extract_quantities(line):
-                converted = _to_base(value, unit)
-                if converted and converted[0] == "m":
+                if (converted and converted[0] == "m"
+                        and not any(abs(converted[1] - fixed)
+                                    <= 1e-9 for fixed
+                                    in _Q4_FIXED)):
                     selection = converted[1]
                     break
     return selection
+
+
+# The question's fixed width and length (Q4: 'Its width is
+# fixed at 20.0 mm and its length at 500 mm'): a stated
+# dimension, never the thickness the answer selects.
+_Q4_FIXED = (20.0e-3, 500e-3)
 
 
 def _score_q4(answer: str, record: dict) -> list[dict]:
@@ -1524,9 +1685,7 @@ def _score_q4(answer: str, record: dict) -> list[dict]:
     # strength check, and volume and mass.
     org = _item_by_name(record,
                         "Answer organization and consistency")
-    lines = [l.strip() for l in answer.splitlines() if l.strip()]
-    sections = [l for l in lines
-                if _HEADING.match(l)]
+    sections = _section_heads(answer)
     low = _normalize(answer).lower()
     themes = (any(w in low for w in ("dimension", "width",
                                      "thickness")),
@@ -1572,9 +1731,20 @@ def _numbered_steps(text: str) -> list[str]:
 # undoes one (the review's exhibit restates the
 # question - correct order in prose - and then
 # states the procedure backwards).
+# frozen-2026-10-03.4 adds the sub-numbered step with no
+# closing mark ('2.4 Close the high-point vent.'): two
+# right Q5 answers of 2026-11-13 numbered every step so,
+# and the vent closure read as no step at all. It adds
+# the lettered step label too ('S1. Start the pump',
+# 'STEP C1 - Start the pump', '**P1 — Zero the input'),
+# which two right Q20 answers and three right Q25 answers
+# of that run wrote for every step.
 _PROCEDURE_LINE = re.compile(
     r"^\s*(?:"
     r"(?:\d+(?:\.\d+)*)[.)]\s"
+    r"|\d+(?:\.\d+)+\s"
+    r"|\**\s*step\s+[a-z]\d+\s*[—:.-]"
+    r"|\**\s*[a-z]\d+\s*[—–:.)-]\s"
     r"|[-*+]\s"
     r"|#{1,6}\s*\**\s*step\s+\d+"
     r"|\**\s*step\s+\d+\s*[—:.-]"
@@ -1895,10 +2065,7 @@ def _organization(record: dict, answer: str,
     each covering one stated theme."""
     item = next(i for i in record["required_items"]
                 if i["item"] == "Organization")
-    lines = [l.strip() for l in answer.splitlines()
-             if l.strip()]
-    heads = [l for l in lines
-             if _HEADING.match(l)]
+    heads = _section_heads(answer)
     low = _normalize(answer).lower()
     present = [any(w in low for w in theme)
                for theme in themes]
@@ -1912,6 +2079,36 @@ def _organization(record: dict, answer: str,
 
 
 # ── Q6: the pump alarm ──────────────────────────────────
+
+# A truth-table row: the input pair, then its output,
+# as 'A B | Alarm' rows ('0 1 |   1') or a mapping ('01 ->
+# 1'). frozen-2026-10-03.4: Q6 verify-first r1 of
+# 2026-11-13 stated the right outputs only so, and the
+# outputs never stood together as '0, 1, 1, 0'.
+_TRUTH_ROW = re.compile(
+    r"^\s*\|?\s*([01])\s*\|?\s*([01])\s*"
+    r"(?:\||->|→|=>|:|=)\s*\**\s*([01])\s*\**\s*\|?\s*$")
+
+
+def _truth_rows(answer: str) -> dict[str, str] | None:
+    """The outputs a truth table states for the four
+    input pairs: the first run of consecutive row lines
+    that names all four pairs once each, as a mapping
+    from pair to output; None when no run does."""
+    run: dict[str, str] = {}
+    for line in _normalize(answer).splitlines():
+        m = _TRUTH_ROW.match(line)
+        if not m:
+            if len(run) == 4:
+                return run
+            run = {}
+            continue
+        pair = m.group(1) + m.group(2)
+        if pair in run:
+            run = {}
+        run[pair] = m.group(3)
+    return run if len(run) == 4 else None
+
 
 def _score_q6(answer: str, record: dict) -> list[dict]:
     items: list[dict] = []
@@ -1942,8 +2139,10 @@ def _score_q6(answer: str, record: dict) -> list[dict]:
     item = _item_by_name(record, "Ordered outputs")
     values = [v for v, _u in extract_quantities(answer)]
     target = [0.0, 1.0, 1.0, 0.0]
-    found = any(values[i:i + 4] == target
-                for i in range(max(len(values) - 3, 0)))
+    found = (any(values[i:i + 4] == target
+                 for i in range(max(len(values) - 3, 0)))
+             or _truth_rows(answer) == {"00": "0", "01": "1",
+                                        "10": "1", "11": "0"})
     if found:
         items.append(_pass(item, "the ordered outputs for "
                                  "00, 01, 10, 11 are "
@@ -2021,7 +2220,8 @@ def _score_q9(answer: str, record: dict) -> list[dict]:
     item = _item_by_name(record,
                          "Selected extension and verdict")
     ext = _numeric_item(item, answer, dimension="m")
-    if ext["pass"] and "pass" in low:
+    passed = _PASS_STATED.search(low) is not None
+    if ext["pass"] and passed:
         items.append(_pass(item, f"{ext['detail']}; the "
                                  f"limit-equality pass is "
                                  f"stated"))
@@ -2029,7 +2229,7 @@ def _score_q9(answer: str, record: dict) -> list[dict]:
         items.append(_fail(item, f"extension within "
                                  f"tolerance: {ext['pass']}; "
                                  f"pass verdict stated: "
-                                 f"{'pass' in low} - both "
+                                 f"{passed} - both "
                                  f"are required"))
 
     # 3. the next lower stiffness: 8.00 N/mm extends
@@ -2039,8 +2239,9 @@ def _score_q9(answer: str, record: dict) -> list[dict]:
                           dimension="N/mm",
                           tolerance=("rel", 1e-12, ""))
     ext8 = _numeric_item(item, answer, dimension="m")
-    if (stiff["pass"] and ext8["pass"]
-            and "fail" in low):
+    failed = ("fail" in low
+              or _FAILURE_STATED.search(low) is not None)
+    if stiff["pass"] and ext8["pass"] and failed:
         items.append(_pass(item, f"{stiff['detail']}; "
                                  f"{ext8['detail']}; the "
                                  f"failure verdict is "
@@ -2052,7 +2253,7 @@ def _score_q9(answer: str, record: dict) -> list[dict]:
                                  f"15.0 mm within "
                                  f"tolerance: {ext8['pass']}; "
                                  f"failure verdict stated: "
-                                 f"{'fail' in low} - all "
+                                 f"{failed} - all "
                                  f"three are required"))
 
     # 4. the stored elastic energy
@@ -2304,7 +2505,8 @@ def _score_q14(answer: str, record: dict) -> list[dict]:
     item = _item_by_name(record,
                          "Selected heating time and verdict")
     time = _numeric_item(item, answer, dimension="s")
-    if time["pass"] and "pass" in low:
+    passed = _PASS_STATED.search(low) is not None
+    if time["pass"] and passed:
         items.append(_pass(item, f"{time['detail']}; the "
                                  f"equality pass is "
                                  f"stated"))
@@ -2312,7 +2514,7 @@ def _score_q14(answer: str, record: dict) -> list[dict]:
         items.append(_fail(item, f"time within tolerance: "
                                  f"{time['pass']}; pass "
                                  f"verdict stated: "
-                                 f"{'pass' in low} - both "
+                                 f"{passed} - both "
                                  f"are required"))
 
     # the next smaller heater: 750 W takes 160 s and fails
@@ -2323,12 +2525,7 @@ def _score_q14(answer: str, record: dict) -> list[dict]:
     # the failure verdict in the answer's own
     # words: 'fails' is one phrasing; 'exceeds
     # the time limit' states the same verdict
-    failure_stated = re.search(
-        r"\b(?:fail(?:s|ed|ure|ing)?|"
-        r"exceeds?|too long|over the limit|"
-        r"outside the limit|beyond the limit|"
-        r"greater than the limit|not met|"
-        r"does not meet|violates?)\b", low)
+    failure_stated = _FAILURE_STATED.search(low)
     if (heater["pass"] and time750["pass"]
             and failure_stated is not None):
         items.append(_pass(item, f"{heater['detail']}; "
@@ -2662,9 +2859,17 @@ def _score_q19(answer: str, record: dict) -> list[dict]:
     r270 = _numeric_item(item, answer, dimension="ohm",
                          tolerance=("rel", 1e-12, ""))
     i270 = _numeric_item(item, answer, dimension="A")
-    if (r270["pass"] and i270["pass"]
-            and any(w in low for w in ("high",
-                                       "exceed"))):
+    # frozen-2026-10-03.4: the direction may also be said
+    # beside the figure, as a comparison - 'greater than
+    # the 22.0 mA upper limit, so 270 ohm is rejected', a
+    # '24.4 mA > 22.0 mA' line, a table row's 'above'. Two
+    # right answers of the 2026-11-13 run said it so and
+    # nowhere used 'high' or 'exceed'.
+    high = (any(w in low for w in ("high", "exceed"))
+            or _beside(low, r"\b270\b|\b24\.4",
+                       r"greater than|\babove\b|\bover\b"
+                       r"|\bupper\b|>"))
+    if r270["pass"] and i270["pass"] and high:
         items.append(_pass(item, f"{r270['detail']}; "
                                  f"{i270['detail']}; the "
                                  f"too-high failure is "
@@ -2676,7 +2881,7 @@ def _score_q19(answer: str, record: dict) -> list[dict]:
                                  f"mA within tolerance: "
                                  f"{i270['pass']}; "
                                  f"too-high verdict stated: "
-                                 f"{any(w in low for w in ('high', 'exceed'))} - "
+                                 f"{high} - "
                                  f"all three are required"))
 
     # 3. the 390 ohm rejection: 16.9231 mA, fails low
@@ -2685,9 +2890,10 @@ def _score_q19(answer: str, record: dict) -> list[dict]:
     r390 = _numeric_item(item, answer, dimension="ohm",
                          tolerance=("rel", 1e-12, ""))
     i390 = _numeric_item(item, answer, dimension="A")
-    if (r390["pass"] and i390["pass"]
-            and any(w in low for w in ("low",
-                                       "below"))):
+    lower = (any(w in low for w in ("low", "below"))
+             or _beside(low, r"\b390\b|\b16\.9",
+                        r"less than|\bunder\b|<"))
+    if r390["pass"] and i390["pass"] and lower:
         items.append(_pass(item, f"{r390['detail']}; "
                                  f"{i390['detail']}; the "
                                  f"too-low failure is "
@@ -2699,7 +2905,7 @@ def _score_q19(answer: str, record: dict) -> list[dict]:
                                  f"mA within tolerance: "
                                  f"{i390['pass']}; "
                                  f"too-low verdict stated: "
-                                 f"{any(w in low for w in ('low', 'below'))} - "
+                                 f"{lower} - "
                                  f"all three are required"))
 
     # 4. the resistor dissipation
@@ -2739,6 +2945,24 @@ def _score_q19(answer: str, record: dict) -> list[dict]:
 
 # ── Q20: the flowmeter collection check ─────────────────
 
+# Q20's operations in the words the recorded answers use
+# for them, as Q5's are (frozen-2026-10-03.4). Seven right
+# answers of 2026-11-13 adjusted the indication to 12.0
+# L/min rather than setting it, held it steady rather than
+# stabilizing it, diverted and started the timer
+# 'simultaneously' or 'at the same instant', diverted
+# 'flow back', and read the volume before 'stopping the
+# pump' or the 'pump stop'.
+_Q20_SETTING = ("set", "adjust")
+_Q20_STEADY = ("stabiliz", "stabilis", "steady")
+_Q20_TOGETHER = ("together", "simultaneous", "at the same instant",
+                 "at the same time", "at the same moment")
+_Q20_DIVERT_BACK = ("divert back",
+                    r"re:\bdivert\w*\s+(?:the\s+)?(?:flow\s+)?back")
+_Q20_PUMP_STOP = ("stop the pump", "stopping the pump",
+                  "stop pump", "pump stop")
+
+
 def _score_q20(answer: str, record: dict) -> list[dict]:
     items: list[dict] = []
     low = _normalize(answer).lower()
@@ -2747,9 +2971,9 @@ def _score_q20(answer: str, record: dict) -> list[dict]:
     # 1. start and stabilization
     item = _item_by_name(record, "Start and stabilization")
     order = _ordered(answer, (
-        (("return",), ("set",)),
-        (("set",), ("stabiliz",)),
-        (("stabiliz",), ("collect",)),
+        (("return",), _Q20_SETTING),
+        (_Q20_SETTING, _Q20_STEADY),
+        (_Q20_STEADY, ("collect",)),
     ))
     setpoint = _has_quantity(quantities, "L/min", 12.0)
     settle = _has_quantity(quantities, "s", 30.0)
@@ -2774,7 +2998,7 @@ def _score_q20(answer: str, record: dict) -> list[dict]:
         (("zero",), ("divert",)),
         (("divert",), ("collect",)),
     ))
-    together = "together" in low
+    together = any(w in low for w in _Q20_TOGETHER)
     collect = _has_quantity(quantities, "s", 60.0)
     no_adjust = ("without" in low
                  and "adjust" in low)
@@ -2797,8 +3021,8 @@ def _score_q20(answer: str, record: dict) -> list[dict]:
     # 3. the end sequence
     item = _item_by_name(record, "End sequence")
     order = _ordered(answer, (
-        (("divert back",), ("read",)),
-        (("read",), ("stop the pump",)),
+        (_Q20_DIVERT_BACK, ("read",)),
+        (("read",), _Q20_PUMP_STOP),
     ))
     if order:
         items.append(_pass(item, "diversion back and timer "
@@ -2971,11 +3195,22 @@ def _score_q24(answer: str, record: dict) -> list[dict]:
                          "Selected driven diameter and ratio")
     diameter = _numeric_item(item, answer,
                              dimension="m")
+    # frozen-2026-10-03.4: the ratio may also be written
+    # '3.00:1', or as a ratio line whose working ends at 3
+    # ('Diameter ratio (driven-to-driver): d2/d1 = 240/80 =
+    # 3.00'). Three right answers of the 2026-11-13 run and
+    # the remeasure wrote it so. A 3 that runs on into more
+    # digits ('3.05:1', '= 3.125') is not 3.
     ratio = ("3:1" in low
              or "ratio 3" in low
              or "ratio of 3" in low
              or re.search(r"ratio\s*=\s*3\b",
-                          low) is not None)
+                          low) is not None
+             or re.search(r"(?<![\d.])3(?:\.0+)?\s*:\s*1"
+                          r"(?:\.0+)?(?!\.?\d)", low) is not None
+             or any(re.search(r"=\s*3(?:\.0+)?(?!\.?\d)", line)
+                    for line in low.splitlines()
+                    if "ratio" in line))
     if diameter["pass"] and ratio:
         items.append(_pass(item, f"{diameter['detail']}; "
                                  f"the 3:1 driven-to-driver "
@@ -3019,6 +3254,24 @@ def _score_q24(answer: str, record: dict) -> list[dict]:
 
 # ── Q25: the comparator hysteresis check ────────────────
 
+# Q25's statements in the forms the recorded answers
+# write them (frozen-2026-10-03.4). Six right answers of
+# 2026-11-13 wrote the transitions 'LOW→HIGH' and 'LOW ->
+# HIGH', the bands '2.90 V <= V_R <= 3.10 V', '2.90 V <=
+# 3.04 V <= 3.10 V' and '[2.90 V, 3.10 V]', the 0 V start
+# as '0.00 V', the count as 'exactly one' or 'exactly 1',
+# the verbs as 'enabling', 'disabling', 'increasing' and
+# 'decreasing', and the shutdown as 'Set input to 0.00 V.
+# Then disable the supply.'
+_Q25_TO = r"{0}\s*(?:-\s*to\s*-|\s+to\s+|→|->)\s*{1}"
+_Q25_BAND = (r"{0}\s*(?:v\b)?\s*(?:(?:[–—-]|to|and)\s*"
+             r"|<=\s*[^\n<]{{0,24}}?<=\s*){1}"
+             r"|\[\s*{0}\s*(?:v\b)?\s*,\s*{1}")
+_Q25_ZERO_THEN_OFF = (r"re:\b(?:set|bring|take|return)\w*\s+"
+                      r"(?:the\s+)?input\b[^\n]{0,40}?"
+                      r"(?<![\d.])0(?:\.0+)?\s*v\b[^\n]*?\bdisabl")
+
+
 def _score_q25(answer: str, record: dict) -> list[dict]:
     items: list[dict] = []
     low = _normalize(answer).lower()
@@ -3028,9 +3281,9 @@ def _score_q25(answer: str, record: dict) -> list[dict]:
     item = _item_by_name(record,
                          "Initialization order and state")
     order = _ordered(answer, (
-        ((r"re:(?<![\d.])0\s*v", "zero"),
-         ("enable",)),
-        (("enable",), ("low",)),
+        ((r"re:(?<![\d.])0(?:\.0+)?\s*v\b", "zero"),
+         ("enabl",)),
+        (("enabl",), ("low",)),
     ))
     if order:
         items.append(_pass(item, "the input is set to 0 V "
@@ -3046,10 +3299,11 @@ def _score_q25(answer: str, record: dict) -> list[dict]:
     # 2. the rising sweep
     item = _item_by_name(record, "Rising sweep")
     rising = ("monoton" in low
-              and any(w in low for w in ("increase",
+              and any(w in low for w in ("increas",
                                          "upward",
                                          "raise"))
-              and "low-to-high" in low)
+              and re.search(_Q25_TO.format("low", "high"),
+                            low) is not None)
     # the record precedes the continuation to the
     # 5.00 V endpoint, where HIGH is confirmed; the
     # first 'confirm' belongs to the initialization
@@ -3058,8 +3312,12 @@ def _score_q25(answer: str, record: dict) -> list[dict]:
     norm = low
     i_record = norm.find("record")
     i_continue = norm.find("continue")
-    order = (i_record >= 0 and i_continue > i_record
-             and "high" in norm[i_continue:])
+    order = ((i_record >= 0 and i_continue > i_record
+              and "high" in norm[i_continue:])
+             or (i_record >= 0 and re.search(
+                 r"confirm\w*\s+(?:the\s+)?(?:output\s+)?"
+                 r"(?:is\s+)?high\b[^\n]{0,12}?\b5(?:\.0+)?\s*v\b",
+                 norm[i_record:]) is not None))
     if (rising and order
             and _has_quantity(quantities, "V", 5.00)):
         items.append(_pass(item, "the input rises "
@@ -3082,12 +3340,13 @@ def _score_q25(answer: str, record: dict) -> list[dict]:
     item = _item_by_name(record,
                          "Falling sweep and shutdown")
     falling = ("monoton" in low
-               and any(w in low for w in ("decrease",
+               and any(w in low for w in ("decreas",
                                           "downward",
                                           "lower"))
-               and "high-to-low" in low)
+               and re.search(_Q25_TO.format("high", "low"),
+                             low) is not None)
     order = _ordered(answer, (
-        (("return",), ("disable",)),
+        (("return", _Q25_ZERO_THEN_OFF), ("disabl",)),
     ))
     if falling and order:
         items.append(_pass(item, "the input falls "
@@ -3107,15 +3366,17 @@ def _score_q25(answer: str, record: dict) -> list[dict]:
     # 4. the acceptance criteria
     item = _item_by_name(record, "Acceptance criteria")
     rising_band = (re.search(
-        r"2\.90\s*(?:[–—-]|to)\s*3\.10", low)
+        _Q25_BAND.format(r"2\.90", r"3\.10"), low)
         is not None)
     falling_band = (re.search(
-        r"1\.90\s*(?:[–—-]|to)\s*2\.10", low)
+        _Q25_BAND.format(r"1\.90", r"2\.10"), low)
         is not None)
     inclusive = ("inclusive" in low or "<=" in low)
     endpoints = "endpoint" in low
     one_transition = ("one transition" in low
-                      or "single transition" in low)
+                      or "single transition" in low
+                      or re.search(r"exactly (?:one|1)\b(?!\.\d)",
+                                   low) is not None)
     if (rising_band and falling_band and inclusive
             and endpoints and one_transition):
         items.append(_pass(item, "both inclusive transition "
@@ -4937,6 +5198,262 @@ def self_test() -> int:
         ("Q24 does not select 200 mm (600 rpm)",
          "Q24", "Driven pitch diameter 200 mm.",
          {"Selected driven diameter and ratio": False}),
+    ])
+    failures += more
+    ran += count
+
+    # frozen-2026-10-03.4: each form the 2026-11-13 runs
+    # wrote in a right answer and the rule missed, and a
+    # wrong answer in the same form, which must still fail.
+    print("\nThe forms frozen-2026-10-03.4 reads, right and "
+          "wrong:")
+    more, count = _fixture([
+        ("Q4 headings set between rules", "Q4",
+         "=== SECTION 1: SELECTED DIMENSIONS ===\n"
+         "Width 20.0 mm; thickness 3.00 mm; length 500 mm.\n"
+         "=== SECTION 2: STRENGTH CHECK ===\n"
+         "Stress 100 MPa: passes. The 2.00 mm strip gives "
+         "150 MPa and fails.\n"
+         "=== SECTION 3: VOLUME AND MASS OF SELECTED STRIP ===\n"
+         "V = 30000 mm^3; m = 0.2355 kg.",
+         {"Answer organization and consistency": True}),
+        ("Q4 wrong: select 4 mm under headings set "
+         "between rules", "Q4",
+         "=== SECTION 1: SELECTED DIMENSIONS ===\n"
+         "Width 20.0 mm; thickness 4.00 mm; length 500 mm.\n"
+         "=== SECTION 2: STRENGTH CHECK ===\n"
+         "Stress 75 MPa: passes.\n"
+         "=== SECTION 3: VOLUME AND MASS OF SELECTED STRIP ===\n"
+         "V = 40000 mm^3; m = 0.314 kg.",
+         {"Selected dimensions": False, "verdict": "FAIL"}),
+        ("Q4 plain title lines", "Q4",
+         "Selected dimensions\n"
+         "Width 20.0 mm; thickness 3.00 mm; length 500 mm.\n\n"
+         "Strength check\n"
+         "Stress 100 MPa: passes. The 2.00 mm strip gives "
+         "150 MPa and fails.\n\n"
+         "Volume and mass of selected strip\n"
+         "V = 30000 mm^3; m = 0.2355 kg.",
+         {"Answer organization and consistency": True}),
+        ("Q4 the selection read past the fixed width", "Q4",
+         "Selected strip in one line: 20.0 mm x 3.00 mm x "
+         "500 mm.",
+         {"Selected dimensions": True}),
+        ("Q4 wrong: 4 mm read past the fixed width", "Q4",
+         "Selected strip in one line: 20.0 mm x 4.00 mm x "
+         "500 mm.",
+         {"Selected dimensions": False}),
+        ("Q4 the thickness sentence beside a rejection "
+         "sentence", "Q4",
+         "Width b = 20.0 mm, thickness t = 3.00 mm, length "
+         "L = 500 mm. The stress does not exceed the 100 MPa "
+         "allowable.",
+         {"Selected dimensions": True}),
+        ("Q18 moment in N*m", "Q18", "M_max = 500 N*m",
+         {"Maximum bending moment": True}),
+        ("Q18 moment in N.m and kN.m", "Q18",
+         "M_max = 0.500 kN.m",
+         {"Maximum bending moment": True}),
+        ("Q18 moment in N\\cdot m", "Q18",
+         "$M_{\\max} = 500\\,\\mathrm{N\\cdot m}$",
+         {"Maximum bending moment": True}),
+        ("Q18 wrong: 250 N*m", "Q18", "M_max = 250 N*m",
+         {"Maximum bending moment": False}),
+        ("Q24 ratio as 3.00:1", "Q24",
+         "Driven pitch diameter 240 mm; driven:driver = "
+         "3.00:1.",
+         {"Selected driven diameter and ratio": True}),
+        ("Q24 ratio line ending at 3.00", "Q24",
+         "Driven pitch diameter 240 mm.\nDiameter ratio "
+         "(driven-to-driver): d2/d1 = 240/80 = 3.00.",
+         {"Selected driven diameter and ratio": True}),
+        ("Q24 wrong: ratio 3.05:1", "Q24",
+         "Driven pitch diameter 240 mm; driven:driver = "
+         "3.05:1.",
+         {"Selected driven diameter and ratio": False}),
+        ("Q24 wrong: ratio 3.00:1.25", "Q24",
+         "Driven pitch diameter 240 mm; driven:driver = "
+         "3.00:1.25.",
+         {"Selected driven diameter and ratio": False}),
+        ("Q24 wrong: ratio line ending at 3.125", "Q24",
+         "Driven pitch diameter 240 mm.\nDiameter ratio: "
+         "d2/d1 = 250/80 = 3.125.",
+         {"Selected driven diameter and ratio": False}),
+        ("Q19 repeating-decimal currents and comparisons "
+         "beside the figure", "Q19",
+         "270 ohm gives 24.444... mA, greater than the "
+         "22.0 mA limit, so 270 ohm is rejected.\n"
+         "390 ohm gives 16.923... mA, less than 18.0 mA, so "
+         "390 ohm is rejected.",
+         {"Lower resistance rejection": True,
+          "Higher resistance rejection": True}),
+        ("Q19 wrong: the rejections without a direction",
+         "Q19",
+         "270 ohm gives 24.444... mA and is rejected.\n"
+         "390 ohm gives 16.923... mA and is rejected.",
+         {"Lower resistance rejection": False,
+          "Higher resistance rejection": False}),
+        ("Q9 next lower rejected as exceeding", "Q9",
+         "Next lower (8.00 N/mm): x = 120 / 8.00 = 15.0 mm. "
+         "Exceeds 12.0 mm limit; rejected.",
+         {"Next lower stiffness check": True}),
+        ("Q9 wrong: next lower accepted", "Q9",
+         "Next lower (8.00 N/mm): x = 120 / 8.00 = 15.0 mm. "
+         "Accepted.",
+         {"Next lower stiffness check": False}),
+        ("Q14 the equality pass in the answer's words", "Q14",
+         "The 1000 W heater satisfies t <= 120 s; its "
+         "heating time is 120.0 s, exactly at the limit.",
+         {"Selected heating time and verdict": True}),
+        ("Q9 the equality pass in the answer's words", "Q9",
+         "Selected extension: 12.0 mm, equal to the 12.0 mm "
+         "limit, which is permitted.",
+         {"Selected extension and verdict": True}),
+        ("Q14 next smaller heater rejected", "Q14",
+         "Next smaller heater: 750 W; its heating time is "
+         "160 s; rejected.",
+         {"Next smaller heater check": True}),
+        ("Q14 wrong: 160 s stated as the selected time",
+         "Q14",
+         "The selected heater's heating time is 160 s, which "
+         "the requirement permits.",
+         {"Selected heating time and verdict": False}),
+        ("Q5 a step that assesses the result is not a "
+         "results heading", "Q5",
+         "9. Record hold-end pressure. Compute the drop: "
+         "6.00 - 5.90 = 0.10 bar.\n"
+         "10. Assess the result against the criteria. "
+         "Compare with the allowable drop.\n"
+         "- Allowable drop: 0.20 bar",
+         {"Logged pressure drop": True}),
+        ("Q5 wrong: a 0.20 bar drop under a results "
+         "heading", "Q5",
+         "9. Record hold-end pressure.\n"
+         "## Result\n"
+         "- Logged drop: 0.20 bar",
+         {"Logged pressure drop": False}),
+        ("Q5 a compared bound in a results section", "Q5",
+         "## Result\n"
+         "The pressure drop is 0.10 bar, within the 0.20 bar "
+         "limit.",
+         {"Logged pressure drop": True}),
+        ("Q5 wrong: a drop out of tolerance in the same "
+         "results section", "Q5",
+         "## Result\n"
+         "The pressure drop is 0.25 bar, within the 0.20 bar "
+         "limit.",
+         {"Logged pressure drop": False}),
+        ("Q5 sub-numbered steps with no closing mark", "Q5",
+         "2.3 Fill until bubble-free water exits the "
+         "high-point vent.\n"
+         "2.4 Close the high-point vent.\n"
+         "3.1 Pressurize to 6.00 bar gauge.",
+         {"Second operation: close vent": True}),
+        ("Q5 wrong: sub-numbered steps pressurize before "
+         "the vent is closed", "Q5",
+         "2.3 Fill until bubble-free water exits the "
+         "high-point vent.\n"
+         "2.4 Pressurize to 6.00 bar gauge.\n"
+         "3.1 Close the high-point vent.",
+         {"Second operation: close vent": False}),
+        ("Q20 lettered steps in the answers' own words",
+         "Q20",
+         "S1. Start the pump with flow to the return tank.\n"
+         "S2. Adjust the indication to 12.0 L/min.\n"
+         "S3. Hold that indication steady for 30 s.\n"
+         "S4. Zero the collection-volume reading.\n"
+         "S5. Simultaneously divert flow into the collection "
+         "vessel and start the timer.\n"
+         "S6. Collect for 60.0 s without adjusting flow.\n"
+         "S7. At 60.0 s, divert flow back to the return tank "
+         "and stop the timer.\n"
+         "S8. Read the collected volume before stopping the "
+         "pump.\n"
+         "S9. Switch the pump off.",
+         {"Start and stabilization": True,
+          "Collection sequence": True,
+          "End sequence": True}),
+        ("Q20 wrong: lettered steps that stop the pump "
+         "before the volume is read", "Q20",
+         "S1. Start the pump with flow to the return tank.\n"
+         "S2. Adjust the indication to 12.0 L/min.\n"
+         "S3. Hold that indication steady for 30 s.\n"
+         "S4. Zero the collection-volume reading.\n"
+         "S5. Simultaneously divert flow into the collection "
+         "vessel and start the timer.\n"
+         "S6. Collect for 60.0 s without adjusting flow.\n"
+         "S7. Stop the pump.\n"
+         "S8. Divert flow back and stop the timer, then "
+         "note the volume.",
+         {"End sequence": False}),
+        ("Q25 the answers' own forms", "Q25",
+         "**S1 — Set the input to 0.00 V before enabling "
+         "the supply.**\n"
+         "**S2 — Supply on; confirm output LOW.**\n"
+         "**S3 — With the input increasing monotonically, "
+         "record the LOW→HIGH transition; continue to 5.00 V "
+         "and confirm HIGH.**\n"
+         "**S4 — With the input decreasing monotonically, "
+         "record the HIGH→LOW transition.**\n"
+         "**S5 — Return the input to zero before disabling "
+         "the supply.**\n"
+         "Criteria, inclusive: 2.90 V <= V_R <= 3.10 V; "
+         "1.90 V <= V_F <= 2.10 V; both endpoint states "
+         "correct; transitions per sweep: exactly 1.",
+         {"Initialization order and state": True,
+          "Rising sweep": True,
+          "Falling sweep and shutdown": True,
+          "Acceptance criteria": True}),
+        ("Q25 the rise recorded, then HIGH confirmed at "
+         "5.00 V", "Q25",
+         "Increase the input monotonically; record the "
+         "LOW-to-HIGH transition. Confirm HIGH at 5.00 V.",
+         {"Rising sweep": True}),
+        ("Q25 wrong: HIGH confirmed at 4.00 V", "Q25",
+         "Increase the input monotonically; record the "
+         "LOW-to-HIGH transition. Confirm HIGH at 4.00 V.",
+         {"Rising sweep": False}),
+        ("Q25 shutdown: the input set to 0.00 V, then the "
+         "supply disabled", "Q25",
+         "Decrease the input monotonically; record the "
+         "HIGH-to-LOW transition.\n"
+         "- P5 — Set input to 0.00 V. Then disable the "
+         "supply.",
+         {"Falling sweep and shutdown": True}),
+        ("Q25 wrong: the supply disabled, then the input "
+         "set to 0.00 V", "Q25",
+         "Decrease the input monotonically; record the "
+         "HIGH-to-LOW transition.\n"
+         "- P5 — Disable the supply. Then set input to "
+         "0.00 V.",
+         {"Falling sweep and shutdown": False}),
+        ("Q25 wrong: a rising band of 2.80-3.10 V in the "
+         "same form", "Q25",
+         "Criteria, inclusive: 2.80 V <= V_R <= 3.10 V; "
+         "1.90 V <= V_F <= 2.10 V; both endpoint states "
+         "correct; exactly one transition per sweep.",
+         {"Acceptance criteria": False}),
+        ("Q10 temperatures in a bare C", "Q10",
+         "1. Set the oven to 120 C.\n"
+         "2. When the coupon probe reads 118.0 C <= T_c <= "
+         "122.0 C, start the timer.",
+         {"Setpoint and timer-start order": True}),
+        ("Q10 wrong: a 125 C setpoint in a bare C", "Q10",
+         "1. Set the oven to 125 C.\n"
+         "2. When the coupon probe reads 118.0 C <= T_c <= "
+         "122.0 C, start the timer.",
+         {"Setpoint and timer-start order": False}),
+        ("Q6 outputs as truth-table rows", "Q6",
+         "    A B | Alarm\n    0 0 |   0\n    0 1 |   1\n"
+         "    1 0 |   1\n    1 1 |   0",
+         {"Ordered outputs": True}),
+        ("Q6 outputs as a mapping", "Q6",
+         "00 -> 0\n01 -> 1\n10 -> 1\n11 -> 0",
+         {"Ordered outputs": True}),
+        ("Q6 wrong: OR rows", "Q6",
+         "    A B | Alarm\n    0 0 |   0\n    0 1 |   1\n"
+         "    1 0 |   1\n    1 1 |   1",
+         {"Ordered outputs": False}),
     ])
     failures += more
     ran += count
