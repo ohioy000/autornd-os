@@ -212,6 +212,13 @@ def _provider_names(entry: dict) -> set[str]:
     name = str(entry.get("name") or "")
     if "|" in name:
         names.add(_base_provider(name.split("|", 1)[0].strip()))
+    # Measured 2026-11-12: a third shape. Google's Vertex endpoints carry
+    # `provider_name` "Google" and the name a pin is written with only in
+    # `tag` ("google-vertex/global"), so a pin that the route lists was
+    # reported "does not serve". The tag is the call-time specifier itself;
+    # match on it too.
+    if entry.get("tag"):
+        names.add(_base_provider(str(entry["tag"])))
     return {n for n in names if n}
 
 
