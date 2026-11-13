@@ -271,9 +271,9 @@ function renderResult(w) {
   } else if (w.candidate && w.candidate.summary) {
     html += '<div style="margin-top:.6rem;white-space:pre-wrap"><strong>Draft, not endorsed</strong><br>' + esc(w.candidate.summary) + '</div>';
   }
-  if (w.recompute_vote && (w.recompute_vote.flagged || w.recompute_vote.unchecked)) {
-    html += '<div style="color:#ffdd55;margin-top:.4rem">Recompute vote: ' + (w.recompute_vote.flagged ? 'flagged' : 'nothing compared') + '</div>';
-  }
+  (w.cautions || []).forEach(c => {
+    html += '<div style="color:#ffdd55;margin-top:.4rem">&#9888; ' + esc(c) + '</div>';
+  });
 
   if (w.phases && w.phases.length) {
     html += '<div style="margin-top:.6rem">';

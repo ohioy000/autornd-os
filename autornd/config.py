@@ -174,7 +174,9 @@ class Settings(BaseSettings):
     # two rounds a lookup and three lookups a run, so 60 s of fetching and
     # three more search calls. That fits the 558 s between 20.7 minutes and
     # this bound while a search call takes under about 160 s; the measurement
-    # of record checks it.
+    # of record checks it. 2026-11-13: the fetch bound went from 10 s to 25 s
+    # a round (fetch.py), so the same sum is 150 s of fetching, which still
+    # fits the 558 s only while a search call takes under about 135 s.
     run_time_budget_seconds: float | None = 1800.0
 
     # Ruling D45 (2): the API run's spend ceiling, in USD. Runs measured

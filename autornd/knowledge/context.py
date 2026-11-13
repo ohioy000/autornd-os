@@ -242,6 +242,30 @@ def criteria_demand_verification(criteria: list[str]) -> bool:
     return False
 
 
+# What a request says when it asks for its sources outright. Measured live
+# 2026-11-12: "Cite the datasheet" was triaged low risk, so no lookup ran, and
+# the answer gave a figure from memory with a quotation the datasheet does not
+# contain; the run ended completed. A request that asks to be cited cannot be
+# answered from memory, whatever its risk. Wider than _VERIFICATION_TERMS,
+# which reads criteria: these phrases are ordinary in a request and rare in a
+# criterion that does not mean them.
+_REQUEST_SOURCE_TERMS = _VERIFICATION_TERMS + (
+    "with sources", "with a source", "with references", "quote the",
+    "according to the", "from the datasheet", "per the datasheet",
+)
+
+
+def request_demands_sources(request: str) -> bool:
+    """Does the request itself ask for its sources? Free and deterministic.
+
+    When it does, the lookup runs at any risk, and when grounding found no
+    gap to ask about, the request itself is the question looked up. Owner's
+    decision of 2026-11-13: a request for citations always gets a lookup.
+    """
+    text = str(request or "").lower()
+    return any(term in text for term in _REQUEST_SOURCE_TERMS)
+
+
 BRIEFING_PROMPT = """\
 Write a short grounding briefing for {practitioner} about to start this request,
 using only the project documentation excerpts below.
@@ -387,7 +411,11 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
         # Only the gaps that change the answer are looked up. Every gap is
         # still shown above, because an engineer wants to know what is missing
         # whether or not it was worth a search fee.
-        if blocking and settings.model_search and worth_a_lookup(risk):
+        demanded = request_demands_sources(request)
+        if demanded and not blocking:
+            blocking = [request]
+        if blocking and settings.model_search and (
+                worth_a_lookup(risk) or demanded):
             from autornd.knowledge.research import render_findings, research_gaps
 
             findings = await research_gaps(client, request, blocking,
@@ -689,7 +717,11 @@ async def build_phase_context(
             # that most needs looking things up. The unknowns scoping found are
             # the queries — the same mechanism as documentation gaps, from the
             # only other place that knows what is missing.
-            if unknowns and settings.model_search and worth_a_lookup(risk):
+            demanded = request_demands_sources(request)
+            if demanded and not unknowns:
+                unknowns = [request]
+            if unknowns and settings.model_search and (
+                    worth_a_lookup(risk) or demanded):
                 from autornd.knowledge.research import render_findings, research_gaps
 
                 findings = await research_gaps(client, request, unknowns,

@@ -584,3 +584,73 @@ class TestTheSourcesAreReturned:
         found = record["quotes"][0]
         assert found["text"] == PASSAGE and found["sha256"] and found["fetched_at"]
         json.dumps(record)   # plain data: it goes through the phase channel
+
+
+class TestARequestForSourcesIsAlwaysLookedUp:
+    """Owner's decision of 2026-11-13, after a live run of 2026-11-12: "Cite
+    the datasheet" was triaged low risk, no lookup ran, and the answer gave
+    a figure from memory with a quotation its source does not contain."""
+
+    async def _ground(self, monkeypatch, request, unknowns):
+        import autornd.knowledge.context as ctx
+        from autornd.models.verdicts import Domain, RiskLevel
+
+        monkeypatch.setattr(config.settings, "model_research", "vendor/researcher")
+        monkeypatch.setattr(ctx, "retrieve", lambda *a, **k: [])
+        monkeypatch.setattr(ctx, "load_docs_context", lambda *a, **k: "")
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
+        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
+        client = _client(_reply(quotes=[(1, PASSAGE, PAGE)]))
+        client.chat_json = AsyncMock(return_value=({
+            "objective": "o", "unknowns": unknowns,
+            "blocking_unknowns": unknowns,
+            "assumptions": [], "considerations": []}, None))
+        record: dict = {}
+        await ctx.build_phase_context(
+            request, [Domain.HARDWARE], client=client,
+            risk=RiskLevel.LOW, grounding_lookup=record)
+        return client, record
+
+    async def test_a_low_risk_request_that_asks_to_be_cited_is_looked_up(
+            self, monkeypatch):
+        client, record = await self._ground(
+            monkeypatch, "What is the limit? Cite the datasheet.", ["the limit"])
+        assert client.chat.await_count == 1
+        assert record["asked"] == ["the limit"]
+        assert record["sources"][0]["quotes"][0]["status"] == "found"
+
+    async def test_a_low_risk_request_that_asks_for_nothing_is_not(self, monkeypatch):
+        """Break-proof: the risk gate still declines when no source is asked for."""
+        client, record = await self._ground(
+            monkeypatch, "What is the limit?", ["the limit"])
+        assert client.chat.await_count == 0 and record == {}
+
+    async def test_with_no_gap_found_the_request_itself_is_the_question(
+            self, monkeypatch):
+        request = "What is the limit? Give it with sources."
+        client, record = await self._ground(monkeypatch, request, [])
+        assert client.chat.await_count == 1
+        assert record["asked"] == [request]
+
+    @pytest.mark.parametrize("request_text, demanded", [
+        ("Cite the datasheet.", True),
+        ("Give the limit, with sources.", True),
+        ("Quote the rule.", True),
+        ("Size the resistor for 20 mA.", False),
+        ("The design references the existing schema.", False),
+    ])
+    def test_what_counts_as_asking(self, request_text, demanded):
+        from autornd.knowledge.context import request_demands_sources
+        assert request_demands_sources(request_text) is demanded
+
+
+class TestAnXmlPageIsRead:
+    async def test_xml_is_read_with_its_markup_dropped(self, monkeypatch):
+        """govinfo.gov serves the CFR as XML; on 2026-11-12 both such pages a
+        lookup quoted were recorded unfetched for their content type."""
+        body = f"<?xml version='1.0'?><SECTION><P>{PASSAGE}</P></SECTION>".encode()
+        monkeypatch.setattr(fetch, "_transport", _served({
+            PAGE: (200, {"content-type": "application/xml"}, body)}))
+        finding, = await research_gaps(
+            _client(_reply(quotes=[(1, PASSAGE, PAGE)])), "a radio", ["The EU 868 MHz limit"])
+        assert finding.quotes[0].status == "found"

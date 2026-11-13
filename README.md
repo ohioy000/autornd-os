@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1766%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1779%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -52,7 +52,8 @@ before relying on any workflow:
 - **Research checks each answer's quote against its page.** Every answer
   quotes the passage it rests on; the harness fetches the page and looks for
   the passage in it. A found passage shows the words are on the page, not that
-  the answer follows from them. A PDF is read through its text layer.
+  the answer follows from them. A PDF is read through its text layer. A
+  request that asks for its sources is always looked up, whatever its risk.
 - **A judge blocks only by pointing at the request.** Validate, the domain
   reviewer, review and the independent check can each stop an answer only with
   an anchor: an ask, the request's own words, or, for a hazard, the answer's
@@ -774,7 +775,7 @@ A submission may name its workflow: `{"request": "...", "workflow": "verify-firs
 
 Every workflow response carries an `error` field: `null` on a healthy run, and otherwise why the run stopped — an infrastructure fault, a plan the architect judged unready, or an escalation needing a human. A blocked workflow always says why.
 
-A run that ends without a delivered answer still keeps the one it wrote. `GET /api/workflows/{id}` returns it as `candidate`: the last answer, marked unendorsed, with the dissents still open against it, and, when an earlier answer was the last one the build judges agreed on, that answer too. A completed run has no candidate; its answer is the delivered one, returned as `answer`. Beside it come `recompute_vote`, the vote's last record when a vote ran, and `sources`: for each lookup, the pages it quoted, whether each was fetched, and whether its quote was found there. A run stopped by an unexpected error keeps its candidate too.
+A run that ends without a delivered answer still keeps the one it wrote. `GET /api/workflows/{id}` returns it as `candidate`: the last answer, marked unendorsed, with the dissents still open against it, and, when an earlier answer was the last one the build judges agreed on, that answer too. A completed run has no candidate; its answer is the delivered one, returned as `answer`. Beside it come `recompute_vote`, the vote's last record when a vote ran, and `sources`: for each lookup, the pages it quoted, whether each was fetched, and whether its quote was found there. A run stopped by an unexpected error keeps its candidate too. `cautions` says in plain sentences what a reader should know before relying on the answer: a vote that flagged or compared nothing, a lookup that did not run, quotes that could not be checked.
 
 ## Worked Example
 

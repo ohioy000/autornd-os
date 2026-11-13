@@ -257,6 +257,55 @@ class WorkflowDetail(WorkflowSummary):
     # What each lookup read (Ruling D56): per question, the pages quoted,
     # whether each was fetched and whether its quote was found there.
     sources: list[dict] = Field(default_factory=list)
+    # What a reader should know before relying on the answer, in plain
+    # sentences: a vote that flagged or compared nothing, a lookup that did
+    # not run, quotes that could not be checked. For people; nothing routes
+    # on it, and each sentence restates a typed field returned above.
+    cautions: list[str] = Field(default_factory=list)
+
+
+def _cautions(vote: dict | None, sources: list[dict],
+              has_answer: bool) -> list[str]:
+    """The cautions beside an answer, read off the typed records.
+
+    Measured live 2026-11-12: a completed run delivered a wrong figure with
+    a vote that had compared nothing and no lookup behind it, and nothing in
+    the delivery said so short of reading the phase records.
+    """
+    if not has_answer:
+        return []
+    out: list[str] = []
+    if vote is not None:
+        if vote.get("flagged"):
+            asks = ", ".join(str(d.get("ask")) for d in
+                             vote.get("disagreements") or [])
+            out.append("The recompute vote disagrees with this answer"
+                       + (f" on ask {asks}." if asks else "."))
+        elif vote.get("skipped"):
+            out.append("The recompute vote did not run, so no figure in "
+                       "this answer was recomputed.")
+        elif vote.get("unchecked") or not vote.get("checked"):
+            out.append("The recompute vote compared nothing, so no figure "
+                       "in this answer was recomputed independently.")
+        elif vote.get("no_consensus"):
+            asks = ", ".join(map(str, vote["no_consensus"]))
+            out.append(f"The recompute vote reached no majority on ask "
+                       f"{asks}; that part of the answer was not compared.")
+    findings = [f for s in sources for f in s.get("findings") or []]
+    if not findings:
+        out.append("No lookup ran: figures and citations in this answer "
+                   "come from the model's memory and were not checked "
+                   "against a source.")
+    else:
+        quotes = [q for f in findings for q in f.get("quotes") or []]
+        found = sum(1 for q in quotes if q.get("status") == "found")
+        if not found:
+            out.append("A lookup ran, but no quoted passage could be found "
+                       "in its page, so its findings are unverified.")
+        elif found < len(quotes):
+            out.append(f"{found} of {len(quotes)} quoted passages were "
+                       f"found in their pages; the rest are unverified.")
+    return out
 
 
 def _summarize(w: Workflow) -> WorkflowSummary:
@@ -445,6 +494,7 @@ def _detail(w: Workflow) -> WorkflowDetail:
         answer=answer,
         recompute_vote=vote,
         sources=sources,
+        cautions=_cautions(vote, sources, answer is not None),
         id=w.id,
         request=w.request,
         status=w.status.value,
