@@ -1,0 +1,166 @@
+{
+ "decision_model": "perplexity/pplx-decider-v1.2",
+ "cost": 6.568e-05,
+ "pairs": [
+  {
+   "kind": "real",
+   "source": "20261113T091013Z-short-workflows-phases-shard-0.jsonl workflow 23",
+   "request": "Two active-high digital inputs, A and B, indicate whether two pumps are running. An active-high alarm must be on when exactly one pump is running and off otherwise. What Boolean function should drive the alarm, and what are its outputs for input pairs $00$, $01$, $10$, and $11$, in that order?",
+   "ask": 1,
+   "answer_value": "XOR: Alarm = A ⊕ B = A'B + AB'",
+   "sample_value": "A XOR B",
+   "probability": 0.8843864808813627,
+   "choice": "yes"
+  },
+  {
+   "kind": "real",
+   "source": "20261113T091013Z-short-workflows-phases-shard-1.jsonl workflow 10",
+   "request": "An ideal open-belt drive has a fixed driver pitch diameter of $80.0\\,\\mathrm{mm}$, driver speed $1500\\,\\mathrm{rpm}$, and transmitted input torque $4.00\\,\\mathrm{N\\,m}$. Available driven pitch diameters are $160$, $200$, and $240\\,\\mathrm{mm}$. Select the smallest driven pulley giving an output speed no greater than $500\\,\\mathrm{rpm}$; equality is allowed. Assume no slip or power loss and adequate belt capacity. Give three sections: pulley selection and diameter ratio; output speed, rotation direction viewed from the same side of both shafts, and torque; and belt linear speed.",
+   "ask": 4,
+   "answer_value": "same direction as the driver",
+   "sample_value": "same direction",
+   "probability": 0.9102763026230394,
+   "choice": "yes"
+  },
+  {
+   "kind": "real",
+   "source": "20261113T091013Z-short-workflows-phases-shard-2.jsonl workflow 3",
+   "request": "In Table G–16 of $29$ CFR § $1910.95$, July 1, 2014 edition, what permissible daily exposure durations correspond to constant sound levels of $90$, $95$, and $100\\,\\mathrm{dBA}$, measured with slow response? Give the three durations in hours.",
+   "ask": 1,
+   "answer_value": "8 h at 90 dBA; 4 h at 95 dBA; 2 h at 100 dBA",
+   "sample_value": "8, 4, 2",
+   "probability": 0.9874230121903118,
+   "choice": "yes"
+  },
+  {
+   "kind": "real",
+   "source": "20261113T091013Z-short-workflows-phases-shard-2.jsonl workflow 5",
+   "request": "For a community drinking-water system, what maximum contaminant levels does $40$ CFR § $141.62(b)$, July 1, 2014 edition, list for arsenic, fluoride, and nitrate? Give concentrations in $\\mathrm{mg/L}$ and state the chemical reporting basis specified for nitrate.",
+   "ask": 3,
+   "answer_value": "as Nitrogen (as N)",
+   "sample_value": "as Nitrogen",
+   "probability": 0.9869979723157766,
+   "choice": "yes"
+  },
+  {
+   "kind": "real",
+   "source": "20261113T091013Z-short-workflows-phases-shard-2.jsonl workflow 13",
+   "request": "In Table G–16 of $29$ CFR § $1910.95$, July 1, 2014 edition, what permissible daily exposure durations correspond to constant sound levels of $90$, $95$, and $100\\,\\mathrm{dBA}$, measured with slow response? Give the three durations in hours.",
+   "ask": 1,
+   "answer_value": "8 h at 90 dBA; 4 h at 95 dBA; 2 h at 100 dBA",
+   "sample_value": "8, 4, 2",
+   "probability": 0.9953799754632437,
+   "choice": "yes"
+  },
+  {
+   "kind": "real",
+   "source": "20261113T091013Z-short-workflows-phases-shard-2.jsonl workflow 15",
+   "request": "For a community drinking-water system, what maximum contaminant levels does $40$ CFR § $141.62(b)$, July 1, 2014 edition, list for arsenic, fluoride, and nitrate? Give concentrations in $\\mathrm{mg/L}$ and state the chemical reporting basis specified for nitrate.",
+   "ask": 1,
+   "answer_value": "arsenic 0.010; fluoride 4.0; nitrate 10 (as N)",
+   "sample_value": "arsenic: 0.010, fluoride: 4.0, nitrate: 10",
+   "probability": 0.872079088773944,
+   "choice": "yes"
+  },
+  {
+   "kind": "real",
+   "source": "20261113T091013Z-short-workflows-phases-shard-2.jsonl workflow 15",
+   "request": "For a community drinking-water system, what maximum contaminant levels does $40$ CFR § $141.62(b)$, July 1, 2014 edition, list for arsenic, fluoride, and nitrate? Give concentrations in $\\mathrm{mg/L}$ and state the chemical reporting basis specified for nitrate.",
+   "ask": 3,
+   "answer_value": "as Nitrogen (as N)",
+   "sample_value": "as Nitrogen",
+   "probability": 0.9969390578235552,
+   "choice": "yes"
+  },
+  {
+   "kind": "real",
+   "source": "20261113T091013Z-short-workflows-phases-shard-2.jsonl workflow 17",
+   "request": "Under $29$ CFR § $1910.147$, July 1, 2014 edition, what minimum unlocking strength is required for tagout-device attachment means, and how frequently must the employer inspect the energy-control procedure? Give the strength in the regulation's pounds unit and the inspection interval.",
+   "ask": 2,
+   "answer_value": "at least annually (no less than once every 12 months)",
+   "sample_value": "at least annually",
+   "probability": 0.980579662067791,
+   "choice": "yes"
+  },
+  {
+   "kind": "real",
+   "source": "20261113T091013Z-short-workflows-phases-shard-2.jsonl workflow 25",
+   "request": "For a community drinking-water system, what maximum contaminant levels does $40$ CFR § $141.62(b)$, July 1, 2014 edition, list for arsenic, fluoride, and nitrate? Give concentrations in $\\mathrm{mg/L}$ and state the chemical reporting basis specified for nitrate.",
+   "ask": 3,
+   "answer_value": "as nitrogen (as N)",
+   "sample_value": "as nitrogen",
+   "probability": 0.9980067155271951,
+   "choice": "yes"
+  },
+  {
+   "kind": "real",
+   "source": "20261113T091013Z-short-workflows-phases-shard-2.jsonl workflow 27",
+   "request": "Under $29$ CFR § $1910.147$, July 1, 2014 edition, what minimum unlocking strength is required for tagout-device attachment means, and how frequently must the employer inspect the energy-control procedure? Give the strength in the regulation's pounds unit and the inspection interval.",
+   "ask": 2,
+   "answer_value": "at least 1",
+   "sample_value": "at least annually",
+   "probability": 0.1501266272066018,
+   "choice": "no"
+  },
+  {
+   "kind": "contrary",
+   "source": "preregistered, from Q24",
+   "request": "An ideal open-belt drive has a fixed driver pitch diameter of $80.0\\,\\mathrm{mm}$, driver speed $1500\\,\\mathrm{rpm}$, and transmitted input torque $4.00\\,\\mathrm{N\\,m}$. Available driven pitch diameters are $160$, $200$, and $240\\,\\mathrm{mm}$. Select the smallest driven pulley giving an output speed no greater than $500\\,\\mathrm{rpm}$; equality is allowed. Assume no slip or power loss and adequate belt capacity. Give three sections: pulley selection and diameter ratio; output speed, rotation direction viewed from the same side of both shafts, and torque; and belt linear speed.",
+   "ask": null,
+   "answer_value": "same direction as the driver",
+   "sample_value": "opposite direction to the driver",
+   "probability": 0.000406424787231743,
+   "choice": "no"
+  },
+  {
+   "kind": "contrary",
+   "source": "preregistered, from Q24",
+   "request": "An ideal open-belt drive has a fixed driver pitch diameter of $80.0\\,\\mathrm{mm}$, driver speed $1500\\,\\mathrm{rpm}$, and transmitted input torque $4.00\\,\\mathrm{N\\,m}$. Available driven pitch diameters are $160$, $200$, and $240\\,\\mathrm{mm}$. Select the smallest driven pulley giving an output speed no greater than $500\\,\\mathrm{rpm}$; equality is allowed. Assume no slip or power loss and adequate belt capacity. Give three sections: pulley selection and diameter ratio; output speed, rotation direction viewed from the same side of both shafts, and torque; and belt linear speed.",
+   "ask": null,
+   "answer_value": "not the same direction as the driver",
+   "sample_value": "same direction",
+   "probability": 0.005941576089058086,
+   "choice": "no"
+  },
+  {
+   "kind": "contrary",
+   "source": "preregistered, from Q6",
+   "request": "Two active-high digital inputs, A and B, indicate whether two pumps are running. An active-high alarm must be on when exactly one pump is running and off otherwise. What Boolean function should drive the alarm, and what are its outputs for input pairs $00$, $01$, $10$, and $11$, in that order?",
+   "ask": null,
+   "answer_value": "XOR: Alarm = A ⊕ B = A'B + AB'",
+   "sample_value": "XNOR",
+   "probability": 0.0012516213251803192,
+   "choice": "no"
+  },
+  {
+   "kind": "contrary",
+   "source": "preregistered, from Q12",
+   "request": "For a community drinking-water system, what maximum contaminant levels does $40$ CFR § $141.62(b)$, July 1, 2014 edition, list for arsenic, fluoride, and nitrate? Give concentrations in $\\mathrm{mg/L}$ and state the chemical reporting basis specified for nitrate.",
+   "ask": null,
+   "answer_value": "as Nitrogen (as N)",
+   "sample_value": "as nitrate ion (as NO3)",
+   "probability": 0.12373941282201179,
+   "choice": "no"
+  },
+  {
+   "kind": "contrary",
+   "source": "preregistered, from Q17",
+   "request": "Under $29$ CFR § $1910.147$, July 1, 2014 edition, what minimum unlocking strength is required for tagout-device attachment means, and how frequently must the employer inspect the energy-control procedure? Give the strength in the regulation's pounds unit and the inspection interval.",
+   "ask": null,
+   "answer_value": "at least annually (no less than once every 12 months)",
+   "sample_value": "at least every two years",
+   "probability": 0.0034922760186497596,
+   "choice": "no"
+  },
+  {
+   "kind": "contrary",
+   "source": "preregistered, from Q7",
+   "request": "In Table G–16 of $29$ CFR § $1910.95$, July 1, 2014 edition, what permissible daily exposure durations correspond to constant sound levels of $90$, $95$, and $100\\,\\mathrm{dBA}$, measured with slow response? Give the three durations in hours.",
+   "ask": null,
+   "answer_value": "8 h at 90 dBA; 4 h at 95 dBA; 2 h at 100 dBA",
+   "sample_value": "8; 2; 1",
+   "probability": 0.017011579339710172,
+   "choice": "no"
+  }
+ ]
+}
