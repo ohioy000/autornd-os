@@ -50,7 +50,7 @@ REQUIRED_TIERS = ("triage", "engineering", "architecture",
 # The recompute tier joined on 2026-11-13: a 'recompute:' pin was refused
 # as "not a tier this harness runs" while the default workflow made three
 # recompute calls a run, on whichever provider the router chose.
-OPTIONAL_TIERS = ("ranker", "premium", "judge", "recompute")
+OPTIONAL_TIERS = ("ranker", "premium", "judge", "recompute", "decision")
 
 # The parameters the harness sends, by call path. OpenRouter strips a pinned
 # endpoint that does not accept a parameter in the request: "Filter by
@@ -72,7 +72,7 @@ NON_PARAMETER_KEYS = frozenset({"model", "messages", "usage", "provider"})
 # independent pass calls "independent", not "premium" (phases.py).
 CALL_FUNCTIONS = ("triage", "engineering", "architecture", "escalation",
                   "research", "search", "judge", "independent", "ranker",
-                  "recompute")
+                  "recompute", "decision")
 
 
 # A7 (ARCH-20260930-100): temperature is sent on every chat but not required
@@ -95,7 +95,8 @@ def sent_parameters(function: str) -> tuple[str, ...]:
     (its listwise fallback is best-effort and never fails a run)."""
     if function == "search":
         return CHAT_PARAMETERS
-    if function == "ranker":
+    if function in ("ranker", "decision"):
+        # The decisions route takes a state and questions, no chat parameters.
         return ()
     return CHAT_JSON_PARAMETERS
 
@@ -141,7 +142,7 @@ def _general_pins() -> list[str]:
 # fail on.
 PIN_FUNCTIONS = ("triage", "engineering", "architecture", "escalation",
                  "research", "search", "judge", "independent", "ranker",
-                 "recompute")
+                 "recompute", "decision")
 
 
 def _pin_target(name: str, models: dict[str, str]) -> tuple[str | None, str]:
@@ -171,6 +172,10 @@ def _pin_target(name: str, models: dict[str, str]) -> tuple[str | None, str]:
         if models.get("recompute"):
             return models["recompute"], ""
         return None, "MODEL_RECOMPUTE is unset, so no recompute call is made"
+    if name == "decision":
+        if models.get("decision"):
+            return models["decision"], ""
+        return None, "MODEL_DECISION is unset, so no decision call is made"
     if name == "premium":
         return None, ("the independent pass calls function 'independent'; "
                       "write the pin as independent:<provider>")
@@ -354,6 +359,8 @@ def _call_targets() -> dict[str, tuple[str, list[str]]]:
             model = client.independent_model() or ""
         elif function == "recompute":
             model = client.recompute_model() or ""
+        elif function == "decision":
+            model = client.decision_model() or ""
         else:
             model = client.get_model(function)
         if model:

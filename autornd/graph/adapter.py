@@ -39,6 +39,13 @@ from autornd.specialists.registry import get_specialists
 
 logger = logging.getLogger(__name__)
 
+# What the decision-notes node stores when it did not run: its own shape,
+# every note absent, so a reader sees a skip and never a set of notes.
+_DECISION_SKIP: dict[str, Any] = {
+    "skipped": True, "reason": "", "needs_sources": None,
+    "asks": [], "quotes": [], "questions_asked": 0,
+}
+
 __all__ = ["PhaseRunner", "UnknownPromptError"]
 
 
@@ -92,6 +99,9 @@ class PhaseRunner:
         # against it; the paid node appends the novel blockers it sends.
         # regrounding_rounds is 0 or 1 — once is ruled, not configured.
         self.grounding_questions: list[str] = []
+        # Every lookup's source records, as written to the phase channel,
+        # kept so the decision notes can read the quotes that were found.
+        self._sources_seen: list[dict[str, Any]] = []
         self.regrounding_rounds: int = 0
         # Ruling D37, HONEST RECORD: what the first plan pass could not
         # answer, what of it was novel, and what a proceeding plan assumed
@@ -408,6 +418,8 @@ class PhaseRunner:
         record on a zero-cost response, which nothing routes on. Nothing is
         written when no lookup returned a finding.
         """
+        if records:
+            self._sources_seen.append({"lookup": lookup, "findings": records})
         if not records or not self.on_phase:
             return
         self.on_phase(
@@ -954,10 +966,30 @@ class PhaseRunner:
         if node.prompt == "recompute":
             return {"skipped": True, "flagged": False, "reason": reason,
                     "samples": []}
+        if node.prompt == "decision_notes":
+            return dict(_DECISION_SKIP, reason=reason)
         if node.kind is NodeKind.CHECK:
             return {"skipped": True, "passed": False, "detail": reason,
                     "reason": reason}
         return {"skipped": True, "reason": reason}
+
+    async def _phase_decision_notes(self, node: Node, state: ExecutionState):
+        """Narrow notes on the finished answer, from the decision tier.
+
+        Recorded and never read: no gate, loop or status looks at them
+        (owner, 2026-11-13). The tier is optional; unset, the node skips
+        and records the skip, as the recompute does.
+        """
+        if self.client.decision_model() is None:
+            return dict(_DECISION_SKIP, reason=(
+                "no model configured for the decision tier — "
+                "no decision notes were taken")), []
+        implement = state.outputs.get("implement")
+        answer = (implement.get("summary") if isinstance(implement, dict)
+                  else getattr(implement, "summary", None)) or ""
+        return await phases.run_decision_notes(
+            self.client, state.request, str(answer),
+            self._anchored_asks(state), self._sources_seen)
 
     async def _phase_recompute(self, node: Node, state: ExecutionState):
         """The recompute node (Ruling D53): blind recomputation.

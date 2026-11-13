@@ -403,6 +403,9 @@ class OpenRouterClient:
         # never silently fall back to the engineering tier.
         **({"recompute": settings.model_recompute}
            if settings.model_recompute else {}),
+        # The decision tier: same optional-tier contract, no fallback.
+        **({"decision": settings.model_decision}
+           if settings.model_decision else {}),
     }
 
     def __init__(self, api_key: str | None = None, base_url: str | None = None):
@@ -856,6 +859,74 @@ class OpenRouterClient:
         not what the vote measures.
         """
         return self.FUNCTION_MODELS.get("recompute")
+
+    def decision_model(self) -> str | None:
+        """The decision tier's model, or None when it is not configured.
+
+        No fallback, as the recompute tier has none: a chat model cannot
+        answer the decisions route, so an unset tier is a skip.
+        """
+        return self.FUNCTION_MODELS.get("decision")
+
+    def decisions_url(self) -> str:
+        """Where a decisions request is posted.
+
+        The route sits beside the chat API, not under it: .../api/v1 for
+        chat, .../api/alpha/decisions for this. It is an alpha route (read
+        2026-11-13), so its shape may change; the call below reads only
+        `answers` and `usage`.
+        """
+        base = self.base_url.rstrip("/").removesuffix("/v1")
+        return f"{base}/alpha/decisions"
+
+    async def decide(
+        self, state: dict[str, Any], questions: dict[str, dict[str, Any]],
+    ) -> tuple[dict[str, Any], ModelResponse]:
+        """Ask a decision model typed questions about `state`.
+
+        Returns (answers keyed by question name, the response). An answer
+        is the provider's own typed object: {"type": "noul", "noul": p},
+        a choice with its probabilities, or a score. Nothing here reads
+        text. Guarded and accounted as every other post is (D45, D47); a
+        decision reply has no completion side, so the worst case is the
+        request's bytes bounded as prompt.
+        """
+        model = self.get_model("decision")
+        client = await self._get_client()
+        body: dict[str, Any] = {"model": model, "state": state,
+                                "questions": questions}
+        order = provider_order_for("decision")
+        if order:
+            body["provider"] = {"order": order,
+                                "allow_fallbacks": provider_fallbacks_allowed()}
+        reservation = self._guard_spend(
+            "decision", model, _prompt_bytes(json.dumps(body)), max_tokens=0)
+        self._in_flight += 1
+        reconciled = False
+        try:
+            resp = await client.post(self.decisions_url(), json=body)
+            _raise_for_status(resp, "decisions")
+            data = resp.json()
+            answers = data.get("answers")
+            if not isinstance(answers, dict):
+                raise ValueError("the decisions reply carries no answers")
+            usage = data.get("usage", {}) or {}
+            cost = float(usage.get("cost") or 0.0)
+            tokens = int(usage.get("input_tokens") or 0)
+            reconciled = True
+            self._release(reservation)
+            self._account("decision", cost, prompt_tokens=tokens,
+                          reservation=reservation)
+        except BaseException as exc:
+            if not reconciled:
+                self._fail_call("decision", model, _failure_kind(exc),
+                                reservation)
+            raise
+        return answers, ModelResponse(
+            content="", model=str(data.get("model") or model),
+            prompt_tokens=tokens,
+            completion_tokens=int(usage.get("output_tokens") or 0),
+            cost=cost, provider=data.get("provider"))
 
     async def chat(
         self,
@@ -1583,4 +1654,7 @@ def rebuild_function_models() -> None:
         # so the recompute node skips rather than falling back.
         **({"recompute": settings.model_recompute}
            if settings.model_recompute else {}),
+        # The decision tier: same optional-tier contract, no fallback.
+        **({"decision": settings.model_decision}
+           if settings.model_decision else {}),
     }

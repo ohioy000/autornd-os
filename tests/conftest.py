@@ -54,6 +54,7 @@ PLACEHOLDERS: dict[str, str] = {
     "MODEL_PREMIUM": "",
     "MODEL_JUDGE": "",
     "MODEL_RECOMPUTE": "",
+    "MODEL_DECISION": "",
     # everything else — the declared defaults
     "DATABASE_URL": "sqlite+aiosqlite:///./autornd.db",
     "API_HOST": "127.0.0.1",
@@ -290,7 +291,7 @@ def seal_double(client: OpenRouterClient) -> OpenRouterClient:
     and needs nothing; this is for the half-patched kind. Methods already
     stubbed are left alone, so it is safe to call on any double.
     """
-    for name in ("chat", "chat_json", "rerank"):
+    for name in ("chat", "chat_json", "rerank", "decide"):
         method = getattr(client, name)
         if isinstance(method, AsyncMock):
             continue
