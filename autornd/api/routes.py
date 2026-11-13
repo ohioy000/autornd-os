@@ -254,6 +254,10 @@ class WorkflowDetail(WorkflowSummary):
     # The recompute vote's last record (Ruling D53), a note beside the
     # answer: flagged, unchecked or agreed. None when no vote ran.
     recompute_vote: dict | None = None
+    # A decision model's narrow notes on the answer, each a probability.
+    # Notes only: nothing in the run read them. None when the workflow has
+    # no such node.
+    decision_notes: dict | None = None
     # What each lookup read (Ruling D56): per question, the pages quoted,
     # whether each was fetched and whether its quote was found there.
     sources: list[dict] = Field(default_factory=list)
@@ -493,6 +497,8 @@ def _detail(w: Workflow) -> WorkflowDetail:
         candidate=candidate,
         answer=answer,
         recompute_vote=vote,
+        decision_notes=next((v for name, v in reversed(verdicts)
+                             if name == "decision_notes"), None),
         sources=sources,
         cautions=_cautions(vote, sources, answer is not None),
         id=w.id,

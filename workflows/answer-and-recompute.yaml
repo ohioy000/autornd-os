@@ -153,3 +153,18 @@ nodes:
       skipped: recompute.skipped
       reason: recompute.reason
     depends_on: [recompute]
+
+  # ── decision notes ───────────────────────────────────────────────
+  # One request to a decision model on the optional decision tier:
+  # narrow yes/no questions about the finished answer (does it give
+  # each ask, does each found quote state an answer to its question,
+  # did the request need sources), each recorded as a probability.
+  # Notes only (owner, 2026-11-13): nothing blocks, routes or revises
+  # on them, and the run's status is decided without them. When the
+  # tier is not configured the node skips and records the skip.
+  - id: decision_notes
+    kind: ai
+    tier: decision
+    prompt: decision_notes
+    advisory: true
+    depends_on: [recompute_vote]

@@ -61,6 +61,13 @@ class Settings(BaseSettings):
     # unset means the recompute node skips — a skip is recorded,
     # never read as a pass — and the workflow runs without it.
     model_recompute: str = ""
+    # The decision tier: a decision model, which returns typed answers with
+    # probabilities and no text, asked a few narrow questions about a
+    # finished answer and recorded as notes. Nothing routes on them (owner,
+    # 2026-11-13: record first, and give a note a role only if a measurement
+    # shows it tracks correctness). Optional like the recompute tier: unset
+    # means the node skips and records the skip.
+    model_decision: str = ""
 
     # Pin which upstream serves requests, comma separated, highest first. Empty
     # means the provider decides, which favours availability over
@@ -299,6 +306,13 @@ class Settings(BaseSettings):
             raise ValueError(f"Recompute model ID must contain '/' (got '{v}')")
         return v
 
+    @field_validator("model_decision")
+    @classmethod
+    def validate_decision_model(cls, v: str) -> str:
+        if v and "/" not in v:
+            raise ValueError(f"Decision model ID must contain '/' (got '{v}')")
+        return v
+
     @field_validator("log_level")
     @classmethod
     def validate_log_level(cls, v: str) -> str:
@@ -342,6 +356,8 @@ _OPTIONAL_TIERS = {
                    "falls back to the engineering tier when unset",
     "model_recompute": "blind recompute samples for the recompute vote "
                        "— the node skips when unset",
+    "model_decision": "a decision model's narrow notes on a finished answer "
+                      "— recorded, never routed on; the node skips when unset",
 }
 
 

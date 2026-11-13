@@ -76,10 +76,12 @@ def _double(router, fail_on=(), error=None, delay=None):
 
 
 def _stripped(spec: WorkflowSpec) -> WorkflowSpec:
-    """The same workflow without the recompute and its vote."""
+    """The same workflow without the recompute, its vote and the decision
+    notes that follow them."""
     return WorkflowSpec(
         spec.name,
-        [n for n in spec.nodes if n.id not in {"recompute", "recompute_vote"}],
+        [n for n in spec.nodes
+         if n.id not in {"recompute", "recompute_vote", "decision_notes"}],
         spec.description)
 
 
@@ -146,8 +148,11 @@ class TestTheWatchdog:
         assert full.outputs["recompute"]["samples"] == []
         assert full.outputs["recompute_vote"]["skipped"] is True
         assert full.watchdog.fired is False
-        assert [c["rule"] for c in full.watchdog.advisory_cuts] == ["cancelled"]
-        assert full.watchdog.advisory_cuts[0]["node"] == "recompute"
+        # The decision notes come after the cut, with the time spent: they
+        # are refused before they start, and the run still completes.
+        assert [(c["node"], c["rule"]) for c in full.watchdog.advisory_cuts] == [
+            ("recompute", "cancelled"), ("decision_notes", "not_started")]
+        assert full.outputs["decision_notes"]["skipped"] is True
         assert full.watchdog.advisory_cuts[0]["billing"] == ABANDONED_CALL_BILLING
 
     async def test_breakproof_a_cut_recompute_not_advisory_blocks_the_run(self):
@@ -281,14 +286,17 @@ class TestUnchangedElsewhere:
         with pytest.raises(SpecError, match="must be true or false"):
             _spec(advisory="yes")
 
-    def test_only_the_recompute_is_advisory_in_the_shipped_workflows(self):
+    def test_only_the_note_takers_are_advisory_in_the_shipped_workflows(self):
+        """The recompute, and since 2026-11-13 the decision notes: both
+        record a note and neither may change a run's status."""
         from pathlib import Path
 
         marked = sorted(
             (path.stem, node.id)
             for path in Path("workflows").glob("*.yaml")
             for node in load(path).nodes if node.advisory)
-        assert marked == [("answer-and-recompute", "recompute")]
+        assert marked == [("answer-and-recompute", "decision_notes"),
+                          ("answer-and-recompute", "recompute")]
 
 
 class TestTheIdent:

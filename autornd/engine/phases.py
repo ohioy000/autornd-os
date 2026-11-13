@@ -1555,3 +1555,116 @@ Original Request:
     verdict = EscalationVerdict(**data)
     return verdict, response
 
+
+
+# ── Decision notes ───────────────────────────────────────────────────────────
+
+# What a decision model is asked about a finished answer. Each is one narrow
+# yes/no question whose evidence is in the state it is given; none asks
+# whether the answer is correct, which a model that recomputes nothing cannot
+# know. Chosen with the owner on 2026-11-13. The bounds keep one request
+# small: the questions are answered side by side from one state.
+DECISION_MAX_ASKS = 12
+DECISION_MAX_QUOTES = 12
+
+
+def _decision_probability(answer: Any) -> float | None:
+    """The probability a yes/no answer states, or None when it states none
+    (a refusal, a missing question, a number outside 0 to 1)."""
+    value = answer.get("noul") if isinstance(answer, dict) else None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value) if 0.0 <= value <= 1.0 else None
+
+
+async def run_decision_notes(
+    client: OpenRouterClient,
+    request: str,
+    answer: str,
+    asks: list[Any] | None,
+    sources: list[dict[str, Any]] | None,
+) -> tuple[dict[str, Any], list[ModelResponse]]:
+    """Narrow notes on a finished answer, from the decision tier.
+
+    One request, three kinds of question:
+      needs_sources  does the request need outside sources to be answered?
+      ask_<n>        does the answer give what anchored ask n asks for?
+      quote_<i>      does found quote i bear on the question it was quoted for?
+    Each comes back as a probability of yes and is recorded as that number.
+    Nothing reads them: they are notes, to be compared with hand readings.
+    """
+    state: dict[str, Any] = {"request": request, "answer": answer}
+    questions: dict[str, dict[str, Any]] = {
+        "needs_sources": {
+            "type": "noul",
+            "instructions": (
+                "Look only at state.request. Can it be answered correctly "
+                "only with facts from an outside source, such as a "
+                "standard, a regulation, a datasheet or a published "
+                "measurement?"),
+            "criteria": {
+                "true": "It turns on a figure or wording that a named or "
+                        "implied outside document holds.",
+                "false": "It can be worked out from what the request "
+                         "itself states and general principles."},
+        },
+    }
+    asked: list[dict[str, Any]] = []
+    for ask in (asks or [])[:DECISION_MAX_ASKS]:
+        field = ask.get if isinstance(ask, dict) else (
+            lambda key, ask=ask: getattr(ask, key, None))
+        number = field("number")
+        quote = str(field("quote") or "").strip()
+        if not isinstance(number, int) or not quote:
+            continue
+        state.setdefault("asks", {})[str(number)] = quote
+        questions[f"ask_{number}"] = {
+            "type": "noul",
+            "instructions": (
+                f"state.asks[\"{number}\"] quotes one thing the request "
+                f"asks for. Does state.answer give it?"),
+            "criteria": {
+                "true": "The answer states a definite value, verdict, step "
+                        "or text for this ask.",
+                "false": "The answer leaves this ask out, defers it, or "
+                         "says it cannot be given."},
+        }
+        asked.append({"ask": number})
+    quoted: list[dict[str, Any]] = []
+    for record in sources or []:
+        for finding in record.get("findings") or []:
+            for quote in finding.get("quotes") or []:
+                if (quote.get("status") != "found"
+                        or len(quoted) >= DECISION_MAX_QUOTES):
+                    continue
+                index = len(quoted)
+                state.setdefault("quotes", {})[str(index)] = {
+                    "question": finding.get("question", ""),
+                    "passage": quote.get("text", "")}
+                questions[f"quote_{index}"] = {
+                    "type": "noul",
+                    "instructions": (
+                        f"state.quotes[\"{index}\"] holds a question and a "
+                        f"passage quoted from a source. Does the passage "
+                        f"itself state an answer to the question?"),
+                    "criteria": {
+                        "true": "The passage states the fact or figure the "
+                                "question asks for.",
+                        "false": "The passage is about the subject but "
+                                 "does not state what the question asks "
+                                 "for, or is about something else."},
+                }
+                quoted.append({"quote": index, "url": quote.get("url", "")})
+    answers, response = await client.decide(state, questions)
+    for entry in asked:
+        entry["addressed"] = _decision_probability(
+            answers.get(f"ask_{entry['ask']}"))
+    for entry in quoted:
+        entry["bears_on_question"] = _decision_probability(
+            answers.get(f"quote_{entry['quote']}"))
+    return {
+        "skipped": False, "reason": "",
+        "needs_sources": _decision_probability(answers.get("needs_sources")),
+        "asks": asked, "quotes": quoted,
+        "questions_asked": len(questions),
+    }, [response]

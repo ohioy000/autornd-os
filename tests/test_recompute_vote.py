@@ -1056,7 +1056,7 @@ class TestTheWorkflow:
         assert spec.ids == [
             "triage", "asks", "asks_anchored", "context", "implement",
             "blocked_check", "blocked_gate", "coverage", "consistency",
-            "recompute", "recompute_vote"]
+            "recompute", "recompute_vote", "decision_notes"]
         recompute = spec.get("recompute")
         assert recompute.kind is NodeKind.AI
         assert recompute.tier == "recompute"
@@ -1132,7 +1132,8 @@ class TestTheWorkflow:
         stripped = WorkflowSpec(
             spec.name,
             [n for n in spec.nodes
-             if n.id not in {"recompute", "recompute_vote"}],
+             if n.id not in {"recompute", "recompute_vote",
+                             "decision_notes"}],
             spec.description)
         full, _, _ = await _drive(
             spec, _workflow_router(100.0, [200.0, 200.0, 200.0]),
