@@ -81,7 +81,7 @@ def _stripped(spec: WorkflowSpec) -> WorkflowSpec:
     return WorkflowSpec(
         spec.name,
         [n for n in spec.nodes
-         if n.id not in {"recompute", "recompute_vote", "decision_notes"}],
+         if n.id not in {"recompute", "recompute_vote", "answer_switches"}],
         spec.description)
 
 
@@ -151,8 +151,8 @@ class TestTheWatchdog:
         # The decision notes come after the cut, with the time spent: they
         # are refused before they start, and the run still completes.
         assert [(c["node"], c["rule"]) for c in full.watchdog.advisory_cuts] == [
-            ("recompute", "cancelled"), ("decision_notes", "not_started")]
-        assert full.outputs["decision_notes"]["skipped"] is True
+            ("recompute", "cancelled"), ("answer_switches", "not_started")]
+        assert full.outputs["answer_switches"]["skipped"] is True
         assert full.watchdog.advisory_cuts[0]["billing"] == ABANDONED_CALL_BILLING
 
     async def test_breakproof_a_cut_recompute_not_advisory_blocks_the_run(self):
@@ -295,8 +295,9 @@ class TestUnchangedElsewhere:
             (path.stem, node.id)
             for path in Path("workflows").glob("*.yaml")
             for node in load(path).nodes if node.advisory)
-        assert marked == [("answer-and-recompute", "decision_notes"),
-                          ("answer-and-recompute", "recompute")]
+        assert marked == [("answer-and-recompute", "answer_switches"),
+                          ("answer-and-recompute", "recompute"),
+                          ("answer-and-recompute", "request_switches")]
 
 
 class TestTheIdent:

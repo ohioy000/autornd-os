@@ -18,6 +18,7 @@ from autornd.knowledge.store import retrieve
 from autornd.models.verdicts import Domain, SpecialistRole
 
 from autornd.routing.openrouter import BudgetExceeded
+from autornd.routing.switches import NO, YES, current_switchboard, route_for
 
 logger = logging.getLogger(__name__)
 
@@ -313,6 +314,45 @@ Return JSON with:
   answer. Often empty. Never more than three."""
 
 
+async def _lookup_wanted(request: str, risk: object) -> tuple[bool, bool]:
+    """Is a grounding lookup wanted: (demanded whatever the gaps, wanted by
+    the risk rating).
+
+    The free rule comes first: a request that asks for its sources in words
+    is demanded, and no switch is asked. Otherwise the needs_sources switch
+    is asked, when there is a decision tier and a search model to act on it.
+    Live, a yes demands the lookup as the words would, and a no bars the one
+    the risk rating alone would have bought. In shadow, or with no tier, the
+    route is `default` and both values are what they were before the switch.
+    """
+    if request_demands_sources(request):
+        return True, worth_a_lookup(risk)
+    route = (await route_for("needs_sources", {"request": request})
+             if settings.model_search else "default")
+    return route == YES, worth_a_lookup(risk) and route != NO
+
+
+async def _helpful_chunks(query: str, candidates: list[dict]) -> list[dict]:
+    """The candidates less those the chunk_helps switch routes out.
+
+    Asked of the nearest RERANK_CANDIDATES, in one request. Live, a confident
+    no drops the excerpt; anything else keeps it. In shadow, or with no
+    tier, every candidate is kept.
+    """
+    board = current_switchboard()
+    if board is None or not candidates:
+        return candidates
+    asked = candidates[:RERANK_CANDIDATES]
+    records = await board.ask([
+        ("chunk_helps", str(chunk.get("tag", "")),
+         {"question": query, "excerpt": chunk["text"]}) for chunk in asked])
+    if len(records) != len(asked):
+        return candidates
+    dropped = {id(chunk) for chunk, record in zip(asked, records)
+               if record["route"] == NO}
+    return [chunk for chunk in candidates if id(chunk) not in dropped]
+
+
 async def expand_queries(client, request: str) -> list[str]:
     """Turn a request into targeted documentation queries (research tier).
 
@@ -430,11 +470,10 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
         # Only the gaps that change the answer are looked up. Every gap is
         # still shown above, because an engineer wants to know what is missing
         # whether or not it was worth a search fee.
-        demanded = request_demands_sources(request)
+        demanded, risk_asks = await _lookup_wanted(request, risk)
         if demanded and not blocking:
             blocking = [request]
-        if blocking and settings.model_search and (
-                worth_a_lookup(risk) or demanded):
+        if blocking and settings.model_search and (risk_asks or demanded):
             from autornd.knowledge.research import render_findings, research_gaps
 
             findings = await research_gaps(client, request, blocking,
@@ -576,7 +615,8 @@ async def load_retrieval_context(query: str, n_results: int = 5, client=None,
         for chunk in retrieve(q, n_results=max(n_results, RERANK_CANDIDATES)):
             if chunk["distance"] <= RETRIEVAL_MAX_DISTANCE:
                 seen.setdefault(chunk["text"], chunk)
-    candidates = sorted(seen.values(), key=lambda c: c["distance"])
+    candidates = await _helpful_chunks(
+        query, sorted(seen.values(), key=lambda c: c["distance"]))
     if not candidates:
         return ""
 
@@ -737,11 +777,10 @@ async def build_phase_context(
             # that most needs looking things up. The unknowns scoping found are
             # the queries — the same mechanism as documentation gaps, from the
             # only other place that knows what is missing.
-            demanded = request_demands_sources(request)
+            demanded, risk_asks = await _lookup_wanted(request, risk)
             if demanded and not unknowns:
                 unknowns = [request]
-            if unknowns and settings.model_search and (
-                    worth_a_lookup(risk) or demanded):
+            if unknowns and settings.model_search and (risk_asks or demanded):
                 from autornd.knowledge.research import render_findings, research_gaps
 
                 findings = await research_gaps(client, request, unknowns,

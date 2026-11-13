@@ -38,6 +38,7 @@ from autornd.knowledge.store import ingest_text, retrieve
 from autornd.models.verdicts import LookupVerdict, QuotedPassage
 
 from autornd.routing.openrouter import BudgetExceeded, extract_json
+from autornd.routing.switches import YES, route_for
 
 logger = logging.getLogger(__name__)
 
@@ -367,7 +368,7 @@ async def research_gaps(
         # everywhere else: the local check is free and it is also more
         # consistent, because it returns the figure already cited rather than
         # re-asking and hoping for the same answer.
-        reused = _recall(question)
+        reused = _recall(question) or await _recall_by_switch(question)
         if reused is not None:
             findings.append(reused)
             continue
@@ -446,6 +447,47 @@ async def _check(finding: Finding) -> None:
             quote.fetched_at, quote.sha256 = source.fetched_at, source.sha256
             quote.status = ("found" if quote_found(quote.text, source.text)
                             else "not_found")
+
+
+# How far a stored finding may be from a question and still be put to the
+# finding_answers switch. The reuse rule above takes only a near restatement
+# (REUSE_DISTANCE); a finding that answers the question in other words lies
+# further out. The bound is the retrieval bound's own measurement
+# (2026-11-13): material on the right subject lay at 0.80 or nearer.
+REUSE_CANDIDATE_DISTANCE = 0.81
+
+
+async def _recall_by_switch(question: str) -> Finding | None:
+    """A stored finding the finding_answers switch says answers this gap.
+
+    Asked only when the reuse rule declined and the nearest stored finding is
+    still near enough to be a candidate. Live, a confident yes reuses it and
+    no search is paid for; anything else, shadow included, looks it up.
+    """
+    try:
+        hits = retrieve(question, n_results=1, where={"tag": RESEARCH_TAG})
+    except Exception as exc:
+        logger.debug("Could not check the store for %r: %s", question[:60], exc)
+        return None
+    if not hits:
+        return None
+    hit = hits[0]
+    distance = hit.get("distance")
+    if distance is None or not REUSE_DISTANCE < distance <= REUSE_CANDIDATE_DISTANCE:
+        return None
+    route = await route_for("finding_answers",
+                            {"question": question, "passage": hit["text"]},
+                            label=str(hit.get("source", "")))
+    if route != YES:
+        return None
+    logger.info("Reusing a stored finding for %r on the switch (distance %.3f)"
+                " — no lookup", question[:60], distance)
+    return Finding(
+        question=question,
+        answer=hit["text"],
+        citations=[hit["source"]] if hit.get("source") else [],
+        model="recalled",
+    )
 
 
 def _recall(question: str) -> Finding | None:

@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1837%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1882%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -316,7 +316,7 @@ AutoRnD routes each phase to a named tier and will not start until every require
 | **Premium** | the independent pass on work that cannot be recalled. Falls back to the architecture tier when empty |
 | **Judge** | reviews the implementation — domain review, validate, review — on a different model from the one that produced it, so a producer's blind spots do not grade themselves. Falls back to the engineering tier when empty. Capped by `JUDGE_MAX_TOKENS` |
 | **Recompute** | blind recomputation: separate samples recompute an answer's key figures from the request, without seeing the answer, and a free check votes them against the answer's typed results — a flag is a note on the delivery, never a block. Runs only on the `answer-and-recompute` workflow; empty, the recompute node skips and the vote records the skip. Capped by `RECOMPUTE_MAX_TOKENS` |
-| **Decision** | a decision model (one that returns typed answers with probabilities, and no text) is asked a few narrow yes/no questions about the finished answer on the default workflow: does it give each ask, does each found quote state an answer to its question, did the request need outside sources. Each is recorded as a probability on the delivery (`decision_notes`). They are notes: nothing blocks, routes or revises on them. Runs only when set; empty, the step skips and says so |
+| **Decision** | a decision model (one that returns typed answers with probabilities, and no text) answers the decision switches: small yes/no questions, each guarding a step that costs far more. They are declared in `switches/default.yaml` with two thresholds, a safe answer and a mode. In `shadow` a switch is recorded and nothing acts on it; in `live` the harness acts on a confident answer and takes the safe, more careful side on anything else. Shipped live: whether a request needs outside sources, which runs the grounding lookup whatever triage rated the risk. Shipped in shadow: whether a retrieved excerpt helps, whether a stored finding answers a new question, whether a request is hard, whether the answer gives each ask, whether a found quote answers its question. Every answer is returned on the delivery as `decisions`. Runs only when set; empty, no switch is asked and the harness behaves as it did without them |
 
 ### Choose non-reasoning models for the tiers that fill a schema
 

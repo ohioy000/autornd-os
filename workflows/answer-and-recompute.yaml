@@ -48,6 +48,21 @@ nodes:
     check: build_context
     depends_on: [asks_anchored]
 
+  # ── decision switches, before the answer ─────────────────────────
+  # The switches that read the request alone: is it a hard request.
+  # Its route is at request_switches.route.hard_request for a
+  # tier_when to read; in shadow that is `default`, so nothing here
+  # routes on it. Advisory: a failure or a cut is a recorded skip
+  # and the answer is written all the same.
+  - id: request_switches
+    kind: ai
+    tier: decision
+    prompt: switches
+    advisory: true
+    args:
+      ask: [hard_request]
+    depends_on: [context]
+
   # ── answer ───────────────────────────────────────────────────────
   # The one answer, on the engineering tier, from the request and
   # the asks with no plan. The implement prompt omits its 'Plan:'
@@ -64,7 +79,7 @@ nodes:
     prompt: implement
     schema: ImplementVerdict
     max_tokens: plan_max_tokens    # the deliverable is plan-sized; 16k truncated it twice (073, 075)
-    depends_on: [context]
+    depends_on: [context, request_switches]
     args:
       results: true
 
@@ -154,17 +169,18 @@ nodes:
       reason: recompute.reason
     depends_on: [recompute]
 
-  # ── decision notes ───────────────────────────────────────────────
-  # One request to a decision model on the optional decision tier:
-  # narrow yes/no questions about the finished answer (does it give
-  # each ask, does each found quote state an answer to its question,
-  # did the request need sources), each recorded as a probability.
-  # Notes only (owner, 2026-11-13): nothing blocks, routes or revises
-  # on them, and the run's status is decided without them. When the
-  # tier is not configured the node skips and records the skip.
-  - id: decision_notes
+  # ── decision switches, after the answer ─────────────────────────
+  # The switches declared in switches/default.yaml that read the
+  # finished answer: does it give each ask, does each quote found on
+  # its page state an answer to its question. One request on the
+  # optional decision tier. Both ship in shadow: recorded, and
+  # nothing blocks, routes or revises on them. The run's status is
+  # decided without this node; with no decision tier it skips.
+  - id: answer_switches
     kind: ai
     tier: decision
-    prompt: decision_notes
+    prompt: switches
     advisory: true
+    args:
+      ask: [ask_covered, quote_answers]
     depends_on: [recompute_vote]
