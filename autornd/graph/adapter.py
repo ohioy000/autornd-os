@@ -17,7 +17,8 @@ from typing import Any, Callable
 
 from autornd.config import settings
 from autornd.engine import phases
-from autornd.graph.checks import Result, _normalize_question, get_check, registry
+from autornd.graph.checks import (
+    Result, _normalize_question, get_check, registry, text_disagreements)
 from autornd.graph.executor import ExecutionState, resolve_args
 from autornd.graph.spec import (
     FANOUT_ASSIGNED,
@@ -36,7 +37,7 @@ from autornd.models.verdicts import Domain, role_key
 from autornd.profiles import get_profile
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
 from autornd.routing.switches import (
-    Switchboard, release_switchboard, use_switchboard)
+    Switchboard, head_and_tail, release_switchboard, use_switchboard)
 from autornd.specialists.base import Specialist
 from autornd.specialists.registry import get_specialists
 
@@ -64,13 +65,31 @@ def _ask_items(runner: Any, state: ExecutionState) -> list[tuple[str, Any]]:
     implement = state.outputs.get("implement")
     answer = (implement.get("summary") if isinstance(implement, dict)
               else getattr(implement, "summary", None)) or ""
+    # The head and the tail of a long answer, not the head alone: a verdict
+    # or a last step sits at the end. Measured 2026-11-13: in the tier-2 run
+    # all four answers ask_covered scored low were longer than the bound,
+    # their verdicts past the cut; in golden batch 1, Q5 r2's release step
+    # and verdict were at characters 6553 and 8732 of 9265.
+    answer = head_and_tail(str(answer))
     items = []
     for ask in runner._anchored_asks(state) or []:
         number, quote = ask.get("number"), str(ask.get("quote") or "").strip()
         if isinstance(number, int) and quote:
             items.append((f"ask {number}",
-                          {"item": quote, "answer": str(answer)}))
+                          {"item": quote, "answer": answer}))
     return items
+
+
+def _disagreement_items(runner: Any, state: ExecutionState
+                        ) -> list[tuple[str, Any]]:
+    recompute = state.outputs.get("recompute")
+    samples = (recompute.get("samples") if isinstance(recompute, dict)
+               else getattr(recompute, "samples", None)) or []
+    return [(f"ask {d['ask']}",
+             {"request": state.request, "answer_value": d["answer"],
+              "sample_value": d["majority"]})
+            for d in text_disagreements(state.outputs.get("recompute_vote"),
+                                        samples)]
 
 
 def _quote_items(runner: Any, state: ExecutionState) -> list[tuple[str, Any]]:
@@ -88,6 +107,7 @@ def _quote_items(runner: Any, state: ExecutionState) -> list[tuple[str, Any]]:
 # kind of evidence is a new entry here, not a new branch.
 _SWITCH_ITEMS: dict[str, Callable[..., list[tuple[str, Any]]]] = {
     "request": _request_item, "asks": _ask_items, "quotes": _quote_items,
+    "disagreements": _disagreement_items,
 }
 
 
@@ -1053,7 +1073,8 @@ class PhaseRunner:
                       ) -> list[tuple[str, str, Any]]:
         """What one switch is asked about in this run, by what it is
         declared to read: one item for `request`, one per anchored ask for
-        `asks`, one per quote found on its page for `quotes`."""
+        `asks`, one per quote found on its page for `quotes`, one per text
+        ask the recompute vote flagged for `disagreements`."""
         collect = _SWITCH_ITEMS.get(switch.each)
         if collect is None:
             return []

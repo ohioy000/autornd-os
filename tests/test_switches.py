@@ -270,7 +270,7 @@ class TestTheDeclarations:
         shipped = load_switches(switches.SWITCHES_FILE)
         assert sorted(shipped) == [
             "ask_covered", "chunk_helps", "finding_answers", "hard_request",
-            "needs_sources", "quote_answers"]
+            "needs_sources", "quote_answers", "same_meaning"]
         assert sorted(s.name for s in shipped.values() if s.mode == LIVE) == [
             "needs_sources"]
         for switch in shipped.values():
@@ -279,6 +279,9 @@ class TestTheDeclarations:
         assert shipped["needs_sources"].safe == YES
         assert shipped["chunk_helps"].safe == YES
         assert shipped["finding_answers"].safe == NO
+        # Unsure keeps the vote's flag: the careful side is "they differ".
+        assert shipped["same_meaning"].safe == NO
+        assert shipped["same_meaning"].each == "disagreements"
 
 
 class TestTheSwitchboard:
@@ -480,7 +483,8 @@ class TestTheSwitchNodes:
         state = await _run(client, recorded)
         assert state.status == "completed" and asked == []
         for node, names in (("request_switches", ["hard_request"]),
-                            ("answer_switches", ["ask_covered", "quote_answers"])):
+                            ("answer_switches", ["same_meaning", "ask_covered",
+                                                 "quote_answers"])):
             out = state.outputs[node]
             assert out["skipped"] is True and out["records"] == []
             assert out["route"] == {name: DEFAULT for name in names}
@@ -570,6 +574,111 @@ class TestTheSwitchNodes:
         assert name == "switches" and len(verdict["records"]) == 3
         assert len(responses) == 1
         assert responses[0].cost == pytest.approx(0.00006)
+
+
+@pytest.fixture
+def recompute_tier(monkeypatch):
+    """The recompute tier set, so the vote has samples to compare."""
+    monkeypatch.setattr(openrouter.settings, "model_recompute",
+                        "vendor/recompute-tier")
+    monkeypatch.setitem(OpenRouterClient.FUNCTION_MODELS, "recompute",
+                        "vendor/recompute-tier")
+
+
+def _worded(router, answer_words, sample_words):
+    """The workflow double with ask 2, the verdict ask, stated in words:
+    the answer's own, and every sample's."""
+    def route(user_message, calls):
+        data = router(user_message, calls)
+        if user_message.startswith("Produce the answer to the following request"):
+            data = dict(data, results=[data["results"][0],
+                                       {"ask": 2, "value": answer_words, "unit": ""}])
+        elif user_message.startswith(REQUEST):
+            data = {"results": [data["results"][0],
+                                {"ask": 2, "value": sample_words, "unit": ""}]}
+        return data
+    return route
+
+
+class TestSameMeaning:
+    """The vote's text flags, put to the decision tier in shadow (the owner,
+    2026-11-13, on that day's same-meaning replay: yes on 9 of 10 flags on
+    right answers, no on all 6 contrary pairs)."""
+
+    async def test_a_text_flag_is_asked_with_a_samples_own_words(
+            self, decision_tier, recompute_tier):
+        client, asked = _with_decisions(_worded(
+            _workflow_router(60.0, [60.0] * 3), "yes, full jitter applies", "Yes."))
+        state = await _run(client)
+        vote = state.outputs["recompute_vote"]
+        assert vote["flagged"] is True
+        assert [(d["ask"], d["majority"]) for d in vote["disagreements"]] == [(2, "YES")]
+        first = state.outputs["answer_switches"]["records"][0]
+        assert (first["switch"], first["item"], first["route"]) == (
+            "same_meaning", "ask 2", DEFAULT)
+        # The sample's words, not the identifier the vote compared.
+        assert asked[-1][0]["q0"] == {"request": REQUEST,
+                                      "answer_value": "yes, full jitter applies",
+                                      "sample_value": "Yes."}
+
+    @pytest.mark.parametrize("probability", [0.0, 1.0])
+    async def test_in_shadow_its_answer_changes_nothing(
+            self, decision_tier, recompute_tier, probability):
+        runs = []
+        for answer in (lambda e: 0.5, lambda e: probability):
+            client, _ = _with_decisions(_worded(
+                _workflow_router(60.0, [60.0] * 3), "yes, full jitter applies",
+                "Yes."), answer=answer)
+            runs.append(await _run(client))
+        first, second = runs
+        assert first.status == second.status == "completed"
+        assert first.outputs["recompute_vote"] == second.outputs["recompute_vote"]
+        assert first.outputs["recompute_vote"]["flagged"] is True
+
+    @pytest.mark.parametrize("answer_value, samples", [
+        (100.0, [200.0] * 3),     # a number flagged: not a question of words
+        (60.0, [60.0] * 3)])      # nothing flagged
+    async def test_only_a_text_flag_is_asked(
+            self, decision_tier, recompute_tier, answer_value, samples):
+        client, _ = _with_decisions(_workflow_router(answer_value, samples))
+        state = await _run(client)
+        assert state.outputs["recompute_vote"]["flagged"] is (answer_value == 100.0)
+        switches_asked = [r["switch"] for r in
+                          state.outputs["answer_switches"]["records"]]
+        assert switches_asked and "same_meaning" not in switches_asked
+
+
+class TestHeadAndTail:
+    def test_a_text_within_the_bound_is_sent_as_it_is(self):
+        text = "a" * switches.MAX_EVIDENCE_CHARS
+        assert switches.head_and_tail(text) == text
+
+    def test_a_long_text_keeps_its_opening_and_its_end_within_the_bound(self):
+        text = "OPENING " + "middle " * 2000 + " THE VERDICT: PASS."
+        sent = switches.head_and_tail(text)
+        assert len(sent) == switches.MAX_EVIDENCE_CHARS
+        assert sent.startswith("OPENING ") and sent.endswith("THE VERDICT: PASS.")
+        assert f"{len(text)} characters in all" in sent
+
+    async def test_ask_covered_is_shown_the_end_of_a_long_answer(self, decision_tier):
+        """Golden batch 1's Q5 r2: its release step and verdict sat at
+        characters 6553 and 8732 of 9265, past the head the switch saw."""
+        long = SUMMARY + "\n\n" + "The timer is reviewed. " * 400 + "\nVERDICT: PASS."
+        router = _workflow_router(200.0, [200.0] * 3)
+
+        def route(user_message, calls):
+            data = router(user_message, calls)
+            if user_message.startswith("Produce the answer to the following request"):
+                data = dict(data, summary=long)
+            return data
+
+        client, asked = _with_decisions(route)
+        state = await _run(client)
+        assert state.status == "completed"
+        evidence = asked[-1][0]["q0"]
+        assert evidence["item"] and len(long) > switches.MAX_EVIDENCE_CHARS
+        assert evidence["answer"].startswith(SUMMARY[:200])
+        assert evidence["answer"].endswith("VERDICT: PASS.")
 
 
 class TestTheDelivery:

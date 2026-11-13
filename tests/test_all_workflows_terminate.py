@@ -74,9 +74,12 @@ class TestEveryWorkflowReachesATerminal:
         assert state.reason == "advisory review: shipped"
         # Ruling D51 (1): the asks node and its anchoring
         # check sit between triage and grounding.
+        # The cut-off check and its gate stand between the build loop
+        # and the review (the owner's word of 2026-11-13).
         assert state.path == [
             "triage", "asks", "asks_anchored", "context", "plan", "plan_ready",
-            "implement", "coverage", "validate", "judges", "review",
+            "implement", "coverage", "validate", "judges",
+            "answer_end", "answer_end_gate", "review",
         ]
 
     async def test_lean_dissent_is_visible(self):

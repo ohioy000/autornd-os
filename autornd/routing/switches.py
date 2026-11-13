@@ -165,6 +165,21 @@ def _probability(answer: Any) -> float | None:
     return float(value) if 0.0 <= value <= 1.0 else None
 
 
+def head_and_tail(text: str, bound: int = MAX_EVIDENCE_CHARS) -> str:
+    """A text within `bound` characters that keeps its opening and its end.
+
+    A text within the bound is returned as it is. A longer one keeps its
+    first and last parts and says, between them, how many characters were
+    left out, so the model knows the middle is missing and not absent.
+    """
+    if len(text) <= bound:
+        return text
+    marker = f"\n[… {len(text)} characters in all; the middle is left out …]\n"
+    keep = max(bound - len(marker), 0)
+    head = keep // 2
+    return text[:head] + marker + text[len(text) - (keep - head):]
+
+
 def _clip(evidence: Any) -> Any:
     """Evidence with each text bounded."""
     if isinstance(evidence, str):

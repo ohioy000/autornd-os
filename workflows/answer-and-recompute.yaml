@@ -104,6 +104,26 @@ nodes:
     on_fail: blocked
     on_fail_reason: "Implementation blocked on an ask it cannot satisfy"
 
+  # A cut-off answer is not a finished one. By the owner's word of
+  # 2026-11-13 ("yes to all 3"): golden batch 1's Q6 r2 stopped
+  # mid-sentence at character 1948, naming no gate, and shipped as done.
+  # A free check on the answer's last line; when it finds the text cut
+  # off, the run ends blocked with that reason, the answer is kept as
+  # the candidate, and the recompute is not paid for. No retry.
+  - id: answer_end
+    kind: check
+    check: answer_ends_whole
+    args:
+      text: implement.summary
+    depends_on: [implement]
+
+  - id: answer_end_gate
+    kind: gate
+    condition: answer_end.passed == true
+    depends_on: [answer_end]
+    on_fail: blocked
+    on_fail_reason: "Answer incomplete: it ends mid-sentence"
+
   # The free checks, before the recompute. If the implementation
   # does not even mention an anchored ask, no recompute is needed
   # to know the answer is incomplete — but the run completes
@@ -151,7 +171,7 @@ nodes:
     args:
       samples: 3
     max_tokens: recompute_max_tokens    # a full calculation, not a verdict — plan-sized
-    depends_on: [consistency]
+    depends_on: [consistency, answer_end_gate]
 
   # The vote. A note, never a gate: it never blocks, routes or
   # revises, and the run's status is decided without it. A flag is
@@ -171,16 +191,19 @@ nodes:
 
   # ── decision switches, after the answer ─────────────────────────
   # The switches declared in switches/default.yaml that read the
-  # finished answer: does it give each ask, does each quote found on
-  # its page state an answer to its question. One request on the
-  # optional decision tier. Both ship in shadow: recorded, and
+  # finished answer: does each text ask the vote flagged say the same
+  # thing as the samples, does it give each ask, does each quote found
+  # on its page state an answer to its question. One request on the
+  # optional decision tier. All ship in shadow: recorded, and
   # nothing blocks, routes or revises on them. The run's status is
   # decided without this node; with no decision tier it skips.
+  # same_meaning is first: a request asks at most MAX_QUESTIONS, and
+  # its few items must not be the ones cut.
   - id: answer_switches
     kind: ai
     tier: decision
     prompt: switches
     advisory: true
     args:
-      ask: [ask_covered, quote_answers]
+      ask: [same_meaning, ask_covered, quote_answers]
     depends_on: [recompute_vote]
