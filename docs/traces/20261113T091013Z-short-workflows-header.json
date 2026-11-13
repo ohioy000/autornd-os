@@ -1,0 +1,24 @@
+{
+ "models": {
+  "triage": "openai/gpt-oss-120b",
+  "engineering": "deepseek/deepseek-v4.1-flash-1017",
+  "architecture": "xiaomi/mimo-v2.6-pro:exacto",
+  "escalation": "google/gemini-4-argon",
+  "research": "z-ai/glm-5.3",
+  "search": "perplexity/sonar",
+  "ranker": "qwen/qwen3-reranker-8b",
+  "judge": "qwen/qwen3-235b-a22b-2507:exacto",
+  "recompute": "meta/muse-ember",
+  "decision": "perplexity/pplx-decider-v1.2"
+ },
+ "provider_order": "triage:crusoe/bf16,engineering:deepinfra/fp8,architecture:gmicloud/bf16,escalation:google-vertex/global,search:Perplexity,research:wafer/us,ranker:Fireworks,judge:deepinfra/fp8,premium:,recompute:Meta",
+ "dataset_version": "frozen-2026-10-03",
+ "scorer_version": "frozen-2026-10-03.3",
+ "workflows": [
+  "answer-and-recompute",
+  "verify-first"
+ ],
+ "repeats": 3,
+ "shards": 5,
+ "max_spend_per_shard": 1.3
+}
