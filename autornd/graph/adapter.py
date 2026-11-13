@@ -467,11 +467,19 @@ class PhaseRunner:
             records = self.switchboard.drain()
             responses = self.switchboard.drain_responses()
             if records and self.on_phase:
+                # One record, so one response: a row is written per
+                # response, and three requests once wrote the same records
+                # three times (live pilot, 2026-11-13). The response carries
+                # the requests' summed tokens and cost.
                 self.on_phase(
                     "switches", {"where": where, "records": records},
-                    responses or [ModelResponse(
-                        content="", model="", prompt_tokens=0,
-                        completion_tokens=0, cost=0.0)],
+                    [ModelResponse(
+                        content="",
+                        model=next((r.model for r in responses), ""),
+                        prompt_tokens=sum(r.prompt_tokens for r in responses),
+                        completion_tokens=sum(
+                            r.completion_tokens for r in responses),
+                        cost=sum(r.cost for r in responses))],
                     state.iteration)
 
     def _record_sources(self, lookup: str, records: list[dict],

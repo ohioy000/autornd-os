@@ -555,6 +555,22 @@ class TestTheSwitchNodes:
         assert written and written[0]["where"] == "grounding"
         assert [r["switch"] for r in written[0]["records"]] == ["needs_sources"]
 
+    async def test_several_requests_in_one_place_are_one_record(self, decision_tier):
+        """Live pilot, 2026-11-13: grounding made three decision requests
+        and the same records were written three times, a row per response."""
+        written: list = []
+        client, _ = _with_decisions(_workflow_router(200.0, [200.0] * 3))
+        runner = PhaseRunner(client, on_phase=lambda *a: written.append(a))
+        runner.switchboard = Switchboard(client, {"s": _switch()})
+        state = type("S", (), {"iteration": 1})()
+        async with runner._switching("grounding", state):
+            for evidence in ("a", "b", "c"):
+                await runner.switchboard.ask([("s", evidence, evidence)])
+        (name, verdict, responses, _), = written
+        assert name == "switches" and len(verdict["records"]) == 3
+        assert len(responses) == 1
+        assert responses[0].cost == pytest.approx(0.00006)
+
 
 class TestTheDelivery:
     def test_every_switch_record_is_returned_in_order(self):
