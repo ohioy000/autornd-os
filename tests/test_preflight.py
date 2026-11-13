@@ -299,6 +299,19 @@ class TestEndpointRouteShapes:
         entry = {"name": "Google AI Studio | vendor/chat-20260902"}
         assert "googleaistudio" in _provider_names(entry)
 
+    def test_a_pin_written_as_the_tag_matches_its_endpoint(self):
+        """Measured 2026-11-12: a Vertex endpoint is named "Google" and
+        carries the pin's own name only in `tag`, so a pin the route lists
+        read as "does not serve"."""
+        from autornd.preflight import _base_provider, _provider_names
+        entry = {"name": "Google | vendor/chat-20261013",
+                 "provider_name": "Google", "tag": "google-vertex/global"}
+        assert _base_provider("google-vertex/global") in _provider_names(entry)
+        # Break-proof: a pin for a region the route does not list still fails
+        # on a model with no such endpoint at all.
+        other = {"provider_name": "DeepInfra", "tag": "deepinfra/fp8"}
+        assert _base_provider("google-vertex/us-south1") not in _provider_names(other)
+
     def test_entries_with_neither_shape_resolve_to_nothing(self):
         """The bound: an entry carrying no identity anywhere must not match
         everything — it matches nothing, and the pin fails loudly."""
