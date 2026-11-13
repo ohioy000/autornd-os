@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public), the shared repository every agent works through; its `main` is the truth.
-**Tests:** 1801 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
+**Tests:** 1804 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -326,7 +326,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      87 files, 1801 tests
+tests/                      87 files, 1804 tests
 
 ```
 
@@ -738,7 +738,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1801 total)
+### 3.7 Test distribution (1804 total)
 
 
 | file | n | file | n |
@@ -759,7 +759,7 @@ is revoked and the warning re-opens with a date.
 | test_guards_can_fail.py | 9 | test_handoff_scheduler.py | 4 |
 | test_handover_truth.py | 8 | test_hermetic_suite.py | 9 |
 | test_iteration_dissent.py | 8 | test_judge_tier.py | 11 |
-| test_knowledge.py | 41 | test_lead_review.py | 10 |
+| test_knowledge.py | 44 | test_lead_review.py | 10 |
 | test_live_wiring.py | 7 | test_node_token_ceilings.py | 8 |
 | test_phase_timing.py | 3 | test_preflight.py | 32 |
 | test_preflight_gate.py | 32 | test_preregistration_precedence.py | 9 |
@@ -826,7 +826,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1801/1801 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1804/1804 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

@@ -682,3 +682,48 @@ class TestSearchSpendIsGated:
         asked = client.chat.await_args.kwargs["user_message"]
         assert "the bolt grade" in asked and "the proof load" in asked
         assert "RESEARCHED FACTS" in out
+
+
+class TestAFarChunkIsNotACandidate:
+    """The owner's ruling of 2026-11-13: a chunk further than 0.81 from the
+    query that found it is not briefed from."""
+
+    async def _candidates(self, monkeypatch, chunks):
+        import autornd.knowledge.context as ctx
+
+        async def one_query(client, query):
+            return [query]
+
+        ranked: list[list[dict]] = []
+
+        async def rerank(client, query, candidates, n_results):
+            ranked.append(candidates)
+            return candidates
+
+        async def brief(client, query, chunks, **kwargs):
+            return "briefing"
+
+        monkeypatch.setattr(ctx, "expand_queries", one_query)
+        monkeypatch.setattr(ctx, "retrieve", lambda *a, **k: chunks)
+        monkeypatch.setattr(ctx, "rerank_chunks", rerank)
+        monkeypatch.setattr(ctx, "synthesize_briefing", brief)
+        out = await ctx.load_retrieval_context("an electric fence", client=None)
+        return out, ranked
+
+    async def test_the_bound_is_the_ruled_one(self):
+        import autornd.knowledge.context as ctx
+        assert ctx.RETRIEVAL_MAX_DISTANCE == 0.81
+
+    async def test_a_chunk_at_the_bound_stays_and_one_past_it_goes(self, monkeypatch):
+        chunks = [{"text": "near", "tag": "t", "source": "s", "distance": 0.40},
+                  {"text": "edge", "tag": "t", "source": "s", "distance": 0.81},
+                  {"text": "far", "tag": "t", "source": "s", "distance": 0.82}]
+        out, ranked = await self._candidates(monkeypatch, chunks)
+        assert out == "briefing"
+        assert [c["text"] for c in ranked[0]] == ["near", "edge"]
+
+    async def test_a_store_holding_only_far_chunks_briefs_nothing(self, monkeypatch):
+        """The studio text lay at 0.96 from the fence question."""
+        chunks = [{"text": "studio", "tag": "t", "source": "s", "distance": 0.96}]
+        out, ranked = await self._candidates(monkeypatch, chunks)
+        assert out == "" and ranked == []
