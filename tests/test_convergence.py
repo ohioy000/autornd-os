@@ -570,6 +570,45 @@ class TestTheRecordsBesideTheAnswer:
         detail = _detail(self._workflow(("implement", {"summary": "a"})))
         assert detail.recompute_vote is None and detail.sources == []
 
+    def test_a_completed_answer_carries_its_cautions(self):
+        """Measured live 2026-11-12: a wrong figure was delivered completed,
+        with a vote that compared nothing and no lookup, and nothing in the
+        delivery said so."""
+        detail = _detail(self._workflow(
+            ("implement", {"summary": "a"}),
+            ("recompute_vote", {"flagged": False, "unchecked": True,
+                                "checked": False})))
+        assert len(detail.cautions) == 2
+        assert "compared nothing" in detail.cautions[0]
+        assert "No lookup ran" in detail.cautions[1]
+
+    def test_a_flag_and_unfound_quotes_are_named(self):
+        detail = _detail(self._workflow(
+            ("sources", {"lookup": "grounding", "findings": [{"quotes": [
+                {"status": "found"}, {"status": "unfetched"}]}]}),
+            ("implement", {"summary": "a"}),
+            ("recompute_vote", {"flagged": True, "checked": True,
+                                "disagreements": [{"ask": 2}]})))
+        assert detail.cautions == [
+            "The recompute vote disagrees with this answer on ask 2.",
+            "1 of 2 quoted passages were found in their pages; the rest "
+            "are unverified."]
+
+    def test_a_checked_answer_with_found_quotes_has_none(self):
+        """Break-proof: the cautions are not boilerplate on every answer."""
+        detail = _detail(self._workflow(
+            ("sources", {"lookup": "grounding", "findings": [{"quotes": [
+                {"status": "found"}]}]}),
+            ("implement", {"summary": "a"}),
+            ("recompute_vote", {"flagged": False, "unchecked": False,
+                                "checked": True, "no_consensus": []})))
+        assert detail.cautions == []
+
+    def test_a_run_with_no_answer_has_no_cautions(self):
+        workflow = self._workflow(("implement", {"summary": "a"}))
+        workflow.status = WorkflowStatus.BLOCKED
+        assert _detail(workflow).cautions == []
+
     def test_a_lookup_writes_its_sources_through_the_phase_channel(self):
         from types import SimpleNamespace
         from autornd.graph.adapter import PhaseRunner

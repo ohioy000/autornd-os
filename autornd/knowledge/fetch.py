@@ -33,14 +33,20 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-# The whole fetch, redirects included, in seconds. Not measured: a judgment
-# that a page slower than this is not worth holding a run for. A lookup's
-# pages are fetched together, so it waits for its slowest page, not the sum.
-FETCH_TIMEOUT_SECONDS = 10.0
+# The whole fetch, redirects included, in seconds. A lookup's pages are
+# fetched together, so it waits for its slowest page, not the sum. Was 10,
+# set by judgment. Measured live 2026-11-12: three of seven quoted pages, all
+# PDFs from one standards body, gave no answer within 10 s, and their answers
+# went unverified. 25 is still a judgment, not a measured optimum: long
+# enough for a PDF of a few megabytes on a slow host, short beside a run
+# that takes minutes.
+FETCH_TIMEOUT_SECONDS = 25.0
 
-# A page larger than this is not read. Not measured: a standards page or a
-# datasheet's HTML is well under it, and a run should not hold more.
-FETCH_MAX_BYTES = 2_000_000
+# A page larger than this is not read. Was 2 MB, sized for HTML. Measured
+# live 2026-11-12: a quoted specification PDF was over it. Standards and
+# datasheets as PDF run to several megabytes; 15 MB covers them and still
+# bounds what a run holds.
+FETCH_MAX_BYTES = 15_000_000
 
 # Redirects followed, each checked as the first address was.
 MAX_REDIRECTS = 3
@@ -53,7 +59,11 @@ MAX_FETCHES = 8
 # and makers publish datasheets and codes as PDF, and before this every one
 # of them was recorded unfetched (audit of 2026-11-11). A scanned PDF has no
 # text layer and is recorded failed, so the gap shows.
-HTML_TYPES = ("text/html", "application/xhtml+xml")
+# XML is read as HTML is, its markup dropped: govinfo.gov publishes the Code
+# of Federal Regulations as XML, and on 2026-11-12 both such pages a lookup
+# quoted were recorded unfetched for their content type.
+HTML_TYPES = ("text/html", "application/xhtml+xml", "application/xml",
+              "text/xml")
 TEXT_TYPES = ("text/plain", "text/markdown")
 PDF_TYPES = ("application/pdf",)
 
