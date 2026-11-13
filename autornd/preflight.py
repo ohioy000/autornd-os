@@ -46,7 +46,11 @@ REQUIRED_TIERS = ("triage", "engineering", "architecture",
 # configuration. The instrument had observed "this tier is not in my list" and
 # reported "this tier has no model", which is a stronger and different claim
 # (convention 26).
-OPTIONAL_TIERS = ("ranker", "premium", "judge")
+#
+# The recompute tier joined on 2026-11-13: a 'recompute:' pin was refused
+# as "not a tier this harness runs" while the default workflow made three
+# recompute calls a run, on whichever provider the router chose.
+OPTIONAL_TIERS = ("ranker", "premium", "judge", "recompute")
 
 # The parameters the harness sends, by call path. OpenRouter strips a pinned
 # endpoint that does not accept a parameter in the request: "Filter by
@@ -67,7 +71,8 @@ NON_PARAMETER_KEYS = frozenset({"model", "messages", "usage", "provider"})
 # matched on (provider_order_for), not the tier's name in .env. The
 # independent pass calls "independent", not "premium" (phases.py).
 CALL_FUNCTIONS = ("triage", "engineering", "architecture", "escalation",
-                  "research", "search", "judge", "independent", "ranker")
+                  "research", "search", "judge", "independent", "ranker",
+                  "recompute")
 
 
 # A7 (ARCH-20260930-100): temperature is sent on every chat but not required
@@ -135,7 +140,8 @@ def _general_pins() -> list[str]:
 # client never applies. A6: the gate refuses exactly what the client would
 # fail on.
 PIN_FUNCTIONS = ("triage", "engineering", "architecture", "escalation",
-                 "research", "search", "judge", "independent", "ranker")
+                 "research", "search", "judge", "independent", "ranker",
+                 "recompute")
 
 
 def _pin_target(name: str, models: dict[str, str]) -> tuple[str | None, str]:
@@ -159,6 +165,12 @@ def _pin_target(name: str, models: dict[str, str]) -> tuple[str | None, str]:
         if models.get("ranker"):
             return models["ranker"], ""
         return None, "MODEL_RANKER is unset, so no ranker call is made"
+    if name == "recompute":
+        # No fallback, as OpenRouterClient.recompute_model has none: an
+        # unset tier skips the samples.
+        if models.get("recompute"):
+            return models["recompute"], ""
+        return None, "MODEL_RECOMPUTE is unset, so no recompute call is made"
     if name == "premium":
         return None, ("the independent pass calls function 'independent'; "
                       "write the pin as independent:<provider>")
@@ -340,6 +352,8 @@ def _call_targets() -> dict[str, tuple[str, list[str]]]:
             model = settings.model_ranker or ""
         elif function == "independent":
             model = client.independent_model() or ""
+        elif function == "recompute":
+            model = client.recompute_model() or ""
         else:
             model = client.get_model(function)
         if model:
