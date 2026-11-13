@@ -435,22 +435,50 @@ class TestAServerDisconnectIsRetried:
 
     async def test_a_transport_error_of_another_class_is_not_retried(
             self, monkeypatch, no_sleep):
-        """Typed matching: a transport error that is not a
-        disconnect - a read failure with no disconnect in
-        its chain - is a different failure with its own
-        accounting, and retrying it would spend the same
-        worst case twice. Hard rule 2's class guard: the
-        matcher keys on the disconnect's type, not on being
-        a transport error and not on the message."""
+        """Typed matching: a transport error that is none of
+        the retried classes - a write failure - is a
+        different failure with its own accounting. Hard rule
+        2's class guard: the matcher keys on each condition's
+        type, not on being a transport error and not on the
+        message. (Until 2026-11-13 this test's example was a
+        read error, which is now a retried class of its own.)"""
         request = httpx.Request("POST", "https://example.invalid/x")
-        read_error = httpx.ReadError("read", request=request)
-        http = _Http([read_error, _ok()])
+        write_error = httpx.WriteError("write", request=request)
+        http = _Http([write_error, _ok()])
         client = _client_with(http, monkeypatch)
-        with pytest.raises(httpx.ReadError):
+        with pytest.raises(httpx.WriteError):
             await client.chat(function="engineering", system_prompt="s",
                               user_message="u")
         assert http.calls == 1, "another transport error must not be retried"
         assert not no_sleep, "no backoff without a retry"
+
+    async def test_a_read_error_that_clears_completes_the_call(
+            self, monkeypatch, no_sleep):
+        """Measured live 2026-11-13: a connection reset while
+        the reply was being read ended a nine-minute run
+        blocked. The first post fails on the read, the retry
+        succeeds, and the retry is counted under its own class."""
+        request = httpx.Request("POST", "https://example.invalid/x")
+        http = _Http([httpx.ReadError("read", request=request), _ok()])
+        client = _client_with(http, monkeypatch)
+        out = await client.chat(function="engineering", system_prompt="s",
+                                user_message="u")
+        assert out.content == "{}"
+        assert http.calls == 2, "the retry did not happen"
+        assert no_sleep == [orm._TRANSIENT_TLS_BACKOFF_S]
+        assert client.retries_by_kind == {"read_error": 1}
+        assert "read_error" in client.retry_reconciliation()[
+            "excluded_from_rejection_counters"]
+
+    async def test_a_read_error_that_persists_still_raises(
+            self, monkeypatch, no_sleep):
+        request = httpx.Request("POST", "https://example.invalid/x")
+        http = _Http([httpx.ReadError("read", request=request)] * 10)
+        client = _client_with(http, monkeypatch)
+        with pytest.raises(httpx.ReadError):
+            await client.chat(function="engineering", system_prompt="s",
+                              user_message="u")
+        assert http.calls == orm._TRANSIENT_TLS_ATTEMPTS
 
 
 class TestABackoffInterruptedBeforeTheRetryDispatches:
