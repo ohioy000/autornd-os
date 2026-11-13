@@ -567,6 +567,24 @@ class TestWhatTheFetchCanRead:
         assert source.status == "fetched" and seen == [api]
         assert source.url == reader and source.final_url == api
 
+    @pytest.mark.parametrize("reader, query", [
+        ("https://www.ecfr.gov/current/title-47/chapter-I/subchapter-A/part-15",
+         "title-47?part=15"),
+        ("https://ecfr.gov/current/title-47/chapter-I/subchapter-A/part-15/subpart-C/",
+         "title-47?part=15&subpart=C"),
+        ("https://www.ecfr.gov/current/title-29/part-1910#p-1", "title-29?part=1910"),
+    ])
+    def test_an_ecfr_part_is_read_through_the_renderer(self, reader, query):
+        """Live 2026-11-13: three part-level addresses got the challenge page."""
+        assert fetch.readable_address(reader) == (
+            "https://www.ecfr.gov/api/renderer/v1/content/enhanced/current/" + query)
+
+    def test_an_address_that_is_not_a_part_or_a_section_is_left_alone(self):
+        for url in ("https://www.ecfr.gov/current/title-47",
+                    "https://www.ecfr.gov/current/title-47/chapter-I",
+                    "https://example.org/current/title-47/part-15"):
+            assert fetch.readable_address(url) == url
+
 
 class TestTheSourcesAreReturned:
     async def test_a_lookup_record_names_each_page_and_what_was_found(self, monkeypatch):
@@ -583,6 +601,9 @@ class TestTheSourcesAreReturned:
             (1, PAGE, "found"), (2, PAGE, "not_found")]
         found = record["quotes"][0]
         assert found["text"] == PASSAGE and found["sha256"] and found["fetched_at"]
+        # Each quote carries the words of its own question, not the first's.
+        assert [q["question_text"] for q in record["quotes"]] == [
+            "The EU 868 MHz limit", "The duty cycle"]
         json.dumps(record)   # plain data: it goes through the phase channel
 
 

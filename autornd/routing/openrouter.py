@@ -905,6 +905,19 @@ class OpenRouterClient:
         reconciled = False
         try:
             resp = await client.post(self.decisions_url(), json=body)
+            # A busy model answers 429 before it reads the request, so
+            # nothing was dispatched and the same reservation stands.
+            # Bounded and backed off as the chat's 429 loop is. Measured
+            # live 2026-11-13: one of sixteen decision calls got "Model
+            # busy, retry later" and, untried again, its notes were lost.
+            for attempt in range(1, _RATE_LIMIT_ATTEMPTS):
+                if resp.status_code != 429:
+                    break
+                delay = _RATE_LIMIT_BACKOFF_S * (2 ** (attempt - 1))
+                logger.warning("429 for %s (attempt %d/%d) — retrying in %.1fs",
+                               model, attempt, _RATE_LIMIT_ATTEMPTS, delay)
+                await asyncio.sleep(delay)
+                resp = await client.post(self.decisions_url(), json=body)
             _raise_for_status(resp, "decisions")
             data = resp.json()
             answers = data.get("answers")

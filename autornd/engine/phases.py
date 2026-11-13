@@ -1639,7 +1639,8 @@ async def run_decision_notes(
                     continue
                 index = len(quoted)
                 state.setdefault("quotes", {})[str(index)] = {
-                    "question": finding.get("question", ""),
+                    "question": (quote.get("question_text")
+                                 or finding.get("question", "")),
                     "passage": quote.get("text", "")}
                 questions[f"quote_{index}"] = {
                     "type": "noul",

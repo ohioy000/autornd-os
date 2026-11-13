@@ -572,6 +572,13 @@ def source_records(findings: list[Finding]) -> list[dict]:
         "citations": list(f.citations),
         "quotes": [{
             "question": q.question,
+            # The words of the question this quote was given for. A bundled
+            # lookup asks several, and the finding's own `question` is only
+            # the first: read against it, a quote for the second question
+            # looks off the point (measured 2026-11-13, three quotes).
+            "question_text": (f._asked()[q.question - 1]
+                              if 1 <= q.question <= len(f._asked())
+                              else f.question),
             "text": q.text[:SOURCE_RECORD_QUOTE_CHARS],
             "url": q.url,
             "status": q.status,

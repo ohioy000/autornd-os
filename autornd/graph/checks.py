@@ -1425,7 +1425,7 @@ def recompute_vote(results: list[Any], samples: list[Any],
             + (str(reason).strip()
                or "no model configured for the recompute tier"),
             checked=False, skipped=True, flagged=False,
-            unchecked=False, disagreements=[], no_consensus=[],
+            unchecked=False, disagreements=[], no_consensus=[], not_comparable=[],
             samples_parsed=0, samples_failed=0,
         )
 
@@ -1471,12 +1471,13 @@ def recompute_vote(results: list[Any], samples: list[Any],
             True,
             f"recompute vote unchecked — {why}",
             checked=False, skipped=False, flagged=False,
-            unchecked=True, disagreements=[], no_consensus=[],
+            unchecked=True, disagreements=[], no_consensus=[], not_comparable=[],
             samples_parsed=samples_parsed, samples_failed=samples_failed,
         )
 
     disagreements: list[dict[str, Any]] = []
     no_consensus: list[int] = []
+    not_comparable: list[int] = []
     for number in sorted(wanted):
         answer = wanted[number]
         ask = next(a for a in (asks or [])
@@ -1504,6 +1505,21 @@ def recompute_vote(results: list[Any], samples: list[Any],
         # the vote can compare, and is left out.
         answer_number = _recompute_numeric(answer_value)
         identity = kind == "verdict" or answer_number is None
+        # A value ask the samples answered with numbers, and the answer
+        # with text that is not just a number, cannot be compared: the
+        # answer's entry is a sentence, or several asks' values in one
+        # field. Compared as identifiers it always differed, which is a
+        # flag for how the entry was written and not for what the answer
+        # says. Ruled by the owner on 2026-11-13, from a live run of that
+        # date: "902-928 MHz (US ISM band); 1 W (30 dBm) conducted output
+        # power, 6 dBi ..." against two samples at 1 was flagged, on an
+        # answer that was right. Recorded as not comparable, never passed.
+        if kind == "value" and answer_number is None:
+            numeric = sum(1 for v in sample_values
+                          if _recompute_numeric(v) is not None)
+            if numeric >= 2 and numeric * 2 > len(sample_values):
+                not_comparable.append(number)
+                continue
         if identity:
             majority, support = _recompute_majority(
                 sample_values, True) or (None, 0)
@@ -1555,13 +1571,21 @@ def recompute_vote(results: list[Any], samples: list[Any],
     # D46 (3): a vote that compared nothing says so. When no voted ask
     # reached a majority, nothing was compared; that used to be recorded
     # as checked, with "no disagreement" (audit of 2026-11-11).
-    if len(no_consensus) == len(wanted):
+    if len(no_consensus) + len(not_comparable) == len(wanted):
+        why = []
+        if no_consensus:
+            why.append("no consensus among the samples on ask(s) "
+                       + ", ".join(str(n) for n in no_consensus))
+        if not_comparable:
+            why.append("the answer's entry is not a number where the "
+                       "samples' are, on ask(s) "
+                       + ", ".join(str(n) for n in not_comparable))
         return Result(
             True,
-            "recompute vote unchecked — no consensus among the samples "
-            "on ask(s) " + ", ".join(str(n) for n in no_consensus),
+            "recompute vote unchecked — " + "; ".join(why),
             checked=False, skipped=False, flagged=False,
             unchecked=True, disagreements=[],
+            not_comparable=not_comparable,
             no_consensus=no_consensus, samples_parsed=samples_parsed,
             samples_failed=samples_failed,
         )
@@ -1581,11 +1605,15 @@ def recompute_vote(results: list[Any], samples: list[Any],
     if no_consensus:
         detail += ("; no consensus on ask(s) "
                    + ", ".join(str(n) for n in no_consensus))
+    if not_comparable:
+        detail += ("; not comparable on ask(s) "
+                   + ", ".join(str(n) for n in not_comparable))
     return Result(
         not flagged,
         detail,
         checked=True, skipped=False, flagged=flagged,
         unchecked=False, disagreements=disagreements,
+        not_comparable=not_comparable,
         no_consensus=no_consensus, samples_parsed=samples_parsed,
         samples_failed=samples_failed,
     )

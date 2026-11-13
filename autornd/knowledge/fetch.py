@@ -108,6 +108,15 @@ _ECFR_SECTION = re.compile(
     r"(?:[^?#]*/)?section-(?P<part>\d+)\.(?P<section>[\w.-]+?)/?(?:[?#].*)?$",
     re.IGNORECASE)
 
+# The same for a whole part, or one subpart of it. Measured live 2026-11-13:
+# three of six quoted pages were part-level addresses, and each got the
+# challenge page; the renderer returned Part 15 of Title 47 whole (0.9 MB).
+_ECFR_PART = re.compile(
+    r"^https?://(?:www\.)?ecfr\.gov/current/title-(?P<title>\d+)/"
+    r"(?:[^?#]*/)?part-(?P<part>\d+)(?:/subpart-(?P<subpart>[A-Za-z]+))?"
+    r"/?(?:[?#].*)?$",
+    re.IGNORECASE)
+
 # A page that asks the reader to prove they are a person. It arrives as HTTP
 # 200 with a little text, so without this it was recorded as fetched and
 # every quote read as "not found in the page" when the page was never read.
@@ -165,6 +174,11 @@ def readable_address(url: str) -> str:
         return ("https://www.ecfr.gov/api/renderer/v1/content/enhanced/current/"
                 f"title-{match['title']}?part={match['part']}"
                 f"&section={match['part']}.{match['section']}")
+    match = _ECFR_PART.match(url.strip())
+    if match:
+        subpart = f"&subpart={match['subpart']}" if match["subpart"] else ""
+        return ("https://www.ecfr.gov/api/renderer/v1/content/enhanced/current/"
+                f"title-{match['title']}?part={match['part']}{subpart}")
     return url
 
 
