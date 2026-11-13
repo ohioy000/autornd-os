@@ -103,6 +103,25 @@ def load_docs_context(
 # recovers the precision, and costs one call per workflow.
 RERANK_CANDIDATES = 20
 
+# A retrieved chunk further than this from the query that found it is not a
+# candidate. Cosine distance: 0 is the same text. Without a bound the store
+# returned its nearest chunks however far they were: on 2026-11-12 an answer
+# about an electric fence carried the wording of studio demo documents, the
+# only material the store held.
+#
+# Ruled by the owner on 2026-11-13 at 0.81, from a free measurement of the
+# same date: a scratch store of 70 chunks on four subjects, 16 questions it
+# could answer and 26 it could not, top five chunks each. Chunks from the
+# right subject lay at 0.24 to 0.80 (median 0.59, 65 chunks); from a wrong
+# one at 0.51 to 0.93 (median 0.78, 145). The two overlap, so no bound
+# separates them. This one kept every right chunk and dropped 65 of the 145
+# wrong ones, the studio text against the fence question (0.96) among them;
+# 0.70 would have left one answerable question with no right chunk. What it
+# does not do: wrong chunks between 0.51 and the bound still pass. Subjects
+# were labelled by document, not chunk by chunk, and the ranker tier was not
+# measured against the same set.
+RETRIEVAL_MAX_DISTANCE = 0.81
+
 
 def _rank_tier() -> str | None:
     """Which tier ranks retrieved context, if any.
@@ -555,7 +574,8 @@ async def load_retrieval_context(query: str, n_results: int = 5, client=None,
     seen: dict[str, dict] = {}
     for q in queries:
         for chunk in retrieve(q, n_results=max(n_results, RERANK_CANDIDATES)):
-            seen.setdefault(chunk["text"], chunk)
+            if chunk["distance"] <= RETRIEVAL_MAX_DISTANCE:
+                seen.setdefault(chunk["text"], chunk)
     candidates = sorted(seen.values(), key=lambda c: c["distance"])
     if not candidates:
         return ""
