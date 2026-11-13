@@ -4117,9 +4117,17 @@ class TestQTheCommittedTrace:
         # the prediction is tested, not reported.
         assert first_vs_final["revised_units"] == 5
         assert first_vs_final["testable"] is True
+        # Scored by the tier-2 scorer on the tree. Under
+        # frozen-2026-10-03.3 this read 3 right-to-right
+        # and 2 wrong-to-wrong: Q19 r1 and Q9 r2 lost
+        # only their Organization item, to '=== 1. ...
+        # ===' headings .3 did not read. Under .4, which
+        # reads them, both are right to right; their
+        # three headings and every figure were checked by
+        # hand on 2026-11-13.
         assert first_vs_final["transitions"] == {
-            "right_to_right": 3, "right_to_wrong": 0,
-            "wrong_to_right": 0, "wrong_to_wrong": 2,
+            "right_to_right": 5, "right_to_wrong": 0,
+            "wrong_to_right": 0, "wrong_to_wrong": 0,
             "no_first_answer": 0}
         # The five, named — re-derived here by the
         # ruling's rule, independently of the

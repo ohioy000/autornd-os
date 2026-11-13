@@ -52,9 +52,12 @@ DATASET_VERSION = "frozen-2026-10-03"
 # and the repair Ruling R5 orders (the tier-3
 # stage-1 reading's recognition classes, the
 # strict-headline rule and its bound-word guard)
-# is a further one: the dataset content is
+# is a further one, and the form repairs of
+# 2026-11-13 (the owner's "yes to all 3": the
+# layouts the 2026-11-13 runs wrote in right
+# answers) another: the dataset content is
 # unchanged, only the instrument changed.
-SCORER_VERSION = "frozen-2026-10-03.3"
+SCORER_VERSION = "frozen-2026-10-03.4"
 
 # The count the owner's command expects. The owner
 # supplied all 25 on 2026-10-03, and ratified the
