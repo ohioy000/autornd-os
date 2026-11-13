@@ -1334,9 +1334,11 @@ class TestVerifyFirst:
         assert spec.name == "verify-first"
         # The ruled node list: triage, grounding, the asks, the
         # answer, the free checks, the judge, and the loop that
-        # owns them.
+        # owns them; then the cut-off check on the final answer and
+        # its gate (the owner's word of 2026-11-13).
         assert [n.id for n in spec.execution_order()] == [
-            "triage", "asks", "asks_anchored", "context", "verify_loop"]
+            "triage", "asks", "asks_anchored", "context", "verify_loop",
+            "answer_end", "answer_end_gate"]
         # Not the standing workflow, and nothing routes to it:
         # the configured default resolves to full-team, and
         # no shipped workflow names this one.

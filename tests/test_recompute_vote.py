@@ -1092,7 +1092,8 @@ class TestTheWorkflow:
         assert spec.ids == [
             "triage", "asks", "asks_anchored", "context",
             "request_switches", "implement",
-            "blocked_check", "blocked_gate", "coverage", "consistency",
+            "blocked_check", "blocked_gate", "answer_end", "answer_end_gate",
+            "coverage", "consistency",
             "recompute", "recompute_vote", "answer_switches"]
         recompute = spec.get("recompute")
         assert recompute.kind is NodeKind.AI

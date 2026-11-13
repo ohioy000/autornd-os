@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public), the shared repository every agent works through; its `main` is the truth.
-**Tests:** 1883 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
+**Tests:** 1923 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -302,8 +302,8 @@ autornd/
 
 workflows/
   full-team.yaml         ★★ the flagship pipeline, 31 nodes, 4 loops (§3.1)
-  lean.yaml                 12 nodes — cheaper variant, one loop
-  verify-first.yaml        12 nodes — Ruling D51 (8): no plan node;
+  lean.yaml                 14 nodes — cheaper variant, one loop
+  verify-first.yaml        14 nodes — Ruling D51 (8): no plan node;
                             the asks are the yardstick, one revision
                             if a judge dissents, escalated if the
                             dissent survives. Not the standing
@@ -311,7 +311,7 @@ workflows/
   triage-only.yaml          2 nodes — triage + grounding (research measurement)
   triage-classify.yaml   ★  1 node — triage alone. Exists so calibration costs
                             ~$0.00002/call instead of a full workflow.
-  answer-and-recompute.yaml  13 nodes — Ruling D53: the asks, one answer
+  answer-and-recompute.yaml  15 nodes — Ruling D53: the asks, one answer
                             with typed results, three blind recompute
                             samples on the optional recompute tier, and a
                             recompute_vote whose flag is a note on the
@@ -326,7 +326,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      88 files, 1883 tests
+tests/                      89 files, 1923 tests
 
 ```
 
@@ -738,7 +738,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1883 total)
+### 3.7 Test distribution (1923 total)
 
 
 | file | n | file | n |
@@ -784,9 +784,10 @@ is revoked and the warning re-opens with a date.
 | test_trace_durability.py | 7 | test_transient_tls_retry.py | 23 |
 | test_triage.py | 10 | test_verdicts.py | 49 |
 | test_watchdog.py | 23 | test_workflow.py | 4 |
-| test_profile_framing.py | 11 | test_advisory_nodes.py | 19 |
+| test_profile_framing.py | 11 | test_advisory_nodes.py | 21 |
 | test_workflow_choice.py | 25 | test_source_check.py | 94 |
-| test_convergence.py | 29 | test_switches.py | 72 |
+| test_convergence.py | 29 | test_switches.py | 80 |
+| test_cut_off_answers.py | 30 | | |
 ---
 
 ## 4. ACTIVE CONTEXT & WORKING MEMORY
@@ -826,7 +827,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1883/1883 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1923/1923 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

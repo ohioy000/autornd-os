@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from autornd.graph.adapter import PhaseRunner
-from autornd.graph.checks import Result, _recompute_ident
+from autornd.graph.checks import Result, _recompute_ident, recompute_vote
 from autornd.graph.executor import ABANDONED_CALL_BILLING, GraphExecutor
 from autornd.graph.spec import SpecError, WorkflowSpec, load, parse
 from autornd.models.verdicts import reset_normalisations
@@ -130,6 +130,39 @@ class TestAFailedSample:
         assert vote["samples_parsed"] == 1
         assert vote["samples_failed"] == 2
         assert "2 failed" in vote["detail"]
+        assert vote["samples_unreadable"] == 0
+
+
+class TestAnUnreadableSample:
+    """A sample that neither failed nor stated a results list is counted.
+    Golden batch 1 of 2026-11-13: Q6 r2's three samples came back as a bare
+    result each, and the record said 0 parsed, 0 failed — of 3."""
+
+    ASKS = [{"number": 1, "kind": "value", "quote": "Give the cap"}]
+    RESULTS = [{"ask": 1, "value": 60.0, "unit": "s"}]
+    # Q6 r2's shape, and Q6 r1's third sample's: keys of its own.
+    BARE = {"ask": 1, "value": "Lamp = B AND (F OR A)", "unit": ""}
+    OWN = {"logic": "(FWD OR AFT) AND BRAKE", "gates": "ONE OR, ONE AND"}
+    READ = {"results": [{"ask": 1, "value": 60.0, "unit": "s"}]}
+
+    def test_three_bare_results_are_three_unreadable_samples(self):
+        result = recompute_vote(results=self.RESULTS,
+                                samples=[self.BARE, self.BARE, self.OWN],
+                                asks=self.ASKS, request="r")
+        vote = result.data
+        assert (vote["samples_parsed"], vote["samples_failed"],
+                vote["samples_unreadable"]) == (0, 0, 3)
+        assert vote["unchecked"] is True
+        assert "0 parsed, 3 unreadable" in result.detail
+
+    def test_parsed_failed_and_unreadable_add_up_to_the_samples(self):
+        samples = [self.READ, self.READ, {"failed": True, "error": "x"},
+                   self.BARE]
+        vote = recompute_vote(results=self.RESULTS, samples=samples,
+                              asks=self.ASKS, request="r").data
+        assert (vote["samples_parsed"], vote["samples_failed"],
+                vote["samples_unreadable"]) == (2, 1, 1)
+        assert vote["checked"] is True and vote["flagged"] is False
 
 
 class TestTheWatchdog:

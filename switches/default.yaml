@@ -120,3 +120,23 @@ quote_answers:
     Recorded beside each quote the check found on its page. Found means the
     words are there, not that they answer the question. No step acts on it
     yet.
+
+same_meaning:
+  question: >
+    Do the two values state the same thing for this ask?
+  yes: They state the same fact, figure or verdict, even in other words or with more detail.
+  no: They state a different fact, figure or verdict, or one contradicts the other.
+  yes_at: 0.80
+  no_at: 0.20
+  safe: "no"
+  # In shadow by the owner's word of 2026-11-13 ("yes to all 3"), on the
+  # same-meaning replay of that day: yes on 9 of the vote's 10 text flags
+  # in the tier-2 run, all on right answers, and no on all 6 contrary pairs
+  # written before it (docs/reviews/2026-11-13-golden-decisions.md). Ten
+  # pairs and six is a first look. The safe side keeps the vote's flag.
+  mode: shadow
+  each: disagreements
+  guards: >
+    Asked only when the recompute vote flags a text ask: the answer's value
+    beside a sample's own words for the majority. Live, a yes would clear
+    that ask's flag as worded differently. No step acts on it yet.

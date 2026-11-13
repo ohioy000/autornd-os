@@ -1426,7 +1426,7 @@ def recompute_vote(results: list[Any], samples: list[Any],
                or "no model configured for the recompute tier"),
             checked=False, skipped=True, flagged=False,
             unchecked=False, disagreements=[], no_consensus=[], not_comparable=[],
-            samples_parsed=0, samples_failed=0,
+            samples_parsed=0, samples_failed=0, samples_unreadable=0,
         )
 
     quote_index = _recompute_ask_index(asks)
@@ -1440,6 +1440,11 @@ def recompute_vote(results: list[Any], samples: list[Any],
     # {failed: true, error}; it states no results, so it never parses.
     samples_failed = sum(1 for s in (samples or [])
                          if isinstance(s, dict) and s.get("failed") is True)
+    # A sample that neither failed nor stated a results list: it came back
+    # in a shape the vote does not read. Golden batch 1 of 2026-11-13: 4
+    # of Q6's 9 samples were a bare result or keys of their own, and the
+    # record counted them as nothing at all (samples_parsed 0, failed 0).
+    samples_unreadable = len(samples or []) - samples_parsed - samples_failed
 
     # The anchored asks of kind value or verdict that the answer's
     # results name — the asks the samples were given, so the only
@@ -1464,8 +1469,10 @@ def recompute_vote(results: list[Any], samples: list[Any],
     # unchecked, and flagged false.
     if samples_parsed < 2 or not wanted:
         failed = f", {samples_failed} failed" if samples_failed else ""
+        unreadable = (f", {samples_unreadable} unreadable"
+                      if samples_unreadable else "")
         why = (f"fewer than 2 parseable samples ({samples_parsed} "
-               f"parsed{failed})" if samples_parsed < 2
+               f"parsed{failed}{unreadable})" if samples_parsed < 2
                else "no answer result names an anchored ask")
         return Result(
             True,
@@ -1473,6 +1480,7 @@ def recompute_vote(results: list[Any], samples: list[Any],
             checked=False, skipped=False, flagged=False,
             unchecked=True, disagreements=[], no_consensus=[], not_comparable=[],
             samples_parsed=samples_parsed, samples_failed=samples_failed,
+            samples_unreadable=samples_unreadable,
         )
 
     disagreements: list[dict[str, Any]] = []
@@ -1588,6 +1596,7 @@ def recompute_vote(results: list[Any], samples: list[Any],
             not_comparable=not_comparable,
             no_consensus=no_consensus, samples_parsed=samples_parsed,
             samples_failed=samples_failed,
+            samples_unreadable=samples_unreadable,
         )
     if flagged:
         detail = (
@@ -1616,4 +1625,110 @@ def recompute_vote(results: list[Any], samples: list[Any],
         not_comparable=not_comparable,
         no_consensus=no_consensus, samples_parsed=samples_parsed,
         samples_failed=samples_failed,
+        samples_unreadable=samples_unreadable,
     )
+
+
+def text_disagreements(vote: Any, samples: Any) -> list[dict[str, Any]]:
+    """The vote's disagreements on text, each with a sample's own words.
+
+    A disagreement on text is one the vote compared as identifiers: its
+    majority is the normalised identifier the samples agreed on, such as
+    `SAMEDIRECTION`. A decision model reads words better than that, so
+    each comes back with the first sample value that normalises to the
+    majority. The same-meaning replay of 2026-11-13 asked about pairs
+    built this way (docs/reviews/2026-11-13-golden-decisions.md). A vote
+    that was skipped, or flagged nothing, has none.
+    """
+    disagreements = (vote.get("disagreements") if isinstance(vote, dict)
+                     else getattr(vote, "disagreements", None)) or []
+    out = []
+    for d in disagreements:
+        if not isinstance(d, dict) or not isinstance(d.get("majority"), str):
+            continue
+        words = next((_recompute_field(entry, "value")
+                      for sample in (samples or [])
+                      if isinstance(_sample_results(sample), list)
+                      for entry in _sample_results(sample)
+                      if _recompute_names(_recompute_field(entry, "ask"),
+                                          d.get("ask"), {})
+                      and _recompute_ident(_recompute_field(entry, "value"))
+                      == d["majority"]), d["majority"])
+        out.append({"ask": d.get("ask"), "answer": str(d.get("answer")),
+                    "majority": str(words)})
+    return out
+
+
+# The cut-off check. Signs that a text stopped before it finished. Measured
+# 2026-11-13 on every distinct answer and summary in docs/traces (576). The
+# tier-4 calibration runs of 2026-10-17 record which answers stopped at the
+# token limit: these signs find 12 of their 16, and neither of the 2 that
+# finished. Of all the rest they find one, golden batch 1's Q6 r2, which
+# ended "…reads as " with its bold open and shipped as done. Left out,
+# because each flagged a finished answer: a trailing "/" or "=" (a URL, an
+# "=== END ===" banner) and an odd count of "$$". Not caught: a text cut
+# at a plain word or inside inline $…$ math.
+_DANGLING_WORDS = frozenset({
+    "a", "an", "the", "of", "to", "and", "or", "nor", "as", "with", "for",
+    "from", "into", "than", "by", "at", "its", "their", "our", "your",
+    "via", "per", "versus", "but", "because", "whose"})
+# Lower case only, so "Class A" is not "a". "in" and "on" are left out:
+# "2 in" is a length and "left on" ends a sentence.
+_CUT_MARK = re.compile(r"[,:;(\[{&]$|(?<![-=*_ ])[-–—]$")
+_LAST_WORD = re.compile(r"([A-Za-z]+)$")
+_RULE_LINE = re.compile(r"[-=*_\s]+")
+
+
+@check("answer_ends_whole")
+def answer_ends_whole(text: Any) -> Result:
+    """Does the answer end where a sentence can end?
+
+    A free check. Across the whole text: an open code block, or display
+    math opened and not closed (`\\[`, `\\(`, `\\begin{`). On the last
+    line: a table row with no closing bar, open bold, an open bracket or
+    quote, a line ending on a comma, colon or dash, or on a word no
+    sentence ends on ("as", "the", "of"). Any one fails it. A whole table
+    row, a rule line and a closed code block end whole. An empty text is
+    unchecked: there is nothing to read.
+
+    It reads the end, not the meaning, so an answer cut off at a full
+    stop passes. It is the plain case only: the one that shipped as done.
+    """
+    body = str(text or "").rstrip()
+    if not body:
+        return Result(True, "no answer text to read", checked=False,
+                      cut=False, signs=[])
+    lines = body.split("\n")
+    signs: list[str] = []
+    if sum(1 for line in lines if line.lstrip().startswith("```")) % 2:
+        signs.append("an open code block")
+    if body.count("\\[") > body.count("\\]"):
+        signs.append("open display math")
+    if body.count("\\(") > body.count("\\)"):
+        signs.append("open inline math")
+    if len(re.findall(r"\\begin\{", body)) > len(re.findall(r"\\end\{", body)):
+        signs.append("an open \\begin block")
+    last = lines[-1].strip()
+    if last.startswith("|") and not last.endswith("|"):
+        signs.append("a table row cut off")
+    if not signs and not (_RULE_LINE.fullmatch(last) or last.startswith("|")
+                          or last.startswith("```")):
+        if last.count("**") % 2:
+            signs.append("open bold")
+        if last.count("(") > last.count(")"):
+            signs.append("an open parenthesis")
+        if last.count("[") > last.count("]"):
+            signs.append("an open bracket")
+        if last.count("“") > last.count("”"):
+            signs.append("an open quotation mark")
+        if last.count("`") % 2:
+            signs.append("open code")
+        if _CUT_MARK.search(last):
+            signs.append(f"a last line ending on {last[-1]!r}")
+        word = _LAST_WORD.search(last)
+        if word and word.group(1) in _DANGLING_WORDS:
+            signs.append(f"a last line ending on '{word.group(1)}'")
+    if signs:
+        return Result(False, "answer cut off: it ends with " + ", ".join(signs)
+                      + f" — last words {last[-80:]!r}", cut=True, signs=signs)
+    return Result(True, "answer ends whole", cut=False, signs=[])
