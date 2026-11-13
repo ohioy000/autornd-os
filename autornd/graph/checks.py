@@ -1332,6 +1332,11 @@ def _recompute_ask_index(asks: list[Any]) -> dict[str, int]:
     }
 
 
+# An ask named by its number, written as text.
+_ASK_NUMBER_TEXT = re.compile(r"^\s*(?:ask\s*)?#?\s*(\d{1,3})\s*[.):]?\s*$",
+                              re.IGNORECASE)
+
+
 def _recompute_names(named: Any, number: Any,
                      quote_index: dict[str, int]) -> bool:
     """Does this result entry name the anchored ask at `number`?
@@ -1343,6 +1348,14 @@ def _recompute_names(named: Any, number: Any,
     if isinstance(named, int) and not isinstance(named, bool):
         return named == number
     if isinstance(named, str) and named.strip():
+        # A number written as text is the number: "1", "#1", "ask 1".
+        # Read as a quote it matched no ask, so the entry named nothing
+        # and the vote compared nothing. Measured live 2026-11-12: an
+        # answer stated 157 dB under ask "1" against three samples at
+        # 168 dB under ask 1, and the vote read unchecked, not flagged.
+        m = _ASK_NUMBER_TEXT.match(named)
+        if m:
+            return int(m.group(1)) == number
         return quote_index.get(_normalise_quote(named)) == number
     return False
 

@@ -923,6 +923,21 @@ CONSIDERATIONS A REVIEWER RAISED (not requirements — weigh them; nothing is ju
             "number or the identifier you chose, unit = the unit of the "
             "number (empty for an identifier). These are the values your "
             "summary states.")
+    # The field's own line in the JSON contract, mechanical shape like
+    # every other field's line, and gated the same way. Without it the
+    # contract below listed seven fields and results was not one of
+    # them: in the live runs of 2026-11-12 and 2026-11-13 the answer
+    # returned results empty in 2 of 9 default-workflow runs (FCC
+    # 15.247 and the SX1276 link budget, both with three value asks),
+    # so the vote had three agreeing samples and nothing to compare
+    # them with.
+    results_field = ""
+    if results:
+        results_field = (
+            "- results: list of {\"ask\": the ask's number as an integer, "
+            "\"value\": ..., \"unit\": ...}, one entry per ask of kind "
+            "value or verdict, as instructed above; an empty list only "
+            "when no ask is of those kinds\n")
     # The blocked_on sentence below is RULED text (Ruling D51 (h),
     # replacing Blueprint 016 B2's sentence by this ruling) — it is
     # carried verbatim by instruction and is not to be paraphrased.
@@ -951,7 +966,7 @@ Return JSON with:
   naming the ask (its number or its quote) and why it cannot be
   answered; an empty list when there are none
 - iteration: {iteration}
-- summary: the implementation itself — the design, code, schema, procedure or
+{results_field}- summary: the implementation itself — the design, code, schema, procedure or
   calculation, in full. This field is the deliverable and is what the validate
   phase and every downstream reviewer will read, so write the work out rather
   than describing it in the abstract.

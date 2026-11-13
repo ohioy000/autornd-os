@@ -1,7 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
 **Repo:** `github.com/ohioy000/autornd-os` (public), the shared repository every agent works through; its `main` is the truth.
-**Tests:** 1781 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
+**Tests:** 1783 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -326,7 +326,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
-tests/                      87 files, 1781 tests
+tests/                      87 files, 1783 tests
 
 ```
 
@@ -738,7 +738,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (1781 total)
+### 3.7 Test distribution (1783 total)
 
 
 | file | n | file | n |
@@ -766,7 +766,7 @@ is revoked and the warning re-opens with a date.
 | test_prior_artifact_revision.py | 3 | test_profiles.py | 23 |
 | test_prohibition_phrasing.py | 20 | test_prohibition_scenario.py | 15 |
 | test_protocol_file.py | 20 | test_rate_limit_retry.py | 13 |
-| test_recompute_vote.py | 63 | test_regrounding.py | 18 |
+| test_recompute_vote.py | 65 | test_regrounding.py | 18 |
 | test_rejection_counter.py | 7 | test_repeat_and_fit_rule.py | 15 |
 | test_research.py | 37 | test_response_files.py | 2 |
 | test_results_log.py | 10 | test_retry_reconciliation.py | 13 |
@@ -826,7 +826,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 1781/1781 pass.** Everything below is a live-behaviour
+**No failing unit tests — 1783/1783 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
