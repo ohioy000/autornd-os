@@ -1090,9 +1090,10 @@ class TestTheWorkflow:
         spec = load("workflows/answer-and-recompute.yaml")
         assert spec.name == "answer-and-recompute"
         assert spec.ids == [
-            "triage", "asks", "asks_anchored", "context", "implement",
+            "triage", "asks", "asks_anchored", "context",
+            "request_switches", "implement",
             "blocked_check", "blocked_gate", "coverage", "consistency",
-            "recompute", "recompute_vote", "decision_notes"]
+            "recompute", "recompute_vote", "answer_switches"]
         recompute = spec.get("recompute")
         assert recompute.kind is NodeKind.AI
         assert recompute.tier == "recompute"
@@ -1169,7 +1170,7 @@ class TestTheWorkflow:
             spec.name,
             [n for n in spec.nodes
              if n.id not in {"recompute", "recompute_vote",
-                             "decision_notes"}],
+                             "answer_switches"}],
             spec.description)
         full, _, _ = await _drive(
             spec, _workflow_router(100.0, [200.0, 200.0, 200.0]),

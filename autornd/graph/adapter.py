@@ -11,6 +11,7 @@ Verdicts are stored as objects rather than dicts, so a condition like
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any, Callable
 
@@ -34,23 +35,60 @@ from autornd.knowledge.context import (
 from autornd.models.verdicts import Domain, role_key
 from autornd.profiles import get_profile
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
+from autornd.routing.switches import (
+    Switchboard, release_switchboard, use_switchboard)
 from autornd.specialists.base import Specialist
 from autornd.specialists.registry import get_specialists
 
 logger = logging.getLogger(__name__)
 
-# What the decision-notes node stores when it did not run: its own shape,
-# every note absent, so a reader sees a skip and never a set of notes.
-_DECISION_SKIP: dict[str, Any] = {
-    "skipped": True, "reason": "", "needs_sources": None,
-    "asks": [], "quotes": [], "questions_asked": 0,
-}
+
+def _switch_skip(names: list[str], reason: str) -> dict[str, Any]:
+    """What a switch node stores when it asked nothing: no record, and
+    every route `default`, so anything reading it acts as it did before."""
+    return {"skipped": True, "reason": reason, "records": [],
+            "route": {name: "default" for name in names}}
 
 __all__ = ["PhaseRunner", "UnknownPromptError"]
 
 
 class UnknownPromptError(KeyError):
     """A node names a prompt with no phase behind it."""
+
+
+def _request_item(runner: Any, state: ExecutionState) -> list[tuple[str, Any]]:
+    return [("request", {"request": state.request})]
+
+
+def _ask_items(runner: Any, state: ExecutionState) -> list[tuple[str, Any]]:
+    implement = state.outputs.get("implement")
+    answer = (implement.get("summary") if isinstance(implement, dict)
+              else getattr(implement, "summary", None)) or ""
+    items = []
+    for ask in runner._anchored_asks(state) or []:
+        number, quote = ask.get("number"), str(ask.get("quote") or "").strip()
+        if isinstance(number, int) and quote:
+            items.append((f"ask {number}",
+                          {"item": quote, "answer": str(answer)}))
+    return items
+
+
+def _quote_items(runner: Any, state: ExecutionState) -> list[tuple[str, Any]]:
+    return [(str(quote.get("url", "")),
+             {"question": quote.get("question_text")
+              or finding.get("question", ""),
+              "passage": quote.get("text", "")})
+            for record in runner._sources_seen
+            for finding in record.get("findings") or []
+            for quote in finding.get("quotes") or []
+            if quote.get("status") == "found"]
+
+
+# What a switch node's switch is asked about, by its declared `each`. A new
+# kind of evidence is a new entry here, not a new branch.
+_SWITCH_ITEMS: dict[str, Callable[..., list[tuple[str, Any]]]] = {
+    "request": _request_item, "asks": _ask_items, "quotes": _quote_items,
+}
 
 
 class PhaseRunner:
@@ -67,6 +105,9 @@ class PhaseRunner:
         executor: Any | None = None,
     ) -> None:
         self.client = client
+        # The run's decision switches: asked through this client, their
+        # records kept here until a phase record takes them.
+        self.switchboard = Switchboard(client)
         # Set by the executor so conditional tier routing can be evaluated.
         self.executor = executor
         self.on_phase = on_phase
@@ -279,12 +320,13 @@ class PhaseRunner:
         deferred: list[str] = []
         asked: list[str] = []
         lookup: dict = {}
-        self.context = await build_phase_context(
-            state.request, triage.domains, triage.specialists,
-            client=self.client, risk=triage.risk,
-            deferred_gaps=deferred, asked_questions=asked,
-            grounding_lookup=lookup,
-        )
+        async with self._switching("grounding", state):
+            self.context = await build_phase_context(
+                state.request, triage.domains, triage.specialists,
+                client=self.client, risk=triage.risk,
+                deferred_gaps=deferred, asked_questions=asked,
+                grounding_lookup=lookup,
+            )
         self.deferred_gaps = deferred
         self._record_sources("grounding", lookup.get("sources") or [], state)
         # HISTORY IS WHAT WAS ASKED (Ruling D37): the novelty check compares
@@ -343,10 +385,11 @@ class PhaseRunner:
             from autornd.knowledge.research import (
                 render_findings, research_gaps, source_records)
 
-            findings = await research_gaps(
-                self.client, state.request, list(self.deferred_gaps),
-                max_tokens=settings.search_max_tokens,
-            )
+            async with self._switching("verification", state):
+                findings = await research_gaps(
+                    self.client, state.request, list(self.deferred_gaps),
+                    max_tokens=settings.search_max_tokens,
+                )
             looked_up = len(findings)
             self._record_sources("verification",
                                  source_records(findings), state)
@@ -407,6 +450,29 @@ class PhaseRunner:
                 "blocked_on": list(result.data["blocked"]),
             })
         return result
+
+    @contextlib.asynccontextmanager
+    async def _switching(self, where: str, state: ExecutionState):
+        """Make this run's switchboard the one the knowledge layer asks,
+        and write what it was asked through the phase channel afterwards.
+
+        Written as the sources are: one record, `switches`, naming where in
+        the run the questions were put. Nothing is written when none was.
+        """
+        token = use_switchboard(self.switchboard)
+        try:
+            yield
+        finally:
+            release_switchboard(token)
+            records = self.switchboard.drain()
+            responses = self.switchboard.drain_responses()
+            if records and self.on_phase:
+                self.on_phase(
+                    "switches", {"where": where, "records": records},
+                    responses or [ModelResponse(
+                        content="", model="", prompt_tokens=0,
+                        completion_tokens=0, cost=0.0)],
+                    state.iteration)
 
     def _record_sources(self, lookup: str, records: list[dict],
                         state: ExecutionState) -> None:
@@ -568,10 +634,11 @@ class PhaseRunner:
         risk = getattr(triage, "risk", None) if triage is not None else None
         findings = []
         if novel and worth_a_lookup(risk):
-            findings = await research_gaps(
-                self.client, state.request, novel,
-                max_tokens=settings.search_max_tokens,
-            )
+            async with self._switching("regrounding", state):
+                findings = await research_gaps(
+                    self.client, state.request, novel,
+                    max_tokens=settings.search_max_tokens,
+                )
             self._record_sources("regrounding", source_records(findings), state)
             if findings:
                 self.context = (self.context + "\n\n"
@@ -966,30 +1033,52 @@ class PhaseRunner:
         if node.prompt == "recompute":
             return {"skipped": True, "flagged": False, "reason": reason,
                     "samples": []}
-        if node.prompt == "decision_notes":
-            return dict(_DECISION_SKIP, reason=reason)
+        if node.prompt == "switches":
+            return _switch_skip(
+                [str(n) for n in (node.args.get("ask") or [])], reason)
         if node.kind is NodeKind.CHECK:
             return {"skipped": True, "passed": False, "detail": reason,
                     "reason": reason}
         return {"skipped": True, "reason": reason}
 
-    async def _phase_decision_notes(self, node: Node, state: ExecutionState):
-        """Narrow notes on the finished answer, from the decision tier.
+    def _switch_items(self, switch: Any, state: ExecutionState
+                      ) -> list[tuple[str, str, Any]]:
+        """What one switch is asked about in this run, by what it is
+        declared to read: one item for `request`, one per anchored ask for
+        `asks`, one per quote found on its page for `quotes`."""
+        collect = _SWITCH_ITEMS.get(switch.each)
+        if collect is None:
+            return []
+        return [(switch.name, label, evidence)
+                for label, evidence in collect(self, state)]
 
-        Recorded and never read: no gate, loop or status looks at them
-        (owner, 2026-11-13). The tier is optional; unset, the node skips
-        and records the skip, as the recompute does.
+    async def _phase_switches(self, node: Node, state: ExecutionState):
+        """A switch node: the switches its args name, asked in one request.
+
+        Its output is the records and, for each switch asked about the
+        request as a whole, its `route`, which a gate or a tier_when may
+        read. A switch in shadow routes `default`, so a condition written
+        against yes or no is false until the switch is made live. With no
+        decision tier the node skips and every route is `default`.
         """
-        if self.client.decision_model() is None:
-            return dict(_DECISION_SKIP, reason=(
+        names = [str(n) for n in (node.args.get("ask") or [])]
+        if not self.switchboard.on():
+            return _switch_skip(names, (
                 "no model configured for the decision tier — "
-                "no decision notes were taken")), []
-        implement = state.outputs.get("implement")
-        answer = (implement.get("summary") if isinstance(implement, dict)
-                  else getattr(implement, "summary", None)) or ""
-        return await phases.run_decision_notes(
-            self.client, state.request, str(answer),
-            self._anchored_asks(state), self._sources_seen)
+                "no switch was asked")), []
+        items = [item for name in names
+                 if name in self.switchboard.switches
+                 for item in self._switch_items(
+                     self.switchboard.switches[name], state)]
+        before = len(self.switchboard.records)
+        records = await self.switchboard.ask(items)
+        del self.switchboard.records[before:]   # this node records its own
+        route = {name: "default" for name in names}
+        for record in records:
+            if self.switchboard.switches[record["switch"]].each == "request":
+                route[record["switch"]] = record["route"]
+        return ({"skipped": False, "reason": "", "records": records,
+                 "route": route}, self.switchboard.drain_responses())
 
     async def _phase_recompute(self, node: Node, state: ExecutionState):
         """The recompute node (Ruling D53): blind recomputation.

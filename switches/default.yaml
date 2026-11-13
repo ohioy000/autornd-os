@@ -1,0 +1,122 @@
+# Decision switches: small yes/no questions a decision model answers for a
+# fraction of a cent, each guarding a step that costs far more.
+#
+# A switch belongs here only if all five hold (owner, 2026-11-13):
+#   1. the step it guards costs much more than the question;
+#   2. the evidence is in hand as text (the model computes and fetches nothing);
+#   3. no free rule can decide it (a deterministic check comes first);
+#   4. there is a safe answer for when the model is unsure or unavailable;
+#   5. the outcome can be checked afterwards, so the thresholds can be set
+#      from data.
+#
+# Fields:
+#   question  one yes/no question about the evidence the switch is shown
+#   yes, no   what each answer means
+#   yes_at    probability at or above which the answer is a confident yes
+#   no_at     probability at or below which it is a confident no
+#   safe      the answer taken when it is neither, or when the call failed:
+#             always the more careful, more expensive side
+#   mode      shadow: the answer is recorded and nothing acts on it
+#             live:   the harness acts on it
+#   guards    what acting on it changes, in plain words
+#
+# A switch ships in shadow. Moving one to live changes what the harness
+# concludes, so it is the owner's ruling, on evidence, and the ruling is
+# written beside the switch. The thresholds are judgments, not measurements,
+# until a run sets them: 0.80 and 0.20 leave a wide unsure band on purpose.
+
+needs_sources:
+  question: >
+    Can this request be answered correctly only with facts from an outside
+    source, such as a standard, a regulation, a datasheet or a published
+    measurement?
+  yes: It turns on a figure or wording that a named or implied outside document holds.
+  no: It can be worked out from what the request itself states and general principles.
+  yes_at: 0.80
+  no_at: 0.20
+  safe: "yes"
+  # Live by the owner's ruling of 2026-11-13. The evidence: nine recorded
+  # runs replayed that day on two decision models. Both gave 0.00 on a
+  # voltage-divider question that needs no source and 0.98 to 1.00 on eight
+  # runs of three questions that do, among them the run triage had rated low
+  # risk, where no lookup ran and the answer was wrong. Nine runs on four
+  # questions is a first look, not a calibration.
+  mode: live
+  guards: >
+    Live, a yes runs the grounding lookup whatever triage rated the risk, and
+    a no skips a lookup that only the risk rating asked for. A request that
+    asks for its sources in words is always looked up, whatever this says.
+
+chunk_helps:
+  question: >
+    Does this excerpt contain information that helps answer this question?
+  yes: The excerpt states facts, figures or rules that bear on the question.
+  no: The excerpt is about another subject, or only shares words with the question.
+  yes_at: 0.80
+  no_at: 0.20
+  safe: "yes"
+  mode: shadow
+  guards: >
+    Live, a no drops the excerpt before it is ranked and briefed from. It
+    covers what the distance bound cannot: excerpts between 0.51 and 0.81
+    that are about something else.
+
+finding_answers:
+  question: >
+    Does this stored passage state an answer to this question?
+  yes: The passage states the fact or figure the question asks for.
+  no: The passage is about the subject but does not state what is asked, or is about something else.
+  yes_at: 0.80
+  no_at: 0.20
+  safe: "no"
+  mode: shadow
+  guards: >
+    Live, a yes reuses a passage an earlier run already checked against its
+    page, and no new search is paid for. Asked only when the stored passage
+    is too far in wording for the reuse rule and near enough to be a
+    candidate.
+
+hard_request:
+  question: >
+    Does answering this request correctly need several dependent steps of
+    calculation or reasoning, or the reconciling of conflicting requirements?
+  yes: It chains calculations, weighs trade-offs, or must reconcile constraints.
+  no: It is a single lookup, a single formula, or a direct statement of fact.
+  yes_at: 0.80
+  no_at: 0.20
+  safe: "yes"
+  mode: shadow
+  each: request
+  guards: >
+    Live, a workflow may choose the answering tier on it (tier_when), sending
+    an easy request to a cheaper model. No shipped workflow does yet: which
+    tier is the cheaper one is a ruling.
+
+ask_covered:
+  question: >
+    The item quotes one thing the request asks for. Does the answer give it?
+  yes: The answer states a definite value, verdict, step or text for this ask.
+  no: The answer leaves this ask out, defers it, or says it cannot be given.
+  yes_at: 0.80
+  no_at: 0.20
+  safe: "yes"
+  mode: shadow
+  each: asks
+  guards: >
+    Recorded beside the recompute vote, which cannot see an omission. No
+    step acts on it yet.
+
+quote_answers:
+  question: >
+    Does the passage itself state an answer to the question it was quoted for?
+  yes: The passage states the fact or figure the question asks for.
+  no: The passage is about the subject but does not state what is asked, or is about something else.
+  yes_at: 0.80
+  no_at: 0.20
+  safe: "yes"
+  mode: shadow
+  each: quotes
+  guards: >
+    Recorded beside each quote the check found on its page. Found means the
+    words are there, not that they answer the question. No step acts on it
+    yet.
