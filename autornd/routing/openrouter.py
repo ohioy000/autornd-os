@@ -275,6 +275,27 @@ def _is_transient_tls_alert(exc: BaseException) -> bool:
     return False
 
 
+def _is_read_error(exc: BaseException) -> bool:
+    """A connection that broke while the response was being read, by type.
+
+    Measured live 2026-11-13: an engineering call's connection was reset
+    mid-read (``httpx.ReadError``) and, unretried, ended a nine-minute run
+    blocked with its lookup already paid for. The same family as the server
+    disconnect: a failure of the transport, not a verdict about the serving,
+    so it takes the same bounded retries and the same D45 accounting under
+    its own counted class. Checked after the TLS alert, which can arrive
+    wrapped in this type and keeps its own class.
+    """
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if isinstance(current, httpx.ReadError):
+            return True
+        current = current.__cause__ or current.__context__
+    return False
+
+
 def _is_server_disconnect(exc: BaseException) -> bool:
     """A server disconnect before any response, matched by type.
 
@@ -654,6 +675,9 @@ class OpenRouterClient:
     # counting, for its own class — the reconciliation's
     # by_kind names which transient condition each retry was.
     RETRY_SERVER_DISCONNECT = "server_disconnect"
+    # The read-error retry (2026-11-13): a connection reset while the
+    # response was being read, counted as its own class.
+    RETRY_READ_ERROR = "read_error"
 
     def _count_retry(self, kind: str) -> None:
         self.retries_by_kind[kind] = self.retries_by_kind.get(kind, 0) + 1
@@ -679,7 +703,8 @@ class OpenRouterClient:
             "excluded_from_rejection_counters": [
                 self.RETRY_EMPTY_REPLY, self.RETRY_PARSE_FAILURE,
                 self.RETRY_TRANSIENT_TLS,
-                self.RETRY_SERVER_DISCONNECT],
+                self.RETRY_SERVER_DISCONNECT,
+                self.RETRY_READ_ERROR],
         }
 
     async def _post_retrying_transient_faults(
@@ -690,11 +715,13 @@ class OpenRouterClient:
             ) -> httpx.Response:
         """POST, retrying the connection's transient conditions.
 
-        Two conditions retry, each matched by type: the TLS
+        Three conditions retry, each matched by type: the TLS
         record-MAC alert (a condition of the connection's
-        record layer) and the server disconnect (R5: the
+        record layer), the server disconnect (R5: the
         serving closed the connection before answering — a
-        transport failure, not a verdict about the serving).
+        transport failure, not a verdict about the serving)
+        and the read error (2026-11-13: the connection was
+        reset while the response was being read).
         The retry is a fresh attempt of the same request.
         Bounded and backed off like the 429 loop above, and
         counted by class, so the record reconciles every
@@ -734,6 +761,9 @@ class OpenRouterClient:
                 elif _is_server_disconnect(exc):
                     retry_kind = self.RETRY_SERVER_DISCONNECT
                     condition = "server disconnect"
+                elif _is_read_error(exc):
+                    retry_kind = self.RETRY_READ_ERROR
+                    condition = "read error"
                 else:
                     raise
                 if attempt + 1 >= _TRANSIENT_TLS_ATTEMPTS:
