@@ -785,6 +785,38 @@ def _vote(answer_value, sample_values, kind="value",
 class TestVoteRules:
     """The vote's comparison rules, unit by unit (D53 §2 (9))."""
 
+    def test_an_ask_named_by_its_number_as_text_is_that_ask(self):
+        """The live SX1276 answer of 2026-11-12, as recorded: 157 dB
+        under ask "1", three samples at 168 dB under ask 1. A number
+        written as text names the ask; read as a quote it named none
+        and the vote was unchecked."""
+        for named in ("1", " 1 ", "#1", "ask 1", "Ask 1."):
+            result = recompute_vote(
+                results=[{"ask": named, "value": "157", "unit": "dB"}],
+                samples=[{"results": [
+                    {"ask": 1, "value": 168, "unit": "dB"}]}] * 3,
+                asks=[{"number": 1, "quote": "the ask", "kind": "value"}],
+                request="the request asks the answer to give the ask")
+            assert result.data["unchecked"] is False, named
+            assert result.data["flagged"] is True, named
+        # A quote that is not a number is still read as a quote.
+        result = recompute_vote(
+            results=[{"ask": "the ask", "value": 168, "unit": "dB"}],
+            samples=[{"results": [
+                {"ask": "1", "value": 168, "unit": "dB"}]}] * 3,
+            asks=[{"number": 1, "quote": "the ask", "kind": "value"}],
+            request="the request asks the answer to give the ask")
+        assert result.data["checked"] is True
+        assert result.data["flagged"] is False
+        # Text that names no ask names none.
+        result = recompute_vote(
+            results=[{"ask": "1 or 2", "value": 168, "unit": "dB"}],
+            samples=[{"results": [
+                {"ask": 1, "value": 168, "unit": "dB"}]}] * 3,
+            asks=[{"number": 1, "quote": "the ask", "kind": "value"}],
+            request="the request asks the answer to give the ask")
+        assert result.data["unchecked"] is True
+
     def test_identity_values_compare_after_normalisation(self):
         """'VL-42' and 'vl 42' are one identifier: case, spacing and
         punctuation dropped, the multiplication sign and a count's
@@ -1296,6 +1328,18 @@ class TestGoldenPrompts:
         # sentence is the addition, and it is absent without the arg.
         assert RESULTS_INSTRUCTION not in VERIFY_FIRST
         assert RESULTS_INSTRUCTION not in ENGINEERING_RND
+
+    async def test_the_json_contract_lists_results_only_when_asked(self):
+        """The field list the reply is written to names results when
+        the node asks for them. Without the line the answer returned
+        results empty on two live runs with three value asks each, and
+        the vote compared nothing."""
+        line = "\n- results: list of {\"ask\": the ask's number"
+        prompt = await self._implement_prompt(None, results=True)
+        assert prompt.index("- iteration: 1") < prompt.index(
+            line) < prompt.index("- summary: the implementation")
+        assert line not in VERIFY_FIRST
+        assert line not in ENGINEERING_RND
 
     async def test_the_recompute_prompt_is_the_ruled_shape(self):
         """The recompute prompt: the system 'You are a careful senior
