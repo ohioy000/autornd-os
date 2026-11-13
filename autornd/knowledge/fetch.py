@@ -21,13 +21,17 @@ import asyncio
 import hashlib
 import io
 import ipaddress
+import json
 import logging
 import re
 import socket
+import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from html.parser import HTMLParser
+from typing import Any, Callable
 from urllib.parse import urljoin, urlsplit
+from xml.etree import ElementTree
 
 import httpx
 
@@ -62,10 +66,38 @@ MAX_FETCHES = 8
 # XML is read as HTML is, its markup dropped: govinfo.gov publishes the Code
 # of Federal Regulations as XML, and on 2026-11-12 both such pages a lookup
 # quoted were recorded unfetched for their content type.
+# Feeds are XML too: open paper indexes answer a query as Atom.
 HTML_TYPES = ("text/html", "application/xhtml+xml", "application/xml",
-              "text/xml")
-TEXT_TYPES = ("text/plain", "text/markdown")
+              "text/xml", "application/atom+xml", "application/rss+xml")
+TEXT_TYPES = ("text/plain", "text/markdown", "text/csv",
+              "text/tab-separated-values")
 PDF_TYPES = ("application/pdf",)
+# The answer of a public database's web interface (a paper index, a
+# chemical or materials register, a standards catalogue) is JSON. It is
+# read as its keys and values, one per line, so a quoted value is found as
+# written and not behind JSON's escapes. Any type ending +json is JSON.
+JSON_TYPES = ("application/json", "text/json")
+# Books and office documents: each is a zip of XML, read with the standard
+# library. Added on the owner's word of 2026-11-13, to read as much of what
+# a lookup can quote as the fetch safely can; none has been met live yet.
+EPUB_TYPES = ("application/epub+zip",)
+DOCX_TYPES = ("application/vnd.openxmlformats-officedocument"
+              ".wordprocessingml.document",)
+PPTX_TYPES = ("application/vnd.openxmlformats-officedocument"
+              ".presentationml.presentation",)
+XLSX_TYPES = ("application/vnd.openxmlformats-officedocument"
+              ".spreadsheetml.sheet",)
+# A server that does not say what a file is. Makers' sites serve datasheets
+# this way. The file is then read by its first bytes and, for a zip, by the
+# members that mark it as a book or an office document; anything else is
+# refused as before.
+UNNAMED_TYPES = ("application/octet-stream", "binary/octet-stream",
+                 "application/zip", "application/x-zip-compressed", "")
+
+# What one zipped document may unpack to, in bytes, summed over the members
+# read. A zip can hold far more than its size, so the read is bounded as the
+# fetch is. A judgment: four times the fetch cap, above any real book's text.
+ZIP_MAX_BYTES = 60_000_000
 
 # The eCFR's reader page answers an automated client with a "Request Access"
 # challenge, HTTP 200; its renderer API returns the same section as HTML
@@ -144,11 +176,207 @@ def challenge_page(text: str) -> bool:
     return any(mark in folded for mark in _CHALLENGE_MARKS)
 
 
+class UnreadableDocument(ValueError):
+    """A document the fetch holds but cannot turn into text."""
+
+
+class PasswordProtected(UnreadableDocument):
+    """A PDF that needs a password to open."""
+
+
+class UnpacksTooLarge(UnreadableDocument):
+    """A zipped document that unpacks past ZIP_MAX_BYTES."""
+
+
 def pdf_text(raw: bytes) -> str:
-    """The text layer of a PDF, pages in order. Raises when it cannot be read."""
+    """The text layer of a PDF, pages in order. Raises when it cannot be read.
+
+    Many datasheets are encrypted with an empty password, to forbid editing
+    and not reading; a viewer opens them without asking. They are opened the
+    same way. Measured live 2026-11-13: one such PDF was recorded failed
+    with DependencyError, the cipher library not being installed. A PDF
+    that needs a real password stays unread and says so.
+    """
     from pypdf import PdfReader
     reader = PdfReader(io.BytesIO(raw))
+    if reader.is_encrypted and not reader.decrypt(""):
+        raise PasswordProtected("the PDF needs a password")
     return "\n".join(page.extract_text() or "" for page in reader.pages)
+
+
+class _Zip:
+    """A zipped document's members, read under one size bound."""
+
+    def __init__(self, raw: bytes) -> None:
+        self.archive = zipfile.ZipFile(io.BytesIO(raw))
+        self.names = self.archive.namelist()
+        self._read = 0
+
+    def read(self, name: str) -> str:
+        self._read += self.archive.getinfo(name).file_size
+        if self._read > ZIP_MAX_BYTES:
+            raise UnpacksTooLarge(f"unpacks past {ZIP_MAX_BYTES} bytes")
+        return self.archive.read(name).decode("utf-8", errors="replace")
+
+
+def _local(tag: str) -> str:
+    """An XML tag without its namespace."""
+    return tag.rsplit("}", 1)[-1]
+
+
+def _numbered(names: list[str], pattern: str) -> list[str]:
+    """The members matching `pattern`, ordered by the number it captures."""
+    found = [(int(m.group(1)), n) for n in names
+             if (m := re.fullmatch(pattern, n))]
+    return [n for _, n in sorted(found)]
+
+
+def epub_text(raw: bytes) -> str:
+    """A book's text, chapters in reading order.
+
+    The order is the package file's spine. A book whose package file cannot
+    be followed is read in the order of its member names instead.
+    """
+    book = _Zip(raw)
+    pages: list[str] = []
+    try:
+        container = ElementTree.fromstring(book.read("META-INF/container.xml"))
+        package_name = next(e.get("full-path") for e in container.iter()
+                            if _local(e.tag) == "rootfile")
+        package = ElementTree.fromstring(book.read(package_name))
+        items = {e.get("id"): e.get("href") for e in package.iter()
+                 if _local(e.tag) == "item"}
+        base = package_name.rsplit("/", 1)[0] + "/" if "/" in package_name else ""
+        for ref in (e for e in package.iter() if _local(e.tag) == "itemref"):
+            href = (items.get(ref.get("idref")) or "").split("#")[0]
+            if base + href in book.names:
+                pages.append(base + href)
+    except (KeyError, StopIteration, TypeError, ElementTree.ParseError):
+        pages = []
+    if not pages:
+        pages = sorted(n for n in book.names
+                       if n.lower().endswith((".xhtml", ".html", ".htm")))
+    return "\n".join(html_text(book.read(name)) for name in pages)
+
+
+def _paragraphs(xml: str, prefix: str) -> str:
+    """Office XML as text, each paragraph on its own line."""
+    xml = re.sub(rf"</{prefix}:p>|<{prefix}:br\s*/>", "\n", xml)
+    return html_text(re.sub(rf"<{prefix}:tab\s*/>", "\t", xml))
+
+
+def docx_text(raw: bytes) -> str:
+    """A word-processor document's body text."""
+    return _paragraphs(_Zip(raw).read("word/document.xml"), "w")
+
+
+def pptx_text(raw: bytes) -> str:
+    """A slide deck's text, slides in order."""
+    deck = _Zip(raw)
+    return "\n".join(_paragraphs(deck.read(name), "a") for name in
+                     _numbered(deck.names, r"ppt/slides/slide(\d+)\.xml"))
+
+
+def xlsx_text(raw: bytes) -> str:
+    """A workbook's cells: a row per line, cells tab-separated, sheets in order."""
+    book = _Zip(raw)
+    shared: list[str] = []
+    if "xl/sharedStrings.xml" in book.names:
+        strings = ElementTree.fromstring(book.read("xl/sharedStrings.xml"))
+        shared = ["".join(t.text or "" for t in item.iter()
+                          if _local(t.tag) == "t")
+                  for item in strings if _local(item.tag) == "si"]
+    lines: list[str] = []
+    for name in _numbered(book.names, r"xl/worksheets/sheet(\d+)\.xml"):
+        sheet = ElementTree.fromstring(book.read(name))
+        for row in (e for e in sheet.iter() if _local(e.tag) == "row"):
+            cells: list[str] = []
+            for cell in (e for e in row if _local(e.tag) == "c"):
+                value = "".join(e.text or "" for e in cell.iter()
+                                if _local(e.tag) in ("v", "t"))
+                if cell.get("t") == "s" and value.isdigit():
+                    value = shared[int(value)] if int(value) < len(shared) else ""
+                cells.append(value)
+            if any(cells):
+                lines.append("\t".join(cells))
+    return "\n".join(lines)
+
+
+def json_text(text: str) -> str:
+    """JSON as its keys and values, one per line; the text itself if it is not JSON."""
+    try:
+        data = json.loads(text)
+    except ValueError:
+        return text
+    lines: list[str] = []
+
+    def walk(value: Any, key: str) -> None:
+        if isinstance(value, dict):
+            for k, v in value.items():
+                walk(v, str(k))
+        elif isinstance(value, list):
+            for v in value:
+                walk(v, key)
+        elif value is not None:
+            shown = value if isinstance(value, str) else json.dumps(value)
+            lines.append(f"{key}: {shown}" if key else str(shown))
+
+    walk(data, "")
+    return "\n".join(lines)
+
+
+# The documents read from their bytes, not decoded as text: kind -> (the
+# name a failure gives it, what it says when it holds no text, its reader).
+_DOCUMENT_READERS: dict[str, tuple[str, str, Callable[[bytes], str]]] = {
+    "pdf": ("PDF", "the PDF has no text layer", pdf_text),
+    "epub": ("EPUB", "the EPUB has no text", epub_text),
+    "docx": ("document", "the document has no text", docx_text),
+    "pptx": ("slide deck", "the slide deck has no text", pptx_text),
+    "xlsx": ("workbook", "the workbook has no text", xlsx_text),
+}
+_KIND_BY_TYPE: dict[str, str] = {
+    **{t: "html" for t in HTML_TYPES}, **{t: "text" for t in TEXT_TYPES},
+    **{t: "json" for t in JSON_TYPES}, **{t: "pdf" for t in PDF_TYPES},
+    **{t: "epub" for t in EPUB_TYPES}, **{t: "docx" for t in DOCX_TYPES},
+    **{t: "pptx" for t in PPTX_TYPES}, **{t: "xlsx" for t in XLSX_TYPES},
+}
+
+
+def readable_type(content_type: str) -> bool:
+    """Can a body of this type be read, or looked into to find out?"""
+    return (content_type in _KIND_BY_TYPE or content_type in UNNAMED_TYPES
+            or content_type.endswith("+json"))
+
+
+def document_kind(content_type: str, raw: bytes) -> str | None:
+    """How a body is read: by its stated type, else by what its bytes show.
+
+    None when it is nothing the fetch reads as text.
+    """
+    if content_type in _KIND_BY_TYPE:
+        return _KIND_BY_TYPE[content_type]
+    if content_type.endswith("+json"):
+        return "json"
+    if content_type not in UNNAMED_TYPES:
+        return None
+    if raw.lstrip()[:5] == b"%PDF-":
+        return "pdf"
+    if raw[:2] != b"PK":
+        return None
+    try:
+        archive = zipfile.ZipFile(io.BytesIO(raw))
+        names = set(archive.namelist())
+        if "mimetype" in names and archive.getinfo("mimetype").file_size < 100 \
+                and archive.read("mimetype").strip() == b"application/epub+zip":
+            return "epub"
+    except (zipfile.BadZipFile, KeyError, OSError):
+        return None
+    for member, kind in (("word/document.xml", "docx"),
+                         ("ppt/presentation.xml", "pptx"),
+                         ("xl/workbook.xml", "xlsx")):
+        if member in names:
+            return kind
+    return None
 
 
 async def _fetch(url: str) -> Source:
@@ -176,11 +404,12 @@ async def _fetch(url: str) -> Source:
                                   final_url=current)
                 content_type = (response.headers.get("content-type", "")
                                 .split(";")[0].strip().lower())
-                if content_type not in HTML_TYPES + TEXT_TYPES + PDF_TYPES:
-                    return Source(url, "failed",
-                                  f"content type {content_type or 'none'} is not "
-                                  f"read as text", final_url=current,
-                                  content_type=content_type)
+                unread = Source(url, "failed",
+                                f"content type {content_type or 'none'} is not "
+                                f"read as text", final_url=current,
+                                content_type=content_type)
+                if not readable_type(content_type):
+                    return unread
                 body = bytearray()
                 async for chunk in response.aiter_bytes():
                     body.extend(chunk)
@@ -189,19 +418,22 @@ async def _fetch(url: str) -> Source:
                                       f"larger than {FETCH_MAX_BYTES} bytes",
                                       final_url=current, content_type=content_type)
                 raw = bytes(body)
-                if content_type in PDF_TYPES:
+                kind = document_kind(content_type, raw)
+                if kind is None:
+                    return unread
+                if kind in _DOCUMENT_READERS:
+                    label, empty, reader = _DOCUMENT_READERS[kind]
                     try:
                         # Off the event loop: a large PDF takes seconds.
-                        text = await asyncio.to_thread(pdf_text, raw)
+                        text = await asyncio.to_thread(reader, raw)
                     except Exception as exc:
                         return Source(url, "failed",
-                                      f"the PDF could not be read: "
+                                      f"the {label} could not be read: "
                                       f"{type(exc).__name__}"[:200],
                                       final_url=current,
                                       content_type=content_type)
                     if not text.strip():
-                        return Source(url, "failed",
-                                      "the PDF has no text layer",
+                        return Source(url, "failed", empty,
                                       final_url=current,
                                       content_type=content_type)
                 else:
@@ -210,8 +442,10 @@ async def _fetch(url: str) -> Source:
                                           errors="replace")
                     except LookupError:
                         text = raw.decode("utf-8", errors="replace")
-                    if content_type in HTML_TYPES:
+                    if kind == "html":
                         text = html_text(text)
+                    elif kind == "json":
+                        text = json_text(text)
                     if challenge_page(text):
                         return Source(url, "failed",
                                       "the page asked for proof of a person "

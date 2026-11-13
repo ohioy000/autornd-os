@@ -23,6 +23,10 @@ dependencies = [
     # knowledge/fetch.py reads a quoted PDF's text layer with it, so a quote
     # from a datasheet or a standard published as PDF can be checked.
     "pypdf>=4.0.0",
+    # pypdf opens an AES-encrypted PDF only with this installed. Datasheets
+    # are often encrypted with an empty password; without it each one was
+    # recorded unread (DependencyError, live 2026-11-13).
+    "cryptography>=42.0.0",
 ]
 
 [project.optional-dependencies]

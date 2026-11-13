@@ -150,6 +150,22 @@ class TestOptionalTiers:
         assert finding.ok and finding.detail.startswith("unused")
         assert "MODEL_RANKER is unset" in finding.detail
 
+    def test_a_recompute_pin_is_checked_like_any_other(self):
+        """Until 2026-11-13 a 'recompute:' pin was refused as "not a tier
+        this harness runs", so the three recompute calls of the default
+        workflow could not be pinned."""
+        models = {**GOOD, "recompute": "vendor/recompute"}
+        endpoints = {"vendor/recompute": {"Good"}}
+        out = check(models, {"recompute": "Good"}, KNOWN, endpoints)
+        (finding,) = [f for f in out if f.subject == "pin recompute"]
+        assert finding.ok and "serves vendor/recompute" in finding.detail
+        out = check(models, {"recompute": "Other"}, KNOWN, endpoints)
+        assert "pin recompute" in _fail_subjects(out)
+        # Unset, the samples do not run, so nothing can fail on the pin.
+        out = check({**GOOD, "recompute": ""}, {"recompute": "Good"}, KNOWN, {})
+        (finding,) = [f for f in out if f.subject == "pin recompute"]
+        assert finding.ok and "unused" in finding.detail
+
     def test_a_premium_pin_is_unused_because_no_call_reads_it(self):
         """The independent pass calls function 'independent' (phases.py), so
         the client never applies a 'premium:' pin, whether or not its

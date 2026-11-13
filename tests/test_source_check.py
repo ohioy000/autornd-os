@@ -654,3 +654,163 @@ class TestAnXmlPageIsRead:
         finding, = await research_gaps(
             _client(_reply(quotes=[(1, PASSAGE, PAGE)])), "a radio", ["The EU 868 MHz limit"])
         assert finding.quotes[0].status == "found"
+
+
+def _zip(members: dict[str, str]) -> bytes:
+    import io
+    import zipfile
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as archive:
+        for name, body in members.items():
+            archive.writestr(name, body)
+    return out.getvalue()
+
+
+def _epub(*chapters: str) -> bytes:
+    """A book whose spine lists its chapters in the order given, which is
+    the reverse of their file names."""
+    names = [f"c{len(chapters) - i}.xhtml" for i in range(len(chapters))]
+    manifest = "".join(f'<item id="i{i}" href="{n}"/>' for i, n in enumerate(names))
+    spine = "".join(f'<itemref idref="i{i}"/>' for i in range(len(names)))
+    return _zip({
+        "mimetype": "application/epub+zip",
+        "META-INF/container.xml": (
+            '<container xmlns="urn:oasis:names:tc:opendocument:xmlns:container">'
+            '<rootfiles><rootfile full-path="OEBPS/book.opf"/></rootfiles></container>'),
+        "OEBPS/book.opf": (
+            '<package xmlns="http://www.idpf.org/2007/opf"><manifest>'
+            f"{manifest}</manifest><spine>{spine}</spine></package>"),
+        **{f"OEBPS/{n}": f"<html><body><p>{c}</p><script>no</script></body></html>"
+           for n, c in zip(names, chapters)},
+    })
+
+
+def _docx(*paragraphs: str) -> bytes:
+    body = "".join(f"<w:p><w:r><w:t>{p}</w:t></w:r></w:p>" for p in paragraphs)
+    return _zip({"word/document.xml": f"<w:document><w:body>{body}</w:body></w:document>"})
+
+
+def _pptx(*slides: str) -> bytes:
+    return _zip({"ppt/presentation.xml": "<p:presentation/>", **{
+        f"ppt/slides/slide{i}.xml": f"<p:sld><a:p><a:r><a:t>{s}</a:t></a:r></a:p></p:sld>"
+        for i, s in enumerate(slides, 1)}})
+
+
+def _xlsx(shared: str, number: str) -> bytes:
+    ns = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+    return _zip({
+        "xl/workbook.xml": f"<workbook {ns}/>",
+        "xl/sharedStrings.xml": f"<sst {ns}><si><t>{shared}</t></si></sst>",
+        "xl/worksheets/sheet1.xml": (
+            f'<worksheet {ns}><sheetData><row><c t="s"><v>0</v></c>'
+            f"<c><v>{number}</v></c></row></sheetData></worksheet>"),
+    })
+
+
+def _encrypted(pdf: bytes, user_password: str) -> bytes:
+    import io
+    from pypdf import PdfReader, PdfWriter
+    writer = PdfWriter()
+    writer.append(PdfReader(io.BytesIO(pdf)))
+    writer.encrypt(user_password, owner_password="owner", algorithm="AES-256")
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()
+
+
+OFFICE = "application/vnd.openxmlformats-officedocument."
+
+
+class TestBooksDocumentsAndData:
+    """What the fetch reads beyond pages and plain PDFs (owner, 2026-11-13)."""
+
+    async def _read(self, monkeypatch, content_type: str, body: bytes):
+        monkeypatch.setattr(fetch, "_transport", _served({
+            PAGE: (200, {"content-type": content_type}, body)}))
+        return await fetch.fetch_source(PAGE)
+
+    async def test_a_pdf_encrypted_with_no_password_is_opened(self, monkeypatch):
+        """Live 2026-11-13: a datasheet encrypted against editing was
+        recorded failed with DependencyError."""
+        body = _encrypted(_pdf(PASSAGE)[2], "")
+        source = await self._read(monkeypatch, "application/pdf", body)
+        assert source.status == "fetched" and PASSAGE in source.text
+
+    async def test_a_pdf_that_needs_a_password_says_so(self, monkeypatch):
+        body = _encrypted(_pdf(PASSAGE)[2], "secret")
+        source = await self._read(monkeypatch, "application/pdf", body)
+        assert source.status == "failed"
+        assert source.reason == "the PDF could not be read: PasswordProtected"
+
+    async def test_an_epub_is_read_in_its_reading_order(self, monkeypatch):
+        source = await self._read(monkeypatch, "application/epub+zip",
+                                  _epub("First chapter.", PASSAGE))
+        assert source.status == "fetched"
+        assert source.text.index("First chapter.") < source.text.index(PASSAGE)
+        assert "no" not in source.text.split()
+
+    async def test_an_epub_with_no_usable_package_file_is_still_read(self, monkeypatch):
+        body = _zip({"mimetype": "application/epub+zip",
+                     "a.xhtml": f"<html><body><p>{PASSAGE}</p></body></html>"})
+        source = await self._read(monkeypatch, "application/epub+zip", body)
+        assert source.status == "fetched" and PASSAGE in source.text
+
+    @pytest.mark.parametrize("content_type, body, lines", [
+        (OFFICE + "wordprocessingml.document", _docx("Scope.", PASSAGE),
+         ["Scope.", PASSAGE]),
+        (OFFICE + "presentationml.presentation", _pptx("Title", PASSAGE),
+         ["Title", PASSAGE]),
+        (OFFICE + "spreadsheetml.sheet", _xlsx("Limit, mW", "25"),
+         ["Limit, mW\t25"]),
+    ])
+    async def test_an_office_document_is_read_line_by_line(
+            self, monkeypatch, content_type, body, lines):
+        source = await self._read(monkeypatch, content_type, body)
+        assert source.status == "fetched"
+        assert [l for l in source.text.splitlines() if l.strip()] == lines
+
+    @pytest.mark.parametrize("content_type", [
+        "application/json", "application/vnd.api+json"])
+    async def test_json_is_read_as_its_keys_and_values(self, monkeypatch, content_type):
+        """A database's answer: a quoted value is found as written, not
+        behind JSON's escapes."""
+        quoted = 'The limit is "25 mW" at 868 MHz (±1 %)'
+        body = json.dumps({"record": {"title": quoted, "year": 2024,
+                                      "tags": ["srd", None]}}).encode()
+        source = await self._read(monkeypatch, content_type, body)
+        assert source.status == "fetched"
+        assert source.text.splitlines() == [
+            f"title: {quoted}", "year: 2024", "tags: srd"]
+
+    async def test_text_that_is_not_json_is_kept_as_it_came(self, monkeypatch):
+        source = await self._read(monkeypatch, "application/json", b"{not json")
+        assert source.status == "fetched" and source.text == "{not json"
+
+    @pytest.mark.parametrize("body, found", [
+        (_pdf(PASSAGE)[2], True),
+        (_epub(PASSAGE), True),
+        (_docx(PASSAGE), True),
+        (_zip({"readme.txt": PASSAGE}), False),
+        (b"\x89PNG\r\n" + PASSAGE.encode(), False),
+    ])
+    async def test_a_file_the_server_did_not_name_is_read_by_what_it_is(
+            self, monkeypatch, body, found):
+        source = await self._read(monkeypatch, "application/octet-stream", body)
+        if found:
+            assert source.status == "fetched" and PASSAGE in source.text
+        else:
+            assert source.status == "failed" and source.reason == (
+                "content type application/octet-stream is not read as text")
+
+    async def test_a_zip_that_unpacks_too_large_is_not_read(self, monkeypatch):
+        monkeypatch.setattr(fetch, "ZIP_MAX_BYTES", 1000)
+        source = await self._read(monkeypatch, OFFICE + "wordprocessingml.document",
+                                  _docx("x" * 2000))
+        assert source.status == "failed"
+        assert source.reason == "the document could not be read: UnpacksTooLarge"
+
+    async def test_a_document_with_no_text_says_so(self, monkeypatch):
+        source = await self._read(monkeypatch, OFFICE + "wordprocessingml.document",
+                                  _docx())
+        assert source.status == "failed"
+        assert source.reason == "the document has no text"
