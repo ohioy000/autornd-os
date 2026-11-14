@@ -136,18 +136,36 @@ class TestAFailedSample:
 class TestAnUnreadableSample:
     """A sample that neither failed nor stated a results list is counted.
     Golden batch 1 of 2026-11-13: Q6 r2's three samples came back as a bare
-    result each, and the record said 0 parsed, 0 failed — of 3."""
+    result each, and the record said 0 parsed, 0 failed — of 3. Since the
+    owner's word of 2026-11-14 a bare result is read as that one result (33
+    such samples in the traces of 2026-11-13 and 14); a sample with keys of
+    its own names no ask and stays unreadable."""
 
     ASKS = [{"number": 1, "kind": "value", "quote": "Give the cap"}]
     RESULTS = [{"ask": 1, "value": 60.0, "unit": "s"}]
-    # Q6 r2's shape, and Q6 r1's third sample's: keys of its own.
-    BARE = {"ask": 1, "value": "Lamp = B AND (F OR A)", "unit": ""}
+    BARE = {"ask": 1, "value": 60.0, "unit": "s"}
     OWN = {"logic": "(FWD OR AFT) AND BRAKE", "gates": "ONE OR, ONE AND"}
     READ = {"results": [{"ask": 1, "value": 60.0, "unit": "s"}]}
 
-    def test_three_bare_results_are_three_unreadable_samples(self):
+    def test_a_bare_result_is_read_as_that_one_result(self):
         result = recompute_vote(results=self.RESULTS,
                                 samples=[self.BARE, self.BARE, self.OWN],
+                                asks=self.ASKS, request="r")
+        vote = result.data
+        assert (vote["samples_parsed"], vote["samples_failed"],
+                vote["samples_unreadable"]) == (2, 0, 1)
+        assert vote["checked"] is True and vote["flagged"] is False
+
+    def test_a_bare_result_that_disagrees_is_a_flag(self):
+        other = dict(self.BARE, value=30.0)
+        vote = recompute_vote(results=self.RESULTS,
+                              samples=[other, other, self.READ],
+                              asks=self.ASKS, request="r").data
+        assert vote["flagged"] is True
+
+    def test_samples_with_keys_of_their_own_are_unreadable(self):
+        result = recompute_vote(results=self.RESULTS,
+                                samples=[self.OWN, self.OWN, self.OWN],
                                 asks=self.ASKS, request="r")
         vote = result.data
         assert (vote["samples_parsed"], vote["samples_failed"],
@@ -156,8 +174,8 @@ class TestAnUnreadableSample:
         assert "0 parsed, 3 unreadable" in result.detail
 
     def test_parsed_failed_and_unreadable_add_up_to_the_samples(self):
-        samples = [self.READ, self.READ, {"failed": True, "error": "x"},
-                   self.BARE]
+        samples = [self.READ, self.BARE, {"failed": True, "error": "x"},
+                   self.OWN]
         vote = recompute_vote(results=self.RESULTS, samples=samples,
                               asks=self.ASKS, request="r").data
         assert (vote["samples_parsed"], vote["samples_failed"],
@@ -329,13 +347,14 @@ class TestUnchangedElsewhere:
             for path in Path("workflows").glob("*.yaml")
             for node in load(path).nodes if node.advisory)
         # The claims workflow is answer-and-recompute with the claim check
-        # added in shadow (the owner, 2026-11-14): its three, and the four
+        # added in shadow (the owner, 2026-11-14): its three, and the five
         # claim nodes, each a note taker.
         claims = "answer-and-recompute-claims"
         assert [m for m in marked if m[0] == claims] == [
             (claims, "answer_switches"), (claims, "claims"),
             (claims, "claims_named"), (claims, "claims_recompute"),
-            (claims, "claims_vote"), (claims, "recompute"),
+            (claims, "claims_switches"), (claims, "claims_vote"),
+            (claims, "recompute"),
             (claims, "request_switches")]
         marked = [m for m in marked if m[0] != claims]
         assert marked == [("answer-and-recompute", "answer_switches"),
