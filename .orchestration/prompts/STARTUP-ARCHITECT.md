@@ -29,8 +29,9 @@ Update this section whenever the queue changes. As of 2026-11-14:
 
 - **Read first:** `docs/carryover-2026-11-14.md`, the summary of #232 to #250 and the open work.
 - **Done:** `same_meaning` and `quote_answers` are live as labels (#249), and the alive check saw both act on a real run with 0 mismatches (`docs/reviews/2026-11-14-switches-alive.md`). About '$1.82' of the owner's '$7' is spent.
-- **In shadow:** the claim check, the owner's choice of 2026-11-14 for errors in an answer's prose. It lives in `workflows/answer-and-recompute-claims.yaml`, for measurement only; the default workflow and the delivery are unchanged. Its first run met 2 of 5 bars (`docs/reviews/2026-11-14-claims-shadow.md`). About '$1.97' of the owner's '$7' is spent.
-- **Next:** the changes that report lists, then a second shadow run on the owner's word. Making the check visible or live is the owner's ruling.
+- **In shadow:** the claim check, the owner's choice of 2026-11-14 for errors in an answer's prose. It lives in `workflows/answer-and-recompute-claims.yaml`, for measurement only; the default workflow and the delivery are unchanged. Two runs: the second left no false flag but did not test the error it is for, and the blind samples were wrong together three times (`docs/reviews/2026-11-14-claims-shadow-2.md`). About '$2.09' of the owner's '$7' is spent.
+- **Live since 2026-11-14:** a recompute sample that is one bare result is read by the vote.
+- **Next, the owner's choice:** check each claim against a found quote (the architect's pick), keep tuning the vote, or stop. Making any of it visible or live is the owner's ruling.
 
 ## How the work moves
 

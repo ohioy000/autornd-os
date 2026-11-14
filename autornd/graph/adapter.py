@@ -1067,6 +1067,9 @@ class PhaseRunner:
                     "samples": []}
         if node.prompt == "claims":
             return {"skipped": True, "reason": reason, "claims": []}
+        if node.prompt == "claim_switches":
+            return {"skipped": True, "reason": reason,
+                    "claim_records": [], "same": []}
         if node.prompt == "switches":
             return _switch_skip(
                 [str(n) for n in (node.args.get("ask") or [])], reason)
@@ -1133,6 +1136,36 @@ class PhaseRunner:
                  "route": route, "cleared": cleared,
                  "not_answering": not_answering},
                 self.switchboard.drain_responses())
+
+    async def _phase_claim_switches(self, node: Node, state: ExecutionState):
+        """same_meaning behind the claim vote, in shadow (the owner,
+        2026-11-14): each claim the claim vote flagged on text is put to
+        the decision model with the claim's name, the answer's words and
+        a sample's. Its records are stored under `claim_records` and the
+        claims it judged the same under `same`, keys the delivery does not
+        read, so no decision of it reaches the delivery."""
+        if not self.switchboard.on():
+            return {"skipped": True, "reason": (
+                "no model configured for the decision tier — "
+                "no switch was asked"), "claim_records": [], "same": []}, []
+        recompute = state.outputs.get(str(node.args.get("samples")))
+        samples = (recompute.get("samples") if isinstance(recompute, dict)
+                   else None) or []
+        kept = state.outputs.get(str(node.args.get("claims")))
+        names = {a.get("number"): a.get("quote") for a in
+                 (kept.get("asks") if isinstance(kept, dict) else None) or []}
+        items = [("same_meaning", f"claim {d['ask']}",
+                  {"request": state.request, "claim": names.get(d["ask"], ""),
+                   "answer_value": d["answer"], "sample_value": d["majority"]})
+                 for d in text_disagreements(
+                     state.outputs.get(str(node.args.get("vote"))), samples)]
+        before = len(self.switchboard.records)
+        records = await self.switchboard.ask(items)
+        del self.switchboard.records[before:]   # this node records its own
+        same = [int(r["item"].split()[1]) for r in records
+                if r["choice"] == YES]
+        return ({"skipped": False, "reason": "", "claim_records": records,
+                 "same": same}, self.switchboard.drain_responses())
 
     async def _phase_recompute(self, node: Node, state: ExecutionState):
         """The recompute node (Ruling D53): blind recomputation.

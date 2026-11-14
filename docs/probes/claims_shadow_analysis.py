@@ -4,10 +4,14 @@ the committed traces. Free: it reads files and calls nothing.
     python docs/probes/claims_shadow_analysis.py \
         docs/traces/20261114T173049Z-claims-shadow
 
+and docs/reviews/2026-11-14-claims-shadow-2.md with the prefix
+docs/traces/20261114T180715Z-claims-shadow-2.
+
 PREFIX-phases-shard-N.jsonl is each shard's database exported a row per line
 (docs/probes/export_shard_db.py). For every unit it prints each claim the
 claims node listed, whether claims_named kept it, the three samples' values
-and what the claim vote said of it: agreed, flagged, no consensus, not
+and what the claim vote said of it: agreed, flagged (and whether same_meaning
+judged the wording the same, from the second run on), no consensus, not
 comparable, or not answered by two samples. A claim counts as a number when
 the answer's value is one. Whether a value is right is the hand reading in
 the report, not this probe (D50).
@@ -37,6 +41,7 @@ for path in sorted(glob.glob(f"{PREFIX}-phases-shard-*.jsonl")):
         samples = phase["claims_recompute"].get("samples") or []
         kept = {a["number"] for a in named["asks"]}
         flagged = {d["ask"] for d in vote.get("disagreements") or []}
+        same = set((phase.get("claims_switches") or {}).get("same") or [])
         print(f"== {unit['question']} r{unit['repeat']}: listed "
               f"{len(phase['claims']['claims'])}, kept {len(kept)}, dropped "
               f"{ {k: v for k, v in named['dropped'].items() if v} }, samples "
@@ -46,13 +51,16 @@ for path in sorted(glob.glob(f"{PREFIX}-phases-shard-*.jsonl")):
               f"{not any('claim' in c for c in unit['cautions'])}")
         for number, claim in enumerate(phase["claims"]["claims"], start=1):
             values = [next((f"{x.get('value')} {x.get('unit') or ''}".strip()
-                            for x in (s.get("results") or [])
+                            for x in (s.get("results")
+                                      or ([s] if "ask" in s else []))
                             if x.get("ask") == number), "-")
                       for s in samples if isinstance(s, dict)]
             if number not in kept:
                 state = "dropped"
             elif not vote.get("checked"):
                 state = "vote compared nothing"
+            elif number in flagged and number in same:
+                state = "flagged, judged same"
             elif number in flagged:
                 state = "flagged"
             elif number in (vote.get("no_consensus") or []):

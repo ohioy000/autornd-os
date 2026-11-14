@@ -1083,14 +1083,16 @@ async def run_claims(
     from autornd.profiles import framing
     f = framing()
     prompt = f"""\
-List the claims this answer relies on: each figure, limit, period, count or selection it states as fact and that a reader would act on.
+List the claims this answer relies on: each figure, limit, period, count or condition it states as a fact that a source or the request fixes, and that a reader would act on.
 
 For each claim give:
 - name: what the value is of, in a few words, specific enough that someone who has not read the answer could look it up. Do not put the value in the name.
-- value: the value exactly as the answer states it, a number or a short identifier
-- unit: the unit of a number, empty for an identifier
+- value: the value exactly as the answer states it. For a figure, the bare number. For anything else, a few words.
+- unit: the unit of a number, empty otherwise
 
-List only what the answer states. Do not correct it, do not add a claim it does not make, and leave out worked examples, section numbers and citations. At most {MAX_CLAIMS} claims, the ones the answer turns on first.
+When a figure only holds with a condition the answer attaches to it, such as the period it must fall within, the point it is measured from or what it applies to, list that condition as a claim of its own, in the answer's words.
+
+List only facts. Leave out anything the answer chose or designed itself, such as a part it picked, a component value it sized or a margin it allowed, and leave out worked examples, section numbers and citations. Do not correct the answer and do not add a claim it does not make. At most {MAX_CLAIMS} claims, the ones the answer turns on first.
 
 Return JSON: {{"claims": [{{"name": "...", "value": 0, "unit": "..."}}]}}
 

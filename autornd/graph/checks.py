@@ -1318,7 +1318,17 @@ def _recompute_field(entry: Any, key: str) -> Any:
 def _sample_results(sample: Any) -> Any:
     """A sample's results list, whichever shape the sample arrives in."""
     if isinstance(sample, dict):
-        return sample.get("results")
+        results = sample.get("results")
+        # A sample that is one bare result, {ask, value, unit} with no
+        # results list around it, is read as that one result (the owner,
+        # 2026-11-14, "go for all 3"). Counted in the traces of 2026-11-13
+        # and 14: 33 samples came back this way and were unreadable, among
+        # them 2 of 3 in a unit whose vote then compared nothing
+        # (docs/reviews/2026-11-14-claims-shadow.md). A sample with keys of
+        # its own (3 in the same traces) names no ask and stays unreadable.
+        if results is None and "ask" in sample and "value" in sample:
+            return [sample]
+        return results
     return getattr(sample, "results", None)
 
 
@@ -1636,6 +1646,31 @@ def recompute_vote(results: list[Any], samples: list[Any],
 # shadow run.
 MAX_CLAIMS = 12
 
+# Words a claim's value may open with that bound the number and are not part
+# of it. The first shadow run (docs/reviews/2026-11-14-claims-shadow.md):
+# one answer's two periods were listed as "at least 3 years" and "at least 2
+# years", which the vote reads as text, and neither could be compared.
+_CLAIM_BOUND = re.compile(
+    r"^\s*(?:at\s+least|at\s+most|not\s+less\s+than|not\s+more\s+than|"
+    r"no\s+less\s+than|no\s+more\s+than|minimum(?:\s+of)?|"
+    r"maximum(?:\s+of)?|up\s+to|about|approximately|[<>\u2264\u2265~\u00b1]=?)\s*",
+    re.IGNORECASE)
+
+
+def _claim_number(value: Any, unit: str) -> tuple[Any, str]:
+    """A claim's value as the vote can compare it: a text value that is a
+    number behind a bounding word is that number, with its unit. Anything
+    else is returned as it came."""
+    if not isinstance(value, str):
+        return value, unit
+    bare = _CLAIM_BOUND.sub("", value, count=1)
+    if bare == value:
+        return value, unit
+    read = _recompute_numeric(bare)
+    if read is None:
+        return value, unit
+    return read[0], (unit or read[1])
+
 
 def _claim_in_text(value: Any, text: str) -> bool:
     """Is this value in the text as written? A number matches as a whole
@@ -1701,8 +1736,8 @@ def claims_named(claims: list[Any], text: str) -> Result:
         else:
             seen.add(_recompute_ident(name))
             asks.append({"number": number, "quote": name, "kind": "value"})
-            results.append({"ask": number, "value": value,
-                            "unit": str(field(claim, "unit") or "")})
+            stated, unit = _claim_number(value, str(field(claim, "unit") or ""))
+            results.append({"ask": number, "value": stated, "unit": unit})
     total = len(claims or [])
     return Result(True, f"{len(asks)} of {total} claims kept",
                   checked=bool(asks), asks=asks, results=results,

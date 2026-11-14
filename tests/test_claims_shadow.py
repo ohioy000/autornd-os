@@ -17,12 +17,14 @@ from autornd.graph.executor import GraphExecutor
 from autornd.graph.spec import load
 from autornd.routing import openrouter
 from autornd.routing.openrouter import OpenRouterClient
+from tests.test_switches import _with_decisions
 from tests.test_recompute_vote import (REQUEST, SETTINGS, SUMMARY, _double,
                                        _workflow_router)
 
 BASE = "workflows/answer-and-recompute.yaml"
 CLAIMS = "workflows/answer-and-recompute-claims.yaml"
-CLAIM_NODES = ["claims", "claims_named", "claims_recompute", "claims_vote"]
+CLAIM_NODES = ["claims", "claims_named", "claims_recompute", "claims_vote",
+               "claims_switches"]
 # SUMMARY states a 60 s cap. The second claim's value is not in the answer.
 LISTED = [{"name": "timer cap", "value": 60, "unit": "s"},
           {"name": "retry limit", "value": 45, "unit": ""}]
@@ -77,6 +79,21 @@ class TestTheClaimsKept:
                       for i in range(MAX_CLAIMS + 3)])
         assert data["kept"] == MAX_CLAIMS and data["dropped"]["over_limit"] == 3
 
+    @pytest.mark.parametrize("value, stated, unit", [
+        ("at least 3 years", 3.0, "years"), ("not less than 8 hours", 8.0, "hours"),
+        ("<25 ns", 25.0, "ns"), ("\u2265 2 years", 2.0, "years")])
+    def test_a_number_behind_a_bounding_word_is_that_number(self, value, stated, unit):
+        data = _kept([{"name": "the limit", "value": value, "unit": ""}],
+                     f"The limit is {value}.")
+        assert data["results"] == [{"ask": 1, "value": stated, "unit": unit}]
+
+    @pytest.mark.parametrize("value", ["3 years", "at least both ratings",
+                                       "11.0-16.0 V", "odd-numbered years"])
+    def test_any_other_value_is_kept_as_it_came(self, value):
+        data = _kept([{"name": "the limit", "value": value, "unit": ""}],
+                     f"The limit is {value}.")
+        assert data["results"][0]["value"] == value
+
     def test_no_claim_is_not_checked_and_never_fails(self):
         result = get_check("claims_named")(claims=[], text=SUMMARY)
         assert result.passed and not result.checked and result.data["asks"] == []
@@ -111,8 +128,11 @@ def recompute_tier(monkeypatch):
                         "vendor/recompute-tier")
 
 
-async def _run(path, router):
+async def _run(path, router, decisions=None):
     client, calls = _double(router)
+    if decisions is not None:
+        client, asked = _with_decisions(router, answer=decisions)
+        calls = asked
     rows: list[tuple[str, dict]] = []
 
     def on_phase(node_id, verdict, responses, iteration):
@@ -139,7 +159,7 @@ def _delivery(rows):
 
 
 class TestTheWorkflow:
-    def test_it_is_the_default_workflow_with_four_nodes_added_after_it(self):
+    def test_it_is_the_default_workflow_with_five_nodes_added_after_it(self):
         base, claims = load(BASE), load(CLAIMS)
         assert claims.ids == base.ids + CLAIM_NODES
         assert [claims.get(i) for i in base.ids] == [base.get(i) for i in base.ids]
@@ -217,3 +237,72 @@ class TestTheWorkflow:
         state, _, _ = await _run(CLAIMS, _router())
         assert state.status == "completed"
         assert state.outputs["claims_vote"]["skipped"] is True
+
+
+TEXT = [{"name": "jitter", "value": "full jitter", "unit": ""}]
+
+
+def _text_router():
+    """One text claim, 'full jitter', against samples that say 'jitter: full'."""
+    base = _router(listed=TEXT)
+
+    def route(user_message, calls):
+        if "relies on the values named below" in user_message:
+            return {"results": [{"ask": 1, "value": "jitter: full", "unit": ""}]}
+        return base(user_message, calls)
+
+    return route
+
+
+@pytest.fixture
+def decision_tier(monkeypatch):
+    monkeypatch.setattr(openrouter.settings, "model_decision", "vendor/decider")
+    monkeypatch.setitem(OpenRouterClient.FUNCTION_MODELS, "decision", "vendor/decider")
+
+
+class TestSameMeaningBehindTheClaimVote:
+    async def test_a_text_flag_is_asked_with_the_claims_name_and_both_wordings(
+            self, recompute_tier, decision_tier):
+        state, asked, rows = await _run(CLAIMS, _text_router(),
+                                        decisions=lambda evidence: 0.95)
+        assert state.outputs["claims_vote"]["flagged"] is True
+        evidence = asked[-1][0]["q0"]
+        assert evidence == {"request": REQUEST, "claim": "jitter",
+                            "answer_value": "full jitter",
+                            "sample_value": "jitter: full"}
+        stored = dict(rows)["claims_switches"]
+        assert stored["same"] == [1]
+        assert stored["claim_records"][0]["item"] == "claim 1"
+        assert state.outputs["claims_vote"]["flagged"] is True   # the row is kept
+
+    async def test_a_no_or_an_unsure_answer_judges_nothing_the_same(
+            self, recompute_tier, decision_tier):
+        for probability in (0.05, 0.5):
+            state, _, _ = await _run(CLAIMS, _text_router(),
+                                     decisions=lambda evidence: probability)
+            assert state.outputs["claims_switches"]["same"] == []
+
+    async def test_its_records_never_reach_the_delivery(
+            self, recompute_tier, decision_tier):
+        answer = lambda evidence: 0.95
+        _, _, base_rows = await _run(BASE, _text_router(), decisions=answer)
+        _, _, rows = await _run(CLAIMS, _text_router(), decisions=answer)
+        base, shadow = _delivery(base_rows), _delivery(rows)
+        assert shadow.decisions == base.decisions and base.decisions
+        assert shadow.recompute_vote == base.recompute_vote
+        assert shadow.cautions == base.cautions and shadow.sources == base.sources
+        stored = dict(rows)["claims_switches"]
+        assert "records" not in stored and "cleared" not in stored
+
+    async def test_with_no_decision_tier_it_skips(self, recompute_tier):
+        state, _, _ = await _run(CLAIMS, _text_router())
+        assert state.status == "completed"
+        assert state.outputs["claims_switches"] == {
+            "skipped": True, "claim_records": [], "same": [],
+            "reason": state.outputs["claims_switches"]["reason"]}
+
+    async def test_a_number_flag_is_not_asked(self, recompute_tier, decision_tier):
+        state, asked, _ = await _run(CLAIMS, _router(),
+                                     decisions=lambda evidence: 0.95)
+        assert state.outputs["claims_vote"]["flagged"] is True
+        assert state.outputs["claims_switches"]["claim_records"] == []

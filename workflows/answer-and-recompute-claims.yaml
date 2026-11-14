@@ -1,11 +1,11 @@
 name: answer-and-recompute-claims
 description: >
   The claim check, in shadow (the owner, 2026-11-14): the
-  answer-and-recompute workflow, node for node, with four
+  answer-and-recompute workflow, node for node, with five
   nodes added after it. A model lists the figures the
   finished answer relies on, a free check keeps the ones it
   can ask about, three blind samples state those same
-  figures, and the vote compares them one by one. All four
+  figures, and the vote compares them one by one. All five
   are recorded only: nothing in the delivery reads them and
   nothing blocks, routes or revises on them. For
   measurement; not offered to a request.
@@ -209,7 +209,7 @@ nodes:
   # value per ask, and an open request is one ask: in five of the six
   # recorded runs of the inspection-authorization question it compared
   # nothing, and the wrong period in two of them sat in prose
-  # (docs/reviews/2026-11-13-golden-decisions.md). These four nodes run
+  # (docs/reviews/2026-11-13-golden-decisions.md). These five nodes run
   # after everything the delivery reads. They are stored as phase rows
   # under their own names, which the delivery does not look for.
   #
@@ -263,3 +263,17 @@ nodes:
       skipped: claims_recompute.skipped
       reason: claims_recompute.reason
     depends_on: [claims_recompute]
+
+  # same_meaning behind the claim vote: a claim flagged on text is put
+  # to the decision model, as the vote on asks does. Its records are
+  # stored under keys of its own, which the delivery does not read.
+  - id: claims_switches
+    kind: ai
+    tier: decision
+    prompt: claim_switches
+    advisory: true
+    args:
+      vote: claims_vote
+      samples: claims_recompute
+      claims: claims_named
+    depends_on: [claims_vote]
