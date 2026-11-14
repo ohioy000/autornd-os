@@ -95,8 +95,10 @@ against years) kept that from being a flag on a right value.
 
 1. **A claim must be a fact, not a choice.** The claims call listed whatever figure the answer
    stated. It should list only what a source or the request fixes.
-2. **A value must arrive as a number.** Of 54 kept claims only 9 had a numeric value; the rest
-   came as text such as "10 ns" or "at least 3 years". That cost IA r1 its two periods.
+2. **A bounded value is read as text.** "at least 3 years" is not a number to the vote, though
+   "3 years" is. That cost IA r1 its two periods. (Corrected 2026-11-14: this item first said only
+   9 of 54 kept claims were numeric. That counted values typed as text such as "10 ns", which the
+   vote does read as numbers.)
 3. **A number alone does not carry the error.** "2 years" was right; "of the 3-year period" was
    the error. The claim needs the condition with the figure, or the condition as a claim of its
    own. This is the hard one, and it is the error we set out to catch.
