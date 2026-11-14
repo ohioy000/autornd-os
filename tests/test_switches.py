@@ -4,6 +4,7 @@ optional decision tier, in shadow until the owner rules one live."""
 
 from __future__ import annotations
 
+import dataclasses
 from unittest.mock import AsyncMock
 
 import pytest
@@ -14,6 +15,7 @@ from autornd.graph.spec import load
 from autornd.knowledge import context as ctx
 from autornd.knowledge import research
 from autornd.preflight import check, sent_parameters
+from autornd.api import routes
 from autornd.routing import openrouter, switches
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
 from autornd.routing.switches import (
@@ -266,13 +268,14 @@ class TestTheDeclarations:
 
     def test_only_a_ruled_switch_is_live_and_each_says_what_it_guards(self):
         """Moving a switch to live changes what the harness concludes: it
-        is the owner's ruling. One is ruled (2026-11-13): needs_sources."""
+        is the owner's ruling. Three are ruled: needs_sources (2026-11-13),
+        and quote_answers and same_meaning as labels (2026-11-14)."""
         shipped = load_switches(switches.SWITCHES_FILE)
         assert sorted(shipped) == [
             "ask_covered", "chunk_helps", "finding_answers", "hard_request",
             "needs_sources", "quote_answers", "same_meaning"]
         assert sorted(s.name for s in shipped.values() if s.mode == LIVE) == [
-            "needs_sources"]
+            "needs_sources", "quote_answers", "same_meaning"]
         for switch in shipped.values():
             assert switch.guards and switch.safe in (YES, NO), switch.name
         # The side that does more work is the safe one.
@@ -615,25 +618,114 @@ class TestSameMeaning:
         assert [(d["ask"], d["majority"]) for d in vote["disagreements"]] == [(2, "YES")]
         first = state.outputs["answer_switches"]["records"][0]
         assert (first["switch"], first["item"], first["route"]) == (
-            "same_meaning", "ask 2", DEFAULT)
+            "same_meaning", "ask 2", YES)
         # The sample's words, not the identifier the vote compared.
         assert asked[-1][0]["q0"] == {"request": REQUEST,
                                       "answer_value": "yes, full jitter applies",
                                       "sample_value": "Yes."}
 
-    @pytest.mark.parametrize("probability", [0.0, 1.0])
-    async def test_in_shadow_its_answer_changes_nothing(
+    async def _delivered(self, answer, declared=None):
+        """One run with a text flag, and the delivery's vote and cautions
+        built from its phase records as the API builds them."""
+        recorded: list = []
+        client, _ = _with_decisions(_worded(
+            _workflow_router(60.0, [60.0] * 3), "yes, full jitter applies",
+            "Yes."), answer=answer)
+        state = await _run(client, recorded, declared)
+        verdicts = [(node, dict(verdict) if isinstance(verdict, dict)
+                     else verdict.model_dump()) for node, verdict in recorded]
+        verdicts.append(("recompute_vote", dict(state.outputs["recompute_vote"])))
+        vote = routes._settled(verdicts, verdicts[-1][1], [])
+        return state, vote, routes._cautions(vote, [], True)
+
+    async def test_live_a_confident_yes_clears_the_flag_in_the_delivery(
+            self, decision_tier, recompute_tier):
+        """The owner, 2026-11-14: the vote flagged 6 right answers for
+        their wording in the lookup runs and same_meaning said yes on all."""
+        state, vote, cautions = await self._delivered(lambda e: 0.99)
+        assert state.status == "completed"
+        # The vote's own record is kept as it found it.
+        assert state.outputs["recompute_vote"]["flagged"] is True
+        assert state.outputs["answer_switches"]["cleared"] == ["ask 2"]
+        assert (vote["flagged"], vote["flagged_by_vote"], vote["cleared"]) == (
+            False, True, [2])
+        assert [d["ask"] for d in vote["disagreements"]] == [2]
+        assert any("worded ask 2 differently" in c for c in cautions)
+        assert not any("disagrees" in c for c in cautions)
+
+    @pytest.mark.parametrize("probability", [0.0, 0.5])
+    async def test_live_a_no_or_an_unsure_keeps_the_flag(
             self, decision_tier, recompute_tier, probability):
-        runs = []
-        for answer in (lambda e: 0.5, lambda e: probability):
-            client, _ = _with_decisions(_worded(
-                _workflow_router(60.0, [60.0] * 3), "yes, full jitter applies",
-                "Yes."), answer=answer)
-            runs.append(await _run(client))
-        first, second = runs
-        assert first.status == second.status == "completed"
-        assert first.outputs["recompute_vote"] == second.outputs["recompute_vote"]
-        assert first.outputs["recompute_vote"]["flagged"] is True
+        state, vote, cautions = await self._delivered(lambda e: probability)
+        assert state.outputs["answer_switches"]["cleared"] == []
+        assert vote["flagged"] is True and "cleared" not in vote
+        assert any("disagrees with this answer on ask 2" in c for c in cautions)
+
+    async def test_in_shadow_a_yes_clears_nothing(
+            self, decision_tier, recompute_tier):
+        shipped = load_switches(switches.SWITCHES_FILE)
+        declared = dict(shipped, same_meaning=dataclasses.replace(
+            shipped["same_meaning"], mode=switches.SHADOW))
+        state, vote, _ = await self._delivered(lambda e: 0.99, declared)
+        assert state.outputs["answer_switches"]["cleared"] == []
+        assert vote["flagged"] is True
+
+    def test_a_flag_on_another_ask_survives_a_cleared_one(self):
+        vote = {"flagged": True, "disagreements": [{"ask": 1}, {"ask": 2}]}
+        settled = routes._settled(
+            [("answer_switches", {"cleared": ["ask 2"], "not_answering": []})],
+            vote, [])
+        assert settled["flagged"] is True and settled["cleared"] == [2]
+        cautions = routes._cautions(settled, [], True)
+        assert any(c.endswith("on ask 1.") for c in cautions)
+
+
+class TestQuoteAnswersLabel:
+    """A quote found on its page that does not answer its question is
+    labelled in the delivery (the owner, 2026-11-14: 21 confident no's over
+    three runs, all right, docs/reviews/2026-11-13-lookup-quotes.md)."""
+
+    def _board(self, client, mode):
+        shipped = load_switches(switches.SWITCHES_FILE)
+        return Switchboard(client, {"quote_answers": dataclasses.replace(
+            shipped["quote_answers"], mode=mode)})
+
+    async def _node(self, probability, mode=LIVE):
+        client, _ = _with_decisions(_workflow_router(200.0, [200.0] * 3),
+                                    answer=lambda e: probability)
+        runner = PhaseRunner(client)
+        runner.switchboard = self._board(client, mode)
+        runner._sources_seen = [{"findings": [{"question": "What limit?", "quotes": [
+            {"status": "found", "url": "https://a.example/p", "text": "Off the point."},
+            {"status": "not_found", "url": "https://b.example/p", "text": "x"}]}]}]
+        node = type("N", (), {"args": {"ask": ["quote_answers"]}})()
+        output, _ = await runner._phase_switches(node, None)
+        return output
+
+    async def test_live_a_confident_no_names_the_quote(self, decision_tier):
+        output = await self._node(0.01)
+        assert output["not_answering"] == [
+            {"url": "https://a.example/p", "passage": "Off the point."}]
+
+    @pytest.mark.parametrize("probability, mode", [
+        (0.99, LIVE), (0.5, LIVE), (0.01, switches.SHADOW)])
+    async def test_a_yes_an_unsure_or_a_shadow_no_names_nothing(
+            self, decision_tier, probability, mode):
+        assert (await self._node(probability, mode))["not_answering"] == []
+
+    def test_the_delivery_labels_that_quote_and_says_so(self):
+        sources = [{"findings": [{"quotes": [
+            {"status": "found", "url": "u", "text": "Off the point."},
+            {"status": "found", "url": "u", "text": "The limit is 5."}]}]}]
+        routes._settled([("answer_switches", {"cleared": [], "not_answering": [
+            {"url": "u", "passage": "Off the point."}]})], None, sources)
+        first, second = sources[0]["findings"][0]["quotes"]
+        assert first["answers_question"] is False
+        assert "answers_question" not in second
+        assert ("1 of the 2 passages found in their pages do not state an "
+                "answer to the question they were quoted for."
+                in routes._cautions(None, sources, True))
+
 
     @pytest.mark.parametrize("answer_value, samples", [
         (100.0, [200.0] * 3),     # a number flagged: not a question of words

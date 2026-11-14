@@ -269,6 +269,44 @@ class WorkflowDetail(WorkflowSummary):
     cautions: list[str] = Field(default_factory=list)
 
 
+def _settled(verdicts: list[tuple[str, Any]], vote: dict | None,
+             sources: list[dict]) -> dict | None:
+    """Apply what the live switches settled to the delivery, as labels.
+
+    The owner's ruling of 2026-11-14 on
+    docs/reviews/2026-11-13-lookup-quotes.md, where same_meaning said yes
+    on 6 of 6 flags the vote raised on right answers for their wording, and
+    all 21 confident no's of quote_answers over three runs were right. An
+    ask same_meaning cleared is listed in the vote's `cleared`, and the
+    vote is `flagged` only if a disagreement is left; what the vote itself
+    found stays in `flagged_by_vote` and `disagreements`. A quote that
+    quote_answers judged not to answer its question carries
+    `answers_question: false`. The stored phase rows are not changed.
+    """
+    last = next((v for _, v in reversed(verdicts) if isinstance(v, dict)
+                 and isinstance(v.get("cleared"), list)
+                 and isinstance(v.get("not_answering"), list)), None)
+    if last is None:
+        return vote
+    marks = [(m.get("url"), m.get("passage")) for m in last["not_answering"]
+             if isinstance(m, dict)]
+    for source in sources:
+        for finding in source.get("findings") or []:
+            for quote in finding.get("quotes") or []:
+                if (isinstance(quote, dict) and quote.get("status") == "found"
+                        and (quote.get("url"), quote.get("text")) in marks):
+                    quote["answers_question"] = False
+    if vote is None or not last["cleared"]:
+        return vote
+    disagreements = vote.get("disagreements") or []
+    cleared = [d.get("ask") for d in disagreements
+               if f"ask {d.get('ask')}" in last["cleared"]]
+    return dict(vote, cleared=cleared,
+                flagged_by_vote=bool(vote.get("flagged")),
+                flagged=bool(vote.get("flagged"))
+                and len(cleared) < len(disagreements))
+
+
 def _cautions(vote: dict | None, sources: list[dict],
               has_answer: bool) -> list[str]:
     """The cautions beside an answer, read off the typed records.
@@ -281,9 +319,16 @@ def _cautions(vote: dict | None, sources: list[dict],
         return []
     out: list[str] = []
     if vote is not None:
+        cleared = vote.get("cleared") or []
+        if cleared:
+            out.append("The recompute vote worded ask "
+                       + ", ".join(map(str, cleared))
+                       + " differently from this answer; a decision model "
+                         "judged the two to say the same thing.")
         if vote.get("flagged"):
             asks = ", ".join(str(d.get("ask")) for d in
-                             vote.get("disagreements") or [])
+                             vote.get("disagreements") or []
+                             if d.get("ask") not in cleared)
             out.append("The recompute vote disagrees with this answer"
                        + (f" on ask {asks}." if asks else "."))
         elif vote.get("skipped"):
@@ -315,6 +360,11 @@ def _cautions(vote: dict | None, sources: list[dict],
         elif found < len(quotes):
             out.append(f"{found} of {len(quotes)} quoted passages were "
                        f"found in their pages; the rest are unverified.")
+        beside = sum(1 for q in quotes if q.get("answers_question") is False)
+        if beside:
+            out.append(f"{beside} of the {found} passages found in their "
+                       f"pages do not state an answer to the question they "
+                       f"were quoted for.")
     return out
 
 
@@ -499,6 +549,7 @@ def _detail(w: Workflow) -> WorkflowDetail:
     vote = next((v for name, v in reversed(verdicts)
                  if name == "recompute_vote"), None)
     sources = [v for name, v in verdicts if name == "sources"]
+    vote = _settled(verdicts, vote, sources)
     return WorkflowDetail(
         candidate=candidate,
         answer=answer,

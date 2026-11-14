@@ -37,7 +37,7 @@ from autornd.models.verdicts import Domain, role_key
 from autornd.profiles import get_profile
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
 from autornd.routing.switches import (
-    Switchboard, head_and_tail, release_switchboard, use_switchboard)
+    NO, YES, Switchboard, head_and_tail, release_switchboard, use_switchboard)
 from autornd.specialists.base import Specialist
 from autornd.specialists.registry import get_specialists
 
@@ -48,7 +48,8 @@ def _switch_skip(names: list[str], reason: str) -> dict[str, Any]:
     """What a switch node stores when it asked nothing: no record, and
     every route `default`, so anything reading it acts as it did before."""
     return {"skipped": True, "reason": reason, "records": [],
-            "route": {name: "default" for name in names}}
+            "route": {name: "default" for name in names},
+            "cleared": [], "not_answering": []}
 
 __all__ = ["PhaseRunner", "UnknownPromptError"]
 
@@ -1103,11 +1104,30 @@ class PhaseRunner:
         records = await self.switchboard.ask(items)
         del self.switchboard.records[before:]   # this node records its own
         route = {name: "default" for name in names}
-        for record in records:
-            if self.switchboard.switches[record["switch"]].each == "request":
+        # What the live switches settled, as typed fields for the delivery
+        # (the owner, 2026-11-14, "yes to first 2", on
+        # docs/reviews/2026-11-13-lookup-quotes.md). A confident yes from
+        # same_meaning clears that ask's flag as worded differently; a
+        # confident no from quote_answers labels that quote as found but
+        # not answering. Labels only: the vote's own record and the quotes
+        # are stored as they were, and nothing blocks or revises on these.
+        # A switch in shadow routes `default`, so both stay empty. Records
+        # are in the order asked, so they pair with the items by position.
+        cleared: list[str] = []
+        not_answering: list[dict[str, str]] = []
+        for (_, label, evidence), record in zip(items, records):
+            each = self.switchboard.switches[record["switch"]].each
+            if each == "request":
                 route[record["switch"]] = record["route"]
+            elif each == "disagreements" and record["route"] == YES:
+                cleared.append(label)
+            elif each == "quotes" and record["route"] == NO:
+                not_answering.append({"url": label, "passage": str(
+                    (evidence or {}).get("passage", ""))})
         return ({"skipped": False, "reason": "", "records": records,
-                 "route": route}, self.switchboard.drain_responses())
+                 "route": route, "cleared": cleared,
+                 "not_answering": not_answering},
+                self.switchboard.drain_responses())
 
     async def _phase_recompute(self, node: Node, state: ExecutionState):
         """The recompute node (Ruling D53): blind recomputation.
