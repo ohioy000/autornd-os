@@ -86,10 +86,10 @@ CHUNKS = [
     {"tag": "t", "text": "The reconnect path's timer is sized by the request alone."},
 ]
 
-# The 16 model-calling functions capture_all reaches. The call-site test
+# The 17 model-calling functions capture_all reaches. The call-site test
 # proves no other function in autornd/ calls a model.
 SITE_FUNCTIONS = frozenset({
-    "run_triage", "run_asks", "run_plan", "run_plan_feasibility",
+    "run_triage", "run_asks", "run_claims", "run_plan", "run_plan_feasibility",
     "run_domain_review", "run_implement", "run_recompute", "run_validate",
     "run_review", "run_doublecheck", "run_escalation_autopsy",
     "expand_queries", "rerank_chunks", "synthesize_briefing",
@@ -300,6 +300,16 @@ async def capture_all(seats: dict[str, object] | None = None) -> dict[str, dict[
         client, REQUEST, CONTEXT, ASKS, max_tokens=None, samples=1,
     )
     take("recompute")
+
+    # The claim check, in shadow: the claims list, and a claim sample.
+    await phases.run_claims(client, REQUEST, IMPLEMENT.summary)
+    take("claims")
+    await phases.run_recompute(
+        client, REQUEST, CONTEXT,
+        [{"number": 1, "quote": "timer period", "kind": "value"}],
+        max_tokens=None, samples=1, claims=True,
+    )
+    take("claims_recompute")
 
     validate, _ = await phases.run_validate(
         client,

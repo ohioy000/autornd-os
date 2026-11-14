@@ -328,6 +328,16 @@ class TestUnchangedElsewhere:
             (path.stem, node.id)
             for path in Path("workflows").glob("*.yaml")
             for node in load(path).nodes if node.advisory)
+        # The claims workflow is answer-and-recompute with the claim check
+        # added in shadow (the owner, 2026-11-14): its three, and the four
+        # claim nodes, each a note taker.
+        claims = "answer-and-recompute-claims"
+        assert [m for m in marked if m[0] == claims] == [
+            (claims, "answer_switches"), (claims, "claims"),
+            (claims, "claims_named"), (claims, "claims_recompute"),
+            (claims, "claims_vote"), (claims, "recompute"),
+            (claims, "request_switches")]
+        marked = [m for m in marked if m[0] != claims]
         assert marked == [("answer-and-recompute", "answer_switches"),
                           ("answer-and-recompute", "recompute"),
                           ("answer-and-recompute", "request_switches")]

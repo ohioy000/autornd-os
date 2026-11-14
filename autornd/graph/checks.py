@@ -1629,6 +1629,86 @@ def recompute_vote(results: list[Any], samples: list[Any],
     )
 
 
+# The most claims one answer is checked on. A judgment, not a measurement:
+# the recorded inspection-authorization answers state five eligibility
+# conditions and two or three periods, so twelve covers them with room, and
+# each claim adds a line to three sample prompts. To be set from the first
+# shadow run.
+MAX_CLAIMS = 12
+
+
+def _claim_in_text(value: Any, text: str) -> bool:
+    """Is this value in the text as written? A number matches as a whole
+    number token, so 2 is not found in 12 or 2.5; text matches as an
+    identifier (case, spacing and punctuation dropped)."""
+    if isinstance(value, bool):
+        return False
+    if isinstance(value, str):
+        try:
+            value = float(value.replace(",", "").strip())
+        except ValueError:
+            pass
+    if isinstance(value, (int, float)):
+        forms = {repr(float(value)), f"{value:g}"}
+        if float(value).is_integer():
+            forms.add(str(int(value)))
+        tokens = set(re.findall(r"(?<![\w.])-?\d+(?:\.\d+)?(?![\w]|\.\d)",
+                                text.replace(",", "")))
+        return bool(forms & tokens)
+    ident = _recompute_ident(value)
+    return bool(ident) and ident in _recompute_ident(text)
+
+
+@check("claims_named")
+def claims_named(claims: list[Any], text: str) -> Result:
+    """Which of the claims node's claims can the blind samples be asked?
+
+    The claims node lists; this free check keeps. A claim is kept when it
+    has a name and a value, its value is in the answer as written (the
+    model copied it, it did not invent or correct it), and its name does
+    not contain the value (the samples are shown the name, and must not be
+    shown the value). A name already kept is not kept twice. At most
+    MAX_CLAIMS are kept.
+
+    A kept claim keeps its position in the claims node's list as its
+    number, so the vote's record joins to the stored claims by position.
+    `asks` and `results` are in the shapes the recompute and its vote
+    already read: each claim is an ask of kind value whose quote is the
+    name, and the answer's result for it is the claim's value.
+    """
+    def field(claim: Any, key: str) -> Any:
+        return (claim.get(key) if isinstance(claim, dict)
+                else getattr(claim, key, None))
+
+    asks: list[dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
+    dropped = {"empty": 0, "not_in_answer": 0, "value_in_name": 0,
+               "repeated": 0, "over_limit": 0}
+    seen: set[str] = set()
+    for number, claim in enumerate(claims or [], start=1):
+        name = str(field(claim, "name") or "").strip()
+        value = field(claim, "value")
+        if not name or value is None or str(value).strip() == "":
+            dropped["empty"] += 1
+        elif not _claim_in_text(value, str(text or "")):
+            dropped["not_in_answer"] += 1
+        elif _claim_in_text(value, name):
+            dropped["value_in_name"] += 1
+        elif _recompute_ident(name) in seen:
+            dropped["repeated"] += 1
+        elif len(asks) >= MAX_CLAIMS:
+            dropped["over_limit"] += 1
+        else:
+            seen.add(_recompute_ident(name))
+            asks.append({"number": number, "quote": name, "kind": "value"})
+            results.append({"ask": number, "value": value,
+                            "unit": str(field(claim, "unit") or "")})
+    total = len(claims or [])
+    return Result(True, f"{len(asks)} of {total} claims kept",
+                  checked=bool(asks), asks=asks, results=results,
+                  kept=len(asks), dropped=dropped)
+
+
 def text_disagreements(vote: Any, samples: Any) -> list[dict[str, Any]]:
     """The vote's disagreements on text, each with a sample's own words.
 

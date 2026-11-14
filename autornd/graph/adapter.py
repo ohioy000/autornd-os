@@ -318,7 +318,7 @@ class PhaseRunner:
             return await self._reground_lookup(state)
         if node.check == "blocked_on_unmet":
             return self._blocked_on_unmet(node, state)
-        if node.check == "recompute_vote":
+        if node.check in ("recompute_vote", "claims_named"):
             return await self._recompute_vote_check(node, state)
         if node.check not in registry:
             raise KeyError(
@@ -537,7 +537,10 @@ class PhaseRunner:
         the flag the vote found is what the delivery carries. Nothing
         routes on it (D53 §2 (5)): the write is a record, not a gate.
         """
-        result = get_check("recompute_vote")(**resolve_args(node, state))
+        # claims_named is written the same way and for the same reason: it
+        # is the only record of which claims were kept and why the others
+        # were dropped (the owner, 2026-11-14, in shadow).
+        result = get_check(node.check)(**resolve_args(node, state))
         if self.on_phase:
             self.on_phase(
                 node.id, dict(result.data),
@@ -1062,6 +1065,8 @@ class PhaseRunner:
         if node.prompt == "recompute":
             return {"skipped": True, "flagged": False, "reason": reason,
                     "samples": []}
+        if node.prompt == "claims":
+            return {"skipped": True, "reason": reason, "claims": []}
         if node.prompt == "switches":
             return _switch_skip(
                 [str(n) for n in (node.args.get("ask") or [])], reason)
@@ -1150,10 +1155,41 @@ class PhaseRunner:
                            "tier — the recompute samples did not run"),
                 "samples": [],
             }, []
+        # A node may recompute a claims check's kept claims instead of the
+        # request's asks (args: {claims: <the check node's id>}), in shadow
+        # by the owner's direction of 2026-11-14. With no claim kept there
+        # is nothing to ask, and no sample is paid for.
+        source = node.args.get("claims")
+        if source:
+            kept = state.outputs.get(str(source))
+            asks = list(kept.get("asks") or []) if isinstance(kept, dict) else []
+            if not asks:
+                return {
+                    "skipped": True,
+                    "flagged": False,
+                    "reason": "no claim was kept — no sample ran",
+                    "samples": [],
+                }, []
+        else:
+            asks = self._anchored_asks(state)
         verdict, responses = await phases.run_recompute(
             self.client, state.request, self.context,
-            self._anchored_asks(state),
+            asks,
             max_tokens=self._max_tokens(node),
             samples=int(node.args.get("samples", 3)),
+            claims=bool(source),
         )
         return verdict, responses
+
+    async def _phase_claims(self, node: Node, state: ExecutionState):
+        """The claims node: the figures the finished answer relies on,
+        listed by a model on the triage tier. In shadow (the owner,
+        2026-11-14): its output is recorded and compared, and nothing in
+        the delivery reads it."""
+        implement = state.outputs.get("implement")
+        answer = (implement.get("summary") if isinstance(implement, dict)
+                  else getattr(implement, "summary", None)) or ""
+        verdict, response = await phases.run_claims(
+            self.client, state.request, str(answer),
+            max_tokens=self._max_tokens(node))
+        return verdict, [response]

@@ -265,6 +265,7 @@ The workflows that ship, one file each in `workflows/` (`tests/test_docs.py` che
 | `triage-classify` | one node — triage alone. A calibration sweep costs a fraction of a cent per call instead of a whole workflow, which is what makes running one over dozens of scenarios affordable |
 | `plan-probe` | triage, grounding and the plan alone — a probe for whether a usable plan comes back, at what token cost and from which serving |
 | `independent-check-probe` | one pass that reaches the independent check and nothing else — a probe, not a shape to ship work through |
+| `answer-and-recompute-claims` | `answer-and-recompute`, node for node, with a claim check added after it, in shadow: a model lists the figures the finished answer relies on, blind samples state those same figures, and the free vote compares them one by one. Recorded only; nothing in the delivery reads it. For measuring, not offered to a request |
 
 Select the server's default with `AUTORND_WORKFLOW`; unset, it is `answer-and-recompute`, which runs no judges, and its recompute step is skipped unless `MODEL_RECOMPUTE` is set. A request may name one of the first four itself (see [API](#api)); the probes are for measuring and cannot be named. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
 

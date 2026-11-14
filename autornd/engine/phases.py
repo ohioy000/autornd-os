@@ -15,9 +15,10 @@ from typing import Any
 from pydantic import ValidationError
 
 from autornd.config import settings
-from autornd.graph.checks import dissent_anchored
+from autornd.graph.checks import MAX_CLAIMS, dissent_anchored
 from autornd.models.verdicts import (
     AsksVerdict,
+    ClaimsVerdict,
     BlockedOnAsk,
     DomainConcern,
     RED_NO_ANCHOR,
@@ -1064,6 +1065,50 @@ def _render_recompute_asks(asks: list[Any] | None) -> str:
     return "\n".join(lines)
 
 
+async def run_claims(
+    client: OpenRouterClient,
+    request: str,
+    answer: str,
+    max_tokens: int | None = None,
+) -> tuple[ClaimsVerdict, ModelResponse]:
+    """The claims node: the figures a finished answer relies on, named.
+
+    In shadow by the owner's direction of 2026-11-14. A model on the
+    triage tier reads the answer after it is written and lists each
+    figure, limit or condition it states, as a name and a value. It
+    copies; it does not judge or correct. The free check `claims_named`
+    keeps a claim only if its value is in the answer and its name does
+    not give the value away. The answer itself is not changed.
+    """
+    from autornd.profiles import framing
+    f = framing()
+    prompt = f"""\
+List the claims this answer relies on: each figure, limit, period, count or selection it states as fact and that a reader would act on.
+
+For each claim give:
+- name: what the value is of, in a few words, specific enough that someone who has not read the answer could look it up. Do not put the value in the name.
+- value: the value exactly as the answer states it, a number or a short identifier
+- unit: the unit of a number, empty for an identifier
+
+List only what the answer states. Do not correct it, do not add a claim it does not make, and leave out worked examples, section numbers and citations. At most {MAX_CLAIMS} claims, the ones the answer turns on first.
+
+Return JSON: {{"claims": [{{"name": "...", "value": 0, "unit": "..."}}]}}
+
+Request:
+{request}
+
+Answer:
+{answer}"""
+    data, response = await client.chat_json(
+        function="triage",
+        system_prompt=f"You are {f['request_analyst']}. Respond with JSON only.",
+        user_message=prompt,
+        schema=ClaimsVerdict,
+        max_tokens=max_tokens,
+    )
+    return ClaimsVerdict(**data), response
+
+
 async def run_recompute(
     client: OpenRouterClient,
     request: str,
@@ -1071,6 +1116,7 @@ async def run_recompute(
     asks: list[Any] | None = None,
     max_tokens: int | None = None,
     samples: int = 3,
+    claims: bool = False,
 ) -> tuple[dict[str, Any], list[ModelResponse]]:
     """The recompute node (Ruling D53): blind recomputation.
 
@@ -1099,6 +1145,17 @@ The asks, quoted from the request — compute each one yourself:
 {_render_recompute_asks(asks)}
 
 Compute the answer yourself. Return JSON with results: one entry per listed ask, {{"ask": its number, "value": your final number or the identifier you chose, "unit": the unit of the number, empty for an identifier}}."""
+    if claims:
+        # The claim samples (the owner, 2026-11-14, in shadow): the same
+        # blind call, asked for named values an answer to this request
+        # relies on. The names are shown; no value and no answer is.
+        prompt = f"""\
+{request}{context_block}
+
+A complete answer to this request relies on the values named below. State each one yourself, from the request, the context and what you know:
+{_render_recompute_asks(asks)}
+
+Return JSON with results: one entry per listed name, {{"ask": its number, "value": your number or the identifier you chose, "unit": the unit of the number, empty for an identifier}}. Leave out any you cannot state."""
 
     responses: list[ModelResponse] = []
     sample_results: list[dict[str, Any]] = []
