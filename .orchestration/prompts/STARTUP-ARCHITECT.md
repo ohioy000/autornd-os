@@ -31,7 +31,8 @@ Update this section whenever the queue changes. As of 2026-11-14:
 - **Done:** `same_meaning` and `quote_answers` are live as labels (#249), and the alive check saw both act on a real run with 0 mismatches (`docs/reviews/2026-11-14-switches-alive.md`). About '$1.82' of the owner's '$7' is spent.
 - **In shadow:** the claim check, the owner's choice of 2026-11-14 for errors in an answer's prose. It lives in `workflows/answer-and-recompute-claims.yaml`, for measurement only; the default workflow and the delivery are unchanged. Two runs: the second left no false flag but did not test the error it is for, and the blind samples were wrong together three times (`docs/reviews/2026-11-14-claims-shadow-2.md`). About '$2.09' of the owner's '$7' is spent.
 - **Live since 2026-11-14:** a recompute sample that is one bare result is read by the vote.
-- **Next, the owner's choice:** check each claim against a found quote (the architect's pick), keep tuning the vote, or stop. Making any of it visible or live is the owner's ruling.
+- **Found 2026-11-14, free:** all 4 recorded wrong IA answers lacked the passage that holds the answer; all 6 that had it were right (`docs/reviews/2026-11-14-prose-errors-are-retrieval.md`). A check after the answer cannot make up for that, so the claim-against-quote check was not built and the claim check is not run again without the owner's word.
+- **Next:** retrieval. First, free: does the same hold on the other recorded lookup answers. Then what the lookup is asked; a change there is a ruling.
 
 ## How the work moves
 
