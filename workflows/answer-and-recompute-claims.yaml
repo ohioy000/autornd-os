@@ -1,0 +1,265 @@
+name: answer-and-recompute-claims
+description: >
+  The claim check, in shadow (the owner, 2026-11-14): the
+  answer-and-recompute workflow, node for node, with four
+  nodes added after it. A model lists the figures the
+  finished answer relies on, a free check keeps the ones it
+  can ask about, three blind samples state those same
+  figures, and the vote compares them one by one. All four
+  are recorded only: nothing in the delivery reads them and
+  nothing blocks, routes or revises on them. For
+  measurement; not offered to a request.
+
+nodes:
+  # ── classify ────────────────────────────────────────────────────
+  - id: triage
+    kind: ai
+    tier: triage
+    prompt: triage
+    schema: TriageVerdict
+
+  # Ruling D51 (1): the asks node, on the triage tier. A model
+  # proposes what the request asks, quoted verbatim, each with its
+  # kind; the free check below keeps only what occurs in the
+  # request and counts every other quote as not anchored.
+  - id: asks
+    kind: ai
+    tier: triage
+    prompt: asks
+    schema: AsksVerdict
+    depends_on: [triage]
+
+  - id: asks_anchored
+    kind: check
+    check: asks_anchored
+    args:
+      asks: asks.asks
+      request: request
+    depends_on: [asks]
+
+  # Grounding, assembled deterministically — the same node as
+  # full-team's, because it is the same job.
+  - id: context
+    kind: check
+    check: build_context
+    depends_on: [asks_anchored]
+
+  # ── decision switches, before the answer ─────────────────────────
+  # The switches that read the request alone: is it a hard request.
+  # Its route is at request_switches.route.hard_request for a
+  # tier_when to read; in shadow that is `default`, so nothing here
+  # routes on it. Advisory: a failure or a cut is a recorded skip
+  # and the answer is written all the same.
+  - id: request_switches
+    kind: ai
+    tier: decision
+    prompt: switches
+    advisory: true
+    args:
+      ask: [hard_request]
+    depends_on: [context]
+
+  # ── answer ───────────────────────────────────────────────────────
+  # The one answer, on the engineering tier, from the request and
+  # the asks with no plan. The implement prompt omits its 'Plan:'
+  # section here: the task line reads 'Produce the answer to the
+  # following request.' Ruling D53: args: {results: true} adds the
+  # results instruction — one typed entry per ask of kind value or
+  # verdict — which the recompute vote compares against. The
+  # instruction is gated on this arg, so no other workflow's
+  # implement prompt changes.
+  - id: implement
+    kind: ai
+    tier: engineering
+    specialist: lead
+    prompt: implement
+    schema: ImplementVerdict
+    max_tokens: plan_max_tokens    # the deliverable is plan-sized; 16k truncated it twice (073, 075)
+    depends_on: [context, request_switches]
+    args:
+      results: true
+
+  # Ruling D51 (5): the implementer's honest-refusal channel. An
+  # entry that names an ask ends the run blocked — this workflow
+  # has no escalation sub-graph to route to, and an unmet ask is a
+  # terminal fact, not an iteration. An entry naming no ask is a
+  # note: counted, never blocking, routed nowhere.
+  - id: blocked_check
+    kind: check
+    check: blocked_on_unmet
+    args:
+      blocked_on: implement.blocked_on
+      asks: asks_anchored.anchored
+      request: request
+    depends_on: [implement]
+
+  - id: blocked_gate
+    kind: gate
+    condition: blocked_check.passed == true
+    depends_on: [blocked_check]
+    on_fail: blocked
+    on_fail_reason: "Implementation blocked on an ask it cannot satisfy"
+
+  # A cut-off answer is not a finished one. By the owner's word of
+  # 2026-11-13 ("yes to all 3"): golden batch 1's Q6 r2 stopped
+  # mid-sentence at character 1948, naming no gate, and shipped as done.
+  # A free check on the answer's last line; when it finds the text cut
+  # off, the run ends blocked with that reason, the answer is kept as
+  # the candidate, and the recompute is not paid for. No retry.
+  - id: answer_end
+    kind: check
+    check: answer_ends_whole
+    args:
+      text: implement.summary
+    depends_on: [implement]
+
+  - id: answer_end_gate
+    kind: gate
+    condition: answer_end.passed == true
+    depends_on: [answer_end]
+    on_fail: blocked
+    on_fail_reason: "Answer incomplete: it ends mid-sentence"
+
+  # The free checks, before the recompute. If the implementation
+  # does not even mention an anchored ask, no recompute is needed
+  # to know the answer is incomplete — but the run completes
+  # either way: these checks are notes, and the vote is a note on
+  # top of them.
+  - id: coverage
+    kind: check
+    check: criteria_addressed
+    args:
+      criteria: asks_anchored.quotes
+      text: implement.summary
+      # The review of 2026-10-14: when nothing anchors, the ask
+      # is the whole request, and word presence cannot judge a
+      # whole request — coverage is passed and unchecked, a note.
+      fallback: asks_anchored.fallback
+    depends_on: [implement]
+
+  # Ruling D51 (4): the reference is the request's stated figures,
+  # never a plan — there is no plan here at all.
+  - id: consistency
+    kind: check
+    check: numbers_consistent
+    args:
+      reference: request
+      implementation: implement.summary
+    depends_on: [implement]
+
+  # ── recompute ────────────────────────────────────────────────────
+  # Three blind samples on the recompute tier, each one a separate
+  # call, each recomputing the anchored asks of kind value and
+  # verdict from the request and the grounding alone. No sample
+  # sees the answer, its results, the plan or another sample's
+  # output. When the recompute tier is not configured the node
+  # skips and records the skip; the vote reads a skip as skipped,
+  # never as passed.
+  - id: recompute
+    kind: ai
+    tier: recompute
+    prompt: recompute
+    schema: RecomputeVerdict
+    # Advisory (ARCH-20261021-124): if the recompute raises, or the
+    # watchdog cuts or refuses it, it stores its skip and the run goes
+    # on. The run's status is decided without it (D53 §2 (5)).
+    advisory: true
+    args:
+      samples: 3
+    max_tokens: recompute_max_tokens    # a full calculation, not a verdict — plan-sized
+    depends_on: [consistency, answer_end_gate]
+
+  # The vote. A note, never a gate: it never blocks, routes or
+  # revises, and the run's status is decided without it. A flag is
+  # recorded in the run's outputs and in the delivery the API
+  # returns, and nothing reads it.
+  - id: recompute_vote
+    kind: check
+    check: recompute_vote
+    args:
+      results: implement.results
+      samples: recompute.samples
+      asks: asks_anchored.anchored
+      request: request
+      skipped: recompute.skipped
+      reason: recompute.reason
+    depends_on: [recompute]
+
+  # ── decision switches, after the answer ─────────────────────────
+  # The switches declared in switches/default.yaml that read the
+  # finished answer: does each text ask the vote flagged say the same
+  # thing as the samples, does it give each ask, does each quote found
+  # on its page state an answer to its question. One request on the
+  # optional decision tier. All ship in shadow: recorded, and
+  # nothing blocks, routes or revises on them. The run's status is
+  # decided without this node; with no decision tier it skips.
+  # same_meaning is first: a request asks at most MAX_QUESTIONS, and
+  # its few items must not be the ones cut.
+  - id: answer_switches
+    kind: ai
+    tier: decision
+    prompt: switches
+    advisory: true
+    args:
+      ask: [same_meaning, ask_covered, quote_answers]
+    depends_on: [recompute_vote]
+
+  # ── the claim check, in shadow ───────────────────────────────────
+  # The owner's direction of 2026-11-14. The vote above compares one
+  # value per ask, and an open request is one ask: in five of the six
+  # recorded runs of the inspection-authorization question it compared
+  # nothing, and the wrong period in two of them sat in prose
+  # (docs/reviews/2026-11-13-golden-decisions.md). These four nodes run
+  # after everything the delivery reads. They are stored as phase rows
+  # under their own names, which the delivery does not look for.
+  #
+  # A model on the triage tier lists the answer's claims: a name and a
+  # value each. It reads the finished answer; the answer's own call and
+  # prompt are as they were. Advisory: a failure is a recorded skip.
+  - id: claims
+    kind: ai
+    tier: triage
+    prompt: claims
+    schema: ClaimsVerdict
+    advisory: true
+    depends_on: [answer_switches]
+
+  # Free: keeps a claim whose value is in the answer as written and
+  # whose name does not give the value away, at most twelve.
+  - id: claims_named
+    kind: check
+    check: claims_named
+    advisory: true
+    args:
+      claims: claims.claims
+      text: implement.summary
+    depends_on: [claims]
+
+  # Three blind samples on the recompute tier. Each is shown the
+  # request, the grounding and the claims' names, never a value or the
+  # answer. With no claim kept, or no recompute tier, it skips.
+  - id: claims_recompute
+    kind: ai
+    tier: recompute
+    prompt: recompute
+    schema: RecomputeVerdict
+    advisory: true
+    args:
+      samples: 3
+      claims: claims_named
+    max_tokens: recompute_max_tokens
+    depends_on: [claims_named]
+
+  # The same free vote, claim by claim. Stored as `claims_vote`.
+  - id: claims_vote
+    kind: check
+    check: recompute_vote
+    advisory: true
+    args:
+      results: claims_named.results
+      samples: claims_recompute.samples
+      asks: claims_named.asks
+      request: request
+      skipped: claims_recompute.skipped
+      reason: claims_recompute.reason
+    depends_on: [claims_recompute]
