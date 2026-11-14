@@ -6,8 +6,8 @@ right is the hand reading below.
 
 ## The point
 
-- **No false flag this time.** 7 figures and 10 text claims were compared and agreed. The 2 wording
-  flags were both judged the same by `same_meaning`. The first run left 7 flags on right claims.
+- **No false flag this time.** 17 claims were compared: 7 figures and 8 text claims agreed, and the
+  2 wording flags were both judged the same by `same_meaning`. The first run left 7 flags on right claims.
 - **But the bar that matters was not tested.** No answer repeated the "2 years of the 3-year
   period" error, so the run cannot say the check would catch it.
 - **And the change aimed at that error did not take.** No unit listed the condition as a claim of
@@ -57,7 +57,8 @@ One reader, the architect. D50 asks for two readers; this is a stated departure.
 the 2-year period before the date he applies". All three Q6 answers give the right logic. The
 screen fails Q6 r1 on the known key defect.
 
-**Compared and agreed: 17,** all right on the reading. 7 figures and 10 text claims.
+**Compared: 17,** all right on the reading. 7 figures and 8 text claims agreed; 2 text claims
+were flagged.
 
 **Flags: 2, both wording,** in IA r1: "14 CFR § 65.95(a)(1)" against the samples' "14 CFR 65.95",
 and the fixed-base sentence with and without "reachable". `same_meaning` said yes to both, at 0.96
@@ -87,7 +88,7 @@ happened once in the first run (18 months).
 | 3 | No more than 1 in 5 right figures flagged | Missed, 3 of 12 | **Met.** 0 of 7 |
 | 4 | A wrong claim is flagged | Missed | **Not tested.** No answer was wrong |
 | 5 | The delivery is unchanged | Met | **Met.** |
-| 6 | No more than 1 in 5 right text claims left flagged | (4 of 10 by the same count) | **Met.** 0 of 12 |
+| 6 | No more than 1 in 5 right text claims left flagged | (4 of 10 by the same count) | **Met.** 0 of 10 |
 
 ## The predictions
 
