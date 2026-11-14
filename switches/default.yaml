@@ -114,12 +114,18 @@ quote_answers:
   yes_at: 0.80
   no_at: 0.20
   safe: "yes"
-  mode: shadow
+  # Live by the owner's ruling of 2026-11-14 ("yes to first 2"), as a label
+  # only. The evidence: 21 confident no's over three runs of 2026-11-13,
+  # every one right on the reading, against a preregistered bar of 15
+  # (docs/reviews/2026-11-13-lookup-quotes.md). One reader read them.
+  mode: live
   each: quotes
   guards: >
-    Recorded beside each quote the check found on its page. Found means the
-    words are there, not that they answer the question. No step acts on it
-    yet.
+    Asked of each quote the check found on its page. Found means the words
+    are there, not that they answer the question. Live, a confident no
+    labels that quote in the delivery as not answering its question, with a
+    caution. It is a label: the quote is kept, and the answer was already
+    written when this is asked.
 
 same_meaning:
   question: >
@@ -134,9 +140,16 @@ same_meaning:
   # in the tier-2 run, all on right answers, and no on all 6 contrary pairs
   # written before it (docs/reviews/2026-11-13-golden-decisions.md). Ten
   # pairs and six is a first look. The safe side keeps the vote's flag.
-  mode: shadow
+  # Live by the owner's ruling of 2026-11-14 ("yes to first 2"): in the
+  # lookup runs of 2026-11-13 the vote flagged 6 right answers for their
+  # wording and this said yes on all 6, from 0.975 to 0.996
+  # (docs/reviews/2026-11-13-lookup-quotes.md). No live no has been seen on
+  # a wrong answer outside the six contrary pairs.
+  mode: live
   each: disagreements
   guards: >
     Asked only when the recompute vote flags a text ask: the answer's value
-    beside a sample's own words for the majority. Live, a yes would clear
-    that ask's flag as worded differently. No step acts on it yet.
+    beside a sample's own words for the majority. Live, a confident yes
+    clears that ask's flag in the delivery as worded differently, and says
+    so in a caution. The vote's own record is kept as it was. The vote is a
+    note either way: nothing blocks, routes or revises on it.
