@@ -35,7 +35,8 @@ Update this section whenever the queue changes. As of 2026-11-14:
 - **Tested 2026-11-14:** looking up the request's own question first does not fix it (9 of 15 against 8). The search returns the answer's passage in 24 of 30 runs and the quote check keeps it in 17: tables quoted as a grid are not matched, osha.gov refuses every fetch, and a vague request brings the wrong section (`docs/reviews/2026-11-14-lookup-asks-request.md`). About '$2.44' of the owner's '$7' is spent.
 - **Ruled by the owner 2026-11-14 and built:** a quote written as a grid of cells is read row by row by the quote check, and a quote whose page could not be read is not counted against the lookup in the delivery; it is said apart as not checked. Record: `docs/reviews/2026-11-14-table-quotes-unread-pages.md`.
 - **Tested 2026-11-14, the owner's third word:** a sentence telling the scoping call to look up each reading of a vague request did not help (3 of 10 against 6 of 10) and the model did not follow it (`docs/reviews/2026-11-14-vague-request.md`). Not proposed. About '$2.65' of the owner's '$7' is spent.
-- **Next, the owner's ruling:** stop on the vague request (the architect's advice), or test the readings as a typed field of the scoping call.
+- **Tested 2026-11-14:** a typed list of search queries filled by the scoping call, as published TypeScript research tools do it, found the passage in 8 of 10 runs against 4 of 10 and met both bars (`docs/reviews/2026-11-14-typed-queries.md`). Not built. About '$2.89' of the owner's '$7' is spent.
+- **Next, the owner's ruling:** a wider test of `lookup_queries` before it ships (about 12 requests, vague and clear, then full answers on IA; about '$0.60').
 
 ## How the work moves
 
