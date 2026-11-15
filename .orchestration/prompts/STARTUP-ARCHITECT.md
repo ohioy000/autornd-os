@@ -42,7 +42,8 @@ Update this section whenever the queue changes. As of 2026-11-14:
 - **Dropped 2026-11-15, the owner's word:** more work on vague requests. Professional questions name their rule; the record holds one vague request.
 - **Approved by the owner 2026-11-15 and frozen:** the professional set, version professional-1, 15 lookup questions in 15 fields (`evals/professional/questions.json`; `verify_keys.py` checks each passage on its live page).
 - **Its baseline, 2026-11-15:** 45 of 45 answers right; the lookup found the governing sentence in 39; 38 of the 45 right answers carried a caution and one caution was a false alarm from the vote (`docs/reviews/2026-11-15-professional-baseline.md`). About '$5.42' of the owner's '$7' is spent.
-- **Next, the owner's rulings:** the cautions. Say what was verified when a figure stands in a found passage; do not let a vote overrule a found passage; drop three more of the search model's marks in the quote check. Also open: a quote broken by a row of dots (D56 (3)); a harder professional set.
+- **Live since 2026-11-15, the owner's rulings:** the delivery says which asks' figures stand in a found passage (`confirmations`), drops the vote's could-not-compare cautions for those asks, and takes a found passage over the vote; the quote check drops three more of the search model's marks (`docs/reviews/2026-11-15-verified-by-source.md`). On the baseline's 45 right answers: cautions 57 to 48, answers with none 7 to 15.
+- **Next:** a harder professional set, drafted for the owner's sign-off. Open for the owner: the cautions about quotes (30 of 45 right answers still carry one); a quote broken by a row of dots (D56 (3)).
 
 ## How the work moves
 

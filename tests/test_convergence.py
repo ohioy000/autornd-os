@@ -612,6 +612,95 @@ class TestTheRecordsBesideTheAnswer:
             "2 more quoted passages were on a page that could not be read; "
             "not checked and not counted."]
 
+    QUOTE = ("(i) A lens dose equivalent of 15 rems (0.15 Sv), and the records "
+             "shall be retained for at least 1 year after the expiration date.")
+
+    def _backed_run(self, results, vote, quote_status="found", asks=1, **quote):
+        return _detail(self._workflow(
+            ("asks", {"asks": [{"quote": "q", "kind": "value"}] * asks}),
+            ("sources", {"lookup": "grounding", "findings": [{"quotes": [
+                dict({"status": quote_status, "text": self.QUOTE}, **quote)]}]}),
+            ("implement", {"summary": "a", "results": results}),
+            ("recompute_vote", vote)))
+
+    def test_a_figure_in_a_found_passage_is_said_and_quiets_the_vote(self):
+        """Owner's ruling 2026-11-15. Measured: 45 of 45 answers right, 38
+        with a caution, 29 cautions a vote that could not compare."""
+        detail = self._backed_run(
+            [{"ask": 1, "value": 15, "unit": "rem (0.15 Sv)"}],
+            {"flagged": False, "unchecked": True, "checked": False})
+        assert detail.cautions == []
+        assert detail.confirmations == [
+            "The figures this answer gives for ask 1 stand in a passage "
+            "found on its page."]
+        assert detail.recompute_vote["backed_by_source"] == [1]
+
+    def test_a_found_passage_is_taken_over_the_vote(self):
+        """Measured 2026-11-15: two samples from memory said 2 rems against
+        the rule's own 15, and the right answer was flagged."""
+        detail = self._backed_run(
+            [{"ask": 1, "value": "lens of the eye = 15 rem (0.15 Sv)", "unit": ""}],
+            {"flagged": True, "checked": True, "disagreements": [
+                {"ask": 1, "answer": "15", "majority": "2", "support": 2}]})
+        vote = detail.recompute_vote
+        assert (vote["flagged"], vote["flagged_by_vote"]) == (False, True)
+        assert vote["overruled_by_source"] == [1]
+        assert len(vote["disagreements"]) == 1, "what the vote found is kept"
+        assert detail.cautions == []
+        assert "the passage is taken over the vote" in detail.confirmations[1]
+
+    @pytest.mark.parametrize("results, quote", [
+        # A different figure from the passage's.
+        ([{"ask": 1, "value": 25, "unit": "rem"}], {}),
+        # One of two figures is not in the passage.
+        ([{"ask": 1, "value": "15 rem (0.25 Sv)", "unit": ""}], {}),
+        # The figure is part of a longer number in the passage.
+        ([{"ask": 1, "value": 0.1, "unit": "Sv"}], {}),
+        # A single digit with another word beside it than the answer's.
+        ([{"ask": 1, "value": 1, "unit": "rem"}], {}),
+        # No number at all: nothing to stand on.
+        ([{"ask": 1, "value": "the lens of the eye", "unit": ""}], {}),
+        # The passage was not found on its page.
+        ([{"ask": 1, "value": 15, "unit": "rem"}], {"status": "not_found"}),
+        # quote_answers judged the passage beside the point.
+        ([{"ask": 1, "value": 15, "unit": "rem"}], {"answers_question": False}),
+    ])
+    def test_nothing_else_backs_an_ask(self, results, quote):
+        """Break-proof: the vote's caution stays and nothing is confirmed."""
+        quote = dict(quote)
+        detail = self._backed_run(
+            results, {"flagged": True, "checked": True,
+                      "disagreements": [{"ask": 1}]},
+            quote_status=quote.pop("status", "found"), **quote)
+        assert detail.confirmations == []
+        assert detail.recompute_vote.get("flagged") is True
+        assert detail.cautions[0] == (
+            "The recompute vote disagrees with this answer on ask 1.")
+
+    def test_a_single_digit_counts_with_its_word_beside_it(self):
+        detail = self._backed_run(
+            [{"ask": 1, "value": "at least 1 year after the expiration date",
+              "unit": ""}],
+            {"flagged": False, "checked": True, "no_consensus": [1]})
+        assert detail.recompute_vote["backed_by_source"] == [1]
+        assert detail.cautions == []
+
+    def test_an_ask_not_backed_keeps_its_caution(self):
+        """Break-proof: one backed ask does not quiet the vote on another."""
+        detail = self._backed_run(
+            [{"ask": 1, "value": 15, "unit": "rem"},
+             {"ask": 2, "value": 40, "unit": "rem"}],
+            {"flagged": False, "checked": True, "no_consensus": [1, 2]}, asks=2)
+        assert detail.cautions == [
+            "The recompute vote reached no majority on ask 2; that part of "
+            "the answer was not compared."]
+        detail = self._backed_run(
+            [{"ask": 1, "value": 15, "unit": "rem"}],
+            {"flagged": False, "unchecked": True, "checked": False}, asks=2)
+        assert detail.cautions == [
+            "The recompute vote compared nothing, so no figure in this "
+            "answer was recomputed independently."]
+
     def test_a_withheld_lookup_answer_is_said(self):
         detail = _detail(self._workflow(
             ("sources", {"lookup": "grounding", "findings": [
