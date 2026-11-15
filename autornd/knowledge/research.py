@@ -249,12 +249,32 @@ def _table_rows(quote: str) -> list[str] | None:
     return rows or None
 
 
+# Marks a search model adds when it quotes a page and the page does not
+# print: emphasis stars and the hashes of a heading. Measured 2026-11-14 on
+# the 74 quotes of three lookup tests that were not found on a page that was
+# read: 12 were on the page word for word once the marks were dropped.
+_EMPHASIS = re.compile(r"\*+")
+_HEADING = re.compile(r"(?m)^\s*#{1,6}\s+")
+
+
+def _parts(quote: str) -> list[str]:
+    """The pieces of a quote that must each be on the page, in order.
+
+    A grid of cells gives one piece per row. Prose is one piece, without
+    the model's own emphasis and heading marks. Words left out are still
+    not allowed: a quote with a row of dots in it is looked for with the
+    dots (Ruling D56 (3)).
+    """
+    rows = _table_rows(quote)
+    if rows is not None:
+        return rows
+    part = _passage(_HEADING.sub("", _EMPHASIS.sub("", quote)))
+    return [part] if part else []
+
+
 def _checked_chars(quote: str) -> int:
     """How many characters of this quote the check compares."""
-    rows = _table_rows(quote)
-    if rows is None:
-        return len(_passage(quote))
-    return sum(len(row) for row in rows)
+    return sum(len(part) for part in _parts(quote))
 
 
 def quote_found(quote: str, page: str) -> bool:
@@ -263,7 +283,8 @@ def quote_found(quote: str, page: str) -> bool:
     Free and deterministic. Nothing is left out: a passage with a word
     missing or changed is not found. Spacing, case, curly quotes, dashes and
     soft hyphens are read alike, because pages and models print those
-    differently without changing a word.
+    differently without changing a word. So are the emphasis stars and
+    heading hashes a model adds when it quotes.
 
     A quote written as a grid of cells is read row by row (owner's ruling,
     2026-11-14): every row must be on the page, its cells side by side and
@@ -271,18 +292,20 @@ def quote_found(quote: str, page: str) -> bool:
     allowed, because the model quoted the rows it used; a cell changed is
     not.
     """
+    text = _normalise(page)
+    if _table_rows(quote) is None:
+        # As written first: a page may print a star of its own.
+        whole = _passage(quote)
+        if len(whole) >= MIN_QUOTE_CHARS and whole in text:
+            return True
     if _checked_chars(quote) < MIN_QUOTE_CHARS:
         return False
-    text = _normalise(page)
-    rows = _table_rows(quote)
-    if rows is None:
-        return _passage(quote) in text
     at = 0
-    for row in rows:
-        at = text.find(row, at)
+    for part in _parts(quote):
+        at = text.find(part, at)
         if at < 0:
             return False
-        at += len(row)
+        at += len(part)
     return True
 
 

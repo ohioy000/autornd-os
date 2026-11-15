@@ -578,6 +578,56 @@ class TestAQuotedTableIsReadRowByRow:
         assert [q.status for q in finding.quotes] == ["found", "too_short"]
 
 
+# A page's words as eCFR prints them (29 CFR 1910.95(g)(5)), and quotes in
+# the forms the search model wrote them in the lookup tests of 2026-11-14.
+NOISE_PAGE = ("\u00a7 1910.95 Occupational noise exposure. (g) Audiometric testing "
+              "program. (5) Baseline audiogram. (i) Within 6 months of an "
+              "employee's first exposure at or above the action level, the "
+              "employer shall establish a valid baseline audiogram against which "
+              "subsequent audiograms can be compared. (ii) Mobile test van "
+              "exception. (iii) Testing to establish a baseline audiogram shall "
+              "be preceded by at least 14 hours without exposure to workplace "
+              "noise.")
+
+
+class TestAModelsOwnMarksAreNotWordsOfThePassage:
+    @pytest.mark.parametrize("quote", [
+        # Emphasis stars the page does not print.
+        "(5) *Baseline audiogram.* (i) Within 6 months of an employee's "
+        "first exposure at or above the action level",
+        "(g) **Audiometric testing program.** (5) *Baseline audiogram.*",
+        # The hashes of a heading.
+        "#### \u00a7 1910.95 Occupational noise exposure.\n(g) Audiometric "
+        "testing program.",
+    ])
+    def test_stars_and_heading_hashes_change_no_word(self, quote):
+        """Measured 2026-11-14: 12 recorded quotes were on their pages word
+        for word and were marked not found for these marks."""
+        assert quote_found(quote, NOISE_PAGE)
+
+    @pytest.mark.parametrize("quote", [
+        # A changed figure under the marks.
+        "(iii) *Testing* to establish a baseline audiogram shall be preceded "
+        "by at least 24 hours",
+        # A row of dots where words were left out: still not allowed (D56).
+        "(i) Within 6 months of an employee's first exposure at or above the "
+        "action level\n...\n(iii) Testing to establish a baseline audiogram",
+        # A heading, then a paragraph that does not follow it on the page.
+        "#### \u00a7 1910.95 Occupational noise exposure.\n(i) Within 6 months "
+        "of an employee's first exposure at or above the action level",
+    ])
+    def test_a_changed_word_or_words_left_out_are_still_not_found(self, quote):
+        """Break-proof: the marks are dropped, the words are not."""
+        assert not quote_found(quote, NOISE_PAGE)
+
+    def test_marks_alone_are_too_short_to_check(self):
+        assert not quote_found("*(5)* **(ii)**", NOISE_PAGE)
+
+    def test_a_star_the_page_itself_prints_still_matches(self):
+        assert quote_found("the limit is 25 mW* in this band at all times",
+                           "Note: the limit is 25 mW* in this band at all times.")
+
+
 class TestWhatTheFetchCanRead:
     async def test_a_pdf_is_read_through_its_text_layer(self, monkeypatch):
         monkeypatch.setattr(fetch, "_transport", _served({PAGE: _pdf(PASSAGE)}))
