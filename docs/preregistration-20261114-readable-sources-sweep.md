@@ -75,3 +75,23 @@ is not advised, and stopping a run even less so.
   questions, so later questions benefit from earlier ones, as they would on a server and would
   not on a single command-line run.
 - One reader; D50 asks for two, a stated departure.
+
+## Addendum, written after the 72 answers and before the re-check
+
+The sweep ran: '$1.160'. It showed a flaw in the first setting. One challenge page from
+ecfr.gov, a site read without trouble all day, listed that site as refusing. The lookups that
+followed in that process were told not to quote it, and 3 of the 8 inspection-authorization
+answers in the two arms with the setting on stated the two-year condition wrongly; all 4 were
+right with it off.
+
+**The repair, made before the re-check:** a site is listed only after two refusals, and a site
+that has been read in the process is never listed.
+
+**The re-check:** the `avoid` arm only, with the repair: the inspection-authorization request 8
+times in one process (stop '$0.22'), and Q17 and Q22, the two questions the search answers from
+osha.gov, 4 times each in one process (stop '$0.16'). About '$0.30' expected, which keeps the
+whole sweep under the owner's '$1.75'.
+
+**The bar for the re-check:** at least 7 of the 8 inspection-authorization answers state 14 CFR
+65.91(c)(2) rightly, read by hand, and no lookup in them is told to avoid ecfr.gov. Q17 and Q22
+pass the screen in at least 7 of 8.

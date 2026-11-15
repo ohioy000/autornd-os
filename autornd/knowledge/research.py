@@ -103,22 +103,30 @@ def reset_dropped_quotes() -> None:
 # permanently mark a working rerank API as unsupported. §6.8 records that exact
 # bug from the last time an exception type was caught too widely.
 
-# Sites that refused a fetch in this process, with the reason, so a later
-# lookup can be told to quote from somewhere else (settings.
-# lookup_avoid_unreadable). A refusal is the site's answer to us, not to the
-# page: "HTTP 403" or a challenge page. A missing page ("HTTP 404") says
-# nothing about the site. A page read from the site takes it off the list.
+# Sites that refuse to be read, learned in this process, so a later lookup
+# can be told to quote from somewhere else (settings.lookup_avoid_unreadable).
+# A refusal is the site's answer to us, not to the page: "HTTP 403" or a
+# challenge page. A missing page ("HTTP 404") says nothing about the site.
+# One refusal is not enough, and a site that has been read here is never
+# listed: in the sweep of 2026-11-14 one challenge page from ecfr.gov, which
+# had been read all day, listed it, and the lookups told to avoid it then
+# got the rule's figure wrong in 3 of 8 answers.
 _unreadable_sites: dict[str, str] = {}
+_refusals: dict[str, int] = {}
+_read_sites: set[str] = set()
 _REFUSALS = ("HTTP 401", "HTTP 403", "HTTP 429", "HTTP 451")
+REFUSALS_TO_LIST = 2
 
 
 def unreadable_sites() -> dict[str, str]:
-    """The sites that refused a fetch in this process, with the reason."""
+    """The sites listed as refusing to be read, with the last reason."""
     return dict(_unreadable_sites)
 
 
 def reset_unreadable_sites() -> None:
     _unreadable_sites.clear()
+    _refusals.clear()
+    _read_sites.clear()
 
 
 def _site(url: str) -> str:
@@ -131,9 +139,13 @@ def _note_fetch(url: str, source) -> None:
     if not site:
         return
     if source.fetched:
+        _read_sites.add(site)
         _unreadable_sites.pop(site, None)
-    elif source.reason in _REFUSALS or "challenge page" in source.reason:
-        _unreadable_sites[site] = source.reason
+    elif (site not in _read_sites
+          and (source.reason in _REFUSALS or "challenge page" in source.reason)):
+        _refusals[site] = _refusals.get(site, 0) + 1
+        if _refusals[site] >= REFUSALS_TO_LIST:
+            _unreadable_sites[site] = source.reason
 
 
 # Added to a lookup when sites are known to refuse us.

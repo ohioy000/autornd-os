@@ -638,16 +638,30 @@ class TestASiteThatRefusesIsAvoided:
     """Owner's direction of 2026-11-14. Measured the same day: 116 of 409
     quotes were on one site that answers every fetch "HTTP 403"."""
 
-    async def _refused_once(self, monkeypatch):
+    async def _refused(self, monkeypatch, times=2):
         monkeypatch.setattr(fetch, "_transport",
                             _served({REFUSING: REFUSED, PAGE: _html()}))
         monkeypatch.setattr(research, "MAX_ROUNDS", 1)
+        for _ in range(times):
+            await research_gaps(_client(_reply(quotes=[(1, PASSAGE, REFUSING)])),
+                                "a radio", ["The EU 868 MHz limit"])
+
+    async def test_a_site_that_refuses_twice_is_listed(self, monkeypatch):
+        await self._refused(monkeypatch)
+        assert research.unreadable_sites() == {"refusing.example.gov": "HTTP 403"}
+
+    async def test_one_refusal_lists_nothing(self, monkeypatch):
+        """Break-proof. Measured 2026-11-14: one challenge page listed
+        ecfr.gov, and 3 of 8 answers told to avoid it were wrong."""
+        await self._refused(monkeypatch, times=1)
+        assert research.unreadable_sites() == {}
+
+    async def test_a_site_read_here_is_never_listed(self, monkeypatch):
+        monkeypatch.setattr(fetch, "_transport", _served({REFUSING: _html()}))
         await research_gaps(_client(_reply(quotes=[(1, PASSAGE, REFUSING)])),
                             "a radio", ["The EU 868 MHz limit"])
-
-    async def test_a_refusal_is_remembered_by_site(self, monkeypatch):
-        await self._refused_once(monkeypatch)
-        assert research.unreadable_sites() == {"refusing.example.gov": "HTTP 403"}
+        await self._refused(monkeypatch, times=3)
+        assert research.unreadable_sites() == {}
 
     async def test_a_missing_page_says_nothing_about_its_site(self, monkeypatch):
         """Break-proof: only a refusal marks a site, not any failed fetch."""
@@ -657,7 +671,7 @@ class TestASiteThatRefusesIsAvoided:
         assert research.unreadable_sites() == {}
 
     async def test_a_page_read_from_the_site_takes_it_off_the_list(self, monkeypatch):
-        await self._refused_once(monkeypatch)
+        await self._refused(monkeypatch)
         monkeypatch.setattr(fetch, "_transport", _served({REFUSING: _html()}))
         await research_gaps(_client(_reply(quotes=[(1, PASSAGE, REFUSING)])),
                             "a radio", ["The EU 868 MHz limit"])
@@ -665,8 +679,8 @@ class TestASiteThatRefusesIsAvoided:
 
     async def test_the_next_lookup_is_told_to_quote_from_elsewhere(self, monkeypatch):
         monkeypatch.setattr(config.settings, "lookup_avoid_unreadable", True)
-        monkeypatch.setattr(fetch, "_transport",
-                            _served({REFUSING: REFUSED, PAGE: _html()}))
+        await self._refused(monkeypatch, times=1)
+        monkeypatch.setattr(research, "MAX_ROUNDS", 2)
         client = _client(_reply(quotes=[(1, PASSAGE, REFUSING)]),
                          _reply(quotes=[(1, PASSAGE, PAGE)]))
         first, second = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
@@ -680,8 +694,8 @@ class TestASiteThatRefusesIsAvoided:
     async def test_switched_off_no_lookup_is_told_anything(self, monkeypatch):
         """Break-proof: the clause is the switch's, and the switch ships off."""
         assert config.settings.lookup_avoid_unreadable is False
-        monkeypatch.setattr(fetch, "_transport",
-                            _served({REFUSING: REFUSED, PAGE: _html()}))
+        await self._refused(monkeypatch, times=1)
+        monkeypatch.setattr(research, "MAX_ROUNDS", 2)
         client = _client(_reply(quotes=[(1, PASSAGE, REFUSING)]),
                          _reply(quotes=[(1, PASSAGE, PAGE)]))
         await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
