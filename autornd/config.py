@@ -164,16 +164,20 @@ class Settings(BaseSettings):
     # work that can least afford a missing figure.
     search_max_tokens_consequential: int = 4000
 
-    # Owner's direction of 2026-11-14, off until the sweep that tests them
-    # has been read. Measured the same day: 128 of 409 quotes in three lookup
-    # tests were on pages that could not be read, 116 of them on one site
-    # that answers every fetch "HTTP 403".
-    # lookup_avoid_unreadable: a site that refuses a fetch is remembered for
-    # the life of the process, and every later lookup is told not to quote
-    # from it but from a copy that can be read.
+    # Owner's direction of 2026-11-14. Measured the same day: 128 of 409
+    # quotes in three lookup tests were on pages that could not be read, 116
+    # of them on one site that answers every fetch "HTTP 403".
+    # lookup_avoid_unreadable: a site that refuses twice, and was never read
+    # in the process, is named to every later lookup, which is told to quote
+    # from a copy that can be read. On by the owner's word of 2026-11-15,
+    # after the 88-answer sweep: quotes on unread pages fell from 9 of 73 to
+    # 3 of 64, the five rule questions passed 19 of 20 with it and without,
+    # and it cost about an eighth more.
     # lookup_withhold_unverified: a lookup answer with no passage found on
-    # its page is kept in the run's record and not shown to the phases.
-    lookup_avoid_unreadable: bool = False
+    # its page is kept in the run's record and not shown to the phases. Off:
+    # in the same sweep an answer with no found passage was still right
+    # about three times in four, and nothing replaces what is withheld.
+    lookup_avoid_unreadable: bool = True
     lookup_withhold_unverified: bool = False
     escalation_recovery_attempts: int = 3
 

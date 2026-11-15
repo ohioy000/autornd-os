@@ -678,7 +678,7 @@ class TestASiteThatRefusesIsAvoided:
         assert research.unreadable_sites() == {}
 
     async def test_the_next_lookup_is_told_to_quote_from_elsewhere(self, monkeypatch):
-        monkeypatch.setattr(config.settings, "lookup_avoid_unreadable", True)
+        assert config.settings.lookup_avoid_unreadable is True, "on since 2026-11-15"
         await self._refused(monkeypatch, times=1)
         monkeypatch.setattr(research, "MAX_ROUNDS", 2)
         client = _client(_reply(quotes=[(1, PASSAGE, REFUSING)]),
@@ -692,8 +692,8 @@ class TestASiteThatRefusesIsAvoided:
         assert first.unchecked() == [1] and second.checked() == {1}
 
     async def test_switched_off_no_lookup_is_told_anything(self, monkeypatch):
-        """Break-proof: the clause is the switch's, and the switch ships off."""
-        assert config.settings.lookup_avoid_unreadable is False
+        """Break-proof: the clause is the switch's."""
+        monkeypatch.setattr(config.settings, "lookup_avoid_unreadable", False)
         await self._refused(monkeypatch, times=1)
         monkeypatch.setattr(research, "MAX_ROUNDS", 2)
         client = _client(_reply(quotes=[(1, PASSAGE, REFUSING)]),
