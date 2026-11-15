@@ -354,12 +354,25 @@ def _cautions(vote: dict | None, sources: list[dict],
     else:
         quotes = [q for f in findings for q in f.get("quotes") or []]
         found = sum(1 for q in quotes if q.get("status") == "found")
-        if not found:
+        # Owner's ruling, 2026-11-14: a quote whose page could not be read is
+        # not counted against the lookup. It is said apart, because nothing
+        # checked it either. Measured 2026-11-15: one site refused all 13
+        # fetches of quotes that held the answer.
+        unread = sum(1 for q in quotes if q.get("status") == "unfetched")
+        read = len(quotes) - unread
+        if not found and read:
             out.append("A lookup ran, but no quoted passage could be found "
                        "in its page, so its findings are unverified.")
-        elif found < len(quotes):
-            out.append(f"{found} of {len(quotes)} quoted passages were "
+        elif not found:
+            out.append("A lookup ran, but no page it quoted could be read, "
+                       "so its findings are unverified.")
+        elif found < read:
+            out.append(f"{found} of {read} quoted passages were "
                        f"found in their pages; the rest are unverified.")
+        if found and unread:
+            out.append(f"{unread} more quoted passage"
+                       f"{'s were' if unread > 1 else ' was'} on a page that "
+                       f"could not be read; not checked and not counted.")
         beside = sum(1 for q in quotes if q.get("answers_question") is False)
         if beside:
             out.append(f"{beside} of the {found} passages found in their "
