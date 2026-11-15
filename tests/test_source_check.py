@@ -521,6 +521,63 @@ class TestTheQuoteCheckReadsPastPrinting:
             "The maximum radiated power[3] in this band is 250 mW e.r.p.")
 
 
+# The page's words as fetched from ecfr.gov on 2026-11-14 (40 CFR 141.62(b)),
+# and the quotes are the search model's own, from the lookup test's trace.
+TABLE_PAGE = ("non-transient, non-community water systems. Contaminant MCL (mg/l) "
+              "(1) Fluoride 4.0 (2) Asbestos 7 Million Fibers/liter (longer than "
+              "10 \u03bcm) (3) Barium 2 (4) Cadmium 0.005 (5) Chromium 0.1 "
+              "(6) Mercury 0.002 (7) Nitrate 10 (as Nitrogen) (8) Nitrite 1 (as "
+              "Nitrogen) (16) Arsenic 0.010")
+
+
+class TestAQuotedTableIsReadRowByRow:
+    @pytest.mark.parametrize("quote", [
+        "|(7) Nitrate|10 (as Nitrogen)|",
+        "|Contaminant|MCL (mg/l)|\n|--|--|\n|(1) Fluoride|4.0|\n"
+        "|(7) Nitrate|10 (as Nitrogen)|\n|(16) Arsenic|0.010|",
+        "| Contaminant | MCL (mg/l) |\n|:--|--:|\n| (2) Asbestos | 7 Million "
+        "Fibers/liter (longer than 10 \u00b5m) |",
+    ])
+    def test_a_grid_of_cells_is_found_when_each_row_is_on_the_page(self, quote):
+        """Measured 2026-11-15: 11 such quotes held the answer, none found."""
+        assert quote_found(quote, TABLE_PAGE)
+
+    @pytest.mark.parametrize("quote", [
+        # A changed figure in one cell.
+        "|Contaminant|MCL (mg/l)|\n|--|--|\n|(7) Nitrate|100 (as Nitrogen)|",
+        # A figure put beside another row's name.
+        "|Contaminant|MCL (mg/l)|\n|--|--|\n|(3) Barium|0.005|",
+        # Rows the page prints in the other order.
+        "|(7) Nitrate|10 (as Nitrogen)|\n|(1) Fluoride|4.0|",
+    ])
+    def test_a_changed_cell_or_a_row_out_of_place_is_not_found(self, quote):
+        """Break-proof: the rows are matched whole, cells side by side."""
+        assert not quote_found(quote, TABLE_PAGE)
+
+    def test_a_grid_too_short_to_check_is_not_found(self):
+        assert not quote_found("|(3) Barium|2|", TABLE_PAGE)
+
+    def test_prose_with_a_bar_in_it_is_still_read_as_prose(self):
+        """A quote is a grid only when every line of it is."""
+        assert not quote_found("(7) Nitrate | 10 (as Nitrogen)", TABLE_PAGE)
+        assert quote_found("(7) Nitrate 10 (as Nitrogen)", TABLE_PAGE)
+
+    async def test_the_check_marks_a_grid_found_and_a_short_one_too_short(
+            self, monkeypatch):
+        from autornd.knowledge import research
+        from autornd.knowledge.fetch import Source
+
+        async def fake(url):
+            return Source(url=url, status="fetched", text=TABLE_PAGE,
+                          fetched_at="t", sha256="s")
+        monkeypatch.setattr(research, "fetch_source", fake)
+        finding = research.Finding(question="q", answer="a", quotes=[
+            research.Quote(1, "|(7) Nitrate|10 (as Nitrogen)|", "https://x"),
+            research.Quote(1, "|(3) Barium|2|", "https://x")])
+        await research._check(finding)
+        assert [q.status for q in finding.quotes] == ["found", "too_short"]
+
+
 class TestWhatTheFetchCanRead:
     async def test_a_pdf_is_read_through_its_text_layer(self, monkeypatch):
         monkeypatch.setattr(fetch, "_transport", _served({PAGE: _pdf(PASSAGE)}))

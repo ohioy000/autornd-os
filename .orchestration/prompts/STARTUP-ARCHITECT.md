@@ -33,7 +33,8 @@ Update this section whenever the queue changes. As of 2026-11-14:
 - **Live since 2026-11-14:** a recompute sample that is one bare result is read by the vote.
 - **Found 2026-11-14, free:** all 4 recorded wrong IA answers lacked the passage that holds the answer; all 6 that had it were right (`docs/reviews/2026-11-14-prose-errors-are-retrieval.md`). A check after the answer cannot make up for that, so the claim-against-quote check was not built and the claim check is not run again without the owner's word.
 - **Tested 2026-11-14:** looking up the request's own question first does not fix it (9 of 15 against 8). The search returns the answer's passage in 24 of 30 runs and the quote check keeps it in 17: tables quoted as a grid are not matched, osha.gov refuses every fetch, and a vague request brings the wrong section (`docs/reviews/2026-11-14-lookup-asks-request.md`). About '$2.44' of the owner's '$7' is spent.
-- **Next, the owner's ruling on each:** read a quoted table cell by cell; tell the search which sites cannot be read; a test for the vague request.
+- **Ruled by the owner 2026-11-14 and built:** a quote written as a grid of cells is read row by row by the quote check, and a quote whose page could not be read is not counted against the lookup in the delivery; it is said apart as not checked. Record: `docs/reviews/2026-11-14-table-quotes-unread-pages.md`.
+- **Next:** the owner's third word of 2026-11-14, a test for the vague request.
 
 ## How the work moves
 

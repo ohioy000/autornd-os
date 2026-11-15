@@ -591,8 +591,41 @@ class TestTheRecordsBesideTheAnswer:
                                 "disagreements": [{"ask": 2}]})))
         assert detail.cautions == [
             "The recompute vote disagrees with this answer on ask 2.",
+            "1 more quoted passage was on a page that could not be read; "
+            "not checked and not counted."]
+
+    def _lookup_cautions(self, *statuses):
+        return _detail(self._workflow(
+            ("sources", {"lookup": "grounding", "findings": [{"quotes": [
+                {"status": s} for s in statuses]}]}),
+            ("implement", {"summary": "a"}),
+            ("recompute_vote", {"flagged": False, "unchecked": False,
+                                "checked": True, "no_consensus": []}))).cautions
+
+    def test_a_page_that_could_not_be_read_is_not_counted_against_the_lookup(self):
+        """Owner's ruling 2026-11-14. Measured 2026-11-15: one site refused
+        every fetch, and each refusal read as a passage not found."""
+        assert self._lookup_cautions("found", "not_found", "unfetched",
+                                     "unfetched") == [
+            "1 of 2 quoted passages were found in their pages; the rest "
+            "are unverified.",
+            "2 more quoted passages were on a page that could not be read; "
+            "not checked and not counted."]
+
+    def test_a_passage_not_found_on_a_page_that_was_read_still_counts(self):
+        """Break-proof: only the unread page is left out of the count."""
+        assert self._lookup_cautions("found", "not_found") == [
             "1 of 2 quoted passages were found in their pages; the rest "
             "are unverified."]
+
+    def test_a_lookup_whose_pages_could_not_be_read_is_still_unverified(self):
+        """Not counted is not the same as checked."""
+        assert self._lookup_cautions("unfetched", "unfetched") == [
+            "A lookup ran, but no page it quoted could be read, so its "
+            "findings are unverified."]
+        assert self._lookup_cautions("unfetched", "not_found") == [
+            "A lookup ran, but no quoted passage could be found in its "
+            "page, so its findings are unverified."]
 
     def test_a_checked_answer_with_found_quotes_has_none(self):
         """Break-proof: the cautions are not boilerplate on every answer."""

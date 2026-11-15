@@ -224,6 +224,39 @@ def _passage(quote: str) -> str:
     return _normalise(quote).strip(" \"'").rstrip(".,;:").rstrip(" \"'")
 
 
+# A line of dashes between a table's heading and its rows: layout, not words.
+_TABLE_RULE = re.compile(r":?-+:?")
+
+
+def _table_rows(quote: str) -> list[str] | None:
+    """The rows of a quote written as a grid of cells, or None for prose.
+
+    A search model quotes a table with a bar between the cells
+    ("|(7) Nitrate|10 (as Nitrogen)|"); the page prints the same cells with
+    a space between them. Measured 2026-11-15 (the lookup test): 11 quotes of
+    one eCFR table held the answer and none was found, because the bars are
+    not on the page. A quote is a grid only when every line of it is.
+    """
+    lines = [line.strip() for line in quote.splitlines() if line.strip()]
+    if not lines or not all(len(line) > 1 and line.startswith("|")
+                            and line.endswith("|") for line in lines):
+        return None
+    rows = []
+    for line in lines:
+        cells = [c.strip() for c in line.strip("|").split("|") if c.strip()]
+        if cells and not all(_TABLE_RULE.fullmatch(c) for c in cells):
+            rows.append(_normalise(" ".join(cells)))
+    return rows or None
+
+
+def _checked_chars(quote: str) -> int:
+    """How many characters of this quote the check compares."""
+    rows = _table_rows(quote)
+    if rows is None:
+        return len(_passage(quote))
+    return sum(len(row) for row in rows)
+
+
 def quote_found(quote: str, page: str) -> bool:
     """Ruling D56 (3): is this passage in this page's text?
 
@@ -231,9 +264,26 @@ def quote_found(quote: str, page: str) -> bool:
     missing or changed is not found. Spacing, case, curly quotes, dashes and
     soft hyphens are read alike, because pages and models print those
     differently without changing a word.
+
+    A quote written as a grid of cells is read row by row (owner's ruling,
+    2026-11-14): every row must be on the page, its cells side by side and
+    the rows in the order quoted. A row left out between two quoted rows is
+    allowed, because the model quoted the rows it used; a cell changed is
+    not.
     """
-    passage = _passage(quote)
-    return len(passage) >= MIN_QUOTE_CHARS and passage in _normalise(page)
+    if _checked_chars(quote) < MIN_QUOTE_CHARS:
+        return False
+    text = _normalise(page)
+    rows = _table_rows(quote)
+    if rows is None:
+        return _passage(quote) in text
+    at = 0
+    for row in rows:
+        at = text.find(row, at)
+        if at < 0:
+            return False
+        at += len(row)
+    return True
 
 
 @dataclass
@@ -429,7 +479,7 @@ async def _ask(client, request: str, asked: list[str], max_tokens: int | None,
 async def _check(finding: Finding) -> None:
     """Ruling D56 (3): fetch each quoted page once, and look for each passage in it."""
     for quote in finding.quotes:
-        if len(_passage(quote.text)) < MIN_QUOTE_CHARS:
+        if _checked_chars(quote.text) < MIN_QUOTE_CHARS:
             quote.status = "too_short"
     urls = list(dict.fromkeys(q.url for q in finding.quotes
                               if q.status != "too_short"))[:MAX_FETCHES]
