@@ -163,6 +163,18 @@ class Settings(BaseSettings):
     # are the difference between a complete answer and a truncated one on the
     # work that can least afford a missing figure.
     search_max_tokens_consequential: int = 4000
+
+    # Owner's direction of 2026-11-14, off until the sweep that tests them
+    # has been read. Measured the same day: 128 of 409 quotes in three lookup
+    # tests were on pages that could not be read, 116 of them on one site
+    # that answers every fetch "HTTP 403".
+    # lookup_avoid_unreadable: a site that refuses a fetch is remembered for
+    # the life of the process, and every later lookup is told not to quote
+    # from it but from a copy that can be read.
+    # lookup_withhold_unverified: a lookup answer with no passage found on
+    # its page is kept in the run's record and not shown to the phases.
+    lookup_avoid_unreadable: bool = False
+    lookup_withhold_unverified: bool = False
     escalation_recovery_attempts: int = 3
 
     # Ruling D38: the API path's declared time budget, in seconds. A budgeted

@@ -373,6 +373,13 @@ def _cautions(vote: dict | None, sources: list[dict],
             out.append(f"{unread} more quoted passage"
                        f"{'s were' if unread > 1 else ' was'} on a page that "
                        f"could not be read; not checked and not counted.")
+        withheld = sum(1 for f in findings if f.get("withheld"))
+        if withheld:
+            out.append(f"{withheld} lookup answer"
+                       f"{'s' if withheld > 1 else ''} had no passage found "
+                       f"on a page that could be read, and "
+                       f"{'were' if withheld > 1 else 'was'} withheld from "
+                       f"the answer.")
         beside = sum(1 for q in quotes if q.get("answers_question") is False)
         if beside:
             out.append(f"{beside} of the {found} passages found in their "

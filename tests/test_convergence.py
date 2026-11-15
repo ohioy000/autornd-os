@@ -612,6 +612,17 @@ class TestTheRecordsBesideTheAnswer:
             "2 more quoted passages were on a page that could not be read; "
             "not checked and not counted."]
 
+    def test_a_withheld_lookup_answer_is_said(self):
+        detail = _detail(self._workflow(
+            ("sources", {"lookup": "grounding", "findings": [
+                {"withheld": True, "quotes": [{"status": "unfetched"}]},
+                {"withheld": False, "quotes": [{"status": "found"}]}]}),
+            ("implement", {"summary": "a"}),
+            ("recompute_vote", {"flagged": False, "unchecked": False,
+                                "checked": True, "no_consensus": []})))
+        assert ("1 lookup answer had no passage found on a page that could be "
+                "read, and was withheld from the answer.") in detail.cautions
+
     def test_a_passage_not_found_on_a_page_that_was_read_still_counts(self):
         """Break-proof: only the unread page is left out of the count."""
         assert self._lookup_cautions("found", "not_found") == [
