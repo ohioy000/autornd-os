@@ -622,6 +622,30 @@ class TestAModelsOwnMarksAreNotWordsOfThePassage:
         """Break-proof: the marks are dropped, the words are not."""
         assert not quote_found(quote, NOISE_PAGE)
 
+    @pytest.mark.parametrize("quote, page", [
+        # The tildes of a subscript.
+        ("The level of the standard for ozone (O~3~) is 0.070 parts per million",
+         "The level of the standard for ozone (O3) is 0.070 parts per million (ppm)."),
+        # A list mark at the start, with or without a backslash.
+        ("1. Verifiers SHALL require passwords to be a minimum of 15 characters.",
+         "Password Verifiers Verifiers SHALL require passwords to be a minimum of "
+         "15 characters."),
+        ("1\\. Verifiers SHALL require passwords to be a minimum of 15 characters.",
+         "Password Verifiers Verifiers SHALL require passwords to be a minimum of "
+         "15 characters."),
+        ("- Verifiers SHALL require passwords to be a minimum of 15 characters.",
+         "Verifiers SHALL require passwords to be a minimum of 15 characters."),
+    ])
+    def test_a_subscript_mark_and_a_list_mark_change_no_word(self, quote, page):
+        """Owner's ruling 2026-11-15, off the baseline's unmatched quotes."""
+        assert quote_found(quote, page)
+
+    def test_a_list_mark_does_not_hide_a_changed_figure(self):
+        """Break-proof: the mark goes, the words stay compared."""
+        assert not quote_found(
+            "1. Verifiers SHALL require passwords to be a minimum of 15 characters.",
+            "Verifiers SHALL require passwords to be a minimum of 8 characters.")
+
     def test_marks_alone_are_too_short_to_check(self):
         assert not quote_found("*(5)* **(ii)**", NOISE_PAGE)
 

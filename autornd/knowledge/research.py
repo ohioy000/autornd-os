@@ -310,6 +310,19 @@ def _table_rows(quote: str) -> list[str] | None:
 # read: 12 were on the page word for word once the marks were dropped.
 _EMPHASIS = re.compile(r"\*+")
 _HEADING = re.compile(r"(?m)^\s*#{1,6}\s+")
+# Three more of the same kind (owner's ruling, 2026-11-15), read off the 11
+# quotes of the professional baseline that were on a page and not matched:
+# the tildes of a subscript ("O~3~"), a backslash before a mark ("1\."),
+# and a list mark at the start of a line ("1. ", "- ").
+_SUBSCRIPT = re.compile(r"~")
+_ESCAPE = re.compile(r"\\(?=[^\w\s])")
+_LIST_MARK = re.compile(r"(?m)^\s*(?:[-\u2022]|\d{1,2}[.)])\s+")
+
+
+def _unmarked(quote: str) -> str:
+    """A quote without the marks a search model adds and a page does not print."""
+    quote = _ESCAPE.sub("", _SUBSCRIPT.sub("", _EMPHASIS.sub("", quote)))
+    return _LIST_MARK.sub("", _HEADING.sub("", quote))
 
 
 def _parts(quote: str) -> list[str]:
@@ -323,7 +336,7 @@ def _parts(quote: str) -> list[str]:
     rows = _table_rows(quote)
     if rows is not None:
         return rows
-    part = _passage(_HEADING.sub("", _EMPHASIS.sub("", quote)))
+    part = _passage(_unmarked(quote))
     return [part] if part else []
 
 

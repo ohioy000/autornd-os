@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
@@ -267,6 +268,108 @@ class WorkflowDetail(WorkflowSummary):
     # not run, quotes that could not be checked. For people; nothing routes
     # on it, and each sentence restates a typed field returned above.
     cautions: list[str] = Field(default_factory=list)
+    # What was checked against a source, in plain sentences (owner's ruling,
+    # 2026-11-15): the asks whose figures stand in a passage found on its
+    # page, and a vote such a passage overruled. For people; nothing routes
+    # on it.
+    confirmations: list[str] = Field(default_factory=list)
+
+
+# A number as an answer states it, and the word that follows it, if any.
+_FIGURE = re.compile(r"(\d+(?:\.\d+)?)(?:[\s-]*([A-Za-z]{3,}))?")
+
+
+def _figures(result: dict) -> list[tuple[str, str]]:
+    """The numbers one answer result states, each with the start of the word
+    after it ("1 year" gives ("1", "year")), from its value and its unit."""
+    value = result.get("value")
+    if isinstance(value, bool) or value is None:
+        return []
+    if isinstance(value, (int, float)):
+        value = f"{value:g}"
+    text = f"{value} {result.get('unit') or ''}".replace(",", "")
+    return list(dict.fromkeys(
+        (number, word[:4].casefold()) for number, word in _FIGURE.findall(text)))
+
+
+def _stands(number: str, word: str, found: str) -> bool:
+    """Is this number in the found passages, as a whole number?
+
+    A number of two digits or more is taken on its own. A single digit is on
+    every page ("5", "(1)"), so it counts only with its word beside it: "1"
+    with "year", "5" with "rems".
+    """
+    whole = rf"(?<![\d.]){re.escape(number)}(?!\d|\.\d)"
+    if len(number) >= 2:
+        return re.search(whole, found) is not None
+    return bool(word) and re.search(
+        whole + rf"[\s-]{{0,3}}{re.escape(word)}", found) is not None
+
+
+def _backed(results: object, sources: list[dict]) -> list[int]:
+    """The asks whose figures stand in a passage found on its page.
+
+    Owner's ruling of 2026-11-15, after the professional baseline: 45 of 45
+    answers were right, 38 carried a caution, and the one disagreement the
+    vote raised was two samples from memory against the regulator's own
+    sentence. An ask is backed when its answer states a number and every
+    number it states stands in the found passages (`_stands`). A passage
+    quote_answers judged beside the point backs nothing. Free and
+    deterministic; it reads typed results and quoted text, never the
+    answer's prose.
+    """
+    if not isinstance(results, list):
+        return []
+    found = " ".join(
+        str(quote.get("text") or "").replace(",", "")
+        for source in sources for finding in source.get("findings") or []
+        for quote in finding.get("quotes") or []
+        if isinstance(quote, dict) and quote.get("status") == "found"
+        and quote.get("answers_question") is not False).casefold()
+    backed = []
+    for result in results:
+        if not isinstance(result, dict) or not isinstance(result.get("ask"), int):
+            continue
+        figures = _figures(result)
+        if figures and all(_stands(n, w, found) for n, w in figures):
+            backed.append(result["ask"])
+    return sorted(set(backed))
+
+
+def _over_the_vote(vote: dict | None, backed: list[int]) -> dict | None:
+    """A found passage outranks the vote (owner's ruling, 2026-11-15).
+
+    A disagreement on a backed ask is listed in `overruled_by_source` and no
+    longer flags the delivery; what the vote itself found stays in
+    `flagged_by_vote` and `disagreements`. The stored rows are not changed.
+    """
+    if vote is None or not backed:
+        return vote
+    cleared = vote.get("cleared") or []
+    overruled = [d.get("ask") for d in vote.get("disagreements") or []
+                 if d.get("ask") in backed and d.get("ask") not in cleared]
+    left = [d for d in vote.get("disagreements") or []
+            if d.get("ask") not in cleared and d.get("ask") not in overruled]
+    return dict(vote, backed_by_source=backed, overruled_by_source=overruled,
+                flagged_by_vote=bool(vote.get("flagged_by_vote",
+                                              vote.get("flagged"))),
+                flagged=bool(vote.get("flagged")) and bool(left))
+
+
+def _confirmations(vote: dict | None, backed: list[int],
+                   has_answer: bool) -> list[str]:
+    if not has_answer or not backed:
+        return []
+    asks = ", ".join(map(str, backed))
+    out = [f"The figures this answer gives for ask {asks} stand in a passage "
+           f"found on its page."]
+    overruled = (vote or {}).get("overruled_by_source") or []
+    if overruled:
+        out.append("The recompute vote disagreed on ask "
+                   + ", ".join(map(str, overruled))
+                   + "; the answer's figures stand in a passage found on its "
+                     "page, and the passage is taken over the vote.")
+    return out
 
 
 def _settled(verdicts: list[tuple[str, Any]], vote: dict | None,
@@ -308,7 +411,7 @@ def _settled(verdicts: list[tuple[str, Any]], vote: dict | None,
 
 
 def _cautions(vote: dict | None, sources: list[dict],
-              has_answer: bool) -> list[str]:
+              has_answer: bool, asks: int = 0) -> list[str]:
     """The cautions beside an answer, read off the typed records.
 
     Measured live 2026-11-12: a completed run delivered a wrong figure with
@@ -319,7 +422,10 @@ def _cautions(vote: dict | None, sources: list[dict],
         return []
     out: list[str] = []
     if vote is not None:
-        cleared = vote.get("cleared") or []
+        # A vote that could not compare an ask says nothing a found passage
+        # has not already settled (owner's ruling, 2026-11-15).
+        backed = vote.get("backed_by_source") or []
+        cleared = [a for a in vote.get("cleared") or [] if a not in backed]
         if cleared:
             out.append("The recompute vote worded ask "
                        + ", ".join(map(str, cleared))
@@ -328,23 +434,29 @@ def _cautions(vote: dict | None, sources: list[dict],
         if vote.get("flagged"):
             asks = ", ".join(str(d.get("ask")) for d in
                              vote.get("disagreements") or []
-                             if d.get("ask") not in cleared)
+                             if d.get("ask") not in (vote.get("cleared") or [])
+                             and d.get("ask") not in backed)
             out.append("The recompute vote disagrees with this answer"
                        + (f" on ask {asks}." if asks else "."))
         elif vote.get("skipped"):
             out.append("The recompute vote did not run, so no figure in "
                        "this answer was recomputed.")
         elif vote.get("unchecked") or not vote.get("checked"):
-            out.append("The recompute vote compared nothing, so no figure "
-                       "in this answer was recomputed independently.")
+            if not (asks and len(backed) >= asks):
+                out.append("The recompute vote compared nothing, so no figure "
+                           "in this answer was recomputed independently.")
         else:
-            if vote.get("no_consensus"):
-                asks = ", ".join(map(str, vote["no_consensus"]))
+            open_asks = [a for a in vote.get("no_consensus") or []
+                         if a not in backed]
+            if open_asks:
+                listed = ", ".join(map(str, open_asks))
                 out.append(f"The recompute vote reached no majority on ask "
-                           f"{asks}; that part of the answer was not compared.")
-            if vote.get("not_comparable"):
-                asks = ", ".join(map(str, vote["not_comparable"]))
-                out.append(f"The recompute vote could not compare ask {asks}: "
+                           f"{listed}; that part of the answer was not compared.")
+            open_asks = [a for a in vote.get("not_comparable") or []
+                         if a not in backed]
+            if open_asks:
+                listed = ", ".join(map(str, open_asks))
+                out.append(f"The recompute vote could not compare ask {listed}: "
                            f"the answer did not state it as a single value.")
     findings = [f for s in sources for f in s.get("findings") or []]
     if not findings:
@@ -570,6 +682,15 @@ def _detail(w: Workflow) -> WorkflowDetail:
                  if name == "recompute_vote"), None)
     sources = [v for name, v in verdicts if name == "sources"]
     vote = _settled(verdicts, vote, sources)
+    backed: list[int] = []
+    asked = 0
+    if answer is not None:
+        results = next((v.get("results") for name, v in reversed(verdicts)
+                        if name == "implement" and isinstance(v, dict)), None)
+        backed = _backed(results, sources)
+        vote = _over_the_vote(vote, backed)
+        asked = next((len(v.get("asks") or []) for name, v in reversed(verdicts)
+                      if name == "asks" and isinstance(v, dict)), 0)
     return WorkflowDetail(
         candidate=candidate,
         answer=answer,
@@ -580,7 +701,8 @@ def _detail(w: Workflow) -> WorkflowDetail:
                    for record in v["records"] if isinstance(record, dict)
                    and "switch" in record],
         sources=sources,
-        cautions=_cautions(vote, sources, answer is not None),
+        cautions=_cautions(vote, sources, answer is not None, asked),
+        confirmations=_confirmations(vote, backed, answer is not None),
         id=w.id,
         request=w.request,
         status=w.status.value,
