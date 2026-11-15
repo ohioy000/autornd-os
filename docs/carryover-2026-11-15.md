@@ -38,7 +38,8 @@ their rule or standard. Work on vague requests was dropped on the owner's word.
 | The quote check drops a search model's own marks: stars, heading hashes, tildes, a backslash before a mark, a leading list mark | #259, #264 |
 | `lookup_avoid_unreadable`: a site that refuses twice, and was never read, is named to later lookups | #261 |
 | `confirmations` in the delivery: asks whose figures stand in a found passage; the vote's could-not-compare cautions are dropped for them | #264 |
-| A found passage is taken over a disagreeing vote. **To be removed in step 1 below** | #264 |
+| ~~A found passage is taken over a disagreeing vote~~ Removed in step 1 | #264 |
+| Cautions rebuilt around the text handed on: a figure on no page, two pages that differ, quotes no longer counted | step 1 |
 
 ## What is built and switched off
 
@@ -67,6 +68,8 @@ In this order. Steps 1 to 3 are free code. Step 4 is a paid run with the owner's
 '$3'.
 
 ### Step 1. Rebuild the cautions around the text the harness hands on
+
+**Done 2026-11-15.** See `docs/reviews/2026-11-15-cautions-on-handed-on-text.md`. Step 2 is next.
 
 - **Say** which figures of the answer stand in the handed-on text (the confirmations of #264).
 - **Warn** when a figure of the answer does not stand in it.

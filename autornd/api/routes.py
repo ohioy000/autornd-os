@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import difflib
 import json
+import math
 import re
 from pathlib import Path
 
@@ -265,13 +267,13 @@ class WorkflowDetail(WorkflowSummary):
     sources: list[dict] = Field(default_factory=list)
     # What a reader should know before relying on the answer, in plain
     # sentences: a vote that flagged or compared nothing, a lookup that did
-    # not run, quotes that could not be checked. For people; nothing routes
-    # on it, and each sentence restates a typed field returned above.
+    # not run or read nothing, a figure that is on no page read, two pages
+    # that give different figures for one thing. For people; nothing routes
+    # on it.
     cautions: list[str] = Field(default_factory=list)
     # What was checked against a source, in plain sentences (owner's ruling,
     # 2026-11-15): the asks whose figures stand in a passage found on its
-    # page, and a vote such a passage overruled. For people; nothing routes
-    # on it.
+    # page. For people; nothing routes on it.
     confirmations: list[str] = Field(default_factory=list)
 
 
@@ -306,70 +308,213 @@ def _stands(number: str, word: str, found: str) -> bool:
         whole + rf"[\s-]{{0,3}}{re.escape(word)}", found) is not None
 
 
-def _backed(results: object, sources: list[dict]) -> list[int]:
-    """The asks whose figures stand in a passage found on its page.
+def _handed_on(sources: list[dict], beside_the_point: bool = False,
+               ) -> list[tuple[str, str]]:
+    """The text a lookup handed on that stands on its page: an address and
+    the passage, for every quote found there. A passage quote_answers judged
+    beside the point is left out unless asked for. `whole` is the passage
+    past the record's first 600 characters, kept since 2026-11-15 because
+    the excerpts of the lookup that reads the documents run to twice that."""
+    return [(str(quote.get("url") or ""),
+             str(quote.get("whole") or quote.get("text") or ""))
+            for source in sources for finding in source.get("findings") or []
+            for quote in finding.get("quotes") or []
+            if isinstance(quote, dict) and quote.get("status") == "found"
+            and (beside_the_point or quote.get("answers_question") is not False)]
+
+
+def _checked_figures(results: object, sources: list[dict],
+                     differing: list[dict]) -> tuple[list[int], list[dict]]:
+    """The asks whose figures stand in the text handed on, and the figures
+    that do not.
 
     Owner's ruling of 2026-11-15, after the professional baseline: 45 of 45
     answers were right, 38 carried a caution, and the one disagreement the
     vote raised was two samples from memory against the regulator's own
     sentence. An ask is backed when its answer states a number and every
-    number it states stands in the found passages (`_stands`). A passage
-    quote_answers judged beside the point backs nothing. Free and
+    number it states stands in the found passages (`_stands`). Free and
     deterministic; it reads typed results and quoted text, never the
     answer's prose.
+
+    The owner's plan of 2026-11-15 added the other side. A figure of the
+    answer's value that is nowhere in the found passages is named, and an
+    ask is not backed when the passages themselves give different figures
+    for the thing it states (`_differing`). On the harder professional run
+    a wrong 9 hours stood beside a found passage that said 10, and the
+    delivery spoke only of quotes in general.
+
+    Between the two a figure is neither confirmed nor named: a single digit
+    that is on the page without its word beside it ("8 cumulative hours"
+    for an answer of 8 hours, right 3 times of 3 on that run). Being absent
+    is read loosely on purpose, by the number's value and with a number
+    written as a word counted, so the caution is true of the page. It is
+    said only of a value that is one number (`_single_figure`).
     """
     if not isinstance(results, list):
-        return []
-    found = " ".join(
-        str(quote.get("text") or "").replace(",", "")
-        for source in sources for finding in source.get("findings") or []
-        for quote in finding.get("quotes") or []
-        if isinstance(quote, dict) and quote.get("status") == "found"
-        and quote.get("answers_question") is not False).casefold()
-    backed = []
+        return [], []
+    every = [text for _, text in _handed_on(sources, beside_the_point=True)]
+    if not every:
+        return [], []  # nothing was read, and the cautions say that once
+    found = " ".join(text.replace(",", "") for _, text in
+                     _handed_on(sources)).casefold()
+    # A passage quote_answers judged beside the point backs nothing, and its
+    # numbers are still on a page that was read.
+    on_the_pages = {float(token) for text in every
+                    for _, numbers, _ in _sentences(text, 0)
+                    for token in numbers}
+    disputed = {float(number) for d in differing for number in d["figures"]}
+    backed: list[int] = []
+    unconfirmed: dict[int, list[str]] = {}
     for result in results:
         if not isinstance(result, dict) or not isinstance(result.get("ask"), int):
             continue
         figures = _figures(result)
         if figures and all(_stands(n, w, found) for n, w in figures):
-            backed.append(result["ask"])
-    return sorted(set(backed))
+            if not disputed.intersection(float(n) for n, _ in figures):
+                backed.append(result["ask"])
+            continue
+        number = _single_figure(result.get("value"))
+        if number is not None and number not in on_the_pages:
+            unit = str(result.get("unit") or "").strip()
+            unconfirmed.setdefault(result["ask"], []).append(
+                f"{number:g} {unit if len(unit) <= SHORT_UNIT_CHARS else ''}".strip())
+    backed = sorted(set(backed))
+    return backed, [{"ask": ask, "figures": list(dict.fromkeys(figures))}
+                    for ask, figures in sorted(unconfirmed.items())
+                    if ask not in backed]
 
 
-def _over_the_vote(vote: dict | None, backed: list[int]) -> dict | None:
-    """A found passage outranks the vote (owner's ruling, 2026-11-15).
+# The longest unit a caution prints beside its figure. Longer ones are
+# descriptions ("grams of alcohol per 210 L of breath").
+SHORT_UNIT_CHARS = 16
 
-    A disagreement on a backed ask is listed in `overruled_by_source` and no
-    longer flags the delivery; what the vote itself found stays in
-    `flagged_by_vote` and `disagreements`. The stored rows are not changed.
+
+def _single_figure(value: object) -> float | None:
+    """The one number an answer's value is, or None.
+
+    A value that is a sentence or a list is not read for the caution that a
+    figure is on no page. Read off the recorded runs of 2026-11-15: such
+    values are mostly citations ("14 CFR 65.91(c)(1)-(5)"), whose numbers a
+    page prints after a section sign or not at all, and every caution drawn
+    from one stood beside a right answer. Nought is the answer "none",
+    which a page states in words.
     """
-    if vote is None or not backed:
-        return vote
-    cleared = vote.get("cleared") or []
-    overruled = [d.get("ask") for d in vote.get("disagreements") or []
-                 if d.get("ask") in backed and d.get("ask") not in cleared]
-    left = [d for d in vote.get("disagreements") or []
-            if d.get("ask") not in cleared and d.get("ask") not in overruled]
-    return dict(vote, backed_by_source=backed, overruled_by_source=overruled,
-                flagged_by_vote=bool(vote.get("flagged_by_vote",
-                                              vote.get("flagged"))),
-                flagged=bool(vote.get("flagged")) and bool(left))
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        number = float(str(value).replace(",", "").strip())
+    except ValueError:
+        return None
+    return number if number and math.isfinite(number) else None
 
 
-def _confirmations(vote: dict | None, backed: list[int],
-                   has_answer: bool) -> list[str]:
+# How the passages are read for figures that differ. A paragraph's own label
+# ("(b)(1)", "(2)") and a section's number ("§ 50.19") are not figures of
+# the rule; a number written as a word is ("nine consecutive hours", on the
+# regulator's own page).
+_LABEL = re.compile(r"\((?:[a-z]{1,4}|\d{1,3})\)|§+\s*\d+(?:\.\d+)?")
+_SENTENCE = re.compile(r"(?<=[.;:?!])\s+|\n+")
+# A number joined to a letter is a mark, not a figure: the "F1" of an
+# amendment note, the 3 of "O3".
+_TOKEN = re.compile(r"(?<![a-z])\d+(?:\.\d+)?(?![a-z])|[a-z]+")
+_NUMBER_WORD = {word: str(n) for n, word in enumerate(
+    "zero one two three four five six seven eight nine ten eleven "
+    "twelve".split())}
+# Two sentences state the same thing when this share of their words agree,
+# in order. Set on the 283 recorded answers of 2026-11-15 (both professional
+# sets, both lookups, and the inspection-authorization request). At 0.8 the
+# 2012 and the current edition of one paragraph, which differ by a nine-word
+# clause and one figure, are one thing; at 0.9 they are not, and that pair
+# is the case this was built for. At 0.7 seven more pairs come in, none of
+# them one thing.
+SAME_SENTENCE_RATIO = 0.8
+SAME_SENTENCE_MIN_WORDS = 8
+# And the words right beside the figure that differs must be the same ones.
+# On the same answers the ratio alone raised 9 cautions; this leaves 5 and
+# drops the 4 that were not one thing: "transmitter power exceeding 1.5 kW
+# PEP" beside "transmitter power output exceeding 200 W PEP", two paragraphs
+# of one rule, three times, and two test methods' numbers once. The 5 left
+# are the flight attendant's 10 hours beside 9 (twice), an ozone standard
+# of 0.070 beside its predecessor's 0.075 (twice), and a driver's 10 hours
+# off duty beside a sister rule's 8.
+SAME_WORDS_BEFORE = 3
+SAME_WORDS_AFTER = 2
+# The most of a sentence a caution prints.
+DIFFERING_SENTENCE_CHARS = 240
+
+
+def _page(url: str) -> str:
+    """One name for a page however its address was written."""
+    return re.sub(r"^https?://(?:www\.)?", "", url.strip().casefold()).rstrip("/")
+
+
+def _sentences(text: str, min_words: int = SAME_SENTENCE_MIN_WORDS,
+               ) -> list[tuple[tuple[str, ...], tuple[str, ...], str]]:
+    """Each sentence of a passage that states a number: its words with every
+    number put aside, the numbers in order, and the sentence as printed."""
+    out = []
+    for sentence in _SENTENCE.split(text):
+        tokens = [_NUMBER_WORD.get(t, t) for t in _TOKEN.findall(
+            _LABEL.sub(" ", sentence.casefold().replace(",", "")))]
+        numbers = tuple(t for t in tokens if t[0].isdigit())
+        words = tuple("#" if t[0].isdigit() else t for t in tokens)
+        if numbers and len(words) - len(numbers) >= min_words:
+            out.append((words, numbers, " ".join(sentence.split())))
+    return out
+
+
+def _differing(sources: list[dict]) -> list[dict]:
+    """Where two pages handed on give different figures for the same thing.
+
+    Measured 2026-11-15 on the harder professional run: the current rule
+    said 10 hours, its 2012 edition said 9 in the same sentence, both were
+    found on their pages word for word, and the answer took the 9. A passage
+    found on its page can be out of date. Two sentences from different pages
+    are the same thing when their words agree (SAME_SENTENCE_RATIO), they
+    state as many numbers, and exactly one number differs. Free and
+    deterministic; it says the pages differ, not which is right.
+    """
+    pages: dict[str, list] = {}
+    for url, text in _handed_on(sources, beside_the_point=True):
+        pages.setdefault(_page(url), []).extend(_sentences(text))
+    out: list[dict] = []
+    seen: set = set()
+    names = list(pages)
+    for i, first in enumerate(names):
+        for second in names[i + 1:]:
+            for words_a, numbers_a, printed in pages[first]:
+                for words_b, numbers_b, _ in pages[second]:
+                    apart = [n for n, (a, b) in enumerate(zip(numbers_a, numbers_b))
+                             if float(a) != float(b)]
+                    if len(numbers_a) != len(numbers_b) or len(apart) != 1:
+                        continue
+                    pair = (numbers_a[apart[0]], numbers_b[apart[0]])
+                    if frozenset(map(float, pair)) in seen:
+                        continue
+                    at_a = [k for k, w in enumerate(words_a) if w == "#"][apart[0]]
+                    at_b = [k for k, w in enumerate(words_b) if w == "#"][apart[0]]
+                    if (words_a[max(0, at_a - SAME_WORDS_BEFORE):at_a]
+                            != words_b[max(0, at_b - SAME_WORDS_BEFORE):at_b]
+                            or words_a[at_a + 1:at_a + 1 + SAME_WORDS_AFTER]
+                            != words_b[at_b + 1:at_b + 1 + SAME_WORDS_AFTER]):
+                        continue
+                    match = difflib.SequenceMatcher(None, words_a, words_b,
+                                                    autojunk=False)
+                    if (match.quick_ratio() >= SAME_SENTENCE_RATIO
+                            and match.ratio() >= SAME_SENTENCE_RATIO):
+                        seen.add(frozenset(map(float, pair)))
+                        out.append({"figures": list(pair),
+                                    "pages": [first, second],
+                                    "sentence": printed})
+    return out
+
+
+def _confirmations(backed: list[int], has_answer: bool) -> list[str]:
     if not has_answer or not backed:
         return []
     asks = ", ".join(map(str, backed))
-    out = [f"The figures this answer gives for ask {asks} stand in a passage "
-           f"found on its page."]
-    overruled = (vote or {}).get("overruled_by_source") or []
-    if overruled:
-        out.append("The recompute vote disagreed on ask "
-                   + ", ".join(map(str, overruled))
-                   + "; the answer's figures stand in a passage found on its "
-                     "page, and the passage is taken over the vote.")
-    return out
+    return [f"The figures this answer gives for ask {asks} stand in a passage "
+            f"found on its page."]
 
 
 def _settled(verdicts: list[tuple[str, Any]], vote: dict | None,
@@ -411,19 +556,31 @@ def _settled(verdicts: list[tuple[str, Any]], vote: dict | None,
 
 
 def _cautions(vote: dict | None, sources: list[dict],
-              has_answer: bool, asks: int = 0) -> list[str]:
+              has_answer: bool, asks: int = 0,
+              unconfirmed: list[dict] | None = None,
+              differing: list[dict] | None = None) -> list[str]:
     """The cautions beside an answer, read off the typed records.
 
     Measured live 2026-11-12: a completed run delivered a wrong figure with
     a vote that had compared nothing and no lookup behind it, and nothing in
     the delivery said so short of reading the phase records.
+
+    Rebuilt 2026-11-15 on the owner's plan, around the text handed on: with
+    the harness reading the documents, not one of 62 harder-set answers came
+    without a caution, 61 of them right, because the cautions counted a
+    model's quotes. They now say which figure could not be confirmed, where
+    the pages differ, and when nothing was read; they no longer count
+    quotes, nor repeat quote_answers' judgement of a passage.
     """
     if not has_answer:
         return []
     out: list[str] = []
     if vote is not None:
         # A vote that could not compare an ask says nothing a found passage
-        # has not already settled (owner's ruling, 2026-11-15).
+        # has not already settled (owner's ruling, 2026-11-15). A vote that
+        # disagrees is said whatever the passages hold: the rule that took a
+        # found passage over it never fired on 184 recorded answers, and in
+        # its one near case would have silenced a true alarm.
         backed = vote.get("backed_by_source") or []
         cleared = [a for a in vote.get("cleared") or [] if a not in backed]
         if cleared:
@@ -432,12 +589,11 @@ def _cautions(vote: dict | None, sources: list[dict],
                        + " differently from this answer; a decision model "
                          "judged the two to say the same thing.")
         if vote.get("flagged"):
-            asks = ", ".join(str(d.get("ask")) for d in
-                             vote.get("disagreements") or []
-                             if d.get("ask") not in (vote.get("cleared") or [])
-                             and d.get("ask") not in backed)
+            flagged = ", ".join(str(d.get("ask")) for d in
+                                vote.get("disagreements") or []
+                                if d.get("ask") not in (vote.get("cleared") or []))
             out.append("The recompute vote disagrees with this answer"
-                       + (f" on ask {asks}." if asks else "."))
+                       + (f" on ask {flagged}." if flagged else "."))
         elif vote.get("skipped"):
             out.append("The recompute vote did not run, so no figure in "
                        "this answer was recomputed.")
@@ -463,40 +619,38 @@ def _cautions(vote: dict | None, sources: list[dict],
         out.append("No lookup ran: figures and citations in this answer "
                    "come from the model's memory and were not checked "
                    "against a source.")
-    else:
-        quotes = [q for f in findings for q in f.get("quotes") or []]
-        found = sum(1 for q in quotes if q.get("status") == "found")
-        # Owner's ruling, 2026-11-14: a quote whose page could not be read is
-        # not counted against the lookup. It is said apart, because nothing
-        # checked it either. Measured 2026-11-15: one site refused all 13
-        # fetches of quotes that held the answer.
-        unread = sum(1 for q in quotes if q.get("status") == "unfetched")
-        read = len(quotes) - unread
-        if not found and read:
-            out.append("A lookup ran, but no quoted passage could be found "
-                       "in its page, so its findings are unverified.")
-        elif not found:
-            out.append("A lookup ran, but no page it quoted could be read, "
-                       "so its findings are unverified.")
-        elif found < read:
-            out.append(f"{found} of {read} quoted passages were "
-                       f"found in their pages; the rest are unverified.")
-        if found and unread:
-            out.append(f"{unread} more quoted passage"
-                       f"{'s were' if unread > 1 else ' was'} on a page that "
-                       f"could not be read; not checked and not counted.")
-        withheld = sum(1 for f in findings if f.get("withheld"))
-        if withheld:
-            out.append(f"{withheld} lookup answer"
-                       f"{'s' if withheld > 1 else ''} had no passage found "
-                       f"on a page that could be read, and "
-                       f"{'were' if withheld > 1 else 'was'} withheld from "
-                       f"the answer.")
-        beside = sum(1 for q in quotes if q.get("answers_question") is False)
-        if beside:
-            out.append(f"{beside} of the {found} passages found in their "
-                       f"pages do not state an answer to the question they "
-                       f"were quoted for.")
+        return out
+    quotes = [q for f in findings for q in f.get("quotes") or []]
+    if not any(q.get("status") == "found" for q in quotes):
+        # Nothing was read. Which of three things happened is said, because
+        # each sends the reader somewhere else. Seen twice on the harder
+        # professional run: a lookup that quoted nothing was reported as
+        # "no page it quoted could be read".
+        if not quotes:
+            why = "it quoted no passage"
+        elif all(q.get("status") == "unfetched" for q in quotes):
+            why = "no page it named could be read"
+        else:
+            why = "none of its passages was found on its page"
+        out.append(f"A lookup ran, but {why}, so nothing in this answer was "
+                   f"checked against a source.")
+    withheld = sum(1 for f in findings if f.get("withheld"))
+    if withheld:
+        out.append(f"{withheld} lookup answer"
+                   f"{'s' if withheld > 1 else ''} had no passage found "
+                   f"on a page that could be read, and "
+                   f"{'were' if withheld > 1 else 'was'} withheld from "
+                   f"the answer.")
+    for d in differing or []:
+        out.append(f"Two pages handed on give different figures for the same "
+                   f"thing: {d['figures'][0]} on {d['pages'][0]} and "
+                   f"{d['figures'][1]} on {d['pages'][1]}. The first reads: "
+                   f"\"{d['sentence'][:DIFFERING_SENTENCE_CHARS]}\"")
+    for u in unconfirmed or []:
+        figures = ", ".join(u["figures"])
+        out.append(f"The answer gives {figures} for ask {u['ask']}, and "
+                   f"that figure is in none of the passages found on their "
+                   f"pages.")
     return out
 
 
@@ -683,12 +837,16 @@ def _detail(w: Workflow) -> WorkflowDetail:
     sources = [v for name, v in verdicts if name == "sources"]
     vote = _settled(verdicts, vote, sources)
     backed: list[int] = []
+    unconfirmed: list[dict] = []
+    differing: list[dict] = []
     asked = 0
     if answer is not None:
         results = next((v.get("results") for name, v in reversed(verdicts)
                         if name == "implement" and isinstance(v, dict)), None)
-        backed = _backed(results, sources)
-        vote = _over_the_vote(vote, backed)
+        differing = _differing(sources)
+        backed, unconfirmed = _checked_figures(results, sources, differing)
+        if vote is not None and backed:
+            vote = dict(vote, backed_by_source=backed)
         asked = next((len(v.get("asks") or []) for name, v in reversed(verdicts)
                       if name == "asks" and isinstance(v, dict)), 0)
     return WorkflowDetail(
@@ -701,8 +859,9 @@ def _detail(w: Workflow) -> WorkflowDetail:
                    for record in v["records"] if isinstance(record, dict)
                    and "switch" in record],
         sources=sources,
-        cautions=_cautions(vote, sources, answer is not None, asked),
-        confirmations=_confirmations(vote, backed, answer is not None),
+        cautions=_cautions(vote, sources, answer is not None, asked,
+                           unconfirmed, differing),
+        confirmations=_confirmations(backed, answer is not None),
         id=w.id,
         request=w.request,
         status=w.status.value,

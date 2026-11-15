@@ -722,9 +722,9 @@ class TestQuoteAnswersLabel:
         first, second = sources[0]["findings"][0]["quotes"]
         assert first["answers_question"] is False
         assert "answers_question" not in second
-        assert ("1 of the 2 passages found in their pages do not state an "
-                "answer to the question they were quoted for."
-                in routes._cautions(None, sources, True))
+        # The label stays; the caution that repeated it was dropped on the
+        # owner's plan of 2026-11-15.
+        assert routes._cautions(None, sources, True) == []
 
 
     @pytest.mark.parametrize("answer_value, samples", [

@@ -352,7 +352,9 @@ _HEADING = re.compile(r"(?m)^\s*#{1,6}\s+")
 # quotes of the professional baseline that were on a page and not matched:
 # the tildes of a subscript ("O~3~"), a backslash before a mark ("1\."),
 # and a list mark at the start of a line ("1. ", "- ").
-_SUBSCRIPT = re.compile(r"~")
+# And the carets of a superscript ("µg/m^3^"), which cost one question its
+# passage in 3 runs of 3 on the harder professional run of 2026-11-15.
+_SUBSCRIPT = re.compile(r"[~^]")
 _ESCAPE = re.compile(r"\\(?=[^\w\s])")
 _LIST_MARK = re.compile(r"(?m)^\s*(?:[-\u2022]|\d{1,2}[.)])\s+")
 
@@ -917,6 +919,15 @@ def source_records(findings: list[Finding]) -> list[dict]:
                               if 1 <= q.question <= len(f._asked())
                               else f.question),
             "text": q.text[:SOURCE_RECORD_QUOTE_CHARS],
+            # The passage past that limit, when it is longer. The lookup that
+            # reads the documents hands on excerpts of up to 1,200 characters
+            # and a short page whole, and a check of the answer's figures
+            # against the text handed on needs all of it (measured
+            # 2026-11-15: with 600 kept, the governing passage could be shown
+            # in only 45 of 62 runs). `text` stays as it was, because the
+            # quote_answers switch reads it and its marks are matched on it.
+            **({"whole": q.text[:DOCUMENT_WHOLE_CHARS]}
+               if len(q.text) > SOURCE_RECORD_QUOTE_CHARS else {}),
             "url": q.url,
             "status": q.status,
             "reason": q.reason,
