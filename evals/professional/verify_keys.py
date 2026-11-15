@@ -1,11 +1,11 @@
-"""Check every passage of the professional draft set against its live page.
+"""Check every passage of the professional set against its live page.
 
-    python -I evals/professional/verify_draft.py REPO
+    python -I evals/professional/verify_keys.py REPO
 
 Free of model calls: it fetches each source with the harness's own fetch and
 looks for the passage with the harness's own quote check. It also checks
-that each key answer's figures are in the page. A draft key whose passage is
-not on its page is not ready for sign-off.
+that each key answer's figures are in the page. A page that has changed
+since the keys were frozen shows here.
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from autornd.knowledge.research import _normalise, quote_found  # noqa: E402
 
 
 async def main() -> None:
-    draft = json.loads((REPO / "evals/professional/draft-questions.json").read_text())
+    draft = json.loads((REPO / "evals/professional/questions.json").read_text())
     bad = 0
     for q in draft["questions"]:
         page = await fetch_source(q["source"])
@@ -39,12 +39,12 @@ async def main() -> None:
         missing = [n for n in figures if n.casefold() not in text]
         ok = passage and not missing
         bad += not ok
-        print(q["id"], "ok" if ok else "NOT READY",
+        print(q["id"], "ok" if ok else "CHANGED",
               "" if page.fetched else f"unread: {page.reason}",
               "" if passage or not page.fetched else "passage not found",
               f"figures not on page: {missing}" if missing else "")
         await asyncio.sleep(1)
-    print(f"{len(draft['questions']) - bad} of {len(draft['questions'])} ready")
+    print(f"{len(draft['questions']) - bad} of {len(draft['questions'])} hold")
 
 
 asyncio.run(main())
