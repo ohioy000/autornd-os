@@ -179,6 +179,14 @@ class Settings(BaseSettings):
     # about three times in four, and nothing replaces what is withheld.
     lookup_avoid_unreadable: bool = True
     lookup_withhold_unverified: bool = False
+
+    # lookup_reads_documents: the lookup asks the search model for documents,
+    # not for an answer; the harness fetches them and hands on their own
+    # words. Off until the comparison that tests it has been read. Measured
+    # 2026-11-15 (the root-cause test): with the governing section's own
+    # text handed on, 8 of 8 answers were right on two questions that had
+    # been wrong 8 times when the answer step read a search model's summary.
+    lookup_reads_documents: bool = False
     escalation_recovery_attempts: int = 3
 
     # Ruling D38: the API path's declared time budget, in seconds. A budgeted
