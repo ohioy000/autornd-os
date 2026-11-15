@@ -36,7 +36,8 @@ Update this section whenever the queue changes. As of 2026-11-14:
 - **Ruled by the owner 2026-11-14 and built:** a quote written as a grid of cells is read row by row by the quote check, and a quote whose page could not be read is not counted against the lookup in the delivery; it is said apart as not checked. Record: `docs/reviews/2026-11-14-table-quotes-unread-pages.md`.
 - **Tested 2026-11-14, the owner's third word:** a sentence telling the scoping call to look up each reading of a vague request did not help (3 of 10 against 6 of 10) and the model did not follow it (`docs/reviews/2026-11-14-vague-request.md`). Not proposed. About '$2.65' of the owner's '$7' is spent.
 - **Tested 2026-11-14:** a typed list of search queries filled by the scoping call, as published TypeScript research tools do it, found the passage in 8 of 10 runs against 4 of 10 and met both bars (`docs/reviews/2026-11-14-typed-queries.md`). Not built. About '$2.89' of the owner's '$7' is spent.
-- **Next, the owner's ruling:** a wider test of `lookup_queries` before it ships (about 12 requests, vague and clear, then full answers on IA; about '$0.60').
+- **Swept 2026-11-14:** on five vague and four clear requests the typed queries showed no gain (vague 9 of 10 in both arms; clear 6 of 8 against 8 of 8), and all 8 full answers to the owner's request were right in both arms (`docs/reviews/2026-11-14-typed-queries-sweep.md`). Not recommended as a replacement. The quote check now drops a model's emphasis stars and heading hashes. About '$3.41' of the owner's '$7' is spent.
+- **Next, the owner's rulings:** build the typed queries narrowly (only when the scoping call says the request has more than one reading) or leave them; whether a quote broken by a row of dots may be checked piece by piece (D56 (3)); what to do about osha.gov, which holds most unread quotes.
 
 ## How the work moves
 
