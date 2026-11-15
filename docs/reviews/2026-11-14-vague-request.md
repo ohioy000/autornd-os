@@ -53,11 +53,12 @@ One reader, the architect. D50 asks for two; a stated departure.
   request, the same code and nearly the same question found the passage in one run and not the
   next. Ten runs an arm cannot tell 6 from 3 with any confidence; they can tell that the sentence
   is no clear gain.
-- **When the passage is missed, the search quoted the other reading.** In the IA runs without the
-  passage, every found quote was about what a holder may do (65.95, 43.7) or about renewal
-  (65.93). The search answers "A or B?" by quoting whichever it meets first.
-- **The owner's second ruling shows in these runs.** 31 quotes were on pages that could not be
-  read, nearly all osha.gov. Under #256 they are said apart and not counted.
+- **When the passage is missed, the search mostly quoted the other reading.** In 5 of the 6 IA
+  runs without the passage, the found quotes were about what a holder may do (65.95, 43.7) or
+  about renewal (65.93). In the sixth the search quoted 65.91 itself, but not the sentence that
+  holds the answer.
+- **The owner's second ruling shows in these runs.** 34 of 99 quotes were on pages that could
+  not be read, 31 of them on osha.gov. Under #256 they are said apart and not counted.
 
 ## What is left, for the owner
 
