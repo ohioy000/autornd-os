@@ -17,8 +17,10 @@ import sys
 from collections import Counter
 
 REPO, ROOT, PREFIX = sys.argv[1], sys.argv[2], sys.argv[3]
-KEYS = {q["id"]: q for q in json.load(
-    open(f"{REPO}/evals/professional/questions.json"))["questions"]}
+KEYS = {q["id"]: q for name in ("questions.json", "hard-questions.json")
+        for q in json.load(open(f"{REPO}/evals/professional/{name}"))["questions"]}
+for _q in KEYS.values():   # the hard set gives several sources a question
+    _q.setdefault("passage", " ".join(s["passage"] for s in _q.get("sources", [])))
 FIGURE = re.compile(r"\d[\d.,/]*\d|\d")
 
 
@@ -41,7 +43,7 @@ for path in sorted(glob.glob(f"{ROOT}/{PREFIX}shard-*.jsonl")):
     for wid, record in zip(ids, records):
         key = KEYS[record["question"]]
         answer = squash(record.get("answer") or "")
-        missing = [item["item"] for item in key["key"]
+        missing = [item["item"] for item in key["key"] if not item.get("derived")
                    if not all(squash(f) in answer for f in figures(item["answer"]))]
         findings = [f for r in rows if r["kind"] == "phase"
                     and r["workflow_id"] == wid and r["phase"] == "sources"

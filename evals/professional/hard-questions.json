@@ -1,5 +1,6 @@
 {
- "status": "DRAFT — not signed off. Keys are the owner's to approve (D44); once approved they are frozen.",
+ "version": "professional-hard-1",
+ "status": "Approved by the owner on 2026-11-15 and frozen. A change is a new version the owner ratifies (D44).",
  "drafted": "2026-11-15",
  "passages_verified_against_live_pages": "2026-11-15",
  "questions": [

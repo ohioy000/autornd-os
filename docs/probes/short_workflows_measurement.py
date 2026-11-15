@@ -13,8 +13,8 @@ Paid: it needs the owner's word and an amount before it is run.
 
 Two settings choose the questions and the workflows; unset, the run is the
 tier-2 run of 2026-11-13 exactly. MEASURE_SET is tier2, golden, tier4 or
-professional (evals/professional's frozen questions, with no screen: the
-answers are read against the keys);
+professional or professional-hard (evals/professional's frozen sets, with
+no screen: the answers are read against the keys);
 golden asks evals/golden's six questions and its side test, screened by the
 golden scorer and, where the question is also tier-2's, by tier-2's; tier4
 asks the frozen tier-4 questions with their own catalogue pages, as tier-4's
@@ -90,12 +90,14 @@ def _questions() -> list[dict]:
                             "question": tier4.d_pages_message(candidate, batch)
                             if pages else candidate["request"]})
         return out
-    if SET == "professional":
-        frozen = json.loads((ROOT / "evals/professional/questions.json").read_text())
+    if SET in ("professional", "professional-hard"):
+        name = "questions.json" if SET == "professional" else "hard-questions.json"
+        frozen = json.loads((ROOT / "evals/professional" / name).read_text())
         return [{"id": q["id"], "shape": q["field"], "question": q["question"]}
                 for q in frozen["questions"]]
     raise SystemExit(
-        f"MEASURE_SET {SET!r} is not tier2, golden, tier4 or professional")
+        f"MEASURE_SET {SET!r} is not tier2, golden, tier4, professional or "
+        f"professional-hard")
 
 
 QUESTIONS = _questions()
