@@ -1,0 +1,297 @@
+{
+ "status": "DRAFT — not signed off. Keys are the owner's to approve (D44); once approved they are frozen.",
+ "drafted": "2026-11-15",
+ "passages_verified_against_live_pages": "2026-11-15",
+ "questions": [
+  {
+   "id": "P1",
+   "field": "aviation",
+   "question": "Under 14 CFR § 91.151, how much fuel beyond the first point of intended landing must an airplane carry to begin a flight under VFR conditions, by day and by night? Give each as a time at normal cruising speed.",
+   "source": "https://www.ecfr.gov/current/title-14/section-91.151",
+   "passage": "(1) During the day, to fly after that for at least 30 minutes; or (2) At night, to fly after that for at least 45 minutes.",
+   "key": [
+    {
+     "item": "Day reserve",
+     "answer": "30 minutes"
+    },
+    {
+     "item": "Night reserve",
+     "answer": "45 minutes"
+    }
+   ],
+   "commonly_confused": "20 minutes is the rotorcraft figure in paragraph (b)."
+  },
+  {
+   "id": "P2",
+   "field": "commercial trucking",
+   "question": "Under 49 CFR § 395.3(a), for a driver of a property-carrying commercial motor vehicle: how many consecutive hours off duty are required before driving, after how many consecutive hours on duty may the driver no longer drive, and how many hours in total may be driven within that period?",
+   "source": "https://www.ecfr.gov/current/title-49/section-395.3",
+   "passage": "A driver may not drive after a period of 14 consecutive hours after coming on-duty following 10 consecutive hours off-duty.",
+   "key": [
+    {
+     "item": "Off duty before driving",
+     "answer": "10 consecutive hours"
+    },
+    {
+     "item": "On-duty window",
+     "answer": "14 consecutive hours"
+    },
+    {
+     "item": "Driving time",
+     "answer": "11 hours"
+    }
+   ],
+   "commonly_confused": "8 hours is the driving time before a 30-minute interruption, a different limit."
+  },
+  {
+   "id": "P3",
+   "field": "health privacy",
+   "question": "Under 45 CFR § 164.404(b), by when must a covered entity notify an individual of a breach of unsecured protected health information? Give the standard and the outer limit, and say from what event the limit runs.",
+   "source": "https://www.ecfr.gov/current/title-45/section-164.404",
+   "passage": "a covered entity shall provide the notification required by paragraph (a) of this section without unreasonable delay and in no case later than 60 calendar days after discovery of a breach.",
+   "key": [
+    {
+     "item": "Standard",
+     "answer": "without unreasonable delay"
+    },
+    {
+     "item": "Outer limit",
+     "answer": "60 calendar days"
+    },
+    {
+     "item": "Runs from",
+     "answer": "discovery of the breach"
+    }
+   ],
+   "commonly_confused": "The limit runs from discovery, not from the date the breach occurred."
+  },
+  {
+   "id": "P4",
+   "field": "consumer lending",
+   "question": "Under 12 CFR § 1026.23(a)(3)(i), until when may a consumer exercise the right to rescind a covered credit transaction, and when does the right expire if the required notice or material disclosures are never delivered?",
+   "source": "https://www.ecfr.gov/current/title-12/section-1026.23",
+   "passage": "The consumer may exercise the right to rescind until midnight of the third business day following consummation, delivery of the notice required by paragraph (b) of this section, or delivery of all material disclosures, whichever occurs last.",
+   "key": [
+    {
+     "item": "Rescission period",
+     "answer": "midnight of the third business day"
+    },
+    {
+     "item": "Measured from",
+     "answer": "the last of consummation, delivery of the notice, delivery of all material disclosures"
+    },
+    {
+     "item": "If never delivered",
+     "answer": "3 years after consummation"
+    }
+   ],
+   "commonly_confused": "Three business days, not three calendar days; and the latest of three events, not consummation alone."
+  },
+  {
+   "id": "P5",
+   "field": "radio",
+   "question": "Under 47 CFR § 97.313, what is the general maximum transmitter power for an amateur station, and what lower limit applies on the 10.10-10.15 MHz segment? Give each with its unit and measure.",
+   "source": "https://www.ecfr.gov/current/title-47/section-97.313",
+   "passage": "(b) No station may transmit with a transmitter power exceeding 1.5 kW PEP. (c) No station may transmit with a transmitter power output exceeding 200 W PEP: (1) On the 10.10-10.15 MHz segment;",
+   "key": [
+    {
+     "item": "General limit",
+     "answer": "1.5 kW PEP"
+    },
+    {
+     "item": "10.10-10.15 MHz",
+     "answer": "200 W PEP"
+    }
+   ],
+   "commonly_confused": "PEP is peak envelope power; an EIRP figure answers a different paragraph."
+  },
+  {
+   "id": "P6",
+   "field": "radiation protection",
+   "question": "Under 10 CFR § 20.1201(a), what are the annual occupational dose limits for an adult: the total effective dose equivalent, the lens of the eye, and the skin of the whole body? Give each in rems and sieverts.",
+   "source": "https://www.ecfr.gov/current/title-10/section-20.1201",
+   "passage": "(i) The total effective dose equivalent being equal to 5 rems (0.05 Sv); or",
+   "key": [
+    {
+     "item": "Total effective dose equivalent",
+     "answer": "5 rems (0.05 Sv)"
+    },
+    {
+     "item": "Lens of the eye",
+     "answer": "15 rems (0.15 Sv)"
+    },
+    {
+     "item": "Skin of the whole body",
+     "answer": "50 rem (0.5 Sv)"
+    }
+   ],
+   "commonly_confused": "50 rems also appears as the organ limit in (a)(1)(ii); the question asks for skin."
+  },
+  {
+   "id": "P7",
+   "field": "hazardous materials transport",
+   "question": "Under 49 CFR § 173.120(a), what flash point defines a Class 3 flammable liquid? Give the figure in both units and the comparison.",
+   "source": "https://www.ecfr.gov/current/title-49/section-173.120",
+   "passage": "a flammable liquid (Class 3) means a liquid having a flash point of not more than 60 °C (140 °F)",
+   "key": [
+    {
+     "item": "Flash point",
+     "answer": "not more than 60 °C (140 °F)"
+    }
+   ],
+   "commonly_confused": "37.8 °C (100 °F) is the threshold for heated materials in the same sentence, not the definition."
+  },
+  {
+   "id": "P8",
+   "field": "construction safety",
+   "question": "Under 29 CFR § 1926.501(b)(1), at what height above a lower level must an employee on a walking/working surface with an unprotected side or edge be protected from falling, and by which systems?",
+   "source": "https://www.ecfr.gov/current/title-29/section-1926.501",
+   "passage": "Each employee on a walking/working surface (horizontal and vertical surface) with an unprotected side or edge which is 6 feet (1.8 m) or more above a lower level shall be protected from falling by the use of guardrail systems, safety net systems, or personal fall arrest systems.",
+   "key": [
+    {
+     "item": "Height",
+     "answer": "6 feet (1.8 m) or more"
+    },
+    {
+     "item": "Systems",
+     "answer": "guardrail systems, safety net systems, or personal fall arrest systems"
+    }
+   ],
+   "commonly_confused": "4 feet is the general-industry figure in 29 CFR 1910, not construction."
+  },
+  {
+   "id": "P9",
+   "field": "network engineering",
+   "question": "Which three blocks of IPv4 address space does RFC 1918 reserve for private internets? Give each range and its prefix.",
+   "source": "https://www.rfc-editor.org/rfc/rfc1918.txt",
+   "passage": "10.0.0.0 - 10.255.255.255 (10/8 prefix) 172.16.0.0 - 172.31.255.255 (172.16/12 prefix) 192.168.0.0 - 192.168.255.255 (192.168/16 prefix)",
+   "key": [
+    {
+     "item": "Block 1",
+     "answer": "10.0.0.0 - 10.255.255.255 (10/8)"
+    },
+    {
+     "item": "Block 2",
+     "answer": "172.16.0.0 - 172.31.255.255 (172.16/12)"
+    },
+    {
+     "item": "Block 3",
+     "answer": "192.168.0.0 - 192.168.255.255 (192.168/16)"
+    }
+   ],
+   "commonly_confused": "The second block ends at 172.31, not 172.32 or 172.255."
+  },
+  {
+   "id": "P10",
+   "field": "UK employment law",
+   "question": "Under regulation 4(1) of the Working Time Regulations 1998 (UK), what is the limit on a worker's average working time, overtime included, and how may a worker be taken outside it?",
+   "source": "https://www.legislation.gov.uk/uksi/1998/1833/regulation/4",
+   "passage": "a worker’s working time, including overtime, in any reference period which is applicable in his case shall not exceed an average of 48 hours for each seven days.",
+   "key": [
+    {
+     "item": "Limit",
+     "answer": "an average of 48 hours for each seven days"
+    },
+    {
+     "item": "Opt-out",
+     "answer": "the worker's agreement in writing, obtained first by the employer"
+    }
+   ],
+   "commonly_confused": "It is an average over a reference period, not a cap on any single week."
+  },
+  {
+   "id": "P11",
+   "field": "air quality",
+   "question": "Under 40 CFR § 50.19, what is the level of the national 8-hour primary ambient air quality standard for ozone, and when is it met at a monitoring site?",
+   "source": "https://www.ecfr.gov/current/title-40/section-50.19",
+   "passage": "(a) The level of the national 8-hour primary ambient air quality standard for ozone (O3) is 0.070 parts per million (ppm), daily maximum 8-hour average",
+   "key": [
+    {
+     "item": "Level",
+     "answer": "0.070 ppm, daily maximum 8-hour average"
+    },
+    {
+     "item": "Met when",
+     "answer": "the 3-year average of the annual fourth-highest daily maximum 8-hour average concentration is less than or equal to 0.070 ppm"
+    }
+   ],
+   "commonly_confused": "0.075 ppm is the earlier standard in § 50.15."
+  },
+  {
+   "id": "P12",
+   "field": "pharmaceutical manufacturing",
+   "question": "Under 21 CFR § 211.180(a), how long must a production, control, or distribution record specifically associated with a batch of a drug product be retained, and what is the period for certain OTC drug products lacking expiration dating?",
+   "source": "https://www.ecfr.gov/current/title-21/section-211.180",
+   "passage": "shall be retained for at least 1 year after the expiration date of the batch or, in the case of certain OTC drug products lacking expiration dating because they meet the criteria for exemption under § 211.137, 3 years after distribution of the batch.",
+   "key": [
+    {
+     "item": "Retention",
+     "answer": "at least 1 year after the expiration date of the batch"
+    },
+    {
+     "item": "OTC without expiration dating",
+     "answer": "3 years after distribution of the batch"
+    }
+   ],
+   "commonly_confused": "The year runs from the expiration date, not from manufacture or distribution."
+  },
+  {
+   "id": "P13",
+   "field": "employment leave",
+   "question": "Under 29 CFR § 825.200(a), how much FMLA leave is an eligible employee entitled to, over what period, leaving aside leave to care for a covered servicemember?",
+   "source": "https://www.ecfr.gov/current/title-29/section-825.200",
+   "passage": "an eligible employee's FMLA leave entitlement is limited to a total of 12 workweeks of leave during any 12-month period",
+   "key": [
+    {
+     "item": "Entitlement",
+     "answer": "12 workweeks"
+    },
+    {
+     "item": "Period",
+     "answer": "any 12-month period"
+    }
+   ],
+   "commonly_confused": "26 workweeks is the separate servicemember-care entitlement."
+  },
+  {
+   "id": "P14",
+   "field": "information security",
+   "question": "In NIST SP 800-63B-4, what minimum length must verifiers require for a password used as a single-factor authentication mechanism, what minimum for a password used only as part of multi-factor authentication, and what maximum length should they permit at least?",
+   "source": "https://pages.nist.gov/800-63-4/sp800-63b.html",
+   "passage": "Verifiers and CSPs SHALL require passwords that are used as a single-factor authentication mechanism to be a minimum of 15 characters in length. Verifiers and CSPs MAY allow passwords that are only used as part of multi-factor authentication processes to be shorter but SHALL require them to be a minimum of eight characters in length. Verifiers and CSPs SHOULD permit a maximum password length of at least 64 characters.",
+   "key": [
+    {
+     "item": "Single-factor minimum",
+     "answer": "15 characters"
+    },
+    {
+     "item": "Multi-factor minimum",
+     "answer": "eight characters"
+    },
+    {
+     "item": "Maximum to permit",
+     "answer": "at least 64 characters"
+    }
+   ],
+   "commonly_confused": "Eight characters as the only minimum is revision 3; revision 4 adds 15 for single-factor use."
+  },
+  {
+   "id": "P15",
+   "field": "email protocol",
+   "question": "Under RFC 5321 section 4.5.3.1, what is the maximum total length of an SMTP text line and of a reply line, and what do those counts include?",
+   "source": "https://www.rfc-editor.org/rfc/rfc5321.txt",
+   "passage": "The maximum total length of a text line including the <CRLF> is 1000 octets (not counting the leading dot duplicated for transparency).",
+   "key": [
+    {
+     "item": "Text line",
+     "answer": "1000 octets, including the <CRLF>"
+    },
+    {
+     "item": "Reply line",
+     "answer": "512 octets, including the reply code and the <CRLF>"
+    }
+   ],
+   "commonly_confused": "998 is the line length without the CRLF in RFC 5322, a different document."
+  }
+ ]
+}
