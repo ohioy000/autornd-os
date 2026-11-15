@@ -1,6 +1,6 @@
 """Check every passage of the professional set against its live page.
 
-    python -I evals/professional/verify_keys.py REPO
+    python -I evals/professional/verify_keys.py REPO [FILE]
 
 Free of model calls: it fetches each source with the harness's own fetch and
 looks for the passage with the harness's own quote check. It also checks
@@ -28,22 +28,30 @@ from autornd.knowledge.research import _normalise, quote_found  # noqa: E402
 
 
 async def main() -> None:
-    draft = json.loads((REPO / "evals/professional/questions.json").read_text())
+    name = sys.argv[2] if len(sys.argv) > 2 else "questions.json"
+    draft = json.loads((REPO / "evals/professional" / name).read_text())
     bad = 0
     for q in draft["questions"]:
-        page = await fetch_source(q["source"])
-        text = _normalise(page.text) if page.fetched else ""
-        passage = page.fetched and quote_found(q["passage"], page.text)
-        figures = [n for item in q["key"]
+        sources = q.get("sources") or [{"url": q["source"], "passage": q["passage"]}]
+        notes, text = [], ""
+        for source in sources:
+            page = await fetch_source(source["url"])
+            if not page.fetched:
+                notes.append(f"unread: {page.reason}")
+                continue
+            text += " " + _normalise(page.text).replace(",", "")
+            if not quote_found(source["passage"], page.text):
+                notes.append("passage not found")
+            await asyncio.sleep(1)
+        # A key item marked derived is worked out from the sources (a sum, a
+        # unit conversion, an absence), so its figures need not be on a page.
+        figures = [n.replace(",", "") for item in q["key"] if not item.get("derived")
                    for n in re.findall(r"\d[\d.,/]*\d|\d", item["answer"])]
         missing = [n for n in figures if n.casefold() not in text]
-        ok = passage and not missing
-        bad += not ok
-        print(q["id"], "ok" if ok else "CHANGED",
-              "" if page.fetched else f"unread: {page.reason}",
-              "" if passage or not page.fetched else "passage not found",
-              f"figures not on page: {missing}" if missing else "")
-        await asyncio.sleep(1)
+        if missing:
+            notes.append(f"figures not on page: {missing}")
+        bad += bool(notes)
+        print(q["id"], "ok" if not notes else "CHANGED", "; ".join(notes))
     print(f"{len(draft['questions']) - bad} of {len(draft['questions'])} hold")
 
 

@@ -1,0 +1,459 @@
+{
+ "status": "DRAFT — not signed off. Keys are the owner's to approve (D44); once approved they are frozen.",
+ "drafted": "2026-11-15",
+ "passages_verified_against_live_pages": "2026-11-15",
+ "questions": [
+  {
+   "id": "H1",
+   "field": "airline cabin crew",
+   "difficulty": [
+    "rule not named",
+    "loosely worded",
+    "the rule changed recently"
+   ],
+   "question": "how much rest does a US airline have to give a flight attendant between duty days",
+   "sources": [
+    {
+     "url": "https://www.ecfr.gov/current/title-14/section-121.467",
+     "passage": "A flight attendant scheduled to a duty period of 14 hours or less as provided under paragraph (b)(1) of this section must be given a scheduled rest period of at least 10 consecutive hours."
+    }
+   ],
+   "key": [
+    {
+     "item": "Rest after a duty period of 14 hours or less",
+     "answer": "at least 10 consecutive hours"
+    },
+    {
+     "item": "Reduction",
+     "answer": "may not be reduced to less than 10 consecutive hours"
+    }
+   ],
+   "commonly_confused": "9 consecutive hours, reducible to 8, is the rule as it stood before 2022."
+  },
+  {
+   "id": "H2",
+   "field": "commercial driving",
+   "difficulty": [
+    "rule not named"
+   ],
+   "question": "At what alcohol concentration is a US commercial motor vehicle driver barred from safety-sensitive duty under the federal drug and alcohol testing rules?",
+   "sources": [
+    {
+     "url": "https://www.ecfr.gov/current/title-49/section-382.201",
+     "passage": "No driver shall report for duty or remain on duty requiring the performance of safety-sensitive functions while having an alcohol concentration of 0.04 or greater."
+    }
+   ],
+   "key": [
+    {
+     "item": "Alcohol concentration",
+     "answer": "0.04 or greater"
+    }
+   ],
+   "commonly_confused": "0.08 is the usual state limit for private drivers; 0.02 triggers a separate 24-hour removal."
+  },
+  {
+   "id": "H3",
+   "field": "unmanned aircraft",
+   "difficulty": [
+    "rule not named",
+    "loosely worded",
+    "the boundary matters"
+   ],
+   "question": "how heavy can a drone be and still count as a small drone under the FAA rules",
+   "sources": [
+    {
+     "url": "https://www.ecfr.gov/current/title-14/section-107.3",
+     "passage": "Small unmanned aircraft means an unmanned aircraft weighing less than 55 pounds on takeoff, including everything that is on board or otherwise attached to the aircraft."
+    }
+   ],
+   "key": [
+    {
+     "item": "Weight",
+     "answer": "less than 55 pounds on takeoff"
+    },
+    {
+     "item": "Counted",
+     "answer": "everything on board or otherwise attached"
+    }
+   ],
+   "commonly_confused": "It is less than 55 pounds, not 55 or less; 0.55 pounds is the registration threshold, a different rule."
+  },
+  {
+   "id": "H4",
+   "field": "UK employment law",
+   "difficulty": [
+    "two documents",
+    "rule not named",
+    "a sum the sources do not state"
+   ],
+   "question": "How much paid annual leave does a worker in Great Britain get by statute, in weeks, and what is the cap in days?",
+   "sources": [
+    {
+     "url": "https://www.legislation.gov.uk/uksi/1998/1833/regulation/13",
+     "passage": "a worker is entitled to four weeks' annual leave in each leave year."
+    },
+    {
+     "url": "https://www.legislation.gov.uk/uksi/1998/1833/regulation/13A",
+     "passage": "The aggregate entitlement provided for in paragraph (2) and regulation 13(1) is subject to a maximum of 28 days."
+    }
+   ],
+   "key": [
+    {
+     "item": "Basic leave",
+     "answer": "four weeks"
+    },
+    {
+     "item": "Additional leave",
+     "answer": "1.6 weeks"
+    },
+    {
+     "item": "Total",
+     "answer": "5.6 weeks",
+     "derived": true
+    },
+    {
+     "item": "Cap",
+     "answer": "28 days"
+    }
+   ],
+   "commonly_confused": "Four weeks alone is the EU-derived minimum; 5.6 is the two regulations together."
+  },
+  {
+   "id": "H5",
+   "field": "flight operations",
+   "difficulty": [
+    "answer is a table row",
+    "rule not named"
+   ],
+   "question": "What are the basic VFR weather minimums in Class E airspace below 10,000 feet MSL: flight visibility and distance from clouds?",
+   "sources": [
+    {
+     "url": "https://www.ecfr.gov/current/title-14/section-91.155",
+     "passage": "Less than 10,000 feet MSL 3 statute miles 500 feet below. 1,000 feet above. 2,000 feet horizontal."
+    }
+   ],
+   "key": [
+    {
+     "item": "Flight visibility",
+     "answer": "3 statute miles"
+    },
+    {
+     "item": "Distance from clouds",
+     "answer": "500 feet below, 1,000 feet above, 2,000 feet horizontal"
+    }
+   ],
+   "commonly_confused": "5 statute miles and 1,000/1,000/1 mile is the row for at or above 10,000 feet MSL."
+  },
+  {
+   "id": "H6",
+   "field": "network engineering",
+   "difficulty": [
+    "standard not named",
+    "plain-text source"
+   ],
+   "question": "In the original DNS specification, what are the size limits on a label and on a full domain name, in octets?",
+   "sources": [
+    {
+     "url": "https://www.rfc-editor.org/rfc/rfc1035.txt",
+     "passage": "labels 63 octets or less names 255 octets or less"
+    }
+   ],
+   "key": [
+    {
+     "item": "Label",
+     "answer": "63 octets or less"
+    },
+    {
+     "item": "Name",
+     "answer": "255 octets or less"
+    }
+   ],
+   "commonly_confused": "253 is the longest name as usually written in text, not the limit the specification states."
+  },
+  {
+   "id": "H7",
+   "field": "industrial hygiene",
+   "difficulty": [
+    "rule not named",
+    "an older limit is still widely quoted",
+    "long page"
+   ],
+   "question": "What are OSHA's permissible exposure limit and action level for respirable crystalline silica in general industry?",
+   "sources": [
+    {
+     "url": "https://www.ecfr.gov/current/title-29/section-1910.1053",
+     "passage": "The employer shall ensure that no employee is exposed to an airborne concentration of respirable crystalline silica in excess of 50 µg/m3, calculated as an 8-hour TWA."
+    }
+   ],
+   "key": [
+    {
+     "item": "Permissible exposure limit",
+     "answer": "50 µg/m3, as an 8-hour TWA"
+    },
+    {
+     "item": "Action level",
+     "answer": "25 µg/m3, as an 8-hour TWA"
+    }
+   ],
+   "commonly_confused": "The older limit was a formula in Table Z-3, about 100 µg/m3 for pure quartz."
+  },
+  {
+   "id": "H8",
+   "field": "drinking water",
+   "difficulty": [
+    "answer is a table row",
+    "rule not named",
+    "very recent rule",
+    "unit conversion"
+   ],
+   "question": "What is the US federal maximum contaminant level for PFOA in drinking water? Give it as the rule lists it and in nanograms per litre.",
+   "sources": [
+    {
+     "url": "https://www.ecfr.gov/current/title-40/section-141.61",
+     "passage": "PFOA 0.0000040 Not applicable."
+    }
+   ],
+   "key": [
+    {
+     "item": "As listed",
+     "answer": "0.0000040 mg/l"
+    },
+    {
+     "item": "In ng/L",
+     "answer": "4.0 ng/L",
+     "derived": true
+    }
+   ],
+   "commonly_confused": "70 parts per trillion was the 2016 health advisory, not a limit; 10 ng/L is the figure for other PFAS."
+  },
+  {
+   "id": "H9",
+   "field": "software security",
+   "difficulty": [
+    "source is a JSON record",
+    "two scoring versions in one record"
+   ],
+   "question": "What CVSS version 3.1 base score and severity does the US National Vulnerability Database give CVE-2021-44228?",
+   "sources": [
+    {
+     "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2021-44228",
+     "passage": "baseScore: 10.0 baseSeverity: CRITICAL"
+    }
+   ],
+   "key": [
+    {
+     "item": "Base score",
+     "answer": "10.0"
+    },
+    {
+     "item": "Severity",
+     "answer": "CRITICAL"
+    }
+   ],
+   "commonly_confused": "9.3 is the same record's version 2.0 score."
+  },
+  {
+   "id": "H10",
+   "field": "web protocols",
+   "difficulty": [
+    "source is a CSV registry",
+    "the registry points to another document"
+   ],
+   "question": "In the IANA HTTP status code registry, what is the name of status code 425 and which RFC is its reference?",
+   "sources": [
+    {
+     "url": "https://www.iana.org/assignments/http-status-codes/http-status-codes-1.csv",
+     "passage": "425,Too Early,[RFC 8470]"
+    }
+   ],
+   "key": [
+    {
+     "item": "Name",
+     "answer": "Too Early"
+    },
+    {
+     "item": "Reference",
+     "answer": "RFC 8470"
+    }
+   ],
+   "commonly_confused": "425 was once listed as Unordered Collection in a WebDAV draft."
+  },
+  {
+   "id": "H11",
+   "field": "meeting procedure",
+   "difficulty": [
+    "source is an EPUB",
+    "an old edition is asked for"
+   ],
+   "question": "In Robert's Rules of Order as first published in 1876, the pocket manual that Project Gutenberg carries, what vote does the manual require to adopt a motion for the Previous Question?",
+   "sources": [
+    {
+     "url": "https://www.gutenberg.org/ebooks/9097.epub.noimages",
+     "passage": "a two-thirds vote be required, as in this Manual [§ 39], for sustaining an objection to the introduction of a question, or for adopting a motion for the Previous Question"
+    }
+   ],
+   "key": [
+    {
+     "item": "Vote",
+     "answer": "a two-thirds vote"
+    }
+   ],
+   "commonly_confused": "A bare majority is the rule of the US House of Representatives, which the manual sets aside for ordinary societies."
+  },
+  {
+   "id": "H12",
+   "field": "electronics",
+   "difficulty": [
+    "source is a PDF datasheet",
+    "answer is in two tables"
+   ],
+   "question": "From Texas Instruments' LM317 datasheet: what is the absolute maximum input-output voltage differential, and what is the typical reference voltage?",
+   "sources": [
+    {
+     "url": "https://www.ti.com/lit/ds/symlink/lm317.pdf",
+     "passage": "Input-output voltage differential −0.3 40 V"
+    }
+   ],
+   "key": [
+    {
+     "item": "Absolute maximum input-output differential",
+     "answer": "40 V"
+    },
+    {
+     "item": "Typical reference voltage",
+     "answer": "1.25 V"
+    }
+   ],
+   "commonly_confused": "37 V is the top of the adjustable output range, not the differential rating."
+  },
+  {
+   "id": "H13",
+   "field": "metrology",
+   "difficulty": [
+    "source is a PDF",
+    "superscripts lost in the text"
+   ],
+   "question": "In the SI Brochure, 9th edition, what value is fixed for the luminous efficacy Kcd, and for monochromatic radiation of what frequency?",
+   "sources": [
+    {
+     "url": "https://www.bipm.org/documents/20126/41483022/SI-Brochure-9-EN.pdf",
+     "passage": "the luminous efficacy of monochromatic radiation of frequency 540 × 1012 Hz, Kcd, is 683 lm/W"
+    }
+   ],
+   "key": [
+    {
+     "item": "Kcd",
+     "answer": "683 lm/W"
+    },
+    {
+     "item": "Frequency",
+     "answer": "540 × 10^12 Hz",
+     "derived": true
+    }
+   ],
+   "commonly_confused": "555 nm is the wavelength in air usually quoted; the definition is by frequency."
+  },
+  {
+   "id": "H14",
+   "field": "aviation",
+   "difficulty": [
+    "the rule does not answer the question",
+    "a near answer is in the same section"
+   ],
+   "question": "Under 14 CFR § 91.151, what fuel reserve must a glider carry to begin a flight under VFR conditions?",
+   "sources": [
+    {
+     "url": "https://www.ecfr.gov/current/title-14/section-91.151",
+     "passage": "No person may begin a flight in a rotorcraft under VFR conditions unless (considering wind and forecast weather conditions) there is enough fuel to fly to the first point of intended landing and, assuming normal cruising speed, to fly after that for at least 20 minutes."
+    }
+   ],
+   "key": [
+    {
+     "item": "Glider reserve",
+     "answer": "none is stated: the section sets reserves for airplanes and for rotorcraft only",
+     "derived": true
+    }
+   ],
+   "commonly_confused": "30 or 45 minutes is the airplane rule and 20 minutes the rotorcraft rule; giving either for a glider is wrong."
+  },
+  {
+   "id": "H15",
+   "field": "hazardous materials transport",
+   "difficulty": [
+    "needs reasoning across two paragraphs",
+    "a worked case, not a definition"
+   ],
+   "question": "A liquid has a flash point of 65 °C and meets the definition of no other hazard class. For transport under the US hazardous materials regulations, is it a Class 3 flammable liquid, and if not, what is it?",
+   "sources": [
+    {
+     "url": "https://www.ecfr.gov/current/title-49/section-173.120",
+     "passage": "a combustible liquid means any liquid that does not meet the definition of any other hazard class specified in this subchapter and has a flash point above 60 °C (140 °F) and below 93 °C (200 °F)."
+    }
+   ],
+   "key": [
+    {
+     "item": "Class 3 flammable liquid?",
+     "answer": "no: its flash point is above 60 °C (140 °F)"
+    },
+    {
+     "item": "What it is",
+     "answer": "a combustible liquid: flash point above 60 °C (140 °F) and below 93 °C (200 °F)"
+    }
+   ],
+   "commonly_confused": "Calling it flammable because 65 °C is 'close to' 60 °C; the definition is a hard line."
+  },
+  {
+   "id": "H16",
+   "field": "commercial trucking",
+   "difficulty": [
+    "rule not named",
+    "colloquial",
+    "three limits are easily mixed up"
+   ],
+   "question": "how long can a trucker drive before they have to take a break",
+   "sources": [
+    {
+     "url": "https://www.ecfr.gov/current/title-49/section-395.3",
+     "passage": "driving is not permitted if more than 8 hours of driving time have passed without at least a consecutive 30-minute interruption in driving status."
+    }
+   ],
+   "key": [
+    {
+     "item": "Driving time before a break",
+     "answer": "8 hours"
+    },
+    {
+     "item": "The break",
+     "answer": "at least a consecutive 30-minute interruption in driving status"
+    }
+   ],
+   "commonly_confused": "11 hours is the total driving limit and 14 hours the on-duty window; neither is the break rule."
+  },
+  {
+   "id": "H17",
+   "field": "radiation protection",
+   "difficulty": [
+    "rule not named",
+    "two limits on different time bases"
+   ],
+   "question": "What dose limits does the US Nuclear Regulatory Commission set for individual members of the public from a licensee's operations: per year, and in any one hour in an unrestricted area?",
+   "sources": [
+    {
+     "url": "https://www.ecfr.gov/current/title-10/section-20.1301",
+     "passage": "The total effective dose equivalent to individual members of the public from the licensed operation does not exceed 0.1 rem (1 mSv) in a year"
+    }
+   ],
+   "key": [
+    {
+     "item": "Per year",
+     "answer": "0.1 rem (1 mSv)"
+    },
+    {
+     "item": "In any one hour",
+     "answer": "0.002 rem (0.02 millisievert)"
+    }
+   ],
+   "commonly_confused": "5 rems is the occupational limit for workers, fifty times higher."
+  }
+ ]
+}
