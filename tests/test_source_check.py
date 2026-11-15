@@ -626,6 +626,10 @@ class TestAModelsOwnMarksAreNotWordsOfThePassage:
         # The tildes of a subscript.
         ("The level of the standard for ozone (O~3~) is 0.070 parts per million",
          "The level of the standard for ozone (O3) is 0.070 parts per million (ppm)."),
+        # The carets of a superscript (the harder professional run: one
+        # question lost its passage 3 runs of 3).
+        ("an 8-hour TWA of 50 µg/m^3^ of respirable crystalline silica",
+         "in excess of an 8-hour TWA of 50 µg/m3 of respirable crystalline silica."),
         # A list mark at the start, with or without a backslash.
         ("1. Verifiers SHALL require passwords to be a minimum of 15 characters.",
          "Password Verifiers Verifiers SHALL require passwords to be a minimum of "
@@ -645,6 +649,19 @@ class TestAModelsOwnMarksAreNotWordsOfThePassage:
         assert not quote_found(
             "1. Verifiers SHALL require passwords to be a minimum of 15 characters.",
             "Verifiers SHALL require passwords to be a minimum of 8 characters.")
+
+    def test_the_record_keeps_a_long_passage_whole(self):
+        """Measured 2026-11-15: the lookup that reads the documents hands on
+        excerpts of up to 1,200 characters, the record kept 600, and a
+        figure past them could not be checked against the text handed on."""
+        long, short = "a" * 599 + " " + "b" * 600, "c" * 600
+        record, = research.source_records([research.Finding(
+            question="q", answer="a",
+            quotes=[research.Quote(1, long, "u"),
+                                  research.Quote(1, short, "u")])])
+        first, second = record["quotes"]
+        assert (first["text"], first["whole"]) == (long[:600], long)
+        assert second["text"] == short and "whole" not in second
 
     def test_marks_alone_are_too_short_to_check(self):
         assert not quote_found("*(5)* **(ii)**", NOISE_PAGE)

@@ -582,7 +582,7 @@ class TestTheRecordsBesideTheAnswer:
         assert "compared nothing" in detail.cautions[0]
         assert "No lookup ran" in detail.cautions[1]
 
-    def test_a_flag_and_unfound_quotes_are_named(self):
+    def test_a_flag_is_named(self):
         detail = _detail(self._workflow(
             ("sources", {"lookup": "grounding", "findings": [{"quotes": [
                 {"status": "found"}, {"status": "unfetched"}]}]}),
@@ -590,9 +590,7 @@ class TestTheRecordsBesideTheAnswer:
             ("recompute_vote", {"flagged": True, "checked": True,
                                 "disagreements": [{"ask": 2}]})))
         assert detail.cautions == [
-            "The recompute vote disagrees with this answer on ask 2.",
-            "1 more quoted passage was on a page that could not be read; "
-            "not checked and not counted."]
+            "The recompute vote disagrees with this answer on ask 2."]
 
     def _lookup_cautions(self, *statuses):
         return _detail(self._workflow(
@@ -602,15 +600,12 @@ class TestTheRecordsBesideTheAnswer:
             ("recompute_vote", {"flagged": False, "unchecked": False,
                                 "checked": True, "no_consensus": []}))).cautions
 
-    def test_a_page_that_could_not_be_read_is_not_counted_against_the_lookup(self):
-        """Owner's ruling 2026-11-14. Measured 2026-11-15: one site refused
-        every fetch, and each refusal read as a passage not found."""
+    def test_quotes_are_not_counted_once_one_was_found(self):
+        """Owner's plan 2026-11-15. Measured: with the harness reading the
+        documents, 0 of 62 harder-set answers came without a caution, 61 of
+        them right, the cautions being counts of quotes."""
         assert self._lookup_cautions("found", "not_found", "unfetched",
-                                     "unfetched") == [
-            "1 of 2 quoted passages were found in their pages; the rest "
-            "are unverified.",
-            "2 more quoted passages were on a page that could not be read; "
-            "not checked and not counted."]
+                                     "unfetched") == []
 
     QUOTE = ("(i) A lens dose equivalent of 15 rems (0.15 Sv), and the records "
              "shall be retained for at least 1 year after the expiration date.")
@@ -635,19 +630,22 @@ class TestTheRecordsBesideTheAnswer:
             "found on its page."]
         assert detail.recompute_vote["backed_by_source"] == [1]
 
-    def test_a_found_passage_is_taken_over_the_vote(self):
-        """Measured 2026-11-15: two samples from memory said 2 rems against
-        the rule's own 15, and the right answer was flagged."""
+    def test_a_vote_that_disagrees_is_said_whatever_the_passage_holds(self):
+        """Owner's plan 2026-11-15. The rule that took a found passage over
+        the vote never fired on 184 recorded answers; in its one near case a
+        wrong 9 hours stood in a found passage and two samples of three
+        rightly said 10."""
         detail = self._backed_run(
             [{"ask": 1, "value": "lens of the eye = 15 rem (0.15 Sv)", "unit": ""}],
             {"flagged": True, "checked": True, "disagreements": [
                 {"ask": 1, "answer": "15", "majority": "2", "support": 2}]})
         vote = detail.recompute_vote
-        assert (vote["flagged"], vote["flagged_by_vote"]) == (False, True)
-        assert vote["overruled_by_source"] == [1]
-        assert len(vote["disagreements"]) == 1, "what the vote found is kept"
-        assert detail.cautions == []
-        assert "the passage is taken over the vote" in detail.confirmations[1]
+        assert vote["flagged"] is True and "overruled_by_source" not in vote
+        assert detail.cautions == [
+            "The recompute vote disagrees with this answer on ask 1."]
+        assert detail.confirmations == [
+            "The figures this answer gives for ask 1 stand in a passage "
+            "found on its page."]
 
     @pytest.mark.parametrize("results, quote", [
         # A different figure from the passage's.
@@ -693,7 +691,9 @@ class TestTheRecordsBesideTheAnswer:
             {"flagged": False, "checked": True, "no_consensus": [1, 2]}, asks=2)
         assert detail.cautions == [
             "The recompute vote reached no majority on ask 2; that part of "
-            "the answer was not compared."]
+            "the answer was not compared.",
+            "The answer gives 40 rem for ask 2, and that figure is in none "
+            "of the passages found on their pages."]
         detail = self._backed_run(
             [{"ask": 1, "value": 15, "unit": "rem"}],
             {"flagged": False, "unchecked": True, "checked": False}, asks=2)
@@ -712,20 +712,124 @@ class TestTheRecordsBesideTheAnswer:
         assert ("1 lookup answer had no passage found on a page that could be "
                 "read, and was withheld from the answer.") in detail.cautions
 
-    def test_a_passage_not_found_on_a_page_that_was_read_still_counts(self):
-        """Break-proof: only the unread page is left out of the count."""
-        assert self._lookup_cautions("found", "not_found") == [
-            "1 of 2 quoted passages were found in their pages; the rest "
-            "are unverified."]
-
-    def test_a_lookup_whose_pages_could_not_be_read_is_still_unverified(self):
-        """Not counted is not the same as checked."""
+    def test_a_lookup_that_read_nothing_says_which_way(self):
+        """Seen twice on the harder professional run of 2026-11-15: a lookup
+        that quoted nothing was said to have quoted pages nobody could read."""
         assert self._lookup_cautions("unfetched", "unfetched") == [
-            "A lookup ran, but no page it quoted could be read, so its "
-            "findings are unverified."]
+            "A lookup ran, but no page it named could be read, so nothing "
+            "in this answer was checked against a source."]
         assert self._lookup_cautions("unfetched", "not_found") == [
-            "A lookup ran, but no quoted passage could be found in its "
-            "page, so its findings are unverified."]
+            "A lookup ran, but none of its passages was found on its page, "
+            "so nothing in this answer was checked against a source."]
+        assert self._lookup_cautions() == [
+            "A lookup ran, but it quoted no passage, so nothing in this "
+            "answer was checked against a source."]
+
+    RULE = ("(2) A flight attendant scheduled to a duty period of 14 hours or "
+            "less as provided under paragraph (b)(1) of this section must be "
+            "given a scheduled rest period of at least 10 consecutive hours.")
+    OLD = ("(2) Except as provided in paragraph (b)(3) of this section, a "
+           "flight attendant scheduled to a duty period of 14 hours or less "
+           "as provided under paragraph (b)(1) of this section must be given "
+           "a scheduled rest period of at least 9 consecutive hours.")
+
+    def _two_pages(self, first, second, value=10, urls=("https://a.example/now",
+                                                        "https://b.example/2012")):
+        return _detail(self._workflow(
+            ("asks", {"asks": [{"quote": "q", "kind": "value"}]}),
+            ("sources", {"lookup": "grounding", "findings": [{"quotes": [
+                {"status": "found", "text": first, "url": urls[0]},
+                {"status": "found", "text": second, "url": urls[1]}]}]}),
+            ("implement", {"summary": "a", "results": [
+                {"ask": 1, "value": value, "unit": "hours"}]}),
+            ("recompute_vote", {"flagged": False, "checked": True})))
+
+    def test_two_pages_that_differ_on_one_figure_are_said_and_confirm_nothing(self):
+        """Measured 2026-11-15, the harder professional run: the current
+        rule said 10 hours, its 2012 edition 9 in the same sentence, both
+        were found word for word, and the answer took the 9."""
+        detail = self._two_pages(self.RULE, self.OLD)
+        assert detail.cautions == [
+            "Two pages handed on give different figures for the same thing: "
+            "10 on a.example/now and 9 on b.example/2012. The first reads: "
+            f"\"{self.RULE}\""]
+        assert detail.confirmations == [], "10 stands, and so does 9"
+
+    @pytest.mark.parametrize("first, second, urls", [
+        # The same page under two spellings of its address.
+        (RULE, OLD, ("http://www.a.example/now/", "https://a.example/now")),
+        # Two paragraphs of one rule for two cases: a second figure differs.
+        (RULE, RULE.replace("14 hours or less", "20 hours or less")
+                   .replace("10 consecutive", "12 consecutive"), None),
+        # Other words beside the figure: two limits, not one.
+        ("(b) No station may transmit with a transmitter power exceeding "
+         "1.5 kW PEP.",
+         "(c) No station may transmit with a transmitter power output "
+         "exceeding 200 W PEP:", None),
+        # A section's own number in a heading.
+        ("§ 50.19 National primary and secondary ambient air quality "
+         "standards for ozone.",
+         "§ 50.15 National primary and secondary ambient air quality "
+         "standards for ozone.", None),
+        # The mark of an amendment note.
+        ("[F1Unless his employer has first obtained the worker's agreement "
+         "in writing, working time shall not exceed 48 hours.",
+         "[F3Unless his employer has first obtained the worker's agreement "
+         "in writing, working time shall not exceed 48 hours.", None),
+        # The same figure on both pages.
+        (RULE, RULE, None),
+    ])
+    def test_nothing_else_is_two_pages_that_differ(self, first, second, urls):
+        """Break-proof: each was a false caution on the recorded runs, or
+        would be one on every rule that states two cases."""
+        detail = self._two_pages(first, second,
+                                 **({"urls": urls} if urls else {}))
+        assert not any("different figures" in c for c in detail.cautions)
+
+    def test_a_figure_on_no_page_is_named(self):
+        """Owner's plan 2026-11-15: warn when a figure of the answer does
+        not stand in the text handed on."""
+        detail = self._two_pages(self.RULE, self.RULE, value=11)
+        assert detail.cautions == [
+            "The answer gives 11 hours for ask 1, and that figure is in none "
+            "of the passages found on their pages."]
+        assert detail.confirmations == []
+
+    @pytest.mark.parametrize("value, passage", [
+        # On the page, without its word beside it: neither said nor named.
+        (8, "they have driven for a period of 8 cumulative hours without a "
+            "break of at least 30 minutes."),
+        # Written as a word, on the regulator's own page.
+        (9, "you must have at least nine consecutive hours of scheduled rest "
+            "after your duty period."),
+        # Printed with a comma or a nought the answer does not write.
+        (2000, "and 2,000.0 feet horizontal from clouds in controlled airspace."),
+        # A citation is not one number, and nought is the answer "none".
+        ("14 CFR 65.91(c)(1)-(5)", RULE),
+        (0, RULE),
+    ])
+    def test_a_figure_is_not_named_when_the_page_may_hold_it(self, value, passage):
+        """Break-proof: each of these stood beside a right answer on the
+        recorded runs of 2026-11-15."""
+        detail = self._two_pages(passage, passage, value=value)
+        assert detail.cautions == [] and detail.confirmations == []
+
+    def test_a_figure_past_the_records_first_600_characters_is_read(self):
+        """Measured 2026-11-15: the record kept 600 characters of excerpts
+        that run to 1,200, and the governing passage could not be shown."""
+        long = "x" * 700 + " " + self.RULE
+        detail = _detail(self._workflow(
+            ("asks", {"asks": [{"quote": "q", "kind": "value"}]}),
+            ("sources", {"lookup": "grounding", "findings": [{"quotes": [
+                {"status": "found", "text": long[:600], "whole": long,
+                 "url": "u"}]}]}),
+            ("implement", {"summary": "a", "results": [
+                {"ask": 1, "value": 10, "unit": "hours"}]}),
+            ("recompute_vote", {"flagged": False, "checked": True})))
+        assert detail.cautions == []
+        assert detail.confirmations == [
+            "The figures this answer gives for ask 1 stand in a passage "
+            "found on its page."]
 
     def test_a_checked_answer_with_found_quotes_has_none(self):
         """Break-proof: the cautions are not boilerplate on every answer."""

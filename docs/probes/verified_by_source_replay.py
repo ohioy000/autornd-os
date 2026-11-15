@@ -7,6 +7,11 @@ every completed run it rebuilds the delivery's vote, cautions and
 confirmations from the stored rows with this tree's code, and prints the
 cautions an answer carried before (rebuilt with no ask backed) and now,
 the asks backed by a found passage, and any vote overruled.
+
+It runs on the tree up to 10c39f4. The helpers it calls were replaced on
+2026-11-15, when the cautions were rebuilt around the text handed on and
+the rule that took a found passage over the vote was removed; the replay
+for the tree since then is handed_on_text_replay.py.
 """
 from __future__ import annotations
 
