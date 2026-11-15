@@ -480,7 +480,7 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
                                            max_tokens=search_budget(risk))
             rendered = render_findings(findings) if findings else ""
             _record_lookup(grounding_lookup, blocking, findings or [], rendered)
-            if findings:
+            if rendered:
                 out += "\n\n" + rendered
         elif blocking and settings.model_search and deferred_gaps is not None:
             # The risk gate declined this lookup. Keep the gaps rather than
@@ -787,7 +787,7 @@ async def build_phase_context(
                                                max_tokens=search_budget(risk))
                 rendered = render_findings(findings) if findings else ""
                 _record_lookup(grounding_lookup, unknowns, findings or [], rendered)
-                if findings:
+                if rendered:
                     parts.append(rendered)
             elif unknowns and settings.model_search and deferred_gaps is not None:
                 # The risk gate declined. Defer, don't discard — the override

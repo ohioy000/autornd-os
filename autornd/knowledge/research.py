@@ -30,6 +30,7 @@ import asyncio
 import logging
 import re
 import unicodedata
+from urllib.parse import urlsplit
 from dataclasses import dataclass, field
 
 from autornd.config import settings
@@ -101,6 +102,48 @@ def reset_dropped_quotes() -> None:
 # rerank sites, which latch their strategy off any exception: an abort would
 # permanently mark a working rerank API as unsupported. §6.8 records that exact
 # bug from the last time an exception type was caught too widely.
+
+# Sites that refused a fetch in this process, with the reason, so a later
+# lookup can be told to quote from somewhere else (settings.
+# lookup_avoid_unreadable). A refusal is the site's answer to us, not to the
+# page: "HTTP 403" or a challenge page. A missing page ("HTTP 404") says
+# nothing about the site. A page read from the site takes it off the list.
+_unreadable_sites: dict[str, str] = {}
+_REFUSALS = ("HTTP 401", "HTTP 403", "HTTP 429", "HTTP 451")
+
+
+def unreadable_sites() -> dict[str, str]:
+    """The sites that refused a fetch in this process, with the reason."""
+    return dict(_unreadable_sites)
+
+
+def reset_unreadable_sites() -> None:
+    _unreadable_sites.clear()
+
+
+def _site(url: str) -> str:
+    host = (urlsplit(url).hostname or "").lower()
+    return host[4:] if host.startswith("www.") else host
+
+
+def _note_fetch(url: str, source) -> None:
+    site = _site(url)
+    if not site:
+        return
+    if source.fetched:
+        _unreadable_sites.pop(site, None)
+    elif source.reason in _REFUSALS or "challenge page" in source.reason:
+        _unreadable_sites[site] = source.reason
+
+
+# Added to a lookup when sites are known to refuse us.
+AVOID_PROMPT = """\
+
+
+These sites refuse to be read from here, so a passage quoted from them cannot
+be checked: {sites}. Quote from none of them. Find the same passage on a site
+that can be read, and give that page's address."""
+
 
 __all__ = ["Finding", "Quote", "quote_found", "research_gaps",
            "source_records"]
@@ -340,6 +383,8 @@ class Finding:
     asked: list[str] = field(default_factory=list)
     quotes: list[Quote] = field(default_factory=list)
     round: int = 1
+    # settings.lookup_withhold_unverified: kept in the record, not rendered.
+    withheld: bool = False
 
     @property
     def grounded(self) -> bool:
@@ -457,6 +502,11 @@ async def research_gaps(
                 findings.append(second)
                 _remember(second)
 
+    if settings.lookup_withhold_unverified:
+        for finding in findings:
+            # Nothing it quoted was found on a page: the answer is the search
+            # model's word alone. Recalled findings were found when stored.
+            finding.withheld = not finding.recalled and not finding.checked()
     if findings:
         checked = sum(len(f.checked()) for f in findings)
         unchecked = sum(len(f.unchecked()) for f in findings)
@@ -507,6 +557,8 @@ async def _check(finding: Finding) -> None:
     urls = list(dict.fromkeys(q.url for q in finding.quotes
                               if q.status != "too_short"))[:MAX_FETCHES]
     sources = dict(zip(urls, await asyncio.gather(*(fetch_source(u) for u in urls))))
+    for url, source in sources.items():
+        _note_fetch(url, source)
     for quote in finding.quotes:
         if quote.status == "too_short":
             continue
@@ -613,6 +665,7 @@ async def _lookup(client, request: str, question: str,
             f"cite them. You never present a guess as a specification."
         ),
         user_message=LOOKUP_PROMPT.format(question=question, **framing())
+        + _avoid_clause()
         + f"\n\nThis is being looked up in service of: {request}",
         temperature=0.0,
         max_tokens=max_tokens or settings.search_max_tokens,
@@ -640,6 +693,12 @@ async def _lookup(client, request: str, question: str,
         response.model,
         verdict.quotes,
     )
+
+
+def _avoid_clause() -> str:
+    if not settings.lookup_avoid_unreadable or not _unreadable_sites:
+        return ""
+    return AVOID_PROMPT.format(sites=", ".join(sorted(_unreadable_sites)))
 
 
 def _valid_quotes(raw: object) -> list[QuotedPassage]:
@@ -684,6 +743,7 @@ def source_records(findings: list[Finding]) -> list[dict]:
         "round": f.round,
         "recalled": f.recalled,
         "unverified_questions": f.unchecked(),
+        "withheld": f.withheld,
         "citations": list(f.citations),
         "quotes": [{
             "question": q.question,
@@ -732,6 +792,7 @@ def _remember(finding: Finding) -> None:
 
 def render_findings(findings: list[Finding]) -> str:
     """Findings as prompt context, with their provenance attached."""
+    findings = [f for f in findings if not f.withheld]
     if not findings:
         return ""
     body = "\n\n".join(f.render() for f in findings)

@@ -104,9 +104,11 @@ def _offline(monkeypatch):
     monkeypatch.setattr(config.settings, "model_search", "vendor/search")
     research.reset_untyped_replies()
     research.reset_dropped_quotes()
+    research.reset_unreadable_sites()
     yield
     research.reset_untyped_replies()
     research.reset_dropped_quotes()
+    research.reset_unreadable_sites()
 
 
 def _reply(answer: str = "25 mW e.r.p.", quotes=(), citations=(PAGE,)) -> ModelResponse:
@@ -626,6 +628,99 @@ class TestAModelsOwnMarksAreNotWordsOfThePassage:
     def test_a_star_the_page_itself_prints_still_matches(self):
         assert quote_found("the limit is 25 mW* in this band at all times",
                            "Note: the limit is 25 mW* in this band at all times.")
+
+
+REFUSING = "https://www.refusing.example.gov/rule/868"
+REFUSED = (403, {"content-type": "text/html"}, b"Forbidden")
+
+
+class TestASiteThatRefusesIsAvoided:
+    """Owner's direction of 2026-11-14. Measured the same day: 116 of 409
+    quotes were on one site that answers every fetch "HTTP 403"."""
+
+    async def _refused_once(self, monkeypatch):
+        monkeypatch.setattr(fetch, "_transport",
+                            _served({REFUSING: REFUSED, PAGE: _html()}))
+        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
+        await research_gaps(_client(_reply(quotes=[(1, PASSAGE, REFUSING)])),
+                            "a radio", ["The EU 868 MHz limit"])
+
+    async def test_a_refusal_is_remembered_by_site(self, monkeypatch):
+        await self._refused_once(monkeypatch)
+        assert research.unreadable_sites() == {"refusing.example.gov": "HTTP 403"}
+
+    async def test_a_missing_page_says_nothing_about_its_site(self, monkeypatch):
+        """Break-proof: only a refusal marks a site, not any failed fetch."""
+        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
+        await research_gaps(_client(_reply(quotes=[(1, PASSAGE, OTHER)])),
+                            "a radio", ["The EU 868 MHz limit"])
+        assert research.unreadable_sites() == {}
+
+    async def test_a_page_read_from_the_site_takes_it_off_the_list(self, monkeypatch):
+        await self._refused_once(monkeypatch)
+        monkeypatch.setattr(fetch, "_transport", _served({REFUSING: _html()}))
+        await research_gaps(_client(_reply(quotes=[(1, PASSAGE, REFUSING)])),
+                            "a radio", ["The EU 868 MHz limit"])
+        assert research.unreadable_sites() == {}
+
+    async def test_the_next_lookup_is_told_to_quote_from_elsewhere(self, monkeypatch):
+        monkeypatch.setattr(config.settings, "lookup_avoid_unreadable", True)
+        monkeypatch.setattr(fetch, "_transport",
+                            _served({REFUSING: REFUSED, PAGE: _html()}))
+        client = _client(_reply(quotes=[(1, PASSAGE, REFUSING)]),
+                         _reply(quotes=[(1, PASSAGE, PAGE)]))
+        first, second = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
+        asked_first, asked_again = (c.kwargs["user_message"]
+                                    for c in client.chat.await_args_list)
+        assert "refuse to be read" not in asked_first
+        assert ("cannot\nbe checked: refusing.example.gov. Quote from none of them."
+                in asked_again)
+        assert first.unchecked() == [1] and second.checked() == {1}
+
+    async def test_switched_off_no_lookup_is_told_anything(self, monkeypatch):
+        """Break-proof: the clause is the switch's, and the switch ships off."""
+        assert config.settings.lookup_avoid_unreadable is False
+        monkeypatch.setattr(fetch, "_transport",
+                            _served({REFUSING: REFUSED, PAGE: _html()}))
+        client = _client(_reply(quotes=[(1, PASSAGE, REFUSING)]),
+                         _reply(quotes=[(1, PASSAGE, PAGE)]))
+        await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
+        assert research.unreadable_sites() == {"refusing.example.gov": "HTTP 403"}
+        assert all("refuse to be read" not in c.kwargs["user_message"]
+                   for c in client.chat.await_args_list)
+
+
+class TestAnAnswerNothingBacksIsWithheld:
+    async def _lookup(self, monkeypatch, quotes):
+        monkeypatch.setattr(fetch, "_transport",
+                            _served({REFUSING: REFUSED, PAGE: _html()}))
+        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
+        return await research_gaps(_client(_reply(quotes=quotes)), "a radio",
+                                   ["The EU 868 MHz limit"])
+
+    async def test_no_passage_found_keeps_it_from_the_phases_and_in_the_record(
+            self, monkeypatch):
+        monkeypatch.setattr(config.settings, "lookup_withhold_unverified", True)
+        findings = await self._lookup(monkeypatch, [(1, PASSAGE, REFUSING)])
+        assert [f.withheld for f in findings] == [True]
+        assert render_findings(findings) == ""
+        record, = research.source_records(findings)
+        assert record["withheld"] is True
+        assert record["quotes"][0]["status"] == "unfetched"
+
+    async def test_a_passage_found_on_its_page_is_shown(self, monkeypatch):
+        """Break-proof: only an answer nothing backs is withheld."""
+        monkeypatch.setattr(config.settings, "lookup_withhold_unverified", True)
+        findings = await self._lookup(monkeypatch, [(1, PASSAGE, PAGE)])
+        assert [f.withheld for f in findings] == [False]
+        assert "25 mW e.r.p." in render_findings(findings)
+
+    async def test_switched_off_an_unverified_answer_is_shown_as_before(
+            self, monkeypatch):
+        assert config.settings.lookup_withhold_unverified is False
+        findings = await self._lookup(monkeypatch, [(1, PASSAGE, REFUSING)])
+        assert [f.withheld for f in findings] == [False]
+        assert "treat this answer as unverified" in render_findings(findings)
 
 
 class TestWhatTheFetchCanRead:
