@@ -38,7 +38,9 @@ Update this section whenever the queue changes. As of 2026-11-14:
 - **Tested 2026-11-14:** a typed list of search queries filled by the scoping call, as published TypeScript research tools do it, found the passage in 8 of 10 runs against 4 of 10 and met both bars (`docs/reviews/2026-11-14-typed-queries.md`). Not built. About '$2.89' of the owner's '$7' is spent.
 - **Swept 2026-11-14:** on five vague and four clear requests the typed queries showed no gain (vague 9 of 10 in both arms; clear 6 of 8 against 8 of 8), and all 8 full answers to the owner's request were right in both arms (`docs/reviews/2026-11-14-typed-queries-sweep.md`). Not recommended as a replacement. The quote check now drops a model's emphasis stars and heading hashes. About '$3.41' of the owner's '$7' is spent.
 - **Built 2026-11-14, switched off:** `lookup_avoid_unreadable` (a site that refuses twice, and was never read, is named to later lookups) and `lookup_withhold_unverified` (a lookup answer with no found passage stays in the record and out of the phases). The 88-answer sweep (`docs/reviews/2026-11-14-readable-sources-sweep.md`): unread quotes 9 of 73 down to 3 of 64, rule questions unharmed, the inspection-authorization request neither fixed nor harmed. Across 28 answers to it, all 5 wrong ones lacked the sentence in their lookup and all 11 that had it were right. About '$4.85' of the owner's '$7' is spent.
-- **Next, the owner's rulings:** switch `lookup_avoid_unreadable` on (the architect would); test the narrow typed queries on the inspection-authorization request (about '$0.50'); whether a quote broken by a row of dots may be checked piece by piece (D56 (3)).
+- **Live since 2026-11-15, the owner's word:** `lookup_avoid_unreadable`. `lookup_withhold_unverified` stays off.
+- **Dropped 2026-11-15, the owner's word:** more work on vague requests. Professional questions name their rule; the record holds one vague request.
+- **Next:** the architect proposes the next core problem on clear, professional-style questions. Still open for the owner: whether a quote broken by a row of dots may be checked piece by piece (D56 (3)).
 
 ## How the work moves
 
