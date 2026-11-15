@@ -27,7 +27,7 @@ Read this first, every time you start as the architect of AutoRnD-OS. It is all 
 
 Update this section whenever the queue changes. As of 2026-11-14:
 
-- **Read first:** `docs/carryover-2026-11-14.md`, the summary of #232 to #250 and the open work.
+- **Read first:** `docs/carryover-2026-11-15.md`: what #251 to #268 found, what is live and what is switched off, and the four-step plan the owner approved on 2026-11-15. `docs/carryover-2026-11-14.md` covers #232 to #250.
 - **Done:** `same_meaning` and `quote_answers` are live as labels (#249), and the alive check saw both act on a real run with 0 mismatches (`docs/reviews/2026-11-14-switches-alive.md`). About '$1.82' of the owner's '$7' is spent.
 - **In shadow:** the claim check, the owner's choice of 2026-11-14 for errors in an answer's prose. It lives in `workflows/answer-and-recompute-claims.yaml`, for measurement only; the default workflow and the delivery are unchanged. Two runs: the second left no false flag but did not test the error it is for, and the blind samples were wrong together three times (`docs/reviews/2026-11-14-claims-shadow-2.md`). About '$2.09' of the owner's '$7' is spent.
 - **Live since 2026-11-14:** a recompute sample that is one bare result is read by the vote.
@@ -47,7 +47,7 @@ Update this section whenever the queue changes. As of 2026-11-14:
 - **Its first run, 2026-11-15:** 47 of 51 right, 1 partly, 3 wrong, all three on H1, where the regulator's own outdated page and two sister rules were found word for word and said 9 hours against the rule's 10 (`docs/reviews/2026-11-15-professional-hard-run.md`). No "verified" line stood beside a wrong figure, by a narrow margin. About '$6.17' of the owner's '$7' is spent.
 - **The root, tested 2026-11-15:** what text reaches the answer step. With the governing section fetched by the harness and handed on in its own words, 8 of 8 answers were right on the two questions that had gone wrong 8 times; handing on the text of the pages the search cited fixed the flight-attendant question (4 of 4) and not the inspection-authorization request (2 of 4), where the search never cited the section (`docs/reviews/2026-11-15-root-cause.md`). About '$6.50' of the owner's '$7' is spent.
 - **Built 2026-11-15, switched off:** `lookup_reads_documents`. The search model is asked where the answer is written; the harness fetches those pages and hands on stretches of their own text. Compared on both frozen professional sets and the inspection-authorization request (`docs/reviews/2026-11-15-lookup-reads-documents.md`): 107 of 107 and 7 of 8 right, never worse than the lookup as it is (62 of 64, 6 of 8), 18 percent cheaper, 97 percent of its quotes found against 66; but no harder-set answer came without a caution. About '$8.96' is spent, '$1.96' beyond the first '$7', on the owner's word.
-- **Next, the owner's word:** rebuild the delivery's cautions around the handed-on text, then make the new lookup the default; then the finding half (refusing sites, a second request for documents); and a set of questions where a summary misleads, to separate the two lookups.
+- **Next, approved by the owner 2026-11-15, in order:** (1) rebuild the delivery's cautions around the handed-on text, absorbing the four small remedies; (2) switch `lookup_reads_documents` on by default; (3) finish the finding half; (4) a set of questions where a summary misleads and a run of both lookups on it, '$3' approved, keys signed off first. The steps are set out in the carryover.
 
 ## How the work moves
 
