@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import re
 import unicodedata
 from urllib.parse import urlsplit
@@ -236,6 +237,43 @@ Reply with JSON only:
   there is one>, "text": "<the passage, exactly as the page prints it>",
   "url": "<the page's address>"}}]}}
 """
+
+# settings.lookup_reads_documents: the search model is asked where the answer
+# is written, not what it is. The harness reads the pages itself.
+DOCUMENTS_PROMPT = """\
+Find the documents in which the answer to the request below is written. Do
+not answer the request.
+
+Request:
+{request}
+
+What the work needs settled:
+{question}
+
+Rules:
+- Give the page of the rule, standard, specification or published document
+  itself, in its current edition, ahead of any page that describes or
+  summarises it.
+- Give the most specific page there is: the section, not the whole part.
+- Give only addresses that can be read as HTML, plain text or PDF.
+- For each document, give a few words that stand in it right where the answer
+  is, copied as the document prints them.
+
+Reply with JSON only, at most {limit} documents, the best first:
+{{"documents": [{{"url": "<the page's address>", "title": "<what it is>",
+  "near": "<a few words from the passage that holds the answer>"}}]}}
+"""
+
+# How much of the fetched pages is handed on. A page this short is handed on
+# whole; of a longer one, the stretches that share most words with the
+# request and with the search model's own pointer. Set on the root-cause test
+# of 2026-11-15, where 2,500 characters a page chosen by shared words was
+# enough on one question and, with no pointer, missed on a misspelt one.
+DOCUMENT_WHOLE_CHARS = 4000
+DOCUMENT_EXCERPT_CHARS = 1200
+DOCUMENT_EXCERPTS = 3
+MAX_DOCUMENTS = 6
+_TERM = re.compile(r"[a-z0-9]{3,}")
 
 # Ruling D56 (4): the second round's question, ahead of the questions asked
 # again.
@@ -515,12 +553,17 @@ async def research_gaps(
         if reused is not None:
             findings.append(reused)
             continue
-        finding = await _ask(client, request, asked, max_tokens)
+        if settings.lookup_reads_documents:
+            finding = await _ask_documents(client, request, asked, max_tokens)
+        else:
+            finding = await _ask(client, request, asked, max_tokens)
         if finding is None:
             continue
         findings.append(finding)
         _remember(finding)   # recalled findings skip this: already stored
-        again = finding.to_ask_again()
+        # A lookup that read the documents itself has nothing to ask again:
+        # its quotes are the pages' words, and a page not read stays unread.
+        again = [] if settings.lookup_reads_documents else finding.to_ask_again()
         if again and MAX_ROUNDS > 1:
             second = await _ask(client, request, again, max_tokens, round_=2)
             if second is not None:
@@ -572,6 +615,100 @@ async def _ask(client, request: str, asked: list[str], max_tokens: int | None,
                       quotes=[Quote(q.question, q.text, q.url) for q in quotes])
     await _check(finding)
     return finding
+
+
+def _excerpts(text: str, terms: set[str]) -> list[str]:
+    """The stretches of a page to hand on, each in the page's own words."""
+    if len(text) <= DOCUMENT_WHOLE_CHARS:
+        return [text.strip()] if text.strip() else []
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    words = [set(_TERM.findall(line.casefold())) for line in lines]
+    # A word on every line of the page tells one line from another by
+    # nothing; a word on few lines tells much. The search model's pointer
+    # words are among the terms, so a request that shares no word with the
+    # passage still finds it.
+    weight = {term: math.log(len(lines) / sum(term in w for w in words))
+              for term in terms if any(term in w for w in words)}
+    scores = [sum(weight.get(term, 0.0) for term in w) for w in words]
+    windows = []
+    for start in range(len(lines)):
+        size, end = 0, start
+        while end < len(lines) and size + len(lines[end]) <= DOCUMENT_EXCERPT_CHARS:
+            size += len(lines[end]) + 1
+            end += 1
+        if end > start:
+            windows.append((sum(scores[start:end]), start, end))
+    chosen: list[tuple[int, int]] = []
+    for score, start, end in sorted(windows, key=lambda w: (-w[0], w[1])):
+        if score <= 0 or len(chosen) >= DOCUMENT_EXCERPTS:
+            break
+        if all(end <= a or start >= b for a, b in chosen):
+            chosen.append((start, end))
+    return ["\n".join(lines[a:b]) for a, b in sorted(chosen)]
+
+
+async def _ask_documents(client, request: str, asked: list[str],
+                         max_tokens: int | None) -> Finding | None:
+    """One lookup that reads the documents itself (lookup_reads_documents).
+
+    The search model names where the answer is written; the harness fetches
+    those pages and the finding carries stretches of their own text as its
+    quotes. No model's summary is handed on, so a quote is the page's words
+    by construction, and each is still put through the same check.
+    """
+    question = _bundle(asked)
+    try:
+        response = await client.chat(
+            function="search",
+            system_prompt=("You find the primary sources a question is "
+                           "answered in. You do not answer from memory."),
+            user_message=DOCUMENTS_PROMPT.format(
+                request=request, question=question, limit=MAX_DOCUMENTS)
+            + _avoid_clause(),
+            temperature=0.0,
+            max_tokens=max_tokens or settings.search_max_tokens,
+        )
+    except BudgetExceeded:
+        raise
+    except Exception as exc:
+        global _refused_lookups
+        _refused_lookups += 1
+        logger.warning("Document lookup failed for %r: %s", question[:60], exc)
+        return None
+    near: dict[str, str] = {}
+    try:
+        data = extract_json((response.content or "").strip())
+        for item in (data.get("documents") or []) if isinstance(data, dict) else []:
+            if isinstance(item, dict) and str(item.get("url") or "").startswith("http"):
+                near.setdefault(str(item["url"]).strip(), str(item.get("near") or ""))
+    except ValueError as exc:
+        logger.warning("Document lookup reply is not the typed format (%s); "
+                       "its citations are used", exc)
+    for url in getattr(response, "citations", None) or []:
+        near.setdefault(str(url), "")
+    urls = [u for u in near
+            if not (settings.lookup_avoid_unreadable
+                    and _site(u) in _unreadable_sites)][:MAX_DOCUMENTS]
+    if not urls:
+        return None
+    pages = await asyncio.gather(*(fetch_source(u) for u in urls))
+    terms = set(_TERM.findall(" ".join([request, question, *near.values()]).casefold()))
+    quotes: list[Quote] = []
+    for url, page in zip(urls, pages):
+        _note_fetch(url, page)
+        if not page.fetched:
+            quotes.append(Quote(1, near[url] or url, url, status="unfetched",
+                                reason=page.reason))
+            continue
+        for text in _excerpts(page.text, terms):
+            quotes.append(Quote(
+                1, text, url, fetched_at=page.fetched_at, sha256=page.sha256,
+                status="found" if quote_found(text, page.text) else "not_found"))
+    return Finding(
+        question=question, citations=urls, model=response.model,
+        asked=[question], quotes=quotes,
+        answer=("No summary was made. The passages below are the pages' own "
+                "words, fetched by the harness; read the answer from them."))
 
 
 async def _check(finding: Finding) -> None:
