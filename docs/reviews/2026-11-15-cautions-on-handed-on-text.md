@@ -125,3 +125,19 @@ excerpt from now on, so fewer of the 41 will fire.
    only when the answer's figure is also on no page?
 3. **Step 3 carries the weight for wrong answers.** Preferring the rule's own current text is
    what would have helped runs 1 and 2.
+
+## Added the same day: the vote's "compared nothing" caution
+
+The owner ruled on point 2 above: yes, if the architect believes it is the best way. The
+architect does. The caution now stands only beside an answer nothing else checked: no passage
+was found on any page, or a figure of the answer is on no page read.
+
+| On the 283 recorded answers | Before the ruling | After |
+|---|---|---|
+| "The vote compared nothing" | 71 | 16 |
+| All cautions | 203 | 148 |
+| Harder set, reads the documents: answers with no caution | 30 of 62 | 39 of 62 |
+
+**What it costs, said plainly:** the one wrong inspection-authorization answer with the new
+lookup carried only this caution, and now carries none. It was a caution about a vote, on an
+answer in words that the vote could not have compared. It did not point at the mistake.

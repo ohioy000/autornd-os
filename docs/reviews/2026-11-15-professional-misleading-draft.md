@@ -6,6 +6,9 @@ status says draft.
 
 File: `evals/professional/misleading-questions.json`, version professional-misleading-1.
 
+**Signed by the owner on 2026-11-15, all 12 keys; the set is approved and frozen. The owner chose
+run C. The run is preregistered in `docs/preregistration-20261115-misleading-set-run.md`.**
+
 ## The point
 
 - **12 questions,** each chosen because the common answer is a figure that is still printed on
