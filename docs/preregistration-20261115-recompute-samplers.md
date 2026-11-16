@@ -89,3 +89,32 @@ For each model, over the 39 answers:
   misleads, which is where a different maker should matter most; H1 is the one question here
   that looks at that.
 - **Unpinned providers** may serve a model at different precision from call to call.
+
+## Addendum, 2026-11-15: a fifth model, on the owner's word
+
+Written and pushed before any spend on it, while the run above was under way and after a first
+look at 11 of its 39 answers. That look is said here because it prompted the addendum: the
+configured model and one other returned every sample in the shape the harness reads; the two
+others returned most of theirs under another key, so the vote could compare little.
+
+- **The owner's hypotheses, stated before the results:** first, that the document-work model of
+  the shortlist would do best because it is built for this; then, on the first look, that the
+  small model of a frontier lab is the best small model and should be tested.
+- **What is added:** a second batch of the same probe with one other model, named in
+  `SAMPLER_MODELS` and recorded in its header: the same 13 questions, three answers each, 39
+  answers. Each has the configured model's samples and the fifth model's, on the same request,
+  context and asks. It is paired with the configured model, which is in both batches, and not
+  with the other three.
+- **It is the small model of a frontier lab.** The shortlist left such models to the owner; the
+  owner has now asked for it. The mission is non-frontier models, and whether this one counts is
+  the owner's to say.
+- **It runs after the first batch ends,** so no more than five processes fetch pages at once.
+- **Cost:** about '$0.60' expected: an answer as shipped and one more set of samples. Stops of
+  '$0.32' on each of two processes, '$0.64' in all. With the first batch that is '$1.62' for the
+  sampler test.
+- **The probe now keeps the context each unit's samples were shown,** so a model added after
+  this can be tested on the same units for the cost of its samples alone.
+- **One free reading is added for every model:** the recorded samples voted again by a reader
+  that takes the values whatever key they sit under. It separates a model that does not know
+  the figure from one that does not follow the reply's shape. The bars above are read on the
+  harness as it is; this reading is reported beside them.
