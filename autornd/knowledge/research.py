@@ -264,6 +264,26 @@ Reply with JSON only, at most {limit} documents, the best first:
   "near": "<a few words from the passage that holds the answer>"}}]}}
 """
 
+# Added to the request for documents when sites are known to refuse us.
+DOCUMENTS_AVOID_PROMPT = """\
+
+
+These sites refuse to be read from here: {sites}. Give no address on them.
+Where a document is on one of them, give the same document on a site that
+can be read."""
+
+# settings.lookup_documents_ask_again: the second request for documents,
+# added to the first one's text. Asked once.
+DOCUMENTS_AGAIN_PROMPT = """\
+
+
+These addresses were tried already and did not serve:
+{tried}
+Give other documents, and none of the addresses above. Where a page could not
+be read, give the same document on a site that can be read. Where a page was
+read and does not hold the words pointed at, give the section that does hold
+the answer."""
+
 # How much of the fetched pages is handed on. A page this short is handed on
 # whole; of a longer one, the stretches that share most words with the
 # request and with the search model's own pointer. Set on the root-cause test
@@ -273,6 +293,9 @@ DOCUMENT_WHOLE_CHARS = 4000
 DOCUMENT_EXCERPT_CHARS = 1200
 DOCUMENT_EXCERPTS = 3
 MAX_DOCUMENTS = 6
+# The shortest pointer looked for on a page. Shorter ones ("the limit") are
+# on most pages and tell nothing; the same floor as a quote's.
+MIN_POINTER_CHARS = MIN_QUOTE_CHARS
 _TERM = re.compile(r"[a-z0-9]{3,}")
 
 # Ruling D56 (4): the second round's question, ahead of the questions asked
@@ -450,6 +473,11 @@ class Finding:
     round: int = 1
     # settings.lookup_withhold_unverified: kept in the record, not rendered.
     withheld: bool = False
+    # settings.lookup_reads_documents: each document the search model named,
+    # in the order tried: its address, the words it pointed at, whether the
+    # page was read, whether those words are on it (None when it gave none),
+    # and the request that named it (1, or 2 for the second).
+    documents: list[dict] = field(default_factory=list)
 
     @property
     def grounded(self) -> bool:
@@ -649,16 +677,50 @@ def _excerpts(text: str, terms: set[str]) -> list[str]:
     return ["\n".join(lines[a:b]) for a, b in sorted(chosen)]
 
 
-async def _ask_documents(client, request: str, asked: list[str],
-                         max_tokens: int | None) -> Finding | None:
-    """One lookup that reads the documents itself (lookup_reads_documents).
+def _holds_pointer(near: str, text: str) -> bool | None:
+    """Are the words the search model pointed at on this page?
 
-    The search model names where the answer is written; the harness fetches
-    those pages and the finding carries stretches of their own text as its
-    quotes. No model's summary is handed on, so a quote is the page's words
-    by construction, and each is still put through the same check.
+    None when it pointed at nothing long enough to look for. Read as the
+    quote check reads a quote, so spacing, case and a model's own marks
+    change nothing.
     """
-    question = _bundle(asked)
+    pointer = _passage(_unmarked(near))
+    if len(pointer) < MIN_POINTER_CHARS:
+        return None
+    return pointer in _normalise(text)
+
+
+def _missed(documents: list[dict]) -> bool:
+    """Did this request for documents bring nothing to read the answer from?
+
+    Either no page could be read, or pointers were given and no page that
+    was read holds its own. The comparison of 2026-11-15 had one wrong
+    answer with this lookup, and it was the one run where the search named
+    two sections beside the governing one; 87 of its quotes were on pages
+    that could not be read.
+    """
+    read = [d for d in documents if d["read"]]
+    if not read:
+        return True
+    pointed = [d["holds_pointer"] for d in read if d["holds_pointer"] is not None]
+    return bool(pointed) and not any(pointed)
+
+
+def _tried(documents: list[dict]) -> str:
+    return "\n".join(
+        f"- {d['url']}: " + ("read, and the words pointed at are not on it"
+                             if d["read"] and d["holds_pointer"] is False
+                             else "read" if d["read"]
+                             else f"could not be read ({d['reason']})")
+        for d in documents)
+
+
+async def _name_documents(client, request: str, question: str,
+                          max_tokens: int | None, tried: list[dict] | None = None,
+                          ) -> tuple[object, dict[str, str]] | None:
+    """Ask the search model where the answer is written: its reply, and each
+    address with the words it pointed at."""
+    again = (DOCUMENTS_AGAIN_PROMPT.format(tried=_tried(tried)) if tried else "")
     try:
         response = await client.chat(
             function="search",
@@ -666,7 +728,7 @@ async def _ask_documents(client, request: str, asked: list[str],
                            "answered in. You do not answer from memory."),
             user_message=DOCUMENTS_PROMPT.format(
                 request=request, question=question, limit=MAX_DOCUMENTS)
-            + _avoid_clause(),
+            + _avoid_clause(DOCUMENTS_AVOID_PROMPT) + again,
             temperature=0.0,
             max_tokens=max_tokens or settings.search_max_tokens,
         )
@@ -688,16 +750,26 @@ async def _ask_documents(client, request: str, asked: list[str],
                        "its citations are used", exc)
     for url in getattr(response, "citations", None) or []:
         near.setdefault(str(url), "")
-    urls = [u for u in near
-            if not (settings.lookup_avoid_unreadable
-                    and _site(u) in _unreadable_sites)][:MAX_DOCUMENTS]
-    if not urls:
-        return None
+    return response, near
+
+
+async def _read_documents(near: dict[str, str], terms: set[str], round_: int,
+                          skip: set[str]) -> tuple[list[Quote], list[dict]]:
+    """Fetch the documents named and take the stretches to hand on."""
+    urls = [u for u in near if u not in skip
+            and not (settings.lookup_avoid_unreadable
+                     and _site(u) in _unreadable_sites)][:MAX_DOCUMENTS]
     pages = await asyncio.gather(*(fetch_source(u) for u in urls))
-    terms = set(_TERM.findall(" ".join([request, question, *near.values()]).casefold()))
     quotes: list[Quote] = []
+    documents: list[dict] = []
     for url, page in zip(urls, pages):
         _note_fetch(url, page)
+        documents.append({
+            "url": url, "near": near[url], "read": bool(page.fetched),
+            "reason": "" if page.fetched else page.reason,
+            "holds_pointer": (_holds_pointer(near[url], page.text)
+                              if page.fetched else None),
+            "request": round_})
         if not page.fetched:
             quotes.append(Quote(1, near[url] or url, url, status="unfetched",
                                 reason=page.reason))
@@ -706,11 +778,52 @@ async def _ask_documents(client, request: str, asked: list[str],
             quotes.append(Quote(
                 1, text, url, fetched_at=page.fetched_at, sha256=page.sha256,
                 status="found" if quote_found(text, page.text) else "not_found"))
+    return quotes, documents
+
+
+async def _ask_documents(client, request: str, asked: list[str],
+                         max_tokens: int | None) -> Finding | None:
+    """One lookup that reads the documents itself (lookup_reads_documents).
+
+    The search model names where the answer is written; the harness fetches
+    those pages and the finding carries stretches of their own text as its
+    quotes. No model's summary is handed on, so a quote is the page's words
+    by construction, and each is still put through the same check.
+
+    With lookup_documents_ask_again on, a request that brought nothing to
+    read the answer from (`_missed`) is made once more, told which addresses
+    were tried and what became of each.
+    """
+    question = _bundle(asked)
+    named = await _name_documents(client, request, question, max_tokens)
+    if named is None:
+        return None
+    response, near = named
+    pointers = dict(near)
+    quotes, documents = await _read_documents(
+        near, _terms(request, question, near), 1, set())
+    if not documents:
+        return None
+    if settings.lookup_documents_ask_again and _missed(documents):
+        again = await _name_documents(client, request, question, max_tokens,
+                                      tried=documents)
+        if again is not None:
+            pointers.update(again[1])
+            more, tried_again = await _read_documents(
+                again[1], _terms(request, question, pointers), 2,
+                {d["url"] for d in documents})
+            quotes += more
+            documents += tried_again
     return Finding(
-        question=question, citations=urls, model=response.model,
-        asked=[question], quotes=quotes,
+        question=question, citations=[d["url"] for d in documents],
+        model=response.model, asked=[question], quotes=quotes,
+        documents=documents,
         answer=("No summary was made. The passages below are the pages' own "
                 "words, fetched by the harness; read the answer from them."))
+
+
+def _terms(request: str, question: str, near: dict[str, str]) -> set[str]:
+    return set(_TERM.findall(" ".join([request, question, *near.values()]).casefold()))
 
 
 async def _check(finding: Finding) -> None:
@@ -859,10 +972,10 @@ async def _lookup(client, request: str, question: str,
     )
 
 
-def _avoid_clause() -> str:
+def _avoid_clause(prompt: str = AVOID_PROMPT) -> str:
     if not settings.lookup_avoid_unreadable or not _unreadable_sites:
         return ""
-    return AVOID_PROMPT.format(sites=", ".join(sorted(_unreadable_sites)))
+    return prompt.format(sites=", ".join(sorted(_unreadable_sites)))
 
 
 def _valid_quotes(raw: object) -> list[QuotedPassage]:
@@ -909,6 +1022,9 @@ def source_records(findings: list[Finding]) -> list[dict]:
         "unverified_questions": f.unchecked(),
         "withheld": f.withheld,
         "citations": list(f.citations),
+        # Only a lookup that read the documents has these; a record without
+        # the key is one that asked for an answer.
+        **({"documents": [dict(d) for d in f.documents]} if f.documents else {}),
         "quotes": [{
             "question": q.question,
             # The words of the question this quote was given for. A bundled

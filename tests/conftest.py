@@ -77,6 +77,7 @@ PLACEHOLDERS: dict[str, str] = {
     # round and its record drive it. The tests of the lookup that reads the
     # documents switch it on themselves.
     "LOOKUP_READS_DOCUMENTS": "false",
+    "LOOKUP_DOCUMENTS_ASK_AGAIN": "false",
     "ESCALATION_RECOVERY_ATTEMPTS": "3",
     "RUN_TIME_BUDGET_SECONDS": "1800",
     "RUN_SPEND_CEILING_USD": "0.50",

@@ -93,7 +93,7 @@ SITE_FUNCTIONS = frozenset({
     "run_domain_review", "run_implement", "run_recompute", "run_validate",
     "run_review", "run_doublecheck", "run_escalation_autopsy",
     "expand_queries", "rerank_chunks", "synthesize_briefing",
-    "analyze_request", "_lookup", "_ask_documents",
+    "analyze_request", "_lookup", "_name_documents",
 })
 
 # The specialist each seat is given. ENGINEERING_SEATS are the ones the golden

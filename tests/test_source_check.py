@@ -882,6 +882,148 @@ class TestTheLookupReadsTheDocuments:
         assert "Do\nnot answer" not in client.chat.await_args.kwargs["user_message"]
 
 
+class TestTheDocumentsAreAskedForOnceMore:
+    """Owner's plan 2026-11-15, the finding half. The comparison's one wrong
+    answer with this lookup was the run where the search named two sections
+    beside the governing one, and 87 of its quotes were on pages that could
+    not be read. Built behind a setting that ships off until it is measured:
+    it is a second paid search call."""
+
+    POINTER = "The maximum radiated power in this band"
+
+    @pytest.fixture(autouse=True)
+    def _on(self, monkeypatch):
+        monkeypatch.setattr(config.settings, "lookup_reads_documents", True)
+        monkeypatch.setattr(config.settings, "lookup_documents_ask_again", True)
+
+    async def _lookup(self, monkeypatch, pages, *replies, seen=None):
+        monkeypatch.setattr(fetch, "_transport", _served(pages, seen))
+        client = _client(*replies)
+        findings = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
+        return client, findings
+
+    def test_it_ships_off(self):
+        assert config.Settings.model_fields[
+            "lookup_documents_ask_again"].default is False
+
+    async def test_switched_off_nothing_is_asked_again(self, monkeypatch):
+        """Break-proof: the second call is the setting's."""
+        monkeypatch.setattr(config.settings, "lookup_documents_ask_again", False)
+        client, _ = await self._lookup(
+            monkeypatch, {REFUSING: REFUSED}, _documents((REFUSING, self.POINTER)))
+        assert client.chat.await_count == 1
+
+    async def test_a_page_that_could_not_be_read_is_asked_for_elsewhere(
+            self, monkeypatch):
+        client, (finding,) = await self._lookup(
+            monkeypatch, {REFUSING: REFUSED, PAGE: _html()},
+            _documents((REFUSING, self.POINTER)), _documents((PAGE, self.POINTER)))
+        assert client.chat.await_count == 2
+        again = client.chat.await_args_list[1].kwargs["user_message"]
+        assert again.startswith(client.chat.await_args_list[0].kwargs["user_message"])
+        assert again.endswith(
+            "These addresses were tried already and did not serve:\n"
+            f"- {REFUSING}: could not be read (HTTP 403)\n"
+            "Give other documents, and none of the addresses above. Where a "
+            "page could not\nbe read, give the same document on a site that "
+            "can be read. Where a page was\nread and does not hold the words "
+            "pointed at, give the section that does hold\nthe answer.")
+        assert [q.status for q in finding.quotes] == ["unfetched", "found"]
+        assert finding.citations == [REFUSING, PAGE]
+        assert finding.documents == [
+            {"url": REFUSING, "near": self.POINTER, "read": False,
+             "reason": "HTTP 403", "holds_pointer": None, "request": 1},
+            {"url": PAGE, "near": self.POINTER, "read": True, "reason": "",
+             "holds_pointer": True, "request": 2}]
+
+    async def test_a_page_without_the_words_pointed_at_is_asked_past(
+            self, monkeypatch):
+        """The comparison's wrong answer: the pages named were read, and the
+        governing sentence was on none of them."""
+        client, (finding,) = await self._lookup(
+            monkeypatch, {OTHER: _text("A page about another section entirely, "
+                                       "with nothing on radiated power."),
+                          PAGE: _html()},
+            _documents((OTHER, self.POINTER)), _documents((PAGE, self.POINTER)))
+        assert client.chat.await_count == 2
+        assert (f"- {OTHER}: read, and the words pointed at are not on it\n"
+                in client.chat.await_args_list[1].kwargs["user_message"])
+        assert [d["holds_pointer"] for d in finding.documents] == [False, True]
+        assert any(quote_found(PASSAGE, q.text) for q in finding.quotes)
+
+    @pytest.mark.parametrize("pointer", [
+        # The words pointed at are on the page, marks and case aside.
+        "the **maximum radiated power** in this band",
+        # No pointer, or one too short to look for, says nothing either way.
+        "", "25 mW",
+    ])
+    async def test_a_page_read_is_not_asked_past_without_cause(
+            self, monkeypatch, pointer):
+        """Break-proof: the second call is paid, and is made only on a miss."""
+        client, (finding,) = await self._lookup(
+            monkeypatch, {PAGE: _html()}, _documents((PAGE, pointer)))
+        assert client.chat.await_count == 1
+        assert finding.documents[0]["holds_pointer"] is (True if "maximum" in pointer
+                                                         else None)
+
+    async def test_one_page_that_holds_its_pointer_is_enough(self, monkeypatch):
+        """Break-proof: a page beside it that was not read, and one that was
+        read and does not hold its pointer, do not make a miss."""
+        client, _ = await self._lookup(
+            monkeypatch, {REFUSING: REFUSED, PAGE: _html(),
+                          OTHER: _text("A page about another section entirely.")},
+            _documents((REFUSING, self.POINTER), (OTHER, self.POINTER),
+                       (PAGE, self.POINTER)))
+        assert client.chat.await_count == 1
+
+    async def test_there_is_no_third_request_and_no_page_is_fetched_twice(
+            self, monkeypatch):
+        seen: list[str] = []
+        client, (finding,) = await self._lookup(
+            monkeypatch, {OTHER: REFUSED},
+            _documents((OTHER, self.POINTER)), _documents((OTHER, self.POINTER)),
+            _documents((PAGE, self.POINTER)), seen=seen)
+        assert client.chat.await_count == 2
+        assert seen == [OTHER]
+        assert [d["request"] for d in finding.documents] == [1]
+
+    async def test_a_second_request_that_fails_leaves_the_first(self, monkeypatch):
+        client, (finding,) = await self._lookup(
+            monkeypatch, {REFUSING: REFUSED},
+            _documents((REFUSING, self.POINTER)), RuntimeError("provider down"))
+        assert [q.status for q in finding.quotes] == ["unfetched"]
+
+    async def test_the_record_carries_the_documents_and_only_for_this_lookup(
+            self, monkeypatch):
+        _, findings = await self._lookup(
+            monkeypatch, {PAGE: _html()}, _documents((PAGE, self.POINTER)))
+        record, = research.source_records(findings)
+        assert record["documents"] == [
+            {"url": PAGE, "near": self.POINTER, "read": True, "reason": "",
+             "holds_pointer": True, "request": 1}]
+        monkeypatch.setattr(config.settings, "lookup_reads_documents", False)
+        research.reset_unreadable_sites()
+        _, findings = await self._lookup(
+            monkeypatch, {PAGE: _html()}, _reply(quotes=[(1, PASSAGE, PAGE)]))
+        record, = research.source_records(findings)
+        assert "documents" not in record
+
+    async def test_a_site_listed_as_refusing_is_named_in_the_request(
+            self, monkeypatch):
+        """The words are the document request's own: it is asked for an
+        address, not for a quote."""
+        monkeypatch.setattr(config.settings, "lookup_documents_ask_again", False)
+        for _ in range(research.REFUSALS_TO_LIST):
+            await self._lookup(monkeypatch, {REFUSING: REFUSED},
+                               _documents((REFUSING, "")))
+        client, _ = await self._lookup(monkeypatch, {PAGE: _html()},
+                                       _documents((PAGE, "")))
+        assert client.chat.await_args.kwargs["user_message"].endswith(
+            "These sites refuse to be read from here: refusing.example.gov. "
+            "Give no address on them.\nWhere a document is on one of them, "
+            "give the same document on a site that\ncan be read.")
+
+
 class TestWhatTheFetchCanRead:
     async def test_a_pdf_is_read_through_its_text_layer(self, monkeypatch):
         monkeypatch.setattr(fetch, "_transport", _served({PAGE: _pdf(PASSAGE)}))
