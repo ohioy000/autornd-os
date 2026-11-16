@@ -13,8 +13,9 @@ Paid: it needs the owner's word and an amount before it is run.
 
 Two settings choose the questions and the workflows; unset, the run is the
 tier-2 run of 2026-11-13 exactly. MEASURE_SET is tier2, golden, tier4 or
-professional or professional-hard (evals/professional's frozen sets, with
-no screen: the answers are read against the keys);
+professional, professional-hard or professional-misleading
+(evals/professional's sets, with no screen: the answers are read against
+the keys; a set still in draft is refused);
 golden asks evals/golden's six questions and its side test, screened by the
 golden scorer and, where the question is also tier-2's, by tier-2's; tier4
 asks the frozen tier-4 questions with their own catalogue pages, as tier-4's
@@ -62,6 +63,9 @@ from autornd.models.workflow import Workflow  # noqa: E402
 from autornd.routing.openrouter import OpenRouterClient  # noqa: E402
 
 SET = os.environ.get("MEASURE_SET", "tier2")
+PROFESSIONAL_SETS = {"professional": "questions.json",
+                     "professional-hard": "hard-questions.json",
+                     "professional-misleading": "misleading-questions.json"}
 WORKFLOWS = tuple(w for w in os.environ.get(
     "MEASURE_WORKFLOWS", "answer-and-recompute,verify-first").split(",") if w)
 TIER2 = json.loads((ROOT / "evals/tier2/questions.json").read_text())
@@ -90,14 +94,20 @@ def _questions() -> list[dict]:
                             "question": tier4.d_pages_message(candidate, batch)
                             if pages else candidate["request"]})
         return out
-    if SET in ("professional", "professional-hard"):
-        name = "questions.json" if SET == "professional" else "hard-questions.json"
-        frozen = json.loads((ROOT / "evals/professional" / name).read_text())
+    if SET in PROFESSIONAL_SETS:
+        frozen = json.loads(
+            (ROOT / "evals/professional" / PROFESSIONAL_SETS[SET]).read_text())
+        # D44: a set is run on keys the owner has signed. A draft says so in
+        # its status, and no paid answer is made on it.
+        if str(frozen.get("status", "")).upper().startswith("DRAFT"):
+            raise SystemExit(
+                f"MEASURE_SET {SET!r} is a draft: its keys are not signed off "
+                f"by the owner, so it is not run")
         return [{"id": q["id"], "shape": q["field"], "question": q["question"]}
                 for q in frozen["questions"]]
     raise SystemExit(
-        f"MEASURE_SET {SET!r} is not tier2, golden, tier4, professional or "
-        f"professional-hard")
+        f"MEASURE_SET {SET!r} is not tier2, golden, tier4, professional, "
+        f"professional-hard or professional-misleading")
 
 
 QUESTIONS = _questions()

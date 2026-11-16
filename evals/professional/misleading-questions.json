@@ -1,0 +1,218 @@
+{
+ "version": "professional-misleading-1",
+ "status": "DRAFT. Not approved. No run is made on it before the owner signs the keys (D44).",
+ "drafted": "2026-11-15",
+ "passages_verified_against_live_pages": "2026-11-15",
+ "purpose": "Questions where a summary misleads: the rule changed and older pages still stand, a sister rule gives another figure, an official page disagrees with the rule's text, or a later document replaced an earlier one. Each stale source is a live page that still prints the other figure.",
+ "questions": [
+  {
+   "id": "M1",
+   "field": "general aviation",
+   "difficulty": ["the rule changed recently", "an official page disagrees with the rule"],
+   "question": "Under BasicMed in the US, what are the limits on the aircraft a pilot may fly: the maximum takeoff weight, the number of occupants it may be authorized to carry, and the number of passengers on board?",
+   "sources": [
+    {"url": "https://www.ecfr.gov/current/title-14/section-61.113",
+     "passage": "The aircraft is authorized to carry not more than 7 occupants, has a maximum takeoff weight of not more than 12,500 pounds, is operated with no more than 6 passengers on board"}
+   ],
+   "key": [
+    {"item": "Maximum takeoff weight", "answer": "not more than 12,500 pounds"},
+    {"item": "Occupants the aircraft is authorized to carry", "answer": "not more than 7"},
+    {"item": "Passengers on board", "answer": "no more than 6"}
+   ],
+   "commonly_confused": "6,000 pounds, 6 occupants and 5 passengers is the rule as it stood before the FAA Reauthorization Act of 2024.",
+   "stale_sources": [
+    {"url": "https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_68-1A.pdf",
+     "passage": "Fly an aircraft with a maximum certificated takeoff weight of no more than 6,000 lbs.",
+     "why": "The FAA's own advisory circular, still served, states the old limits."}
+   ]
+  },
+  {
+   "id": "M2",
+   "field": "air quality",
+   "difficulty": ["the rule changed recently", "the older section still stands in the code"],
+   "question": "What are the current US national primary ambient air quality standards for PM2.5: the annual level and the 24-hour level?",
+   "sources": [
+    {"url": "https://www.ecfr.gov/current/title-40/section-50.20",
+     "passage": "The national primary ambient air quality standards for PM2.5 are 9.0 micrograms per cubic meter (µg/m3) annual arithmetic mean concentration and 35 µg/m3 24-hour average concentration"}
+   ],
+   "key": [
+    {"item": "Annual", "answer": "9.0 micrograms per cubic meter"},
+    {"item": "24-hour", "answer": "35 micrograms per cubic meter"}
+   ],
+   "commonly_confused": "12.0 micrograms per cubic meter is the 2012 annual standard. Its section, 40 CFR 50.18, is still in the code beside the 2024 one.",
+   "stale_sources": [
+    {"url": "https://www.ecfr.gov/current/title-40/section-50.18",
+     "passage": "The national primary ambient air quality standards for PM2.5 are 12.0 micrograms per cubic meter (µg/m3) annual arithmetic mean concentration",
+     "why": "The earlier standard's section, in the same words but for the figure."}
+   ]
+  },
+  {
+   "id": "M3",
+   "field": "motor carrier safety",
+   "difficulty": ["a sister rule gives other figures"],
+   "question": "For the driver of a passenger-carrying commercial motor vehicle in the US, such as a motorcoach: how many hours may they drive, after how many consecutive hours off duty, and after how many hours on duty may they no longer drive?",
+   "sources": [
+    {"url": "https://www.ecfr.gov/current/title-49/section-395.5",
+     "passage": "More than 10 hours following 8 consecutive hours off duty"},
+    {"url": "https://www.ecfr.gov/current/title-49/section-395.5",
+     "passage": "For any period after having been on duty 15 hours following 8 consecutive hours off duty"}
+   ],
+   "key": [
+    {"item": "Driving limit", "answer": "10 hours"},
+    {"item": "Off duty before driving", "answer": "8 consecutive hours"},
+    {"item": "On-duty limit after which no driving", "answer": "15 hours"}
+   ],
+   "commonly_confused": "11 hours of driving, 10 consecutive hours off duty and a 14-hour period are the limits for property-carrying vehicles (49 CFR 395.3).",
+   "stale_sources": [
+    {"url": "https://www.ecfr.gov/current/title-49/section-395.3",
+     "passage": "A driver may not drive without first taking 10 consecutive hours off duty",
+     "why": "The sister rule, for property-carrying vehicles."}
+   ]
+  },
+  {
+   "id": "M4",
+   "field": "occupational safety",
+   "difficulty": ["a sister rule gives another figure"],
+   "question": "In general industry, not construction, at what height above a lower level must a US employer protect an employee on a walking-working surface with an unprotected side or edge from falling?",
+   "sources": [
+    {"url": "https://www.ecfr.gov/current/title-29/section-1910.28",
+     "passage": "the employer must ensure that each employee on a walking-working surface with an unprotected side or edge that is 4 feet (1.2 m) or more above a lower level is protected from falling"}
+   ],
+   "key": [
+    {"item": "Height", "answer": "4 feet (1.2 m) or more above a lower level"}
+   ],
+   "commonly_confused": "6 feet (1.8 m) is the construction rule (29 CFR 1926.501(b)(1)), question P8 of the first set.",
+   "stale_sources": [
+    {"url": "https://www.ecfr.gov/current/title-29/section-1926.501",
+     "passage": "with an unprotected side or edge which is 6 feet (1.8 m) or more above a lower level shall be protected from falling",
+     "why": "The sister rule, for construction."}
+   ]
+  },
+  {
+   "id": "M5",
+   "field": "airline cabin crew",
+   "difficulty": ["a sister rule gives another figure", "the better-known rule changed and this one did not"],
+   "question": "A US on-demand charter operator flies under 14 CFR Part 135. How much rest must it give a flight attendant after a scheduled duty period of 14 hours or less, and to what may that rest be reduced?",
+   "sources": [
+    {"url": "https://www.ecfr.gov/current/title-14/section-135.273",
+     "passage": "a flight attendant scheduled to a duty period of 14 hours or less as provided under paragraph (b)(1) of this section must be given a scheduled rest period of at least 9 consecutive hours."},
+    {"url": "https://www.ecfr.gov/current/title-14/section-135.273",
+     "passage": "may be scheduled or reduced to 8 consecutive hours if the flight attendant is provided a subsequent rest period of at least 10 consecutive hours"}
+   ],
+   "key": [
+    {"item": "Rest after a duty period of 14 hours or less", "answer": "at least 9 consecutive hours"},
+    {"item": "Reduction", "answer": "to 8 consecutive hours, if the next rest period is at least 10 consecutive hours"}
+   ],
+   "commonly_confused": "10 consecutive hours with no reduction is the airline rule, 14 CFR 121.467, since 2022. It is question H1 of the harder set, turned round.",
+   "stale_sources": [
+    {"url": "https://www.ecfr.gov/current/title-14/section-121.467",
+     "passage": "must be given a scheduled rest period of at least 10 consecutive hours.",
+     "why": "The sister rule, for airlines under Part 121."}
+   ]
+  },
+  {
+   "id": "M6",
+   "field": "general aviation",
+   "difficulty": ["sister figures in one section", "loosely worded"],
+   "question": "How much reserve fuel must a helicopter carry to begin a VFR flight in the US, beyond the fuel to reach the first point of intended landing?",
+   "sources": [
+    {"url": "https://www.ecfr.gov/current/title-14/section-91.151",
+     "passage": "No person may begin a flight in a rotorcraft under VFR conditions unless (considering wind and forecast weather conditions) there is enough fuel to fly to the first point of intended landing and, assuming normal cruising speed, to fly after that for at least 20 minutes."}
+   ],
+   "key": [
+    {"item": "Reserve", "answer": "at least 20 minutes at normal cruising speed"}
+   ],
+   "commonly_confused": "30 minutes by day and 45 minutes at night are the airplane figures of the same section, question P1 of the first set."
+  },
+  {
+   "id": "M7",
+   "field": "internet protocols",
+   "difficulty": ["a later document replaced an earlier one"],
+   "question": "Which RFC is the current specification of HTTP/2, and which RFCs does it obsolete?",
+   "sources": [
+    {"url": "https://www.rfc-editor.org/rfc/rfc9113.txt",
+     "passage": "This document obsoletes RFCs 7540 and 8740."}
+   ],
+   "key": [
+    {"item": "Current specification", "answer": "RFC 9113"},
+    {"item": "Obsoletes", "answer": "RFC 7540 and RFC 8740"}
+   ],
+   "commonly_confused": "RFC 7540 is the 2015 specification, obsolete since 2022 and still widely cited."
+  },
+  {
+   "id": "M8",
+   "field": "internet security",
+   "difficulty": ["a later document replaced an earlier one"],
+   "question": "Which RFC deprecated TLS 1.0 and TLS 1.1, and what status did it give the RFCs that had defined them?",
+   "sources": [
+    {"url": "https://www.rfc-editor.org/rfc/rfc8996.txt",
+     "passage": "This document formally deprecates Transport Layer Security (TLS) versions 1.0 (RFC 2246) and 1.1 (RFC 4346). Accordingly, those documents have been moved to Historic status."}
+   ],
+   "key": [
+    {"item": "The RFC", "answer": "RFC 8996"},
+    {"item": "Status of RFC 2246 and RFC 4346", "answer": "Historic"}
+   ],
+   "commonly_confused": "RFC 7525 recommended against TLS 1.0 and 1.1 without deprecating them; RFC 8446 is TLS 1.3 itself."
+  },
+  {
+   "id": "M9",
+   "field": "UK payroll",
+   "difficulty": ["the figure changes every year", "last year's and next year's figures stand on the same page"],
+   "question": "What is the UK National Living Wage hourly rate for workers aged 21 and over from April 2026, and the National Minimum Wage hourly rate for 18 to 20 year olds?",
+   "sources": [
+    {"url": "https://www.gov.uk/national-minimum-wage-rates",
+     "passage": "An apprentice aged 21 who has completed the first year of their apprenticeship is entitled to a minimum hourly rate of £12.71."}
+   ],
+   "key": [
+    {"item": "Aged 21 and over", "answer": "£12.71"},
+    {"item": "Aged 18 to 20", "answer": "£10.85"}
+   ],
+   "commonly_confused": "£12.21 and £10 are the rates of April 2025 to March 2026; £13.21 and £11.27 are announced for April 2027. All three sets are on the page."
+  },
+  {
+   "id": "M10",
+   "field": "US payroll",
+   "difficulty": ["the figure changes every year", "last year's and next year's figures stand on the same page"],
+   "question": "What is the US Social Security contribution and benefit base, the most earnings subject to the Social Security payroll tax, for 2026?",
+   "sources": [
+    {"url": "https://www.ssa.gov/oact/cola/cbb.html",
+     "passage": "2025 176,100 2026 184,500 2027 192,300"}
+   ],
+   "key": [
+    {"item": "Contribution and benefit base, 2026", "answer": "$184,500"}
+   ],
+   "commonly_confused": "$176,100 is the base for 2025 and $192,300 the base for 2027; both are in the same table."
+  },
+  {
+   "id": "M11",
+   "field": "motor carrier safety",
+   "difficulty": ["the rule changed", "older pages still stand"],
+   "question": "Under the FMCSA short-haul exception that frees a driver from keeping records of duty status: within what radius of the normal work reporting location must the driver operate, and within how many consecutive hours must the driver be released from work?",
+   "sources": [
+    {"url": "https://www.ecfr.gov/current/title-49/section-395.1",
+     "passage": "The driver operates within a 150 air-mile radius (172.6 statute miles) of the normal work reporting location"},
+    {"url": "https://www.ecfr.gov/current/title-49/section-395.1",
+     "passage": "returns to the work reporting location and is released from work within 14 consecutive hours"}
+   ],
+   "key": [
+    {"item": "Radius", "answer": "150 air-mile radius (172.6 statute miles)"},
+    {"item": "Released from work within", "answer": "14 consecutive hours"}
+   ],
+   "commonly_confused": "A 100 air-mile radius and 12 consecutive hours is the exception as it stood before 29 September 2020."
+  },
+  {
+   "id": "M12",
+   "field": "US retirement plans",
+   "difficulty": ["the figure changes every year"],
+   "question": "What is the limit on an employee's elective deferrals to a 401(k) plan for 2026, before any catch-up contribution?",
+   "sources": [
+    {"url": "https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-topics-401k-and-profit-sharing-plan-contribution-limits",
+     "passage": "The limit on employee elective deferrals (for traditional and safe harbor plans) is: $24,500 in 2026, subject to cost-of-living adjustments"}
+   ],
+   "key": [
+    {"item": "Elective deferral limit, 2026", "answer": "$24,500"}
+   ],
+   "commonly_confused": "$23,500 is the limit for 2025 and $23,000 the limit for 2024."
+  }
+ ]
+}
