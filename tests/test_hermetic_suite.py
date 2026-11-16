@@ -35,6 +35,10 @@ SUITE_CHOSEN = {
     # The suite describes the full team, the workflow with every phase;
     # the shipped default is answer-and-recompute (owner, 2026-11-12).
     "autornd_workflow",
+    # The suite drives the lookup that asks a search model for an answer and
+    # its quotes, which still ships behind this setting; the shipped default
+    # is the lookup that reads the documents (owner's plan, 2026-11-15).
+    "lookup_reads_documents",
 }
 
 # Not a setting: the class-annotated set of runtime-mutable names, which

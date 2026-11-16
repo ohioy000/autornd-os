@@ -71,6 +71,11 @@ PLACEHOLDERS: dict[str, str] = {
     "SEARCH_MAX_TOKENS_CONSEQUENTIAL": "4000",
     "LOOKUP_AVOID_UNREADABLE": "true",
     "LOOKUP_WITHHOLD_UNVERIFIED": "false",
+    # The suite's own choice, not the shipped default (on since 2026-11-15):
+    # the lookup that asks a search model for an answer and its quotes still
+    # ships behind this setting, and the tests of its quote check, its second
+    # round and its record drive it. The tests of the lookup that reads the
+    # documents switch it on themselves.
     "LOOKUP_READS_DOCUMENTS": "false",
     "ESCALATION_RECOVERY_ATTEMPTS": "3",
     "RUN_TIME_BUDGET_SECONDS": "1800",

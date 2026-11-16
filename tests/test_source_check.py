@@ -866,9 +866,14 @@ class TestTheLookupReadsTheDocuments:
                             "a radio", ["The EU 868 MHz limit"])
         assert seen == [PAGE]
 
+    def test_it_ships_on(self):
+        """Owner's plan 2026-11-15, after the comparison: 107 of 107
+        professional answers right with it, never worse and 18 percent
+        cheaper an answer."""
+        assert config.Settings.model_fields["lookup_reads_documents"].default is True
+
     async def test_switched_off_the_lookup_is_the_old_one(self, monkeypatch):
-        """Break-proof: the new lookup is the switch's, and it ships off."""
-        assert config.Settings.model_fields["lookup_reads_documents"].default is False
+        """Break-proof: the new lookup is the switch's."""
         monkeypatch.setattr(config.settings, "lookup_reads_documents", False)
         monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
         client = _client(_reply(quotes=[(1, PASSAGE, PAGE)]))
