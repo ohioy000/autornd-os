@@ -198,6 +198,17 @@ class Settings(BaseSettings):
     # (docs/reviews/2026-11-15-cautions-on-handed-on-text.md). Off, the
     # lookup is the one that asks the search model for an answer and quotes.
     lookup_reads_documents: bool = True
+    # lookup_documents_ask_again: when a request for documents brought
+    # nothing to read the answer from (no page could be read, or no page
+    # read holds the words the search model pointed at), the documents are
+    # asked for once more, with the addresses tried and what became of each.
+    # Off until measured: it is a second paid search call, and how often it
+    # would fire is not known, because runs before 2026-11-15 did not record
+    # the pointer words. The record keeps them now (`documents`), so the
+    # next run shows it free. Built for the one wrong answer of the
+    # comparison, where the search named two sections beside the governing
+    # one, and for the 87 quotes that were on pages that could not be read.
+    lookup_documents_ask_again: bool = False
     escalation_recovery_attempts: int = 3
 
     # Ruling D38: the API path's declared time budget, in seconds. A budgeted

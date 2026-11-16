@@ -47,6 +47,7 @@ their rule or standard. Work on vague requests was dropped on the owner's word.
 |---|---|---|
 | `lookup_reads_documents` | The search model is asked where the answer is written; the harness fetches those pages and hands on stretches of their own text as quotes (`_ask_documents`, `_excerpts` in `autornd/knowledge/research.py`) | Never worse than the old lookup (107 of 107 professional answers, 7 of 8 on the owner's request), 18 percent cheaper, 97 percent of quotes found against 66. **On by default since step 2** |
 | `lookup_withhold_unverified` | A lookup answer with no found passage stays in the record and out of the phases | An unverified lookup answer was still right about three times in four |
+| `lookup_documents_ask_again` | A second request for documents, once, when the first brought nothing to read the answer from (`_missed`, `_name_documents` in `autornd/knowledge/research.py`) | Not measured yet. A second paid search call |
 
 Also in the tree, for measurement only: `workflows/answer-and-recompute-claims.yaml` (the claim
 check, in shadow).
@@ -101,6 +102,16 @@ In this order. Steps 1 to 3 are free code. Step 4 is a paid run with the owner's
 comment, `tests/conftest.py` to match, and the one test that asserts the default.
 
 ### Step 3. Finish the finding half
+
+**Built 2026-11-15, switched off, not yet measured.** `lookup_documents_ask_again`: when a
+request for documents brought nothing to read the answer from (no page could be read, or no page
+read holds the words the search model pointed at), the documents are asked for once more, with
+the addresses tried and what became of each. It is a second paid search call, so it ships off
+until a run shows what it does. The record now keeps each document named, its pointer words,
+whether it was read and whether it holds them (`documents` in a `sources` record), so the next
+run shows free how often the second request would fire. Refusing sites are named to the document
+request in its own words. They are still learned within one process, after two refusals.
+**Measure it in step 4's run, as a third arm, before switching it on.**
 
 - **Fewer pages lost to refusing sites.** 87 quotes were on unread pages in the comparison. The
   refusing sites are already remembered; the document request should be told them from the first
