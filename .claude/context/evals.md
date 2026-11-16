@@ -46,6 +46,28 @@ by substring-matching the error message, and correcting the message silently tur
 skipped units into units that had run — which would have inflated the denominator
 of every pass rate in any sweep that hit its cap.
 
+## Reading the answers: two readers, the first one blind
+
+The answers of a run are read against the signed keys by hand; a scorer or a figure check only
+points (D50). Since 2026-11-16 this is how the reading is done, and it costs no model spend of
+the harness's own:
+
+1. **Make blind packets:** `docs/probes/blind_reading_packets.py`. One file a question, holding
+   the question, the key and every delivered answer under a code, in shuffled order. The reader
+   cannot tell which arm or run an answer came from. The codes file is kept away from the
+   readers.
+2. **One reader a packet,** a subagent given that one file and asked for a verdict an answer:
+   right, wrong, partly or unclear, with what the answer states and a sentence of it as
+   evidence.
+3. **Join and unblind:** `docs/probes/blind_reading_verdicts.py`. It gives the table by question
+   and arm, every answer not marked right with the cautions it carried, every disagreement
+   between the reader and the free figure check, and a random dozen marked right.
+4. **The architect is the second reader** of every answer not marked right, every disagreement,
+   and the dozen.
+
+First used on the three-arm run of 2026-11-15: 215 answers in phase 1, 4 not right, and the
+second reader agreed with the first on all 17 answers re-read.
+
 ## The trace is the deliverable
 
 Every unit is appended to `evals/results/*.jsonl` as it finishes, flushed

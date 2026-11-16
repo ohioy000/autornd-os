@@ -262,14 +262,19 @@ async function sendChat() {
   }
 }
 
-function renderResult(w) {
-  let html = '<span class="msg-status ' + w.status + '">' + w.status.toUpperCase() + '</span> ';
-  html += '<strong>Workflow #' + w.id + '</strong>';
+// What a run delivered, the same in the chat and in the Workflows tab: the
+// error, the answer or the draft a run that did not complete left behind,
+// then what was checked against a source and what was not. The draft's text
+// is `candidate.answer`; this page read `candidate.summary`, a key the
+// record never had, so a blocked run showed no draft (API audit, 2026-11-16).
+function renderDelivery(w) {
+  let html = '';
   if (w.error) html += '<div style="color:#db5f5f;margin-top:.4rem">' + esc(w.error) + '</div>';
+  const draft = w.candidate && (w.candidate.answer || w.candidate.summary);
   if (w.answer) {
     html += '<div style="margin-top:.6rem;white-space:pre-wrap"><strong>Answer</strong><br>' + esc(w.answer) + '</div>';
-  } else if (w.candidate && w.candidate.summary) {
-    html += '<div style="margin-top:.6rem;white-space:pre-wrap"><strong>Draft, not endorsed</strong><br>' + esc(w.candidate.summary) + '</div>';
+  } else if (draft) {
+    html += '<div style="margin-top:.6rem;white-space:pre-wrap"><strong>Draft, not endorsed</strong><br>' + esc(draft) + '</div>';
   }
   (w.confirmations || []).forEach(c => {
     html += '<div style="color:#6fcf7f;margin-top:.4rem">&#10003; ' + esc(c) + '</div>';
@@ -277,6 +282,13 @@ function renderResult(w) {
   (w.cautions || []).forEach(c => {
     html += '<div style="color:#ffdd55;margin-top:.4rem">&#9888; ' + esc(c) + '</div>';
   });
+  return html;
+}
+
+function renderResult(w) {
+  let html = '<span class="msg-status ' + w.status + '">' + w.status.toUpperCase() + '</span> ';
+  html += '<strong>Workflow #' + w.id + '</strong>';
+  html += renderDelivery(w);
 
   if (w.phases && w.phases.length) {
     html += '<div style="margin-top:.6rem">';
@@ -390,6 +402,7 @@ async function loadDetail(id) {
   const det = document.getElementById('detail');
   det.innerHTML = '<h2>Workflow #' + w.id + ' &mdash; ' + esc(w.request.slice(0,80)) + '</h2>'
     + '<p style="margin:.5rem 0;font-size:.85rem;color:#888">Status: <span class="badge badge-' + esc(w.status) + '">' + esc(w.status) + '</span> | Risk: ' + esc(w.risk_level||'-') + ' | Iterations: ' + w.iteration + ' | Cost: $' + w.total_cost.toFixed(4) + '</p>'
+    + '<div class="phase-card">' + renderDelivery(w) + '</div>'
     + '<div class="phase-list">' + w.phases.map(p =>
       '<div class="phase-card"><h3>' + esc(p.phase) + ' (iter ' + p.iteration + ') &mdash; ' + esc(p.model_used||'?') + ' &mdash; $' + p.cost.toFixed(6) + '</h3>'
       + '<pre>' + esc(JSON.stringify(p.verdict, null, 2)) + '</pre></div>'

@@ -827,6 +827,19 @@ class TestTheRecordsBesideTheAnswer:
          "in writing, working time shall not exceed 48 hours.", None),
         # The same figure on both pages.
         (RULE, RULE, None),
+        # A PDF wraps its lines: the last line of another paragraph is not a
+        # sentence of its own (the API walk of 2026-11-16, a right answer).
+        ("(1) During the day, to fly after that for at least 30 minutes; or",
+         "(b) No person may begin a flight in a\nrotorcraft under VFR "
+         "conditions unless\nthere is enough fuel to fly\nto the first point "
+         "of intended landing\nand, assuming normal cruising speed,\nto fly "
+         "after that for at least 20 minutes.", None),
+        # One section under two addresses prints both paragraphs: two things
+        # on each page, not one thing told two ways (the three-arm run).
+        (RULE + "\n" + RULE.replace("14 hours or less", "14 hours or more")
+                            .replace("10 consecutive", "12 consecutive"),
+         RULE.replace("14 hours or less", "14 hours or more")
+             .replace("10 consecutive", "12 consecutive") + "\n" + RULE, None),
     ])
     def test_nothing_else_is_two_pages_that_differ(self, first, second, urls):
         """Break-proof: each was a false caution on the recorded runs, or

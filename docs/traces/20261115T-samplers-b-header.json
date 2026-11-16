@@ -1,0 +1,24 @@
+{
+ "configured_recompute": "meta/muse-ember",
+ "other_samplers": [
+  "anthropic/claude-haiku-5.5",
+  "qwen/qwen3.8-omni-flash"
+ ],
+ "models": {
+  "triage": "openai/gpt-oss-120b",
+  "engineering": "deepseek/deepseek-v4.1-flash-1017",
+  "architecture": "xiaomi/mimo-v2.6-pro:exacto",
+  "escalation": "google/gemini-4-argon",
+  "research": "z-ai/glm-5.3",
+  "search": "perplexity/sonar",
+  "recompute": "meta/muse-ember",
+  "decision": "perplexity/pplx-decider-v1.2"
+ },
+ "provider_order": "triage:crusoe/bf16,engineering:deepinfra/fp8,architecture:gmicloud/bf16,escalation:google-vertex/global,search:Perplexity,research:wafer/us,ranker:Fireworks,judge:deepinfra/fp8,premium:,recompute:Meta",
+ "provider_order_for_other_samplers": "triage:crusoe/bf16,engineering:deepinfra/fp8,architecture:gmicloud/bf16,escalation:google-vertex/global,search:Perplexity,research:wafer/us,ranker:Fireworks,judge:deepinfra/fp8,premium:,recompute:",
+ "lookup_reads_documents": true,
+ "workflow": "answer-and-recompute",
+ "repeats": 3,
+ "shards": 2,
+ "max_spend_per_shard": 0.39
+}
