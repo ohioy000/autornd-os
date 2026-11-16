@@ -126,6 +126,10 @@ async def _recompute_with_every_model(self, node, state):
     asks = self._anchored_asks(state)
     SIDE.update({
         "asks": asks, "context_chars": len(self.context or ""),
+        # The context itself, kept since the addendum of 2026-11-15, so a
+        # model added later can be given the same samples to make without
+        # the answer being made again.
+        "context": self.context or "",
         "models": {CONFIGURED: {
             "samples": verdict.get("samples") or [],
             "cost": round(sum(r.cost for r in responses), 6),
@@ -187,6 +191,7 @@ async def run_unit(question: dict, repeat: int) -> dict:
             "cautions": detail.cautions, "confirmations": detail.confirmations,
             "shipped_vote": detail.recompute_vote,
             "asks": SIDE.get("asks"), "context_chars": SIDE.get("context_chars"),
+            "context": SIDE.get("context"),
             "models": models,
             "others_cost": round(sum(float(models[m].get("cost") or 0.0)
                                      for m in OTHERS if m in models), 6),
