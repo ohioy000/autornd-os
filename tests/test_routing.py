@@ -741,7 +741,8 @@ class TestResearchIsBilled:
     research lookup reported $0.0000, because research calls `client.chat`
     directly and never touch the phase runner that was doing the counting."""
 
-    async def test_a_research_lookup_moves_the_clients_totals(self, monkeypatch):
+    async def test_a_research_lookup_moves_the_clients_totals(self, monkeypatch,
+                                                             pages_served):
         from autornd.knowledge import research
 
         client = OpenRouterClient(api_key="test")

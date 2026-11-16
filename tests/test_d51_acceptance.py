@@ -136,7 +136,7 @@ def _double(router, serve_chat: bool = False):
 
     `serve_chat` wires `chat` through the same router. The
     search tier's lookup speaks through `chat`, not
-    `chat_json` (research._lookup), so a run whose grounding
+    `chat_json` (research._name_documents), so a run whose grounding
     reaches its maximum needs it served for that call to be
     recorded and billed like every other."""
     client = OpenRouterClient(api_key="test")
@@ -1998,7 +1998,7 @@ class TestR3TheCallBoundCountsGroundingAtItsMaximum:
                 "write the search queries",
                 "rank these documentation excerpts",
                 "write a short grounding briefing",
-                "answer these engineering questions"))]
+                "find the documents in which the answer"))]
         assert len(grounding) == 4
         # And the whole run inside the amended bound: triage, asks,
         # grounding's four at their maximum, and the four.

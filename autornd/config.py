@@ -1,13 +1,22 @@
 import os
 from pathlib import Path
 
-from pydantic import ValidationError, field_validator
+from pydantic import ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 # Ruling D55 (7): a workflow renamed, old name to new. Used only to word the
 # refusal of an old name, in the setting and in a request. It never resolves
 # one: there is no alias.
 RENAMED_WORKFLOWS = {"engineering-rnd": "full-team"}
+
+
+# Settings that were removed, by name. The lookup that reads the documents is
+# the only lookup now; the second request for documents and the withholding
+# of unverified answers were measured and taken out (owner, 2026-11-16).
+RETIRED_SETTINGS = frozenset({
+    "lookup_reads_documents", "lookup_documents_ask_again",
+    "lookup_withhold_unverified",
+})
 
 
 class Settings(BaseSettings):
@@ -173,42 +182,25 @@ class Settings(BaseSettings):
     # after the 88-answer sweep: quotes on unread pages fell from 9 of 73 to
     # 3 of 64, the five rule questions passed 19 of 20 with it and without,
     # and it cost about an eighth more.
-    # lookup_withhold_unverified: a lookup answer with no passage found on
-    # its page is kept in the run's record and not shown to the phases. Off:
-    # in the same sweep an answer with no found passage was still right
-    # about three times in four, and nothing replaces what is withheld.
+    # Withholding a lookup answer with no found passage was built and
+    # removed (2026-11-16): in the same sweep such an answer was still right
+    # about three times in four, and nothing replaced what was withheld.
     lookup_avoid_unreadable: bool = True
-    lookup_withhold_unverified: bool = False
 
-    # lookup_reads_documents: the lookup asks the search model for documents,
-    # not for an answer; the harness fetches them and hands on their own
-    # words. Measured 2026-11-15 (the root-cause test): with the governing
-    # section's own text handed on, 8 of 8 answers were right on two
-    # questions that had been wrong 8 times when the answer step read a
-    # search model's summary.
-    # On by the owner's plan of 2026-11-15, after the comparison
-    # (docs/reviews/2026-11-15-lookup-reads-documents.md): 107 of 107
-    # professional answers right and 7 of 8 on the inspection-authorization
-    # request, against 62 of 64, 45 of 45 and 6 of 8 with the lookup that
-    # asks for an answer; never worse, 18 percent cheaper an answer, and 724
-    # of 743 quotes on read pages found against 106 of 160. It waited on the
-    # cautions, which had been written for a model's own quotes: rebuilt
-    # around the text handed on, 30 of its 62 harder-set answers come with
-    # no caution where none did
-    # (docs/reviews/2026-11-15-cautions-on-handed-on-text.md). Off, the
-    # lookup is the one that asks the search model for an answer and quotes.
-    lookup_reads_documents: bool = True
-    # lookup_documents_ask_again: when a request for documents brought
-    # nothing to read the answer from (no page could be read, or no page
-    # read holds the words the search model pointed at), the documents are
-    # asked for once more, with the addresses tried and what became of each.
-    # Off until measured: it is a second paid search call, and how often it
-    # would fire is not known, because runs before 2026-11-15 did not record
-    # the pointer words. The record keeps them now (`documents`), so the
-    # next run shows it free. Built for the one wrong answer of the
-    # comparison, where the search named two sections beside the governing
-    # one, and for the 87 quotes that were on pages that could not be read.
-    lookup_documents_ask_again: bool = False
+    # The lookup asks the search model for documents, not for an answer; the
+    # harness fetches them and hands on their own words. There is no setting:
+    # it is the only lookup. Measured 2026-11-15 (the root-cause test): with
+    # the governing section's own text handed on, 8 of 8 answers were right
+    # on two questions that had been wrong 8 times when the answer step read
+    # a search model's summary. In the comparison
+    # (docs/reviews/2026-11-15-lookup-reads-documents.md) it was never worse,
+    # 18 percent cheaper an answer, and 724 of 743 quotes on read pages were
+    # found against 106 of 160. On the set where a summary misleads it was
+    # right in 144 of 144 answers read blind, against 141 of 144 for the
+    # lookup that asked for an answer, which the owner then had removed
+    # (2026-11-16, docs/reviews/2026-11-16-misleading-set-run.md). A second
+    # request for documents after a miss was measured in the same run: it
+    # fired in 13 of 144 lookups and gained nothing, and was removed too.
     escalation_recovery_attempts: int = 3
 
     # Ruling D38: the API path's declared time budget, in seconds. A budgeted
@@ -274,13 +266,14 @@ class Settings(BaseSettings):
     # default no longer pays for judges. full-team stays offered by name.
     autornd_workflow: str = "answer-and-recompute"
 
+    # The settings PUT /api/settings accepts, and no others. Thirteen were
+    # named here while the endpoint's body took five: the other eight were
+    # dropped without a word and the call answered "No settings to update"
+    # (API audit of 2026-11-16). Cut to the five on the owner's word of that
+    # day; tests/test_settings.py holds the two lists together.
     RUNTIME_MUTABLE: set[str] = {
         "max_iterations", "escalation_max_tokens", "escalation_recovery_attempts",
-        "autornd_profile", "autornd_workflow", "log_level",
-        "validate_max_tokens", "search_max_tokens",
-        "search_max_tokens_consequential",
-        "review_rework_attempts", "plan_max_tokens", "judge_max_tokens",
-        "recompute_max_tokens",
+        "autornd_profile", "log_level",
     }
 
     # The suite never reads the owner's .env (ARCH-20261002-112): with
@@ -292,6 +285,22 @@ class Settings(BaseSettings):
         "env_file": None if os.environ.get("AUTORND_TESTING") else ".env",
         "env_file_encoding": "utf-8",
     }
+
+    @model_validator(mode="before")
+    @classmethod
+    def drop_retired_settings(cls, data):
+        # A name in .env that is not a setting stops the server from
+        # starting. These three were settings until 2026-11-16, so an .env
+        # written before then may still carry them: each is dropped and
+        # said, not refused. Any other unknown name is still refused.
+        if isinstance(data, dict):
+            for name in [k for k in data if str(k).lower() in RETIRED_SETTINGS]:
+                data.pop(name)
+                import logging
+                logging.getLogger(__name__).warning(
+                    "%s is no longer a setting and is ignored (removed "
+                    "2026-11-16); delete it from .env", str(name).upper())
+        return data
 
     @field_validator("run_time_budget_seconds", mode="before")
     @classmethod

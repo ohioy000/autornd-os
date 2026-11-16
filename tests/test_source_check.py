@@ -1,11 +1,11 @@
 """Ruling D56: a finding is checked against its source.
 
-A lookup's reply is typed: an answer, and the passages it rests on, each with
-its page's address. The harness fetches each page, records which version it
-read, and looks for each passage in it. An answer whose passage is found is
-checked; a question whose quoted passage is not found is asked once more; what
-is still not found is marked unverified. Only a found passage is kept for
-later runs.
+The lookup asks the search model where the answer is written. The harness
+fetches each page named, records which version it read, and hands on the
+page's own words; each passage handed on is looked for in its page. Only a
+found passage is kept for later runs. The lookup that asked the search model
+for an answer and its quotes, and its second round, were removed on
+2026-11-16 with their tests.
 
 Every page here is served by an httpx.MockTransport and every name resolves
 through a stub: the suite never reaches the network.
@@ -24,7 +24,7 @@ import pytest
 from autornd import config
 from autornd.knowledge import fetch, research
 from autornd.knowledge.research import (
-    AGAIN_PROMPT, MIN_QUOTE_CHARS, RESEARCH_TAG, Finding, Quote, quote_found,
+    MIN_QUOTE_CHARS, RESEARCH_TAG, Finding, Quote, quote_found,
     render_findings, research_gaps,
 )
 from autornd.routing.openrouter import ModelResponse
@@ -102,50 +102,22 @@ def _offline(monkeypatch):
     monkeypatch.setattr(research, "retrieve", lambda *a, **k: [])
     monkeypatch.setattr(research, "ingest_text", lambda *a, **k: 0)
     monkeypatch.setattr(config.settings, "model_search", "vendor/search")
-    research.reset_untyped_replies()
-    research.reset_dropped_quotes()
     research.reset_unreadable_sites()
     yield
-    research.reset_untyped_replies()
-    research.reset_dropped_quotes()
     research.reset_unreadable_sites()
 
 
-def _reply(answer: str = "25 mW e.r.p.", quotes=(), citations=(PAGE,)) -> ModelResponse:
-    content = json.dumps({"answer": answer, "quotes": [
-        {"question": n, "text": text, "url": url} for n, text, url in quotes]})
+def _documents(*items) -> ModelResponse:
+    content = json.dumps({"documents": [
+        {"url": url, "title": "t", "near": near} for url, near in items]})
     return ModelResponse(content=content, model="search/model", prompt_tokens=10,
-                         completion_tokens=20, cost=0.005, citations=list(citations))
+                         completion_tokens=20, cost=0.005, citations=[])
 
 
 def _client(*replies: ModelResponse):
     client = AsyncMock()
     client.chat = AsyncMock(side_effect=list(replies))
     return client
-
-
-class TestTheReplyIsTyped:
-    async def test_the_answer_and_its_quotes_are_fields(self, monkeypatch):
-        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
-        client = _client(_reply(quotes=[(1, PASSAGE, PAGE)]))
-        finding, = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
-        assert finding.answer == "25 mW e.r.p."
-        assert [(q.question, q.text, q.url) for q in finding.quotes] == [(1, PASSAGE, PAGE)]
-        assert client.chat.await_args.kwargs["function"] == "search"
-        assert client.chat_json.await_count == 0, "the lookup stays a plain chat"
-
-    @pytest.mark.parametrize("content", [
-        "25 mW e.r.p., per ETSI EN 300 220.",
-        '{"figure": "25 mW"}',
-    ])
-    async def test_a_reply_not_in_the_format_is_kept_whole_and_counted(self, content):
-        client = _client(ModelResponse(content=content, model="m", prompt_tokens=1,
-                                       completion_tokens=1, cost=0.0, citations=[PAGE]))
-        finding, = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
-        assert finding.answer == content
-        assert finding.quotes == [] and finding.unchecked() == [1]
-        assert research.untyped_replies() == 1
-        assert client.chat.await_count == 1, "nothing quoted, so nothing asked again"
 
 
 class TestTheFetch:
@@ -270,83 +242,15 @@ class TestTheQuoteCheck:
         assert len("25 mW e.r.p.") < MIN_QUOTE_CHARS
         assert not quote_found("25 mW e.r.p.", PASSAGE)
 
-    async def test_a_found_passage_checks_its_answer(self, monkeypatch):
-        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
-        finding, = await research_gaps(
-            _client(_reply(quotes=[(1, PASSAGE, PAGE)])), "a radio", ["The EU 868 MHz limit"])
-        quote, = finding.quotes
-        assert quote.status == "found" and finding.checked() == {1}
-        assert quote.sha256 == hashlib.sha256(HTML.encode()).hexdigest()
-        rendered = finding.render()
-        assert f'- [1] "{PASSAGE}" — {PAGE} (fetched {quote.fetched_at}, sha256 {quote.sha256[:12]})' in rendered
-        assert "unverified" not in rendered
-
-    @pytest.mark.parametrize("served, status", [
-        (_html("<p>A different page entirely, about something else.</p>"), "not_found"),
-        ((200, {"content-type": "application/pdf"}, b"%PDF"), "unfetched"),
-    ])
-    async def test_a_passage_not_found_leaves_its_answer_unverified(
-            self, monkeypatch, served, status):
-        monkeypatch.setattr(fetch, "_transport", _served({PAGE: served}))
-        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
-        finding, = await research_gaps(
-            _client(_reply(quotes=[(1, PASSAGE, PAGE)])), "a radio", ["The EU 868 MHz limit"])
-        assert finding.quotes[0].status == status and finding.unchecked() == [1]
-        assert "No quoted passage was found in its page — treat this answer as unverified." in finding.render()
-
-    async def test_a_bundle_names_the_questions_left_unverified(self, monkeypatch):
-        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(), OTHER: _text(CELL)}))
-        finding, = await research_gaps(_client(_reply(quotes=[
-            (1, PASSAGE, PAGE), (2, "Charge each cell to 3.60 V and no higher.", OTHER)])),
-            "a radio", ["The EU 868 MHz limit", "The LiFePO4 cutoff", "The duty cycle"])
-        assert finding.checked() == {1} and finding.unchecked() == [2, 3]
-        assert ("No quoted passage was found in its page for questions 2, 3 — treat "
-                "those answers as unverified.") in finding.render()
-
     async def test_pages_fetched_per_lookup_are_bounded(self, monkeypatch):
         seen: list[str] = []
-        pages = {f"{PAGE}/{n}": _text(PASSAGE) for n in range(fetch.MAX_FETCHES + 1)}
+        pages = {f"{PAGE}/{n}": _text(PASSAGE)
+                 for n in range(research.MAX_DOCUMENTS + 1)}
         monkeypatch.setattr(fetch, "_transport", _served(pages, seen))
-        finding, = await research_gaps(_client(_reply(quotes=[
-            (1, PASSAGE, url) for url in pages])), "a radio", ["The EU 868 MHz limit"])
-        assert len(seen) == fetch.MAX_FETCHES
-        assert [q.status for q in finding.quotes][-1] == "unfetched"
-        assert finding.quotes[-1].reason == f"past the {fetch.MAX_FETCHES}-page fetch cap"
-
-
-class TestAskedOnceMore:
-    async def test_a_passage_not_found_is_asked_again_once(self, monkeypatch):
-        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(), OTHER: _text(CELL)}))
-        client = _client(
-            _reply(quotes=[(1, PASSAGE, PAGE), (2, "Charge to 4.2 V per cell, always.", OTHER)]),
-            _reply(answer="3.65 V", quotes=[(1, CELL, OTHER)]))
-        first, second = await research_gaps(
-            client, "a radio", ["The EU 868 MHz limit", "The LiFePO4 cutoff"])
-        assert client.chat.await_count == 2
-        again = client.chat.await_args_list[1].kwargs["user_message"]
-        assert AGAIN_PROMPT.format(questions="The LiFePO4 cutoff") in again
-        assert "The EU 868 MHz limit" not in again, "a checked question is not asked again"
-        assert (second.round, second.asked, second.checked()) == (2, ["The LiFePO4 cutoff"], {1})
-        assert second.render().startswith("Q (asked again): The LiFePO4 cutoff")
-        assert first.unchecked() == [2]
-
-    async def test_a_reply_that_quoted_nothing_is_not_asked_again(self):
-        client = _client(_reply(quotes=[]))
-        finding, = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
-        assert client.chat.await_count == 1 and finding.unchecked() == [1]
-
-    async def test_there_is_no_third_round(self, monkeypatch):
-        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html("<p>Nothing here at all.</p>")}))
-        client = _client(_reply(quotes=[(1, PASSAGE, PAGE)]),
-                         _reply(quotes=[(1, PASSAGE, PAGE)]))
-        findings = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
-        assert client.chat.await_count == 2 and [f.round for f in findings] == [1, 2]
-
-    async def test_every_answer_found_costs_one_request(self, monkeypatch):
-        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
-        client = _client(_reply(quotes=[(1, PASSAGE, PAGE)]))
-        await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
-        assert client.chat.await_count == 1
+        finding, = await research_gaps(
+            _client(_documents(*[(url, "") for url in pages])),
+            "a radio", ["The EU 868 MHz limit"])
+        assert len(seen) == research.MAX_DOCUMENTS == len(finding.documents)
 
 
 class TestOnlyAFoundPassageIsKept:
@@ -354,11 +258,12 @@ class TestOnlyAFoundPassageIsKept:
         stored: list[tuple[str, str, str]] = []
         monkeypatch.setattr(research, "ingest_text",
                             lambda text, tag, source="": stored.append((text, tag, source)))
-        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(), OTHER: _text(CELL)}))
-        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
-        await research_gaps(_client(_reply(quotes=[
-            (1, PASSAGE, PAGE), (2, CELL, OTHER), (3, "Not on the page, this sentence.", PAGE)])),
-            "a radio", ["The EU 868 MHz limit", "The LiFePO4 cutoff", "The duty cycle"])
+        monkeypatch.setattr(fetch, "_transport", _served(
+            {PAGE: _html(), OTHER: _text(CELL), REFUSING: REFUSED}))
+        await research_gaps(
+            _client(_documents((PAGE, ""), (OTHER, ""), (REFUSING, ""))),
+            "a radio", ["The LiFePO4 cutoff"])
+        # The page that could not be read is not kept.
         assert [(tag, source) for _, tag, source in stored] == [
             (RESEARCH_TAG, PAGE), (RESEARCH_TAG, OTHER)]
         text = stored[1][0]
@@ -373,7 +278,8 @@ class TestOnlyAFoundPassageIsKept:
             return []
 
         monkeypatch.setattr(research, "retrieve", fake_retrieve)
-        await research_gaps(_client(_reply()), "a radio", ["The EU 868 MHz limit"])
+        await research_gaps(_client(_documents((PAGE, ""))), "a radio",
+                            ["The EU 868 MHz limit"])
         assert seen["where"] == {"tag": "research-quoted"}
 
     @pytest.mark.parametrize("distance, reused", [(0.1, True), (0.2, False)])
@@ -382,12 +288,13 @@ class TestOnlyAFoundPassageIsKept:
         monkeypatch.setattr(research, "retrieve", lambda *a, **k: [{
             "text": f'Q: The EU 868 MHz limit\nThe page says: "{PASSAGE}"',
             "source": PAGE, "tag": RESEARCH_TAG, "distance": distance}])
-        client = _client(_reply())
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
+        client = _client(_documents((PAGE, "")))
         findings = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
         assert (client.chat.await_count == 0) is reused
         assert (findings[0].model == "recalled") is reused
 
-    async def test_a_recalled_passage_is_not_asked_again_or_marked(self, monkeypatch):
+    async def test_a_recalled_passage_is_not_looked_up_or_marked(self, monkeypatch):
         monkeypatch.setattr(research, "retrieve", lambda *a, **k: [{
             "text": f'Q: The EU 868 MHz limit\nThe page says: "{PASSAGE}"',
             "source": PAGE, "tag": RESEARCH_TAG, "distance": 0.05}])
@@ -405,9 +312,9 @@ class TestTheRecord:
         monkeypatch.setattr(ctx, "retrieve", lambda *a, **k: [])
         monkeypatch.setattr(ctx, "load_docs_context", lambda *a, **k: "")
         monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
-        client = _client(
-            _reply(quotes=[(1, PASSAGE, PAGE), (2, "Not on the page, this sentence.", PAGE)]),
-            _reply(quotes=[(1, "Still not on the page, this one.", PAGE)]))
+        monkeypatch.setattr(fetch, "_transport",
+                            _served({PAGE: _html(), REFUSING: REFUSED}))
+        client = _client(_documents((PAGE, ""), (REFUSING, "")))
         client.chat_json = AsyncMock(return_value=({
             "objective": "size it", "unknowns": ["the limit", "the duty cycle"],
             "blocking_unknowns": ["the limit", "the duty cycle"],
@@ -416,16 +323,16 @@ class TestTheRecord:
         out = await ctx.build_phase_context(
             "size a radio", [Domain.HARDWARE], client=client,
             risk=RiskLevel.HIGH, grounding_lookup=record)
-        assert record["quotes"] == {"found": 1, "not_found": 2, "unfetched": 0,
+        assert record["quotes"] == {"found": 1, "not_found": 0, "unfetched": 1,
                                     "too_short": 0}
-        assert record["asked_again"] == 1 and record["found"] == 2
-        assert "1 of 2 have answers no passage found in its page backs" not in out
-        assert "2 of 2 have answers no passage found in its page backs" in out
+        assert "asked_again" not in record and record["found"] == 1
+        assert "have answers no passage found in its page backs" not in out
+        assert PASSAGE[:40] in out
 
 
 def test_a_finding_built_the_old_way_is_one_unverified_question():
     finding = Finding("q", "a", ["https://x/y"])
-    assert finding.unchecked() == [1] and finding.to_ask_again() == []
+    assert finding.unchecked() == [1]
     assert Quote(1, "t", "u").status == "unchecked"
 
 
@@ -466,38 +373,6 @@ class TestTheFetchConnectsToTheAddressItChecked:
         monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
         assert (await fetch.fetch_source(PAGE)).status == "fetched"
         assert [kwargs["trust_env"] for kwargs in made] == [False]
-
-
-class TestOneBadQuoteCostsOnlyItself:
-    """Audit of 2026-11-11: one malformed quote used to void the reply's
-    typed reading, so the answer was kept as raw JSON and every good quote
-    beside it went unchecked."""
-
-    @pytest.mark.parametrize("bad", [
-        {"question": 1, "text": PASSAGE},                 # no address
-        {"question": "first", "text": PASSAGE, "url": PAGE},
-        {"question": 1, "text": "  ", "url": PAGE},
-        "not an object",
-    ])
-    async def test_the_answer_and_the_good_quotes_are_kept(self, monkeypatch, bad):
-        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
-        content = json.dumps({"answer": "25 mW e.r.p.", "quotes": [
-            bad, {"question": 1, "text": PASSAGE, "url": PAGE}]})
-        client = _client(ModelResponse(content=content, model="m", prompt_tokens=1,
-                                       completion_tokens=1, cost=0.0, citations=[PAGE]))
-        finding, = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
-        assert finding.answer == "25 mW e.r.p."
-        assert [q.status for q in finding.quotes] == ["found"]
-        assert research.dropped_quotes() == 1
-        assert research.untyped_replies() == 0
-
-    async def test_quotes_that_are_not_a_list_leave_the_answer(self):
-        content = json.dumps({"answer": "25 mW e.r.p.", "quotes": "none"})
-        client = _client(ModelResponse(content=content, model="m", prompt_tokens=1,
-                                       completion_tokens=1, cost=0.0, citations=[PAGE]))
-        finding, = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
-        assert finding.answer == "25 mW e.r.p." and finding.quotes == []
-        assert research.dropped_quotes() == 1
 
 
 class TestTheQuoteCheckReadsPastPrinting:
@@ -563,21 +438,6 @@ class TestAQuotedTableIsReadRowByRow:
         """A quote is a grid only when every line of it is."""
         assert not quote_found("(7) Nitrate | 10 (as Nitrogen)", TABLE_PAGE)
         assert quote_found("(7) Nitrate 10 (as Nitrogen)", TABLE_PAGE)
-
-    async def test_the_check_marks_a_grid_found_and_a_short_one_too_short(
-            self, monkeypatch):
-        from autornd.knowledge import research
-        from autornd.knowledge.fetch import Source
-
-        async def fake(url):
-            return Source(url=url, status="fetched", text=TABLE_PAGE,
-                          fetched_at="t", sha256="s")
-        monkeypatch.setattr(research, "fetch_source", fake)
-        finding = research.Finding(question="q", answer="a", quotes=[
-            research.Quote(1, "|(7) Nitrate|10 (as Nitrogen)|", "https://x"),
-            research.Quote(1, "|(3) Barium|2|", "https://x")])
-        await research._check(finding)
-        assert [q.status for q in finding.quotes] == ["found", "too_short"]
 
 
 # A page's words as eCFR prints them (29 CFR 1910.95(g)(5)), and quotes in
@@ -682,9 +542,8 @@ class TestASiteThatRefusesIsAvoided:
     async def _refused(self, monkeypatch, times=2):
         monkeypatch.setattr(fetch, "_transport",
                             _served({REFUSING: REFUSED, PAGE: _html()}))
-        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
         for _ in range(times):
-            await research_gaps(_client(_reply(quotes=[(1, PASSAGE, REFUSING)])),
+            await research_gaps(_client(_documents((REFUSING, PASSAGE))),
                                 "a radio", ["The EU 868 MHz limit"])
 
     async def test_a_site_that_refuses_twice_is_listed(self, monkeypatch):
@@ -699,83 +558,50 @@ class TestASiteThatRefusesIsAvoided:
 
     async def test_a_site_read_here_is_never_listed(self, monkeypatch):
         monkeypatch.setattr(fetch, "_transport", _served({REFUSING: _html()}))
-        await research_gaps(_client(_reply(quotes=[(1, PASSAGE, REFUSING)])),
+        await research_gaps(_client(_documents((REFUSING, PASSAGE))),
                             "a radio", ["The EU 868 MHz limit"])
         await self._refused(monkeypatch, times=3)
         assert research.unreadable_sites() == {}
 
     async def test_a_missing_page_says_nothing_about_its_site(self, monkeypatch):
         """Break-proof: only a refusal marks a site, not any failed fetch."""
-        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
-        await research_gaps(_client(_reply(quotes=[(1, PASSAGE, OTHER)])),
+        await research_gaps(_client(_documents((OTHER, PASSAGE))),
                             "a radio", ["The EU 868 MHz limit"])
         assert research.unreadable_sites() == {}
 
     async def test_a_page_read_from_the_site_takes_it_off_the_list(self, monkeypatch):
+        """A listed site is not fetched while the switch is on, so this is
+        seen with it off: the list is kept either way."""
+        monkeypatch.setattr(config.settings, "lookup_avoid_unreadable", False)
         await self._refused(monkeypatch)
+        assert research.unreadable_sites() != {}
         monkeypatch.setattr(fetch, "_transport", _served({REFUSING: _html()}))
-        await research_gaps(_client(_reply(quotes=[(1, PASSAGE, REFUSING)])),
+        await research_gaps(_client(_documents((REFUSING, PASSAGE))),
                             "a radio", ["The EU 868 MHz limit"])
         assert research.unreadable_sites() == {}
 
-    async def test_the_next_lookup_is_told_to_quote_from_elsewhere(self, monkeypatch):
+    async def test_the_next_lookup_is_told_to_give_no_address_there(self, monkeypatch):
         assert config.settings.lookup_avoid_unreadable is True, "on since 2026-11-15"
         await self._refused(monkeypatch, times=1)
-        monkeypatch.setattr(research, "MAX_ROUNDS", 2)
-        client = _client(_reply(quotes=[(1, PASSAGE, REFUSING)]),
-                         _reply(quotes=[(1, PASSAGE, PAGE)]))
-        first, second = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
-        asked_first, asked_again = (c.kwargs["user_message"]
-                                    for c in client.chat.await_args_list)
+        client = _client(_documents((REFUSING, PASSAGE)), _documents((PAGE, "")))
+        await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
+        finding, = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
+        asked_first, asked_next = (c.kwargs["user_message"]
+                                   for c in client.chat.await_args_list)
         assert "refuse to be read" not in asked_first
-        assert ("cannot\nbe checked: refusing.example.gov. Quote from none of them."
-                in asked_again)
-        assert first.unchecked() == [1] and second.checked() == {1}
+        assert ("refuse to be read from here: refusing.example.gov. Give no "
+                "address on them." in asked_next)
+        assert finding.checked() == {1}
 
     async def test_switched_off_no_lookup_is_told_anything(self, monkeypatch):
         """Break-proof: the clause is the switch's."""
         monkeypatch.setattr(config.settings, "lookup_avoid_unreadable", False)
-        await self._refused(monkeypatch, times=1)
-        monkeypatch.setattr(research, "MAX_ROUNDS", 2)
-        client = _client(_reply(quotes=[(1, PASSAGE, REFUSING)]),
-                         _reply(quotes=[(1, PASSAGE, PAGE)]))
+        await self._refused(monkeypatch, times=2)
+        client = _client(_documents((PAGE, "")))
         await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
         assert research.unreadable_sites() == {"refusing.example.gov": "HTTP 403"}
         assert all("refuse to be read" not in c.kwargs["user_message"]
                    for c in client.chat.await_args_list)
-
-
-class TestAnAnswerNothingBacksIsWithheld:
-    async def _lookup(self, monkeypatch, quotes):
-        monkeypatch.setattr(fetch, "_transport",
-                            _served({REFUSING: REFUSED, PAGE: _html()}))
-        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
-        return await research_gaps(_client(_reply(quotes=quotes)), "a radio",
-                                   ["The EU 868 MHz limit"])
-
-    async def test_no_passage_found_keeps_it_from_the_phases_and_in_the_record(
-            self, monkeypatch):
-        monkeypatch.setattr(config.settings, "lookup_withhold_unverified", True)
-        findings = await self._lookup(monkeypatch, [(1, PASSAGE, REFUSING)])
-        assert [f.withheld for f in findings] == [True]
-        assert render_findings(findings) == ""
-        record, = research.source_records(findings)
-        assert record["withheld"] is True
-        assert record["quotes"][0]["status"] == "unfetched"
-
-    async def test_a_passage_found_on_its_page_is_shown(self, monkeypatch):
-        """Break-proof: only an answer nothing backs is withheld."""
-        monkeypatch.setattr(config.settings, "lookup_withhold_unverified", True)
-        findings = await self._lookup(monkeypatch, [(1, PASSAGE, PAGE)])
-        assert [f.withheld for f in findings] == [False]
-        assert "25 mW e.r.p." in render_findings(findings)
-
-    async def test_switched_off_an_unverified_answer_is_shown_as_before(
-            self, monkeypatch):
-        assert config.settings.lookup_withhold_unverified is False
-        findings = await self._lookup(monkeypatch, [(1, PASSAGE, REFUSING)])
-        assert [f.withheld for f in findings] == [False]
-        assert "treat this answer as unverified" in render_findings(findings)
 
 
 LONG_PAGE = "\n".join(
@@ -788,21 +614,10 @@ LONG_PAGE = "\n".join(
        for n in range(60, 120)])
 
 
-def _documents(*items) -> ModelResponse:
-    content = json.dumps({"documents": [
-        {"url": url, "title": "t", "near": near} for url, near in items]})
-    return ModelResponse(content=content, model="search/model", prompt_tokens=10,
-                         completion_tokens=20, cost=0.005, citations=[])
-
-
 class TestTheLookupReadsTheDocuments:
     """Measured 2026-11-15 (the root-cause test): with the governing section's
     own text handed on, 8 of 8 answers were right on two questions that had
     been wrong 8 times on a search model's summary."""
-
-    @pytest.fixture(autouse=True)
-    def _on(self, monkeypatch):
-        monkeypatch.setattr(config.settings, "lookup_reads_documents", True)
 
     async def test_the_search_is_asked_where_not_what(self, monkeypatch):
         monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
@@ -844,7 +659,7 @@ class TestTheLookupReadsTheDocuments:
             "flite attendnt brake", ["zzz"])
         assert any("at least 10 consecutive hours" in q.text for q in finding.quotes)
 
-    async def test_a_page_not_read_is_recorded_and_nothing_is_asked_again(
+    async def test_a_page_not_read_is_recorded_and_the_search_is_asked_once(
             self, monkeypatch):
         monkeypatch.setattr(fetch, "_transport",
                             _served({REFUSING: REFUSED, PAGE: _html()}))
@@ -866,170 +681,24 @@ class TestTheLookupReadsTheDocuments:
                             "a radio", ["The EU 868 MHz limit"])
         assert seen == [PAGE]
 
-    def test_it_ships_on(self):
-        """Owner's plan 2026-11-15, after the comparison: 107 of 107
-        professional answers right with it, never worse and 18 percent
-        cheaper an answer."""
-        assert config.Settings.model_fields["lookup_reads_documents"].default is True
-
-    async def test_switched_off_the_lookup_is_the_old_one(self, monkeypatch):
-        """Break-proof: the new lookup is the switch's."""
-        monkeypatch.setattr(config.settings, "lookup_reads_documents", False)
-        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
-        client = _client(_reply(quotes=[(1, PASSAGE, PAGE)]))
-        finding, = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
-        assert finding.answer == "25 mW e.r.p."
-        assert "Do\nnot answer" not in client.chat.await_args.kwargs["user_message"]
-
-
-class TestTheDocumentsAreAskedForOnceMore:
-    """Owner's plan 2026-11-15, the finding half. The comparison's one wrong
-    answer with this lookup was the run where the search named two sections
-    beside the governing one, and 87 of its quotes were on pages that could
-    not be read. Built behind a setting that ships off until it is measured:
-    it is a second paid search call."""
-
-    POINTER = "The maximum radiated power in this band"
-
-    @pytest.fixture(autouse=True)
-    def _on(self, monkeypatch):
-        monkeypatch.setattr(config.settings, "lookup_reads_documents", True)
-        monkeypatch.setattr(config.settings, "lookup_documents_ask_again", True)
-
-    async def _lookup(self, monkeypatch, pages, *replies, seen=None):
-        monkeypatch.setattr(fetch, "_transport", _served(pages, seen))
-        client = _client(*replies)
-        findings = await research_gaps(client, "a radio", ["The EU 868 MHz limit"])
-        return client, findings
-
-    def test_it_ships_off(self):
-        assert config.Settings.model_fields[
-            "lookup_documents_ask_again"].default is False
-
-    async def test_switched_off_nothing_is_asked_again(self, monkeypatch):
-        """Break-proof: the second call is the setting's."""
-        monkeypatch.setattr(config.settings, "lookup_documents_ask_again", False)
-        client, _ = await self._lookup(
-            monkeypatch, {REFUSING: REFUSED}, _documents((REFUSING, self.POINTER)))
-        assert client.chat.await_count == 1
-
-    async def test_a_page_that_could_not_be_read_is_asked_for_elsewhere(
-            self, monkeypatch):
-        client, (finding,) = await self._lookup(
-            monkeypatch, {REFUSING: REFUSED, PAGE: _html()},
-            _documents((REFUSING, self.POINTER)), _documents((PAGE, self.POINTER)))
-        assert client.chat.await_count == 2
-        again = client.chat.await_args_list[1].kwargs["user_message"]
-        assert again.startswith(client.chat.await_args_list[0].kwargs["user_message"])
-        assert again.endswith(
-            "These addresses were tried already and did not serve:\n"
-            f"- {REFUSING}: could not be read (HTTP 403)\n"
-            "Give other documents, and none of the addresses above. Where a "
-            "page could not\nbe read, give the same document on a site that "
-            "can be read. Where a page was\nread and does not hold the words "
-            "pointed at, give the section that does hold\nthe answer.")
-        assert [q.status for q in finding.quotes] == ["unfetched", "found"]
-        assert finding.citations == [REFUSING, PAGE]
-        assert finding.documents == [
-            {"url": REFUSING, "near": self.POINTER, "read": False,
-             "reason": "HTTP 403", "holds_pointer": None, "request": 1},
-            {"url": PAGE, "near": self.POINTER, "read": True, "reason": "",
-             "holds_pointer": True, "request": 2}]
-
-    async def test_a_page_without_the_words_pointed_at_is_asked_past(
-            self, monkeypatch):
-        """The comparison's wrong answer: the pages named were read, and the
-        governing sentence was on none of them."""
-        client, (finding,) = await self._lookup(
-            monkeypatch, {OTHER: _text("A page about another section entirely, "
-                                       "with nothing on radiated power."),
-                          PAGE: _html()},
-            _documents((OTHER, self.POINTER)), _documents((PAGE, self.POINTER)))
-        assert client.chat.await_count == 2
-        assert (f"- {OTHER}: read, and the words pointed at are not on it\n"
-                in client.chat.await_args_list[1].kwargs["user_message"])
-        assert [d["holds_pointer"] for d in finding.documents] == [False, True]
-        assert any(quote_found(PASSAGE, q.text) for q in finding.quotes)
-
-    @pytest.mark.parametrize("pointer", [
-        # The words pointed at are on the page, marks and case aside.
-        "the **maximum radiated power** in this band",
-        # No pointer, or one too short to look for, says nothing either way.
-        "", "25 mW",
-    ])
-    async def test_a_page_read_is_not_asked_past_without_cause(
-            self, monkeypatch, pointer):
-        """Break-proof: the second call is paid, and is made only on a miss."""
-        client, (finding,) = await self._lookup(
-            monkeypatch, {PAGE: _html()}, _documents((PAGE, pointer)))
-        assert client.chat.await_count == 1
-        assert finding.documents[0]["holds_pointer"] is (True if "maximum" in pointer
-                                                         else None)
-
-    async def test_one_page_that_holds_its_pointer_is_enough(self, monkeypatch):
-        """Break-proof: a page beside it that was not read, and one that was
-        read and does not hold its pointer, do not make a miss."""
-        client, _ = await self._lookup(
-            monkeypatch, {REFUSING: REFUSED, PAGE: _html(),
-                          OTHER: _text("A page about another section entirely.")},
-            _documents((REFUSING, self.POINTER), (OTHER, self.POINTER),
-                       (PAGE, self.POINTER)))
-        assert client.chat.await_count == 1
-
-    async def test_there_is_no_third_request_and_no_page_is_fetched_twice(
-            self, monkeypatch):
-        seen: list[str] = []
-        client, (finding,) = await self._lookup(
-            monkeypatch, {OTHER: REFUSED},
-            _documents((OTHER, self.POINTER)), _documents((OTHER, self.POINTER)),
-            _documents((PAGE, self.POINTER)), seen=seen)
-        assert client.chat.await_count == 2
-        assert seen == [OTHER]
-        assert [d["request"] for d in finding.documents] == [1]
-
-    async def test_a_second_request_that_fails_leaves_the_first(self, monkeypatch):
-        client, (finding,) = await self._lookup(
-            monkeypatch, {REFUSING: REFUSED},
-            _documents((REFUSING, self.POINTER)), RuntimeError("provider down"))
-        assert [q.status for q in finding.quotes] == ["unfetched"]
-
-    async def test_the_record_carries_the_documents_and_only_for_this_lookup(
-            self, monkeypatch):
-        _, findings = await self._lookup(
-            monkeypatch, {PAGE: _html()}, _documents((PAGE, self.POINTER)))
-        record, = research.source_records(findings)
-        assert record["documents"] == [
-            {"url": PAGE, "near": self.POINTER, "read": True, "reason": "",
-             "holds_pointer": True, "request": 1}]
-        monkeypatch.setattr(config.settings, "lookup_reads_documents", False)
-        research.reset_unreadable_sites()
-        _, findings = await self._lookup(
-            monkeypatch, {PAGE: _html()}, _reply(quotes=[(1, PASSAGE, PAGE)]))
-        record, = research.source_records(findings)
-        assert "documents" not in record
-
-    async def test_a_site_listed_as_refusing_is_named_in_the_request(
-            self, monkeypatch):
-        """The words are the document request's own: it is asked for an
-        address, not for a quote."""
-        monkeypatch.setattr(config.settings, "lookup_documents_ask_again", False)
-        for _ in range(research.REFUSALS_TO_LIST):
-            await self._lookup(monkeypatch, {REFUSING: REFUSED},
-                               _documents((REFUSING, "")))
-        client, _ = await self._lookup(monkeypatch, {PAGE: _html()},
-                                       _documents((PAGE, "")))
-        assert client.chat.await_args.kwargs["user_message"].endswith(
-            "These sites refuse to be read from here: refusing.example.gov. "
-            "Give no address on them.\nWhere a document is on one of them, "
-            "give the same document on a site that\ncan be read.")
+    def test_it_is_the_only_lookup(self):
+        """Owner's word 2026-11-16, after 432 answers read blind: 144 of 144
+        right with it against 141 of 144. The lookup that asked for an
+        answer, the second request for documents and the withholding of
+        unverified answers are gone, and so are their settings."""
+        for gone in ("lookup_reads_documents", "lookup_documents_ask_again",
+                     "lookup_withhold_unverified"):
+            assert gone not in config.Settings.model_fields
+        assert not hasattr(research, "_ask") and not hasattr(research, "_lookup")
 
 
 class TestWhatTheFetchCanRead:
     async def test_a_pdf_is_read_through_its_text_layer(self, monkeypatch):
         monkeypatch.setattr(fetch, "_transport", _served({PAGE: _pdf(PASSAGE)}))
         finding, = await research_gaps(
-            _client(_reply(quotes=[(1, PASSAGE, PAGE)])), "a radio", ["The EU 868 MHz limit"])
+            _client(_documents((PAGE, PASSAGE))), "a radio", ["The EU 868 MHz limit"])
         assert finding.quotes[0].status == "found"
+        assert quote_found(PASSAGE, finding.quotes[0].text)
 
     @pytest.mark.parametrize("served, reason", [
         (_pdf(""), "the PDF has no text layer"),
@@ -1047,9 +716,8 @@ class TestWhatTheFetchCanRead:
         wall = _html("<html><body><h1>Request Access</h1><p>Please complete "
                      "the CAPTCHA to continue.</p></body></html>")
         monkeypatch.setattr(fetch, "_transport", _served({PAGE: wall}))
-        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
         finding, = await research_gaps(
-            _client(_reply(quotes=[(1, PASSAGE, PAGE)])), "a radio", ["The EU 868 MHz limit"])
+            _client(_documents((PAGE, PASSAGE))), "a radio", ["The EU 868 MHz limit"])
         quote, = finding.quotes
         assert quote.status == "unfetched" and "challenge page" in quote.reason
 
@@ -1091,22 +759,26 @@ class TestWhatTheFetchCanRead:
 
 class TestTheSourcesAreReturned:
     async def test_a_lookup_record_names_each_page_and_what_was_found(self, monkeypatch):
-        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
-        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
-        findings = await research_gaps(_client(_reply(quotes=[
-            (1, PASSAGE, PAGE), (2, "Not on the page, this sentence.", PAGE)])),
-            "a radio", ["The EU 868 MHz limit", "The duty cycle"])
+        monkeypatch.setattr(fetch, "_transport",
+                            _served({PAGE: _html(), REFUSING: REFUSED}))
+        findings = await research_gaps(
+            _client(_documents((PAGE, PASSAGE), (REFUSING, "x"))),
+            "a radio", ["The EU 868 MHz limit"])
         record, = research.source_records(findings)
-        assert record["round"] == 1 and record["recalled"] is False
-        assert record["citations"] == [PAGE]
-        assert record["unverified_questions"] == [2]
+        assert record["recalled"] is False
+        assert "round" not in record and "withheld" not in record
+        assert record["citations"] == [PAGE, REFUSING]
+        assert record["unverified_questions"] == []
         assert [(q["question"], q["url"], q["status"]) for q in record["quotes"]] == [
-            (1, PAGE, "found"), (2, PAGE, "not_found")]
+            (1, PAGE, "found"), (1, REFUSING, "unfetched")]
         found = record["quotes"][0]
-        assert found["text"] == PASSAGE and found["sha256"] and found["fetched_at"]
-        # Each quote carries the words of its own question, not the first's.
+        assert quote_found(PASSAGE, found["text"])
+        assert found["sha256"] and found["fetched_at"]
         assert [q["question_text"] for q in record["quotes"]] == [
-            "The EU 868 MHz limit", "The duty cycle"]
+            "The EU 868 MHz limit"] * 2
+        assert [(d["url"], d["read"], d["holds_pointer"], d["request"])
+                for d in record["documents"]] == [
+            (PAGE, True, True, 1), (REFUSING, False, None, 1)]
         json.dumps(record)   # plain data: it goes through the phase channel
 
 
@@ -1123,8 +795,7 @@ class TestARequestForSourcesIsAlwaysLookedUp:
         monkeypatch.setattr(ctx, "retrieve", lambda *a, **k: [])
         monkeypatch.setattr(ctx, "load_docs_context", lambda *a, **k: "")
         monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html()}))
-        monkeypatch.setattr(research, "MAX_ROUNDS", 1)
-        client = _client(_reply(quotes=[(1, PASSAGE, PAGE)]))
+        client = _client(_documents((PAGE, "")))
         client.chat_json = AsyncMock(return_value=({
             "objective": "o", "unknowns": unknowns,
             "blocking_unknowns": unknowns,
@@ -1176,8 +847,9 @@ class TestAnXmlPageIsRead:
         monkeypatch.setattr(fetch, "_transport", _served({
             PAGE: (200, {"content-type": "application/xml"}, body)}))
         finding, = await research_gaps(
-            _client(_reply(quotes=[(1, PASSAGE, PAGE)])), "a radio", ["The EU 868 MHz limit"])
+            _client(_documents((PAGE, PASSAGE))), "a radio", ["The EU 868 MHz limit"])
         assert finding.quotes[0].status == "found"
+        assert quote_found(PASSAGE, finding.quotes[0].text)
 
 
 def _zip(members: dict[str, str]) -> bytes:

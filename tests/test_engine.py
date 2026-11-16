@@ -277,15 +277,15 @@ class TestWorkflowEngine:
         client = OpenRouterClient(api_key="test")
 
         async def _no_lookup(lookup_client, request, question,
-                             **kwargs):
+                             max_tokens):
             # The one network boundary this test's blocked plan would
             # reach: the gap the blockers name is looked up, and the
             # suite may not reach the provider (ARCH-20261002-112).
-            # No answer is the same outcome a failed lookup produces.
-            return "", [], "mock", []
+            # None is the same outcome a failed lookup produces.
+            return None
 
         monkeypatch.setattr(
-            "autornd.knowledge.research._lookup", _no_lookup)
+            "autornd.knowledge.research._name_documents", _no_lookup)
 
         # The context build also probes the rerank API with this
         # client's own method — another boundary the suite may not

@@ -47,51 +47,6 @@ needs_sources:
     a no skips a lookup that only the risk rating asked for. A request that
     asks for its sources in words is always looked up, whatever this says.
 
-chunk_helps:
-  question: >
-    Does this excerpt contain information that helps answer this question?
-  yes: The excerpt states facts, figures or rules that bear on the question.
-  no: The excerpt is about another subject, or only shares words with the question.
-  yes_at: 0.80
-  no_at: 0.20
-  safe: "yes"
-  mode: shadow
-  guards: >
-    Live, a no drops the excerpt before it is ranked and briefed from. It
-    covers what the distance bound cannot: excerpts between 0.51 and 0.81
-    that are about something else.
-
-finding_answers:
-  question: >
-    Does this stored passage state an answer to this question?
-  yes: The passage states the fact or figure the question asks for.
-  no: The passage is about the subject but does not state what is asked, or is about something else.
-  yes_at: 0.80
-  no_at: 0.20
-  safe: "no"
-  mode: shadow
-  guards: >
-    Live, a yes reuses a passage an earlier run already checked against its
-    page, and no new search is paid for. Asked only when the stored passage
-    is too far in wording for the reuse rule and near enough to be a
-    candidate.
-
-hard_request:
-  question: >
-    Does answering this request correctly need several dependent steps of
-    calculation or reasoning, or the reconciling of conflicting requirements?
-  yes: It chains calculations, weighs trade-offs, or must reconcile constraints.
-  no: It is a single lookup, a single formula, or a direct statement of fact.
-  yes_at: 0.80
-  no_at: 0.20
-  safe: "yes"
-  mode: shadow
-  each: request
-  guards: >
-    Live, a workflow may choose the answering tier on it (tier_when), sending
-    an easy request to a cheaper model. No shipped workflow does yet: which
-    tier is the cheaper one is a ruling.
-
 needs_calculation:
   question: >
     Must the answer to this request be worked out by calculation from figures,
@@ -116,20 +71,6 @@ needs_calculation:
     Live, only a yes runs the recompute step and its three samples. A
     confident no skips them, and so does having no decision tier to ask:
     the step is off unless a request is judged to need a calculation.
-
-ask_covered:
-  question: >
-    The item quotes one thing the request asks for. Does the answer give it?
-  yes: The answer states a definite value, verdict, step or text for this ask.
-  no: The answer leaves this ask out, defers it, or says it cannot be given.
-  yes_at: 0.80
-  no_at: 0.20
-  safe: "yes"
-  mode: shadow
-  each: asks
-  guards: >
-    Recorded beside the recompute vote, which cannot see an omission. No
-    step acts on it yet.
 
 quote_answers:
   question: >

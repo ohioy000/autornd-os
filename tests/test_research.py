@@ -47,6 +47,25 @@ def _empty_store(monkeypatch):
                         lambda *a, **kw: [])
 
 
+PAGE_TEXT = "The per-cell charge cutoff for this cell is 3.65 V at 25 C."
+
+
+@pytest.fixture(autouse=True)
+def _pages_served(monkeypatch):
+    """Every page a lookup names is read, with one sentence on it, and
+    nothing is written to the store. The lookup fetches the documents the
+    search model names; the suite never reaches the network."""
+    from autornd.knowledge.fetch import Source
+
+    async def served(url):
+        return Source(url=url, status="fetched", text=PAGE_TEXT,
+                      fetched_at="2026-11-16T00:00:00Z", sha256="ab" * 32)
+
+    monkeypatch.setattr("autornd.knowledge.research.fetch_source", served)
+    monkeypatch.setattr("autornd.knowledge.research.ingest_text",
+                        lambda *a, **kw: 0)
+
+
 def stored(text, source="https://example.org/standard.pdf", distance=0.05):
     """A hit as the store would return it."""
     return [{"text": text, "source": source, "tag": "research",
@@ -153,11 +172,11 @@ class TestResearchGaps:
         assert len(findings) == MAX_LOOKUPS
         assert client.chat.await_count == MAX_LOOKUPS
 
-    async def test_an_empty_answer_is_discarded(self, monkeypatch):
+    async def test_a_reply_that_names_no_document_is_discarded(self, monkeypatch):
         from autornd import config
 
         monkeypatch.setattr(config.settings, "model_search", "vendor/search")
-        client = client_returning(reply("   ", ["https://x/y.pdf"]))
+        client = client_returning(reply("I could not find this.", []))
         assert await research_gaps(client, "req", GAPS[:1]) == []
 
 
@@ -169,7 +188,12 @@ class TestOnlyCitedFactsBecomeKnowledge:
         found in its page is kept; tests/test_source_check.py stores one."""
         from autornd import config
         import autornd.knowledge.research as research
+        from autornd.knowledge.fetch import Source
 
+        async def refused(url):
+            return Source(url=url, status="refused", reason="HTTP 403")
+
+        monkeypatch.setattr(research, "fetch_source", refused)
         monkeypatch.setattr(config.settings, "model_search", "vendor/search")
         stored: list[tuple] = []
         monkeypatch.setattr(research, "ingest_text",
@@ -177,21 +201,6 @@ class TestOnlyCitedFactsBecomeKnowledge:
         client = client_returning(reply("3.65 V", ["https://eve.com/ds.pdf"]))
         findings = await research_gaps(client, "req", GAPS[:1])
         assert len(findings) == 1 and findings[0].grounded
-        assert stored == []
-
-    async def test_an_uncited_finding_is_shown_but_not_stored(self, monkeypatch):
-        """Worth telling the operator; not worth becoming permanent context
-        that later workflows treat as established project knowledge."""
-        from autornd import config
-        import autornd.knowledge.research as research
-
-        monkeypatch.setattr(config.settings, "model_search", "vendor/search")
-        stored: list[tuple] = []
-        monkeypatch.setattr(research, "ingest_text",
-                            lambda text, tag, source="": stored.append((tag, source)))
-        client = client_returning(reply("I could not find this.", []))
-        findings = await research_gaps(client, "req", GAPS[:1])
-        assert len(findings) == 1 and not findings[0].grounded
         assert stored == []
 
     async def test_a_storage_failure_is_not_fatal(self, monkeypatch):

@@ -17,11 +17,14 @@ what the project documentation fails to cover; those gaps become the queries,
 so the only thing ever searched is something known to be missing. Findings are
 ingested, so a fact looked up once is local for every workflow after.
 
-Ruling D56 adds the check the citations never were. Every answer quotes the
-passage it rests on, and the harness fetches the page and looks for the
-passage in it. An answer whose passage is found there is checked, and only a
-found passage is kept for later runs. A question whose passage is not found is
-asked once more; what is still not found is marked unverified.
+Ruling D56 added the check the citations never were: a quoted passage is
+looked for in the page it names, and only a found passage is kept for later
+runs. Since the owner's rulings of 2026-11-15 and 16 there is one lookup: the
+search model is asked where the answer is written, the harness fetches those
+pages, and the passages handed on are the pages' own words. The earlier
+lookup, which asked the search model for an answer and its quotes, was
+removed on 2026-11-16: on 432 answers read blind it was right in 141 of 144
+against 144 of 144 (docs/reviews/2026-11-16-misleading-set-run.md).
 """
 
 from __future__ import annotations
@@ -35,12 +38,9 @@ from urllib.parse import urlsplit
 from dataclasses import dataclass, field
 
 from autornd.config import settings
-from autornd.knowledge.fetch import MAX_FETCHES, fetch_source
+from autornd.knowledge.fetch import fetch_source
 from autornd.knowledge.store import ingest_text, retrieve
-from autornd.models.verdicts import LookupVerdict, QuotedPassage
-
 from autornd.routing.openrouter import BudgetExceeded, extract_json
-from autornd.routing.switches import YES, route_for
 
 logger = logging.getLogger(__name__)
 
@@ -65,36 +65,6 @@ def reset_refused_lookups() -> None:
     global _refused_lookups
     _refused_lookups = 0
 
-
-# Ruling D56 (1): lookup replies that were not the typed format, counted since
-# process start. Each is kept as an unverified answer; the count is how a
-# search serving that ignores the format shows.
-_untyped_replies = 0
-
-
-def untyped_replies() -> int:
-    return _untyped_replies
-
-
-def reset_untyped_replies() -> None:
-    global _untyped_replies
-    _untyped_replies = 0
-
-
-# Quotes dropped because one was malformed (no text, no address, a number
-# that is not one), counted since process start. The rest of the reply is
-# kept: one bad quote used to void the whole reply's typed reading, so every
-# good quote beside it went unchecked (audit of 2026-11-11).
-_dropped_quotes = 0
-
-
-def dropped_quotes() -> int:
-    return _dropped_quotes
-
-
-def reset_dropped_quotes() -> None:
-    global _dropped_quotes
-    _dropped_quotes = 0
 
 # A budget stop is a decision, not a failure. Every handler below exists so a
 # lookup that breaks does not take the workflow with it, and each one would
@@ -149,15 +119,6 @@ def _note_fetch(url: str, source) -> None:
             _unreadable_sites[site] = source.reason
 
 
-# Added to a lookup when sites are known to refuse us.
-AVOID_PROMPT = """\
-
-
-These sites refuse to be read from here, so a passage quoted from them cannot
-be checked: {sites}. Quote from none of them. Find the same passage on a site
-that can be read, and give that page's address."""
-
-
 __all__ = ["Finding", "Quote", "quote_found", "research_gaps",
            "source_records"]
 
@@ -174,13 +135,6 @@ __all__ = ["Finding", "Quote", "quote_found", "research_gaps",
 # up to match, because a single answer now has to cover everything the work was
 # missing rather than one figure.
 MAX_LOOKUPS = 1
-
-# Ruling D56 (4): a question whose quoted passage was not found in its page is
-# asked once more, together with the others not found, in one more request.
-# Two rounds at most, so one more search fee, and only when a check failed. An
-# answer that quoted nothing is not asked again: the model did not follow the
-# format, and the same request again buys little.
-MAX_ROUNDS = 2
 
 # Ruling D56 (3): a passage shorter than this checks nothing. "25 mW" is on
 # many pages; a sentence is on few. Not measured: about the shortest passage
@@ -202,43 +156,7 @@ RESEARCH_TAG = "research-quoted"
 # design, while a needless lookup only costs money.
 REUSE_DISTANCE = 0.175
 
-LOOKUP_PROMPT = """\
-Answer these {questions} from authoritative sources — {sources}.
-
-{question}
-
-Answer every question above. Each one is here because the work cannot proceed
-on an assumption about it, so a partial answer leaves the work blocked.
-
-Rules:
-- Give the figures, with their units exactly as the source states them.
-- Distinguish units that are commonly confused.{unit_examples}
-- Name the source document for every figure.
-- Name the standard or code that governs this class of work, even when the
-  question does not mention one.
-- Add what a practitioner would expect to see that the question did not ask
-  for.{gap_examples} The
-  person asking usually does not know what they left out.
-- If authoritative sources disagree, say so and give both.
-- If you cannot find it, say so plainly. An admitted gap is useful; a plausible
-  guess is worse than nothing, because everything downstream will trust it.
-  This applies to the additions above too: an element you cannot source is
-  named as unverified, never stated as a specification.
-
-Quote, for every answer, the passage it rests on: copied character for
-character from the page, nothing left out and nothing reworded, at least a
-full sentence. Give the address of that page itself, one that can be read as
-HTML or plain text. Each page is fetched and each passage looked for in it; an
-answer whose passage is not found there is marked unverified.
-
-Reply with JSON only:
-{{"answer": "<the full answer, written as the rules above ask>",
-  "quotes": [{{"question": <the number of the question it answers, 1 if
-  there is one>, "text": "<the passage, exactly as the page prints it>",
-  "url": "<the page's address>"}}]}}
-"""
-
-# settings.lookup_reads_documents: the search model is asked where the answer
+# The search model is asked where the answer
 # is written, not what it is. The harness reads the pages itself.
 DOCUMENTS_PROMPT = """\
 Find the documents in which the answer to the request below is written. Do
@@ -272,18 +190,6 @@ These sites refuse to be read from here: {sites}. Give no address on them.
 Where a document is on one of them, give the same document on a site that
 can be read."""
 
-# settings.lookup_documents_ask_again: the second request for documents,
-# added to the first one's text. Asked once.
-DOCUMENTS_AGAIN_PROMPT = """\
-
-
-These addresses were tried already and did not serve:
-{tried}
-Give other documents, and none of the addresses above. Where a page could not
-be read, give the same document on a site that can be read. Where a page was
-read and does not hold the words pointed at, give the section that does hold
-the answer."""
-
 # How much of the fetched pages is handed on. A page this short is handed on
 # whole; of a longer one, the stretches that share most words with the
 # request and with the search model's own pointer. Set on the root-cause test
@@ -298,17 +204,6 @@ MAX_DOCUMENTS = 6
 MIN_POINTER_CHARS = MIN_QUOTE_CHARS
 _TERM = re.compile(r"[a-z0-9]{3,}")
 
-# Ruling D56 (4): the second round's question, ahead of the questions asked
-# again.
-AGAIN_PROMPT = """\
-An earlier answer to these could not be checked: no passage it quoted was
-found in the page it named, or the page could not be read as HTML or plain
-text. Answer them again, and quote each passage exactly as such a page prints
-it.
-
-{questions}"""
-
-# Characters a passage and its page often print differently, read as one.
 _SAME_CHARACTER = str.maketrans({
     "\u2018": "'", "\u2019": "'", "\u201a": "'", "\u201b": "'", "\u2032": "'",
     "\u201c": '"', "\u201d": '"', "\u201e": '"', "\u201f": '"', "\u2033": '"',
@@ -466,17 +361,13 @@ class Finding:
     answer: str
     citations: list[str] = field(default_factory=list)
     model: str = ""
-    # Ruling D56: the questions this lookup asked, numbered from 1 as the
-    # prompt numbered them; the passages it quoted; the round that asked.
+    # Ruling D56: the questions this lookup asked, numbered from 1; the
+    # passages handed on.
     asked: list[str] = field(default_factory=list)
     quotes: list[Quote] = field(default_factory=list)
-    round: int = 1
-    # settings.lookup_withhold_unverified: kept in the record, not rendered.
-    withheld: bool = False
-    # settings.lookup_reads_documents: each document the search model named,
-    # in the order tried: its address, the words it pointed at, whether the
-    # page was read, whether those words are on it (None when it gave none),
-    # and the request that named it (1, or 2 for the second).
+    # Each document the search model named, in the order tried: its address,
+    # the words it pointed at, whether the page was read, and whether those
+    # words are on it (None when it gave none).
     documents: list[dict] = field(default_factory=list)
 
     @property
@@ -511,14 +402,8 @@ class Finding:
         found = self.checked()
         return [n for n in range(1, len(self._asked()) + 1) if n not in found]
 
-    def to_ask_again(self) -> list[str]:
-        """Ruling D56 (4): the questions that quoted a passage and had none found."""
-        quoted = {q.question for q in self.quotes}
-        return [self._asked()[n - 1] for n in self.unchecked() if n in quoted]
-
     def render(self) -> str:
-        label = "Q (asked again)" if self.round > 1 else "Q"
-        lines = [f"{label}: {self.question}", f"A: {self.answer}"]
+        lines = [f"Q: {self.question}", f"A: {self.answer}"]
         found = [q for q in self.quotes if q.status == "found"]
         if self.citations:
             lines.append("Sources: " + ", ".join(self.citations[:5]))
@@ -551,8 +436,7 @@ async def research_gaps(
 ) -> list[Finding]:
     """Look up the gaps a briefing identified, check them, and keep what holds.
 
-    Returns findings in gap order, a second round's finding right after the
-    one it asks again. Failure of a single lookup is not fatal: a workflow
+    Returns findings in gap order. Failure of a single lookup is not fatal: a workflow
     with three of four facts is better off than one that aborted, and the
     missing one stays visible as a gap. A page that cannot be fetched never
     fails a lookup; it leaves its answer unverified.
@@ -579,32 +463,16 @@ async def research_gaps(
         # everywhere else: the local check is free and it is also more
         # consistent, because it returns the figure already cited rather than
         # re-asking and hoping for the same answer.
-        reused = _recall(question) or await _recall_by_switch(question)
+        reused = _recall(question)
         if reused is not None:
             findings.append(reused)
             continue
-        if settings.lookup_reads_documents:
-            finding = await _ask_documents(client, request, asked, max_tokens)
-        else:
-            finding = await _ask(client, request, asked, max_tokens)
+        finding = await _ask_documents(client, request, asked, max_tokens)
         if finding is None:
             continue
         findings.append(finding)
         _remember(finding)   # recalled findings skip this: already stored
-        # A lookup that read the documents itself has nothing to ask again:
-        # its quotes are the pages' words, and a page not read stays unread.
-        again = [] if settings.lookup_reads_documents else finding.to_ask_again()
-        if again and MAX_ROUNDS > 1:
-            second = await _ask(client, request, again, max_tokens, round_=2)
-            if second is not None:
-                findings.append(second)
-                _remember(second)
 
-    if settings.lookup_withhold_unverified:
-        for finding in findings:
-            # Nothing it quoted was found on a page: the answer is the search
-            # model's word alone. Recalled findings were found when stored.
-            finding.withheld = not finding.recalled and not finding.checked()
     if findings:
         checked = sum(len(f.checked()) for f in findings)
         unchecked = sum(len(f.unchecked()) for f in findings)
@@ -621,30 +489,6 @@ def _bundle(asked: list[str]) -> str:
     if len(asked) == 1:
         return asked[0]
     return "\n".join(f"{i}. {q}" for i, q in enumerate(asked, 1))
-
-
-async def _ask(client, request: str, asked: list[str], max_tokens: int | None,
-               round_: int = 1) -> Finding | None:
-    """One lookup, checked. None when it failed or found nothing."""
-    question = _bundle(asked)
-    prompt = question if round_ == 1 else AGAIN_PROMPT.format(questions=question)
-    try:
-        answer, citations, model, quotes = await _lookup(
-            client, request, prompt, max_tokens=max_tokens)
-    except BudgetExceeded:
-        raise
-    except Exception as exc:
-        global _refused_lookups
-        _refused_lookups += 1
-        logger.warning("Lookup failed for %r: %s", question[:60], exc)
-        return None
-    if not answer:
-        return None
-    finding = Finding(question=question, answer=answer, citations=citations,
-                      model=model, asked=list(asked), round=round_,
-                      quotes=[Quote(q.question, q.text, q.url) for q in quotes])
-    await _check(finding)
-    return finding
 
 
 def _excerpts(text: str, terms: set[str]) -> list[str]:
@@ -690,37 +534,11 @@ def _holds_pointer(near: str, text: str) -> bool | None:
     return pointer in _normalise(text)
 
 
-def _missed(documents: list[dict]) -> bool:
-    """Did this request for documents bring nothing to read the answer from?
-
-    Either no page could be read, or pointers were given and no page that
-    was read holds its own. The comparison of 2026-11-15 had one wrong
-    answer with this lookup, and it was the one run where the search named
-    two sections beside the governing one; 87 of its quotes were on pages
-    that could not be read.
-    """
-    read = [d for d in documents if d["read"]]
-    if not read:
-        return True
-    pointed = [d["holds_pointer"] for d in read if d["holds_pointer"] is not None]
-    return bool(pointed) and not any(pointed)
-
-
-def _tried(documents: list[dict]) -> str:
-    return "\n".join(
-        f"- {d['url']}: " + ("read, and the words pointed at are not on it"
-                             if d["read"] and d["holds_pointer"] is False
-                             else "read" if d["read"]
-                             else f"could not be read ({d['reason']})")
-        for d in documents)
-
-
 async def _name_documents(client, request: str, question: str,
-                          max_tokens: int | None, tried: list[dict] | None = None,
+                          max_tokens: int | None,
                           ) -> tuple[object, dict[str, str]] | None:
     """Ask the search model where the answer is written: its reply, and each
     address with the words it pointed at."""
-    again = (DOCUMENTS_AGAIN_PROMPT.format(tried=_tried(tried)) if tried else "")
     try:
         response = await client.chat(
             function="search",
@@ -728,7 +546,7 @@ async def _name_documents(client, request: str, question: str,
                            "answered in. You do not answer from memory."),
             user_message=DOCUMENTS_PROMPT.format(
                 request=request, question=question, limit=MAX_DOCUMENTS)
-            + _avoid_clause(DOCUMENTS_AVOID_PROMPT) + again,
+            + _avoid_clause(),
             temperature=0.0,
             max_tokens=max_tokens or settings.search_max_tokens,
         )
@@ -753,11 +571,11 @@ async def _name_documents(client, request: str, question: str,
     return response, near
 
 
-async def _read_documents(near: dict[str, str], terms: set[str], round_: int,
-                          skip: set[str]) -> tuple[list[Quote], list[dict]]:
+async def _read_documents(near: dict[str, str], terms: set[str],
+                          ) -> tuple[list[Quote], list[dict]]:
     """Fetch the documents named and take the stretches to hand on."""
-    urls = [u for u in near if u not in skip
-            and not (settings.lookup_avoid_unreadable
+    urls = [u for u in near
+            if not (settings.lookup_avoid_unreadable
                      and _site(u) in _unreadable_sites)][:MAX_DOCUMENTS]
     pages = await asyncio.gather(*(fetch_source(u) for u in urls))
     quotes: list[Quote] = []
@@ -769,7 +587,10 @@ async def _read_documents(near: dict[str, str], terms: set[str], round_: int,
             "reason": "" if page.fetched else page.reason,
             "holds_pointer": (_holds_pointer(near[url], page.text)
                               if page.fetched else None),
-            "request": round_})
+            # Always 1: a second request for documents was measured on 432
+            # answers, fired in 13 of 144 lookups and gained nothing, and was
+            # removed (2026-11-16). Kept so records read as the traces do.
+            "request": 1})
         if not page.fetched:
             quotes.append(Quote(1, near[url] or url, url, status="unfetched",
                                 reason=page.reason))
@@ -783,37 +604,22 @@ async def _read_documents(near: dict[str, str], terms: set[str], round_: int,
 
 async def _ask_documents(client, request: str, asked: list[str],
                          max_tokens: int | None) -> Finding | None:
-    """One lookup that reads the documents itself (lookup_reads_documents).
+    """One lookup: the harness reads the documents itself.
 
     The search model names where the answer is written; the harness fetches
     those pages and the finding carries stretches of their own text as its
     quotes. No model's summary is handed on, so a quote is the page's words
     by construction, and each is still put through the same check.
-
-    With lookup_documents_ask_again on, a request that brought nothing to
-    read the answer from (`_missed`) is made once more, told which addresses
-    were tried and what became of each.
     """
     question = _bundle(asked)
     named = await _name_documents(client, request, question, max_tokens)
     if named is None:
         return None
     response, near = named
-    pointers = dict(near)
     quotes, documents = await _read_documents(
-        near, _terms(request, question, near), 1, set())
+        near, _terms(request, question, near))
     if not documents:
         return None
-    if settings.lookup_documents_ask_again and _missed(documents):
-        again = await _name_documents(client, request, question, max_tokens,
-                                      tried=documents)
-        if again is not None:
-            pointers.update(again[1])
-            more, tried_again = await _read_documents(
-                again[1], _terms(request, question, pointers), 2,
-                {d["url"] for d in documents})
-            quotes += more
-            documents += tried_again
     return Finding(
         question=question, citations=[d["url"] for d in documents],
         model=response.model, asked=[question], quotes=quotes,
@@ -824,72 +630,6 @@ async def _ask_documents(client, request: str, asked: list[str],
 
 def _terms(request: str, question: str, near: dict[str, str]) -> set[str]:
     return set(_TERM.findall(" ".join([request, question, *near.values()]).casefold()))
-
-
-async def _check(finding: Finding) -> None:
-    """Ruling D56 (3): fetch each quoted page once, and look for each passage in it."""
-    for quote in finding.quotes:
-        if _checked_chars(quote.text) < MIN_QUOTE_CHARS:
-            quote.status = "too_short"
-    urls = list(dict.fromkeys(q.url for q in finding.quotes
-                              if q.status != "too_short"))[:MAX_FETCHES]
-    sources = dict(zip(urls, await asyncio.gather(*(fetch_source(u) for u in urls))))
-    for url, source in sources.items():
-        _note_fetch(url, source)
-    for quote in finding.quotes:
-        if quote.status == "too_short":
-            continue
-        source = sources.get(quote.url)
-        if source is None:
-            quote.status = "unfetched"
-            quote.reason = f"past the {MAX_FETCHES}-page fetch cap"
-        elif not source.fetched:
-            quote.status, quote.reason = "unfetched", source.reason
-        else:
-            quote.fetched_at, quote.sha256 = source.fetched_at, source.sha256
-            quote.status = ("found" if quote_found(quote.text, source.text)
-                            else "not_found")
-
-
-# How far a stored finding may be from a question and still be put to the
-# finding_answers switch. The reuse rule above takes only a near restatement
-# (REUSE_DISTANCE); a finding that answers the question in other words lies
-# further out. The bound is the retrieval bound's own measurement
-# (2026-11-13): material on the right subject lay at 0.80 or nearer.
-REUSE_CANDIDATE_DISTANCE = 0.81
-
-
-async def _recall_by_switch(question: str) -> Finding | None:
-    """A stored finding the finding_answers switch says answers this gap.
-
-    Asked only when the reuse rule declined and the nearest stored finding is
-    still near enough to be a candidate. Live, a confident yes reuses it and
-    no search is paid for; anything else, shadow included, looks it up.
-    """
-    try:
-        hits = retrieve(question, n_results=1, where={"tag": RESEARCH_TAG})
-    except Exception as exc:
-        logger.debug("Could not check the store for %r: %s", question[:60], exc)
-        return None
-    if not hits:
-        return None
-    hit = hits[0]
-    distance = hit.get("distance")
-    if distance is None or not REUSE_DISTANCE < distance <= REUSE_CANDIDATE_DISTANCE:
-        return None
-    route = await route_for("finding_answers",
-                            {"question": question, "passage": hit["text"]},
-                            label=str(hit.get("source", "")))
-    if route != YES:
-        return None
-    logger.info("Reusing a stored finding for %r on the switch (distance %.3f)"
-                " — no lookup", question[:60], distance)
-    return Finding(
-        question=question,
-        answer=hit["text"],
-        citations=[hit["source"]] if hit.get("source") else [],
-        model="recalled",
-    )
 
 
 def _recall(question: str) -> Finding | None:
@@ -922,85 +662,10 @@ def _recall(question: str) -> Finding | None:
     )
 
 
-async def _lookup(client, request: str, question: str,
-                  max_tokens: int | None = None
-                  ) -> tuple[str, list[str], str, list[QuotedPassage]]:
-    """One search-backed lookup. Returns (answer, citations, model, quotes).
-
-    Ruling D56 (1): the reply is typed, so its quotes are fields, never read
-    out of prose. It stays a plain chat: the parameters it sends are the ones
-    preflight checks the search serving for, and one reply is one search fee,
-    with no retry for its shape.
-    """
-    from autornd.profiles import framing, get_profile
-    f = framing()
-    profile = get_profile()
-    response = await client.chat(
-        function="search",
-        system_prompt=(
-            f"You answer {f['questions']} from authoritative sources and "
-            f"cite them. You never present a guess as a specification."
-        ),
-        user_message=LOOKUP_PROMPT.format(question=question, **framing())
-        + _avoid_clause()
-        + f"\n\nThis is being looked up in service of: {request}",
-        temperature=0.0,
-        max_tokens=max_tokens or settings.search_max_tokens,
-    )
-    content = (response.content or "").strip()
-    try:
-        data = extract_json(content)
-        if not isinstance(data, dict) or "answer" not in data:
-            raise ValueError("the reply has no answer field")
-        verdict = LookupVerdict(answer=str(data.get("answer") or ""),
-                                quotes=_valid_quotes(data.get("quotes")))
-    except ValueError as exc:
-        # Convention 21: a reply in prose loses no word of its answer, so it
-        # is kept whole as the answer, with no quotes, which marks it
-        # unverified. Counted, so a search serving that ignores the format
-        # shows as one.
-        global _untyped_replies
-        _untyped_replies += 1
-        logger.warning("Lookup reply is not the typed format (%s); kept as "
-                       "an unverified answer", exc)
-        verdict = LookupVerdict(answer=content)
-    return (
-        verdict.answer.strip(),
-        list(getattr(response, "citations", None) or []),
-        response.model,
-        verdict.quotes,
-    )
-
-
-def _avoid_clause(prompt: str = AVOID_PROMPT) -> str:
+def _avoid_clause() -> str:
     if not settings.lookup_avoid_unreadable or not _unreadable_sites:
         return ""
-    return prompt.format(sites=", ".join(sorted(_unreadable_sites)))
-
-
-def _valid_quotes(raw: object) -> list[QuotedPassage]:
-    """The quotes of a reply that are well formed, each judged on its own.
-
-    A malformed quote is dropped and counted; it never costs the reply its
-    answer or its other quotes.
-    """
-    global _dropped_quotes
-    if not isinstance(raw, list):
-        if raw is not None:
-            _dropped_quotes += 1
-        return []
-    kept: list[QuotedPassage] = []
-    for item in raw:
-        try:
-            quote = QuotedPassage.model_validate(item)
-            if not quote.text.strip() or not quote.url.strip():
-                raise ValueError("a quote needs its text and its address")
-            kept.append(quote)
-        except ValueError as exc:
-            _dropped_quotes += 1
-            logger.warning("Dropped a malformed quote from a lookup reply: %s",
-                           str(exc)[:200])
-    return kept
+    return DOCUMENTS_AVOID_PROMPT.format(sites=", ".join(sorted(_unreadable_sites)))
 
 
 # The most of one quoted passage a source record carries.
@@ -1010,20 +675,17 @@ SOURCE_RECORD_QUOTE_CHARS = 600
 def source_records(findings: list[Finding]) -> list[dict]:
     """What each lookup read, as plain data for the run's record.
 
-    One entry per finding: the question, the round, whether it was recalled
+    One entry per finding: the question, whether it was recalled
     from the store, the provider's own citations, and every quote with what
     the check found. "found" means the words are on the page fetched, not
     that the answer follows from them.
     """
     return [{
         "question": f.question,
-        "round": f.round,
         "recalled": f.recalled,
         "unverified_questions": f.unchecked(),
-        "withheld": f.withheld,
         "citations": list(f.citations),
-        # Only a lookup that read the documents has these; a record without
-        # the key is one that asked for an answer.
+        # A finding recalled from the store has none.
         **({"documents": [dict(d) for d in f.documents]} if f.documents else {}),
         "quotes": [{
             "question": q.question,
@@ -1081,7 +743,6 @@ def _remember(finding: Finding) -> None:
 
 def render_findings(findings: list[Finding]) -> str:
     """Findings as prompt context, with their provenance attached."""
-    findings = [f for f in findings if not f.withheld]
     if not findings:
         return ""
     body = "\n\n".join(f.render() for f in findings)

@@ -38,6 +38,10 @@ _WORK = {"feasible": True, "concerns": [], "blockers": [], "critical": False,
          "summary": "Drop is 2 x 3 ft x 0.01614 ohm/ft x 0.050 A = 0.004842 V.",
          "ship": True, "findings": [], "verdict": "Ship."}
 LOOKUP_ANSWER = "22 AWG solid copper is 16.14 ohm per 1000 ft at 20 C."
+
+# Every run here names a document in its lookup; the page is served, never
+# fetched (tests/conftest.py, pages_served).
+pytestmark = pytest.mark.usefixtures("pages_served")
 BLOCKING = "What is the resistance of 22 AWG solid copper?"
 
 
@@ -51,7 +55,10 @@ def _responses(**overrides) -> dict:
         # is what the paid lookup asks.
         "research": {"queries": ["22 AWG resistance"], "objective": "Wire it.",
                      "unknowns": [BLOCKING], "blocking_unknowns": [BLOCKING]},
-        "search": {"answer": LOOKUP_ANSWER},
+        # The search model names a document; the page's words are served by
+        # the pages_served fixture where a test reads them.
+        "search": {"documents": [{"url": "https://example.org/awg",
+                                  "title": "wire table", "near": ""}]},
         "architecture": {"ready": True, "plan": "Show the drop.", "blockers": [],
                          "success_criteria": ["The drop arithmetic is shown"]},
         "engineering": dict(_WORK),
@@ -75,7 +82,9 @@ async def _units(tmp_path, client_factory, timeout=60.0, repeat=1):
 
 
 class TestR6TheGroundingLookupIsRecorded:
-    async def test_its_questions_and_answer_are_in_the_written_record(self, tmp_path):
+    async def test_its_questions_and_answer_are_in_the_written_record(
+            self, tmp_path, pages_served):
+        pages_served["text"] = LOOKUP_ANSWER
         _, (unit,) = await _units(tmp_path, lambda: make_mock_client(_responses()))
         lookup = unit["verdicts"]["context"]["lookup"]
         assert lookup["asked"] == [BLOCKING]

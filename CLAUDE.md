@@ -188,7 +188,7 @@ uvicorn autornd.main:app --port 8100                 # run the API
   Adding an existing node to a loop body silently shortens the pipeline; a phase needed in both places
   needs **two node ids**.
 - **The API entry point is `engine/workflow.py`, not just `graph/executor.py`.** It owns the DB row,
-  the status column and episodic memory; it looks like dead legacy and is not
+  and the status column; it looks like dead legacy and is not
   (`tests/test_live_wiring.py` pins it).
 - **Cost figures predating commit `b4cd89f` are understated 2.6×–295×.** Never cite one; re-measure.
 - **`api_host` defaults to `127.0.0.1` on purpose** — calls cost real money; the Dockerfile passes

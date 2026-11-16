@@ -314,9 +314,9 @@ class TestTheSentListIsWhatTheClientSends:
         assert set(sent_parameters("engineering")) == set(CHAT_JSON_PARAMETERS)
 
     async def test_the_search_lookup_sends_exactly_the_plain_list(self):
-        from autornd.knowledge.research import _lookup
+        from autornd.knowledge.research import _name_documents
         client = self._client()
-        await _lookup(client, "request", "question")
+        await _name_documents(client, "request", "question", None)
         (_, payload), = client._client.payloads
         assert set(payload) - NON_PARAMETER_KEYS == set(sent_parameters("search"))
 

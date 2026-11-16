@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-2075%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1993%20passing-brightgreen.svg)](#testing)
 
 **A harness that lets low-cost models answer expert questions correctly, and says honestly what it checked.**
 
@@ -171,7 +171,7 @@ To pin which provider serves a tier, set `OPENROUTER_PROVIDER_ORDER`. `.env.exam
 
 ### Decision switches
 
-The switches are declared in [`switches/default.yaml`](switches/default.yaml), each with two thresholds, a safe answer and a mode. In `shadow` the answer is recorded and nothing acts on it. In `live` the harness acts on a confident answer and takes the safe, more careful side otherwise.
+The switches are declared in [`switches/default.yaml`](switches/default.yaml), each with two thresholds, a safe answer and a mode. All four are `live`: the harness acts on a confident answer and takes the safe, more careful side otherwise. A new switch starts in `shadow`, where its answer is recorded and nothing acts on it.
 
 | Switch | Mode | What it does |
 |---|---|---|
@@ -179,7 +179,6 @@ The switches are declared in [`switches/default.yaml`](switches/default.yaml), e
 | `needs_calculation` | live | the recompute step runs unless the answer is a confident no |
 | `quote_answers` | live | a found passage that does not answer its question is labelled `answers_question: false` in `sources`. It is kept, and it backs no confirmation |
 | `same_meaning` | live | asked when the vote flags an ask stated in words. A confident yes clears the flag as a difference of wording, and a caution says so |
-| `hard_request`, `ask_covered`, `chunk_helps`, `finding_answers` | shadow | recorded only |
 
 ## Workflows Are Files
 
@@ -227,7 +226,6 @@ The workflows that ship, one file each in `workflows/` (`tests/test_docs.py` che
 | `triage-classify` | one node, triage alone. A probe |
 | `plan-probe` | triage, grounding and the plan alone. A probe |
 | `independent-check-probe` | one pass that reaches the independent check and nothing else. A probe |
-| `answer-and-recompute-claims` | `answer-and-recompute` with a claim check added in shadow. It is recorded only, and nothing in the delivery reads it. For measuring |
 
 **Choosing one.** `AUTORND_WORKFLOW` sets the server's default. Unset, it is `answer-and-recompute`. A request may name one of the four offered workflows in its `workflow` field, and `GET /api/workflows/offered` lists them. Any other name, or a path, is refused with 422 before anything runs. The probes cannot be named by a request. To make your own, copy a file and change it.
 
@@ -271,7 +269,7 @@ Grounding has two parts: your own documents, then outside sources.
 
 With no decision tier, the risk rating and the request's own words decide. Everything that is missing goes into one request.
 
-**How a lookup works** (`lookup_reads_documents`, on by default since 2026-11-15):
+**How a lookup works.** There is one lookup:
 
 1. The search model is asked where the answer is written, not what it is. It names documents and a few words that stand near the answer.
 2. The harness fetches those pages itself. It reads HTML, plain text, the text layer of a PDF and some office formats.
@@ -283,10 +281,7 @@ With no decision tier, the risk rating and the request's own words decide. Every
 
 Settings, in `autornd/config.py`, each settable in `.env` in upper case:
 
-- `lookup_reads_documents`. Off, the older lookup runs: the search model answers and quotes, each quote is checked against its page, and a passage not found is asked once more.
-- `lookup_documents_ask_again`, off. When the first request for documents brought nothing to read, ask once more.
-- `lookup_avoid_unreadable`, on. A site that refuses twice is named to later lookups, which are told to give a copy that can be read.
-- `lookup_withhold_unverified`, off. Keep a lookup answer with no found passage out of the answer step.
+- `lookup_avoid_unreadable`, on. A site that refuses twice is named to later lookups, which are told to give a copy that can be read. The list of such sites is kept for the whole server process, so one caller's refused fetches shape what the next caller's lookup is told.
 - `SEARCH_MAX_TOKENS` and `SEARCH_MAX_TOKENS_CONSEQUENTIAL` cap one search call. The second applies at high and critical risk.
 
 ## Profiles and the Knowledge Store
@@ -349,7 +344,7 @@ Triage assigns specialists for each run. In the default workflow one lead writes
 
 **Settings at runtime.** `PUT /api/settings` is for loopback callers only and accepts five settings: `max_iterations` (1 to 20), `escalation_max_tokens`, `escalation_recovery_attempts`, `autornd_profile` and `log_level`. A numeric setting can be lowered below the value the server started with and never raised above it. `POST /api/profiles/{name}` switches the profile, also from loopback only. Everything else is changed in `.env` and needs a restart.
 
-**Deployment.** Run it on a private network, or behind a reverse proxy with TLS. There is no rate limiting, and every run spends real money. The database is SQLite by default. There is no migration tool: missing additive columns are added at startup, and any other schema change is by hand.
+**Deployment.** Run one server process on its database. A run lives in the process that started it: when the server starts, any run a stopped server left in flight is ended as `blocked` with the reason, and a second process on the same database would end the first one's live runs. Run it on a private network, or behind a reverse proxy with TLS. There is no rate limiting, and every run spends real money. The database is SQLite by default. There is no migration tool: missing additive columns are added at startup, and any other schema change is by hand.
 
 ## API
 
@@ -369,7 +364,6 @@ Triage assigns specialists for each run. In the default workflow one lead writes
 | GET · PUT | `/api/settings` | read settings, secrets redacted. Change the five runtime settings |
 | GET | `/api/profiles` | the active and the available profiles |
 | POST | `/api/profiles/{name}` | switch profile, from this machine only |
-| GET | `/api/episodes` | the caller's past run outcomes |
 | GET | `/api/health` | health and per-tier model verification |
 | GET | `/api/knowledge/stats` | knowledge store statistics |
 

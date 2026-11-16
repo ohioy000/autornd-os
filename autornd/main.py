@@ -12,7 +12,6 @@ from autornd.api.dashboard import dashboard_router
 from autornd.api.routes import router
 from autornd.config import settings
 from autornd.database import init_db
-import autornd.knowledge.episodic  # noqa: F401 — register Episode model
 import autornd.models.user  # noqa: F401 — register User model
 
 logging.basicConfig(
@@ -21,9 +20,47 @@ logging.basicConfig(
 )
 
 
+# What a run left in flight by a stopped server is told.
+STRANDED = ("The server stopped while this run was in flight, and the run "
+            "was ended when the server next started. Submit it again.")
+
+
+async def end_stranded_runs() -> int:
+    """End every run a stopped server left in flight. Returns how many.
+
+    A run lives in the process that started it: after a restart nothing
+    will ever move its row again, and it read as running for ever (API
+    audit of 2026-11-16). Each such row ends blocked, with the reason.
+    Right for one server process on its database, which is how this is
+    run; a second process sharing the database would end the first one's
+    live runs, so do not run two (owner's word, 2026-11-16).
+    """
+    from datetime import datetime, timezone
+
+    from sqlalchemy import update
+
+    from autornd import database
+    from autornd.models.workflow import Workflow, WorkflowStatus
+
+    ended = (WorkflowStatus.COMPLETED, WorkflowStatus.BLOCKED,
+             WorkflowStatus.ESCALATED)
+    async with database.async_session() as session:
+        result = await session.execute(
+            update(Workflow).where(Workflow.status.notin_(ended))
+            .values(status=WorkflowStatus.BLOCKED, error=STRANDED,
+                    updated_at=datetime.now(timezone.utc)))
+        await session.commit()
+    return result.rowcount or 0
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    stranded = await end_stranded_runs()
+    if stranded:
+        logging.getLogger("autornd").warning(
+            "%d run(s) were in flight when the server last stopped; each "
+            "was ended as blocked", stranded)
 
     from autornd.routing.openrouter import check_models
     logger = logging.getLogger("autornd")

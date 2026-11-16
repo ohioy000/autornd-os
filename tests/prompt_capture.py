@@ -89,11 +89,11 @@ CHUNKS = [
 # The 17 model-calling functions capture_all reaches. The call-site test
 # proves no other function in autornd/ calls a model.
 SITE_FUNCTIONS = frozenset({
-    "run_triage", "run_asks", "run_claims", "run_plan", "run_plan_feasibility",
+    "run_triage", "run_asks", "run_plan", "run_plan_feasibility",
     "run_domain_review", "run_implement", "run_recompute", "run_validate",
     "run_review", "run_doublecheck", "run_escalation_autopsy",
     "expand_queries", "rerank_chunks", "synthesize_briefing",
-    "analyze_request", "_lookup", "_name_documents",
+    "analyze_request", "_name_documents",
 })
 
 # The specialist each seat is given. ENGINEERING_SEATS are the ones the golden
@@ -301,16 +301,6 @@ async def capture_all(seats: dict[str, object] | None = None) -> dict[str, dict[
     )
     take("recompute")
 
-    # The claim check, in shadow: the claims list, and a claim sample.
-    await phases.run_claims(client, REQUEST, IMPLEMENT.summary)
-    take("claims")
-    await phases.run_recompute(
-        client, REQUEST, CONTEXT,
-        [{"number": 1, "quote": "timer period", "kind": "value"}],
-        max_tokens=None, samples=1, claims=True,
-    )
-    take("claims_recompute")
-
     validate, _ = await phases.run_validate(
         client,
         REQUEST,
@@ -383,11 +373,6 @@ async def capture_all(seats: dict[str, object] | None = None) -> dict[str, dict[
 
     scoping, unknowns = await knowledge_context.analyze_request(client, REQUEST)
     take("scoping")
-
-    answer, citations, model, quotes = await research._lookup(
-        client, REQUEST, "the backoff cap in seconds", max_tokens=None,
-    )
-    take("lookup")
 
     await research._ask_documents(
         client, REQUEST, ["the backoff cap in seconds"], None,

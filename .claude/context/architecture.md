@@ -7,7 +7,7 @@ Load when touching `graph/`, `engine/`, node scheduling, loops or gates.
 ```
 POST /api/workflows            autornd/api/routes.py
   → WorkflowEngine.execute()   autornd/engine/workflow.py:1  (DB row, status column,
-                                 PhaseResult rows, episodic memory afterwards)
+                                 PhaseResult rows)
   → GraphExecutor(spec, runner, settings_lookup).run(request)
                                autornd/graph/executor.py:124,351
       loads workflows/<name>.yaml      autornd/graph/spec.py:128

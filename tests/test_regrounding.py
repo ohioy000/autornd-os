@@ -323,7 +323,8 @@ class TestRegroundingEdge:
             "blocker": "container topology: shared or per-worker?",
             "basis": "asked: false; lookup returned 0 finding(s) this round"}]
 
-    async def test_adapter_lookup_handler_bills_and_evolves_state(self):
+    async def test_adapter_lookup_handler_bills_and_evolves_state(
+            self, pages_served):
         # (b), through the real PhaseRunner: the adapter's own lookup
         # handler sends only the novel blockers, bills the search call, and
         # mutates context asked/rounds in place -- the code that ships is
@@ -333,8 +334,8 @@ class TestRegroundingEdge:
         from tests.conftest import make_mock_client
 
         client = make_mock_client({
-            "search": {"answer": "dedicated per-worker sidecars",
-                       "citations": ["runbook p.3"]},
+            "search": {"documents": [{"url": "https://example.org/runbook",
+                                      "title": "runbook", "near": ""}]},
         })
         runner = PhaseRunner(client)
         state = ExecutionState(request="D37 probe (b)")

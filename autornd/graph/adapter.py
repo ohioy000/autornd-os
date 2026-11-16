@@ -37,7 +37,7 @@ from autornd.models.verdicts import Domain, role_key
 from autornd.profiles import get_profile
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
 from autornd.routing.switches import (
-    NO, YES, Switchboard, head_and_tail, release_switchboard, use_switchboard)
+    NO, YES, Switchboard, release_switchboard, use_switchboard)
 from autornd.specialists.base import Specialist
 from autornd.specialists.registry import get_specialists
 
@@ -60,25 +60,6 @@ class UnknownPromptError(KeyError):
 
 def _request_item(runner: Any, state: ExecutionState) -> list[tuple[str, Any]]:
     return [("request", {"request": state.request})]
-
-
-def _ask_items(runner: Any, state: ExecutionState) -> list[tuple[str, Any]]:
-    implement = state.outputs.get("implement")
-    answer = (implement.get("summary") if isinstance(implement, dict)
-              else getattr(implement, "summary", None)) or ""
-    # The head and the tail of a long answer, not the head alone: a verdict
-    # or a last step sits at the end. Measured 2026-11-13: in the tier-2 run
-    # all four answers ask_covered scored low were longer than the bound,
-    # their verdicts past the cut; in golden batch 1, Q5 r2's release step
-    # and verdict were at characters 6553 and 8732 of 9265.
-    answer = head_and_tail(str(answer))
-    items = []
-    for ask in runner._anchored_asks(state) or []:
-        number, quote = ask.get("number"), str(ask.get("quote") or "").strip()
-        if isinstance(number, int) and quote:
-            items.append((f"ask {number}",
-                          {"item": quote, "answer": answer}))
-    return items
 
 
 def _disagreement_items(runner: Any, state: ExecutionState
@@ -107,7 +88,7 @@ def _quote_items(runner: Any, state: ExecutionState) -> list[tuple[str, Any]]:
 # What a switch node's switch is asked about, by its declared `each`. A new
 # kind of evidence is a new entry here, not a new branch.
 _SWITCH_ITEMS: dict[str, Callable[..., list[tuple[str, Any]]]] = {
-    "request": _request_item, "asks": _ask_items, "quotes": _quote_items,
+    "request": _request_item, "quotes": _quote_items,
     "disagreements": _disagreement_items,
 }
 
@@ -318,7 +299,7 @@ class PhaseRunner:
             return await self._reground_lookup(state)
         if node.check == "blocked_on_unmet":
             return self._blocked_on_unmet(node, state)
-        if node.check in ("recompute_vote", "claims_named"):
+        if node.check == "recompute_vote":
             return await self._recompute_vote_check(node, state)
         if node.check not in registry:
             raise KeyError(
@@ -537,9 +518,6 @@ class PhaseRunner:
         the flag the vote found is what the delivery carries. Nothing
         routes on it (D53 §2 (5)): the write is a record, not a gate.
         """
-        # claims_named is written the same way and for the same reason: it
-        # is the only record of which claims were kept and why the others
-        # were dropped (the owner, 2026-11-14, in shadow).
         result = get_check(node.check)(**resolve_args(node, state))
         if self.on_phase:
             self.on_phase(
@@ -1065,11 +1043,6 @@ class PhaseRunner:
         if node.prompt == "recompute":
             return {"skipped": True, "flagged": False, "reason": reason,
                     "samples": []}
-        if node.prompt == "claims":
-            return {"skipped": True, "reason": reason, "claims": []}
-        if node.prompt == "claim_switches":
-            return {"skipped": True, "reason": reason,
-                    "claim_records": [], "same": []}
         if node.prompt == "switches":
             return _switch_skip(
                 [str(n) for n in (node.args.get("ask") or [])], reason)
@@ -1137,36 +1110,6 @@ class PhaseRunner:
                  "not_answering": not_answering},
                 self.switchboard.drain_responses())
 
-    async def _phase_claim_switches(self, node: Node, state: ExecutionState):
-        """same_meaning behind the claim vote, in shadow (the owner,
-        2026-11-14): each claim the claim vote flagged on text is put to
-        the decision model with the claim's name, the answer's words and
-        a sample's. Its records are stored under `claim_records` and the
-        claims it judged the same under `same`, keys the delivery does not
-        read, so no decision of it reaches the delivery."""
-        if not self.switchboard.on():
-            return {"skipped": True, "reason": (
-                "no model configured for the decision tier — "
-                "no switch was asked"), "claim_records": [], "same": []}, []
-        recompute = state.outputs.get(str(node.args.get("samples")))
-        samples = (recompute.get("samples") if isinstance(recompute, dict)
-                   else None) or []
-        kept = state.outputs.get(str(node.args.get("claims")))
-        names = {a.get("number"): a.get("quote") for a in
-                 (kept.get("asks") if isinstance(kept, dict) else None) or []}
-        items = [("same_meaning", f"claim {d['ask']}",
-                  {"request": state.request, "claim": names.get(d["ask"], ""),
-                   "answer_value": d["answer"], "sample_value": d["majority"]})
-                 for d in text_disagreements(
-                     state.outputs.get(str(node.args.get("vote"))), samples)]
-        before = len(self.switchboard.records)
-        records = await self.switchboard.ask(items)
-        del self.switchboard.records[before:]   # this node records its own
-        same = [int(r["item"].split()[1]) for r in records
-                if r["choice"] == YES]
-        return ({"skipped": False, "reason": "", "claim_records": records,
-                 "same": same}, self.switchboard.drain_responses())
-
     def _recompute_wanted(self, node: Node, state: ExecutionState) -> bool:
         """Does the switch this node names say its samples should run?
 
@@ -1218,41 +1161,11 @@ class PhaseRunner:
                            "not run"),
                 "samples": [],
             }, []
-        # A node may recompute a claims check's kept claims instead of the
-        # request's asks (args: {claims: <the check node's id>}), in shadow
-        # by the owner's direction of 2026-11-14. With no claim kept there
-        # is nothing to ask, and no sample is paid for.
-        source = node.args.get("claims")
-        if source:
-            kept = state.outputs.get(str(source))
-            asks = list(kept.get("asks") or []) if isinstance(kept, dict) else []
-            if not asks:
-                return {
-                    "skipped": True,
-                    "flagged": False,
-                    "reason": "no claim was kept — no sample ran",
-                    "samples": [],
-                }, []
-        else:
-            asks = self._anchored_asks(state)
+        asks = self._anchored_asks(state)
         verdict, responses = await phases.run_recompute(
             self.client, state.request, self.context,
             asks,
             max_tokens=self._max_tokens(node),
             samples=int(node.args.get("samples", 3)),
-            claims=bool(source),
         )
         return verdict, responses
-
-    async def _phase_claims(self, node: Node, state: ExecutionState):
-        """The claims node: the figures the finished answer relies on,
-        listed by a model on the triage tier. In shadow (the owner,
-        2026-11-14): its output is recorded and compared, and nothing in
-        the delivery reads it."""
-        implement = state.outputs.get("implement")
-        answer = (implement.get("summary") if isinstance(implement, dict)
-                  else getattr(implement, "summary", None)) or ""
-        verdict, response = await phases.run_claims(
-            self.client, state.request, str(answer),
-            max_tokens=self._max_tokens(node))
-        return verdict, [response]

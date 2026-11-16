@@ -669,13 +669,6 @@ def _cautions(vote: dict | None, sources: list[dict],
             why = "none of its passages was found on its page"
         out.append(f"A lookup ran, but {why}, so nothing in this answer was "
                    f"checked against a source.")
-    withheld = sum(1 for f in findings if f.get("withheld"))
-    if withheld:
-        out.append(f"{withheld} lookup answer"
-                   f"{'s' if withheld > 1 else ''} had no passage found "
-                   f"on a page that could be read, and "
-                   f"{'were' if withheld > 1 else 'was'} withheld from "
-                   f"the answer.")
     for d in differing or []:
         out.append(f"Two pages handed on give different figures for the same "
                    f"thing: {d['figures'][0]} on {d['pages'][0]} and "
@@ -1066,7 +1059,10 @@ async def update_settings(body: SettingsUpdate, request: Request):
 
     updates = body.model_dump(exclude_none=True)
     if not updates:
-        raise HTTPException(400, "No settings to update")
+        raise HTTPException(
+            400, "No settings to update. The settings that can change at "
+                 f"runtime are {', '.join(sorted(settings.RUNTIME_MUTABLE))}; "
+                 "change any other in .env and restart the server.")
 
     bad = set(updates) - settings.RUNTIME_MUTABLE
     if bad:
@@ -1184,35 +1180,3 @@ async def switch_profile(name: str, request: Request):
 async def knowledge_stats():
     from autornd.knowledge.store import get_stats
     return {"data": get_stats()}
-
-
-@router.get("/episodes")
-async def list_episodes(
-    request: Request,
-    limit: int = 10,
-    session: AsyncSession = Depends(get_session),
-):
-    from autornd.knowledge.episodic import get_recent_episodes
-
-    # Ruling D45 (4): a caller sees their own runs, as /api/workflows does.
-    episodes = await get_recent_episodes(
-        session, limit=limit, user_id=_get_user_id(request))
-    return {
-        "data": [
-            {
-                "id": ep.id,
-                "workflow_id": ep.workflow_id,
-                "request": ep.request[:200],
-                "domains": ep.domains,
-                "risk": ep.risk,
-                "iterations": ep.iterations,
-                "shipped": ep.shipped,
-                "verdict": ep.verdict[:200],
-                "findings_count": ep.findings_count,
-                "total_cost": round(ep.total_cost, 4),
-                "created_at": ep.created_at.isoformat(),
-            }
-            for ep in episodes
-        ],
-        "meta": {"count": len(episodes)},
-    }
