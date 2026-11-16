@@ -56,7 +56,7 @@ nodes:
     prompt: switches
     advisory: true
     args:
-      ask: [hard_request]
+      ask: [hard_request, needs_calculation]
     depends_on: [context]
 
   # ── answer ───────────────────────────────────────────────────────
@@ -166,6 +166,10 @@ nodes:
     advisory: true
     args:
       samples: 3
+      # Owner's ruling of 2026-11-16: off by default, kept for calculations.
+      # The samples run only when this switch routes yes; on any other route
+      # the node records a skip, as it does with no recompute tier.
+      when_switch: needs_calculation
     max_tokens: recompute_max_tokens    # a full calculation, not a verdict — plan-sized
     depends_on: [consistency, answer_end_gate]
 

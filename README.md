@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-2056%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-2063%20passing-brightgreen.svg)](#testing)
 
 
 **An open-source harness for engineering teamwork, aimed at being frugal and accurate at the same time.**
@@ -260,14 +260,14 @@ The workflows that ship, one file each in `workflows/` (`tests/test_docs.py` che
 | `full-team` | the full team: plan, feasibility, a build loop with domain review and judges, risk-scaled review, escalation |
 | `lean` | plan, build, verify. No review team, no escalation — but it keeps the free checks |
 | `verify-first` | no plan: the request's asks, one answer, the free checks and one judge. One revision if the judge names a failed ask; escalated if the dissent survives |
-| `answer-and-recompute` | the request's asks, one answer with typed results, then blind recompute samples on the optional recompute tier and a free vote. A disagreement is a note on the delivery, never a block; with the recompute tier empty, the vote records a skip |
+| `answer-and-recompute` | the request's asks, one answer with typed results, then, for a request judged to need a calculation, blind recompute samples on the optional recompute tier and a free vote. A disagreement is a note on the delivery, never a block; for any other request, or with the recompute or the decision tier empty, the vote records a skip |
 | `triage-only` | classification and grounding, two calls, for measuring triage quality cheaply |
 | `triage-classify` | one node — triage alone. A calibration sweep costs a fraction of a cent per call instead of a whole workflow, which is what makes running one over dozens of scenarios affordable |
 | `plan-probe` | triage, grounding and the plan alone — a probe for whether a usable plan comes back, at what token cost and from which serving |
 | `independent-check-probe` | one pass that reaches the independent check and nothing else — a probe, not a shape to ship work through |
 | `answer-and-recompute-claims` | `answer-and-recompute`, node for node, with a claim check added after it, in shadow: a model lists the facts the finished answer relies on, blind samples state those same facts, the free vote compares them one by one, and a wording difference is put to the decision model. Recorded only; nothing in the delivery reads it. For measuring, not offered to a request |
 
-Select the server's default with `AUTORND_WORKFLOW`; unset, it is `answer-and-recompute`, which runs no judges, and its recompute step is skipped unless `MODEL_RECOMPUTE` is set. A request may name one of the first four itself (see [API](#api)); the probes are for measuring and cannot be named. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
+Select the server's default with `AUTORND_WORKFLOW`; unset, it is `answer-and-recompute`, which runs no judges. Its recompute step is off by default and kept for calculations: it runs only when `MODEL_RECOMPUTE` is set and the `needs_calculation` switch, asked on the decision tier (`MODEL_DECISION`), says the request needs one. A request may name one of the first four itself (see [API](#api)); the probes are for measuring and cannot be named. Copy one and change it — that is the point of it being a file. Measured against each other with mocks, in under a second, for nothing:
 
 | | happy path | never converges |
 |---|---|---|
@@ -623,7 +623,7 @@ MODEL_SEARCH=             # required
 # Optional tiers (MODEL_RANKER and the others under Model Tiers) turn
 # their feature off when empty.
 
-AUTORND_WORKFLOW=answer-and-recompute   # the default; set MODEL_RECOMPUTE for its vote
+AUTORND_WORKFLOW=answer-and-recompute   # the default; set MODEL_RECOMPUTE and MODEL_DECISION for its vote on calculations
 # Limits: MAX_ITERATIONS and the *_MAX_TOKENS caps. Defaults in .env.example.
 
 API_HOST=127.0.0.1        # containers need 0.0.0.0

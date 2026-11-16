@@ -21,6 +21,10 @@ from tests.test_switches import _with_decisions
 from tests.test_recompute_vote import (REQUEST, SETTINGS, SUMMARY, _double,
                                        _workflow_router)
 
+# Every test here is of a request judged to need a calculation: the
+# recompute step runs only for those (owner's ruling, 2026-11-16).
+pytestmark = pytest.mark.usefixtures("calculation_request")
+
 BASE = "workflows/answer-and-recompute.yaml"
 CLAIMS = "workflows/answer-and-recompute-claims.yaml"
 CLAIM_NODES = ["claims", "claims_named", "claims_recompute", "claims_vote",

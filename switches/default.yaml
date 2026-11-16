@@ -92,6 +92,31 @@ hard_request:
     an easy request to a cheaper model. No shipped workflow does yet: which
     tier is the cheaper one is a ruling.
 
+needs_calculation:
+  question: >
+    Must the answer to this request be worked out by calculation from figures,
+    and not read from a document?
+  yes: It asks for a value that has to be computed, such as a sum, a chain of conversions, a sizing or a design figure.
+  no: It asks what a rule, a standard, a datasheet or another published document states.
+  yes_at: 0.80
+  no_at: 0.20
+  safe: "yes"
+  # Live by the owner's ruling of 2026-11-16: "Turn recompute off by default,
+  # keep it for calculations". The evidence is for the ruling and not yet for
+  # this question's thresholds. On 215 answers to questions a document
+  # answers, each read blind, the recompute vote flagged none of the 4 that
+  # were not right and 15 that were, and cost about a fifth of a run
+  # (docs/reviews/2026-11-16-misleading-set-run.md): its samples read the
+  # same text as the answer and repeat its mistake. Where the vote was
+  # proven, Ruling D53's 5 of 5, the questions were calculations. How this
+  # question sorts the two kinds has not been measured.
+  mode: live
+  each: request
+  guards: >
+    Live, only a yes runs the recompute step and its three samples. A
+    confident no skips them, and so does having no decision tier to ask:
+    the step is off unless a request is judged to need a calculation.
+
 ask_covered:
   question: >
     The item quotes one thing the request asks for. Does the answer give it?
