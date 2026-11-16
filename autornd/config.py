@@ -182,11 +182,22 @@ class Settings(BaseSettings):
 
     # lookup_reads_documents: the lookup asks the search model for documents,
     # not for an answer; the harness fetches them and hands on their own
-    # words. Off until the comparison that tests it has been read. Measured
-    # 2026-11-15 (the root-cause test): with the governing section's own
-    # text handed on, 8 of 8 answers were right on two questions that had
-    # been wrong 8 times when the answer step read a search model's summary.
-    lookup_reads_documents: bool = False
+    # words. Measured 2026-11-15 (the root-cause test): with the governing
+    # section's own text handed on, 8 of 8 answers were right on two
+    # questions that had been wrong 8 times when the answer step read a
+    # search model's summary.
+    # On by the owner's plan of 2026-11-15, after the comparison
+    # (docs/reviews/2026-11-15-lookup-reads-documents.md): 107 of 107
+    # professional answers right and 7 of 8 on the inspection-authorization
+    # request, against 62 of 64, 45 of 45 and 6 of 8 with the lookup that
+    # asks for an answer; never worse, 18 percent cheaper an answer, and 724
+    # of 743 quotes on read pages found against 106 of 160. It waited on the
+    # cautions, which had been written for a model's own quotes: rebuilt
+    # around the text handed on, 30 of its 62 harder-set answers come with
+    # no caution where none did
+    # (docs/reviews/2026-11-15-cautions-on-handed-on-text.md). Off, the
+    # lookup is the one that asks the search model for an answer and quotes.
+    lookup_reads_documents: bool = True
     escalation_recovery_attempts: int = 3
 
     # Ruling D38: the API path's declared time budget, in seconds. A budgeted

@@ -45,7 +45,7 @@ their rule or standard. Work on vague requests was dropped on the owner's word.
 
 | Setting | What it does | Why it is off |
 |---|---|---|
-| `lookup_reads_documents` | The search model is asked where the answer is written; the harness fetches those pages and hands on stretches of their own text as quotes (`_ask_documents`, `_excerpts` in `autornd/knowledge/research.py`) | Never worse than the old lookup (107 of 107 professional answers, 7 of 8 on the owner's request), 18 percent cheaper, 97 percent of quotes found against 66. But no harder-set answer came without a caution. On after step 1 |
+| `lookup_reads_documents` | The search model is asked where the answer is written; the harness fetches those pages and hands on stretches of their own text as quotes (`_ask_documents`, `_excerpts` in `autornd/knowledge/research.py`) | Never worse than the old lookup (107 of 107 professional answers, 7 of 8 on the owner's request), 18 percent cheaper, 97 percent of quotes found against 66. **On by default since step 2** |
 | `lookup_withhold_unverified` | A lookup answer with no found passage stays in the record and out of the phases | An unverified lookup answer was still right about three times in four |
 
 Also in the tree, for measurement only: `workflows/answer-and-recompute-claims.yaml` (the claim
@@ -93,6 +93,9 @@ In this order. Steps 1 to 3 are free code. Step 4 is a paid run with the owner's
   figures against the handed-on text needs the whole excerpt in the record.
 
 ### Step 2. Switch the new lookup on by default
+
+**Done 2026-11-15.** The suite keeps the older lookup, by a stated choice in `tests/conftest.py`:
+46 tests drive that lookup's quote check, second round and record. Step 3 is next.
 
 `lookup_reads_documents: bool = True` in `autornd/config.py`, with the measurement in its
 comment, `tests/conftest.py` to match, and the one test that asserts the default.
