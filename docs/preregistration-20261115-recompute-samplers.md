@@ -118,3 +118,17 @@ others returned most of theirs under another key, so the vote could compare litt
   that takes the values whatever key they sit under. It separates a model that does not know
   the figure from one that does not follow the reply's shape. The bars above are read on the
   harness as it is; this reading is reported beside them.
+
+## Second addendum, 2026-11-15: a sixth model, on the owner's word
+
+Written and pushed before any spend on it, and before the second batch has started.
+
+- **The owner asked for one more:** a recent small model from the maker of the judge tier's
+  model. The owner knows it repeats a maker and asks for it as a different model. The default
+  workflow does not use the judge tier, so in the runs measured here no step shares its maker.
+- **It joins the second batch,** beside the fifth model: the same 39 answers, each with the
+  configured model's samples and both added models', on the same request, context and asks.
+- **Cost:** the second batch is now about '$0.72' expected, with stops of '$0.39' on each of two
+  processes, '$0.78' in all, in place of '$0.64'. With the first batch that is about '$1.76' for
+  the sampler test.
+- Nothing else of the test changes.
