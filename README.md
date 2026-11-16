@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1993%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-1995%20passing-brightgreen.svg)](#testing)
 
 **A harness that lets low-cost models answer expert questions correctly, and says honestly what it checked.**
 
@@ -135,7 +135,7 @@ Both paths return the same record under `data`:
 | A figure is in none of the passages found on their pages | the answer states a number that no text the harness read contains | check that figure against the source yourself |
 | Two pages give different figures for the same thing | the pages read disagree, for example an old edition beside the current one | open both pages in `sources` and see which one governs |
 | A lookup ran, but nothing was checked against a source | it quoted no passage, or no page it named could be read, or no passage was found on its page | treat the answer as the model's memory. Ingest the document, or ask again naming a page that can be read |
-| No lookup ran | figures and citations come from the model's memory | ask for sources in the request ("cite the source"), which always runs a lookup |
+| No lookup ran | figures and citations come from the model's memory. Not said beside a request judged to need a calculation | ask for sources in the request ("cite the source"), which always runs a lookup |
 | The recompute vote disagrees with this answer | a majority of the blind samples computed another value for the ask named | recompute that ask by hand. `recompute_vote.disagreements` has both values |
 | The recompute vote compared nothing, or did not run | said only when nothing else checked the answer either | as for the first rows: the answer is unchecked |
 | The vote worded an ask differently, reached no majority, or could not compare an ask | that part of the answer was not compared, or differs only in wording | read that ask with more care |
