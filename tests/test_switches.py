@@ -268,14 +268,21 @@ class TestTheDeclarations:
 
     def test_only_a_ruled_switch_is_live_and_each_says_what_it_guards(self):
         """Moving a switch to live changes what the harness concludes: it
-        is the owner's ruling. Three are ruled: needs_sources (2026-11-13),
-        and quote_answers and same_meaning as labels (2026-11-14)."""
+        is the owner's ruling. Four are ruled: needs_sources (2026-11-13),
+        quote_answers and same_meaning as labels (2026-11-14), and
+        needs_calculation, which decides whether the recompute step runs
+        (2026-11-16)."""
         shipped = load_switches(switches.SWITCHES_FILE)
         assert sorted(shipped) == [
             "ask_covered", "chunk_helps", "finding_answers", "hard_request",
-            "needs_sources", "quote_answers", "same_meaning"]
+            "needs_calculation", "needs_sources", "quote_answers",
+            "same_meaning"]
         assert sorted(s.name for s in shipped.values() if s.mode == LIVE) == [
-            "needs_sources", "quote_answers", "same_meaning"]
+            "needs_calculation", "needs_sources", "quote_answers",
+            "same_meaning"]
+        # Unsure runs the samples: the careful side does the work.
+        assert shipped["needs_calculation"].safe == YES
+        assert shipped["needs_calculation"].each == "request"
         for switch in shipped.values():
             assert switch.guards and switch.safe in (YES, NO), switch.name
         # The side that does more work is the safe one.
@@ -485,7 +492,8 @@ class TestTheSwitchNodes:
         client, asked = _with_decisions(_workflow_router(200.0, [200.0] * 3))
         state = await _run(client, recorded)
         assert state.status == "completed" and asked == []
-        for node, names in (("request_switches", ["hard_request"]),
+        for node, names in (("request_switches", ["hard_request",
+                                                  "needs_calculation"]),
                             ("answer_switches", ["same_meaning", "ask_covered",
                                                  "quote_answers"])):
             out = state.outputs[node]
@@ -502,8 +510,10 @@ class TestTheSwitchNodes:
         before = state.outputs["request_switches"]
         assert [(r["switch"], r["item"], r["choice"], r["route"])
                 for r in before["records"]] == [
-            ("hard_request", "request", YES, DEFAULT)]
-        assert before["route"] == {"hard_request": DEFAULT}
+            ("hard_request", "request", YES, DEFAULT),
+            ("needs_calculation", "request", YES, YES)]
+        assert before["route"] == {"hard_request": DEFAULT,
+                                   "needs_calculation": YES}
         after = state.outputs["answer_switches"]
         assert [(r["switch"], r["item"]) for r in after["records"]] == [
             ("ask_covered", "ask 1"), ("ask_covered", "ask 2")]
@@ -539,7 +549,8 @@ class TestTheSwitchNodes:
         declared = {"hard_request": _switch("hard_request", mode=LIVE,
                                             each="request")}
         state = await _run(client, declared=declared)
-        assert state.outputs["request_switches"]["route"] == {"hard_request": NO}
+        assert state.outputs["request_switches"]["route"] == {
+            "hard_request": NO, "needs_calculation": DEFAULT}
         assert state.status == "completed"
 
     async def test_a_failed_decision_call_never_fails_the_run(self, decision_tier):
@@ -547,8 +558,12 @@ class TestTheSwitchNodes:
                                     error=RuntimeError("route gone"))
         state = await _run(client)
         assert state.status == "completed"
-        record, = state.outputs["request_switches"]["records"]
-        assert record["choice"] == UNAVAILABLE and record["route"] == DEFAULT
+        first, second = state.outputs["request_switches"]["records"]
+        assert first["choice"] == UNAVAILABLE and first["route"] == DEFAULT
+        # A live switch takes its safe side when the call fails: the samples
+        # would run.
+        assert (second["switch"], second["choice"], second["route"]) == (
+            "needs_calculation", UNAVAILABLE, YES)
 
     async def test_the_knowledge_layers_questions_are_written_to_the_record(
             self, decision_tier, monkeypatch):
@@ -580,12 +595,78 @@ class TestTheSwitchNodes:
 
 
 @pytest.fixture
-def recompute_tier(monkeypatch):
+def recompute_tier(monkeypatch, calculation_request):
     """The recompute tier set, so the vote has samples to compare."""
     monkeypatch.setattr(openrouter.settings, "model_recompute",
                         "vendor/recompute-tier")
     monkeypatch.setitem(OpenRouterClient.FUNCTION_MODELS, "recompute",
                         "vendor/recompute-tier")
+
+
+@pytest.fixture
+def recompute_tier_alone(monkeypatch):
+    """The recompute tier set and nothing said about the request: whether
+    the samples run is the needs_calculation switch's to decide."""
+    monkeypatch.setattr(openrouter.settings, "model_recompute",
+                        "vendor/recompute-tier")
+    monkeypatch.setitem(OpenRouterClient.FUNCTION_MODELS, "recompute",
+                        "vendor/recompute-tier")
+
+
+class TestTheRecomputeIsKeptForCalculations:
+    """Owner's ruling 2026-11-16: "Turn recompute off by default, keep it
+    for calculations". Measured that day on 215 answers to questions a
+    document answers, each read blind: the vote flagged none of the 4 that
+    were not right and 15 that were, for about a fifth of a run's cost."""
+
+    NOT_RUN = ("the request was not judged to need a calculation — the "
+               "recompute samples did not run")
+
+    async def _recompute(self, probability=None, declared=None):
+        client, _ = _with_decisions(_workflow_router(200.0, [200.0] * 3),
+                                    answer=lambda e: probability)
+        state = await _run(client, declared=declared)
+        assert state.status == "completed"
+        assert state.outputs["implement"].summary == SUMMARY
+        return state.outputs["recompute"], state.outputs["recompute_vote"]
+
+    @pytest.mark.parametrize("probability", [0.95, 0.5])
+    async def test_a_yes_or_an_unsure_runs_the_three_samples(
+            self, decision_tier, recompute_tier_alone, probability):
+        recompute, vote = await self._recompute(probability)
+        assert recompute["skipped"] is False and len(recompute["samples"]) == 3
+        assert vote["skipped"] is False and vote["checked"] is True
+
+    async def test_a_confident_no_skips_them_and_the_vote_says_why(
+            self, decision_tier, recompute_tier_alone):
+        recompute, vote = await self._recompute(0.03)
+        assert recompute == {"skipped": True, "flagged": False,
+                             "reason": self.NOT_RUN, "samples": []}
+        assert vote["skipped"] is True and vote["flagged"] is False
+
+    async def test_with_no_decision_tier_the_step_is_off(self, recompute_tier_alone):
+        """Off by default: with nothing to ask, nothing says a request needs
+        a calculation."""
+        recompute, vote = await self._recompute(0.95)
+        assert recompute["reason"] == self.NOT_RUN and recompute["samples"] == []
+        assert vote["skipped"] is True
+
+    async def test_in_shadow_the_switch_runs_nothing(
+            self, decision_tier, recompute_tier_alone):
+        """Break-proof: only a route of yes runs the samples, and a switch
+        in shadow routes `default` whatever it answers."""
+        recompute, _ = await self._recompute(0.95, declared={
+            "needs_calculation": _switch("needs_calculation", each="request")})
+        assert recompute["reason"] == self.NOT_RUN
+
+    async def test_a_node_that_names_no_switch_always_runs(
+            self, recompute_tier_alone):
+        """Break-proof for the workflows that do not gate their samples."""
+        spec = load(WORKFLOW)
+        spec.get("recompute").args.pop("when_switch")
+        client, _ = _with_decisions(_workflow_router(200.0, [200.0] * 3))
+        state = await _run(client, spec=spec)
+        assert len(state.outputs["recompute"]["samples"]) == 3
 
 
 def _worded(router, answer_words, sample_words):

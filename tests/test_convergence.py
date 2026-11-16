@@ -716,6 +716,25 @@ class TestTheRecordsBesideTheAnswer:
             "A lookup ran, but none of its passages was found on its page, "
             "so nothing in this answer was checked against a source."]
 
+    def test_a_vote_that_did_not_run_is_said_by_the_same_rule(self):
+        """Owner's ruling 2026-11-16: the recompute step is off unless a
+        request needs a calculation, so its vote is skipped on most answers.
+        That is said only where nothing else checked the answer."""
+        skipped = {"flagged": False, "skipped": True, "checked": False}
+        said = ("The recompute vote did not run, so no figure in this answer "
+                "was recomputed.")
+        assert self._backed_run([{"ask": 1, "value": 15, "unit": "rem"}],
+                                skipped).cautions == []
+        assert self._backed_run([{"ask": 1, "value": "the lens of the eye",
+                                  "unit": ""}], skipped).cautions == []
+        assert self._backed_run([{"ask": 1, "value": 40, "unit": "rem"}],
+                                skipped).cautions[0] == said
+        assert self._backed_run([{"ask": 1, "value": 15, "unit": "rem"}],
+                                skipped, quote_status="not_found").cautions[0] == said
+        assert _detail(self._workflow(
+            ("implement", {"summary": "a"}),
+            ("recompute_vote", skipped))).cautions[0] == said
+
     @pytest.mark.parametrize("results", [
         # On the page without its word beside it: not verified, not absent.
         [{"ask": 1, "value": 1, "unit": "rem"}],

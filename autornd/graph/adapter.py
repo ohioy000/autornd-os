@@ -1167,6 +1167,20 @@ class PhaseRunner:
         return ({"skipped": False, "reason": "", "claim_records": records,
                  "same": same}, self.switchboard.drain_responses())
 
+    def _recompute_wanted(self, node: Node, state: ExecutionState) -> bool:
+        """Does the switch this node names say its samples should run?
+
+        A node that names no switch always runs. One that does runs only on
+        a route of yes, read as a typed field off the switch node's output.
+        """
+        gate = node.args.get("when_switch")
+        if not gate:
+            return True
+        asked = state.outputs.get("request_switches")
+        route = (asked.get("route") or {}).get(str(gate)) if isinstance(
+            asked, dict) else None
+        return route == YES
+
     async def _phase_recompute(self, node: Node, state: ExecutionState):
         """The recompute node (Ruling D53): blind recomputation.
 
@@ -1186,6 +1200,22 @@ class PhaseRunner:
                 "flagged": False,
                 "reason": ("no model configured for the recompute "
                            "tier — the recompute samples did not run"),
+                "samples": [],
+            }, []
+        # Owner's ruling of 2026-11-16: the step is off by default and kept
+        # for calculations. A node that names a switch (args: {when_switch:
+        # <name>}) runs its samples only when that switch routed yes. Any
+        # other route skips: a confident no, a switch in shadow, or no
+        # decision tier to ask. Measured that day on 215 answers to
+        # questions a document answers: the vote flagged none of the 4 not
+        # right and 15 that were, for about a fifth of a run's cost.
+        if not self._recompute_wanted(node, state):
+            return {
+                "skipped": True,
+                "flagged": False,
+                "reason": ("the request was not judged to need a "
+                           "calculation — the recompute samples did "
+                           "not run"),
                 "samples": [],
             }, []
         # A node may recompute a claims check's kept claims instead of the

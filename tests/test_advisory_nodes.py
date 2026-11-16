@@ -26,6 +26,10 @@ from autornd.routing.openrouter import BudgetExceeded, OpenRouterClient
 from tests.conftest import make_mock_response, seal_double
 from tests.test_recompute_vote import REQUEST, SETTINGS, _workflow_router
 
+# Every test here is of a request judged to need a calculation: the
+# recompute step runs only for those (owner's ruling, 2026-11-16).
+pytestmark = pytest.mark.usefixtures("calculation_request")
+
 WORKFLOW = "workflows/answer-and-recompute.yaml"
 
 

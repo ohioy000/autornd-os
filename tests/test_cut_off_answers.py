@@ -32,6 +32,10 @@ from tests.test_graph import SETTINGS as SCRIPTED_SETTINGS
 from tests.test_graph import ScriptedRunner
 from tests.test_recompute_vote import REQUEST, SUMMARY, _drive, _workflow_router
 
+# Every test here is of a request judged to need a calculation: the
+# recompute step runs only for those (owner's ruling, 2026-11-16).
+pytestmark = pytest.mark.usefixtures("calculation_request")
+
 ROOT = Path(__file__).resolve().parent.parent
 TRACES = ROOT / "docs" / "traces"
 # Q6 r2 as it shipped, ending as the record has it.

@@ -63,6 +63,10 @@ from autornd.routing.openrouter import (
 from autornd.specialists.registry import get_specialist
 from tests.conftest import make_mock_response, seal_double
 
+# Every test here is of a request judged to need a calculation: the
+# recompute step runs only for those (owner's ruling, 2026-11-16).
+pytestmark = pytest.mark.usefixtures("calculation_request")
+
 ROOT = Path(__file__).resolve().parents[1]
 TRACES = ROOT / "docs/traces"
 PROBES = ROOT / "evals/tier4/probes"
@@ -1098,7 +1102,8 @@ class TestTheWorkflow:
         recompute = spec.get("recompute")
         assert recompute.kind is NodeKind.AI
         assert recompute.tier == "recompute"
-        assert recompute.args == {"samples": 3}
+        assert recompute.args == {"samples": 3,
+                                  "when_switch": "needs_calculation"}
         assert recompute.max_tokens == "recompute_max_tokens"
         vote = spec.get("recompute_vote")
         assert vote.kind is NodeKind.CHECK

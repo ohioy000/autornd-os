@@ -595,8 +595,13 @@ def _cautions(vote: dict | None, sources: list[dict],
             out.append("The recompute vote disagrees with this answer"
                        + (f" on ask {flagged}." if flagged else "."))
         elif vote.get("skipped"):
-            out.append("The recompute vote did not run, so no figure in "
-                       "this answer was recomputed.")
+            # The same rule as for a vote that compared nothing, below. Since
+            # the owner's ruling of 2026-11-16 the step is off unless a
+            # request needs a calculation, so this would stand beside every
+            # answer read from a page.
+            if unconfirmed or not _handed_on(sources, beside_the_point=True):
+                out.append("The recompute vote did not run, so no figure in "
+                           "this answer was recomputed.")
         elif vote.get("unchecked") or not vote.get("checked"):
             # Said only when nothing else checked the answer either: no
             # passage was found on any page, or a figure of the answer is on

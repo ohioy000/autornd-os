@@ -378,3 +378,15 @@ def make_mock_client(responses: dict[str, dict[str, Any]],
     client.close = AsyncMock()
     return client
 
+
+
+@pytest.fixture
+def calculation_request(monkeypatch):
+    """The request in hand is one the needs_calculation switch routed yes
+    on, so the recompute step runs. Owner's ruling of 2026-11-16: the step
+    is off unless a request is judged to need a calculation. The tests of
+    the samples, the vote and the watchdog are tests of that case; the gate
+    itself is tested end to end in tests/test_switches.py."""
+    from autornd.graph.adapter import PhaseRunner
+    monkeypatch.setattr(PhaseRunner, "_recompute_wanted",
+                        lambda self, node, state: True)
