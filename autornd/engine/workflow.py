@@ -302,14 +302,10 @@ class WorkflowEngine:
         workflow.updated_at = datetime.now(timezone.utc)
         await self.session.commit()
 
-        if workflow.status is WorkflowStatus.COMPLETED:
-            review = state.outputs.get("review")
-            implement = state.outputs.get("implement")
-            plan = state.outputs.get("plan")
-            if triage and plan and implement and review:
-                await self._save_episodic_memory(
-                    workflow, triage, plan, implement, review)
-
+        # Episodic memory was taken out on the owner's word of 2026-11-16.
+        # The episode was added after this commit and never committed, so
+        # none was ever saved (docs/reviews/2026-11-16-user-path-audit.md),
+        # and no phase read one. The run's own row and phases are the record.
         return workflow
 
     @staticmethod
@@ -450,30 +446,3 @@ class WorkflowEngine:
         workflow.total_cost = self.client.spend
         workflow.updated_at = datetime.now(timezone.utc)
         await self.session.flush()
-
-    async def _save_episodic_memory(
-        self,
-        workflow: Workflow,
-        triage: TriageVerdict,
-        plan: PlanVerdict,
-        implement: ImplementVerdict,
-        review: ReviewVerdict,
-    ):
-        """Save workflow outcome to episodic memory for future reference."""
-        from autornd.knowledge.episodic import save_episode
-
-        try:
-            await save_episode(
-                self.session,
-                workflow_id=workflow.id,
-                request=workflow.request,
-                domains=[domain_key(d) for d in triage.domains],
-                risk=triage.risk.value,
-                iterations=workflow.iteration,
-                shipped=review.ship,
-                verdict=review.verdict,
-                findings_count=len(review.findings),
-                total_cost=workflow.total_cost,
-            )
-        except Exception:
-            logger.warning("Failed to save episodic memory for workflow %d", workflow.id)

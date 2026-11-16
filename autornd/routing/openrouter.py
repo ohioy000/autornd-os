@@ -1535,6 +1535,10 @@ async def check_models() -> dict[str, dict]:
         ("ranker", settings.model_ranker),
         ("premium", settings.model_premium),
         ("judge", settings.model_judge),
+        # Listed since the API audit of 2026-11-16: a wrong model on either
+        # tier showed only when a run reached it, and health said "ok".
+        ("recompute", settings.model_recompute),
+        ("decision", settings.model_decision),
     ):
         if model_id:
             configured[tier] = model_id

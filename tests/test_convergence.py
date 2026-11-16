@@ -750,17 +750,6 @@ class TestTheRecordsBesideTheAnswer:
             asks=2)
         assert detail.cautions == []
 
-    def test_a_withheld_lookup_answer_is_said(self):
-        detail = _detail(self._workflow(
-            ("sources", {"lookup": "grounding", "findings": [
-                {"withheld": True, "quotes": [{"status": "unfetched"}]},
-                {"withheld": False, "quotes": [{"status": "found"}]}]}),
-            ("implement", {"summary": "a"}),
-            ("recompute_vote", {"flagged": False, "unchecked": False,
-                                "checked": True, "no_consensus": []})))
-        assert ("1 lookup answer had no passage found on a page that could be "
-                "read, and was withheld from the answer.") in detail.cautions
-
     def test_a_lookup_that_read_nothing_says_which_way(self):
         """Seen twice on the harder professional run of 2026-11-15: a lookup
         that quoted nothing was said to have quoted pages nobody could read."""

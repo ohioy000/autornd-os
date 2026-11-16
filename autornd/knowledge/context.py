@@ -18,7 +18,7 @@ from autornd.knowledge.store import retrieve
 from autornd.models.verdicts import Domain, SpecialistRole
 
 from autornd.routing.openrouter import BudgetExceeded
-from autornd.routing.switches import NO, YES, current_switchboard, route_for
+from autornd.routing.switches import NO, YES, route_for
 
 logger = logging.getLogger(__name__)
 
@@ -332,27 +332,6 @@ async def _lookup_wanted(request: str, risk: object) -> tuple[bool, bool]:
     return route == YES, worth_a_lookup(risk) and route != NO
 
 
-async def _helpful_chunks(query: str, candidates: list[dict]) -> list[dict]:
-    """The candidates less those the chunk_helps switch routes out.
-
-    Asked of the nearest RERANK_CANDIDATES, in one request. Live, a confident
-    no drops the excerpt; anything else keeps it. In shadow, or with no
-    tier, every candidate is kept.
-    """
-    board = current_switchboard()
-    if board is None or not candidates:
-        return candidates
-    asked = candidates[:RERANK_CANDIDATES]
-    records = await board.ask([
-        ("chunk_helps", str(chunk.get("tag", "")),
-         {"question": query, "excerpt": chunk["text"]}) for chunk in asked])
-    if len(records) != len(asked):
-        return candidates
-    dropped = {id(chunk) for chunk, record in zip(asked, records)
-               if record["route"] == NO}
-    return [chunk for chunk in candidates if id(chunk) not in dropped]
-
-
 async def expand_queries(client, request: str) -> list[str]:
     """Turn a request into targeted documentation queries (research tier).
 
@@ -402,11 +381,9 @@ def _record_lookup(record: dict | None, asked: list[str], findings: list,
         "findings_chars": len(rendered),
         "bound_chars": GROUNDING_LOOKUP_RECORD_CHARS,
         "truncated": len(rendered) > GROUNDING_LOOKUP_RECORD_CHARS,
-        # Ruling D56 (6): what the quote check found, passage by passage,
-        # and how many lookups asked again. A reading of the check, not of
-        # whether the answers are right.
+        # Ruling D56 (6): what the quote check found, passage by passage.
+        # A reading of the check, not of whether the answers are right.
         "quotes": _quote_counts(findings),
-        "asked_again": sum(1 for f in findings if getattr(f, "round", 1) > 1),
         # What was read, page by page, so the delivery can show it.
         "sources": _source_records(findings),
     })
@@ -615,8 +592,7 @@ async def load_retrieval_context(query: str, n_results: int = 5, client=None,
         for chunk in retrieve(q, n_results=max(n_results, RERANK_CANDIDATES)):
             if chunk["distance"] <= RETRIEVAL_MAX_DISTANCE:
                 seen.setdefault(chunk["text"], chunk)
-    candidates = await _helpful_chunks(
-        query, sorted(seen.values(), key=lambda c: c["distance"]))
+    candidates = sorted(seen.values(), key=lambda c: c["distance"])
     if not candidates:
         return ""
 

@@ -1,4 +1,4 @@
-"""Test knowledge store, context loading, and episodic memory."""
+"""Test knowledge store and context loading."""
 
 import json
 import tempfile
@@ -119,68 +119,6 @@ class TestChromaStore:
             assert stats["count"] == 0 or stats.get("status") == "not_initialized"
         finally:
             settings.chromadb_path = original_path
-
-
-@pytest.mark.asyncio
-class TestEpisodicMemory:
-    async def test_save_and_retrieve_episode(self, db_session):
-        from autornd.knowledge.episodic import save_episode, get_recent_episodes
-
-        await save_episode(
-            db_session,
-            workflow_id=1,
-            request="Add temperature threshold alert",
-            domains=["backend"],
-            risk="medium",
-            iterations=1,
-            shipped=True,
-            verdict="Ship — all thresholds configured correctly",
-            findings_count=0,
-            total_cost=0.45,
-        )
-        await db_session.commit()
-
-        episodes = await get_recent_episodes(db_session)
-        assert len(episodes) == 1
-        assert episodes[0].shipped is True
-        assert episodes[0].request == "Add temperature threshold alert"
-
-    async def test_similar_episodes_by_domain(self, db_session):
-        from autornd.knowledge.episodic import save_episode, get_similar_episodes
-
-        await save_episode(
-            db_session, workflow_id=1, request="Fix firmware bug",
-            domains=["firmware"], risk="high", iterations=3,
-            shipped=True, verdict="Ship", findings_count=1, total_cost=0.80,
-        )
-        await save_episode(
-            db_session, workflow_id=2, request="Update dashboard",
-            domains=["frontend"], risk="low", iterations=1,
-            shipped=True, verdict="Ship", findings_count=0, total_cost=0.20,
-        )
-        await db_session.commit()
-
-        firmware_similar = await get_similar_episodes(db_session, ["firmware"])
-        assert len(firmware_similar) == 1
-        assert firmware_similar[0].workflow_id == 1
-
-    async def test_format_episodes_context(self, db_session):
-        from autornd.knowledge.episodic import (
-            save_episode, get_recent_episodes, format_episodes_context,
-        )
-
-        await save_episode(
-            db_session, workflow_id=1, request="Blocked task",
-            domains=["hardware"], risk="critical", iterations=5,
-            shipped=False, verdict="Blocked on missing datasheet",
-            findings_count=3, total_cost=1.20,
-        )
-        await db_session.commit()
-
-        episodes = await get_recent_episodes(db_session)
-        ctx = format_episodes_context(episodes)
-        assert "BLOCKED" in ctx
-        assert "missing datasheet" in ctx.lower()
 
 
 @pytest.mark.asyncio
@@ -446,7 +384,8 @@ class TestRankTierSelection:
         client.chat_json = AsyncMock(side_effect=RuntimeError("down"))
         assert await ctx.analyze_request(client, "req") == ("", [])
 
-    async def test_scoping_unknowns_drive_outward_lookups(self, monkeypatch):
+    async def test_scoping_unknowns_drive_outward_lookups(self, monkeypatch,
+                                                         pages_served):
         """An empty knowledge store is how this ships, and it is the case that
         most needs facts looked up. Search used to hang off documentation gaps
         only, which left the search tier configured, required, and inert on a
@@ -667,7 +606,7 @@ class TestSearchSpendIsGated:
             client=client, risk=RiskLevel.HIGH)
         assert client.chat.await_count == 0
 
-    async def test_a_blocking_gap_on_consequential_work_pays_once(self):
+    async def test_a_blocking_gap_on_consequential_work_pays_once(self, pages_served):
         import autornd.knowledge.context as ctx
         from autornd.models.verdicts import Domain, RiskLevel
 

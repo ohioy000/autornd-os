@@ -137,3 +137,138 @@ class TestThePageShowsWhatARunDelivered:
         assert "renderDelivery(w)" in detail
         chat = DASHBOARD[DASHBOARD.index("function renderResult(w)"):]
         assert "renderDelivery(w)" in chat[:chat.index("\n}\n")]
+
+
+@pytest.mark.asyncio
+class TestARunStrandedByARestartIsEnded:
+    """API audit of 2026-11-16: a run in flight when the server stopped
+    read as running for ever. Owner's word that day: end such runs as
+    blocked when the server starts."""
+
+    async def _rows(self, db_session, monkeypatch):
+        from autornd import database
+        from autornd.models.workflow import Workflow, WorkflowStatus
+        from tests.conftest import test_session_factory
+
+        monkeypatch.setattr(database, "async_session", test_session_factory)
+        rows = {}
+        for status, error in ((WorkflowStatus.PENDING, None),
+                              (WorkflowStatus.IMPLEMENT, None),
+                              (WorkflowStatus.COMPLETED, None),
+                              (WorkflowStatus.BLOCKED, "its own reason"),
+                              (WorkflowStatus.ESCALATED, None)):
+            row = Workflow(request=status.value, status=status, error=error)
+            db_session.add(row)
+            rows[status] = row
+        await db_session.commit()
+        return rows
+
+    async def test_a_run_in_flight_ends_blocked_with_the_reason(
+            self, db_session, monkeypatch):
+        from autornd.main import STRANDED, end_stranded_runs
+        from autornd.models.workflow import WorkflowStatus
+
+        rows = await self._rows(db_session, monkeypatch)
+        assert await end_stranded_runs() == 2
+        for row in rows.values():
+            await db_session.refresh(row)
+        for was in (WorkflowStatus.PENDING, WorkflowStatus.IMPLEMENT):
+            assert rows[was].status is WorkflowStatus.BLOCKED
+            assert rows[was].error == STRANDED
+        assert "Submit it again" in STRANDED
+
+    async def test_a_run_that_ended_is_left_as_it_ended(
+            self, db_session, monkeypatch):
+        """Break-proof: the sweep takes only rows still in flight."""
+        from autornd.main import end_stranded_runs
+        from autornd.models.workflow import WorkflowStatus
+
+        rows = await self._rows(db_session, monkeypatch)
+        await end_stranded_runs()
+        for row in rows.values():
+            await db_session.refresh(row)
+        assert rows[WorkflowStatus.COMPLETED].status is WorkflowStatus.COMPLETED
+        assert rows[WorkflowStatus.COMPLETED].error is None
+        assert rows[WorkflowStatus.ESCALATED].status is WorkflowStatus.ESCALATED
+        assert rows[WorkflowStatus.BLOCKED].error == "its own reason"
+        assert await end_stranded_runs() == 0
+
+
+class TestTheRuntimeSettingsNamedAreTheOnesAccepted:
+    """API audit of 2026-11-16: thirteen settings were named as changeable
+    and the endpoint's body took five; the other eight were dropped without
+    a word."""
+
+    def test_the_list_and_the_body_are_the_same_names(self):
+        from autornd import config
+        from autornd.api.routes import SettingsUpdate
+        assert config.settings.RUNTIME_MUTABLE == set(SettingsUpdate.model_fields)
+
+    @pytest.mark.asyncio
+    async def test_a_setting_not_on_the_list_is_refused_and_the_list_named(
+            self, api_client, monkeypatch):
+        from autornd import config
+        before = config.settings.plan_max_tokens
+        resp = await api_client.put("/api/settings",
+                                    json={"plan_max_tokens": 100})
+        assert resp.status_code == 400
+        detail = resp.json()["detail"]
+        for name in sorted(config.settings.RUNTIME_MUTABLE):
+            assert name in detail
+        assert "in .env and restart" in detail
+        assert config.settings.plan_max_tokens == before
+
+
+@pytest.mark.asyncio
+class TestHealthListsEveryConfiguredTier:
+    """API audit of 2026-11-16: a wrong model on the recompute or decision
+    tier showed only when a run reached it."""
+
+    async def _status(self, monkeypatch, recompute, decision):
+        from unittest.mock import patch
+        from autornd import config
+        monkeypatch.setattr(config.settings, "model_recompute", recompute)
+        monkeypatch.setattr(config.settings, "model_decision", decision)
+        monkeypatch.setattr(openrouter, "_model_status", {})
+        with patch("autornd.routing.openrouter.httpx.AsyncClient",
+                   side_effect=RuntimeError("no catalogue in the suite")):
+            return await openrouter.check_models()
+
+    async def test_the_recompute_and_decision_tiers_are_listed_when_set(
+            self, monkeypatch):
+        status = await self._status(monkeypatch, "vendor/recompute", "vendor/decider")
+        assert status["recompute"] == {"model": "vendor/recompute", "available": None}
+        assert status["decision"] == {"model": "vendor/decider", "available": None}
+
+    async def test_an_unset_tier_is_not_listed(self, monkeypatch):
+        """Break-proof: an optional tier left empty is not a degraded one."""
+        status = await self._status(monkeypatch, "", "")
+        assert "recompute" not in status and "decision" not in status
+
+
+class TestARetiredSettingDoesNotStopTheServer:
+    """Probe of 2026-11-16: an .env that still named a removed lookup
+    setting stopped the server at import, as any unknown name does."""
+
+    ENV = ("MODEL_TRIAGE=a/b\nMODEL_ENGINEERING=a/b\nMODEL_ARCHITECTURE=a/b\n"
+           "MODEL_ESCALATION=a/b\nMODEL_RESEARCH=a/b\nMODEL_SEARCH=a/b\n")
+
+    def test_it_is_dropped_and_said(self, tmp_path, caplog):
+        from autornd.config import RETIRED_SETTINGS, Settings
+        env = tmp_path / ".env"
+        env.write_text(self.ENV + "".join(
+            f"{name.upper()}=true\n" for name in sorted(RETIRED_SETTINGS)))
+        with caplog.at_level("WARNING"):
+            cfg = Settings(_env_file=str(env))
+        for name in RETIRED_SETTINGS:
+            assert not hasattr(cfg, name)
+            assert f"{name.upper()} is no longer a setting" in caplog.text
+
+    def test_any_other_unknown_name_is_still_refused(self, tmp_path):
+        """Break-proof: only the retired names are let through."""
+        from pydantic import ValidationError
+        from autornd.config import Settings
+        env = tmp_path / ".env"
+        env.write_text(self.ENV + "LOOKUP_READS_DOCUMENTZ=true\n")
+        with pytest.raises(ValidationError):
+            Settings(_env_file=str(env))

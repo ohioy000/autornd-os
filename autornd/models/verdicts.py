@@ -385,45 +385,6 @@ class ResultValue(BaseModel):
         return value if isinstance(value, str) else _coerce_str(value)
 
 
-class ClaimValue(BaseModel):
-    """One claim a finished answer relies on: a named figure, limit or
-    condition, with the value the answer gives it. The name says what the
-    value is of and must not carry the value, because the blind samples
-    are shown the name."""
-
-    name: str
-    value: float | str
-    unit: str = ""
-
-    @field_validator("name", "unit", mode="before")
-    @classmethod
-    def _coerce_text(cls, value: Any) -> str:
-        if value is None:
-            return ""
-        return value if isinstance(value, str) else _coerce_str(value)
-
-
-class ClaimsVerdict(BaseModel):
-    """The `claims` node's verdict: the claims a finished answer states.
-
-    The owner's direction of 2026-11-14, in shadow. The recompute vote
-    compares one value per ask, and an open request is one ask: in five of
-    the six recorded runs of the inspection-authorization question the
-    vote compared nothing, and the wrong period in two of them sat in
-    prose (docs/reviews/2026-11-13-golden-decisions.md). The list may be
-    empty: an answer with no figure to check has no claim.
-    """
-
-    claims: list[ClaimValue] = Field(default_factory=list)
-
-    @field_validator("claims", mode="before")
-    @classmethod
-    def _coerce_claims(cls, value: Any) -> Any:
-        if value is None:
-            return []
-        return value
-
-
 class RecomputeVerdict(BaseModel):
     """One blind recompute sample's verdict: its typed results.
 
@@ -1005,28 +966,3 @@ class EscalationVerdict(BaseModel):
     # a fact about the request, and the revision is not spent on it.
     rulings: list[EscalationRuling] = Field(default_factory=list)
 
-
-class QuotedPassage(BaseModel):
-    """One passage a lookup quoted, and the page it says it is on (Ruling D56 (1)).
-
-    `question` is the question's number in the lookup, counted from 1. The
-    harness fetches `url` and looks for `text` in it; nothing here is taken
-    on the model's word.
-    """
-
-    question: int = 1
-    text: str
-    url: str
-
-
-class LookupVerdict(BaseModel):
-    """A search lookup's reply (Ruling D56 (1)).
-
-    `answer` is the prose every phase reads, as before. `quotes` are what the
-    answer rests on, each to be found in its own page before the answer to
-    its question counts as checked. An empty answer is a lookup that found
-    nothing.
-    """
-
-    answer: str = ""
-    quotes: list[QuotedPassage] = Field(default_factory=list)

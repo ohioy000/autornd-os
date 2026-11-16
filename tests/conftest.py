@@ -70,14 +70,6 @@ PLACEHOLDERS: dict[str, str] = {
     "SEARCH_MAX_TOKENS": "1500",
     "SEARCH_MAX_TOKENS_CONSEQUENTIAL": "4000",
     "LOOKUP_AVOID_UNREADABLE": "true",
-    "LOOKUP_WITHHOLD_UNVERIFIED": "false",
-    # The suite's own choice, not the shipped default (on since 2026-11-15):
-    # the lookup that asks a search model for an answer and its quotes still
-    # ships behind this setting, and the tests of its quote check, its second
-    # round and its record drive it. The tests of the lookup that reads the
-    # documents switch it on themselves.
-    "LOOKUP_READS_DOCUMENTS": "false",
-    "LOOKUP_DOCUMENTS_ASK_AGAIN": "false",
     "ESCALATION_RECOVERY_ATTEMPTS": "3",
     "RUN_TIME_BUDGET_SECONDS": "1800",
     "RUN_SPEND_CEILING_USD": "0.50",
@@ -108,7 +100,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from autornd.database import Base, get_session
 from autornd.main import app
 from autornd.routing.openrouter import ModelResponse, OpenRouterClient
-import autornd.knowledge.episodic  # noqa: F401 — register Episode model
 import autornd.models.user  # noqa: F401 — register User model
 
 # ── 2. Nothing the suite runs reaches the network ───────────────────────────
@@ -378,6 +369,26 @@ def make_mock_client(responses: dict[str, dict[str, Any]],
     client.close = AsyncMock()
     return client
 
+
+
+@pytest.fixture
+def pages_served(monkeypatch):
+    """Every page a lookup names is read, and nothing is stored. The lookup
+    asks the search model for documents and fetches them itself, so a test
+    of a lookup that finds something needs a page; the suite never reaches
+    the network. The page's words are `pages_served["text"]`, to set."""
+    from autornd.knowledge import research
+    from autornd.knowledge.fetch import Source
+
+    page = {"text": "The supply is 18-30 V per the datasheet."}
+
+    async def served(url):
+        return Source(url=url, status="fetched", text=page["text"],
+                      fetched_at="2026-11-16T00:00:00Z", sha256="ab" * 32)
+
+    monkeypatch.setattr(research, "fetch_source", served)
+    monkeypatch.setattr(research, "ingest_text", lambda *a, **k: 0)
+    return page
 
 
 @pytest.fixture

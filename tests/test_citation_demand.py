@@ -102,7 +102,8 @@ class TestTheRiskGateDefersInsteadOfDiscarding:
         assert deferred == ["the claim's figure"], "the gap is kept, not dropped"
         assert "REQUEST ANALYSIS" in out
 
-    async def test_consequential_work_looks_up_and_defers_nothing(self, _no_docs):
+    async def test_consequential_work_looks_up_and_defers_nothing(
+            self, _no_docs, pages_served):
         from autornd.models.verdicts import Domain, RiskLevel
 
         client = _scoping_client(["the claim's figure"])

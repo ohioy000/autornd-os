@@ -578,51 +578,6 @@ class TestTheServerIsNotOpenByDefault:
             assert body["authentication_configured"] is False
 
 
-class TestEpisodesAreScopedToTheirCaller:
-    """(b) /api/episodes showed every run's request, verdict and cost to any
-    caller. Ownership lives on the workflow row; the filter joins it."""
-
-    async def test_a_caller_sees_only_their_own_runs(
-            self, api_client, db_session, monkeypatch):
-        from autornd.config import settings
-        from autornd.knowledge.episodic import Episode
-
-        monkeypatch.setattr(
-            settings, "jwt_secret",
-            "test-secret-0123456789abcdef0123456789abcdef")
-
-        tokens = {}
-        owners = {}
-        for name in ("alice", "bob"):
-            registered = await api_client.post(
-                "/api/auth/register",
-                json={"username": f"{name}-episodes",
-                      "email": f"{name}-episodes@example.com",
-                      "password": "correct-horse-battery-staple"})
-            assert registered.status_code == 201
-            tokens[name] = registered.json()["data"]["token"]
-            owners[name] = registered.json()["data"]["id"]
-
-        for name in ("alice", "bob"):
-            row = Workflow(request=f"{name}'s run",
-                           status=WorkflowStatus.COMPLETED,
-                           user_id=owners[name])
-            db_session.add(row)
-            await db_session.flush()
-            db_session.add(Episode(
-                workflow_id=row.id, request=f"{name}'s run",
-                domains='["backend"]', risk="medium", shipped=True,
-                verdict=f"{name}'s verdict", findings_count=0, total_cost=0.01))
-        await db_session.commit()
-
-        alice = await api_client.get(
-            "/api/episodes", headers={"Authorization": f"Bearer {tokens['alice']}"})
-        bob = await api_client.get(
-            "/api/episodes", headers={"Authorization": f"Bearer {tokens['bob']}"})
-        assert {e["request"] for e in alice.json()["data"]} == {"alice's run"}
-        assert {e["request"] for e in bob.json()["data"]} == {"bob's run"}
-
-
 class TestSettingsAreNotARemoteLever:
     """(c) A runtime ceiling raise applied to every run in flight (review F8).
     The endpoint is loopback-only and can only tighten; the tighten half lives

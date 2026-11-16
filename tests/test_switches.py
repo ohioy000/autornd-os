@@ -271,10 +271,11 @@ class TestTheDeclarations:
         is the owner's ruling. Four are ruled: needs_sources (2026-11-13),
         quote_answers and same_meaning as labels (2026-11-14), and
         needs_calculation, which decides whether the recompute step runs
-        (2026-11-16)."""
+        (2026-11-16). The four that stayed in shadow, ask_covered,
+        chunk_helps, finding_answers and hard_request, were removed on the
+        owner's word of 2026-11-16: nothing acted on them."""
         shipped = load_switches(switches.SWITCHES_FILE)
         assert sorted(shipped) == [
-            "ask_covered", "chunk_helps", "finding_answers", "hard_request",
             "needs_calculation", "needs_sources", "quote_answers",
             "same_meaning"]
         assert sorted(s.name for s in shipped.values() if s.mode == LIVE) == [
@@ -287,8 +288,6 @@ class TestTheDeclarations:
             assert switch.guards and switch.safe in (YES, NO), switch.name
         # The side that does more work is the safe one.
         assert shipped["needs_sources"].safe == YES
-        assert shipped["chunk_helps"].safe == YES
-        assert shipped["finding_answers"].safe == NO
         # Unsure keeps the vote's flag: the careful side is "they differ".
         assert shipped["same_meaning"].safe == NO
         assert shipped["same_meaning"].each == "disagreements"
@@ -389,74 +388,6 @@ class TestNeedsSources:
         assert client.calls == []
 
 
-CHUNKS = [{"text": "on the subject", "tag": "a", "distance": 0.3},
-          {"text": "off the subject", "tag": "b", "distance": 0.6}]
-
-
-class TestChunkHelps:
-    answer = staticmethod(lambda e: 0.02 if "off" in e["excerpt"] else 0.97)
-
-    async def test_with_no_switchboard_every_candidate_is_kept(self):
-        assert await ctx._helpful_chunks("q", CHUNKS) == CHUNKS
-
-    async def test_in_shadow_it_is_recorded_and_every_candidate_is_kept(self, board):
-        made = board(_Decider(self.answer), chunk_helps=_switch("chunk_helps"))
-        assert await ctx._helpful_chunks("the question", CHUNKS) == CHUNKS
-        assert [(r["item"], r["choice"]) for r in made.records] == [
-            ("a", YES), ("b", NO)]
-
-    async def test_live_a_confident_no_drops_the_excerpt(self, board):
-        board(_Decider(self.answer), chunk_helps=_switch("chunk_helps", mode=LIVE))
-        assert await ctx._helpful_chunks("the question", CHUNKS) == CHUNKS[:1]
-
-    async def test_live_a_failed_call_keeps_every_candidate(self, board):
-        board(_Decider(error=RuntimeError("down")),
-              chunk_helps=_switch("chunk_helps", mode=LIVE))
-        assert await ctx._helpful_chunks("the question", CHUNKS) == CHUNKS
-
-
-class TestFindingAnswers:
-    def _stored(self, monkeypatch, distance):
-        monkeypatch.setattr(research, "retrieve", lambda *a, **k: [
-            {"text": "The cap is 60 s.", "source": "https://a.example/p",
-             "tag": research.RESEARCH_TAG, "distance": distance}])
-
-    async def test_in_shadow_it_is_recorded_and_the_lookup_still_runs(
-            self, board, monkeypatch):
-        self._stored(monkeypatch, 0.6)
-        made = board(_Decider(lambda e: 0.99),
-                     finding_answers=_switch("finding_answers", safe=NO))
-        assert await research._recall_by_switch("What is the cap?") is None
-        assert [r["choice"] for r in made.records] == [YES]
-
-    async def test_live_a_yes_reuses_the_stored_finding(self, board, monkeypatch):
-        self._stored(monkeypatch, 0.6)
-        board(_Decider(lambda e: 0.99),
-              finding_answers=_switch("finding_answers", mode=LIVE, safe=NO))
-        finding = await research._recall_by_switch("What is the cap?")
-        assert finding.recalled and finding.answer == "The cap is 60 s."
-        assert finding.citations == ["https://a.example/p"]
-
-    @pytest.mark.parametrize("probability", [0.5, 0.01, None])
-    async def test_live_anything_but_a_confident_yes_looks_it_up(
-            self, board, monkeypatch, probability):
-        self._stored(monkeypatch, 0.6)
-        board(_Decider(lambda e: probability),
-              finding_answers=_switch("finding_answers", mode=LIVE, safe=NO))
-        assert await research._recall_by_switch("What is the cap?") is None
-
-    @pytest.mark.parametrize("distance", [
-        0.05,                                         # the reuse rule's own ground
-        research.REUSE_CANDIDATE_DISTANCE + 0.01])    # too far to be a candidate
-    async def test_it_is_asked_only_between_the_two_bounds(
-            self, board, monkeypatch, distance):
-        self._stored(monkeypatch, distance)
-        client = _Decider()
-        board(client, finding_answers=_switch("finding_answers", mode=LIVE, safe=NO))
-        assert await research._recall_by_switch("What is the cap?") is None
-        assert client.calls == []
-
-
 def _with_decisions(router, answer=lambda evidence: 0.9, error=None):
     client, calls = _double(router)
     asked: list[tuple[dict, dict]] = []
@@ -492,9 +423,8 @@ class TestTheSwitchNodes:
         client, asked = _with_decisions(_workflow_router(200.0, [200.0] * 3))
         state = await _run(client, recorded)
         assert state.status == "completed" and asked == []
-        for node, names in (("request_switches", ["hard_request",
-                                                  "needs_calculation"]),
-                            ("answer_switches", ["same_meaning", "ask_covered",
+        for node, names in (("request_switches", ["needs_calculation"]),
+                            ("answer_switches", ["same_meaning",
                                                  "quote_answers"])):
             out = state.outputs[node]
             assert out["skipped"] is True and out["records"] == []
@@ -510,19 +440,12 @@ class TestTheSwitchNodes:
         before = state.outputs["request_switches"]
         assert [(r["switch"], r["item"], r["choice"], r["route"])
                 for r in before["records"]] == [
-            ("hard_request", "request", YES, DEFAULT),
             ("needs_calculation", "request", YES, YES)]
-        assert before["route"] == {"hard_request": DEFAULT,
-                                   "needs_calculation": YES}
-        after = state.outputs["answer_switches"]
-        assert [(r["switch"], r["item"]) for r in after["records"]] == [
-            ("ask_covered", "ask 1"), ("ask_covered", "ask 2")]
+        assert before["route"] == {"needs_calculation": YES}
         assert ("request_switches", before) in recorded
-        assert ("answer_switches", after) in recorded
-        # The evidence each question saw.
+        # The evidence the question saw.
         request_state, _ = asked[0]
         assert request_state == {"q0": {"request": REQUEST}}
-        assert asked[-1][0]["q0"]["answer"] == SUMMARY
 
     @pytest.mark.parametrize("probability", [0.0, 0.5, 1.0])
     async def test_in_shadow_no_answer_changes_the_run(
@@ -546,11 +469,11 @@ class TestTheSwitchNodes:
             self, decision_tier):
         client, _ = _with_decisions(_workflow_router(200.0, [200.0] * 3),
                                     answer=lambda e: 0.03)
-        declared = {"hard_request": _switch("hard_request", mode=LIVE,
-                                            each="request")}
+        declared = {"needs_calculation": _switch("needs_calculation", mode=LIVE,
+                                                 each="request")}
         state = await _run(client, declared=declared)
         assert state.outputs["request_switches"]["route"] == {
-            "hard_request": NO, "needs_calculation": DEFAULT}
+            "needs_calculation": NO}
         assert state.status == "completed"
 
     async def test_a_failed_decision_call_never_fails_the_run(self, decision_tier):
@@ -558,8 +481,8 @@ class TestTheSwitchNodes:
                                     error=RuntimeError("route gone"))
         state = await _run(client)
         assert state.status == "completed"
-        first, second = state.outputs["request_switches"]["records"]
-        assert first["choice"] == UNAVAILABLE and first["route"] == DEFAULT
+        only, = state.outputs["request_switches"]["records"]
+        second = only
         # A live switch takes its safe side when the call fails: the samples
         # would run.
         assert (second["switch"], second["choice"], second["route"]) == (
@@ -818,40 +741,7 @@ class TestQuoteAnswersLabel:
         assert state.outputs["recompute_vote"]["flagged"] is (answer_value == 100.0)
         switches_asked = [r["switch"] for r in
                           state.outputs["answer_switches"]["records"]]
-        assert switches_asked and "same_meaning" not in switches_asked
-
-
-class TestHeadAndTail:
-    def test_a_text_within_the_bound_is_sent_as_it_is(self):
-        text = "a" * switches.MAX_EVIDENCE_CHARS
-        assert switches.head_and_tail(text) == text
-
-    def test_a_long_text_keeps_its_opening_and_its_end_within_the_bound(self):
-        text = "OPENING " + "middle " * 2000 + " THE VERDICT: PASS."
-        sent = switches.head_and_tail(text)
-        assert len(sent) == switches.MAX_EVIDENCE_CHARS
-        assert sent.startswith("OPENING ") and sent.endswith("THE VERDICT: PASS.")
-        assert f"{len(text)} characters in all" in sent
-
-    async def test_ask_covered_is_shown_the_end_of_a_long_answer(self, decision_tier):
-        """Golden batch 1's Q5 r2: its release step and verdict sat at
-        characters 6553 and 8732 of 9265, past the head the switch saw."""
-        long = SUMMARY + "\n\n" + "The timer is reviewed. " * 400 + "\nVERDICT: PASS."
-        router = _workflow_router(200.0, [200.0] * 3)
-
-        def route(user_message, calls):
-            data = router(user_message, calls)
-            if user_message.startswith("Produce the answer to the following request"):
-                data = dict(data, summary=long)
-            return data
-
-        client, asked = _with_decisions(route)
-        state = await _run(client)
-        assert state.status == "completed"
-        evidence = asked[-1][0]["q0"]
-        assert evidence["item"] and len(long) > switches.MAX_EVIDENCE_CHARS
-        assert evidence["answer"].startswith(SUMMARY[:200])
-        assert evidence["answer"].endswith("VERDICT: PASS.")
+        assert "same_meaning" not in switches_asked
 
 
 class TestTheDelivery:
@@ -879,12 +769,12 @@ class TestTheDelivery:
                 phase(1, "switches", {"where": "grounding",
                                       "records": [record("needs_sources")]}),
                 phase(2, "request_switches", {"skipped": False, "route": {},
-                                              "records": [record("hard_request")]}),
+                                              "records": [record("needs_calculation")]}),
                 phase(3, "implement", {"summary": "the answer"}),
             ])
         detail = _detail(workflow)
         assert [(d["switch"], d["where"]) for d in detail.decisions] == [
-            ("needs_sources", "grounding"), ("hard_request", "request_switches")]
+            ("needs_sources", "grounding"), ("needs_calculation", "request_switches")]
 
 
 class TestPreflightKnowsTheTier:

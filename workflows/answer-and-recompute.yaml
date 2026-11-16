@@ -49,20 +49,17 @@ nodes:
     depends_on: [asks_anchored]
 
   # ── decision switches, before the answer ─────────────────────────
-  # The switches that read the request alone: is it a hard request, and
-  # does it need a calculation (live: it decides whether the recompute
-  # step runs).
-  # Its route is at request_switches.route.hard_request for a
-  # tier_when to read; in shadow that is `default`, so nothing here
-  # routes on it. Advisory: a failure or a cut is a recorded skip
-  # and the answer is written all the same.
+  # The switch that reads the request alone: does it need a calculation
+  # (live: it decides whether the recompute step runs). Advisory: a
+  # failure or a cut is a recorded skip and the answer is written all
+  # the same.
   - id: request_switches
     kind: ai
     tier: decision
     prompt: switches
     advisory: true
     args:
-      ask: [hard_request, needs_calculation]
+      ask: [needs_calculation]
     depends_on: [context]
 
   # ── answer ───────────────────────────────────────────────────────
@@ -198,9 +195,9 @@ nodes:
   # ── decision switches, after the answer ─────────────────────────
   # The switches declared in switches/default.yaml that read the
   # finished answer: does each text ask the vote flagged say the same
-  # thing as the samples, does it give each ask, does each quote found
-  # on its page state an answer to its question. One request on the
-  # optional decision tier. All ship in shadow: recorded, and
+  # thing as the samples, does each quote found on its page state an
+  # answer to its question. One request on the optional decision tier.
+  # Both are live as labels on the delivery (the owner, 2026-11-14);
   # nothing blocks, routes or revises on them. The run's status is
   # decided without this node; with no decision tier it skips.
   # same_meaning is first: a request asks at most MAX_QUESTIONS, and
@@ -211,5 +208,5 @@ nodes:
     prompt: switches
     advisory: true
     args:
-      ask: [same_meaning, ask_covered, quote_answers]
+      ask: [same_meaning, quote_answers]
     depends_on: [recompute_vote]

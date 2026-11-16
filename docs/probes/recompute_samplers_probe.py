@@ -226,7 +226,8 @@ async def main() -> None:
             "provider_order": settings.openrouter_provider_order,
             "provider_order_for_other_samplers":
                 _unpinned(settings.openrouter_provider_order),
-            "lookup_reads_documents": settings.lookup_reads_documents,
+            # The setting was removed on 2026-11-16: it is the only lookup.
+            "lookup_reads_documents": True,
             "workflow": WORKFLOW, "repeats": REPEATS, "shards": SHARDS,
             "max_spend_per_shard": MAX_SPEND}, indent=1))
     spent = 0.0

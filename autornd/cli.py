@@ -1,4 +1,4 @@
-"""CLI for AutoRnD — doc ingestion, knowledge stats, episodic memory."""
+"""CLI for AutoRnD — doc ingestion and knowledge stats."""
 
 import argparse
 import sys
