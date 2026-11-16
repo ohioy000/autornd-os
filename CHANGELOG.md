@@ -275,6 +275,36 @@ can report it. That one is recorded and left for a ruling.
 
 The suite stands at **712 tests** as of `c442c5f`, up from 85 at 0.1.0.
 
+**The default became one answer and its checks.** Since November the workflow a
+request runs by default has no plan, no judge and no loop: triage, the request's
+asks, a lookup, one answer with typed values, two gates that can stop a run, and
+free checks. The longer workflows are still offered by name. An audit had found
+that a judge could not block an answer on a wrong number, and three tiers of
+questions had shown no real catch by a judge.
+
+**The lookup reads the documents itself.** The search tier is asked where the
+answer is written, not what it is. The harness fetches those pages and hands
+their own words to the answer step, and every passage is recorded with whether
+it was found on its page. The lookup that asked a search model for an answer
+and its quotes was measured against this one and removed.
+
+**The delivery says what was checked.** An answer comes with "verified" lines
+for figures that stand in a found passage, and cautions that name a figure on
+no page, two pages that differ, or nothing read. Small yes/no decision switches
+on an optional decision tier guard the steps that cost more.
+
+**The recompute vote is kept for calculations.** On answers read from a
+document its samples read the same text and repeated the answer's mistake. It
+now runs only for a request judged to need a calculation.
+
+**Less of it.** The claim check, four switches that only recorded, the second
+request for documents, the withholding of unverified answers and episodic
+memory were measured or found unused, and taken out. A run left in flight by a
+stopped server ends blocked when the server next starts.
+
+**The story and the model choices are written down:** `docs/HOW-WE-GOT-HERE.md`
+and `docs/MODELS.md`, with a map of the record in `docs/README.md`.
+
 ## [0.1.0] — 2026-09-12
 
 ### Added
