@@ -189,7 +189,18 @@ class WorkflowEngine:
 
         runner = PhaseRunner(self.client, on_phase=on_phase)
         path = workflow_file or workflow_path()
-        spec = load_spec(path)
+        try:
+            spec = load_spec(path)
+        except Exception as exc:
+            # The row is already committed as pending. Left alone, a workflow
+            # file that is missing or does not load kept it pending for ever
+            # on the background path (API audit of 2026-11-16).
+            logger.exception("Workflow %d could not load %s", workflow.id, path)
+            workflow.status = WorkflowStatus.BLOCKED
+            workflow.error = (f"The workflow could not be loaded: "
+                              f"{type(exc).__name__}: {exc}")[:500]
+            await self.session.commit()
+            return workflow
         # Ruling D55 (5): which workflow ran, recorded before anything else,
         # through the phase channel on a zero-cost response, as the recompute
         # vote's record is. No DB schema change.

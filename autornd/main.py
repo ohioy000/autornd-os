@@ -73,9 +73,11 @@ app.include_router(dashboard_router)
 async def unhandled_exception_handler(request: Request, exc: Exception):
     tb = traceback.format_exception(type(exc), exc, exc.__traceback__)
     logging.getLogger("autornd").error("Unhandled exception:\n%s", "".join(tb))
+    # The traceback is logged and not returned: it names files and lines of
+    # the server to whoever called (API audit of 2026-11-16).
     return JSONResponse(
         status_code=500,
-        content={"detail": str(exc), "traceback": "".join(tb)},
+        content={"detail": f"{type(exc).__name__}: {exc}"},
     )
 
 

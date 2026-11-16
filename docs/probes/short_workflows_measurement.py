@@ -170,7 +170,9 @@ async def _run_unit(workflow: str, question: dict, repeat: int) -> dict:
             detail = _detail(row)
         answer = detail.answer or ""
         candidate = detail.candidate if isinstance(detail.candidate, dict) else {}
-        scored_text = answer or str(candidate.get("summary") or "")
+        # The draft a run left is `candidate.answer`; `summary` was never a key
+        # of that record, so an undelivered unit was recorded with no draft.
+        scored_text = answer or str(candidate.get("answer") or "")
         verdict = screen(question, scored_text) if scored_text else None
         triage = next((p.verdict for p in detail.phases if p.phase == "triage"), {})
         record.update({

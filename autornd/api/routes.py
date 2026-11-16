@@ -414,6 +414,15 @@ def _single_figure(value: object) -> float | None:
 # regulator's own page).
 _LABEL = re.compile(r"\((?:[a-z]{1,4}|\d{1,3})\)|§+\s*\d+(?:\.\d+)?")
 _SENTENCE = re.compile(r"(?<=[.;:?!])\s+|\n+")
+# A line break inside a sentence is the page's layout, not its end: a PDF
+# wraps every line. It is read as a space unless the line before ends a
+# sentence or the line after opens a paragraph ("(b)", "§ 91.153", "2.").
+# Seen on the API walk of 2026-11-16: a right answer of 20 minutes carried
+# two cautions, because a PDF's last wrapped line, "to fly after that for
+# at least 20 minutes.", read as a sentence of its own and matched the
+# airplane's "(1) During the day, to fly after that for at least 30 minutes".
+_WRAPPED = re.compile(
+    r"(?<![.;:?!])[ \t]*\n\s*(?!\s|\([a-z0-9]{1,4}\)|§|\d{1,3}[.)]\s)", re.I)
 # A number joined to a letter is a mark, not a figure: the "F1" of an
 # amendment note, the 3 of "O3".
 _TOKEN = re.compile(r"(?<![a-z])\d+(?:\.\d+)?(?![a-z])|[a-z]+")
@@ -433,10 +442,14 @@ SAME_SENTENCE_MIN_WORDS = 8
 # On the same answers the ratio alone raised 9 cautions; this leaves 5 and
 # drops the 4 that were not one thing: "transmitter power exceeding 1.5 kW
 # PEP" beside "transmitter power output exceeding 200 W PEP", two paragraphs
-# of one rule, three times, and two test methods' numbers once. The 5 left
-# are the flight attendant's 10 hours beside 9 (twice), an ozone standard
-# of 0.070 beside its predecessor's 0.075 (twice), and a driver's 10 hours
-# off duty beside a sister rule's 8.
+# of one rule, three times, and two test methods' numbers once.
+# Repaired 2026-11-16, after the API walk and the three-arm run showed two
+# more false kinds (a PDF's wrapped lines, and one section under two
+# addresses): on the same 283 answers 3 cautions are left. Two are the case
+# this was built for, the flight attendant's 10 hours beside 9. The third
+# is false and the rule cannot tell it: "More than 10 hours following 8
+# consecutive hours off duty" beside "More than 15 hours following 8
+# consecutive hours off-duty", two limits a rule prints in the same words.
 SAME_WORDS_BEFORE = 3
 SAME_WORDS_AFTER = 2
 # The most of a sentence a caution prints.
@@ -453,7 +466,7 @@ def _sentences(text: str, min_words: int = SAME_SENTENCE_MIN_WORDS,
     """Each sentence of a passage that states a number: its words with every
     number put aside, the numbers in order, and the sentence as printed."""
     out = []
-    for sentence in _SENTENCE.split(text):
+    for sentence in _SENTENCE.split(_WRAPPED.sub(" ", text)):
         tokens = [_NUMBER_WORD.get(t, t) for t in _TOKEN.findall(
             _LABEL.sub(" ", sentence.casefold().replace(",", "")))]
         numbers = tuple(t for t in tokens if t[0].isdigit())
@@ -480,10 +493,21 @@ def _differing(sources: list[dict]) -> list[dict]:
     out: list[dict] = []
     seen: set = set()
     names = list(pages)
+    # What each page states, word for word and figure for figure. Two pages
+    # differ on a sentence only when neither also prints the other's: one
+    # section reached under two addresses, or a part that holds both an old
+    # section and its successor, prints both, and then the pair is two
+    # things on each page and not one thing told two ways. Seen on the
+    # three-arm run of 2026-11-15, on one eCFR section under two addresses.
+    states = {name: {(words, numbers) for words, numbers, _ in sentences}
+              for name, sentences in pages.items()}
     for i, first in enumerate(names):
         for second in names[i + 1:]:
             for words_a, numbers_a, printed in pages[first]:
                 for words_b, numbers_b, _ in pages[second]:
+                    if ((words_a, numbers_a) in states[second]
+                            or (words_b, numbers_b) in states[first]):
+                        continue
                     apart = [n for n, (a, b) in enumerate(zip(numbers_a, numbers_b))
                              if float(a) != float(b)]
                     if len(numbers_a) != len(numbers_b) or len(apart) != 1:
@@ -1063,6 +1087,15 @@ async def update_settings(body: SettingsUpdate, request: Request):
     # itself — Ruling D45 (3): a ceiling may be lowered at runtime and never
     # raised above its startup value, because a raise applies to every run in
     # flight and any caller the middleware admits could make it (review F8).
+    # A limit of nought or less is not a tighter limit; it is a broken one
+    # (API audit of 2026-11-16: -5 was accepted for a token ceiling).
+    not_positive = sorted(
+        name for name, value in updates.items()
+        if isinstance(value, (int, float)) and not isinstance(value, bool)
+        and value <= 0)
+    if not_positive:
+        raise HTTPException(
+            422, f"{', '.join(not_positive)} must be greater than zero.")
     raised = [name for name, value in updates.items()
               if not _only_tightens(name, value)]
     if raised:
@@ -1111,6 +1144,9 @@ async def health():
         # startup, so an open server cannot be mistaken for a closed one.
         "authentication_configured": bool(settings.api_key or settings.jwt_secret),
         "allow_unauthenticated_remote": settings.allow_unauthenticated_remote,
+        # The catalogue is public, so the models can read as available with
+        # no key to call them with (API audit of 2026-11-16).
+        "provider_key_configured": bool(settings.openrouter_api_key.strip()),
         "models": model_status,
     }
 

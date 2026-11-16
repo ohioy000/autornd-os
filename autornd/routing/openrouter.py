@@ -336,6 +336,10 @@ class SpendGuardRefused(BudgetExceeded):
             f"${worst_case:.4f}, and ${remaining:.4f} remained")
 
 
+class MissingProviderKey(RuntimeError):
+    """A provider call was about to be made with no key configured."""
+
+
 class ProviderFailure(RuntimeError):
     """A provider ended the run without producing usable output.
 
@@ -813,6 +817,13 @@ class OpenRouterClient:
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
+            # With no key the header below is "Bearer " and the transport
+            # refuses it as an illegal header value, which says nothing a
+            # user can act on (API audit of 2026-11-16).
+            if not str(self.api_key or "").strip():
+                raise MissingProviderKey(
+                    "No provider key is set. Put OPENROUTER_API_KEY in .env "
+                    "and restart the server.")
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
                 headers={

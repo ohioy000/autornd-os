@@ -8,7 +8,9 @@ the key's figure (a pointer; the samples are read by hand), the vote it
 would have given on the answer as delivered, and the vote it would have
 given had the answer stated the commonly confused figure in the key
 figure's place. With a QUESTION_ID it prints that question's units, every
-sample's values beside the answer's.
+sample's values beside the answer's. With ANY_SHAPE=1 in the environment the
+samples are first read whatever key their values sit under (`any_shape`),
+and every vote is worked out again from them.
 
 CONFUSED was written before any sample was read: for each question, the
 key's leading figure and the figure the question is commonly answered with.
@@ -74,6 +76,26 @@ def confused_answer(results: list, key: str, other: str) -> list | None:
     return None
 
 
+def any_shape(sample: object) -> object:
+    """A sample with its values under `results`, whatever key the model put
+    them under. Two of the first batch's models answered under "answers" or
+    "asks", or as one bare result; the harness reads none of those. This is
+    for the reading that tells a model that does not know the figure from
+    one that does not follow the reply's shape. It is not the harness."""
+    if not isinstance(sample, dict) or sample.get("failed"):
+        return sample
+    if isinstance(sample.get("results"), list):
+        return sample
+    if "ask" in sample and "value" in sample:
+        return {"results": [sample]}
+    for value in sample.values():
+        if isinstance(value, list) and value and all(
+                isinstance(v, dict) and "value" in v for v in value):
+            return {"results": value}
+    return sample
+
+
+TOLERANT = os.environ.get("ANY_SHAPE") == "1"
 units = [json.loads(line) for path in sorted(glob.glob(str(OUT / "shard-*.jsonl")))
          for line in open(path, encoding="utf-8")]
 totals: dict[str, Counter] = defaultdict(Counter)
@@ -95,6 +117,14 @@ for unit in units:
         total["cost"] += float(entry.get("cost") or 0.0)
         total["seconds"] += float(entry.get("seconds") or 0.0)
         samples = entry.get("samples") or []
+        total["samples_in_the_shape_asked"] += sum(
+            1 for x in samples if isinstance(x, dict)
+            and isinstance(x.get("results"), list))
+        vote = entry.get("vote") or {}
+        if TOLERANT:
+            samples = [any_shape(x) for x in samples]
+            vote = checks.recompute_vote(unit.get("results") or [], samples,
+                                         unit.get("asks") or [], "").data
         for sample in samples:
             total["samples"] += 1
             if not isinstance(sample, dict) or sample.get("failed"):
@@ -105,7 +135,6 @@ for unit in units:
             total["samples_with_key_figure"] += f"{float(key):g}" in stated
             total["samples_with_confused_figure"] += (
                 f"{float(other):g}" in stated and f"{float(key):g}" not in stated)
-        vote = entry.get("vote") or {}
         total["flags_as_delivered"] += bool(vote.get("flagged"))
         total["flags_where_answer_holds_key"] += bool(vote.get("flagged")) and answer_holds_key
         total["answers_holding_key"] += answer_holds_key
