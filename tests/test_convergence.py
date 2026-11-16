@@ -694,12 +694,42 @@ class TestTheRecordsBesideTheAnswer:
             "the answer was not compared.",
             "The answer gives 40 rem for ask 2, and that figure is in none "
             "of the passages found on their pages."]
+
+    COMPARED_NOTHING = ("The recompute vote compared nothing, so no figure in "
+                        "this answer was recomputed independently.")
+
+    def test_a_vote_that_compared_nothing_is_said_when_nothing_else_checked(self):
+        """Owner's ruling 2026-11-15. On 283 recorded answers the caution
+        stood beside 71, nearly all right and read from a page that was
+        found; it is kept for an answer nothing else checked."""
+        vote = {"flagged": False, "unchecked": True, "checked": False}
+        # A figure of the answer is on no page read.
+        assert self._backed_run([{"ask": 1, "value": 40, "unit": "rem"}],
+                                vote).cautions == [
+            self.COMPARED_NOTHING,
+            "The answer gives 40 rem for ask 1, and that figure is in none "
+            "of the passages found on their pages."]
+        # No passage was found on any page.
+        assert self._backed_run([{"ask": 1, "value": 15, "unit": "rem"}], vote,
+                                quote_status="not_found").cautions == [
+            self.COMPARED_NOTHING,
+            "A lookup ran, but none of its passages was found on its page, "
+            "so nothing in this answer was checked against a source."]
+
+    @pytest.mark.parametrize("results", [
+        # On the page without its word beside it: not verified, not absent.
+        [{"ask": 1, "value": 1, "unit": "rem"}],
+        # An answer in words, read from the page.
+        [{"ask": 1, "value": "the lens of the eye", "unit": ""}],
+        # Verified for one ask of two.
+        [{"ask": 1, "value": 15, "unit": "rem"}],
+    ])
+    def test_it_is_not_said_of_an_answer_read_from_a_found_page(self, results):
+        """Break-proof: each of these carried the caution before the ruling."""
         detail = self._backed_run(
-            [{"ask": 1, "value": 15, "unit": "rem"}],
-            {"flagged": False, "unchecked": True, "checked": False}, asks=2)
-        assert detail.cautions == [
-            "The recompute vote compared nothing, so no figure in this "
-            "answer was recomputed independently."]
+            results, {"flagged": False, "unchecked": True, "checked": False},
+            asks=2)
+        assert detail.cautions == []
 
     def test_a_withheld_lookup_answer_is_said(self):
         detail = _detail(self._workflow(

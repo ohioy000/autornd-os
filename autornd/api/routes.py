@@ -598,7 +598,13 @@ def _cautions(vote: dict | None, sources: list[dict],
             out.append("The recompute vote did not run, so no figure in "
                        "this answer was recomputed.")
         elif vote.get("unchecked") or not vote.get("checked"):
-            if not (asks and len(backed) >= asks):
+            # Said only when nothing else checked the answer either: no
+            # passage was found on any page, or a figure of the answer is on
+            # no page read (owner's ruling, 2026-11-15). Replayed on 283
+            # recorded answers it stood beside 71, nearly all right, and was
+            # the largest caution left; an answer read from a page that was
+            # found does not rest on the vote.
+            if unconfirmed or not _handed_on(sources, beside_the_point=True):
                 out.append("The recompute vote compared nothing, so no figure "
                            "in this answer was recomputed independently.")
         else:

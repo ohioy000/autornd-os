@@ -58,7 +58,7 @@ check, in shadow).
 |---|---|---|
 | First professional set, 15 questions | `evals/professional/questions.json` | Frozen, professional-1 |
 | Harder professional set, 17 questions | `evals/professional/hard-questions.json` | Frozen, professional-hard-1 |
-| Where a summary misleads, 12 questions | `evals/professional/misleading-questions.json` | **Draft, professional-misleading-1. Not approved; the runner refuses it** |
+| Where a summary misleads, 12 questions | `evals/professional/misleading-questions.json` | Frozen, professional-misleading-1 |
 
 `evals/professional/verify_keys.py REPO [FILE]` checks every key passage on its live source. The
 answer runner takes them as `MEASURE_SET=professional` and `professional-hard`. Neither has an
@@ -129,6 +129,9 @@ request in its own words. They are still learned within one process, after two r
 See `docs/reviews/2026-11-15-professional-misleading-draft.md`: the owner signs the keys and
 chooses the size of the run. 12 questions at 12 answers a side is about '$3.75', more than the
 '$3' approved. Nothing is run before both are answered.
+
+**Answered 2026-11-15:** keys signed, run C (three arms, 432 answers, about '$5.60'),
+preregistered in `docs/preregistration-20261115-misleading-set-run.md`.
 
 - Both lookups are near the ceiling on the two professional sets, so those cannot separate them.
 - **Write a set of questions where a summary misleads,** like the flight-attendant one: a rule
