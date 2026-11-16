@@ -579,10 +579,20 @@ def _settled(verdicts: list[tuple[str, Any]], vote: dict | None,
                 and len(cleared) < len(disagreements))
 
 
+def _judged_a_calculation(verdicts: list) -> bool:
+    """Did the needs_calculation switch route this request yes? Read as a
+    typed field off the switch node's record; any other route, a skipped
+    node or no decision tier is no."""
+    return any(isinstance(v, dict) and isinstance(v.get("route"), dict)
+               and v["route"].get("needs_calculation") == "yes"
+               for _, v in verdicts)
+
+
 def _cautions(vote: dict | None, sources: list[dict],
               has_answer: bool, asks: int = 0,
               unconfirmed: list[dict] | None = None,
-              differing: list[dict] | None = None) -> list[str]:
+              differing: list[dict] | None = None,
+              calculation: bool = False) -> list[str]:
     """The cautions beside an answer, read off the typed records.
 
     Measured live 2026-11-12: a completed run delivered a wrong figure with
@@ -651,9 +661,18 @@ def _cautions(vote: dict | None, sources: list[dict],
                            f"the answer did not state it as a single value.")
     findings = [f for s in sources for f in s.get("findings") or []]
     if not findings:
-        out.append("No lookup ran: figures and citations in this answer "
-                   "come from the model's memory and were not checked "
-                   "against a source.")
+        # Not said beside a calculation (owner's ruling, 2026-11-16: "drop
+        # the warning completely, since we have changed the objective to
+        # just calculate"). Measured that day on tier 2: all 15 calculation
+        # answers were right, nothing in them needed looking up, and all 15
+        # carried this line (docs/reviews/2026-11-16-needs-calculation.md).
+        # It stays beside any other answer no lookup stood behind: that is
+        # the case of 2026-11-12, a wrong figure from memory with nothing
+        # to say so.
+        if not calculation:
+            out.append("No lookup ran: figures and citations in this answer "
+                       "come from the model's memory and were not checked "
+                       "against a source.")
         return out
     quotes = [q for f in findings for q in f.get("quotes") or []]
     if not any(q.get("status") == "found" for q in quotes):
@@ -888,7 +907,8 @@ def _detail(w: Workflow) -> WorkflowDetail:
                    and "switch" in record],
         sources=sources,
         cautions=_cautions(vote, sources, answer is not None, asked,
-                           unconfirmed, differing),
+                           unconfirmed, differing,
+                           calculation=_judged_a_calculation(verdicts)),
         confirmations=_confirmations(backed, answer is not None),
         id=w.id,
         request=w.request,

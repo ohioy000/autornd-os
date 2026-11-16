@@ -582,6 +582,30 @@ class TestTheRecordsBesideTheAnswer:
         assert "compared nothing" in detail.cautions[0]
         assert "No lookup ran" in detail.cautions[1]
 
+    def _calculation(self, route):
+        return _detail(self._workflow(
+            ("request_switches", {"skipped": False, "records": [],
+                                  "route": {"needs_calculation": route}}),
+            ("implement", {"summary": "a"}),
+            ("recompute_vote", {"flagged": False, "unchecked": False,
+                                "checked": True, "no_consensus": []}))).cautions
+
+    def test_a_calculation_is_not_told_no_lookup_ran(self):
+        """Owner's ruling 2026-11-16. Measured that day: all 15 tier-2
+        calculation answers were right and voted on, and all 15 carried
+        the line."""
+        assert self._calculation("yes") == []
+
+    def test_any_other_answer_with_no_lookup_is_still_told(self):
+        """Break-proof: only a request the switch routed yes is spared. A
+        confident no, a switch that was not asked and a run with no switch
+        node all keep the line."""
+        for route in ("no", "default"):
+            assert self._calculation(route) == [
+                "No lookup ran: figures and citations in this answer come "
+                "from the model's memory and were not checked against a "
+                "source."]
+
     def test_a_flag_is_named(self):
         detail = _detail(self._workflow(
             ("sources", {"lookup": "grounding", "findings": [{"quotes": [
