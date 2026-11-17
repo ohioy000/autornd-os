@@ -36,6 +36,26 @@ The evidence, in the order we met it:
 5. **A small model from a frontier lab, tried in one seat, was level and dearer.** In the
    recompute seat `claude-haiku-5.5` and the model it replaced each scored 9 of 13, at one and
    a half times the cost.
+6. **A frontier model asked directly is just as right, faster, and about six times dearer.**
+   On 22 of the professional questions `claude-fable-5.2`, with web search on and no harness,
+   was right on all 22 in 8.5 seconds an answer for '$0.071'. The harness is right on the same
+   22 in about a minute for '$0.011' (`docs/reviews/2026-11-17-frontier-direct.md`).
+
+### What the direct comparison changed
+
+Before 17 November this file argued from our own runs alone. The comparison with a frontier
+model corrected it in two ways, and both are kept here plainly:
+
+- **A frontier model does not get these questions wrong.** The case for the harness is not
+  better answers. It is the same answers for about a sixth of the price, with a record of
+  every passage read.
+- **The price gap is about six times, not the fifteen to thirty we predicted.** A frontier
+  model's answer costs cents, not dimes.
+
+So the thesis is narrower than a reader might hope: **inexpensive models, handed the right
+page, match a frontier model on these questions; they do not beat it.** What you buy with the
+harness is cost at volume, a checkable record, and freedom from any one model. What you give up
+is speed and simplicity.
 
 ### Why this holds as cheaper frontier models arrive
 
@@ -62,10 +82,12 @@ The evidence, in the order we met it:
 
 ### What this thesis does not claim
 
-- **We have not run a current frontier model, cheap or dear, as the answer step of today's
-  harness.** The claim is that our evidence gives no reason to expect a gain on these
-  questions, not that we measured none. One extra arm in the acceptance run would settle it for
-  about a dollar.
+- **We have not run a frontier model as the answer step inside today's harness.** We have run
+  one beside it, asked directly (point 6). Both were right on everything, so there was nothing
+  left for the swap to show on these questions.
+- **It does not claim the harness is the better buy for everyone.** For a handful of questions
+  a frontier model with search is simpler and faster. The harness earns its keep at volume, or
+  where the record of what was read matters.
 - **It is a claim about precise questions whose answer is written on a page that can be read,**
   and about short calculations. It is not a claim about open design work or long reasoning,
   where the tier-4 results suggest a strong model may earn its price.
@@ -173,7 +195,9 @@ still offered by name.
 
 ## What we have not measured
 
-- A current frontier model as the answer step of today's harness.
+- A frontier model as the answer step inside today's harness, or more than one answer a
+  question from a frontier model asked directly.
+- Either side on questions hard enough to separate them. Every set is at the ceiling for both.
 - The ranker and the research tier against any alternative.
 - The reasons for the re-tiering of 12 and 13 November, which the record does not hold.
 - The recompute step with its present model on a calculation the answer step gets wrong: on
