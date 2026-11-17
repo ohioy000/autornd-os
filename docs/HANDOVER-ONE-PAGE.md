@@ -27,6 +27,13 @@ first for the rules. They stay as they are.
 5. **The pointing cautions fire on about a fifth of right answers.** Narrowing them is a change to
    what the delivery says, so it needs a ruling.
 6. **Owner-side:** reasons for the 2026-11-12 and 13 re-tiering, for `docs/MODELS.md`.
+7. **`HANDOVER.md` is a 1,900-line snapshot dated 2026-10-21.** The plan said to propose one
+   current page and an archive. This page is the current page; moving the long file under `docs/`
+   as the archive is the owner's call, because tests and other files cite it by path.
+8. **Sites learned as refusing are shared by every run in one process.** By design, not isolated
+   (`docs/reviews/2026-11-16-user-path-audit.md`, left open 3).
+9. **Not seen live:** whether the 1,800-second time budget cuts a node already in flight. The
+   watchdog tests cancel calls mid-flight; no live run has been timed out on purpose.
 
 ## How to work here
 
