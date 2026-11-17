@@ -54,3 +54,29 @@ run is now held after its first call by a gate the test opens when it has looked
 the watcher made to sleep 3 s first, the old test's condition fails with the CI message
 and the gated test passes. Breaking the write-as-you-go line in
 `engine/workflow.py` still fails the test.
+
+## A real run through the image with a real key, 2026-11-17
+
+The last open item on the release list was a run that gets all the way through the
+container with a real key and a signed-in browser caller. It was done by hand.
+
+- **The image** was built from a fresh clone of main at `00c3281`, so the build context held
+  no `.env`. The key reached the container as environment variables passed by name from the
+  owner's `.env`; it was never printed and never written into the image. `JWT_SECRET` was set
+  to a test value. `/api/health` said `ok` and all ten tiers were available.
+- **The account** was registered from inside the container (a loopback caller there), then
+  signed in through the page in Chromium. The sign-in worked and the page held its token.
+- **The question** was "Under 49 CFR § 173.120(a), what flash point threshold defines a Class 3
+  flammable liquid?" The run completed in 68 seconds with a correct answer, a confirmation
+  tick, no caution mark, and a cost of '$0.0080'. The Workflows tab listed the run. The only
+  console error was the expected 401 before sign-in.
+- **One defect found:** the Workflows table said "-21600s ago". The server writes UTC, SQLite
+  returns the time with no zone marker, and the page read that as local time (US Central). It
+  is fixed in pull request 298 with a test that runs the page's own function under two zones.
+- **One risk found the same day, by a cold start from the README** (an agent, not a person,
+  with only the README): an image built from a tree that holds a working `.env` carried it. An
+  image built here on 2026-11-16 held a 3.4 KB `/app/.env`. It was deleted, and a
+  `.dockerignore` now keeps every `.env*` file except the template out of the build
+  (pull request 299). The image built from the owner's tree with the fix holds only `.env.example`.
+
+The container and the image used for this check were removed afterwards.

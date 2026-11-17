@@ -13,7 +13,8 @@ Paid: it needs the owner's word and an amount before it is run.
 
 Two settings choose the questions and the workflows; unset, the run is the
 tier-2 run of 2026-11-13 exactly. MEASURE_SET is tier2, golden, tier4 or
-professional, professional-hard or professional-misleading
+professional, professional-hard, professional-misleading or
+professional-holdout
 (evals/professional's sets, with no screen: the answers are read against
 the keys; a set still in draft is refused);
 golden asks evals/golden's six questions and its side test, screened by the
@@ -65,7 +66,8 @@ from autornd.routing.openrouter import OpenRouterClient  # noqa: E402
 SET = os.environ.get("MEASURE_SET", "tier2")
 PROFESSIONAL_SETS = {"professional": "questions.json",
                      "professional-hard": "hard-questions.json",
-                     "professional-misleading": "misleading-questions.json"}
+                     "professional-misleading": "misleading-questions.json",
+                     "professional-holdout": "holdout-questions.json"}
 WORKFLOWS = tuple(w for w in os.environ.get(
     "MEASURE_WORKFLOWS", "answer-and-recompute,verify-first").split(",") if w)
 TIER2 = json.loads((ROOT / "evals/tier2/questions.json").read_text())
@@ -107,7 +109,7 @@ def _questions() -> list[dict]:
                 for q in frozen["questions"]]
     raise SystemExit(
         f"MEASURE_SET {SET!r} is not tier2, golden, tier4, professional, "
-        f"professional-hard or professional-misleading")
+        f"professional-hard, professional-misleading or professional-holdout")
 
 
 QUESTIONS = _questions()

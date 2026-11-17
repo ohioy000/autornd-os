@@ -33,7 +33,8 @@ verdicts: dict = {}
 for path in sorted(glob.glob(sys.argv[3])):
     verdicts.update(json.loads(Path(path).read_text()))
 keys = {q["id"]: q for name in ("questions.json", "hard-questions.json",
-                                "misleading-questions.json")
+                                "misleading-questions.json",
+                                "holdout-questions.json")
         for q in json.loads((REPO / "evals/professional" / name).read_text())["questions"]}
 NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
 _units: dict[str, list] = {}
