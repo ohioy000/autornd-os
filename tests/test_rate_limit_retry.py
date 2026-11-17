@@ -148,6 +148,19 @@ class TestARateLimitIsRetried:
         assert http.calls == 2, "the retry did not happen"
         assert no_sleep == [orm._RATE_LIMIT_BACKOFF_S], "backoff not applied once"
 
+    async def test_a_429_that_lasts_four_attempts_still_clears(
+            self, monkeypatch, no_sleep):
+        """The acceptance run of 2026-11-17 lost 6 of 270 units to a 429 that
+        outlasted three attempts and was gone minutes later."""
+        http = _Http([_rate_limited()] * 4 + [_ok()])
+        client = OpenRouterClient(api_key="test")
+        monkeypatch.setattr(client, "_get_client", AsyncMock(return_value=http))
+        out = await client.chat(function="engineering", system_prompt="s",
+                                user_message="u")
+        assert out.content == "{}"
+        assert http.calls == 5
+        assert no_sleep == [2.0, 4.0, 8.0, 16.0]
+
     async def test_backoff_grows_and_the_attempts_are_bounded(self, monkeypatch, no_sleep):
         http = _Http([_rate_limited()] * 10)
         client = OpenRouterClient(api_key="test")
@@ -157,8 +170,8 @@ class TestARateLimitIsRetried:
                               user_message="u")
         assert http.calls == orm._RATE_LIMIT_ATTEMPTS, (
             "a pinned tier cannot fall back, so this must not retry forever")
-        assert no_sleep == [orm._RATE_LIMIT_BACKOFF_S,
-                            orm._RATE_LIMIT_BACKOFF_S * 2]
+        assert no_sleep == [orm._RATE_LIMIT_BACKOFF_S * 2 ** i
+                            for i in range(orm._RATE_LIMIT_ATTEMPTS - 1)]
 
     async def test_a_persistent_429_still_reports_the_upstream_reason(
             self, monkeypatch, no_sleep):
@@ -218,8 +231,8 @@ class TestAReplyWithoutChoicesIsARetryableProviderFailure:
                               user_message="u")
         assert http.calls == orm._RATE_LIMIT_ATTEMPTS, (
             "a pinned tier cannot fall back, so this must not retry forever")
-        assert no_sleep == [orm._RATE_LIMIT_BACKOFF_S,
-                            orm._RATE_LIMIT_BACKOFF_S * 2]
+        assert no_sleep == [orm._RATE_LIMIT_BACKOFF_S * 2 ** i
+                            for i in range(orm._RATE_LIMIT_ATTEMPTS - 1)]
 
     async def test_the_exhausted_failure_is_typed_and_names_the_body(
             self, monkeypatch, no_sleep):
