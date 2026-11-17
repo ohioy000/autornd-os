@@ -44,7 +44,7 @@ are not a forecast for a question nobody has seen.
 
 ## Known limits
 
-These are in the README's Limitations too. The first three came from the last run.
+These are in the README's Limitations too. The first three came from the last run, and the proxy line from a check made afterwards.
 
 1. **A right figure can come with a wrong claim beside it.** Roughly 30 of the 264 answers carried
    a wrong or doubtful claim outside what was asked, by a rough count of the readers' notes.
@@ -57,11 +57,14 @@ These are in the README's Limitations too. The first three came from the last ru
 5. **Answers written in words are not checked the way figures are.**
 6. **The answer-step prompt can trip a safety filter on some frontier models.** Tried once, the
    model returned no text; what trips it was not looked for.
-7. **Some sites refuse to be read,** and a scanned PDF stays unread. The delivery says so.
-8. **The recompute vote cannot see an omission,** or an error every sample shares.
-9. **The provider rate-limits.** Six of 270 units were blocked by an upstream 429 in the last run
+7. **With no key set, a same-host proxy that does not pass `X-Forwarded-For` serves everyone.**
+   Measured 2026-11-17: with the header the request is refused, without it accepted. Set `API_KEY`
+   or `JWT_SECRET` whenever anything other than that machine can reach the server.
+8. **Some sites refuse to be read,** and a scanned PDF stays unread. The delivery says so.
+9. **The recompute vote cannot see an omission,** or an error every sample shares.
+10. **The provider rate-limits.** Six of 270 units were blocked by an upstream 429 in the last run
    and made again; a caller should expect the odd blocked run.
-10. **No code execution, no streaming, no roles.** Runs are kept apart per user; there are no
+11. **No code execution, no streaming, no roles.** Runs are kept apart per user; there are no
     admin or team permissions.
 
 ## What was checked by hand
