@@ -1,5 +1,7 @@
 # AutoRnD-OS — Project State & Handover Document
 
+> **This file is an archive.** Its narrative is the snapshot of 2026-10-21 and later sections were added as work went on. For where things stand now, read [`docs/HANDOVER-ONE-PAGE.md`](docs/HANDOVER-ONE-PAGE.md), [`docs/release-notes.md`](docs/release-notes.md) and [`docs/MODELS.md`](docs/MODELS.md). The test count in line 4 is kept true by a guard; the rest is history.
+
 **Repo:** `github.com/ohioy000/autornd-os` (public), the shared repository every agent works through; its `main` is the truth.
 **Tests:** 1996 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
 
