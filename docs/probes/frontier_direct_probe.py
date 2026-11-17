@@ -17,6 +17,11 @@ The questions are drawn from the three professional sets by a fixed seed,
 7, 9 and 6 of them, 22 in all: the draw is in the preregistration and is
 checked here. It stops starting calls once the spend has reached MAX_SPEND.
 LIMIT asks only the first LIMIT questions not yet in OUT_FILE, for a smoke.
+
+Two settings were added on 2026-11-17 for the owner's second data point.
+FRONTIER_EFFORT is the reasoning effort sent (medium when unset).
+FRONTIER_SUBSET asks only that many of the 22, drawn from them by the same
+fixed seed, and FRONTIER_MAX_TOKENS raises the most one call may write.
 """
 from __future__ import annotations
 
@@ -44,7 +49,9 @@ DRAW = (("questions.json", 7), ("hard-questions.json", 9),
         ("misleading-questions.json", 6))
 # The most one call may write, reasoning included. A bound on a call's
 # cost, not a target.
-MAX_TOKENS = 8000
+MAX_TOKENS = int(os.environ.get("FRONTIER_MAX_TOKENS", "8000"))
+EFFORT = os.environ.get("FRONTIER_EFFORT", "medium").strip()
+SUBSET = int(os.environ.get("FRONTIER_SUBSET", "0"))
 SEARCH_RESULTS = 5
 
 
@@ -56,6 +63,10 @@ def _questions() -> list[dict]:
         drawn = set(random.Random(f"{SEED}|{name}").sample(ids, count))
         out += [{"set": name, "id": q["id"], "question": q["question"]}
                 for q in frozen["questions"] if q["id"] in drawn]
+    if SUBSET:
+        kept = set(random.Random(f"{SEED}|subset").sample(
+            [q["id"] for q in out], SUBSET))
+        out = [q for q in out if q["id"] in kept]
     return out
 
 
@@ -67,13 +78,14 @@ def _addresses(message: dict) -> list[str]:
 
 async def _ask(http: httpx.AsyncClient, question: dict) -> dict:
     started = time.time()
-    record = {"set": question["set"], "id": question["id"], "model": MODEL}
+    record = {"set": question["set"], "id": question["id"], "model": MODEL,
+              "effort": EFFORT}
     try:
         response = await http.post("/chat/completions", json={
             "model": MODEL,
             "messages": [{"role": "user", "content": question["question"]}],
             "max_tokens": MAX_TOKENS,
-            "reasoning": {"effort": "medium"},
+            "reasoning": {"effort": EFFORT},
             "plugins": [{"id": "web", "max_results": SEARCH_RESULTS}],
             "usage": {"include": True},
         })
