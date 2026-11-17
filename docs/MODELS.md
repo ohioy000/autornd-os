@@ -40,6 +40,9 @@ The evidence, in the order we met it:
    On 22 of the professional questions `claude-fable-5.2`, with web search on and no harness,
    was right on all 22 in 8.5 seconds an answer for '$0.071'. The harness is right on the same
    22 in about a minute for '$0.011' (`docs/reviews/2026-11-17-frontier-direct.md`).
+7. **More reasoning effort did not change the answers.** The same model at high effort was
+   right on 14 of 14, as at medium, for about one and a half times the cost. One call at
+   maximum effort cost '$1.05' (`docs/reviews/2026-11-17-frontier-effort-and-seat.md`).
 
 ### What the direct comparison changed
 
@@ -82,9 +85,12 @@ is speed and simplicity.
 
 ### What this thesis does not claim
 
-- **We have not run a frontier model as the answer step inside today's harness.** We have run
-  one beside it, asked directly (point 6). Both were right on everything, so there was nothing
-  left for the swap to show on these questions.
+- **We could not run a frontier model as the answer step inside today's harness.** We tried
+  on 17 November: the model returned no text and the provider reported a content filter, on
+  two questions. Something in our answer request trips it; we did not look for what. So this
+  file makes no claim about the harness making a frontier model better or cheaper.
+- **It does not claim the harness is more accurate than a frontier model.** Asked directly, the
+  frontier model was right on every question we put to it. The two are level.
 - **It does not claim the harness is the better buy for everyone.** For a handful of questions
   a frontier model with search is simpler and faster. The harness earns its keep at volume, or
   where the record of what was read matters.
