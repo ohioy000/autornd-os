@@ -410,8 +410,13 @@ async function loadDetail(id) {
 }
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+// The server stores UTC but SQLite hands the time back with no zone marker, so
+// `new Date("2026-11-17T20:00:00")` reads it as the browser's local time and a
+// browser west of Greenwich shows "-21600s ago". Seen on the real-key container
+// run of 2026-11-17 (US Central): the Workflows table said "-21600s ago".
 function timeAgo(iso) {
-  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  const stamped = /(Z|[+-]\d\d:?\d\d)$/.test(iso) ? iso : iso + 'Z';
+  const s = Math.max(0, Math.floor((Date.now() - new Date(stamped).getTime()) / 1000));
   if (s < 60) return s + 's ago';
   if (s < 3600) return Math.floor(s/60) + 'm ago';
   if (s < 86400) return Math.floor(s/3600) + 'h ago';
