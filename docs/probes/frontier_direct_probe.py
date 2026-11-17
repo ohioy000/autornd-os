@@ -94,7 +94,12 @@ async def _ask(http: httpx.AsyncClient, question: dict) -> dict:
                 "completion_tokens": usage.get("completion_tokens"),
                 "reasoning_tokens": (usage.get("completion_tokens_details")
                                      or {}).get("reasoning_tokens"),
-                "cost": usage.get("cost")})
+                "cost": usage.get("cost"),
+                # Added after the smoke of 2026-11-17, which answered from
+                # memory with search switched on: the provider's own count
+                # of what the call used, so a search made or not made shows.
+                "usage": usage,
+                "annotations": len(message.get("annotations") or [])})
     except Exception as exc:
         record.update({"status": "raised",
                        "error": f"{type(exc).__name__}: {exc}"[:400]})

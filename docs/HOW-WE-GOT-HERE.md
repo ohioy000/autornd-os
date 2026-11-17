@@ -55,6 +55,9 @@ better input: the page's own words.
   shipped lookup was right in 144 of 144. No wrong answer in any arm carried a "verified" line.
 - **Cost:** about '$0.011' an answer for a lookup and '$0.004' for a calculation
   (`docs/reviews/2026-11-16-needs-calculation.md`).
+- **Beside a frontier model:** asked 22 of the same questions directly, with web search, a
+  frontier model was right on all 22, about seven times faster and about six times dearer
+  (`docs/reviews/2026-11-17-frontier-direct.md`). The harness matches it; it does not beat it.
 - **What it does not do.** It cannot tell a stale official page from a current one when
   nothing in the text shows it. It checks figures, not conditions written in words. Some sites
   refuse to be read. The question sets are now near the ceiling, so they can no longer show
