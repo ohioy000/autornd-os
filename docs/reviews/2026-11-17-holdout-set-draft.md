@@ -6,6 +6,10 @@ The runner refuses it while its status says draft.
 
 File: `evals/professional/holdout-questions.json`, version professional-holdout-1.
 
+**Signed by the owner on 2026-11-17, all 42 keys; the set is approved and frozen. The owner's
+word was "Sign all 42 and approve '$2'". The run is preregistered in
+`docs/preregistration-20261117-holdout-run.md`.**
+
 ## The point
 
 Every figure so far was measured on questions the harness was shaped against. This set is for
