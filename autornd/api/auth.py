@@ -34,7 +34,7 @@ def _is_loopback(request: Request) -> bool:
 _UNAUTHENTICATED_REMOTE_FIX = (
     "This server has no authentication configured and serves loopback callers "
     "only. Set API_KEY or JWT_SECRET in .env to serve remote callers — accounts "
-    "are created from this machine, never remotely (Ruling D47) — or set "
+    "are created from this machine, never remotely — or set "
     "ALLOW_UNAUTHENTICATED_REMOTE=1 to serve everyone without authentication "
     "(anyone who can reach this port can then spend the owner's credits)."
 )
@@ -44,7 +44,7 @@ _UNAUTHENTICATED_REMOTE_FIX = (
 # a remote stranger registering (201) and being served (200) the moment
 # JWT_SECRET was configured. The refusal names how an account comes to exist.
 _REGISTRATION_FIX = (
-    "Accounts are created from this machine only (Ruling D47): ask the owner "
+    "Accounts are created from this machine only: ask the owner "
     "to run the registration on the server itself. A remote caller is served "
     "with a credential the owner issued — the API_KEY, or a token for an "
     "account created from this machine — or under ALLOW_UNAUTHENTICATED_REMOTE=1."

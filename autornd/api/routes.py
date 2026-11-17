@@ -93,7 +93,7 @@ def _admit_run(request: Request, request_text: str, workflow: str) -> tuple:
         raise HTTPException(
             429,
             f"At most {settings.max_concurrent_runs} runs are in flight at "
-            f"once (Ruling D45); wait for one to finish and submit again.")
+            f"once; wait for one to finish and submit again.")
     return caller
 
 
@@ -1074,8 +1074,8 @@ async def update_settings(body: SettingsUpdate, request: Request):
     # flight, so it is not a remote caller's to make.
     if not _is_loopback(request):
         raise HTTPException(
-            403, "Runtime settings are for loopback callers only (Ruling "
-                 "D45); change them in .env or from this machine.")
+            403, "Runtime settings are for loopback callers only; change "
+                 "them in .env or from this machine.")
 
     updates = body.model_dump(exclude_none=True)
     if not updates:
@@ -1117,7 +1117,7 @@ async def update_settings(body: SettingsUpdate, request: Request):
     if raised:
         raise HTTPException(
             400,
-            "Runtime settings can only tighten (Ruling D45); "
+            "Runtime settings can only tighten; "
             f"{', '.join(sorted(raised))} would be raised above its startup "
             f"value. Change it in .env and restart.")
 
@@ -1188,8 +1188,8 @@ async def switch_profile(name: str, request: Request):
     # for every run in flight — loopback only, like the settings it shadows.
     if not _is_loopback(request):
         raise HTTPException(
-            403, "Switching profiles is for loopback callers only (Ruling "
-                 "D45); set AUTORND_PROFILE in .env or use this machine.")
+            403, "Switching profiles is for loopback callers only; set "
+                 "AUTORND_PROFILE in .env or use this machine.")
     profile = load_profile(name)
     set_profile(profile)
     reload_specialists()

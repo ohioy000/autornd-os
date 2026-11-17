@@ -314,6 +314,18 @@ only the wrong figure carried a caution that pointed at it. The report is
 `docs/reviews/2026-11-17-acceptance-run.md`. The page now fits a phone, and the
 Docker image has been built and run by hand.
 
+**A cold start from the README, and what it found.** An agent that had only the
+README cloned, installed, started the server and built the image. It ran, in
+about five minutes. It also found that the image build copied the working `.env`
+into the image, so the provider key was readable by anyone given the image: a
+`.dockerignore` now keeps every `.env*` file except the template out, proven by
+building from a tree that holds three of them. The README now says what the
+first start looks like, which Python it needs, and where the database lands.
+The dashboard's Workflows table no longer reads '-21600s ago' in a browser west
+of Greenwich, and its greeting no longer promises a plan step the default
+workflow does not have. A run through the Docker image with a real key, called
+from a signed-in browser, finished in 68 seconds for 'eight tenths of a cent'.
+
 ## [0.1.0] — 2026-09-12
 
 ### Added

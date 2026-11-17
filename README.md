@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-2006%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-2010%20passing-brightgreen.svg)](#testing)
 
 **A harness that lets low-cost models answer expert questions correctly, and says honestly what it checked.**
 
@@ -58,11 +58,14 @@ You need Python 3.11 or later and an API key for an OpenAI-compatible provider. 
 ```bash
 git clone https://github.com/ohioy000/autornd-os.git
 cd autornd-os
+python3 -m venv .venv && . .venv/bin/activate
 cp .env.example .env          # then edit .env, see below
 pip install -e .
 python -m autornd.preflight   # checks the configuration, bills nothing
 uvicorn autornd.main:app --port 8100
 ```
+
+`python3 --version` must print 3.11 or later. If it prints an older version, make the virtual environment with `python3.11` or `python3.12` instead; `pip` refuses an older Python and says so. AutoRnD keeps its database (`autornd.db`) and its knowledge store (`chromadb_data/`) in the directory you start it from, so start it from the same place each time.
 
 In `.env`:
 
@@ -72,9 +75,11 @@ In `.env`:
 
 [`.env.example`](.env.example) documents every setting and its default. It is the single source of truth for settings.
 
-If a required tier is unset, AutoRnD refuses to start and names the tiers that are missing. `python -m autornd.preflight` asks the provider's catalogue whether each configured model and provider pin is real. It makes no model call. At startup the server makes the same kind of check, and `GET /api/health` reports `ok` or `degraded` and names the tiers it could not verify.
+If a required tier is unset, AutoRnD refuses to start and names the tiers that are missing. `python -m autornd.preflight` asks the provider's catalogue whether each configured model and provider pin is real. It makes no model call, and it needs the network but not your key, because the catalogue is public. It prints one `[ok]` or `[FAIL]` line for each check and exits with status 1 if any failed. A `[FAIL] ... not in the provider catalogue` line means that model id is not one your provider serves; correct it in `.env`. At startup the server makes the same kind of check, and `GET /api/health` reports `ok` or `degraded` and names the tiers it could not verify.
 
 The dashboard is at `http://localhost:8100/`. The server binds to loopback by default.
+
+**What you should see on the first start.** With the key left empty or the tier ids not yet checked, the server still starts, and `GET /api/health` answers 200 with `"status": "degraded"`, `"provider_key_configured": false`, and each tier it could not verify under `unverified_models` with `"available": false`. That is the honest report, not a crash. A run submitted in that state ends `blocked` at once, bills nothing, and says why in `error`: `MissingProviderKey: No provider key is set. Put OPENROUTER_API_KEY in .env and restart the server.` Set the key, restart, and `/api/health` reports `ok`.
 
 ### Docker
 
@@ -87,6 +92,7 @@ docker run -p 8100:8100 --env-file .env \
   autornd
 ```
 
+- **The image does not carry your `.env`.** [`.dockerignore`](.dockerignore) keeps every `.env*` file except `.env.example` out of the build, so a key never lands in an image you might push or share. The key reaches the container only through `--env-file` when it runs. If you build an image of your own from this tree, keep that file.
 - **Keep the volume.** By default the image writes its SQLite file and its ChromaDB store inside the container, and both are lost when the container is removed. The `-v` and `-e` lines above put them on a named volume.
 - **Set `API_KEY` or `JWT_SECRET` first.** A request that reaches the container through the published port is not a loopback caller, your own host included. With neither set it is refused with 403 and a sentence naming the fix. Only `/api/health` answers.
 
