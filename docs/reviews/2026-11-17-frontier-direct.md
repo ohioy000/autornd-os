@@ -73,7 +73,7 @@ the 22 and wrote little reasoning when it did.
     '$71'.
   - **A record of what was read.** Every passage, its page, its checksum, and whether it was
     found, and "verified" lines only beside figures that stand in a found passage. Six of the
-    frontier model's 22 answers gave the reader nothing to check, and three of those said so.
+    frontier model's 22 answers gave the reader nothing to check, and four of those said so.
   - **No dependence on one model.** The harness reached the same answers with inexpensive
     models that can be swapped and pinned.
 - **The case against it, as plainly:** it is seven times slower, it is a system to run and
