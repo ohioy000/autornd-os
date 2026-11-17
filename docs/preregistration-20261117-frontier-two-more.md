@@ -79,3 +79,23 @@ answer seat costs less an answer than the frontier model asked directly at mediu
 - Run 2 changes one seat. A harness built around a frontier model (fewer steps, less text
   handed on) is a different design and is not tested here.
 - The readers are models of the same maker as the model read.
+
+## Addendum, 2026-11-17, pushed before the spend it covers
+
+**What the smokes found.**
+- Run 1: one call at maximum effort answered, with the key's three figures, for '$1.05' in 224
+  seconds, about 23,000 tokens of reasoning. Fourteen would cost about '$15', over the limit.
+- Run 2: on two questions the frontier model returned no text in the harness's answer seat;
+  the provider gave the stop reason `content_filter`. With the effort setting and without. Each
+  blocked run cost about '$0.27'. Run 2 is held for the owner's decision.
+
+**The owner's word for run 1, 2026-11-17:** "Stay within 5 dollars for Fable and change it to
+high."
+
+**Run 1 as it now stands.** The same 14 questions, once each, reasoning effort `high`, a call
+may write up to 32,000 tokens. The limit for run 1 is '$5.00' in all, the '$1.05' already spent
+on the maximum-effort call included: the probe starts no call at high effort once '$3.60' is
+spent on them. If the money runs out before the fourteenth, the answers in hand are the result
+and the report says how many. The maximum-effort call is reported beside them as one call.
+
+The executor's prediction for high effort: right on all it answers; '$0.15' to '$0.50' a call.
