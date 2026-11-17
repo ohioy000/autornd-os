@@ -28,6 +28,10 @@ htmlcov/
 *.log
 chromadb_data/
 
+# Local agent tooling and scratch folders, never part of the project.
+.qwen/
+ai-native-starter-pack/
+
 # Private grounding corpora used for local testing. Real project documentation
 # is the point of the grounding experiment and must never reach a public repo —
 # keep it here, keep it out of git.

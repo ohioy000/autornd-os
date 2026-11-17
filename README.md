@@ -33,6 +33,9 @@ AutoRnD produces text. It does not run code, edit files or deploy anything.
 
 AutoRnD is a research harness as much as a product. It measures itself, and the records say what it does and what it does not do. Read them before you rely on a workflow:
 
+- [`docs/HOW-WE-GOT-HERE.md`](docs/HOW-WE-GOT-HERE.md) tells how the harness came to its present shape, why it has so many tests, and why its rules describe an architect and a coder.
+- [`docs/MODELS.md`](docs/MODELS.md) names the models we ran for each tier and argues why inexpensive ones are the right choice for this work.
+- [`docs/README.md`](docs/README.md) is a map of the record.
 - [`docs/reviews/`](docs/reviews/) holds one dated report for each measurement.
 - [`docs/traces/`](docs/traces/) holds the run records those reports cite.
 - [`docs/carryover-2026-11-16.md`](docs/carryover-2026-11-16.md) says where the harness stands and what is planned.
