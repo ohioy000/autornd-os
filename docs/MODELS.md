@@ -32,7 +32,11 @@ The evidence, in the order we met it:
    once it was handed the governing section's own words (`docs/reviews/2026-11-15-root-cause.md`).
 4. **With that in place the answers are right nearly every time.** 107 of 107 professional
    answers, then 144 of 144 on a set built from questions where a summary misleads, read blind
-   against signed keys (`docs/reviews/2026-11-16-misleading-set-run.md`).
+   against signed keys (`docs/reviews/2026-11-16-misleading-set-run.md`). The final
+   configuration was then run once on all three sets, six answers to each of 44 questions:
+   259 of 264 right on the key (248 on a stricter reading), for about '$0.009' an answer
+   (`docs/reviews/2026-11-17-acceptance-run.md`). The five that are not right are an omission, a
+   form, a datasheet figure and a misdefined term; none is an older figure.
 5. **A small model from a frontier lab, tried in one seat, was level and dearer.** In the
    recompute seat `claude-haiku-5.5` and the model it replaced each scored 9 of 13, at one and
    a half times the cost.
@@ -74,7 +78,10 @@ is speed and simplicity.
 - **The failures that remain are not failures of intelligence.** The wrong answers we still see
   come from a stale official page that looks current, from a sister rule quoted word for word,
   and from sites that refuse to be read. A stronger model handed the wrong page states the
-  wrong page's figure with more confidence, not less.
+  wrong page's figure with more confidence, not less. The last run's five misses were of another
+  kind: a figure given without the parts that make it, a form of a figure not given, a datasheet
+  figure misread, and a term defined wrongly beside a right figure. The checks read the figures
+  asked for and not the prose around them.
 - **Serving matters as much as the model, and we control it.** The same model served by five
   providers classified 22 to 33 of 36 test cases correctly (`HANDOVER.md` §6.1). Open-weight
   models can be pinned to one provider at one precision. That choice is ours to make and to

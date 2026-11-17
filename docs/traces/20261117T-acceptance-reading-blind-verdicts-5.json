@@ -1,0 +1,182 @@
+{
+ "bc73a214": {
+  "verdict": "right",
+  "stated": "683 lm/W; 540 x 10^12 Hz",
+  "evidence": "Kcd = 683 lm/W exactly, for monochromatic radiation of frequency exactly 540 x 10^12 Hz",
+  "note": "Treats 555.017 nm in air only as a derived annotation."
+ },
+ "db07e968": {
+  "verdict": "right",
+  "stated": "683 lm/W; 540 x 10^12 Hz (540 THz)",
+  "evidence": "Kcd = 683 lm/W ... frequency 540 x 10^12 Hz",
+  "note": "Explicitly says definition is by frequency, not wavelength."
+ },
+ "8fd57fcc": {
+  "verdict": "right",
+  "stated": "683 lm/W; 540 x 10^12 Hz",
+  "evidence": "Kcd = 683 lm/W exactly, for monochromatic radiation of frequency 540 x 10^12 Hz (540 THz)",
+  "note": "Table-numbering aside is incidental; 555 nm labelled non-normative."
+ },
+ "7b944002": {
+  "verdict": "right",
+  "stated": "683 lm/W; 540 x 10^12 Hz",
+  "evidence": "fixing the luminous efficacy of monochromatic radiation of frequency 540 x 10^12 Hz to be exactly 683 lm/W",
+  "note": ""
+ },
+ "a06e9217": {
+  "verdict": "right",
+  "stated": "683 lm/W; 540 x 10^12 Hz",
+  "evidence": "683 (exact) lm W^-1 ... 540 x 10^12 Hz (= 540 THz)",
+  "note": ""
+ },
+ "70474c4d": {
+  "verdict": "right",
+  "stated": "683 lm/W; 540 x 10^12 Hz",
+  "evidence": "The defining quantity is a frequency, not a wavelength. 540 x 10^12 Hz ... 683",
+  "note": ""
+ },
+ "85d24f5c": {
+  "verdict": "right",
+  "stated": "no glider reserve; section covers airplanes and rotorcraft only (stated as 0 minutes / does not apply)",
+  "evidence": "The section does not apply to gliders ... Subsection (a) reaches only 'a flight in an airplane'; (b) only rotorcraft",
+  "note": "Says 'zero minutes' but explains the section simply does not reach gliders."
+ },
+ "83bf3dab": {
+  "verdict": "right",
+  "stated": "none prescribed; section sets reserves for airplanes (30/45) and rotorcraft (20) only",
+  "evidence": "The correct answer is therefore 'none' - not 'zero minutes,' because the regulation ... simply does not speak to them",
+  "note": "Closest match to the key wording."
+ },
+ "d7e05583": {
+  "verdict": "right",
+  "stated": "no glider reserve; section limited to airplanes and rotorcraft",
+  "evidence": "No fuel reserve is required ... 0 minutes - meaning the section does not apply",
+  "note": ""
+ },
+ "225412f4": {
+  "verdict": "right",
+  "stated": "no glider reserve; section applies only to airplanes and rotorcraft",
+  "evidence": "Section 91.151 applies by its terms only to airplanes and rotorcraft, and a glider is neither",
+  "note": "Framed as 0 minutes but grounded in non-applicability."
+ },
+ "08975ab4": {
+  "verdict": "right",
+  "stated": "no glider reserve; section applies only to airplanes and rotorcraft",
+  "evidence": "not subject to any fuel reserve under 14 CFR 91.151 ... a glider is neither",
+  "note": "Quoted regulation text has garbled words (airplan, rottercraft) and a paraphrased glider definition, but the conclusion is correct."
+ },
+ "5a3429c0": {
+  "verdict": "right",
+  "stated": "none for a glider; section prescribes reserves only for airplanes and rotorcraft",
+  "evidence": "the section prescribes no reserve for gliders (equivalently, 0 minutes)",
+  "note": "Flags motor-glider interpretive question but answer for a glider is none."
+ },
+ "02f041d2": {
+  "verdict": "right",
+  "stated": "not Class 3; combustible liquid (above 60 C, below 93 C)",
+  "evidence": "The liquid is not a Class 3 flammable liquid ... a combustible liquid under 49 CFR 173.120(b)(1)",
+  "note": "Says no shipping paper is needed without addressing the bulk combustible-liquid requirements; side point only."
+ },
+ "ead5ea55": {
+  "verdict": "right",
+  "stated": "not Class 3; combustible liquid (60 C < FP < 93 C)",
+  "evidence": "not a Class 3 flammable liquid ... it is a combustible liquid under 49 CFR 173.120(b)(1)",
+  "note": ""
+ },
+ "1ffbd3e8": {
+  "verdict": "right",
+  "stated": "not Class 3; combustible liquid",
+  "evidence": "No ... It is a COMBUSTIBLE LIQUID as defined in 49 CFR 173.120(b)(1)",
+  "note": ""
+ },
+ "7e6a34f9": {
+  "verdict": "right",
+  "stated": "not Class 3; combustible liquid",
+  "evidence": "NOT a Class 3 flammable liquid ... It is a COMBUSTIBLE LIQUID as defined in 49 CFR 173.120(b)(1)",
+  "note": ""
+ },
+ "5cd00d8f": {
+  "verdict": "partly",
+  "stated": "not Class 3; combustible liquid (correct), but wrong extra claim on regulatory status",
+  "evidence": "It is a combustible liquid as defined in 49 CFR 173.120(b)(1)",
+  "note": "Attributes a highway/rail-only 'not regulated' exception to 173.120(b)(3) and says other modes are regulated; (b)(3) is the does-not-sustain-combustion provision, so this extra claim is wrong."
+ },
+ "2dde2477": {
+  "verdict": "right",
+  "stated": "not Class 3; combustible liquid (60 < 65 < 93 C)",
+  "evidence": "No - the liquid is not a Class 3 flammable liquid ... a combustible liquid under 49 CFR 173.120(b)(1)",
+  "note": ""
+ },
+ "699b9c03": {
+  "verdict": "right",
+  "stated": "8 cumulative driving hours, then 30 consecutive minute break (US property carrier)",
+  "evidence": "8 hours of cumulative driving ... must take a 30-minute break",
+  "note": "Also gives EU 4.5 h/45 min as a labelled alternative; US is the headline."
+ },
+ "3a325f7e": {
+  "verdict": "right",
+  "stated": "8 cumulative driving hours, then 30 consecutive minute break",
+  "evidence": "a driver may drive up to 8 cumulative hours before a break is required ... 30-minute interruption",
+  "note": ""
+ },
+ "8d3a9ab8": {
+  "verdict": "right",
+  "stated": "8 hours driving, then 30 consecutive minutes non-driving",
+  "evidence": "8 hours of driving, then 30 consecutive minutes of break",
+  "note": ""
+ },
+ "b74255a5": {
+  "verdict": "right",
+  "stated": "8 cumulative driving hours, then at least 30 consecutive minutes non-driving",
+  "evidence": "may drive up to 8 cumulative hours of driving time before a break is required ... at least 30 consecutive minutes",
+  "note": ""
+ },
+ "cab6e4b2": {
+  "verdict": "right",
+  "stated": "8 cumulative driving hours, then 30 consecutive minute break",
+  "evidence": "may drive for 8 cumulative hours before a break ... 30 consecutive minute break",
+  "note": ""
+ },
+ "74bf7ada": {
+  "verdict": "partly",
+  "stated": "8 cumulative driving hours, then 30 consecutive minutes (US); EU 4.5 h/45 min alternative",
+  "evidence": "8 hours of cumulative driving time, then a break of at least 30 consecutive minutes",
+  "note": "Core figures right, but wrongly says the 30-minute break still applies to short-haul-exception drivers; 395.3(a)(3)(ii) excludes them. Also gives EU as a co-equal short answer."
+ },
+ "9a22e104": {
+  "verdict": "right",
+  "stated": "0.1 rem (1 mSv) per year TEDE; 0.002 rem (0.02 mSv) in any one hour",
+  "evidence": "Annual: 0.1 rem (1 mSv) ... Any one hour: 0.002 rem (0.02 mSv) from external sources in any unrestricted area",
+  "note": "Correctly treats 0.05 rem/yr as a screening value and 5 rem as occupational."
+ },
+ "e928d01f": {
+  "verdict": "right",
+  "stated": "0.1 rem (1 mSv) per year; 0.002 rem (0.02 mSv) in any one hour",
+  "evidence": "per year the limit is 0.1 rem (1 mSv) TEDE; in any one hour in an unrestricted area ... 0.002 rem (0.02 mSv)",
+  "note": ""
+ },
+ "62aa2d0d": {
+  "verdict": "right",
+  "stated": "0.1 rem (1 mSv) per year; 0.002 rem (0.02 mSv) in any one hour",
+  "evidence": "Per year ... 0.1 rem (1 mSv) TEDE ... In any one hour in an unrestricted area: 0.002 rem (0.02 mSv)",
+  "note": ""
+ },
+ "58961452": {
+  "verdict": "right",
+  "stated": "0.1 rem (1 mSv) per year; 0.002 rem (0.02 mSv) in any one hour",
+  "evidence": "0.1 rem in a year ... 0.002 rem in any one hour",
+  "note": ""
+ },
+ "d42b8ecc": {
+  "verdict": "right",
+  "stated": "0.1 rem (1 mSv) per year; 0.002 rem (0.02 mSv) in any one hour",
+  "evidence": "0.1 rem (1 mSv) in a year; 0.002 rem (0.02 mSv) in any one hour",
+  "note": "Tangential error: gives 10 CFR 50 Appendix I objectives as 25/75 mrem/yr (those are 40 CFR 190 values); does not affect the asked limits."
+ },
+ "ef302de7": {
+  "verdict": "right",
+  "stated": "0.1 rem (1 mSv) per year; 0.002 rem (0.02 mSv) in any one hour",
+  "evidence": "0.1 rem in a year (100 mrem/yr) ... 0.002 rem in any one hour (2 mrem/h)",
+  "note": "Slip: says 17.5 rem/yr is 'seventeen times' the annual limit (it is about 175 times); the asked figures are correct."
+ }
+}
