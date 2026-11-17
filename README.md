@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1996%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-2005%20passing-brightgreen.svg)](#testing)
 
 **A harness that lets low-cost models answer expert questions correctly, and says honestly what it checked.**
 
@@ -347,7 +347,7 @@ Triage assigns specialists for each run. In the default workflow one lead writes
 
 **Settings at runtime.** `PUT /api/settings` is for loopback callers only and accepts five settings: `max_iterations` (1 to 20), `escalation_max_tokens`, `escalation_recovery_attempts`, `autornd_profile` and `log_level`. A numeric setting can be lowered below the value the server started with and never raised above it. `POST /api/profiles/{name}` switches the profile, also from loopback only. Everything else is changed in `.env` and needs a restart.
 
-**Deployment.** Run one server process on its database. A run lives in the process that started it: when the server starts, any run a stopped server left in flight is ended as `blocked` with the reason, and a second process on the same database would end the first one's live runs. Run it on a private network, or behind a reverse proxy with TLS. Behind a reverse proxy on the same host, set `API_KEY` or `JWT_SECRET` anyway: the no-key rule trusts the caller's address, and a proxy that does not pass `X-Forwarded-For` makes every caller look like this machine (measured: with the header the request is refused, without it the request is accepted). There is no rate limiting, and every run spends real money. The database is SQLite by default. There is no migration tool: missing additive columns are added at startup, and any other schema change is by hand.
+**Deployment.** Run one server process on its database. A run lives in the process that started it: when the server starts, any run a stopped server left in flight is ended as `blocked` with the reason, and a second process on the same database would end the first one's live runs. Run it on a private network, or behind a reverse proxy with TLS. Behind a reverse proxy on the same host, set `API_KEY` or `JWT_SECRET` anyway: the no-key rule trusts the caller's address, and a proxy that does not pass `X-Forwarded-For` makes every caller look like this machine (measured: with the header the request is refused, without it the request is accepted). There is no rate limiting, and every run spends real money. The database is SQLite by default. It carries a schema version: at startup, numbered migrations bring an older database forward in place, and a database written by a newer AutoRnD is refused with a plain sentence instead of being opened. A release that must change a table adds a numbered step; it never edits one that has shipped.
 
 ## API
 

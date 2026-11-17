@@ -30,7 +30,15 @@ logger = logging.getLogger(__name__)
 # below — a reply with no choices array — for the same
 # reason: both are the serving failing a call a pinned tier
 # has nowhere else to send.
-_RATE_LIMIT_ATTEMPTS = 3
+#
+# Three attempts (6 s of waiting) was set on the 2026-09-20 measurement and
+# held until the acceptance run of 2026-11-17: with six processes asking one
+# serving at once, 6 of 270 units ended blocked on an upstream 429 after the
+# third attempt, and the same six completed when made again minutes later
+# (docs/reviews/2026-11-17-acceptance-run.md). Five attempts is 30 s of
+# waiting (2, 4, 8, 16). Still bounded, and a 429 is refused before it is
+# read, so nothing is billed for the waiting.
+_RATE_LIMIT_ATTEMPTS = 5
 _RATE_LIMIT_BACKOFF_S = 2.0
 
 # The transient-TLS retry (the SSLV3_ALERT_BAD_RECORD_MAC
