@@ -6,6 +6,9 @@ was proven by breaking the line it guards.
 """
 from __future__ import annotations
 
+import os
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -150,6 +153,28 @@ class TestThePageShowsWhatARunDelivered:
         assert "flex-wrap:wrap" in rule(".top-bar")
         assert "flex-wrap:wrap" in rule(".top-bar .controls")
         assert "overflow:auto" in rule(".workflows-wrap")
+
+    @pytest.mark.skipif(shutil.which("node") is None, reason="needs node to run the page's own function")
+    def test_a_time_with_no_zone_reads_as_utc_in_any_browser_zone(self):
+        """Measured 2026-11-17 in Chromium, real-key container run, US Central:
+        the Workflows table said "-21600s ago". SQLite hands the time back
+        with no zone marker, and `new Date(...)` reads such a string as local
+        time. The page's own timeAgo is run under a zone west of Greenwich and
+        one east of it, on a stamp ten seconds old written the way the server
+        writes it, and on one that carries a zone."""
+        start = DASHBOARD.index("function timeAgo(iso)")
+        func = DASHBOARD[start:DASHBOARD.index("\n}\n", start) + 3]
+        script = (func + """
+const naive = new Date(Date.now() - 10000).toISOString().slice(0, -1);
+const zoned = new Date(Date.now() - 10000).toISOString();
+const offset = new Date(Date.now() - 10000).toISOString().slice(0, -5) + "+00:00";
+console.log([timeAgo(naive), timeAgo(zoned), timeAgo(offset)].join("|"));
+""")
+        for zone in ("America/Chicago", "Asia/Tokyo"):
+            out = subprocess.run(["node", "-e", script], capture_output=True, text=True,
+                                 env={**os.environ, "TZ": zone}, check=True).stdout.strip()
+            for seen in out.split("|"):
+                assert seen in ("9s ago", "10s ago", "11s ago"), (zone, out)
 
 
 @pytest.mark.asyncio
