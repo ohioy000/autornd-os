@@ -75,7 +75,7 @@ async def lifespan(app: FastAPI):
     elif not settings.api_key and not settings.jwt_secret:
         logger.info(
             "No API_KEY or JWT_SECRET configured: serving loopback callers "
-            "only (Ruling D45). Set one in .env to serve remote callers.")
+            "only. Set one in .env to serve remote callers.")
 
     try:
         status = await check_models()

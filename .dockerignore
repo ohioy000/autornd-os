@@ -1,0 +1,30 @@
+# What the image build must not copy. The Dockerfile runs `COPY . .`, so
+# without this file a build from a tree that holds a working .env bakes the
+# provider key into the image's /app/.env, where anyone who pulls or saves the
+# image can read it. Found 2026-11-17 by a cold start from the README: an
+# image built from the owner's tree on 2026-11-16 carried a 3.4 KB /app/.env,
+# and the README said to put the key in .env and then build. The key reaches
+# the container through `--env-file` at run time, not through the image.
+.env*
+!.env.example
+
+# Local state and scratch that is not source.
+.git
+.venv
+venv
+*.db
+*.sqlite3
+chromadb_data
+evals/results
+*.log
+**/__pycache__
+**/*.pyc
+.pytest_cache
+*.egg-info
+.claude
+.qwen
+ai-native-starter-pack
+docs/milkhouse
+docs/private*
+evals/private*
+profiles/milkhouse.yaml

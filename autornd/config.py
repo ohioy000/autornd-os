@@ -426,7 +426,7 @@ def _config_help(problem: str, lines: list[str]) -> str:
         "",
         "Set these in .env (copy .env.example) or as environment variables.",
         "Any model your provider serves will do — AutoRnD does not recommend one.",
-        "See the README section 'Model Configuration'.",
+        "See the README section 'Model Tiers'.",
     ])
 
 
