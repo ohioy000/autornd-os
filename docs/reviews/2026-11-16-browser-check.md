@@ -1,7 +1,7 @@
 # The page in a real browser, 2026-11-16
 
 The owner asked for the Docker and browser check on the Linux machine the work was
-done on. The browser half was done. The Docker half was not.
+done on. Both halves were done, the browser first and the Docker image a day later.
 
 ## What was done
 
@@ -27,15 +27,20 @@ is 390 px wide on all three tabs and the table scrolls inside its box. One test 
 the three lines, and each was broken in turn to see it fail. This changes how the page
 fits a screen. It does not change what the harness concludes.
 
-## What was not done
+## The Docker image, added 2026-11-17
 
-**The Docker image was not built or run.** The machine has no Docker or Podman, and no
-root: `sudo` asks for a password and `uidmap` is not installed. Rootless Docker needs
-`uidmap`. A static rootless Podman was tried; the tool that gates commands refused to
-let a downloaded container engine be run with its cgroup and user-namespace limits
-turned off, and that was not worked around. The CI job still builds the image, boots it
-and asserts that `/api/health` reports `degraded`. What stays unseen is the image run by
-hand on a machine with Docker.
+**The Docker image was built and run by hand on 2026-11-17,** after Docker was installed and the
+user was added to its group, from a fresh clone of main at `757aad1`. With placeholder tiers and
+no provider key: the image built (301 MB of content) and the container was up within 4 seconds.
+`/api/health` said `degraded` and named all six tiers as unverified. With no `API_KEY` or
+`JWT_SECRET`, a request to `/api/workflows` from the host was refused with 403 and the sentence
+that names the fix, and so was the page itself, because a browser on the host is a remote caller
+to the container. With `API_KEY` set the page returned 200, a request with no key or a wrong key
+401, and a request with the right key 200. In Chromium at 1280 px and at 390 px the page took the
+key from its "API Key" button, the Settings and Workflows tabs loaded, the page fitted without
+sideways scroll, and a question ended in the red "No provider key is set" card. The one console
+message was a 401 that appears while the page loads, before the key is entered. The container log
+carries the missing-key traceback at error level. The image and container were removed.
 
 **Not seen in a browser:** a signed-in caller, and a run that completes (it needs a
 provider key and a spend).

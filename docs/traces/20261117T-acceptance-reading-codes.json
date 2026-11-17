@@ -1,0 +1,1892 @@
+{
+ "808258ae": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#0",
+  "question": "H1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "d5b79ac3": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#1",
+  "question": "H3",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "137a9146": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#2",
+  "question": "H5",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "37cdaca3": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#3",
+  "question": "H7",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "38dff0a0": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#4",
+  "question": "H9",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "672326b0": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#5",
+  "question": "H11",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "db07e968": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#6",
+  "question": "H13",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "1ffbd3e8": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#7",
+  "question": "H15",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "62aa2d0d": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#8",
+  "question": "H17",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "0cecc359": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#9",
+  "question": "H2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "2da97790": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#10",
+  "question": "H4",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "42bedaf3": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#11",
+  "question": "H6",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "0d76339c": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#12",
+  "question": "H8",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "f139f90e": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#13",
+  "question": "H10",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "43227d86": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#14",
+  "question": "H12",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "d7e05583": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#15",
+  "question": "H14",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "cab6e4b2": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#16",
+  "question": "H16",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "c187396f": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#17",
+  "question": "H1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "8526dcb4": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#18",
+  "question": "H3",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "cf730148": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#19",
+  "question": "H5",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "f5924007": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#20",
+  "question": "H7",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "66d1e957": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#21",
+  "question": "H9",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "d80c46d8": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#22",
+  "question": "H11",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "bc73a214": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#23",
+  "question": "H13",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "7e6a34f9": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#24",
+  "question": "H15",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "e928d01f": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#25",
+  "question": "H17",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "54b3157a": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#26",
+  "question": "H2",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "b90089df": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#27",
+  "question": "H4",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "dca21127": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#28",
+  "question": "H6",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "cf8eb225": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#29",
+  "question": "H8",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "c48ef88c": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#30",
+  "question": "H10",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "21717828": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#31",
+  "question": "H12",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "5a3429c0": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#32",
+  "question": "H14",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "8d3a9ab8": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#33",
+  "question": "H16",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "31a00306": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#34",
+  "question": "H1",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "1a96b550": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#35",
+  "question": "H3",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "b90d1fee": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#36",
+  "question": "H5",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "64fcf13e": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#37",
+  "question": "H7",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "f3eb5910": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#38",
+  "question": "H9",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "876338b6": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#39",
+  "question": "H11",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "8fd57fcc": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#40",
+  "question": "H13",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "5cd00d8f": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#41",
+  "question": "H15",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "d42b8ecc": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#42",
+  "question": "H17",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "9a9b6d1a": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#43",
+  "question": "H2",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "d6c4837c": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#44",
+  "question": "H4",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "8fe35a85": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#45",
+  "question": "H6",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "c4bfd114": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#46",
+  "question": "H8",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "be14f2e9": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#47",
+  "question": "H10",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "8211c748": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#48",
+  "question": "H12",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "83bf3dab": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#49",
+  "question": "H14",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "3a325f7e": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-0.jsonl#50",
+  "question": "H16",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "03b995f6": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#0",
+  "question": "H2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "76811abb": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#1",
+  "question": "H4",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "fcbc8139": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#2",
+  "question": "H6",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "c4bd1cd1": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#3",
+  "question": "H8",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "f7b0310b": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#4",
+  "question": "H10",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "08d66db9": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#5",
+  "question": "H12",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "6f1cf031": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#6",
+  "question": "H14",
+  "repeat": 1,
+  "status": "blocked",
+  "delivered": false
+ },
+ "e8b6609b": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#7",
+  "question": "H16",
+  "repeat": 1,
+  "status": "blocked",
+  "delivered": false
+ },
+ "f05bb05d": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#8",
+  "question": "H1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "44a121b4": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#9",
+  "question": "H3",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "6c186ba8": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#10",
+  "question": "H5",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "fe569ba4": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#11",
+  "question": "H7",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "74817c03": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#12",
+  "question": "H9",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "5cfcfa26": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#13",
+  "question": "H11",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "70474c4d": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#14",
+  "question": "H13",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "02f041d2": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#15",
+  "question": "H15",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "ef302de7": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#16",
+  "question": "H17",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "9aa8d587": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#17",
+  "question": "H2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "b3853fca": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#18",
+  "question": "H4",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "54eaf151": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#19",
+  "question": "H6",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "4d3012aa": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#20",
+  "question": "H8",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "18c43145": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#21",
+  "question": "H10",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "5a9891cc": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#22",
+  "question": "H12",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "08975ab4": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#23",
+  "question": "H14",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "b74255a5": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#24",
+  "question": "H16",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "31fad0a7": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#25",
+  "question": "H1",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "026c2ba2": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#26",
+  "question": "H3",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "3b950dbd": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#27",
+  "question": "H5",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "f9b37755": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#28",
+  "question": "H7",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "83567be4": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#29",
+  "question": "H9",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "6552cbb4": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#30",
+  "question": "H11",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "7b944002": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#31",
+  "question": "H13",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "2dde2477": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#32",
+  "question": "H15",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "58961452": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#33",
+  "question": "H17",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "e51f58d4": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#34",
+  "question": "H2",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "6390f466": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#35",
+  "question": "H4",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "8657420a": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#36",
+  "question": "H6",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "5c52af72": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#37",
+  "question": "H8",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "0968a960": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#38",
+  "question": "H10",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "4c707db1": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#39",
+  "question": "H12",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "85d24f5c": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#40",
+  "question": "H14",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "699b9c03": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#41",
+  "question": "H16",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "dc0ef209": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#42",
+  "question": "H1",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "3e02436f": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#43",
+  "question": "H3",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "7bdc4c44": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#44",
+  "question": "H5",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "483b55d6": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#45",
+  "question": "H7",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "428e8684": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#46",
+  "question": "H9",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "64baa24b": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#47",
+  "question": "H11",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "a06e9217": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#48",
+  "question": "H13",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "ead5ea55": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#49",
+  "question": "H15",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "9a22e104": {
+  "source": "evals/results/20261117T-acceptance-hard/shard-1.jsonl#50",
+  "question": "H17",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "508fc913": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#0",
+  "question": "M1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "f6402883": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#1",
+  "question": "M3",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "2ff078d5": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#2",
+  "question": "M5",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "ab41f8e3": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#3",
+  "question": "M7",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "618961ac": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#4",
+  "question": "M9",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "d84360c2": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#5",
+  "question": "M11",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "2b2be4d8": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#6",
+  "question": "M1",
+  "repeat": 2,
+  "status": "blocked",
+  "delivered": false
+ },
+ "8bca71f7": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#7",
+  "question": "M3",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "dcc8aacb": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#8",
+  "question": "M5",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "bb695fd8": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#9",
+  "question": "M7",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "3ebded5e": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#10",
+  "question": "M9",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "5be16c80": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#11",
+  "question": "M11",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "661135a0": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#12",
+  "question": "M1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "2cdbae27": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#13",
+  "question": "M3",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "fb5989e1": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#14",
+  "question": "M5",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "f7036fdb": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#15",
+  "question": "M7",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "afa65d12": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#16",
+  "question": "M9",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "c78b0951": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#17",
+  "question": "M11",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "0bd879f4": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#18",
+  "question": "M1",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "e9fca2cd": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#19",
+  "question": "M3",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "ea6443ba": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#20",
+  "question": "M5",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "e37a900e": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#21",
+  "question": "M7",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "8430cab9": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#22",
+  "question": "M9",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "958d4b94": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#23",
+  "question": "M11",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "0e94b51c": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#24",
+  "question": "M1",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "0f8ff04f": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#25",
+  "question": "M3",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "37d1beef": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#26",
+  "question": "M5",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "9219d4bf": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#27",
+  "question": "M7",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "7d3d8a96": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#28",
+  "question": "M9",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "54f7aa5e": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#29",
+  "question": "M11",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "142befa9": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#30",
+  "question": "M1",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "c12cf7f6": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#31",
+  "question": "M3",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "62cc34f3": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#32",
+  "question": "M5",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "c10c7abc": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#33",
+  "question": "M7",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "46a1861f": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#34",
+  "question": "M9",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "70773a62": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-0.jsonl#35",
+  "question": "M11",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "2036917d": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#0",
+  "question": "M2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "e9d646b0": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#1",
+  "question": "M4",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "7f34bfc4": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#2",
+  "question": "M6",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "3681abd9": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#3",
+  "question": "M8",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "4bc1b70e": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#4",
+  "question": "M10",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "020e1c26": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#5",
+  "question": "M12",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "89e02a14": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#6",
+  "question": "M2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "f7a3e6c0": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#7",
+  "question": "M4",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "de64ad7f": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#8",
+  "question": "M6",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "5c2b947d": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#9",
+  "question": "M8",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "f6808835": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#10",
+  "question": "M10",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "9c64c741": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#11",
+  "question": "M12",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "fbbbe3ea": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#12",
+  "question": "M2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "2710aa31": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#13",
+  "question": "M4",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "48ac0424": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#14",
+  "question": "M6",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "126c857f": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#15",
+  "question": "M8",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "ff9e1b54": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#16",
+  "question": "M10",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "3a4d2ba3": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#17",
+  "question": "M12",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "22fd3ea8": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#18",
+  "question": "M2",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "58061589": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#19",
+  "question": "M4",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "48a8e575": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#20",
+  "question": "M6",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "12e95bb0": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#21",
+  "question": "M8",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "9ed2140b": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#22",
+  "question": "M10",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "2035203c": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#23",
+  "question": "M12",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "546855bd": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#24",
+  "question": "M2",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "835d5f39": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#25",
+  "question": "M4",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "d5e257cd": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#26",
+  "question": "M6",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "df5910fb": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#27",
+  "question": "M8",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "495d0f7a": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#28",
+  "question": "M10",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "54a33a98": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#29",
+  "question": "M12",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "79b1d032": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#30",
+  "question": "M2",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "e67d717a": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#31",
+  "question": "M4",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "fbde7b3b": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#32",
+  "question": "M6",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "af60b1f7": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#33",
+  "question": "M8",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "0cd5c231": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#34",
+  "question": "M10",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "288d4058": {
+  "source": "evals/results/20261117T-acceptance-mislead/shard-1.jsonl#35",
+  "question": "M12",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "ff67ca2b": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#0",
+  "question": "P1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "e0a6f86a": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#1",
+  "question": "P3",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "a2d0defa": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#2",
+  "question": "P5",
+  "repeat": 1,
+  "status": "blocked",
+  "delivered": false
+ },
+ "e055547f": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#3",
+  "question": "P7",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "de763ff6": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#4",
+  "question": "P9",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "0f4ba1e4": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#5",
+  "question": "P11",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "dc6ac279": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#6",
+  "question": "P13",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "d25babde": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#7",
+  "question": "P15",
+  "repeat": 1,
+  "status": "blocked",
+  "delivered": false
+ },
+ "91b5d801": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#8",
+  "question": "P2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "8a817c83": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#9",
+  "question": "P4",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "fe2e1a01": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#10",
+  "question": "P6",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "fb3dd187": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#11",
+  "question": "P8",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "0d90c6e8": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#12",
+  "question": "P10",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "69392de4": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#13",
+  "question": "P12",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "9e1b5ee0": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#14",
+  "question": "P14",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "715cbefd": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#15",
+  "question": "P1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "4532b67a": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#16",
+  "question": "P3",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "daa7df51": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#17",
+  "question": "P5",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "da364709": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#18",
+  "question": "P7",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "d7408766": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#19",
+  "question": "P9",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "8edcbd69": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#20",
+  "question": "P11",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "b785c3cc": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#21",
+  "question": "P13",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "684aabfc": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#22",
+  "question": "P15",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "90c1623f": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#23",
+  "question": "P2",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "5980d8ef": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#24",
+  "question": "P4",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "1fbc4899": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#25",
+  "question": "P6",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "a7465559": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#26",
+  "question": "P8",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "2eff6486": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#27",
+  "question": "P10",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "7b7b3171": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#28",
+  "question": "P12",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "43df0e72": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#29",
+  "question": "P14",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "2b46557d": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#30",
+  "question": "P1",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "f1722b9a": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#31",
+  "question": "P3",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "8d22082f": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#32",
+  "question": "P5",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "251bdbbd": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#33",
+  "question": "P7",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "6fb16d8a": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#34",
+  "question": "P9",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "b6e3e652": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#35",
+  "question": "P11",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "7fabbc02": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#36",
+  "question": "P13",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "185487fb": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#37",
+  "question": "P15",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "0d9b2b28": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#38",
+  "question": "P2",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "4f2200c5": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#39",
+  "question": "P4",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "0e5b7864": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#40",
+  "question": "P6",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "626c96c4": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#41",
+  "question": "P8",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "6e76190b": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#42",
+  "question": "P10",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "ad6c78e7": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#43",
+  "question": "P12",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "e394dcc8": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-0.jsonl#44",
+  "question": "P14",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "77bbec2d": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#0",
+  "question": "P2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "da4fdf9c": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#1",
+  "question": "P4",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "9491d975": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#2",
+  "question": "P6",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "d482630b": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#3",
+  "question": "P8",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "3b7f5b3c": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#4",
+  "question": "P10",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "17dac218": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#5",
+  "question": "P12",
+  "repeat": 1,
+  "status": "blocked",
+  "delivered": false
+ },
+ "7b4a582d": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#6",
+  "question": "P14",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "6b0f27be": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#7",
+  "question": "P1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "634277d8": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#8",
+  "question": "P3",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "fdb5b163": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#9",
+  "question": "P5",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "e8e84d2c": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#10",
+  "question": "P7",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "e4e0caf1": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#11",
+  "question": "P9",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "f216b49d": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#12",
+  "question": "P11",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "fec6f2a8": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#13",
+  "question": "P13",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "1f1e7944": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#14",
+  "question": "P15",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "416319e0": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#15",
+  "question": "P2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "b1a683d4": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#16",
+  "question": "P4",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "d5dd6f08": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#17",
+  "question": "P6",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "c4af8f8b": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#18",
+  "question": "P8",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "36d01000": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#19",
+  "question": "P10",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "4a3d4594": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#20",
+  "question": "P12",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "6516ff4e": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#21",
+  "question": "P14",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "5f3ee984": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#22",
+  "question": "P1",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "8be59ff3": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#23",
+  "question": "P3",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "6486e8e1": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#24",
+  "question": "P5",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "d82071b9": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#25",
+  "question": "P7",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "5a258ae2": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#26",
+  "question": "P9",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "3ab736e9": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#27",
+  "question": "P11",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "8c0f1993": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#28",
+  "question": "P13",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "eba510b4": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#29",
+  "question": "P15",
+  "repeat": 4,
+  "status": "completed",
+  "delivered": true
+ },
+ "23f25d3e": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#30",
+  "question": "P2",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "2cbf73d5": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#31",
+  "question": "P4",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "7fc1c028": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#32",
+  "question": "P6",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "d0365c8e": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#33",
+  "question": "P8",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "b4fd9d62": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#34",
+  "question": "P10",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "223b51b9": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#35",
+  "question": "P12",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "800890ed": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#36",
+  "question": "P14",
+  "repeat": 5,
+  "status": "completed",
+  "delivered": true
+ },
+ "854f12dd": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#37",
+  "question": "P1",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "9c20a443": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#38",
+  "question": "P3",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "6e005eb4": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#39",
+  "question": "P5",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "2cd13bf6": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#40",
+  "question": "P7",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "ff1ed82d": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#41",
+  "question": "P9",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "f2833295": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#42",
+  "question": "P11",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "d76aefc2": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#43",
+  "question": "P13",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "2ca47ddd": {
+  "source": "evals/results/20261117T-acceptance-prof/shard-1.jsonl#44",
+  "question": "P15",
+  "repeat": 6,
+  "status": "completed",
+  "delivered": true
+ },
+ "225412f4": {
+  "source": "evals/results/20261117T-acceptance-redo/hard/shard-0.jsonl#0",
+  "question": "H14",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "74bf7ada": {
+  "source": "evals/results/20261117T-acceptance-redo/hard/shard-0.jsonl#1",
+  "question": "H16",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "b47baba1": {
+  "source": "evals/results/20261117T-acceptance-redo/mislead/shard-0.jsonl#0",
+  "question": "M1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "36e0029c": {
+  "source": "evals/results/20261117T-acceptance-redo/prof/shard-0.jsonl#0",
+  "question": "P5",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "b6719ff2": {
+  "source": "evals/results/20261117T-acceptance-redo/prof/shard-0.jsonl#1",
+  "question": "P12",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "a37de3ff": {
+  "source": "evals/results/20261117T-acceptance-redo/prof/shard-0.jsonl#2",
+  "question": "P15",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ }
+}

@@ -1,0 +1,57 @@
+{
+"5f3ee984": {"verdict": "right", "stated": "30 min day, 45 min night", "evidence": "(1) During the day... at least 30 minutes; (2) At night... at least 45 minutes", "note": "20 min correctly excluded as rotorcraft."},
+"6b0f27be": {"verdict": "right", "stated": "30 min day, 45 min night", "evidence": "Day: 30 minutes at normal cruising speed; Night: 45 minutes", "note": "A distance-form arithmetic slip is self-corrected in the text; conclusion unaffected."},
+"854f12dd": {"verdict": "right", "stated": "30 min day, 45 min night", "evidence": "DAY: 30 minutes. NIGHT: 45 minutes.", "note": ""},
+"2b46557d": {"verdict": "right", "stated": "30 min day, 45 min night", "evidence": "DAY at least 30 minutes; NIGHT at least 45 minutes", "note": ""},
+"ff67ca2b": {"verdict": "right", "stated": "30 min day, 45 min night", "evidence": "DAY: 30 minutes NIGHT: 45 minutes", "note": ""},
+"715cbefd": {"verdict": "right", "stated": "30 min day, 45 min night", "evidence": "Day: 30 minutes at normal cruising speed. Night: 45 minutes", "note": ""},
+
+"416319e0": {"verdict": "right", "stated": "10 h off duty; 14 consecutive hours; 11 h driving", "evidence": "10 consecutive hours off duty / 14 consecutive hours / 11 hours of driving", "note": "8-hour/30-minute break correctly kept separate."},
+"23f25d3e": {"verdict": "right", "stated": "10 h off duty; 14 h; 11 h driving", "evidence": "10 consecutive hours; 14 consecutive hours after coming on duty; 11 hours", "note": ""},
+"77bbec2d": {"verdict": "right", "stated": "10 h off duty; 14 h; 11 h driving", "evidence": "10 HOURS; 14 HOURS; 11 HOURS", "note": ""},
+"91b5d801": {"verdict": "right", "stated": "10 h off duty; 14 h; 11 h driving", "evidence": "10 consecutive hours off duty; 14 consecutive hours; 11 hours", "note": ""},
+"0d9b2b28": {"verdict": "right", "stated": "10 h off duty; 14 h; 11 h driving", "evidence": "10 consecutive hours off duty; 14 consecutive hours after coming on duty; 11 total hours", "note": ""},
+"90c1623f": {"verdict": "right", "stated": "10 h off duty; 14 h; 11 h driving", "evidence": "10 consecutive hours off duty | 14 consecutive hours | 11 hours", "note": ""},
+
+"9c20a443": {"verdict": "right", "stated": "without unreasonable delay; 60 calendar days; from discovery", "evidence": "without unreasonable delay and in no case later than 60 calendar days after discovery", "note": ""},
+"634277d8": {"verdict": "right", "stated": "without unreasonable delay; 60 calendar days; from discovery", "evidence": "60-day period runs from discovery of the breach... not the date of the breach itself", "note": ""},
+"4532b67a": {"verdict": "right", "stated": "without unreasonable delay; 60 calendar days; from discovery", "evidence": "not later than 60 calendar days after discovery of a breach", "note": ""},
+"f1722b9a": {"verdict": "right", "stated": "without unreasonable delay; 60 calendar days; from discovery", "evidence": "Standard without unreasonable delay; outer limit 60 calendar days after discovery", "note": ""},
+"e0a6f86a": {"verdict": "right", "stated": "without unreasonable delay; 60 calendar days; from discovery", "evidence": "clock runs from discovery of the breach", "note": ""},
+"8be59ff3": {"verdict": "right", "stated": "without unreasonable delay; 60 calendar days; from discovery", "evidence": "From discovery of the breach, as defined in 164.404(a)(2)", "note": ""},
+
+"2cbf73d5": {"verdict": "partly", "stated": "midnight of 3rd business day after last of consummation/notice/disclosures; 3 years after consummation", "evidence": "Business day... is the general definition in 1026.2(a)(6): a day on which the creditor's offices are open", "note": "Key figures right, but it wrongly says the general offices-open business-day definition applies to rescission (it is Sundays/holidays excluded), contradicting its own Saturday-counting examples."},
+"da4fdf9c": {"verdict": "right", "stated": "midnight of 3rd business day after last of three events; 3 years after consummation (or earlier transfer/sale)", "evidence": "midnight of the third business day following the last of (a) consummation, (b) notice, (c) all material disclosures", "note": "Correct rescission business-day definition (Saturdays count)."},
+"4f2200c5": {"verdict": "right", "stated": "midnight of 3rd business day after last of three events; 3 years after consummation", "evidence": "The trigger is therefore the LAST of three events, not consummation alone", "note": ""},
+"8a817c83": {"verdict": "right", "stated": "midnight of 3rd business day after last of three events; 3 years after consummation", "evidence": "midnight of the third business day following the last of... 3 years after consummation", "note": ""},
+"b1a683d4": {"verdict": "right", "stated": "midnight of 3rd business day after last of three events; 3 years after consummation", "evidence": "right expires 3 years after consummation... WHICHEVER OCCURS FIRST", "note": "Jesinoski citation and holding are loosely stated, but that is peripheral to the key."},
+"5980d8ef": {"verdict": "partly", "stated": "midnight of 3rd business day after last of three events; 3 years after consummation", "evidence": "Business day for rescission purposes is a day on which the creditor's offices are open... Saturdays, Sundays and federal holidays count only if the creditor is in fact open", "note": "Key figures right, but it misstates the rescission business-day definition (all days except Sundays and federal holidays)."},
+
+"6486e8e1": {"verdict": "right", "stated": "1.5 kW PEP; 200 W PEP", "evidence": "General maximum: 1.5 kW PEP... On 10.10-10.15 MHz: 200 W PEP", "note": ""},
+"8d22082f": {"verdict": "right", "stated": "1.5 kW PEP; 200 W PEP", "evidence": "1.5 kW PEP = 1500 W PEP; 200 W PEP", "note": ""},
+"daa7df51": {"verdict": "right", "stated": "1.5 kW PEP; 200 W PEP", "evidence": "1.5 kW PEP; 200 W PEP transmitter power output", "note": ""},
+"36e0029c": {"verdict": "right", "stated": "1.5 kW PEP; 200 W PEP", "evidence": "1.5 kW PEP; 200 W PEP at the transmitter power output", "note": "Side remark 'one-seventh (about 13.3%)' is internally inconsistent but irrelevant."},
+"fdb5b163": {"verdict": "right", "stated": "1.5 kW PEP; 200 W PEP", "evidence": "1.5 kW PEP (1500 W PEP); 200 W PEP (0.2 kW PEP)", "note": ""},
+"6e005eb4": {"verdict": "right", "stated": "1.5 kW PEP; 200 W PEP", "evidence": "1.5 kW PEP; 200 W PEP", "note": ""},
+
+"9491d975": {"verdict": "right", "stated": "TEDE 5 rems (0.05 Sv); lens 15 rems (0.15 Sv); skin 50 rems (0.5 Sv)", "evidence": "5 rems / 0.05 Sv; 15 rems / 0.15 Sv; 50 rems / 0.5 Sv", "note": "Separates the (a)(1)(ii) organ 50 rems from skin."},
+"fe2e1a01": {"verdict": "right", "stated": "TEDE 5 rem (0.05 Sv); lens 15 rem (0.15 Sv); skin 50 rem (0.5 Sv)", "evidence": "5 rem = 0.05 Sv; 15 rem = 0.15 Sv; 50 rem = 0.5 Sv", "note": ""},
+"d5dd6f08": {"verdict": "right", "stated": "TEDE 5 rems (0.05 Sv); lens 15 rems (0.15 Sv); skin 50 rem (0.5 Sv)", "evidence": "5 rems = 0.05 Sv; 15 rems = 0.15 Sv; 50 rem = 0.5 Sv", "note": ""},
+"7fc1c028": {"verdict": "right", "stated": "TEDE 5 rem (0.05 Sv); lens 15 rem (0.15 Sv); skin 50 rem (0.5 Sv)", "evidence": "table: 5 rem 0.05 Sv; 15 rem 0.15 Sv; 50 rem 0.5 Sv", "note": "Typo 'TDE' and cites 20.1203 for the summation note; immaterial."},
+"0e5b7864": {"verdict": "right", "stated": "TEDE 5 rem (0.05 Sv); lens 15 rem (0.15 Sv); skin 50 rem (0.5 Sv)", "evidence": "The TEDE limit is 5 rem, never 50 rem", "note": ""},
+"1fbc4899": {"verdict": "right", "stated": "TEDE 5 rems (0.05 Sv); lens 15 rems (0.15 Sv); skin 50 rems (0.5 Sv)", "evidence": "5 rems per year = 0.05 Sv; 15 rems = 0.15 Sv; 50 rems = 0.5 Sv", "note": "Stray historical remark that the 3-rem lens figure predates 2007 is wrong (it predates 1991) but does not affect the conclusion."},
+
+"da364709": {"verdict": "right", "stated": "not more than 60 C (140 F)", "evidence": "Flash point: not more than 60 C (140 F)", "note": "Treats 37.8 C as the separate heated-material prong, not the definition."},
+"251bdbbd": {"verdict": "right", "stated": "not more than 60 C (140 F)", "evidence": "Threshold as written: not more than 60 C (140 F)", "note": ""},
+"d82071b9": {"verdict": "right", "stated": "not more than 60 C (140 F)", "evidence": "a flash point of not more than 60 C (140 F)... at or below, inclusive", "note": "Describes 173.115 as covering Divisions 4.x, which is off but peripheral."},
+"e8e84d2c": {"verdict": "right", "stated": "not more than 60 C (140 F)", "evidence": "flash point of not more than 60 C (140 F)... inclusive", "note": "Peripheral mis-description of 173.115 in the exceptions list."},
+"2cd13bf6": {"verdict": "right", "stated": "not more than 60 C (140 F)", "evidence": "flash point of not more than 60 C (140 F)", "note": ""},
+"e055547f": {"verdict": "right", "stated": "not more than 60 C (140 F)", "evidence": "flash point of not more than 60 C (140 F)... inclusive upper bound", "note": ""},
+
+"d482630b": {"verdict": "right", "stated": "6 ft (1.8 m) or more; guardrail, safety net, personal fall arrest", "evidence": "6 feet (1.8 m) or more above a lower level... guardrail systems, safety net systems, or personal fall arrest systems", "note": ""},
+"fb3dd187": {"verdict": "right", "stated": "6 ft (1.8 m) or more; guardrail, safety net, personal fall arrest", "evidence": "6 feet (1.8 m) or more above a lower level; any one of the three", "note": "4 ft correctly identified as general industry."},
+"c4af8f8b": {"verdict": "right", "stated": "6 ft (1.8 m) or more; guardrail, safety net, personal fall arrest", "evidence": "6 feet (1.8 m) or more above a lower level; guardrail, safety net, or personal fall arrest systems", "note": ""},
+"a7465559": {"verdict": "right", "stated": "6 ft (1.8 m) or more; guardrail, safety net, personal fall arrest", "evidence": "6 feet (1.8 m) or more; Guardrail systems, safety net systems, or personal fall arrest systems", "note": ""},
+"626c96c4": {"verdict": "right", "stated": "6 ft (1.8 m) or more; guardrail, safety net, personal fall arrest", "evidence": "6 feet (1.8 m) or more above a lower level... guardrail, safety net, or personal fall arrest", "note": ""},
+"d0365c8e": {"verdict": "right", "stated": "6 ft (1.8 m) or more; guardrail, safety net, personal fall arrest", "evidence": "6 feet (1.8 m) or more above a lower level; any one of guardrail, safety net, personal fall arrest", "note": "4 ft correctly identified as general industry."}
+}

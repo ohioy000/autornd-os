@@ -305,6 +305,15 @@ stopped server ends blocked when the server next starts.
 **The story and the model choices are written down:** `docs/HOW-WE-GOT-HERE.md`
 and `docs/MODELS.md`, with a map of the record in `docs/README.md`.
 
+**The final configuration was run once on all three professional sets.** Six
+answers to each of 44 questions, 264 in all, read blind by two readers against
+signed keys: 259 were right on the key (248 on a stricter reading) for about
+nine tenths of a cent an answer, and no confirmation stood beside a wrong
+figure. The one bar missed is that wrong answers were rarely marked: of five,
+only the wrong figure carried a caution that pointed at it. The report is
+`docs/reviews/2026-11-17-acceptance-run.md`. The page now fits a phone, and the
+Docker image has been built and run by hand.
+
 ## [0.1.0] — 2026-09-12
 
 ### Added

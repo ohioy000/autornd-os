@@ -1,0 +1,218 @@
+{
+ "f9b37755": {
+  "verdict": "right",
+  "stated": "PEL 50 ug/m3, AL 25 ug/m3, both 8-h TWA",
+  "evidence": "PEL 50 µg/m³ ... 8-hour TWA; AL 25 µg/m³ ... 8-hour TWA",
+  "note": ""
+ },
+ "fe569ba4": {
+  "verdict": "right",
+  "stated": "PEL 50 ug/m3, AL 25 ug/m3, both 8-h TWA",
+  "evidence": "PEL = 50 µg/m³ (0.050 mg/m³) as an 8-hour TWA; action level = 25 µg/m³",
+  "note": "Z-3 formula only as superseded history."
+ },
+ "f5924007": {
+  "verdict": "right",
+  "stated": "PEL 50 ug/m3, AL 25 ug/m3, both 8-h TWA",
+  "evidence": "50 µg/m³ ... 8-hour TWA; 25 µg/m³ ... 8-hour TWA",
+  "note": ""
+ },
+ "64fcf13e": {
+  "verdict": "right",
+  "stated": "PEL 50 ug/m3, AL 25 ug/m3, both 8-h TWA",
+  "evidence": "PEL: 50 µg/m³ as an 8-hour TWA ... Action level: 25 µg/m³ as an 8-hour TWA",
+  "note": "Z-3 formula noted as pre-2016, not current."
+ },
+ "483b55d6": {
+  "verdict": "right",
+  "stated": "PEL 50 ug/m3, AL 25 ug/m3, both 8-h TWA",
+  "evidence": "PEL = 50 µg/m³ respirable crystalline silica, 8-hour TWA; Action Level = 25 µg/m³",
+  "note": "Peripheral sampler/California details look shaky but do not touch the key."
+ },
+ "37cdaca3": {
+  "verdict": "right",
+  "stated": "PEL 50 ug/m3, AL 25 ug/m3, both 8-h TWA",
+  "evidence": "PEL 50 µg/m³ ... AL 25 µg/m³ as 8-hour TWA",
+  "note": "Peripheral claim that 1910.1053 also covers maritime is doubtful; key items correct."
+ },
+ "5c52af72": {
+  "verdict": "right",
+  "stated": "MCL 0.0000040 mg/L as listed = 4.0 ng/L",
+  "evidence": "MCL = 0.0000040 mg/l ... In nanograms per litre: 4.0 ng/L",
+  "note": ""
+ },
+ "cf8eb225": {
+  "verdict": "right",
+  "stated": "MCL 0.0000040 mg/L as listed = 4.0 ng/L",
+  "evidence": "As the rule lists it: 0.0000040 mg/L; 4.0 ng/L",
+  "note": ""
+ },
+ "c4bfd114": {
+  "verdict": "right",
+  "stated": "MCL 0.0000040 mg/L as listed = 4.0 ng/L",
+  "evidence": "PFOA MCL = 0.0000040 mg/L as listed ... equals 4.0 ng/L",
+  "note": ""
+ },
+ "c4bd1cd1": {
+  "verdict": "right",
+  "stated": "MCL 0.0000040 mg/L as listed = 4.0 ng/L",
+  "evidence": "PFOA MCL: 0.0000040 mg/l ... equal to 4.0 ng/L",
+  "note": ""
+ },
+ "0d76339c": {
+  "verdict": "right",
+  "stated": "MCL 0.0000040 mg/L as listed = 4.0 ng/L",
+  "evidence": "rule-listed value is 0.0000040 mg/L ... 4.0 ng/L",
+  "note": ""
+ },
+ "4d3012aa": {
+  "verdict": "partly",
+  "stated": "4.0 ppt = 4.0 ng/L; no 0.0000040 mg/l",
+  "evidence": "As the rule lists it: 4.0 parts per trillion (ppt)",
+  "note": "Gives 4.0 ng/L correctly but never states the as-listed form 0.0000040 mg/l; labels ppt as the rule's listing."
+ },
+ "83567be4": {
+  "verdict": "right",
+  "stated": "10.0 CRITICAL (v3.1)",
+  "evidence": "Base score 10.0; Severity CRITICAL",
+  "note": ""
+ },
+ "f3eb5910": {
+  "verdict": "right",
+  "stated": "10.0 CRITICAL (v3.1)",
+  "evidence": "NVD gives ... CVSS v3.1 base score of 10.0, severity CRITICAL",
+  "note": "9.3 and 9.8 identified as other records."
+ },
+ "66d1e957": {
+  "verdict": "right",
+  "stated": "10.0 CRITICAL (v3.1)",
+  "evidence": "10.0 / Critical, from NVD's own primary CVSS v3.1 assessment",
+  "note": "9.3 and 9.8 identified as other records."
+ },
+ "74817c03": {
+  "verdict": "right",
+  "stated": "10.0 CRITICAL (v3.1)",
+  "evidence": "CVSS v3.1 base score: 10.0; Severity: CRITICAL",
+  "note": "9.3 and 9.8 identified as other records."
+ },
+ "38dff0a0": {
+  "verdict": "right",
+  "stated": "10.0 CRITICAL (v3.1)",
+  "evidence": "Base score 10.0; Critical",
+  "note": "9.3 and 9.8 identified as other records."
+ },
+ "428e8684": {
+  "verdict": "right",
+  "stated": "10.0 CRITICAL (v3.1)",
+  "evidence": "Base score 10.0; Severity CRITICAL",
+  "note": "9.3 and 9.8 identified as other records."
+ },
+ "c48ef88c": {
+  "verdict": "right",
+  "stated": "Too Early; RFC 8470",
+  "evidence": "425 Too Early; RFC 8470",
+  "note": ""
+ },
+ "be14f2e9": {
+  "verdict": "right",
+  "stated": "Too Early; RFC 8470",
+  "evidence": "Name: Too Early; Reference: RFC 8470",
+  "note": "RFC author names given are wrong but irrelevant to the key."
+ },
+ "f7b0310b": {
+  "verdict": "right",
+  "stated": "Too Early; RFC 8470",
+  "evidence": "1. Too Early. 2. RFC 8470.",
+  "note": "RFC title slightly misstated; key correct."
+ },
+ "0968a960": {
+  "verdict": "right",
+  "stated": "Too Early; RFC 8470",
+  "evidence": "Status code 425 is named 'Too Early' ... RFC 8470",
+  "note": "Correctly rejects Unordered Collection."
+ },
+ "18c43145": {
+  "verdict": "right",
+  "stated": "Too Early; RFC 8470",
+  "evidence": "Name: Too Early; Reference: RFC 8470",
+  "note": "RFC author names given are wrong but irrelevant to the key."
+ },
+ "f139f90e": {
+  "verdict": "right",
+  "stated": "Too Early; RFC 8470",
+  "evidence": "named 'Too Early', reference RFC 8470",
+  "note": "RFC author names given are wrong but irrelevant to the key."
+ },
+ "876338b6": {
+  "verdict": "right",
+  "stated": "two-thirds vote",
+  "evidence": "A two-thirds (2/3) vote",
+  "note": ""
+ },
+ "5cfcfa26": {
+  "verdict": "right",
+  "stated": "two-thirds vote",
+  "evidence": "requires a TWO-THIRDS VOTE to adopt",
+  "note": ""
+ },
+ "6552cbb4": {
+  "verdict": "right",
+  "stated": "two-thirds vote",
+  "evidence": "Two-thirds vote",
+  "note": ""
+ },
+ "672326b0": {
+  "verdict": "right",
+  "stated": "two-thirds vote",
+  "evidence": "requires a TWO-THIRDS VOTE to adopt",
+  "note": ""
+ },
+ "d80c46d8": {
+  "verdict": "right",
+  "stated": "two-thirds vote",
+  "evidence": "requires a TWO-THIRDS VOTE (2/3) to be adopted",
+  "note": ""
+ },
+ "64baa24b": {
+  "verdict": "right",
+  "stated": "two-thirds vote",
+  "evidence": "requires a two-thirds vote to adopt",
+  "note": ""
+ },
+ "43227d86": {
+  "verdict": "right",
+  "stated": "40 V; 1.25 V",
+  "evidence": "Absolute maximum ... differential: 40 V; VREF 1.25 V",
+  "note": ""
+ },
+ "21717828": {
+  "verdict": "right",
+  "stated": "40 V; 1.25 V",
+  "evidence": "Input-output differential ... 40 V; V_REF typ 1.25 V",
+  "note": "Correctly separates 37 V output range."
+ },
+ "08d66db9": {
+  "verdict": "right",
+  "stated": "40 V; 1.25 V",
+  "evidence": "V_I − V_O: 40 V; V_REF 1.25 V",
+  "note": "Correctly separates 37 V output range."
+ },
+ "4c707db1": {
+  "verdict": "right",
+  "stated": "40 V; 1.25 V",
+  "evidence": "Absolute maximum ... differential: 40 V; typical 1.25 V",
+  "note": ""
+ },
+ "5a9891cc": {
+  "verdict": "right",
+  "stated": "40 V; 1.25 V",
+  "evidence": "V_I − V_O ... MAX 40 V; V_REF TYP 1.25",
+  "note": "Variant table claims LM317L is 40 V, peripheral; key correct."
+ },
+ "8211c748": {
+  "verdict": "wrong",
+  "stated": "35 V differential; 1.25 V",
+  "evidence": "Absolute maximum ... differential, V_I − V_O | 35 V",
+  "note": "Reference voltage right but differential given as 35 V and explicitly rejects 40 V."
+ }
+}

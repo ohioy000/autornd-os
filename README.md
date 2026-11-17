@@ -403,6 +403,8 @@ The suite takes about 90 seconds to 3 minutes. It makes no network call and spen
 
 - **A source that is wrong, with nothing in its text to show it, is not caught.** A stale official page or a sister rule, found word for word, is confirmed like any other.
 - **A confirmation is about words on a page.** It means the answer's figures stand in a passage that was found. It does not mean the passage is the right rule.
+- **A right figure can come with a wrong claim beside it.** The answers are long, and the checks read the figures a question asks for, not the rest. A misdefined term next to a right number was confirmed like any other.
+- **A caution can be a false alarm.** When an older edition of a rule sits among the pages found, the delivery says the pages differ, including on an answer that is right.
 - **Answers written in words are not checked the way figures are.** The confirmations and most cautions read numbers. A wrong condition in prose can pass unseen.
 - **The answer-step prompt can trip a safety filter on some frontier models.** It was written for inexpensive models. If you put a frontier model in the answer seat, try one request first; a reply stopped by a content filter ends the run as blocked.
 - **Some sites refuse to be read.** A page behind a login or a challenge, or a scanned PDF, stays unread, and the delivery says so.
