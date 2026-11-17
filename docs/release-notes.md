@@ -31,13 +31,13 @@ One run of 2026-11-17, preregistered before the spend, on the three frozen profe
 - **One of six bars missed:** of the five wrong answers only one, a wrong figure, carried a
   caution that pointed at it. The other four were an omission, a missing form, and a term
   defined wrongly beside a right figure; the checks read figures, not prose.
-- **Against a frontier model asked directly** (22 of the same questions, web search on): level on
-  accuracy, the harness about six times cheaper and about seven times slower
+- **Against a frontier model asked directly** (22 of the same questions, web search on): **equivalent
+  accuracy**, the harness about six times cheaper and about seven times slower
   (`docs/reviews/2026-11-17-frontier-direct.md`, `docs/MODELS.md`). The frontier model was right
   22 of 22 at medium effort and 14 of 14 at high effort. The harness, in the acceptance run, was
-  right on 131 of its 132 answers to those same 22 questions (129 on the stricter marks). **The
-  harness is not shown to be more accurate, and not shown to be less accurate.** The samples are
-  too small to separate a miss rate of one or two in a hundred from none.
+  right on 131 of its 132 answers to those same 22 questions (129 on the stricter marks). Neither
+  is shown to be more accurate than the other: the samples are too small to separate a miss rate
+  of one or two in a hundred from none.
 
 These sets are the ones the harness was shaped against. They are not a hold-out, and the figures
 are not a forecast for a question nobody has seen.
