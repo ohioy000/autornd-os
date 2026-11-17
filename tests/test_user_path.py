@@ -138,6 +138,19 @@ class TestThePageShowsWhatARunDelivered:
         chat = DASHBOARD[DASHBOARD.index("function renderResult(w)"):]
         assert "renderDelivery(w)" in chat[:chat.index("\n}\n")]
 
+    def test_the_page_fits_a_phone_without_losing_a_button(self):
+        """Measured 2026-11-16 in Chromium at 390 px: the header's Refresh
+        button ran 20 px past the edge and the body hides overflow, so it was
+        cut off and could not be reached; the workflows table was 435 px wide
+        inside a box that could not scroll sideways. The header wraps and the
+        table's box scrolls."""
+        def rule(selector):
+            start = DASHBOARD.index(selector + "{")
+            return DASHBOARD[start:DASHBOARD.index("}", start)]
+        assert "flex-wrap:wrap" in rule(".top-bar")
+        assert "flex-wrap:wrap" in rule(".top-bar .controls")
+        assert "overflow:auto" in rule(".workflows-wrap")
+
 
 @pytest.mark.asyncio
 class TestARunStrandedByARestartIsEnded:

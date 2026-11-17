@@ -249,13 +249,20 @@ class TestAdditiveMigration:
 # — on the shared in-memory connection an uncommitted row would be visible too.
 
 
-async def _wire_file_backed_run(tmp_path, monkeypatch, delays=None):
+async def _wire_file_backed_run(tmp_path, monkeypatch, delays=None,
+                                hold: asyncio.Event | None = None, hold_after: int = 1):
     """The run path on a file-backed database, with the provider-free double.
 
     The app and the background runner share one session factory; a second
     engine over the same file is the observer. Returns the clients the run
     path builds (so a test can read what was called and billed) and the
     observer's factory.
+
+    `hold` is a gate for a test that must look at a run while it is still
+    going: every provider call after the first `hold_after` waits until the
+    event is set, so the run cannot end until the test lets it. A sleep per
+    call only made the run long; on a loaded machine the observer was starved
+    for longer than the run, and it first saw the phase after the run was done.
     """
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -296,6 +303,18 @@ async def _wire_file_backed_run(tmp_path, monkeypatch, delays=None):
         # provider call, billed or not.
         client.rerank = AsyncMock(
             side_effect=RuntimeError("rerank is not part of the test double"))
+        if hold is not None:
+            started = {"n": 0}
+            for name in ("chat_json", "chat"):
+                real = getattr(client, name).side_effect
+
+                async def gated(*a, _real=real, **k):
+                    started["n"] += 1
+                    if started["n"] > hold_after:
+                        await hold.wait()
+                    return await _real(*a, **k)
+
+                getattr(client, name).side_effect = gated
         made.append(client)
         return client
 
@@ -413,30 +432,36 @@ class TestProgressIsVisibleMidRun:
         from sqlalchemy import select
         from tests.test_watchdog import REQUEST
 
-        # Every call takes a while, so the run is long enough to observe.
+        # The run is held after its first call, so it cannot end until this
+        # test says so. The first phase is then the only thing the observer
+        # can find, however slow the machine is.
+        hold = asyncio.Event()
         clients, observer_factory = await _wire_file_backed_run(
-            tmp_path, monkeypatch, delays={"default": 0.25})
+            tmp_path, monkeypatch, hold=hold)
 
         posted = asyncio.create_task(
             api_client.post("/api/workflows", json={"request": REQUEST}))
 
         seen = None
-        for _ in range(600):
-            async with observer_factory() as session:
-                phases = (await session.execute(select(PhaseResult))).scalars().all()
-                rows = (await session.execute(select(Workflow))).scalars().all()
-            if phases:
-                seen = (rows[0].status.value, len(phases))
-                break
-            await asyncio.sleep(0.01)
+        try:
+            for _ in range(1000):
+                async with observer_factory() as session:
+                    phases = (await session.execute(select(PhaseResult))).scalars().all()
+                    rows = (await session.execute(select(Workflow))).scalars().all()
+                if phases:
+                    seen = (rows[0].status.value, len(phases))
+                    break
+                await asyncio.sleep(0.01)
 
-        assert seen is not None, "no phase was ever visible to the second session"
-        status, n_phases = seen
-        assert n_phases >= 1
-        assert status not in ("completed", "blocked", "escalated"), (
-            f"the run had already ended ({status}) when the phase was first seen")
-        assert not posted.done(), (
-            "the run had already ended when the phase was first seen")
+            assert seen is not None, "no phase was ever visible to the second session"
+            status, n_phases = seen
+            assert n_phases >= 1
+            assert status not in ("completed", "blocked", "escalated"), (
+                f"the run had already ended ({status}) when the phase was first seen")
+            assert not posted.done(), (
+                "the run had already ended when the phase was first seen")
+        finally:
+            hold.set()
 
         await posted
         final = (await api_client.get(f"/api/workflows/{rows[0].id}")).json()["data"]
