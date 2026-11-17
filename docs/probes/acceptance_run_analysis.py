@@ -42,9 +42,10 @@ if len(sys.argv) > 4:
     final = json.loads(Path(sys.argv[4]).read_text())
 
 KEYS = {q["id"]: q for name in ("questions.json", "hard-questions.json",
-                                "misleading-questions.json")
+                                "misleading-questions.json",
+                                "holdout-questions.json")
         for q in json.loads((REPO / "evals/professional" / name).read_text())["questions"]}
-SET_OF = {"P": "professional", "H": "hard", "M": "misleading"}
+SET_OF = {"P": "professional", "H": "hard", "M": "misleading", "X": "holdout"}
 POINTING = ("give different figures for the same thing",
             "is in none of the passages found")
 
