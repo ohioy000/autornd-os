@@ -96,8 +96,10 @@ is speed and simplicity.
   on 17 November: the model returned no text and the provider reported a content filter, on
   two questions. Something in our answer request trips it; we did not look for what. So this
   file makes no claim about the harness making a frontier model better or cheaper.
-- **It does not claim the harness is more accurate than a frontier model.** Asked directly, the
-  frontier model was right on every question we put to it. The two are level.
+- **It does not claim the harness is more accurate than a frontier model, or less.** Asked
+  directly, the frontier model was right on every question we put to it (36 answers). On the same
+  22 questions the harness's acceptance answers were right 131 of 132. The two are level, and
+  the samples are too small to say more.
 - **It does not claim the harness is the better buy for everyone.** For a handful of questions
   a frontier model with search is simpler and faster. The harness earns its keep at volume, or
   where the record of what was read matters.
