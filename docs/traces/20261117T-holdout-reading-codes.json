@@ -1,0 +1,884 @@
+{
+ "789ce186": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#0",
+  "question": "X1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "16697c6a": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#1",
+  "question": "X4",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "ca4be2ab": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#2",
+  "question": "X7",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "480440d0": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#3",
+  "question": "X10",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "0d815e39": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#4",
+  "question": "X13",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "6053d825": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#5",
+  "question": "X16",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "de16a26a": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#6",
+  "question": "X19",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "7516725a": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#7",
+  "question": "X22",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "988d4b77": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#8",
+  "question": "X25",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "93593e38": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#9",
+  "question": "X28",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "6d03c42b": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#10",
+  "question": "X31",
+  "repeat": 1,
+  "status": "blocked",
+  "delivered": false
+ },
+ "eade5cd6": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#11",
+  "question": "X34",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "fde26c6d": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#12",
+  "question": "X37",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "6276ca2b": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#13",
+  "question": "X40",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "9dd4142b": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#14",
+  "question": "X1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "ccdd1a54": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#15",
+  "question": "X4",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "0038288f": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#16",
+  "question": "X7",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "6935ae27": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#17",
+  "question": "X10",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "59a8d710": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#18",
+  "question": "X13",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "4a79b3fe": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#19",
+  "question": "X16",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "fd11a3fa": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#20",
+  "question": "X19",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "02324529": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#21",
+  "question": "X22",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "7a1fbd06": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#22",
+  "question": "X25",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "1f707770": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#23",
+  "question": "X28",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "f19cb915": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#24",
+  "question": "X31",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "57dec7cf": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#25",
+  "question": "X34",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "e8ec69ac": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#26",
+  "question": "X37",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "f5a88361": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#27",
+  "question": "X40",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "7df80314": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#28",
+  "question": "X1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "e0e45bf7": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#29",
+  "question": "X4",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "cdcbf784": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#30",
+  "question": "X7",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "89ab5b18": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#31",
+  "question": "X10",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "79afd355": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#32",
+  "question": "X13",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "7c596ecb": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#33",
+  "question": "X16",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "22dd2e55": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#34",
+  "question": "X19",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "3eba345e": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#35",
+  "question": "X22",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "a9ae47ee": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#36",
+  "question": "X25",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "3275a7f7": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#37",
+  "question": "X28",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "28e3fe93": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#38",
+  "question": "X31",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "a0b8e4d6": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#39",
+  "question": "X34",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "8691faf4": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#40",
+  "question": "X37",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "d800082d": {
+  "source": "evals/results/20261117T-holdout/shard-0.jsonl#41",
+  "question": "X40",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "2667f298": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#0",
+  "question": "X2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "870f01a5": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#1",
+  "question": "X5",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "1c48cbc3": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#2",
+  "question": "X8",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "a680a5b3": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#3",
+  "question": "X11",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "54615b9b": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#4",
+  "question": "X14",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "d30db712": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#5",
+  "question": "X17",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "e69584da": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#6",
+  "question": "X20",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "bb3bb6cb": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#7",
+  "question": "X23",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "b03d8bcf": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#8",
+  "question": "X26",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "fc6606cf": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#9",
+  "question": "X29",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "96f3d649": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#10",
+  "question": "X32",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "9625638a": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#11",
+  "question": "X35",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "179de50a": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#12",
+  "question": "X38",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "a8736e35": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#13",
+  "question": "X41",
+  "repeat": 1,
+  "status": "blocked",
+  "delivered": false
+ },
+ "a0d5f799": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#14",
+  "question": "X2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "170dad8f": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#15",
+  "question": "X5",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "77f9a6ec": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#16",
+  "question": "X8",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "534ec7ef": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#17",
+  "question": "X11",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "33710f57": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#18",
+  "question": "X14",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "0bd1de8d": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#19",
+  "question": "X17",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "9e4443d6": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#20",
+  "question": "X20",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "5ae86f00": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#21",
+  "question": "X23",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "f24a7db8": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#22",
+  "question": "X26",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "f2a58394": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#23",
+  "question": "X29",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "73f6cd3f": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#24",
+  "question": "X32",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "5497014d": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#25",
+  "question": "X35",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "0708d1ab": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#26",
+  "question": "X38",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "567dc511": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#27",
+  "question": "X41",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "cb56151d": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#28",
+  "question": "X2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "12008dbe": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#29",
+  "question": "X5",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "ab104a50": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#30",
+  "question": "X8",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "0e5be3bf": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#31",
+  "question": "X11",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "afc13c1e": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#32",
+  "question": "X14",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "e05bbc0f": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#33",
+  "question": "X17",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "b40183cc": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#34",
+  "question": "X20",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "cf9d6d10": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#35",
+  "question": "X23",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "ef42757f": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#36",
+  "question": "X26",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "4ee77ba7": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#37",
+  "question": "X29",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "d698a846": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#38",
+  "question": "X32",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "1dd85957": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#39",
+  "question": "X35",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "85e730f5": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#40",
+  "question": "X38",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "3e53be3f": {
+  "source": "evals/results/20261117T-holdout/shard-1.jsonl#41",
+  "question": "X41",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "e4c2ee5b": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#0",
+  "question": "X3",
+  "repeat": 1,
+  "status": "blocked",
+  "delivered": false
+ },
+ "07492eef": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#1",
+  "question": "X6",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "11a2d0a3": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#2",
+  "question": "X9",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "ff9142de": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#3",
+  "question": "X12",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "037eb5cd": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#4",
+  "question": "X15",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "b407e2c7": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#5",
+  "question": "X18",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "e4f69140": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#6",
+  "question": "X21",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "e22d5a3b": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#7",
+  "question": "X24",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "2867feec": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#8",
+  "question": "X27",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "742e120a": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#9",
+  "question": "X30",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "dc94cb44": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#10",
+  "question": "X33",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "e8ad7093": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#11",
+  "question": "X36",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "fb0cd4bd": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#12",
+  "question": "X39",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "74bb5233": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#13",
+  "question": "X42",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "9803a32e": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#14",
+  "question": "X3",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "9a3a6935": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#15",
+  "question": "X6",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "40ae31b5": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#16",
+  "question": "X9",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "3b895766": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#17",
+  "question": "X12",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "203ffe78": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#18",
+  "question": "X15",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "223df70b": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#19",
+  "question": "X18",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "193145c7": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#20",
+  "question": "X21",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "42ff49f9": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#21",
+  "question": "X24",
+  "repeat": 2,
+  "status": "blocked",
+  "delivered": false
+ },
+ "b3518ec3": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#22",
+  "question": "X27",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "780455bf": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#23",
+  "question": "X30",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "74721f7a": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#24",
+  "question": "X33",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "0dffde29": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#25",
+  "question": "X36",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "39d394c8": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#26",
+  "question": "X39",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "a81a8be3": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#27",
+  "question": "X42",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "0dd094e2": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#28",
+  "question": "X3",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "47906586": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#29",
+  "question": "X6",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "668b9eaa": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#30",
+  "question": "X9",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "d095157e": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#31",
+  "question": "X12",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "06ec2fc9": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#32",
+  "question": "X15",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "7e6f9284": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#33",
+  "question": "X18",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "5a471edf": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#34",
+  "question": "X21",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "ea5f5ade": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#35",
+  "question": "X24",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "7af2db84": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#36",
+  "question": "X27",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "35bc9558": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#37",
+  "question": "X30",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "dd5f8a94": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#38",
+  "question": "X33",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "5eb23e2c": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#39",
+  "question": "X36",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "2845e561": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#40",
+  "question": "X39",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "1a12a01d": {
+  "source": "evals/results/20261117T-holdout/shard-2.jsonl#41",
+  "question": "X42",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ }
+}

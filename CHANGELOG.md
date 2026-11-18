@@ -326,6 +326,16 @@ of Greenwich, and its greeting no longer promises a plan step the default
 workflow does not have. A run through the Docker image with a real key, called
 from a signed-in browser, finished in 68 seconds for 'eight tenths of a cent'.
 
+**The database is versioned, and the harness met questions it was not shaped for.** A
+`schema_version` stamp and numbered migrations bring an older database forward in place, and a
+database from a newer release is refused with a plain sentence. The rate-limit retry went from
+three attempts to five. A hold-out set of 42 questions, written by authors that never saw the
+harness's answers and signed by the owner, was run once at '$1.355': 113 of 126 answers right on
+the key, 97 on a stricter reading, none blocked by a rate limit. Two of seven preregistered bars
+were missed. One confirmation stood beside a wrong year taken from a superseded licence, and of
+nine wrong answers three carried a caution that pointed at them. The release was held for the
+owner on the first. The report is `docs/reviews/2026-11-17-holdout-run.md`.
+
 ## [0.1.0] — 2026-09-12
 
 ### Added

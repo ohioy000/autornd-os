@@ -1,0 +1,134 @@
+{
+ "0d815e39": {
+  "verdict": "wrong",
+  "note": "second reading over the whole answer: no mention of Article 30(5) or where the 250 figure stands; key item 2 missing"
+ },
+ "fd11a3fa": {
+  "verdict": "wrong",
+  "note": "second reading: says part b is a mandatory automatic lock; the control's part b is a choice of actions; key item 3 missing"
+ },
+ "f19cb915": {
+  "verdict": "wrong",
+  "note": "second reading: names the 2015 licence as the one in force; the key is the 2025 licence"
+ },
+ "7c596ecb": {
+  "verdict": "wrong",
+  "note": "second reading: gives the HTML Standard's handling as the reason; the Recommendation's note says assistive technology no longer needs to parse HTML. Borderline: a reason from the Understanding document"
+ },
+ "a0b8e4d6": {
+  "verdict": "wrong",
+  "note": "second reading: 'more than 18 m'; key is '18 m or more'; the answer itself flags the comparator as unconfirmed. Borderline"
+ },
+ "e69584da": {
+  "verdict": "wrong",
+  "note": "second reading: says Revision 2 is 'Superseded, not Withdrawn' and that the PDF carries no banner; the key is Withdrawn 14 May 2024"
+ },
+ "0708d1ab": {
+  "verdict": "wrong",
+  "note": "second reading: the 2009 buffer interval is left 'NOT ANSWERED'; the key item is 3 seconds"
+ },
+ "567dc511": {
+  "verdict": "wrong",
+  "note": "second reading: gives 45 degC/W and 150 degC; the datasheet states none"
+ },
+ "d095157e": {
+  "verdict": "wrong",
+  "note": "second reading: TI 8.0 and a limit of 10; key is TI 16 and a limit of 50"
+ },
+ "6053d825": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "74721f7a": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "cf9d6d10": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "2867feec": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "193145c7": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "742e120a": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "96f3d649": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "870f01a5": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "0dffde29": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "b407e2c7": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "fb0cd4bd": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "7516725a": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "4a79b3fe": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "f5a88361": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "e0e45bf7": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "d800082d": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "ff9142de": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "037eb5cd": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "e8ad7093": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "3b895766": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "203ffe78": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "780455bf": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "06ec2fc9": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ },
+ "35bc9558": {
+  "verdict": "right",
+  "note": "second reading over the whole answer: every key item present and right"
+ }
+}

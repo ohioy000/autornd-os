@@ -12,12 +12,24 @@ first for the rules. They stay as they are.
   Docker build.
 - The acceptance run is done and written up: `docs/reviews/2026-11-17-acceptance-run.md`.
   259 of 264 right on the key, about '$0.009' an answer, one of six bars missed.
-- The Docker image and the page have been run by hand.
-- The release is drafted in `docs/release-notes.md`. It is not tagged.
+- The hold-out run is done and written up: `docs/reviews/2026-11-17-holdout-run.md`. 42 questions
+  nobody shaped the harness against, 113 of 126 right on the key (97 on a stricter reading),
+  '$1.355'. **Bar 2 was missed: one confirmation stood beside a wrong year. The preregistration
+  holds the release for the owner.** Bar 4 was missed again.
+- The database has numbered migrations and a refusal of a newer database; the rate-limit retry is
+  five attempts; the Docker image has been run with a real key and a signed-in browser; an agent
+  started the project from the README alone and found one real risk (the image carried `.env`),
+  now fixed.
+- The release is drafted in `docs/release-notes.md`. **It is not tagged and no version is named.**
 
 ## Open, in the order that matters
 
-1. **Tag the release.** The owner picks the version; the recommendation is 0.2.0. The notes are written. 1.0 waits for a hold-out run of questions nobody shaped the harness against, a completed run through the container with a real key, a migration tool or an explicit no-upgrade promise, and a person other than the builder starting it from the README.
+1. **The owner decides the release.** The hold-out run missed its bar 2, so the release is held
+   (`docs/reviews/2026-11-17-holdout-run.md`, "What it says for the release"). The choices are to
+   release with the limit stated, or to take a ruling on a guard first. Of the four conditions
+   for 1.0, three are met: the container ran with a real key, the database migrates, and the
+   hold-out run was made, though it missed bar 2. The fourth, a person other than the builder
+   starting it from the README, is not done: an agent did it, which is not the same.
 2. **A second human reading** of the acceptance answers was offered and declined on 2026-11-17; the release goes out on the two-reader reading. Verdicts are in
    `docs/traces/20261117T-acceptance-reading-*`.
 3. **Why the answer-step prompt trips a content filter on one frontier model.** Not looked for.
