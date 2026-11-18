@@ -6,7 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-Nothing yet.
+Measured, not changed: on 2026-11-18 a frontier model asked directly, with web
+search, was right on all 42 hold-out questions where the harness was right on
+113 of its 126 answers, at about nine times the cost an answer. The 0.2.0
+claim of equivalent accuracy with a frontier model holds only for the questions
+the harness was shaped against. The report is
+`docs/reviews/2026-11-18-frontier-direct-holdout.md`; `docs/MODELS.md` and the
+release notes are corrected. Two probes changed: the frontier probe asks the
+hold-out set on request, and the blind-reading packet builder reads its rows.
 
 ## [0.2.0] — 2026-11-17
 

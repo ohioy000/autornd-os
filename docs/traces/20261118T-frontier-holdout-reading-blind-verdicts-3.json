@@ -1,0 +1,100 @@
+{
+  "d2e2430f": {
+    "verdict": "right",
+    "stated": "Canada 1.0 mW/cm2 with test load; US 1 mW/cm2 before acquisition; US 5 mW/cm2 after acquisition",
+    "evidence": "(a) 'Canada - 1.0 mW/cm2 ... with the prescribed test load in place'; (b) 'United States, before acquisition by a purchaser - 1 mW/cm2 ... at any point 5 cm or more from the external surface'; (c) 'after acquisition - 5 mW/cm2 ... at any such point'; also says Canadian 5.0 is only the no-test-load figure.",
+    "outside_wrong": false,
+    "note": "All three key items stated correctly; the Canadian 5.0 no-test-load remark matches the key's note."
+  },
+  "5ef39cb5": {
+    "verdict": "right",
+    "stated": "2.0 hours at 93 dBA; L(ex,8) ceiling 87 dBA",
+    "evidence": "'2.0 hours per employee per 24-hour period at 93 dBA'; 'Section 7.4(b) caps the 8-hour-normalised noise exposure level at 87 dBA.'",
+    "outside_wrong": false,
+    "note": "Both key items right; the added remark about a March 2026 proposed amendment is a caveat that I cannot verify from the packet."
+  },
+  "485f37a9": {
+    "verdict": "right",
+    "stated": "4 W EIRP; 25 mW per 3 kHz peak PSD; 2025 licence commencing 1 October 2025",
+    "evidence": "'Maximum EIRP: 4 W ... in 2400-2483.5 MHz'; 'radiated peak power spectral density goes above 25 mW per 3 kHz'; 'Year made: 2025 ... Class Licence 2025 ... 1 October 2025 start date, and the 2015 licence it replaced'.",
+    "outside_wrong": false,
+    "note": "All three key items committed to and right; caveats about drawing on the consultation draft do not change the stated figures."
+  },
+  "2a16b873": {
+    "verdict": "right",
+    "stated": "ELV 87 dB(A) and 140 dB(C); protector attenuation not counted for the upper action value (only for the limit values, reg 4(5))",
+    "evidence": "'Daily or weekly personal noise exposure: 87 dB(A)'; 'Peak sound pressure: 140 dB(C)'; 'No, the attenuation of hearing protectors cannot be counted when judging whether the upper exposure action value has been reached. Regulation 4(5) allows ... only when applying the exposure limit values.'",
+    "outside_wrong": false,
+    "note": "All three key items right; action values quoted (85 dB(A)/137 dB(C)) are correctly labelled as action values, not limits."
+  },
+  "453ca32e": {
+    "verdict": "right",
+    "stated": "CO 20 ppm 8-hr and 100 ppm 15-min; second pair 30/200 ppm for underground mining and tunnelling only until 21/8/23; no longer applies on 17 Nov 2026",
+    "evidence": "'Long-term (8-hour TWA): 20 ppm (23 mg/m3)'; 'Short-term (15-minute): 100 ppm (117 mg/m3)'; 'Limits applicable to underground mining & tunnelling industries ONLY until 21/8/23'; 'No ... ran out on 21 August 2023, more than three years ago.'",
+    "outside_wrong": false,
+    "note": "All four key items right; the answer correctly identifies the 30/200 pair as the transitional mining pair, not the current WEL."
+  },
+  "b63e1684": {
+    "verdict": "right",
+    "stated": "sprinklers above 11 m; previously 30 m; second stair at 18 m or more; effective 30 September 2026",
+    "evidence": "'top storey more than 11m above ground level (paragraph 7.4)'; 'The trigger height was 30m; the 2020 amendments cut it from 30m to 11m.'; 'The threshold is a top storey of 18m or more'; '30 September 2026 is the date those amendments take effect in England.'",
+    "outside_wrong": false,
+    "note": "All four key items right, with 18 m correctly attached to the second stair and not to sprinklers."
+  },
+  "b48c9815": {
+    "verdict": "right",
+    "stated": "2022 R_inf = 10 973 731.568 157(12) m^-1, u = 0.000 012 m^-1, relative 1.1e-12; 2018 value 10 973 731.568 160(21) m^-1",
+    "evidence": "'R_inf = 10 973 731.568 157(12) m-1'; 'Standard uncertainty: 0.000 012 m-1'; 'Relative standard uncertainty: 1.1 x 10-12'; 'CODATA 2018 value it replaced: R_inf = 10 973 731.568 160(21) m-1'.",
+    "outside_wrong": false,
+    "note": "Both the 2022 value with uncertainty and the 2018 replaced value match the key; the 2018 value is correctly labelled as the replaced one."
+  },
+  "422b24d3": {
+    "verdict": "right",
+    "stated": "No RF impedance ohms-at-frequency limit; only a qualitative low-enough-impedance requirement; 2.5 milliohm dc resistance per joint",
+    "evidence": "'sets no maximum RF impedance in ohms at a stated frequency for a Class R joint'; 'must be kept low enough to prevent interference at the frequencies of interest'; 'Each joint in the path is limited to 2.5 milliohms of DC resistance'; '2.5-milliohm figure is historical and has no RF design basis'.",
+    "outside_wrong": false,
+    "note": "Both key items right; the answer does not treat the 2.5 milliohm dc limit as an RF limit."
+  },
+  "25b0cd12": {
+    "verdict": "right",
+    "stated": "Current NTDE 1983-2001; fifth epoch data 2002-2020; proposed release year 2029",
+    "evidence": "'currently based on the 1983-2001 National Tidal Datum Epoch'; 'water level data spanning 2002-2020'; 'New NTDE products are currently proposed for release in 2029.'",
+    "outside_wrong": false,
+    "note": "All three key items right; the answer does not treat the 2002-2020 epoch as already in force."
+  },
+  "855e8ba4": {
+    "verdict": "right",
+    "stated": "11th Edition buffer at least 2 s; default walking speed 3.5 ft/s; 2009 MUTCD buffer at least 3 s",
+    "evidence": "'Buffer interval minimum (11th Edition): At least 2 seconds'; 'Default walking speed ... 3.5 feet per second' (with up to 4 ft/s option for extended push button); 'Buffer interval minimum in the 2009 MUTCD: At least 3 seconds.'",
+    "outside_wrong": false,
+    "note": "All three key items right; the 4 ft/s extended-push-button option matches the key's parenthetical."
+  },
+  "75703d34": {
+    "verdict": "right",
+    "stated": "Aboveground 1,320 gal or less; completely buried 42,000 gal or less; only containers of 55 gal or more counted; both must be met",
+    "evidence": "'Aboveground: aggregate storage capacity of 1,320 US gallons or less'; 'Completely buried: storage capacity of 42,000 US gallons or less'; 'Only containers with a capacity of 55 US gallons or greater are counted'; 'The exemption requires both conditions to be met'.",
+    "outside_wrong": false,
+    "note": "All key items right, including the combination rule; the exclusion lists are extra and consistent with the rule."
+  },
+  "2152194d": {
+    "verdict": "right",
+    "stated": "1 TR = 3516.8528 W (3.516853 kW); 10 TR = 35.17 kW",
+    "evidence": "'1 TR = 3516.8528 W = 3.516853 kW'; '10 TR x 3.516853 kW/TR = 35.16853 kW'; 'Rounded to four significant figures: 35.17 kW'.",
+    "outside_wrong": false,
+    "note": "Factor and result both match the key; no thermochemical Btu or 3.5 kW rule of thumb used."
+  },
+  "7de23984": {
+    "verdict": "right",
+    "stated": "No theta-JA, max junction temperature or power dissipation found; from memory the datasheet does not publish them at all (premise may not hold)",
+    "evidence": "'I could not find a junction-to-ambient thermal resistance for the 28-pin PDIP, a maximum junction temperature, or a total power dissipation figure'; 'From memory ... this datasheet family does not publish those three values at all.'; 'there may be no theta-JA or TJ(max) to quote from DS40002061B.'",
+    "outside_wrong": false,
+    "note": "Judged right because it states the datasheet does not publish the three values and quotes no wrong figure, although it flags this as unconfirmed memory and hedges with 'may'; the absolute-maximum-ratings list it gives (per-pin 40 mA, VCC/GND 200 mA) is consistent with the key's note."
+  },
+  "cdec9780": {
+    "verdict": "right",
+    "stated": "130 W at TC = 25 C; derating 0.87 W/C; 64.75 W (about 65 W) at TC = 100 C",
+    "evidence": "'Maximum power dissipation at TC = 25 C: 130 W'; 'Linear derating factor: 0.87 W/C'; 'PD(100 C) = 130 W - 0.87 W/C x (100 - 25) C = 130 W - 65.25 W = 64.75 W (about 65 W)'.",
+    "outside_wrong": false,
+    "note": "All three key items right; the thermal-resistance cross-check (about 65.2 W) is consistent and does not conflict."
+  }
+}

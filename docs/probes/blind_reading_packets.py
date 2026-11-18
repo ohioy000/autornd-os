@@ -37,11 +37,14 @@ by_question: dict[str, list] = {}
 for unit in units:
     code = hashlib.sha256(f"{SEED}|{unit['_source']}".encode()).hexdigest()[:8]
     answer = unit.get("answer") or ""
-    codes[code] = {"source": unit["_source"], "question": unit.get("question"),
+    # A harness unit names its question under "question"; a frontier-direct
+    # row (frontier_direct_probe.py) names it under "id".
+    qid = unit.get("question") or unit.get("id")
+    codes[code] = {"source": unit["_source"], "question": qid,
                    "repeat": unit.get("repeat"), "status": unit.get("status"),
                    "delivered": bool(answer)}
-    if answer and unit.get("question") in keys:
-        by_question.setdefault(unit["question"], []).append((code, answer))
+    if answer and qid in keys:
+        by_question.setdefault(qid, []).append((code, answer))
 (OUT / "codes.json").write_text(json.dumps(codes, indent=1))
 rng = random.Random(SEED)
 for qid, answers in by_question.items():

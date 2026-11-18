@@ -40,14 +40,19 @@ The evidence, in the order we met it:
 5. **A small model from a frontier lab, tried in one seat, was level and dearer.** In the
    recompute seat `claude-haiku-5.5` and the model it replaced each scored 9 of 13, at one and
    a half times the cost.
-6. **A frontier model asked directly is just as right, faster, and about six times dearer.**
-   On 22 of the professional questions `claude-fable-5.2`, with web search on and no harness,
+6. **On the questions we shaped the harness against, a frontier model asked directly is just as
+   right, faster, and about six times dearer.** On 22 of the professional questions `claude-fable-5.2`, with web search on and no harness,
    was right on all 22 in 8.5 seconds an answer for '$0.071'. The harness is right on the same
    22 in about a minute for '$0.011' (`docs/reviews/2026-11-17-frontier-direct.md`).
 7. **More reasoning effort did not change the answers.** The same model at high effort was
    right on 14 of 14, as at medium, for about one and a half times the cost. One call at
    maximum effort cost '$1.05' (`docs/reviews/2026-11-17-frontier-effort-and-seat.md`).
-
+8. **On 42 new questions, a frontier model asked directly was more accurate, faster, and about
+   nine times dearer.** The same model, with web search on and no harness, was right on all 42
+   in 11.2 seconds an answer for '$0.0986'. The harness was right on 113 of its 126 answers
+   (89.7 percent) in 107 seconds for '$0.0108'. These questions were written after the harness
+   was fixed, by authors that never saw its answers
+   (`docs/reviews/2026-11-18-frontier-direct-holdout.md`).
 ### What the direct comparison changed
 
 Before 17 November this file argued from our own runs alone. The comparison with a frontier
@@ -57,18 +62,25 @@ model corrected it in two ways, and both are kept here plainly:
   better answers. It is the same answers for about a sixth of the price, with a record of
   every passage read.
 - **The price gap is about six times, not the fifteen to thirty we predicted.** A frontier
-  model's answer costs cents, not dimes.
+  model's answer costs cents, not dimes. On the 42 new questions it was about nine times.
+- **On new questions the frontier model is the more accurate** (added 18 November). It was right
+  on 42 of 42 against the harness's 113 of 126, ten points apart. The first two points above
+  were measured on questions the harness was shaped against, where both were at the ceiling.
+  The hold-out shows the gap that shaping hid. The harness's misses were mostly of what was
+  read: a stale instrument's year, a withdrawn status, figures in long PDFs.
 
 So the thesis is narrower than a reader might hope: **inexpensive models, handed the right
-page, match a frontier model on these questions; they do not beat it.** What you buy with the
-harness is cost at volume, a checkable record, and freedom from any one model. What you give up
-is speed and simplicity.
+page, match a frontier model on the questions the harness was shaped against, and on new
+questions they are about ten points behind it. They do not beat it on either.** What you buy
+with the harness is cost at volume, a checkable record, and freedom from any one model. What you
+give up is speed, simplicity and, on new questions, about ten points of accuracy.
 
 ### Why this holds as cheaper frontier models arrive
 
-- **There is little left for a better answerer to win.** Our question sets are at the ceiling.
-  A model that is right 144 times in 144 cannot be beaten on that set, only matched for more or
-  less money.
+- **On the sets we shaped it against, there is little left for a better answerer to win.** Those
+  question sets are at the ceiling. A model that is right 144 times in 144 cannot be beaten on
+  that set, only matched for more or less money. On new questions there is room: the harness
+  was right on 113 of 126, and a frontier model asked directly on 42 of 42.
 - **The answer step is a small part of the bill.** A lookup answer costs about '$0.011' and a
   calculation about '$0.004' (`docs/reviews/2026-11-16-needs-calculation.md`). In the 144
   lookup answers of 15 November the answer step was about 16 percent of the cost and grounding
@@ -96,10 +108,13 @@ is speed and simplicity.
   on 17 November: the model returned no text and the provider reported a content filter, on
   two questions. Something in our answer request trips it; we did not look for what. So this
   file makes no claim about the harness making a frontier model better or cheaper.
-- **It does not claim the harness is more accurate than a frontier model, or less. The claim is
-  equivalent accuracy.** Asked directly, the frontier model was right on every question we put
-  to it (36 answers). On the same 22 questions the harness's acceptance answers were right 131
-  of 132. The two are equivalent on these questions, and the samples are too small to say more.
+- **It does not claim the harness is as accurate as a frontier model on questions it was not
+  shaped against. On those it is less accurate.** Asked directly, the frontier model was right
+  on every question we put to it: 22 of 22 on the questions the harness was shaped against, and
+  42 of 42 on new ones. On the same 22 the harness's acceptance answers were right 131 of 132,
+  so the two were equivalent there and the samples are too small to say more. On the 42 new
+  questions the harness was right on 113 of 126, and the gap of ten points is outside what one
+  answer's noise explains.
 - **It does not claim the harness is the better buy for everyone.** For a handful of questions
   a frontier model with search is simpler and faster. The harness earns its keep at volume, or
   where the record of what was read matters.

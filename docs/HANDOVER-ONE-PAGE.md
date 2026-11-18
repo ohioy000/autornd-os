@@ -22,6 +22,11 @@ first for the rules. They stay as they are.
   now fixed.
 - **0.2.0 is released** (tag `v0.2.0`, 2026-11-17), on the owner's word "Release 0.2.0, limit
   stated". The notes are `docs/release-notes.md`.
+- **Added 2026-11-18: a frontier model asked directly was right on all 42 hold-out questions,**
+  against the harness's 113 of 126, at about nine times the cost an answer ('$0.0986' against
+  '$0.0108') and a tenth of the time. `docs/reviews/2026-11-18-frontier-direct-holdout.md`,
+  '$4.14' of '$5.00'. Bar 1 was missed. The 0.2.0 claim of equivalent accuracy holds only for the
+  questions the harness was shaped against, and `docs/MODELS.md` and the release notes now say so.
 
 ## Open, in the order that matters
 
@@ -31,7 +36,9 @@ first for the rules. They stay as they are.
    nothing (`docs/MODELS.md`), and a free check on years and names would fix one symptom. 1.0 now
    waits for **a person other than the builder starting the project from the README** (an agent
    did it, which is not the same), using `docs/first-try-note.md`, and for the owner's word to
-   lift the held bar. The container run, the migrations and the retry are done.
+   lift the held bar. The container run, the migrations and the retry are done. The frontier
+   comparison of 2026-11-18 (item 10) bears on how 1.0 is described, since the harness is less
+   accurate than a frontier model on new questions.
    Also the owner's: `CLAUDE.md` rule 12 says there is no migration tool, and the database now
    has numbered migrations.
 2. **A second human reading** of the acceptance answers was offered and declined on 2026-11-17; the release went out on the two-reader reading. Verdicts are in
@@ -49,6 +56,13 @@ first for the rules. They stay as they are.
    (`docs/reviews/2026-11-16-user-path-audit.md`, left open 3).
 9. **Not seen live:** whether the 1,800-second time budget cuts a node already in flight. The
    watchdog tests cancel calls mid-flight; no live run has been timed out on purpose.
+
+10. **The accuracy gap on new questions.** The harness missed 13 answers on 11 questions that a
+    frontier model asked directly answered right. The misses were of what was read: a stale
+    instrument's year (X31), a withdrawn status on a cover page (X20), figures in long PDFs, two
+    over the fetch's 15 MB limit (X38, X41). None was tested as a cause. What to do is a design
+    question and needs a ruling: the lookup could find or read pages differently. It is not an
+    instrument repair.
 
 ## How to work here
 
