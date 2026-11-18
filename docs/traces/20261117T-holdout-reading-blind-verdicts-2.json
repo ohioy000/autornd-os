@@ -1,0 +1,289 @@
+{
+ "a0d5f799": {
+  "verdict": "right",
+  "stated": "31 Dec 2028; 26 May 2024; 26 Sep 2024",
+  "evidence": "Last date 31 December 2028. Application 26 May 2024. Agreement 26 September 2024.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "2667f298": {
+  "verdict": "right",
+  "stated": "31 Dec 2028; 26 May 2024; 26 Sep 2024",
+  "evidence": "31 December 2028 (inclusive); application no later than 26 May 2024; agreement no later than 26 September 2024.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "cb56151d": {
+  "verdict": "right",
+  "stated": "31 Dec 2028; 26 May 2024; 26 Sep 2024",
+  "evidence": "31 DECEMBER 2028; 26 MAY 2024; 26 SEPTEMBER 2024.",
+  "outside_wrong": false,
+  "note": "cites Regulation (EU) 2023/1127 as the amending act; other answers cite 2023/607; not a key item and not checked"
+ },
+ "870f01a5": {
+  "verdict": "right",
+  "stated": "AC 50-1000 V; DC 75-1500 V; 24 V AC out of scope",
+  "evidence": "AC: 50 V to 1 000 V. DC: 75 V to 1 500 V. VERDICT: NO - 24 V AC < 50 V AC.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "12008dbe": {
+  "verdict": "right",
+  "stated": "AC 50-1000 V; DC 75-1500 V; 24 V AC out of scope",
+  "evidence": "Equipment designed for use at 24 V AC is outside the scope; 24 V AC is below the 50 V AC lower bound.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "170dad8f": {
+  "verdict": "right",
+  "stated": "AC 50-1000 V; DC 75-1500 V; 24 V AC out of scope",
+  "evidence": "AC: 50 V to 1 000 V. DC: 75 V to 1 500 V. Equipment designed for use at 24 V AC - OUTSIDE the scope.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "77f9a6ec": {
+  "verdict": "right",
+  "stated": "Yes, applies from 11 Sep 2026 even for a 2025 product; 24 h; 72 h; 14 days after measure available",
+  "evidence": "Yes. ... Article 14 into application from 11 September 2026 ... 24 hours ... 72 hours ... no later than 14 days after a corrective or mitigating measure is available.",
+  "outside_wrong": false,
+  "note": "It rests the point on Article 71(2) and Article 69 point 2 rather than naming Article 69(3), but the conclusion matches the key."
+ },
+ "1c48cbc3": {
+  "verdict": "right",
+  "stated": "Yes, applies from 11 Sep 2026 incl. products placed before 11 Dec 2027 (Art 69(3)); 24 h; 72 h; 14 days after measure available",
+  "evidence": "Reporting under Article 14 CRA has applied since 11 September 2026 ... including products placed on the market before 11 December 2027 ... within 24 hours ... within 72 hours ... no later than 14 days after that measure is available.",
+  "outside_wrong": true,
+  "note": "Section 4.6 says a 14-day period from 17 Nov falls 'on or before 31 November', which is not a date; it then gives 1 December 2026. Not a key item."
+ },
+ "ab104a50": {
+  "verdict": "right",
+  "stated": "Yes, applies from 11 Sep 2026; Art 69(3) carve-out; 24 h; 72 h; 14 days after remedy available",
+  "evidence": "Yes - the manufacturer must report now ... Art. 69(3) expressly derogates ... within 24 hours ... within 72 hours ... 14 days after a corrective or mitigating measure is available.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "534ec7ef": {
+  "verdict": "right",
+  "stated": "(a) 200 kOhm; (b) 40 kOhm",
+  "evidence": "(a) ... 200 kΩ minimum (500 Ω/V × 400 V). (b) ... 40 kΩ minimum (100 Ω/V × 400 V).",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0e5be3bf": {
+  "verdict": "right",
+  "stated": "(a) 200 kOhm; (b) 40 kOhm",
+  "evidence": "(a) 500 x 400 = 200 000 Ω = 200 kΩ. (b) 100 x 400 = 40 000 Ω = 40 kΩ.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a680a5b3": {
+  "verdict": "right",
+  "stated": "(a) 200 kOhm; (b) 40 kOhm",
+  "evidence": "R_min = 500 ohm/V x 400 V = 200 kΩ ... R_min = 100 ohm/V x 400 V = 40 kΩ.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "33710f57": {
+  "verdict": "right",
+  "stated": "No (Art 2(1) of 2022/30 disapplies); 1 August 2025",
+  "evidence": "A1. NO. ... Article 2(1)(a) ... disapplies all three requirements. A2. From 1 August 2025.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "54615b9b": {
+  "verdict": "right",
+  "stated": "No (Art 2(1) disapplies); 1 August 2025",
+  "evidence": "No. Article 2(1) of Delegated Regulation (EU) 2022/30 disapplies all three points ... 1 August 2025.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "afc13c1e": {
+  "verdict": "right",
+  "stated": "No (Art 2(1) disapplies); 1 August 2025",
+  "evidence": "NO. They are expressly disapplied. ... 1 AUGUST 2025.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0bd1de8d": {
+  "verdict": "right",
+  "stated": "14 rounds; 128 bits; 15 round keys",
+  "evidence": "Nr = 14; 128 bits; 15 (Nr + 1). Stating '14 round keys' would be wrong.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e05bbc0f": {
+  "verdict": "right",
+  "stated": "14 rounds; 128 bits; 15 round keys",
+  "evidence": "14 rounds, 128-bit block, 15 round keys, each a four-word array.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d30db712": {
+  "verdict": "right",
+  "stated": "14 rounds; 128 bits; 15 round keys",
+  "evidence": "Rounds: 14. Block size: 128 bits. Round keys consumed: 15 (Nr + 1).",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "9e4443d6": {
+  "verdict": "right",
+  "stated": "17 families; 14 families; Withdrawn 14 May 2024, superseded by Rev. 3",
+  "evidence": "17 families ... Revision 2 defined 14 families ... 'Withdrawn on May 14, 2024. Superseded by SP 800-171 Rev. 3.'",
+  "outside_wrong": true,
+  "note": "Its list of the 17 Rev. 3 families has Contingency Planning and omits Supply Chain Risk Management; it differs from b40183cc's list (which adds Planning, System and Services Acquisition and Supply Chain Risk Management). The counts are right; the family list looks wrong. Not a key item."
+ },
+ "e69584da": {
+  "verdict": "wrong",
+  "stated": "17 families; 14 families; status 'Superseded', not Withdrawn",
+  "evidence": "Rev. 2 is Superseded, not Withdrawn and not Obsoleted.",
+  "outside_wrong": true,
+  "note": "Key says status is Withdrawn 14 May 2024. This answer says Superseded and explicitly denies Withdrawn, so the status item is wrong. Its Rev. 3 family list also looks wrong (lists Contingency Planning, omits Planning)."
+ },
+ "b40183cc": {
+  "verdict": "right",
+  "stated": "17 families; 14 families; Withdrawn on 14 May 2024, superseded by Rev. 3",
+  "evidence": "defines 17 families ... Revision 2 - defined 14 families ... 'Withdrawn on May 14, 2024. Superseded by SP 800-171 Rev. 3.'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "5ae86f00": {
+  "verdict": "right",
+  "stated": "forkserver; fork; spawn when no writable temp dir (3.15.1)",
+  "evidence": "forkserver ... fork ... when there is no writable temporary directory ... Changed in version 3.15.1.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bb3bb6cb": {
+  "verdict": "right",
+  "stated": "forkserver; fork; spawn when no writable temp dir (3.15.1)",
+  "evidence": "forkserver ... fork ... When there is no writable temporary directory - for example on a read-only file system.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "cf9d6d10": {
+  "verdict": "right",
+  "stated": "forkserver; fork; spawn when no writable temp dir (3.15.1)",
+  "evidence": "forkserver ... fork ... When there is no writable temporary directory ... (documented as a 3.15.1 change).",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b03d8bcf": {
+  "verdict": "right",
+  "stated": "65536 bytes; 65536 pages; 2^32 bytes (4 GiB); 2^48 pages",
+  "evidence": "65536 bytes = 2^16; 65536 pages; 4294967296 bytes = 4 GiB; 2^48 pages.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ef42757f": {
+  "verdict": "right",
+  "stated": "65536 bytes; 65536 pages; 2^32 bytes (4 GiB); 2^48 pages",
+  "evidence": "65,536 bytes; 65,536 pages; 4,294,967,296 bytes = 4 GiB; 281,474,976,710,656 pages = 2^48.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f24a7db8": {
+  "verdict": "right",
+  "stated": "65536 bytes; 65536 pages; 2^32 bytes (4 GiB); 2^48 pages",
+  "evidence": "65,536 bytes (64 KiB); 65,536 pages; 4,294,967,296 bytes (4 GiB); 2^48 pages.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f2a58394": {
+  "verdict": "right",
+  "stated": "(a) 1.0; (b) 1; (c) 5 mW/cm2",
+  "evidence": "(a) 1.0 mW/cm2 with the prescribed test load; (b) 1 mW/cm2 prior to acquisition; (c) 5 mW/cm2 thereafter.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "fc6606cf": {
+  "verdict": "right",
+  "stated": "(a) 1.0; (b) 1; (c) 5 mW/cm2",
+  "evidence": "The correct three answers are 1.0 mW/cm2, 1 mW/cm2, and 5 mW/cm2 for (a), (b), and (c).",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "4ee77ba7": {
+  "verdict": "right",
+  "stated": "(a) 1.0; (b) 1; (c) 5 mW/cm2",
+  "evidence": "(a) 1.0 mW/cm2; (b) 1 mW/cm2 prior to acquisition; (c) 5 mW/cm2 thereafter.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d698a846": {
+  "verdict": "right",
+  "stated": "87 dB(A); 140 dB(C); No, protector attenuation not counted for upper action value",
+  "evidence": "ANSWER TO ASK 1 ... 87 dB(A) ... 140 dB(C). ANSWER TO ASK 2 - NO.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "73f6cd3f": {
+  "verdict": "right",
+  "stated": "87 dB(A); 140 dB(C); No",
+  "evidence": "87 dB(A) ... and 140 dB(C) ... No. The attenuation ... may NOT be counted when judging whether the upper exposure action value has been reached.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "96f3d649": {
+  "verdict": "right",
+  "stated": "87 dB(A); 140 dB(C); No",
+  "evidence": "87 dB(A) ... 140 dB(C) ... No. ... must not be counted ... upper exposure action value.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "5497014d": {
+  "verdict": "right",
+  "stated": "2022: 10 973 731.568 157 m^-1; u = 0.000 012 m^-1; 2018: 10 973 731.568 160(21) m^-1",
+  "evidence": "R_infinity = 10 973 731.568 157 m^-1; Standard uncertainty = 0.000 012 m^-1; 2018 ... 10 973 731.568 160(21) m^-1.",
+  "outside_wrong": true,
+  "note": "It gives the 2018 relative uncertainty as 1.1 x 10^-12; the other answers and the 21/10.97e6 arithmetic give 1.9 x 10^-12. Not a key item."
+ },
+ "1dd85957": {
+  "verdict": "right",
+  "stated": "2022: 10 973 731.568 157 m^-1; u = 0.000 012 m^-1; 2018: 10 973 731.568 160(21) m^-1",
+  "evidence": "R_infinity (2022) = 10973731.568157 m^-1, u = 0.000012 m^-1; 2018 ... 10 973 731.568 160(21) m^-1.",
+  "outside_wrong": true,
+  "note": "Section 3 writes 157(12) as +/- 0.000 000 000 012 and places the last two digits at the 10^-6 and 10^-7 places; section 4 says the values differ in the third decimal. Both are wrong glosses. The stated figures themselves are right. Not key items."
+ },
+ "9625638a": {
+  "verdict": "right",
+  "stated": "2022: 10 973 731.568 157 m^-1; u = 0.000 012 m^-1; 2018: 10 973 731.568 160(21) m^-1",
+  "evidence": "10 973 731.568 157 ... 0.000 012 ... 10 973 731.568 160 ... published in concise form as 10 973 731.568 160(21) m^-1.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "85e730f5": {
+  "verdict": "right",
+  "stated": "2 seconds; 3.5 ft/s; 3 seconds (2009)",
+  "evidence": "at least 2 seconds ... 3.5 ft/s ... 2009 MUTCD ... at least 3 seconds.",
+  "outside_wrong": true,
+  "note": "It says the 2009 default walking speed was 4 ft/s and older/disabled 3 ft/s; the answer itself rates that medium confidence and takes it from memory. Likely wrong and not a key item."
+ },
+ "0708d1ab": {
+  "verdict": "wrong",
+  "stated": "2 seconds; 3.5 ft/s; 2009 value not given (answer says NOT ANSWERED)",
+  "evidence": "#3 ... ANSWER: NOT ANSWERED - blocked. ... Not established from the sources retrieved. (It mentions a '3 seconds' recollection only as a search target and says not to publish it.)",
+  "outside_wrong": false,
+  "note": "Item 3 (2009 buffer minimum, key: at least 3 seconds) is not answered. Items 1 and 2 are right."
+ },
+ "179de50a": {
+  "verdict": "right",
+  "stated": "2 seconds; 3.5 ft/s; 3 seconds (2009)",
+  "evidence": "at least 2 seconds ... 3.5 feet per second ... 2009 MUTCD ... at least 3 seconds.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "567dc511": {
+  "verdict": "wrong",
+  "stated": "theta-JA 45 degC/W; TJ max 150 degC",
+  "evidence": "θJA = 45 °C/W ... TJ(max) = 150 °C",
+  "outside_wrong": true,
+  "note": "Key says the datasheet states none of these. The answer gives figures for all."
+ },
+ "3e53be3f": {
+  "verdict": "right",
+  "stated": "No theta-JA, no max junction temperature, no power dissipation stated",
+  "evidence": "Junction-to-ambient thermal resistance (degC/W): not specified. ... Maximum junction temperature or total power dissipation: not specified.",
+  "outside_wrong": false,
+  "note": ""
+ }
+}

@@ -12,14 +12,29 @@ first for the rules. They stay as they are.
   Docker build.
 - The acceptance run is done and written up: `docs/reviews/2026-11-17-acceptance-run.md`.
   259 of 264 right on the key, about '$0.009' an answer, one of six bars missed.
-- The Docker image and the page have been run by hand.
-- The release is drafted in `docs/release-notes.md`. It is not tagged.
+- The hold-out run is done and written up: `docs/reviews/2026-11-17-holdout-run.md`. 42 questions
+  nobody shaped the harness against, 113 of 126 right on the key (97 on a stricter reading),
+  '$1.355'. **Bar 2 was missed: one confirmation stood beside a wrong year. The preregistration
+  holds the release for the owner.** Bar 4 was missed again.
+- The database has numbered migrations and a refusal of a newer database; the rate-limit retry is
+  five attempts; the Docker image has been run with a real key and a signed-in browser; an agent
+  started the project from the README alone and found one real risk (the image carried `.env`),
+  now fixed.
+- **0.2.0 is released** (tag `v0.2.0`, 2026-11-17), on the owner's word "Release 0.2.0, limit
+  stated". The notes are `docs/release-notes.md`.
 
 ## Open, in the order that matters
 
-1. **Tag the release.** The owner picks the version; the recommendation is 0.2.0. The notes are written. 1.0 waits for a hold-out run of questions nobody shaped the harness against, a completed run through the container with a real key, a migration tool or an explicit no-upgrade promise, and a person other than the builder starting it from the README.
-2. **A second human reading** of the acceptance answers was offered and declined on 2026-11-17; the release goes out on the two-reader reading. Verdicts are in
-   `docs/traces/20261117T-acceptance-reading-*`.
+1. **1.0.** The hold-out run missed its bar 2 (`docs/reviews/2026-11-17-holdout-run.md`), so
+   the owner released 0.2.0 with the limit stated. 1.0 waits for two things: **a ruling on a guard**
+   for a confirmation beside a figure from a superseded source, then a hold-out run that meets all
+   its bars (about '$1.40', with the owner's word); and **a person other than the builder starting
+   it from the README** (an agent did it, which is not the same). The container run, the
+   migrations and the retry are done.
+   Also the owner's: `CLAUDE.md` rule 12 says there is no migration tool, and the database now
+   has numbered migrations.
+2. **A second human reading** of the acceptance answers was offered and declined on 2026-11-17; the release went out on the two-reader reading. Verdicts are in
+   `docs/traces/20261117T-acceptance-reading-*`. The hold-out answers were read the same way.
 3. **Why the answer-step prompt trips a content filter on one frontier model.** Not looked for.
    About '$0.10' a try. Only if someone wants a frontier model in that seat.
 4. **Prose is not checked the way figures are.** The last run's five misses were omissions and a

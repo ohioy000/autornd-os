@@ -1,0 +1,282 @@
+{
+ "0dd094e2": {
+  "verdict": "right",
+  "stated": "SO2 24-h 40; NO2 annual 10",
+  "evidence": "(a) 40 ug/m3; (b) 10 ug/m3",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "9803a32e": {
+  "verdict": "right",
+  "stated": "SO2 24-h 40; NO2 annual 10",
+  "evidence": "(a) 40 ug/m3; (b) 10 ug/m3; 2005 SO2 value was 20",
+  "outside_wrong": false,
+  "note": "Odd remark that part (b) is not carried into a results array, but the value is given."
+ },
+ "47906586": {
+  "verdict": "right",
+  "stated": "above 0.1 % w/w; 45 days; free of charge",
+  "evidence": "Above 0.1 % w/w; within 45 days; free of charge",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "9a3a6935": {
+  "verdict": "right",
+  "stated": "above 0.1 % w/w; 45 days; no charge",
+  "evidence": "0.1 % w/w of the article; 45 days from receipt; No, free of charge",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "07492eef": {
+  "verdict": "right",
+  "stated": "0.1 % w/w; 45 days; no charge",
+  "evidence": "0.1 % w/w; 45 days; No, free of charge",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "11a2d0a3": {
+  "verdict": "right",
+  "stated": "10 substances; cadmium; 22 July 2021",
+  "evidence": "ten entries; cadmium 0,01 %; 22 July 2021",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "668b9eaa": {
+  "verdict": "right",
+  "stated": "10 substances; cadmium; 22 July 2021",
+  "evidence": "Answer: 10; Cadmium; 22 July 2021",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "40ae31b5": {
+  "verdict": "right",
+  "stated": "10 substances; cadmium; 22 July 2021",
+  "evidence": "10 (ten entries); Cadmium; 22 July 2021",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ff9142de": {
+  "verdict": "right",
+  "stated": "TI 16.0; within limit of 50",
+  "evidence": "Adjusted TI = 8.0 x 2 = 16.0; limit is 50; within",
+  "outside_wrong": false,
+  "note": "Adds a conditional caveat about the package cap of 10 but gives the freight-container limit of 50 as its answer."
+ },
+ "3b895766": {
+  "verdict": "right",
+  "stated": "TI 16.0; within limit of 50",
+  "evidence": "TI = 16.0; para 526(b) limit 50; yes within",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d095157e": {
+  "verdict": "wrong",
+  "stated": "TI 8.0; limit 10",
+  "evidence": "TI = 8.0; governing limit is TI <= 10",
+  "outside_wrong": false,
+  "note": "Leaves out the Table 7 factor of 2 (says the 3 m2 area is not an input) and tests against 10 instead of 50. Both key items are wrong."
+ },
+ "06ec2fc9": {
+  "verdict": "right",
+  "stated": "2.5.8 Target Size (Minimum); 24x24; circle 24; AAA 44x44",
+  "evidence": "SC 2.5.8 ... 24 by 24 CSS pixels ... 24 CSS pixel diameter circle ... 44 by 44",
+  "outside_wrong": false,
+  "note": "Refers to a 'project-context note' that is not in the question; harmless."
+ },
+ "203ffe78": {
+  "verdict": "right",
+  "stated": "2.5.8; 24x24; circle 24; AAA 44x44",
+  "evidence": "SC 2.5.8 ... 24 by 24 ... 24 CSS pixel diameter ... 44 by 44 (SC 2.5.5)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "037eb5cd": {
+  "verdict": "right",
+  "stated": "2.5.8; 24x24; circle 24; AAA 44x44",
+  "evidence": "SC 2.5.8 Target Size (Minimum) ... 24 by 24 ... 24 CSS pixel diameter ... 44 by 44 - SC 2.5.5",
+  "outside_wrong": true,
+  "note": "Calls 2.5.5 a 'third, non-normative' criterion in one muddled sentence; 2.5.5 is a normative AAA criterion. Does not touch the key items."
+ },
+ "7e6f9284": {
+  "verdict": "right",
+  "stated": "96 bits; 2^32; 68,719,476,704 bytes",
+  "evidence": "96 bits (12 bytes); 2^32; 2^36-32 bytes = 68,719,476,704 bytes",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "223df70b": {
+  "verdict": "right",
+  "stated": "96 bits; 2^32; 68,719,476,704 bytes",
+  "evidence": "96 bits; 2^32 = 4,294,967,296; 2^36 - 32 = 68,719,476,704 bytes",
+  "outside_wrong": true,
+  "note": "Says IV lengths under 96 bits must use the RBG-based construction. This conflicts with its own statement that the random field must be at least 96 bits, and with answer b407e2c7. Likely wrong, not verifiable from the key."
+ },
+ "b407e2c7": {
+  "verdict": "right",
+  "stated": "96 bits; 2^32; 68,719,476,704 bytes",
+  "evidence": "96 bits (12 bytes); 2^32 = 4,294,967,296; 68,719,476,704 bytes",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "193145c7": {
+  "verdict": "right",
+  "stated": "yes enabled; initdb --no-data-checksums; old and new must match",
+  "evidence": "Yes ... enabled by default; initdb ... --no-data-checksums; same data checksum setting",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e4f69140": {
+  "verdict": "right",
+  "stated": "yes enabled; initdb --no-data-checksums; old and new must match",
+  "evidence": "has data checksums enabled; initdb ... --no-data-checksums; same data-checksum setting",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "5a471edf": {
+  "verdict": "right",
+  "stated": "yes enabled; initdb --no-data-checksums; old and new must match",
+  "evidence": "data checksums enabled; initdb ... --no-data-checksums; identical data checksum settings",
+  "outside_wrong": true,
+  "note": "Says '--no-checksums exists as the initdb spelling' and some builds accept it as a synonym. This is wrong against its own correct option --no-data-checksums."
+ },
+ "e22d5a3b": {
+  "verdict": "right",
+  "stated": "1.28 not supported; 1.25 supported; 1.24 not supported",
+  "evidence": "v1.28 OUTSIDE; v1.25 INSIDE; v1.24 OUTSIDE",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ea5f5ade": {
+  "verdict": "right",
+  "stated": "1.28 not supported; 1.25 supported; 1.24 not supported",
+  "evidence": "v1.28 NO; v1.25 YES; v1.24 NO",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7af2db84": {
+  "verdict": "right",
+  "stated": "L3 300000-600000 ms, default 300000; L2 discouraged 30000-180000, default 120000",
+  "evidence": "Recommended range 300000 to 600000; default 300000; discouraged 30000 to 180000, default 120000",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "2867feec": {
+  "verdict": "right",
+  "stated": "L3 300000-600000 ms, default 300000; L2 discouraged 30000-180000, default 120000",
+  "evidence": "Recommended range: 300000 ms to 600000 ms; default 300000; discouraged 30000-180000, default 120000",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b3518ec3": {
+  "verdict": "right",
+  "stated": "L3 300000-600000 ms, default 300000; L2 discouraged 30000-180000, default 120000",
+  "evidence": "300000 ms to 600000 ms; 300000 ms; discouraged: 30000 ms - 180000 ms, 120000 ms",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "35bc9558": {
+  "verdict": "right",
+  "stated": "2 hours; 87 dBA",
+  "evidence": "93 dBA: 2 hours; Lex,8 ... 87 dBA",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "780455bf": {
+  "verdict": "right",
+  "stated": "2 hours; 87 dBA",
+  "evidence": "93 dBA / 2 h; Lex,8 that exceeds 87 dBA",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "742e120a": {
+  "verdict": "right",
+  "stated": "2.0 hours; 87 dBA",
+  "evidence": "93 dBA ... 2.0 hours; ceiling ... 87 dBA",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "dc94cb44": {
+  "verdict": "right",
+  "stated": "20 ppm and 100 ppm; second pair 30/200 for underground mining and tunnelling only until 21 Aug 2023; no longer applies",
+  "evidence": "20 / 100; underground mining and tunnelling industries only; No",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "dd5f8a94": {
+  "verdict": "right",
+  "stated": "20 ppm and 100 ppm; second pair 30/200 for underground mining and tunnelling only until 21 Aug 2023; no longer applies",
+  "evidence": "20 ppm (8-hour) and 100 ppm (15-minute); underground mining and tunnelling only; No, expired 21 August 2023",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "74721f7a": {
+  "verdict": "right",
+  "stated": "20 ppm and 100 ppm; second pair 30/200 for underground mining and tunnelling only until 21 Aug 2023; no longer applies",
+  "evidence": "20 and 100; Underground mining & tunnelling industries ONLY, until 21/8/23; No",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0dffde29": {
+  "verdict": "right",
+  "stated": "no RF impedance limit; dc resistance 2.5 milliohms per joint",
+  "evidence": "no maximum RF impedance ... 2.5 milliohms (0.0025 ohm) maximum across each joint",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "5eb23e2c": {
+  "verdict": "right",
+  "stated": "no RF impedance limit; dc resistance 2.5 milliohms per joint",
+  "evidence": "sets no maximum RF impedance ... dc resistance across each joint shall not exceed 2.5 milliohms",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e8ad7093": {
+  "verdict": "right",
+  "stated": "no RF impedance limit; dc resistance 2.5 milliohms per joint",
+  "evidence": "no maximum RF impedance ... dc resistance limit of 2.5 milliohms or less per joint",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "fb0cd4bd": {
+  "verdict": "right",
+  "stated": "1,320 gal aboveground; 42,000 gal buried; only containers of 55 gal or more count; both must hold",
+  "evidence": "1,320 U.S. gallons or less; 42,000 ... or less; capacity of 55 U.S. gallons or greater; BOTH",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "39d394c8": {
+  "verdict": "right",
+  "stated": "1,320 gal aboveground; 42,000 gal buried; only containers of 55 gal or more count; both must hold",
+  "evidence": "1,320 US gallons or less; 42,000 US gallons or less; 55 US gallons or greater; BOTH",
+  "outside_wrong": true,
+  "note": "Cites 112.1(d)(1)(ii) and (d)(1)(i); the key cites 112.1(d)(2)(ii) and (d)(2)(i). The values are right, the paragraph numbers differ from the key."
+ },
+ "2845e561": {
+  "verdict": "right",
+  "stated": "1,320 gal aboveground; 42,000 gal buried; only containers of 55 gal or more count; both must hold",
+  "evidence": "1,320 U.S. gallons; 42,000 U.S. gallons; 55 U.S. gallons or greater; conjunctive, both",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a81a8be3": {
+  "verdict": "right",
+  "stated": "130 W; 0.87 W/degC; 64.75 W",
+  "evidence": "130; 0.87; 130 - 0.87 x 75 = 64.75 W",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1a12a01d": {
+  "verdict": "right",
+  "stated": "130 W; 0.87 W/degC; 64.75 W",
+  "evidence": "130 W; 0.87 W/degC; 64.75 W (about 64.8 W)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "74bb5233": {
+  "verdict": "right",
+  "stated": "130 W; 0.87 W/degC; 64.75 W",
+  "evidence": "130 W; 0.87 W/degC; 64.75 W",
+  "outside_wrong": false,
+  "note": ""
+ }
+}

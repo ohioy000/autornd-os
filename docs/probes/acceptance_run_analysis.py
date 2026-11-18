@@ -46,6 +46,17 @@ KEYS = {q["id"]: q for name in ("questions.json", "hard-questions.json",
                                 "holdout-questions.json")
         for q in json.loads((REPO / "evals/professional" / name).read_text())["questions"]}
 SET_OF = {"P": "professional", "H": "hard", "M": "misleading", "X": "holdout"}
+
+
+def group_of(question: str) -> str:
+    """The hold-out set's three authoring groups (X1-14, X15-28, X29-42); the
+    other sets are their own group. Bar 7 of the hold-out run reads by group."""
+    if question[0] != "X":
+        return SET_OF[question[0]]
+    n = int(question[1:])
+    return ("holdout EU and international" if n <= 14 else
+            "holdout software and standards" if n <= 28 else
+            "holdout physical engineering")
 POINTING = ("give different figures for the same thing",
             "is in none of the passages found")
 
@@ -112,7 +123,7 @@ for code, meta in CODES.items():
     if rebuilt != cautions:
         raise SystemExit(f"{meta['source']}: the rebuilt cautions are not the shipped ones")
     rows.append({
-        "code": code, "q": meta["question"], "set": SET_OF[meta["question"][0]],
+        "code": code, "q": meta["question"], "set": group_of(meta["question"]),
         "verdict": verdict, "cautions": cautions,
         "points": any(p in c for c in cautions for p in POINTING),
         "confirmed": bool(backed), "backed": backed, "figures": figures,
@@ -121,16 +132,22 @@ for code, meta in CODES.items():
     })
 
 n = len(rows)
+HOLDOUT = all(r["q"][0] == "X" for r in rows)
+# The bars of each run's preregistration. The hold-out's are in
+# docs/preregistration-20261117-holdout-run.md; counts there are of ALL units
+# made (126), not of those delivered, so a blocked answer is not a right one.
+BARS = ({"right": "at least 100 of 126 made", "set": "70%"} if HOLDOUT else
+        {"right": "at least 240 of 264", "set": "85%"})
 right = [r for r in rows if r["verdict"] == "right"]
 wrong = [r for r in rows if r["verdict"] != "right"]
 print(f"answers read: {n}; missing verdicts: {sum(r['verdict'] == 'MISSING' for r in rows)}")
-print(f"BAR 1  right: {len(right)} of {n}   (bar: at least 240 of 264)")
+print(f"BAR 1  right: {len(right)} of {n} delivered   (bar: {BARS['right']})")
 by_set: dict = defaultdict(Counter)
 for r in rows:
     by_set[r["set"]]["n"] += 1
     by_set[r["set"]]["right"] += r["verdict"] == "right"
 for s, c in by_set.items():
-    print(f"BAR 6  {s}: {c['right']} of {c['n']} = {100 * c['right'] / c['n']:.1f}%   (bar: 85%)")
+    print(f"BAR {'7' if HOLDOUT else '6'}  {s}: {c['right']} of {c['n']} = {100 * c['right'] / c['n']:.1f}%   (bar: {BARS['set']})")
 print(f"BAR 2  not-right answers carrying a confirmation: "
       f"{sum(r['confirmed'] for r in wrong)} of {len(wrong)}; whether the ask a confirmation "
       f"covers is the wrong one is read off the listing below")

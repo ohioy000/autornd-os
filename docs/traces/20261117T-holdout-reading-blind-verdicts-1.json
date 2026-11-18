@@ -1,0 +1,289 @@
+{
+ "7df80314": {
+  "verdict": "right",
+  "stated": "Applies and Directive repealed 20 January 2027; Directive still in force on 17 Nov 2026: yes",
+  "evidence": "'Directive 2006/42/EC is repealed with effect from 20 January 2027'; 'Yes. Its repeal takes effect only on 20 January 2027.'",
+  "outside_wrong": true,
+  "note": "Gives Art 50(1) as 20 October 2023; the other answers give 20 October 2026 from the consolidated dates. Not a key item."
+ },
+ "9dd4142b": {
+  "verdict": "right",
+  "stated": "20 January 2027 for both; Directive still in force: yes",
+  "evidence": "'Regulation applies from 20 January 2027'; 'YES ... repealed only with effect from 20 January 2027'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "789ce186": {
+  "verdict": "right",
+  "stated": "20 January 2027 for both; Directive still in force: yes",
+  "evidence": "'Regulation applies from 20 January 2027 ... Directive 2006/42/EC is STILL IN FORCE'",
+  "outside_wrong": true,
+  "note": "Gives Art 50(1) as 20 October 2023, yet its own quoted EUR-Lex dates list 20/10/2026. Not a key item."
+ },
+ "16697c6a": {
+  "verdict": "right",
+  "stated": "Lens limit 20 mSv/yr averaged over 5 years (100 in 5 years), max 50 mSv in any one year; old limit 150 mSv/yr",
+  "evidence": "'20 mSv per year averaged over 5 consecutive years (i.e. 100 mSv in 5 years), with no annual dose in a single year exceeding 50 mSv'; 'from 150 mSv per year to 20 mSv'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e0e45bf7": {
+  "verdict": "right",
+  "stated": "20 mSv/yr averaged over 5 years, max 50 mSv in a single year; old limit 150 mSv/yr",
+  "evidence": "'20 mSv in a year, averaged over defined periods of 5 consecutive years ... not exceeding 50 mSv in any single year'; '150 mSv in a year'",
+  "outside_wrong": true,
+  "note": "A note says the 16-18 lens limit is 20 mSv with 5-year average and 50 mSv cap, which contradicts its own table (20 mSv/y) and the other answers. Not a key item."
+ },
+ "ccdd1a54": {
+  "verdict": "right",
+  "stated": "20 mSv/yr averaged over 5 years (100 in 5), max 50 mSv in one year; old limit 150 mSv/yr",
+  "evidence": "'20 mSv per year averaged over 5 consecutive years (i.e. 100 mSv in 5 years), with no annual dose in a single year exceeding 50 mSv'; '150 mSv in a year'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0038288f": {
+  "verdict": "right",
+  "stated": "TSP incident notification 24 hours; other entities 72 hours",
+  "evidence": "'a trust service provider ... within 24 hours'; 'within 72 hours of becoming aware ... point (b)'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "cdcbf784": {
+  "verdict": "right",
+  "stated": "TSP 24 hours; other essential and important entities 72 hours",
+  "evidence": "'Trust service provider ... within 24 hours'; 'Other essential and important entities ... within 72 hours'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ca4be2ab": {
+  "verdict": "right",
+  "stated": "TSP 24 hours; all other entities 72 hours",
+  "evidence": "'TSPs ... within 24 HOURS'; 'All other essential and important entities ... within 72 HOURS'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "89ab5b18": {
+  "verdict": "right",
+  "stated": "56 hours",
+  "evidence": "'ANSWER: 56 hours.' min(56, 60) = 56; weekly cap binds",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "480440d0": {
+  "verdict": "right",
+  "stated": "56 hours",
+  "evidence": "'Answer: 56 hours.' Binding cap min(56, 60) = 56",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6935ae27": {
+  "verdict": "right",
+  "stated": "56 hours",
+  "evidence": "'Maximum driving time in the week immediately following a 30-hour week: 56 hours'; says 60 is wrong",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0d815e39": {
+  "verdict": "wrong",
+  "stated": "Item 1: no employee threshold (right). Item 2: does not say the 250 figure is in Article 30(5); names German 20 as the usual figure behind the question",
+  "evidence": "'The GDPR ... sets no employee-count threshold at all.' It never mentions Article 30(5) or records of processing as the place for 250.",
+  "outside_wrong": false,
+  "note": "Second key item (250 appears in Art 30(5)) is missing from the answer, so not every key item is right."
+ },
+ "59a8d710": {
+  "verdict": "right",
+  "stated": "No employee-count threshold; 250 is Article 30(5) records derogation",
+  "evidence": "'There is no employee-count threshold.'; table row '250 employees | GDPR Article 30(5) - records of processing activities'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "79afd355": {
+  "verdict": "right",
+  "stated": "None; 250 is Article 30(5) records exemption, not a DPO rule",
+  "evidence": "'Short answer. None.'; '\"250 employees\" - Article 30(5), records of processing'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "4a79b3fe": {
+  "verdict": "right",
+  "stated": "No, 4.1.1 is Obsolete and removed in WCAG 2.2; reason: assistive technology no longer needs to parse HTML directly",
+  "evidence": "'No ... 4.1.1 is marked Obsolete and removed'; 'Assistive technology no longer has any need to directly parse HTML.'",
+  "outside_wrong": false,
+  "note": "Says the answer is No under WCAG 2.1 too (deemed satisfied); the key concerns WCAG 2.2 only."
+ },
+ "6053d825": {
+  "verdict": "right",
+  "stated": "No for WCAG 2.2 (removed); reason: assistive technology no longer has any need to directly parse HTML",
+  "evidence": "'Verdict: NO ... 4.1.1 is not a success criterion in WCAG 2.2'; 'Assistive technology no longer has any need to directly parse HTML.'",
+  "outside_wrong": false,
+  "note": "Also gives a conditional Yes for WCAG 2.1; the answer picks the 2.2 branch when no version is named, so the 2.2 item is No."
+ },
+ "7c596ecb": {
+  "verdict": "wrong",
+  "stated": "Item 1: No (right). Item 2: reason given is that the HTML Standard now defines user agent handling and the criterion gives no benefit; does not say assistive technology no longer needs to parse HTML",
+  "evidence": "'the HTML Standard now requires user agents to handle incomplete tags ... the criterion no longer provides benefit in itself'",
+  "outside_wrong": false,
+  "note": "Reason is taken from the WCAG 2.1 note, not the WCAG 2.2 reason the key requires."
+ },
+ "22dd2e55": {
+  "verdict": "right",
+  "stated": "No number, no time period, no lockout duration; all organization-defined; control fixes that a limit be enforced and an action (selection of five) follow",
+  "evidence": "'requires no specific number of attempts, no specific time period, and no specific lockout duration'; lists the five AC-7b selections",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "de16a26a": {
+  "verdict": "right",
+  "stated": "All three organization-defined; control requires a limit and an automatic response chosen from the five options",
+  "evidence": "'requires no specific number of attempts, no specific time window, and no specific lockout duration'; lists the Selection options and says only one has a duration",
+  "outside_wrong": true,
+  "note": "Says AC-7(1) takes an organization-defined number; another answer says AC-7(1) is withdrawn. Not a key item."
+ },
+ "fd11a3fa": {
+  "verdict": "wrong",
+  "stated": "Items 1 and 2 right (all organization-defined). Item 3: says the control requires an automatic, time-bounded lockout; omits the other four actions",
+  "evidence": "'b. Automatically lock the account or node for [Assignment: organization-defined time period]'; 'b is mandatory and automatic'; 'Always time-bounded lockout'",
+  "outside_wrong": false,
+  "note": "The action is a selection (lock for a period, lock until admin release, delay prompt, notify admin, other). The answer reconstructs b as lock-for-period only, so what the control fixes is misstated."
+ },
+ "7516725a": {
+  "verdict": "right",
+  "stated": "Range 0-200; default 60; 133",
+  "evidence": "'Accepted range: 0-200 inclusive'; 'Default: 60'; 'swappiness should be 133'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "02324529": {
+  "verdict": "right",
+  "stated": "Range 0 through 200; default 60; 133",
+  "evidence": "Table: '0 through 200 inclusive | 60 | 133'",
+  "outside_wrong": true,
+  "note": "Says the default is defined in mm/swap.c; another answer says mm/vmscan.c. Not a key item and unverified."
+ },
+ "3eba345e": {
+  "verdict": "right",
+  "stated": "Range 0 through 200; default 60; 133",
+  "evidence": "'ACCEPTED RANGE ... 0 through 200 (inclusive)'; 'DEFAULT VALUE: 60'; 'FINAL ANSWERS: range 0-200; default 60; ... 133'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a9ae47ee": {
+  "verdict": "right",
+  "stated": "Range 30000-32767; static 30000-30085; dynamic 30086-32767",
+  "evidence": "'30000-32767'; 'Static (lower band) 30000-30085'; 'Dynamic (upper band) 30086-32767'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "988d4b77": {
+  "verdict": "right",
+  "stated": "Range 30000-32767; static 30000-30085; dynamic 30086-32767",
+  "evidence": "'Default allocated range: 30000-32767'; 'static band 30000-30085 ... dynamic band 30086-32767'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7a1fbd06": {
+  "verdict": "right",
+  "stated": "Range 30000-32767; static 30000-30085; dynamic 30086-32767",
+  "evidence": "'30000-32767'; 'Static 30000-30085'; 'Dynamic 30086-32767'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "93593e38": {
+  "verdict": "right",
+  "stated": "IPv4 536; IPv6 1220; MUST (MUST-15)",
+  "evidence": "'MUST assume a default send MSS of 536 (576 - 40) for IPv4 or 1220 (1280 - 60) for IPv6 (MUST-15)'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1f707770": {
+  "verdict": "right",
+  "stated": "IPv4 536; IPv6 1220; MUST (MUST-15)",
+  "evidence": "'IPv4: MUST assume a default send MSS of 536 octets (576 - 40)'; 'IPv6 ... 1220 octets (1280 - 60)'; 'Requirement level: MUST ... MUST-15'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "3275a7f7": {
+  "verdict": "right",
+  "stated": "IPv4 536; IPv6 1220; MUST (MUST-15)",
+  "evidence": "'IPv4 default send MSS: 536 octets'; 'IPv6 ... 1220 octets'; 'Requirement level: MUST ... MUST-15'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f19cb915": {
+  "verdict": "wrong",
+  "stated": "4 W EIRP (right); 25 mW per 3 kHz (right); instrument year 2015 (wrong, key is the 2025 licence)",
+  "evidence": "'Year carried by the name of the instrument: 2015 - Radiocommunications (Low Interference Potential Devices) Class Licence 2015.'",
+  "outside_wrong": false,
+  "note": "Treats the 2015 licence as current; the answer itself flags it could not confirm currency."
+ },
+ "28e3fe93": {
+  "verdict": "right",
+  "stated": "4 W EIRP; 25 mW per 3 kHz (clause 43); 2025 licence, commenced 1 October 2025",
+  "evidence": "'4 W EIRP'; '25 mW per 3 kHz'; 'Class Licence 2025 ... commenced 1 Oct 2025'",
+  "outside_wrong": true,
+  "note": "Says the 500 kHz minimum bandwidth was not in the 2015 instrument; the other answer quotes it from 2015 item 59. Not a key item and unverified."
+ },
+ "a0b8e4d6": {
+  "verdict": "wrong",
+  "stated": "(a) more than 11 m (right); (b) 30 m (right); (c) more than 18 m, so exactly 18.0 m is not caught (key is 18 m or more); date 30 September 2026 (right)",
+  "evidence": "'more than one common stair where the building has a top storey more than 18 m'; 'a building exactly 18.0 m high is not caught'",
+  "outside_wrong": false,
+  "note": "Borderline: figure 18 m matches but the comparator is stated as 'more than', against the key's '18 m or more'. The answer asks the reader to confirm the comparator."
+ },
+ "57dec7cf": {
+  "verdict": "right",
+  "stated": "(a) more than 11 m; (b) more than 30 m; (c) 18 m or more; 30 September 2026",
+  "evidence": "'top storey MORE THAN 11 m'; 'MORE THAN 30 m'; 'a storey 18 m OR MORE in height'; '30 September 2026'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "eade5cd6": {
+  "verdict": "right",
+  "stated": "(a) more than 11 m; (b) more than 30 m; (c) 18 m or more; 30 September 2026",
+  "evidence": "'More than 11 m above ground level'; 'More than 30 m'; '18 m or more above ground level'; '30 September 2026'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e8ec69ac": {
+  "verdict": "right",
+  "stated": "Current epoch 1983-2001; replacement data 2002-2020; proposed release 2029",
+  "evidence": "'1983-2001'; '2002-2020'; 'The current proposed release date for new NTDE products is in 2029.'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8691faf4": {
+  "verdict": "right",
+  "stated": "1983-2001; 2002-2020; 2029",
+  "evidence": "Table: '1983-2001 National Tidal Datum Epoch | 2002-2020 | 2029'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "fde26c6d": {
+  "verdict": "right",
+  "stated": "1983-2001; 2002-2020; 2029",
+  "evidence": "'NTDE 1983-2001'; '2002-2020'; 'Proposed release year ... 2029'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d800082d": {
+  "verdict": "right",
+  "stated": "35.17 kW (35 168.53 W; factor 3.516 853 E+03 W per ton)",
+  "evidence": "'Answer: the chiller's cooling capacity is 35.17 kW.'; '3.516 853 E+03 W'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f5a88361": {
+  "verdict": "right",
+  "stated": "35.17 kW (35 168.53 W; factor 3.516 853 x 10^3 W)",
+  "evidence": "'Capacity = 35.17 kW'; '3.516 853 x 10^3 W'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6276ca2b": {
+  "verdict": "right",
+  "stated": "35.17 kW (35 168.53 W; factor 3.516 853 E+03 W)",
+  "evidence": "'CHILLER CAPACITY = 35.17 kW'; '1 ton of refrigeration = 3.516 853 kW'",
+  "outside_wrong": true,
+  "note": "Says '35.17 kW_th ~ 12.0 ton'; 35.17 kW is 10 tons. Not a key item."
+ }
+}

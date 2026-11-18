@@ -97,7 +97,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="AutoRnD",
     description="Engineering & R&D Agentic Team",
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan,
 )
 

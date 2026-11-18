@@ -1,4 +1,4 @@
-# Release notes: the first public release (draft, to be tagged on the owner's word)
+# Release notes: 0.2.0, the first public release
 
 AutoRnD-OS answers expert and professional questions with inexpensive models, and says honestly
 what it checked. A prose question goes in. A typed answer comes out, with the passages it read,
@@ -39,8 +39,24 @@ One run of 2026-11-17, preregistered before the spend, on the three frozen profe
   is shown to be more accurate than the other: the samples are too small to separate a miss rate
   of one or two in a hundred from none.
 
-These sets are the ones the harness was shaped against. They are not a hold-out, and the figures
-are not a forecast for a question nobody has seen.
+These sets are the ones the harness was shaped against, so the figures above are not a forecast
+for a question nobody has seen. A second run, also preregistered, did that.
+
+**The hold-out run, 2026-11-17.** 42 questions written after the harness was fixed, by authors
+that never saw its answers, in fields the other sets leave out; checked against the live pages by
+two other agents; keys signed by the owner. Three answers each, 126 answers, read blind by three
+readers and again by the executor (`docs/reviews/2026-11-17-holdout-run.md`).
+
+- **113 of 126 right on the key** (about 90 percent), **97 on a stricter reading** where a wrong
+  claim outside the key counts. On the 26 questions whose cited page the harness's own fetch
+  can read, 74 of 78; on the 16 it cannot, 39 of 48. On the five traps, where the right answer
+  is "the document states no such figure", 10 of 15.
+- **'$1.355' for the run, about '$0.011' an answer, about 107 seconds an answer.**
+- **None blocked by a rate limit** in 126; the retry was raised to five attempts.
+- **Two of seven bars missed.** One confirmation stood beside a wrong figure (a year taken from
+  a superseded licence whose page is still served), and of nine wrong answers three carried a
+  caution that pointed at them. Four answers ended blocked by the harness's own checks: two
+  cut off, two that named an ask it could not satisfy, one of them a trap.
 
 ## Known limits
 
@@ -53,7 +69,9 @@ These are in the README's Limitations too. The first three came from the last ru
 3. **A confirmation is about words on a page.** It cannot see what a figure means: a right count
    of business days with the day misdefined was confirmed.
 4. **A source that is wrong with nothing in its text to show it is not caught,** such as a stale
-   official page that looks current.
+   official page that looks current. In the hold-out run one such answer, a year taken from a
+   superseded licence, carried a confirmation, because the figure did stand on a page that was
+   found. A confirmation is about words on a page, not about which page is current.
 5. **Answers written in words are not checked the way figures are.**
 6. **The answer-step prompt can trip a safety filter on some frontier models.** Tried once, the
    model returned no text; what trips it was not looked for.
@@ -62,19 +80,32 @@ These are in the README's Limitations too. The first three came from the last ru
    or `JWT_SECRET` whenever anything other than that machine can reach the server.
 8. **Some sites refuse to be read,** and a scanned PDF stays unread. The delivery says so.
 9. **The recompute vote cannot see an omission,** or an error every sample shares.
-10. **The provider rate-limits.** Six of 270 units were blocked by an upstream 429 in the last run
-   and made again; a caller should expect the odd blocked run.
+10. **The provider rate-limits.** Six of 270 units were blocked by an upstream 429 in the acceptance
+   run, before the retry was raised from three attempts to five. None of 126 was blocked in the
+   hold-out run. A caller should still expect the odd blocked run.
 11. **No code execution, no streaming, no roles.** Runs are kept apart per user; there are no
     admin or team permissions.
+12. **The harness blocks rather than say "none stated".** On a datasheet that gives no thermal
+    resistance, one answer was blocked on an ask it could not satisfy and one invented a figure
+    (with cautions saying it was on no page). Two of 126 answers were cut off and blocked.
+13. **Wrong words and missing items get no caution.** Of nine wrong answers in the hold-out run,
+    six carried none: a missing item, a wrong status, a comparator. The checks read figures.
+14. **`/api/profiles` reports the profile's display name** ("AutoRnD" for the default), which is
+    not in its own list of names. The names in the list are the ones to use.
 
 ## What was checked by hand
 
 - The test suite on three Python versions in CI, an editable install, a built wheel, and a Docker
   build that boots and asserts `/api/health` reports `degraded` honestly.
 - The Docker image built and run on 2026-11-17 on a Linux machine, with the page driven in a real
-  browser at desktop and phone width (`docs/reviews/2026-11-16-browser-check.md`).
-- Not seen: a signed-in caller in a browser, and a completed run in the container (it needs a
-  provider key and a spend).
+  browser at desktop and phone width, and a completed run through the image with a real key from
+  a signed-in browser: 68 seconds, a correct answer with a confirmation, '$0.0080'
+  (`docs/reviews/2026-11-16-browser-check.md`).
+- A cold start: an agent with only the README cloned, installed and started the project in
+  about five minutes, and built the image. It found that the image carried the working `.env`;
+  that is fixed. It was an agent, not a person, and it had no browser.
+- A database from before the version stamp, and one from a newer release, were migrated and
+  refused as the tests say.
 
 ## How to run it
 
@@ -83,8 +114,15 @@ and `OPENROUTER_API_KEY` in `.env`, then `uvicorn autornd.main:app --port 8100`;
 Dockerfile and pass the same as environment variables, with `API_KEY` set if anything other than
 that machine will call it.
 
-## Before tagging
+## Why 0.2.0 and not 1.0
 
-- The owner chooses the version number. `pyproject.toml` still says 0.1.0.
-- The owner may add the reasons for the 2026-11-12 and 13 re-tiering to `docs/MODELS.md`.
-- A second human reading of the acceptance answers is the owner's to ask for.
+The hold-out run missed its bar 2: one confirmation stood beside a wrong figure. The
+preregistration says that holds the release for the owner, and on 2026-11-17 the owner chose to
+release as 0.2.0 with the limit stated, in item 4 of the known limits above. 1.0 waits for:
+
+- a person, not an agent, starting the project from the README;
+- a ruling on a guard for a confirmation beside a figure from a superseded source, and a
+  hold-out run that meets all its bars.
+
+Until then, read a confirmation as "the figures stand in a passage found on its page", not as
+"the page is the current one".
