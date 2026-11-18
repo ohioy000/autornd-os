@@ -20,18 +20,21 @@ first for the rules. They stay as they are.
   five attempts; the Docker image has been run with a real key and a signed-in browser; an agent
   started the project from the README alone and found one real risk (the image carried `.env`),
   now fixed.
-- The release is drafted in `docs/release-notes.md`. **It is not tagged and no version is named.**
+- **0.2.0 is released** (tag `v0.2.0`, 2026-11-17), on the owner's word "Release 0.2.0, limit
+  stated". The notes are `docs/release-notes.md`.
 
 ## Open, in the order that matters
 
-1. **The owner decides the release.** The hold-out run missed its bar 2, so the release is held
-   (`docs/reviews/2026-11-17-holdout-run.md`, "What it says for the release"). The choices are to
-   release with the limit stated, or to take a ruling on a guard first. Of the four conditions
-   for 1.0, three are met: the container ran with a real key, the database migrates, and the
-   hold-out run was made, though it missed bar 2. The fourth, a person other than the builder
-   starting it from the README, is not done: an agent did it, which is not the same.
-2. **A second human reading** of the acceptance answers was offered and declined on 2026-11-17; the release goes out on the two-reader reading. Verdicts are in
-   `docs/traces/20261117T-acceptance-reading-*`.
+1. **1.0.** The hold-out run missed its bar 2 (`docs/reviews/2026-11-17-holdout-run.md`), so
+   the owner released 0.2.0 with the limit stated. 1.0 waits for two things: **a ruling on a guard**
+   for a confirmation beside a figure from a superseded source, then a hold-out run that meets all
+   its bars (about '$1.40', with the owner's word); and **a person other than the builder starting
+   it from the README** (an agent did it, which is not the same). The container run, the
+   migrations and the retry are done.
+   Also the owner's: `CLAUDE.md` rule 12 says there is no migration tool, and the database now
+   has numbered migrations.
+2. **A second human reading** of the acceptance answers was offered and declined on 2026-11-17; the release went out on the two-reader reading. Verdicts are in
+   `docs/traces/20261117T-acceptance-reading-*`. The hold-out answers were read the same way.
 3. **Why the answer-step prompt trips a content filter on one frontier model.** Not looked for.
    About '$0.10' a try. Only if someone wants a frontier model in that seat.
 4. **Prose is not checked the way figures are.** The last run's five misses were omissions and a

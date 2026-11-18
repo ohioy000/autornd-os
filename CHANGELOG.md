@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.2.0] — 2026-11-17
+
 Everything below happened after 0.1.0 and none of it was recorded until now.
 The entry is written as prose rather than a bullet list because most of these
 changes are only meaningful with the measurement that forced them.

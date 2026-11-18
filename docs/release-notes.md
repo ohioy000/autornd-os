@@ -1,4 +1,4 @@
-# Release notes: the first public release (draft, held: see "Before tagging")
+# Release notes: 0.2.0, the first public release
 
 AutoRnD-OS answers expert and professional questions with inexpensive models, and says honestly
 what it checked. A prose question goes in. A typed answer comes out, with the passages it read,
@@ -114,15 +114,15 @@ and `OPENROUTER_API_KEY` in `.env`, then `uvicorn autornd.main:app --port 8100`;
 Dockerfile and pass the same as environment variables, with `API_KEY` set if anything other than
 that machine will call it.
 
-## Before tagging
+## Why 0.2.0 and not 1.0
 
-- **The release is held.** The hold-out run missed its bar 2, and the preregistration says the
-  release is held and the case goes to the owner. The owner decides: release with the limit
-  stated, or take a ruling on a guard first.
-- The owner chooses the version number. `pyproject.toml` still says 0.1.0. The recommendation
-  was 0.2.0, with 1.0 only after a hold-out run that met its bars and a person starting the
-  project from the README.
-- The owner may add the reasons for the 2026-11-12 and 13 re-tiering to `docs/MODELS.md`.
-- A second human reading of the acceptance and hold-out answers is the owner's to ask for.
-- `CLAUDE.md` rule 12 still says there is no migration tool; the database now has numbered
-  migrations. Changing the rule is the owner's.
+The hold-out run missed its bar 2: one confirmation stood beside a wrong figure. The
+preregistration says that holds the release for the owner, and on 2026-11-17 the owner chose to
+release as 0.2.0 with the limit stated, in item 4 of the known limits above. 1.0 waits for:
+
+- a person, not an agent, starting the project from the README;
+- a ruling on a guard for a confirmation beside a figure from a superseded source, and a
+  hold-out run that meets all its bars.
+
+Until then, read a confirmation as "the figures stand in a passage found on its page", not as
+"the page is the current one".
