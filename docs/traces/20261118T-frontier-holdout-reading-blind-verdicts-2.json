@@ -1,0 +1,100 @@
+{
+  "0708149d": {
+    "verdict": "right",
+    "stated": "2.5.8 Target Size (Minimum), 24x24 CSS px, 24 px circle for spacing exception, 2.5.5 Enhanced 44x44",
+    "evidence": "'Success Criterion 2.5.8 Target Size (Minimum), which is new in WCAG 2.2'; 'at least 24 by 24 CSS pixels'; 'a 24 CSS pixel diameter circle centered on each one's bounding box'; 'Success Criterion 2.5.5 Target Size (Enhanced) requires at least 44 by 44 CSS pixels'",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "e1ab5b39": {
+    "verdict": "right",
+    "stated": "No, 4.1.1 is 'Obsolete and removed' in WCAG 2.2; reason is assistive technology no longer needs to directly parse HTML",
+    "evidence": "'No.'; 'it has removed success criterion 4.1.1 Parsing, so it is not a requirement for Level A or AA conformance'; 'Parsing (Obsolete and removed)'; 'Assistive technology no longer has any need to directly parse HTML.'",
+    "outside_wrong": false,
+    "note": "The answer also notes the WCAG 2.0/2.1 position correctly without confusing it with the 2.2 answer."
+  },
+  "40e3d96b": {
+    "verdict": "right",
+    "stated": "14 rounds, 128-bit block, 15 round keys",
+    "evidence": "'AES-256 uses 14 rounds (Nr = 14)'; '128 bits (Nb = 4 words of 32 bits each)'; 'The cipher consumes 15 round keys (Nr + 1), each consisting of four 32-bit words'",
+    "outside_wrong": false,
+    "note": "The 60-word key expansion figure is also correct."
+  },
+  "369f2739": {
+    "verdict": "right",
+    "stated": "96-bit IV, 2^32 invocations, 2^36 - 32 bytes = 68,719,476,704 bytes",
+    "evidence": "'Recommended IV length: 96 bits (12 bytes)'; 'Maximum invocations per key: 2^32 (4,294,967,296)'; 'Maximum plaintext per invocation: 2^36 − 32 bytes (68,719,476,704 bytes)' with 'len(P) ≤ 2^39 − 256' stated in bits",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "3e4d6eb4": {
+    "verdict": "right",
+    "stated": "AC-7 fixes no number, period or lockout duration; all are organization-defined; it fixes enforcing a limit and an action when exceeded",
+    "evidence": "'AC-7 does not require any specific number, time period, or lockout duration. All three values are organization-defined parameters.'; lists the actions: 'lock the account or node for an [organization-defined time period]', 'lock ... until released by an administrator', 'delay the next logon prompt', 'notify the system administrator', 'take other [organization-defined action]'",
+    "outside_wrong": false,
+    "note": "Example figures from industry and agencies are explicitly framed as practice or other organizations' values, not as the NIST requirement."
+  },
+  "2b3c9c53": {
+    "verdict": "right",
+    "stated": "17 families in Rev. 3, 14 in Rev. 2, Rev. 2 superseded and (from recollection) withdrawn 14 May 2024 by Rev. 3",
+    "evidence": "'Current revision (Revision 3, May 2024): 17 families.'; 'Revision 2: 14 families.' (derived from three new families added); 'Revision 2's status: superseded.' and 'that PDF carries a cover notice marking it as a withdrawn publication, superseded by Revision 3 on May 14, 2024, but I can't confirm that from these sources'",
+    "outside_wrong": false,
+    "note": "Status is stated as superseded and as withdrawn 14 May 2024, hedged only on source confirmation; the figures match the key, so scored right."
+  },
+  "b943b608": {
+    "verdict": "right",
+    "stated": "Yes, enabled by default in 18; disable with initdb --no-data-checksums; pg_upgrade needs matching checksum settings",
+    "evidence": "'Yes, checksums are enabled.'; 'run initdb --no-data-checksums'; 'the old and new clusters must have the same checksum setting, either both on or both off'",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "6620cd26": {
+    "verdict": "right",
+    "stated": "range 0 to 200, default 60, 133 for swap 2x faster",
+    "evidence": "'vm.swappiness accepts values from 0 to 200'; 'Default: 60'; 'Swap 2x faster than filesystem IO: 133'",
+    "outside_wrong": false,
+    "note": "Also says the 100-to-200 raise came in kernel 5.8, which is correct."
+  },
+  "b2ca3014": {
+    "verdict": "right",
+    "stated": "forkserver now, fork before 3.14, spawn when no writable temp directory (3.15.1)",
+    "evidence": "'Current default on Linux (3.15 series): forkserver.'; 'Default before Python 3.14: fork.'; 'when there is no writable temporary directory (see tempfile.gettempdir()) ... for example on a read-only file system ... this changed in version 3.15.1'",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "1f03f78f": {
+    "verdict": "right",
+    "stated": "v1.28 not supported, v1.25 supported, v1.24 not supported",
+    "evidence": "'v1.28 – not supported. The kubelet must not be newer than kube-apiserver'; 'v1.25 – supported. It is two minor versions older'; 'v1.24 – not supported. It is three minor versions older, and the three-version allowance does not apply here: kubelets older than 1.25 may only be up to two minor versions older'",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "238bc7a5": {
+    "verdict": "right",
+    "stated": "default range 30000-32767; static 30000-30085; dynamic 30086-32767",
+    "evidence": "'default range 30000-32767'; 'Static band: 30000-30085 (86 ports)'; 'Dynamic band: 30086-32767 (2,682 ports)'",
+    "outside_wrong": false,
+    "note": "Arithmetic on band sizes checks out (2768 total, 86 static, 2682 dynamic)."
+  },
+  "c3c42a85": {
+    "verdict": "right",
+    "stated": "64 KiB page (65536 bytes); i32 at most 65536 pages = 4 GiB; i64 at most 2^48 pages",
+    "evidence": "'Page size: 65,536 bytes (64 KiB, i.e. 2^16 bytes)'; 'i32 memories: at most 2^16 = 65,536 pages, which is 2^32 bytes ... (4 GiB)'; 'i64 memories: at most 2^48 = 281,474,976,710,656 pages'",
+    "outside_wrong": false,
+    "note": "Answer says it is from memory of the spec but commits to every key figure."
+  },
+  "f279443e": {
+    "verdict": "right",
+    "stated": "Level 3: 300000-600000 ms, default 300000 ms; Level 2 discouraged: 30000-180000 ms, default 120000 ms",
+    "evidence": "'recommended range ... is 300000 to 600000 milliseconds, with a recommended default of 300000 milliseconds (5 minutes)'; 'discouraged | 30000 to 180000 ms | 120000 ms (2 minutes)'",
+    "outside_wrong": false,
+    "note": "Notes the Level 3 figures come from a secondary summary but commits to them; the Level 2 required/preferred row (30000-600000, 300000) is also correct."
+  },
+  "ab68875a": {
+    "verdict": "right",
+    "stated": "536 bytes IPv4, 1220 bytes IPv6, MUST (MUST-15)",
+    "evidence": "'IPv4: 536 bytes (576 − 40)'; 'IPv6: 1220 bytes (1280 − 60)'; 'MUST-level (mandatory) requirement, labeled MUST-15'",
+    "outside_wrong": false,
+    "note": ""
+  }
+}

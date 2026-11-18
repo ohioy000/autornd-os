@@ -1,0 +1,100 @@
+{
+  "653f16a4": {
+    "verdict": "right",
+    "stated": "Applies and Directive repealed 20 January 2027; Directive still in force today",
+    "evidence": "Item 1: 'The Regulation applies from 20 January 2027, the Directive is repealed with effect from that same day'; Item 2: 'Directive 2006/42/EC is therefore still in force today'; also explains that 14 January 2027 was the first-published date changed by the corrigendum.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "f1976243": {
+    "verdict": "right",
+    "stated": "31 December 2028; application by 26 May 2024; written agreement by 26 September 2024",
+    "evidence": "Item 1: 'Last date for placing on the market or putting into service: 31 December 2028.'; Item 2: '26 May 2024: the manufacturer ... must have lodged a formal application with a notified body'; Item 3: '26 September 2024: the notified body and the manufacturer must have signed a written agreement'.",
+    "outside_wrong": false,
+    "note": "The 31 December 2027 date is correctly attached to class III and IIb implantables only."
+  },
+  "9fd62472": {
+    "verdict": "right",
+    "stated": "SO2 24-hour 40 ug/m3; NO2 annual 10 ug/m3",
+    "evidence": "Item 1: '(a) Sulfur dioxide, 24-hour mean: 40 µg/m³'; Item 2: '(b) Nitrogen dioxide, annual mean: 10 µg/m³'; the 20 and 40 figures are correctly labelled as 2005 values.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "82fa2051": {
+    "verdict": "right",
+    "stated": "20 mSv/yr averaged over 5 years (100 mSv in 5 years), max 50 mSv in any year; previously 150 mSv per year",
+    "evidence": "Item 1: '20 mSv per year averaged over 5 consecutive years (i.e., 100 mSv in 5 years), with no more than 50 mSv in any single year'; Item 2: 'previously, this dose limit had been 150 mSv per year'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "cd6e135f": {
+    "verdict": "right",
+    "stated": "AC 50-1 000 V; DC 75-1 500 V; 24 V AC is not in scope",
+    "evidence": "Item 1: 'Alternating current: between 50 and 1 000 V'; Item 2: 'Direct current: between 75 and 1 500 V'; Item 3: 'No. Equipment whose rated input and output voltage is 24 V AC falls below the 50 V AC lower threshold'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "06979e3a": {
+    "verdict": "right",
+    "stated": "Above 0.1% w/w; within 45 days of receipt; free of charge",
+    "evidence": "Item 1: 'in a concentration above 0.1% weight by weight (w/w)'; Item 2: 'within 45 days of receipt of the request'; Item 3: 'No, the information must be provided free of charge'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "b2cc56cd": {
+    "verdict": "right",
+    "stated": "Trust service providers 24 hours; other entities 72 hours",
+    "evidence": "Item 1: 'a trust service provider must notify the CSIRT ... within 24 hours of becoming aware of the significant incident'; Item 2: 'Article 23(4)(b), the incident notification must be submitted ... within 72 hours of becoming aware'; keeps the separate 24-hour early warning distinct.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "dcf34a80": {
+    "verdict": "right",
+    "stated": "Yes, reporting applies now (since 11 Sept 2026); early warning 24 h; vulnerability notification 72 h; final report 14 days after a corrective or mitigating measure is available",
+    "evidence": "Item 1: 'Yes, the manufacturer must report now ... reporting obligations have applied since 11 September 2026'; Item 2: 'Within 24 hours of becoming aware'; Item 3: 'Within 72 hours of becoming aware'; Item 4: 'No later than 14 days after a corrective or mitigating measure is available'.",
+    "outside_wrong": false,
+    "note": "Correctly separates the reporting duty from the 11 December 2027 general application date."
+  },
+  "394b93fb": {
+    "verdict": "right",
+    "stated": "Ten substances; cadmium at 0,01 %; 22 July 2021 for medical devices",
+    "evidence": "Item 1: 'Ten. These are lead, mercury, cadmium, hexavalent chromium, PBB, PBDE and four phthalates'; Item 2: 'Cadmium. The other nine all sit at 0,1 %'; Item 3: 'Medical devices date: 22 July 2021'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "def0d857": {
+    "verdict": "right",
+    "stated": "56 hours",
+    "evidence": "'The most they may drive in the following week is 56 hours.' It notes 90 - 30 = 60 from the two-week cap alone and that the 56-hour weekly cap 'is the binding limit'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "f5b908ca": {
+    "verdict": "right",
+    "stated": "(a) 200 kilo-ohm; (b) 40 kilo-ohm",
+    "evidence": "Item (a): '500 Ω/V × 400 V = 200,000 Ω = 200 kΩ'; Item (b): '100 Ω/V × 400 V = 40,000 Ω = 40 kΩ' when all AC buses are protected by one of the two measures.",
+    "outside_wrong": false,
+    "note": "The answer discloses that its wording came from a UNECE working document and the 03 series text, not the 2026/1695 text itself, but it commits to the key figures."
+  },
+  "55191ce5": {
+    "verdict": "right",
+    "stated": "TI 16; within the limit of 50 for a freight container used as packaging",
+    "evidence": "Item 1: 'TI = 16' via '0.08 mSv/h x 100 = 8' and a factor of 2 for the 'more than 1 m2 up to 5 m2' band; Item 2: 'A TI of 16 is below 50, so the container complies without exclusive use.'",
+    "outside_wrong": false,
+    "note": "The answer's recollection about the Rev. 1 limit is hedged and outside the key items; I cannot confirm it is wrong."
+  },
+  "c5c3646f": {
+    "verdict": "right",
+    "stated": "No employee threshold; the 250 figure is in Article 30(5), not Article 37",
+    "evidence": "Item 1: 'There is no employee threshold. The GDPR does not make a data protection officer (DPO) mandatory at any particular headcount.' (Article 37(1) tied to the kind of processing); Item 2: 'The figure of 250 does appear in Article 30(5), but that is a partial exemption from the record-keeping duty and has nothing to do with DPOs'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "74473d5d": {
+    "verdict": "right",
+    "stated": "No, the Article 3(3)(d), (e), (f) requirements do not apply to a medical device; Delegated Regulation applies from 1 August 2025",
+    "evidence": "Item 1: 'No — the insulin pump is exempt' citing Article 2(1) of Delegated Regulation (EU) 2022/30 ('shall not apply to radio equipment to which either of the following Union legislation also applies: (a) Regulation (EU) 2017/745'); Item 2: '1 August 2025', noting 1 August 2024 was the original date postponed by 2023/2444.",
+    "outside_wrong": false,
+    "note": "The extra claim about Delegated Regulation (EU) 2026/339 repealing 2022/30 from 11 December 2027 is outside the key and I cannot confirm it is wrong."
+  }
+}

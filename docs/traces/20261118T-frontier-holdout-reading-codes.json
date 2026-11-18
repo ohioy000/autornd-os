@@ -1,0 +1,296 @@
+{
+ "653f16a4": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#0",
+  "question": "X1",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "f1976243": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#1",
+  "question": "X2",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "9fd62472": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#2",
+  "question": "X3",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "82fa2051": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#3",
+  "question": "X4",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "cd6e135f": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#4",
+  "question": "X5",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "06979e3a": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#5",
+  "question": "X6",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "b2cc56cd": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#6",
+  "question": "X7",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "dcf34a80": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#7",
+  "question": "X8",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "394b93fb": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#8",
+  "question": "X9",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "def0d857": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#9",
+  "question": "X10",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "f5b908ca": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#10",
+  "question": "X11",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "55191ce5": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#11",
+  "question": "X12",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "c5c3646f": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#12",
+  "question": "X13",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "74473d5d": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#13",
+  "question": "X14",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "0708149d": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#14",
+  "question": "X15",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "e1ab5b39": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#15",
+  "question": "X16",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "40e3d96b": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#16",
+  "question": "X17",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "369f2739": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#17",
+  "question": "X18",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "3e4d6eb4": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#18",
+  "question": "X19",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "2b3c9c53": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#19",
+  "question": "X20",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "b943b608": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#20",
+  "question": "X21",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "6620cd26": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#21",
+  "question": "X22",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "b2ca3014": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#22",
+  "question": "X23",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "1f03f78f": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#23",
+  "question": "X24",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "238bc7a5": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#24",
+  "question": "X25",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "c3c42a85": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#25",
+  "question": "X26",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "f279443e": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#26",
+  "question": "X27",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "ab68875a": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#27",
+  "question": "X28",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "d2e2430f": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#28",
+  "question": "X29",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "5ef39cb5": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#29",
+  "question": "X30",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "485f37a9": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#30",
+  "question": "X31",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "2a16b873": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#31",
+  "question": "X32",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "453ca32e": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#32",
+  "question": "X33",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "b63e1684": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#33",
+  "question": "X34",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "b48c9815": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#34",
+  "question": "X35",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "422b24d3": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#35",
+  "question": "X36",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "25b0cd12": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#36",
+  "question": "X37",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "855e8ba4": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#37",
+  "question": "X38",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "75703d34": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#38",
+  "question": "X39",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "2152194d": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#39",
+  "question": "X40",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "7de23984": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#40",
+  "question": "X41",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "cdec9780": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/frontier-holdout/answers.jsonl#41",
+  "question": "X42",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ }
+}

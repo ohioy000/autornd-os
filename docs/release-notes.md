@@ -36,8 +36,14 @@ One run of 2026-11-17, preregistered before the spend, on the three frozen profe
   (`docs/reviews/2026-11-17-frontier-direct.md`, `docs/MODELS.md`). The frontier model was right
   22 of 22 at medium effort and 14 of 14 at high effort. The harness, in the acceptance run, was
   right on 131 of its 132 answers to those same 22 questions (129 on the stricter marks). Neither
-  is shown to be more accurate than the other: the samples are too small to separate a miss rate
-  of one or two in a hundred from none.
+  is shown to be more accurate than the other on those 22: the samples are too small to separate
+  a miss rate of one or two in a hundred from none.
+- **On 42 new questions the frontier model was more accurate** (measured 2026-11-18, after the
+  release): right on 42 of 42 asked directly with web search, against the harness's 113 of 126
+  (89.7 percent), at about nine times the cost an answer ('$0.0986' against '$0.0108') and a
+  tenth of the time (11.2 seconds against 107). The claim of equivalent accuracy above holds
+  only for questions the harness was shaped against
+  (`docs/reviews/2026-11-18-frontier-direct-holdout.md`).
 
 These sets are the ones the harness was shaped against, so the figures above are not a forecast
 for a question nobody has seen. A second run, also preregistered, did that.

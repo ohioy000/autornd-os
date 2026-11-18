@@ -57,7 +57,10 @@ better input: the page's own words.
   (`docs/reviews/2026-11-16-needs-calculation.md`).
 - **Beside a frontier model:** asked 22 of the same questions directly, with web search, a
   frontier model was right on all 22, about seven times faster and about six times dearer
-  (`docs/reviews/2026-11-17-frontier-direct.md`). The harness matches it; it does not beat it.
+  (`docs/reviews/2026-11-17-frontier-direct.md`). On those questions the harness matches it; it
+  does not beat it. On 42 new questions, measured the next day, the frontier model was right on
+  all 42 and the harness on 113 of 126, at about a ninth of the cost
+  (`docs/reviews/2026-11-18-frontier-direct-holdout.md`).
 - **What it does not do.** It cannot tell a stale official page from a current one when
   nothing in the text shows it. It checks figures, not conditions written in words. Some sites
   refuse to be read. The question sets are now near the ceiling, so they can no longer show
