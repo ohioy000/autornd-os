@@ -26,11 +26,12 @@ first for the rules. They stay as they are.
 ## Open, in the order that matters
 
 1. **1.0.** The hold-out run missed its bar 2 (`docs/reviews/2026-11-17-holdout-run.md`), so
-   the owner released 0.2.0 with the limit stated. 1.0 waits for two things: **a ruling on a guard**
-   for a confirmation beside a figure from a superseded source, then a hold-out run that meets all
-   its bars (about '$1.40', with the owner's word); and **a person other than the builder starting
-   it from the README** (an agent did it, which is not the same). The container run, the
-   migrations and the retry are done.
+   the owner released 0.2.0 with the limit stated. **On 2026-11-17 the owner took the advice to
+   leave that limit stated and build no guard:** judges and second models were tried and caught
+   nothing (`docs/MODELS.md`), and a free check on years and names would fix one symptom. 1.0 now
+   waits for **a person other than the builder starting the project from the README** (an agent
+   did it, which is not the same), using `docs/first-try-note.md`, and for the owner's word to
+   lift the held bar. The container run, the migrations and the retry are done.
    Also the owner's: `CLAUDE.md` rule 12 says there is no migration tool, and the database now
    has numbered migrations.
 2. **A second human reading** of the acceptance answers was offered and declined on 2026-11-17; the release went out on the two-reader reading. Verdicts are in
