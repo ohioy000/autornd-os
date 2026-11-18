@@ -11,7 +11,8 @@ checksum from elsewhere, so they are not moved or renamed.
 | [`HOW-WE-GOT-HERE.md`](HOW-WE-GOT-HERE.md) | The story: how the harness changed, why there are so many tests, why the architect-and-coder form |
 | [`MODELS.md`](MODELS.md) | The models chosen for each tier, how the choices changed, and why they stand |
 | [`HANDOVER-ONE-PAGE.md`](HANDOVER-ONE-PAGE.md) | One page: where things stand, what is open, how to work here |
-| [`release-notes.md`](release-notes.md) | The first release's notes (draft until tagged): what it is, what was measured, the known limits |
+| [`release-notes.md`](release-notes.md) | The 0.2.0 release notes: what it is, what was measured, the known limits |
+| [`first-try-note.md`](first-try-note.md) | The note to give a person who tries to start the project from the README alone |
 | [`carryover-2026-11-16.md`](carryover-2026-11-16.md) | The latest handover: where the work stands and the plan to the release |
 | [`reviews/`](reviews/) | One report for each measurement or audit, named by date. The newest are the current state |
 
