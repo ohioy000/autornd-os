@@ -18,6 +18,11 @@ The questions are drawn from the three professional sets by a fixed seed,
 checked here. It stops starting calls once the spend has reached MAX_SPEND.
 LIMIT asks only the first LIMIT questions not yet in OUT_FILE, for a smoke.
 
+FRONTIER_SET=professional-holdout asks every question of the hold-out set
+(evals/professional/holdout-questions.json) once, in file order, in place of
+the draw; a set whose status says draft is refused, as the harness's own
+runner refuses it. Added 2026-11-18 for the hold-out comparison.
+
 Two settings were added on 2026-11-17 for the owner's second data point.
 FRONTIER_EFFORT is the reasoning effort sent (medium when unset).
 FRONTIER_SUBSET asks only that many of the 22, drawn from them by the same
@@ -53,9 +58,21 @@ MAX_TOKENS = int(os.environ.get("FRONTIER_MAX_TOKENS", "8000"))
 EFFORT = os.environ.get("FRONTIER_EFFORT", "medium").strip()
 SUBSET = int(os.environ.get("FRONTIER_SUBSET", "0"))
 SEARCH_RESULTS = 5
+SET_NAME = os.environ.get("FRONTIER_SET", "").strip()
 
 
 def _questions() -> list[dict]:
+    if SET_NAME:
+        if SET_NAME != "professional-holdout":
+            raise SystemExit(f"FRONTIER_SET {SET_NAME!r} is not professional-holdout")
+        frozen = json.loads(
+            (ROOT / "evals/professional/holdout-questions.json").read_text())
+        # D44: no paid answer is made on keys the owner has not signed.
+        if str(frozen.get("status", "")).upper().startswith("DRAFT"):
+            raise SystemExit("the hold-out set is a draft: its keys are not "
+                             "signed off by the owner, so it is not run")
+        return [{"set": "holdout-questions.json", "id": q["id"],
+                 "question": q["question"]} for q in frozen["questions"]]
     out = []
     for name, count in DRAW:
         frozen = json.loads((ROOT / "evals/professional" / name).read_text())
