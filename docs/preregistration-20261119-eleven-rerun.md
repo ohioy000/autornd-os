@@ -152,3 +152,17 @@ amount is '$4.50' in all, and it is the most this run may spend.** The three-pas
 - **Not run:** a fresh run of all 42 questions on the harness (about '$1.4'). It does not fit
   beside arm B. The first run's 89.7 percent stays the harness's overall figure, and this run
   speaks only for the 11 questions, as the limits above say.
+
+## Addendum 2, 2026-11-19: a third frontier pass
+
+Pushed before the third pass's spend. Passes 1 and 2 of arm B are done and cost '$1.12' and
+'$0.70', '$1.82' for 22 calls, far under the '$3.2' expected. At low effort the model pulled in
+less search text than I assumed: **the bound in "Money and stops" ("low effort saves at most about
+'$0.12' a pass") was wrong, and prediction 6 (a cost an answer of '$0.13' to '$0.17') failed on
+cost alone.** No answer has been read; this is decided from cost.
+
+The owner's amount, '$4.50' in all, stands. With '$1.82' spent and arm A capped near '$0.50', a
+third pass fits and restores the design above, 33 draws against 33. Pass 3 starts no call once
+'$1.70' is spent, so it cannot pass about '$2.15'. Together at most about '$4.47'. The bars on
+arm B return to their 33-answer form (bar 2 at least 30 of 33; prediction 5 "31 to 33 of 33"),
+using the answers made.
