@@ -4,11 +4,13 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-2012%20passing-brightgreen.svg)](#testing)
 
-**A harness that lets low-cost models answer expert questions correctly, and says honestly what it checked.**
+**A harness that lets low-cost models answer precise expert questions, shows what each answer rested on, and says honestly what it checked.**
 
 You send a request in prose. A workflow defined in a YAML file triages it, grounds it in sources, writes one answer and checks that answer with free deterministic code. The answer comes back with what was checked against a source and what was not.
 
-It is built for precise professional questions that name their rule or standard. It talks to any OpenAI-compatible endpoint. **You choose every model:** AutoRnD ships no defaults and recommends none.
+It is built for precise professional questions that name their rule or standard. It talks to any OpenAI-compatible endpoint.
+
+**Who it is for.** People who ask many precise questions and need to see what each answer rested on: a team checking regulations, standards and datasheets, for example. It is built to cost far less an answer than asking a frontier model directly. The trade, as measured: it is slower, and on questions written after it was fixed it was less often right than a frontier model asked directly with web search. For a handful of questions, asking a frontier model with search is the simpler way. The figures are in [`docs/MODELS.md`](docs/MODELS.md) and the [release notes](docs/release-notes.md); this README does not restate them. **You choose every model:** AutoRnD ships no defaults and recommends none.
 
 ## What It Does
 
@@ -414,7 +416,8 @@ The suite takes about 90 seconds to 3 minutes. It makes no network call and spen
 - **Answers written in words are not checked the way figures are.** The confirmations and most cautions read numbers. A wrong condition in prose can pass unseen.
 - **The answer-step prompt can trip a safety filter on some frontier models.** It was written for inexpensive models. If you put a frontier model in the answer seat, try one request first; a reply stopped by a content filter ends the run as blocked.
 - **With no key set, a same-host proxy that does not pass `X-Forwarded-For` serves everyone.** The loopback rule reads the caller's address. Set `API_KEY` or `JWT_SECRET` whenever anything other than this machine can reach the server.
-- **Some sites refuse to be read.** A page behind a login or a challenge, or a scanned PDF, stays unread, and the delivery says so.
+- **Some sites refuse to be read.** A page behind a login or a challenge, or a scanned PDF, stays unread, and the delivery says so. A page that does not answer within its time limit is unread too, and an answer built on few pages was wrong more often in our measurements.
+- **On new questions it is less often right than a frontier model asked directly,** and its misses scatter: the same question can be right on one run and wrong on the next. See `docs/MODELS.md`.
 - **The recompute vote cannot see an omission,** nor an error every sample shares. It is off unless a request is judged to need a calculation.
 - **Word-matching checks cannot see negation or paraphrase.** That is why they are notes.
 - **No code execution.** AutoRnD produces text.

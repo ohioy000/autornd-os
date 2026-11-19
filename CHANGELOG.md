@@ -15,6 +15,14 @@ the harness was shaped against. The report is
 release notes are corrected. Two probes changed: the frontier probe asks the
 hold-out set on request, and the blind-reading packet builder reads its rows.
 
+Measured, not changed (2026-11-19): the harness's hold-out misses scatter
+across draws instead of clustering on questions, and a lookup that read three
+pages or fewer was not right in 6 of 13 units against 7 of 113 for four or
+more (`docs/reviews/2026-11-19-holdout-misses-classified.md`). The README now
+says who the harness is for and that it is less often right than a frontier
+model on new questions; the release notes' conditions for 1.0 are brought in
+line with the owner's decision to build no guard.
+
 ## [0.2.0] — 2026-11-17
 
 Everything below happened after 0.1.0 and none of it was recorded until now.

@@ -22,6 +22,10 @@ FRONTIER_SET=professional-holdout asks every question of the hold-out set
 (evals/professional/holdout-questions.json) once, in file order, in place of
 the draw; a set whose status says draft is refused, as the harness's own
 runner refuses it. Added 2026-11-18 for the hold-out comparison.
+FRONTIER_IDS=X3,X12,... asks only those questions of the hold-out set, in file
+order, and stops if one is not in it. Added 2026-11-19 for the rerun of the
+eleven questions the harness missed; a second and third pass use a second and
+third OUT_FILE.
 
 Two settings were added on 2026-11-17 for the owner's second data point.
 FRONTIER_EFFORT is the reasoning effort sent (medium when unset).
@@ -59,6 +63,7 @@ EFFORT = os.environ.get("FRONTIER_EFFORT", "medium").strip()
 SUBSET = int(os.environ.get("FRONTIER_SUBSET", "0"))
 SEARCH_RESULTS = 5
 SET_NAME = os.environ.get("FRONTIER_SET", "").strip()
+IDS = [x.strip() for x in os.environ.get("FRONTIER_IDS", "").split(",") if x.strip()]
 
 
 def _questions() -> list[dict]:
@@ -71,8 +76,12 @@ def _questions() -> list[dict]:
         if str(frozen.get("status", "")).upper().startswith("DRAFT"):
             raise SystemExit("the hold-out set is a draft: its keys are not "
                              "signed off by the owner, so it is not run")
+        unknown = set(IDS) - {q["id"] for q in frozen["questions"]}
+        if unknown:
+            raise SystemExit(f"FRONTIER_IDS names {sorted(unknown)}, not in the set")
         return [{"set": "holdout-questions.json", "id": q["id"],
-                 "question": q["question"]} for q in frozen["questions"]]
+                 "question": q["question"]} for q in frozen["questions"]
+                if not IDS or q["id"] in IDS]
     out = []
     for name, count in DRAW:
         frozen = json.loads((ROOT / "evals/professional" / name).read_text())

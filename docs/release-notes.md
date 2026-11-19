@@ -39,7 +39,7 @@ One run of 2026-11-17, preregistered before the spend, on the three frozen profe
   is shown to be more accurate than the other on those 22: the samples are too small to separate
   a miss rate of one or two in a hundred from none.
 - **On 42 new questions the frontier model was more accurate** (measured 2026-11-18, after the
-  release): right on 42 of 42 asked directly with web search, against the harness's 113 of 126
+  release): right on 42 of 42 asked directly with web search (one draw a question), against the harness's 113 of 126
   (89.7 percent), at about nine times the cost an answer ('$0.0986' against '$0.0108') and a
   tenth of the time (11.2 seconds against 107). The claim of equivalent accuracy above holds
   only for questions the harness was shaped against
@@ -124,11 +124,14 @@ that machine will call it.
 
 The hold-out run missed its bar 2: one confirmation stood beside a wrong figure. The
 preregistration says that holds the release for the owner, and on 2026-11-17 the owner chose to
-release as 0.2.0 with the limit stated, in item 4 of the known limits above. 1.0 waits for:
+release as 0.2.0 with the limit stated, in item 4 of the known limits above. The owner also took
+the advice to build no guard: judges and second models caught nothing in the record
+(`docs/MODELS.md`). 1.0 waits for:
 
-- a person, not an agent, starting the project from the README;
-- a ruling on a guard for a confirmation beside a figure from a superseded source, and a
-  hold-out run that meets all its bars.
+- a person, not an agent, starting the project from the README (`docs/first-try-note.md`);
+- the owner's word to lift the held bar;
+- a decision on how to describe the accuracy gap to a frontier model on new questions, which was
+  measured after this release (`docs/reviews/2026-11-18-frontier-direct-holdout.md`).
 
 Until then, read a confirmation as "the figures stand in a passage found on its page", not as
 "the page is the current one".
