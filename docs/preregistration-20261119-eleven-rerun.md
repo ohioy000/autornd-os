@@ -128,3 +128,27 @@ verdict. A harness unit that ends blocked by its own checks counts as not right.
   reference, and it is one draw a question.
 - **The harness's side and the frontier side run on the same day this time,** which the first
   comparison did not.
+
+## Addendum, 2026-11-19: the owner's amount
+
+Pushed before the spend. The owner's word on the amount: "4.9 ... 4.5 is all thats left". **The
+amount is '$4.50' in all, and it is the most this run may spend.** The three-pass plan above
+(about '$5.3' expected) does not fit. What changes:
+
+- **Arm B is two passes, not three:** 22 calls, expected about '$3.2' (two passes at about
+  '$1.6'). **Arm A is unchanged:** 33 units, about '$0.35'. Expected total about '$3.6'.
+- **Stops that keep the total under '$4.50'.** Arm A: each of its three processes starts no unit
+  once it has spent '$0.15', so the arm cannot pass about '$0.50'. Arm B: pass 1 starts no call
+  once '$1.90' is spent; pass 2 is given what remains under '$3.55' for the two passes together
+  and starts no call once that is spent. One call has cost up to '$0.45', so arm B cannot pass
+  '$4.00'. Together at most '$4.50'.
+- **If a pass is cut short by its stop,** the answers made are read, the shortfall is reported,
+  and the frontier arm's bars use the answers made.
+- **Arm B's bars on 22 answers.** Bar 2: the frontier model at low effort is right on **at least
+  20 of 22** (91 percent). Bar 3 compares rates: the harness's right out of its answers made
+  against the frontier model's right out of its answers made. Prediction 5 becomes "21 or 22 of
+  22". Bars 1 and 4 and the other predictions stand.
+- **The smoke is unchanged:** X3 first, as pass 1's first answer.
+- **Not run:** a fresh run of all 42 questions on the harness (about '$1.4'). It does not fit
+  beside arm B. The first run's 89.7 percent stays the harness's overall figure, and this run
+  speaks only for the 11 questions, as the limits above say.
