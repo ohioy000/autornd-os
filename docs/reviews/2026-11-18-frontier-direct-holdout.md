@@ -14,9 +14,12 @@ how does a frontier model asked directly compare with the harness?
   `docs/MODELS.md`, the release notes and the history are corrected in this pull request.
 - **The harness is about nine times cheaper an answer: '$0.0108' against '$0.0986'.** Bar 2 is
   met. The harness is also nearly ten times slower: 107 seconds against 11.2.
-- **All 13 answers the harness did not get right fell on 11 questions, and the frontier model
-  was right on all 11.** Among them: the year of the instrument in force (X31), the withdrawn
-  status of an old revision (X20), and a datasheet that states no figure (X41).
+- **The harness's 13 not-right answers fell on 11 questions, and the frontier model was right on
+  all 11.** But the harness was right on each of those 11 in at least one of its three draws, and
+  its misses scatter instead of clustering (corrected 2026-11-19, see
+  `docs/reviews/2026-11-19-holdout-misses-classified.md`). Among them: the year of the instrument
+  in force (X31), the withdrawn status of an old revision (X20), and a datasheet that states no
+  figure (X41).
 - **What is left of the case for the harness is cost at volume and a record of what was read.**
   Not accuracy.
 
@@ -59,7 +62,8 @@ largest on the traps and on the sources it cannot read.
 **Which questions.** The harness's 9 wrong answers were on X12, X13, X16, X19, X20, X31, X34, X38
 and X41, and 4 more units ended blocked by its own checks (X3, X24, X31, X41): 13 answers on 11
 questions. The frontier model was right on all 11. There is no question the harness answered
-right and the frontier model wrong.
+right and the frontier model wrong. **Added 2026-11-19:** the harness was right on each of the
+11 in at least one draw (9 of the 11 in two of three), and the frontier model had one draw.
 
 ## The bars
 
@@ -128,7 +132,9 @@ them the frontier model said it was unsure, and was right.
   113 of 126. The earlier "equivalent accuracy" came from 22 questions the harness had been
   shaped against, where both were at the ceiling. The hold-out does what it was built to do: it
   shows the gap the shaping hid.
-- **What the harness missed is mostly what is read, not how it is reasoned about.** X31: the harness
+- **What the harness missed went with how much it read** (corrected 2026-11-19: the first version
+  of this bullet called the misses mostly of what was read, as if the questions were hard for the
+  harness; they are scattered draws, each question right in at least one of its three). X31: the harness
   took the year from a licence page still served; the frontier model's search found the 2025
   instrument and said its figures came from a consultation draft. X20: the harness said
   Revision 2 was superseded, not withdrawn, and that the PDF carries no banner; the cover says

@@ -49,7 +49,7 @@ The evidence, in the order we met it:
    maximum effort cost '$1.05' (`docs/reviews/2026-11-17-frontier-effort-and-seat.md`).
 8. **On 42 new questions, a frontier model asked directly was more accurate, faster, and about
    nine times dearer.** The same model, with web search on and no harness, was right on all 42
-   in 11.2 seconds an answer for '$0.0986'. The harness was right on 113 of its 126 answers
+   (one draw each) in 11.2 seconds an answer for '$0.0986'. The harness was right on 113 of its 126 answers
    (89.7 percent) in 107 seconds for '$0.0108'. These questions were written after the harness
    was fixed, by authors that never saw its answers
    (`docs/reviews/2026-11-18-frontier-direct-holdout.md`).
@@ -66,8 +66,11 @@ model corrected it in two ways, and both are kept here plainly:
 - **On new questions the frontier model is the more accurate** (added 18 November). It was right
   on 42 of 42 against the harness's 113 of 126, ten points apart. The first two points above
   were measured on questions the harness was shaped against, where both were at the ceiling.
-  The hold-out shows the gap that shaping hid. The harness's misses were mostly of what was
-  read: a stale instrument's year, a withdrawn status, figures in long PDFs.
+  The hold-out shows the gap that shaping hid. The harness's misses scatter across draws: each
+  of the 11 questions it missed was right in at least one of its three draws. A lookup that read
+  three pages or fewer was not right in 6 of 13 units, against 7 of 113 when it read four or
+  more (`docs/reviews/2026-11-19-holdout-misses-classified.md`). The frontier model had one draw
+  a question.
 
 So the thesis is narrower than a reader might hope: **inexpensive models, handed the right
 page, match a frontier model on the questions the harness was shaped against, and on new

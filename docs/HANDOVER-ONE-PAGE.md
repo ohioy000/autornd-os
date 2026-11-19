@@ -58,11 +58,15 @@ first for the rules. They stay as they are.
    watchdog tests cancel calls mid-flight; no live run has been timed out on purpose.
 
 10. **The accuracy gap on new questions.** The harness missed 13 answers on 11 questions that a
-    frontier model asked directly answered right. The misses were of what was read: a stale
-    instrument's year (X31), a withdrawn status on a cover page (X20), figures in long PDFs, two
-    over the fetch's 15 MB limit (X38, X41). None was tested as a cause. What to do is a design
-    question and needs a ruling: the lookup could find or read pages differently. It is not an
-    instrument repair.
+    frontier model asked directly answered right, but it was right on each of the 11 in at least
+    one draw: the misses scatter. A lookup that read 3 pages or fewer was not right in 6 of 13
+    units, against 7 of 113 for 4 or more; most unread pages gave "no answer within 25 s"
+    (`docs/reviews/2026-11-19-holdout-misses-classified.md`). A rerun of the 11 questions, the
+    harness beside the frontier model at low effort, is preregistered
+    (`docs/preregistration-20261119-eleven-rerun.md`) and awaits the owner's amount. What to do
+    about the gap is a design question and needs a ruling (a longer fetch limit, a retry of a
+    cut-off answer, saying "none stated", reading more pages). **Any lookup change makes the 42
+    hold-out questions a used set;** a second hold-out set is needed to judge it.
 
 ## How to work here
 
