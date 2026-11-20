@@ -199,6 +199,23 @@ DOCUMENT_WHOLE_CHARS = 4000
 DOCUMENT_EXCERPT_CHARS = 1200
 DOCUMENT_EXCERPTS = 3
 MAX_DOCUMENTS = 6
+
+# The reader tier (owner's ruling, 2026-11-20). A page too long to hand on whole
+# is cut into the READER_CHUNKS stretches that share the most words with the
+# question, each READER_CHUNK_CHARS long, and each goes to its own call of the
+# reader model, all at once (READER_CONCURRENCY at a time). The model copies back
+# up to READER_PASSAGES stretches of its text, word for word, that bear on the
+# question; each is put through quote_found and one not on the page is dropped.
+# Sized from a free replay of 36 pages on 2026-11-20: a lookup's pages run to
+# hundreds of thousands of characters and the PDF read, not the reading,
+# takes the time, so what the reader is for is which stretches are handed on,
+# not speed. 6 stretches of 6,000 characters is about 1,500 tokens a call and
+# at most 36 calls a lookup, a few tenths of a cent at a small model's rate.
+READER_CHUNK_CHARS = 6000
+READER_CHUNKS = 6
+READER_PASSAGES = 3
+READER_CONCURRENCY = 8
+READER_MAX_TOKENS = 1200
 # The shortest pointer looked for on a page. Shorter ones ("the limit") are
 # on most pages and tell nothing; the same floor as a quote's.
 MIN_POINTER_CHARS = MIN_QUOTE_CHARS
@@ -491,8 +508,13 @@ def _bundle(asked: list[str]) -> str:
     return "\n".join(f"{i}. {q}" for i, q in enumerate(asked, 1))
 
 
-def _excerpts(text: str, terms: set[str]) -> list[str]:
-    """The stretches of a page to hand on, each in the page's own words."""
+def _excerpts(text: str, terms: set[str], size: int = DOCUMENT_EXCERPT_CHARS,
+              count: int = DOCUMENT_EXCERPTS) -> list[str]:
+    """The stretches of a page to hand on, each in the page's own words.
+
+    `size` and `count` are the stretch length and how many; the defaults are
+    what a lookup hands on, and the reader tier asks for longer ones.
+    """
     if len(text) <= DOCUMENT_WHOLE_CHARS:
         return [text.strip()] if text.strip() else []
     lines = [line.strip() for line in text.splitlines() if line.strip()]
@@ -506,15 +528,15 @@ def _excerpts(text: str, terms: set[str]) -> list[str]:
     scores = [sum(weight.get(term, 0.0) for term in w) for w in words]
     windows = []
     for start in range(len(lines)):
-        size, end = 0, start
-        while end < len(lines) and size + len(lines[end]) <= DOCUMENT_EXCERPT_CHARS:
-            size += len(lines[end]) + 1
+        end, used = start, 0
+        while end < len(lines) and used + len(lines[end]) <= size:
+            used += len(lines[end]) + 1
             end += 1
         if end > start:
             windows.append((sum(scores[start:end]), start, end))
     chosen: list[tuple[int, int]] = []
     for score, start, end in sorted(windows, key=lambda w: (-w[0], w[1])):
-        if score <= 0 or len(chosen) >= DOCUMENT_EXCERPTS:
+        if score <= 0 or len(chosen) >= count:
             break
         if all(end <= a or start >= b for a, b in chosen):
             chosen.append((start, end))
@@ -571,15 +593,112 @@ async def _name_documents(client, request: str, question: str,
     return response, near
 
 
+READER_PROMPT = """Below is one stretch of a page, and a question. Copy out, word for \
+word and without changing a character, up to {limit} passages of the stretch \
+that answer the question or give a figure, a name, a date or a rule it \
+turns on. Each passage must be a whole sentence, row of a table or clause \
+taken exactly as it is printed. Do not summarise, correct, translate or add \
+anything. If nothing in the stretch bears on the question, return an empty \
+list.
+
+Question:
+{question}
+
+Stretch:
+{chunk}
+
+Reply with JSON only: {{"passages": ["...", "..."]}}"""
+
+
+async def _read_chunk(client, question: str, chunk: str) -> list[str]:
+    """One call of the reader model: the passages it copied from one stretch.
+
+    A failure is no passages, not a failed lookup: the stretches chosen by
+    shared words are handed on whatever the reader does. A spend refusal is
+    the run's, and goes up.
+    """
+    try:
+        response = await client.chat(
+            function="reader",
+            system_prompt=("You copy passages out of a text, exactly as "
+                           "printed. You never summarise or rewrite."),
+            user_message=READER_PROMPT.format(
+                limit=READER_PASSAGES, question=question, chunk=chunk),
+            temperature=0.0,
+            max_tokens=READER_MAX_TOKENS,
+        )
+        data = extract_json((response.content or "").strip())
+    except BudgetExceeded:
+        raise
+    except Exception as exc:
+        logger.warning("Reader call failed (%s): %s", type(exc).__name__, exc)
+        return []
+    items = data.get("passages") if isinstance(data, dict) else None
+    return [s.strip() for s in items if isinstance(s, str) and s.strip()][
+        :READER_PASSAGES] if isinstance(items, list) else []
+
+
+async def _read_with_readers(client, question: str, pages: dict[str, str],
+                             terms: set[str]) -> dict[str, dict]:
+    """What the reader tier copied from each long page, by address.
+
+    Every stretch goes to its own call, all at once. A passage counts only
+    where quote_found finds it on the page: the reader's words are never
+    handed on on its say-so. Returns, for each page it read, the passages
+    that held and how many calls and passages it made.
+    """
+    jobs: list[tuple[str, str]] = []
+    for url, text in pages.items():
+        if len(text) <= DOCUMENT_WHOLE_CHARS:
+            continue  # handed on whole already; nothing to pick
+        for chunk in _excerpts(text, terms, READER_CHUNK_CHARS, READER_CHUNKS):
+            jobs.append((url, chunk))
+    gate = asyncio.Semaphore(READER_CONCURRENCY)
+
+    async def one(chunk: str) -> list[str]:
+        async with gate:
+            return await _read_chunk(client, question, chunk)
+
+    results = await asyncio.gather(*(one(c) for _, c in jobs),
+                                   return_exceptions=True)
+    for result in results:
+        if isinstance(result, BudgetExceeded):
+            raise result
+    out: dict[str, dict] = {}
+    for (url, _), result in zip(jobs, results):
+        entry = out.setdefault(url, {"calls": 0, "passages": [], "dropped": 0})
+        entry["calls"] += 1
+        if isinstance(result, BaseException):
+            continue
+        for passage in result:
+            if len(passage) >= MIN_QUOTE_CHARS and quote_found(passage, pages[url]):
+                if _normalise(passage) not in {_normalise(p) for p in entry["passages"]}:
+                    entry["passages"].append(passage)
+            else:
+                entry["dropped"] += 1
+    return out
+
+
 async def _read_documents(near: dict[str, str], terms: set[str],
+                          client=None, question: str = "",
                           ) -> tuple[list[Quote], list[dict]]:
-    """Fetch the documents named and take the stretches to hand on."""
+    """Fetch the documents named and take the stretches to hand on.
+
+    With the reader tier set and a client given, the long pages are also read
+    by the reader model, and what it copied (and the page holds) is handed on
+    beside the stretches chosen by shared words.
+    """
     urls = [u for u in near
             if not (settings.lookup_avoid_unreadable
                      and _site(u) in _unreadable_sites)][:MAX_DOCUMENTS]
     pages = await asyncio.gather(*(fetch_source(u) for u in urls))
     quotes: list[Quote] = []
     documents: list[dict] = []
+    read_by_reader: dict[str, dict] = {}
+    if client is not None and settings.model_reader:
+        read_by_reader = await _read_with_readers(
+            client, question,
+            {u: pg.text for u, pg in zip(urls, pages) if pg.fetched}, terms)
     for url, page in zip(urls, pages):
         _note_fetch(url, page)
         documents.append({
@@ -590,12 +709,24 @@ async def _read_documents(near: dict[str, str], terms: set[str],
             # Always 1: a second request for documents was measured on 432
             # answers, fired in 13 of 144 lookups and gained nothing, and was
             # removed (2026-11-16). Kept so records read as the traces do.
-            "request": 1})
+            "request": 1,
+            # Only when the reader tier read the page: calls made, passages
+            # that held, passages dropped for not being on the page.
+            **({"reader": {"calls": read_by_reader[url]["calls"],
+                           "passages": len(read_by_reader[url]["passages"]),
+                           "dropped": read_by_reader[url]["dropped"]}}
+               if url in read_by_reader else {})})
         if not page.fetched:
             quotes.append(Quote(1, near[url] or url, url, status="unfetched",
                                 reason=page.reason))
             continue
-        for text in _excerpts(page.text, terms):
+        chosen = _excerpts(page.text, terms)
+        seen = {_normalise(c) for c in chosen}
+        # What the reader copied and the page holds, beside the stretches
+        # chosen by shared words; a passage already among them is not repeated.
+        chosen += [p for p in read_by_reader.get(url, {}).get("passages", [])
+                   if _normalise(p) not in seen]
+        for text in chosen:
             quotes.append(Quote(
                 1, text, url, fetched_at=page.fetched_at, sha256=page.sha256,
                 status="found" if quote_found(text, page.text) else "not_found"))
@@ -617,7 +748,7 @@ async def _ask_documents(client, request: str, asked: list[str],
         return None
     response, near = named
     quotes, documents = await _read_documents(
-        near, _terms(request, question, near))
+        near, _terms(request, question, near), client, question)
     if not documents:
         return None
     return Finding(

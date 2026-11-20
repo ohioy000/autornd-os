@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-2012%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-2027%20passing-brightgreen.svg)](#testing)
 
 **A harness that lets low-cost models answer precise expert questions, shows what each answer rested on, and says honestly what it checked.**
 
@@ -174,6 +174,7 @@ Each step is routed to a tier named by its job. You set one model per tier.
 | **Premium** | the Double Check review a user can ask for after a run, and `full-team`'s independent pass on work that cannot be recalled. Empty, the Double Check endpoints answer 404 and the pass uses the architecture tier |
 | **Judge** | validate, domain review and review in `full-team`, and validate in `verify-first`, on a different model from the one that wrote the answer. Empty, they run on the engineering tier. The default workflow does not use it |
 | **Recompute** | the three blind samples of the recompute vote. They run only when the decision tier is set as well and the `needs_calculation` switch routes yes. Otherwise the step records a skip, and the vote reads a skip as skipped, never as passed |
+| **Reader** | small, fast models that read the long pages a lookup fetched, many stretches at once, and copy back the words that bear on the question. Each copied passage is checked against the page and dropped if it is not there; nothing is summarised. Empty, a lookup hands on the stretches chosen by shared words alone |
 | **Decision** | a decision model, which returns typed answers with probabilities and no text. It answers the decision switches. Empty, no switch is asked and the recompute step never runs |
 
 So `MODEL_DECISION` alone turns on the switches, and `MODEL_DECISION` with `MODEL_RECOMPUTE` turns on the recompute vote for calculations. The decision tier needs a model served on the provider's decisions route, not a chat model.
