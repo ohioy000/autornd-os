@@ -44,13 +44,30 @@ logger = logging.getLogger(__name__)
 # went unverified. 25 is still a judgment, not a measured optimum: long
 # enough for a PDF of a few megabytes on a slow host, short beside a run
 # that takes minutes.
-FETCH_TIMEOUT_SECONDS = 25.0
+#
+# 25 -> 60, the owner's ruling of 2026-11-20 to let the fetch take more time,
+# after the eleven-question rerun: 24 of 28 lookups had a page that gave no
+# answer in 25 s. Measured free the same day on 36 pages of six such lookups,
+# fetched together as a lookup does: the downloads take 0.5-2 s, the time goes
+# on pypdf, which is CPU-bound, so a lookup's PDFs queue behind each other.
+# Pages read by limit: 25 s 15, 60 s 19, 120 s 20, 210 s 27 (the rest, whole
+# NIST SP 800-53 among them, had not finished at 300 s). 60 is the most the
+# run budget allows: a run fetches at most six rounds (two rounds a lookup,
+# three lookups), 360 s at 60 against the 558 s that config.py leaves; 210
+# would be 1,260 s and would starve the search calls. A faster read (PDFs
+# parsed in parallel processes) would pay more than a longer limit and is
+# not done here.
+FETCH_TIMEOUT_SECONDS = 60.0
 
 # A page larger than this is not read. Was 2 MB, sized for HTML. Measured
 # live 2026-11-12: a quoted specification PDF was over it. Standards and
 # datasheets as PDF run to several megabytes; 15 MB covers them and still
-# bounds what a run holds.
-FETCH_MAX_BYTES = 15_000_000
+# bounds what a run holds. 15 -> 37.5 MB (x2.5), the owner's ruling of
+# 2026-11-20: four documents were cut by it in the 2026-11-17 and 2026-11-19
+# runs, the traffic manual at 29.4 MB, a datasheet at 24.8 MB, a specification
+# page at 18.6 MB and a vendor datasheet over 15 MB (size not measured). A run
+# can hold eight such pages at once, up to 300 MB of raw bytes.
+FETCH_MAX_BYTES = 37_500_000
 
 # Redirects followed, each checked as the first address was.
 MAX_REDIRECTS = 3

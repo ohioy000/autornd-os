@@ -67,7 +67,10 @@ first for the rules. They stay as they are.
     bar 3 (within five points) missed, cost bar met. The first run's misses were draws on 8 of the
     11 questions and repeat on X12, X31 and X41. **11 draws were never made (provider 402 on
     credit while the two arms ran together); redoing them costs about '$0.65' and needs the
-    owner's word and a runner option to pick exact units.** What to do
+    owner's word and a runner option to pick exact units.** **2026-11-20, owner's ruling:
+    the fetch limits went to 60 s (from 25) and 37.5 MB (from 15); the downloads take 0.5-2 s
+    and the time is the PDF text read, so a faster read would pay more (not done); effect on
+    answers unmeasured.** What to do
     about the gap is a design question and needs a ruling (a longer fetch limit, a retry of a
     cut-off answer, saying "none stated", reading more pages). **Any lookup change makes the 42
     hold-out questions a used set;** a second hold-out set is needed to judge it.
