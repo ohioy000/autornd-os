@@ -43,6 +43,10 @@
   "system": "You write search queries that retrieve engineering documentation. Respond with JSON only.",
   "user": "An engineer is about to work on the request below. Write the search queries\nthat would pull the most useful material out of this project's documentation.\n\nTarget what the work will actually need settled — interfaces it must match,\nconstraints it must respect, existing behaviour it must not break — rather\nthan restating the request.\n\nRequest:\nSize the backoff timer for the reconnect path. Give the cap in seconds and state whether jitter applies.\n\nReturn JSON with:\n- queries: 2 to 4 short search queries, most important first."
  },
+ "reader_chunk": {
+  "system": "You copy passages out of a text, exactly as printed. You never summarise or rewrite.",
+  "user": "Below is one stretch of a page, and a question. Copy out, word for word and without changing a character, up to 3 passages of the stretch that answer the question or give a figure, a name, a date or a rule it turns on. Each passage must be a whole sentence, row of a table or clause taken exactly as it is printed. Do not summarise, correct, translate or add anything. If nothing in the stretch bears on the question, return an empty list.\n\nQuestion:\nthe backoff cap in seconds\n\nStretch:\nThe reconnect path's timer is sized by the request alone.\n\nReply with JSON only: {\"passages\": [\"...\", \"...\"]}"
+ },
  "recompute": {
   "system": "You are a careful senior engineer.",
   "user": "Size the backoff timer for the reconnect path. Give the cap in seconds and state whether jitter applies.\n\nProject context:\nThe reconnect path's timer is sized by the request alone; no corpus was consulted for it.\n\nThe asks, quoted from the request — compute each one yourself:\n1. Give the cap in seconds [value]\n2. state whether jitter applies [verdict]\n\nCompute the answer yourself. Return JSON with results: one entry per listed ask, {\"ask\": its number, \"value\": your final number or the identifier you chose, \"unit\": the unit of the number, empty for an identifier}."

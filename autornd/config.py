@@ -70,6 +70,13 @@ class Settings(BaseSettings):
     # unset means the recompute node skips — a skip is recorded,
     # never read as a pass — and the workflow runs without it.
     model_recompute: str = ""
+    # The reader tier (owner's ruling, 2026-11-20): small, fast models read the
+    # long pages a lookup fetched, many at once, one call a stretch of the page,
+    # and copy back the words that bear on the question. Optional like the
+    # premium tier: unset, a lookup hands on the stretches chosen by shared
+    # words alone, as it always did. It reads and copies; it never summarises,
+    # and every stretch it returns is put through the same quote check.
+    model_reader: str = ""
     # The decision tier: a decision model, which returns typed answers with
     # probabilities and no text, asked a few narrow questions about a
     # finished answer and recorded as notes. Nothing routes on them (owner,
@@ -342,7 +349,7 @@ class Settings(BaseSettings):
     @field_validator(
         "model_triage", "model_engineering", "model_architecture",
         "model_escalation", "model_research", "model_ranker", "model_search",
-        "model_judge",
+        "model_judge", "model_reader",
     )
     @classmethod
     def validate_model_id(cls, v: str) -> str:
@@ -414,6 +421,8 @@ _OPTIONAL_TIERS = {
                    "falls back to the engineering tier when unset",
     "model_recompute": "blind recompute samples for the recompute vote "
                        "— the node skips when unset",
+    "model_reader": "fast readers of a lookup's long pages, in parallel, copying "
+                    "back the words that bear on the question — off when unset",
     "model_decision": "a decision model's narrow notes on a finished answer "
                       "— recorded, never routed on; the node skips when unset",
 }

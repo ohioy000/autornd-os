@@ -32,6 +32,16 @@ first run's misses were mostly draws on eight questions and repeat on three
 reported as not made. `docs/reviews/2026-11-19-eleven-rerun.md`; two probes
 added to rebuild the figures.
 
+Added (2026-11-20, the owner's ruling): a reader tier, `MODEL_READER`, off when
+empty. When set, the long pages a lookup fetched are cut into the six stretches
+that share the most words with the question, each goes to its own call of a
+small fast model, all at once, and the model copies back up to three passages
+word for word. A passage counts only where the page holds it, by the same quote
+check as before; nothing is summarised. It adds to the stretches chosen by
+shared words and replaces none. It makes the lookup choose better stretches of a
+long page; it does not make the PDF text come sooner, which is where the time
+goes. Its effect on answers is not measured.
+
 Changed (2026-11-20, the owner's ruling): the fetch layer waits up to 60 s for a
 page instead of 25 s, and reads a page up to 37.5 MB instead of 15 MB. In the
 eleven-question rerun 24 of 28 lookups had a page that gave no answer in 25 s

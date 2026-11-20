@@ -54,6 +54,7 @@ PLACEHOLDERS: dict[str, str] = {
     "MODEL_PREMIUM": "",
     "MODEL_JUDGE": "",
     "MODEL_RECOMPUTE": "",
+    "MODEL_READER": "",
     "MODEL_DECISION": "",
     # everything else — the declared defaults
     "DATABASE_URL": "sqlite+aiosqlite:///./autornd.db",

@@ -93,7 +93,7 @@ SITE_FUNCTIONS = frozenset({
     "run_domain_review", "run_implement", "run_recompute", "run_validate",
     "run_review", "run_doublecheck", "run_escalation_autopsy",
     "expand_queries", "rerank_chunks", "synthesize_briefing",
-    "analyze_request", "_name_documents",
+    "analyze_request", "_name_documents", "_read_chunk",
 })
 
 # The specialist each seat is given. ENGINEERING_SEATS are the ones the golden
@@ -378,6 +378,11 @@ async def capture_all(seats: dict[str, object] | None = None) -> dict[str, dict[
         client, REQUEST, ["the backoff cap in seconds"], None,
     )
     take("lookup_documents")
+
+    await research._read_chunk(
+        client, "the backoff cap in seconds", CHUNKS[0]["text"],
+    )
+    take("reader_chunk")
 
     from autornd.specialists import registry as specialists_registry
 

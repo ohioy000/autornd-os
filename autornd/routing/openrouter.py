@@ -418,6 +418,9 @@ class OpenRouterClient:
         # The decision tier: same optional-tier contract, no fallback.
         **({"decision": settings.model_decision}
            if settings.model_decision else {}),
+        # The reader tier (owner's ruling, 2026-11-20): same contract; a
+        # lookup reads its long pages with it only when it is set.
+        **({"reader": settings.model_reader} if settings.model_reader else {}),
     }
 
     def __init__(self, api_key: str | None = None, base_url: str | None = None):
@@ -1547,6 +1550,7 @@ async def check_models() -> dict[str, dict]:
         # tier showed only when a run reached it, and health said "ok".
         ("recompute", settings.model_recompute),
         ("decision", settings.model_decision),
+        ("reader", settings.model_reader),
     ):
         if model_id:
             configured[tier] = model_id
@@ -1693,4 +1697,7 @@ def rebuild_function_models() -> None:
         # The decision tier: same optional-tier contract, no fallback.
         **({"decision": settings.model_decision}
            if settings.model_decision else {}),
+        # The reader tier (owner's ruling, 2026-11-20): same contract; a
+        # lookup reads its long pages with it only when it is set.
+        **({"reader": settings.model_reader} if settings.model_reader else {}),
     }
