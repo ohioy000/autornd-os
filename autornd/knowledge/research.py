@@ -626,6 +626,12 @@ async def _read_chunk(client, question: str, chunk: str) -> list[str]:
                 limit=READER_PASSAGES, question=question, chunk=chunk),
             temperature=0.0,
             max_tokens=READER_MAX_TOKENS,
+            # Measured live 2026-11-20 on the first beta call: the reader
+            # model reasoned through all 1,200 tokens of its budget and sent
+            # no reply (finish "length"). Copying needs no reasoning. Off, the
+            # same call used 23 output tokens, not 118, at about a quarter of
+            # the cost.
+            reasoning={"enabled": False},
         )
         data = extract_json((response.content or "").strip())
     except BudgetExceeded:
