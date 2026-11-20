@@ -1,0 +1,156 @@
+{
+  "e277e485": {
+    "verdict": "right",
+    "stated": "SO2 24-hour AQG 40 ug/m3; NO2 annual AQG 10 ug/m3",
+    "evidence": "SO2: '24-hour mean | 40 µg/m³'; NO2: 'Annual mean | 10 µg/m³'; also 'Do not report 20 µg/m³' for 2005 SO2.",
+    "outside_wrong": false,
+    "note": "Both key figures stated correctly and distinguished from interim targets and 2005 values."
+  },
+  "e0e60886": {
+    "verdict": "right",
+    "stated": "SO2 24-hour AQG 40 ug/m3; NO2 annual AQG 10 ug/m3",
+    "evidence": "'(a) Sulfur dioxide (SO2), 24-hour mean: 40 µg/m³, up from 20 µg/m³ in the 2005 guidelines'; '(b) ... annual mean: 10 µg/m³, down from 40 µg/m³ in the 2005 guidelines'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "c4fa9d3d": {
+    "verdict": "right",
+    "stated": "SO2 24-hour AQG 40 ug/m3; NO2 annual AQG 10 ug/m3",
+    "evidence": "'(a) ... 24-hour mean: 40 µg/m³'; '(b) ... annual mean: 10 µg/m³'; 'raised from 20 µg/m³ to 40 µg/m³ ... tightened ... from 40 µg/m³ to 10 µg/m³'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "db247bcb": {
+    "verdict": "right",
+    "stated": "SO2 24-hour AQG 40 ug/m3; NO2 annual AQG 10 ug/m3",
+    "evidence": "'(a) ... 24-hour mean: 40 µg/m³. This is up from 20 µg/m³ in the 2005 guidelines'; '(b) ... annual mean: 10 µg/m³. This is down from 40 µg/m³'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "d4ba4212": {
+    "verdict": "right",
+    "stated": "SO2 24-hour AQG 40 ug/m3; NO2 annual AQG 10 ug/m3",
+    "evidence": "'sulfur dioxide (SO2), 24-hour mean, is 40 µg/m³'; table row 'Nitrogen dioxide (NO2) | Annual | 10 µg/m³'; 'The superseded 2005 SO2 24-hour guideline value was 20 µg/m³ and should not be reported'.",
+    "outside_wrong": false,
+    "note": "NO2 value is given only in the table row, but it is stated clearly."
+  },
+  "f781b0cb": {
+    "verdict": "right",
+    "stated": "SO2 24-hour AQG 40 ug/m3; NO2 annual AQG 10 ug/m3",
+    "evidence": "'(a) Sulfur dioxide (SO2), 24-hour mean | 40 µg/m³'; '(b) Nitrogen dioxide (NO2), annual mean | 10 µg/m³'; SO2 'loosened from 20 ... to 40', NO2 'tightened from 40 ... to 10'.",
+    "outside_wrong": false,
+    "note": "Extra context (ppb conversions, interim targets, EU limits) is consistent with the key."
+  },
+  "d35fd003": {
+    "verdict": "wrong",
+    "stated": "TI 8.0; within limit of 50",
+    "evidence": "'TI = 0.08 mSv/h / 0.01 mSv/h = 8.0'; 'the assigned TI is 8.0 and it is within the applicable TI limit of 50'; 'it does not alter the TI calculation'.",
+    "outside_wrong": false,
+    "note": "Fails the TI item: omits the Table 7 factor of 2 for a 1-5 m2 load area, giving 8 instead of 16 (the commonly confused figure); limit 50 and 'within' are right."
+  },
+  "042eecba": {
+    "verdict": "right",
+    "stated": "TI 16; within the limit of 50",
+    "evidence": "'Transport index: 16, which is within the limit of 50'; '0.08 × 100 = 8 ... factor of 2: 8 × 2 = 16'; 'para. 526(b) ... freight container used as packaging shall not exceed 50'; 'lower limit of 10 in para. 526(a) applies to other packages'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "15437444": {
+    "verdict": "right",
+    "stated": "TI 16; within the limit of 50",
+    "evidence": "'Transport index: 16, which is within the limit of 50'; '8 × 2 = 16'; 'para. 526(b) ... shall not exceed 50 ... A TI of 16 is within this limit'; the limit of 10 in 526(a) 'does not apply here'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "109facf5": {
+    "verdict": "right",
+    "stated": "TI 16; within the limit of 50",
+    "evidence": "'TI = 16, and yes, it is within the limit, which is 50 for a freight container used as packaging'; '0.08 mSv/h × 100 = 8 ... factor is 2 ... TI = 8 × 2 = 16'; 'the TI of any freight container used as packaging shall not exceed 50'.",
+    "outside_wrong": false,
+    "note": "Hedges that the Table 7 band was taken from memory and speculates about the 2018 edition, but commits to 16 and 50 for the current edition."
+  },
+  "fbdd46c5": {
+    "verdict": "wrong",
+    "stated": "TI 80.0; NOT within limit (limit given as 10, or 50 only if exclusive use)",
+    "evidence": "'TI = 0.08 mSv/h × 100 × 10 = 80.0'; '80.0 > 10, so the assigned TI is NOT within the limit'; 'applicable TI limit for a non-exclusive-use package/freight container is 10'.",
+    "outside_wrong": true,
+    "note": "Fails both items: TI is 80 (wrong factor of 10 instead of 2) and the limit is given as 10 with the container found non-compliant, instead of 50 and compliant."
+  },
+  "9ea80040": {
+    "verdict": "right",
+    "stated": "No employee threshold; Art. 37(1) is activity-based; 250 is Art. 30(5)",
+    "evidence": "'There is no employee threshold'; Art. 37(1) lists public authority, large-scale monitoring, large-scale special-category/criminal data; 'The 250-employee figure appears in Article 30(5), which concerns an exemption from record-keeping duties, not DPO appointment'.",
+    "outside_wrong": false,
+    "note": "German 20-person rule (raised from 10 in 2019) and the dropped early-draft 250 trigger are accurate."
+  },
+  "b5bd3969": {
+    "verdict": "right",
+    "stated": "No employee threshold; Art. 37(1) is activity-based; 250 is Art. 30(5)",
+    "evidence": "'There is no employee-count threshold. The GDPR never makes a DPO mandatory at any number of employees'; Art. 37(1)(a)-(c) quoted; '250 employees | Art. 30(5) GDPR ... It has nothing to do with DPOs'.",
+    "outside_wrong": true,
+    "note": "Key items right; outside the key it mislabels WP243 as the DPIA guidelines (WP243 is the DPO guideline) and cites 'EDPB Guidelines 8/2022 on data protection officers', which are actually the lead-supervisory-authority guidelines, so the claim that they 'state expressly that no employee-number threshold exists' is unsupported."
+  },
+  "c351aec7": {
+    "verdict": "right",
+    "stated": "No employee threshold; Art. 37(1) is activity-based; 250 is Art. 30(5)",
+    "evidence": "'There is no employee-count threshold. The GDPR never makes DPO appointment mandatory at any number of employees'; three activity-based triggers in Art. 37(1); 'Article 30(5) — the 250-employee figure ... a record-keeping exemption. It has nothing to do with Article 37'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "6877c729": {
+    "verdict": "right",
+    "stated": "No employee threshold; Art. 37(1) is activity-based; 250 is Art. 30(5)",
+    "evidence": "'At no number of employees ... no employee-count threshold'; Art. 37(1) three qualitative triggers; 'The 250 figure in the GDPR belongs to a different obligation: Article 30(5), the record-of-processing exemption ... it does not appear in Art. 37'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "2ad323c8": {
+    "verdict": "right",
+    "stated": "No employee threshold; Art. 37(1) is activity-based; 250 is Art. 30(5)",
+    "evidence": "'There is no employee threshold'; three Art. 37(1) situations listed; 'The 250-employee figure appears in Article 30(5), which concerns an exemption from the record-keeping obligation, not DPO appointment'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "645683ce": {
+    "verdict": "right",
+    "stated": "No employee threshold; Art. 37(1) is activity-based; 250 is Art. 30(5)",
+    "evidence": "'There is no employee threshold'; three Art. 37(1) situations listed; 'The 250-employee figure appears in Article 30(5), which concerns the exemption from keeping records of processing activities, not DPO appointment'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "b0a29f7b": {
+    "verdict": "right",
+    "stated": "Rev. 3 = 17 families; Rev. 2 = 14 families; Rev. 2 Withdrawn 14 May 2024, superseded in its entirety by Rev. 3",
+    "evidence": "'Revision 3 ... defines 17 families'; 'Revision 2 defined 14 families'; 'WITHDRAWN — withdrawn on May 14, 2024 and superseded in its entirety by SP 800-171 Revision 3'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "470eda7f": {
+    "verdict": "right",
+    "stated": "Rev. 3 = 17 families; Rev. 2 = 14; Rev. 2 Withdrawn since 14 May 2024, redirects to Rev. 3",
+    "evidence": "'Seventeen families make up Revision 3'; 'Its total stood at 14 families'; 'Withdrawn ... redirects readers to Revision 3. The withdrawal dates to May 14, 2024, when Revision 3 came out'.",
+    "outside_wrong": false,
+    "note": "Hedged as coming from secondary sources ('reportedly'), but it commits to Withdrawn, 14 May 2024 and supersession by Rev. 3; does not say 'in its entirety'."
+  },
+  "f353a9e6": {
+    "verdict": "right",
+    "stated": "Rev. 3 = 17 families; Rev. 2 = 14; Rev. 2 Withdrawn since 14 May 2024, superseded by Rev. 3",
+    "evidence": "'The family count in Revision 3 stands at 17'; 'Fourteen families was the total under Revision 2'; 'Withdrawn ... a marking that dates from May 14, 2024, when Revision 3 superseded it'.",
+    "outside_wrong": false,
+    "note": "Notes it read only secondary sources, but commits to all three key figures; does not say 'in its entirety'."
+  },
+  "203b9ef9": {
+    "verdict": "right",
+    "stated": "Rev. 3 = 17 families; Rev. 2 = 14; Rev. 2 Withdrawn on 14 May 2024, superseded by Rev. 3",
+    "evidence": "'Rev. 3: 17 families. Rev. 2: 14 families. Rev. 2 status: Withdrawn on May 14, 2024, superseded by SP 800-171 Rev. 3'; Rev. 3 and Rev. 2 family lists enumerated (3.1-3.17 and 3.1-3.14).",
+    "outside_wrong": false,
+    "note": "Also explains the 11-name CSRC metadata field as not the family count."
+  },
+  "66769ae5": {
+    "verdict": "right",
+    "stated": "Rev. 3 = 17 families; Rev. 2 = 14; Rev. 2 Withdrawn 14 May 2024, superseded in its entirety by Rev. 3",
+    "evidence": "'Current revision (Rev. 3, May 2024) defines 17 families'; 'Revision 2 defined 14 families'; 'Withdrawn — withdrawn 14 May 2024 and superseded in its entirety by NIST SP 800-171 Rev. 3'.",
+    "outside_wrong": false,
+    "note": ""
+  }
+}

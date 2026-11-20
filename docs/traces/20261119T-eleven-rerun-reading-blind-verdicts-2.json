@@ -1,0 +1,114 @@
+{
+  "7467cbd5": {
+    "verdict": "right",
+    "stated": "No, 4.1.1 is obsolete and removed in WCAG 2.2; reason: assistive technology no longer does its own markup parsing, it relies on the browser",
+    "evidence": "Item 1: '**No.** A page does **not** have to pass 4.1.1' and 'Success Criterion 4.1.1 Parsing is **obsolete and removed** in WCAG 2.2'. Item 2: 'previously assistive technology did their own markup parsing. Now they rely on the browser' and '4.1.1 is no longer needed for accessibility'.",
+    "outside_wrong": false,
+    "note": "The reason is taken from the WAI FAQ rather than the in-document note, and the answer says so, but it conveys that assistive technology no longer needs to parse markup itself."
+  },
+  "2644d982": {
+    "verdict": "right",
+    "stated": "No, 4.1.1 is 'Obsolete and removed' in WCAG 2.2; reason: assistive technology no longer needs to parse HTML directly",
+    "evidence": "Item 1: '**No.** ... in it 4.1.1 Parsing is marked \"Obsolete and removed\", so it is not a conformance requirement at any level, including AA.' Item 2: 'Assistive technology no longer needs to parse HTML directly, so those problems either no longer exist or are covered by other criteria.'",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "dfc882b5": {
+    "verdict": "right",
+    "stated": "No, 4.1.1 is '(Obsolete and removed)' in WCAG 2.2; reason: assistive technology no longer needs to parse HTML directly",
+    "evidence": "Item 1: '**No.** ... in that version 4.1.1 Parsing is marked \"(Obsolete and removed).\" It is not a conformance requirement at any level'. Item 2: 'Assistive technology no longer needs to parse HTML directly. Those problems therefore either no longer exist or are covered by other criteria'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "01b9750e": {
+    "verdict": "right",
+    "stated": "No, 4.1.1 appears only as 'Parsing (Obsolete and removed)' in WCAG 2.2; reason quoted from the note: assistive technology no longer has any need to directly parse HTML",
+    "evidence": "Item 1: '**No.** ... 4.1.1 Parsing is not a requirement in that version. It appears only as \"Parsing (Obsolete and removed),\" so there is nothing to pass or fail'. Item 2 quote: 'Assistive technology no longer has any need to directly parse HTML. Consequently, these problems either no longer exist or are addressed by other criteria.'",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "68ac8886": {
+    "verdict": "right",
+    "stated": "No, 4.1.1 is 'Obsolete and removed' in WCAG 2.2 (Dec 2024); reason quoted: assistive technology no longer has any need to directly parse HTML",
+    "evidence": "Item 1: 'Answer: No — not applicable. 4.1.1 is not a conformance requirement in WCAG 2.2 ... listed as Obsolete and removed'. Item 2 quote: 'Assistive technology no longer has any need to directly parse HTML. Consequently, these problems either no longer exist or are addressed by other criteria.'",
+    "outside_wrong": false,
+    "note": "The WCAG 2.1 contingency (Pass, always satisfied) is a side branch; the primary answer for the December 2024 Recommendation is WCAG 2.2 and No."
+  },
+  "91b295af": {
+    "verdict": "right",
+    "stated": "No, 4.1.1 is obsolete and removed in WCAG 2.2; reason given as parsing problems for assistive technology no longer exist because the HTML Standard governs handling, so the criterion is no longer needed",
+    "evidence": "Item 1: '**Verdict — No.** ... 4.1.1 is **not a success criterion in WCAG 2.2** — it is recorded as obsolete and removed.' Item 2: 'was originally adopted to address problems that assistive technology had directly parsing HTML. Since this criterion was written, the HTML Standard has adopted specific requirements governing how user agents must handle incomplete tags ... this criterion no longer provides any benefit' and '4.1.1 is no longer needed for accessibility'.",
+    "outside_wrong": true,
+    "note": "The reason is worded from the FAQ and the WCAG 2.0 errata text rather than the WCAG 2.2 note, so it is a weaker match for the key reason, but it conveys the same point (assistive technology parsing HTML is no longer a problem); it also calls Guideline 4.1 'Robust' (it is 'Compatible') and presents the errata text as the WCAG 2.2 note."
+  },
+  "5db5f914": {
+    "verdict": "right",
+    "stated": "Number, period and lockout duration are all organization-defined with no NIST value; the control fixes a limit plus an automatic action (lock for a period, lock until admin release, delay, notify, other)",
+    "evidence": "Items 1 and 2: 'does not require any specific number of attempts, time period, or lockout duration. All three are organization-defined parameters' and 'organization-defined (no NIST value)'. Item 3: 'Enforce a limit of [Assignment: organization-defined number] consecutive invalid logon attempts' and the b. selection of lock for a period / until released by an administrator / delay / notify / other.",
+    "outside_wrong": false,
+    "note": "The 3 / 15 minutes / 30 minutes example is explicitly labelled 'NOT a NIST requirement'."
+  },
+  "b8205fd5": {
+    "verdict": "right",
+    "stated": "AC-7 prescribes no specific numbers; all three are organization-defined; the control enforces a limit and one or more automatic actions; the common figures come from FedRAMP, DoD and others, not the control",
+    "evidence": "Items 1 and 2: 'control AC-7 does not prescribe specific numbers. All three values are organization-defined parameters'. Item 3: 'AC-7a: Enforce a limit of [organization-defined number] consecutive invalid logon attempts' and 'AC-7b: ... lock the account or node for an [organization-defined time period]; lock it until released by an administrator; delay the next logon prompt ...; notify the system administrator; or take [other organization-defined action]'. Table is headed 'Commonly used values come from frameworks that build on 800-53, not from the control itself'.",
+    "outside_wrong": false,
+    "note": "The 3 / 15 minutes / 30 minutes figures are attributed to other frameworks and given 'from memory', not as the NIST requirement."
+  },
+  "eebbaf94": {
+    "verdict": "right",
+    "stated": "No number, time period or lockout duration is stated; all three are organization-defined parameters (None stated); the control requires enforcing a limit and an automatic response chosen from a selection",
+    "evidence": "Items 1 and 2: 'does **not** prescribe a specific number of consecutive invalid logon attempts, a specific time period ..., or a specific lockout duration. All three are Organization-Defined Parameters' and 'Value in Rev. 5: **None stated** — organization-defined'. Item 3: AC-7a 'Enforce a limit of [Assignment: organization-defined number] consecutive invalid logon attempts' and the AC-7b selection of five responses.",
+    "outside_wrong": true,
+    "note": "The AC-7(2) enhancement is described as 'Reuses the AC-7a threshold', but in Rev. 5 AC-7(2) carries its own organization-defined number; the illustrative 3 / 15 minute values are labelled 'NOT a NIST requirement'."
+  },
+  "c21bf2df": {
+    "verdict": "right",
+    "stated": "AC-7 prescribes no numbers; all three are organization-defined parameters; the control enforces a limit and an automatic action chosen from a selection; the FedRAMP, DISA and CNSSI figures are from other frameworks",
+    "evidence": "Items 1 and 2: 'control AC-7 does not itself prescribe specific numbers. All three values are organization-defined parameters (ODPs)' and 'those baselines also leave the values unassigned'. Item 3: 'AC-7a: Enforce a limit of [organization-defined number] consecutive invalid logon attempts ...' and the AC-7b list (lock for a period, until admin release, delay, notify, other). Table heading: 'from other frameworks, not from NIST 800-53 itself'.",
+    "outside_wrong": false,
+    "note": "The 3 / 15 / 30 figures are attributed to other frameworks, from memory, and not given as the NIST requirement."
+  },
+  "e481c42c": {
+    "verdict": "right",
+    "stated": "AC-7 prescribes no specific numbers; all three values are organization-defined; the requirement is that a threshold exists and triggers an automatic response from a selection; typical values are industry or organizational practice",
+    "evidence": "Items 1 and 2: 'control AC-7 does not prescribe specific numbers. All three values are organization-defined parameters' and 'they come from your organization's policy or an applicable overlay or baseline, not from the control itself'. Item 3: 'The requirement is that a threshold exists, is documented, and triggers an automatic system response' plus the five AC-7b actions.",
+    "outside_wrong": false,
+    "note": "The 'typical' 3 to 5 attempts and 15 to 30 minute figures are attributed to industry practice and to named organizations' own policies, not to AC-7."
+  },
+  "7bb5f27e": {
+    "verdict": "right",
+    "stated": "v1.28 outside (newer than apiserver), v1.25 inside, v1.24 outside (below 1.25 so only two minors older allowed)",
+    "evidence": "'v1.28 ... OUTSIDE — kubelet newer than kube-apiserver'; 'v1.25 ... INSIDE — exactly at the n-2 floor'; 'v1.24 ... FAIL (1.24 < 1.25, needs ≥ 1.25) ... OUTSIDE'. Supported set '{1.25, 1.26, 1.27}'.",
+    "outside_wrong": true,
+    "note": "The sensitivity section says that for n = 1.28 the 1.25 kubelet 'would also drop out', which is wrong because 1.25 is exactly three behind 1.28 and is allowed."
+  },
+  "2e1028cd": {
+    "verdict": "right",
+    "stated": "Only v1.25 is supported; v1.28 is newer than the apiserver; v1.24 is three behind and kubelets below 1.25 are capped at two",
+    "evidence": "'v1.28 is not supported. A kubelet must never be newer than kube-apiserver.' 'v1.25 is supported. It is two minor versions older'. 'v1.24 is not supported. ... kubelets older than v1.25 may only be up to two minor versions behind. v1.24 is three behind v1.27'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "deb8cf5a": {
+    "verdict": "right",
+    "stated": "Only v1.25 is supported; v1.28 is newer than the apiserver; v1.24 is three behind and a kubelet below 1.25 may only be two minors older",
+    "evidence": "'v1.28: not supported. The kubelet must not be newer than kube-apiserver'. 'v1.25: supported. It is two minor versions older ... within the limit under both the old two-version rule and the current three-version rule'. 'v1.24: not supported. ... a kubelet below 1.25 may only be up to two minor versions older'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "55a813b2": {
+    "verdict": "right",
+    "stated": "Only v1.25 is inside the skew; v1.28 outside (newer); v1.24 outside (three behind and below 1.25 so a two-minor lag only)",
+    "evidence": "'Only `v1.25` is inside the supported skew. `v1.28` is outside (newer than the apiserver). `v1.24` is outside (three minors behind, and a kubelet older than 1.25 is only entitled to a two-minor lag).' Table: v1.28 OUTSIDE, v1.25 INSIDE, v1.24 OUTSIDE; allowed set '{1.25, 1.26, 1.27}'.",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "9623efa1": {
+    "verdict": "right",
+    "stated": "Only v1.25 is inside the skew; v1.28 out (newer than apiserver); v1.24 out (three behind, kubelet below 1.25 capped at two)",
+    "evidence": "'Answer: only v1.25 is inside the supported skew. v1.28 is outside (newer than the apiserver), and v1.24 is outside (three minor versions behind, but a kubelet below 1.25 is only allowed to lag by two).' Table: v1.28 OUT, v1.25 IN, v1.24 OUT; 'Allowed kubelet minors for a 1.27 apiserver: {1.25, 1.26, 1.27}'.",
+    "outside_wrong": true,
+    "note": "The HA caveat claims that if any apiserver instance is at 1.26 a 1.24 kubelet 'becomes IN', which is wrong because it is still three behind the 1.27 instances and the policy says HA skew narrows the allowed set; this also contradicts the answer's own script."
+  }
+}

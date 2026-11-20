@@ -23,6 +23,15 @@ says who the harness is for and that it is less often right than a frontier
 model on new questions; the release notes' conditions for 1.0 are brought in
 line with the owner's decision to build no guard.
 
+Measured, not changed (2026-11-19, later): the eleven questions the harness
+missed were asked again, three draws each, beside a frontier model at low
+effort. The harness was right on 24 of the 28 answers it made (85.7 percent,
+against 60.6 percent the first time) and the frontier model on 27 of 27, so the
+first run's misses were mostly draws on eight questions and repeat on three
+(X12, X31, X41). Eleven draws were refused by the provider for credit and are
+reported as not made. `docs/reviews/2026-11-19-eleven-rerun.md`; two probes
+added to rebuild the figures.
+
 ## [0.2.0] — 2026-11-17
 
 Everything below happened after 0.1.0 and none of it was recorded until now.

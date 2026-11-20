@@ -44,6 +44,12 @@ One run of 2026-11-17, preregistered before the spend, on the three frozen profe
   tenth of the time (11.2 seconds against 107). The claim of equivalent accuracy above holds
   only for questions the harness was shaped against
   (`docs/reviews/2026-11-18-frontier-direct-holdout.md`).
+- **The eleven questions the harness missed, asked again** (2026-11-19): the harness was right on
+  24 of the 28 answers it made (85.7 percent), against 60.6 percent the first time; the frontier
+  model at low effort was right on 27 of 27, at about ten times the cost an answer. Most of the
+  first run's misses were draws, but three questions (X12, X31, X41) fail again. Eleven draws
+  were never made (provider credit errors), and the harness still trails the frontier model on
+  accuracy (`docs/reviews/2026-11-19-eleven-rerun.md`).
 
 These sets are the ones the harness was shaped against, so the figures above are not a forecast
 for a question nobody has seen. A second run, also preregistered, did that.

@@ -1,0 +1,145 @@
+{
+ "_about": "Executor's second reading, 2026-11-19, of the eleven-question rerun. Read in full: every answer the blind readers did not mark right (3), every answer they marked outside_wrong (6), the three X41 answers, and the other X12 and X31 answers, plus a random 12 of the rest (seed 20261119). 30 of 54 in all. No verdict differs from the blind readers'. says_unchecked is a hand count among the 30 read.",
+ "d35fd003": {
+  "verdict": "wrong",
+  "notes": "TI 8.0: leaves out the Table 7 factor of 2. Limit 50 and 'within' are right, the TI is not. Wrong.",
+  "outside_wrong": false
+ },
+ "fbdd46c5": {
+  "verdict": "wrong",
+  "notes": "TI 80.0 (a factor of 10 for area) and a limit of 10 with the container found non-compliant. Both key items wrong.",
+  "outside_wrong": true
+ },
+ "90e1534b": {
+  "verdict": "wrong",
+  "notes": "4 W and 25 mW per 3 kHz right; names the 2015 licence as the one in force (year 2015). The year item is wrong. This is the stale-instrument miss the preregistration named.",
+  "says_unchecked": true,
+  "outside_wrong": false
+ },
+ "e4ac8bb8": {
+  "verdict": "right",
+  "notes": "2 s, 3.5 ft/s, 3 s all right. It also says the 2009 default speed was 4.0 ft/s and answers 'assumptions in the project brief' nobody gave; both outside the key. Right.",
+  "says_unchecked": true,
+  "outside_wrong": true
+ },
+ "b5bd3969": {
+  "verdict": "right",
+  "notes": "No headcount threshold, Art 37(1) activity-based, 250 is Art 30(5): all right. Mislabels WP243 and EDPB Guidelines 8/2022, outside the key; says the attributions should be verified.",
+  "says_unchecked": true,
+  "outside_wrong": true
+ },
+ "91b295af": {
+  "verdict": "right",
+  "notes": "No; obsolete and removed in WCAG 2.2. The reason is given from the FAQ and the errata text (assistive technology parsing no longer a problem): it carries the key's reason. A weaker quote of it than the other five, but right. Suggests answering Pass if the form has no N/A: advice, not a claim about the key.",
+  "outside_wrong": true
+ },
+ "eebbaf94": {
+  "verdict": "right",
+  "notes": "None stated, all three organization-defined; the control fixes a limit and a response. Right. Config schema numbers are labelled placeholders. AC-7(2) remark is outside the key.",
+  "outside_wrong": true
+ },
+ "7bb5f27e": {
+  "verdict": "right",
+  "notes": "Only 1.25 inside; 1.28 and 1.24 outside, with the right reasons. The sensitivity section says 1.25 'would also drop out' at n 1.28, which is wrong (outside the key; the question fixes the apiserver at 1.27).",
+  "outside_wrong": true
+ },
+ "9623efa1": {
+  "verdict": "right",
+  "notes": "Only 1.25 inside; 1.28 and 1.24 outside, right reasons, script agrees. The HA caveat says a 1.24 kubelet 'becomes IN' if an apiserver sits at 1.26, wrong and against its own script, but a hypothetical beyond the question. Counted right; a stricter reader might not.",
+  "outside_wrong": true
+ },
+ "15437444": {
+  "verdict": "right",
+  "notes": "TI 16 and limit 50, within. Right.",
+  "says_unchecked": true
+ },
+ "109facf5": {
+  "verdict": "right",
+  "notes": "TI 16 and limit 50, within. Right.",
+  "says_unchecked": true
+ },
+ "042eecba": {
+  "verdict": "right",
+  "notes": "TI 16 and limit 50, within. Right.",
+  "says_unchecked": true
+ },
+ "6f414ebe": {
+  "verdict": "right",
+  "notes": "4 W; 25 mW per 3 kHz; 2025. Says the 2.4 GHz figures are from earlier versions and should be checked. Right.",
+  "says_unchecked": true
+ },
+ "d3cec33e": {
+  "verdict": "right",
+  "notes": "4 W; 25 mW per 3 kHz (says it could not confirm from the 2025 text); 2025. Right.",
+  "says_unchecked": true
+ },
+ "39a81549": {
+  "verdict": "right",
+  "notes": "4 W; 25 mW per 3 kHz; 2025 (F2025L01047), and says the Papua New Guinea 2026 licence is not the Australian one. Right. Lists checks to run, says confidence high."
+ },
+ "22752f46": {
+  "verdict": "right",
+  "notes": "Says no thermal resistance, junction temperature or power dissipation is published, 'as far as I know', from the contents list. Matches 'None'. Hedged but it says none. Right.",
+  "says_unchecked": true
+ },
+ "0bc2c417": {
+  "verdict": "right",
+  "notes": "Same as 22752f46: none from the retrieved text, 'as far as I recall'. Right.",
+  "says_unchecked": true
+ },
+ "e7fde2ce": {
+  "verdict": "right",
+  "notes": "None specified; searched terms listed; derives a budget from an assumed 60 degC/W and labels it not a datasheet value. Right. It claims a search of the complete body: whether the page was read is in the pages table of the report."
+ },
+ "deb8cf5a": {
+  "verdict": "right",
+  "notes": "Every key item right, read in full."
+ },
+ "224a81ce": {
+  "verdict": "right",
+  "notes": "Every key item right, read in full."
+ },
+ "b0a29f7b": {
+  "verdict": "right",
+  "notes": "Every key item right, read in full."
+ },
+ "2e1028cd": {
+  "verdict": "right",
+  "notes": "Right. Says it is from knowledge of the policy, not a fresh lookup.",
+  "says_unchecked": true
+ },
+ "db247bcb": {
+  "verdict": "right",
+  "notes": "Every key item right, read in full."
+ },
+ "470eda7f": {
+  "verdict": "right",
+  "notes": "17, 14, withdrawn 14 May 2024, redirects to Rev 3. Says the status is from secondary sources. Right.",
+  "says_unchecked": true
+ },
+ "c351aec7": {
+  "verdict": "right",
+  "notes": "Every key item right, read in full."
+ },
+ "9e2d4b7d": {
+  "verdict": "right",
+  "notes": "Every key item right, read in full."
+ },
+ "c4fa9d3d": {
+  "verdict": "right",
+  "notes": "Every key item right, read in full."
+ },
+ "f781b0cb": {
+  "verdict": "right",
+  "notes": "Every key item right, read in full."
+ },
+ "23c751d9": {
+  "verdict": "right",
+  "notes": "Every key item right, read in full."
+ },
+ "f353a9e6": {
+  "verdict": "right",
+  "notes": "17, 14, withdrawn 14 May 2024. Says the status is as secondary sources report it. Right.",
+  "says_unchecked": true
+ }
+}

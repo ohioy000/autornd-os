@@ -1,0 +1,471 @@
+{
+ "f781b0cb": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-0.jsonl#0",
+  "question": "X3",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "68ac8886": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-0.jsonl#1",
+  "question": "X16",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "55a813b2": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-0.jsonl#2",
+  "question": "X24",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "224a81ce": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-0.jsonl#3",
+  "question": "X38",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "fbdd46c5": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-0.jsonl#4",
+  "question": "X12",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "5db5f914": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-0.jsonl#5",
+  "question": "X19",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "90e1534b": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-0.jsonl#6",
+  "question": "X31",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "82bdf7b9": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-0.jsonl#7",
+  "question": "X41",
+  "repeat": 2,
+  "status": "blocked",
+  "delivered": false
+ },
+ "c351aec7": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-0.jsonl#8",
+  "question": "X13",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "b0a29f7b": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-0.jsonl#9",
+  "question": "X20",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "23c751d9": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-0.jsonl#10",
+  "question": "X34",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "d35fd003": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-1.jsonl#0",
+  "question": "X12",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "eebbaf94": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-1.jsonl#1",
+  "question": "X19",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "39a81549": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-1.jsonl#2",
+  "question": "X31",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "e7fde2ce": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-1.jsonl#3",
+  "question": "X41",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "6877c729": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-1.jsonl#4",
+  "question": "X13",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "66769ae5": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-1.jsonl#5",
+  "question": "X20",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "9e2d4b7d": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-1.jsonl#6",
+  "question": "X34",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "d4ba4212": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-1.jsonl#7",
+  "question": "X3",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "91b295af": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-1.jsonl#8",
+  "question": "X16",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "9623efa1": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-1.jsonl#9",
+  "question": "X24",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "e4ac8bb8": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-1.jsonl#10",
+  "question": "X38",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true
+ },
+ "b5bd3969": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-2.jsonl#0",
+  "question": "X13",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "203b9ef9": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-2.jsonl#1",
+  "question": "X20",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "d52a5ecc": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-2.jsonl#2",
+  "question": "X34",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true
+ },
+ "e277e485": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-2.jsonl#3",
+  "question": "X3",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "7467cbd5": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-2.jsonl#4",
+  "question": "X16",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "7bb5f27e": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-2.jsonl#5",
+  "question": "X24",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true
+ },
+ "34a1fa92": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-2.jsonl#6",
+  "question": "X38",
+  "repeat": 2,
+  "status": "blocked",
+  "delivered": false
+ },
+ "07d68e89": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-2.jsonl#7",
+  "question": "X12",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false
+ },
+ "1fbbaa14": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-2.jsonl#8",
+  "question": "X19",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false
+ },
+ "9ba7aa6c": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-2.jsonl#9",
+  "question": "X31",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false
+ },
+ "a86683f7": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-rerun/shard-2.jsonl#10",
+  "question": "X41",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false
+ },
+ "db247bcb": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass1.jsonl#0",
+  "question": "X3",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "15437444": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass1.jsonl#1",
+  "question": "X12",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "9ea80040": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass1.jsonl#2",
+  "question": "X13",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "dfc882b5": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass1.jsonl#3",
+  "question": "X16",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "c21bf2df": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass1.jsonl#4",
+  "question": "X19",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "f353a9e6": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass1.jsonl#5",
+  "question": "X20",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "deb8cf5a": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass1.jsonl#6",
+  "question": "X24",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "6f414ebe": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass1.jsonl#7",
+  "question": "X31",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "81da8ec1": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass1.jsonl#8",
+  "question": "X34",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "9e6531d4": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass1.jsonl#9",
+  "question": "X38",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "22752f46": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass1.jsonl#10",
+  "question": "X41",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "e0e60886": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass2.jsonl#0",
+  "question": "X3",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "109facf5": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass2.jsonl#1",
+  "question": "X12",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "645683ce": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass2.jsonl#2",
+  "question": "X13",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "2644d982": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass2.jsonl#3",
+  "question": "X16",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "b8205fd5": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass2.jsonl#4",
+  "question": "X19",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "654475f2": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass2.jsonl#5",
+  "question": "X20",
+  "repeat": null,
+  "status": "failed",
+  "delivered": false
+ },
+ "6b81628e": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass2.jsonl#6",
+  "question": "X24",
+  "repeat": null,
+  "status": "failed",
+  "delivered": false
+ },
+ "6821d5c1": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass2.jsonl#7",
+  "question": "X31",
+  "repeat": null,
+  "status": "failed",
+  "delivered": false
+ },
+ "3188a9e3": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass2.jsonl#8",
+  "question": "X34",
+  "repeat": null,
+  "status": "failed",
+  "delivered": false
+ },
+ "7ea5fbf5": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass2.jsonl#9",
+  "question": "X38",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "3096e208": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass2.jsonl#10",
+  "question": "X41",
+  "repeat": null,
+  "status": "failed",
+  "delivered": false
+ },
+ "c4fa9d3d": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass3.jsonl#0",
+  "question": "X3",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "042eecba": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass3.jsonl#1",
+  "question": "X12",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "2ad323c8": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass3.jsonl#2",
+  "question": "X13",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "01b9750e": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass3.jsonl#3",
+  "question": "X16",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "e481c42c": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass3.jsonl#4",
+  "question": "X19",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "470eda7f": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass3.jsonl#5",
+  "question": "X20",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "2e1028cd": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass3.jsonl#6",
+  "question": "X24",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "d3cec33e": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass3.jsonl#7",
+  "question": "X31",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "e21fcf65": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass3.jsonl#8",
+  "question": "X34",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "e965c1bc": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass3.jsonl#9",
+  "question": "X38",
+  "repeat": null,
+  "status": "failed",
+  "delivered": false
+ },
+ "0bc2c417": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass3.jsonl#10",
+  "question": "X41",
+  "repeat": null,
+  "status": "answered",
+  "delivered": true
+ },
+ "318540aa": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/4e914fa1-613c-5684-a7a1-d41d19f3a0a3/scratchpad/eleven-frontier/pass3.jsonl#11",
+  "question": "X38",
+  "repeat": null,
+  "status": "failed",
+  "delivered": false
+ }
+}

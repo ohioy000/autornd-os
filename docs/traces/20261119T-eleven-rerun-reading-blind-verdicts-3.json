@@ -1,0 +1,114 @@
+{
+  "90e1534b": {
+    "verdict": "wrong",
+    "stated": "4 W EIRP; 25 mW per 3 kHz; instrument year 2015 (2015 licence said to be in force)",
+    "evidence": "'Maximum EIRP: 4 W.' / 'Additional radiated peak power spectral density limit: 25 mW per 3 kHz' / 'Year carried in the name of the instrument in force: 2015.' and 'the 2015 instrument is the one in force on the date asked about.'",
+    "outside_wrong": false,
+    "note": "Instrument item fails: it names the 2015 licence as in force, but the key says the 2025 licence (commenced 1 October 2025) replaced it."
+  },
+  "6f414ebe": {
+    "verdict": "right",
+    "stated": "4 W; 25 mW in any 3 kHz; 2025 licence, commenced 1 October 2025, replacing the 2015 licence",
+    "evidence": "'Maximum EIRP: 4 W' / 'radiated peak PSD must not exceed 25 mW in any 3 kHz' / 'Year the instrument was made: 2025' and 'Sunsetting ended the 2015 class licence on 1 October 2025, and its 2025 replacement took effect that same day.'",
+    "outside_wrong": false,
+    "note": "All three key items stated; it says openly that the 2.4 GHz figures rest on earlier versions and secondary sources, but it still commits to them."
+  },
+  "d3cec33e": {
+    "verdict": "right",
+    "stated": "4 W; 25 mW in any 3 kHz; 2025 licence, commencing 1 October 2025, replacing the 2015 licence",
+    "evidence": "'4 W EIRP, a radiated peak power spectral density cap of 25 mW in any 3 kHz, and the instrument was made in 2025.' / 'Class Licence 2025 ... commencing 1 October 2025, when it replaced the 2015 licence.' / 'Item 7 ... sets 4 W ... conditions located in clause 43.'",
+    "outside_wrong": false,
+    "note": "All three key items stated and committed to; the caveat that the PSD figure rests on the 2015 text does not remove the commitment."
+  },
+  "39a81549": {
+    "verdict": "right",
+    "stated": "4 W (36 dBm); 25 mW per 3 kHz; 2025 (F2025L01047), in force, replacing the 2015 licence",
+    "evidence": "'Maximum EIRP: 4 W' / 'must not exceed 25 mW per 3 kHz' / 'Year of the instrument now in force ... 2025.' and 'Title: Radiocommunications (Low Interference Potential Devices) Class Licence 2025 ... Status shown on the Register: In force'",
+    "outside_wrong": false,
+    "note": "All three key items stated correctly; it also correctly excludes the Papua New Guinea 2026 instrument."
+  },
+  "e21fcf65": {
+    "verdict": "right",
+    "stated": "(a) more than 11 m; (b) 30 m; (c) 18 m or more; 2026 amendments take effect 30 September 2026",
+    "evidence": "'top storey more than 11 m above ground level' / 'the trigger was 30 m' / 'a top storey of 18 m or more above ground level' / '30 September 2026 is the date the 2026 amendments ... came into effect in England.'",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "9e2d4b7d": {
+    "verdict": "right",
+    "stated": "(a) more than 11 m; (b) 30 m; (c) 18 m (18 m or more); 30 September 2026",
+    "evidence": "'top storey more than 11 m above ground level' / 'Before the 2020 amendments the trigger was a top storey more than 30 m' / 'a storey 18m or more in height. The trigger height is therefore 18 m.' / 'The 2026 amendments take effect on 30 September 2026 for use in England.'",
+    "outside_wrong": false,
+    "note": "Gives the strict 11 m versus inclusive 18 m wording correctly."
+  },
+  "23c751d9": {
+    "verdict": "right",
+    "stated": "(a) 11 m (more than); (b) 30 m; (c) 18 m or more; 30 September 2026",
+    "evidence": "'(a) Current sprinkler trigger ... 11 m ... more than 11 m' / '(b) ... 30 m' / '(c) ... 18 m ... a storey 18 m or more in height' / '(d) Effective date of (c) 30 September 2026'",
+    "outside_wrong": false,
+    "note": "Its provenance table says the 11 m and 30 m figures were not grounded in fetched passages, but it commits to both figures."
+  },
+  "81da8ec1": {
+    "verdict": "right",
+    "stated": "(a) more than 11 m (para 7.4); (b) 30 m; (c) 18 m or more (para 3.30(b)); 30 September 2026",
+    "evidence": "'top storey more than 11m above ground level ... (paragraph 7.4)' / 'the trigger height was 30m' / 'Under paragraph 3.30(b) ... top storey of 18m or more in height' / '2026 amendments, which take effect on 30 September 2026'",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "d52a5ecc": {
+    "verdict": "right",
+    "stated": "(a) more than 11 m; (b) more than 30 m; (c) 18 m or more; 30 September 2026",
+    "evidence": "'More than 11 m above ground level' / 'More than 30 m above ground level' / '18 m - recommendation applies to blocks of flats with a storey 18 m or more in height' / 'Date ... 30 September 2026'",
+    "outside_wrong": false,
+    "note": "It calls the amendment set the 'March 2024 booklet' and says the request's '2026 amendments' label differs, but all four key figures and the date are right."
+  },
+  "7ea5fbf5": {
+    "verdict": "right",
+    "stated": "11th Edition buffer 2 s; default 3.5 ft/s (up to 4 ft/s can be justified); 2009 buffer 3 s",
+    "evidence": "'11th Edition buffer minimum: 2 seconds.' / 'Default walking speed: 3.5 ft/s' / 'evaluating the clearance time at up to 4 ft/s' / '2009 MUTCD buffer minimum: 3 seconds.'",
+    "outside_wrong": false,
+    "note": "It notes Missouri DOT shows 3 s but does not adopt that as the federal figure."
+  },
+  "224a81ce": {
+    "verdict": "right",
+    "stated": "11th Edition buffer at least 2 s; default 3.5 ft/s; 2009 buffer at least 3 s",
+    "evidence": "'Minimum buffer interval in the 11th Edition ... 2 seconds' / 'Default walking speed ... 3.5 feet per second' / 'Buffer-interval minimum in the 2009 MUTCD: 3 seconds.'",
+    "outside_wrong": false,
+    "note": ""
+  },
+  "9e6531d4": {
+    "verdict": "right",
+    "stated": "11th Edition buffer at least 2 s; default 3.5 ft/s; 2009 buffer at least 3 s",
+    "evidence": "'Buffer interval (11th Edition): at least 2 seconds.' / 'Default walking speed: 3.5 feet per second.' / 'Buffer interval (2009 MUTCD): at least 3 seconds.'",
+    "outside_wrong": false,
+    "note": "It mentions that Missouri's guide uses 3 s but keeps 2 s as the federal 11th Edition figure."
+  },
+  "e4ac8bb8": {
+    "verdict": "right",
+    "stated": "11th Edition buffer 2 s; default 3.5 ft/s; 2009 buffer 3 s",
+    "evidence": "'Minimum buffer interval ... 2 seconds' / 'Default walking speed ... 3.5 ft/s' / 'Buffer-interval minimum in the 2009 MUTCD ... 3 seconds'",
+    "outside_wrong": true,
+    "note": "All three key items are right, but it wrongly says the 2009 default walking speed was 4.0 ft/s and that 3.5 ft/s is an 11th Edition change; the 2009 MUTCD already used 3.5 ft/s."
+  },
+  "22752f46": {
+    "verdict": "right",
+    "stated": "None: no thermal resistance, maximum junction temperature or total power dissipation published in the datasheet",
+    "evidence": "'as far as I know this datasheet doesn't publish thermal resistance, maximum junction temperature, or total power dissipation for the ATmega328P.' / 'Figures of roughly 60C/W for a 28-pin PDIP circulate online, but that is a generic package estimate, not a number from this datasheet.'",
+    "outside_wrong": false,
+    "note": "Commits to none being stated (with an 'as far as I know' softener) and does not present any theta-JA as the datasheet's."
+  },
+  "e7fde2ce": {
+    "verdict": "right",
+    "stated": "None: theta-JA not specified; no junction temperature or power dissipation rating in the datasheet",
+    "evidence": "'NOT SPECIFIED in DS40002061B. The document contains no thermal-resistance table of any kind.' / 'NEITHER is specified in DS40002061B. The document does not use the term junction temperature and publishes no power-dissipation rating for any package.'",
+    "outside_wrong": false,
+    "note": "Its 60 C/W figure is labelled an assumption, not a datasheet value, and it warns against deriving a dissipation rating from the absolute-maximum numbers."
+  },
+  "0bc2c417": {
+    "verdict": "right",
+    "stated": "None: the datasheet does not publish theta-JA, maximum junction temperature or total power dissipation",
+    "evidence": "'as far as I recall this datasheet doesn't publish one, nor a maximum junction temperature or total power dissipation.' / 'Since the table of contents shows no thermal section, you would need to get theta-JA for the 28P3 package from Microchip directly.'",
+    "outside_wrong": false,
+    "note": "Commits to none being stated despite hedging on retrieval; no theta-JA figure is given."
+  }
+}

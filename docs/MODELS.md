@@ -70,7 +70,12 @@ model corrected it in two ways, and both are kept here plainly:
   of the 11 questions it missed was right in at least one of its three draws. A lookup that read
   three pages or fewer was not right in 6 of 13 units, against 7 of 113 when it read four or
   more (`docs/reviews/2026-11-19-holdout-misses-classified.md`). The frontier model had one draw
-  a question.
+  a question. A rerun of those 11 questions (19 November) gave the harness 24 right of 28 answers
+  made (85.7 percent, against 60.6 percent the first time) and the frontier model at low effort 27
+  of 27, at about a tenth of the cost an answer for the harness. On 8 of the 11 the first run's
+  misses were draws; on three (the transport index, the instrument in force, a datasheet that
+  states no figure) the harness is weak. Eleven of the 66 draws were never made, because the
+  provider refused calls for credit (`docs/reviews/2026-11-19-eleven-rerun.md`).
 
 So the thesis is narrower than a reader might hope: **inexpensive models, handed the right
 page, match a frontier model on the questions the harness was shaped against, and on new
