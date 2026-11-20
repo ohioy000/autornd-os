@@ -61,9 +61,13 @@ first for the rules. They stay as they are.
     frontier model asked directly answered right, but it was right on each of the 11 in at least
     one draw: the misses scatter. A lookup that read 3 pages or fewer was not right in 6 of 13
     units, against 7 of 113 for 4 or more; most unread pages gave "no answer within 25 s"
-    (`docs/reviews/2026-11-19-holdout-misses-classified.md`). A rerun of the 11 questions, the
-    harness beside the frontier model at low effort, is preregistered
-    (`docs/preregistration-20261119-eleven-rerun.md`) and awaits the owner's amount. What to do
+    (`docs/reviews/2026-11-19-holdout-misses-classified.md`). The rerun of the 11 questions
+    (`docs/reviews/2026-11-19-eleven-rerun.md`, '$3.0122' spent of '$4.50') gave the harness 24 right
+    of 28 answers made against the frontier model's 27 of 27 at low effort: bar 1 met on rate,
+    bar 3 (within five points) missed, cost bar met. The first run's misses were draws on 8 of the
+    11 questions and repeat on X12, X31 and X41. **11 draws were never made (provider 402 on
+    credit while the two arms ran together); redoing them costs about '$0.65' and needs the
+    owner's word and a runner option to pick exact units.** What to do
     about the gap is a design question and needs a ruling (a longer fetch limit, a retry of a
     cut-off answer, saying "none stated", reading more pages). **Any lookup change makes the 42
     hold-out questions a used set;** a second hold-out set is needed to judge it.
