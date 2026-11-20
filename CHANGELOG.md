@@ -32,6 +32,16 @@ first run's misses were mostly draws on eight questions and repeat on three
 reported as not made. `docs/reviews/2026-11-19-eleven-rerun.md`; two probes
 added to rebuild the figures.
 
+Changed (2026-11-20, the owner's ruling): the fetch layer waits up to 60 s for a
+page instead of 25 s, and reads a page up to 37.5 MB instead of 15 MB. In the
+eleven-question rerun 24 of 28 lookups had a page that gave no answer in 25 s
+and four documents were cut for size. Measured free on six such lookups, the
+downloads take 0.5 to 2 s and the time goes on reading the PDF text, so a longer
+limit reads more pages (19 of 36 at 60 s against 15 at 25 s) but a faster read
+would read more; that is not done. The effect on answers is not measured: the 42
+hold-out questions are now a used set and a second hold-out set is needed to
+judge it.
+
 ## [0.2.0] — 2026-11-17
 
 Everything below happened after 0.1.0 and none of it was recorded until now.

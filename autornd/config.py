@@ -222,6 +222,9 @@ class Settings(BaseSettings):
     # of record checks it. 2026-11-13: the fetch bound went from 10 s to 25 s
     # a round (fetch.py), so the same sum is 150 s of fetching, which still
     # fits the 558 s only while a search call takes under about 135 s.
+    # 2026-11-20: the bound went from 25 s to 60 s a round (owner's ruling),
+    # so the same sum is 360 s of fetching, and the 558 s fit only while a
+    # search call takes under about 66 s.
     run_time_budget_seconds: float | None = 1800.0
 
     # Ruling D45 (2): the API run's spend ceiling, in USD. Runs measured
