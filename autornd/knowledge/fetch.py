@@ -172,6 +172,10 @@ class Source:
     etag: str = ""
     content_type: str = ""
     text: str = ""
+    # How many pages the document has, when a PDF was read in processes (which report it); 0 for
+    # anything else. Owner's ruling of 2026-11-21 (option C): a proof of absence names the size of
+    # the document it searched.
+    pages: int = 0
 
     @property
     def fetched(self) -> bool:
@@ -183,7 +187,10 @@ async def fetch_source(url: str) -> Source:
     progress: dict[str, int] = {}
     try:
         async with asyncio.timeout(FETCH_TIMEOUT_SECONDS):
-            return await _fetch(url, progress)
+            source = await _fetch(url, progress)
+            if source.fetched:
+                source.pages = progress.get("pages", 0)
+            return source
     except TimeoutError:
         reason = f"no answer within {FETCH_TIMEOUT_SECONDS:g} s"
         # A PDF that ran out of time says how far it had got, so a record of

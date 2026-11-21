@@ -47,6 +47,18 @@ writing `issue` lost three entire reviews at the last phase with the findings in
 **Exhibits precede leniency.** No field is made tolerant on speculation — point at
 the trace that died.
 
+## A claim only a proof may allow
+
+`ImplementVerdict.not_stated` (owner's ruling of 2026-11-21, option C) is the one way an answer may say
+a document states none for an ask. It is typed like `blocked_on` and never read from the summary's
+English, and it works only where the grounding holds a proof of absence for that ask
+(`knowledge/absence.py`: code searched the full text of a page read in full for the words an answer
+would be printed with, and found none of them). `blocked_on_unmet` takes the claims and the numbers of
+the proven asks: a claim with no proof ends the run blocked, as a blocked ask does, and is counted
+(`NOT_STATED_NO_PROOF`); a claim that names no ask is a note (`NOT_STATED_NO_ASK`). **Never accept
+"none stated" on the model's word, and never widen what a proof says:** it is about one page as
+fetched, and only as wide as the words listed for it.
+
 ## Every normalization is counted
 
 `_normalisations` / `normalisations()` / `normalisations_by_kind()` /

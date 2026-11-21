@@ -16,7 +16,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 from autornd.engine import phases
-from autornd.knowledge import context as knowledge_context, research
+from autornd.knowledge import absence, context as knowledge_context, research
 from autornd.config import settings
 from autornd.models.verdicts import (
     AsksVerdict,
@@ -86,14 +86,15 @@ CHUNKS = [
     {"tag": "t", "text": "The reconnect path's timer is sized by the request alone."},
 ]
 
-# The 17 model-calling functions capture_all reaches. The call-site test
-# proves no other function in autornd/ calls a model.
+# The 18 model-calling functions capture_all reaches. The call-site test
+# proves no other function in autornd/ calls a model. name_terms is the 18th
+# (owner's ruling of 2026-11-21, option C): the words a document prints for an ask.
 SITE_FUNCTIONS = frozenset({
     "run_triage", "run_asks", "run_plan", "run_plan_feasibility",
     "run_domain_review", "run_implement", "run_recompute", "run_validate",
     "run_review", "run_doublecheck", "run_escalation_autopsy",
     "expand_queries", "rerank_chunks", "synthesize_briefing",
-    "analyze_request", "_name_documents", "_read_chunk",
+    "analyze_request", "_name_documents", "_read_chunk", "name_terms",
 })
 
 # The specialist each seat is given. ENGINEERING_SEATS are the ones the golden
@@ -122,6 +123,8 @@ def _reply(function: str = "", schema: Any = None, user_message: str = "") -> di
         }
     if schema is AsksVerdict:
         return {"asks": []}
+    if schema is absence.TermsVerdict:
+        return {"terms": [{"ask": 1, "any_of": ["cap", "ceiling", "maximum delay"]}]}
     if schema is PlanVerdict:
         return {
             "ready": True,
@@ -384,6 +387,9 @@ async def capture_all(seats: dict[str, object] | None = None) -> dict[str, dict[
         client, "the backoff cap in seconds", CHUNKS[0]["text"],
     )
     take("reader_chunk")
+
+    await absence.name_terms(client, REQUEST, ASKS)
+    take("absence_terms")
 
     from autornd.specialists import registry as specialists_registry
 

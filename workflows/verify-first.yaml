@@ -47,6 +47,12 @@ nodes:
     kind: check
     check: build_context
     depends_on: [asks_anchored]
+    # Owner's ruling of 2026-11-21 (option C): the lookup is given the anchored asks and the
+    # grounding carries a proof of absence for each page read in full that has none of the words an
+    # ask's answer would be printed with; only for such an ask may the answer say "none stated",
+    # and blocked_check refuses the claim for any other. See answer-and-recompute.
+    args:
+      none_stated: true
 
   # ── answer ───────────────────────────────────────────────────────
   # The one answer, on the engineering tier, from the request and

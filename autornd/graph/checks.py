@@ -27,6 +27,8 @@ from autornd.models.verdicts import (
     BLOCKED_ON_NO_ASK,
     CONSISTENCY_NOTE,
     COVERAGE_NOTE,
+    NOT_STATED_NO_ASK,
+    NOT_STATED_NO_PROOF,
     UNANCHORED_ASK_QUOTE,
     count_normalisation,
     dissent_kind,
@@ -471,7 +473,8 @@ def judges_agree(**judges: Any) -> Result:
 
 @check("blocked_on_unmet")
 def blocked_on_unmet(blocked_on: list[Any], asks: list[Any],
-                     request: str) -> Result:
+                     request: str, not_stated: list[Any] | None = None,
+                     proven: list[Any] | None = None) -> Result:
     """Did the implementer refuse on an ask? (Ruling D51 (5).)
 
     The B13 honest-refusal gate, re-anchored. The old check asked
@@ -498,11 +501,21 @@ def blocked_on_unmet(blocked_on: list[Any], asks: list[Any],
     and a false negative is a note, not a fabrication loop. The
     typed contract is pinned from both sides in
     tests/test_blocked_on.py.
+
+    Owner's ruling of 2026-11-21 (option C): `not_stated` is the answer's
+    claim that the document states none for an ask, and `proven` the
+    numbers of the asks the grounding holds a proof of absence for
+    (knowledge/absence.py). A claim naming a proven ask is accepted and
+    recorded (`none_stated`); a claim naming an ask with no proof is
+    refused exactly as a blocked ask is, because only a proof allows
+    "none stated"; a claim naming no ask is a note. Both arguments are
+    optional, so every caller that passes neither reads as it always did.
     """
     asks = list(asks or [])
     entries = [b for b in (blocked_on or []) if b is not None]
-    if not entries:
-        return Result(True, "nothing blocked on", blocked=[])
+    claims = [c for c in (not_stated or []) if c is not None]
+    if not entries and not claims:
+        return Result(True, "nothing blocked on", blocked=[], none_stated=[])
 
     def names_an_ask(entry: Any) -> bool:
         ask = _ask_field(entry, "ask")
@@ -536,20 +549,63 @@ def blocked_on_unmet(blocked_on: list[Any], asks: list[Any],
         if not names_an_ask(e):
             count_normalisation(BLOCKED_ON_NO_ASK)
 
-    if named:
+    # A none-stated claim is read by the ask's number, the only thing a proof is keyed by; a quote
+    # is mapped to the number of the anchored ask it is verbatim.
+    proof_for = {n for n in (proven or []) if isinstance(n, int) and not isinstance(n, bool)}
+    accepted: list[dict[str, Any]] = []
+    refused: list[dict[str, Any]] = []
+    for claim in claims:
+        number = _claimed_ask_number(claim, asks)
+        if number is None:
+            count_normalisation(NOT_STATED_NO_ASK)
+            continue
+        why = str(_ask_field(claim, "why") or "").strip()
+        if number in proof_for:
+            accepted.append({"ask": number, "why": why})
+        else:
+            count_normalisation(NOT_STATED_NO_PROOF)
+            refused.append({
+                "ask": number,
+                "why": "none stated, claimed with no proof of absence in the grounding"
+                       + (f" ({why})" if why else "")})
+
+    if named or refused:
+        reasons = [rendered(e) for e in named] + [
+            f"ask {r['ask']}: {r['why']}" for r in refused]
         return Result(
             False,
-            "implementation names an ask it cannot satisfy: "
-            + "; ".join(rendered(e) for e in named),
+            "implementation names an ask it cannot satisfy: " + "; ".join(reasons),
             blocked=[{"ask": _ask_field(e, "ask"),
                       "why": str(_ask_field(e, "why") or "")}
-                     for e in named],
+                     for e in named] + refused,
+            none_stated=accepted,
         )
     return Result(
         True,
-        "no blocked entry names an ask — the fold will judge them",
+        ("no blocked entry names an ask — the fold will judge them"
+         if not accepted else
+         "none stated, with a proof of absence for ask "
+         + ", ".join(str(a["ask"]) for a in accepted)),
         blocked=[],
+        none_stated=accepted,
     )
+
+
+def _claimed_ask_number(entry: Any, asks: list[Any]) -> int | None:
+    """The number of the anchored ask an entry names, or None when it names none.
+
+    A number inside the asks' range names itself; a quote names the ask it is verbatim. A quote
+    that anchors in the request but is none of the asks names no ask a proof can be keyed to.
+    """
+    ask = _ask_field(entry, "ask")
+    if isinstance(ask, int) and not isinstance(ask, bool):
+        return ask if 1 <= ask <= len(asks) else None
+    if isinstance(ask, str) and ask.strip():
+        for a in asks:
+            if _normalise_quote(str(_ask_field(a, "quote") or "")) == _normalise_quote(ask):
+                number = _ask_field(a, "number")
+                return number if isinstance(number, int) and not isinstance(number, bool) else None
+    return None
 
 
 # ── criterion shape (ruling B17-R1, §29) ──────────────────────────────────

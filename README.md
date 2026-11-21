@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-2138%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-2279%20passing-brightgreen.svg)](#testing)
 
 **A harness that lets low-cost models answer precise expert questions, shows what each answer rested on, and says honestly what it checked.**
 
@@ -257,7 +257,7 @@ A `check` node runs a function, not a model call. It is free and exact about wha
 | Check | What it does |
 |---|---|
 | `asks_anchored` | keeps only the asks a model quoted that really occur in the request. When none do, the whole request is the one ask |
-| `blocked_on_unmet` | ends the run blocked when the answer refuses an ask it cannot meet |
+| `blocked_on_unmet` | ends the run blocked when the answer refuses an ask it cannot meet, or says "none stated" for an ask the lookup holds no proof of absence for |
 | `answer_ends_whole` | finds an answer that is cut off mid-sentence |
 | `criteria_addressed` | does the answer visibly address each ask? |
 | `numbers_consistent` | does the answer contradict a figure the request states? |
@@ -288,6 +288,7 @@ With no decision tier, the risk rating and the request's own words decide. Every
 3. It hands on stretches of each page's own text. A short page is handed on whole. No model's summary is handed on.
 4. Every stretch is recorded as a quote with whether it was found on its page, the time it was fetched and the sha256 of the bytes read. That record is `sources`.
 5. Passages found on their pages are stored in the knowledge store, so a later run can reuse them without a new search.
+6. In the default workflow and `verify-first`, when a page was read in full, the harness also searches its whole text for the words an answer would be printed with. A cheap model lists the words for each figure or verdict the request asks for, and code does the search. Where none of the words is on a page, the grounding says so, naming the page, its size and its hash. Only then may the answer say "none stated" for that ask. A page that was not read in full proves nothing, and a document that names the thing without giving a figure has the words on it, so such an ask still blocks the run.
 
 **A fetch reads public web pages only:** `http` and `https`, public addresses, redirects included. A page that answers with a prove-you-are-a-person challenge is recorded as not read.
 
