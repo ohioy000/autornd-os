@@ -6,6 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Changed (2026-11-21, the third live stage of the second hold-out's authoring): the description of group 9
+(civil, structural and geotechnical engineering) in `evals/professional/write_holdout.py` now names the
+families of address a model can recall: the eCFR texts of 23, 33 and 44 CFR, the Building Regulations
+approved documents on structure and ground, USGS reports at pubs.usgs.gov and NIST technical notes at
+nvlpubs.nist.gov. Of the 30 documents the plan named for that group, 22 were addresses that do not exist
+(HTTP 404, deep file paths of FHWA, FEMA and NRCS made up from memory) and four more rounds opened one
+page each (11 of 95 named), where the other groups opened 13 to 30 of their first 30. Nothing else changes and no
+test changes: the tests that guard the groups' detail and numbers hold as they were. Counts unchanged:
+2,301 tests in 100 files.
+
 Fixed (2026-11-21, the second live stage of the second hold-out's authoring): with thinking off, the
 author model still named far more documents than the plan asked for, 91 and 161 where 30 were asked, and
 five of nine replies stopped at the 12,000-token limit and were thrown away whole ('$0.0761' for
