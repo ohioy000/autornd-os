@@ -6,6 +6,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Added (2026-11-21, the owner's ruling, option C of the "none stated" question: the harness proves
+absence itself, and only a proof lets an answer say it; this is known limit 12 of the 0.2.0 release
+notes): after a lookup has read a page in full, one cheap call (the triage tier, about '$0.00015' a call
+in the hold-out run) lists, for each ask of kind value or verdict, the words a document prints where it
+states the answer, and code searches the whole text of each page read in full for them. Where none of the
+words is on a page, the grounding carries a line saying so, naming the page, its size, its hash and the
+words searched. The search ignores case, spacing, hyphens, a line break in the middle of a word,
+ligatures and the many ways a page prints a degree sign or a dash; at least three words are needed and
+every one must be absent; a page that timed out, was refused or was read in part proves nothing. The
+answer step is offered a typed field, `not_stated`, only where a proof exists, and a proof is made only
+where the workflow's context node opts in (`none_stated: true` on the `context` node of
+`answer-and-recompute` and `verify-first`; `full-team`, whose file is pinned as the graph arm E ran,
+is unchanged, so its grounding, its cost and its prompt read as they did and it still blocks); the check
+`blocked_on_unmet` accepts a claim for an ask that has a proof and ends the run blocked on a claim for
+one that has none, as it does for a blocked ask, counting both kinds of refusal; with no proof the
+prompt is byte-identical to what it was. What it does not do: a proof is a fact about one page as
+fetched and only as wide as the words listed, so a document that names the thing and gives no figure
+(by their keys, X13, X19 and X36 of the first hold-out are such documents) has the words on it and the
+ask still blocks the run; only a document whose text has none of them, as the ATmega328P datasheet has
+none of the thermal words (X41), can be proven. Nothing was run with money and no live run has been made:
+141 new tests (76 for the search and the words, 61 for the check, the field, the prompt, the workflows
+and the whole graph end to end, 4 for the page count a PDF read in processes now reports), and each of
+the 134 guarded lines was proven by breaking it on the final tree (134 of 134 fail their own test; at
+the first pass, before the opt-in moved to the context node, six did not: three were gaps in the tests
+and three were mistakes in the runner's cases, and tests were added or the cases corrected). Counts
+re-derived: 2,279 tests in 100 files; the full suite is 2,278 passed and 1 skipped, network guard 0.
+
 Added (2026-11-21, the owner's word: "a full re test with a new set that's twice the size ... write
 a simple script using my env so I don't have to show the api key"): `evals/professional/write_holdout.py`,
 which writes the second hold-out set (84 questions, six groups of 14) with two models named on its

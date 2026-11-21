@@ -211,6 +211,38 @@ def stub(monkeypatch, tmp_path):
             pass
 
 
+class TestTheSourceSaysHowManyPages:
+    """A proof of absence names the size of the document it searched (owner's ruling of 2026-11-21,
+    option C), so a PDF read in processes says how many pages it has."""
+
+    async def test_a_pdf_read_in_processes_has_its_page_count(self, monkeypatch, served):
+        monkeypatch.setattr(pdf_read, "workers", lambda: 2)
+        served(_pdf_pages([f"page {i}" for i in range(5)]))
+        source = await fetch.fetch_source(PAGE)
+        assert source.status == "fetched" and source.pages == 5
+
+    async def test_a_page_that_was_not_read_in_processes_has_none(self, monkeypatch, served):
+        monkeypatch.setattr(fetch, "PARALLEL_MIN_BYTES", 10 ** 9)    # read in a thread, as a small one is
+        served(_pdf_pages(["a", "b", "c"]))
+        source = await fetch.fetch_source(PAGE)
+        assert source.status == "fetched" and source.pages == 0
+
+    async def test_a_failed_read_has_none(self, served):
+        served(b"%PDF-1.4 not a document")
+        source = await fetch.fetch_source(PAGE)
+        assert source.status == "failed" and source.pages == 0
+
+    async def test_a_read_that_failed_after_the_count_was_known_has_none(self, monkeypatch):
+        """The count is the size of a page read in full; a read that failed says nothing of size."""
+        async def failed_after_counting(url, progress):
+            progress["pages"] = 7
+            return fetch.Source(url=url, status="failed", reason="the PDF could not be read: Broken")
+
+        monkeypatch.setattr(fetch, "_fetch", failed_after_counting)
+        source = await fetch.fetch_source(PAGE)
+        assert source.status == "failed" and source.pages == 0
+
+
 class TestWhenTheTimeIsUp:
     async def test_the_processes_are_stopped_and_the_fetch_says_how_far_it_got(
             self, monkeypatch, served, stub):

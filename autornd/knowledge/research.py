@@ -38,7 +38,8 @@ from urllib.parse import urlsplit
 from dataclasses import dataclass, field
 
 from autornd.config import settings
-from autornd.knowledge.fetch import fetch_source
+from autornd.knowledge.absence import Proof, name_terms, prove, render_proofs
+from autornd.knowledge.fetch import Source, fetch_source
 from autornd.knowledge.store import ingest_text, retrieve
 from autornd.routing.openrouter import BudgetExceeded, extract_json
 
@@ -386,6 +387,11 @@ class Finding:
     # the words it pointed at, whether the page was read, and whether those
     # words are on it (None when it gave none).
     documents: list[dict] = field(default_factory=list)
+    # Owner's ruling of 2026-11-21 (option C, knowledge/absence.py): the words searched for each ask
+    # (by ask number, as the request's asks are numbered) and, for each page read in full that has none
+    # of an ask's words, a proof. Empty unless the run gave the lookup its asks.
+    searched: dict[int, list[str]] = field(default_factory=dict)
+    proofs: list[Proof] = field(default_factory=list)
 
     @property
     def grounded(self) -> bool:
@@ -441,6 +447,7 @@ class Finding:
         elif unchecked:
             lines.append("No quoted passage was found in its page — treat this "
                          "answer as unverified.")
+        lines += render_proofs(self.proofs)
         return "\n".join(lines)
 
 
@@ -450,8 +457,13 @@ async def research_gaps(
     gaps: list[str],
     max_lookups: int = MAX_LOOKUPS,
     max_tokens: int | None = None,
+    asks: list | None = None,
 ) -> list[Finding]:
     """Look up the gaps a briefing identified, check them, and keep what holds.
+
+    `asks` are the run's anchored asks (numbered dicts); given them, the lookup also searches the full
+    text of every page it read in full for the words each ask's answer would be printed with, and
+    hands on a proof for each page that has none (knowledge/absence.py).
 
     Returns findings in gap order. Failure of a single lookup is not fatal: a workflow
     with three of four facts is better off than one that aborted, and the
@@ -484,7 +496,7 @@ async def research_gaps(
         if reused is not None:
             findings.append(reused)
             continue
-        finding = await _ask_documents(client, request, asked, max_tokens)
+        finding = await _ask_documents(client, request, asked, max_tokens, asks)
         if finding is None:
             continue
         findings.append(finding)
@@ -720,12 +732,14 @@ async def _read_with_readers(client, question: str, pages: dict[str, str],
 
 async def _read_documents(near: dict[str, str], terms: set[str],
                           client=None, question: str = "",
+                          read: dict[str, Source] | None = None,
                           ) -> tuple[list[Quote], list[dict]]:
     """Fetch the documents named and take the stretches to hand on.
 
     With the reader tier set and a client given, the long pages are also read
     by the reader model, and what it copied (and the page holds) is handed on
-    beside the stretches chosen by shared words.
+    beside the stretches chosen by shared words. `read`, when given, is filled
+    with every page read in full, by address, for the proof of absence.
     """
     urls = [u for u in near
             if not (settings.lookup_avoid_unreadable
@@ -740,6 +754,8 @@ async def _read_documents(near: dict[str, str], terms: set[str],
             {u: pg.text for u, pg in zip(urls, pages) if pg.fetched}, terms)
     for url, page in zip(urls, pages):
         _note_fetch(url, page)
+        if read is not None and page.fetched:
+            read[url] = page
         documents.append({
             "url": url, "near": near[url], "read": bool(page.fetched),
             "reason": "" if page.fetched else page.reason,
@@ -773,7 +789,8 @@ async def _read_documents(near: dict[str, str], terms: set[str],
 
 
 async def _ask_documents(client, request: str, asked: list[str],
-                         max_tokens: int | None) -> Finding | None:
+                         max_tokens: int | None,
+                         asks: list | None = None) -> Finding | None:
     """One lookup: the harness reads the documents itself.
 
     The search model names where the answer is written; the harness fetches
@@ -786,14 +803,22 @@ async def _ask_documents(client, request: str, asked: list[str],
     if named is None:
         return None
     response, near = named
+    read: dict[str, Source] = {}
     quotes, documents = await _read_documents(
-        near, _terms(request, question, near), client, question)
+        near, _terms(request, question, near), client, question, read)
     if not documents:
         return None
+    # Free before paid (hard rule 5): the words are asked for only when a page was read in full, and
+    # the search of those pages is code.
+    searched: dict[int, list[str]] = {}
+    proofs: list[Proof] = []
+    if asks and read:
+        searched = await name_terms(client, request, asks)
+        proofs = prove(searched, read)
     return Finding(
         question=question, citations=[d["url"] for d in documents],
         model=response.model, asked=[question], quotes=quotes,
-        documents=documents,
+        documents=documents, searched=searched, proofs=proofs,
         answer=("No summary was made. The passages below are the pages' own "
                 "words, fetched by the harness; read the answer from them."))
 
@@ -857,6 +882,10 @@ def source_records(findings: list[Finding]) -> list[dict]:
         "citations": list(f.citations),
         # A finding recalled from the store has none.
         **({"documents": [dict(d) for d in f.documents]} if f.documents else {}),
+        # What was searched for each ask, and each page that has none of it (option C).
+        **({"searched": {str(n): list(w) for n, w in f.searched.items()}}
+           if f.searched else {}),
+        **({"proofs": [p.as_record() for p in f.proofs]} if f.proofs else {}),
         "quotes": [{
             "question": q.question,
             # The words of the question this quote was given for. A bundled

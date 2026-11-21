@@ -824,6 +824,7 @@ async def run_implement(
     max_tokens: int | None = None,
     asks: list[Any] | None = None,
     results: bool = False,
+    proven: list[int] | None = None,
 ) -> tuple[ImplementVerdict, list[ModelResponse]]:
     from autornd.profiles import framing, get_profile
     f = framing()
@@ -938,6 +939,30 @@ CONSIDERATIONS A REVIEWER RAISED (not requirements — weigh them; nothing is ju
             "\"value\": ..., \"unit\": ...}, one entry per ask of kind "
             "value or verdict, as instructed above; an empty list only "
             "when no ask is of those kinds\n")
+    # Owner's ruling of 2026-11-21 (option C): "none stated" is allowed for an ask only where the
+    # grounding holds a proof of absence for it (knowledge/absence.py). The channel is offered when at
+    # least one ask has a proof, and a proof exists only where the workflow's context node opted in;
+    # with none, every line below is empty and the prompt is byte-identical to what it was, so a run
+    # that cannot prove anything reads, and is told, nothing new. The ruled blocked_on sentence is
+    # untouched: the instruction follows it, and ends by sending an unproven ask back to it.
+    none_stated_instruction = ""
+    none_stated_field = ""
+    proven_asks = sorted({n for n in (proven or [])
+                          if isinstance(n, int) and not isinstance(n, bool)})
+    if proven_asks:
+        none_stated_instruction = (
+            "\nThe grounding holds a proof of absence for ask "
+            + ", ".join(str(n) for n in proven_asks)
+            + ": the harness searched the full text of a page it read in full, and none of the "
+            "words a statement of the answer would be printed with is in it. If the answer to "
+            "such an ask is that the page states none, list the ask in not_stated (its number, and "
+            "why: the page and what was searched), say so in the summary naming the page, and "
+            "give no figure for it. An ask with no proof of absence is never listed in "
+            "not_stated: if the grounding does not answer it, it goes in blocked_on, as above.")
+        none_stated_field = (
+            "- not_stated: list of the asks the page states none for, each entry naming the ask "
+            "(its number) and why (the page and what was searched); only asks the grounding "
+            "holds a proof of absence for; an empty list when there are none\n")
     # The blocked_on sentence below is RULED text (Ruling D51 (h),
     # replacing Blueprint 016 B2's sentence by this ruling) — it is
     # carried verbatim by instruction and is not to be paraphrased.
@@ -951,7 +976,7 @@ CONSIDERATIONS A REVIEWER RAISED (not requirements — weigh them; nothing is ju
 The asks, quoted from the request — the answer is judged against these and nothing else:
 {render_asks(asks)}
 {results_instruction}
-If an ask cannot be honestly answered with the grounding available, name it by its number in blocked_on rather than producing something that answers it on paper.
+If an ask cannot be honestly answered with the grounding available, name it by its number in blocked_on rather than producing something that answers it on paper.{none_stated_instruction}
 Answer the request, and include the plan's falsifiers, kill triggers or assumption tables only if the request asks for them.
 {open_points_block}{feasibility_block}
 {feedback}
@@ -965,7 +990,7 @@ Return JSON with:
 - blocked_on: list of asks the work cannot honestly answer, each entry
   naming the ask (its number or its quote) and why it cannot be
   answered; an empty list when there are none
-- iteration: {iteration}
+{none_stated_field}- iteration: {iteration}
 {results_field}- summary: the implementation itself — the design, code, schema, procedure or
   calculation, in full. This field is the deliverable and is what the validate
   phase and every downstream reviewer will read, so write the work out rather

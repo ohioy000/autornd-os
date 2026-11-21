@@ -47,6 +47,14 @@ nodes:
     kind: check
     check: build_context
     depends_on: [asks_anchored]
+    # Owner's ruling of 2026-11-21 (option C): the lookup is given the anchored asks, searches the
+    # pages it read in full for the words each ask's answer would be printed with, and the grounding
+    # carries a proof of absence for each page that has none. For such an ask the answer may say
+    # "none stated" (not_stated) and blocked_check refuses the claim for any ask with no proof;
+    # without a proof the prompt is unchanged and an unanswerable ask is blocked_on. full-team's
+    # file is pinned as the graph arm E ran (D55 (2)), so it has no such arg and is unchanged.
+    args:
+      none_stated: true
 
   # ── decision switches, before the answer ─────────────────────────
   # The switch that reads the request alone: does it need a calculation

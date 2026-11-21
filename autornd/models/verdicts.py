@@ -443,6 +443,14 @@ class ImplementVerdict(BaseModel):
     # to declare itself red. An entry that names no ask is a note,
     # counted, and routes nowhere.
     blocked_on: list[BlockedOnAsk] = Field(default_factory=list)
+    # Owner's ruling of 2026-11-21 (option C, knowledge/absence.py): the asks the answer says the
+    # document states none for. The channel exists only where the grounding holds a proof of absence
+    # for the ask (the harness searched the full text of a page it read in full for the words the
+    # answer would be printed with and found none), and the free check refuses a claim with no proof:
+    # an entry naming an ask with no proof is a block, as an ask the work cannot answer is. The same
+    # shape as blocked_on, a number or a quote and a reason. Defaulted: every recorded verdict
+    # predates it and must still parse, and an answer that does not use it reads as it always did.
+    not_stated: list[BlockedOnAsk] = Field(default_factory=list)
     # Ruling D53: the answer's typed results — one entry per ask of
     # kind value or verdict, naming the ask by its number or its
     # quote — so the recompute vote can compare the answer against
@@ -469,6 +477,14 @@ class ImplementVerdict(BaseModel):
     def _coerce_results(cls, value: Any) -> Any:
         # A null results field is no results — the answer stated
         # none — not a malformed verdict.
+        if value is None:
+            return []
+        return value
+
+    @field_validator("not_stated", mode="before")
+    @classmethod
+    def _coerce_not_stated(cls, value: Any) -> Any:
+        # A null is no claim, as a null blocked_on is no refusal.
         if value is None:
             return []
         return value
@@ -534,6 +550,11 @@ UNANCHORED_ASK_QUOTE = "unanchored_ask_quote"
 UNANCHORED_DISSENT = "unanchored_dissent"
 RED_NO_ANCHOR = "red_with_no_anchor"
 BLOCKED_ON_NO_ASK = "blocked_on_entry_names_no_ask"
+# Owner's ruling of 2026-11-21 (option C): a "none stated" claim that names no ask is a note, as a
+# blocked_on entry that names none is; one that names an ask the grounding has no proof for is
+# counted, because it is the model claiming what only a proof allows.
+NOT_STATED_NO_ASK = "not_stated_entry_names_no_ask"
+NOT_STATED_NO_PROOF = "not_stated_claim_without_proof"
 CONSISTENCY_NOTE = "consistency_note"
 # Ruling of 2026-10-15 (R1): coverage left the judges_agree
 # fold. Its result is still recorded — a fail is counted here,

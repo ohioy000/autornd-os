@@ -393,6 +393,14 @@ def _record_lookup(record: dict | None, asked: list[str], findings: list,
         "quotes": _quote_counts(findings),
         # What was read, page by page, so the delivery can show it.
         "sources": _source_records(findings),
+        # Owner's ruling of 2026-11-21 (option C): the words searched for each ask, and the proofs
+        # of absence made from them. Left out when no lookup searched, so a record reads as it did.
+        **({"searched": {str(n): list(w) for f in findings
+                         for n, w in getattr(f, "searched", {}).items()}}
+           if any(getattr(f, "searched", None) for f in findings) else {}),
+        **({"proofs": [p.as_record() for f in findings
+                       for p in getattr(f, "proofs", [])]}
+           if any(getattr(f, "proofs", None) for f in findings) else {}),
     })
 
 
@@ -412,7 +420,8 @@ def _quote_counts(findings: list) -> dict[str, int]:
 async def synthesize_briefing(client, request: str, chunks: list[dict],
                               risk: object = None,
                               deferred_gaps: list[str] | None = None,
-                              grounding_lookup: dict | None = None) -> str:
+                              grounding_lookup: dict | None = None,
+                              asks: list | None = None) -> str:
     """Read the ranked excerpts and write a grounded briefing (research tier).
 
     Falls back to handing the excerpts through verbatim, which is what every
@@ -467,7 +476,8 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
             # deferred branch below keeps only the gaps, which is what was declined.
             asked = lookup_questions(request, blocking)
             findings = await research_gaps(client, request, asked,
-                                           max_tokens=search_budget(risk))
+                                           max_tokens=search_budget(risk),
+                                           asks=asks)
             rendered = render_findings(findings) if findings else ""
             _record_lookup(grounding_lookup, asked, findings or [], rendered)
             if rendered:
@@ -590,7 +600,8 @@ async def load_retrieval_context(query: str, n_results: int = 5, client=None,
                                  risk: object = None,
                                  deferred_gaps: list[str] | None = None,
                                  asked_questions: list[str] | None = None,
-                                 grounding_lookup: dict | None = None) -> str:
+                                 grounding_lookup: dict | None = None,
+                                 asks: list | None = None) -> str:
     """Research the project docs for a request: expand, retrieve, rank, brief."""
     queries = await expand_queries(client, query)
     if asked_questions is not None:
@@ -612,7 +623,8 @@ async def load_retrieval_context(query: str, n_results: int = 5, client=None,
     ranked = await rerank_chunks(client, query, candidates, n_results)
     return await synthesize_briefing(client, query, ranked, risk=risk,
                                      deferred_gaps=deferred_gaps,
-                                     grounding_lookup=grounding_lookup)
+                                     grounding_lookup=grounding_lookup,
+                                     asks=asks)
 
 
 SCOPING_PROMPT = """\
@@ -734,6 +746,7 @@ async def build_phase_context(
     deferred_gaps: list[str] | None = None,
     asked_questions: list[str] | None = None,
     grounding_lookup: dict | None = None,
+    asks: list | None = None,
 ) -> str:
     """Build full context string for a workflow phase.
 
@@ -747,6 +760,10 @@ async def build_phase_context(
     looked up (Ruling D37: the novelty check compares round two against what
     round one asked, and the asked record is what was asked — not what was
     declined. Deferred gaps were never asked).
+
+    `asks`, when given, are the run's anchored asks: the lookup then also searches the pages it read in
+    full for the words each ask would be answered with, and hands on a proof for each page that has
+    none (owner's ruling of 2026-11-21, option C; knowledge/absence.py).
     """
     parts: list[str] = []
 
@@ -759,7 +776,8 @@ async def build_phase_context(
                                                      risk=risk,
                                                      deferred_gaps=deferred_gaps,
                                                      asked_questions=asked_questions,
-                                                     grounding_lookup=grounding_lookup)
+                                                     grounding_lookup=grounding_lookup,
+                                                     asks=asks)
         if retrieval_ctx:
             parts.append("=== RELEVANT KNOWLEDGE ===\n" + retrieval_ctx)
         else:
@@ -785,7 +803,8 @@ async def build_phase_context(
                 # (owner's ruling of 2026-11-21): see lookup_questions.
                 asked = lookup_questions(request, unknowns)
                 findings = await research_gaps(client, request, asked,
-                                               max_tokens=search_budget(risk))
+                                               max_tokens=search_budget(risk),
+                                               asks=asks)
                 rendered = render_findings(findings) if findings else ""
                 _record_lookup(grounding_lookup, asked, findings or [], rendered)
                 if rendered:

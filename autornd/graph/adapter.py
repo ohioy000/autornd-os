@@ -292,7 +292,7 @@ class PhaseRunner:
 
     async def run_check(self, node: Node, state: ExecutionState) -> Result:
         if node.check == "build_context":
-            return await self._build_context(state)
+            return await self._build_context(state, node)
         if node.check == "verify_grounding":
             return await self._verify_grounding(state)
         if node.check == "reground_context_lookup":
@@ -308,7 +308,7 @@ class PhaseRunner:
             )
         return get_check(node.check)(**resolve_args(node, state))
 
-    async def _build_context(self, state: ExecutionState) -> Result:
+    async def _build_context(self, state: ExecutionState, node: Node) -> Result:
         """Assemble grounding once, for every phase that follows.
 
         Grounding is the cheapest quality lever there is — deterministic docs
@@ -322,12 +322,20 @@ class PhaseRunner:
         deferred: list[str] = []
         asked: list[str] = []
         lookup: dict = {}
+        # Owner's ruling of 2026-11-21 (option C): a context node that opts in with args:
+        # {none_stated: true} gives the lookup the run's anchored asks, so the lookup searches the pages
+        # it read in full for the words each ask would be answered with and the grounding carries a
+        # proof of absence for each page that has none. A node that does not opt in gives it none: no
+        # extra call, no proof line, a grounding that reads as it always did. full-team's file is
+        # pinned as the graph arm E ran (D55 (2)), so it has no such arg and is unchanged.
+        asks = self._anchored_asks(state) if node.args.get("none_stated") else None
         async with self._switching("grounding", state):
             self.context = await build_phase_context(
                 state.request, triage.domains, triage.specialists,
                 client=self.client, risk=triage.risk,
                 deferred_gaps=deferred, asked_questions=asked,
                 grounding_lookup=lookup,
+                asks=asks,
             )
         self.deferred_gaps = deferred
         self._record_sources("grounding", lookup.get("sources") or [], state)
@@ -349,7 +357,17 @@ class PhaseRunner:
             # what came back. `asked` above is the retrieval queries, which
             # 098's record could be mistaken for. None when no lookup ran.
             lookup=lookup or None,
+            # The numbers of the asks the grounding holds a proof of absence for; the implement
+            # prompt names them and the blocked-on check reads them. Always present, empty when none.
+            proven=sorted({int(p["ask"]) for p in (lookup.get("proofs") or [])}),
         )
+
+    def _proven_asks(self, state: ExecutionState) -> list[int]:
+        """The asks the grounding holds a proof of absence for (option C), as the context node
+        recorded them; none when no lookup ran or none was proven."""
+        context = state.outputs.get("context")
+        proven = context.get("proven") if isinstance(context, dict) else None
+        return [n for n in (proven or []) if isinstance(n, int) and not isinstance(n, bool)]
 
     async def _verify_grounding(self, state: ExecutionState) -> Result:
         """One bundled lookup when an ask demands a citation.
@@ -434,9 +452,17 @@ class PhaseRunner:
         the entry here, on the real path only; the check itself stays a pure
         registry function the executor and the tests drive directly.
         """
-        result = get_check("blocked_on_unmet")(**resolve_args(node, state))
+        args = resolve_args(node, state)
+        # Owner's ruling of 2026-11-21 (option C): the answer's "none stated" claims and the asks the
+        # grounding proves absent. Read here, not declared in the workflow, so a workflow whose
+        # context node never opts in (and so never has a proof) is checked exactly as before.
+        implement = state.outputs.get("implement")
+        claims = (implement.get("not_stated") if isinstance(implement, dict)
+                  else getattr(implement, "not_stated", None))
+        args["not_stated"] = list(claims or [])
+        args["proven"] = self._proven_asks(state)
+        result = get_check("blocked_on_unmet")(**args)
         if not result.passed:
-            implement = state.outputs.get("implement")
             summary = getattr(implement, "summary", None)
             if summary is None and isinstance(implement, dict):
                 summary = implement.get("summary", "")
@@ -756,6 +782,10 @@ class PhaseRunner:
                 # is byte-identical to what it was — the instruction is
                 # gated on this arg, not on the workflow's name.
                 results=bool(node.args.get("results", False)),
+                # Owner's ruling of 2026-11-21 (option C): the asks the grounding holds a proof of
+                # absence for, which exist only where the context node opted in. The prompt offers
+                # "none stated" for these asks and for no other.
+                proven=self._proven_asks(state),
             )
 
         verdict, latest = await write_answer()
