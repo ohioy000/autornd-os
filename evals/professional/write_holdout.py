@@ -26,12 +26,14 @@ stop and be run again and only the missing work is done:
               the worker checks those again; one round only (--again for another)
     assemble  the draft set, the review file and the cost                          free
 
-Six groups of 14 are Y1 to Y84, twice the 42 of the first hold-out. A question reaches the draft only
-if code finds every cited passage on the page it names, every figure in a key answer is on the cited
-pages (unless the key marks it derived), and both checks say OK. Anything else is held back and
-listed in review.md with the reason. The draft says "Draft, not approved": the runner refuses it
-until the owner signs the keys (D44). Pages are read with a longer limit than the harness's 60 s, so
-the set is not made only of pages the harness reads quickly.
+Nine groups of 14 are Y1 to Y126, three times the 42 of the first hold-out: six that cover the first
+set's ground twice over, and three engineering subjects the owner added on 2026-11-21, each described
+in detail (groups 7 to 9) so that the plan names documents across the whole of its ground. A question
+reaches the draft only if code finds every cited passage on the page it names, every figure in a key
+answer is on the cited pages (unless the key marks it derived), and both checks say OK. Anything else
+is held back and listed in review.md with the reason. The draft says "Draft, not approved": the
+runner refuses it until the owner signs the keys (D44). Pages are read with a longer limit than the
+harness's 60 s, so the set is not made only of pages the harness reads quickly.
 
 Paid stages need the owner's word and a stated amount: --budget is the total for WORKDIR, counted from
 calls.jsonl across every run, and no call starts that could pass it. --dry-run asks nothing and says
@@ -115,7 +117,11 @@ class Group:
         return [f"Y{self.first + i}" for i in range(PER_GROUP)]
 
 
-# The first set's three areas, each cut in two so that the 84 spread over the same ground.
+# Groups 1 to 6 are the first set's three areas, each cut in two, so that 84 questions spread over the
+# same ground. Groups 7 to 9 are three engineering subjects the owner added on 2026-11-21, and each is
+# described in detail, not as a bare label such as "electrical systems": the plan call names documents
+# from this text alone, and a long list of the topics and of the kinds of publisher is what makes it
+# spread them over the whole subject instead of over its best-known corner.
 GROUPS = [
     Group(1, "EU law and standards: products, energy, environment, transport, finance", 1),
     Group(2, "international law and standards: treaties and conventions and the public texts of "
@@ -127,6 +133,31 @@ GROUPS = [
     Group(5, "physical engineering, units, datasheets and manuals", 57),
     Group(6, "national rules and codes: the United States, the United Kingdom, Canada, Australia, "
              "Japan, India and others", 71),
+    Group(7, "electrical power systems and installations: conductor sizing and ampacity; overcurrent, "
+             "earth-fault and arc-flash protection; earthing and bonding; clearances and working "
+             "distances; grid and generator connection rules (voltage and frequency ride-through, "
+             "harmonics, flicker, reactive power); transformer and motor efficiency limits and their "
+             "test conditions; battery storage and charger installation; electromagnetic-compatibility "
+             "emission limits. From the free texts of regulators, grid operators and agencies (OSHA, "
+             "FERC and NERC, DOE, FCC, the UK Electricity Safety, Quality and Continuity Regulations "
+             "and Grid Code, the Australian and Canadian regulators)", 85),
+    Group(8, "mechanical, thermal and materials engineering: pressure vessels, boilers and piping "
+             "(design, test and relief pressures, allowable stresses, inspection intervals); lifting "
+             "equipment (rated loads, proof tests, sling, chain and hook criteria, inspection); "
+             "fatigue and fracture; threaded fasteners and bolted joints (preload, torque); welding "
+             "and weld-inspection acceptance criteria; heat exchangers; refrigeration and HVAC "
+             "limits (refrigerant leak-repair thresholds, charge and efficiency requirements); "
+             "material properties and test methods. From the free texts of safety regulators and "
+             "agencies (OSHA, the UK HSE, EPA, DOE, NASA and US defence handbooks and standards, "
+             "NIST)", 99),
+    Group(9, "civil, structural and geotechnical engineering: highway and bridge design (design "
+             "loads, clearances, geometric design values, pavement design); concrete, steel and "
+             "timber design provisions; wind, snow and seismic design parameters; foundations, "
+             "retaining walls and soil classification; drainage, hydrology and design storms; dams, "
+             "levees and scour. From the free manuals and guides of transport agencies, geological "
+             "surveys and emergency-management agencies (FHWA, state transport departments, USGS, "
+             "FEMA, NRCS, National Highways standards, the EU Joint Research Centre's Eurocode "
+             "background documents, Austroads and the New Zealand Transport Agency)", 113),
 ]
 
 
@@ -1007,7 +1038,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--worker", required=True)
     parser.add_argument("--worker-provider", required=True)
     parser.add_argument("--budget", type=float, help="dollars for the whole WORKDIR, all runs")
-    parser.add_argument("--groups", default="1,2,3,4,5,6")
+    # Every group, so that a group added to GROUPS is run without anyone having to say so.
+    parser.add_argument("--groups", default=",".join(str(g.number) for g in GROUPS))
     parser.add_argument("--date", default=time.strftime("%Y-%m-%d"))
     parser.add_argument("--parallel", type=int, default=4)
     parser.add_argument("--effort-author", default="medium",

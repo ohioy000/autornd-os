@@ -4,7 +4,7 @@ Written 2026-11-21 at the owner's request. The first hold-out (`professional-hol
 used: its misses shaped the fixes since, so it can no longer say how the harness does on questions
 nobody tuned for. This set is for that.
 
-## Update, 2026-11-21: 84 questions, written and checked by models through a script
+## Update, 2026-11-21: 126 questions, written and checked by models through a script
 
 The owner asked for a set twice the size of the first (84 questions, `Y1` to `Y84`, six groups of 14)
 and for the questions to be written by models through a script that reads the owner's `.env` itself,
@@ -13,6 +13,19 @@ international law and standards, group 3 software, security and internet standar
 and infrastructure documentation, group 5 physical engineering, units, datasheets and manuals, group
 6 national rules and codes. `evals/professional/write_holdout.py` does the work and its docstring says
 how to run it; the two models are named on its command line and nowhere in the code.
+
+Later the same day the owner added three engineering subjects to the line-up and asked for each to be
+described in more detail than a label such as "electrical systems": the plan call names documents from
+the area text alone, and a long list of topics and of the kinds of publisher is what spreads them over
+the whole subject. Group 7 is electrical power systems and installations (conductor sizing, overcurrent,
+earth-fault and arc-flash protection, earthing and bonding, clearances, grid and generator connection
+rules, transformer and motor efficiency, battery storage and chargers, electromagnetic-compatibility
+limits). Group 8 is mechanical, thermal and materials engineering (pressure equipment, lifting
+equipment, fatigue and fracture, fasteners, welding, heat exchangers, refrigeration and HVAC, material
+properties and test methods). Group 9 is civil, structural and geotechnical engineering (highway and
+bridge design, concrete, steel and timber, wind, snow and seismic parameters, foundations and soil
+classification, drainage and hydrology, dams and levees). The set is now nine groups of 14, `Y1` to
+`Y126`, three times the first; `--groups` still picks any of them and its default is all nine.
 
 The prompts below are used as written. One short preface is added in front of Prompt A and one short
 tail after Prompt B, because a model cannot browse: code opens the pages with the harness's own fetch,

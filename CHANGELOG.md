@@ -6,6 +6,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Changed (2026-11-21, the owner's word: "Add to the line up 3 more engineering subjects and be more
+detailed than ie electrical systems"): the second hold-out set's line-up in
+`evals/professional/write_holdout.py` gains three groups of 14, so the set is nine groups and 126
+questions, `Y1` to `Y126`, three times the first hold-out. Group 7 is electrical power systems and
+installations, group 8 mechanical, thermal and materials engineering, group 9 civil, structural and
+geotechnical engineering. Each is described by its topics and by the kinds of publisher, in 83 to 87
+words and not by a label, because the plan call names documents from that text alone and a long list
+is what spreads them over the whole subject. The default of `--groups` listed only 1 to 6 and would
+have left the three out; it now lists every group in the line-up. Nothing was run with money, and the
+authoring had not started, so its cost rises by half. 8 new tests (the line-up and its numbers, the
+detail, no shared area, the default, the area and the ids reaching the author, the area reaching the
+plan call), and each of the 17 guarded lines was proven by breaking it (17 of 17 fail their test; one
+case of the runner matched two lines at first and was made exact). Counts re-derived: 2,287 tests in
+100 files.
+
 Added (2026-11-21, the owner's ruling, option C of the "none stated" question: the harness proves
 absence itself, and only a proof lets an answer say it; this is known limit 12 of the 0.2.0 release
 notes): after a lookup has read a page in full, one cheap call (the triage tier, about '$0.00015' a call
