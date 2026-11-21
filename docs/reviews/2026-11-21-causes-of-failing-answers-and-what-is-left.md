@@ -115,3 +115,16 @@ Rulings are the owner's. Each item says what it would cost and what it could be 
 Reader beta about '$0.30'; provider and Flash scoping tests '$0.384'; cap-versus-effort tests about '$0.10' and
 '$0.036'; medium-effort scoping '$0.0269'; four full units '$0.0674'; reader on/off '$0.178' of '$0.20'; implement
 probe '$0.0736'; larger-model test '$0.0699' of '$0.10'. Credits left '$0.2669' at the last check.
+
+## Status after the owner's answers of 2026-11-21 (evening)
+
+The list above, as the owner answered it. Items not yet done are kept here so none is lost.
+
+| # | Item | Status |
+|---|---|---|
+| 1 | A second hold-out set | Prompts written: `docs/holdout-2-prompts.md`. Three authors, two checkers, the owner signs, one run of about '$1.4'. |
+| 2 | Ask the whole question too | Built, PR #317 (one more numbered line in the same single search request). **Not yet measured.** A search-only replay on the stored scoped questions is proposed, about '$0.15', awaiting the owner's amount. |
+| 3 | "None stated" instead of blocking | Explained to the owner; awaiting a ruling. |
+| 4 | A retry on a cut-off answer | Built, PR #316: up to three more attempts, in the three workflows that gate on the check. Reading the two answers the hold-out blocked: X3 draw 1 was cut (the model ended the field on "of" inside valid JSON); X24 draw 2 was not (a `jq` line in a code block was read as open math), so the check was repaired. |
+| 5 | Faster PDF reading and a retry of an unread page; a lower effort for the answer-writing call; the reader tier's pin or removal | Explained to the owner; to be taken up later. The reader is set in the owner's `.env` with no serving pin. |
+| 6 | A way to see a stale official page | Open, needs a ruling. |
