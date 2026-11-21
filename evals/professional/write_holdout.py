@@ -2,7 +2,7 @@
 
     python evals/professional/write_holdout.py WORKDIR STAGES --author MODEL --author-provider TAG \
         --worker MODEL --worker-provider TAG --budget DOLLARS [--groups 1,2] [--date 2026-11-21] \
-        [--parallel 4] [--effort-author medium] [--effort-check low] [--again] [--dry-run]
+        [--parallel 4] [--effort-author default] [--effort-check default] [--again] [--dry-run]
 
 Run it from the repo, where `.env` is. The harness's own client reads the key from there: this script
 never reads it, prints it or writes it (tests/test_write_holdout.py checks the source never names it).
@@ -99,13 +99,22 @@ CHECK_PAGE_CHARS = 2_400_000
 # minimal and none, capped at 4,000 tokens, showed that only off answered (31 documents in 2,405
 # tokens for '$0.0033'); the other two were cut off with an empty reply, as low had been.
 PLAN_EFFORT = "off"
-# Output ceilings: the author writes 14 questions and may reason first; the rest are short. A plan
-# reply of 30 documents is about 2,500 tokens, and the first live run's longest ran past 12,000 (161
-# documents), so the plan ceiling is 5,000: a reply that runs on is cut there and its finished
-# entries are kept, which costs under '$0.01' where 12,000 cost '$0.015' for entries never used.
-AUTHOR_MAX_TOKENS, PLAN_MAX_TOKENS, WORKER_MAX_TOKENS = 48_000, 5_000, 16_000
+# Output ceilings. The owner said on 2026-11-21 not to cap the questions run ("let it cook, we want
+# high quality") and not to tune how hard a model thinks, so the author's ceiling (write and fix) and
+# the worker's (extract and check) are the most either pinned endpoint gives: 65,536 completion tokens
+# each, from the provider's public catalogue (max_completion_tokens) on that date. The ceilings before
+# were 48,000 and 16,000: a write with thinking on spent all 48,000 on thought and returned nothing
+# ('$0.0642'), and one check at the low level was cut at 16,000 where the others used 11,000 to
+# 15,000. The number is written here and not read from the catalogue; the pins come in on the command
+# line, so a pin whose endpoint gives less than this is the owner's to notice. The plan is the
+# exception and stays short: a reply of 30 documents is about 2,500 tokens, and the
+# first live run's longest ran past 12,000 (161 documents), so its ceiling is 5,000: a reply that runs
+# on is cut there and its finished entries are kept, which costs under '$0.01' where 12,000 cost
+# '$0.015' for entries never used.
+AUTHOR_MAX_TOKENS, PLAN_MAX_TOKENS, WORKER_MAX_TOKENS = 65_536, 5_000, 65_536
 # The HTTP wait for one reply: a long answer from a reasoning model takes minutes, and the client's
-# own 120 s was set for short ones.
+# own 120 s was set for short ones. A reply at the ceiling above takes about 550 s at the slowest rate
+# measured (12,000 tokens in 100 s), and the 48,000-token write took 270 s, so 900 s holds.
 REPLY_TIMEOUT_SECONDS = 900.0
 # For --dry-run only: characters to a token, and the share of its limit a reply is guessed to use.
 CHARS_PER_TOKEN, GUESSED_REPLY_SHARE = 3.5, 0.4
@@ -1086,9 +1095,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--groups", default=",".join(str(g.number) for g in GROUPS))
     parser.add_argument("--date", default=time.strftime("%Y-%m-%d"))
     parser.add_argument("--parallel", type=int, default=4)
-    parser.add_argument("--effort-author", default="medium",
+    # "default" sends no reasoning option at all, so the provider's own setting applies: the owner's
+    # instruction of 2026-11-21 was not to tinker with how hard a model thinks on the questions run.
+    # A level is still allowed, for a model that honours one; "off" is the only value the author's
+    # endpoint obeys (low, minimal, none and medium all thought without bound on 2026-11-21).
+    parser.add_argument("--effort-author", default="default",
                         choices=("off", "low", "medium", "high", "default"))
-    parser.add_argument("--effort-check", default="low",
+    parser.add_argument("--effort-check", default="default",
                         choices=("off", "low", "medium", "high", "default"))
     parser.add_argument("--again", action="store_true", help="redo a fix or check already saved")
     parser.add_argument("--dry-run", action="store_true")
