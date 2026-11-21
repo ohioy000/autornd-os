@@ -35,6 +35,9 @@ from xml.etree import ElementTree
 
 import httpx
 
+from autornd.knowledge.pdf_read import (
+    PARALLEL_MIN_BYTES, PdfFailed, PdfUnavailable, read_pdf)
+
 logger = logging.getLogger(__name__)
 
 # The whole fetch, redirects included, in seconds. A lookup's pages are
@@ -54,9 +57,13 @@ logger = logging.getLogger(__name__)
 # NIST SP 800-53 among them, had not finished at 300 s). 60 is the most the
 # run budget allows: a run fetches at most six rounds (two rounds a lookup,
 # three lookups), 360 s at 60 against the 558 s that config.py leaves; 210
-# would be 1,260 s and would starve the search calls. A faster read (PDFs
-# parsed in parallel processes) would pay more than a longer limit and is
-# not done here.
+# would be 1,260 s and would starve the search calls. The faster read was
+# done 2026-11-21 (pdf_read.py: PDFs read in processes that are stopped when
+# this limit runs out). Read together under this limit, as a lookup does, on
+# a two-core laptop: six IAEA PDFs, 1 read before and 6 after (all by 23.5
+# s); six heavy ones (three datasheets of 555, 653 and 653 pages, SP 800-53,
+# a 323-page specification and a 228-page building regulation), 0 before and
+# 3 after. The limit is unchanged.
 FETCH_TIMEOUT_SECONDS = 60.0
 
 # A page larger than this is not read. Was 2 MB, sized for HTML. Measured
@@ -173,12 +180,18 @@ class Source:
 
 async def fetch_source(url: str) -> Source:
     """Fetch one page. Never raises: the Source says what happened."""
+    progress: dict[str, int] = {}
     try:
         async with asyncio.timeout(FETCH_TIMEOUT_SECONDS):
-            return await _fetch(url)
+            return await _fetch(url, progress)
     except TimeoutError:
-        return Source(url, "failed",
-                      f"no answer within {FETCH_TIMEOUT_SECONDS:g} s")
+        reason = f"no answer within {FETCH_TIMEOUT_SECONDS:g} s"
+        # A PDF that ran out of time says how far it had got, so a record of
+        # the miss tells a slow read from one that never started.
+        if progress.get("pages"):
+            reason += (f" (read {progress.get('done', 0)} of "
+                       f"{progress['pages']} pages)")
+        return Source(url, "failed", reason)
     except Exception as exc:
         return Source(url, "failed", f"{type(exc).__name__}: {exc}"[:200])
 
@@ -410,7 +423,27 @@ def document_kind(content_type: str, raw: bytes) -> str | None:
     return None
 
 
-async def _fetch(url: str) -> Source:
+async def _read_document(kind: str, raw: bytes, reader: Callable[[bytes], str],
+                         progress: dict[str, int] | None) -> str:
+    """A document's text. A PDF of PARALLEL_MIN_BYTES or more is read in
+    processes that can be stopped; everything else, and a PDF when processes
+    cannot be started here, is read in a thread, off the event loop."""
+    if kind == "pdf" and len(raw) >= PARALLEL_MIN_BYTES:
+        try:
+            return await read_pdf(raw, progress)
+        except PdfUnavailable as exc:
+            logger.warning("PDF reading processes could not start (%s); "
+                           "reading in a thread", exc)
+    return await asyncio.to_thread(reader, raw)
+
+
+def _error_name(exc: Exception) -> str:
+    """The name a failed read goes by: a reading process's own error, or the
+    exception's type."""
+    return exc.name if isinstance(exc, PdfFailed) else type(exc).__name__
+
+
+async def _fetch(url: str, progress: dict[str, int] | None = None) -> Source:
     current = readable_address(url)
     # trust_env=False: no proxy from the environment, which would resolve
     # the name itself, and no .netrc credentials sent to a quoted page.
@@ -455,12 +488,11 @@ async def _fetch(url: str) -> Source:
                 if kind in _DOCUMENT_READERS:
                     label, empty, reader = _DOCUMENT_READERS[kind]
                     try:
-                        # Off the event loop: a large PDF takes seconds.
-                        text = await asyncio.to_thread(reader, raw)
+                        text = await _read_document(kind, raw, reader, progress)
                     except Exception as exc:
                         return Source(url, "failed",
                                       f"the {label} could not be read: "
-                                      f"{type(exc).__name__}"[:200],
+                                      f"{_error_name(exc)}"[:200],
                                       final_url=current,
                                       content_type=content_type)
                     if not text.strip():
