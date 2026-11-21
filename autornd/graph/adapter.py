@@ -729,32 +729,60 @@ class PhaseRunner:
         # 'Plan:' section, naming the request as the task instead.
         # A workflow WITH a plan still reads it off the state.
         plan = state.outputs.get("plan")
-        verdict, responses = await phases.run_implement(
-            self.client, state.request, plan, lead,
-            iteration=state.iteration or 1,
-            prior_summary=prior_summary,
-            red_cause=last.get("red_cause"),
-            # Every criterion validate judged, and whatever review blocked on —
-            # both recorded in the failure log already, neither previously read
-            # back. §15.1 measured the loop rediscovering one criterion at a
-            # time while the rest sat in the log unread.
-            evidence=last.get("evidence"),
-            review_findings=last.get("review_findings"),
-            resolution_directive=self.resolution_directive,
-            context=self.context,
-            primary_domain=None,      # the lead is already resolved
-            considerations=considerations,
-            max_tokens=self._max_tokens(node),
-            # Ruling D51 (2): the answer is judged against the
-            # asks, and the implementer reads them too.
-            asks=self._anchored_asks(state),
-            # Ruling D53: only the answer-and-recompute workflow's
-            # implement node asks for typed results (its args carry
-            # results: true). Every other workflow's implement prompt
-            # is byte-identical to what it was — the instruction is
-            # gated on this arg, not on the workflow's name.
-            results=bool(node.args.get("results", False)),
-        )
+
+        async def write_answer():
+            return await phases.run_implement(
+                self.client, state.request, plan, lead,
+                iteration=state.iteration or 1,
+                prior_summary=prior_summary,
+                red_cause=last.get("red_cause"),
+                # Every criterion validate judged, and whatever review blocked
+                # on — both recorded in the failure log already, neither
+                # previously read back. §15.1 measured the loop rediscovering
+                # one criterion at a time while the rest sat in the log unread.
+                evidence=last.get("evidence"),
+                review_findings=last.get("review_findings"),
+                resolution_directive=self.resolution_directive,
+                context=self.context,
+                primary_domain=None,      # the lead is already resolved
+                considerations=considerations,
+                max_tokens=self._max_tokens(node),
+                # Ruling D51 (2): the answer is judged against the
+                # asks, and the implementer reads them too.
+                asks=self._anchored_asks(state),
+                # Ruling D53: only the answer-and-recompute workflow's
+                # implement node asks for typed results (its args carry
+                # results: true). Every other workflow's implement prompt
+                # is byte-identical to what it was — the instruction is
+                # gated on this arg, not on the workflow's name.
+                results=bool(node.args.get("results", False)),
+            )
+
+        verdict, latest = await write_answer()
+        responses = list(latest)
+        # Owner's ruling of 2026-11-21: a cut-off answer is written again, at
+        # least three times, "to have slack for the routers" — until then it
+        # ended the run blocked on the first. The two answers the hold-out
+        # blocked were one the model ended mid-sentence inside valid JSON
+        # (X3, 1,713 characters; the reply was not kept, so its finish reason
+        # is unknown) and one the check misread (X24, a `jq` string in a code
+        # block); the first is what this retries. The node opts in with
+        # args: {cut_retries: N}, so no other workflow's implement changes.
+        # The free check that judges it is the one the gate after the node
+        # runs, so a text still cut after the last attempt ends the run
+        # blocked exactly as before, and each attempt is billed as made.
+        retries = max(0, int(node.args.get("cut_retries", 0) or 0))
+        for retry in range(1, retries + 1):
+            if get_check("answer_ends_whole")(verdict.summary).passed:
+                break
+            logger.warning(
+                "Answer cut off (%d characters, finish_reason=%s, model %s): "
+                "writing it again, retry %d of %d",
+                len(verdict.summary or ""),
+                getattr(latest[0], "finish_reason", None),
+                getattr(latest[0], "model", None), retry, retries)
+            verdict, latest = await write_answer()
+            responses.extend(latest)
         return verdict, responses
 
     def record_partial_iteration(

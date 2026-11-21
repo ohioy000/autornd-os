@@ -64,6 +64,8 @@ nodes:
     specialist: lead
     prompt: implement
     schema: ImplementVerdict
+    args:
+      cut_retries: 3    # owner's ruling of 2026-11-21, see the answer_end node below
 
   # The free check runs first. An implementation that never mentions
   # an ask is rejected before a paid validator is asked about it.
@@ -115,7 +117,9 @@ nodes:
   # mid-sentence and shipped as done. A free check on the final answer's
   # last line; when it finds the text cut off, the run ends blocked with
   # that reason, the answer is kept as the candidate, and the review is
-  # not paid for. No retry.
+  # not paid for. The implement node writes a cut-off answer again first
+  # (cut_retries, the owner's word of 2026-11-21), so the run ends here only
+  # when every attempt was cut.
   - id: answer_end
     kind: check
     check: answer_ends_whole

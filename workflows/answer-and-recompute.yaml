@@ -81,6 +81,9 @@ nodes:
     depends_on: [context, request_switches]
     args:
       results: true
+      # Owner's ruling of 2026-11-21: a cut-off answer is written again, three
+      # more times at most, "to have slack for the routers".
+      cut_retries: 3
 
   # Ruling D51 (5): the implementer's honest-refusal channel. An
   # entry that names an ask ends the run blocked — this workflow
@@ -108,7 +111,10 @@ nodes:
   # mid-sentence at character 1948, naming no gate, and shipped as done.
   # A free check on the answer's last line; when it finds the text cut
   # off, the run ends blocked with that reason, the answer is kept as
-  # the candidate, and the recompute is not paid for. No retry.
+  # the candidate, and the recompute is not paid for. The implement node
+  # writes a cut-off answer again before this gate sees it (cut_retries, the
+  # owner's word of 2026-11-21), so the gate ends the run only when every
+  # attempt was cut.
   - id: answer_end
     kind: check
     check: answer_ends_whole

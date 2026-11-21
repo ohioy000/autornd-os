@@ -1693,6 +1693,10 @@ _DANGLING_WORDS = frozenset({
 _CUT_MARK = re.compile(r"[,:;(\[{&]$|(?<![-=*_ ])[-–—]$")
 _LAST_WORD = re.compile(r"([A-Za-z]+)$")
 _RULE_LINE = re.compile(r"[-=*_\s]+")
+# A closed fenced block, and a code span on one line: what `answer_ends_whole`
+# leaves out before it counts math delimiters.
+_CODE_BLOCK = re.compile(r"(?ms)^[ \t]*```.*?^[ \t]*```[ \t]*$")
+_CODE_SPAN = re.compile(r"`[^`\n]+`")
 
 
 @check("answer_ends_whole")
@@ -1700,7 +1704,7 @@ def answer_ends_whole(text: Any) -> Result:
     """Does the answer end where a sentence can end?
 
     A free check. Across the whole text: an open code block, or display
-    math opened and not closed (`\\[`, `\\(`, `\\begin{`). On the last
+    math opened and not closed outside code (`\\[`, `\\(`, `\\begin{`). On the last
     line: a table row with no closing bar, open bold, an open bracket or
     quote, a line ending on a comma, colon or dash, or on a word no
     sentence ends on ("as", "the", "of"). Any one fails it. A whole table
@@ -1718,11 +1722,17 @@ def answer_ends_whole(text: Any) -> Result:
     signs: list[str] = []
     if sum(1 for line in lines if line.lstrip().startswith("```")) % 2:
         signs.append("an open code block")
-    if body.count("\\[") > body.count("\\]"):
+    # Math is counted outside code. A `jq` string "\(.name)" or a regex
+    # `\(` inside a closed code block or code span opens nothing: X24 draw 2
+    # of the hold-out (2026-11-17) ended on a whole sentence and was blocked
+    # as "open inline math" for the two `\(` of one `jq` line.
+    prose = _CODE_BLOCK.sub("", body)
+    prose = _CODE_SPAN.sub("", prose)
+    if prose.count("\\[") > prose.count("\\]"):
         signs.append("open display math")
-    if body.count("\\(") > body.count("\\)"):
+    if prose.count("\\(") > prose.count("\\)"):
         signs.append("open inline math")
-    if len(re.findall(r"\\begin\{", body)) > len(re.findall(r"\\end\{", body)):
+    if len(re.findall(r"\\begin\{", prose)) > len(re.findall(r"\\end\{", prose)):
         signs.append("an open \\begin block")
     last = lines[-1].strip()
     if last.startswith("|") and not last.endswith("|"):

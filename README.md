@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-2038%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-2050%20passing-brightgreen.svg)](#testing)
 
 **A harness that lets low-cost models answer precise expert questions, shows what each answer rested on, and says honestly what it checked.**
 
@@ -20,7 +20,7 @@ A request that names no workflow runs the default, [`workflows/answer-and-recomp
 2. **Asks.** One call on the triage tier quotes what the request asks for. A free check keeps only the quotes that really occur in the request. When none do, the whole request is the one ask.
 3. **Grounding.** The harness retrieves from the documents you ingested and, when a lookup is wanted, reads outside sources itself. See [Research](#research).
 4. **One answer.** One call on the engineering tier, from the request, the asks and the grounding. It states its results as typed values, one for each ask that wants a value or a verdict.
-5. **Two gates.** The run ends `blocked` if the answer says it cannot meet an ask, or if the answer is cut off mid-sentence.
+5. **Two gates.** The run ends `blocked` if the answer says it cannot meet an ask, or if the answer is still cut off mid-sentence after it has been written again three times.
 6. **Free checks.** Does the answer address each ask? Does it contradict a figure the request states? These are notes. They never block.
 7. **Recompute vote, optional.** For a request judged to need a calculation, three blind samples recompute the typed results and a free check votes. A disagreement is a note, never a block. It is off unless two optional tiers are set, see [Model Tiers](#model-tiers).
 8. **Decision switches, optional.** Small yes/no questions on the decision tier, asked before and after the answer.
