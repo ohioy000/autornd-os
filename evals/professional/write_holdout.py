@@ -93,8 +93,12 @@ PASSAGES_SHOWN, MIN_PAGES_TO_WRITE = 12, 8
 # What one checker call may carry of page text, in characters (about 600,000 tokens), so a call stays
 # well inside the worker's context; a page past its share is cut and the checker is told so.
 CHECK_PAGE_CHARS = 2_400_000
-# Naming documents from memory is recall, not reasoning, so the plan call thinks as little as it may.
-PLAN_EFFORT = "low"
+# Naming documents from memory is recall, not reasoning, so the plan call does not think. The first
+# live run (2026-11-21) asked for the low level and the endpoint ignored it: all nine replies spent the
+# whole 12,000 tokens on thought and returned nothing ('$0.1365' for nothing). One probe each at off,
+# minimal and none, capped at 4,000 tokens, showed that only off answered (31 documents in 2,405
+# tokens for '$0.0033'); the other two were cut off with an empty reply, as low had been.
+PLAN_EFFORT = "off"
 # Output ceilings: the author writes 14 questions and may reason first; the rest are short.
 AUTHOR_MAX_TOKENS, PLAN_MAX_TOKENS, WORKER_MAX_TOKENS = 48_000, 12_000, 16_000
 # The HTTP wait for one reply: a long answer from a reasoning model takes minutes, and the client's

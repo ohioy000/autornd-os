@@ -641,11 +641,13 @@ class TestTheStagesFromPlanToDraft:
         assert client.calls == []
         assert any("run the write stage first" in line for line in run.errors)
 
-    async def test_naming_documents_is_asked_with_little_reasoning(
+    async def test_naming_documents_is_asked_with_reasoning_off_because_a_level_is_ignored(
             self, tmp_path, monkeypatch, small):
+        # The live endpoint ignored low, minimal and none and spent every token on thought; only off
+        # let a reply through (see PLAN_EFFORT).
         client = FakeClient(Script())
         await run_stages(make_run(tmp_path, client=client), ["plan"])
-        assert client.calls[0]["reasoning"] == {"effort": "low"}
+        assert client.calls[0]["reasoning"] == {"enabled": False}
 
     async def test_writing_a_group_again_throws_away_the_checks_of_the_old_draft(
             self, tmp_path, monkeypatch, small):

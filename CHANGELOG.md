@@ -6,6 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Fixed (2026-11-21, found by the first live stage of the second hold-out's authoring): the plan call of
+`evals/professional/write_holdout.py` asked the author model for a low level of thinking and the endpoint
+ignored it, so all nine replies spent the whole 12,000 tokens on thought and returned nothing ('$0.1365'
+for nothing). One probe each at off, minimal and none, capped at 4,000 tokens, showed that only off
+answers (31 documents in 2,405 tokens, '$0.0033'; the other two were cut off with an empty reply, as low
+had been), so the plan call now asks for no thinking. The worker model does honour levels (a
+checker-shaped call used 71, 368 and 415 tokens at off, low and medium), so its settings stay. The test
+that pinned the low level held the setting that does not work and was corrected, not appeased. 4 guarded
+lines proven by breaking them (4 of 4 fail their test). Counts unchanged: 2,287 tests in 100 files.
+
 Changed (2026-11-21, the owner's word: "Add to the line up 3 more engineering subjects and be more
 detailed than ie electrical systems"): the second hold-out set's line-up in
 `evals/professional/write_holdout.py` gains three groups of 14, so the set is nine groups and 126
