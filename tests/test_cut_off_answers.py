@@ -6,7 +6,10 @@ open and no gate named, and no caution said so
 (docs/reviews/2026-11-13-golden-decisions.md). The owner's word that day,
 "yes to all 3", added a free check and a gate: a text that ends cut off
 ends the run blocked with that reason, the answer kept as the candidate,
-and nothing more paid for. No retry.
+and nothing more paid for. It had no retry. The owner's word of 2026-11-21,
+"def a retry, 3 attempts at least, to have slack for the routers", added
+one: the implement node of each workflow that gates on the check writes a
+cut-off answer again, up to three more times, before the gate sees it.
 
 The check's signs were measured on every recorded answer in docs/traces
 before they were kept. The tier-4 calibration runs of 2026-10-17 record
@@ -180,3 +183,122 @@ class TestTheGate:
         assert state.reason.startswith("Answer incomplete: it ends mid-sentence")
         # lean's review is not paid for on an answer that is not finished.
         assert "review" not in runner.ai_calls
+
+
+def _answer_calls(calls):
+    return [c for c in calls
+            if c["user"].startswith("Produce the answer to the following request")]
+
+
+def _cut_first(cuts: int):
+    """answer-and-recompute's double whose first `cuts` answers are cut off
+    and whose later ones are whole, counted by the answers written."""
+    route = _workflow_router(60.0, [60.0] * 3)
+
+    def router(user_message, calls):
+        data = route(user_message, calls)
+        if (user_message.startswith("Produce the answer to the following request")
+                and len(_answer_calls(calls)) <= cuts):
+            data = dict(data, summary=SUMMARY + "\n\n- Then **apply it as")
+        return data
+
+    return router
+
+
+class TestTheRetry:
+    async def test_a_cut_answer_is_written_again_and_the_run_completes(
+            self, recompute_tier):
+        state, _, calls = await _drive(
+            load("workflows/answer-and-recompute.yaml"), _cut_first(1), REQUEST)
+        assert state.status == "completed"
+        assert state.outputs["answer_end"]["passed"] is True
+        assert len(_answer_calls(calls)) == 2
+        assert [c["function"] for c in calls].count("recompute") == 3
+
+    async def test_it_tries_three_more_times_and_no_more(self, recompute_tier):
+        # Cut three times, whole on the fourth: the last retry is the one
+        # that gets through.
+        state, _, calls = await _drive(
+            load("workflows/answer-and-recompute.yaml"), _cut_first(3), REQUEST)
+        assert state.status == "completed"
+        assert len(_answer_calls(calls)) == 4
+
+    async def test_when_every_attempt_is_cut_the_run_ends_blocked_after_four(
+            self, recompute_tier):
+        state, _, calls = await _drive(
+            load("workflows/answer-and-recompute.yaml"), _cut_first(99), REQUEST)
+        assert state.status == "blocked"
+        assert state.reason.startswith("Answer incomplete: it ends mid-sentence")
+        assert len(_answer_calls(calls)) == 4
+        assert "recompute" not in [c["function"] for c in calls]
+        assert state.candidate is not None
+
+    async def test_a_whole_answer_is_written_once(self, recompute_tier):
+        state, _, calls = await _drive(
+            load("workflows/answer-and-recompute.yaml"), _cut_first(0), REQUEST)
+        assert state.status == "completed"
+        assert len(_answer_calls(calls)) == 1
+
+    async def test_a_node_that_does_not_ask_for_it_writes_once(self, recompute_tier):
+        spec = load("workflows/answer-and-recompute.yaml")
+        implement = next(n for n in spec.nodes if n.id == "implement")
+        implement.args.pop("cut_retries")
+        state, _, calls = await _drive(spec, _cut_first(1), REQUEST)
+        assert state.status == "blocked"
+        assert len(_answer_calls(calls)) == 1
+
+    def test_every_workflow_that_gates_on_a_cut_answer_asks_for_three_retries(self):
+        gated = []
+        for path in sorted(glob.glob(str(ROOT / "workflows" / "*.yaml"))):
+            spec = load(path)
+            if any(n.kind == "check" and n.check == "answer_ends_whole"
+                   for n in spec.nodes):
+                gated.append(Path(path).stem)
+                implement = next(n for n in spec.nodes if n.id == "implement")
+                assert implement.args.get("cut_retries", 0) >= 3, path
+        # The guard read its subject before it judged it.
+        assert gated == ["answer-and-recompute", "lean", "verify-first"]
+
+
+def _recorded_answer(workflow_id: int) -> str:
+    """The implement summary of one workflow of the hold-out's shard 2."""
+    path = TRACES / "20261117T-holdout-phases-shard-2.jsonl"
+    for line in open(path, encoding="utf-8"):
+        row = json.loads(line)
+        if (row["kind"] == "phase" and row["phase"] == "implement"
+                and row["workflow_id"] == workflow_id):
+            return row["verdict"]["summary"]
+    raise AssertionError(f"no implement row for workflow {workflow_id}")
+
+
+class TestTheTwoAnswersTheHoldoutBlocked:
+    """Shard 2 of the hold-out blocked two answers as cut off. Read from
+    their records, one is cut off and one is not."""
+
+    def test_x3_draw_1_ends_on_the_word_of_and_is_cut(self):
+        result = answer_ends_whole(_recorded_answer(1))
+        assert result.passed is False
+        assert result.data["signs"] == ["a last line ending on 'of'"]
+
+    def test_x24_draw_2_ends_on_a_whole_sentence_and_is_not_cut(self):
+        answer = _recorded_answer(22)
+        # The two `\(` the check once counted as open math are in one jq line.
+        assert answer.count("\\(") == 2 and answer.count("\\)") == 0
+        assert answer.rstrip().endswith("schedule an upgrade to 1.26/1.27.")
+        assert answer_ends_whole(answer).passed is True
+
+    @pytest.mark.parametrize("text", [
+        "Run it.\n\n```\njq '.[] | \"\\(.name)\"'\n```\n\nThat is the list.",
+        "Interpolate with `\\(.name)` inside a jq string. That is all.",
+    ])
+    def test_a_math_delimiter_in_code_opens_nothing(self, text):
+        assert answer_ends_whole(text).passed is True
+
+    @pytest.mark.parametrize("text, sign", [
+        ("The head is \\(H = 1.35 and the rest follows.", "open inline math"),
+        ("Run it.\n\n```\njq .\n```\n\nThe head is \\[H = 1.35 and so.",
+         "open display math"),
+    ])
+    def test_a_math_delimiter_left_open_in_prose_still_fails(self, text, sign):
+        result = answer_ends_whole(text)
+        assert result.passed is False and sign in result.data["signs"]

@@ -6,6 +6,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Changed (2026-11-21, the owner's ruling: a retry, three attempts at least, "to have slack for the
+routers"): the implement node of the three workflows that gate on a cut-off answer
+(`answer-and-recompute`, `verify-first`, `lean`) writes a cut-off answer again, up to three more
+times, before the gate sees it, through a new node argument `cut_retries`; a workflow that does not
+set it is unchanged, and a text still cut after the last attempt ends the run blocked exactly as
+before. Found by reading the two answers the hold-out blocked as cut off (X3 draw 1, X24 draw 2):
+X3's is cut, its `summary` field ending on the word "of" inside valid JSON, so the model ended it and
+the retry is the fix; X24's is not, it ended on a whole sentence and the check misread two `\(` in a
+`jq` line of a code block as open inline math, so `answer_ends_whole` now counts math delimiters
+outside code only (an instrument repair: it reported a cut-off where there was none). Both answers
+read from their records in the tests; each guarded line shown to fail them when removed.
+
 Changed (2026-11-21, the owner's ruling: medium for the research tier): query expansion and the
 briefing ask for medium reasoning effort too, as the request-scoping call already did. A probe the
 same day found query expansion at the provider's default taking 24,253 tokens, 189 s and '$0.034' on X12,
