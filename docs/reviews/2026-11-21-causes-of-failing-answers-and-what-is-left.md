@@ -13,13 +13,17 @@ scratchpad, not in the repo; their figures are quoted here).
 - **The failing answers have six causes, and only two are fixed.** Thin lookups (pages not read) are
   loosened by #309. The research tier's runaway reasoning was a cost and time fault, not a
   correctness one, and #312 and #313 fixed it. Four causes stand: an answer that blocks where it
-  should say "none stated", a stale official page taken as current, a table factor that never
-  reaches the answer, and an answer cut off mid-sentence.
+  should say "none stated", a stale official page taken as current, a search that returns the wrong
+  family of pages (X12), and an answer cut off mid-sentence.
 - **The reader tier shows no benefit.** Same cost and time, and on X12, the question it was built for,
   4 of 5 right with it off and 3 of 5 with it on. Its pages-read gain on X34 is real but did not
   change that answer.
-- **The X12 miss is not a pages problem.** One draw read 6 of 6 pages and still gave TI 8. The Table 7
-  passage, the factor of 2 for a load area of 1 to 5 m², is not reaching the answer step.
+- **The X12 miss is a wrong-pages problem, not an unread-pages one.** Corrected after merge: the first
+  text of this review said the Table 7 passage, the factor of 2 for a load area of 1 to 5 m², was lost
+  after the pages were read. Read from the ten X12 draws on disk: all three TI 8 answers read only US
+  federal rule pages (four, six and five of them: eCFR, govinfo) and no IAEA document; all seven right answers read at least one.
+  The three draws that sent the question whole to the search all found the IAEA pages; the seven that
+  sent the scoping call's rewrite had lost the word "international", and three of those got US pages only.
 - **Time is mostly the answer-writing call and the lookup, money is mostly the lookup.** In the
   hold-out run the answer-writing step was 57 percent of the time (median 51 s) and cost '$0.327'
   of '$1.356'; grounding took '$0.872' of it.
@@ -33,7 +37,7 @@ Counts are from the reports named; none was re-derived except where marked.
 | 1 | **A thin lookup: pages never read** (no answer in 25 s, HTTP 403, over 15 MB) | 6 of the 13 hold-out misses (X19, X20, X31, X34, X38, X41) read 1 to 3 pages; X12 in the rerun read 1 and 2 of 6. Fisher p = 0.0004 on the hold-out, 0.19 on the rerun's 28 | Loosened by #309. X12 now reads 6 of 6 and is right in 4 of 5 today, but X34 still read only 2 of 6 once, with 154 s of grounding |
 | 2 | **Blocks where it should say "none stated"** (known limit 12) | X41 blocked twice in the hold-out and rerun and gave an invented 45 degC/W once; X31 draw 1 blocked on clause 43 | Open. A behaviour change, the owner's ruling |
 | 3 | **A stale official page taken as current** (known limit 4) | X31 gave the 2015 licence in two runs; the flight-attendant question gave 9 hours three of three in the hard set; two BasicMed answers in the misleading set | Open. Nothing in the harness detects it |
-| 4 | **The right passage does not reach the answer** | X12: TI 8 (the factor forgotten) in the hold-out (5 pages read), rerun draw 1 (1 page), and 2 of 5 today even with 6 of 6 pages read, reader on or off | Open. Neither longer reading nor the reader fixed it |
+| 4 | **The search returns the wrong family of pages**: US federal rules where the question asks for the international document | X12 TI 8 (the factor of 2 forgotten): 3 of the 10 draws on disk, each with only US federal pages read (four, six and five) and no IAEA page. The hold-out's wrong draw also cites 49 CFR in its answer; its pages were not kept | Open. A change to what the lookup asks, the owner's ruling |
 | 5 | **An answer cut off mid-sentence, then blocked** | X3 (1,713 characters) and X24 (5,917) in the hold-out, 2 of 126, '$0.0085' and '$0.0083' for nothing | Open. Not a token cap, since the answers are short; cause unknown; no retry exists |
 | 6 | **The question or the key is at fault, or the call is borderline** | X13 (the key asks what the question does not), X16 (a reason), X34 ("more than 18 m" against "18 m or more"), X19 and X20 (wording) | Measurement noise: about 4 of the hold-out's 9 wrong answers. Not a harness fix |
 
@@ -52,7 +56,9 @@ on an answer that wrote `10^400` (#311).
   the regular model; this is why medium is the setting, not low.
 - **Four units on the new setting were right** (X4, X12, X22, X34), one reading each.
 - **The reader tier:** four questions, off 4 right, on 3; X12 three more draws each, off 2 of 3, on 2 of 3.
-  Reader calls cost about the same as they save. It hands on 3 to 4 times more quoted text.
+  Reader calls cost about the same as they save. It hands on 3 to 4 times more quoted text. The X12
+  differences follow which pages the search returned, not the reader: the three wrong draws are one with
+  the reader off and two with it on, and all three had no IAEA page.
 - **The answer-writing call** used 2,711, 9,126 and 4,620 tokens for answers of about 1,000 tokens, in 17
   to 56 s, for '$0.002' to '$0.003'. It is a time cost.
 - **A larger model for the answer-writing call** (one draw, X12, `moonshotai/kimi-k3.1-pro`): right, 141 s,
@@ -68,11 +74,17 @@ Rulings are the owner's. Each item says what it would cost and what it could be 
 1. **A second hold-out set before any of 2 to 5 below.** The 42 questions are used: every change shaped
    by their misses can only be judged on questions it was not shaped against. Authoring, checking every
    key against the live pages and the owner's signing, then about '$1.4' for the harness.
-2. **"None stated" instead of blocking** (cause 2). Seen in 4 to 5 of about 160 answers on the same two
+2. **Keep the question's own jurisdiction words in every lookup question** (cause 4). Found free, from
+   the ten X12 draws on disk: the 3 wrong draws all had a scoped lookup question with no "international"
+   in it and a search that returned only US federal pages; the 3 draws that sent the question whole all
+   found the IAEA pages; of 7 scoped draws, 4 found them. Seven right against three wrong on that split is
+   p = 0.008 (one-sided), but the grouping was made after seeing the pages and the draws are not a
+   designed test, so it is a lead and not a proof. Two ways to act, both a change to what the lookup asks
+   and so a ruling: add the question's own words to each scoped lookup question, or search the whole
+   question as well. A test costs the grounding only, under '$0.02' a draw (the hold-out's grounding
+   averaged '$0.007' a unit; X12 reads more).
+3. **"None stated" instead of blocking** (cause 2). Seen in 4 to 5 of about 160 answers on the same two
    questions. Needs a design that does not let an unread page count as "none".
-3. **Why the Table 7 passage does not reach the answer** (cause 4). The cheapest next step is free:
-   read the X12 lookups' handed-on quotes in the traces and see whether the passage was on a page read and
-   not chosen, or on a page not read. That says whether the fix is the excerpt chooser or the reading.
 4. **A retry when an answer is cut off** (cause 5), after finding why it ends early. 2 of 126, each
    costing '$0.008' now for nothing. Retry wiring may be an instrument repair; the exit condition is a
    ruling. Asked, not decided.
@@ -91,6 +103,10 @@ Rulings are the owner's. Each item says what it would cost and what it could be 
   table (from `20261117T-holdout-phases-shard-*`) and the lookups of the eleven-question rerun.
 - Today's tests are one draw per question, mostly, and one reader (me) against frozen keys on a used set.
   They show no clear failure and cannot show a small gain or loss.
+- Cause 4 was first written as "the passage is lost after the pages are read" and corrected the same day
+  from the pages kept in the run databases of 2026-11-20 and 21 (ten X12 draws). The hold-out and the
+  eleven-question rerun kept no page addresses, so for their X12 draws only what the answers cite could be
+  checked. The reader's X12 comparison is confounded by which pages the search returned.
 - The implement probe spent '$0.0736' against the '$0.06' I stated, because the shard cap is checked
   between units and X12 cost '$0.05' that time (the 24,253-token call). Over by '$0.014'.
 
