@@ -501,6 +501,39 @@ async def research_gaps(
     return findings
 
 
+# The longest request that is also put to the first lookup as a question of
+# its own. Measured on the 111 questions in the evaluation sets: median 257
+# characters, longest 1,091. Past this a request is a brief, not a question,
+# and the gaps scoping named stand alone.
+WHOLE_QUESTION_MAX_CHARS = 1500
+
+
+def lookup_questions(request: str, gaps: list[str]) -> list[str]:
+    """What a run's first lookup asks: the request itself, then each gap.
+
+    The owner's ruling of 2026-11-21 ("also scope the whole question if it's
+    still frugal"). Scoping rewrites a request into the unknowns it has to
+    settle, and a rewrite can lose the words that say which document is meant.
+    Read from the ten X12 draws kept from 2026-11-20 and 21 (a question that
+    asks for the international rules for moving radioactive material): the
+    three draws that asked the whole question all read IAEA pages; of the seven
+    that asked scoping's rewrite, which no longer said "international", three
+    read only US federal rules and all three gave a wrong answer. The search
+    model is given the request as well, but it answers the question it is asked
+    ("what the work needs settled"), so the whole question goes there too.
+
+    Frugal by construction: the lookup stays one request that reads at most
+    MAX_DOCUMENTS pages, so the only addition is one more numbered line in it.
+    No gaps means no lookup was wanted, and none is made for the request alone;
+    the request already among the gaps is not asked twice.
+    """
+    asked = [g.strip() for g in gaps if g and g.strip()]
+    whole = (request or "").strip()
+    if not asked or not whole or whole in asked or len(whole) > WHOLE_QUESTION_MAX_CHARS:
+        return asked
+    return [whole, *asked]
+
+
 def _bundle(asked: list[str]) -> str:
     """The question text of one lookup: one question, or several numbered."""
     if len(asked) == 1:
