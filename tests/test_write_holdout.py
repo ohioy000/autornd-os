@@ -295,6 +295,95 @@ class TestTheLineUp:
         assert len(plans) == 1 and f"The area: {group.area}." in plans[0]["user"]
 
 
+class TestThePlanReply:
+    """The first live run's replies named 91 and 161 documents when 30 were asked for, and one stopped at
+    its limit in the middle of an entry. The plan keeps what was finished and takes what was asked."""
+
+    @staticmethod
+    def entry(n: int) -> dict:
+        return {"url": f"https://example.org/doc-{n}", "title": f"Document {n}", "why": "limits"}
+
+    def cut_reply(self) -> str:
+        whole = json.dumps({"documents": [self.entry(1), self.entry(2), self.entry(3)]})
+        return whole[:whole.index("doc-3") + 3]
+
+    def test_a_whole_reply_gives_its_documents(self):
+        reply = json.dumps({"documents": [self.entry(1), self.entry(2)]}) + "\nA note."
+        assert [d["url"] for d in mod.plan_entries(reply)] == [
+            "https://example.org/doc-1", "https://example.org/doc-2"]
+
+    def test_a_bare_list_is_read_too(self):
+        assert len(mod.plan_entries(json.dumps([self.entry(1), self.entry(2), self.entry(3)]))) == 3
+
+    def test_text_before_the_json_does_not_matter(self):
+        reply = "Here are the documents: " + json.dumps({"documents": [self.entry(1)]})
+        assert len(mod.plan_entries(reply)) == 1
+
+    def test_a_reply_cut_in_the_middle_of_an_entry_gives_the_entries_finished_before_the_cut(self):
+        assert [d["title"] for d in mod.plan_entries(self.cut_reply())] == ["Document 1", "Document 2"]
+
+    def test_a_reply_cut_before_its_first_entry_is_finished_gives_nothing(self):
+        assert mod.plan_entries('{"documents": [{"url": "https://exa') == []
+
+    @pytest.mark.parametrize("reply", ["I could not do it.", "", '{"documents": "none"}'])
+    def test_a_reply_with_no_entries_gives_nothing(self, reply):
+        assert mod.plan_entries(reply) == []
+
+    async def test_only_a_caller_that_says_so_may_keep_a_reply_that_was_cut_off(self, tmp_path):
+        client = FakeClient(lambda call: ('{"documents": [', 0.01, "length"))
+        run = make_run(tmp_path, client=client)
+        kept = await mod.ask(run, "plan", mod.GROUPS[0], "author", "s", "u", max_tokens=10,
+                             keep_cut=True)
+        assert kept == '{"documents": ['
+        with pytest.raises(mod.ReplyCutOff):
+            await mod.ask(run, "plan", mod.GROUPS[0], "author", "s", "u", max_tokens=10)
+        assert run.spent() == pytest.approx(0.02), "both were paid for"
+
+    async def test_a_plan_reply_that_stopped_at_its_limit_still_gives_its_finished_entries(
+            self, tmp_path, small):
+        client = FakeClient(lambda call: (self.cut_reply(), 0.01, "length"))
+        run = make_run(tmp_path, client=client)
+        await mod.STAGES["plan"](run)
+        plan = json.loads((tmp_path / "plan-g1.json").read_text())
+        assert [d["title"] for d in plan["documents"]] == ["Document 1", "Document 2"]
+        assert run.errors == [] and run.spent() == pytest.approx(0.01), "it was paid for and used"
+
+    async def test_no_more_documents_are_taken_than_were_asked_for(self, tmp_path, small, monkeypatch):
+        monkeypatch.setattr(mod, "ASK_FIRST", 2)
+        entries = [self.entry(n) for n in range(1, 8)]
+        client = FakeClient(lambda call: (json.dumps({"documents": entries}), 0.01, "stop"))
+        run = make_run(tmp_path, client=client)
+        await mod.STAGES["plan"](run)
+        plan = json.loads((tmp_path / "plan-g1.json").read_text())
+        assert [d["title"] for d in plan["documents"]] == ["Document 1", "Document 2"]
+
+    async def test_a_second_round_takes_only_as_many_as_it_asks_for(self, tmp_path, small, monkeypatch):
+        monkeypatch.setattr(mod, "ASK_FIRST", 3)
+        monkeypatch.setattr(mod, "ASK_MORE", 1)
+        entries = [self.entry(n) for n in range(1, 10)]
+        client = FakeClient(lambda call: (json.dumps({"documents": entries}), 0.01, "stop"))
+        run = make_run(tmp_path, client=client)
+        await mod.STAGES["plan"](run)
+        await mod.STAGES["plan"](run)
+        plan = json.loads((tmp_path / "plan-g1.json").read_text())
+        assert [d["title"] for d in plan["documents"]] == [f"Document {n}" for n in (1, 2, 3, 4)]
+        assert plan["asked"] == 2
+
+    async def test_the_plan_call_asks_for_exactly_the_number_wanted_and_for_short_reasons(
+            self, tmp_path, small):
+        client = FakeClient(Script())
+        await mod.STAGES["plan"](make_run(tmp_path, client=client))
+        user = client.calls[0]["user"]
+        assert f"exactly {mod.ASK_FIRST} different public documents in this area, and no more" in user
+        assert "in under 15 words" in user
+
+    async def test_the_plan_reply_ceiling_keeps_a_runaway_to_cents(self, tmp_path, small):
+        client = FakeClient(Script())
+        await mod.STAGES["plan"](make_run(tmp_path, client=client))
+        assert client.calls[0]["max_tokens"] == mod.PLAN_MAX_TOKENS
+        assert mod.PLAN_MAX_TOKENS <= 6000
+
+
 class TestReadingAReply:
     @pytest.mark.parametrize("reply, note", [
         ('{"a": 1}\nA short note.', "A short note."),

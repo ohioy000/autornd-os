@@ -6,6 +6,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Fixed (2026-11-21, the second live stage of the second hold-out's authoring): with thinking off, the
+author model still named far more documents than the plan asked for, 91 and 161 where 30 were asked, and
+five of nine replies stopped at the 12,000-token limit and were thrown away whole ('$0.0761' for
+nothing, '$0.2484' in all on the authoring so far, inside the owner's '$3'). The plan now keeps what a
+reply finished before its cut (a new `plan_entries`, which also reads a whole reply as before), takes
+no more documents than were asked for (every page taken is paid for again when the worker copies
+passages out of it), asks for exactly the number wanted with a reason of under 15 words each, and has a
+ceiling of 5,000 tokens, since a reply of 30 documents is about 2,500: a reply that runs on now costs
+under '$0.01' and is still used. `ask` refuses a cut reply as before unless its caller says it can use
+what came before the cut, and only the plan does. 14 new tests, and each of the 11 guarded lines was
+proven by breaking it (11 of 11 fail their test). Counts re-derived: 2,301 tests in 100 files.
+
 Fixed (2026-11-21, found by the first live stage of the second hold-out's authoring): the plan call of
 `evals/professional/write_holdout.py` asked the author model for a low level of thinking and the endpoint
 ignored it, so all nine replies spent the whole 12,000 tokens on thought and returned nothing ('$0.1365'

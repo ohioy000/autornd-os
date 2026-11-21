@@ -99,8 +99,11 @@ CHECK_PAGE_CHARS = 2_400_000
 # minimal and none, capped at 4,000 tokens, showed that only off answered (31 documents in 2,405
 # tokens for '$0.0033'); the other two were cut off with an empty reply, as low had been.
 PLAN_EFFORT = "off"
-# Output ceilings: the author writes 14 questions and may reason first; the rest are short.
-AUTHOR_MAX_TOKENS, PLAN_MAX_TOKENS, WORKER_MAX_TOKENS = 48_000, 12_000, 16_000
+# Output ceilings: the author writes 14 questions and may reason first; the rest are short. A plan
+# reply of 30 documents is about 2,500 tokens, and the first live run's longest ran past 12,000 (161
+# documents), so the plan ceiling is 5,000: a reply that runs on is cut there and its finished
+# entries are kept, which costs under '$0.01' where 12,000 cost '$0.015' for entries never used.
+AUTHOR_MAX_TOKENS, PLAN_MAX_TOKENS, WORKER_MAX_TOKENS = 48_000, 5_000, 16_000
 # The HTTP wait for one reply: a long answer from a reasoning model takes minutes, and the client's
 # own 120 s was set for short ones.
 REPLY_TIMEOUT_SECONDS = 900.0
@@ -246,7 +249,7 @@ PLAN_SYSTEM = (
 PLAN_USER = """\
 Today is {DATE}. The area: {AREA}.
 
-Name {COUNT} different public documents in this area. Each one must be:
+Name exactly {COUNT} different public documents in this area, and no more. Each one must be:
 - free to read, with no login and no paywall, on the site of the body that publishes it, and the
   law, standard, specification, datasheet or manual itself, not a page that describes it;
 - at an address you are confident is real and stable (for example an EUR-Lex CELEX address, an
@@ -258,7 +261,7 @@ Spread them over many publishers and many topics inside the area.
 Do not choose from these areas, which earlier sets already cover:
 {COVERED}
 {AVOID}
-Reply: {"documents": [{"url": "https://...", "title": "name of the document", "why": "the kind of rule or figure a question could ask"}]}
+Reply: {"documents": [{"url": "https://...", "title": "name of the document", "why": "the kind of rule or figure a question could ask, in under 15 words"}]}
 """
 
 EXTRACT_SYSTEM = (
@@ -330,6 +333,34 @@ def first_json(text: str) -> tuple[object, str]:
             at += 1
             continue
         return value, text[end:].strip().strip("`").strip()
+
+
+def plan_entries(reply: str) -> list:
+    """The documents a plan reply names: its whole JSON when it is whole, and otherwise every entry
+    that was finished before the cut. The first live run's replies named 91 and 161 documents when 30
+    were asked for, and one stopped at its limit in the middle of an entry."""
+    try:
+        value, _ = first_json(reply)
+    except ValueError:
+        value = None
+    documents = value.get("documents") if isinstance(value, dict) else value
+    if isinstance(documents, list):
+        return documents
+    key = reply.find('"documents"')
+    start = reply.find("[", key if key >= 0 else 0)
+    if start < 0:
+        return []
+    decoder, at, found = json.JSONDecoder(), start + 1, []
+    while True:
+        while at < len(reply) and reply[at] in " \t\r\n,":
+            at += 1
+        if at >= len(reply) or reply[at] != "{":
+            return found
+        try:
+            entry, at = decoder.raw_decode(reply, at)
+        except ValueError:
+            return found
+        found.append(entry)
 
 
 def clean_question(raw: object) -> dict | None:
@@ -537,8 +568,11 @@ def _append(run: Run, record: dict) -> None:
 
 async def ask(run: Run, stage: str, group: Group | None, function: str, system: str, user: str, *,
               max_tokens: int, temperature: float = 0.3, json_mode: bool = False,
-              effort: str = "default") -> str:
-    """One model call. Its cost goes to calls.jsonl at once and its reply to raw/, whatever follows."""
+              effort: str = "default", keep_cut: bool = False) -> str:
+    """One model call. Its cost goes to calls.jsonl at once and its reply to raw/, whatever follows.
+
+    A reply that stopped at its limit is refused, because what it holds cannot be trusted whole, unless
+    the caller says it can use what came before the cut (the plan, which is a list)."""
     model = run.author if function == AUTHOR_FN else run.worker
     if run.dry:
         rate_in, rate_out = run.prices.get(model, (0.0, 0.0))
@@ -576,7 +610,7 @@ async def ask(run: Run, stage: str, group: Group | None, function: str, system: 
                   prompt_tokens=response.prompt_tokens, completion_tokens=response.completion_tokens,
                   cost=response.cost, seconds=round(time.time() - started, 1), raw=name)
     _append(run, record)
-    if response.finish_reason == "length":
+    if response.finish_reason == "length" and not keep_cut:
         raise ReplyCutOff(f"the {stage} reply stopped at its limit of {max_tokens} tokens")
     return response.content or ""
 
@@ -693,20 +727,22 @@ async def stage_plan(run: Run) -> None:
             avoid = ("\nAlready named, so do not name them again: " + "; ".join(named) + "\n"
                      + ("These did not open, so name nothing like them: " + "; ".join(failed) + "\n"
                         if failed else ""))
+        count = ASK_MORE if named else ASK_FIRST
         user = (PLAN_USER.replace("{DATE}", run.date).replace("{AREA}", group.area)
-                .replace("{COUNT}", str(ASK_MORE if named else ASK_FIRST))
+                .replace("{COUNT}", str(count))
                 .replace("{COVERED}", covered_areas(run.prompt_a)).replace("{AVOID}", avoid))
         reply = await ask(run, "plan", group, AUTHOR_FN, PLAN_SYSTEM, user, max_tokens=PLAN_MAX_TOKENS,
-                          json_mode=True, effort=PLAN_EFFORT)
-        value, _ = first_json(reply)
-        documents = value.get("documents") if isinstance(value, dict) else value
-        have = set(named)
-        for doc in documents if isinstance(documents, list) else []:
+                          json_mode=True, effort=PLAN_EFFORT, keep_cut=True)
+        have, added = set(named), 0
+        for doc in plan_entries(reply):
+            if added >= count:             # ask for 30, take 30: every page taken is paid for again
+                break                      # when the worker copies passages out of it
             if not isinstance(doc, dict):
                 continue
             url, title = str(doc.get("url", "")).strip(), str(doc.get("title", "")).strip()
             if url.startswith(("http://", "https://")) and title and url not in have:
                 have.add(url)
+                added += 1
                 plan["documents"].append({"url": url, "title": title,
                                           "why": str(doc.get("why", "")).strip(),
                                           "round": plan["asked"] + 1})
