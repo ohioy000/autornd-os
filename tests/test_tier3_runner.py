@@ -247,6 +247,7 @@ class RecordingClient(runner.DryRunClient):
             model: str | None = None,
             tools: list[dict[str, Any]] | None = None,
             tool_choice: str | None = None,
+            reasoning: dict[str, Any] | None = None,
     ) -> runner.ModelResponse:
         self.offers.append({
             "function": function, "model": model,
@@ -260,7 +261,7 @@ class RecordingClient(runner.DryRunClient):
             response_format=response_format,
             temperature=temperature, max_tokens=max_tokens,
             model=model, tools=tools,
-            tool_choice=tool_choice)
+            tool_choice=tool_choice, reasoning=reasoning)
 
 
 class _Wiring:
@@ -3381,13 +3382,14 @@ class _R6PipelineClient(runner.DryRunClient):
             model: str | None = None,
             tools: list[dict[str, Any]] | None = None,
             tool_choice: str | None = None,
+            reasoning: dict[str, Any] | None = None,
     ) -> runner.ModelResponse:
         response = await super().chat(
             function, system_prompt, user_message,
             response_format=response_format,
             temperature=temperature, max_tokens=max_tokens,
             model=model, tools=tools,
-            tool_choice=tool_choice)
+            tool_choice=tool_choice, reasoning=reasoning)
         self.costs.append(response.cost)
         return response
 

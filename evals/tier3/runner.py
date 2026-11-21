@@ -4879,7 +4879,11 @@ class DryRunClient(OpenRouterClient):
             model: str | None = None,
             tools: list[dict[str, Any]] | None = None,
             tool_choice: str | None = None,
+            reasoning: dict[str, Any] | None = None,
     ) -> ModelResponse:
+        # `reasoning` mirrors OpenRouterClient.chat so a pipeline call that
+        # sets an effort (the request scoping, 2026-11-21) reaches this
+        # stand-in as it reaches the real client; a scripted call ignores it.
         self._call_number += 1
         outcome = (self._outcomes[self._call_number - 1]
                    if self._call_number <= len(self._outcomes)

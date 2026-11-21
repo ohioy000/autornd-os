@@ -123,6 +123,17 @@ class Settings(BaseSettings):
     plan_max_tokens: int = 32768
     escalation_max_tokens: int = 16384
 
+    # The research tier (query expansion, the briefing, the request scoping)
+    # ran at chat_json's 16,384 default. Measured 2026-11-20/21 on the hold-out
+    # questions: at the provider's default reasoning the scoping call spent
+    # 4,000 to 10,500 tokens, and on X12 15,000 to 30,400, returning nothing
+    # twice at the cap (182 s and '$0.023' each) before a third try just fit
+    # under it. Owner's ruling of 2026-11-21: correctness first, so give the tier
+    # room. A ceiling is billed only when used, so this costs nothing on the calls
+    # that were already fine; the scoping call also asks for medium effort, which
+    # used 650 to 1,030 tokens, so the room is a margin and not the working size.
+    research_max_tokens: int = 32768
+
     # Validate judges work; it does not redo it. Measured against live models
     # an unbounded validator produced 15k output tokens for a green/red verdict,
     # taking three minutes and costing more than the implementation it checked.

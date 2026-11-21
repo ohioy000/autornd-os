@@ -1252,6 +1252,7 @@ class OpenRouterClient:
         max_tokens: int = 16384,
         max_retries: int = 3,
         schema: type | None = None,
+        reasoning: dict[str, Any] | None = None,
     ) -> tuple[dict[str, Any], ModelResponse]:
         """Chat and parse the response as JSON. Returns (parsed_dict, response).
 
@@ -1291,6 +1292,9 @@ class OpenRouterClient:
                 response_format={"type": "json_object"},
                 temperature=temperature,
                 max_tokens=max_tokens,
+                # Absent unless asked for, as in chat(): a call that sets no
+                # effort reaches chat() exactly as it did before the option.
+                **({"reasoning": reasoning} if reasoning else {}),
             )
             if not (response.content or "").strip():
                 detail = (
