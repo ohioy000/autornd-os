@@ -4,6 +4,29 @@ Written 2026-11-21 at the owner's request. The first hold-out (`professional-hol
 used: its misses shaped the fixes since, so it can no longer say how the harness does on questions
 nobody tuned for. This set is for that.
 
+## Update, 2026-11-21: 84 questions, written and checked by models through a script
+
+The owner asked for a set twice the size of the first (84 questions, `Y1` to `Y84`, six groups of 14)
+and for the questions to be written by models through a script that reads the owner's `.env` itself,
+so no key is shown. The three areas below are each cut in two: group 1 EU law and standards, group 2
+international law and standards, group 3 software, security and internet standards, group 4 software
+and infrastructure documentation, group 5 physical engineering, units, datasheets and manuals, group
+6 national rules and codes. `evals/professional/write_holdout.py` does the work and its docstring says
+how to run it; the two models are named on its command line and nowhere in the code.
+
+The prompts below are used as written. One short preface is added in front of Prompt A and one short
+tail after Prompt B, because a model cannot browse: code opens the pages with the harness's own fetch,
+a helper model copies passages out of them, and code finds each passage word for word on its page
+before the author sees it. Then, before any checker reads a question, code finds every cited passage
+and every figure of the key on the cited pages (a key entry marked `"derived": true` is exempt from the
+figures). Two checks read each question with the full text of its pages. A question that is flagged is
+repaired or replaced once, and read again. What still fails is held back and listed in `review.md`
+with the reason; the draft holds only questions both checkers passed. Nobody who writes or checks a
+question sees the harness, its answers or the other sets' keys.
+
+The rest of this page is the plan for the first, human-written version, and is kept as it was. The
+owner still signs the keys (D44), and the rule below still holds once they are signed.
+
 ## How it is made (the same way as the first)
 
 1. **Three authors, 14 questions each**, each a separate fresh session with only Prompt A pasted in.

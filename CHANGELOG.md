@@ -6,6 +6,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Added (2026-11-21, the owner's word: "a full re test with a new set that's twice the size ... write
+a simple script using my env so I don't have to show the api key"): `evals/professional/write_holdout.py`,
+which writes the second hold-out set (84 questions, six groups of 14) with two models named on its
+command line, each pinned to the provider tag given with no fallback, and checks it. Code opens each
+page with the harness's own fetch (waiting longer than the harness's 60 s, so the set is not made only
+of pages the harness reads quickly); the helper model copies passages out of the pages and code finds
+each word for word; the author writes the 14 questions of a group from those passages with Prompt A of
+`docs/holdout-2-prompts.md` as written; code finds every cited passage and every figure of the key on
+the cited pages; two checks with Prompt B read what passes; one repair round follows; a question reaches
+the draft only if both checkers say OK, and every other is listed with its reason. The key is read by the
+harness's own client and never by the script (a test reads the source to prove it); money is counted
+from a ledger across runs and no call starts that could pass the amount given; `--dry-run` asks nothing
+and estimates the cost. 54 tests with no network and no spend, each guard proven by breaking its line
+(37 of 37). No call has been made yet: a paid stage needs the owner's word and an amount.
+
 Changed (2026-11-21, the owner's word: "if you think the pdf fix can be done with code great, make
 sure it's not a model issue"): a PDF of 250,000 bytes or more is read by up to one process per core
 (at most eight) instead of by one thread, each process taking every n-th page and the pages joined
