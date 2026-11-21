@@ -1,0 +1,16 @@
+{"mode": "alone", "i": 7, "workers": 4, "new_s": 3.3, "one_core_s": 5.1, "speedup": 1.55, "same_text": true, "chars": 330570}
+{"mode": "alone", "i": 13, "workers": 4, "new_s": 2.3, "one_core_s": 3.7, "speedup": 1.65, "same_text": true, "chars": 305326}
+{"mode": "alone", "i": 12, "workers": 4, "new_s": 2.3, "one_core_s": 3.8, "speedup": 1.66, "same_text": true, "chars": 292522}
+{"mode": "alone", "i": 10, "workers": 4, "new_s": 3.1, "one_core_s": 5.8, "speedup": 1.88, "same_text": true, "chars": 294629}
+{"mode": "alone", "i": 14, "workers": 4, "new_s": 4.5, "one_core_s": 7.2, "speedup": 1.61, "same_text": true, "chars": 444686}
+{"mode": "alone", "i": 8, "workers": 4, "new_s": 4.6, "one_core_s": 8.2, "speedup": 1.8, "same_text": true, "chars": 1049710}
+{"mode": "alone", "i": 1, "workers": 4, "new_s": 3.7, "one_core_s": 7.1, "speedup": 1.92, "same_text": true, "chars": 262083}
+{"mode": "alone", "i": 3, "workers": 4, "new_s": 6.3, "one_core_s": 12.0, "speedup": 1.89, "same_text": true, "chars": 857580}
+{"mode": "alone", "i": 4, "workers": 4, "new_s": 5.4, "one_core_s": 9.3, "speedup": 1.72, "same_text": true, "chars": 499383}
+{"mode": "alone", "i": 2, "workers": 4, "new_s": 22.5, "one_core_s": 24.2, "speedup": 1.08, "same_text": true, "chars": 612941}
+{"mode": "alone", "i": 5, "workers": 4, "new_s": 15.4, "one_core_s": 28.4, "speedup": 1.84, "same_text": true, "chars": 949759}
+{"mode": "alone", "i": 0, "workers": 4, "new_s": 27.1, "one_core_s": 47.1, "speedup": 1.74, "same_text": true, "chars": 1653493}
+{"mode": "lookup", "how": "old", "limit": 60.0, "ids": [7, 13, 8, 10, 14, 3], "finished_at_s": {"13": 54.8, "7": null, "8": null, "10": null, "14": null, "3": null}, "read_in_time": 1, "of": 6, "wall_s": 60.1}
+{"mode": "lookup", "how": "new", "limit": 60.0, "ids": [7, 13, 8, 10, 14, 3], "finished_at_s": {"7": 3.4, "10": 6.6, "13": 8.8, "8": 13.1, "3": 19.5, "14": 23.5}, "read_in_time": 6, "of": 6, "wall_s": 23.5}
+{"mode": "lookup", "how": "old", "limit": 60.0, "ids": [5, 6, 11, 0, 2, 4], "finished_at_s": {"5": null, "6": null, "11": null, "0": null, "2": null, "4": null}, "read_in_time": 0, "of": 6, "wall_s": 60.7}
+{"mode": "lookup", "how": "new", "limit": 60.0, "ids": [5, 6, 11, 0, 2, 4], "finished_at_s": {"2": 19.5, "11": 33.0, "4": 40.7, "5": null, "6": null, "0": null}, "read_in_time": 3, "of": 6, "wall_s": 60.0}

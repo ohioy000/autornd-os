@@ -6,6 +6,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Changed (2026-11-21, the owner's word: "if you think the pdf fix can be done with code great, make
+sure it's not a model issue"): a PDF of 250,000 bytes or more is read by up to one process per core
+(at most eight) instead of by one thread, each process taking every n-th page and the pages joined
+in order; the text is exactly the one-process text (compared on 12 real PDFs). It is not a model
+issue: no model is called while a page is read, and read in a process with no network each of 16
+PDFs that had gone unread took 8.9 to 134.4 s four at a time on a two-core laptop (3.7 to 47.1 s
+for the 12 also read alone on an idle machine), 78 to 100% of it cpu time, so the time is pypdf's
+parse. A thread cannot be stopped, so a read that ran past the 60 s limit went on burning the core; a
+process is killed when the limit runs out, at most one process per core runs at once across all the
+PDFs of a run, and a page that ran out of time now says how far it got ("no answer within 60 s (read
+N of M pages)"). Read together under the 60 s limit on a two-core laptop, six IAEA PDFs gave 1 read
+before and 6 after (all by 23.5 s), and six heavy ones (three datasheets of 555, 653 and 653 pages,
+SP 800-53, a 323-page specification and a 228-page building regulation) gave 0 before and 3 after.
+The limit is unchanged, a PDF that still runs out of time still hands on nothing, and where processes
+cannot be started the PDF is read in a thread as before. The records are `docs/traces/20261121T-pdf-read-onecore.jsonl`
+(sha256 `d25dc068242d2ff942d435213bb1b2c30c345785d3286758fb4a5ded3aa2734a`) and
+`docs/traces/20261121T-pdf-read-old-vs-new.jsonl` (sha256
+`ca71a0b486d42f1bb4a45e08ea97bfa061e7bfd4917e668c5188bffec064a05a`); the probe is
+`docs/probes/pdf_read_benchmark.py`.
+
 Changed (2026-11-21, the owner's word: "also scope the whole question if it's still frugal"): the
 first lookup of a run asks the whole request as well as the gaps scoping or the briefing named, as one
 numbered line in the same request, through `lookup_questions`; a request past 1,500 characters is a
