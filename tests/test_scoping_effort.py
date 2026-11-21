@@ -4,8 +4,8 @@ its own output ceiling (owner's ruling, 2026-11-21: correctness first).
 Measured: at the provider's default the scoping call spent 4,000 to 30,000
 tokens reasoning and twice returned nothing at the 16,384-token cap on X12; at
 medium it used 650 to 1,030 and all four hold-out units run through it were
-right. What is pinned: the scoping call carries the effort option and only that
-call does; all three research-tier calls carry the tier's ceiling.
+right. What is pinned: all three research-tier calls carry the effort option and the
+tier's ceiling.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from autornd.knowledge import context
 
 
 @pytest.mark.asyncio
-class TestTheScopingCallAsksForMediumEffort:
+class TestTheResearchCallsAskForMediumEffort:
     async def test_analyze_request_sends_medium_effort(self, monkeypatch):
         """Break-proof: remove `reasoning=` from the call in analyze_request
         and this fails."""
@@ -31,12 +31,25 @@ class TestTheScopingCallAsksForMediumEffort:
         assert client.chat_json.await_args.kwargs["reasoning"] == {"effort": "medium"}
         assert unknowns == ["b"]
 
-    async def test_query_expansion_is_left_as_it_was(self, monkeypatch):
+    async def test_query_expansion_and_the_briefing_ask_for_it_too(self, monkeypatch):
+        """Owner's ruling of 2026-11-21: medium for the tier. Found in the
+        probe of that day: query expansion at the provider's default took
+        24,253 tokens and 189 s on X12. Break-proof: remove `reasoning=` from
+        either call and this fails."""
         monkeypatch.setattr(config.settings, "model_research", "vendor/research")
+        seen = []
+
+        async def chat_json(**kw):
+            seen.append(kw)
+            return ({"queries": ["q"], "briefing": "b"}, None)
+
         client = AsyncMock()
-        client.chat_json = AsyncMock(return_value=({"queries": ["q"]}, None))
+        client.chat_json = AsyncMock(side_effect=chat_json)
         await context.expand_queries(client, "a request")
-        assert "reasoning" not in client.chat_json.await_args.kwargs
+        await context.synthesize_briefing(
+            client, "a request", [{"tag": "t", "text": "x", "source": "s", "distance": 0.1}])
+        assert len(seen) == 2
+        assert all(kw["reasoning"] == {"effort": "medium"} for kw in seen)
 
 
 @pytest.mark.asyncio

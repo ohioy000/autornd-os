@@ -352,6 +352,12 @@ async def expand_queries(client, request: str) -> list[str]:
             user_message=QUERY_PROMPT.format(request=request, **framing()),
             temperature=0.0,
             max_tokens=settings.research_max_tokens,
+            # Medium effort, as the scoping call below (owner's ruling of
+            # 2026-11-21: medium for the tier). Found in the probe of that
+            # day: at the provider's default this call took 24,253 tokens,
+            # 189 s and '$0.034' on X12, where an earlier probe of the same
+            # call had used 1,123.
+            reasoning={"effort": "medium"},
         )
         queries = [q for q in data.get("queries", []) if isinstance(q, str) and q.strip()]
         return queries[:4] or [request]
@@ -432,6 +438,7 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
             user_message=BRIEFING_PROMPT.format(request=request, excerpts=excerpts, **framing()),
             temperature=0.1,
             max_tokens=settings.research_max_tokens,
+            reasoning={"effort": "medium"},
         )
         briefing = (data.get("briefing") or "").strip()
         if not briefing:
