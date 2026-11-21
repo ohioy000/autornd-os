@@ -6,6 +6,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Changed (2026-11-21, the owner's instruction for the questions run of the second hold-out: not to cap the
+tokens, to let it cook, and not to tinker with how hard a model thinks): in
+`evals/professional/write_holdout.py` the author's ceiling (the write and the fix) and the worker's (the
+extract and the checks) are now 65,536 completion tokens each, the most either pinned endpoint gives
+(the provider's public catalogue, 2026-11-21), where they were 48,000 and 16,000; and `--effort-author`
+and `--effort-check` now default to `default`, which sends no reasoning option, so the provider's own
+setting applies, where they were medium and low. The reasons for the old numbers: a write with thinking
+on spent all 48,000 tokens on thought and returned nothing ('$0.0642'), and one check at the low level
+was cut at 16,000 where the others used 11,000 to 15,000. The plan keeps its 5,000-token ceiling and its
+thinking off, and the extract keeps its thinking off, as measured; a level given on the command line is
+still sent as it was given. The reply wait of 900 s holds for a reply at the new ceiling (about 550 s at
+the slowest rate measured). 9 new tests, and each of the 22 guarded lines was proven by breaking it (22 of
+22 fail their test, files restored byte-identical). Counts re-derived: 2,310 tests in 100 files.
+
 Changed (2026-11-21, the third live stage of the second hold-out's authoring): the description of group 9
 (civil, structural and geotechnical engineering) in `evals/professional/write_holdout.py` now names the
 families of address a model can recall: the eCFR texts of 23, 33 and 44 CFR, the Building Regulations

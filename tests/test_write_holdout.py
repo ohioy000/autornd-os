@@ -185,7 +185,7 @@ def make_run(tmp_path, client=None, **over):
     prompt_a, prompt_b = mod.load_prompts(mod.PROMPTS.read_text(encoding="utf-8"))
     args = dict(work=tmp_path, author="acme/author-1", author_provider="acme/p1",
                 worker="acme/worker-1", worker_provider="acme/p2", date="2026-11-21", budget=None,
-                parallel=2, effort_author="medium", effort_check="low", again=False, dry=False,
+                parallel=2, effort_author="default", effort_check="default", again=False, dry=False,
                 groups=[mod.GROUPS[0]], prompt_a=prompt_a, prompt_b=prompt_b, client=client)
     args.update(over)
     return mod.Run(**args)
@@ -611,6 +611,92 @@ class TestTheMoneyTheKeyAndThePins:
         assert len(run.errors) == 4 and run.stopped
 
 
+class TestTheQuestionsRunIsNotCapped:
+    """The owner's instruction of 2026-11-21: let the questions run cook, and do not tinker with how
+    hard a model thinks. Writing, checking and repairing get the most an endpoint gives and no
+    reasoning option; the plan alone stays short (see PLAN_MAX_TOKENS)."""
+
+    ARGV = ["w", "write", "--author", "a/b", "--author-provider", "p",
+            "--worker", "c/d", "--worker-provider", "q"]
+
+    def test_the_default_leaves_how_hard_each_model_thinks_to_the_provider(self):
+        args = mod.parse_args(self.ARGV)
+        assert args.effort_author == "default" and args.effort_check == "default"
+        assert mod.reasoning_for(args.effort_author) is None
+        assert mod.reasoning_for(args.effort_check) is None
+
+    @pytest.mark.parametrize("level, option", [("off", {"enabled": False}), ("low", {"effort": "low"}),
+                                               ("high", {"effort": "high"})])
+    def test_a_level_given_on_the_command_line_is_still_sent_as_it_was_given(self, level, option):
+        args = mod.parse_args(self.ARGV + ["--effort-author", level, "--effort-check", level])
+        assert mod.reasoning_for(args.effort_author) == option
+        assert mod.reasoning_for(args.effort_check) == option
+
+    def test_the_author_and_the_worker_may_reply_up_to_what_the_endpoints_give(self):
+        assert mod.AUTHOR_MAX_TOKENS == 65_536
+        assert mod.WORKER_MAX_TOKENS == 65_536
+
+    async def test_write_check_and_fix_ask_for_that_ceiling_and_send_no_reasoning_option(
+            self, tmp_path, monkeypatch, small):
+        client = FakeClient(Script())
+        run = make_run(tmp_path, client=client)
+        await run_stages(run, ["plan", "open", "extract", "write", "check", "fix"], monkeypatch,
+                         make_fetch())
+        write = [c for c in client.calls if c["function"] == "author" and "Write the 3" in c["user"]]
+        fix = [c for c in client.calls if c["function"] == "author" and "QUESTIONS TO REPAIR" in c["user"]]
+        check = [c for c in client.calls if c["function"] == "worker" and "THE FILE:" in c["user"]]
+        assert len(write) == 1 and len(fix) == 1 and len(check) >= 4, "two readings and two re-checks"
+        for call in write + fix + check:
+            assert call["max_tokens"] == 65_536, call["user"][:40]
+            assert call["reasoning"] is None, call["user"][:40]
+
+    async def test_a_level_given_to_the_run_reaches_the_write_the_fix_and_the_checks(
+            self, tmp_path, monkeypatch, small):
+        client = FakeClient(Script())
+        run = make_run(tmp_path, client=client, effort_author="off", effort_check="low")
+        await run_stages(run, ["plan", "open", "extract", "write", "check", "fix"], monkeypatch,
+                         make_fetch())
+        author = [c for c in client.calls
+                  if c["function"] == "author" and "different public documents" not in c["user"]]
+        check = [c for c in client.calls if c["function"] == "worker" and "THE FILE:" in c["user"]]
+        assert len(author) == 2 and len(check) >= 4
+        assert all(c["reasoning"] == {"enabled": False} for c in author)
+        assert all(c["reasoning"] == {"effort": "low"} for c in check)
+
+    async def test_the_levels_on_the_command_line_reach_the_calls_through_main(
+            self, tmp_path, monkeypatch, small):
+        async def no_pins(run):
+            return None
+
+        async def no_models():
+            return {}
+
+        client = FakeClient(Script())
+        monkeypatch.setattr(mod, "verify_pins", no_pins)
+        monkeypatch.setattr(mod, "check_models", no_models)
+        monkeypatch.setattr(mod, "OpenRouterClient", lambda: client)
+        monkeypatch.setattr(mod.fetch, "fetch_source", make_fetch())
+        await mod.main([str(tmp_path), "plan,open,extract,write,check", "--author", "acme/author-1",
+                        "--author-provider", "acme/p1", "--worker", "acme/worker-1",
+                        "--worker-provider", "acme/p2", "--budget", "5", "--groups", "1",
+                        "--effort-author", "off", "--effort-check", "low"])
+        write = [c for c in client.calls if c["function"] == "author" and "Write the 3" in c["user"]]
+        check = [c for c in client.calls if c["function"] == "worker" and "THE FILE:" in c["user"]]
+        assert len(write) == 1 and len(check) == 2
+        assert write[0]["reasoning"] == {"enabled": False}, "the author's level is the author's"
+        assert all(c["reasoning"] == {"effort": "low"} for c in check), "the checker's is the checker's"
+
+    async def test_the_plan_and_the_extract_keep_their_own_settings(self, tmp_path, monkeypatch, small):
+        client = FakeClient(Script())
+        run = make_run(tmp_path, client=client)
+        await run_stages(run, ["plan", "open", "extract"], monkeypatch, make_fetch())
+        plan = [c for c in client.calls if "different public documents" in c["user"]]
+        extract = [c for c in client.calls if "TEXT:" in c["user"]]
+        assert plan and extract
+        assert all(c["reasoning"] == {"enabled": False} for c in plan + extract)
+        assert all(c["max_tokens"] == mod.PLAN_MAX_TOKENS for c in plan)
+
+
 class TestTheStagesFromPlanToDraft:
     async def test_every_stage_runs_and_only_checked_questions_reach_the_draft(
             self, tmp_path, monkeypatch, small):
@@ -702,7 +788,7 @@ class TestTheStagesFromPlanToDraft:
         assert len(write) == 1
         assert write[0]["system"].startswith(mod.AUTHOR_PREFACE)
         assert "999 millimetres" not in write[0]["user"], "a made-up passage never reached the author"
-        assert write[0]["reasoning"] == {"effort": "medium"}
+        assert write[0]["reasoning"] is None, "no reasoning option: the provider's own setting applies"
         extract = [c for c in client.calls if "TEXT:" in c["user"]]
         assert all(c["reasoning"] == {"enabled": False} and c["json"] for c in extract)
         assert {c["model"] for c in extract} == {"acme/worker-1"}
