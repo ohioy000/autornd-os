@@ -114,7 +114,8 @@ Rulings are the owner's. Each item says what it would cost and what it could be 
 
 Reader beta about '$0.30'; provider and Flash scoping tests '$0.384'; cap-versus-effort tests about '$0.10' and
 '$0.036'; medium-effort scoping '$0.0269'; four full units '$0.0674'; reader on/off '$0.178' of '$0.20'; implement
-probe '$0.0736'; larger-model test '$0.0699' of '$0.10'. Credits left '$0.2669' at the last check.
+probe '$0.0736'; larger-model test '$0.0699' of '$0.10'; whole-question search replay '$0.0176' of '$0.02'.
+Credits left '$0.2669' at the last check, so about '$0.249' after the replay.
 
 ## Status after the owner's answers of 2026-11-21 (evening)
 
@@ -123,7 +124,7 @@ The list above, as the owner answered it. Items not yet done are kept here so no
 | # | Item | Status |
 |---|---|---|
 | 1 | A second hold-out set | Prompts written: `docs/holdout-2-prompts.md`. Three authors, two checkers, the owner signs, one run of about '$1.4'. |
-| 2 | Ask the whole question too | Built, PR #317 (one more numbered line in the same single search request). **Not yet measured.** A search-only replay on the stored scoped questions is proposed, about '$0.15', awaiting the owner's amount. |
+| 2 | Ask the whole question too | Built, PR #317 (one more numbered line in the same single search request). **Measured in part, 2026-11-21:** a search-only replay on the three stored scoped questions that had led to US-only pages (three search requests, '$0.0176' of the owner's '$0.02'; nothing fetched, no answer written). With the whole question first, the first six addresses named held IAEA documents in all three (3, 5 and 1 of the six; the trace's own `iaea` field counts every address named, 15 to 17 a call, and the first-six counts come from its `urls`), each with the 2025 edition of SSR-6, which none of the three draws had read. **A lead, not a result:** three requests, on questions picked because they failed (some would do better on a second try with no change), no same-day control, and it counts pages named, not pages read; the 2025 edition is a large PDF and large PDFs still time out at 60 s (item 5). Record: `docs/traces/20261121T-whole-question-smoke.jsonl` (sha256 `d92a059a81b8c6b09efe19fc544faddd57637213cd53dde63783e3deebf90007`), inputs beside it, probe `docs/probes/whole_question_search_replay.py`. A fuller replay (the seven draws that asked scoping's rewrite, both ways, repeated) is about '$0.15' and awaits the owner's amount. |
 | 3 | "None stated" instead of blocking | Explained to the owner; awaiting a ruling. |
 | 4 | A retry on a cut-off answer | Built, PR #316: up to three more attempts, in the three workflows that gate on the check. Reading the two answers the hold-out blocked: X3 draw 1 was cut (the model ended the field on "of" inside valid JSON); X24 draw 2 was not (a `jq` line in a code block was read as open math), so the check was repaired. |
 | 5 | Faster PDF reading and a retry of an unread page; a lower effort for the answer-writing call; the reader tier's pin or removal | Explained to the owner; to be taken up later. The reader is set in the owner's `.env` with no serving pin. |
