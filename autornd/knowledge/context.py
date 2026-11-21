@@ -351,6 +351,7 @@ async def expand_queries(client, request: str) -> list[str]:
             ),
             user_message=QUERY_PROMPT.format(request=request, **framing()),
             temperature=0.0,
+            max_tokens=settings.research_max_tokens,
         )
         queries = [q for q in data.get("queries", []) if isinstance(q, str) and q.strip()]
         return queries[:4] or [request]
@@ -430,6 +431,7 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
             ),
             user_message=BRIEFING_PROMPT.format(request=request, excerpts=excerpts, **framing()),
             temperature=0.1,
+            max_tokens=settings.research_max_tokens,
         )
         briefing = (data.get("briefing") or "").strip()
         if not briefing:
@@ -670,6 +672,14 @@ async def analyze_request(client, request: str) -> tuple[str, list[str]]:
                 request=request, profile_block=profile_block, **framing()
             ),
             temperature=0.1,
+            # Medium effort and the research tier's own ceiling (owner's ruling
+            # of 2026-11-21, after the scratch test of that day): at the
+            # provider's default this call spent 4,000 to 30,000 tokens
+            # reasoning on the hold-out questions tried and on X12 twice
+            # returned nothing at the old 16,384 cap; at medium it used 650 to
+            # 1,030 tokens and all four units run through it were right.
+            max_tokens=settings.research_max_tokens,
+            reasoning={"effort": "medium"},
         )
     except BudgetExceeded:
         raise

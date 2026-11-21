@@ -197,6 +197,7 @@ def recording_client() -> OpenRouterClient:
         max_tokens: int = 16384,
         max_retries: int = 3,
         schema: Any = None,
+        reasoning: Any = None,
     ) -> tuple[dict[str, Any], ModelResponse]:
         CALLS.append({"function": function, "system": system_prompt, "user": user_message})
         data = _reply(function=function, schema=schema, user_message=user_message)

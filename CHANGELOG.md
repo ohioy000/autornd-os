@@ -6,6 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Changed (2026-11-21, the owner's ruling: correctness first): the research tier has its
+own output ceiling, `RESEARCH_MAX_TOKENS`, 32,768 where it was chat_json's 16,384, and the
+request-scoping call asks for medium reasoning effort. Found in the reader beta: at the
+provider's default reasoning the scoping call spent 4,000 to 30,400 tokens (X12: 15,000 or
+more, twice returning nothing at the old cap), which cost 650 s and '$0.08' on one unit; at
+medium it used 650 to 1,030 tokens, grounding on X12 took 98 s, and four hold-out units run
+through it (X4, X12, X22, X34) were each right against the frozen keys, by one reading. The
+other research calls keep the provider's default effort. A pin test the same day showed the
+runaway on three providers and on the Flash model, so it is not a bad provider.
+
 Fixed (2026-11-20, found in the reader beta): an answer that wrote a power
 too large for a float, such as "10^400" or "1e999", made the numbers check raise
 OverflowError and blocked the whole workflow; such a figure is now skipped as no
