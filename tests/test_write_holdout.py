@@ -241,9 +241,58 @@ class TestThePromptsAreTheDocs:
         covered = mod.covered_areas(a)
         assert covered.startswith("employment, payroll") and covered.endswith("EPA SPCC.")
 
-    def test_there_are_six_groups_of_fourteen_numbered_y1_to_y84(self):
+    def test_there_are_nine_groups_of_fourteen_numbered_y1_to_y126(self):
         ids = [qid for group in mod.GROUPS for qid in group.ids]
-        assert len(mod.GROUPS) == 6 and ids == [f"Y{n}" for n in range(1, 85)]
+        assert len(mod.GROUPS) == 9 and ids == [f"Y{n}" for n in range(1, 127)]
+
+
+class TestTheLineUp:
+    """Groups 1 to 6 are the first set's ground twice over; groups 7 to 9 are the three engineering
+    subjects the owner added on 2026-11-21, described in detail and not by a bare label."""
+
+    SUBJECTS = {7: "electrical power systems and installations",
+                8: "mechanical, thermal and materials engineering",
+                9: "civil, structural and geotechnical engineering"}
+
+    def test_the_three_engineering_groups_come_after_the_six_and_name_their_subjects(self):
+        added = {g.number: g.area for g in mod.GROUPS if g.number > 6}
+        assert sorted(added) == [7, 8, 9]
+        for number, subject in self.SUBJECTS.items():
+            assert added[number].startswith(subject + ":"), number
+
+    def test_each_added_group_is_described_in_detail_and_not_by_a_bare_label(self):
+        # "electrical systems" is the label the owner asked to be more detailed than: two words and
+        # no topics. The plan call names documents from this text alone.
+        for group in mod.GROUPS:
+            if group.number <= 6:
+                continue
+            words = len(group.area.split())
+            topics = group.area.count(";") + group.area.count(",")
+            assert words >= 60 and topics >= 12, (group.number, words, topics)
+
+    def test_no_two_groups_share_an_area(self):
+        assert len({g.area for g in mod.GROUPS}) == len(mod.GROUPS)
+
+    def test_the_default_runs_every_group_so_an_added_group_is_not_left_out(self):
+        args = mod.parse_args(["w", "plan", "--author", "a/b", "--author-provider", "p",
+                               "--worker", "c/d", "--worker-provider", "q"])
+        assert {int(n) for n in args.groups.split(",")} == {g.number for g in mod.GROUPS}
+
+    @pytest.mark.parametrize("number", [7, 8, 9])
+    def test_the_whole_area_and_the_groups_own_ids_reach_the_author(self, number):
+        a, _ = mod.load_prompts(mod.PROMPTS.read_text(encoding="utf-8"))
+        group = next(g for g in mod.GROUPS if g.number == number)
+        system = mod.author_system(a, group, "2026-11-21")
+        assert group.area in system
+        assert f"Number them {group.ids[0]} to {group.ids[-1]}." in system
+
+    async def test_the_whole_area_reaches_the_plan_call(self, tmp_path, small):
+        group = next(g for g in mod.GROUPS if g.number == 7)
+        client = FakeClient(Script())
+        run = make_run(tmp_path, client=client, groups=[group])
+        await mod.STAGES["plan"](run)
+        plans = [c for c in client.calls if "different public documents" in c["user"]]
+        assert len(plans) == 1 and f"The area: {group.area}." in plans[0]["user"]
 
 
 class TestReadingAReply:
