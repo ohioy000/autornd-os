@@ -87,7 +87,9 @@ class TestR6TheGroundingLookupIsRecorded:
         pages_served["text"] = LOOKUP_ANSWER
         _, (unit,) = await _units(tmp_path, lambda: make_mock_client(_responses()))
         lookup = unit["verdicts"]["context"]["lookup"]
-        assert lookup["asked"] == [BLOCKING]
+        # The run's request is asked beside the gap scoping named (owner's
+        # ruling of 2026-11-21), so the record shows both.
+        assert lookup["asked"] == [REQUEST, BLOCKING]
         assert lookup["found"] == 1
         assert LOOKUP_ANSWER in lookup["findings"]
         assert lookup["truncated"] is False

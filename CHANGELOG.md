@@ -6,6 +6,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Changed (2026-11-21, the owner's word: "also scope the whole question if it's still frugal"): the
+first lookup of a run asks the whole request as well as the gaps scoping or the briefing named, as one
+numbered line in the same request, through `lookup_questions`; a request past 1,500 characters is a
+brief and stands aside, and a request that is already a gap is not asked twice. It stays one search
+request that reads at most six pages, so the only cost is one more line of text. Found by reading the
+ten X12 draws kept from 2026-11-20 and 21: the three draws that asked the whole question all read IAEA
+pages; of the seven that asked scoping's rewrite, which no longer said "international", three read only
+US federal rules and gave the wrong answer. The two later lookups (the override's and the second
+round's) are unchanged. Whether it helps is not yet measured; a replay of the search step on the
+stored scoped questions is proposed, awaiting the owner's amount.
+
 Changed (2026-11-21, the owner's ruling: a retry, three attempts at least, "to have slack for the
 routers"): the implement node of the three workflows that gate on a cut-off answer
 (`answer-and-recompute`, `verify-first`, `lean`) writes a cut-off answer again, up to three more

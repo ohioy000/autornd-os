@@ -460,12 +460,16 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
         if demanded and not blocking:
             blocking = [request]
         if blocking and settings.model_search and (risk_asks or demanded):
-            from autornd.knowledge.research import render_findings, research_gaps
+            from autornd.knowledge.research import (
+                lookup_questions, render_findings, research_gaps)
 
-            findings = await research_gaps(client, request, blocking,
+            # The request is asked too (owner's ruling of 2026-11-21); the
+            # deferred branch below keeps only the gaps, which is what was declined.
+            asked = lookup_questions(request, blocking)
+            findings = await research_gaps(client, request, asked,
                                            max_tokens=search_budget(risk))
             rendered = render_findings(findings) if findings else ""
-            _record_lookup(grounding_lookup, blocking, findings or [], rendered)
+            _record_lookup(grounding_lookup, asked, findings or [], rendered)
             if rendered:
                 out += "\n\n" + rendered
         elif blocking and settings.model_search and deferred_gaps is not None:
@@ -774,12 +778,16 @@ async def build_phase_context(
             if demanded and not unknowns:
                 unknowns = [request]
             if unknowns and settings.model_search and (risk_asks or demanded):
-                from autornd.knowledge.research import render_findings, research_gaps
+                from autornd.knowledge.research import (
+                    lookup_questions, render_findings, research_gaps)
 
-                findings = await research_gaps(client, request, unknowns,
+                # The whole request is asked beside the gaps scoping named
+                # (owner's ruling of 2026-11-21): see lookup_questions.
+                asked = lookup_questions(request, unknowns)
+                findings = await research_gaps(client, request, asked,
                                                max_tokens=search_budget(risk))
                 rendered = render_findings(findings) if findings else ""
-                _record_lookup(grounding_lookup, unknowns, findings or [], rendered)
+                _record_lookup(grounding_lookup, asked, findings or [], rendered)
                 if rendered:
                     parts.append(rendered)
             elif unknowns and settings.model_search and deferred_gaps is not None:

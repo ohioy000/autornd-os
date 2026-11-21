@@ -811,7 +811,10 @@ class TestARequestForSourcesIsAlwaysLookedUp:
         client, record = await self._ground(
             monkeypatch, "What is the limit? Cite the datasheet.", ["the limit"])
         assert client.chat.await_count == 1
-        assert record["asked"] == ["the limit"]
+        # The request is asked beside the gap scoping named (owner's ruling
+        # of 2026-11-21), in the one lookup.
+        assert record["asked"] == ["What is the limit? Cite the datasheet.",
+                                   "the limit"]
         assert record["sources"][0]["quotes"][0]["status"] == "found"
 
     async def test_a_low_risk_request_that_asks_for_nothing_is_not(self, monkeypatch):
