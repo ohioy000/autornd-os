@@ -135,12 +135,23 @@ async def read_pdf(raw: bytes, progress: dict[str, int] | None = None) -> str:
         tasks = [asyncio.ensure_future(_read_stripe(path, stripe, stride, pages, progress))
                  for stripe in range(stride)]
         try:
-            await asyncio.gather(*tasks)
+            # Not gather: it raises the moment ONE stripe is cancelled or fails, while the others are
+            # still killing their process, and cancelling those again here cut their wait short and
+            # left the process unreaped (found by CI on 2026-11-21: a killed process still there when
+            # the fetch returned). `wait` stops nothing by itself.
+            await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+            for task in tasks:
+                if task.done():
+                    task.result()      # the first stripe's failure, if one failed
         except BaseException:
-            # One failed, or the caller's time ran out: stop the rest, and let each kill its process.
+            # One failed, or the caller's time ran out: stop the rest, once, and return only when
+            # every process has been killed and reaped.
             for task in tasks:
                 task.cancel()
-            await asyncio.gather(*tasks, return_exceptions=True)
+            await asyncio.wait(tasks)
+            for task in tasks:         # every outcome is read, so none is reported as never retrieved
+                if not task.cancelled():
+                    task.exception()
             raise
         total = progress.get("pages", 0)
         if len(pages) != total:

@@ -228,6 +228,33 @@ class TestWhenTheTimeIsUp:
             with pytest.raises(ProcessLookupError):
                 os.kill(pid, 0)
 
+    async def test_every_process_is_reaped_before_the_read_gives_up(
+            self, monkeypatch, served, stub):
+        """One stripe finishing its kill first must not cut the others' wait
+        short. Found by CI on 2026-11-21: `gather` raised as soon as the first
+        stripe was cancelled, and cancelling the second again, mid-wait, left
+        its killed process there when the fetch returned."""
+        stub("hangs")
+        served(b"%PDF-1.4 stand-in")
+        real_wait = asyncio.subprocess.Process.wait
+        started: list[int] = []
+        ended: list[int] = []
+
+        async def slow_second(self):
+            started.append(self.pid)
+            if len(started) == 2:      # the second process is reaped later than the first
+                await asyncio.sleep(0.3)
+            code = await real_wait(self)
+            ended.append(self.pid)
+            return code
+
+        monkeypatch.setattr(asyncio.subprocess.Process, "wait", slow_second)
+        monkeypatch.setattr(fetch, "FETCH_TIMEOUT_SECONDS", 1.5)
+        source = await fetch.fetch_source(PAGE)
+        assert source.status == "failed"
+        assert len(started) == 2
+        assert sorted(ended) == sorted(started), "a process was left unreaped"
+
     async def test_a_worker_that_dies_is_a_failed_read_not_a_hang(
             self, served, stub):
         stub("dies")
