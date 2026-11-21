@@ -14,8 +14,15 @@ request that reads at most six pages, so the only cost is one more line of text.
 ten X12 draws kept from 2026-11-20 and 21: the three draws that asked the whole question all read IAEA
 pages; of the seven that asked scoping's rewrite, which no longer said "international", three read only
 US federal rules and gave the wrong answer. The two later lookups (the override's and the second
-round's) are unchanged. Whether it helps is not yet measured; a replay of the search step on the
-stored scoped questions is proposed, awaiting the owner's amount.
+round's) are unchanged. Measured in part, the same day and with the owner's approved amount, by
+replaying the search step alone on the three scoped questions that had led to US-only pages (three
+search requests; no page fetched, no answer written): with the whole question first, the first six
+addresses named held IAEA documents in all three (3, 5 and 1 of the six), each with the 2025 edition of
+SSR-6, which none of the three draws had read. A lead and not a result: three requests, on questions
+picked because they failed, with no same-day control, counting pages named and not pages read. The
+record is `docs/traces/20261121T-whole-question-smoke.jsonl` (sha256
+`d92a059a81b8c6b09efe19fc544faddd57637213cd53dde63783e3deebf90007`), its inputs sit beside it, and
+`docs/probes/whole_question_search_replay.py` reads them.
 
 Changed (2026-11-21, the owner's ruling: a retry, three attempts at least, "to have slack for the
 routers"): the implement node of the three workflows that gate on a cut-off answer

@@ -1,0 +1,145 @@
+{
+  "what": "Inputs of the search-only smoke test of the whole-question lookup, 2026-11-21: the scoped lookup question each of three X12 draws sent in its run (which read only US federal rules), and the same question with the whole request put first as lookup_questions builds it. Kept because the run databases they came from are not.",
+  "question": {
+    "set": "professional-holdout-1",
+    "id": "X12",
+    "file": "evals/professional/holdout-questions.json",
+    "request": "Under the current edition of the international safety requirements for transporting radioactive material, a freight container used as packaging (not under exclusive use) has a maximum dose rate of 0.08 mSv/h measured at 1 m from its external surfaces, and the largest cross-sectional area of the load is 3 m2. What transport index (TI) is assigned, and is it within the TI limit for such a container?"
+  },
+  "pages_matching": "ssr-6|ts-r-1|iaea|nrc.gov/docs|rampac",
+  "draws": [
+    {
+      "draw": {
+        "run": "reader-on2",
+        "repeat": 1
+      },
+      "gaps": [
+        "The TI limit for a freight container NOT under exclusive use under the applicable edition (this decides compliance, not just detail)",
+        "Whether the container qualifies as a single package 'freight container used as packaging' versus a consignment of packages, since different TI limits and aggregation rules apply"
+      ],
+      "scoped_question": "1. The TI limit for a freight container NOT under exclusive use under the applicable edition (this decides compliance, not just detail)\n2. Whether the container qualifies as a single package 'freight container used as packaging' versus a consignment of packages, since different TI limits and aggregation rules apply",
+      "whole_first_question": "1. Under the current edition of the international safety requirements for transporting radioactive material, a freight container used as packaging (not under exclusive use) has a maximum dose rate of 0.08 mSv/h measured at 1 m from its external surfaces, and the largest cross-sectional area of the load is 3 m2. What transport index (TI) is assigned, and is it within the TI limit for such a container?\n2. The TI limit for a freight container NOT under exclusive use under the applicable edition (this decides compliance, not just detail)\n3. Whether the container qualifies as a single package 'freight container used as packaging' versus a consignment of packages, since different TI limits and aggregation rules apply",
+      "original_documents": [
+        {
+          "url": "https://www.icao.int/sites/default/files/DangerousGoods/DGP%20Meeting%20Documentation/WG22WPs/DGPWG.22.WP.001.1.en.pdf",
+          "read": false,
+          "reason": "HTTP 404"
+        },
+        {
+          "url": "https://www.ecfr.gov/current/title-49/subtitle-B/chapter-I/subchapter-C/part-173/subpart-A/section-173.403",
+          "read": true,
+          "reason": ""
+        },
+        {
+          "url": "https://ecfr.gov/current/title-49/section-176.704",
+          "read": true,
+          "reason": ""
+        },
+        {
+          "url": "https://www.govinfo.gov/content/pkg/CFR-2025-title49-vol2/pdf/CFR-2025-title49-vol2-sec176-704.pdf",
+          "read": true,
+          "reason": ""
+        },
+        {
+          "url": "https://www.icao.int/safety/DangerousGoods/WG16/DGPWG.16.WP.009.2.en.pdf",
+          "read": false,
+          "reason": "HTTP 404"
+        },
+        {
+          "url": "http://ecfr.gov/current/title-49/subtitle-B/chapter-I/subchapter-C/part-176/subpart-M",
+          "read": true,
+          "reason": ""
+        }
+      ]
+    },
+    {
+      "draw": {
+        "run": "x12-off",
+        "repeat": 1
+      },
+      "gaps": [
+        "The applicable TI determination method (standard dose-rate-at-1-m derivation versus the alternative method for large freight containers), since the 3 m² cross-section may qualify the container for the alternative and the two formulas give different numbers.",
+        "The applicable TI limit for a freight container used as packaging not under exclusive use, since the limit is what decides compliance.",
+        "The regulation edition/jurisdiction, since the operative clause set and its figures depend on it."
+      ],
+      "scoped_question": "1. The applicable TI determination method (standard dose-rate-at-1-m derivation versus the alternative method for large freight containers), since the 3 m² cross-section may qualify the container for the alternative and the two formulas give different numbers.\n2. The applicable TI limit for a freight container used as packaging not under exclusive use, since the limit is what decides compliance.\n3. The regulation edition/jurisdiction, since the operative clause set and its figures depend on it.",
+      "whole_first_question": "1. Under the current edition of the international safety requirements for transporting radioactive material, a freight container used as packaging (not under exclusive use) has a maximum dose rate of 0.08 mSv/h measured at 1 m from its external surfaces, and the largest cross-sectional area of the load is 3 m2. What transport index (TI) is assigned, and is it within the TI limit for such a container?\n2. The applicable TI determination method (standard dose-rate-at-1-m derivation versus the alternative method for large freight containers), since the 3 m² cross-section may qualify the container for the alternative and the two formulas give different numbers.\n3. The applicable TI limit for a freight container used as packaging not under exclusive use, since the limit is what decides compliance.\n4. The regulation edition/jurisdiction, since the operative clause set and its figures depend on it.",
+      "original_documents": [
+        {
+          "url": "https://www.ecfr.gov/current/title-49/subtitle-B/chapter-I/subchapter-C/part-173/subpart-I",
+          "read": true,
+          "reason": ""
+        },
+        {
+          "url": "https://www.ecfr.gov/current/title-49/part-176/subpart-M",
+          "read": true,
+          "reason": ""
+        },
+        {
+          "url": "https://www.ecfr.gov/current/title-10/part-71",
+          "read": true,
+          "reason": ""
+        },
+        {
+          "url": "https://www.ecfr.gov/current/title-49/section-172.403",
+          "read": true,
+          "reason": ""
+        },
+        {
+          "url": "https://www.govinfo.gov/content/pkg/CFR-2025-title49-vol2/pdf/CFR-2025-title49-vol2-sec173-442.pdf",
+          "read": true,
+          "reason": ""
+        },
+        {
+          "url": "https://www.govinfo.gov/content/pkg/CFR-2025-title49-vol2/pdf/CFR-2025-title49-vol2-sec173-441.pdf",
+          "read": true,
+          "reason": ""
+        }
+      ]
+    },
+    {
+      "draw": {
+        "run": "x12-on",
+        "repeat": 2
+      },
+      "gaps": [
+        "The specific TI limit the applicable edition sets for a freight container used as packaging under non-exclusive-use conditions, since that limit decides compliance.",
+        "The exact TI-assignment convention in force in that edition (unit conversion and measurement distance), since it decides the numerical TI."
+      ],
+      "scoped_question": "1. The specific TI limit the applicable edition sets for a freight container used as packaging under non-exclusive-use conditions, since that limit decides compliance.\n2. The exact TI-assignment convention in force in that edition (unit conversion and measurement distance), since it decides the numerical TI.",
+      "whole_first_question": "1. Under the current edition of the international safety requirements for transporting radioactive material, a freight container used as packaging (not under exclusive use) has a maximum dose rate of 0.08 mSv/h measured at 1 m from its external surfaces, and the largest cross-sectional area of the load is 3 m2. What transport index (TI) is assigned, and is it within the TI limit for such a container?\n2. The specific TI limit the applicable edition sets for a freight container used as packaging under non-exclusive-use conditions, since that limit decides compliance.\n3. The exact TI-assignment convention in force in that edition (unit conversion and measurement distance), since it decides the numerical TI.",
+      "original_documents": [
+        {
+          "url": "https://www.ecfr.gov/current/title-49/subtitle-B/chapter-I/subchapter-C/part-173/subpart-A/section-173.403",
+          "read": true,
+          "reason": ""
+        },
+        {
+          "url": "https://www.ecfr.gov/current/title-49/title-49-part-176/subpart-M",
+          "read": false,
+          "reason": "the page asked for proof of a person (a challenge page), so it was not read"
+        },
+        {
+          "url": "https://www.ecfr.gov/current/title-49/subtitle-B/chapter-I/subchapter-C/part-176/subpart-M/section-176.704",
+          "read": true,
+          "reason": ""
+        },
+        {
+          "url": "https://www.ecfr.gov/current/title-49/part-176/subpart-M",
+          "read": true,
+          "reason": ""
+        },
+        {
+          "url": "http://www.ecfr.gov/current/title-49/subtitle-B/chapter-I/subchapter-C/part-176/subpart-M/section-176.704",
+          "read": true,
+          "reason": ""
+        },
+        {
+          "url": "https://www.ecfr.gov/current/title-49/subtitle-B/chapter-I/subchapter-C/part-173/subpart-I",
+          "read": true,
+          "reason": ""
+        }
+      ]
+    }
+  ]
+}
