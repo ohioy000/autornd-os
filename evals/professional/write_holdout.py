@@ -161,10 +161,14 @@ GROUPS = [
              "loads, clearances, geometric design values, pavement design); concrete, steel and "
              "timber design provisions; wind, snow and seismic design parameters; foundations, "
              "retaining walls and soil classification; drainage, hydrology and design storms; dams, "
-             "levees and scour. From the free manuals and guides of transport agencies, geological "
-             "surveys and emergency-management agencies (FHWA, state transport departments, USGS, "
-             "FEMA, NRCS, National Highways standards, the EU Joint Research Centre's Eurocode "
-             "background documents, Austroads and the New Zealand Transport Agency)", 113),
+             "levees and scour. From free texts at stable addresses: the eCFR texts of 23 CFR on "
+             "highway design standards, bridges and hydraulics and of 33 CFR and 44 CFR on waterway "
+             "and flood rules, the Building Regulations approved documents on structure and on "
+             "ground, USGS reports at pubs.usgs.gov, NIST technical notes at nvlpubs.nist.gov, and "
+             "the manuals of transport agencies, geological surveys and emergency-management "
+             "agencies (FHWA, state transport departments, FEMA, NRCS, National Highways standards, "
+             "the EU Joint Research Centre's Eurocode background documents, Austroads and the New "
+             "Zealand Transport Agency)", 113),
 ]
 
 
