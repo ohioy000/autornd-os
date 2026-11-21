@@ -125,6 +125,12 @@ def _figures(text: str) -> list[tuple[float, int, str]]:
         mantissa = float(digits)
         exp = caret.replace("−", "-") if caret else (
             sup.translate(_SUPERSCRIPT) if sup else e_exp)
+        # A power a float cannot hold is no figure to compare. Found live
+        # 2026-11-20 (the reader beta, X20): an answer written "10^400" or
+        # "1e999" made `10 ** int(exp)` raise OverflowError, which blocked the
+        # whole workflow; a still larger one would build a huge integer first.
+        if exp and abs(int(exp)) > 308:
+            continue
         value = mantissa * (10 ** int(exp)) if exp else mantissa
         significant = len(digits.replace(".", "").lstrip("0")) or 1
         out.append((value, significant, unit))

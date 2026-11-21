@@ -101,6 +101,17 @@ class TestTheTierIsOn:
         assert held and held[0].status == "found"
         assert docs[0]["reader"]["passages"] == 1 and docs[0]["reader"]["dropped"] == 0
 
+    async def test_the_reader_is_asked_not_to_reason(self, monkeypatch, served):
+        """Measured live: with reasoning on, the model spent its whole budget
+        thinking and returned nothing. Break-proof: remove the option and this
+        fails."""
+        tier(monkeypatch)
+        client = AsyncMock()
+        client.chat = AsyncMock(return_value=reader_reply([]))
+        await research._read_documents({URL: "p"}, TERMS, client, "q")
+        assert all(c.kwargs["reasoning"] == {"enabled": False}
+                   for c in client.chat.await_args_list)
+
     async def test_a_passage_not_on_the_page_is_dropped(self, monkeypatch, served):
         """The reader's say-so is never enough. Break-proof: if the check
         quote_found is taken out of _read_with_readers, this fails."""

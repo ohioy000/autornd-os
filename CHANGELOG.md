@@ -6,6 +6,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Fixed (2026-11-20, found in the reader beta): an answer that wrote a power
+too large for a float, such as "10^400" or "1e999", made the numbers check raise
+OverflowError and blocked the whole workflow; such a figure is now skipped as no
+figure to compare. The reader model is also asked not to reason, because with
+reasoning on it spent its whole output budget thinking and returned nothing;
+`chat()` takes an optional `reasoning` argument, absent from the request unless given.
+
 Measured, not changed: on 2026-11-18 a frontier model asked directly, with web
 search, was right on all 42 hold-out questions where the harness was right on
 113 of its 126 answers, at about nine times the cost an answer. The 0.2.0

@@ -280,3 +280,34 @@ class TestAReplyWithoutChoicesIsARetryableProviderFailure:
         monkeypatch.setattr(client, "_get_client", AsyncMock(return_value=http))
         await client.chat(function="engineering", system_prompt="s", user_message="u")
         assert http.calls == 1 and no_sleep == []
+
+
+@pytest.mark.asyncio
+class TestTheReasoningOptionIsSentOnlyWhenAsked:
+    async def test_it_is_in_the_payload_when_given(self, monkeypatch):
+        sent = []
+
+        class Http:
+            async def post(self, path, json):
+                sent.append(json)
+                return _ok()
+
+        client = OpenRouterClient(api_key="test")
+        monkeypatch.setattr(client, "_get_client", AsyncMock(return_value=Http()))
+        await client.chat(function="engineering", system_prompt="s",
+                          user_message="u", reasoning={"enabled": False})
+        assert sent[0]["reasoning"] == {"enabled": False}
+
+    async def test_it_is_absent_when_not_given(self, monkeypatch):
+        sent = []
+
+        class Http:
+            async def post(self, path, json):
+                sent.append(json)
+                return _ok()
+
+        client = OpenRouterClient(api_key="test")
+        monkeypatch.setattr(client, "_get_client", AsyncMock(return_value=Http()))
+        await client.chat(function="engineering", system_prompt="s",
+                          user_message="u")
+        assert "reasoning" not in sent[0]

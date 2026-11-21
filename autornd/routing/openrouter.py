@@ -974,7 +974,11 @@ class OpenRouterClient:
         model: str | None = None,
         tools: list[dict[str, Any]] | None = None,
         tool_choice: str | None = None,
+        reasoning: dict[str, Any] | None = None,
     ) -> ModelResponse:
+        # `reasoning` (2026-11-20, the reader tier's beta): OpenRouter's own
+        # option, sent as given, for example {"enabled": False}. Unset, the
+        # payload carries none and the provider's default decides, as before.
         # Additive (arch-20261003-119): a call may name its serving
         # directly (the tier-3 arms' TIER3_* pins, resolved from the
         # environment by the experiment's own settings class), and may
@@ -1009,6 +1013,8 @@ class OpenRouterClient:
             payload["tools"] = tools
         if tool_choice:
             payload["tool_choice"] = tool_choice
+        if reasoning:
+            payload["reasoning"] = reasoning
         # Ask for real spend rather than inferring it. Providers that ignore
         # this simply omit usage.cost and we fall back to catalogue rates.
         payload["usage"] = {"include": True}
