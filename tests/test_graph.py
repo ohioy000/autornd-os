@@ -319,6 +319,20 @@ class TestNumbersConsistent:
                                             "sets max_interval to 60s")
         assert r.passed
 
+    @pytest.mark.parametrize("power", ["10^400", "1e999", "10^5000"])
+    def test_a_power_a_float_cannot_hold_does_not_crash_the_check(self, power):
+        """Found live 2026-11-20 (the reader beta, X20): `10 ** int(exp)` raised
+        OverflowError on an answer's own figure and blocked the workflow.
+        Break-proof: take out the exponent guard in checks._figures and the
+        400 and 5000 cases raise here."""
+        r = get_check("numbers_consistent")(
+            "cap at 60 s", f"sets 60 s, as in 1 x {power} s of nothing")
+        assert r.passed
+
+    def test_a_sane_power_is_still_read(self):
+        r = get_check("numbers_consistent")("limit 2 x 10^3 W", "sets 2000 W")
+        assert r.passed and r.checked
+
     def test_no_shared_unit_passes_but_says_it_compared_nothing(self):
         """Ruling D46 (3): a check that compared nothing says so. It passes
         exactly as before — reporting absence as conflict would be a different
