@@ -296,10 +296,20 @@ the problem in one sentence and the exact fix.
 """
 
 
-def checker_system(prompt_b: str) -> str:
+# The author is told today's date (Prompt A's {DATE}) and writes "as in force on" it; the checker was
+# not, and the Flash and Haiku checkers took that date for one in the future and held back questions
+# for it (2026-11-21: about a dozen of the Haiku reading's 33 FIX verdicts on groups 1 to 9, and "as in
+# force on a future date" among the Flash ones). The owner ruled on 2026-11-22 that the checkers be
+# told the date. Nothing else about what they check is changed.
+CHECK_DATE = ("TODAY is {DATE}. The pages below were fetched today or in the days just before it.\n")
+
+
+def checker_system(prompt_b: str, date: str | None = None) -> str:
     if "THE FILE:" not in prompt_b:
         raise ValueError("Prompt B no longer ends with 'THE FILE:'")
-    return prompt_b.split("THE FILE:")[0].rstrip() + "\n" + CHECK_TAIL
+    tail = CHECK_TAIL if date is None else CHECK_TAIL.replace(
+        "\nIN THIS SESSION", "\n" + CHECK_DATE.replace("{DATE}", date) + "IN THIS SESSION", 1)
+    return prompt_b.split("THE FILE:")[0].rstrip() + "\n" + tail
 
 
 PLAN_SYSTEM = (
@@ -995,7 +1005,7 @@ async def check_group(run: Run, group: Group, name: str, questions: list[dict],
             continue
         verdicts: dict[str, dict] = {}
         for batch in (reversed(batches) if k == 2 else batches):
-            reply = await ask(run, name, group, WORKER_FN, checker_system(run.prompt_b),
+            reply = await ask(run, name, group, WORKER_FN, checker_system(run.prompt_b, run.date),
                               check_user(batch, texts, reverse=(k == 2)),
                               max_tokens=WORKER_MAX_TOKENS, temperature=0.2 + 0.4 * (k - 1),
                               effort=run.effort_check)

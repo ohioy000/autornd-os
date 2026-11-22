@@ -236,6 +236,28 @@ class TestThePromptsAreTheDocs:
         assert system.startswith(b.split("THE FILE:")[0].rstrip())
         assert "{paste the author's JSON}" not in system and '{"verdicts"' in system
 
+    def test_the_checker_is_told_the_date_and_prompt_b_is_otherwise_as_it_was(self):
+        """The author is told today's date and writes 'as in force on' it; a checker that was not told
+        took it for a date in the future (owner's ruling of 2026-11-22: tell the checkers)."""
+        _, b = mod.load_prompts(mod.PROMPTS.read_text(encoding="utf-8"))
+        plain, dated = mod.checker_system(b), mod.checker_system(b, "2026-11-21")
+        assert "TODAY is" not in plain and "TODAY is 2026-11-21." in dated
+        assert dated.replace(mod.CHECK_DATE.replace("{DATE}", "2026-11-21"), "") == plain, \
+            "the date line is the only addition"
+        assert dated.index("TODAY is") > dated.index(b.split("THE FILE:")[0].rstrip()[-40:])
+
+    async def test_every_reading_and_re_reading_carries_the_runs_date(
+            self, tmp_path, monkeypatch, small):
+        client = FakeClient(Script())
+        run = make_run(tmp_path, client=client, date="2026-11-21")
+        await run_stages(run, ["plan", "open", "extract", "write", "check", "fix"], monkeypatch,
+                         make_fetch())
+        check = [c for c in client.calls if c["function"] == "worker" and "THE FILE:" in c["user"]]
+        assert len(check) >= 4, "two readings and two re-checks"
+        assert all("TODAY is 2026-11-21." in c["system"] for c in check)
+        author = [c for c in client.calls if c["function"] == "author"]
+        assert not any("TODAY is" in c["system"] for c in author), "the author's prompt is its own"
+
     def test_the_areas_already_covered_come_from_prompt_a(self):
         a, _ = mod.load_prompts(mod.PROMPTS.read_text(encoding="utf-8"))
         covered = mod.covered_areas(a)
