@@ -59,13 +59,14 @@ framing:
     followed at the bedside and audited.
   risk_high_examples: |-
     the answer acts on a patient or a record — an order, a prescription, a
-      dosing change, a result released to a chart — or is safety-critical in
+      dosing change, a material or device chosen for a procedure on a patient, a
+      result released to a chart — or is safety-critical in
       function even while still a draft, such as a dosing limit or an alarm
       threshold; or it ships as core system behaviour, a security boundary, or
       data integrity. A dose given stays given, and someone is in the room
   risk_medium_examples: |-
     the answer is still a decision, reversible until an order is placed
-      or a protocol is approved — choosing between options, estimating a risk,
+      or a protocol is approved — choosing between study designs or analysis methods, estimating a risk,
       summarising the evidence, setting a screening interval, taking a history
   risk_protective_example: |-
     Planning the backup of a research data store is

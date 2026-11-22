@@ -137,6 +137,22 @@ class TestTheRulesStayTheSame:
             assert "injure" in text and "person" in text and "damage" in text and "equipment" in text, name
 
 
+class TestTheMedicalGuideAndAChosenMaterial:
+    """2026-11-22: the medical text read "select an impression material and set time for a full arch implant restoration"
+    as `medium` on 5 of 5 repeats (the sector's floor is `high`), because its medium examples said "choosing between
+    options". A material or device chosen for a procedure on a patient acts on the patient; a choice of study design does
+    not. The two phrases below carry that, and the guide's anchors above are unchanged."""
+
+    def test_a_material_chosen_for_a_procedure_is_in_the_high_examples_and_not_in_the_medium_ones(self):
+        _use("medical")
+        words = framing()
+        high = " ".join(words["risk_high_examples"].split())
+        medium = " ".join(words["risk_medium_examples"].split())
+        assert "a material or device chosen for a procedure on a patient" in high
+        assert "choosing between options" not in medium
+        assert "choosing between study designs or analysis methods" in medium
+
+
 class TestTheCitationPhrasesOutsideEngineering:
     def test_a_tuned_profile_has_no_datasheet_phrase_and_keeps_the_generic_ones(self):
         for name in TUNED:
