@@ -133,3 +133,36 @@ caps (`--max-spend 0.40`, `--max-spend-sweep 0.40`), the six runs, the pin, the 
 prediction are unchanged. Spent so far: '$0.0402' of the '$3.00'; the remaining five are expected to cost about '$0.25'.
 The remaining runs, in this order: `general` × `gen_contract_threshold` (the pair of run 1, the leak check), then
 `legal` and `general` × the two new requests.
+
+## Amendment 2 — after the six runs, before any further spend (2026-11-21)
+
+**What the six runs read** (n = 1 per cell; spent '$0.1455' of the '$3.00'). All six completed. Under `legal` the answer
+call was served by the pinned id via Z.AI in all three runs and by nothing else; its cost is the catalogue's no-cache
+figure (the billed cost is 1.000, 1.000 and 0.997 of it). Under `general` the pinned id appears in none of the three.
+The paired headers differ in `models.engineering` only. **Two things the predictions did not foresee:**
+
+1. **Under `general` the answer call is not on the engineering tier.** All three `general` runs have no `engineering`
+   call and one `architecture` call, which is the answer. `general` declares no domains, `lead_for_domain` is documented
+   to return the profile's system-view role for a domain nobody mapped, and that role (the planner) is on the
+   architecture tier. So S2's second half, "served by the global engineering model", is **not observable** in a `general`
+   run, and the leak part of S2 (the pinned id is absent) holds only trivially: the pin's tier was not called there.
+   This is how `general` was built and is not changed here.
+2. **The pinned model's typed verdict was rejected once.** In `legal` × `pin_legal_termination_clause` the harness
+   rejected one engineering reply against the verdict's schema (`rejections_by_tier: {engineering: 1}`, served by Z.AI)
+   and the retry was accepted; the other two `legal` runs had none. **S4 is falsified as written, at n = 3** (predicted
+   none); `general` had none, as predicted.
+
+**The added arm.** The check the owner needs is whether the pin leaks into the tier it overrides on a profile that
+**does** call that tier, the engineering profile (every other profile is unaffected by construction, and the owner's own
+profile is the one to be sure of). One run: `AUTORND_PROFILE=engineering`, the same pin in the environment, the same
+order, the new request `pin_engineering_leak_check` (a firmware question, so triage names the firmware domain and the
+lead it maps to is on the engineering tier). Same caps (`--max-spend 0.40 --max-spend-sweep 0.40`), same amended stop
+rules, one run, n = 1, no repeat.
+
+- **S9 — the engineering profile is not touched by the legal pin, n = 1.** `models_by_function` for the `engineering`
+  tier is exactly one id, the global engineering model the header's `models.engineering` names, and the pinned id appears
+  nowhere in the record. *The pinned id anywhere falsifies it and is the worst result this smoke can return.* If triage
+  does not name a domain led by an engineering-tier role, the engineering tier is not called, the check was not
+  exercised, and that is reported as read; the run is not repeated.
+
+Everything else is unchanged. The spend of this run is expected to be a few cents.
