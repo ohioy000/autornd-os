@@ -247,7 +247,11 @@ still offered by name.
   With its thinking off: about 60 completion tokens, 2.2 to 2.4 seconds, '$0.0031' to '$0.0036' an arm, and 6 units below a
   risk floor on the old guide where the first model had 0. With its default thinking: 2,800 to 4,500 tokens, 17.6 to 25.1
   seconds, '$0.0718' to '$0.0907' an arm, and 0 units below a floor on the old guide (171 meeting the bounds, the limit).
-- **Not measured.** Anything but triage; a repeat of any arm. Not proposed as a pin: that is the owner's (G-2).
+- **A repeat with default thinking** of the old guide, the finance text and the legal text, 180 units each ('$0.2454'):
+  the old guide 1 unit below a floor and 171 meeting the bounds, finance 1 and 173, legal 0 and 173, so the two field
+  texts held in both runs and the old guide as a baseline held in both.
+- **Not measured.** Anything but triage; a repeat of the medical or the thinking-off arms. A pin for `finance` and `legal`
+  is proposed in the record and is the owner's (G-2).
 
 ## What the changes have in common
 

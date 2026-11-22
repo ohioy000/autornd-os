@@ -2,9 +2,9 @@
 
 **Status.** Owner-directed in conversation, 2026-11-22. Nothing here is a ruling and nothing ships on it: a serving pin is
 the owner's (G-2), and the tuned texts held by `docs/reviews/2026-11-21-per-profile-pins-and-tuned-prompts.md` stay held
-until the owner rules. Pre-registered in `docs/preregistration-triage-model-hy4-flash.md` (with two amendments, each
-committed alone before the spend it opens). Spent: '$0.4233' of the '$0.50' the owner's permission was read to cover, inside
-the '$1.00' given for sweeps. Traces below, by sha256.
+until the owner rules. Pre-registered in `docs/preregistration-triage-model-hy4-flash.md` (with three amendments, each
+committed alone before the spend it opens). Spent: '$0.6687' in all ('$0.4233' of the '$0.50' first read from the owner's permission, then '$0.2454' on the repeat of
+Amendment 3), inside the '$1.00' given for sweeps ('$0.2251' on the first sweep; '$0.1062' of it left). Traces below, by sha256.
 
 ## The question
 
@@ -72,6 +72,35 @@ brewing, broadcast, dentistry and automotive as `low`. The full lists are reprod
 `docs/probes/score_triage_hy4.py`. (Its `medical` list contains sectors with no reading because of the cap; those are
 not movements.)
 
+## The repeat (Amendment 3): 3 arms, thinking on, each complete
+
+The owner asked for just 3 arms: the baseline, finance and legal, repeated with default thinking, each a full 180 units
+(per-arm cap '$0.115', so none was cut). Spent '$0.2454' ('$0.0804', '$0.0687', '$0.0963'); about 56 to 66 minutes an arm;
+**no rejected reply and no provider failure in the 540 units, every call on Tencent**.
+
+| Arm | Units below a floor | Meets every bound | Rule |
+|---|---|---|---|
+| R0 (old guide, `general`) | 1 (`wide_dentistry`, `medium`) | 171 | **M2 holds** (at most 3 and at least 171: again exactly at the limit) |
+| Rf (`finance`) | 1 (`wide_wind_energy`, `medium`) | 173 | **M3 holds** (limit R0's 1 plus 3 is 4) |
+| Rl (`legal`) | 0 | 173 | **M3 holds** |
+
+**The pre-registered test for "supported on this model".** A text is supported only if it holds M3 in the first run
+and in this one, and the baseline holds M2 in both. Baseline: held in both (171 and 171 meeting the bounds; 0 and 1 below a
+floor). `finance`: held in both (1 and 1 below a floor). `legal`: held in both (1 on the 174 units that ran, and 0 on a
+complete arm). **So the finance and legal texts are supported on `hy4-flash` with its default thinking, and the baseline is
+supported as a baseline.** Predictions: **P12** holds (even odds, and it sat on the limit again), **P13** holds twice,
+**P14** holds (all complete, '$0.2454' under '$0.30').
+
+**Movements (M5), against R0:** `finance` 3 of 36 sectors move in modal risk, with one unanimous change (semiconductor,
+`high` to `medium` on all five repeats); `legal` 3 of 36 and none unanimous. Semiconductor reads `medium` under the
+finance text in this run and in the thinking-off run, and under legal in neither; the owner may want to read it.
+
+**What this does not say.** The baseline itself meets the bounds on 171 of 180 units on this model, against 174 on the
+first model, so this model is no better than the first on the old text and is 3 units worse on the over-calling side
+(`risk_at_most` misses 8 and 9). It is not shown to be a better triage model than the first, only a model on which two
+texts that failed on the first read within the margin. Two runs per text, each of 180 units, a margin of 3. The medical
+text was not repeated; it stays held.
+
 ## Predictions, scored
 
 - **P1 (the probe), n = 4: holds.** Typed, no rejection, the pinned model, Tencent only, rated.
@@ -111,16 +140,18 @@ not movements.)
 ## Options, and a recommendation (the owner's to take)
 
 1. **Keep the owner's triage model; fix the three texts' examples** (the first record's option 2). No new model, no latency.
-2. **Pin the triage tier of `finance` and `legal` to this model with its default thinking**
+2. **Pin the triage tier of `finance` and `legal` to this model with its default thinking** (**now supported by two runs each**, above)
    (`PROFILE_MODELS=<profile>:triage=tencent/hy4-flash@tencent/fp8`, no harness change needed because thinking on is the
    model's default). This lets the two texts that passed ship on a model they were measured on, at about '$0.0004' a call
    and about 19 seconds a run, and leaves every other profile alone. `medical` stays held. A G-2 pin, proposed with this
    evidence, not made.
 3. **Do both**, and read the medical dentistry readings by hand first.
 
-My recommendation is option 3, in this order: read the dentistry readings; fix medical's examples; and, if the owner wants the
-field texts to ship before that, take option 2 for `finance` and `legal` only after a repeat of those two arms (about
-'$0.19' with the cap raised, so that each arm completes), because each passed on one run of 180 units with a margin of 3.
+My recommendation, after the repeat, is option 2 for `finance` and `legal`: the two texts passed twice on this model, and the
+cost is about '$0.0004' a call and about 19 seconds a run under those two profiles only. The pin line would be
+`PROFILE_MODELS=finance:triage=tencent/hy4-flash@tencent/fp8,legal:triage=tencent/hy4-flash@tencent/fp8`; it is a G-2 pin
+and waits on the owner, as does the choice to accept 19 seconds on every run. In parallel, read the dentistry readings and
+fix medical's examples (option 1 for that profile).
 
 ## Traces (sha256)
 
@@ -139,6 +170,9 @@ field texts to ship before that, take option 2 for `finance` and `legal` only af
 | `triage-hy4-on-Tf.jsonl` | `eb74b5b2fbdac0bb715b95f3a500bb95dbeae6986d8987c42c0fb6011c622dc2` |
 | `triage-hy4-on-Tm.jsonl` | `319d5dded7a9c070764e336ca0e2316b20743828788dc8b2d0887cec689ef386` |
 | `triage-hy4-on-Tl.jsonl` | `3bd0a088691e89550c4a390ac1669343dd62faf342715f2b4ecdb7a4d0fef281` |
+| `triage-hy4-on-repeat-R0.jsonl` | `2d73b7bb2babc47514ca6c2e3d1c783e8b9767600db6560cb6d5cd65c64dc10e` |
+| `triage-hy4-on-repeat-Rf.jsonl` | `f7fdf45b24a82f5645fe8d422300da028b2a4fd43442ecd3678ed62f5f37ebb7` |
+| `triage-hy4-on-repeat-Rl.jsonl` | `339a508e4d3ff496512086055cf409bd4accb287a915e554a855131c3957f0fc` |
 
 The wrapper, `docs/probes/triage_thinking_off_wrapper.py`: `10904e36a001e3dcb76301aad093516da644e266197f1f49a840d3d8225508fe`.
 The first probe call's caps were set wrong by me (a unit reserves its cap against the sweep cap), so it ran one of three

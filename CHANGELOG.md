@@ -37,12 +37,14 @@ the profile then read such requests low; and `general` met the risk bounds on 16
 margin, all of them over-calls, none below a floor). Those four texts are held for the owner's ruling and are not
 claimed to hold. Engineering is unaffected. See `docs/reviews/2026-11-21-per-profile-pins-and-tuned-prompts.md`.
 
-Measured (2026-11-22, '$0.4233', the owner's instruction): the same suite and the same held texts with a different
+Measured (2026-11-22, '$0.6687' in all with the repeat below, the owner's instruction): the same suite and the same held texts with a different
 triage model, its thinking off and on. With its thinking off that model under-called more than the first (41, 51 and 15
 units below a floor for finance, medical and legal, and 6 for the old guide); with its default thinking the old guide held
 (0), and the finance and legal texts read within the margin of it (1 and 1) while medical still read dentistry below its
 floor (6 units, in an arm cut at its spend cap); `general` held in both. Default thinking cost two to three times the first
-model per run and took about 19 seconds a call. Nothing ships on it. See
+model per run and took about 19 seconds a call. A repeat of the old guide, finance and legal with default thinking ('$0.2454',
+three complete arms) held again (the old guide 1 unit below a floor and 171 meeting the bounds, finance 1, legal 0), so by the rule
+written beforehand the finance and legal texts are supported on that model with its default thinking. Nothing ships on it. See
 `docs/reviews/2026-11-22-triage-model-hy4-flash.md`.
 
 Added (2026-11-21): the second hold-out set as a draft, `evals/professional/holdout2-questions.json` (`professional-holdout-2`, status "Draft, not approved"), 181 questions of the 182 asked, `Y1` to `Y182` without `Y48`, thirteen groups of 14: the six areas of the first set, three engineering subjects, and law, finance, medicine and natural science, written and checked by models through `evals/professional/write_holdout.py`. Each of the 181 passed the code check (every cited passage found word for word on its page by the harness's quote check, every non-derived figure of its key on a cited page) and two readings by the worker with whole pages, and `evals/professional/verify_keys.py` found every passage and figure of the 181 on the live pages on 2026-11-21 ('181 of 181 hold'). `Y48` was held back after two repair rounds, for a nit in its key ("(dimensionless)" added to a numeric answer). 50 PDF pages of 9 groups were opened and extracted again with PDFium before the last readings. The set is registered in `docs/probes/short_workflows_measurement.py` as `professional-holdout-2` and the runner refuses it while its status says Draft (D44): the owner signs the keys first. `tests/test_holdout2_draft.py` (5 tests) pins the draft's shape, its registration and the refusal, each proven by breaking it (4 of 4 fail their test, files restored). The authoring cost '$4.1581' in all, of the '$6.6' the owner approved. Counts re-derived: 2,334 tests in 101 files.
