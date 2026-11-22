@@ -220,6 +220,52 @@ still offered by name.
 - **Premium.** A frontier model sat here in September as an independent check. It was left
   empty on purpose from 3 October: "no frontier model sits inside" the measured pipeline.
 
+### A profile's own model: one legal pin, proposed, not ratified (2026-11-21)
+- **The model.** `z-ai/glm-5.3-flashx-legal`, listed in the public catalogue on 21 November (about three
+  weeks old) and the only domain-named model among the 476 listed. One endpoint, Z.AI (`z-ai/fp8`, fp8).
+  Context 1,048,576 tokens, output ceiling 131,072. The same price as `glm-5.3-flashx`: '$0.37' a million
+  tokens in, '$1.25' out. It accepts typed output, reasoning and tools.
+- **The pin proposed.** `PROFILE_MODELS=legal:engineering=z-ai/glm-5.3-flashx-legal@z-ai`: the legal
+  profile's answer tier and no other tier, no other profile. It waits on the owner (G-2); no `.env` carries it.
+- **What the smoke read** (`docs/preregistration-per-profile-pins-smoke.md`; seven runs, '$0.1521' in all; one run
+  for each cell, so each figure is one observation). Under the legal profile the model that replied to the
+  answer call was the pinned one in all three runs, served by Z.AI, and billed at its catalogue rate to within
+  0.3 percent. One of the three replies was rejected once against the verdict's schema and the retry was
+  accepted. The three runs cost '$0.0402', '$0.0418' and '$0.0100'. The same requests under the general
+  profile, with the same pin in the environment, never reached it, and under the engineering profile the
+  answer stayed on the engineering model above.
+- **Not measured.** Whether its answers are better than the engineering model's on legal questions, on any
+  question set with signed keys, or at more than one run a request. The smoke is evidence of serving, cost and
+  typed output, not of quality.
+
+### A second triage model, read with its thinking off and on (2026-11-22)
+- **The model.** `tencent/hy4-flash`, released 16 November; one endpoint, Tencent (`tencent/fp8`, fp8). Context 1,048,576,
+  output ceiling 65,536, typed output and reasoning supported. '$0.035' in and '$0.1405' out per million tokens, against
+  '$0.09' and '$0.36' for the model it was read against.
+- **What it did on the triage seat** (wide suite, 36 sectors, five repeats, 180 units an arm; the evidence is
+  `docs/reviews/2026-11-22-triage-model-hy4-flash.md`). Zero rejected replies and zero provider failures in 1,760 units.
+  With its thinking off: about 60 completion tokens, 2.2 to 2.4 seconds, '$0.0031' to '$0.0036' an arm, and 6 units below a
+  risk floor on the old guide where the first model had 0. With its default thinking: 2,800 to 4,500 tokens, 17.6 to 25.1
+  seconds, '$0.0718' to '$0.0907' an arm, and 0 units below a floor on the old guide (171 meeting the bounds, the limit).
+- **A repeat with default thinking** of the old guide, the finance text and the legal text, 180 units each ('$0.2454'):
+  the old guide 1 unit below a floor and 171 meeting the bounds, finance 1 and 173, legal 0 and 173, so the two field
+  texts held in both runs and the old guide as a baseline held in both.
+- **The medical text after its examples were fixed**, default thinking, 180 units ('$0.1176', 26.6 seconds a unit, no errors): 2 units
+  below a floor (both the semiconductor sector) and 173 meeting the bounds, dentistry `high` on 5 of 5. One run.
+- **Two models in the catalogue, never run in this harness before 2026-11-22** (free reads only): `qwen/qwen4-max`, one endpoint (Alibaba),
+  context 1,000,000, output ceiling 131,072, typed output and reasoning, '$1.425' in and '$4.275' out per million; and
+  `google/gemini-4-hydrogen`, Vertex and AI Studio endpoints, context 1,048,576, output ceiling 943,718 on Vertex, typed output and
+  reasoning, '$1.50' in and '$7.50' out per million. Both pass preflight as pins. Run once each in the line-up smoke
+  (`docs/reviews/2026-11-22-model-lineup-smoke.md`): `qwen4-max` via Alibaba, one question, '$0.0078' for the answer call; hydrogen via
+  Google on a finance and on a medical question, '$0.0216' and '$0.0599' for the answer call; no rejected replies and no provider
+  failures. The spend guard could not bound `qwen4-max` (its cache-write rate, '$1.78' per million, is above its prompt rate) nor the
+  global answer model (time-of-day price overrides), so both ran unbounded; it bounded hydrogen, the legal model and `hy4-flash`.
+- **The first model at high reasoning effort** ('$0.2567', three arms): finance 9 units below a floor and legal 8, against
+  24 and 10 at its default effort and 1 and 0 to 1 for this model with thinking on; 10 seconds a unit and '$0.079' to
+  '$0.090' an arm. More thinking alone did not bring those texts within the margin.
+- **Not measured.** Anything but triage; a repeat of the medical or the thinking-off arms. A pin for `finance` and `legal`
+  is proposed in the record and is the owner's (G-2).
+
 ## What the changes have in common
 
 - **Most early changes were forced by a model returning nothing,** not by a model being wrong:

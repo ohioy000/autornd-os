@@ -1,0 +1,16 @@
+id: pin_legal_termination_clause
+description: >
+  Pin smoke, request 1 of 3 (docs/preregistration-per-profile-pins-smoke.md): a drafting request that needs no outside
+  source and no calculation, so under the default workflow it runs the triage, the decision switches and the answer
+  call (the engineering tier, where the legal pin sits), and nothing that can be mistaken for the pin. It names no
+  workflow. It states no risk bound: this scenario is about which model served the answer, and the risk axis is
+  measured elsewhere (the prompt sweep).
+request: >
+  Draft a termination-for-convenience clause for a one-year software subscription agreement governed by the law of
+  England and Wales. Either party may terminate on thirty days' written notice; the customer is refunded the prepaid
+  fees for the unexpired part of the term, pro rata; a notice takes effect on the date it is received. Number the
+  sub-clauses and, after the clause, say in one line for each sub-clause which of those three terms it carries out.
+tags: [pin-smoke, legal]
+expect:
+  status: completed
+  max_calls: 30

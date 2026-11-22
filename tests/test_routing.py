@@ -882,6 +882,74 @@ class TestProviderVisibility:
         assert c.providers_by_function == {}
 
 
+class TestModelVisibility:
+    """A profile's pin changes which model answers a call, and the provider cannot say so: the model the owner pins
+    and the sibling a global tier runs can both be one provider's. The model the reply names is recorded per tier,
+    so a run's record shows which one was served."""
+
+    def test_models_are_recorded_per_tier(self):
+        c = OpenRouterClient(api_key="test")
+        c._account("engineering", 0.0001, provider="Vendor", model="vendor/field-model")
+        c._account("engineering", 0.0001, provider="Vendor", model="vendor/other-model")
+        c._account("triage", 0.0001, provider="Crusoe", model="vendor/triage-model")
+        assert c.models_by_function["engineering"] == {"vendor/field-model", "vendor/other-model"}
+        assert c.models_by_function["triage"] == {"vendor/triage-model"}
+
+    def test_a_missing_model_is_not_recorded_as_one(self):
+        c = OpenRouterClient(api_key="test")
+        c._account("triage", 0.0001, provider="Vendor", model=None)
+        assert c.models_by_function == {}
+        assert c.calls == 1, "the call still counts"
+
+    def test_reset_clears_models(self):
+        c = OpenRouterClient(api_key="test")
+        c._account("triage", 0.0001, provider="Vendor", model="vendor/field-model")
+        c.reset_accounting()
+        assert c.models_by_function == {}
+
+    @staticmethod
+    async def _chat(monkeypatch, reply_model):
+        """One real chat() through a fake transport whose reply names `reply_model` (or none)."""
+        from autornd.config import settings
+
+        monkeypatch.setattr(settings, "model_engineering", "vendor/asked-for")
+
+        class FakeResponse:
+            status_code = 200
+            text = ""
+            def raise_for_status(self): pass
+            def json(self):
+                body = {"choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}],
+                        "provider": "Vendor",
+                        "usage": {"prompt_tokens": 1, "completion_tokens": 1, "cost": 0.0}}
+                if reply_model is not None:
+                    body["model"] = reply_model
+                return body
+
+        class FakeHttp:
+            async def post(self, path, json):
+                return FakeResponse()
+
+        client = OpenRouterClient(api_key="test")
+        monkeypatch.setattr(client, "_get_client", AsyncMock(return_value=FakeHttp()))
+        await client.chat(function="engineering", system_prompt="s", user_message="u")
+        return client
+
+    async def test_a_chat_records_the_model_the_reply_names_and_not_the_one_asked_for(self, monkeypatch):
+        client = await self._chat(monkeypatch, "vendor/served")
+        assert client.models_by_function == {"engineering": {"vendor/served"}}
+        assert client.providers_by_function == {"engineering": {"Vendor"}}
+
+    async def test_a_reply_that_names_no_model_records_none(self, monkeypatch):
+        client = await self._chat(monkeypatch, None)
+        assert client.models_by_function == {}
+        assert client.calls == 1
+
+    async def test_a_reply_whose_model_is_not_text_records_none(self, monkeypatch):
+        client = await self._chat(monkeypatch, 7)
+        assert client.models_by_function == {}
+
+
 class TestProviderPinning:
     """Reproducibility and availability are different goals. Unset, the provider
     decides and a run may be served by anyone; set, a run is repeatable."""

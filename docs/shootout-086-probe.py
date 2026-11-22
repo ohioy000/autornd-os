@@ -21,7 +21,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from autornd.engine.phases import ESCALATION_SYSTEM_PROMPT
+from autornd.engine.phases import escalation_system_prompt
+from autornd.profiles import load_profile, set_profile
 from autornd.routing import openrouter as or_mod
 from autornd.routing.openrouter import OpenRouterClient
 
@@ -68,7 +69,9 @@ OUT = "docs/traces/086-escalation-shootout.jsonl"
 
 
 async def ask(client, model, order, qid, question):
-    system = (ESCALATION_SYSTEM_PROMPT.format(n=2)
+    # The prompt's words are the active profile's since 2026-11-21; this probe ran on the engineering ones.
+    set_profile(load_profile("engineering"))
+    system = (escalation_system_prompt(2)
               + "\n\nArchitect's Plan:\n" + PLAN
               + "\n\nTriage Classification:\n- " + TRIAGE)
     user = ("The following 2 implementation attempts all failed validation. "

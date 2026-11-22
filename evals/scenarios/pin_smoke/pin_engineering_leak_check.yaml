@@ -1,0 +1,15 @@
+id: pin_engineering_leak_check
+description: >
+  Pin smoke, the leak check on the owner's own profile (docs/preregistration-per-profile-pins-smoke.md, amendment 2):
+  a firmware request, so under the engineering profile triage names the firmware domain and the lead it maps to, a role
+  on the engineering tier, writes the answer. That is the tier the legal pin overrides for the legal profile; run with
+  that pin in the environment, this answer must still come from the global engineering model. It names no workflow and
+  states no risk bound: it is about which model served, not about the request.
+request: >
+  A Cortex-M4 firmware reads a mechanical push button on a GPIO pin. Describe, in two short paragraphs, how to debounce
+  it with a 1 kHz timer interrupt and a counter that must see the same level on five consecutive ticks, and state the
+  longest bounce, in milliseconds, that this scheme tolerates.
+tags: [pin-smoke, engineering]
+expect:
+  status: completed
+  max_calls: 30

@@ -1,0 +1,17 @@
+id: pin_legal_delay_damages
+description: >
+  Pin smoke, request 2 of 3 (docs/preregistration-per-profile-pins-smoke.md): a legal request that is a calculation, so
+  the decision switch can send it to the recompute tier and the answer call is the one the pin serves. It names no
+  workflow. The answer does not depend on how the days are counted: 46 days of delay at 1,250 pounds is 57,500, which
+  is over the cap of 10% of 480,000, which is 48,000, and 45 or 47 days give the same payable figure.
+request: >
+  A construction contract fixes liquidated damages for delay at £1,250 for each day after 14 March, capped at 10% of
+  the contract price of £480,000. The works were completed on 29 April of the same year. Work out the liquidated
+  damages payable and say whether the cap applies, showing the number of days you counted, the uncapped amount and the
+  cap.
+tags: [pin-smoke, legal]
+expect:
+  status: completed
+  max_calls: 30
+  figures_present:
+    - ["48,000", "48000"]

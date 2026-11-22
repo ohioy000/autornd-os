@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import contextvars
 import logging
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -165,6 +166,25 @@ def _probability(answer: Any) -> float | None:
     return float(value) if 0.0 <= value <= 1.0 else None
 
 
+# The words a switch's text may take from the active profile: `{switch_...}` in
+# a question, a yes or a no. They are filled when the question is asked and not
+# when the file is read, so a profile switched at run time changes the question.
+# Only `switch_` names are filled; a name the profile does not declare is left as
+# written, so it shows in the request and is not guessed.
+_SWITCH_WORD = re.compile(r"\{(switch_\w+)\}")
+
+
+def fill_switch_words(text: str) -> str:
+    """`text` with each {switch_...} replaced by the active profile's word for it."""
+    if "{switch_" not in text:
+        return text
+    from autornd.profiles import framing
+    words = framing()
+    return _SWITCH_WORD.sub(
+        lambda m: (" ".join(str(words[m.group(1)]).split())
+                   if m.group(1) in words else m.group(0)), text)
+
+
 def _clip(evidence: Any) -> Any:
     """Evidence with each text bounded."""
     if isinstance(evidence, str):
@@ -217,8 +237,9 @@ class Switchboard:
             questions[key] = {
                 "type": "noul",
                 "instructions": (f'Look only at state["{key}"]. '
-                                 f"{switch.question}"),
-                "criteria": {"true": switch.yes, "false": switch.no},
+                                 f"{fill_switch_words(switch.question)}"),
+                "criteria": {"true": fill_switch_words(switch.yes),
+                             "false": fill_switch_words(switch.no)},
             }
         try:
             answers, response = await self.client.decide(state, questions)

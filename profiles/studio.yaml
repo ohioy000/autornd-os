@@ -32,6 +32,47 @@ constraints:
   - "Reading age 14 or below on public pages"
   - "No claim about a named competitor without legal review"
 
+# ── framing ──────────────────────────────────────────────────────────────
+# Only what a content studio teaches differently; every other word is general's.
+# The risk guide's examples, the hazard sentence and the three switch words are
+# a studio's own (what general says about each is in general.yaml). The rules
+# around the examples are the code's, the same for every profile.
+framing:
+  risk_harm_rules: |-
+    health and safety claims, privacy and
+    defamation law, consumer-protection and advertising rules, accessibility
+    requirements, workplace and product safety codes
+  risk_paper_examples: |-
+    A dosage claim in a health article, a safety instruction in a
+    how-to guide and a testimonial that names a person are critical while still in
+    draft, because the draft is what gets published, followed and quoted.
+  risk_high_examples: |-
+    the answer publishes or changes something the public sees or uses — a
+      live page, a sent campaign, a claim about a named person or competitor, a
+      price or an offer — or is safety-critical in function even while still a
+      draft, such as a health instruction or a safety warning; or it ships as core
+      system behaviour, a security boundary, or data integrity. A page published
+      to the live site stays public, and readers act on it
+  risk_medium_examples: |-
+    the answer is still a decision, reversible until a piece is
+      published or a budget is committed — choosing an angle, outlining a piece,
+      drafting copy, setting a keyword target, planning a calendar
+  risk_protective_example: |-
+    Planning the backup of the content store is
+    planning work, and a wrong answer loses the published archive, so it is at
+    least high rather than medium. It is critical only if a person can be harmed:
+    losing pages, drafts or money, however much of it, is high.
+  hazard_harm: "injure a person or damage property or equipment"
+  switch_outside_sources: "a statute, a regulation, a style guide, a published study or a published figure"
+  switch_computed_values: "a sum, a rate, a reading age, a word count or a total"
+  switch_published_documents: "a rule, a style guide, a statute or another published document"
+  escalation_persona: "the Brand Strategist for AutoRnD"
+  escalation_worker: "Writing"
+  escalation_flaw: "logic or editorial flaw"
+  escalation_correction: "angle or missing sources"
+  escalation_scope: "the current plan"
+  escalation_plan_heading: "Plan:"
+
 # ── domains ──────────────────────────────────────────────────────────────
 # domain name -> lead specialist, or {lead, checks}.
 #

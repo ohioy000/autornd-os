@@ -401,3 +401,32 @@ async def capture_all(seats: dict[str, object] | None = None) -> dict[str, dict[
     }
 
     return captured
+
+
+class Decider:
+    """A decision client that records the questions it is put and answers none of them."""
+
+    def __init__(self) -> None:
+        self.questions: dict = {}
+
+    def decision_model(self) -> str:
+        return "test-provider/test-decision"
+
+    async def decide(self, state, questions):
+        self.questions = questions
+        return {key: {"noul": 0.5} for key in questions}, None
+
+
+async def switch_requests() -> dict[str, dict]:
+    """What each declared switch puts to the decision model under the active profile: the request
+    Switchboard.ask builds, not the YAML, so a filled word and a written sentence compare equal."""
+    from autornd.routing.switches import Switchboard, load_switches
+
+    client = Decider()
+    board = Switchboard(client)
+    sent: dict[str, dict] = {}
+    for name in sorted(load_switches()):
+        client.questions = {}
+        await board.ask([(name, "label", "some evidence")])
+        sent[name] = client.questions["q0"]
+    return sent

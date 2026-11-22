@@ -36,6 +36,40 @@ _specialists: dict[str, Specialist] | None = None
 # roles their profile ought to declare without a line per workflow.
 _synthesized: dict[str, Specialist] = {}
 
+# (profile, role, tier) already warned about, so a reload does not repeat the line.
+_warned_tiers: set[tuple[str, str, str]] = set()
+
+
+def _role_tier_problem(tier: str) -> str:
+    """Why a role's tier would not run on a model of its own, or '' when it will.
+
+    OpenRouterClient.get_model falls back to the engineering model for a name it
+    does not know and for an optional tier nothing sets, without a word, so a
+    typo in a profile's `tier:` ran that role on the engineering model unseen.
+    The judge tier is left alone: falling back to engineering when it is unset
+    is what the tier is documented to do.
+    """
+    from autornd.config import PINNABLE_TIERS, settings
+    from autornd.routing.pins import tier_model
+
+    if tier == "independent":
+        return ""
+    if tier not in PINNABLE_TIERS:
+        return f"is not a tier (the tiers are {', '.join(PINNABLE_TIERS)})"
+    if tier != "judge" and not tier_model(tier, getattr(settings, f"model_{tier}", "")):
+        return "has no model set"
+    return ""
+
+
+def _warn_about_tier(profile: str, role: str, tier: str) -> None:
+    problem = _role_tier_problem(tier)
+    if problem and (profile, role, tier) not in _warned_tiers:
+        _warned_tiers.add((profile, role, tier))
+        logger.warning(
+            "Role '%s' in profile '%s' names tier '%s', which %s; its calls run on "
+            "the engineering model. Fix the role's tier or set the tier's model "
+            "(a warning only: nothing is refused).", role, profile, tier, problem)
+
 
 def _build_prompt(role: object, template: dict) -> str:
     from autornd.profiles import get_profile
@@ -68,16 +102,19 @@ def _profile_templates() -> dict[str, dict]:
     """
     from autornd.profiles import get_profile
 
+    profile = get_profile()
     templates: dict[str, dict] = {}
-    for name, definition in (get_profile().roles or {}).items():
+    for name, definition in (profile.roles or {}).items():
         key = role_key(name)
         definition = definition or {}
+        tier = (definition.get("tier")
+                or definition.get("router_function")
+                or "engineering")
+        _warn_about_tier(profile.stem, key, str(tier))
         templates[key] = {
             "name": definition.get("name") or _title(key),
             "domain": definition.get("domain", ""),
-            "router_function": definition.get("tier")
-            or definition.get("router_function")
-            or "engineering",
+            "router_function": tier,
             "expertise": definition.get("expertise", "")
             or f"Your domain: {definition.get('domain') or _title(key)}.",
         }

@@ -1,0 +1,59 @@
+{
+ "source_demand": {
+  "": false,
+  "According to the standard, what is the limit?": true,
+  "Answer with sources.": true,
+  "Cite the datasheet for the maximum supply voltage.": true,
+  "Draft a retention schedule for patient records.": false,
+  "Explain what a datasheet is.": false,
+  "Give the absolute maximum rating from the datasheet.": true,
+  "I need the attribution for each claim.": true,
+  "Is the figure verifiable?": true,
+  "Per The Datasheet, what is the dropout voltage?": true,
+  "Please answer with a source for each figure.": true,
+  "Provide a bibliography.": true,
+  "Quote the clause that sets the limit.": true,
+  "Read the limit from the datasheets of both parts.": true,
+  "Size a 5 V rail for 2 A with 10% margin.": false,
+  "State the limit FROM THE DATASHEET.": true,
+  "The data sheet lists three limits; compare them.": false,
+  "What is 2 + 2?": false,
+  "What is the maximum supply voltage per the datasheet?": true,
+  "Which of these two designs is cheaper to build?": false,
+  "Write the summary with references.": true
+ },
+ "switches": {
+  "needs_calculation": {
+   "criteria": {
+    "false": "It asks what a rule, a standard, a datasheet or another published document states.",
+    "true": "It asks for a value that has to be computed, such as a sum, a chain of conversions, a sizing or a design figure."
+   },
+   "instructions": "Look only at state[\"q0\"]. Must the answer to this request be worked out by calculation from figures, and not read from a document?",
+   "type": "noul"
+  },
+  "needs_sources": {
+   "criteria": {
+    "false": "It can be worked out from what the request itself states and general principles.",
+    "true": "It turns on a figure or wording that a named or implied outside document holds."
+   },
+   "instructions": "Look only at state[\"q0\"]. Can this request be answered correctly only with facts from an outside source, such as a standard, a regulation, a datasheet or a published measurement?",
+   "type": "noul"
+  },
+  "quote_answers": {
+   "criteria": {
+    "false": "The passage is about the subject but does not state what is asked, or is about something else.",
+    "true": "The passage states the fact or figure the question asks for."
+   },
+   "instructions": "Look only at state[\"q0\"]. Does the passage itself state an answer to the question it was quoted for?",
+   "type": "noul"
+  },
+  "same_meaning": {
+   "criteria": {
+    "false": "They state a different fact, figure or verdict, or one contradicts the other.",
+    "true": "They state the same fact, figure or verdict, even in other words or with more detail."
+   },
+   "instructions": "Look only at state[\"q0\"]. Do the two values state the same thing for this ask?",
+   "type": "noul"
+  }
+ }
+}

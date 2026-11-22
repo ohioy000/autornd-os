@@ -52,6 +52,19 @@ REGISTERED = [
      "docs/traces/071-live-terminal-2.jsonl"),
     ("docs/preregistration-072-live-retest-new-pins.md",
      "docs/traces/072-live-retest-new-pins.jsonl"),
+    # 2026-11-22: the two paid steps of the per-profile pins and prompts work, each registered in a commit made alone
+    # before its first run (the first run of each is paired; the later runs came after it).
+    ("docs/preregistration-per-profile-pins-smoke.md",
+     "docs/traces/pin-smoke-legal-gen_contract_threshold.jsonl"),
+    ("docs/preregistration-prompt-sweep-per-profile.md",
+     "docs/traces/prompt-sweep-control.jsonl"),
+    # 2026-11-22: the triage-model run; its first probe call came 12 seconds after the registration commit.
+    ("docs/preregistration-triage-model-hy4-flash.md",
+     "docs/traces/triage-hy4-probe-on-1.jsonl"),
+    ("docs/preregistration-medical-examples-fix.md",
+     "docs/traces/medical-fix-Mx.jsonl"),
+    ("docs/preregistration-model-lineup-smoke.md",
+     "docs/traces/lineup-smoke-A.jsonl"),
 ]
 
 

@@ -69,6 +69,10 @@ class ProjectProfile:
     framing: dict[str, str] = field(default_factory=dict)
     base: str = ""
     role_order: list[str] = field(default_factory=list)
+    # The file this profile was read from, without its extension: the name PROFILE_MODELS and
+    # AUTORND_PROFILE use. `name` above is the display name (the docs directory follows it), so
+    # a pin cannot key on it. A profile built in code has no file, so it has no pins.
+    stem: str = ""
 
     def role_that_checks_work(self) -> str:
         """Who is added when risk is high enough that somebody must check."""
@@ -188,6 +192,7 @@ def _read(name: str) -> ProjectProfile:
         structural_roles=data.get("structural_roles", {}) or {},
         framing=data.get("framing", {}) or {},
         base=data.get("base", "") or "",
+        stem=name,
     )
 
 

@@ -50,7 +50,12 @@ REQUIRED_TIERS = ("triage", "engineering", "architecture",
 # The recompute tier joined on 2026-11-13: a 'recompute:' pin was refused
 # as "not a tier this harness runs" while the default workflow made three
 # recompute calls a run, on whichever provider the router chose.
-OPTIONAL_TIERS = ("ranker", "premium", "judge", "recompute", "decision")
+#
+# The reader tier joined on 2026-11-21, a day after it was added to the
+# harness (research.py runs it on every long page whenever MODEL_READER is
+# set): a 'reader:' pin was refused the same way, and its model's endpoint
+# was never looked at.
+OPTIONAL_TIERS = ("ranker", "premium", "judge", "recompute", "decision", "reader")
 
 # The parameters the harness sends, by call path. OpenRouter strips a pinned
 # endpoint that does not accept a parameter in the request: "Filter by
@@ -72,7 +77,7 @@ NON_PARAMETER_KEYS = frozenset({"model", "messages", "usage", "provider"})
 # independent pass calls "independent", not "premium" (phases.py).
 CALL_FUNCTIONS = ("triage", "engineering", "architecture", "escalation",
                   "research", "search", "judge", "independent", "ranker",
-                  "recompute", "decision")
+                  "recompute", "decision", "reader")
 
 
 # A7 (ARCH-20260930-100): temperature is sent on every chat but not required
@@ -93,7 +98,13 @@ def sent_parameters(function: str) -> tuple[str, ...]:
     """What a call on this function sends. Search is a plain chat (no JSON
     mode); the ranker uses the rerank API, which takes no chat parameters
     (its listwise fallback is best-effort and never fails a run)."""
-    if function == "search":
+    if function in ("search", "reader"):
+        # The reader's call is a plain chat too. It also sends `reasoning`
+        # ({"enabled": false}, research.py), which is NOT listed here: whether to
+        # refuse an endpoint that does not list it is a ruling the owner has not
+        # made, and nothing about the reader was checked before it entered
+        # preflight (docs/reviews/2026-11-21-per-profile-pins-and-tuned-prompts.md,
+        # questions recorded). tests/test_profile_pin_coverage.py names the gap.
         return CHAT_PARAMETERS
     if function in ("ranker", "decision"):
         # The decisions route takes a state and questions, no chat parameters.
@@ -142,7 +153,31 @@ def _general_pins() -> list[str]:
 # fail on.
 PIN_FUNCTIONS = ("triage", "engineering", "architecture", "escalation",
                  "research", "search", "judge", "independent", "ranker",
-                 "recompute", "decision")
+                 "recompute", "decision", "reader")
+
+
+def _function_of(label: str) -> str:
+    """The function a target is for. A profile pin's target is labelled
+    'profile:function' (check_profile_pins); a plain target is the function."""
+    return label.rpartition(":")[2]
+
+
+def _targets_under(stem: str) -> dict[str, tuple[str, list[str]]]:
+    """_call_targets() as the profile with this file stem would resolve it.
+
+    The active profile is swapped for the duration and put back, so the answer is
+    the client's own resolution (pins, the engineering fallback, the independent
+    model derived from the effective models) and not a second copy of it. A stem
+    with no pins, '' included, gives the global resolution every profile reads.
+    """
+    from autornd.profiles import ProjectProfile, get_profile, set_profile
+
+    previous = get_profile()
+    set_profile(ProjectProfile(stem=stem))
+    try:
+        return _call_targets()
+    finally:
+        set_profile(previous)
 
 
 def _pin_target(name: str, models: dict[str, str]) -> tuple[str | None, str]:
@@ -176,6 +211,12 @@ def _pin_target(name: str, models: dict[str, str]) -> tuple[str | None, str]:
         if models.get("decision"):
             return models["decision"], ""
         return None, "MODEL_DECISION is unset, so no decision call is made"
+    if name == "reader":
+        # No fallback: research.py reads long pages with the reader only when
+        # the tier has a model, so an unset tier makes no call.
+        if models.get("reader"):
+            return models["reader"], ""
+        return None, "MODEL_READER is unset, so no reader call is made"
     if name == "premium":
         return None, ("the independent pass calls function 'independent'; "
                       "write the pin as independent:<provider>")
@@ -254,6 +295,21 @@ def _base_provider(pin: str) -> str:
             .replace(" ", ""))
 
 
+def _serves(endpoints: dict[str, set[str]], model: str, provider: str) -> bool | None:
+    """Whether `provider` serves `model`, from the provider names read for it.
+
+    Endpoints are keyed by exact id; a suffixed id resolves to the same serving
+    list as its base, so fall back to the base before reporting unresolvable.
+    None: the endpoints could not be read.
+    """
+    serving = endpoints.get(model)
+    if serving is None:
+        serving = endpoints.get(_base_model(model))
+    if serving is None:
+        return None
+    return _base_provider(provider) in {_base_provider(s) for s in serving}
+
+
 def check(models: dict[str, str], pins: dict[str, str],
           known: set[str], endpoints: dict[str, set[str]],
           general: list[str] | tuple[str, ...] = ()) -> list[Finding]:
@@ -270,15 +326,7 @@ def check(models: dict[str, str], pins: dict[str, str],
         else:
             out.append(Finding(True, f"model_{tier}", model))
     def serves(model: str, provider: str) -> bool | None:
-        # Endpoints are keyed by exact id; a suffixed id resolves to the
-        # same serving list as its base, so fall back to the base before
-        # reporting unresolvable. None: the endpoints could not be read.
-        serving = endpoints.get(model)
-        if serving is None:
-            serving = endpoints.get(_base_model(model))
-        if serving is None:
-            return None
-        return _base_provider(provider) in {_base_provider(s) for s in serving}
+        return _serves(endpoints, model, provider)
 
     for name, provider in pins.items():
         subject = f"pin {name}"
@@ -344,17 +392,23 @@ def _call_targets() -> dict[str, tuple[str, list[str]]]:
     The model comes from the client's own lookup (so an unset judge tier
     resolves to the engineering model, as the judging nodes do), and the
     order from provider_order_for, which reads tier-scoped AND general pins.
-    A function the harness cannot reach is left out: the ranker with no
-    ranker model, the independent pass with no independent model.
+    A function the harness cannot reach is left out: the ranker and the reader
+    with no model, the independent pass with no independent model.
+
+    Resolved for the ACTIVE profile, so its own PROFILE_MODELS pins count; see
+    _targets_under for a profile that is not the active one.
     """
     from autornd.config import settings
     from autornd.routing.openrouter import OpenRouterClient, provider_order_for
+    from autornd.routing.pins import tier_model
 
     client = OpenRouterClient(api_key="preflight")
     targets: dict[str, tuple[str, list[str]]] = {}
     for function in CALL_FUNCTIONS:
         if function == "ranker":
-            model = settings.model_ranker or ""
+            model = tier_model("ranker", settings.model_ranker) or ""
+        elif function == "reader":
+            model = tier_model("reader", settings.model_reader) or ""
         elif function == "independent":
             model = client.independent_model() or ""
         elif function == "recompute":
@@ -366,6 +420,49 @@ def _call_targets() -> dict[str, tuple[str, list[str]]]:
         if model:
             targets[function] = (model, provider_order_for(function))
     return targets
+
+
+def check_profile_pins(pins: dict, stems: list[str] | tuple[str, ...],
+                       known: set[str],
+                       endpoints: dict[str, set[str]]) -> list[Finding]:
+    """Pure: is every PROFILE_MODELS pin read by a profile, real, and served?
+
+    One finding per pin. A pin whose profile has no file is read by nothing,
+    so a typo in the profile's name would run that profile on the global model
+    without a word: it fails, naming the profiles that exist. A pin without a
+    provider is reported, not failed: the router decides who serves it, and no
+    provider order is applied to it (autornd/routing/pins.py).
+    """
+    known_base = {_base_model(m) for m in known}
+    out: list[Finding] = []
+    for stem, tiers in pins.items():
+        for tier, pin in tiers.items():
+            subject = f"pin {stem}:{tier}"
+            if stem not in stems:
+                out.append(Finding(False, subject, (
+                    f"no profile file '{stem}.yaml' (the profiles are "
+                    f"{', '.join(stems)}): nothing reads this pin, so '{stem}' "
+                    f"would run on the global model")))
+            elif _base_model(pin.model) not in known_base and pin.model not in endpoints:
+                out.append(Finding(False, subject,
+                                   f"{pin.model} is not in the provider catalogue"))
+            elif not pin.provider:
+                out.append(Finding(True, subject, (
+                    f"{pin.model}; no provider named, so the router decides and "
+                    f"OPENROUTER_PROVIDER_ORDER is not applied to it")))
+            else:
+                served = _serves(endpoints, pin.model, pin.provider)
+                if served is None:
+                    out.append(Finding(False, subject,
+                                       f"cannot resolve endpoints for {pin.model}"))
+                elif not served:
+                    out.append(Finding(False, subject, (
+                        f"{pin.provider} does not serve {pin.model} — with "
+                        f"fallbacks disabled this is a 404")))
+                else:
+                    out.append(Finding(True, subject,
+                                       f"{pin.provider} serves {pin.model}"))
+    return out
 
 
 def _select(listing: list[dict], pin: str) -> list[dict] | None:
@@ -413,9 +510,9 @@ def check_temperature(targets: dict[str, tuple[str, list[str]]],
     """Pure, A7: one informational finding per (function, pinned provider)
     whose call sends temperature. Kept apart from check_parameters, whose
     findings decide the gate."""
-    return [_temperature_finding(function, provider, model, listings)
-            for function, (model, order) in targets.items()
-            if INFORMATIONAL_PARAMETERS & set(sent_parameters(function))
+    return [_temperature_finding(label, provider, model, listings)
+            for label, (model, order) in targets.items()
+            if INFORMATIONAL_PARAMETERS & set(sent_parameters(_function_of(label)))
             for provider in order]
 
 
@@ -429,15 +526,16 @@ def check_parameters(targets: dict[str, tuple[str, list[str]]],
     must never be reported as no problem (convention 28).
     """
     out: list[Finding] = []
-    for function, (model, order) in targets.items():
+    for label, (model, order) in targets.items():
+        function = _function_of(label)
         sent = required_parameters(function)
         if not order:
-            out.append(Finding(True, f"params {function}",
+            out.append(Finding(True, f"params {label}",
                                "unpinned — parameter support depends on the "
                                "router's choice"))
             continue
         for provider in order:
-            subject = f"params {function} via {provider}"
+            subject = f"params {label} via {provider}"
             if not sent:
                 out.append(Finding(True, subject,
                                    "rerank API — sends no chat parameters"))
@@ -484,8 +582,21 @@ def check_parameters(targets: dict[str, tuple[str, list[str]]],
 
 
 async def run() -> list[Finding]:
+    from autornd.profiles import list_profiles
+    from autornd.routing.pins import pins_by_profile
+
     models, pins, general = _configured(), _pins(), _general_pins()
-    targets = _call_targets()
+    # What every profile reads for a tier it has not pinned, then, for each
+    # profile that has pins, only the calls its pins change (labelled
+    # 'profile:function'). The run is checked whichever profile is active.
+    profile_pins = pins_by_profile()
+    targets = _targets_under("")
+    baseline = dict(targets)
+    for stem in profile_pins:
+        for function, target in _targets_under(stem).items():
+            if target != baseline.get(function):
+                targets[f"{stem}:{function}"] = target
+    pin_models = {pin.model for tiers in profile_pins.values() for pin in tiers.values()}
     known = {m["id"] for m in (await _fetch("/models")).get("data", [])}
     endpoints: dict[str, set[str]] = {}
     listings: dict[str, list[dict]] = {}
@@ -494,7 +605,7 @@ async def run() -> list[Finding]:
     named = list(pins) + (list(PIN_FUNCTIONS) if general else [])
     pinned_models = {_pin_target(n, models)[0] for n in named} - {None, ""}
     targeted = {model for model, order in targets.values() if order}
-    for model in pinned_models | targeted:
+    for model in pinned_models | targeted | pin_models:
         # Ask the endpoints route for every pinned model, INCLUDING ones absent
         # from /models. Measured 2026-09-22: `qwen/qwen3-reranker-8b` is not in
         # /models at all — that route lists chat models, and a reranker is not
@@ -508,12 +619,13 @@ async def run() -> list[Finding]:
         except Exception:
             continue                      # left unresolved, and reported as such
         listings[model] = list(data.get("endpoints", []))
-        if model in pinned_models:
+        if model in pinned_models or model in pin_models:
             names: set[str] = set()
             for e in listings[model]:
                 names |= _provider_names(e)
             endpoints[model] = names
     return (check(models, pins, known, endpoints, general)
+            + check_profile_pins(profile_pins, list_profiles(), known, endpoints)
             + check_parameters(targets, listings)
             + check_temperature(targets, listings))
 

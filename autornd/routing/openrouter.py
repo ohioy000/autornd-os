@@ -12,7 +12,8 @@ from typing import Any
 import httpx
 from pydantic import ValidationError
 
-from autornd.config import settings
+from autornd.config import PINNABLE_TIERS, settings
+from autornd.routing.pins import active_pin, pinned_order, pins_by_profile, tier_model
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +128,29 @@ def provider_order_for(function: str) -> list[str]:
 
     A tier named with an empty value is explicitly unpinned, which is how one
     tier opts out of a global default.
+
+    A profile's own pin for the tier (PROFILE_MODELS, autornd/routing/pins.py)
+    carries its own serving and is read first: `@vendor` gives [vendor], a pin
+    with no provider gives [] and the router decides. The global order above
+    was written for the global model, and a provider that does not host the
+    pinned one answers 404 under hard pins, so it is not applied. The
+    independent call follows the tier that supplies its model (premium when
+    that has a model for the profile, else architecture), and so does a tier
+    that has no model of its own, whose calls run on the engineering model
+    (get_model): they take that model's serving with it. A name that is no
+    tier (an arm that names its own serving) is left to the order above. With
+    no pin set nothing here changes.
     """
+    source = function.lower()
+    if source == "independent":
+        source = "premium" if tier_model("premium", settings.model_premium) else "architecture"
+    elif (source in PINNABLE_TIERS and source not in OpenRouterClient.FUNCTION_MODELS
+          and active_pin(source) is None):
+        source = "engineering"
+    pinned = pinned_order(source)
+    if pinned is not None:
+        return pinned
+
     raw = (settings.openrouter_provider_order or "").strip()
     if not raw:
         return []
@@ -446,6 +469,11 @@ class OpenRouterClient:
         # different risk classification on four sectors. Without this recorded,
         # that looks like a code regression.
         self.providers_by_function: dict[str, set[str]] = {}
+        # The model each reply names, per function. A profile's pin changes which model answers a call, and the
+        # provider cannot say it did: the model the owner pins and the sibling the global tier runs can both be
+        # one provider's, so only the model the reply names shows which one was served. Kept only when the reply
+        # names one; a reply that omits it records nothing rather than the id that was asked for.
+        self.models_by_function: dict[str, set[str]] = {}
         # Optional budgets, used by experiments. Left unset in production: an
         # abort half-way through a real workflow throws away the work done so
         # far, whereas an experiment that runs away is a thing that has already
@@ -512,7 +540,8 @@ class OpenRouterClient:
     def _account(self, function: str, cost: float,
                  provider: str | None = None,
                  prompt_tokens: int = 0, completion_tokens: int = 0,
-                 reservation: _Reservation | None = None) -> None:
+                 reservation: _Reservation | None = None,
+                 model: str | None = None) -> None:
         """Record one billable request. Called for every request, no exceptions.
 
         Budgets are enforced here rather than by the caller, so a ceiling covers
@@ -528,6 +557,8 @@ class OpenRouterClient:
         self.calls_by_function[function] = self.calls_by_function.get(function, 0) + 1
         if provider:
             self.providers_by_function.setdefault(function, set()).add(provider)
+        if model:
+            self.models_by_function.setdefault(function, set()).add(model)
         if cost:
             self.spend += cost
             self.spend_by_function[function] = (
@@ -669,6 +700,7 @@ class OpenRouterClient:
         self.spend_by_function = {}
         self.calls_by_function = {}
         self.providers_by_function = {}
+        self.models_by_function = {}
         self.rejections_by_function = {}
         self.rejections_by_provider = {}
         self.retries_by_kind = {}
@@ -848,9 +880,17 @@ class OpenRouterClient:
         return self._client
 
     def get_model(self, function: str) -> str:
+        # The active profile's own pin for the tier is read first (PROFILE_MODELS,
+        # autornd/routing/pins.py), and a tier nothing sets falls back to the
+        # engineering model that profile reads, its pin included. With no pin set
+        # every line below is the expression it was before pins existed.
+        engineering = tier_model("engineering", settings.model_engineering)
         if function == "independent":
-            return self.independent_model() or settings.model_engineering
-        return self.FUNCTION_MODELS.get(function, settings.model_engineering)
+            return self.independent_model() or engineering
+        pin = active_pin(function)
+        if pin:
+            return pin.model
+        return self.FUNCTION_MODELS.get(function, engineering)
 
     def independent_model(self) -> str | None:
         """A model for the independent pass, or None if there isn't an honest one.
@@ -865,8 +905,12 @@ class OpenRouterClient:
         the lookup then falls back to engineering, so the "independent" check
         would quietly have been the same model all along.
         """
-        candidate = settings.model_premium or settings.model_architecture
-        if not candidate or candidate == settings.model_engineering:
+        # Derived from the models the active profile reads, pins included: a
+        # profile that pins its engineering model to the architecture model has
+        # no honest second opinion, and one that pins a premium model has one.
+        candidate = (tier_model("premium", settings.model_premium)
+                     or tier_model("architecture", settings.model_architecture))
+        if not candidate or candidate == tier_model("engineering", settings.model_engineering):
             return None
         return candidate
 
@@ -879,16 +923,19 @@ class OpenRouterClient:
         tier would not be blind to nothing in particular, but it would
         silently run on the model that produced the answer, which is
         not what the vote measures.
+
+        A pin on this tier for the active profile turns it on for that profile.
         """
-        return self.FUNCTION_MODELS.get("recompute")
+        return tier_model("recompute", self.FUNCTION_MODELS.get("recompute"))
 
     def decision_model(self) -> str | None:
         """The decision tier's model, or None when it is not configured.
 
         No fallback, as the recompute tier has none: a chat model cannot
-        answer the decisions route, so an unset tier is a skip.
+        answer the decisions route, so an unset tier is a skip. A pin on this
+        tier for the active profile turns it on for that profile.
         """
-        return self.FUNCTION_MODELS.get("decision")
+        return tier_model("decision", self.FUNCTION_MODELS.get("decision"))
 
     def decisions_url(self) -> str:
         """Where a decisions request is posted.
@@ -1159,10 +1206,12 @@ class OpenRouterClient:
             reconciled = True
             reservation = reservation_holder[0]
             self._release(reservation)
+            replied = data.get("model")
             self._account(function, cost, provider,
                           prompt_tokens=prompt_tokens,
                           completion_tokens=completion_tokens,
-                          reservation=reservation)
+                          reservation=reservation,
+                          model=replied if isinstance(replied, str) else None)
         except BaseException as exc:
             # A BudgetExceeded here is the transient-TLS retry's
             # re-check refusing an attempt that was never dispatched
@@ -1564,6 +1613,13 @@ async def check_models() -> dict[str, dict]:
     ):
         if model_id:
             configured[tier] = model_id
+    # PROFILE_MODELS: every profile's pin is confirmed and rated here with the rest, under
+    # the label 'profile:tier', not only the active profile's. A profile can be switched to
+    # at run time, and a pinned model the catalogue cannot rate would run it with the spend
+    # guard blind; a pin the catalogue does not list shows in health as unverified.
+    for stem, pinned in pins_by_profile().items():
+        for tier, pin in pinned.items():
+            configured[f"{stem}:{tier}"] = pin.model
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:

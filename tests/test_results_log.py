@@ -22,6 +22,8 @@ from __future__ import annotations
 
 import json
 
+from unittest.mock import AsyncMock
+
 import pytest
 
 from autornd.evals.runner import ResultsLog, default_results_path, run_repeated
@@ -122,6 +124,26 @@ class TestARecordCarriesEnoughToDiagnoseWith:
         assert unit["cost_by_tier"] and unit["calls_by_tier"]
         assert unit["status"] == "completed"
         assert isinstance(unit["assertions"], list)
+
+    async def test_it_keeps_the_model_each_reply_named(self, tmp_path):
+        """What a profile's pin changes, and the provider alone cannot show."""
+        def make_client():
+            client = billing_client(scripted("high"), per_call=0.001)
+            inner = client.chat_json.side_effect
+
+            async def naming(function, system_prompt, user_message, **kw):
+                client.models_by_function.setdefault(function, set()).add(f"vendor/{function}-model")
+                return await inner(function, system_prompt, user_message, **kw)
+
+            client.chat_json = AsyncMock(side_effect=naming)
+            return client
+
+        log = ResultsLog(tmp_path / "r.jsonl")
+        await run_repeated([parse({"id": "s", "request": "Add retry"})], load(TRIAGE_CLASSIFY), make_client,
+                           SETTINGS, repeat=1, results_log=log)
+        log.close()
+        unit = [r for r in read(tmp_path / "r.jsonl") if r["record"] == "unit"][0]
+        assert unit["models_by_function"] == {"triage": ["vendor/triage-model"]}
 
     async def test_verdicts_survive_the_json_round_trip(self, tmp_path):
         """Pydantic models are dumped in JSON mode, so a result file can be read

@@ -6,6 +6,57 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Added (2026-11-21, the owner's instruction): a profile can name its own model for a tier. `PROFILE_MODELS`
+(empty by default) reads `<profile>:<tier>=<model-id>[@<provider>]`, comma separated; a pin changes that tier for
+that profile and no other, does not carry through `base:`, and brings its own serving. Every place that reads a
+tier reads the pin first, the start-up check confirms and rates every profile's pin, preflight checks each pin
+(and learned the reader tier it was missing), the eval run's header records the effective model map, the
+profile and the pins, and a unit's record now names the model each reply came from beside its provider
+(`models_by_function`). With the setting empty nothing changes: every accessor equals the old expression across
+all ten profile files. The README has a new section, Choosing Models.
+
+Added (2026-11-21, the owner's instruction): four field profiles, `legal`, `finance`, `medical` and `science`,
+each a standalone team with three subjects, five roles, its own examples and a constraint that its output is a
+draft for a qualified person to review and is not advice. None names a model.
+
+Changed (2026-11-21, the owner's instruction): the prompts are written in the profile's words where they were
+written in engineering's. The triage risk guide's worked examples, the sentence that defines a hazard, the
+decision switches' questions, the phrases that mean a request asks for its sources and the escalation prompt's
+names and labels are now profile words (29 framing keys became 35). Engineering and the profiles built on it
+send exactly what they sent: every prompt site, captured under all of them, is byte-identical to the build
+before. `general` is now the universal profile, with examples from several fields where it taught with
+physical-engineering ones, so a checkout that ran with no profile set now sends different examples; set
+`AUTORND_PROFILE=engineering` for engineering R&D. `studio` and the four field profiles teach with their own.
+The risk guide's rules are the same text under every profile.
+
+Measured (2026-11-21, '$0.2251' of the owner's '$1.00'): the triage risk guide under each profile on the wide suite,
+36 sectors at five repeats, against main's text. By the rules written beforehand, `studio` and `science` held; the
+tuned text of `legal`, `finance` and `medical` did not (10, 24 and 18 of 180 units read a sector below its risk
+floor, against none for the control, with a margin of 3), because their examples hold no physical-hazard case and
+the profile then read such requests low; and `general` met the risk bounds on 169 units against 174 (2 past the
+margin, all of them over-calls, none below a floor). Those four texts are held for the owner's ruling and are not
+claimed to hold. Engineering is unaffected. See `docs/reviews/2026-11-21-per-profile-pins-and-tuned-prompts.md`.
+
+Measured (2026-11-22, '$0.9275' in all with the repeat and the effort test below, the owner's instruction): the same suite and the same held texts with a different
+triage model, its thinking off and on. With its thinking off that model under-called more than the first (41, 51 and 15
+units below a floor for finance, medical and legal, and 6 for the old guide); with its default thinking the old guide held
+(0), and the finance and legal texts read within the margin of it (1 and 1) while medical still read dentistry below its
+floor (6 units, in an arm cut at its spend cap); `general` held in both. Default thinking cost two to three times the first
+model per run and took about 19 seconds a call. A repeat of the old guide, finance and legal with default thinking ('$0.2454',
+three complete arms) held again (the old guide 1 unit below a floor and 171 meeting the bounds, finance 1, legal 0), so by the rule
+written beforehand the finance and legal texts are supported on that model with its default thinking. The first model was then read at high reasoning effort
+('$0.2567', three arms, 11 units lost to the provider's rate limit): finance 9 units below a floor and legal 8 (24 and 10 at its
+default effort), so more thinking alone did not bring the texts within the margin and the second model reads them better at the
+same amount of thinking. The medical examples were then fixed after the dentistry readings were read (a material or device chosen for a
+procedure on a patient is now a high example) and read in one arm with default thinking ('$0.1176', 180 units, no errors): 2 units below a
+floor, 173 meeting the bounds, dentistry read `high` on 5 of 5 repeats, so by the rule written beforehand the medical text is supported on
+that model at one run (the dentistry result is not independent, the fix having been written after its readings). Nothing ships on it. A model line-up
+smoke (a '$1.00' ceiling, five runs, '$0.1183' spent) then ran each tier and model combination once: the global answer model, a newly listed
+large model on the engineering profile, another on finance and on medical, the legal model, each served by its one provider with typed output intact
+and its answer cost equal to the catalogue figure; the spend guard could not bound two of the five answer models (the global one for time-of-day
+price overrides, the newly listed large one for a cache-write rate above its prompt rate), which is the subject of a separate change. See
+`docs/reviews/2026-11-22-model-lineup-smoke.md` and `docs/reviews/2026-11-22-triage-model-hy4-flash.md`.
+
 Changed (2026-11-22, the owner's sign-off): the second hold-out set, `evals/professional/holdout2-questions.json` (`professional-holdout-2`), is signed and frozen with 174 questions, down from the 181 of the draft: the owner signed the keys (D44) and ruled that the questions a Haiku reading found really defective be dropped. Haiku (a different model family from the two that wrote and checked them) read all 181 once, groups 1 to 9 on 2026-11-21 ('$2.3669', 125 questions, the catalogue's price for it was five times too low and the run stopped at the budget) and groups 10 to 13 on 2026-11-22, with the checkers now told the date ('$1.663', 56 questions): 134 OK and 47 FIX. About a dozen of the FIX verdicts were the date premise the checkers had taken for the future, and many others were wording nits or notes that call the answer correct; seven were real and were dropped, `Y10` (a confusion note mislabels a date), `Y55` (it names ECMA-404 passages that were not supplied), `Y87` (omits that the rule applies only to installations after 13 August 2007), `Y93` (puts a frequency-window passage under the Quebec variance), `Y96` (calls a use requirement a scope sentence), `Y97` (a trap that says no numeric limit is stated, where the same section gives a table in dBuV) and `Y107` (says each container where the paragraph covers containers of 2 lb or less for motor-vehicle air conditioning). With `Y48`, held back by the script, 8 ids are withheld and each says why in the file's `withheld`. The runner accepts the set now (its status no longer says Draft) and still refuses a draft. `tests/test_holdout2_draft.py` became `tests/test_holdout2_set.py` (7 tests: the file's sha256 is the signed one, the ids, the withheld reasons, the status, the registration and the runner's draft refusal; each of 5 guarded lines proven by breaking it, 5 of 5 fail their test, files restored). Authoring and checks cost '$8.1881' in all of the '$8.6' the owner approved ('$6.6', then about '$2' more). No harness test was run, at the owner's word to hold it. Counts re-derived: 2,338 tests in 101 files.
 
 Changed (2026-11-22, the owner's ruling that the checkers be told the date): the checker calls of `evals/professional/write_holdout.py` now say "TODAY is <the run's date>. The pages below were fetched today or in the days just before it." after the first paragraph of the tail added to Prompt B; nothing else about Prompt B or what the checkers check changes, and the author's prompt is untouched. The author was told the date (Prompt A's `{DATE}`) and wrote "as in force on 2026-11-21"; the checkers were not, took it for a date in the future, and held questions back for it: about a dozen of the 33 FIX verdicts of the Haiku reading of groups 1 to 9 on 2026-11-21, and the Flash readings' "as in force on a future date". 2 new tests; each of 3 guarded lines proven by breaking it (3 of 3 fail their test, files restored). Counts re-derived: 2,336 tests in 101 files.
