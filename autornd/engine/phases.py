@@ -1495,9 +1495,12 @@ Original request:
     return verdict, response
 
 
+# The words in braces are the profile's (escalation_* in profiles/*.yaml) and {n} is the count of failed attempts;
+# escalation_system_prompt() fills them. Engineering's words are the ones this prompt was written with. What the
+# prompt asks for, and when it may ask for a person, are the same under every profile.
 ESCALATION_SYSTEM_PROMPT = """\
-You are the Principal Systems Architect for AutoRnD.
-The Implementation agent has failed {n} consecutive validation attempts.
+You are {escalation_persona}.
+The {escalation_worker} agent has failed {n} consecutive validation attempts.
 Your objective is to perform a root-cause autopsy and generate a resolution directive.
 You must not produce the implementation yourself. You direct the implementing agent.
 Direct, do not produce: the directive names what the implementer must do, never
@@ -1508,15 +1511,24 @@ Before you direct anything, rule on each open dissent in the failure log: does i
 
 You MUST respond with a JSON object containing exactly these fields:
 {{
-  "root_cause_analysis": "The fundamental logic or architectural flaw causing the consecutive failures. Conclusion only, no reasoning steps.",
-  "architectural_correction": "Corrected logic or missing dependencies if the original plan was flawed. null if plan was sound.",
-  "resolution_directive": "Specific, step-by-step instructions for the Implementation model to succeed on its next attempt.",
+  "root_cause_analysis": "The fundamental {escalation_flaw} causing the consecutive failures. Conclusion only, no reasoning steps.",
+  "architectural_correction": "Corrected {escalation_correction} if the original plan was flawed. null if plan was sound.",
+  "resolution_directive": "Specific, step-by-step instructions for the {escalation_worker} model to succeed on its next attempt.",
   "requires_human": false,
   "rulings": [{{"dissent": <number>, "upheld": true, "reason": "<one line>"}}]
 }}
 Set requires_human to true ONLY if the fix requires access, credentials or a
 real-world action that no amount of further specification can supply, or falls
-entirely outside the scope of the current architecture."""
+entirely outside the scope of {escalation_scope}."""
+
+
+def escalation_system_prompt(n: int) -> str:
+    """The escalation prompt in the active profile's words, read per call so a profile switched at run time is
+    honoured. Only escalation_* words are filled; the template's literal braces are the JSON example's."""
+    from autornd.profiles import framing
+
+    words = {key: value for key, value in framing().items() if key.startswith("escalation_")}
+    return ESCALATION_SYSTEM_PROMPT.format(n=n, **words)
 
 
 async def run_escalation_autopsy(
@@ -1528,11 +1540,13 @@ async def run_escalation_autopsy(
     context: str = "",
     asks: list[Any] | None = None,
 ) -> tuple[EscalationVerdict, ModelResponse]:
-    system_prompt = ESCALATION_SYSTEM_PROMPT.format(n=len(failure_log))
+    from autornd.profiles import framing
+
+    system_prompt = escalation_system_prompt(len(failure_log))
     context_block = f"\n\nProject context:\n{context}" if context else ""
     system_prompt += f"""
 
-Architect's Plan:
+{framing()['escalation_plan_heading']}
 {plan.plan}
 
 Triage Classification:

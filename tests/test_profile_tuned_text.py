@@ -1,14 +1,15 @@
 """A profile that is not engineering teaches with its own examples, and none of engineering's.
 
-The triage risk guide, the hazard sentence and the decision switches' questions are written in the profile's words
-(tests/test_profile_prompt_words.py shows each word is read where the text used to be). This file guards what those
-words say. Engineering keeps the physical-engineering examples the guide was calibrated on; every other profile
+The triage risk guide, the hazard sentence, the decision switches' questions and the escalation prompt are written in
+the profile's words (tests/test_profile_prompt_words.py and tests/test_profile_escalation_words.py show each word is
+read where the text used to be). This file guards what those words say. Engineering keeps the physical-engineering examples the guide was calibrated on; every other profile
 teaches with the examples of its own field, and the universal profile with examples from several. Three things hold
 for every profile that is not engineering:
 
  - what its models are sent is the text that was read and ruled on: a compact fixture per profile holds the rendered
-   risk guide, the hazard lines and the switch questions, and a change to a word is a change to a fixture;
- - none of engineering's examples reaches a model (the lexicon below is taken from engineering's own ten words, and
+   risk guide, the hazard lines, the switch questions and the escalation prompt, and a change to a word is a change
+   to a fixture;
+ - none of engineering's examples reaches a model (the lexicon below is taken from engineering's own words, and
    is shown to be found under engineering, so a scan that cannot match cannot pass);
  - the rules around the examples are untouched. The guide's rules live in the code and are the same for every
    profile, because the risk axis must not move with the profile; a passage carries the rule it is spliced into, and
@@ -42,7 +43,10 @@ HAZARD_SITES = ("domain_review", "validate", "review_collaborative", "review_adv
 LEXICON = ("lintel", "structural loading", "pressure vessel", "load path", "control surface", "wiring, installing",
            "actuating", "sensor", "aeration", "live stock", "tank of", "tolerance", "sizing", "datasheet",
            "chain of conversions", "design figure", "damage equipment", "selecting a component", "a part is cut",
-           "on a machine")
+           "on a machine",
+           # the escalation prompt's own words
+           "principal systems architect", "architectural flaw", "implementation agent", "implementation model",
+           "current architecture", "architect's plan", "missing dependencies")
 
 
 def _use(name: str) -> None:
@@ -51,7 +55,8 @@ def _use(name: str) -> None:
 
 
 async def _view(name: str, monkeypatch) -> dict:
-    """What a profile's models are taught with: the risk guide, the hazard lines, the switch questions."""
+    """What a profile's models are taught with: the risk guide, the hazard lines, the switch questions, and the
+    escalation prompt."""
     monkeypatch.setattr(settings, "model_research", "test-provider/test-research")
     monkeypatch.setattr(settings, "model_ranker", "test-provider/test-rank")
     reset_rerank_mode()
@@ -63,6 +68,7 @@ async def _view(name: str, monkeypatch) -> dict:
         "hazard": [line for site in HAZARD_SITES for line in captured[site]["user"].splitlines()
                    if "followed as written" in line],
         "switches": await switch_requests(),
+        "escalation": captured["escalation"]["system"],
     }
 
 

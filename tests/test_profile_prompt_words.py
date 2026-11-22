@@ -63,9 +63,10 @@ async def _capture(monkeypatch) -> dict[str, dict[str, str]]:
 
 
 class TestTheTenWordsEveryProfileResolves:
-    def test_general_declares_twenty_nine_words_and_the_ten_are_among_them(self):
+    def test_general_declares_thirty_five_words_and_the_ten_are_among_them(self):
+        """Nineteen team words, the ten here, and the six of the escalation prompt (test_profile_escalation_words.py)."""
         declared = set(_general().framing)
-        assert len(declared) == 29
+        assert len(declared) == 35
         assert set(TEN) <= declared
 
     def test_no_profile_declares_a_word_general_does_not(self):
@@ -194,10 +195,12 @@ class TestTheCitationPhrases:
 class TestTheEscalationFieldText:
     def test_requires_human_says_what_the_escalation_prompt_says(self):
         """No model reads this description (nothing sends a schema), but it is the field's documentation and
-        named manual hardware intervention, an engineering word, for every profile."""
-        from autornd.engine.phases import ESCALATION_SYSTEM_PROMPT
+        named manual hardware intervention, an engineering word, for every profile. It says what the prompt says
+        in engineering's words, the ones the prompt was written with."""
+        from autornd.engine.phases import escalation_system_prompt
 
-        prompt = " ".join(ESCALATION_SYSTEM_PROMPT.split())
+        _use("engineering")
+        prompt = " ".join(escalation_system_prompt(1).split())
         tail = re.search(r"Set requires_human to true ONLY if (.*)$", prompt).group(1)
         description = EscalationVerdict.model_fields["requires_human"].description
         assert description == f"True ONLY if {tail}"

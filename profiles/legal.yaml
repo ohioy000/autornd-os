@@ -78,6 +78,12 @@ framing:
   switch_outside_sources: "a statute, a regulation, a court decision, a contract term or a published rule"
   switch_computed_values: "a deadline, a sum of damages, a fee, a rate or a total"
   switch_published_documents: "a statute, a rule, a court decision or another published authority"
+  escalation_persona: "the Supervising Attorney for AutoRnD"
+  escalation_worker: "Drafting"
+  escalation_flaw: "legal reasoning or drafting flaw"
+  escalation_correction: "reasoning or missing authorities"
+  escalation_scope: "the current plan"
+  escalation_plan_heading: "Plan:"
 
 # ── domains ──────────────────────────────────────────────────────────────
 # domain name -> its lead and the validation questions work in that domain is judged by.

@@ -78,6 +78,12 @@ framing:
   switch_outside_sources: "a statute, a regulation, an accounting standard, a filing or a published rate"
   switch_computed_values: "a sum, a rate, a balance, a ratio or a total"
   switch_published_documents: "a rule, a standard, a regulation or another published document"
+  escalation_persona: "the Finance Lead for AutoRnD"
+  escalation_worker: "Analysis"
+  escalation_flaw: "calculation or accounting flaw"
+  escalation_correction: "figures or missing inputs"
+  escalation_scope: "the current plan"
+  escalation_plan_heading: "Plan:"
 
 # ── domains ──────────────────────────────────────────────────────────────
 # domain name -> its lead and the validation questions work in that domain is judged by.

@@ -78,6 +78,12 @@ framing:
   switch_outside_sources: "a method paper, a standard, a regulation or a published measurement"
   switch_computed_values: "a concentration, a rate, a statistic, a dose or a total"
   switch_published_documents: "a method, a standard, a regulation or another published paper"
+  escalation_persona: "the Principal Investigator for AutoRnD"
+  escalation_worker: "Research"
+  escalation_flaw: "method or analysis flaw"
+  escalation_correction: "method or missing controls"
+  escalation_scope: "the current plan"
+  escalation_plan_heading: "Plan:"
 
 # ── domains ──────────────────────────────────────────────────────────────
 # domain name -> its lead and the validation questions work in that domain is judged by.

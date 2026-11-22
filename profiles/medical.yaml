@@ -76,6 +76,12 @@ framing:
   switch_outside_sources: "a guideline, a regulation, a label, a trial report or a published measurement"
   switch_computed_values: "a dose, a rate, a score, a risk or a total"
   switch_published_documents: "a guideline, a label, a regulation or another published document"
+  escalation_persona: "the Medical Director for AutoRnD"
+  escalation_worker: "Clinical research"
+  escalation_flaw: "clinical reasoning or evidence flaw"
+  escalation_correction: "reasoning or missing evidence"
+  escalation_scope: "the current plan"
+  escalation_plan_heading: "Plan:"
 
 # ── domains ──────────────────────────────────────────────────────────────
 # domain name -> its lead and the validation questions work in that domain is judged by.

@@ -966,15 +966,15 @@ class EscalationRuling(BaseModel):
 class EscalationVerdict(BaseModel):
     root_cause_analysis: str = Field(
         ...,
-        description="The fundamental logic or architectural flaw causing the consecutive failures. Conclusion only, no reasoning steps.",
+        description="The fundamental flaw, in the logic or the plan, causing the consecutive failures. Conclusion only, no reasoning steps.",
     )
     architectural_correction: str | None = Field(
         None,
-        description="Corrected logic or missing dependencies if the original plan was flawed.",
+        description="Corrected logic, or the missing inputs, if the original plan was flawed.",
     )
     resolution_directive: str = Field(
         ...,
-        description="Specific, step-by-step instructions for the Implementation model to succeed on its next attempt.",
+        description="Specific, step-by-step instructions for the implementing agent to succeed on its next attempt.",
     )
     requires_human: bool = Field(
         ...,

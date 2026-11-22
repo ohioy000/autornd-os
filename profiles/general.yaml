@@ -64,6 +64,15 @@ framing:
   switch_computed_values: "a sum, a rate, a dose, a balance or a total"
   switch_published_documents: "a rule, a statute, a standard or another published document"
   source_request_terms: ""
+  # The escalation prompt's words (who writes the autopsy, who it directs, what it looks for and the
+  # plan it reads). Only names and labels: the rules of the prompt, including when it may ask for a
+  # person, stay in the code and are the same for every profile.
+  escalation_persona: "the Principal Reviewer for AutoRnD"
+  escalation_worker: "Lead"
+  escalation_flaw: "logic or planning flaw"
+  escalation_correction: "logic or missing inputs"
+  escalation_scope: "the current plan"
+  escalation_plan_heading: "Plan:"
 
 
 roles:

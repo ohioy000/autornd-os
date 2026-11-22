@@ -66,6 +66,12 @@ framing:
   switch_outside_sources: "a statute, a regulation, a style guide, a published study or a published figure"
   switch_computed_values: "a sum, a rate, a reading age, a word count or a total"
   switch_published_documents: "a rule, a style guide, a statute or another published document"
+  escalation_persona: "the Brand Strategist for AutoRnD"
+  escalation_worker: "Writing"
+  escalation_flaw: "logic or editorial flaw"
+  escalation_correction: "angle or missing sources"
+  escalation_scope: "the current plan"
+  escalation_plan_heading: "Plan:"
 
 # ── domains ──────────────────────────────────────────────────────────────
 # domain name -> lead specialist, or {lead, checks}.

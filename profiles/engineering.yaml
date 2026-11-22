@@ -54,6 +54,15 @@ framing:
   source_request_terms: |-
     from the datasheet
     per the datasheet
+  # The escalation prompt's own words: who writes the autopsy, who it directs, and the three
+  # phrases its schema text and rule carry. These are the words it was written with; every
+  # other profile names its own.
+  escalation_persona: "the Principal Systems Architect for AutoRnD"
+  escalation_worker: "Implementation"
+  escalation_flaw: "logic or architectural flaw"
+  escalation_correction: "logic or missing dependencies"
+  escalation_scope: "the current architecture"
+  escalation_plan_heading: "Architect's Plan:"
 
 
 domains:
