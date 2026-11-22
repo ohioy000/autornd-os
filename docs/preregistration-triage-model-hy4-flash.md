@@ -242,3 +242,55 @@ gave the sweeps ('$0.2251' on the first sweep, '$0.4233' on the study, '$0.3516'
 - **P14, n = 3.** Every arm completes under its cap, M1 holds, and the three together cost under '$0.30'.
 
 Everything else is unchanged, including the stop rules, which apply per lane.
+
+## Amendment 4 — the first model at a higher reasoning effort, before it runs (2026-11-22)
+
+**Why.** The repeat (Amendment 3) held, and the record says the model and how much it thinks are the only things that
+changed between the first sweep and the thinking-on arms (no prompt, profile, workflow or graph file differs; the
+baseline arms ran in the same unchanged worktree; the triage-classify workflow makes one triage call and no lookup, with a
+prompt of 809 to 896 tokens, so no document text and no PDF reader is in play). The thinking-off arms failed, so thinking
+carries the result; but the first model was only ever read at its default effort, so "this model" and "more thinking"
+are not separated. The owner chose to test it ("I like that idea").
+
+**The probe** (spent '$0.0021'; first attempt refused by the spend guard before any call, '$0.0000': this model's worst
+case for one triage call is '$0.0063' and I had set the unit cap to '$0.005'). Three units (`wide_appsec`,
+`wide_aquaculture`, `wide_hvac`), `general` profile, this branch, the owner's global triage model through Crusoe, the
+triage call sending `reasoning: {"effort": ...}` by a wrapper outside the repository. **Medium** (which is the model's
+default, 493 to 587 completion tokens as in the sweep): 2.1 to 2.6 seconds and '$0.00017' to '$0.00019' a call. **High**:
+1,621 to 2,289 completion tokens, 5.7 to 8.3 seconds, '$0.00045' to '$0.00062' a call; typed, no rejection, served by
+Crusoe, all three read `critical`. So an arm at high effort is about '$0.08' to '$0.11' and 20 to 25 minutes.
+
+**The owner's instruction (2026-11-22): three arms, the baseline, finance and legal, "about '$0.30'".**
+
+**The arms.** E0, Ef and El: the old guide under `general` (the clean control worktree), and the finance and legal
+texts of this branch, with the first model (the owner's global triage model, as in the first sweep), its provider as in
+the first sweep (`triage:crusoe/bf16`), and **reasoning effort `high`**, sent by the probe wrapper
+(`docs/probes/triage_effort_wrapper.py`, copied with the results). Suite, repeats and instrument as in the first
+sweep (36 sectors, `--repeat 5`, 180 units an arm), `--timeout 120`, three lanes at once. No other tier is called.
+
+**The money, stated before it is spent.** Per arm `--max-spend 0.01 --max-spend-sweep 0.12`: the ceiling of the three
+is '$0.36', expected about '$0.28'. Spent on all sweeps and studies so far: '$0.8959' ('$0.2251' + '$0.6687' +
+'$0.0021'). **This run takes the owner's total for the sweeps past the '$1.00' they gave them, by up to '$0.256'; the
+owner chose it in conversation with that figure in front of them (about '$0.20' more).** The new ceiling for all of it
+is '$1.2559'.
+
+**The rules.**
+- **E1**, each arm complete (180 units) with at most 2 errors; an arm cut by its cap is reported as cut, not re-run.
+- **E2**: E0 holds M2 as written above (at most 3 units below a floor and at least 171 meeting the bounds).
+- **E3**: Ef and El each have no more than E0's units below a floor plus 3.
+- **Reported, not scored:** the same texts side by side at default effort (first sweep: finance 24, legal 10, old guide 0)
+  and at high effort, and against the second model with thinking on (finance 1 and 1, legal 1 and 0), with cost and
+  seconds a unit.
+- **What a result means.** E3 holding for a text means the first model, given more reasoning, reads that text within the
+  margin: the lever is the reasoning and not the model, and a triage-effort setting is the thing to propose (it would
+  need a harness change and a ruling; none is made here). E3 failing means the second model is doing something the first
+  does not at that effort. Nothing is tuned to pass and no arm is re-run to pass.
+
+**Predictions, written after seeing the probe's tokens and not any arm's counts.**
+- **P15, n = 1.** E0 holds E2 (about four in five: it held at default effort with 0 and 174).
+- **P16, n = 1.** Ef holds E3, at about even odds: the second model's thinking-off arm spent about 60 tokens and failed, its
+  thinking-on arm spent about 2,800 and held, and the first model at high effort spends 1,600 to 2,300.
+- **P17, n = 1.** El holds E3, about three in five (its gap at default effort was 10).
+- **P18, n = 3.** Each arm completes under '$0.12'; the three cost under '$0.33'; each takes under 40 minutes.
+
+Everything else is unchanged, including the stop rules, which apply per lane.
