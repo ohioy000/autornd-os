@@ -1875,25 +1875,21 @@ class TestGThePreflight:
             "price the guard can bound" in refusal
             for refusal in report.refusals), report.refusals
         # An entry carrying a charge the bound cannot
-        # cover: a cache component priced above the
-        # prompt rate, which the token-only bound
-        # understates. The guard is blind for it
-        # (D49: an unknown price is not free). A
-        # per-request charge is not this case — the
-        # bound adds it once per call — and neither
-        # is a component priced at or below the rate
-        # its side is charged at: the repair the PR
-        # #152 review ordered made both bounded.
+        # read: a component it does not know. The guard
+        # is blind for it (D49: an unknown price is not
+        # free). A per-request charge is not this case,
+        # and since the owner's ruling of 2026-11-22
+        # neither is a component priced above the rate
+        # its side is charged at, nor a time-of-day
+        # override: all three are bounded at their highest.
         catalogue = _fixture_catalogue()
         for entry in catalogue:
             if entry["id"] == TEST_SERVINGS["C"][0]:
-                entry["pricing"]["input_cache_read"] = \
-                    f"{FIXTURE_PROMPT_RATE * 2}"
+                entry["pricing"]["fine_tuning"] = "0.01"
         report = runner.run_preflight(TEST_SERVINGS, catalogue)
         assert any(
             "arm C: the serving test/arm-c-1 has no catalogue "
             "price the guard can bound" in refusal
-            and "input_cache_read" in refusal
             for refusal in report.refusals), report.refusals
         # Arm E's tiers are covered by the same case: the
         # gate covers the standing pins.
@@ -2260,37 +2256,35 @@ class TestG2TheWorstCaseBound:
                   if row["tier"] == "triage"]
         assert not row.get("unknown")
 
-    def test_a_component_priced_above_its_side_stays_blind(self):
-        # A cache component priced above the prompt rate is
-        # a charge the bound understates: the guard says so,
-        # naming the component, rather than bounding it.
+    def test_a_component_priced_above_its_side_is_bounded_at_that_price(self):
+        # Owner's ruling 2026-11-22: a cache component priced
+        # above the prompt rate is a prompt token billed
+        # higher, so the worst case charges the prompt side at
+        # the highest of the two and the row is not unknown.
         catalogue = _fixture_catalogue()
         for entry in catalogue:
             if entry["id"] == TEST_SERVINGS["E"]["triage"]:
-                entry["pricing"]["input_cache_read"] = \
+                entry["pricing"]["input_cache_write"] = \
                     f"{FIXTURE_PROMPT_RATE * 10}"
         rows = runner.arm_e_worst_case(TEST_SERVINGS, catalogue)
         (row,) = [row for row in rows
                   if row["tier"] == "triage"]
-        assert row["unknown"]
-        assert "input_cache_read" in row["reason"]
-        # Break-proof (runner.py, _unboundable_reason):
-        #     if prompt is None or rate > prompt:
-        #         charges.append(key)
-        # -> if False:
-        #         charges.append(key)
-        # FAILED ...::test_a_component_priced_above_its_
-        # side_stays_blind (the row reported the
-        # serving boundable) and
-        # ...::test_the_two_instruments_apply_the_
-        # same_test - AssertionError:
-        # {'prompt': '1e-07', 'completion': '2e-07',
-        # 'input_cache_read': '1e-06'} assert False
-        # == True : a cache component priced ten times
-        # the prompt rate was reported as bounded, the
-        # two instruments disagreed on the same entry,
-        # and the worst case would have understated
-        # every cached-token charge the call can carry.
+        assert not row.get("unknown")
+        prompt_bytes = len(QUESTIONS[max(
+            QUESTIONS,
+            key=lambda qid: len(QUESTIONS[qid]["question"]))]["question"].encode("utf-8"))
+        expected = ((prompt_bytes + 512)
+                    * FIXTURE_PROMPT_RATE * 10
+                    + row["cap"] * FIXTURE_COMPLETION_RATE)
+        assert row["worst_case"] == pytest.approx(expected)
+        # Break-proof (autornd/routing/openrouter.py, _worst_case_rates):
+        #     elif key.startswith(_CACHE_COMPONENT_PREFIX):
+        #         side_prompt = max(side_prompt, rate)
+        # -> elif key.startswith(_CACHE_COMPONENT_PREFIX):
+        #         pass
+        # FAILED: the worst case was the fixture prompt rate, a tenth
+        # of what a cache write can be charged, so the bound
+        # understated every call that wrote the cache.
 
     def test_a_component_the_bound_does_not_know_stays_blind(
             self):

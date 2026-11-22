@@ -194,17 +194,20 @@ class TestCostEstimation:
         ]})
         assert orr._model_pricing["vendor/cacheable"] == (0.000001, 0.000004)
 
-    async def test_a_cache_component_above_the_prompt_rate_is_unrated(self):
-        """A cache component priced above the prompt rate is a
-        charge the bound understates: the model stays unrated."""
+    async def test_a_cache_component_above_the_prompt_rate_is_bounded_at_that_rate(self):
+        """Owner's ruling 2026-11-22 (any model, any tier): a cache component
+        priced above the prompt rate is a prompt token billed higher, so the
+        bound charges the prompt side at the highest of the two. The model is
+        rated, never blind, and the bound is never below what a call costs."""
         import autornd.routing.openrouter as orr
 
         await self._parse_catalogue({"data": [
             {"id": "vendor/expensive-cache",
              "pricing": {"prompt": "0.000001", "completion": "0.000004",
-                          "input_cache_read": "0.000002"}},
+                          "input_cache_read": "0.000002",
+                          "input_cache_write": "0.0000025"}},
         ]})
-        assert "vendor/expensive-cache" not in orr._model_pricing
+        assert orr._model_pricing["vendor/expensive-cache"] == (0.0000025, 0.000004)
 
     async def test_reasoning_at_or_below_the_completion_rate_is_bounded(self):
         """Reasoning tokens are part of the output the cap bounds,
@@ -221,7 +224,7 @@ class TestCostEstimation:
         ]})
         assert orr._model_pricing["vendor/reasoning"] == (0.000001, 0.000004)
 
-    async def test_reasoning_above_the_completion_rate_is_unrated(self):
+    async def test_reasoning_above_the_completion_rate_is_bounded_at_that_rate(self):
         import autornd.routing.openrouter as orr
 
         await self._parse_catalogue({"data": [
@@ -229,7 +232,59 @@ class TestCostEstimation:
              "pricing": {"prompt": "0.000001", "completion": "0.000004",
                           "internal_reasoning": "0.000005"}},
         ]})
-        assert "vendor/expensive-reasoning" not in orr._model_pricing
+        assert orr._model_pricing["vendor/expensive-reasoning"] == (0.000001, 0.000005)
+
+    async def test_a_time_of_day_override_is_bounded_at_its_highest_price(self):
+        """The owner's global answer model's catalogue entry carried an
+        `overrides` list (a price by day and UTC hour, up to twice the base
+        rate) and was blind for it on every call. The bound is the highest
+        price any layer can charge, and a layer inherits what it does not set."""
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/by-the-hour",
+             "pricing": {"prompt": "0.00000015", "completion": "0.0000006",
+                          "input_cache_read": "0.000000003",
+                          "overrides": [
+                              {"utc_days": ["monday"], "utc_start": 100, "utc_end": 400,
+                               "prompt": "0.0000003", "completion": "0.0000012",
+                               "input_cache_read": "0.000000006"},
+                              {"utc_days": ["saturday"], "prompt": "0.00000015"}]}},
+        ]})
+        assert orr._model_pricing["vendor/by-the-hour"] == (0.0000003, 0.0000012)
+
+    async def test_a_prompt_size_step_up_is_bounded_at_its_highest_price(self):
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/steps",
+             "pricing": {"prompt": "0.0000001", "completion": "0.0000005",
+                          "web_search": "0.01",
+                          "overrides": [{"min_prompt_tokens": 100000,
+                                         "prompt": "0.0000005", "completion": "0.0000025",
+                                         "web_search": "0.02"}]}},
+        ]})
+        assert orr._model_pricing["vendor/steps"] == (0.0000005, 0.0000025)
+        assert orr._model_per_request["vendor/steps"] == pytest.approx(0.02)
+
+    async def test_an_overrides_value_the_bound_cannot_read_leaves_the_model_blind(self):
+        """Bounding at the highest rate is for what can be read. An overrides
+        field that is not a list of mappings, or a layer with a price that does
+        not parse, is a charge the bound cannot see: unrated, and named."""
+        import autornd.routing.openrouter as orr
+
+        await self._parse_catalogue({"data": [
+            {"id": "vendor/odd-overrides",
+             "pricing": {"prompt": "0.000001", "completion": "0.000004",
+                          "overrides": "weekdays cost more"}},
+            {"id": "vendor/odd-layer",
+             "pricing": {"prompt": "0.000001", "completion": "0.000004",
+                          "overrides": [{"prompt": "a lot"}]}},
+        ]})
+        assert "vendor/odd-overrides" not in orr._model_pricing
+        assert "vendor/odd-layer" not in orr._model_pricing
+        assert orr._unreadable_charges({"prompt": "1", "completion": "1",
+                                        "overrides": "x"}) == ["overrides"]
 
     async def test_modality_components_do_not_unrate_a_text_only_call(self):
         """The harness's calls are text-only: the image and audio
