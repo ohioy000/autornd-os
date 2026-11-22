@@ -203,3 +203,42 @@ The thinking-on arms with 45 seconds are not run; a unit that passes 120 seconds
 
 Everything not mentioned here is unchanged, including the stop rules, which apply per lane. The wrapper of Amendment 1 is not
 used by these arms.
+
+## Amendment 3 — the repeat, before it runs (2026-11-22)
+
+**What was read** (`docs/reviews/2026-11-22-triage-model-hy4-flash.md`, committed). With thinking on the old text held M2 at
+its limit (0 units below a floor, 171 meeting the bounds), and the finance and legal texts held M3 (1 and 1 below a floor);
+the medical text failed (6 in the 140 units that ran, on dentistry and one marine repeat); the medical and legal arms were
+cut by my per-arm cap of '$0.10'. Every arm is one run of 180 units, and the baseline passed at its limit.
+
+**The owner's instruction (2026-11-22): "just 3 arms", the choice made in conversation from three offered: the baseline, finance and legal, thinking on.**
+These are the two texts that held and the baseline they are judged against. Medical is not repeated; it stays held, to be
+fixed by hand first. Thinking off is not repeated; it failed M2.
+
+**The arms.** R0, Rf and Rl: the old guide under `general` (clean worktree at main as of the earlier control), and the
+finance and legal texts of this branch, each with the model's default thinking (no wrapper), `--repeat 5 --timeout 120`,
+180 units, the same model, provider, process environment, suite and instrument as T0, Tf and Tl. Three lanes at once.
+
+**The money.** Per arm `--max-spend 0.01 --max-spend-sweep 0.115`, so no unit starts that cannot fit under '$0.115' and a
+complete arm (about '$0.08' for R0, '$0.075' for Rf, '$0.095' for Rl) is not cut. The ceiling of the three is '$0.345'.
+Expected about '$0.25'. This is new money beyond the study's '$0.50' (spent: '$0.4233'); it comes out of the '$1.00' the owner
+gave the sweeps ('$0.2251' on the first sweep, '$0.4233' on the study, '$0.3516' left) and leaves at least '$0.006' of it.
+**The study's new ceiling, probes, both settings and the repeat, is '$0.77'**, the owner's stated sweeps total less the first sweep. Nothing else is called.
+
+**The rules (as written above, applied to this run on its own and then to both runs).**
+- **M1**, at most 2 errors an arm and a complete arm (180 units); an arm cut by its cap is reported as cut.
+- **M2 for R0**: at most 3 units below a floor and at least 171 meeting the bounds.
+- **M3 for Rf and Rl**: units below a floor no more than R0's plus 3.
+- **Held on both runs.** A text is **supported on this model** only if it holds M3 in the first run (Tf, Tl) **and** in this
+  one, and the baseline holds M2 in both. Failing any of the four holds the text and the model for that profile; nothing is
+  tuned to pass and no arm is re-run to pass.
+- **Reported, not scored:** the two runs side by side per arm (units below a floor, units meeting the bounds, modal
+  movers), cost and seconds a unit.
+
+**Predictions.**
+- **P12, n = 1.** R0 holds M2. At even odds: T0 sat exactly on the limit (171) and the spread of identical arms was 2 to 3 units.
+- **P13, n = 2.** Rf and Rl each hold M3. About two in three each: both held with 1 unit below a floor, and the spread
+  of identical arms is about 3 units.
+- **P14, n = 3.** Every arm completes under its cap, M1 holds, and the three together cost under '$0.30'.
+
+Everything else is unchanged, including the stop rules, which apply per lane.
