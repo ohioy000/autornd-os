@@ -134,3 +134,21 @@ workflow, `--repeat 1`, the process-environment order):
 
 Everything else in L1, L3, L5 and L6 stands. The caps of B to E sum to '$0.94'; spent so far '$0.0058' of the '$1.00', so the
 ceiling for the whole smoke stays '$0.9458' by the caps and '$1.00' by the owner's word.
+
+## Amendment 3 — after run B, before any further spend (2026-11-22)
+
+**What run B read** (n = 1; '$0.0131', the smoke's total so far '$0.0189' of the '$1.00'). The engineering profile with the `qwen4-max`
+pin completed in 10 calls and 91 seconds and passed its assertions. Triage was served by `hy4-flash` through Tencent and the
+answer call by `qwen/qwen4-max` through Alibaba and by nothing else, with no schema rejection and no provider failure (L1, L2,
+L3 hold for B); the engineering tier cost '$0.0078' and triage '$0.0013'. **L4 is falsified for B at n = 1:** the record
+carries a blind entry for the pinned `qwen4-max`, so the sweep halted on the stop rule of Amendment 2. The guard's own test
+(`_prices_what_the_guard_cannot_bound`) calls its catalogue price unboundable because its cache-write rate ('$1.78' per
+million) is above its prompt rate ('$1.425'); the same test passes `gemini-4-hydrogen`, the legal model and `hy4-flash`, and
+fails the owner's global answer model (time-of-day overrides) and the recompute model.
+
+**The owner's word, asked in conversation: "Yes run C to E and keep deepseek for engineering but make sure any model can be
+used for any tier in future plug and play no issues."** So: C, D and E are run, in that order; the stop rule and every
+other rule stand; the engineering profile **keeps the global answer model** (no `engineering:engineering` pin is set in these
+runs, and the `qwen4-max` pin is not made; run B stands as the record of that seat). The change that lets any model run on
+any tier with the guard sighted is a separate change after this branch merges, with its own pre-registration; it is not part of
+this smoke. The caps of C, D and E are unchanged ('$0.33', '$0.33', '$0.10').
