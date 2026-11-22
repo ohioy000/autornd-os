@@ -105,3 +105,14 @@ reading; a comparison with another triage model; or the profiles' rosters. Every
 
 The seven results are scored in `docs/reviews/2026-11-21-per-profile-pins-and-tuned-prompts.md` with each rule applied as
 written above. If a rule holds a profile's text, the README says only what survived, and the owner is told first.
+
+## Amendment 1 — after the control arm, before any further spend (2026-11-21)
+
+The control arm ran to completion: 180 unit records, 0 errors, '$0.0315' (a mean of '$0.000175' a unit, so the seven arms
+are expected to cost about '$0.22'). The runner stopped after it on the stop rule "a non-zero exit", which was written
+without knowing what the eval CLI's exit code means: **it exits 0 only when every unit passed its assertions and 1 when any
+did not, and 3 for a refused preflight.** The control's units fail assertions as this sweep expects them to, 65 on
+`specialists_include` (the 13 sectors that name `test_engineer`, an engineering role, run under `general`, five repeats
+each; reported and not scored, as written above) and 6 on `risk_at_most`. **Clarification:** exit codes 0 and 1 are normal
+here; any other exit code stops the sweep. Every other stop rule, the caps, the arms, the rules that decide and the
+predictions are unchanged, and the control arm stands as it ran. The remaining six arms run in the order above.
