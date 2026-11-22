@@ -67,7 +67,10 @@ SET = os.environ.get("MEASURE_SET", "tier2")
 PROFESSIONAL_SETS = {"professional": "questions.json",
                      "professional-hard": "hard-questions.json",
                      "professional-misleading": "misleading-questions.json",
-                     "professional-holdout": "holdout-questions.json"}
+                     "professional-holdout": "holdout-questions.json",
+                     # Drafted 2026-11-21 by models through evals/professional/write_holdout.py; a draft
+                     # is refused below until the owner signs the keys (D44).
+                     "professional-holdout-2": "holdout2-questions.json"}
 WORKFLOWS = tuple(w for w in os.environ.get(
     "MEASURE_WORKFLOWS", "answer-and-recompute,verify-first").split(",") if w)
 TIER2 = json.loads((ROOT / "evals/tier2/questions.json").read_text())
@@ -109,7 +112,8 @@ def _questions() -> list[dict]:
                 for q in frozen["questions"]]
     raise SystemExit(
         f"MEASURE_SET {SET!r} is not tier2, golden, tier4, professional, "
-        f"professional-hard, professional-misleading or professional-holdout")
+        f"professional-hard, professional-misleading, professional-holdout or "
+        f"professional-holdout-2")
 
 
 QUESTIONS = _questions()
