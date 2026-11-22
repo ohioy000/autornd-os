@@ -189,6 +189,18 @@ async def _run_unit(workflow: str, question: dict, repeat: int) -> dict:
             "scorer": verdict, "triage_risk": (triage or {}).get("risk"),
             "phases": [p.phase for p in detail.phases],
             "recompute_vote": detail.recompute_vote,
+            # Which models and providers served each tier, and what the spend guard
+            # could not rate: added 2026-11-22 for the hold-out-2 run so a result says
+            # what served it (a profile can pin a tier to its own model). Fields only;
+            # nothing about which questions run or how.
+            "profile": settings.autornd_profile or "general",
+            "models_by_function": {k: sorted(v) for k, v in
+                                   client.models_by_function.items()},
+            "providers_by_function": {k: sorted(v) for k, v in
+                                      client.providers_by_function.items()},
+            "spend_by_function": {k: round(v, 6) for k, v in
+                                  client.spend_by_function.items()},
+            "spend_guard_blind": list(client.spend_guard_blind),
             "decisions": detail.decisions, "cautions": detail.cautions,
             "lookups": [{"lookup": s.get("lookup"),
                          "quotes": [q.get("status") for f in s.get("findings") or []
@@ -215,6 +227,8 @@ async def main() -> None:
                 "research", "search", "ranker", "judge", "recompute",
                 "decision")},
             "provider_order": settings.openrouter_provider_order,
+            "profile": settings.autornd_profile or "general",
+            "profile_models": settings.profile_models,
             "set": SET,
             "dataset_version": scorer.MANIFEST["dataset_version"],
             "scorer_version": scorer.SCORER_VERSION,
