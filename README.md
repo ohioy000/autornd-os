@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-2600%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-2601%20passing-brightgreen.svg)](#testing)
 
 **A harness that lets low-cost models answer precise expert questions, shows what each answer rested on, and says honestly what it checked.**
 
@@ -463,7 +463,7 @@ The suite takes about 90 seconds to 3 minutes. It makes no network call and spen
 - **No code execution.** AutoRnD produces text.
 - **No streaming.** The sync endpoint blocks. Use the async endpoint and poll for long runs.
 - **No roles.** Runs are kept apart for each user. There are no admin or team permissions.
-- **A field profile is a starting team, not a measured one.** Legal, finance, medical and science each set a team, a vocabulary and examples. None was measured on that field's questions. Their risk-guide examples were read on a 36-sector triage suite: `legal`, `finance` and `medical` rated physical-hazard requests below the floor on some repeats where the engineering examples did not, so use them for their own field's work and keep a person in the loop on anything that could injure someone or damage equipment. Read the output as a draft for a qualified person to review.
+- **A field profile is a starting team, not a measured one.** Legal, finance, medical and science each set a team, a vocabulary and examples. None was measured on that field's questions. Their risk-guide examples were read on a 36-sector triage suite: `legal`, `finance` and `medical` rated physical-hazard requests below the floor on some repeats where the engineering examples did not (how often depends on the triage model and on whether it thinks before answering; see the records under `docs/reviews/`), so use them for their own field's work and keep a person in the loop on anything that could injure someone or damage equipment. Read the output as a draft for a qualified person to review.
 - **Quality follows the models you choose,** and every run calls a paid API.
 
 ## Contributing

@@ -171,6 +171,13 @@ this changes engineering.
   kept because it is the verdict's schema; the word `cite` also matches inside "excited". None changes what a model is sent
   under a field profile in a way the sweep measured.
 
+## Follow-up (2026-11-22)
+
+The owner asked whether the model is the cause. A second triage model, with its thinking off and on, was run on the same
+suite and the held texts: `docs/reviews/2026-11-22-triage-model-hy4-flash.md`. In short, the `finance` and `legal` texts
+read within the margin on a model that thinks and fail on one that does not (and on the first model); `medical` fails on
+dentistry on both; `general` holds on both.
+
 ## What waits on the owner
 
 1. **G-2:** a "yes" on the pin `PROFILE_MODELS=legal:engineering=<id>@z-ai` after reading the three smoke runs. Nothing is

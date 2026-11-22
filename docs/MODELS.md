@@ -238,6 +238,17 @@ still offered by name.
   question set with signed keys, or at more than one run a request. The smoke is evidence of serving, cost and
   typed output, not of quality.
 
+### A second triage model, read with its thinking off and on (2026-11-22)
+- **The model.** `tencent/hy4-flash`, released 16 November; one endpoint, Tencent (`tencent/fp8`, fp8). Context 1,048,576,
+  output ceiling 65,536, typed output and reasoning supported. '$0.035' in and '$0.1405' out per million tokens, against
+  '$0.09' and '$0.36' for the model it was read against.
+- **What it did on the triage seat** (wide suite, 36 sectors, five repeats, 180 units an arm; the evidence is
+  `docs/reviews/2026-11-22-triage-model-hy4-flash.md`). Zero rejected replies and zero provider failures in 1,760 units.
+  With its thinking off: about 60 completion tokens, 2.2 to 2.4 seconds, '$0.0031' to '$0.0036' an arm, and 6 units below a
+  risk floor on the old guide where the first model had 0. With its default thinking: 2,800 to 4,500 tokens, 17.6 to 25.1
+  seconds, '$0.0718' to '$0.0907' an arm, and 0 units below a floor on the old guide (171 meeting the bounds, the limit).
+- **Not measured.** Anything but triage; a repeat of any arm. Not proposed as a pin: that is the owner's (G-2).
+
 ## What the changes have in common
 
 - **Most early changes were forced by a model returning nothing,** not by a model being wrong:

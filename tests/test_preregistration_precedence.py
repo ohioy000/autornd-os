@@ -58,6 +58,9 @@ REGISTERED = [
      "docs/traces/pin-smoke-legal-gen_contract_threshold.jsonl"),
     ("docs/preregistration-prompt-sweep-per-profile.md",
      "docs/traces/prompt-sweep-control.jsonl"),
+    # 2026-11-22: the triage-model run; its first probe call came 12 seconds after the registration commit.
+    ("docs/preregistration-triage-model-hy4-flash.md",
+     "docs/traces/triage-hy4-probe-on-1.jsonl"),
 ]
 
 
