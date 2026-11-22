@@ -9,10 +9,11 @@ Free: no model call, no spend, no key. The network is used only to download the 
 IDS is a comma-separated list of sample numbers (0 to 15). `download` saves the 16 PDFs below as
 DIR/00.pdf ... DIR/15.pdf: PDFs that gave no answer in the runs of 2026-11-17 to 21. `onecore` reads
 one of them with the harness's own one-process reader (`pdf_text`) and prints the open time, the read
-time and the cpu time. `alone` reads each through `read_pdf` (processes) and again through `pdf_text`,
-and says whether the text is the same. `lookup` reads the IDS together under the fetch's own limit, as
-a lookup's pages are, either in threads as the harness did before (`old`) or in processes (`new`), and
-says when each finished (null: not read in time).
+time and the cpu time. `alone` reads each through `read_pdf` (PDFium, in processes) and again through `pdf_text` (pypdf,
+one thread: what the harness read with before 2026-11-21), and gives both times and both lengths: the
+texts differ, for the libraries differ. `lookup` reads the IDS together under the fetch's own limit, as
+a lookup's pages are, either with pypdf in threads as the harness did before (`old`) or with PDFium in
+processes (`new`), and says when each finished (null: not read in time).
 
 The records of 2026-11-21 are docs/traces/20261121T-pdf-read-onecore.jsonl (`onecore`, four at a time)
 and 20261121T-pdf-read-old-vs-new.jsonl (`alone` and `lookup`, run one scenario to a process on an
@@ -96,9 +97,9 @@ async def alone(directory: Path, numbers: list[str]) -> None:
         reference = await asyncio.to_thread(pdf_text, raw)
         one_core_s = time.time() - began
         print(json.dumps({"mode": "alone", "i": int(number), "workers": pdf_read.workers(),
-                          "new_s": round(new_s, 1), "one_core_s": round(one_core_s, 1),
-                          "speedup": round(one_core_s / new_s, 2), "same_text": text == reference,
-                          "chars": len(text)}), flush=True)
+                          "new_s": round(new_s, 2), "one_core_s": round(one_core_s, 1),
+                          "speedup": round(one_core_s / new_s, 1), "chars": len(text),
+                          "chars_one_core": len(reference)}), flush=True)
 
 
 async def lookup(directory: Path, numbers: list[str], how: str) -> None:

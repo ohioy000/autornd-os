@@ -1,0 +1,18 @@
+{"mode": "alone", "i": 7, "workers": 4, "new_s": 0.57, "one_core_s": 5.1, "speedup": 8.9, "chars": 328691, "chars_one_core": 330570}
+{"mode": "alone", "i": 13, "workers": 4, "new_s": 0.34, "one_core_s": 3.8, "speedup": 10.9, "chars": 306458, "chars_one_core": 305326}
+{"mode": "alone", "i": 12, "workers": 4, "new_s": 0.35, "one_core_s": 3.8, "speedup": 11.0, "chars": 292579, "chars_one_core": 292522}
+{"mode": "alone", "i": 10, "workers": 4, "new_s": 0.35, "one_core_s": 5.9, "speedup": 16.6, "chars": 292504, "chars_one_core": 294629}
+{"mode": "alone", "i": 14, "workers": 4, "new_s": 0.44, "one_core_s": 7.3, "speedup": 16.4, "chars": 439523, "chars_one_core": 444686}
+{"mode": "alone", "i": 8, "workers": 4, "new_s": 0.62, "one_core_s": 8.2, "speedup": 13.4, "chars": 1040646, "chars_one_core": 1049710}
+{"mode": "alone", "i": 1, "workers": 4, "new_s": 0.35, "one_core_s": 7.3, "speedup": 20.8, "chars": 258728, "chars_one_core": 262083}
+{"mode": "alone", "i": 3, "workers": 4, "new_s": 0.63, "one_core_s": 12.2, "speedup": 19.2, "chars": 850590, "chars_one_core": 857580}
+{"mode": "alone", "i": 4, "workers": 4, "new_s": 0.6, "one_core_s": 9.2, "speedup": 15.4, "chars": 491164, "chars_one_core": 499383}
+{"mode": "alone", "i": 2, "workers": 4, "new_s": 0.71, "one_core_s": 21.8, "speedup": 30.9, "chars": 627345, "chars_one_core": 612941}
+{"mode": "alone", "i": 5, "workers": 4, "new_s": 0.96, "one_core_s": 26.8, "speedup": 27.9, "chars": 932316, "chars_one_core": 949759}
+{"mode": "alone", "i": 0, "workers": 4, "new_s": 1.26, "one_core_s": 44.1, "speedup": 35.1, "chars": 1561656, "chars_one_core": 1653493}
+{"mode": "alone", "i": 9, "workers": 4, "new_s": 0.48, "one_core_s": 10.2, "speedup": 21.1, "chars": 369212, "chars_one_core": 378705}
+{"mode": "alone", "i": 11, "workers": 4, "new_s": 0.83, "one_core_s": 25.2, "speedup": 30.5, "chars": 932312, "chars_one_core": 949759}
+{"mode": "alone", "i": 6, "workers": 4, "new_s": 0.78, "one_core_s": 20.0, "speedup": 25.5, "chars": 837532, "chars_one_core": 839561}
+{"mode": "alone", "i": 15, "workers": 4, "new_s": 3.38, "one_core_s": 130.0, "speedup": 38.5, "chars": 2839873, "chars_one_core": 2948324}
+{"mode": "lookup", "how": "new", "limit": 60.0, "ids": [7, 13, 8, 10, 14, 3], "finished_at_s": {"7": 1.1, "13": 0.4, "8": 2.8, "10": 0.7, "14": 2.2, "3": 1.8}, "read_in_time": 6, "of": 6, "wall_s": 2.8}
+{"mode": "lookup", "how": "new", "limit": 60.0, "ids": [5, 6, 11, 0, 2, 4], "finished_at_s": {"5": 7.1, "6": 6.0, "11": 1.1, "0": 2.9, "2": 4.0, "4": 4.9}, "read_in_time": 6, "of": 6, "wall_s": 7.1}
