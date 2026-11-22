@@ -1524,10 +1524,17 @@ _model_per_request: dict[str, float] = {}
 # them. The tier-3 preflight applies the same classes
 # (evals/tier3/runner.py: _unboundable_reason), and a test asserts
 # the two agree.
-_CACHE_COMPONENTS = ("input_cache_read", "input_cache_write")
+_CACHE_COMPONENT_PREFIX = "input_cache_"
 _REASONING_COMPONENTS = ("internal_reasoning",)
 _PER_REQUEST_COMPONENTS = ("web_search", "request")
-_MODALITY_COMPONENTS = ("image", "audio", "input_audio_cache")
+# image_output and audio_output: read on 2026-11-22 as the only unknown
+# components in the 476-model catalogue (12 models, image and audio generators);
+# a chat call that asks for text never carries them, as it never carries `image`.
+_MODALITY_COMPONENTS = ("image", "audio", "input_audio_cache",
+                        "image_output", "audio_output")
+# What an `overrides` layer carries besides prices: the condition that selects it.
+_OVERRIDE_CONDITIONS = ("utc_days", "utc_start", "utc_end",
+                        "min_prompt_tokens", "max_prompt_tokens")
 
 
 def extract_json(text: str) -> dict[str, Any]:
@@ -1539,55 +1546,118 @@ def extract_json(text: str) -> dict[str, Any]:
     return OpenRouterClient._extract_json(text)
 
 
+def _worst_case_rates(pricing: dict[str, Any]) -> tuple[float, float, float] | None:
+    """The (prompt, completion, per-request) rates a call to this catalogue
+    entry can be charged at in the worst case, or None when it cannot be bounded.
+
+    Ruling of the owner, 2026-11-22 ("make sure any model can be used for any tier
+    ... plug and play"): a price shape the bound did not foresee no longer leaves
+    the model unrated. The bound takes the HIGHEST rate each side can be charged
+    at, across the entry and every `overrides` layer (a time-of-day price, a price
+    that steps up above a prompt size): the prompt side at the highest of the
+    prompt rate and every cache component (a cache write above the prompt rate is
+    a prompt token billed higher), the completion side at the highest of the
+    completion rate and the reasoning rate, the flat per-request charges added once
+    at their highest. A bound is an upper limit, so it may be above what a call
+    costs and is never below it. The modality components never charge on a
+    text-only call. **A component the bound does not know is still a charge it
+    cannot bound**, and the entry stays unrated and named in the log; so is a
+    price that does not parse, an override that is not a list of mappings, and an
+    entry that prices neither side (an absent component is unknown, not free — D49;
+    an explicit "0" is a published zero and stays priced).
+
+    Measured 2026-11-22 (docs/traces/lineup-smoke-A.jsonl and the line-up
+    record): the owner's global answer model was blind for a time-of-day
+    `overrides` list, and a model with a cache-write rate above its prompt rate was
+    blind for that rate. Both ran unbounded on every call.
+    """
+    if not isinstance(pricing, dict):
+        return None
+
+    def number(value: Any) -> float | None:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    base = {k: v for k, v in pricing.items() if k != "overrides"}
+    layers = [base]
+    overrides = pricing.get("overrides")
+    if overrides not in (None, ""):
+        if not isinstance(overrides, list):
+            return None
+        for layer in overrides:
+            if not isinstance(layer, dict):
+                return None
+            layers.append({**base, **layer})
+    prompt_rate = completion_rate = per_request = None
+    for layer in layers:
+        prompt = number(layer.get("prompt"))
+        completion = number(layer.get("completion"))
+        if prompt is None or completion is None:
+            return None
+        side_prompt, side_completion, flat = prompt, completion, 0.0
+        for key, value in layer.items():
+            if key in ("prompt", "completion") or value in (None, ""):
+                continue
+            if key in _OVERRIDE_CONDITIONS:
+                continue
+            rate = number(value)
+            if rate is None:
+                return None
+            if key in _MODALITY_COMPONENTS:
+                continue
+            if key in _PER_REQUEST_COMPONENTS:
+                flat += rate
+            elif key.startswith(_CACHE_COMPONENT_PREFIX):
+                side_prompt = max(side_prompt, rate)
+            elif key in _REASONING_COMPONENTS:
+                side_completion = max(side_completion, rate)
+            else:
+                return None
+        prompt_rate = side_prompt if prompt_rate is None else max(prompt_rate, side_prompt)
+        completion_rate = (side_completion if completion_rate is None
+                           else max(completion_rate, side_completion))
+        per_request = flat if per_request is None else max(per_request, flat)
+    return prompt_rate, completion_rate, per_request or 0.0
+
+
+def _unreadable_charges(pricing: dict[str, Any]) -> list[str]:
+    """The names of the catalogue components `_worst_case_rates` cannot read:
+    a component the bound does not know, a price that does not parse, an
+    `overrides` list that is not a list of mappings. Named so that the blind
+    model says which charge it could not bound, never only that it was blind."""
+    if not isinstance(pricing, dict):
+        return ["pricing"]
+    names: list[str] = []
+    overrides = pricing.get("overrides")
+    layers = [{k: v for k, v in pricing.items() if k != "overrides"}]
+    if overrides not in (None, ""):
+        if not isinstance(overrides, list) or not all(
+                isinstance(layer, dict) for layer in overrides):
+            names.append("overrides")
+        else:
+            layers.extend(overrides)
+    known = (_MODALITY_COMPONENTS + _PER_REQUEST_COMPONENTS + _REASONING_COMPONENTS
+             + _OVERRIDE_CONDITIONS + ("prompt", "completion"))
+    for layer in layers:
+        for key, value in layer.items():
+            if value in (None, "") or key in _OVERRIDE_CONDITIONS:
+                continue
+            try:
+                float(value)
+            except (TypeError, ValueError):
+                names.append(key)
+                continue
+            if key not in known and not key.startswith(_CACHE_COMPONENT_PREFIX):
+                names.append(key)
+    return sorted(set(names))
+
+
 def _prices_what_the_guard_cannot_bound(pricing: dict[str, Any]) -> bool:
     """Does this catalogue entry carry a charge the worst-case bound
-    cannot bound?
-
-    The bound charges the prompt rate for every prompt byte and the
-    completion rate for the whole output cap, so a component priced
-    at or below the rate the bound already charges its side at
-    cannot cost more than the bound does: the cache components
-    against the prompt rate, reasoning against the completion rate
-    (reasoning tokens are part of the output the cap bounds). A
-    flat per-request charge does not scale with the call, so the
-    bound adds it once per request. The modality components (image,
-    audio) never charge on the text-only calls the harness makes.
-    Anything else — a component priced above the rate its side is
-    charged at, or a component the bound does not know — is a
-    charge a token-only bound understates. The catalogue prices in
-    strings; empty and zero mean "no charge for this component",
-    and a value that does not parse is a charge this cannot read,
-    which is the same answer: unboundable.
-    """
-    try:
-        prompt = float(pricing.get("prompt"))
-    except (TypeError, ValueError):
-        prompt = None
-    try:
-        completion = float(pricing.get("completion"))
-    except (TypeError, ValueError):
-        completion = None
-    for key, value in pricing.items():
-        if key in ("prompt", "completion") or value in (None, ""):
-            continue
-        try:
-            rate = float(value)
-        except (TypeError, ValueError):
-            return True
-        if key in _PER_REQUEST_COMPONENTS:
-            continue
-        if key in _MODALITY_COMPONENTS:
-            continue
-        if key in _CACHE_COMPONENTS:
-            if prompt is None or rate > prompt:
-                return True
-            continue
-        if key in _REASONING_COMPONENTS:
-            if completion is None or rate > completion:
-                return True
-            continue
-        return True
-    return False
+    cannot bound? The inverse of `_worst_case_rates`."""
+    return _worst_case_rates(pricing) is None
 
 
 async def check_models() -> dict[str, dict]:
@@ -1656,24 +1726,18 @@ async def check_models() -> dict[str, dict]:
                 # rate, the per-request charge added once per
                 # request, the modality components a text-only call
                 # never carries) leave it rated.
-                if _prices_what_the_guard_cannot_bound(pricing):
+                bound = _worst_case_rates(pricing)
+                if bound is None:
+                    logger.warning(
+                        "model %s carries a catalogue charge the worst-case bound "
+                        "cannot read (%s); the spend guard is blind for it",
+                        m.get("id"), ", ".join(_unreadable_charges(pricing)) or "none named")
                     continue
-                prompt = pricing.get("prompt")
-                completion = pricing.get("completion")
-                if prompt is None or completion is None:
-                    continue
-                try:
-                    _model_pricing[m["id"]] = (
-                        float(prompt), float(completion))
-                except (TypeError, ValueError):
-                    continue
-                # The per-request components the bound adds once
-                # per request, recorded beside the token rates so
-                # the guard charges them on every call.
-                per_request = sum(
-                    float(pricing[key])
-                    for key in _PER_REQUEST_COMPONENTS
-                    if pricing.get(key) not in (None, ""))
+                prompt_rate, completion_rate, per_request = bound
+                _model_pricing[m["id"]] = (prompt_rate, completion_rate)
+                # The per-request components, at their highest, the bound adds
+                # once per request, recorded beside the token rates so the
+                # guard charges them on every call.
                 if per_request:
                     _model_per_request[m["id"]] = per_request
     except Exception as exc:

@@ -584,15 +584,11 @@ async def fetch_catalogue(
     return catalogue
 
 
-# The catalogue's component classes, as the worst-case bound reads
-# them — the same classes the client's guard applies
-# (autornd/routing/openrouter.py:
-# _prices_what_the_guard_cannot_bound; a test asserts the two
-# agree).
-_CACHE_COMPONENTS = ("input_cache_read", "input_cache_write")
-_REASONING_COMPONENTS = ("internal_reasoning",)
-_PER_REQUEST_COMPONENTS = ("web_search", "request")
-_MODALITY_COMPONENTS = ("image", "audio", "input_audio_cache")
+# The worst-case bound is the client's own, read from one place
+# (autornd/routing/openrouter.py: _worst_case_rates), so the preflight
+# and the guard cannot drift: this module has no component classes of
+# its own since the owner's ruling of 2026-11-22 (any catalogue price
+# shape is bounded at its highest rate).
 
 
 async def fetch_credit() -> float | None:
@@ -684,26 +680,14 @@ def _unboundable_reason(entry: dict[str, Any]) -> str | None:
     """Why the guard cannot bound a call to this serving,
     or None when it can.
 
-    The same test the client's own catalogue loader applies
-    (autornd/routing/openrouter.py:
-    _prices_what_the_guard_cannot_bound): a component the
-    catalogue does not price is unknown, not free. The bound
-    charges the prompt rate for every prompt byte and the
-    completion rate for the whole output cap, so a component
-    priced at or below the rate the bound already charges
-    its side at cannot cost more than the bound does — the
-    cache components against the prompt rate, reasoning
-    against the completion rate — and a flat per-request
-    charge is added once per request. The modality
-    components (image, audio) never charge on the
-    text-only calls this experiment makes. A component
-    priced above the rate its side is charged at, or one
-    the bound does not know, is a charge a token-only worst
-    case understates. The states say which: served but not
-    priced in the catalogue (confirmed via the per-model
-    endpoint), a charge the bound cannot cover, and a
-    priced entry with a missing side. An unknown price is
-    not free (D49)."""
+    The test is the client's own (autornd/routing/openrouter.py:
+    _worst_case_rates): the bound charges each side at the highest
+    rate the entry and its time-of-day or prompt-size overrides
+    can charge, so only an entry that prices neither side, one with
+    a price that does not parse, or one with a component the bound
+    does not know is blind. An unknown price is not free (D49)."""
+    from autornd.routing.openrouter import (
+        _unreadable_charges, _worst_case_rates)
     pricing = entry.get("pricing") or {}
     if not pricing:
         if entry.get("confirmed_served"):
@@ -711,43 +695,14 @@ def _unboundable_reason(entry: dict[str, Any]) -> str | None:
                     "(confirmed via the per-model endpoint) — "
                     "the guard is blind for it")
         return "the catalogue entry carries no pricing"
-    try:
-        prompt = float(pricing.get("prompt"))
-    except (TypeError, ValueError):
-        prompt = None
-    try:
-        completion = float(pricing.get("completion"))
-    except (TypeError, ValueError):
-        completion = None
-    charges = []
-    for key, value in pricing.items():
-        if key in ("prompt", "completion") or value in (None, ""):
-            continue
-        try:
-            rate = float(value)
-        except (TypeError, ValueError):
-            charges.append(key)
-            continue
-        if key in _PER_REQUEST_COMPONENTS:
-            continue          # added once per request
-        if key in _MODALITY_COMPONENTS:
-            continue          # text-only calls never carry them
-        if key in _CACHE_COMPONENTS:
-            if prompt is None or rate > prompt:
-                charges.append(key)
-            continue
-        if key in _REASONING_COMPONENTS:
-            if completion is None or rate > completion:
-                charges.append(key)
-            continue
-        charges.append(key)   # a component the bound does not cover
-    if charges:
-        return ("carries charges beside prompt and completion "
-                f"tokens ({', '.join(sorted(charges))}), which "
-                "a token-only worst case understates — the guard "
-                "is blind for it")
     if "prompt" not in pricing or "completion" not in pricing:
         return "the catalogue prices neither side of the call"
+    if _worst_case_rates(pricing) is None:
+        names = ", ".join(_unreadable_charges(pricing)) or "none named"
+        return ("carries a charge the worst-case bound cannot read "
+                f"({names}: a component it does not know, a price that "
+                "does not parse, or an overrides list it cannot read) — "
+                "the guard is blind for it")
     return None
 
 
@@ -777,30 +732,24 @@ def _rates(index: dict[str, dict[str, Any]], serving: str,
             f"{where}: the serving {serving} has no catalogue "
             "price the guard can bound (D49: an unknown price "
             "is not free)")
-    pricing = entry["pricing"]
-    return float(pricing["prompt"]), float(pricing["completion"])
+    from autornd.routing.openrouter import _worst_case_rates
+    prompt_rate, completion_rate, _flat = _worst_case_rates(
+        entry["pricing"])
+    return prompt_rate, completion_rate
 
 
 def _per_request_charge(entry: dict[str, Any] | None) -> float:
-    """The entry's flat per-request charge: the components
-    the worst-case bound adds once per request the call can
-    make. An entry the catalogue does not carry carries no
-    charge, and an unparseable component is a charge the
-    bound cannot read — unboundable, which _unboundable_reason
-    has already said by the time any caller reaches this."""
+    """The entry's flat per-request charge, at its highest across
+    the entry and its overrides: the components the worst-case bound
+    adds once per request the call can make. An entry the catalogue
+    does not carry carries no charge, and an entry the bound cannot
+    read is unboundable, which _unboundable_reason has already said
+    by the time any caller reaches this."""
     if entry is None:
         return 0.0
-    pricing = entry.get("pricing") or {}
-    total = 0.0
-    for key in _PER_REQUEST_COMPONENTS:
-        value = pricing.get(key)
-        if value in (None, ""):
-            continue
-        try:
-            total += float(value)
-        except (TypeError, ValueError):
-            continue
-    return total
+    from autornd.routing.openrouter import _worst_case_rates
+    bound = _worst_case_rates(entry.get("pricing") or {})
+    return bound[2] if bound else 0.0
 
 
 # ── The prompts and their rendering ───────────────────────────────
@@ -4146,14 +4095,11 @@ def _install_dry_run_rates(catalogue: list[dict[str, Any]]) -> int:
     from autornd.routing import openrouter as _openrouter
     installed = 0
     for entry in catalogue:
-        pricing = entry.get("pricing") or {}
-        try:
-            _openrouter._model_pricing[entry["id"]] = (
-                float(pricing["prompt"]),
-                float(pricing["completion"]))
-            installed += 1
-        except (KeyError, TypeError, ValueError):
+        bound = _openrouter._worst_case_rates(entry.get("pricing") or {})
+        if bound is None or "id" not in entry:
             continue
+        _openrouter._model_pricing[entry["id"]] = (bound[0], bound[1])
+        installed += 1
         # The per-request charge rides with the rates, so the
         # guard the dry run's calls pass through charges it too.
         per_request = _per_request_charge(entry)

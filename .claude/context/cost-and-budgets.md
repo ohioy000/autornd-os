@@ -31,6 +31,22 @@ Rates are learned from the provider catalogue at startup
 harness, not a model recommendation. `tests/test_docs.py` fails any PR that names
 a model in code, config defaults, profiles, workflows or user-facing docs.
 
+## The spend guard bounds any catalogue price at its highest rate (owner's ruling, 2026-11-22)
+
+`_worst_case_rates` (`openrouter.py`) turns a catalogue `pricing` entry into the rates the worst-case bound
+charges: the **highest** each side can be charged at across the entry and every `overrides` layer (a
+time-of-day price, a step up above a prompt size) — the prompt side at the highest of the prompt rate and
+every `input_cache_*` component, the completion side at the highest of the completion rate and the
+reasoning rate, flat per-request charges added once. A bound is never below what a call costs and may be
+above it; `_model_pricing` therefore holds that bound, and the cost estimate that falls back on it is an
+upper limit for such a model. Only a charge the bound cannot read — a component it does not know, a price
+that does not parse, an unreadable `overrides` — leaves a model blind, and the log names it
+(`_unreadable_charges`). An absent price side is still unknown, not free (D49); a published "0" is a price.
+The tier-3 and tier-4 preflights call the same function, so the two cannot drift. Why: the line-up smoke
+ran two of five answer models blind (a time-of-day override; a cache-write rate above the prompt rate),
+and any model must be able to serve any tier with the guard sighted. Read on 2026-11-22: 476 of 476
+catalogue entries are bounded.
+
 ## Token budgets are settings, and each carries its measurement
 
 Read the comment before changing the number (`config.py:57-80`):

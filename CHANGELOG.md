@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Changed (2026-11-22, the owner's ruling: "make sure any model can be used for any tier ... plug and play"): the spend guard bounds
+any catalogue price at its highest rate instead of leaving a model blind. The worst case now takes, for each side of a call, the
+highest rate across the entry and its time-of-day or prompt-size `overrides`, with every cache component counted on the prompt
+side and the reasoning rate on the completion side; only a charge it cannot read (a component it does not know, a price that does
+not parse) leaves a model unrated, and the log names it. The tier-3 and tier-4 preflights read the same function. Read on the live
+catalogue of 2026-11-22: 476 of 476 entries are bounded where 12 were blind to a component the bound did not know, and two of the
+five answer models of the line-up smoke had been running unbounded. Five tests that enshrined "unrated above its side's rate" are
+rewritten and 15 new tests pin the shapes, each guarded line broken once.
+
 Added (2026-11-21, the owner's instruction): a profile can name its own model for a tier. `PROFILE_MODELS`
 (empty by default) reads `<profile>:<tier>=<model-id>[@<provider>]`, comma separated; a pin changes that tier for
 that profile and no other, does not carry through `base:`, and brings its own serving. Every place that reads a
