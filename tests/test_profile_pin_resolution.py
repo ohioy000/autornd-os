@@ -279,6 +279,55 @@ class TestAPinCarriesItsOwnServing:
         assert provider_order_for("ENGINEERING") == ["vendor"]
 
 
+class TestATierWithNoModelOfItsOwnTakesTheEngineeringPinsServing:
+    """An unset judge tier runs on the engineering model (get_model). Under a profile that pins
+    engineering that is the pinned model, and a provider that does not host it answers 404 under
+    hard pins, so the call carries the pin's serving and not the order written for another model."""
+
+    ENGINEERING = "legal:engineering=vendor/legal-model@vendor"
+
+    def test_an_unset_judge_follows_the_engineering_pin(self, globals_):
+        globals_.setattr(settings, "openrouter_provider_order", "judge:Alpha,Together")
+        globals_.setattr(settings, "profile_models", self.ENGINEERING)
+        client = OpenRouterClient(api_key="test")
+        _active("legal")
+        assert client.get_model("judge") == "vendor/legal-model"
+        assert provider_order_for("judge") == ["vendor"]
+        _active("general")
+        assert client.get_model("judge") == "g/eng"
+        assert provider_order_for("judge") == ["Alpha"]
+
+    def test_an_engineering_pin_with_no_provider_leaves_the_judge_to_the_router(self, globals_):
+        globals_.setattr(settings, "openrouter_provider_order", "judge:Alpha,Together")
+        globals_.setattr(settings, "profile_models", "legal:engineering=vendor/legal-model")
+        _active("legal")
+        assert provider_order_for("judge") == []
+
+    def test_a_judge_with_a_model_of_its_own_keeps_its_own_order(self, globals_):
+        _configure(globals_, "full")
+        globals_.setattr(settings, "openrouter_provider_order", "judge:Alpha,Together")
+        globals_.setattr(settings, "profile_models", self.ENGINEERING)
+        client = OpenRouterClient(api_key="test")
+        _active("legal")
+        assert client.get_model("judge") == "g/judge"
+        assert provider_order_for("judge") == ["Alpha"]
+
+    def test_a_judge_the_profile_pins_itself_keeps_its_own_serving(self, globals_):
+        globals_.setattr(settings, "openrouter_provider_order", "Together")
+        globals_.setattr(settings, "profile_models",
+                         self.ENGINEERING + ",legal:judge=vendor/legal-judge@judge-host")
+        _active("legal")
+        assert provider_order_for("judge") == ["judge-host"]
+
+    def test_a_name_that_is_no_tier_is_left_to_the_global_order(self, globals_):
+        """The tier-3 arms name their own function and take their provider from the global
+        order; a profile's engineering pin must not become theirs."""
+        globals_.setattr(settings, "openrouter_provider_order", "tier3_arm_a:Provider")
+        globals_.setattr(settings, "profile_models", self.ENGINEERING)
+        _active("legal")
+        assert provider_order_for("tier3_arm_a") == ["Provider"]
+
+
 class TestTheRequestThatLeavesCarriesThePin:
     async def _sent(self, monkeypatch, function):
         captured: dict = {}

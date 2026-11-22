@@ -26,7 +26,9 @@ from autornd.evals.runner import (
 )
 from autornd.evals.scenario import load_scenarios
 from autornd.graph.spec import load as load_spec
+from autornd.profiles import get_profile
 from autornd.routing.openrouter import OpenRouterClient, check_models
+from autornd.routing.pins import effective_models
 
 
 # Every figure here is post-b4cd89f; anything earlier understates by 2.6x-295x.
@@ -265,7 +267,10 @@ async def main() -> int:
     # The header makes a results file self-describing: which model ran at each
     # tier, who was pinned to serve it, and what the run was allowed to spend.
     # Without it a stored result cannot be priced against its serving later,
-    # which is the diagnosis B4 turned on.
+    # which is the diagnosis B4 turned on. `models` is the map the active profile
+    # reads, its PROFILE_MODELS pins laid over the global one: the global map alone
+    # would name a model that never served a pinned tier. `profile` and
+    # `profile_models` say which profile that was and every pin the run was given.
     results = ResultsLog(
         args.results_file or default_results_path(args.scenarios),
         config={
@@ -275,7 +280,9 @@ async def main() -> int:
             "max_spend": args.max_spend,
             "max_spend_sweep": budget.cap if budget else None,
             "timeout": args.timeout,
-            "models": OpenRouterClient.FUNCTION_MODELS,
+            "models": effective_models(OpenRouterClient.FUNCTION_MODELS),
+            "profile": get_profile().stem,
+            "profile_models": settings.profile_models,
             "provider_order": settings.openrouter_provider_order,
             # What was verified before the spend, or that it was skipped.
             "preflight": preflight_record,

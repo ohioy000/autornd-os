@@ -12,8 +12,8 @@ from typing import Any
 import httpx
 from pydantic import ValidationError
 
-from autornd.config import settings
-from autornd.routing.pins import active_pin, pinned_order, tier_model
+from autornd.config import PINNABLE_TIERS, settings
+from autornd.routing.pins import active_pin, pinned_order, pins_by_profile, tier_model
 
 logger = logging.getLogger(__name__)
 
@@ -135,12 +135,18 @@ def provider_order_for(function: str) -> list[str]:
     was written for the global model, and a provider that does not host the
     pinned one answers 404 under hard pins, so it is not applied. The
     independent call follows the tier that supplies its model (premium when
-    that has a model for the profile, else architecture). With no pin set
-    nothing here changes.
+    that has a model for the profile, else architecture), and so does a tier
+    that has no model of its own, whose calls run on the engineering model
+    (get_model): they take that model's serving with it. A name that is no
+    tier (an arm that names its own serving) is left to the order above. With
+    no pin set nothing here changes.
     """
     source = function.lower()
     if source == "independent":
         source = "premium" if tier_model("premium", settings.model_premium) else "architecture"
+    elif (source in PINNABLE_TIERS and source not in OpenRouterClient.FUNCTION_MODELS
+          and active_pin(source) is None):
+        source = "engineering"
     pinned = pinned_order(source)
     if pinned is not None:
         return pinned
@@ -1596,6 +1602,13 @@ async def check_models() -> dict[str, dict]:
     ):
         if model_id:
             configured[tier] = model_id
+    # PROFILE_MODELS: every profile's pin is confirmed and rated here with the rest, under
+    # the label 'profile:tier', not only the active profile's. A profile can be switched to
+    # at run time, and a pinned model the catalogue cannot rate would run it with the spend
+    # guard blind; a pin the catalogue does not list shows in health as unverified.
+    for stem, pinned in pins_by_profile().items():
+        for tier, pin in pinned.items():
+            configured[f"{stem}:{tier}"] = pin.model
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
