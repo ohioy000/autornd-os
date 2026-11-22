@@ -250,6 +250,13 @@ still offered by name.
 - **A repeat with default thinking** of the old guide, the finance text and the legal text, 180 units each ('$0.2454'):
   the old guide 1 unit below a floor and 171 meeting the bounds, finance 1 and 173, legal 0 and 173, so the two field
   texts held in both runs and the old guide as a baseline held in both.
+- **The medical text after its examples were fixed**, default thinking, 180 units ('$0.1176', 26.6 seconds a unit, no errors): 2 units
+  below a floor (both the semiconductor sector) and 173 meeting the bounds, dentistry `high` on 5 of 5. One run.
+- **Two models in the catalogue, never run in this harness before 2026-11-22** (free reads only): `qwen/qwen4-max`, one endpoint (Alibaba),
+  context 1,000,000, output ceiling 131,072, typed output and reasoning, '$1.425' in and '$4.275' out per million; and
+  `google/gemini-4-hydrogen`, Vertex and AI Studio endpoints, context 1,048,576, output ceiling 943,718 on Vertex, typed output and
+  reasoning, '$1.50' in and '$7.50' out per million. Both pass preflight as pins. The one live call of the line-up smoke so far
+  (the global answer model, run A) found that model's catalogue price carries `overrides` the spend guard cannot bound.
 - **The first model at high reasoning effort** ('$0.2567', three arms): finance 9 units below a floor and legal 8, against
   24 and 10 at its default effort and 1 and 0 to 1 for this model with thinking on; 10 seconds a unit and '$0.079' to
   '$0.090' an arm. More thinking alone did not bring those texts within the margin.

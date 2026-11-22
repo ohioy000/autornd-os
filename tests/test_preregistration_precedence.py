@@ -61,6 +61,10 @@ REGISTERED = [
     # 2026-11-22: the triage-model run; its first probe call came 12 seconds after the registration commit.
     ("docs/preregistration-triage-model-hy4-flash.md",
      "docs/traces/triage-hy4-probe-on-1.jsonl"),
+    ("docs/preregistration-medical-examples-fix.md",
+     "docs/traces/medical-fix-Mx.jsonl"),
+    ("docs/preregistration-model-lineup-smoke.md",
+     "docs/traces/lineup-smoke-A.jsonl"),
 ]
 
 

@@ -96,3 +96,19 @@ are the first measured for the two new models, and are the figure the owner's de
 Each result file is copied byte-identical into `docs/traces/` and cited by its sha256 in the ruling record, with the
 predictions above scored one by one, as read. The pin lines go into the owner's `.env` only after the merge and the
 owner's "yes", and only where the code that declares the key is in every checkout that reads that file.
+
+## Amendment 1 — after run A, before any further spend (2026-11-22)
+
+**What run A read** (n = 1; '$0.0058' of the '$1.00'). The engineering profile with no engineering pin completed in 10 calls and
+98 seconds, passed its assertions, and its answer call was served by the global engineering model through DeepInfra and by
+nothing else, with no schema rejection and no provider failure (L1 holds for A; L2 holds for A; L4 does **not**, below).
+
+**The stop.** The runner stopped on the stop rule as written: the record carries a `spend_guard_blind` entry on the
+`engineering` tier, for the global model. It is not a pinned model. The cause is the catalogue entry's `overrides` list (a
+time-of-day price), which the guard cannot bound (the record of the study of 2026-11-22, "Found, not touched"). **L4, as
+written ("no blind on a pinned tier"), is scored falsified at n = 1 by a tier that carries no pin.**
+
+**Held.** Runs B to E were not started. The runs were started while the medical triage arm was still running (the
+pre-registration said after it had finished; the owner's "Go" was taken as the word to start). Whether to amend the stop rule
+to "a blind entry on a **pinned model**" and run B to E (the caps sum to '$0.94') is the owner's, asked in conversation.
+

@@ -184,14 +184,51 @@ its size, its training or the way its thinking is used is not separable from the
    for `legal`. The examples are enough for the second model when it thinks and not when it answers straight away, and
    **not for the first model even at high effort** (finance 9, legal 8): both thinking and which model are part of what the
    text is measured on, and more thinking alone did not close the gap.
-2. **`medical` is the exception that stays.** It under-calls dentistry with thinking on too. That one is the text, or the
-   field's own reading of the sector (above), whichever the owner decides.
+2. **`medical` was the exception, and the fixed text holds.** The earlier text under-called dentistry with thinking on; after
+   the examples were fixed (the section above) the arm holds X1 to X3 at one run, with dentistry read `high` 5 of 5 (not
+   independent evidence of the fix).
 3. **`general` is not model-sensitive on these two models:** it holds M3 and M4 in both settings and the first sweep's
    miss (2 units, over-calls) was not repeated (0 floor misses, 175 meeting the bounds).
 4. **Not shown:** that thinking on makes the triage better in any sense but these readings; anything about the answer
    tier; a repeat of any arm (each is one run of 180 units, and the first sweep's spread between identical arms was 2 to 3
    units); whether `hy4-flash` with its thinking on is acceptable for a seat that runs on every request at about 19 seconds
    a call (a latency decision for the owner).
+
+## The medical text after the dentistry fix (the medical-fix pre-registration, one arm)
+
+The owner's "Yes to all" (2026-11-22) covered fixing the medical examples after the dentistry readings were read. The fix
+(commit `2dc6f4b`) names a material or device chosen for a procedure on a patient beside an order, a prescription and a
+dosing change in the high examples, and says "choosing between study designs or analysis methods" in the medium ones.
+One arm, `medical` text, the second model with its default thinking, 180 units, set in the process environment only
+(`docs/preregistration-medical-examples-fix.md`, committed before the spend). Disclosure, as written there: the fix was
+written after reading that sector's verdicts, so dentistry is **not** independent evidence of it; the other 35 sectors are
+the check that nothing else moved.
+
+| Rule | Read | |
+|---|---|---|
+| X1, complete, at most 2 errors | 180 units, 0 errors | holds |
+| X2, units below a floor, at most 3 | **2** (both `wide_semiconductor`, read `low`) | holds |
+| X3, units meeting every bound, at least 168 | **173** | holds |
+| X4, `wide_dentistry` high or above on at least 4 of 5 | **5 of 5** `high` | holds (reported, not independent) |
+
+Reference: the old guide on this model, thinking on, had 0 and 1 units below a floor and 171 and 171 meeting the bounds
+(T0 and R0); the earlier medical text had 6 floor misses in the 140 units it ran (Tm). One provider (Tencent), no blind
+entries, '$0.1176', 26.6 seconds a unit (4,779 s for the arm; the line-up smoke's run A shared the machine for 98 s of it).
+
+**Where the readings moved against the old guide's modal reading** (reported, not scored): `wide_broadcast` medium to low,
+`wide_data_engineering` medium to high, `wide_dentistry` critical to high, `wide_marine` critical to high,
+`wide_veterinary` high to critical, `wide_wind_energy` critical to high, and `wide_semiconductor` high to a split (medium 2,
+low 2, high 1), which is where the 2 floor misses are. Three sectors moved down from `critical` to `high` and two moved up;
+each is inside its own bounds, since X3 holds, and none is read as better or worse. The semiconductor split is the one thing
+here that is not stable; it is a sector the earlier medical text did not read low, so it is the cost of this wording to
+watch on a repeat, not a rule failure.
+
+**Predictions scored.** P19 (X2) **holds**, P20 (X4) **holds**, P21 (X3) **holds**, P22 (cost and time) **half falsified**: the
+arm is complete under '$0.14' ('$0.1176') and took 80 minutes, not the 60 to 70 predicted.
+
+**What it means by the rules written beforehand:** the medical text is supported on this model with its default thinking, as
+finance and legal are, at one run. A pin of the medical triage tier to `tencent/hy4-flash` is **the thing to propose, and the
+owner's to ratify (G-2); it is not made**. The medical arm is one run, where finance and legal have two each.
 
 ## Options, and a recommendation (the owner's to take)
 
@@ -229,6 +266,7 @@ fix medical's examples (option 1 for that profile).
 | `triage-hy4-on-repeat-R0.jsonl` | `2d73b7bb2babc47514ca6c2e3d1c783e8b9767600db6560cb6d5cd65c64dc10e` |
 | `triage-hy4-on-repeat-Rf.jsonl` | `f7fdf45b24a82f5645fe8d422300da028b2a4fd43442ecd3678ed62f5f37ebb7` |
 | `triage-hy4-on-repeat-Rl.jsonl` | `339a508e4d3ff496512086055cf409bd4accb287a915e554a855131c3957f0fc` |
+| `medical-fix-Mx.jsonl` | `5e4af2a0b6d61295914b575bca7baea6b96b284a0e71e2f645782e69d22b1c4b` |
 | `triage-oss-probe-medium.jsonl` | `91d06551db6a5c2c03942facc2477f2c209983c4ca6cea16d79e2c547298af4c` |
 | `triage-oss-probe-high.jsonl` | `76c3b70a79e135c62710adb58b8f39040aecba0ba2e605f519f4b558d942e437` |
 | `triage-oss-high-E0.jsonl` | `21dda3f59ffb9e1d2bfaaa5a471e67d62a89763cd5b9c0de16f10715146b6d4c` |
@@ -253,3 +291,11 @@ units; the other two ran as `probe-on-2` ('$0.0003' of the study's spend is the 
   one and a ruling of its own; it would also need a measurement of the readings it costs (here, 6 floor misses on the old
   text where thinking on has 0).
 - **The ledger of servings counts a unit by its header's tiers**, as the first record notes.
+- **The owner's global answer model is blind to the spend guard, and now says so in a live run** (run A of the model line-up smoke,
+  `docs/traces/lineup-smoke-A.jsonl`, sha256 `3ba6e7f030fa89777c3a59f78a7d2ae954f38754644a7358902aea533e134ca8`). The catalogue
+  entry for `deepseek/deepseek-v4.1-flash-1017` carries an `overrides` list (a price by day and UTC hour, up to twice the base
+  rate); `_prices_what_the_guard_cannot_bound` reads any component it does not know as unboundable, so the engineering tier
+  runs with the guard blind (`spend_guard_blind` names it), as the recompute tier does for the same reason (a
+  `min_prompt_tokens` override). Every engineering run on that model is affected, not only the smoke. The fix would be to
+  bound a call by the highest price across the overrides; it changes how the cost guard counts, so it is the owner's ruling and
+  is **not made**. The call itself cost '$0.0019'.
