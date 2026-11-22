@@ -26,13 +26,16 @@ Three rules, each a choice the owner can overrule:
 from __future__ import annotations
 
 import functools
+from typing import TypeVar
 
 from autornd.config import PINNABLE_TIERS, ProfilePin, parse_profile_models, settings
 
 __all__ = [
     "PINNABLE_TIERS", "ProfilePin", "active_pin", "active_stem", "effective_models",
-    "pins_by_profile", "pins_for", "tier_model",
+    "pinned_order", "pins_by_profile", "pins_for", "tier_model",
 ]
+
+_Default = TypeVar("_Default")
 
 
 @functools.lru_cache(maxsize=16)
@@ -72,15 +75,29 @@ def active_pin(tier: str) -> ProfilePin | None:
     return pins.get(active_stem(), {}).get(tier)
 
 
-def tier_model(tier: str, default: str = "") -> str:
+def tier_model(tier: str, default: _Default = "") -> str | _Default:
     """The model the active profile reads this tier from: its pin, else `default`.
 
-    `default` is the expression the caller used before pins existed (a settings field), so
-    a caller changes from ``settings.model_x`` to ``tier_model("x", settings.model_x)`` and
+    `default` is the expression the caller used before pins existed (a settings field, or a
+    lookup that may be None: the recompute and decision tiers answer None when unset), so a
+    caller changes from ``settings.model_x`` to ``tier_model("x", settings.model_x)`` and
     nothing else.
     """
     pin = active_pin(tier)
     return pin.model if pin else default
+
+
+def pinned_order(tier: str) -> list[str] | None:
+    """The providers the active profile's pin for this tier names, or None when it has no pin.
+
+    A pin carries its own serving: ``@vendor`` gives ['vendor'], a pin with no provider gives []
+    (the router decides), and neither reads OPENROUTER_PROVIDER_ORDER. None means "no pin here",
+    and the caller reads the global order exactly as it did before pins existed.
+    """
+    pin = active_pin(tier)
+    if pin is None:
+        return None
+    return [pin.provider] if pin.provider else []
 
 
 def effective_models(base: dict[str, str]) -> dict[str, str]:

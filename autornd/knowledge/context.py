@@ -18,6 +18,7 @@ from autornd.knowledge.store import retrieve
 from autornd.models.verdicts import Domain, SpecialistRole
 
 from autornd.routing.openrouter import BudgetExceeded
+from autornd.routing.pins import tier_model
 from autornd.routing.switches import NO, YES, route_for
 
 logger = logging.getLogger(__name__)
@@ -130,9 +131,9 @@ def _rank_tier() -> str | None:
     The ranker tier owns this job. If it is unset but a research model exists,
     that model ranks instead rather than losing the capability entirely.
     """
-    if settings.model_ranker:
+    if tier_model("ranker", settings.model_ranker):
         return "ranker"
-    if settings.model_research:
+    if tier_model("research", settings.model_research):
         return "research"
     return None
 
@@ -328,7 +329,7 @@ async def _lookup_wanted(request: str, risk: object) -> tuple[bool, bool]:
     if request_demands_sources(request):
         return True, worth_a_lookup(risk)
     route = (await route_for("needs_sources", {"request": request})
-             if settings.model_search else "default")
+             if tier_model("search", settings.model_search) else "default")
     return route == YES, worth_a_lookup(risk) and route != NO
 
 
@@ -338,7 +339,7 @@ async def expand_queries(client, request: str) -> list[str]:
     Falls back to searching the raw request, which is what retrieval did before
     any research model existed.
     """
-    if client is None or not settings.model_research:
+    if client is None or not tier_model("research", settings.model_research):
         return [request]
     from autornd.profiles import framing
     f = framing()
@@ -430,7 +431,7 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
     raw = "\n\n".join(
         f"[{c['tag']}] (distance: {c['distance']:.3f})\n{c['text']}" for c in chunks
     )
-    if client is None or not settings.model_research or not chunks:
+    if client is None or not tier_model("research", settings.model_research) or not chunks:
         return raw
 
     from autornd.profiles import framing
@@ -468,7 +469,7 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
         demanded, risk_asks = await _lookup_wanted(request, risk)
         if demanded and not blocking:
             blocking = [request]
-        if blocking and settings.model_search and (risk_asks or demanded):
+        if blocking and tier_model("search", settings.model_search) and (risk_asks or demanded):
             from autornd.knowledge.research import (
                 lookup_questions, render_findings, research_gaps)
 
@@ -482,7 +483,7 @@ async def synthesize_briefing(client, request: str, chunks: list[dict],
             _record_lookup(grounding_lookup, asked, findings or [], rendered)
             if rendered:
                 out += "\n\n" + rendered
-        elif blocking and settings.model_search and deferred_gaps is not None:
+        elif blocking and tier_model("search", settings.model_search) and deferred_gaps is not None:
             # The risk gate declined this lookup. Keep the gaps rather than
             # dropping them: if the plan then writes a criterion demanding
             # verifiability, the override node looks them up anyway
@@ -521,7 +522,8 @@ async def rerank_chunks(
     if _rerank_mode == "distance":
         return candidates[:keep]
 
-    model = settings.model_ranker if tier == "ranker" else settings.model_research
+    model = (tier_model("ranker", settings.model_ranker) if tier == "ranker"
+             else tier_model("research", settings.model_research))
 
     # ── native rerank API ──
     if _rerank_mode in (None, "native"):
@@ -674,7 +676,7 @@ async def analyze_request(client, request: str) -> tuple[str, list[str]]:
     always returns a list, which is why research used to fire on every workflow
     whether or not anything needed looking up.
     """
-    if client is None or not settings.model_research:
+    if client is None or not tier_model("research", settings.model_research):
         return "", []
 
     from autornd.profiles import framing, get_profile
@@ -795,7 +797,7 @@ async def build_phase_context(
             demanded, risk_asks = await _lookup_wanted(request, risk)
             if demanded and not unknowns:
                 unknowns = [request]
-            if unknowns and settings.model_search and (risk_asks or demanded):
+            if unknowns and tier_model("search", settings.model_search) and (risk_asks or demanded):
                 from autornd.knowledge.research import (
                     lookup_questions, render_findings, research_gaps)
 
@@ -809,7 +811,7 @@ async def build_phase_context(
                 _record_lookup(grounding_lookup, asked, findings or [], rendered)
                 if rendered:
                     parts.append(rendered)
-            elif unknowns and settings.model_search and deferred_gaps is not None:
+            elif unknowns and tier_model("search", settings.model_search) and deferred_gaps is not None:
                 # The risk gate declined. Defer, don't discard — the override
                 # node may still fire on a plan-side verifiability demand.
                 deferred_gaps.extend(unknowns)

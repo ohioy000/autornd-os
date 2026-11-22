@@ -24,6 +24,7 @@ from autornd.engine.workflow import (
 )
 from autornd.models.workflow import PhaseResult, Workflow, WorkflowStatus
 from autornd.routing.openrouter import OpenRouterClient
+from autornd.routing.pins import tier_model
 
 router = APIRouter(prefix="/api")
 
@@ -941,7 +942,8 @@ async def estimate_doublecheck(
     session: AsyncSession = Depends(get_session),
 ):
     from autornd.config import settings
-    if not settings.model_premium:
+    premium = tier_model("premium", settings.model_premium)
+    if not premium:
         raise HTTPException(404, "Premium model not configured")
 
     workflow = await _load_owned_workflow(workflow_id, request, session)
@@ -956,8 +958,8 @@ async def estimate_doublecheck(
     # makes no call — _estimate_cost is local arithmetic over the catalogue
     # rate — so there is nothing to admit and nothing to count.
     client = OpenRouterClient()
-    cost = client._estimate_cost(settings.model_premium, est_tokens, est_tokens // 2)
-    return {"data": {"estimated_cost": round(cost, 4), "model": settings.model_premium}}
+    cost = client._estimate_cost(premium, est_tokens, est_tokens // 2)
+    return {"data": {"estimated_cost": round(cost, 4), "model": premium}}
 
 
 @router.post("/workflows/{workflow_id}/doublecheck")
@@ -970,7 +972,7 @@ async def run_doublecheck_endpoint(
     from autornd.engine.phases import run_doublecheck
     from autornd.models.verdicts import ImplementVerdict
 
-    if not settings.model_premium:
+    if not tier_model("premium", settings.model_premium):
         raise HTTPException(404, "Premium model not configured")
 
     workflow = await _load_owned_workflow(workflow_id, request, session)
@@ -1155,7 +1157,7 @@ async def health():
         "status": "degraded" if unverified else "ok",
         "unverified_models": unverified,
         "service": "autornd",
-        "premium_model": settings.model_premium or None,
+        "premium_model": tier_model("premium", settings.model_premium) or None,
         # Ruling D45 (1): the override is reported here and logged at
         # startup, so an open server cannot be mistaken for a closed one.
         "authentication_configured": bool(settings.api_key or settings.jwt_secret),

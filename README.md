@@ -2,7 +2,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-2356%20passing-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-2440%20passing-brightgreen.svg)](#testing)
 
 **A harness that lets low-cost models answer precise expert questions, shows what each answer rested on, and says honestly what it checked.**
 

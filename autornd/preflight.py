@@ -349,12 +349,13 @@ def _call_targets() -> dict[str, tuple[str, list[str]]]:
     """
     from autornd.config import settings
     from autornd.routing.openrouter import OpenRouterClient, provider_order_for
+    from autornd.routing.pins import tier_model
 
     client = OpenRouterClient(api_key="preflight")
     targets: dict[str, tuple[str, list[str]]] = {}
     for function in CALL_FUNCTIONS:
         if function == "ranker":
-            model = settings.model_ranker or ""
+            model = tier_model("ranker", settings.model_ranker) or ""
         elif function == "independent":
             model = client.independent_model() or ""
         elif function == "recompute":

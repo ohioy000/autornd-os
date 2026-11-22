@@ -13,6 +13,7 @@ import httpx
 from pydantic import ValidationError
 
 from autornd.config import settings
+from autornd.routing.pins import active_pin, pinned_order, tier_model
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +128,23 @@ def provider_order_for(function: str) -> list[str]:
 
     A tier named with an empty value is explicitly unpinned, which is how one
     tier opts out of a global default.
+
+    A profile's own pin for the tier (PROFILE_MODELS, autornd/routing/pins.py)
+    carries its own serving and is read first: `@vendor` gives [vendor], a pin
+    with no provider gives [] and the router decides. The global order above
+    was written for the global model, and a provider that does not host the
+    pinned one answers 404 under hard pins, so it is not applied. The
+    independent call follows the tier that supplies its model (premium when
+    that has a model for the profile, else architecture). With no pin set
+    nothing here changes.
     """
+    source = function.lower()
+    if source == "independent":
+        source = "premium" if tier_model("premium", settings.model_premium) else "architecture"
+    pinned = pinned_order(source)
+    if pinned is not None:
+        return pinned
+
     raw = (settings.openrouter_provider_order or "").strip()
     if not raw:
         return []
@@ -848,9 +865,17 @@ class OpenRouterClient:
         return self._client
 
     def get_model(self, function: str) -> str:
+        # The active profile's own pin for the tier is read first (PROFILE_MODELS,
+        # autornd/routing/pins.py), and a tier nothing sets falls back to the
+        # engineering model that profile reads, its pin included. With no pin set
+        # every line below is the expression it was before pins existed.
+        engineering = tier_model("engineering", settings.model_engineering)
         if function == "independent":
-            return self.independent_model() or settings.model_engineering
-        return self.FUNCTION_MODELS.get(function, settings.model_engineering)
+            return self.independent_model() or engineering
+        pin = active_pin(function)
+        if pin:
+            return pin.model
+        return self.FUNCTION_MODELS.get(function, engineering)
 
     def independent_model(self) -> str | None:
         """A model for the independent pass, or None if there isn't an honest one.
@@ -865,8 +890,12 @@ class OpenRouterClient:
         the lookup then falls back to engineering, so the "independent" check
         would quietly have been the same model all along.
         """
-        candidate = settings.model_premium or settings.model_architecture
-        if not candidate or candidate == settings.model_engineering:
+        # Derived from the models the active profile reads, pins included: a
+        # profile that pins its engineering model to the architecture model has
+        # no honest second opinion, and one that pins a premium model has one.
+        candidate = (tier_model("premium", settings.model_premium)
+                     or tier_model("architecture", settings.model_architecture))
+        if not candidate or candidate == tier_model("engineering", settings.model_engineering):
             return None
         return candidate
 
@@ -879,16 +908,19 @@ class OpenRouterClient:
         tier would not be blind to nothing in particular, but it would
         silently run on the model that produced the answer, which is
         not what the vote measures.
+
+        A pin on this tier for the active profile turns it on for that profile.
         """
-        return self.FUNCTION_MODELS.get("recompute")
+        return tier_model("recompute", self.FUNCTION_MODELS.get("recompute"))
 
     def decision_model(self) -> str | None:
         """The decision tier's model, or None when it is not configured.
 
         No fallback, as the recompute tier has none: a chat model cannot
-        answer the decisions route, so an unset tier is a skip.
+        answer the decisions route, so an unset tier is a skip. A pin on this
+        tier for the active profile turns it on for that profile.
         """
-        return self.FUNCTION_MODELS.get("decision")
+        return tier_model("decision", self.FUNCTION_MODELS.get("decision"))
 
     def decisions_url(self) -> str:
         """Where a decisions request is posted.

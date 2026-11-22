@@ -42,6 +42,7 @@ from autornd.knowledge.absence import Proof, name_terms, prove, render_proofs
 from autornd.knowledge.fetch import Source, fetch_source
 from autornd.knowledge.store import ingest_text, retrieve
 from autornd.routing.openrouter import BudgetExceeded, extract_json
+from autornd.routing.pins import tier_model
 
 logger = logging.getLogger(__name__)
 
@@ -470,7 +471,7 @@ async def research_gaps(
     missing one stays visible as a gap. A page that cannot be fetched never
     fails a lookup; it leaves its answer unverified.
     """
-    if client is None or not settings.model_search or not gaps:
+    if client is None or not tier_model("search", settings.model_search) or not gaps:
         return []
 
     # Ask everything in one request. Splitting the gaps would mean one search
@@ -748,7 +749,7 @@ async def _read_documents(near: dict[str, str], terms: set[str],
     quotes: list[Quote] = []
     documents: list[dict] = []
     read_by_reader: dict[str, dict] = {}
-    if client is not None and settings.model_reader:
+    if client is not None and tier_model("reader", settings.model_reader):
         read_by_reader = await _read_with_readers(
             client, question,
             {u: pg.text for u, pg in zip(urls, pages) if pg.fetched}, terms)
