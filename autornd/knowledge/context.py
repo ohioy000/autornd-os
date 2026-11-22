@@ -269,11 +269,23 @@ def criteria_demand_verification(criteria: list[str]) -> bool:
 # contain; the run ended completed. A request that asks to be cited cannot be
 # answered from memory, whatever its risk. Wider than _VERIFICATION_TERMS,
 # which reads criteria: these phrases are ordinary in a request and rare in a
-# criterion that does not mean them.
+# criterion that does not mean them. These are the phrases any field uses; the
+# ones that belong to one field ("from the datasheet" and "per the datasheet"
+# were two of them) are the profile's `source_request_terms`, added below.
 _REQUEST_SOURCE_TERMS = _VERIFICATION_TERMS + (
     "with sources", "with a source", "with references", "quote the",
-    "according to the", "from the datasheet", "per the datasheet",
+    "according to the",
 )
+
+
+def _profile_source_terms() -> tuple[str, ...]:
+    """The phrases the active profile adds, one per line in its
+    `source_request_terms`. Read when the request is judged and not at import,
+    so a profile switched at run time changes them. A blank line is no phrase:
+    the empty string is inside every text and would demand a lookup of all."""
+    from autornd.profiles import framing
+    lines = framing().get("source_request_terms", "").splitlines()
+    return tuple(term for term in (line.strip().lower() for line in lines) if term)
 
 
 def request_demands_sources(request: str) -> bool:
@@ -284,7 +296,7 @@ def request_demands_sources(request: str) -> bool:
     decision of 2026-11-13: a request for citations always gets a lookup.
     """
     text = str(request or "").lower()
-    return any(term in text for term in _REQUEST_SOURCE_TERMS)
+    return any(term in text for term in _REQUEST_SOURCE_TERMS + _profile_source_terms())
 
 
 BRIEFING_PROMPT = """\

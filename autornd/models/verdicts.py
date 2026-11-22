@@ -978,7 +978,7 @@ class EscalationVerdict(BaseModel):
     )
     requires_human: bool = Field(
         ...,
-        description="True ONLY if the fix requires external API keys, manual hardware intervention, or falls entirely outside the current architecture scope.",
+        description="True ONLY if the fix requires access, credentials or a real-world action that no amount of further specification can supply, or falls entirely outside the scope of the current architecture.",
     )
     # Ruling D51 (6): one ruling per open dissent — {"dissent":
     # <number>, "upheld": true|false, "reason": "<one line>"}.

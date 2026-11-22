@@ -21,6 +21,40 @@ framing:
   role_example: "firmware_engineer"
   unit_examples: " ERP is not EIRP. Typical is not\n  maximum. Absolute maximum ratings are not operating ranges."
   gap_examples: " Measured against published standards, the gaps were all of this kind: a\n  pasteuriser answer with no flow-diversion valve, a partition answer with no\n  flanking path, an interlocking answer with no safety-integrity level."
+  # The risk guide's examples, the hazard sentence, the switch words and the
+  # citation phrases: the text the harness always used, cut out of the code word
+  # for word. What each key is, and why only the examples may change, is in
+  # general.yaml.
+  risk_harm_rules: |-
+    structural loading, food contact,
+    sterility, pressure vessels, electrical code, emissions
+  risk_paper_examples: |-
+    A lintel carrying a wall, a sterilisation protocol and a
+    food-contact material are critical while still on paper, because the paper is
+    what gets built and audited.
+  risk_high_examples: |-
+    the answer changes the physical world — wiring, installing, actuating
+      or modifying equipment — or is safety-critical in function even while still a
+      drawing, such as a control surface or a load path; or it ships as core system
+      behaviour, a security boundary, or data integrity. Routing power to a sensor
+      on a machine stays there, and someone stands next to it
+  risk_medium_examples: |-
+    the answer is still a decision, reversible until an order is placed
+      or a part is cut — selecting a component, sizing a part, calculating a
+      budget, setting a tolerance, taking a measurement
+  risk_protective_example: |-
+    Sizing the backup aeration for a tank of live stock
+    is sizing work, and a wrong answer loses the entire stock, so it is at least
+    high rather than medium. It is critical only if a person can be harmed: losing
+    stock, equipment or money, however much of it, is high.
+  hazard_harm: "injure a person or damage equipment"
+  switch_outside_sources: "a standard, a regulation, a datasheet or a published measurement"
+  switch_computed_values: "a sum, a chain of conversions, a sizing or a design figure"
+  switch_published_documents: "a rule, a standard, a datasheet or another published document"
+  source_request_terms: |-
+    from the datasheet
+    per the datasheet
+
 
 domains:
   firmware:

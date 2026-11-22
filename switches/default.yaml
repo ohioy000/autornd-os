@@ -20,6 +20,13 @@
 #             live:   the harness acts on it
 #   guards    what acting on it changes, in plain words
 #
+# A question, a yes or a no may name the active profile's own words as
+# {switch_outside_sources}, {switch_computed_values} or
+# {switch_published_documents} (framing keys of the same names). They are
+# filled when the question is asked, so a field's questions name its own
+# documents, and the engineering profile's words are the ones these questions
+# were written and measured with.
+#
 # A switch ships in shadow. Moving one to live changes what the harness
 # concludes, so it is the owner's ruling, on evidence, and the ruling is
 # written beside the switch. The thresholds are judgments, not measurements,
@@ -28,8 +35,7 @@
 needs_sources:
   question: >
     Can this request be answered correctly only with facts from an outside
-    source, such as a standard, a regulation, a datasheet or a published
-    measurement?
+    source, such as {switch_outside_sources}?
   yes: It turns on a figure or wording that a named or implied outside document holds.
   no: It can be worked out from what the request itself states and general principles.
   yes_at: 0.80
@@ -51,8 +57,8 @@ needs_calculation:
   question: >
     Must the answer to this request be worked out by calculation from figures,
     and not read from a document?
-  yes: It asks for a value that has to be computed, such as a sum, a chain of conversions, a sizing or a design figure.
-  no: It asks what a rule, a standard, a datasheet or another published document states.
+  yes: It asks for a value that has to be computed, such as {switch_computed_values}.
+  no: It asks what {switch_published_documents} states.
   yes_at: 0.80
   no_at: 0.20
   safe: "yes"

@@ -250,11 +250,8 @@ Risk guide — judge the consequence of being wrong, not the subject matter.
 Ask these two questions in order.
 
 First: if this answer is wrong, can a person be harmed, or does it breach a
-rule that exists to prevent harm — structural loading, food contact,
-sterility, pressure vessels, electrical code, emissions? If so it is critical,
-at every stage. A lintel carrying a wall, a sterilisation protocol and a
-food-contact material are critical while still on paper, because the paper is
-what gets built and audited.
+rule that exists to prevent harm — {f['risk_harm_rules']}? If so it is critical,
+at every stage. {f['risk_paper_examples']}
 
 Not every published standard is one of those. A standard that exists for
 quality, consistency or interoperability — broadcast loudness, file formats,
@@ -263,23 +260,14 @@ written and however much a breach embarrasses someone. Ask what the rule is
 protecting, not whether a rule exists.
 
 Second, if nobody can be harmed: has anything been committed to yet?
-- high: the answer changes the physical world — wiring, installing, actuating
-  or modifying equipment — or is safety-critical in function even while still a
-  drawing, such as a control surface or a load path; or it ships as core system
-  behaviour, a security boundary, or data integrity. Routing power to a sensor
-  on a machine stays there, and someone stands next to it
-- medium: the answer is still a decision, reversible until an order is placed
-  or a part is cut — selecting a component, sizing a part, calculating a
-  budget, setting a tolerance, taking a measurement
+- high: {f['risk_high_examples']}
+- medium: {f['risk_medium_examples']}
 - low: presentation, copy, documentation or configuration that is trivially
   reversible and cannot hurt anyone
 
 Work on something whose purpose is to protect — a backup, an interlock, an
 alarm, a containment, a life-support system — is judged by what it protects,
-not by the stage it is at. Sizing the backup aeration for a tank of live stock
-is sizing work, and a wrong answer loses the entire stock, so it is at least
-high rather than medium. It is critical only if a person can be harmed: losing
-stock, equipment or money, however much of it, is high.
+not by the stage it is at. {f['risk_protective_example']}
 
 A protocol, schedule, policy, setpoint band or limit that will be followed
 repeatedly carries the consequence of everything it governs. Judge it by what
@@ -592,6 +580,8 @@ def build_domain_review_prompt(
     request: str, summary: str, asks: list[Any] | None = None,
     context: str = "",
 ) -> str:
+    from autornd.profiles import framing
+    f = framing()
     context_block = f"\n\nProject context:\n{context}" if context else ""
     return f"""\
 Review this implementation from your domain perspective. Do NOT produce an alternative design.
@@ -608,7 +598,7 @@ The asks, quoted from the request:
 Judge the answer against the request from your domain. A concern can be critical only if it is anchored:
 - it names the ask it concerns, by number, and what the answer states or omits against it; or
 - it quotes the request's own words, exactly, for something the answer gets wrong or leaves out; or
-- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment. Quote those words of the answer.
+- it is a hazard: something the answer states or instructs that would, if followed as written, {f['hazard_harm']}. Quote those words of the answer.
 If the answer gives something for an ask and you say it is false, set kind: wrong_fact and quote, in source_quote, the words of the request or of the provided sources that show it is false. If you cannot quote them, it is a note.
 An omission is never a hazard. If the request asked for what is missing, quote the request; if it did not, it is a note, and a note is never critical.
 
@@ -1205,7 +1195,7 @@ Return JSON with:
 - red_cause: null if green, otherwise the specific failure cause
 - failed_ask: the number of the ask the work fails, when the failure is one ask's
 - anchor_quote: the request's own words, verbatim, for what the answer gets wrong or leaves out, when the failure is not one ask's number
-- hazard: true only when the answer states or instructs something that would, followed as written, injure a person or damage equipment
+- hazard: true only when the answer states or instructs something that would, followed as written, {f['hazard_harm']}
 - hazard_quote: when hazard is true, the answer's own words that state or instruct it, verbatim
 - kind: the dissent's kind — unmet_ask (the answer gives nothing for the ask), wrong_fact (the answer gives something for the ask and you say it is false), or hazard
 - source_quote: for wrong_fact, the request's or the sources' own words that contradict the answer, verbatim
@@ -1284,7 +1274,7 @@ The asks, quoted from the request:
 Judge the answer against the request. A finding can block only if it is anchored:
 - it names the ask it concerns, by number, and what the answer states or omits against it; or
 - it quotes the request's own words, exactly, for something the answer gets wrong or leaves out; or
-- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment. Quote those words of the answer.
+- it is a hazard: something the answer states or instructs that would, if followed as written, {f['hazard_harm']}. Quote those words of the answer.
 If the answer gives something for an ask and you say it is false, set kind: wrong_fact and quote, in source_quote, the words of the request or of the provided sources that show it is false. If you cannot quote them, it is a note.
 An omission is never a hazard. If the request asked for what is missing, quote the request; if it did not, it is a note.
 Use severity critical or high only for an anchored finding. Everything else is a note, at severity medium or low, and cannot block.
@@ -1449,7 +1439,7 @@ The asks, quoted from the request:
 An issue can block only if it is anchored:
 - it names the ask it concerns, by number, and what the answer states or omits against it; or
 - it quotes the request's own words, exactly, for something the answer gets wrong or leaves out; or
-- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage equipment. Quote those words of the answer.
+- it is a hazard: something the answer states or instructs that would, if followed as written, {f['hazard_harm']}. Quote those words of the answer.
 If the answer gives something for an ask and you say it is false, set kind: wrong_fact and quote, in source_quote, the words of the request or of the provided sources that show it is false. If you cannot quote them, it is a recommendation.
 An omission is never a hazard. If the request asked for what is missing, quote the request; if it did not, it is a recommendation.
 
