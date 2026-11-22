@@ -26,8 +26,9 @@ independent test of it.** The other 35 sectors are the check that the change mov
 default thinking (no wrapper), provider `tencent/fp8`, set in the process environment only; the wide suite (36 sectors,
 `--repeat 5`, 180 units), `--timeout 120`, workflow `triage-classify`, in a separate detached worktree at the committed
 fix so no git operation touches a tree a paid run writes into. The reference is the second model's thinking-on arms of
-`docs/traces/triage-hy4-on-T0.jsonl` and `triage-hy4-on-repeat-R0.jsonl` (the old guide: 0 and 1 units below a floor,
-171 and 171 meeting the bounds) and `triage-hy4-on-Tm.jsonl` (the earlier medical text: 6 below a floor in 140 units).
+the files `triage-hy4-on-T0.jsonl` and `triage-hy4-on-repeat-R0.jsonl` (the old guide: 0 and 1 units below a floor,
+171 and 171 meeting the bounds) and `triage-hy4-on-Tm.jsonl` (the earlier medical text: 6 below a floor in 140 units), all in
+`docs/traces`.
 
 ## The rules that decide (written before the spend)
 
