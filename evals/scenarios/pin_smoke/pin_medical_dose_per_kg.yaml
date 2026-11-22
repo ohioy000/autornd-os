@@ -1,0 +1,17 @@
+id: pin_medical_dose_per_kg
+description: >
+  Model line-up smoke (docs/preregistration-model-lineup-smoke.md): a medical request that is a calculation, so the
+  decision switch can send it to the recompute tier and the answer call is the one the medical pin serves. It names no
+  workflow. 15 mg per kg a day for 18.4 kg is 276 mg a day, and 276 mg in 3 equal doses is 92 mg a dose. A teaching
+  arithmetic request: it asks for a number to be checked against the prescriber's order, and no patient is named.
+request: >
+  A teaching example for a nursing course: a drug is ordered at 15 mg per kg of body weight per day, divided into 3
+  equal doses, for a child who weighs 18.4 kg. Work out the total daily amount and the amount in each dose, showing the
+  steps, and say what a nurse should check before giving it.
+tags: [lineup-smoke, medical]
+expect:
+  status: completed
+  max_calls: 30
+  figures_present:
+    - ["276"]
+    - ["92"]

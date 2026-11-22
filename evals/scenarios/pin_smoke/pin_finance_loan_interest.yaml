@@ -1,0 +1,16 @@
+id: pin_finance_loan_interest
+description: >
+  Model line-up smoke (docs/preregistration-model-lineup-smoke.md): a finance request that is a calculation, so the
+  decision switch can send it to the recompute tier and the answer call is the one the finance pin serves. It names no
+  workflow. 200,000 at 6% compounded once a year for 3 years is 200,000 x 1.191016 = 238,203.20, of which 38,203.20 is
+  interest.
+request: >
+  A loan of £200,000 accrues interest at 6% a year, compounded once a year, and nothing is repaid for 3 years. Work out
+  the total owed at the end of the 3 years and how much of it is interest, showing each year's balance.
+tags: [lineup-smoke, finance]
+expect:
+  status: completed
+  max_calls: 30
+  figures_present:
+    - ["238,203.20", "238203.20", "238,203.2"]
+    - ["38,203.20", "38203.20", "38,203.2"]
