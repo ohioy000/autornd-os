@@ -241,22 +241,27 @@ class TestThePromptsAreTheDocs:
         covered = mod.covered_areas(a)
         assert covered.startswith("employment, payroll") and covered.endswith("EPA SPCC.")
 
-    def test_there_are_nine_groups_of_fourteen_numbered_y1_to_y126(self):
+    def test_there_are_thirteen_groups_of_fourteen_numbered_y1_to_y182(self):
         ids = [qid for group in mod.GROUPS for qid in group.ids]
-        assert len(mod.GROUPS) == 9 and ids == [f"Y{n}" for n in range(1, 127)]
+        assert len(mod.GROUPS) == 13 and ids == [f"Y{n}" for n in range(1, 183)]
 
 
 class TestTheLineUp:
     """Groups 1 to 6 are the first set's ground twice over; groups 7 to 9 are the three engineering
-    subjects the owner added on 2026-11-21, described in detail and not by a bare label."""
+    subjects the owner added on 2026-11-21, and groups 10 to 13 the four subjects (law, finance,
+    medicine, natural science) the owner added after them, all described in detail and not by a bare label."""
 
     SUBJECTS = {7: "electrical power systems and installations",
                 8: "mechanical, thermal and materials engineering",
-                9: "civil, structural and geotechnical engineering"}
+                9: "civil, structural and geotechnical engineering",
+                10: "law",
+                11: "finance, banking, securities and tax",
+                12: "medicine and clinical practice",
+                13: "natural science"}
 
-    def test_the_three_engineering_groups_come_after_the_six_and_name_their_subjects(self):
+    def test_the_seven_added_groups_come_after_the_six_and_name_their_subjects(self):
         added = {g.number: g.area for g in mod.GROUPS if g.number > 6}
-        assert sorted(added) == [7, 8, 9]
+        assert sorted(added) == [7, 8, 9, 10, 11, 12, 13]
         for number, subject in self.SUBJECTS.items():
             assert added[number].startswith(subject + ":"), number
 
@@ -278,7 +283,7 @@ class TestTheLineUp:
                                "--worker", "c/d", "--worker-provider", "q"])
         assert {int(n) for n in args.groups.split(",")} == {g.number for g in mod.GROUPS}
 
-    @pytest.mark.parametrize("number", [7, 8, 9])
+    @pytest.mark.parametrize("number", [7, 8, 9, 10, 11, 12, 13])
     def test_the_whole_area_and_the_groups_own_ids_reach_the_author(self, number):
         a, _ = mod.load_prompts(mod.PROMPTS.read_text(encoding="utf-8"))
         group = next(g for g in mod.GROUPS if g.number == number)
@@ -611,6 +616,93 @@ class TestTheMoneyTheKeyAndThePins:
         assert len(run.errors) == 4 and run.stopped
 
 
+class TestACheckCallCarriesItsPagesWhole:
+    """On the second run of the second hold-out (2026-11-21) every question of a group went to the
+    checker in one call and each page got an equal share of the limit, so the checkers said "the page
+    is cut, I could not check" of 15 questions in 4 groups, on pages where code had found every
+    passage already. The questions are now packed into calls that carry their pages whole where they
+    can, and a repair's re-check is read again even when an older one is saved."""
+
+    PAGE_CHARS = len(page(1))
+
+    @pytest.fixture
+    def two_pages_to_a_call(self, monkeypatch):
+        monkeypatch.setattr(mod, "CHECK_PAGE_CHARS", 2 * self.PAGE_CHARS)
+
+    def qs(self):
+        return [question("Y1", 1, 1), question("Y2", 2, 1), question("Y3", 1, 2),
+                question("Y4", 3, 1)]
+
+    def test_questions_are_packed_while_their_pages_fit_and_a_shared_page_counts_once(
+            self, two_pages_to_a_call):
+        batches = mod.check_batches(self.qs(), URLS)
+        assert [[q["id"] for q in b] for b in batches] == [["Y1", "Y2", "Y3"], ["Y4"]]
+
+    def test_a_question_whose_pages_alone_pass_the_limit_goes_by_itself_and_is_cut(
+            self, monkeypatch):
+        monkeypatch.setattr(mod, "CHECK_PAGE_CHARS", self.PAGE_CHARS // 2)
+        batches = mod.check_batches(self.qs(), URLS)
+        assert [[q["id"] for q in b] for b in batches] == [["Y1", "Y3"], ["Y2"], ["Y4"]], \
+            "Y1 and Y3 share a page, so they share a call; no page fits whole, and each is cut"
+        assert "[the page is cut here" in mod.check_user(batches[1], URLS, reverse=False)
+
+    def test_no_page_in_a_packed_call_is_cut(self, two_pages_to_a_call):
+        for batch in mod.check_batches(self.qs(), URLS):
+            assert "[the page is cut here" not in mod.check_user(batch, URLS, reverse=False)
+
+    def test_every_question_is_in_exactly_one_batch(self, two_pages_to_a_call):
+        batches = mod.check_batches(self.qs(), URLS)
+        assert sorted(q["id"] for b in batches for q in b) == ["Y1", "Y2", "Y3", "Y4"]
+
+    async def test_a_reading_is_one_call_a_batch_and_the_second_goes_the_other_way_round(
+            self, tmp_path, monkeypatch, small):
+        client = FakeClient(Script())
+        run = make_run(tmp_path, client=client)
+        await run_stages(run, ["plan", "open", "extract"], monkeypatch, make_fetch())
+        monkeypatch.setattr(mod, "CHECK_PAGE_CHARS", 2 * self.PAGE_CHARS)
+        client.calls.clear()
+        questions = self.qs()
+        await mod.check_group(run, run.groups[0], "check", questions)
+        asked = [[q["id"] for q in json.loads(c["user"].split("THE PAGES:")[0][len("THE FILE:\n"):])
+                  ["questions"]] for c in client.calls]
+        assert asked == [["Y1", "Y2", "Y3"], ["Y4"], ["Y4"], ["Y3", "Y2", "Y1"]]
+        for k in (1, 2):
+            saved = json.loads((tmp_path / f"check-g1-{k}.json").read_text())
+            assert sorted(saved) == ["Y1", "Y2", "Y3", "Y4"], "one file holds every batch's verdicts"
+
+    async def test_a_saved_reading_stands_unless_it_is_forced(self, tmp_path, monkeypatch, small):
+        client = FakeClient(Script())
+        run = make_run(tmp_path, client=client)
+        await run_stages(run, ["plan", "open", "extract"], monkeypatch, make_fetch())
+        group, questions = run.groups[0], [question("Y1", 1, 1)]
+        stale = {"Y1": {"verdict": "FIX", "problem": "stale", "fix": ""}}
+        for k in (1, 2):
+            (tmp_path / f"recheck-g1-{k}.json").write_text(json.dumps(stale))
+        before = len(client.calls)
+        await mod.check_group(run, group, "recheck", questions)
+        assert len(client.calls) == before, "saved, so not asked again"
+        await mod.check_group(run, group, "recheck", questions, force=True)
+        assert len(client.calls) == before + 2
+        assert json.loads((tmp_path / "recheck-g1-1.json").read_text())["Y1"]["problem"] != "stale"
+
+    async def test_a_repair_reads_its_questions_again_over_a_saved_recheck(
+            self, tmp_path, monkeypatch, small):
+        """The second repair round skipped its re-check because the first round's file was there, and
+        the old verdicts stood for new questions under the same ids."""
+        client = FakeClient(Script())
+        run = make_run(tmp_path, client=client)
+        await run_stages(run, ["plan", "open", "extract", "write", "check"], monkeypatch, make_fetch())
+        sentinel = {"Y1": {"verdict": "OK", "problem": "SENTINEL", "fix": ""},
+                    "Y2": {"verdict": "OK", "problem": "SENTINEL", "fix": ""},
+                    "Y3": {"verdict": "OK", "problem": "SENTINEL", "fix": ""}}
+        for k in (1, 2):
+            (tmp_path / f"recheck-g1-{k}.json").write_text(json.dumps(sentinel))
+        await run_stages(run, ["fix"])
+        for k in (1, 2):
+            text = (tmp_path / f"recheck-g1-{k}.json").read_text()
+            assert "SENTINEL" not in text, "the repair's questions were read again"
+
+
 class TestTheQuestionsRunIsNotCapped:
     """The owner's instruction of 2026-11-21: let the questions run cook, and do not tinker with how
     hard a model thinks. Writing, checking and repairing get the most an endpoint gives and no
@@ -633,8 +725,8 @@ class TestTheQuestionsRunIsNotCapped:
         assert mod.reasoning_for(args.effort_check) == option
 
     def test_the_author_and_the_worker_may_reply_up_to_what_the_endpoints_give(self):
-        assert mod.AUTHOR_MAX_TOKENS == 65_536
-        assert mod.WORKER_MAX_TOKENS == 65_536
+        assert mod.AUTHOR_MAX_TOKENS == 130_000      # the owner's number, 2026-11-21
+        assert mod.WORKER_MAX_TOKENS == 65_536       # the worker's endpoint gives no more
 
     async def test_write_check_and_fix_ask_for_that_ceiling_and_send_no_reasoning_option(
             self, tmp_path, monkeypatch, small):
@@ -646,8 +738,11 @@ class TestTheQuestionsRunIsNotCapped:
         fix = [c for c in client.calls if c["function"] == "author" and "QUESTIONS TO REPAIR" in c["user"]]
         check = [c for c in client.calls if c["function"] == "worker" and "THE FILE:" in c["user"]]
         assert len(write) == 1 and len(fix) == 1 and len(check) >= 4, "two readings and two re-checks"
-        for call in write + fix + check:
-            assert call["max_tokens"] == 65_536, call["user"][:40]
+        for call in write + fix:
+            assert call["max_tokens"] == mod.AUTHOR_MAX_TOKENS, call["user"][:40]
+            assert call["reasoning"] is None, call["user"][:40]
+        for call in check:
+            assert call["max_tokens"] == mod.WORKER_MAX_TOKENS, call["user"][:40]
             assert call["reasoning"] is None, call["user"][:40]
 
     async def test_a_level_given_to_the_run_reaches_the_write_the_fix_and_the_checks(

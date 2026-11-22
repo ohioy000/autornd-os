@@ -1,12 +1,15 @@
-"""A PDF is read in processes that can be stopped, not in a thread that cannot.
+"""A PDF is read by PDFium in processes that can be stopped, not in a thread that cannot.
 
-pypdf is pure Python, so the old read (a thread each) took turns on one core and went on running after
+The old reader, pypdf, is pure Python: threads took turns on one core and a read went on running after
 its page had been given up. Measured 2026-11-21 on 16 PDFs that gave no answer in earlier runs, read
 four at a time in processes of their own with no network and no model: they took 8.9 to 134.4 s, a
-653-page datasheet 49.9 s, NIST SP 800-53 Rev. 5 80.6 s. The tests here pin what the change must keep
-(the text is exactly the one-process text), what it must do (stop the processes when the time is up,
-never run more than the set number at once, fall back to a thread when processes cannot start) and
-what the fetch says about a PDF that ran out of time.
+653-page datasheet 49.9 s, NIST SP 800-53 Rev. 5 80.6 s. PDFium read the same 16 alone in 0.3 to 3.4 s,
+9 to 39 times faster, and is not thread-safe (two threads at once crashed the process), so it only
+runs in a process of its own. The tests here pin what the change must keep (every page's text, in the
+document's order), what it must do (stop the processes when the time is up, never run more than the set
+number at once, read a small PDF in one process and a large one in stripes, fall back to a thread when
+processes cannot start, name a killed process as a failed read) and what the fetch says about a PDF
+that ran out of time.
 """
 
 from __future__ import annotations
@@ -24,7 +27,6 @@ import httpx
 import pytest
 
 from autornd.knowledge import fetch, pdf_read
-from autornd.knowledge.fetch import pdf_text
 from autornd.knowledge.pdf_read import PdfFailed, read_pdf
 
 PAGE = "https://example.org/standard.pdf"
@@ -70,6 +72,32 @@ def _encrypted(pdf: bytes, user_password: str) -> bytes:
     return out.getvalue()
 
 
+@pytest.fixture(autouse=True)
+def stripes(monkeypatch):
+    """Every test PDF is a few hundred bytes; a test that wants one process says so."""
+    monkeypatch.setattr(pdf_read, "PARALLEL_MIN_BYTES", 0)
+
+
+def _spy_on_processes(monkeypatch) -> list[tuple]:
+    """Count the reading processes started, while still starting them."""
+    started: list[tuple] = []
+    real = pdf_read.asyncio.create_subprocess_exec
+
+    async def counting(*args, **kwargs):
+        started.append(args)
+        return await real(*args, **kwargs)
+
+    monkeypatch.setattr(pdf_read.asyncio, "create_subprocess_exec", counting)
+    return started
+
+
+async def _refuse_processes(monkeypatch) -> None:
+    async def refuse(*args, **kwargs):
+        raise OSError("no processes here")
+
+    monkeypatch.setattr(pdf_read.asyncio, "create_subprocess_exec", refuse)
+
+
 @pytest.fixture
 def served(monkeypatch):
     """A page address that serves the PDF handed to it, with names resolving
@@ -84,11 +112,10 @@ def served(monkeypatch):
         monkeypatch.setattr(fetch, "_transport", httpx.MockTransport(handler))
 
     monkeypatch.setattr(fetch, "_addresses", public)
-    monkeypatch.setattr(fetch, "PARALLEL_MIN_BYTES", 0)
     return serve
 
 
-class TestTheTextIsTheOneProcessText:
+class TestTheTextIsTheDocumentsText:
     @pytest.mark.parametrize("pages, processes", [
         (7, 3),    # the stripes hold 3, 2 and 2 pages
         (2, 4),    # more processes than pages: two have nothing to read
@@ -100,16 +127,13 @@ class TestTheTextIsTheOneProcessText:
         monkeypatch.setattr(pdf_read, "workers", lambda: processes)
         raw = _pdf_pages([f"page number {i}" for i in range(pages)])
         text = await read_pdf(raw)
-        assert text == pdf_text(raw)
-        where = [text.index(f"page number {i}") for i in range(pages)]
-        assert where == sorted(where), "page order is the document's"
+        assert text == "\n".join(f"page number {i}" for i in range(pages)), \
+            "every page, in the document's order, whichever process read it"
 
     async def test_a_page_with_no_text_keeps_its_place(self, monkeypatch):
         monkeypatch.setattr(pdf_read, "workers", lambda: 2)
         raw = _pdf_pages(["first", "", "third"])
-        text = await read_pdf(raw)
-        assert text == pdf_text(raw)
-        assert text.index("first") < text.index("third")
+        assert await read_pdf(raw) == "first\n\nthird"
 
     async def test_progress_says_how_many_pages_there_are_and_how_many_are_read(
             self, monkeypatch):
@@ -153,15 +177,19 @@ class TestWhatAFailedReadSays:
         (b"%PDF-1.7 broken", "the PDF could not be read"),
         (_pdf_pages([""]), "the PDF has no text layer"),
     ])
-    async def test_the_fetch_gives_the_same_reason_in_processes_as_in_a_thread(
+    async def test_the_fetch_gives_the_same_kind_of_reason_in_processes_as_in_a_thread(
             self, monkeypatch, served, raw, reason):
+        """The two readers name a broken file's error differently (PdfiumError, PdfReadError), so the
+        reason is compared up to its error name; a password and a missing text layer are exact."""
         served(raw)
         in_processes = await fetch.fetch_source(PAGE)
-        monkeypatch.setattr(fetch, "PARALLEL_MIN_BYTES", 10**9)
+        await _refuse_processes(monkeypatch)
         in_a_thread = await fetch.fetch_source(PAGE)
         assert in_processes.status == in_a_thread.status == "failed"
-        assert in_processes.reason == in_a_thread.reason
         assert in_processes.reason.startswith(reason)
+        assert in_a_thread.reason.startswith(reason)
+        if "PasswordProtected" in reason or "text layer" in reason:
+            assert in_processes.reason == in_a_thread.reason
 
 
 STUB = '''
@@ -177,6 +205,10 @@ if mode == "hangs":
 elif mode == "dies":
     out.write(b"N 8\\n"); out.flush()
     sys.exit(3)
+elif mode == "killed":
+    import signal
+    out.write(b"N 8\\n"); out.flush()
+    os.kill(os.getpid(), signal.SIGSEGV)    # what a crash in the PDF library looks like
 else:
     with open(os.path.join(here, "events"), "a") as log:
         log.write("S %f\\n" % time.time())
@@ -222,7 +254,7 @@ class TestTheSourceSaysHowManyPages:
         assert source.status == "fetched" and source.pages == 5
 
     async def test_a_page_that_was_not_read_in_processes_has_none(self, monkeypatch, served):
-        monkeypatch.setattr(fetch, "PARALLEL_MIN_BYTES", 10 ** 9)    # read in a thread, as a small one is
+        await _refuse_processes(monkeypatch)                         # read in a thread instead
         served(_pdf_pages(["a", "b", "c"]))
         source = await fetch.fetch_source(PAGE)
         assert source.status == "fetched" and source.pages == 0
@@ -295,6 +327,16 @@ class TestWhenTheTimeIsUp:
         assert source.status == "failed"
         assert source.reason == "the PDF could not be read: WorkerExit3"
 
+    async def test_a_worker_killed_by_a_signal_is_a_failed_read_not_a_dead_server(
+            self, served, stub):
+        """PDFium is native code reading a file from the internet; if it crashes, the crash is the
+        process's and the fetch says so (the status of a process killed by SIGSEGV is -11)."""
+        stub("killed")
+        served(b"%PDF-1.4 stand-in")
+        source = await fetch.fetch_source(PAGE)
+        assert source.status == "failed"
+        assert source.reason == "the PDF could not be read: WorkerExit-11"
+
     async def test_a_page_that_is_not_a_pdf_says_nothing_about_pages(
             self, monkeypatch, served):
         """The reason of an ordinary timeout is unchanged."""
@@ -335,15 +377,54 @@ class TestWhenProcessesCannotStart:
         assert "a sentence read in a thread" in source.text
         assert "could not start" in caplog.text
 
-    async def test_a_small_pdf_starts_no_process(self, monkeypatch, served):
-        async def forbidden(*args, **kwargs):
-            raise AssertionError("a small PDF is read in a thread")
+    async def test_a_thread_read_gives_the_text_pypdf_gives(self, monkeypatch, served):
+        await _refuse_processes(monkeypatch)
+        served(_pdf_pages(["first", "second"]))
+        source = await fetch.fetch_source(PAGE)
+        assert source.text == fetch.pdf_text(_pdf_pages(["first", "second"]))
 
-        monkeypatch.setattr(pdf_read.asyncio, "create_subprocess_exec", forbidden)
-        monkeypatch.setattr(fetch, "PARALLEL_MIN_BYTES", 10**9)
+
+class TestHowManyProcessesReadOnePdf:
+    """One for a small PDF, `workers()` stripes for a large one. PDFium opens a document in a fraction
+    of a second, which a small PDF does not repay twice."""
+
+    async def test_a_small_pdf_is_read_by_one_process(self, monkeypatch):
+        monkeypatch.setattr(pdf_read, "PARALLEL_MIN_BYTES", 10**9)
+        monkeypatch.setattr(pdf_read, "workers", lambda: 3)
+        started = _spy_on_processes(monkeypatch)
+        text = await read_pdf(_pdf_pages(["a", "b", "c", "d"]))
+        assert len(started) == 1 and text == "a\nb\nc\nd"
+        assert started[0][-2:] == ("0", "1"), "stripe 0 of a stride of 1: every page"
+
+    async def test_a_small_pdf_that_is_fetched_is_read_in_a_process_and_not_in_a_thread(
+            self, monkeypatch, served):
+        """The fetch used to keep a small PDF for the in-thread reader. PDFium is not thread-safe,
+        and a process is the only place it runs."""
+        monkeypatch.setattr(pdf_read, "PARALLEL_MIN_BYTES", 10**9)
+        started = _spy_on_processes(monkeypatch)
         served(_pdf_pages(["a small one"]))
         source = await fetch.fetch_source(PAGE)
         assert source.status == "fetched" and "a small one" in source.text
+        assert len(started) == 1
+
+    async def test_a_large_pdf_is_read_in_as_many_stripes_as_there_are_workers(self, monkeypatch):
+        monkeypatch.setattr(pdf_read, "workers", lambda: 3)
+        started = _spy_on_processes(monkeypatch)
+        text = await read_pdf(_pdf_pages(["a", "b", "c", "d"]))
+        assert len(started) == 3 and text == "a\nb\nc\nd"
+        assert sorted(args[-2:] for args in started) == [("0", "3"), ("1", "3"), ("2", "3")]
+
+    async def test_the_size_that_separates_them_is_the_one_set(self, monkeypatch):
+        raw = _pdf_pages(["a", "b"])
+        monkeypatch.setattr(pdf_read, "workers", lambda: 2)
+        monkeypatch.setattr(pdf_read, "PARALLEL_MIN_BYTES", len(raw))
+        started = _spy_on_processes(monkeypatch)
+        await read_pdf(raw)
+        assert len(started) == 2, "a PDF of exactly that size is a large one"
+        monkeypatch.setattr(pdf_read, "PARALLEL_MIN_BYTES", len(raw) + 1)
+        started.clear()
+        await read_pdf(raw)
+        assert len(started) == 1
 
 
 class TestTheWorkerOnItsOwn:
@@ -358,15 +439,61 @@ class TestTheWorkerOnItsOwn:
         assert "autornd" not in imported
 
     def test_it_writes_the_page_count_then_each_page_of_its_stripe(self, tmp_path):
-        from pypdf import PdfReader
         path = tmp_path / "three.pdf"
         path.write_bytes(_pdf_pages(["zero", "one", "two"]))
-        page = PdfReader(str(path)).pages[1].extract_text().encode()
         done = subprocess.run(
             [sys.executable, str(pdf_read.WORKER), str(path), "1", "2"],
             capture_output=True, timeout=60)
         assert done.returncode == 0
-        assert done.stdout == b"N 3\n" + b"P 1 %d\n" % len(page) + page
+        assert done.stdout == b"N 3\n" + b"P 1 3\n" + b"one"
+
+    def test_it_does_not_load_pypdf(self, tmp_path):
+        """The reader is PDFium; pypdf is only the fallback in the parent. A worker that loaded it
+        would be slow to start and would read with the wrong engine."""
+        path = tmp_path / "one.pdf"
+        path.write_bytes(_pdf_pages(["only"]))
+        code = ("import runpy, sys\n"
+                f"sys.argv = ['w', {str(path)!r}, '0', '1']\n"
+                "try:\n"
+                f"    runpy.run_path({str(pdf_read.WORKER)!r}, run_name='__main__')\n"
+                "except SystemExit:\n"
+                "    pass\n"
+                "sys.stderr.write('LOADED' if 'pypdf' in sys.modules else 'NOT-LOADED')\n")
+        done = subprocess.run([sys.executable, "-c", code], capture_output=True, timeout=60)
+        assert done.stderr.decode().endswith("NOT-LOADED"), done.stderr
+        assert b"only" in done.stdout
+
+    def test_a_pdf_that_needs_a_password_is_named_and_exits_2(self, tmp_path):
+        path = tmp_path / "locked.pdf"
+        path.write_bytes(_encrypted(_pdf_pages(["secret"]), "secret"))
+        done = subprocess.run(
+            [sys.executable, str(pdf_read.WORKER), str(path), "0", "1"],
+            capture_output=True, timeout=60)
+        assert done.returncode == 2 and done.stdout == b"E PasswordProtected\n"
+
+    def test_the_mark_pdfium_leaves_for_a_hyphen_at_a_line_end_is_written_as_the_hyphen(self):
+        """PDFium writes U+FFFE where a line ended in a hyphen and joins the lines, and its line ends
+        are carriage return and line feed. The page shows a hyphen and the quote check normalises
+        line ends, so the text says the same (28 of 35 sample PDFs have the mark, 2026-11-21)."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("pdf_worker_under_test", pdf_read.WORKER)
+        worker = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(worker)
+        closed: list[bool] = []
+
+        class Textpage:
+            def get_text_range(self):
+                return "an organization" + chr(0xFFFE) + "\r\ndefined value\r\nnext line"
+
+            def close(self):
+                closed.append(True)
+
+        class Page:
+            def get_textpage(self):
+                return Textpage()
+
+        assert worker.page_text(Page()) == "an organization-\ndefined value\nnext line"
+        assert closed == [True], "the text page is released"
 
     def test_it_names_the_error_and_exits_2_when_it_cannot_go_on(self, tmp_path):
         path = tmp_path / "broken.pdf"

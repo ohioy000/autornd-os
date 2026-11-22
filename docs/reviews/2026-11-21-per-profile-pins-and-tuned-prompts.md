@@ -159,6 +159,9 @@ this changes engineering.
   global engineering and recompute models carry unbounded charge components in the catalogue, so they are blind too. Both
   are known and not changed.
 - **`general` answers on the architecture tier**, because it declares no domains. Left as built.
+- **The serving ledger counts a unit by the tiers its header declares**, not by the tiers it called: the triage-only sweep
+  arms add 1,264 `completed` units to a row for the engineering tier that they never used. The ledger is generated and was
+  regenerated; the way it counts is not changed here.
 - **Whether preflight should refuse a reader endpoint that lacks `reasoning`**: undecided, see above.
 - **Two tests depend on order**: `test_non_security_fields_take_their_declared_defaults` fails when it runs after
   `test_settings`, and `tests/test_api.py::TestHealthEndpoint::test_health` leaks a `_model_status`. Found on the way, not

@@ -27,6 +27,26 @@ bridge design, concrete, steel and timber, wind, snow and seismic parameters, fo
 classification, drainage and hydrology, dams and levees). The set is now nine groups of 14, `Y1` to
 `Y126`, three times the first; `--groups` still picks any of them and its default is all nine.
 
+Later still the owner added four subjects, each to be asked as many questions as the others (14):
+group 10 law (statutes, regulations, court rules and treaties: limitation periods, deadlines,
+thresholds, penalties, jurisdiction and burdens of proof), group 11 finance, banking, securities and
+tax (capital and liquidity ratios, filing deadlines, tax rates and thresholds, anti-money-laundering
+and payment rules), group 12 medicine and clinical practice (drug-label dosing and contraindications,
+diagnostic criteria and screening intervals, vaccination schedules, trial and device rules), and
+group 13 natural science (physics, chemistry, earth and climate science, astronomy and biology, and
+the figures of their reference works and reports). Each is described in the script by its topics and
+by the free publishers at stable addresses to draw on, and the three that touch areas Prompt A
+already lists as covered say so (health privacy, pharmaceutical manufacturing and radiation rules for
+medicine; the SI, CODATA and metrology texts for science). The set becomes thirteen groups of 14,
+`Y1` to `Y182`, four times the first. The owner also moved the writing of these four groups to another
+author model, with the author's reply ceiling at 130,000 tokens; the pins are on the command line.
+
+Result (2026-11-21): 181 of the 182 questions were accepted and are in the repo as a draft,
+`evals/professional/holdout2-questions.json`; `Y48` was held back (a nit in its key). Every passage
+and figure of the 181 is on its live page (`verify_keys.py`: 181 of 181 hold). The authoring cost
+'$4.1581' of the '$6.6' the owner approved. Next: the owner signs the keys (D44), then the set is
+registered as run-ready, preregistered and frozen, and the full run is made.
+
 The prompts below are used as written. One short preface is added in front of Prompt A and one short
 tail after Prompt B, because a model cannot browse: code opens the pages with the harness's own fetch,
 a helper model copies passages out of them, and code finds each passage word for word on its page

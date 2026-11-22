@@ -35,8 +35,7 @@ from xml.etree import ElementTree
 
 import httpx
 
-from autornd.knowledge.pdf_read import (
-    PARALLEL_MIN_BYTES, PdfFailed, PdfUnavailable, read_pdf)
+from autornd.knowledge.pdf_read import PdfFailed, PdfUnavailable, read_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +58,8 @@ logger = logging.getLogger(__name__)
 # three lookups), 360 s at 60 against the 558 s that config.py leaves; 210
 # would be 1,260 s and would starve the search calls. The faster read was
 # done 2026-11-21 (pdf_read.py: PDFs read in processes that are stopped when
-# this limit runs out). Read together under this limit, as a lookup does, on
+# this limit runs out; the reader was changed from pypdf to PDFium the same
+# day, 9 to 39 times faster on 16 sample PDFs, see pdf_read.py). Read together under this limit, as a lookup does, on
 # a two-core laptop: six IAEA PDFs, 1 read before and 6 after (all by 23.5
 # s); six heavy ones (three datasheets of 555, 653 and 653 pages, SP 800-53,
 # a 323-page specification and a 228-page building regulation), 0 before and
@@ -83,8 +83,9 @@ MAX_REDIRECTS = 3
 # per question; past this many the rest are recorded unfetched.
 MAX_FETCHES = 8
 
-# What can be read as text. A PDF is read through pypdf: standards bodies
-# and makers publish datasheets and codes as PDF, and before this every one
+# What can be read as text. A PDF is read through PDFium, in processes of its
+# own (pdf_read.py; pypdf in a thread only where processes cannot start):
+# standards bodies and makers publish datasheets and codes as PDF, and before this every one
 # of them was recorded unfetched (audit of 2026-11-11). A scanned PDF has no
 # text layer and is recorded failed, so the gap shows.
 # XML is read as HTML is, its markup dropped: govinfo.gov publishes the Code
@@ -240,7 +241,13 @@ class UnpacksTooLarge(UnreadableDocument):
 
 
 def pdf_text(raw: bytes) -> str:
-    """The text layer of a PDF, pages in order. Raises when it cannot be read.
+    """The text layer of a PDF, pages in order, read by pypdf in this thread.
+
+    Not how a PDF is read: PDFium reads it, in processes of their own
+    (pdf_read.py, pdf_worker.py). This is what is left when those processes
+    cannot be started here, and it gives a different text (a hyphen that ends
+    a line is followed by the line break, for one). Raises when it cannot be
+    read.
 
     Many datasheets are encrypted with an empty password, to forbid editing
     and not reading; a viewer opens them without asking. They are opened the
@@ -432,10 +439,10 @@ def document_kind(content_type: str, raw: bytes) -> str | None:
 
 async def _read_document(kind: str, raw: bytes, reader: Callable[[bytes], str],
                          progress: dict[str, int] | None) -> str:
-    """A document's text. A PDF of PARALLEL_MIN_BYTES or more is read in
-    processes that can be stopped; everything else, and a PDF when processes
-    cannot be started here, is read in a thread, off the event loop."""
-    if kind == "pdf" and len(raw) >= PARALLEL_MIN_BYTES:
+    """A document's text. A PDF is read by PDFium in processes that can be
+    stopped, whatever its size (pdf_read.py); everything else, and a PDF when
+    processes cannot be started here, is read in a thread, off the event loop."""
+    if kind == "pdf":
         try:
             return await read_pdf(raw, progress)
         except PdfUnavailable as exc:

@@ -1,21 +1,35 @@
-"""Read a PDF's text in parallel processes, and stop them when the time is up.
+"""Read a PDF's text with PDFium, in processes that can be stopped when the time is up.
 
-pypdf is pure Python, so threads take turns on one core, and a thread cannot be stopped: the old read
-ran in `asyncio.to_thread`, a lookup's PDFs queued behind each other, and a read that ran past the
-limit went on burning the core after its page had been given up. Measured 2026-11-21 on 16 PDFs that
-gave no answer in earlier runs, each read in a process of its own with no network and no model: four
-at a time on this two-core laptop they took 8.9 to 134.4 s (the whole MUTCD, 1,161 pages, 134.4 s;
-NIST SP 800-53 Rev. 5 80.6 s; a 653-page datasheet 49.9 s), and the 12 that were also read alone on
-an idle machine took 3.7 to 47.1 s (SP 800-53 47.1 s, the datasheet 28.4 s). Cpu time was 78 to 100%
-of wall time, so the time is pypdf's parse: nothing waits on a model, and the downloads took 0.7 to
-15 s. Read together under the fetch's 60 s, as a lookup does, six IAEA PDFs gave 1 read before and 6
-after (all by 23.5 s), and six heavy ones gave 0 before and 3 after.
+The harness read PDFs with pypdf, which is pure Python: threads take turns on one core, and a thread
+cannot be stopped, so a lookup's PDFs queued behind each other and a read that ran past the limit went
+on burning the core after its page had been given up. Measured 2026-11-21 on 16 PDFs that gave no
+answer in earlier runs, each read in a process of its own with no network and no model: four at a time
+on this two-core laptop they took 8.9 to 134.4 s (the whole MUTCD, 1,161 pages, 134.4 s; NIST SP 800-53
+Rev. 5 80.6 s; a 653-page datasheet 49.9 s), and the 12 that were also read alone on an idle machine
+took 3.7 to 47.1 s. Cpu time was 78 to 100% of wall time, so the time is pypdf's parse: nothing waits on
+a model, and the downloads took 0.7 to 15 s.
 
-So each PDF is written to a temporary file and read by `workers()` processes at once, each taking
-every `workers()`-th page (`pdf_worker.py`); the pages are joined in order and are the text the one-process
-read gives. A process is killed when its read is cancelled, which is what the fetch's time limit does.
-At most `workers()` processes run at once across all the PDFs of a run, in the order they asked, so a
-lookup's six large PDFs share the cores instead of each starting a full set.
+PDFium, the library of Chrome's PDF viewer, read the same 16 alone, in 4 processes, in 0.3 to 3.4 s
+(the largest, 2.8 million characters, in 3.4 s, where pypdf in one thread took 130 s), against 3.8 to
+130 s for pypdf in one thread: 9 to 39 times faster (docs/traces/20261121T-pdfium-read.jsonl).
+Read together under the fetch's 60 s, as a lookup does, six PDFs that were once not read in time were
+all read by 2.8 s, and six heavy ones by 7.1 s (before this: 0 of six in time in one thread, 3 of six
+in pypdf processes). PDFium is not thread-safe: two threads at once crashed the process in libpdfium
+(a general protection fault, 2026-11-21). It is native code reading a file from the internet, so it
+belongs in a process of its own, whose crash is a failed read and not a dead server, and that is what
+this module starts.
+
+So each PDF is written to a temporary file and read by processes (`pdf_worker.py`): one when it is
+small, `workers()` at once, each taking every `workers()`-th page, when it is large. The pages are
+joined in order. A process is killed when its read is cancelled, which is what the fetch's time limit
+does. At most `workers()` processes run at once across all the PDFs of a run, in the order they asked,
+so a lookup's six large PDFs share the cores instead of each starting a full set.
+
+The text is PDFium's, not pypdf's: where a line ended in a hyphen PDFium joins the lines and the hyphen
+is written back (`pdf_worker.page_text`), spaces fall where PDFium puts them, and a passage copied from
+pypdf text is not always found in it: 53 of the 356 passages the second hold-out's extract kept, in 13
+of 35 PDFs, and all 53 are found once whitespace is ignored (docs/traces/20261121T-pdfium-passage-parity.jsonl).
+Whoever copies passages out of a PDF must copy them from this text.
 """
 from __future__ import annotations
 
@@ -30,8 +44,11 @@ logger = logging.getLogger(__name__)
 
 WORKER = Path(__file__).with_name("pdf_worker.py")
 
-# A PDF smaller than this is read in a thread as before: starting a process and opening the file in
-# it costs a fraction of a second, which a small PDF does not repay.
+# A PDF smaller than this is read by one process; a larger one by `workers()` processes at once, each
+# taking every `workers()`-th page. Starting a process and opening the file in it costs a fraction of
+# a second, which a small PDF does not repay twice. 250,000 was a judgment made for pypdf, whose
+# reads of large PDFs took tens of seconds; it was not measured again for PDFium, which reads even the
+# 2.8-million-character MUTCD in 3.4 s, so where it falls matters less (see above).
 PARALLEL_MIN_BYTES = 250_000
 
 # The most processes that read at once. One per core, up to this: each holds the whole document, and
@@ -117,14 +134,14 @@ async def _read_stripe(path: Path, stripe: int, stride: int,
 
 
 async def read_pdf(raw: bytes, progress: dict[str, int] | None = None) -> str:
-    """The text layer of a PDF, pages in order, the same text `pdf_text` gives.
+    """The text layer of a PDF, pages in order, as PDFium gives it (`pdf_worker.page_text`).
 
     `progress` is filled as the pages come in ("pages": how many the PDF has, "done": how many are
     read), so a caller that gives up can say how far it got. Raises PdfFailed when the document
     cannot be read (a password, a broken file) and PdfUnavailable when the processes cannot start.
     """
     progress = progress if progress is not None else {}
-    stride = workers()
+    stride = workers() if len(raw) >= PARALLEL_MIN_BYTES else 1
     pages: dict[int, str] = {}
     handle, name = tempfile.mkstemp(prefix="autornd-", suffix=".pdf")
     os.close(handle)

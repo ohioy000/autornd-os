@@ -20,8 +20,14 @@ dependencies = [
     # across three Python versions while `pip install -e .` produced an
     # install with no JWT library at all.
     "pyjwt>=2.8.0",
-    # knowledge/fetch.py reads a quoted PDF's text layer with it, so a quote
-    # from a datasheet or a standard published as PDF can be checked.
+    # knowledge/pdf_worker.py reads a quoted PDF's text layer with it, so a
+    # quote from a datasheet or a standard published as PDF can be checked.
+    # PDFium, the library of Chrome's PDF viewer: 9 to 39 times faster than
+    # pypdf on the 16 sample PDFs timed (2026-11-21), and it opens a document
+    # locked against editing without a word, as a viewer does. Tested at 5.15.2.
+    "pypdfium2>=5.15.2",
+    # knowledge/fetch.py reads a PDF with it in a thread when the processes
+    # that run PDFium cannot be started (a sandbox that forbids them).
     "pypdf>=4.0.0",
     # pypdf opens an AES-encrypted PDF only with this installed. Datasheets
     # are often encrypted with an empty password; without it each one was
