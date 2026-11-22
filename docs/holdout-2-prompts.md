@@ -41,6 +41,12 @@ medicine; the SI, CODATA and metrology texts for science). The set becomes thirt
 `Y1` to `Y182`, four times the first. The owner also moved the writing of these four groups to another
 author model, with the author's reply ceiling at 130,000 tokens; the pins are on the command line.
 
+Result (2026-11-21): 181 of the 182 questions were accepted and are in the repo as a draft,
+`evals/professional/holdout2-questions.json`; `Y48` was held back (a nit in its key). Every passage
+and figure of the 181 is on its live page (`verify_keys.py`: 181 of 181 hold). The authoring cost
+'$4.1581' of the '$6.6' the owner approved. Next: the owner signs the keys (D44), then the set is
+registered as run-ready, preregistered and frozen, and the full run is made.
+
 The prompts below are used as written. One short preface is added in front of Prompt A and one short
 tail after Prompt B, because a model cannot browse: code opens the pages with the harness's own fetch,
 a helper model copies passages out of them, and code finds each passage word for word on its page
