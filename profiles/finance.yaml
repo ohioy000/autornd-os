@@ -1,0 +1,139 @@
+# Finance Office — a profile for finance work: analysis, accounting and reporting, and controls and audit.
+#
+# Nothing it produces is financial, tax or investment advice: every answer is a draft for a qualified finance or
+# accounting professional to review, and the constraints below say so to every specialist.
+#
+# It is standalone, like studio: no `base:`, and none of the engineering profile's team, words or examples apply.
+# What the triage risk guide teaches with, the hazard sentence, the decision switches' questions and the framing
+# words are this field's own (general.yaml says what each key is). No corpus is committed; to ground it in your own
+# documents add docs/finance_office/ with a manifest.json, as docs/meridian_studio/ does.
+#
+# Select with AUTORND_PROFILE=finance. To run it on a model built for the field without touching any other profile,
+# pin one tier to it in the environment (README, "Choosing Models"):
+#   PROFILE_MODELS=finance:engineering=<model-id>@<provider>
+# A role's tier is the default for a call whose workflow node names none, and the shipped workflows name a tier on
+# every node that calls a model, so a pin on `engineering` changes the nodes on that tier (the answer, the
+# implementation) whichever role leads. The leads here sit on engineering and the reviewer on architecture, so a
+# workflow that leaves a node to its role still does not have a drafter review its own work.
+
+name: "Finance Office"
+description: "A small finance team: financial analysis, accounting and reporting, controls and audit"
+
+# Free context every specialist prompt carries. Keep it short and true: it is paid for on every call.
+constraints:
+  - "Output is a draft for a qualified finance or accounting professional to review. It is not financial, tax or investment advice."
+  - "Every figure shows its source and its arithmetic."
+  - "State the period, the currency and the basis of every number."
+
+# ── framing ──────────────────────────────────────────────────────────────
+# The words the prompts take from the profile. Each reads correctly at the line it is spliced into.
+framing:
+  team: "a finance team"
+  request_kind: "finance request"
+  request_analyst: "a finance request analyst"
+  work: "financial work"
+  implementation: "financial analysis"
+  deliverables: "the model, the schedule, the reconciliation, the memo, the calculation"
+  practitioner: "a financial analyst"
+  practitioners: "financial analysts"
+  competent_practitioner: "a competent financial analyst"
+  senior_practitioner: "a careful senior financial analyst"
+  independent_reviewer: "an independent senior finance reviewer"
+  task: "finance task"
+  documentation: "financial documentation"
+  questions: "finance questions"
+  sources: "accounting and auditing standards, regulations, filings and official statistics"
+  unrecallable_examples: "a released payment, a filed return, a published disclosure"
+  role_example: "financial_analyst"
+  unit_examples: ""
+  gap_examples: ""
+  # The risk guide's examples, the hazard sentence, the switch words: this field's own. The rules around
+  # them are the code's, the same for every profile (general.yaml says why).
+  risk_harm_rules: |-
+    client-money and suitability rules,
+    anti-money-laundering and sanctions rules, accurate reporting and audit
+    requirements, data-protection law, workplace and building safety
+    codes
+  risk_paper_examples: |-
+    A capital-adequacy calculation, a tax return and a disclosure
+    to investors are critical while still in draft, because the draft is what gets
+    filed, signed and audited.
+  risk_high_examples: |-
+    the answer moves money or commits a filing — releasing a payment,
+      placing a trade, filing a return, publishing a figure — or is
+      safety-critical in function even while still a draft, such as a control that
+      stops a payment or a limit that caps exposure; or it ships as core system
+      behaviour, a security boundary, or data integrity. A payment released from a
+      live account stays released, and someone relies on it
+  risk_medium_examples: |-
+    the answer is still a decision, reversible until an order is placed
+      or a return is filed — choosing a method, estimating a figure, building a
+      forecast, setting a threshold, reading a statement
+  risk_protective_example: |-
+    Planning the backup of the ledger is planning work,
+    and a wrong answer loses the books of record, so it is at least high rather
+    than medium. It is critical only if a person can be harmed: losing records,
+    positions or money, however much of it, is high.
+  hazard_harm: "injure a person or damage property or equipment"
+  switch_outside_sources: "a statute, a regulation, an accounting standard, a filing or a published rate"
+  switch_computed_values: "a sum, a rate, a balance, a ratio or a total"
+  switch_published_documents: "a rule, a standard, a regulation or another published document"
+
+# ── domains ──────────────────────────────────────────────────────────────
+# domain name -> its lead and the validation questions work in that domain is judged by.
+domains:
+  financial_analysis:
+    lead: financial_analyst
+    checks:
+      - "Does every figure show its source, its period and its arithmetic?"
+      - "Do the stated assumptions support the conclusion, and is each one flagged as an assumption?"
+
+  accounting_reporting:
+    lead: accountant
+    checks:
+      - "Do debits and credits balance, and do the schedules tie to the totals reported?"
+      - "Is the reporting standard named, and is each treatment consistent with it?"
+
+  controls_and_audit:
+    lead: internal_auditor
+    checks:
+      - "Is every control tied to the risk it addresses, and does it say who performs it?"
+      - "Is each finding supported by evidence the reviewer can trace?"
+
+# ── roles ────────────────────────────────────────────────────────────────
+# The leads are on the engineering tier; the checker is on the architecture tier.
+roles:
+  financial_analyst:
+    name: "Financial Analyst"
+    domain: financial_analysis
+    tier: engineering
+    expertise: "Builds and checks models, forecasts and valuations. Shows every input and every step, and says which numbers are assumptions."
+
+  accountant:
+    name: "Accountant"
+    domain: accounting_reporting
+    tier: engineering
+    expertise: "Prepares and reconciles ledgers, schedules and reports under a named standard. Ties every total back to its entries."
+
+  internal_auditor:
+    name: "Internal Auditor"
+    domain: controls_and_audit
+    tier: engineering
+    expertise: "Tests controls against the risks they address and writes findings the reviewer can trace to evidence."
+
+  reviewing_controller:
+    name: "Reviewing Controller"
+    domain: financial_analysis
+    tier: architecture
+    expertise: "Checks the work against what the request asked and against its sources, as a second pair of eyes. Names what is wrong or missing and does not redo the analysis."
+
+  finance_lead:
+    name: "Finance Lead"
+    domain: the whole function
+    tier: engineering
+    expertise: "Holds the whole picture: what the request needs, in what order, and what each step depends on."
+
+# Risky work is checked by someone, and work that spans domains has someone holding the whole.
+structural_roles:
+  checks_work: reviewing_controller
+  holds_system_view: finance_lead

@@ -1,0 +1,44 @@
+{
+ "guide": "Risk guide — judge the consequence of being wrong, not the subject matter.\nAsk these two questions in order.\n\nFirst: if this answer is wrong, can a person be harmed, or does it breach a\nrule that exists to prevent harm — client-money and suitability rules,\nanti-money-laundering and sanctions rules, accurate reporting and audit\nrequirements, data-protection law, workplace and building safety\ncodes? If so it is critical,\nat every stage. A capital-adequacy calculation, a tax return and a disclosure\nto investors are critical while still in draft, because the draft is what gets\nfiled, signed and audited.\n\nNot every published standard is one of those. A standard that exists for\nquality, consistency or interoperability — broadcast loudness, file formats,\nnaming conventions, style guides — is not a harm rule, however formally it is\nwritten and however much a breach embarrasses someone. Ask what the rule is\nprotecting, not whether a rule exists.\n\nSecond, if nobody can be harmed: has anything been committed to yet?\n- high: the answer moves money or commits a filing — releasing a payment,\n  placing a trade, filing a return, publishing a figure — or is\n  safety-critical in function even while still a draft, such as a control that\n  stops a payment or a limit that caps exposure; or it ships as core system\n  behaviour, a security boundary, or data integrity. A payment released from a\n  live account stays released, and someone relies on it\n- medium: the answer is still a decision, reversible until an order is placed\n  or a return is filed — choosing a method, estimating a figure, building a\n  forecast, setting a threshold, reading a statement\n- low: presentation, copy, documentation or configuration that is trivially\n  reversible and cannot hurt anyone\n\nWork on something whose purpose is to protect — a backup, an interlock, an\nalarm, a containment, a life-support system — is judged by what it protects,\nnot by the stage it is at. Planning the backup of the ledger is planning work,\nand a wrong answer loses the books of record, so it is at least high rather\nthan medium. It is critical only if a person can be harmed: losing records,\npositions or money, however much of it, is high.\n\nA protocol, schedule, policy, setpoint band or limit that will be followed\nrepeatedly carries the consequence of everything it governs. Judge it by what\nhappens when it is followed, not by the fact that it is a document. A\nsterilisation protocol, a return-to-play progression and a style guide are all\npaperwork: if following it can harm someone or breach a regulated requirement\nit is critical, and if the worst case is rework or an unhappy audience it stays\nlow or medium.\n\n",
+ "hazard": [
+  "- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage property or equipment. Quote those words of the answer.",
+  "- hazard: true only when the answer states or instructs something that would, followed as written, injure a person or damage property or equipment",
+  "- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage property or equipment. Quote those words of the answer.",
+  "- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage property or equipment. Quote those words of the answer.",
+  "- it is a hazard: something the answer states or instructs that would, if followed as written, injure a person or damage property or equipment. Quote those words of the answer."
+ ],
+ "switches": {
+  "needs_calculation": {
+   "criteria": {
+    "false": "It asks what a rule, a standard, a regulation or another published document states.",
+    "true": "It asks for a value that has to be computed, such as a sum, a rate, a balance, a ratio or a total."
+   },
+   "instructions": "Look only at state[\"q0\"]. Must the answer to this request be worked out by calculation from figures, and not read from a document?",
+   "type": "noul"
+  },
+  "needs_sources": {
+   "criteria": {
+    "false": "It can be worked out from what the request itself states and general principles.",
+    "true": "It turns on a figure or wording that a named or implied outside document holds."
+   },
+   "instructions": "Look only at state[\"q0\"]. Can this request be answered correctly only with facts from an outside source, such as a statute, a regulation, an accounting standard, a filing or a published rate?",
+   "type": "noul"
+  },
+  "quote_answers": {
+   "criteria": {
+    "false": "The passage is about the subject but does not state what is asked, or is about something else.",
+    "true": "The passage states the fact or figure the question asks for."
+   },
+   "instructions": "Look only at state[\"q0\"]. Does the passage itself state an answer to the question it was quoted for?",
+   "type": "noul"
+  },
+  "same_meaning": {
+   "criteria": {
+    "false": "They state a different fact, figure or verdict, or one contradicts the other.",
+    "true": "They state the same fact, figure or verdict, even in other words or with more detail."
+   },
+   "instructions": "Look only at state[\"q0\"]. Do the two values state the same thing for this ask?",
+   "type": "noul"
+  }
+ }
+}

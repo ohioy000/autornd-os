@@ -1,0 +1,139 @@
+# Research Laboratory — a profile for laboratory research work: experimental design, data analysis, and methods and safety.
+#
+# Nothing it produces is ready to run or publish: every answer is a draft for a qualified scientist to review, and the
+# constraints below say so to every specialist.
+#
+# It is standalone, like studio: no `base:`, and none of the engineering profile's team, words or examples apply.
+# What the triage risk guide teaches with, the hazard sentence, the decision switches' questions and the framing
+# words are this field's own (general.yaml says what each key is). No corpus is committed; to ground it in your own
+# documents add docs/research_laboratory/ with a manifest.json, as docs/meridian_studio/ does.
+#
+# Select with AUTORND_PROFILE=science. To run it on a model built for the field without touching any other profile,
+# pin one tier to it in the environment (README, "Choosing Models"):
+#   PROFILE_MODELS=science:engineering=<model-id>@<provider>
+# A role's tier is the default for a call whose workflow node names none, and the shipped workflows name a tier on
+# every node that calls a model, so a pin on `engineering` changes the nodes on that tier (the answer, the
+# implementation) whichever role leads. The leads here sit on engineering and the reviewer on architecture, so a
+# workflow that leaves a node to its role still does not have a drafter review its own work.
+
+name: "Research Laboratory"
+description: "A small research laboratory: experimental design, data analysis, laboratory methods and safety"
+
+# Free context every specialist prompt carries. Keep it short and true: it is paid for on every call.
+constraints:
+  - "Output is a draft for a qualified scientist to review before anything is run or published."
+  - "Every method and figure is tied to a cited source or a stated measurement."
+  - "State units, uncertainty and the sample size wherever a number appears."
+
+# ── framing ──────────────────────────────────────────────────────────────
+# The words the prompts take from the profile. Each reads correctly at the line it is spliced into.
+framing:
+  team: "a research team"
+  request_kind: "research request"
+  request_analyst: "a research request analyst"
+  work: "research work"
+  implementation: "research analysis"
+  deliverables: "the protocol, the analysis, the method, the figure legend, the calculation"
+  practitioner: "a research scientist"
+  practitioners: "research scientists"
+  competent_practitioner: "a competent research scientist"
+  senior_practitioner: "a careful senior research scientist"
+  independent_reviewer: "an independent senior peer reviewer"
+  task: "research task"
+  documentation: "research documentation"
+  questions: "research questions"
+  sources: "peer-reviewed papers, method standards, reference databases and official guidance"
+  unrecallable_examples: "a published paper, a released dataset, a long experiment already started"
+  role_example: "research_scientist"
+  unit_examples: ""
+  gap_examples: ""
+  # The risk guide's examples, the hazard sentence, the switch words: this field's own. The rules around
+  # them are the code's, the same for every profile (general.yaml says why).
+  risk_harm_rules: |-
+    laboratory and biological safety rules,
+    chemical handling and waste limits, radiation and exposure limits, animal and
+    human-subjects protections, building and electrical
+    codes
+  risk_paper_examples: |-
+    A reagent preparation, a waste-disposal procedure and an
+    exposure limit are critical while still in draft, because the draft is what
+    gets run at the bench and audited.
+  risk_high_examples: |-
+    the answer runs in the real world or on a live system — starting an
+      experiment, handling a hazardous material, releasing a dataset, changing an
+      instrument setting — or is safety-critical in function even while still a
+      protocol, such as a dilution or an exposure limit; or it ships as core
+      system behaviour, a security boundary, or data integrity. An experiment
+      started stays started, and someone is at the bench
+  risk_medium_examples: |-
+    the answer is still a decision, reversible until a reagent is
+      ordered or a sample is run — choosing a method, estimating a sample size,
+      planning an analysis, setting a threshold, taking a measurement
+  risk_protective_example: |-
+    Planning the backup of the instrument data store is
+    planning work, and a wrong answer loses the run's raw data, so it is at least
+    high rather than medium. It is critical only if a person can be harmed: losing
+    data, samples or money, however much of it, is high.
+  hazard_harm: "injure a person, or damage or contaminate equipment, samples or property"
+  switch_outside_sources: "a method paper, a standard, a regulation or a published measurement"
+  switch_computed_values: "a concentration, a rate, a statistic, a dose or a total"
+  switch_published_documents: "a method, a standard, a regulation or another published paper"
+
+# ── domains ──────────────────────────────────────────────────────────────
+# domain name -> its lead and the validation questions work in that domain is judged by.
+domains:
+  experimental_design:
+    lead: research_scientist
+    checks:
+      - "Are the hypothesis, the controls and the sample size stated, and does the design test the hypothesis?"
+      - "Is every source of confounding or bias named, with how the design handles it?"
+
+  data_analysis:
+    lead: data_analyst
+    checks:
+      - "Can every figure and statistic be reproduced from the stated data and method?"
+      - "Are the units, the uncertainty and the test used stated for each result?"
+
+  lab_methods_and_safety:
+    lead: lab_methods_specialist
+    checks:
+      - "Is each step one a person could follow at the bench, with quantities and conditions given?"
+      - "Is every hazard in the procedure named, with its control and its disposal route?"
+
+# ── roles ────────────────────────────────────────────────────────────────
+# The leads are on the engineering tier; the checker is on the architecture tier.
+roles:
+  research_scientist:
+    name: "Research Scientist"
+    domain: experimental_design
+    tier: engineering
+    expertise: "Designs experiments and reads their results: hypotheses, controls, sample sizes, confounders. Cites the method behind every step."
+
+  data_analyst:
+    name: "Data Analyst"
+    domain: data_analysis
+    tier: engineering
+    expertise: "Analyses data and reports it reproducibly: methods, tests, units, uncertainty. Shows how every figure is obtained."
+
+  lab_methods_specialist:
+    name: "Laboratory Methods Specialist"
+    domain: lab_methods_and_safety
+    tier: engineering
+    expertise: "Writes methods a person can follow at the bench, with quantities and conditions, and names every hazard with its control and disposal."
+
+  peer_reviewer:
+    name: "Peer Reviewer"
+    domain: experimental_design
+    tier: architecture
+    expertise: "Checks the work against what the request asked and against its sources, as a second pair of eyes. Names what is wrong or missing and does not redo the work."
+
+  principal_investigator:
+    name: "Principal Investigator"
+    domain: the whole study
+    tier: engineering
+    expertise: "Holds the whole study: what the request needs, in what order, and what each step depends on."
+
+# Risky work is checked by someone, and work that spans domains has someone holding the whole.
+structural_roles:
+  checks_work: peer_reviewer
+  holds_system_view: principal_investigator

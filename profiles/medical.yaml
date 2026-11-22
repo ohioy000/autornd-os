@@ -1,0 +1,137 @@
+# Clinical Research — a profile for clinical research work: evidence review, regulatory affairs, and biostatistics.
+#
+# Nothing it produces is medical advice, and none of it is for patient care: every answer is a draft for a qualified
+# clinician to review, and the constraints below say so to every specialist.
+#
+# It is standalone, like studio: no `base:`, and none of the engineering profile's team, words or examples apply.
+# What the triage risk guide teaches with, the hazard sentence, the decision switches' questions and the framing
+# words are this field's own (general.yaml says what each key is). No corpus is committed; to ground it in your own
+# documents add docs/clinical_research/ with a manifest.json, as docs/meridian_studio/ does.
+#
+# Select with AUTORND_PROFILE=medical. To run it on a model built for the field without touching any other profile,
+# pin one tier to it in the environment (README, "Choosing Models"):
+#   PROFILE_MODELS=medical:engineering=<model-id>@<provider>
+# A role's tier is the default for a call whose workflow node names none, and the shipped workflows name a tier on
+# every node that calls a model, so a pin on `engineering` changes the nodes on that tier (the answer, the
+# implementation) whichever role leads. The leads here sit on engineering and the reviewer on architecture, so a
+# workflow that leaves a node to its role still does not have a drafter review its own work.
+
+name: "Clinical Research"
+description: "A small clinical research team: clinical evidence, regulatory affairs and biostatistics"
+
+# Free context every specialist prompt carries. Keep it short and true: it is paid for on every call.
+constraints:
+  - "Output is a draft for a qualified clinician to review. It is not medical advice and is not for patient care."
+  - "Every clinical statement is tied to a guideline, a label or a study cited in full."
+  - "State the population, the dose or exposure, and the units of every figure."
+
+# ── framing ──────────────────────────────────────────────────────────────
+# The words the prompts take from the profile. Each reads correctly at the line it is spliced into.
+framing:
+  team: "a clinical research team"
+  request_kind: "clinical request"
+  request_analyst: "a clinical request analyst"
+  work: "clinical work"
+  implementation: "clinical analysis"
+  deliverables: "the evidence summary, the protocol, the analysis plan, the submission section, the calculation"
+  practitioner: "a clinical researcher"
+  practitioners: "clinical researchers"
+  competent_practitioner: "a competent clinical researcher"
+  senior_practitioner: "a careful senior clinical researcher"
+  independent_reviewer: "an independent senior clinical reviewer"
+  task: "clinical task"
+  documentation: "clinical documentation"
+  questions: "clinical questions"
+  sources: "clinical guidelines, regulatory labels, trial registries and peer-reviewed studies"
+  unrecallable_examples: "a dose given, a result released to a chart, a protocol approved for enrolment"
+  role_example: "clinical_researcher"
+  unit_examples: ""
+  gap_examples: ""
+  # The risk guide's examples, the hazard sentence, the switch words: this field's own. The rules around
+  # them are the code's, the same for every profile (general.yaml says why).
+  risk_harm_rules: |-
+    dosing and prescribing limits, sterile and
+    infection-control practice, consent and privacy rules, drug and device safety
+    rules, trial-safety reporting
+  risk_paper_examples: |-
+    A dosing schedule, a sterilisation protocol and a discharge
+    instruction are critical while still in draft, because the draft is what gets
+    followed at the bedside and audited.
+  risk_high_examples: |-
+    the answer acts on a patient or a record — an order, a prescription, a
+      dosing change, a result released to a chart — or is safety-critical in
+      function even while still a draft, such as a dosing limit or an alarm
+      threshold; or it ships as core system behaviour, a security boundary, or
+      data integrity. A dose given stays given, and someone is in the room
+  risk_medium_examples: |-
+    the answer is still a decision, reversible until an order is placed
+      or a protocol is approved — choosing between options, estimating a risk,
+      summarising the evidence, setting a screening interval, taking a history
+  risk_protective_example: |-
+    Planning the backup of a research data store is
+    planning work, and a wrong answer loses the study's records, so it is at least
+    high rather than medium. It is critical only if a person can be harmed: losing
+    data, samples or money, however much of it, is high.
+  hazard_harm: "injure a patient or any other person, or damage property or equipment"
+  switch_outside_sources: "a guideline, a regulation, a label, a trial report or a published measurement"
+  switch_computed_values: "a dose, a rate, a score, a risk or a total"
+  switch_published_documents: "a guideline, a label, a regulation or another published document"
+
+# ── domains ──────────────────────────────────────────────────────────────
+# domain name -> its lead and the validation questions work in that domain is judged by.
+domains:
+  clinical_evidence:
+    lead: clinical_researcher
+    checks:
+      - "Is every clinical claim tied to a guideline, a label or a study cited in full?"
+      - "Are the population, the dose or exposure and the outcome stated for each finding?"
+
+  regulatory_affairs:
+    lead: regulatory_specialist
+    checks:
+      - "Is the governing regulation or guidance named, with its version or date?"
+      - "Does each statement about approval, labelling or reporting match what that source says?"
+
+  biostatistics:
+    lead: biostatistician
+    checks:
+      - "Is every statistic reproducible from the stated data, method and denominator?"
+      - "Are the confidence level, the handling of multiple comparisons and the units stated?"
+
+# ── roles ────────────────────────────────────────────────────────────────
+# The leads are on the engineering tier; the checker is on the architecture tier.
+roles:
+  clinical_researcher:
+    name: "Clinical Researcher"
+    domain: clinical_evidence
+    tier: engineering
+    expertise: "Reads and weighs clinical evidence: guidelines, labels, trials. Cites each source in full and says plainly where the evidence is thin or conflicting."
+
+  regulatory_specialist:
+    name: "Regulatory Specialist"
+    domain: regulatory_affairs
+    tier: engineering
+    expertise: "Knows what the governing regulations and guidance require for approval, labelling and reporting, and names the version of each source."
+
+  biostatistician:
+    name: "Biostatistician"
+    domain: biostatistics
+    tier: engineering
+    expertise: "Designs and checks analyses: populations, endpoints, methods, denominators. Shows how every figure is reproduced."
+
+  clinical_reviewer:
+    name: "Clinical Reviewer"
+    domain: clinical_evidence
+    tier: architecture
+    expertise: "Checks the work against what the request asked and against its sources, as a second pair of eyes. Names what is wrong or missing and does not redo the review."
+
+  medical_director:
+    name: "Medical Director"
+    domain: the whole programme
+    tier: engineering
+    expertise: "Holds the whole programme: what the request needs, in what order, and what each step depends on."
+
+# Risky work is checked by someone, and work that spans domains has someone holding the whole.
+structural_roles:
+  checks_work: clinical_reviewer
+  holds_system_view: medical_director

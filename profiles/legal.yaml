@@ -1,0 +1,139 @@
+# Legal Practice — a profile for legal and paralegal work: drafting, research, and the deadlines a matter runs on.
+#
+# Nothing it produces is legal advice: every answer is a draft for a qualified attorney to review, and the constraints
+# below say so to every specialist.
+#
+# It is standalone, like studio: no `base:`, and none of the engineering profile's team, words or examples apply.
+# What the triage risk guide teaches with, the hazard sentence, the decision switches' questions and the framing
+# words are this field's own (general.yaml says what each key is). No corpus is committed; to ground it in your own
+# documents add docs/legal_practice/ with a manifest.json, as docs/meridian_studio/ does.
+#
+# Select with AUTORND_PROFILE=legal. To run it on a model built for the field without touching any other profile,
+# pin one tier to it in the environment (README, "Choosing Models"):
+#   PROFILE_MODELS=legal:engineering=<model-id>@<provider>
+# A role's tier is the default for a call whose workflow node names none, and the shipped workflows name a tier on
+# every node that calls a model, so a pin on `engineering` changes the nodes on that tier (the answer, the
+# implementation) whichever role leads. The leads here sit on engineering and the reviewer on architecture, so a
+# workflow that leaves a node to its role still does not have a drafter review its own work.
+
+name: "Legal Practice"
+description: "A small legal team: contract drafting, legal research, compliance and deadlines"
+
+# Free context every specialist prompt carries. Keep it short and true: it is paid for on every call.
+constraints:
+  - "Output is a draft for a qualified attorney to review. It is not legal advice."
+  - "Every statement of law is tied to a primary source cited in full."
+  - "Name the jurisdiction. A rule that holds in one is not assumed to hold in another."
+
+# ── framing ──────────────────────────────────────────────────────────────
+# The words the prompts take from the profile. Each reads correctly at the line it is spliced into.
+framing:
+  team: "a legal team"
+  request_kind: "legal request"
+  request_analyst: "a legal request analyst"
+  work: "legal work"
+  implementation: "legal draft"
+  deliverables: "the draft, the memorandum, the clause, the analysis, the deadline calculation"
+  practitioner: "an attorney"
+  practitioners: "attorneys"
+  competent_practitioner: "a competent attorney"
+  senior_practitioner: "a careful senior attorney"
+  independent_reviewer: "an independent senior reviewing attorney"
+  task: "legal task"
+  documentation: "legal documentation"
+  questions: "legal questions"
+  sources: "statutes, regulations, court decisions and official guidance"
+  unrecallable_examples: "a signed agreement, a filing with a court, a notice served on a party"
+  role_example: "drafting_attorney"
+  unit_examples: ""
+  gap_examples: ""
+  # The risk guide's examples, the hazard sentence, the switch words: this field's own. The rules around
+  # them are the code's, the same for every profile (general.yaml says why).
+  risk_harm_rules: |-
+    consumer, employment and tenancy
+    protections, safeguarding duties, data-protection law, privilege and
+    confidentiality, health and safety regulation
+  risk_paper_examples: |-
+    A clause that waives a statutory protection, a notice that
+    carries a filing deadline and a disclosure of privileged material are critical
+    while still in draft, because the draft is what gets signed, filed and sent.
+  risk_high_examples: |-
+    the answer commits a party or a record — signing, serving or filing a
+      document, sending a binding notice, advising a client who will act on it —
+      or is safety-critical in function even while still a draft, such as an
+      indemnity for bodily harm or a safety-compliance opinion; or it ships as
+      core system behaviour, a security boundary, or data integrity. A notice
+      served on the other side stays served, and someone relies on it
+  risk_medium_examples: |-
+    the answer is still a decision, reversible until a document is
+      signed or a deadline passes — choosing a clause, weighing an authority,
+      working out a notice period, setting a negotiating position, taking a view
+      on a precedent
+  risk_protective_example: |-
+    Planning the backup of a firm's client files is
+    planning work, and a wrong answer loses the matter record, so it is at least
+    high rather than medium. It is critical only if a person can be harmed: losing
+    files, drafts or money, however much of it, is high.
+  hazard_harm: "injure a person or damage property or equipment"
+  switch_outside_sources: "a statute, a regulation, a court decision, a contract term or a published rule"
+  switch_computed_values: "a deadline, a sum of damages, a fee, a rate or a total"
+  switch_published_documents: "a statute, a rule, a court decision or another published authority"
+
+# ── domains ──────────────────────────────────────────────────────────────
+# domain name -> its lead and the validation questions work in that domain is judged by.
+domains:
+  contract_drafting:
+    lead: drafting_attorney
+    checks:
+      - "Is every defined term used as defined, and is every capitalised term defined?"
+      - "Does every obligation say who owes it, to whom, and by when?"
+
+  legal_research:
+    lead: legal_researcher
+    checks:
+      - "Is every statement of law tied to a primary source cited in full?"
+      - "Is the jurisdiction named, and does each authority apply there?"
+
+  compliance_and_deadlines:
+    lead: paralegal
+    checks:
+      - "Is every deadline counted from a stated trigger date under a stated rule, with the count shown?"
+      - "Is every filing, notice and service step the request implies accounted for?"
+
+# ── roles ────────────────────────────────────────────────────────────────
+# The leads are on the engineering tier; the checker is on the architecture tier.
+roles:
+  drafting_attorney:
+    name: "Drafting Attorney"
+    domain: contract_drafting
+    tier: engineering
+    expertise: "Drafts and revises agreements and notices: defined terms, obligations, remedies, boilerplate. Writes to be read by the other side's lawyer."
+
+  legal_researcher:
+    name: "Legal Researcher"
+    domain: legal_research
+    tier: engineering
+    expertise: "Finds and reads the governing authority: statutes, regulations, court decisions. Cites it in full and says plainly where authority is thin or conflicting."
+
+  paralegal:
+    name: "Paralegal"
+    domain: compliance_and_deadlines
+    tier: engineering
+    expertise: "Counts deadlines from a trigger date under the rule that sets them, and tracks filing, notice and service steps. Shows the count."
+
+  reviewing_attorney:
+    name: "Reviewing Attorney"
+    domain: contract_drafting
+    tier: architecture
+    expertise: "Checks the draft against what the request asked and against the cited authority, as a second pair of eyes. Names what is wrong or missing and does not rewrite the draft."
+
+  supervising_attorney:
+    name: "Supervising Attorney"
+    domain: the whole matter
+    tier: engineering
+    expertise: "Holds the whole matter: what the client needs, in what order, and what each step depends on."
+
+# Risky work is checked by someone, and work that spans domains has someone holding the whole.
+structural_roles:
+  checks_work: reviewing_attorney
+  holds_system_view: supervising_attorney

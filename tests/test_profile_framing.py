@@ -90,6 +90,11 @@ class TestNothingEngineeringLeaks:
         hits = _leaks(await _capture_for("studio", monkeypatch, NEUTRAL_SEATS))
         assert not hits, f"engineering words under studio: {hits}"
 
+    async def test_no_engineering_word_reaches_a_model_under_the_professional_profiles(self, monkeypatch):
+        for name in ("legal", "finance", "medical", "science"):
+            hits = _leaks(await _capture_for(name, monkeypatch, NEUTRAL_SEATS))
+            assert not hits, f"engineering words under {name}: {hits}"
+
     def test_every_model_call_site_is_captured(self):
         """A model call the capture does not cover is a prompt the leak scans never read."""
         excluded = {("routing/openrouter.py", "chat_json"), ("specialists/base.py", "run")}

@@ -34,7 +34,7 @@ from tests.prompt_capture import NEUTRAL_SEATS, capture_all, switch_requests
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures" / "tuned"
 WRITE_GOLDEN = os.environ.get("WRITE_GOLDEN") == "1"
 
-TUNED = ("general", "studio")
+TUNED = ("general", "studio", "legal", "finance", "medical", "science")
 HAZARD_SITES = ("domain_review", "validate", "review_collaborative", "review_adversarial", "doublecheck")
 
 # Engineering's own examples, one distinctive token each, taken from its ten words. A profile that teaches with its
