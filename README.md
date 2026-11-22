@@ -10,7 +10,7 @@ You send a request in prose. A workflow defined in a YAML file triages it, groun
 
 It is built for precise professional questions that name their rule or standard. It talks to any OpenAI-compatible endpoint.
 
-**Who it is for.** People who ask many precise questions and need to see what each answer rested on: a team checking regulations, standards and datasheets, for example. It is built to cost far less an answer than asking a frontier model directly. The trade, as measured: it is slower, and on questions written after it was fixed it was less often right than a frontier model asked directly with web search. For a handful of questions, asking a frontier model with search is the simpler way. The figures are in [`docs/MODELS.md`](docs/MODELS.md) and the [release notes](docs/release-notes.md); this README does not restate them. **You choose every model:** AutoRnD ships no defaults and recommends none.
+**Who it is for.** People who ask many precise questions and need to see what each answer rested on: a team checking regulations, standards and datasheets, for example. It is built to cost far less an answer than asking a frontier model directly. The trade, as measured: it is slower, and on questions written after it was fixed it was less often right than a frontier model asked directly with web search. For a handful of questions, asking a frontier model with search is the simpler way. The figures are in [`docs/MODELS.md`](docs/MODELS.md) and the [release notes](docs/release-notes.md); this README does not restate them. **You choose every model:** AutoRnD ships no defaults and recommends none, and the choice is as much of the harness as the code is. See [Choosing Models](#choosing-models).
 
 ## What It Does
 
@@ -72,7 +72,7 @@ uvicorn autornd.main:app --port 8100
 In `.env`:
 
 - Set `OPENROUTER_API_KEY`. Set `OPENROUTER_BASE_URL` to use another OpenAI-compatible endpoint.
-- Set a model for each of the six required tiers: `MODEL_TRIAGE`, `MODEL_ENGINEERING`, `MODEL_ARCHITECTURE`, `MODEL_ESCALATION`, `MODEL_RESEARCH`, `MODEL_SEARCH`. All six must be set to start, although the default workflow calls only four of them. See [Model Tiers](#model-tiers).
+- Set a model for each of the six required tiers: `MODEL_TRIAGE`, `MODEL_ENGINEERING`, `MODEL_ARCHITECTURE`, `MODEL_ESCALATION`, `MODEL_RESEARCH`, `MODEL_SEARCH`. All six must be set to start, although the default workflow calls only four of them. See [Choosing Models](#choosing-models) and [Model Tiers](#model-tiers).
 - Set `API_KEY` or `JWT_SECRET` if anything other than this machine will call the server. See [Auth, Limits and Deployment](#auth-limits-and-deployment).
 
 [`.env.example`](.env.example) documents every setting and its default. It is the single source of truth for settings.
@@ -151,6 +151,43 @@ Both paths return the same record under `data`:
 | The recompute vote compared nothing, or did not run | said only when nothing else checked the answer either | as for the first rows: the answer is unchecked |
 | The vote worded an ask differently, reached no majority, or could not compare an ask | that part of the answer was not compared, or differs only in wording | read that ask with more care |
 
+## Choosing Models
+
+Which model sits in each seat matters as much as the code around it. The harness is built to get precise answers from inexpensive models, and it does that only when every seat has a model that can do that seat's work. AutoRnD ships no defaults and recommends none, so the choice is yours. It is worth making on evidence.
+
+**What each seat asks of a model.** A seat is a [tier](#model-tiers). Each asks for something different, and a model that cannot give it fails in a way that can look like a bad answer.
+
+| Seat | What it must do | What goes wrong without it |
+|---|---|---|
+| Triage and the asks | Return a typed JSON verdict, fast and cheap, on every request | A reply in the wrong shape is rejected and asked for again, and every retry is a paid call. The risk that triage reads also sets how much checking the run does |
+| Engineering, the answer | Write the whole answer as typed JSON, inside a long output ceiling | An answer cut off at the ceiling is written again, up to three more times. A model that cannot hold the shape fails the run |
+| Research and search | Read pages and search the web. The search tier needs a model that can search | The lookup finds less, and the delivery says what it could not check |
+| Judge, premium, escalation | Grade or direct work that a different model wrote | The check is only independent if the model is a different one |
+| Decision | Return typed answers with probabilities, on the provider's decisions route | No switch is asked |
+
+**Check before you pay.** `python -m autornd.preflight` reads the provider's public catalogue. For each tier and each pin it says whether the model exists, whether the provider you pinned serves it, and whether that provider's endpoint accepts what the harness sends: a typed reply and a token ceiling. It bills nothing. Run it after every change to `.env`.
+
+**Pin the serving as well as the model.** One model id can be served by several providers, at different precision, and they differ in the length of their replies, their price and their answers. `OPENROUTER_PROVIDER_ORDER` pins a provider for each tier. With fallbacks off, a pin that names a provider which does not serve the model fails with a 404 and does not fall back quietly. [`.env.example`](.env.example) explains the form.
+
+**Keep the check independent.** A model should not be the only check on its own answer. The judge, premium and architecture tiers exist so that a second opinion can come from a different model, and the independent pass is derived from the models you set.
+
+**A model for one profile.** A profile can name its own model for a tier. This is for work where a model built for the field is worth having, a legal model for a legal team for example, while every other run stays on the model you already chose.
+
+```
+PROFILE_MODELS=<profile>:<tier>=<model-id>[@<provider>],<profile>:<tier>=...
+PROFILE_MODELS=legal:engineering=vendor/legal-model@vendor
+```
+
+- `<profile>` is the profile's file name without `.yaml`. `<tier>` is any tier except `independent`, which is derived. The model id has a `/` in it.
+- A pin changes that tier for that profile and for no other. It does not carry through `base:`, so a profile built on another one keeps the other's model. The setting ships empty, and while it is empty every profile runs on the tiers you set.
+- A pin brings its own serving. With `@provider`, that provider serves it. Without one, the router chooses, and `OPENROUTER_PROVIDER_ORDER` is not applied to that tier, because that order was written for the tier's other model.
+- `python -m autornd.preflight` and `GET /api/health` check the pins of every profile, so switching profile while the server runs never meets a model nobody checked. A pin for a profile that has no file fails preflight.
+- The record of every eval run names the profile, the pins, and the model each reply came from, tier by tier.
+
+**Which tier answers.** The answer is written by the lead that triage picks, on that role's tier. A profile that declares subjects has the subject's lead write it. A profile that declares none, as `general` does, has its system-view role write it, and that role is on the architecture tier. So pin the tier the lead of your profile is on. The four field profiles put every role that can lead on the engineering tier. The engineering profile's leads are on it too, except its systems architect, which is on the architecture tier.
+
+**Measure the choice.** Run the same questions with each candidate and read the answers by hand. `python -m autornd.evals.cli` runs scenarios and writes a record that names the provider and the model that served each tier, the cost, and every reply rejected for its shape. Keep a candidate only if its replies hold the shape and its answers survive your own reading. [`docs/MODELS.md`](docs/MODELS.md) says what we measured and what we did not.
+
 ## Model Tiers
 
 Each step is routed to a tier named by its job. You set one model per tier.
@@ -179,7 +216,7 @@ Each step is routed to a tier named by its job. You set one model per tier.
 
 So `MODEL_DECISION` alone turns on the switches, and `MODEL_DECISION` with `MODEL_RECOMPUTE` turns on the recompute vote for calculations. The decision tier needs a model served on the provider's decisions route, not a chat model.
 
-To pin which provider serves a tier, set `OPENROUTER_PROVIDER_ORDER`. `.env.example` explains the form and why a measurement should be pinned.
+To pin which provider serves a tier, set `OPENROUTER_PROVIDER_ORDER`. `.env.example` explains the form and why a measurement should be pinned. To give one profile its own model for a tier, set `PROFILE_MODELS`, see [Choosing Models](#choosing-models).
 
 ### Decision switches
 
@@ -299,17 +336,18 @@ Settings, in `autornd/config.py`, each settable in `.env` in upper case:
 
 ## Profiles and the Knowledge Store
 
-A profile supplies the team and the project context: the roles, the subjects, your stack and constraints. `AUTORND_PROFILE` selects `profiles/<name>.yaml`. Six are tracked:
+A profile supplies the team and the words the prompts are written in: the roles, the subjects, the examples the risk guide teaches with, your stack and constraints. It does not choose a model, see [Choosing Models](#choosing-models). `AUTORND_PROFILE` selects `profiles/<name>.yaml`. Ten are tracked:
 
 | Profile | What it is |
 |---|---|
-| `general` | the default when `AUTORND_PROFILE` is unset: a lead, a reviewer and a planner, with no subject list |
-| `engineering` | the engineering team, see [Specialists](#specialists) |
+| `general` | the default when `AUTORND_PROFILE` is unset: a lead, a reviewer and a planner, with no subject list. It is the universal profile: its examples come from several fields, and none from one. On the triage suite it rated a few requests higher than the engineering examples did, never lower than a floor |
+| `engineering` | the engineering team, with the physical-engineering examples the risk guide was first calibrated on. **For engineering R&D, set `AUTORND_PROFILE=engineering`.** See [Specialists](#specialists) |
 | `example` | a worked example built on `engineering`: an IoT monitoring project |
-| `studio` | a worked example that is not an engineering team: a content studio |
+| `studio` | a worked example that is not an engineering team: a content studio, with examples of its own |
+| `legal`, `finance`, `medical`, `science` | a small team for each field, with its own subjects, roles and examples. Each says in its constraints that its output is a draft for a qualified person to review and is not advice. No corpus ships with them |
 | `cupline`, `tier4` | fictional test corpora used by the measurements |
 
-A profile can set `base: engineering` to build on that team and add its own `domains:` and `roles:`. The comments in `example.yaml` and `studio.yaml` show how.
+A profile can set `base: engineering` to build on that team and add its own `domains:` and `roles:`. The comments in `example.yaml` and `studio.yaml` show how. The four field profiles stand alone: they do not build on `engineering`, and none of its team, words or examples reaches a model under them.
 
 The knowledge store is a local ChromaDB store. It ships empty.
 
@@ -425,6 +463,7 @@ The suite takes about 90 seconds to 3 minutes. It makes no network call and spen
 - **No code execution.** AutoRnD produces text.
 - **No streaming.** The sync endpoint blocks. Use the async endpoint and poll for long runs.
 - **No roles.** Runs are kept apart for each user. There are no admin or team permissions.
+- **A field profile is a starting team, not a measured one.** Legal, finance, medical and science each set a team, a vocabulary and examples. None was measured on that field's questions. Their risk-guide examples were read on a 36-sector triage suite: `legal`, `finance` and `medical` rated physical-hazard requests below the floor on some repeats where the engineering examples did not, so use them for their own field's work and keep a person in the loop on anything that could injure someone or damage equipment. Read the output as a draft for a qualified person to review.
 - **Quality follows the models you choose,** and every run calls a paid API.
 
 ## Contributing

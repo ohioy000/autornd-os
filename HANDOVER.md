@@ -112,7 +112,8 @@ harness.**
 ### Hard constraint: private corpora must never enter this repo
 
 `.gitignore` enforces separation. Verified at this snapshot: `git ls-files
-profiles/` returns **only** `example.yaml`; no `.env` is tracked.
+profiles/` returns **only** the ten shipped profiles (cupline, engineering, example, finance, general,
+legal, medical, science, studio, tier4), none of which holds a private corpus; no `.env` is tracked.
 
 ```
 .env
@@ -328,7 +329,7 @@ evals/
   scenarios/materiality/    5 · scenarios/planprobe/ 3 · scenarios/probe/ 1
   grounding/*.yaml       ★  8 sectors graded against published figures
 
-profiles/example.yaml       one of two tracked profiles (studio.yaml, §5)
+profiles/*.yaml             ten tracked profiles (§5)
 tests/                      107 files, 2574 tests
 
 ```
@@ -1689,6 +1690,11 @@ own repetition spread, and that is the honest form of "risk is
 profile-invariant". The mechanism is narrow by construction: `run_triage`'s
 system prompt is a fixed literal and its user prompt carries no profile context,
 so a profile changes **only the two vocabulary lists** triage is offered.
+
+> **Dated 2026-11-21: that last sentence no longer holds.** The triage risk guide's worked examples and the
+> hazard sentence are now profile words (`docs/reviews/2026-11-21-per-profile-pins-and-tuned-prompts.md`), so a
+> profile now also changes the examples the guide teaches with. The measurement above predates that change; the
+> sweep recorded in that file is the measurement for the new text.
 
 **The vocabulary earns its place on exactly the work it should.** Of 36 sectors
 one is content work; the control invented `copywriting` for it **once in three**

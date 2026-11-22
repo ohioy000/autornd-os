@@ -220,6 +220,24 @@ still offered by name.
 - **Premium.** A frontier model sat here in September as an independent check. It was left
   empty on purpose from 3 October: "no frontier model sits inside" the measured pipeline.
 
+### A profile's own model: one legal pin, proposed, not ratified (2026-11-21)
+- **The model.** `z-ai/glm-5.3-flashx-legal`, listed in the public catalogue on 21 November (about three
+  weeks old) and the only domain-named model among the 476 listed. One endpoint, Z.AI (`z-ai/fp8`, fp8).
+  Context 1,048,576 tokens, output ceiling 131,072. The same price as `glm-5.3-flashx`: '$0.37' a million
+  tokens in, '$1.25' out. It accepts typed output, reasoning and tools.
+- **The pin proposed.** `PROFILE_MODELS=legal:engineering=z-ai/glm-5.3-flashx-legal@z-ai`: the legal
+  profile's answer tier and no other tier, no other profile. It waits on the owner (G-2); no `.env` carries it.
+- **What the smoke read** (`docs/preregistration-per-profile-pins-smoke.md`; seven runs, '$0.1521' in all; one run
+  for each cell, so each figure is one observation). Under the legal profile the model that replied to the
+  answer call was the pinned one in all three runs, served by Z.AI, and billed at its catalogue rate to within
+  0.3 percent. One of the three replies was rejected once against the verdict's schema and the retry was
+  accepted. The three runs cost '$0.0402', '$0.0418' and '$0.0100'. The same requests under the general
+  profile, with the same pin in the environment, never reached it, and under the engineering profile the
+  answer stayed on the engineering model above.
+- **Not measured.** Whether its answers are better than the engineering model's on legal questions, on any
+  question set with signed keys, or at more than one run a request. The smoke is evidence of serving, cost and
+  typed output, not of quality.
+
 ## What the changes have in common
 
 - **Most early changes were forced by a model returning nothing,** not by a model being wrong:

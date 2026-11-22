@@ -6,6 +6,37 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Added (2026-11-21, the owner's instruction): a profile can name its own model for a tier. `PROFILE_MODELS`
+(empty by default) reads `<profile>:<tier>=<model-id>[@<provider>]`, comma separated; a pin changes that tier for
+that profile and no other, does not carry through `base:`, and brings its own serving. Every place that reads a
+tier reads the pin first, the start-up check confirms and rates every profile's pin, preflight checks each pin
+(and learned the reader tier it was missing), the eval run's header records the effective model map, the
+profile and the pins, and a unit's record now names the model each reply came from beside its provider
+(`models_by_function`). With the setting empty nothing changes: every accessor equals the old expression across
+all ten profile files. The README has a new section, Choosing Models.
+
+Added (2026-11-21, the owner's instruction): four field profiles, `legal`, `finance`, `medical` and `science`,
+each a standalone team with three subjects, five roles, its own examples and a constraint that its output is a
+draft for a qualified person to review and is not advice. None names a model.
+
+Changed (2026-11-21, the owner's instruction): the prompts are written in the profile's words where they were
+written in engineering's. The triage risk guide's worked examples, the sentence that defines a hazard, the
+decision switches' questions, the phrases that mean a request asks for its sources and the escalation prompt's
+names and labels are now profile words (29 framing keys became 35). Engineering and the profiles built on it
+send exactly what they sent: every prompt site, captured under all of them, is byte-identical to the build
+before. `general` is now the universal profile, with examples from several fields where it taught with
+physical-engineering ones, so a checkout that ran with no profile set now sends different examples; set
+`AUTORND_PROFILE=engineering` for engineering R&D. `studio` and the four field profiles teach with their own.
+The risk guide's rules are the same text under every profile.
+
+Measured (2026-11-21, '$0.2251' of the owner's '$1.00'): the triage risk guide under each profile on the wide suite,
+36 sectors at five repeats, against main's text. By the rules written beforehand, `studio` and `science` held; the
+tuned text of `legal`, `finance` and `medical` did not (10, 24 and 18 of 180 units read a sector below its risk
+floor, against none for the control, with a margin of 3), because their examples hold no physical-hazard case and
+the profile then read such requests low; and `general` met the risk bounds on 169 units against 174 (2 past the
+margin, all of them over-calls, none below a floor). Those four texts are held for the owner's ruling and are not
+claimed to hold. Engineering is unaffected. See `docs/reviews/2026-11-21-per-profile-pins-and-tuned-prompts.md`.
+
 Changed (2026-11-21, the owner's instruction for the questions run of the second hold-out: not to cap the
 tokens, to let it cook, and not to tinker with how hard a model thinks): in
 `evals/professional/write_holdout.py` the author's ceiling (the write and the fix) and the worker's (the
