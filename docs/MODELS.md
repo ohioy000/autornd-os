@@ -255,8 +255,11 @@ still offered by name.
 - **Two models in the catalogue, never run in this harness before 2026-11-22** (free reads only): `qwen/qwen4-max`, one endpoint (Alibaba),
   context 1,000,000, output ceiling 131,072, typed output and reasoning, '$1.425' in and '$4.275' out per million; and
   `google/gemini-4-hydrogen`, Vertex and AI Studio endpoints, context 1,048,576, output ceiling 943,718 on Vertex, typed output and
-  reasoning, '$1.50' in and '$7.50' out per million. Both pass preflight as pins. The one live call of the line-up smoke so far
-  (the global answer model, run A) found that model's catalogue price carries `overrides` the spend guard cannot bound.
+  reasoning, '$1.50' in and '$7.50' out per million. Both pass preflight as pins. Run once each in the line-up smoke
+  (`docs/reviews/2026-11-22-model-lineup-smoke.md`): `qwen4-max` via Alibaba, one question, '$0.0078' for the answer call; hydrogen via
+  Google on a finance and on a medical question, '$0.0216' and '$0.0599' for the answer call; no rejected replies and no provider
+  failures. The spend guard could not bound `qwen4-max` (its cache-write rate, '$1.78' per million, is above its prompt rate) nor the
+  global answer model (time-of-day price overrides), so both ran unbounded; it bounded hydrogen, the legal model and `hy4-flash`.
 - **The first model at high reasoning effort** ('$0.2567', three arms): finance 9 units below a floor and legal 8, against
   24 and 10 at its default effort and 1 and 0 to 1 for this model with thinking on; 10 seconds a unit and '$0.079' to
   '$0.090' an arm. More thinking alone did not bring those texts within the margin.
