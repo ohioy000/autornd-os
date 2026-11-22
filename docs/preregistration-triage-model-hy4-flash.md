@@ -114,3 +114,42 @@ assertion, which the suite expects); any other code stops. No git operation agai
 Each result file is copied byte-identical into `docs/traces/` and cited by sha256 in a record next to the earlier one. The
 decisions the run leaves are the owner's: whether `hy4-flash` is proposed as a triage pin for any profile (G-2, with this
 as the evidence), and whether any held text is released.
+
+## Amendment 1 — after the probe, before any arm (2026-11-22)
+
+**What the probe read** (spent '$0.0016' of the '$0.30'; n = 3 units, wide_appsec, wide_aquaculture and wide_hvac, one repeat
+each, `general` profile, this branch). Q1, Q2, Q3 and Q4 hold: all three completed with a typed triage verdict, no
+rejection, no provider failure, the model that replied was the pinned one, served by Tencent, rated by the guard. P1 holds.
+Two things the pre-registration did not foresee:
+
+1. **My cap setting was wrong on the first call.** Each unit reserves `--max-spend` against `--max-spend-sweep`, so
+   `--max-spend 0.02 --max-spend-sweep 0.02` let one unit start and skipped two. That is my setting, not the model. The two
+   skipped units were run with `--max-spend 0.005 --max-spend-sweep 0.02`. The arms use `--max-spend 0.005
+   --max-spend-sweep 0.05`, which is the per-arm cap of '$0.05' as written above.
+2. **With its default thinking the model is dear and slow for this seat.** Completion tokens 2,231, 3,262 and 3,311 (mean
+   2,934, against 528 for the earlier model over 180 units of the earlier sweep), 16.2 to 20.1 seconds a call (the earlier
+   model, 2.6 s), '$0.00044' a call (the earlier model, '$0.00018'): the rate per token is 2.6 times lower and the tokens are
+   5.6 times more. P6 is falsified as a prediction of the default setting: five arms would cost about '$0.40'.
+
+**The owner's instruction (2026-11-22): try thinking off.** The same three units were run with the triage call sending
+`reasoning: {"enabled": false}`, set by a probe wrapper around `OpenRouterClient.chat_json` that lives in the session's
+scratch folder and **not in the repository**; no harness code is changed. All three completed, typed, no rejection,
+served by Tencent: completion tokens 59, 63 and 59, 2.6 to 3.2 seconds a call, '$0.000037' to '$0.000038' a call, and the
+readings were `high`, `high` and `critical`, each within its sector's bounds. Spent '$0.0001'; '$0.0017' in all.
+
+**What changes.** The five arms are run **with thinking off for the triage call**, by the same wrapper, in the process
+only. Everything else stands: the arms, the text, the model, the provider, 180 units an arm, the rules M1 to M5, the stop
+rules, the per-arm cap of '$0.05' and the total of '$0.30'. The wrapper is part of the instrument and its file is copied
+into `docs/probes/` with the results. **What this run therefore measures is the model with thinking off.** The model with
+its default thinking is not read on the sweep (the probe's 3 units are not a reading), and that is stated wherever a result
+is. A model that is adopted for the triage seat needs a harness setting for this option and a ruling of its own (it changes
+what the model does at the seat); neither is made here.
+
+**Predictions replaced or added.**
+- **P6 is replaced.** Each arm costs under '$0.015' (the probe's '$0.000038' a call over 180 units is '$0.007') and the five
+  together under '$0.07'; each arm takes about 10 minutes.
+- **P7, n = 5 arms.** Thinking off does not make the model under-call by itself: H0 holds M2. This is the one thing the
+  probe cannot say: the three probe sectors are all clear-cut, and a model that thinks less may read the borderline
+  sectors lower. It is held at about even odds, as P3 was.
+
+Everything else in this file is unchanged. The expected spend of the five arms is about '$0.04'.
