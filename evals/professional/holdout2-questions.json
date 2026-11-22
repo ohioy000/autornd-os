@@ -1,9 +1,19 @@
 {
  "version": "professional-holdout-2",
- "status": "Draft, not approved",
+ "status": "Approved by the owner on 2026-11-22 (the owner's word in session: sign off, drop the flagged questions) and frozen. A change is a new version the owner ratifies (D44).",
  "drafted": "2026-11-21",
  "passages_verified_against_live_pages": "2026-11-21",
  "purpose": "A hold-out set: questions written after the harness was tuned, by authors who never saw its answers, across fields the other sets do not cover.",
+ "withheld": {
+  "Y48": "held back by the authoring script after two repair rounds: its key adds '(dimensionless)' to a numeric answer",
+  "Y97": "dropped on 2026-11-22 after a Haiku reading, on the owner's instruction: a trap that says no numeric limit is stated, but the same section gives a table of limits in dBuV",
+  "Y87": "dropped on 2026-11-22 after a Haiku reading, on the owner's instruction: omits that the rule applies only to installations after 13 August 2007",
+  "Y93": "dropped on 2026-11-22 after a Haiku reading, on the owner's instruction: attributes the frequency-window passage to the Quebec variance; it is from another attachment",
+  "Y107": "dropped on 2026-11-22 after a Haiku reading, on the owner's instruction: says each container; the cited paragraph covers containers of 2 lb or less for motor-vehicle air conditioning",
+  "Y55": "dropped on 2026-11-22 after a Haiku reading, on the owner's instruction: the confusion note names supplied ECMA-404 passages that were not supplied",
+  "Y96": "dropped on 2026-11-22 after a Haiku reading, on the owner's instruction: calls a use requirement a scope sentence",
+  "Y10": "dropped on 2026-11-22 after a Haiku reading, on the owner's instruction: the confusion note mislabels a date"
+ },
  "questions": [
   {
    "id": "Y1",
@@ -240,28 +250,6 @@
     }
    ],
    "commonly_confused": "People often quote only 1 September 2021 as the repeal date for the old lamp-labelling rules. The passage has an express exception: Article 3(2) and Article 4(2) were repealed on 25 December 2019."
-  },
-  {
-   "id": "Y10",
-   "field": "EU ecodesign / light-source regulations repealed",
-   "difficulty": [
-    "newer edition, amendment or corrigendum changed the value",
-    "old value still quoted"
-   ],
-   "question": "Under Commission Regulation (EU) 2019/2020, as in force on 2026-11-21, from what date were Regulations (EC) No 244/2009, (EC) No 245/2009 and (EU) No 1194/2012 repealed?",
-   "sources": [
-    {
-     "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32019R2020",
-     "passage": "Regulations (EC) No 244/2009, (EC) No 245/2009 and (EU) No 1194/2012 are repealed with effect from 1 September 2021."
-    }
-   ],
-   "key": [
-    {
-     "item": "repeal date for Regulations (EC) No 244/2009, (EC) No 245/2009 and (EU) No 1194/2012",
-     "answer": "1 September 2021"
-    }
-   ],
-   "commonly_confused": "A reader may quote 25 December 2019 because that date appears in the related energy-labelling repeal, or may assume the older lighting regulations ended when Regulation (EU) 2019/2020 entered into force. The ecodesign repeal passage states 1 September 2021."
   },
   {
    "id": "Y11",
@@ -1365,43 +1353,6 @@
    "commonly_confused": "128 is still quoted from RFC 3280, but RFC 5280 explicitly says ub-emailaddress-length was changed from 128 to 255."
   },
   {
-   "id": "Y55",
-   "field": "document identification",
-   "difficulty": [
-    "question names no rule or document"
-   ],
-   "question": "A service sends JSON over the public internet. The payload uses uppercase TRUE and the sender adds U+FEFF at the start of the transmitted text. Which public specification should be checked, and what two rules does it state about these literal names and the byte order mark?",
-   "sources": [
-    {
-     "url": "https://www.rfc-editor.org/rfc/rfc8259.txt",
-     "passage": "The literal names MUST be lowercase.  No other literal names are allowed."
-    },
-    {
-     "url": "https://www.rfc-editor.org/rfc/rfc8259.txt",
-     "passage": "Implementations MUST NOT add a byte order mark (U+FEFF) to the beginning of a networked-transmitted JSON text."
-    },
-    {
-     "url": "https://www.rfc-editor.org/rfc/rfc8259.txt",
-     "passage": "JSON text exchanged between systems that are not part of a closed ecosystem MUST be encoded using UTF-8 [RFC3629]."
-    }
-   ],
-   "key": [
-    {
-     "item": "specification to check",
-     "answer": "RFC 8259: The JavaScript Object Notation (JSON) Data Interchange Format"
-    },
-    {
-     "item": "rule on literal names",
-     "answer": "literal names MUST be lowercase; no other literal names are allowed"
-    },
-    {
-     "item": "rule on byte order mark",
-     "answer": "implementations MUST NOT add a byte order mark (U+FEFF) to the beginning of a networked-transmitted JSON text"
-    }
-   ],
-   "commonly_confused": "ECMA-404 is tempting because it is also a JSON syntax specification, but the supplied ECMA-404 passages define syntax scope and do not state these two network JSON rules; RFC 8259 states both."
-  },
-  {
    "id": "Y56",
    "field": "SPARQL 1.1 query language",
    "difficulty": [
@@ -2170,28 +2121,6 @@
    "commonly_confused": "The tempting wrong answer is a 6 ft height; the passage gives 1.98 m (6.5 ft), while one entrance is permitted only under the stated exceptions."
   },
   {
-   "id": "Y87",
-   "field": "GFCI receptacles",
-   "difficulty": [
-    "plain lookup",
-    "easy memory check"
-   ],
-   "question": "Under OSHA 29 CFR 1910 Subpart S, as in force on 2026-11-21, which 125-volt, single-phase receptacles installed in bathrooms or on rooftops must have ground-fault circuit-interrupter protection for personnel?",
-   "sources": [
-    {
-     "url": "https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XVII/part-1910/subpart-S",
-     "passage": "All 125-volt, single-phase, 15- and 20-ampere receptacles installed in bathrooms or on rooftops shall have ground-fault circuit-interrupter protection for personnel."
-    }
-   ],
-   "key": [
-    {
-     "item": "receptacle ratings covered by bathroom or rooftop GFCI rule",
-     "answer": "all 125-volt, single-phase, 15- and 20-ampere receptacles"
-    }
-   ],
-   "commonly_confused": "A reader may add 30-ampere receptacles by mixing this rule with the separate rule for receptacle outlets not part of permanent wiring. The bathroom/rooftop passage lists only 15- and 20-ampere receptacles."
-  },
-  {
    "id": "Y88",
    "field": "generator protection settings and evidence retention",
    "difficulty": [
@@ -2315,39 +2244,6 @@
    "commonly_confused": "A reader may answer 0.022 s or 50–100 milliseconds by confusing the high-voltage delay and frequency calculation window with the no-trip-zone end. The passage states 4 seconds."
   },
   {
-   "id": "Y93",
-   "field": "generator voltage protection",
-   "difficulty": [
-    "two passages"
-   ],
-   "question": "In NERC PRC-024-3, as in force on 2026-11-21, in the Quebec Interconnection variance, what minimum delay and positive-sequence voltage threshold are stated for inverter-based resources to cease injecting current momentarily, and what typical frequency-calculation window or filtering lengths are stated?",
-   "sources": [
-    {
-     "url": "https://www.nerc.com/pa/Stand/Reliability%20Standards/PRC-024-3.pdf",
-     "passage": "After a minimum delay of 0.022 s, when the positive-sequence voltage exceeds 1.25 per unit (p.u.) Normal operation must resume once the voltage drops back below 1.25 p.u at the high side of the MPT."
-    },
-    {
-     "url": "https://www.nerc.com/pa/Stand/Reliability%20Standards/PRC-024-3.pdf",
-     "passage": "Frequency is calculated over a window of time. While the frequency boundaries include the option to trip instantaneously for frequencies outside the specified range, this calculation should occur over a time window. Typical window/filtering lengths are three to six cycles (50 – 100 milliseconds)."
-    }
-   ],
-   "key": [
-    {
-     "item": "minimum delay for momentary cessation of current injection in the Quebec Interconnection variance",
-     "answer": "0.022 s"
-    },
-    {
-     "item": "positive-sequence voltage threshold for momentary cessation of current injection in the Quebec Interconnection variance",
-     "answer": "exceeds 1.25 p.u.; normal operation resumes below 1.25 p.u. at the high side of the MPT"
-    },
-    {
-     "item": "typical frequency-calculation window or filtering lengths",
-     "answer": "three to six cycles (50 – 100 milliseconds)"
-    }
-   ],
-   "commonly_confused": "The tempting wrong answer is to treat 0.022 s and 1.25 p.u. as a general high-voltage trip condition, or to say frequency outside the range must always trip instantaneously. The supplied passage ties the voltage language to the Quebec Interconnection variance and says frequency calculation should occur over a time window."
-  },
-  {
    "id": "Y94",
    "field": "distribution transformer efficiency dates",
    "difficulty": [
@@ -2406,61 +2302,6 @@
     }
    ],
    "commonly_confused": "The tempting wrong answer is to apply the removed Dec. 23, 2024 amendments or to say the tables apply after April 23, 2029. The supplied passages state the reverted version and the window ending before April 23, 2029."
-  },
-  {
-   "id": "Y96",
-   "field": "motor test temperature",
-   "difficulty": [
-    "trap: rule does not apply",
-    "scope clause"
-   ],
-   "question": "An auditor asks whether OSHA 29 CFR 1910 Subpart S, as in force on 2026-11-21, sets a 50-volt guarding threshold for all testing work on electric circuits or equipment. What is the correct answer, and what scope sentence controls testing work?",
-   "sources": [
-    {
-     "url": "https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XVII/part-1910/subpart-S",
-     "passage": "Except as elsewhere required or permitted by this standard, live parts of electric equipment operating at 50 volts or more shall be guarded against accidental contact by use of approved cabinets or other forms of approved enclosures or by any of the following means:"
-    },
-    {
-     "url": "https://www.ecfr.gov/current/title-29/subtitle-B/chapter-XVII/part-1910/subpart-S",
-     "passage": "Only qualified persons may perform testing work on electric circuits or equipment."
-    }
-   ],
-   "key": [
-    {
-     "item": "whether the 50-volt guarding threshold is the rule for testing work",
-     "answer": "No; the 50-volt passage is a guarding rule for live parts, not the rule controlling testing work"
-    },
-    {
-     "item": "scope sentence controlling testing work",
-     "answer": "Only qualified persons may perform testing work on electric circuits or equipment."
-    }
-   ],
-   "commonly_confused": "The tempting wrong answer is 'yes, 50 volts or more' because that figure appears in the same subpart. The supplied testing-work scope clause instead limits who may perform testing work."
-  },
-  {
-   "id": "Y97",
-   "field": "EMC conducted emissions",
-   "difficulty": [
-    "trap: value not stated in supplied passage"
-   ],
-   "question": "For FCC 47 CFR Part 15 Subpart B, as in force on 2026-11-21, a compliance officer asks for the numeric conducted-emission limit in microvolts for equipment designed to be connected to the public utility AC power line, excluding Class A digital devices, within 150 kHz to 30 MHz. From the supplied passage, what numeric limit can be stated, and what does the passage actually require?",
-   "sources": [
-    {
-     "url": "https://www.ecfr.gov/current/title-47/chapter-I/subchapter-A/part-15/subpart-B",
-     "passage": "Except for Class A digital devices, for equipment that is designed to be connected to the public utility (AC) power line, the radio frequency voltage that is conducted back onto the AC power line on any frequency or frequencies within the band 150 kHz to 30 MHz shall not exceed the limits in the following table, as measured using a 50 μH/50 ohms line impedance stabilization network (LISN)."
-    }
-   ],
-   "key": [
-    {
-     "item": "numeric conducted-emission limit available from the supplied passage",
-     "answer": "no numeric microvolt limit is stated in the supplied passage"
-    },
-    {
-     "item": "what the passage requires",
-     "answer": "the radio frequency voltage conducted back onto the AC power line within 150 kHz to 30 MHz shall not exceed the limits in the following table, measured using a 50 μH/50 ohms LISN"
-    }
-   ],
-   "commonly_confused": "The tempting wrong answer is 1000 μV, which appears in a separate carrier-current-system passage, or a Class B table value from memory. The supplied passage for AC-power-line equipment says only 'the limits in the following table' and gives no number."
   },
   {
    "id": "Y98",
@@ -2713,32 +2554,6 @@
     }
    ],
    "commonly_confused": "The tempting wrong answer is that the rule began in 1993 or only covered class I and class II refrigerants; the passage shows the 2018 expansion to non-exempt substitute refrigerants and the 2018 recordkeeping requirement."
-  },
-  {
-   "id": "Y107",
-   "field": "refrigerant container leakage",
-   "difficulty": [
-    "newer edition or amendment changed the value",
-    "plain lookup"
-   ],
-   "question": "Under 40 CFR 82.154 as in force on 2026-11-21, what annual leakage rate applies to each refrigerant container when its self-sealing valve is closed, and does the passage say it applies to partially full containers as well as new, full containers?",
-   "sources": [
-    {
-     "url": "https://www.ecfr.gov/current/title-40/chapter-I/subchapter-C/part-82/subpart-F/section-82.154",
-     "passage": "The leakage rate from each container must not exceed 3.00 grams per year when the self-sealing valve is closed. This leakage rate applies to new, full containers as well as containers that may be partially full."
-    }
-   ],
-   "key": [
-    {
-     "item": "maximum leakage rate with self-sealing valve closed",
-     "answer": "3.00 grams per year"
-    },
-    {
-     "item": "applies to partially full containers",
-     "answer": "Yes; new, full containers as well as containers that may be partially full"
-    }
-   ],
-   "commonly_confused": "The tempting wrong answer is 3 percent, from the noncondensables purge limit in 40 CFR 82.158, or 3 years, from recordkeeping in 40 CFR 82.156; the container valve limit is 3.00 grams per year."
   },
   {
    "id": "Y108",
