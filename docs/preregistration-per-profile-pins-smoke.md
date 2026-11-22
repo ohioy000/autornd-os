@@ -108,3 +108,28 @@ Each result file is copied byte-identical into `docs/traces/` and cited by its s
 (`docs/reviews/2026-11-21-per-profile-pins-and-tuned-prompts.md`) with the predictions above scored one by one, as read.
 The pin line goes into the owner's `.env` only on the owner's "yes" and the merge, and only where the code that declares
 the key is already in every checkout that reads that file.
+
+## Amendment 1 — after the first run, before any further spend (2026-11-21)
+
+**What run 1 read.** `legal` × `gen_contract_threshold` (n = 1) completed for '$0.0402' in 24 calls. The answer call (the
+`engineering` tier) was served by the pinned id via Z.AI and by nothing else (S1 holds for this run); its cost, '$0.0301'
+for 11,293 prompt and 20,716 completion tokens, is the catalogue's no-cache figure to the cent (S6 holds); no schema
+rejection and no provider failure (S4 holds); the header records the profile and the pin and shows the pin in
+`models.engineering`. It stopped the sweep on the stop rule written above, because the unit carries three
+`spend_guard_blind` entries, all of the **`decision` tier**: the owner's global `MODEL_DECISION` is not listed in the
+public catalogue (no id of that name among 476 models, Perplexity's listed ids being the sonar family), so the guard cannot
+rate it. The three decision calls cost '$0.0002' in all, the unit is billed from what the provider reports, and every run
+of this workflow makes those calls. **S5 as written ("no unit carries a `spend_guard_blind` entry") is falsified, at n = 1,
+by a tier that is not the pin's.** It is a finding that waits on the owner (G-3): the decision model is unrated.
+
+**The owner's ruling (2026-11-21, asked in conversation after run 1): amend and run the other five.**
+
+**The amended stop rule.** A blind entry on a tier other than the pinned one is recorded and reported in the ruling
+record, not a stop. Everything else stands: a failing preflight, any HTTP 404, a blind entry **on the `engineering`
+tier** (the pinned call), a cap reached, a unit that ends in anything but a terminal, and the pinned id appearing in any
+`general` run. **S5 is restated** as: no blind entry on the `engineering` tier, no 404 or refused call, and each unit
+`status: completed`, in all six; the original wording is scored falsified and the restatement is scored besides it. The
+caps (`--max-spend 0.40`, `--max-spend-sweep 0.40`), the six runs, the pin, the process-environment order and every other
+prediction are unchanged. Spent so far: '$0.0402' of the '$3.00'; the remaining five are expected to cost about '$0.25'.
+The remaining runs, in this order: `general` × `gen_contract_threshold` (the pair of run 1, the leak check), then
+`legal` and `general` × the two new requests.
