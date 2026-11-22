@@ -952,21 +952,55 @@ def check_user(questions: list[dict], texts: dict[str, str], reverse: bool) -> s
             + "\n\nTHE PAGES:\n\n" + "\n\n".join(pages))
 
 
-async def check_group(run: Run, group: Group, name: str, questions: list[dict]) -> None:
+def check_batches(questions: list[dict], texts: dict[str, str]) -> list[list[dict]]:
+    """The questions in the order given, packed into calls so that the pages one call carries fit
+    whole inside CHECK_PAGE_CHARS where they can. A question goes into the open call while the pages
+    of the call, counted once each, stay inside that; one whose pages alone pass it goes by itself
+    (and `check_user` cuts them). Before this every question of a group went in one call and each
+    page got an equal share of the limit: on the second hold-out's second run (2026-11-21) the
+    checkers said "the page is cut, I could not check" of 15 questions in 4 groups whose pages code
+    had already found every passage on, and nothing could be done about it but ask again."""
+    batches: list[list[dict]] = []
+    held: list[set[str]] = []
+    sizes: list[int] = []
+    for question in questions:
+        urls = {u for u in (find_url(s["url"], texts) for s in question["sources"]) if u}
+        for index, open_urls in enumerate(held):
+            added = sum(len(texts[u]) for u in urls - open_urls)
+            if added == 0 or sizes[index] + added <= CHECK_PAGE_CHARS:    # a shared page costs nothing more
+                batches[index].append(question)
+                open_urls |= urls
+                sizes[index] += added
+                break
+        else:
+            batches.append([question])
+            held.append(set(urls))
+            sizes.append(sum(len(texts[u]) for u in urls))
+    return batches
+
+
+async def check_group(run: Run, group: Group, name: str, questions: list[dict],
+                      force: bool = False) -> None:
     """Two readings of these questions by the worker, saved as {name}-g{N}-{1,2}.json.
 
     The same model reads twice, so the second reading takes the questions in the other order and a
-    higher temperature: a miss that is chance is less likely to repeat."""
+    higher temperature: a miss that is chance is less likely to repeat. Each reading is one call
+    per batch of `check_batches`. `force` reads again what is saved: a repair has new questions
+    under the same ids, and a saved re-check of the old ones must not stand for them (the second
+    repair round of 2026-11-21 skipped its re-check for that reason)."""
     texts = page_texts(run, group)
-    ids = [q["id"] for q in questions]
+    batches = check_batches(questions, texts)
     for k in (1, 2):
-        if run.path(f"{name}-g{group.number}-{k}.json").exists() and not run.again:
+        if run.path(f"{name}-g{group.number}-{k}.json").exists() and not (run.again or force):
             continue
-        reply = await ask(run, name, group, WORKER_FN, checker_system(run.prompt_b),
-                          check_user(questions, texts, reverse=(k == 2)),
-                          max_tokens=WORKER_MAX_TOKENS, temperature=0.2 + 0.4 * (k - 1),
-                          effort=run.effort_check)
-        run.save(f"{name}-g{group.number}-{k}.json", parse_verdicts(reply, ids))
+        verdicts: dict[str, dict] = {}
+        for batch in (reversed(batches) if k == 2 else batches):
+            reply = await ask(run, name, group, WORKER_FN, checker_system(run.prompt_b),
+                              check_user(batch, texts, reverse=(k == 2)),
+                              max_tokens=WORKER_MAX_TOKENS, temperature=0.2 + 0.4 * (k - 1),
+                              effort=run.effort_check)
+            verdicts.update(parse_verdicts(reply, [q["id"] for q in batch]))
+        run.save(f"{name}-g{group.number}-{k}.json", verdicts)
 
 
 async def stage_check(run: Run) -> None:
@@ -1050,7 +1084,7 @@ async def stage_fix(run: Run) -> None:
         run.save(f"fixed-g{group.number}.json", {"questions": questions, "note": note})
         fresh = [q for q in questions if not problems(q, texts)]
         if fresh:
-            await check_group(run, group, "recheck", fresh)
+            await check_group(run, group, "recheck", fresh, force=True)
 
     done = await each(run, [(f"fix g{g.number}", (lambda g=g: job(g))) for g in run.groups])
     print(f"fix: {done} of {len(run.groups)} groups repaired and read again")

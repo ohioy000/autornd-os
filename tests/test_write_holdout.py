@@ -616,6 +616,93 @@ class TestTheMoneyTheKeyAndThePins:
         assert len(run.errors) == 4 and run.stopped
 
 
+class TestACheckCallCarriesItsPagesWhole:
+    """On the second run of the second hold-out (2026-11-21) every question of a group went to the
+    checker in one call and each page got an equal share of the limit, so the checkers said "the page
+    is cut, I could not check" of 15 questions in 4 groups, on pages where code had found every
+    passage already. The questions are now packed into calls that carry their pages whole where they
+    can, and a repair's re-check is read again even when an older one is saved."""
+
+    PAGE_CHARS = len(page(1))
+
+    @pytest.fixture
+    def two_pages_to_a_call(self, monkeypatch):
+        monkeypatch.setattr(mod, "CHECK_PAGE_CHARS", 2 * self.PAGE_CHARS)
+
+    def qs(self):
+        return [question("Y1", 1, 1), question("Y2", 2, 1), question("Y3", 1, 2),
+                question("Y4", 3, 1)]
+
+    def test_questions_are_packed_while_their_pages_fit_and_a_shared_page_counts_once(
+            self, two_pages_to_a_call):
+        batches = mod.check_batches(self.qs(), URLS)
+        assert [[q["id"] for q in b] for b in batches] == [["Y1", "Y2", "Y3"], ["Y4"]]
+
+    def test_a_question_whose_pages_alone_pass_the_limit_goes_by_itself_and_is_cut(
+            self, monkeypatch):
+        monkeypatch.setattr(mod, "CHECK_PAGE_CHARS", self.PAGE_CHARS // 2)
+        batches = mod.check_batches(self.qs(), URLS)
+        assert [[q["id"] for q in b] for b in batches] == [["Y1", "Y3"], ["Y2"], ["Y4"]], \
+            "Y1 and Y3 share a page, so they share a call; no page fits whole, and each is cut"
+        assert "[the page is cut here" in mod.check_user(batches[1], URLS, reverse=False)
+
+    def test_no_page_in_a_packed_call_is_cut(self, two_pages_to_a_call):
+        for batch in mod.check_batches(self.qs(), URLS):
+            assert "[the page is cut here" not in mod.check_user(batch, URLS, reverse=False)
+
+    def test_every_question_is_in_exactly_one_batch(self, two_pages_to_a_call):
+        batches = mod.check_batches(self.qs(), URLS)
+        assert sorted(q["id"] for b in batches for q in b) == ["Y1", "Y2", "Y3", "Y4"]
+
+    async def test_a_reading_is_one_call_a_batch_and_the_second_goes_the_other_way_round(
+            self, tmp_path, monkeypatch, small):
+        client = FakeClient(Script())
+        run = make_run(tmp_path, client=client)
+        await run_stages(run, ["plan", "open", "extract"], monkeypatch, make_fetch())
+        monkeypatch.setattr(mod, "CHECK_PAGE_CHARS", 2 * self.PAGE_CHARS)
+        client.calls.clear()
+        questions = self.qs()
+        await mod.check_group(run, run.groups[0], "check", questions)
+        asked = [[q["id"] for q in json.loads(c["user"].split("THE PAGES:")[0][len("THE FILE:\n"):])
+                  ["questions"]] for c in client.calls]
+        assert asked == [["Y1", "Y2", "Y3"], ["Y4"], ["Y4"], ["Y3", "Y2", "Y1"]]
+        for k in (1, 2):
+            saved = json.loads((tmp_path / f"check-g1-{k}.json").read_text())
+            assert sorted(saved) == ["Y1", "Y2", "Y3", "Y4"], "one file holds every batch's verdicts"
+
+    async def test_a_saved_reading_stands_unless_it_is_forced(self, tmp_path, monkeypatch, small):
+        client = FakeClient(Script())
+        run = make_run(tmp_path, client=client)
+        await run_stages(run, ["plan", "open", "extract"], monkeypatch, make_fetch())
+        group, questions = run.groups[0], [question("Y1", 1, 1)]
+        stale = {"Y1": {"verdict": "FIX", "problem": "stale", "fix": ""}}
+        for k in (1, 2):
+            (tmp_path / f"recheck-g1-{k}.json").write_text(json.dumps(stale))
+        before = len(client.calls)
+        await mod.check_group(run, group, "recheck", questions)
+        assert len(client.calls) == before, "saved, so not asked again"
+        await mod.check_group(run, group, "recheck", questions, force=True)
+        assert len(client.calls) == before + 2
+        assert json.loads((tmp_path / "recheck-g1-1.json").read_text())["Y1"]["problem"] != "stale"
+
+    async def test_a_repair_reads_its_questions_again_over_a_saved_recheck(
+            self, tmp_path, monkeypatch, small):
+        """The second repair round skipped its re-check because the first round's file was there, and
+        the old verdicts stood for new questions under the same ids."""
+        client = FakeClient(Script())
+        run = make_run(tmp_path, client=client)
+        await run_stages(run, ["plan", "open", "extract", "write", "check"], monkeypatch, make_fetch())
+        sentinel = {"Y1": {"verdict": "OK", "problem": "SENTINEL", "fix": ""},
+                    "Y2": {"verdict": "OK", "problem": "SENTINEL", "fix": ""},
+                    "Y3": {"verdict": "OK", "problem": "SENTINEL", "fix": ""}}
+        for k in (1, 2):
+            (tmp_path / f"recheck-g1-{k}.json").write_text(json.dumps(sentinel))
+        await run_stages(run, ["fix"])
+        for k in (1, 2):
+            text = (tmp_path / f"recheck-g1-{k}.json").read_text()
+            assert "SENTINEL" not in text, "the repair's questions were read again"
+
+
 class TestTheQuestionsRunIsNotCapped:
     """The owner's instruction of 2026-11-21: let the questions run cook, and do not tinker with how
     hard a model thinks. Writing, checking and repairing get the most an endpoint gives and no
