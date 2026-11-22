@@ -153,3 +153,53 @@ what the model does at the seat); neither is made here.
   sectors lower. It is held at about even odds, as P3 was.
 
 Everything else in this file is unchanged. The expected spend of the five arms is about '$0.04'.
+
+## Amendment 2 — after the five thinking-off arms, before the thinking-on arms (2026-11-22)
+
+**What was run.** The five arms of Amendment 1 (thinking off) finished with 180 units each, no errors, no rejections, every
+call served by Tencent, '$0.0031' to '$0.0036' an arm and '$0.0167' in all, about 7 minutes an arm. Spent on this study so
+far, with the probes: about '$0.0184'. **Disclosure: the check script printed each arm's failed-assertion counts as it
+ended, and I read them before writing this amendment** (the baseline H0 had 6 units below a floor; Hg 0 and 5 above a
+ceiling; Hf 41; Hm 51; Hl 15). They are not yet scored by M1 to M5, which is done in the record; the predictions below are
+therefore written **after** seeing them, and are marked so.
+
+**The owner's instruction (2026-11-22): run the same test with thinking on, the model's default, to have data to compare,
+and "full permission, whatever you have to do to get it done".** Read as: the same five arms, one setting changed, with the
+spend that needs. The money is stated here, before it is spent.
+
+**The thinking-on arms.** T0, Tg, Tf, Tm and Tl are H0, Hg, Hf, Hm and Hl with **no wrapper**: the triage call sends no
+`reasoning` option and the model's own default applies, as the probe's first three units did. Same trees, texts, profiles,
+suite (36 sectors, 5 repeats, 180 units an arm), model, provider and process-environment settings. Three changes, each for
+the reason given:
+1. **`--timeout 120`, not 45.** With its default thinking a call took 16 to 20 seconds in the probe; a 45-second limit would
+   count a slow thinking call as an error and measure the limit, not the model. The arms of Amendment 1 ran at 45 and took
+   about 2.5 seconds a call, so they are unaffected.
+2. **Per-arm cap '$0.10'** (`--max-spend 0.01 --max-spend-sweep 0.10`), because the probe's '$0.00044' a call is '$0.08' an
+   arm. A unit starts only while the spend so far plus '$0.01' fits.
+3. **Five lanes at once**, one process an arm, because five hours in line is not a measurement anyone waits for. Each lane
+   writes its own file; no lane reads another's. If a lane stops on a stop rule, the others run to their own end.
+
+**The total.** The owner's '$0.30' for this study does not cover default thinking (five arms would be about '$0.40').
+The permission above is read as covering it: **the ceiling for the whole study, probes and both settings, is now '$0.50'**,
+inside the '$1.00' the owner gave the sweeps (spent on them before this study: '$0.2251'). Expected for the five
+thinking-on arms: about '$0.40'. The ceiling by caps is five arms at '$0.10', '$0.50', plus the '$0.0184' spent, so
+the actual stop is the sum: if the study's total reaches '$0.50' no further unit is started. No other tier is called.
+
+**The rules.** M1 to M5 stand and are applied to each setting separately (thinking off: H0, Hg, Hf, Hm, Hl; thinking on:
+T0, Tg, Tf, Tm, Tl), each setting against its own baseline. Added, reported not scored: per arm, the thinking-off and
+thinking-on readings side by side (units below a floor, units meeting every bound, modal movers, cost, seconds a unit).
+The thinking-on arms with 45 seconds are not run; a unit that passes 120 seconds is an error under M1.
+
+**Predictions, written after seeing the thinking-off counts.**
+- **P8, n = 5 arms.** Thinking on reads the physical-hazard sectors higher: in each arm the units below a floor are no more
+  than in the same arm with thinking off. Falsified for an arm where thinking on is worse.
+- **P9 (M2 on thinking on), n = 1.** T0 holds M2 (at most 3 units below a floor, at least 171 meeting the bounds). H0 did
+  not hold it with thinking off, and the earlier model on the same text held it. I expect thinking on to close the gap, at
+  about even odds.
+- **P10 (M3 on thinking on), n = 4.** Tf, Tm and Tl stay above the margin of T0, as the earlier sweep's arms did on the
+  earlier model: the examples, not the model, are the cause. Tg holds M4.
+- **P11 (cost and time), n = 5.** Each arm costs under '$0.10', the five under '$0.45', and each arm takes under 80 minutes
+  in its lane; M1 holds in all five.
+
+Everything not mentioned here is unchanged, including the stop rules, which apply per lane. The wrapper of Amendment 1 is not
+used by these arms.
