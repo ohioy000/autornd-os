@@ -26,9 +26,10 @@ stop and be run again and only the missing work is done:
               the worker checks those again; one round only (--again for another)
     assemble  the draft set, the review file and the cost                          free
 
-Nine groups of 14 are Y1 to Y126, three times the 42 of the first hold-out: six that cover the first
-set's ground twice over, and three engineering subjects the owner added on 2026-11-21, each described
-in detail (groups 7 to 9) so that the plan names documents across the whole of its ground. A question
+Thirteen groups of 14 are Y1 to Y182, four times the 42 of the first hold-out: six that cover the
+first set's ground twice over, three engineering subjects the owner added on 2026-11-21 (groups 7 to
+9), and four subjects added later the same day (legal, finance, medical and science, groups 10 to
+13), each described in detail so that the plan names documents across the whole of its ground. A question
 reaches the draft only if code finds every cited passage on the page it names, every figure in a key
 answer is on the cited pages (unless the key marks it derived), and both checks say OK. Anything else
 is held back and listed in review.md with the reason. The draft says "Draft, not approved": the
@@ -105,13 +106,16 @@ PLAN_EFFORT = "off"
 # each, from the provider's public catalogue (max_completion_tokens) on that date. The ceilings before
 # were 48,000 and 16,000: a write with thinking on spent all 48,000 on thought and returned nothing
 # ('$0.0642'), and one check at the low level was cut at 16,000 where the others used 11,000 to
-# 15,000. The number is written here and not read from the catalogue; the pins come in on the command
+# 15,000. The author's ceiling was raised to 130,000 later the same day, on the owner's word, for the
+# model that writes the four subjects added after the first nine (its endpoints list 943,718, so the
+# 130,000 is the owner's number and not the endpoint's); the worker's stays at its endpoint's 65,536,
+# which it cannot pass. The number is written here and not read from the catalogue; the pins come in on the command
 # line, so a pin whose endpoint gives less than this is the owner's to notice. The plan is the
 # exception and stays short: a reply of 30 documents is about 2,500 tokens, and the
 # first live run's longest ran past 12,000 (161 documents), so its ceiling is 5,000: a reply that runs
 # on is cut there and its finished entries are kept, which costs under '$0.01' where 12,000 cost
 # '$0.015' for entries never used.
-AUTHOR_MAX_TOKENS, PLAN_MAX_TOKENS, WORKER_MAX_TOKENS = 65_536, 5_000, 65_536
+AUTHOR_MAX_TOKENS, PLAN_MAX_TOKENS, WORKER_MAX_TOKENS = 130_000, 5_000, 65_536
 # The HTTP wait for one reply: a long answer from a reasoning model takes minutes, and the client's
 # own 120 s was set for short ones. A reply at the ceiling above takes about 550 s at the slowest rate
 # measured (12,000 tokens in 100 s), and the 48,000-token write took 270 s, so 900 s holds.
@@ -178,6 +182,51 @@ GROUPS = [
              "agencies (FHWA, state transport departments, FEMA, NRCS, National Highways standards, "
              "the EU Joint Research Centre's Eurocode background documents, Austroads and the New "
              "Zealand Transport Agency)", 113),
+    Group(10, "law: statutes, regulations, court rules and treaties, and the facts a lawyer looks up in "
+              "them (limitation periods, notice and filing deadlines, thresholds, penalties, standing "
+              "and jurisdiction rules, burdens of proof, definitions and exceptions); contract, tort, "
+              "property, company, insolvency, intellectual-property, evidence and procedure law; "
+              "competition and consumer law; arbitration and human-rights texts. From free texts at "
+              "stable addresses: legislation.gov.uk Acts and statutory instruments, the US Code and "
+              "eCFR, the Federal Rules of Civil Procedure, Evidence and Appellate Procedure, EUR-Lex "
+              "regulations and directives, WIPO treaties, UNCITRAL texts, the UN treaty collection, "
+              "the European Convention on Human Rights, and the published rules of courts and of "
+              "regulators (the Supreme Court of the United States, the UK Supreme Court, the "
+              "Competition and Markets Authority, the Federal Trade Commission)", 127),
+    Group(11, "finance, banking, securities and tax: capital and liquidity ratios and their "
+              "definitions; disclosure, reporting and filing deadlines; thresholds and limits in "
+              "securities, derivatives, payments, consumer-credit and anti-money-laundering rules; "
+              "audit and accounting-standard requirements; tax rates, allowances, brackets, "
+              "reporting thresholds and penalties; insurance solvency rules. From free texts at "
+              "stable addresses: the eCFR texts of 17 CFR (SEC) and 12 CFR (Federal Reserve, FDIC, "
+              "CFPB, OCC), IRS publications and instructions at irs.gov, the Basel Framework at "
+              "bis.org, the FATF Recommendations, IOSCO reports, EUR-Lex regulations and "
+              "directives on markets, payments, banking and insurance, the FCA Handbook, HMRC "
+              "manuals and guidance at gov.uk, the Australian Taxation Office and the Canada "
+              "Revenue Agency", 141),
+    Group(12, "medicine and clinical practice: dosing, contraindications, interaction and monitoring "
+              "statements in drug labels; diagnostic criteria, screening intervals and "
+              "classification thresholds in clinical guidelines; vaccination schedules; "
+              "regulatory requirements for trials, device classification and approval pathways; "
+              "reference ranges and staging systems; infection-control and public-health rules. "
+              "From free texts at stable addresses: FDA labels and guidance at fda.gov and "
+              "accessdata.fda.gov, the eCFR text of 21 CFR parts on trials and devices, CDC "
+              "pages and MMWR reports, WHO guidelines at who.int and iris.who.int, NICE "
+              "guidelines, ICH guidelines, the European Medicines Agency's guidelines, the UK "
+              "MHRA, the NIH and open-access articles at ncbi.nlm.nih.gov/pmc. Not the health "
+              "privacy, pharmaceutical manufacturing or radiation rules named as covered", 155),
+    Group(13, "natural science: physics, chemistry, earth and climate science, astronomy and "
+              "biology, and the figures of their reference works and reports (constants of "
+              "particles and nuclides, thermodynamic and spectroscopic data, reaction and "
+              "hazard data, atmospheric and ocean quantities, emission and forcing estimates, "
+              "orbital and planetary parameters, taxonomic and genetic conventions, "
+              "mathematical-function identities). From free texts at stable addresses: IPCC "
+              "assessment reports at ipcc.ch, NASA technical reports at ntrs.nasa.gov and fact "
+              "sheets at nasa.gov, the Particle Data Group's review at pdg.lbl.gov, the IUPAC "
+              "Gold Book, the NIST Digital Library of Mathematical Functions, NOAA and USGS "
+              "reports, ESA and ESO pages, the National Academies' free books, and open-access "
+              "papers on arxiv.org and at ncbi.nlm.nih.gov/pmc. Not the SI, CODATA and "
+              "metrology texts named as covered", 169),
 ]
 
 

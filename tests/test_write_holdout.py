@@ -241,22 +241,27 @@ class TestThePromptsAreTheDocs:
         covered = mod.covered_areas(a)
         assert covered.startswith("employment, payroll") and covered.endswith("EPA SPCC.")
 
-    def test_there_are_nine_groups_of_fourteen_numbered_y1_to_y126(self):
+    def test_there_are_thirteen_groups_of_fourteen_numbered_y1_to_y182(self):
         ids = [qid for group in mod.GROUPS for qid in group.ids]
-        assert len(mod.GROUPS) == 9 and ids == [f"Y{n}" for n in range(1, 127)]
+        assert len(mod.GROUPS) == 13 and ids == [f"Y{n}" for n in range(1, 183)]
 
 
 class TestTheLineUp:
     """Groups 1 to 6 are the first set's ground twice over; groups 7 to 9 are the three engineering
-    subjects the owner added on 2026-11-21, described in detail and not by a bare label."""
+    subjects the owner added on 2026-11-21, and groups 10 to 13 the four subjects (law, finance,
+    medicine, natural science) the owner added after them, all described in detail and not by a bare label."""
 
     SUBJECTS = {7: "electrical power systems and installations",
                 8: "mechanical, thermal and materials engineering",
-                9: "civil, structural and geotechnical engineering"}
+                9: "civil, structural and geotechnical engineering",
+                10: "law",
+                11: "finance, banking, securities and tax",
+                12: "medicine and clinical practice",
+                13: "natural science"}
 
-    def test_the_three_engineering_groups_come_after_the_six_and_name_their_subjects(self):
+    def test_the_seven_added_groups_come_after_the_six_and_name_their_subjects(self):
         added = {g.number: g.area for g in mod.GROUPS if g.number > 6}
-        assert sorted(added) == [7, 8, 9]
+        assert sorted(added) == [7, 8, 9, 10, 11, 12, 13]
         for number, subject in self.SUBJECTS.items():
             assert added[number].startswith(subject + ":"), number
 
@@ -278,7 +283,7 @@ class TestTheLineUp:
                                "--worker", "c/d", "--worker-provider", "q"])
         assert {int(n) for n in args.groups.split(",")} == {g.number for g in mod.GROUPS}
 
-    @pytest.mark.parametrize("number", [7, 8, 9])
+    @pytest.mark.parametrize("number", [7, 8, 9, 10, 11, 12, 13])
     def test_the_whole_area_and_the_groups_own_ids_reach_the_author(self, number):
         a, _ = mod.load_prompts(mod.PROMPTS.read_text(encoding="utf-8"))
         group = next(g for g in mod.GROUPS if g.number == number)
@@ -633,8 +638,8 @@ class TestTheQuestionsRunIsNotCapped:
         assert mod.reasoning_for(args.effort_check) == option
 
     def test_the_author_and_the_worker_may_reply_up_to_what_the_endpoints_give(self):
-        assert mod.AUTHOR_MAX_TOKENS == 65_536
-        assert mod.WORKER_MAX_TOKENS == 65_536
+        assert mod.AUTHOR_MAX_TOKENS == 130_000      # the owner's number, 2026-11-21
+        assert mod.WORKER_MAX_TOKENS == 65_536       # the worker's endpoint gives no more
 
     async def test_write_check_and_fix_ask_for_that_ceiling_and_send_no_reasoning_option(
             self, tmp_path, monkeypatch, small):
@@ -646,8 +651,11 @@ class TestTheQuestionsRunIsNotCapped:
         fix = [c for c in client.calls if c["function"] == "author" and "QUESTIONS TO REPAIR" in c["user"]]
         check = [c for c in client.calls if c["function"] == "worker" and "THE FILE:" in c["user"]]
         assert len(write) == 1 and len(fix) == 1 and len(check) >= 4, "two readings and two re-checks"
-        for call in write + fix + check:
-            assert call["max_tokens"] == 65_536, call["user"][:40]
+        for call in write + fix:
+            assert call["max_tokens"] == mod.AUTHOR_MAX_TOKENS, call["user"][:40]
+            assert call["reasoning"] is None, call["user"][:40]
+        for call in check:
+            assert call["max_tokens"] == mod.WORKER_MAX_TOKENS, call["user"][:40]
             assert call["reasoning"] is None, call["user"][:40]
 
     async def test_a_level_given_to_the_run_reaches_the_write_the_fix_and_the_checks(
