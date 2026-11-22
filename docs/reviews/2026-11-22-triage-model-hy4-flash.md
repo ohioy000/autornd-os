@@ -95,11 +95,25 @@ supported as a baseline.** Predictions: **P12** holds (even odds, and it sat on 
 `high` to `medium` on all five repeats); `legal` 3 of 36 and none unanimous. Semiconductor reads `medium` under the
 finance text in this run and in the thinking-off run, and under legal in neither; the owner may want to read it.
 
-**What this does not say.** The baseline itself meets the bounds on 171 of 180 units on this model, against 174 on the
-first model, so this model is no better than the first on the old text and is 3 units worse on the over-calling side
-(`risk_at_most` misses 8 and 9). It is not shown to be a better triage model than the first, only a model on which two
-texts that failed on the first read within the margin. Two runs per text, each of 180 units, a margin of 3. The medical
-text was not repeated; it stays held.
+**Better, and at what.** (Corrected after the owner's question; the first wording said "not shown to be better", which
+understated it.) On the three field texts this model, thinking on, has far fewer units below a floor than the first
+model: finance 24 against 1 and 1, legal 10 against 1 and 0, medical 18 against 6 (in 140 units run). A difference of 20 or more
+units is far outside the 2 to 3 unit spread two arms of identical text showed, so it is not luck, and it came twice. It is
+not the code: no prompt, profile, workflow or graph file differs between the tree the first sweep ran on and the tree
+these arms ran on (only the knowledge and PDF files that came in with the merge of main), and the baseline arms ran in the
+same unchanged control worktree both times. **The only things that changed are the model and how much it thinks**, and
+the thinking-off arms (41, 51 and 15 units below a floor) show that thinking is what carries it. For this harness that is the
+property that matters: the risk axis must not move with the profile's text, and this model on this seat moves less than
+the first when the text is weaker.
+
+**Where it is not better.** On the old guide, the same text both models were given, the first model has 0 units below a
+floor and 174 meeting the bounds, this one 0 and 1 below a floor and 171 (twice, exactly at the limit); it over-calls
+a little more (`risk_at_most` misses 8 and 9 against 6). So it is not a better reader of the guide the project was
+calibrated on, and it costs 2 to 3 times as much and takes about 7 times as long. **Not tested:** whether the first model
+would also hold the three texts if it thought as much. Its catalogue entry lists a `reasoning_effort` parameter, and a
+three-arm run at a higher effort (an estimate of '$0.1' to '$0.2' for the three, since the first model would think more) would separate "this model" from "more thinking". Until
+then the fair claim is that more thinking at this seat is what makes the field texts safe; this model is one way to
+buy it. Two runs per text, each of 180 units, a margin of 3. The medical text was not repeated; it stays held.
 
 ## Predictions, scored
 
