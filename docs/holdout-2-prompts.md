@@ -47,6 +47,13 @@ and figure of the 181 is on its live page (`verify_keys.py`: 181 of 181 hold). T
 '$4.1581' of the '$6.6' the owner approved. Next: the owner signs the keys (D44), then the set is
 registered as run-ready, preregistered and frozen, and the full run is made.
 
+Signed (2026-11-22): after a Haiku reading of all 181 (47 FIX, of which seven were real defects) the
+owner signed the keys with those seven dropped (`Y10`, `Y55`, `Y87`, `Y93`, `Y96`, `Y97`, `Y107`), so the
+frozen set holds 174 questions; the eight withheld ids, with `Y48`, say why in the file. The checkers
+were told the date after the first Haiku pass, which removed the "as in force on a future date" flags.
+Authoring and checks cost '$8.1881' of the '$8.6' approved. No harness run has been made on it; the
+run waits on the owner.
+
 The prompts below are used as written. One short preface is added in front of Prompt A and one short
 tail after Prompt B, because a model cannot browse: code opens the pages with the harness's own fetch,
 a helper model copies passages out of them, and code finds each passage word for word on its page
