@@ -2,9 +2,10 @@
 
 **Status.** Owner-directed in conversation, 2026-11-22. Nothing here is a ruling and nothing ships on it: a serving pin is
 the owner's (G-2), and the tuned texts held by `docs/reviews/2026-11-21-per-profile-pins-and-tuned-prompts.md` stay held
-until the owner rules. Pre-registered in `docs/preregistration-triage-model-hy4-flash.md` (with three amendments, each
-committed alone before the spend it opens). Spent: '$0.6687' in all ('$0.4233' of the '$0.50' first read from the owner's permission, then '$0.2454' on the repeat of
-Amendment 3), inside the '$1.00' given for sweeps ('$0.2251' on the first sweep; '$0.1062' of it left). Traces below, by sha256.
+until the owner rules. Pre-registered in `docs/preregistration-triage-model-hy4-flash.md` (with four amendments, each
+committed alone before the spend it opens). Spent on this study: '$0.9275' ('$0.4233' of the '$0.50' first read from the owner's permission, '$0.2454' on the repeat of
+Amendment 3, '$0.2567' and '$0.0021' on the high-effort test of Amendment 4); with the first sweep's '$0.2251', '$1.1526' on all
+sweeps, which is past the '$1.00' they were given by the amount the owner chose in conversation (about '$0.20' more). Traces below, by sha256.
 
 ## The question
 
@@ -109,11 +110,52 @@ the first when the text is weaker.
 **Where it is not better.** On the old guide, the same text both models were given, the first model has 0 units below a
 floor and 174 meeting the bounds, this one 0 and 1 below a floor and 171 (twice, exactly at the limit); it over-calls
 a little more (`risk_at_most` misses 8 and 9 against 6). So it is not a better reader of the guide the project was
-calibrated on, and it costs 2 to 3 times as much and takes about 7 times as long. **Not tested:** whether the first model
-would also hold the three texts if it thought as much. Its catalogue entry lists a `reasoning_effort` parameter, and a
-three-arm run at a higher effort (an estimate of '$0.1' to '$0.2' for the three, since the first model would think more) would separate "this model" from "more thinking". Until
-then the fair claim is that more thinking at this seat is what makes the field texts safe; this model is one way to
-buy it. Two runs per text, each of 180 units, a margin of 3. The medical text was not repeated; it stays held.
+calibrated on, and it costs 2 to 3 times as much and takes about 7 times as long. Two runs per text, each of 180 units, a
+margin of 3. The medical text was not repeated; it stays held. The question this left open, whether the first model would
+hold the texts if it thought as much, was then tested (next section), and the answer changes the reading above: **the
+amount of thinking is not the whole of it.**
+
+## The first model at high reasoning effort (Amendment 4)
+
+The owner chose to test it: the first model (the owner's global triage model, through Crusoe), the old guide, finance and legal,
+**high** reasoning effort sent by a wrapper outside the harness (`docs/probes/triage_effort_wrapper.py`), 180 units an arm,
+three lanes at once. A three-unit probe first ('$0.0021'): medium effort, which is its default, matched the sweep (493 to 587
+tokens), high spent 1,621 to 2,289 tokens and 5.7 to 8.3 seconds a call. Spent on the three arms '$0.2567' ('$0.0789',
+'$0.0879', '$0.0899'), about 30 to 32 minutes an arm, 10 seconds a unit, about 1,630 to 1,830 completion tokens a unit.
+
+| Arm, high effort | Units that ran | Units below a floor | Meets every bound | Rule |
+|---|---|---|---|---|
+| E0 (old guide, `general`) | 175 | 0 | 171 | E1 fails: 5 errors |
+| Ef (`finance`) | 174 | **9** (aquaculture 5, veterinary 2, geotechnical 1, textiles 1) | 148 | E1 fails: 6 errors; E3 would fail |
+| El (`legal`) | 180 | **8** (aquaculture 4, printing 3, pulp and paper 1) | 139 | E1 holds; **E3 fails** (limit 3) |
+
+**The errors are the provider's, not the model's.** All 11 are HTTP 429, "temporarily rate-limited upstream", after the
+client's retries (about 31 seconds a unit): E0 lost brewing, cold chain, hvac, legal ops and space; Ef lost broadcast, cold
+chain, rail signalling, semiconductor, space and textiles. No rejected reply and no provider failure otherwise. Cause: I
+ran three lanes at once against the one provider; the five lanes of the second model on its provider had none. The
+pre-registration says an arm with more than 2 errors is not scored by its other rules, and it is not re-run. **Read as
+the rule allows, and no further:** E0's 0 below a floor is on 175 units, so its limit for E3 is 3, or at most 8 if all 5
+lost units had been misses, which at default effort 0 of 180 were; `finance`'s 9 can only grow with its 6 lost units, so it
+fails whatever they read; `legal` is complete and has 8, which fails a limit of 3 and, with an implausible worst-case
+baseline of 5, would sit exactly at the limit of 8.
+
+**What it says.** At high effort the first model spends about as many tokens as the second model does thinking, and it
+still does not read the field texts within the margin: finance 9 (24 at default effort, 1 and 1 on the second model),
+legal 8 (10 at default, 1 and 0 on the second). The aquaculture and printing sectors, which both texts under-call, stay
+under-called. Effort moved finance from 24 to 9 and legal hardly at all. **So the amount of thinking is not what separates
+the two models: the second model reads these texts better at the same thinking.** It also over-calls far more at high effort
+under the field texts (`legal` misses its ceiling on 33 units against 9 for the baseline at the same effort and 6 at default), so `legal` meets the bounds on
+139 units where the second model meets them on 173. Cost: at high effort the first model costs '$0.079' to '$0.090' an arm,
+the same as the second model with thinking on ('$0.069' to '$0.096'), and 10 seconds a unit against 17 to 22, so what the first
+model keeps over the second is speed, not cost.
+
+**Predictions (written after the probe's tokens, before any arm's counts):** P15 (E0 holds E2) **holds on the 175 units that
+ran** (0 below a floor, 171 meeting the bounds); P16 (Ef holds E3) **falsified**; P17 (El holds E3) **falsified**; P18 (each
+arm under '$0.12', the three under '$0.33', under 40 minutes) **holds**.
+
+**Not shown:** that a still higher effort, a different provider or another reasoning setting would not close the gap; the
+first model was read at the one effort the owner's setting offers above its default. Whether the second model's advantage is
+its size, its training or the way its thinking is used is not separable from these arms.
 
 ## Predictions, scored
 
@@ -139,9 +181,9 @@ buy it. Two runs per text, each of 180 units, a margin of 3. The medical text wa
 
 1. **The under-calling is not only the examples.** The same `finance` text under-calls badly with thinking off (41 units)
    and on the earlier model (24), and reads within the margin of its baseline when the model thinks (1). The same holds
-   for `legal`. The examples are enough for a model that reasons through the guide's rules and not for one that answers
-   straight away; both are model behaviour, and the seat's model and its thinking setting are part of what the text is
-   measured on.
+   for `legal`. The examples are enough for the second model when it thinks and not when it answers straight away, and
+   **not for the first model even at high effort** (finance 9, legal 8): both thinking and which model are part of what the
+   text is measured on, and more thinking alone did not close the gap.
 2. **`medical` is the exception that stays.** It under-calls dentistry with thinking on too. That one is the text, or the
    field's own reading of the sector (above), whichever the owner decides.
 3. **`general` is not model-sensitive on these two models:** it holds M3 and M4 in both settings and the first sweep's
@@ -187,12 +229,21 @@ fix medical's examples (option 1 for that profile).
 | `triage-hy4-on-repeat-R0.jsonl` | `2d73b7bb2babc47514ca6c2e3d1c783e8b9767600db6560cb6d5cd65c64dc10e` |
 | `triage-hy4-on-repeat-Rf.jsonl` | `f7fdf45b24a82f5645fe8d422300da028b2a4fd43442ecd3678ed62f5f37ebb7` |
 | `triage-hy4-on-repeat-Rl.jsonl` | `339a508e4d3ff496512086055cf409bd4accb287a915e554a855131c3957f0fc` |
+| `triage-oss-probe-medium.jsonl` | `91d06551db6a5c2c03942facc2477f2c209983c4ca6cea16d79e2c547298af4c` |
+| `triage-oss-probe-high.jsonl` | `76c3b70a79e135c62710adb58b8f39040aecba0ba2e605f519f4b558d942e437` |
+| `triage-oss-high-E0.jsonl` | `21dda3f59ffb9e1d2bfaaa5a471e67d62a89763cd5b9c0de16f10715146b6d4c` |
+| `triage-oss-high-Ef.jsonl` | `fe6418fa1c492333c2fce171d9557068a611eab6f915afc989833d5237924735` |
+| `triage-oss-high-El.jsonl` | `78de6b0148b8900b24ee81bf86502d0ce69f942fbdf090943ffd72f3da7150b2` |
 
+The effort wrapper, `docs/probes/triage_effort_wrapper.py`: `5b313d26d2a57a5e03cb4effbaf2d9ebcf2972b3cba3d676ff1509aa3ec463f1`.
 The wrapper, `docs/probes/triage_thinking_off_wrapper.py`: `10904e36a001e3dcb76301aad093516da644e266197f1f49a840d3d8225508fe`.
 The first probe call's caps were set wrong by me (a unit reserves its cap against the sweep cap), so it ran one of three
 units; the other two ran as `probe-on-2` ('$0.0003' of the study's spend is the first, '$0.0010' the second).
 
 ## Found, not touched
+
+- **Three lanes at once on one provider drew upstream 429s** (11 of 540 units, the first model through Crusoe); five lanes on the
+  second model's provider drew none. The client retries for about 31 seconds and then ends the unit as blocked.
 
 - **The thinking-on arms' per-arm cap was mine and too low for the slowest two.** Noted above; the cost of a complete
   `medical` arm is about '$0.11'.

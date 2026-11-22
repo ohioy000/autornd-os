@@ -68,14 +68,14 @@ was never indexed.** This is that index.
 | `engineering` | `deepseek/deepseek-v4-flash` | **StreamLake** | pinned | 10 | 5 | blocked 1, escalated 1 | 3 |
 | `engineering` | `deepseek/deepseek-v4-flash` | **Venice** | rotated | 4 | 0 | blocked 2 | 2 |
 | `engineering` | `deepseek/deepseek-v4-flash` | **Wafer** | rotated | 2 | 0 | — | 2 |
-| `engineering` | `deepseek/deepseek-v4.1-flash-1017` | **deepinfra/fp8** | pinned | 3576 | 3564 | — | 12 |
+| `engineering` | `deepseek/deepseek-v4.1-flash-1017` | **deepinfra/fp8** | pinned | 4122 | 4099 | blocked 11 | 12 |
 | `engineering` | `google/gemini-2.5-flash` | **GMICloud** | pinned | 1 | 0 | — | 1 |
 | `engineering` | `minimax/minimax-m3` | **DeepInfra** | pinned | 1 | 0 | blocked 1 | 0 |
 | `engineering` | `qwen/qwen3-235b-a22b-2507` | **Nebius** | pinned | 20 | 0 | blocked 19, escalated 1 | 0 |
 | `engineering` | `xiaomi/mimo-v2.6-flash` | **Xiaomi** | pinned | 9 | 1 | blocked 8 | 0 |
 | `engineering` | `z-ai/glm-5` | **StreamLake** | pinned | 20 | 8 | blocked 11, escalated 1 | 0 |
 | `engineering` | `z-ai/glm-5.3-flashx-legal` | **deepinfra/fp8** | pinned | 3 | 3 | — | 0 |
-| `escalation` | `google/gemini-4-argon` | **google-vertex/global** | pinned | 3579 | 3567 | — | 12 |
+| `escalation` | `google/gemini-4-argon` | **google-vertex/global** | pinned | 4125 | 4102 | blocked 11 | 12 |
 | `escalation` | `moonshotai/kimi-k3` | **Chutes** | rotated | 1 | 0 | escalated 1 | 0 |
 | `escalation` | `moonshotai/kimi-k3` | **DeepInfra** | rotated | 2 | 0 | — | 2 |
 | `escalation` | `moonshotai/kimi-k3` | **DigitalOcean** | rotated | 4 | 0 | escalated 1 | 3 |
@@ -95,30 +95,32 @@ was never indexed.** This is that index.
 | `judge` | `moonshotai/kimi-k2.5:exacto` | **siliconflow/int4** | pinned | 11 | 0 | blocked 10, escalated 1 | 0 |
 | `judge` | `openai/gpt-5.2-chat` | **Azure** | pinned | 1 | 0 | blocked 1 | 0 |
 | `judge` | `openai/gpt-6.1-sol-pro` | **OpenAI** | pinned | 3 | 0 | blocked 3 | 0 |
-| `judge` | `qwen/qwen3-235b-a22b-2507:exacto` | **deepinfra/fp8** | pinned | 3579 | 3567 | — | 12 |
+| `judge` | `qwen/qwen3-235b-a22b-2507:exacto` | **deepinfra/fp8** | pinned | 4125 | 4102 | blocked 11 | 12 |
 | `premium` | `openai/gpt-6.1-sol-pro` | **OpenAI** | pinned | 5 | 0 | blocked 5 | 0 |
 | `premium` | `openai/gpt-6.1-sol-pro:exacto` | **Azure** | pinned | 15 | 0 | blocked 14, escalated 1 | 0 |
 | `premium` | `z-ai/glm-5.3` | **Friendli** | pinned | 8 | 0 | blocked 8 | 0 |
 | `premium` | `z-ai/glm-5.3-prime` | **Alibaba** | pinned | 27 | 9 | blocked 17, escalated 1 | 0 |
-| `ranker` | `qwen/qwen3-reranker-8b` | **Fireworks** | pinned | 3634 | 3576 | blocked 44, escalated 2 | 12 |
+| `ranker` | `qwen/qwen3-reranker-8b` | **Fireworks** | pinned | 4180 | 4111 | blocked 55, escalated 2 | 12 |
 | `reader` | `nvidia/nemotron-3-nano-30b-a3b` | **Nebius** | rotated | 2 | 2 | — | 0 |
-| `recompute` | `anthropic/claude-haiku-5.5` | **Anthropic** | pinned | 3579 | 3567 | — | 12 |
+| `recompute` | `anthropic/claude-haiku-5.5` | **Anthropic** | pinned | 4125 | 4102 | blocked 11 | 12 |
 | `research` | `google/gemini-2.5-flash` | **Google** | rotated | 126 | 68 | blocked 9, escalated 8 | 41 |
 | `research` | `google/gemini-2.5-flash` | **Google** | pinned | 46 | 9 | blocked 36, escalated 1 | 0 |
 | `research` | `google/gemini-3.8-flash` | **google-ai-studio** | pinned | 9 | 0 | blocked 8, escalated 1 | 0 |
 | `research` | `moonshotai/kimi-k3` | **InferenceNet** | rotated | 1 | 0 | — | 1 |
 | `research` | `moonshotai/kimi-k3` | **Modal** | rotated | 1 | 0 | — | 1 |
-| `research` | `z-ai/glm-5.3` | **wafer/us** | pinned | 3579 | 3567 | — | 12 |
+| `research` | `z-ai/glm-5.3` | **wafer/us** | pinned | 4125 | 4102 | blocked 11 | 12 |
 | `search` | `perplexity/sonar` | **Perplexity** | rotated | 54 | 22 | blocked 4, escalated 3 | 25 |
-| `search` | `perplexity/sonar` | **Perplexity** | pinned | 3634 | 3576 | blocked 44, escalated 2 | 12 |
+| `search` | `perplexity/sonar` | **Perplexity** | pinned | 4180 | 4111 | blocked 55, escalated 2 | 12 |
 | `search` | `perplexity/sonar-pro` | **Perplexity** | rotated | 30 | 24 | blocked 2, escalated 1 | 3 |
 | `triage` | `deepseek/deepseek-v4-flash` | **Alibaba** | pinned | 381 | 295 | blocked 34, escalated 9 | 43 |
 | `triage` | `deepseek/deepseek-v4-flash` | **DigitalOcean** | pinned | 7 | 0 | blocked 7 | 0 |
 | `triage` | `deepseek/deepseek-v4-pro-0813:exacto` | **relace/fp4** | pinned | 2 | 0 | blocked 2 | 0 |
 | `triage` | `google/gemini-3.8-flash` | **google** | pinned | 1 | 0 | blocked 1 | 0 |
 | `triage` | `google/gemini-3.8-flash` | **google-ai-studio** | pinned | 10 | 0 | blocked 9, escalated 1 | 0 |
-| `triage` | `openai/gpt-oss-120b` | **crusoe/bf16** | pinned | 1267 | 1267 | — | 0 |
+| `triage` | `openai/gpt-oss-120b` | **crusoe/bf16** | pinned | 1813 | 1802 | blocked 11 | 0 |
 | `triage` | `tencent/hy4-flash` | **tencent/fp8** | pinned | 2312 | 2300 | — | 12 |
+
+**Unmeasured tiers:** `decision` — named in a trace header's model map, but no committed unit records a provider for them. They ran no calls, or ran them before per-tier attribution existed. Listed rather than omitted, because an absent row reads as a tier that does not exist.
 
 **Unmeasured tiers:** `decision` — named in a trace header's model map, but no committed unit records a provider for them. They ran no calls, or ran them before per-tier attribution existed. Listed rather than omitted, because an absent row reads as a tier that does not exist.
 

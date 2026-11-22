@@ -250,6 +250,9 @@ still offered by name.
 - **A repeat with default thinking** of the old guide, the finance text and the legal text, 180 units each ('$0.2454'):
   the old guide 1 unit below a floor and 171 meeting the bounds, finance 1 and 173, legal 0 and 173, so the two field
   texts held in both runs and the old guide as a baseline held in both.
+- **The first model at high reasoning effort** ('$0.2567', three arms): finance 9 units below a floor and legal 8, against
+  24 and 10 at its default effort and 1 and 0 to 1 for this model with thinking on; 10 seconds a unit and '$0.079' to
+  '$0.090' an arm. More thinking alone did not bring those texts within the margin.
 - **Not measured.** Anything but triage; a repeat of the medical or the thinking-off arms. A pin for `finance` and `legal`
   is proposed in the record and is the owner's (G-2).
 
