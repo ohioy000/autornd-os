@@ -469,6 +469,11 @@ class OpenRouterClient:
         # different risk classification on four sectors. Without this recorded,
         # that looks like a code regression.
         self.providers_by_function: dict[str, set[str]] = {}
+        # The model each reply names, per function. A profile's pin changes which model answers a call, and the
+        # provider cannot say it did: the model the owner pins and the sibling the global tier runs can both be
+        # one provider's, so only the model the reply names shows which one was served. Kept only when the reply
+        # names one; a reply that omits it records nothing rather than the id that was asked for.
+        self.models_by_function: dict[str, set[str]] = {}
         # Optional budgets, used by experiments. Left unset in production: an
         # abort half-way through a real workflow throws away the work done so
         # far, whereas an experiment that runs away is a thing that has already
@@ -535,7 +540,8 @@ class OpenRouterClient:
     def _account(self, function: str, cost: float,
                  provider: str | None = None,
                  prompt_tokens: int = 0, completion_tokens: int = 0,
-                 reservation: _Reservation | None = None) -> None:
+                 reservation: _Reservation | None = None,
+                 model: str | None = None) -> None:
         """Record one billable request. Called for every request, no exceptions.
 
         Budgets are enforced here rather than by the caller, so a ceiling covers
@@ -551,6 +557,8 @@ class OpenRouterClient:
         self.calls_by_function[function] = self.calls_by_function.get(function, 0) + 1
         if provider:
             self.providers_by_function.setdefault(function, set()).add(provider)
+        if model:
+            self.models_by_function.setdefault(function, set()).add(model)
         if cost:
             self.spend += cost
             self.spend_by_function[function] = (
@@ -692,6 +700,7 @@ class OpenRouterClient:
         self.spend_by_function = {}
         self.calls_by_function = {}
         self.providers_by_function = {}
+        self.models_by_function = {}
         self.rejections_by_function = {}
         self.rejections_by_provider = {}
         self.retries_by_kind = {}
@@ -1197,10 +1206,12 @@ class OpenRouterClient:
             reconciled = True
             reservation = reservation_holder[0]
             self._release(reservation)
+            replied = data.get("model")
             self._account(function, cost, provider,
                           prompt_tokens=prompt_tokens,
                           completion_tokens=completion_tokens,
-                          reservation=reservation)
+                          reservation=reservation,
+                          model=replied if isinstance(replied, str) else None)
         except BaseException as exc:
             # A BudgetExceeded here is the transient-TLS retry's
             # re-check refusing an attempt that was never dispatched

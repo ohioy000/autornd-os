@@ -244,6 +244,7 @@ class ResultsLog:
             "cost_by_tier": run.cost_by_tier,
             "calls_by_tier": run.calls_by_tier,
             "providers_by_function": run.providers_by_tier,
+            "models_by_function": run.models_by_tier,
             "refused_lookups": run.refused_lookups,
             "normalised_verdicts": run.normalised_verdicts,
             "normalised_by_kind": run.normalised_by_kind,
@@ -470,6 +471,8 @@ class ScenarioRun:
     # between runs looks like a code regression until you can see that a model
     # id changed hands.
     providers_by_tier: dict[str, list[str]] = field(default_factory=dict)
+    # The model each reply named, per tier: what a pin changes and the provider alone cannot show.
+    models_by_tier: dict[str, list[str]] = field(default_factory=dict)
     # Every node's typed verdict, as plain dicts. The harness used to throw
     # these away the moment it had scored them, which made diagnosing a past
     # sweep impossible: Blueprint 005 set out to read eighteen triage verdicts
@@ -1050,6 +1053,8 @@ async def run_scenario(
         calls_by_tier=dict(runner.client.calls_by_function),
         providers_by_tier={k: sorted(v) for k, v
                            in runner.client.providers_by_function.items()},
+        models_by_tier={k: sorted(v) for k, v
+                        in getattr(runner.client, "models_by_function", {}).items()},
         verdicts=verdicts,
         status=str(getattr(state, "status", "") or ""),
         stop_reason=getattr(state, "stop_reason", None),
