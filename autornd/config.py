@@ -1,5 +1,7 @@
 import os
+import re
 from pathlib import Path
+from typing import NamedTuple
 
 from pydantic import ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings
@@ -17,6 +19,78 @@ RETIRED_SETTINGS = frozenset({
     "lookup_reads_documents", "lookup_documents_ask_again",
     "lookup_withhold_unverified",
 })
+
+
+# The tiers a profile may pin: every tier a setting names, the six required and the six
+# optional. Not 'independent': that one is derived from the premium and architecture tiers
+# (OpenRouterClient.independent_model), so pinning it would name a model the harness works
+# out for itself. Pin premium or architecture instead.
+PINNABLE_TIERS = (
+    "triage", "engineering", "architecture", "escalation", "research", "search",
+    "ranker", "premium", "judge", "recompute", "reader", "decision",
+)
+
+
+class ProfilePin(NamedTuple):
+    """One profile's own model for one tier, and the provider that serves it ('' for none)."""
+
+    model: str
+    provider: str = ""
+
+
+def parse_profile_models(raw: str) -> dict[str, dict[str, ProfilePin]]:
+    """PROFILE_MODELS as {profile file stem: {tier: ProfilePin}}.
+
+        legal:engineering=vendor/legal-model@vendor,finance:triage=vendor/other-model
+
+    A malformed entry raises ValueError with a sentence that names it. Nothing is guessed: an
+    entry that did not parse would otherwise run a profile on the wrong model without a word.
+    The model id is split off at the first '=' and the provider at the '@', so an id that
+    carries a ':variant' reads as written.
+    """
+    out: dict[str, dict[str, ProfilePin]] = {}
+    shape = "Write <profile>:<tier>=<model-id>[@<provider>]"
+    for entry in (raw or "").split(","):
+        entry = entry.strip()
+        if not entry:
+            continue
+        head, equals, value = entry.partition("=")
+        if not equals:
+            raise ValueError(f"'{entry}' has no '='. {shape}.")
+        profile, colon, tier = head.partition(":")
+        profile, tier = profile.strip(), tier.strip().lower()
+        if not colon or not profile or not tier:
+            raise ValueError(f"'{entry}' does not start with <profile>:<tier>. {shape}.")
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+", profile):
+            raise ValueError(
+                f"'{entry}': '{profile}' is not a profile file name (letters, digits, '_', "
+                f"'-' and '.', without the '.yaml').")
+        if tier == "independent":
+            raise ValueError(
+                f"'{entry}': 'independent' follows from the premium and architecture tiers; "
+                f"pin one of those instead.")
+        if tier not in PINNABLE_TIERS:
+            raise ValueError(
+                f"'{entry}': '{tier}' is not a tier a profile can pin. "
+                f"The tiers are {', '.join(PINNABLE_TIERS)}.")
+        value = value.strip()
+        if value.count("@") > 1:
+            raise ValueError(f"'{entry}' has more than one '@'. {shape}.")
+        model, at, provider = value.partition("@")
+        model, provider = model.strip(), provider.strip()
+        if "/" not in model or any(ch.isspace() for ch in model):
+            raise ValueError(
+                f"'{entry}': the model id must look like vendor/name, with a '/' and no "
+                f"spaces (got '{model}').")
+        if at and not provider:
+            raise ValueError(f"'{entry}' ends in '@' with no provider after it.")
+        if any(ch.isspace() for ch in provider):
+            raise ValueError(f"'{entry}': the provider '{provider}' has a space in it.")
+        pins = out.setdefault(profile, {})
+        if tier in pins:
+            raise ValueError(f"'{profile}:{tier}' is pinned twice.")
+        pins[tier] = ProfilePin(model, provider)
+    return out
 
 
 class Settings(BaseSettings):
@@ -279,6 +353,12 @@ class Settings(BaseSettings):
 
     autornd_profile: str = ""
 
+    # A model, and optionally a provider, for one profile's one tier, so a legal team and an
+    # engineering team need not draft on the same model: `<profile>:<tier>=<model-id>[@<provider>]`,
+    # comma separated (autornd/routing/pins.py). Empty changes nothing: every profile reads the
+    # tiers above. Not in RUNTIME_MUTABLE: a pin names who is paid, so it is the owner's line in .env.
+    profile_models: str = ""
+
     # Which workflow graph to run. A bare name resolves inside workflows/.
     # A request may name an offered workflow instead (Ruling D55); this is
     # the one a request that names none runs. answer-and-recompute, on the
@@ -389,6 +469,12 @@ class Settings(BaseSettings):
             raise ValueError(f"Decision model ID must contain '/' (got '{v}')")
         return v
 
+    @field_validator("profile_models")
+    @classmethod
+    def validate_profile_models(cls, v: str) -> str:
+        parse_profile_models(v)
+        return v
+
     @field_validator("log_level")
     @classmethod
     def validate_log_level(cls, v: str) -> str:
@@ -453,6 +539,20 @@ def _config_help(problem: str, lines: list[str]) -> str:
     ])
 
 
+def _profile_models_help(problems: list[str]) -> str:
+    return "\n".join([
+        "AutoRnD is not configured — PROFILE_MODELS is malformed.",
+        "",
+        *[f"  {problem}" for problem in problems],
+        "",
+        "PROFILE_MODELS gives one profile its own model for one tier:",
+        "  PROFILE_MODELS=<profile>:<tier>=<model-id>[@<provider>][,<profile>:<tier>=...]",
+        "",
+        "Fix the line in .env, or leave it empty so every profile uses the tiers.",
+        "See the README section 'Choosing Models'.",
+    ])
+
+
 def _build_settings() -> "Settings":
     try:
         cfg = Settings()
@@ -462,6 +562,13 @@ def _build_settings() -> "Settings":
             for e in exc.errors()
             if str(e["loc"][0]) in _TIER_HELP or str(e["loc"][0]) in _OPTIONAL_TIERS
         ]
+        pins_bad = [
+            str(e.get("msg", "")).removeprefix("Value error, ")
+            for e in exc.errors()
+            if str(e["loc"][0]) == "profile_models"
+        ]
+        if not bad and pins_bad:
+            raise SystemExit(_profile_models_help(pins_bad)) from exc
         if not bad:
             raise
         raise SystemExit(_config_help(

@@ -41,6 +41,9 @@ PLACEHOLDERS: dict[str, str] = {
     "OPENROUTER_BASE_URL": "https://openrouter.ai/api/v1",
     "OPENROUTER_PROVIDER_ORDER": "",
     "OPENROUTER_PROVIDER_FALLBACKS": "",
+    # per-profile model pins — empty: every profile reads the tiers, as on a machine
+    # that never set one
+    "PROFILE_MODELS": "",
     # required tiers — named placeholders
     "MODEL_TRIAGE": "test-provider/test-triage",
     "MODEL_ENGINEERING": "test-provider/test-engineering",
