@@ -25,9 +25,9 @@ from autornd.config import settings
 from autornd.knowledge.context import request_demands_sources, reset_rerank_mode
 from autornd.models.verdicts import EscalationVerdict
 from autornd.profiles import _general, framing, list_profiles, load_profile, set_profile
-from autornd.routing.switches import Switchboard, fill_switch_words, load_switches
+from autornd.routing.switches import fill_switch_words
 from autornd.specialists.registry import reload_specialists
-from tests.prompt_capture import capture_all
+from tests.prompt_capture import capture_all, switch_requests
 
 ROOT = Path(__file__).resolve().parent.parent
 MAIN = json.loads((ROOT / "tests" / "fixtures" / "words" / "main.json").read_text(encoding="utf-8"))
@@ -60,32 +60,6 @@ async def _capture(monkeypatch) -> dict[str, dict[str, str]]:
     monkeypatch.setattr(settings, "model_ranker", "test-provider/test-rank")
     reset_rerank_mode()
     return await capture_all()
-
-
-class _Decider:
-    """A decision client that records the questions it is put and answers none of them."""
-
-    def __init__(self) -> None:
-        self.questions: dict = {}
-
-    def decision_model(self) -> str:
-        return "test-provider/test-decision"
-
-    async def decide(self, state, questions):
-        self.questions = questions
-        return {key: {"noul": 0.5} for key in questions}, None
-
-
-async def _requests_sent() -> dict[str, dict]:
-    """What each declared switch puts to the decision model under the active profile."""
-    client = _Decider()
-    board = Switchboard(client)
-    sent: dict[str, dict] = {}
-    for name in sorted(load_switches()):
-        client.questions = {}
-        await board.ask([(name, "label", "some evidence")])
-        sent[name] = client.questions["q0"]
-    return sent
 
 
 class TestTheTenWordsEveryProfileResolves:
@@ -151,11 +125,11 @@ class TestTheSwitchQuestions:
     async def test_the_engineering_family_sends_what_main_sent(self):
         for name in ENGINEERING_FAMILY:
             _use(name)
-            assert await _requests_sent() == MAIN["switches"], name
+            assert await switch_requests() == MAIN["switches"], name
 
     async def test_a_profiles_own_words_are_filled_into_the_questions(self):
         _use_marked(**{key: MARKS[key] for key in SWITCH_WORDS})
-        sent = await _requests_sent()
+        sent = await switch_requests()
         assert sent["needs_sources"]["instructions"].endswith(
             "from an outside source, such as <<switch_outside_sources>>?")
         assert sent["needs_calculation"]["criteria"]["true"].endswith(
@@ -167,7 +141,7 @@ class TestTheSwitchQuestions:
     async def test_every_switch_is_filled_under_every_profile(self):
         for name in list_profiles():
             _use(name)
-            for switch, request in (await _requests_sent()).items():
+            for switch, request in (await switch_requests()).items():
                 text = " ".join([request["instructions"], request["criteria"]["true"],
                                  request["criteria"]["false"]])
                 assert "{" not in text and "}" not in text, (name, switch, text)
@@ -181,10 +155,10 @@ class TestTheSwitchQuestions:
 
     async def test_the_words_follow_a_profile_switched_at_run_time(self):
         _use_marked(switch_outside_sources="a marker word")
-        assert "such as a marker word?" in (await _requests_sent())["needs_sources"]["instructions"]
+        assert "such as a marker word?" in (await switch_requests())["needs_sources"]["instructions"]
         _use("engineering")
         assert "such as a standard, a regulation, a datasheet" in (
-            await _requests_sent())["needs_sources"]["instructions"]
+            await switch_requests())["needs_sources"]["instructions"]
 
 
 class TestTheCitationPhrases:

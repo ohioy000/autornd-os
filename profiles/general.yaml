@@ -23,45 +23,47 @@ framing:
   gap_examples: ""
   # The triage risk guide's worked examples, the sentence that defines a hazard,
   # the three words the decision switches' questions take, and the phrases that
-  # mean a request asks for its sources. They were written into the code, so every
-  # profile taught risk with these examples; they were cut out of it word for word
-  # and a profile may now teach with its own. Only the examples move. The rules
-  # around them stay in the code and are the same for every profile, because the
-  # risk axis must not move with the profile (docs/handover-review.md, B2: of the
-  # 23 wide-suite sectors that read the same on every repeat in both arms, none
-  # changed risk under another profile). A hazard text keeps both injury to a
-  # person and damage to what the work touches. One phrase per line in
-  # source_request_terms; none means only the generic phrases (cite, quote the,
-  # with sources, according to the) count.
+  # mean a request asks for its sources. They were written into the code in one
+  # field's words, physical engineering, and every profile taught with them;
+  # engineering.yaml keeps those exact words. This is the universal profile, so
+  # its examples come from several fields at once (a building, a patient, a
+  # payment, a filing, a live system) and from none in particular. Only the
+  # examples move. The rules around them stay in the code and are the same for
+  # every profile, because the risk axis must not move with the profile
+  # (docs/handover-review.md, B2: of the 23 wide-suite sectors that read the
+  # same on every repeat in both arms, none changed risk under another profile).
+  # A hazard text keeps both injury to a person and damage to what the work
+  # touches. source_request_terms is one phrase per line; none means only the
+  # generic phrases (cite, quote the, with sources, according to the) count.
   risk_harm_rules: |-
-    structural loading, food contact,
-    sterility, pressure vessels, electrical code, emissions
+    building and fire codes, electrical codes,
+    food and medicine safety, clinical practice, workplace safety, environmental
+    limits
   risk_paper_examples: |-
-    A lintel carrying a wall, a sterilisation protocol and a
-    food-contact material are critical while still on paper, because the paper is
-    what gets built and audited.
+    A load-bearing calculation, a dosing schedule and a safety
+    notice are critical while still in draft, because the draft is what gets
+    built, given out and audited.
   risk_high_examples: |-
-    the answer changes the physical world — wiring, installing, actuating
-      or modifying equipment — or is safety-critical in function even while still a
-      drawing, such as a control surface or a load path; or it ships as core system
-      behaviour, a security boundary, or data integrity. Routing power to a sensor
-      on a machine stays there, and someone stands next to it
+    the answer changes the real world or a live system — acting on a
+      patient, sending a payment, filing a document, installing or modifying
+      equipment, deploying a change — or is safety-critical in function even while
+      still a draft, such as a dosing rule or a safety check; or it ships as core
+      system behaviour, a security boundary, or data integrity. A payment sent
+      from a live account stays sent, and someone relies on it
   risk_medium_examples: |-
     the answer is still a decision, reversible until an order is placed
-      or a part is cut — selecting a component, sizing a part, calculating a
-      budget, setting a tolerance, taking a measurement
+      or a document is signed — choosing between options, working out a quantity,
+      calculating a budget, setting a limit, taking a measurement
   risk_protective_example: |-
-    Sizing the backup aeration for a tank of live stock
-    is sizing work, and a wrong answer loses the entire stock, so it is at least
-    high rather than medium. It is critical only if a person can be harmed: losing
-    stock, equipment or money, however much of it, is high.
-  hazard_harm: "injure a person or damage equipment"
-  switch_outside_sources: "a standard, a regulation, a datasheet or a published measurement"
-  switch_computed_values: "a sum, a chain of conversions, a sizing or a design figure"
-  switch_published_documents: "a rule, a standard, a datasheet or another published document"
-  source_request_terms: |-
-    from the datasheet
-    per the datasheet
+    Planning the backup for a customer database is
+    planning work, and a wrong answer loses every record, so it is at least high
+    rather than medium. It is critical only if a person can be harmed: losing
+    data, goods or money, however much of it, is high.
+  hazard_harm: "injure a person or damage property or equipment"
+  switch_outside_sources: "a statute, a regulation, a standard, a guideline or a published figure"
+  switch_computed_values: "a sum, a rate, a dose, a balance or a total"
+  switch_published_documents: "a rule, a statute, a standard or another published document"
+  source_request_terms: ""
 
 
 roles:
