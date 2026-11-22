@@ -112,3 +112,25 @@ written ("no blind on a pinned tier"), is scored falsified at n = 1 by a tier th
 pre-registration said after it had finished; the owner's "Go" was taken as the word to start). Whether to amend the stop rule
 to "a blind entry on a **pinned model**" and run B to E (the caps sum to '$0.94') is the owner's, asked in conversation.
 
+
+## Amendment 2 — the owner's ruling, before any further spend (2026-11-22)
+
+**The owner's word, asked in conversation after Amendment 1: "Yes to all and hy4flash is now default for all triage pins."**
+Three things follow, and nothing else in this document changes (the pins, the scenarios, the caps, the `answer-and-recompute`
+workflow, `--repeat 1`, the process-environment order):
+
+1. **The stop rule is amended** as proposed: a `spend_guard_blind` entry stops a run only when it is on a **pinned model**, that
+   is the pinned answer model of the run or the triage model; a blind entry on any other model (the decision and recompute
+   models, and the global answer model of run A) is recorded and reported, not a stop. Run A's stop is thereby scored as read
+   (the global answer model is blind to the guard) and not a stop of the sweep. Runs B to E are run, in that order.
+2. **The triage model of runs B to E is `tencent/hy4-flash`**, default thinking, served by `tencent/fp8`, for every profile
+   (the owner's new default for the triage tier, including the medical triage pin ratified in the same word), set through the
+   process environment as `MODEL_TRIAGE` and the `triage` entry of `OPENROUTER_PROVIDER_ORDER`; no triage entry is left in
+   `PROFILE_MODELS`. Run A, already made, ran on the earlier triage model. **L2 is restated:** B, C, D and E are triaged by
+   `hy4-flash` via Tencent; A was triaged by the global model. **L7 is restated:** the headers of A and B differ in the
+   `engineering` entry **and the `triage` entry**, nothing else; it is no longer a clean one-variable pair, and the record
+   says so.
+3. **L4 is restated** by the rule above: no blind entry on a pinned model, no 404, each unit `status: completed`, in B to E.
+
+Everything else in L1, L3, L5 and L6 stands. The caps of B to E sum to '$0.94'; spent so far '$0.0058' of the '$1.00', so the
+ceiling for the whole smoke stays '$0.9458' by the caps and '$1.00' by the owner's word.
