@@ -286,6 +286,8 @@ still offered by name.
   profiles and the new triage model.
 - **Not measured.** More than one answer a question; a harder set, where a larger model could show a difference this one could
   not; anything but this one set.
+- **The owner's ruling of 2026-11-23:** the three pins and the reader tier are removed from the owner's `.env` (the code for
+  both stays, empty by default); the second triage model and the field profiles stay.
 
 ## What the changes have in common
 

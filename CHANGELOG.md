@@ -21,6 +21,10 @@ right, read blind and again, against 41 of 42 for the pinned arms, which the rul
 cost 3.1 times as much for it; the second run's gain over the earlier line-up came from the field profiles and the triage model. Nothing
 in the harness changed. Record: `docs/reviews/2026-11-22-holdout2-unpinned-arm.md`.
 
+Changed (2026-11-23, the owner's ruling): the owner's standing line-up no longer carries the three per-profile pins or the reader tier, on the evidence
+of the unpinned arm (no gain shown for the pins at 3.1 times the cost) and of the reader's on/off test of 2026-11-21 (no benefit shown). The code for
+both stays and is off when the setting is empty, so nothing in the harness changed; the second triage model and the field profiles stay.
+
 Changed (2026-11-22, the owner's ruling: "make sure any model can be used for any tier ... plug and play"): the spend guard bounds
 any catalogue price at its highest rate instead of leaving a model blind. The worst case now takes, for each side of a call, the
 highest rate across the entry and its time-of-day or prompt-size `overrides`, with every cache component counted on the prompt

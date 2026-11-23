@@ -94,3 +94,20 @@ Byte-identical in `docs/traces/`, prefix `20261122T-holdout2-`; first 16 charact
 
 The headers (`U3-header.json` to `U5-header.json`) record the profile and the empty pins; the codes, three blind verdict
 files and the second reading are `unpinned-reading-*`.
+
+## The owner's ruling, 2026-11-23
+
+The owner read the record and ruled: the extra answer models (the three pins) are not worth keeping, and the reader
+tier adds nothing to the harness, so both are removed from the owner's `.env`. Done the same day, with a backup
+(`.env.bak-20261123`); every other line is byte-identical and the free preflight reads 34 ok, 0 failing.
+
+- **The pins:** `PROFILE_MODELS` is gone, so the law, finance and medicine profiles answer on the global answer model, the
+  setting the unpinned arm measured (42 of 42 right). The pin mechanism stays in the code, empty by default, and changes
+  nothing when empty.
+- **The reader tier:** `MODEL_READER` is gone, so no reader call is made; the code stays, off when empty. The evidence for
+  the ruling: the on/off test of 2026-11-21 (four questions, 4 right with it off and 3 with it on; X12 three more draws,
+  2 of 3 each; calls costing about what they save), which "cannot show a small gain or loss"; and this run, where it read
+  1,218 of 1,516 documents in 252 of 272 units, copied back 8,059 passages (4,126 more were dropped for not being on the
+  page), and cost '$0.76' of '$5.41'. **A run with the reader off over a whole set has not been made:** the 97 percent of
+  the second run was measured with the reader on, and the unpinned 42 of 42 as well.
+- **Kept:** the second triage model and the field profiles, which are the part that showed a gain (51 to 56 right of 56).

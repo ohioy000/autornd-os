@@ -70,10 +70,11 @@ first for the rules. They stay as they are.
     owner's word and a runner option to pick exact units.** **2026-11-20, owner's ruling:
     the fetch limits went to 60 s (from 25) and 37.5 MB (from 15); the downloads take 0.5-2 s
     and the time is the PDF text read, so a faster read would pay more (not done); effect on
-    answers unmeasured.** **Also 2026-11-20, owner's ruling: a reader tier (`MODEL_READER`, set in
-    the owner's `.env`, serving unpinned: G-2 open) reads a lookup's long pages in parallel and
-    copies back verbatim passages, each checked against the page. Built, tested, never run live;
-    not measured.** What to do
+    answers unmeasured.** **Also 2026-11-20, owner's ruling: a reader tier (`MODEL_READER`, off when
+    empty) reads a lookup's long pages in parallel and copies back verbatim passages, each
+    checked against the page. Built and tested; the on/off test of 2026-11-21 showed no benefit
+    (`docs/reviews/2026-11-21-causes-of-failing-answers-and-what-is-left.md`), and on 2026-11-23
+    the owner ruled it removed from `.env` (the code stays, off when empty).** What to do
     about the gap is a design question and needs a ruling (a longer fetch limit, a retry of a
     cut-off answer, saying "none stated", reading more pages). **Any lookup change makes the 42
     hold-out questions a used set;** a second hold-out set is needed to judge it.
