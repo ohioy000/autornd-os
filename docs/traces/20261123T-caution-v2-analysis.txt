@@ -1,0 +1,75 @@
+v2 answers delivered 106 of 109 units; verdicts {'right': 98, 'partly': 2, 'wrong': 6}; cost of the delivered $1.7625
+reader tier: 547 of 639 documents read by it, 2444 calls; seats by phase: triage tencent/hy4-flash x109; request_switches perplexity/pplx-decider-v1.2-20261016 x109; implement deepseek/deepseek-v4.1-flash-1017 x97; recompute anthropic/claude-haiku-5.5 x78; implement xiaomi/mimo-v2.6-pro:exacto x12
+
+BY GROUP (gap = the revised gap cautions):
+  A: 24 answers, right 24, not right 0; gap beside right 6 (25.0%), beside not right 0 of 0
+  B: 42 answers, right 35, not right 7; gap beside right 4 (11.4%), beside not right 1 of 7
+  C: 40 answers, right 39, not right 1; gap beside right 0 (0.0%), beside not right 1 of 1
+
+FALSE ALARMS, preregistered measure (right answers of A and the control): 6 of 63 (9.5%; bar 3%)
+  by kind, over every right answer: {'blocked note': 3, 'not stated': 6, 'no result': 2}
+
+RIGHT ANSWERS THAT GET A GAP:
+   professional-holdout X19 A 48e6742c results=0 not_stated=True blocked=True: The answer marks part of the request as one it could not answer: NIST SP 800-53 Rev. 5 AC-7 does not state a number. Clause (a) reads 'Enforce a limit of [Assignment: org || The answer marks part of the request as one it could not answer: Same clause (a): the window is '[Assignment: organization-defined time period]'. Rev. 5 fixes no window. 
+   professional-holdout X19 A 25da23a8 results=1 not_stated=True blocked=False: The answer says ask 1 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an ans || The answer says ask 3 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an ans
+   professional-holdout X19 A b25022aa results=2 not_stated=True blocked=False: The answer says ask 3 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an ans
+   professional-holdout X36 A 7f3bfa49 results=1 not_stated=False blocked=True: The answer marks part of the request as one it could not answer: 1 — 'what maximum RF impedance [value]': NASA-STD-4003A (including Change 1, revalidated 03-13-2026) stat || The answer marks part of the request as one it could not answer: 2 — 'in ohms at a stated frequency': the standard states no measurement frequency for a Class R bond beca
+   professional-holdout X41 B c5f4a8b7 results=0 not_stated=True blocked=False: The answer says ask 1 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an ans || The answer says ask 2 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an ans
+   professional-holdout X36 A 018bce49 results=2 not_stated=True blocked=False: The answer says ask 1 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an ans
+   professional-holdout X41 B 7cd6f41e results=0 not_stated=True blocked=False: The answer says ask 1 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an ans || The answer says ask 2 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an ans
+   professional-holdout X36 A 94325d6b results=1 not_stated=False blocked=True: The answer gives no result for ask 1: "what maximum RF impedance, in ohms at a stated frequency, NASA-STD-4003A (Electrical Bonding for NASA Launch Vehicles, S". || The answer marks part of the request as one it could not answer: Ask 1 — NASA-STD-4003A specifies no maximum RF impedance in ohms at any stated frequency for a Class R bo
+   professional-holdout X41 B 70a02a25 results=0 not_stated=True blocked=False: The answer says ask 1 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an ans || The answer says ask 2 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an ans
+   professional-holdout-2 Y68 B ea6441bb results=1 not_stated=False blocked=False: The answer gives no result for ask 2: "What does the specification say about that section?".
+
+EVERY ANSWER NOT RIGHT (read the gap against the reader's note for 'points at the wrong part'):
+   tier4 T4-58 B 145e2e39 partly gaps=0 shipped=3 clean=False
+      reader: B-500 is a valid design (true drop 1.80 %) but not the cheapest; Results drop and current figures differ from the method values (721.7 A catalogue current).
+      shipped: Two pages handed on give different figures for the same thing: 5 on studocu.com/in/document/aaa-college-of-engineering-technology/mobile-application-development/ieee-std-c57-standard-requirements-and-
+      shipped: Two pages handed on give different figures for the same thing: 13 on studocu.com/in/document/aaa-college-of-engineering-technology/mobile-application-development/ieee-std-c57-standard-requirements-and
+      shipped: The answer gives 721.7 A for ask 3, and that figure is in none of the passages found on their pages.
+   tier4 T4-42 B d9c2e673 wrong gaps=0 shipped=0 clean=True
+      reader: Treated I_n (amplitude) as RMS; crest 40.50 A exceeds 33 A.
+   tier4 T4-58 B 70987460 partly gaps=0 shipped=2 clean=False
+      reader: B-500 is a valid design (true drop 1.80 %) but not the cheapest; Results drop (3.00) and current (108.3, not catalogue 721.7) differ from the method values; ignored sin-phi so rejected B-320.
+      shipped: The answer gives 721.7 A for ask 3, and that figure is in none of the passages found on their pages.
+      shipped: The answer gives 400 V for ask 4, and that figure is in none of the passages found on their pages.
+   professional-holdout X14 B 05af2f2d wrong gaps=0 shipped=2 clean=False
+      reader: Denies the Article 2(1) MDR derogation and says the date was never postponed (2023/2444 postponed it); also wrong publication date.
+      shipped: The recompute vote did not run, so no figure in this answer was recomputed.
+      shipped: A lookup ran, but no page it named could be read, so nothing in this answer was checked against a source.
+   professional-holdout X31 B e5420745 wrong gaps=2 shipped=1 clean=False
+      reader: Year right, but key requires 4 W and 25 mW per 3 kHz; answer says operative schedule was not retrieved.
+      gap: The answer says ask 2 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an answer would be printed with, and it found none.
+      gap: The answer says ask 3 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an answer would be printed with, and it found none.
+      shipped: Two pages handed on give different figures for the same thing: 2025 on legislation.gov.au/f2025l01047 and 2000 on legislation.gov.au/f2005b00339/2011-07-27. The first reads: "Radiocommunications (Low 
+   professional-holdout-2 Y9 B 344214a7 wrong gaps=0 shipped=2 clean=False
+      reader: Also cites Articles 15/16 for repeal/entry into force, contradicting the key's Article 9 text; admits no retrieval.
+      shipped: The recompute vote did not run, so no figure in this answer was recomputed.
+      shipped: A lookup ran, but no page it named could be read, so nothing in this answer was checked against a source.
+   professional-holdout-2 Y68 B e05d37fe wrong gaps=0 shipped=0 clean=True
+      reader: Misses that UI Events says the Mouse and Wheel Events section moved to Pointer Events.
+   professional-hard H9 C 87005514 wrong gaps=1 shipped=0 clean=False
+      reader: Key is 10.0 CRITICAL; answer declined to give it.
+      gap: The answer says ask 1 is not stated in the document. The only check behind that is a search of the pages read in full for the words a model listed as the ones such an answer would be printed with, and it found none.
+
+CATCHES: gap beside 2 of 8 not-right answers; shipped-or-gap 6; come clean 2
+
+PROOFS OF ABSENCE (the words were named for a lookup that read a page; bar 60%):
+  this run, all answers: 100 of 104 (96.2%)
+    group A: 24 of 24 (100.0%)
+    group B: 40 of 42 (95.2%)
+    group C: 36 of 38 (94.7%)
+  the tally's second hold-out answers: 9 of 193 (4.7%)
+
+THE 'NONE STATED' ANSWERS (right answers of X36, X19, and any answer that used either channel):
+   X19 48e6742c right not_stated_channel=True blocked_note=True gaps=['The answer marks part of the request as one it could not answer: NIST SP 800-53 Rev. 5 AC-', 'The answer marks part of the request as one it could not answer: Same clause (a): the wind']
+   X19 25da23a8 right not_stated_channel=True blocked_note=False gaps=['The answer says ask 1 is not stated in the document. The only check behind that is a searc', 'The answer says ask 3 is not stated in the document. The only check behind that is a searc']
+   X19 b25022aa right not_stated_channel=True blocked_note=False gaps=['The answer says ask 3 is not stated in the document. The only check behind that is a searc']
+   X31 e5420745 wrong not_stated_channel=True blocked_note=False gaps=['The answer says ask 2 is not stated in the document. The only check behind that is a searc', 'The answer says ask 3 is not stated in the document. The only check behind that is a searc']
+   X36 7f3bfa49 right not_stated_channel=False blocked_note=True gaps=["The answer marks part of the request as one it could not answer: 1 — 'what maximum RF impe", "The answer marks part of the request as one it could not answer: 2 — 'in ohms at a stated "]
+   X41 c5f4a8b7 right not_stated_channel=True blocked_note=False gaps=['The answer says ask 1 is not stated in the document. The only check behind that is a searc', 'The answer says ask 2 is not stated in the document. The only check behind that is a searc']
+   X36 018bce49 right not_stated_channel=True blocked_note=False gaps=['The answer says ask 1 is not stated in the document. The only check behind that is a searc']
+   X41 7cd6f41e right not_stated_channel=True blocked_note=False gaps=['The answer says ask 1 is not stated in the document. The only check behind that is a searc', 'The answer says ask 2 is not stated in the document. The only check behind that is a searc']
+   X36 94325d6b right not_stated_channel=False blocked_note=True gaps=['The answer gives no result for ask 1: "what maximum RF impedance, in ohms at a stated freq', 'The answer marks part of the request as one it could not answer: Ask 1 — NASA-STD-4003A sp']
+   X41 70a02a25 right not_stated_channel=True blocked_note=False gaps=['The answer says ask 1 is not stated in the document. The only check behind that is a searc', 'The answer says ask 2 is not stated in the document. The only check behind that is a searc']
+   H9 87005514 wrong not_stated_channel=True blocked_note=False gaps=['The answer says ask 1 is not stated in the document. The only check behind that is a searc']
