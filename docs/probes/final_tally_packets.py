@@ -2,7 +2,8 @@
 
     python -I final_tally_packets.py REPO OUT_DIR SEED [FIRST_DIR [RESUME_DIR]]
 
-One packet per question (docs/preregistration-20261123-final-tally.md and its amendment 1): the question, its signed key
+One packet per question (docs/preregistration-20261123-final-tally.md and its amendment 1; the re-asks of
+docs/preregistration-20261123-caution-test.md join the packet of their question): the question, its signed key
 (for tier 4, its requirement statements with the reference design and the catalogue pages) and every delivered answer of
 the question under a code that shows neither the arm, nor the run, nor the invocation, in a shuffled order. For the 56
 field questions the packet holds the answer on the field profile (arm F, the tally's own) and the one on the engineering
@@ -102,10 +103,16 @@ def block_tier4(qid: str) -> list[str]:
               "**Designs known to fail (what a missed trap looks like):**"]
     for w in c.get("wrong_designs") or []:
         lines.append(f"- {json.dumps(w.get('values'), ensure_ascii=False)} fails {w.get('failed_requirement_ids')}: {w.get('why', '')}")
-    trap = c.get("trap") or {}
-    lines += ["", f"**The trap:** {trap.get('judgment', '')}", "", "**Catalogue pages the system was given:**"]
+    # The candidates were written in four shapes: a trap is a mapping with a judgment (batches 5 and 6), a plain sentence (2 to 4) or
+    # absent (the pilot); a page is a mapping with a title and its markdown or, in batches 2 and 5, the markdown text itself.
+    trap = c.get("trap")
+    judgment = trap.get("judgment", "") if isinstance(trap, dict) else str(trap or "")
+    lines += ["", f"**The trap:** {judgment}", "", "**Catalogue pages the system was given:**"]
     for page in c.get("corpus_pages") or []:
-        lines += ["", f"### {page.get('title', '')}", page.get("markdown", "")]
+        if isinstance(page, dict):
+            lines += ["", f"### {page.get('title', '')}", page.get("markdown", "")]
+        else:
+            lines += ["", str(page)]
     return lines
 
 
@@ -137,6 +144,21 @@ for lane in launch.lanes():
             for n, line in enumerate(open(path, encoding="utf-8")):
                 u = json.loads(line)
                 u.update(_source=f"{path}#{n}", _run=run, _inv=inv["name"], _set=inv["set"], _arm=arm_of(inv["name"]))
+                units.append(u)
+
+# The re-ask run (docs/preregistration-20261123-caution-test.md): stage 1 always, stage 2 when its list is given. Its answers join
+# the packets of their questions under codes of their own, so the reader cannot tell a re-ask from the tally's answer.
+for stage in ("1", "2"):
+    if stage == "2" and not os.environ.get("TALLY_RERUN_EXTRA"):
+        continue
+    for lane in launch.rerun_lanes(stage):
+        for inv in lane:
+            path = launch.rerun_out(stage) / inv["name"] / "shard-0.jsonl"
+            if not path.exists():
+                continue
+            for n, line in enumerate(open(path, encoding="utf-8")):
+                u = json.loads(line)
+                u.update(_source=f"{path}#{n}", _run=f"rerun{stage}", _inv=inv["name"], _set=inv["set"], _arm="R")
                 units.append(u)
 
 codes: dict[str, dict] = {}

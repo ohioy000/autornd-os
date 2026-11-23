@@ -153,13 +153,18 @@ for code, meta in made_codes.items():
                      points=any(p in c for c in cautions for p in POINTING),
                      confirmed=bool(backed), backed=backed, figures=figures, calculation=calculation, quotes=quotes, routing=routing))
 
-tally_units = [u for u in all_units if u["arm"] != "E"]
-tally_rows = [r for r in rows if r["arm"] != "E"]
+# Arm E is the small test, and arm R the re-ask run of docs/preregistration-20261123-caution-test.md: neither is the tally's
+# own answer to a question, so the bars below leave them out, and the fresh test of the caution fix reads them all.
+tally_units = [u for u in all_units if u["arm"] not in ("E", "R")]
+tally_rows = [r for r in rows if r["arm"] not in ("E", "R")]
+t_units = [u for u in all_units if u["arm"] != "R"]      # the tally and the small test: what the bars of cost and seats count
+t_rows = [r for r in rows if r["arm"] != "R"]
 right = [r for r in tally_rows if r["verdict"] == "right"]
 wrong = [r for r in tally_rows if r["verdict"] != "right"]
 n_dist = len({(u["set"], u["q"]) for u in tally_units})
 print(f"units in the records {len(CODES)}; stopped by the key's limit and left out {stopped}; made {len(all_units)} "
-      f"(arm E {len(all_units) - len(tally_units)}, the tally {len(tally_units)} over {n_dist} distinct questions)")
+      f"(arm E {sum(u['arm'] == 'E' for u in all_units)}, the re-asks {sum(u['arm'] == 'R' for u in all_units)}, "
+      f"the tally {len(tally_units)} over {n_dist} distinct questions)")
 print(f"answers read {len(rows)} of {len(all_units)} made; missing verdicts {sum(r['verdict'] == 'MISSING' for r in rows)}; "
       f"unclear {sum(r['verdict'] == 'unclear' for r in rows)}")
 dup = Counter((u["set"], u["q"]) for u in tally_units)
@@ -200,22 +205,23 @@ print(f"\nBAR 3  not-right answers carrying a confirmation: {sum(r['confirmed'] 
 print(f"BAR 4  right answers with no caution: {sum(not r['cautions'] for r in right)} of {len(right)}   (bar: at least half)")
 print(f"BAR 5  wrong answers with a pointing caution (the two phrases): {sum(r['points'] for r in wrong)} of {len(wrong)}   "
       f"(bar: at least half; any other caution is read by hand below)")
-total_cost = sum(u["cost"] for u in all_units)
-every_cost = sum(float(unit(m["source"]).get("cost") or 0) + float(unit(m["source"]).get("liability") or 0) for m in CODES.values())
+total_cost = sum(u["cost"] for u in t_units)
+every_cost = sum(float(unit(m["source"]).get("cost") or 0) + float(unit(m["source"]).get("liability") or 0)
+                 for m in CODES.values() if m["arm"] != "R")
 print(f"BAR 6  cost of every unit of both runs, the stopped ones included: ${every_cost:.4f}; of the made ones ${total_cost:.4f}; "
       f"mean of the {len(tally_rows)} delivered tally answers ${sum(r['cost'] for r in tally_rows) / max(len(tally_rows), 1):.4f}   "
       f"(bar: within $9.00 with the probes' $0.0344; at most $0.02 an answer)")
 blocked = [u for u in tally_units if not u["delivered"]]
-print(f"BAR 7  tally answers that ended blocked or raised: {len(blocked)} of {len(tally_units)} (+{len(all_units) - len(tally_units)} of arm E: "
+print(f"BAR 7  tally answers that ended blocked or raised: {len(blocked)} of {len(tally_units)} (+{sum(u['arm'] == 'E' for u in all_units)} of arm E: "
       f"{sum(not u['delivered'] for u in all_units if u['arm'] == 'E')})   (bar: at most 9 of the 367)")
 for u in blocked:
     print(f"       {u['set']} {u['q']} {u['inv']} {u['run']} {u['status']} {u['error'][:110]}")
-bad_seat = [u for u in all_units if not u["seat_ok"]]
-reader = [u for u in all_units if "reader" in u["mb"]]
+bad_seat = [u for u in t_units if not u["seat_ok"]]
+reader = [u for u in t_units if "reader" in u["mb"]]
 print(f"BAR 8  units whose engineering seat was not the global answer model or triage seat not the second triage model: "
       f"{len(bad_seat)}; units with a call on a reader tier: {len(reader)}   (bar: none)")
 funcs: dict = defaultdict(Counter)
-for u in all_units:
+for u in t_units:
     for f, models in u["mb"].items():
         for m in models:
             funcs[f][m] += 1
@@ -247,7 +253,7 @@ for s in ("tier2", "golden"):
     print(f"   {s}: screen PASS on {sum(r['screen'] == 'PASS' for r in rs)} of {len(rs)}; reading right on "
           f"{sum(r['verdict'] == 'right' for r in rs)}; they agree on {agree}")
 
-print("\nEVERY ANSWER NOT RIGHT (the tally and arm E):")
+print("\nEVERY ANSWER NOT RIGHT (the tally, arm E and the re-asks, arm R):")
 for r in sorted([r for r in rows if r["verdict"] != "right"], key=lambda r: (r["set"], r["q"], r["arm"])):
     print(f"  {r['set']} {r['q']} {r['arm']} {r['run']} {r['code']} {r['verdict']} confirmed={r['confirmed']} points={r['points']} "
           f"cautions={len(r['cautions'])} gaps={None if r['gaps'] is None else len(r['gaps'])} figures={str(r['figures'])[:80]}")
@@ -255,24 +261,34 @@ for r in sorted([r for r in rows if r["verdict"] != "right"], key=lambda r: (r["
         print("      caution:", c[:180])
     for g in r["gaps"] or []:
         print("      gap:", g[:180])
+# ---- The fresh test of the caution fix (docs/preregistration-20261123-caution-test.md) ----------------------------------------
+# Never seen by the design's 681 answers: the tier-2, golden and tier-4 sets and the two questions of the second hold-out they did not
+# cover (docs/probes/caution_replay.py's pool). Every other question was in the 681, so its answers here are fresh and it is not.
+NEVER_SAW_IDS = {("professional-holdout-2", "Y13"), ("professional-holdout-2", "Y52")}
+never_saw = lambda r: r["set"] in ("tier2", "tier4", "golden") or (r["set"], r["q"]) in NEVER_SAW_IDS
 if hasattr(routes, "_gaps"):
+    print("\nTHE CAUTION FIX ON FRESH ANSWERS (branch fix/20261123-caution-flaw, design frozen at b66498e, gaps replayed on the stored rows;")
+    print("  in-sample on the 681 it designed on: gaps beside 8 of 658 right answers and 5 of 23 not right):")
+    print(f"   {'':46s}{'answers':>8s}{'right':>7s}{'not right':>10s}   {'gap beside right':22s}{'gap beside not right':22s}{'shipped or gap, not right'}")
+    for label, grp in (("A  the tally and arm E", [r for r in rows if r["arm"] != "R"]),
+                       ("     on questions the 681 covered", [r for r in rows if r["arm"] != "R" and not never_saw(r)]),
+                       ("     on questions the design never saw", [r for r in rows if r["arm"] != "R" and never_saw(r)]),
+                       ("B  the re-asks", [r for r in rows if r["arm"] == "R"]),
+                       ("pooled fresh, A + B", rows)):
+        r_ = [r for r in grp if r["verdict"] == "right"]
+        n_ = [r for r in grp if r["verdict"] != "right"]
+        gr, gn = sum(bool(r["gaps"]) for r in r_), sum(bool(r["gaps"]) for r in n_)
+        en = sum(bool(r["cautions"] or r["gaps"]) for r in n_)
+        print(f"   {label:46s}{len(grp):8d}{len(r_):7d}{len(n_):10d}   {gr:4d} ({100 * gr / max(len(r_), 1):4.1f}%)         {gn:4d} of {len(n_):3d}            {en} of {len(n_)}")
+    print("   (design: right answers marked at most 3 percent; every not-right one marked pointing at the wrong part, read by hand)")
     r_all = [r for r in rows if r["verdict"] == "right"]
-    n_all = [r for r in rows if r["verdict"] != "right"]
-    gr = sum(bool(r["gaps"]) for r in r_all)
-    gn = sum(bool(r["gaps"]) for r in n_all)
-    sr = sum(bool(r["cautions"]) for r in r_all)
-    sn = sum(bool(r["cautions"]) for r in n_all)
-    er_ = sum(bool(r["cautions"] or r["gaps"]) for r in r_all)
-    en_ = sum(bool(r["cautions"] or r["gaps"]) for r in n_all)
-    print(f"\nTHE GAP CAUTIONS (branch fix/20261123-caution-flaw, replayed; all {len(rows)} delivered answers, arm E included):")
-    print(f"   shipped cautions beside right {sr} of {len(r_all)} ({100 * sr / max(len(r_all), 1):.1f}%), beside not-right {sn} of {len(n_all)}")
-    print(f"   gap cautions     beside right {gr} of {len(r_all)} ({100 * gr / max(len(r_all), 1):.1f}%), beside not-right {gn} of {len(n_all)}"
-          f"   (design: right answers marked at most 3 percent; every not-right one marked pointing at the wrong part, read by hand)")
-    print(f"   either           beside right {er_} of {len(r_all)}, beside not-right {en_} of {len(n_all)}")
-    print("   RIGHT ANSWERS THAT GET A GAP:")
+    print("   RIGHT ANSWERS THAT GET A GAP (fresh):")
     for r in r_all:
         if r["gaps"]:
-            print(f"      {r['set']} {r['q']} {r['arm']} {r['code']}: {[g[:90] for g in r['gaps']]}")
+            print(f"      {r['set']} {r['q']} {r['arm']} {r['run']} {r['code']}: {[g[:90] for g in r['gaps']]}")
+    reask = [u for u in all_units if u["arm"] == "R"]
+    print(f"   the re-asks: made {len(reask)}, delivered {sum(u['delivered'] for u in reask)}, cost ${sum(u['cost'] for u in reask):.4f}, "
+          f"seat not as set {sum(not u['seat_ok'] for u in reask)}, a reader call {sum('reader' in u['mb'] for u in reask)}")
 
 # ---- A secondary measure, written down on 2026-11-23 before any answer of the tally was read ---------------------------------
 # The owner asked whether the decision tier could serve the caution fix. It already judges, for every quote a lookup found on its
@@ -308,15 +324,15 @@ if rows:
               f"comes clean={clean(r)}")
 
 # ---- What the decision tier routed (free; read off the stored rows, no answer text and no label) ------------------------------
-if rows:
-    cnt = lambda key, val: sum(r["routing"][key] == val for r in rows)
-    print(f"\nWHAT THE DECISION TIER ROUTED (its two live routing switches, over the {len(rows)} delivered answers, arm E included):")
-    print(f"   needs_calculation: routed yes {cnt('calculation', 'yes')}, no {cnt('calculation', 'no')}, other or none {sum(r['routing']['calculation'] not in ('yes', 'no') for r in rows)}"
-          f"  -> the three-sample recompute ran on {sum(r['routing']['recompute_ran'] for r in rows)} and was skipped on {sum(not r['routing']['recompute_ran'] for r in rows)}")
+if t_rows:
+    cnt = lambda key, val: sum(r["routing"][key] == val for r in t_rows)
+    print(f"\nWHAT THE DECISION TIER ROUTED (its two live routing switches, over the {len(t_rows)} delivered answers of the tally and arm E):")
+    print(f"   needs_calculation: routed yes {cnt('calculation', 'yes')}, no {cnt('calculation', 'no')}, other or none {sum(r['routing']['calculation'] not in ('yes', 'no') for r in t_rows)}"
+          f"  -> the three-sample recompute ran on {sum(r['routing']['recompute_ran'] for r in t_rows)} and was skipped on {sum(not r['routing']['recompute_ran'] for r in t_rows)}")
     print(f"   needs_sources:     confident yes {cnt('sources', 'yes')}, unsure (taken as yes) {cnt('sources', 'unsure')}, confident no {cnt('sources', 'no')}, "
-          f"unavailable {cnt('sources', 'unavailable')}, not asked {cnt('sources', None)}  -> a lookup ran on {sum(r['routing']['lookup_ran'] for r in rows)}")
+          f"unavailable {cnt('sources', 'unavailable')}, not asked {cnt('sources', None)}  -> a lookup ran on {sum(r['routing']['lookup_ran'] for r in t_rows)}")
     for s_ in USED + (UNSEEN,):
-        mine = [r for r in rows if r["set"] == s_]
+        mine = [r for r in t_rows if r["set"] == s_]
         if mine:
             print(f"      {s_:26s} {len(mine):3d} answers: recompute ran {sum(r['routing']['recompute_ran'] for r in mine):3d}, "
                   f"lookup switch yes {sum(r['routing']['sources'] in ('yes', 'unsure') for r in mine):3d} / no {sum(r['routing']['sources'] == 'no' for r in mine):3d}")
