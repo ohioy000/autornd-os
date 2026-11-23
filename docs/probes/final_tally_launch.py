@@ -3,6 +3,8 @@
     python -I docs/probes/final_tally_launch.py plan            # free: prints the lanes, their questions and caps
     python -I docs/probes/final_tally_launch.py probe           # paid, '$0.10' a set: one question of tier2, golden, tier4
     python -I docs/probes/final_tally_launch.py run             # paid: starts every lane, detached, and returns
+    python -I docs/probes/final_tally_launch.py resume-plan     # free: the units the key's limit left unanswered, and caps
+    python -I docs/probes/final_tally_launch.py resume          # paid: starts the lanes for those units only (amendment 1)
 
 Environment: TALLY_TREE (the clean checkout the runs use, default /home/jb/autornd-os-wt-h2run), TALLY_OUT (where the
 runs write, outside any git tree, default /home/jb/final-runs), TALLY_PY (the interpreter).
@@ -105,14 +107,14 @@ def command(i: dict, out: Path) -> str:
             f"{' '.join(i['ids'])} > {out}/{i['name']}.log 2>&1")
 
 
-def write_lane(n: int, lane: list[dict]) -> Path:
-    OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "lanes").mkdir(exist_ok=True)
-    path = OUT / "lanes" / f"lane{n:02d}.sh"
+def write_lane(n: int, lane: list[dict], out: Path = OUT) -> Path:
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "lanes").mkdir(exist_ok=True)
+    path = out / "lanes" / f"lane{n:02d}.sh"
     lines = ["#!/bin/bash", f"cd {TREE}"]
     for i in lane:
-        lines += [f'echo "START {i["name"]} $(date -u +%T)" >> {OUT}/status.txt', command(i, OUT),
-                  f'echo "EXIT {i["name"]} $? $(date -u +%T)" >> {OUT}/status.txt']
+        lines += [f'echo "START {i["name"]} $(date -u +%T)" >> {out}/status.txt', command(i, out),
+                  f'echo "EXIT {i["name"]} $? $(date -u +%T)" >> {out}/status.txt']
     path.write_text("\n".join(lines) + "\n")
     path.chmod(0o755)
     return path
@@ -152,5 +154,63 @@ def run() -> None:
         print("started", script)
 
 
+# ---- Amendment 1 (docs/preregistration-20261123-final-tally-amendment-1.md): the units the key's limit stopped ----
+RESUME = Path(os.environ.get("TALLY_RESUME_OUT", str(OUT / "resume1")))
+RESUME_PER_ANSWER_CAP = 0.022   # as the first run's
+RESUME_TIER4_PER_ANSWER_CAP = 0.030   # the probe's tier-4 answer cost '$0.0209' (its pages ride in the message)
+RESUME_MIN_CAP = 0.10
+RESUME_E_CAP = 0.38             # the small test as a whole stays inside the owner's '$1.00': '$0.143' spent + 2 x '$0.38' + overrun
+
+
+def unanswered(name: str) -> list[str]:
+    """The ids, in their first order, of an invocation's units that the provider's key limit stopped: not delivered and an
+    HTTP 403 in the error (a few had spent a little before it came). A unit that ended blocked for any other reason is a
+    result and stays one."""
+    path = OUT / name / "shard-0.jsonl"
+    rows = [json.loads(x) for x in open(path, encoding="utf-8")] if path.exists() else []
+    return [r["question"] for r in rows if not r.get("delivered") and "403" in str(r.get("error") or "")]
+
+
+def resume_lanes() -> list[list[dict]]:
+    out: list[list[dict]] = []
+    for lane in lanes():
+        mine = []
+        for i in lane:
+            ids = unanswered(i["name"])
+            if not ids:
+                continue
+            if i["name"].startswith("E-"):
+                cap = RESUME_E_CAP
+            elif i["set"] == "tier4":
+                cap = max(RESUME_MIN_CAP, round(len(ids) * RESUME_TIER4_PER_ANSWER_CAP, 2))
+            else:
+                cap = max(RESUME_MIN_CAP, round(len(ids) * RESUME_PER_ANSWER_CAP, 2))
+            mine.append(dict(i, ids=ids, cap=cap))
+        if mine:
+            out.append(mine)
+    return out
+
+
+def resume_plan() -> None:
+    total, cap_sum, count = 0, 0.0, 0
+    for n, lane in enumerate(resume_lanes(), 1):
+        q = sum(len(i["ids"]) for i in lane)
+        c = sum(i["cap"] for i in lane)
+        total += q
+        cap_sum += c
+        count += len(lane)
+        print(f"lane {n:2d}: {q:3d} questions, caps ${c:.2f}: " +
+              "; ".join(f"{i['name']} [{len(i['ids'])}, ${i['cap']:.2f}]" for i in lane))
+    print(f"units to make {total}, invocations {count}, sum of caps ${cap_sum:.2f}")
+
+
+def resume() -> None:
+    for n, lane in enumerate(resume_lanes(), 1):
+        script = write_lane(n, lane, RESUME)
+        subprocess.Popen(["bash", str(script)], start_new_session=True, stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
+        print("started", script)
+
+
 if __name__ == "__main__":
-    {"plan": plan, "probe": probe, "run": run}[sys.argv[1]]()
+    {"plan": plan, "probe": probe, "run": run, "resume-plan": resume_plan, "resume": resume}[sys.argv[1]]()
