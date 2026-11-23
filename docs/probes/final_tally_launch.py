@@ -5,6 +5,8 @@
     python -I docs/probes/final_tally_launch.py run             # paid: starts every lane, detached, and returns
     python -I docs/probes/final_tally_launch.py resume-plan     # free: the units the key's limit left unanswered, and caps
     python -I docs/probes/final_tally_launch.py resume          # paid: starts the lanes for those units only (amendment 1)
+    python -I docs/probes/final_tally_launch.py rerun-plan [1|2]  # free: the re-ask run's lanes, questions and caps
+    python -I docs/probes/final_tally_launch.py rerun [1|2]       # paid: starts them (docs/preregistration-20261123-caution-test.md)
 
 Environment: TALLY_TREE (the clean checkout the runs use, default /home/jb/autornd-os-wt-h2run), TALLY_OUT (where the
 runs write, outside any git tree, default /home/jb/final-runs), TALLY_PY (the interpreter).
@@ -103,7 +105,7 @@ def lanes() -> list[list[dict]]:
 def command(i: dict, out: Path) -> str:
     env = (f"PYTHONPATH={TREE} AUTORND_PROFILE={i['profile']} MEASURE_SET={i['set']} "
            f"MEASURE_WORKFLOWS=answer-and-recompute")
-    return (f"{env} {PY} {TREE}/docs/probes/short_workflows_measurement.py {out}/{i['name']} 0 1 1 {i['cap']} "
+    return (f"{env} {PY} {TREE}/docs/probes/short_workflows_measurement.py {out}/{i['name']} 0 1 {i.get('repeats', 1)} {i['cap']} "
             f"{' '.join(i['ids'])} > {out}/{i['name']}.log 2>&1")
 
 
@@ -212,5 +214,76 @@ def resume() -> None:
         print("started", script)
 
 
+# ---- The re-ask run (docs/preregistration-20261123-caution-test.md): fresh answers to the questions that fail ---------------------
+# The owner's approval of 2026-11-23 ("I approve that plan perfect"): re-ask every question that has produced a not-right answer,
+# three times each, on the shipped line-up, so that the caution fix meets enough fresh wrong answers to say what it catches.
+# Measured beforehand: those 19 questions were not right on 23 of the 83 answers made to them (28 percent; 3.4 percent over all 681).
+RERUN_REPEATS = 3
+RERUN_PER_ANSWER_CAP = 0.022    # as the tally's
+RERUN_TIER4_PER_ANSWER_CAP = 0.030
+RERUN_MIN_CAP = 0.10
+RERUN_CEILING = 1.50            # the whole re-ask run, spend: the owner approved about '$0.8' and a cap of '$1.50'
+# stage 1: every question with a not-right answer in the four labelled runs behind docs/reviews/2026-11-23-caution-flaw.md
+RERUN_KNOWN = ([("professional-hard", q) for q in ("H4", "H8", "H12")] + [("professional", "P4")]
+               + [("professional-holdout", q) for q in ("X12", "X13", "X16", "X19", "X20", "X31", "X34", "X38", "X41")]
+               + [("professional-holdout-2", q) for q in ("Y68", "Y124", "Y140", "Y146", "Y149", "Y170")])
+
+
+def rerun_out(stage: str) -> Path:
+    return Path(os.environ.get("TALLY_RERUN_OUT", str(OUT))) / f"rerun{stage}"
+
+
+def rerun_pairs(stage: str) -> list[tuple[str, str]]:
+    """Stage 1 is the 19 known questions. Stage 2 is the questions whose tally answer was read not right: a JSON list of
+    [set, id] in TALLY_RERUN_EXTRA, written after the reading and committed before the spend."""
+    if stage == "1":
+        return RERUN_KNOWN
+    extra = json.loads(Path(os.environ["TALLY_RERUN_EXTRA"]).read_text(encoding="utf-8"))
+    return [(s, q) for s, q in extra if (s, q) not in RERUN_KNOWN]
+
+
+def rerun_lanes(stage: str) -> list[list[dict]]:
+    """One invocation for each tally invocation that holds a chosen question, in the tally's own order and on the profile the
+    question ran on there (the field questions on their own profile, never the small test)."""
+    pairs = rerun_pairs(stage)
+    out: list[list[dict]] = []
+    for lane in lanes():
+        for i in lane:
+            if i["name"].startswith("E-"):
+                continue
+            ids = [q for q in i["ids"] if (i["set"], q) in pairs]
+            if ids:
+                per = RERUN_TIER4_PER_ANSWER_CAP if i["set"] == "tier4" else RERUN_PER_ANSWER_CAP
+                cap = max(RERUN_MIN_CAP, round(len(ids) * RERUN_REPEATS * per, 2))
+                out.append([dict(i, name=f"R{stage}-{i['name']}", ids=ids, cap=cap, repeats=RERUN_REPEATS)])
+    found = {(i["set"], q) for lane in out for i in lane for q in i["ids"]}
+    if set(pairs) - found:
+        raise SystemExit(f"not in any tally invocation: {sorted(set(pairs) - found)}")
+    return out
+
+
+def rerun_plan(stage: str = "1") -> None:
+    total, cap_sum = 0, 0.0
+    for n, lane in enumerate(rerun_lanes(stage), 1):
+        for i in lane:
+            total += len(i["ids"]) * i["repeats"]
+            cap_sum += i["cap"]
+            print(f"lane {n:2d}: {i['name']} [{i['set']}, {i['profile']}] {len(i['ids'])} questions x {i['repeats']} = "
+                  f"{len(i['ids']) * i['repeats']} answers, cap ${i['cap']:.2f}: {' '.join(i['ids'])}")
+    print(f"stage {stage}: {len(rerun_pairs(stage))} questions, answers {total}, expected spend about ${total * 0.0135:.2f}, "
+          f"sum of caps ${cap_sum:.2f}, ceiling for the whole re-ask run ${RERUN_CEILING:.2f}")
+
+
+def rerun(stage: str = "1") -> None:
+    out = rerun_out(stage)
+    for n, lane in enumerate(rerun_lanes(stage), 1):
+        script = write_lane(n, lane, out)
+        subprocess.Popen(["bash", str(script)], start_new_session=True, stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
+        print("started", script)
+
+
 if __name__ == "__main__":
-    {"plan": plan, "probe": probe, "run": run, "resume-plan": resume_plan, "resume": resume}[sys.argv[1]]()
+    MODES = {"plan": plan, "probe": probe, "run": run, "resume-plan": resume_plan, "resume": resume,
+             "rerun-plan": lambda: rerun_plan(*sys.argv[2:3]), "rerun": lambda: rerun(*sys.argv[2:3])}
+    MODES[sys.argv[1]]()
