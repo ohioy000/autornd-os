@@ -114,8 +114,17 @@ def delivery(source: str, set_name: str, question: str):
     switched = next((v for name, v in reversed(verdicts_) if name == "answer_switches" and isinstance(v, dict)), None)
     choices = [r.get("choice") for r in (switched or {}).get("records") or [] if r.get("switch") == "quote_answers"]
     quotes = {"judged": len(choices), **{c: choices.count(c) for c in ("yes", "unsure", "no", "unavailable")}}
+    # What the live routing switches settled for this answer, read off the stored rows: the calculation switch's route (whether
+    # the three-sample recompute may run), the lookup switch's choice, and whether the recompute and a lookup actually ran.
+    route = next(((v.get("route") or {}).get("needs_calculation") for name, v in reversed(verdicts_)
+                  if name == "request_switches" and isinstance(v, dict)), None)
+    looked = [r.get("choice") for name, v in verdicts_ if name == "switches" and isinstance(v, dict)
+              for r in v.get("records") or [] if r.get("switch") == "needs_sources"]
+    voted = next((v for name, v in reversed(verdicts_) if name == "recompute_vote" and isinstance(v, dict)), None)
+    routing = {"calculation": route, "sources": looked[-1] if looked else None,
+               "recompute_ran": bool(voted) and not voted.get("skipped"), "lookup_ran": any(n == "sources" for n, _ in verdicts_)}
     return ((backed if routes._confirmations(backed, True) else []), figures, cautions, gaps,
-            routes._judged_a_calculation(verdicts_), quotes)
+            routes._judged_a_calculation(verdicts_), quotes, routing)
 
 
 made_codes = {c: m for c, m in CODES.items() if "403" not in (m.get("error") or "")}
@@ -136,13 +145,13 @@ for code, meta in made_codes.items():
     if not meta["delivered"]:
         continue
     verdict = (final.get(code) or verdicts.get(code) or {}).get("verdict", "MISSING")
-    backed, figures, rebuilt, gaps, calculation, quotes = delivery(meta["source"], meta["set"], meta["question"])
+    backed, figures, rebuilt, gaps, calculation, quotes, routing = delivery(meta["source"], meta["set"], meta["question"])
     cautions = u.get("cautions") or []
     if rebuilt != cautions:
         raise SystemExit(f"{meta['source']}: the rebuilt cautions are not the shipped ones")
     rows.append(dict(base, verdict=verdict, cautions=cautions, gaps=gaps,
                      points=any(p in c for c in cautions for p in POINTING),
-                     confirmed=bool(backed), backed=backed, figures=figures, calculation=calculation, quotes=quotes))
+                     confirmed=bool(backed), backed=backed, figures=figures, calculation=calculation, quotes=quotes, routing=routing))
 
 tally_units = [u for u in all_units if u["arm"] != "E"]
 tally_rows = [r for r in rows if r["arm"] != "E"]
@@ -297,5 +306,19 @@ if rows:
         print(f"      {r['set']} {r['q']} {r['arm']} {r['code']} {r['verdict']}: {q['yes']}/{q['unsure']}/{q['no']}"
               f"{' (unavailable ' + str(q['unavailable']) + ')' if q['unavailable'] else ''}  rule={'YES' if no_yes(r) else 'no'}  "
               f"comes clean={clean(r)}")
+
+# ---- What the decision tier routed (free; read off the stored rows, no answer text and no label) ------------------------------
+if rows:
+    cnt = lambda key, val: sum(r["routing"][key] == val for r in rows)
+    print(f"\nWHAT THE DECISION TIER ROUTED (its two live routing switches, over the {len(rows)} delivered answers, arm E included):")
+    print(f"   needs_calculation: routed yes {cnt('calculation', 'yes')}, no {cnt('calculation', 'no')}, other or none {sum(r['routing']['calculation'] not in ('yes', 'no') for r in rows)}"
+          f"  -> the three-sample recompute ran on {sum(r['routing']['recompute_ran'] for r in rows)} and was skipped on {sum(not r['routing']['recompute_ran'] for r in rows)}")
+    print(f"   needs_sources:     confident yes {cnt('sources', 'yes')}, unsure (taken as yes) {cnt('sources', 'unsure')}, confident no {cnt('sources', 'no')}, "
+          f"unavailable {cnt('sources', 'unavailable')}, not asked {cnt('sources', None)}  -> a lookup ran on {sum(r['routing']['lookup_ran'] for r in rows)}")
+    for s_ in USED + (UNSEEN,):
+        mine = [r for r in rows if r["set"] == s_]
+        if mine:
+            print(f"      {s_:26s} {len(mine):3d} answers: recompute ran {sum(r['routing']['recompute_ran'] for r in mine):3d}, "
+                  f"lookup switch yes {sum(r['routing']['sources'] in ('yes', 'unsure') for r in mine):3d} / no {sum(r['routing']['sources'] == 'no' for r in mine):3d}")
 
 print("\nBY RUN (which run made each answer):", dict(Counter((u["run"], u["delivered"]) for u in all_units)))
