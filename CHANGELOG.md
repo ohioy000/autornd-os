@@ -15,6 +15,12 @@ times and the earlier line-up 51, which the rule written beforehand reads as no 
 Four of 230 answers ended blocked (two provider failures, two upstream rate limits). The record, the readings and every raw run file by
 sha256 are in `docs/reviews/2026-11-22-holdout2-run.md`; nothing in the harness changed.
 
+Measured (2026-11-22, the owner's word "Yes run it with the dollar cap"): the unpinned arm of the second hold-out run, the 42 law, finance and medicine
+questions answered again on their own field profiles and the new triage model with no pin, for '$0.69' of a cap of '$1.00': 42 of 42
+right, read blind and again, against 41 of 42 for the pinned arms, which the rule written beforehand reads as no difference shown. The pins
+cost 3.1 times as much for it; the second run's gain over the earlier line-up came from the field profiles and the triage model. Nothing
+in the harness changed. Record: `docs/reviews/2026-11-22-holdout2-unpinned-arm.md`.
+
 Changed (2026-11-22, the owner's ruling: "make sure any model can be used for any tier ... plug and play"): the spend guard bounds
 any catalogue price at its highest rate instead of leaving a model blind. The worst case now takes, for each side of a call, the
 highest rate across the entry and its time-of-day or prompt-size `overrides`, with every cache component counted on the prompt

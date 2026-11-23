@@ -1,0 +1,100 @@
+{
+ "310c2490": {
+  "verdict": "right",
+  "stated": "ASAP, no later than 7 calendar days after initial receipt",
+  "evidence": "AS SOON AS POSSIBLE, AND IN NO CASE LATER THAN 7 CALENDAR DAYS AFTER THE SPONSOR'S INITIAL RECEIPT OF THE INFORMATION",
+  "outside_wrong": false,
+  "note": "Distinguishes 15-day clock correctly"
+ },
+ "7ad32d79": {
+  "verdict": "right",
+  "stated": "At least 90 (calendar) days before proposed introduction",
+  "evidence": "must submit that notification to FDA at least 90 calendar days before the person proposes to begin the introduction",
+  "outside_wrong": false,
+  "note": "Commits to 90 days, not working days"
+ },
+ "4ef181c9": {
+  "verdict": "right",
+  "stated": "At least 5 members; >=1 nonscientific primary interest; >=1 independent of institution/site",
+  "evidence": "(a) At least five members. (b) At least one member whose primary area of interest is in a nonscientific area. (c) At least one member who is independent of the institution/trial site.",
+  "outside_wrong": false,
+  "note": "All three key items present"
+ },
+ "81beb926": {
+  "verdict": "right",
+  "stated": "8,000 individuals in US per year (not more than, inclusive)",
+  "evidence": "The checklist must use 8,000 individuals in the United States per year",
+  "outside_wrong": false,
+  "note": "4,000 identified as superseded"
+ },
+ "d185cba0": {
+  "verdict": "right",
+  "stated": "After 48-72 hours; trained health care worker",
+  "evidence": "After 48\u201372 hours, the skin test reaction must be examined by a trained health care worker.",
+  "outside_wrong": false,
+  "note": "Both key items present"
+ },
+ "20f277e0": {
+  "verdict": "right",
+  "stated": "45 days after FDA receives the PMA",
+  "evidence": "FDA must notify the applicant whether a PMA has been filed within 45 days after FDA receives the PMA",
+  "outside_wrong": false,
+  "note": "180-day correctly distinguished"
+ },
+ "bcf2668e": {
+  "verdict": "right",
+  "stated": "ISO 13485:2016(E), Third edition, March 1, 2016",
+  "evidence": "21 CFR Part 820 incorporates by reference ISO 13485:2016(E)... Third edition, March 1, 2016",
+  "outside_wrong": false,
+  "note": "Not 2003"
+ },
+ "72e05eb7": {
+  "verdict": "right",
+  "stated": "15 days acceptance notification; 120 days review/order, both from receipt, not additive",
+  "evidence": "The 15-day acceptance notification is not additive to the 120 days",
+  "outside_wrong": false,
+  "note": "Both figures and non-additivity stated"
+ },
+ "37c35b64": {
+  "verdict": "right",
+  "stated": "7 calendar days after first knowledge; follow-up by day 15 (7+8)",
+  "evidence": "Day 15 measured from day 0 (7 calendar days for the initial notification + 8 additional calendar days = 15",
+  "outside_wrong": false,
+  "note": "Matches key"
+ },
+ "1aaa9cf3": {
+  "verdict": "right",
+  "stated": "018",
+  "evidence": "Answer: 018.",
+  "outside_wrong": false,
+  "note": "Initial IND 000, later 001-017"
+ },
+ "e965afa2": {
+  "verdict": "right",
+  "stated": "No; custom-device exemption under 807.85(a) removes 510(k)/90-day requirement",
+  "evidence": "Answer: No. 21 CFR 807.85(a) states, in terms: \"A custom device is exempt from premarket notification requirements of this subpart",
+  "outside_wrong": false,
+  "note": "Adds conditions that could defeat exemption; core answer matches"
+ },
+ "b8f2cbea": {
+  "verdict": "right",
+  "stated": "No; preference limited to age 5+ with BCG; 4-year-old not covered",
+  "evidence": "VERDICT (ask 2): No.",
+  "outside_wrong": false,
+  "note": "Cites the 5-years-and-older condition"
+ },
+ "5560f8ad": {
+  "verdict": "right",
+  "stated": "NG136; replaces CG127",
+  "evidence": "NG136 \u2014 NICE guideline 'Hypertension in adults: diagnosis and management'... CG127.",
+  "outside_wrong": false,
+  "note": "NG28 correctly treated as secondary partial replacement"
+ },
+ "5c85a88c": {
+  "verdict": "right",
+  "stated": "No, not sufficient; consent required except under 50.22/50.23/50.24; defines minimal risk per 50.3(k)",
+  "evidence": "Minimal risk is a necessary condition ... but it is not a sufficient one.",
+  "outside_wrong": false,
+  "note": "Definition quoted verbatim and matches key"
+ }
+}

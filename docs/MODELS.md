@@ -280,8 +280,12 @@ still offered by name.
   51, no difference shown by the rule written before the run (+5 was "better"). Two of the earlier line-up's five were
   upstream 429s on its triage model. The field arms cost '$2.34' for the 56 answers, the earlier line-up '$0.70'.
 - **Served as set** in every unit: the pins' own provider each time, no rejected replies, no spend-guard blind entry.
-- **Not measured.** More than one answer a question; the pins' effect apart from the triage model (the unpinned science arm
-  carries the largest gap of the four); anything but this one set.
+- **The pins apart from the profile and the triage model** (the same 42 law, finance and medicine questions, the global answer
+  model and no pin, `docs/reviews/2026-11-22-holdout2-unpinned-arm.md`, '$0.69'): 42 of 42 right against 41 of 42 for the pinned
+  arms, so no gain shown for the pins at 3.1 times the cost; the gain of the line-up over its predecessor came from the field
+  profiles and the new triage model.
+- **Not measured.** More than one answer a question; a harder set, where a larger model could show a difference this one could
+  not; anything but this one set.
 
 ## What the changes have in common
 

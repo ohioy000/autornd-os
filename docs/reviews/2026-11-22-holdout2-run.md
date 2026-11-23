@@ -62,6 +62,10 @@ from the two readers who marked every answer right. **No verdict was changed; th
 agreed on every answer.** That the readers are models, as the authors of the questions were, is a
 limit. The stricter reading (a wrong claim outside the key) finds one, in a partly-right answer.
 
+> **Addendum, same day:** the comparison below cannot separate the pins from the profile and triage change. The run that does
+> (`docs/reviews/2026-11-22-holdout2-unpinned-arm.md`) found the unpinned global answer model right on 42 of 42 of the same
+> field questions against 41 of 42 pinned: the pins are not shown better, and the gain came from the profile and the triage model.
+
 ## The bars
 
 | Bar | Result | |
@@ -146,8 +150,8 @@ By the rule written before the run: **no difference shown** (between -3 and +4).
   (Y68), and a right figure was given with the wrong reason (Y124). The harness did not mark either.
 - Wrong or partly right answers still come with no pointing caution (bar 4, as in the first run and
   the acceptance run). The known limits grow by this and no change follows without a ruling.
-- Whether the pins are worth their cost is the owner's, on these numbers: no difference shown at +4,
-  at 3.3 times the cost.
+- Whether the pins are worth their cost is the owner's. This run could not isolate them; the unpinned arm did
+  (see the addendum): no gain shown, at 3.1 times the cost.
 
 ## Found, not touched
 

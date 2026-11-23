@@ -1,0 +1,100 @@
+{
+ "f820460a": {
+  "verdict": "right",
+  "stated": "GBP 5,000 within the 12 months ending with the donation date",
+  "evidence": "The period of 12 months ending with the date on which the donation in question is made",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "50b6e33a": {
+  "verdict": "right",
+  "stated": "One quarter (25%) of nominal value plus whole premium",
+  "evidence": "One quarter \u2014 25% \u2014 of the nominal value of each share allotted",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "77ebd960": {
+  "verdict": "right",
+  "stated": "Dispositive 10,000 words; other motions 2,500 words",
+  "evidence": "Memoranda in support of, or in opposition to, any other motion shall not exceed 2,500 words",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "750e96ad": {
+  "verdict": "right",
+  "stated": "Service: 14 days from conclusion; sales: 14 days from physical possession (consumer or non-carrier third party)",
+  "evidence": "expires at the end of 14 days from the day on which the consumer, or a third party other than the carrier and indicated by the consumer, acquires physical possession of the goods",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "800ae6e1": {
+  "verdict": "right",
+  "stated": "Presumed innocent until proved guilty according to law",
+  "evidence": "Everyone charged with a criminal offence shall be presumed innocent until proved guilty according to law.",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "dd57e54c": {
+  "verdict": "right",
+  "stated": "24 days (14 + 10)",
+  "evidence": "the combined interval from service of the complaint to the conference is 24 days",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "856afad3": {
+  "verdict": "right",
+  "stated": "Margins EUR 400m, 50m, 25m",
+  "evidence": "Community-wide turnover, undertaking 2: exceeds EUR 250 million by EUR 25 million.",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "5b5e2b3e": {
+  "verdict": "right",
+  "stated": "Total EUR 55; exclusion does not cover the pair",
+  "evidence": "Total used for the threshold: EUR 55",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "4b6a525c": {
+  "verdict": "right",
+  "stated": "Abrogated April 29, 2015, effective December 1, 2015",
+  "evidence": "ABROGATED. The Appendix of Forms is no longer a component of the Federal Rules of Civil Procedure.",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "8757ab23": {
+  "verdict": "right",
+  "stated": "Nine years, no re-election",
+  "evidence": "Nine (9) years. ... No.",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "e15d49f1": {
+  "verdict": "right",
+  "stated": "No; Council Decision 2010/787/EU of 10 Dec 2010 handles it",
+  "evidence": "Council Decision 2010/787/EU of 10 December 2010 on State aid to facilitate the closure of uncompetitive coal mines",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "4f7d6435": {
+  "verdict": "right",
+  "stated": "No derogation from Article 3; Article 2 exception is deaths from lawful acts of war",
+  "evidence": "except in respect of deaths resulting from lawful acts of war",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "19393990": {
+  "verdict": "right",
+  "stated": "UNCITRAL Model Law on International Commercial Arbitration (2006 amended)",
+  "evidence": "It covers all stages of the arbitral process from the arbitration agreement, the composition and jurisdiction of the arbitral tribunal and the extent of court intervention through to the recognition and enforcement of the arbitral award.",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ },
+ "e5b6de24": {
+  "verdict": "right",
+  "stated": "Yes, rules apply to further procedure in pending actions; otherwise former evidentiary principles apply",
+  "evidence": "in which event former evidentiary principles apply",
+  "outside_wrong": false,
+  "note": "All key items stated correctly."
+ }
+}
