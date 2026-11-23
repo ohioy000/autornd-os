@@ -109,7 +109,13 @@ def delivery(source: str, set_name: str, question: str):
                                 calculation=routes._judged_a_calculation(verdicts_))
     figures = [(r.get("ask"), r.get("value")) for r in results or [] if isinstance(r, dict)]
     gaps = routes._gaps(verdicts_, workflow["request"]) if hasattr(routes, "_gaps") and answer is not None else None
-    return (backed if routes._confirmations(backed, True) else []), figures, cautions, gaps
+    # What the decision tier already judged and stored (switch quote_answers, one record per quote found on its page; each
+    # record's `choice` is the model's answer by the switch's thresholds). Read per answer in the secondary measure below.
+    switched = next((v for name, v in reversed(verdicts_) if name == "answer_switches" and isinstance(v, dict)), None)
+    choices = [r.get("choice") for r in (switched or {}).get("records") or [] if r.get("switch") == "quote_answers"]
+    quotes = {"judged": len(choices), **{c: choices.count(c) for c in ("yes", "unsure", "no", "unavailable")}}
+    return ((backed if routes._confirmations(backed, True) else []), figures, cautions, gaps,
+            routes._judged_a_calculation(verdicts_), quotes)
 
 
 made_codes = {c: m for c, m in CODES.items() if "403" not in (m.get("error") or "")}
@@ -130,13 +136,13 @@ for code, meta in made_codes.items():
     if not meta["delivered"]:
         continue
     verdict = (final.get(code) or verdicts.get(code) or {}).get("verdict", "MISSING")
-    backed, figures, rebuilt, gaps = delivery(meta["source"], meta["set"], meta["question"])
+    backed, figures, rebuilt, gaps, calculation, quotes = delivery(meta["source"], meta["set"], meta["question"])
     cautions = u.get("cautions") or []
     if rebuilt != cautions:
         raise SystemExit(f"{meta['source']}: the rebuilt cautions are not the shipped ones")
     rows.append(dict(base, verdict=verdict, cautions=cautions, gaps=gaps,
                      points=any(p in c for c in cautions for p in POINTING),
-                     confirmed=bool(backed), backed=backed, figures=figures))
+                     confirmed=bool(backed), backed=backed, figures=figures, calculation=calculation, quotes=quotes))
 
 tally_units = [u for u in all_units if u["arm"] != "E"]
 tally_rows = [r for r in rows if r["arm"] != "E"]
@@ -258,5 +264,38 @@ if hasattr(routes, "_gaps"):
     for r in r_all:
         if r["gaps"]:
             print(f"      {r['set']} {r['q']} {r['arm']} {r['code']}: {[g[:90] for g in r['gaps']]}")
+
+# ---- A secondary measure, written down on 2026-11-23 before any answer of the tally was read ---------------------------------
+# The owner asked whether the decision tier could serve the caution fix. It already judges, for every quote a lookup found on its
+# page, whether the passage states an answer to the question it was quoted for (switch quote_answers, live as a label), and the
+# judgments are stored with every run, so reading them per answer costs no call. The rule is one and is not tuned: the lookup
+# found quotes and none was judged to state an answer (no confident yes). On the 681 labelled answers of four earlier runs
+# (docs/probes/caution_replay.py's pool) it held for 114 of 658 right answers (17.3%) and 11 of 23 not right (47.8%), and for 4 of
+# the 11 not-right answers that come clean, with 86 right answers beside them: a weak separation, found in-sample. This reads it
+# on answers made after it was stated. It is a measurement: no caution is built on it, and it is reported as read.
+if rows:
+    r_all = [r for r in rows if r["verdict"] == "right"]
+    n_all = [r for r in rows if r["verdict"] != "right"]
+    judged = lambda r: r["quotes"]["judged"] > 0
+    no_yes = lambda r: judged(r) and r["quotes"]["yes"] == 0
+    clean = lambda r: not (r["cautions"] or r["gaps"])
+    share = lambda grp, f: f"{sum(bool(f(r)) for r in grp):4d} of {len(grp):3d} ({100 * sum(bool(f(r)) for r in grp) / max(len(grp), 1):5.1f}%)"
+    print(f"\nTHE DECISION TIER'S OWN JUDGMENTS OF THE QUOTES, per answer (secondary; all {len(rows)} delivered answers, arm E included):")
+    print(f"   {'':58s}{'right':24s}not right")
+    for label, f in (("the lookup found a quote on its page, so the tier judged one", judged),
+                     ("the shipped label: some quote judged not to answer", lambda r: r["quotes"]["no"] > 0),
+                     ("NO QUOTE JUDGED TO STATE AN ANSWER (the rule)", no_yes),
+                     ("  ... and not a request judged a calculation", lambda r: no_yes(r) and not r["calculation"]),
+                     ("  ... and the answer otherwise comes clean", lambda r: no_yes(r) and clean(r)),
+                     ("every judgment a confident no (none unsure)", lambda r: judged(r) and r["quotes"]["yes"] == 0 and r["quotes"]["unsure"] == 0)):
+        print(f"   {label:58s}{share(r_all, f):24s}{share(n_all, f)}")
+    print(f"   the answers that come clean (no shipped and no gap caution{'' if hasattr(routes, '_gaps') else '; this tree has no gaps'}): "
+          f"right {share(r_all, clean)}, not right {share(n_all, clean)}")
+    print("   EVERY ANSWER NOT RIGHT, its quotes judged yes/unsure/no and whether it comes clean:")
+    for r in sorted(n_all, key=lambda r: (r["set"], r["q"], r["arm"])):
+        q = r["quotes"]
+        print(f"      {r['set']} {r['q']} {r['arm']} {r['code']} {r['verdict']}: {q['yes']}/{q['unsure']}/{q['no']}"
+              f"{' (unavailable ' + str(q['unavailable']) + ')' if q['unavailable'] else ''}  rule={'YES' if no_yes(r) else 'no'}  "
+              f"comes clean={clean(r)}")
 
 print("\nBY RUN (which run made each answer):", dict(Counter((u["run"], u["delivered"]) for u in all_units)))
