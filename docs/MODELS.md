@@ -266,6 +266,23 @@ still offered by name.
 - **Not measured.** Anything but triage; a repeat of the medical or the thinking-off arms. A pin for `finance` and `legal`
   is proposed in the record and is the owner's (G-2).
 
+### The line-up on 174 unseen questions (2026-11-22)
+- **What ran.** The owner's line-up as shipped: `tencent/hy4-flash` with its default thinking on the triage seat, the global
+  answer model (`deepseek/deepseek-v4.1-flash-1017`, DeepInfra) on the engineering seat, and the three pins: the legal model
+  (`z-ai/glm-5.3-flashx-legal`, Z.AI) for legal, `google/gemini-4-hydrogen` (Google) for finance and medical. The default
+  workflow, one answer a question, on `professional-holdout-2`; the evidence is `docs/reviews/2026-11-22-holdout2-run.md`.
+- **Right on the key:** 169 of 174 answers made (14 of 14 legal on the legal model, 13 of 14 finance and 14 of 14 medicine on
+  the large model, 14 of 14 natural science and 114 of 118 of the engineering groups on the global answer model).
+- **What a whole answer cost, all tiers together:** '$0.0125' to '$0.0161' an answer on the arms that use the global answer
+  model; '$0.0258' with the legal model; '$0.0715' (finance) and '$0.0569' (medicine) with the large model. Run total
+  '$4.72' for 230 answers.
+- **Against the line-up before today** (the same 56 field questions, the earlier triage model and no pins): 55 right against
+  51, no difference shown by the rule written before the run (+5 was "better"). Two of the earlier line-up's five were
+  upstream 429s on its triage model. The field arms cost '$2.34' for the 56 answers, the earlier line-up '$0.70'.
+- **Served as set** in every unit: the pins' own provider each time, no rejected replies, no spend-guard blind entry.
+- **Not measured.** More than one answer a question; the pins' effect apart from the triage model (the unpinned science arm
+  carries the largest gap of the four); anything but this one set.
+
 ## What the changes have in common
 
 - **Most early changes were forced by a model returning nothing,** not by a model being wrong:

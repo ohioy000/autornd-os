@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Measured (2026-11-22, the owner's word "Approved whatever you think necessary"): the second hold-out run, 174 unseen questions with signed keys,
+one answer each on the shipped line-up with the field profiles and their pinned answer models, for '$4.72' of a stated ceiling of '$7.00'.
+169 of 174 answers made are right on the key (the first hold-out run read 113 of 126), two readers agreeing on every answer; seven of the
+eight bars written beforehand are met and the eighth, that wrong answers carry a caution pointing at the wrong part, is missed as it was
+before. Against the line-up before it, on the 56 questions of the four field groups, the field profiles with their pins were right 55
+times and the earlier line-up 51, which the rule written beforehand reads as no difference shown; the pinned arms cost 3.3 times as much.
+Four of 230 answers ended blocked (two provider failures, two upstream rate limits). The record, the readings and every raw run file by
+sha256 are in `docs/reviews/2026-11-22-holdout2-run.md`; nothing in the harness changed.
+
 Changed (2026-11-22, the owner's ruling: "make sure any model can be used for any tier ... plug and play"): the spend guard bounds
 any catalogue price at its highest rate instead of leaving a model blind. The worst case now takes, for each side of a call, the
 highest rate across the entry and its time-of-day or prompt-size `overrides`, with every cache component counted on the prompt
