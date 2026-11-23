@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Measured (2026-11-23, the owner's word "Yes run the full test now ... to get a final tally, whatever amount necessary"): the final tally, 311 questions in eight sets and the 56 field questions again on the engineering profile, one answer each on the shipped line-up with the per-profile pins and the reader tier off, for '$4.27' of a stated ceiling of '$9.00' ('$0.0116' an answer). 292 of 311 are right on the key, 167 of 174 on the unseen second hold-out set (the second run read 169 with the reader on), read blind and again by two readers; seven of the eight bars written beforehand hold and the eighth, that wrong answers carry a caution pointing at the wrong part, is missed as before. The field profiles against the engineering profile on the same 56 questions read -1, no difference shown. The caution fix's fresh test (a re-ask of the questions that had failed, '$1.09') found its four typed cautions beside 1.9 percent of 412 right answers and beside 9 of 30 not-right ones, 7 of the 9 pointing at the wrong part by hand against a bar of 4 in 5. Nothing in the harness changed. Record: `docs/reviews/2026-11-23-final-tally.md`.
+
 Measured (2026-11-22, the owner's word "Approved whatever you think necessary"): the second hold-out run, 174 unseen questions with signed keys,
 one answer each on the shipped line-up with the field profiles and their pinned answer models, for '$4.72' of a stated ceiling of '$7.00'.
 169 of 174 answers made are right on the key (the first hold-out run read 113 of 126), two readers agreeing on every answer; seven of the

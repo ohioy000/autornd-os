@@ -1,0 +1,3293 @@
+{
+ "666f9e1e": {
+  "verdict": "right",
+  "stated": "UTF-8; U+000B as \\u000b lowercase",
+  "evidence": "\"encoded in UTF-8\"; \"U+000B therefore serializes as ... \\u000b\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "590bde3d": {
+  "verdict": "right",
+  "stated": "UTF-8 and UTF-16 only",
+  "evidence": "\"Exactly two: UTF-8 and UTF-16.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8ad3a8ba": {
+  "verdict": "right",
+  "stated": "2^29 = 536,870,912 times",
+  "evidence": "\"2^53 / 2^24 = 2^29 = 536,870,912\"",
+  "outside_wrong": false,
+  "note": "Mentions subtractive reading only to reject it."
+ },
+ "e3464731": {
+  "verdict": "right",
+  "stated": "20 repetitions; 32 calc-value terms",
+  "evidence": "\"Answer: 20 repetitions.\"; \"Answer: 32 <calc-value> terms.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "295b7b39": {
+  "verdict": "right",
+  "stated": "01 December 2026",
+  "evidence": "\"no earlier than 01 December 2026\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1d43e12f": {
+  "verdict": "wrong",
+  "stated": "Says UI Events requires wheel event; never says the section was moved to Pointer Events",
+  "evidence": "\"The event type is `wheel`\"; cites \"2024-09-06 W3C WD: 3.5.2.1 wheel\"",
+  "outside_wrong": true,
+  "note": "Places the wheel section in the 2024 WD, contradicting the key that it has moved."
+ },
+ "7edcffe6": {
+  "verdict": "partly",
+  "stated": "Answers wheel, but states current UI Events carries a notice that the section moved to Pointer Events",
+  "evidence": "\"In the current /TR/uievents/ snapshot that whole section has been moved to Pointer Events\"",
+  "outside_wrong": false,
+  "note": "Does not commit to 'no such value in UI Events'; gives wheel as the answer for older snapshots."
+ },
+ "9aea5edf": {
+  "verdict": "partly",
+  "stated": "Answers wheel; notes 2024 WD says Mouse and Wheel Events moved to Pointer Events [pointerevents4]",
+  "evidence": "\"The Mouse Events and Wheel Events section of this specification have been moved to the Pointer Events specification [pointerevents4].\"",
+  "outside_wrong": false,
+  "note": "Headline answer is wheel; the moved status is present but secondary; quotes an unverified dispatch sentence."
+ },
+ "af6310da": {
+  "verdict": "partly",
+  "stated": "Answers wheel; notes current UI Events says the section moved to Pointer Events",
+  "evidence": "\"The event type is `wheel`\"; \"states ... have been moved to the Pointer Events specification [pointerevents4]\"",
+  "outside_wrong": false,
+  "note": "Treats wheel as required in UI Events drafts, with the move as a caveat."
+ },
+ "321dd40e": {
+  "verdict": "right",
+  "stated": "No, data: URI IMG not included",
+  "evidence": "\"No. ... does NOT produce a PerformanceResourceTiming object\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "da66d7ea": {
+  "verdict": "right",
+  "stated": "368 Mtoe; 19.98 %, about 20 %",
+  "evidence": "\"1 842 - 1 474 = 368 Mtoe\"; \"19.98 % ... about 20 %\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "88b91661": {
+  "verdict": "right",
+  "stated": "HR-Time Level 3; 100 us or higher; 5 us or higher",
+  "evidence": "\"false ... 100 microseconds - or a higher implementation-defined value\"; \"true ... 5 microseconds\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b49a444a": {
+  "verdict": "right",
+  "stated": "Duty to ensure, so far as is reasonably practicable, health, safety and welfare at work of all his employees",
+  "evidence": "\"to ensure, so far as is reasonably practicable, the health, safety and welfare at work of all his employees\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "2c33c87f": {
+  "verdict": "right",
+  "stated": "Written statement of general policy plus organisation and arrangements; notice to all employees",
+  "evidence": "\"a written statement of his general policy ... and the organisation and arrangements\"; \"notice of all of his employees\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "209dd3e2": {
+  "verdict": "right",
+  "stated": "29 December 1999; five or more employees",
+  "evidence": "\"Coming into force 29th December 1999\"; \"five or more employees\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "71ee1d83": {
+  "verdict": "right",
+  "stated": "No; Regulations do not apply to master, crew or employer for those activities",
+  "evidence": "\"Answer: NO. The Regulations are expressly disapplied in those circumstances by regulation 2(1).\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b4aaacf1": {
+  "verdict": "right",
+  "stated": "12 months fixed guards only; 6 months other; exceptional circumstances liable to jeopardise safety",
+  "evidence": "\"at least every 12 months, where it has fixed guards only\"; \"at least every 6 months, in other cases\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7e3e1760": {
+  "verdict": "right",
+  "stated": "No; reg 3(5) disapplies requirements for equipment supplied by sale, agreement for sale or hire-purchase",
+  "evidence": "\"No. ... do not apply to a distributor in respect of work equipment that it supplies by way of sale.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "160e6864": {
+  "verdict": "right",
+  "stated": "At least 5 years from date record was made",
+  "evidence": "\"At least 5 years, running from the date on which the record was made.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "9b1176c9": {
+  "verdict": "right",
+  "stated": "As soon as practicable and in any event within 15 days of the accident",
+  "evidence": "\"as soon as practicable and in any event within 15 days of the accident\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a6ef1140": {
+  "verdict": "right",
+  "stated": "Between heads of rails at right angles; five-eighths of an inch below top of rail head",
+  "evidence": "\"between the heads of the rails at right-angles to the rails in a plane five-eighths of an inch below the top of the rail head\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e8c0b18a": {
+  "verdict": "right",
+  "stated": "200 kWh",
+  "evidence": "\"E = 80 kWh x 2,5 = 200 kWh\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6e7d568b": {
+  "verdict": "right",
+  "stated": "No; curved-track requirements apply only above 0.25 degree",
+  "evidence": "\"No. ... requirements specified for curved track apply only to track having a curvature greater than 0.25 degree.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6310d684": {
+  "verdict": "right",
+  "stated": "All locomotives except steam-propelled; 96 dB(A) min, 110 dB(A) max at 100 ft",
+  "evidence": "\"all locomotives except those propelled by steam power\"; \"minimum 96 dB(A), maximum 110 dB(A)\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d59caf3d": {
+  "verdict": "right",
+  "stated": "116 steps; 117 carrier frequencies",
+  "evidence": "\"116 ten-kilohertz steps.\"; \"117.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "335d535e": {
+  "verdict": "right",
+  "stated": "0.5 W on channels 8-14; 2.0 W on 1-7 and 15-22",
+  "evidence": "\"ERP on channels 8 through 14 does not exceed 0.5 Watts and ... 1 through 7 and 15 through 22 does not exceed 2.0 Watts\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "119b3c46": {
+  "verdict": "right",
+  "stated": "120 days, as expeditiously as possible",
+  "evidence": "\"as expeditiously as possible within 120 days after receipt of the application\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e072028d": {
+  "verdict": "right",
+  "stated": "Greater of equipment width or 762 mm (30 in.); at least 90-degree opening of doors/hinged panels",
+  "evidence": "\"the width of the equipment or 762 mm (30 in.), whichever is greater\"; \"at least a 90-degree opening\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "c68e4e09": {
+  "verdict": "right",
+  "stated": "610 mm (24 in.) wide and 1.98 m (6.5 ft) high",
+  "evidence": "\"not less than 610 mm (24 in.) wide and 1.98 m (6.5 ft) high\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "fe2b4a15": {
+  "verdict": "wrong",
+  "stated": "60 calendar days after request; 60 days after change unless PC/TP directs otherwise; retention declared not answerable",
+  "evidence": "\"Ask 4 (R1-R4 retention): blocked pending the Compliance/Evidence Retention text of PRC-024-3\"",
+  "outside_wrong": false,
+  "note": "Gets the first two items right but gives no retention period (key: 3 years or until next audit, whichever is longer)."
+ },
+ "6dfee3b6": {
+  "verdict": "right",
+  "stated": "next serial 018 (initial 000, later 001-017)",
+  "evidence": "The next submission must carry serial number 018.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "9e2e2122": {
+  "verdict": "right",
+  "stated": "next serial 018",
+  "evidence": "The next submission to this IND must carry the three-digit serial number 018",
+  "outside_wrong": false,
+  "note": "Cites 312.23(a)(5) rather than (e) but flags it for confirmation; answer unaffected."
+ },
+ "a4ce60d5": {
+  "verdict": "right",
+  "stated": "No; 807.85(a) exempts custom device, 90-day rule does not apply",
+  "evidence": "No. 21 CFR 807.85(a)... A custom device is exempt from premarket notification requirements of this subpart",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6cb3cfa1": {
+  "verdict": "right",
+  "stated": "No; 807.85(a) exemption, 90-day clock never starts",
+  "evidence": "No. ... is not required to submit a premarket notification at least 90 days before commercial distribution.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7161207c": {
+  "verdict": "right",
+  "stated": "No; preference is age-gated at 5 and older",
+  "evidence": "does not apply to a 4-year-old who received BCG. The page's preference is expressly age-gated at 5 years and older",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0a8cc240": {
+  "verdict": "right",
+  "stated": "No; preference stated for people 5 and older",
+  "evidence": "No. The page states the TB blood test preference for people 5 years of age and older who have received BCG",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "24754ccf": {
+  "verdict": "right",
+  "stated": "NG136; CG127",
+  "evidence": "NICE guideline NG136... NICE clinical guideline CG127",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "2c378a20": {
+  "verdict": "right",
+  "stated": "NG136; CG127",
+  "evidence": "NICE guideline NG136... Ask 2 ... NICE guideline CG127",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6bb1c754": {
+  "verdict": "right",
+  "stated": "No, consent required unless exception (50.22/50.23/50.24); minimal risk definition quoted correctly",
+  "evidence": "NO. Minimal risk is necessary but not sufficient.; Minimal risk means that the probability and magnitude of harm or discomfort anticipated...",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "aace7dd0": {
+  "verdict": "right",
+  "stated": "No, only IRB under 50.22 or 50.23/50.24; definition quoted correctly",
+  "evidence": "VERDICT ... NO.; Minimal risk means that the probability and magnitude of harm or discomfort anticipated in the research are not greater...",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "69a2947a": {
+  "verdict": "right",
+  "stated": "0.510 998 950 00(15) MeV/c^2; 9.109 383 7015(28) x 10^-31 kg",
+  "evidence": "m_e = 0.510 998 950 00(15) MeV/c^2 = 9.109 383 7015(28) x 10^-31 kg",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "c96d79a9": {
+  "verdict": "right",
+  "stated": "0.510 998 950 00(15) MeV/c^2; 9.109 383 7015(28)x10^-31 kg",
+  "evidence": "0.510 998 950 00(15) MeV/c^2 = 9.109 383 7015(28)\u00d710^-31 kg",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f7116c45": {
+  "verdict": "right",
+  "stated": "free: elementary and fundamental stages (at least); compulsory: elementary",
+  "evidence": "\"the elementary and fundamental stages\"; \"elementary education\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8f59763e": {
+  "verdict": "right",
+  "stated": "10^18 eV (1 EeV), exclusive",
+  "evidence": "Threshold: E = 10^18 eV (= 1 EeV). Verdict: exclusive.",
+  "outside_wrong": false,
+  "note": "Flags the defining sentence as unverified but commits to the right value."
+ },
+ "a5e7f0cc": {
+  "verdict": "wrong",
+  "stated": "10^17 eV (0.1 EeV), exclusive",
+  "evidence": "E = 10^17 eV (= 100 PeV = 0.1 EeV); Exclusive",
+  "outside_wrong": false,
+  "note": "Wrong threshold; took it from a different chapter."
+ },
+ "3108c5c5": {
+  "verdict": "wrong",
+  "stated": "10^17 eV (100 PeV), exclusive",
+  "evidence": "Ask 2 \u2014 threshold: 10^17 eV = 100 PeV = 0.1 EeV.",
+  "outside_wrong": false,
+  "note": "Wrong threshold; mentions 1 EeV only as a common convention not given."
+ },
+ "c01570a3": {
+  "verdict": "right",
+  "stated": "10^18 eV (1 EeV), exclusive",
+  "evidence": "threshold of 10^18 eV, i.e. 1 EeV... The threshold is exclusive.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "47fd7c5f": {
+  "verdict": "right",
+  "stated": "6.36 mb; 4.0 to 8.7 mb",
+  "evidence": "Surface pressure: 6.36 mb at mean radius (variable from 4.0 to 8.7 mb depending on season)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "48dc1457": {
+  "verdict": "right",
+  "stated": "6.36 mb; 4.0 to 8.7 mb",
+  "evidence": "Ask 1 - 6.36 mb. Ask 2 - 4.0 to 8.7 mb",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "85f0d06d": {
+  "verdict": "right",
+  "stated": "1 bar: 165 K (-108 C); 0.1 bar: 112 K (-161 C)",
+  "evidence": "Temperature at 1 bar: 165 K (-108 C); Temperature at 0.1 bar: 112 K (-161 C)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "5832d19d": {
+  "verdict": "right",
+  "stated": "1 bar: 165 K (-108 C); 0.1 bar: 112 K (-161 C)",
+  "evidence": "165 | -108 ; 112 | -161",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "07964b99": {
+  "verdict": "right",
+  "stated": "H0 = 67.4 \u00b1 0.5 km/s/Mpc",
+  "evidence": "H0 = 67.4 \u00b1 0.5 km s^-1 Mpc^-1 (68% confidence)",
+  "outside_wrong": false,
+  "note": "Also gives 67.36 \u00b1 0.54 as the same constraint."
+ },
+ "dc6d5cf2": {
+  "verdict": "right",
+  "stated": "H0 = (67.4 \u00b1 0.5) km/s/Mpc",
+  "evidence": "H0 = (67.4\u00b10.5) km s\u22121Mpc\u22121",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "c4d35248": {
+  "verdict": "right",
+  "stated": "21.385 km",
+  "evidence": "Answer to the ask 21.385 km.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "c1db4113": {
+  "verdict": "right",
+  "stated": "21.385 km",
+  "evidence": "Answer: 21.385 km.",
+  "outside_wrong": false,
+  "note": "Mentions 21.4 km as optional rounding but commits to 21.385."
+ },
+ "a7a42c0b": {
+  "verdict": "right",
+  "stated": "19.7%",
+  "evidence": "Propellant accounted for 19.7 % of Gaia's launch mass.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "09d5598b": {
+  "verdict": "right",
+  "stated": "19.7%",
+  "evidence": "Propellant was 19.7 % of launch mass",
+  "outside_wrong": false,
+  "note": "Lists 24.5% only as a non-requested related ratio."
+ },
+ "91de74fe": {
+  "verdict": "right",
+  "stated": "159.4",
+  "evidence": "Result: 159.4",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "61f7798b": {
+  "verdict": "right",
+  "stated": "159.4",
+  "evidence": "Earth/Mars pressure ratio | 159.4 | dimensionless",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b51ba3c5": {
+  "verdict": "right",
+  "stated": "A&P 3 yrs; 2-yr active; fixed base; equipment/data; written test; 65.95(a)(1) approved data",
+  "evidence": "\"(1) Hold a currently effective mechanic certificate with both an airframe rating and a powerplant rating... at least 3 years\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ebf6ebc6": {
+  "verdict": "right",
+  "stated": "active-high positive logic; doors into OR; OR and brake into AND; AND drives lamp",
+  "evidence": "\"LAMP_ON = (FWD_OPEN OR AFT_OPEN) AND BRAKE_ENG\"; \"logic 1 = high\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bc9a5cbe": {
+  "verdict": "right",
+  "stated": "10 consecutive hours after duty of 14 h or less; may not be reduced below 10",
+  "evidence": "\"10 consecutive hours... may not be reduced\" (121.467(b)(2),(b)(3))",
+  "outside_wrong": true,
+  "note": "Says the Part 121 rise from 9 to 10 hours was a 2014 amendment; key says the 9-hour rule stood until 2022."
+ },
+ "da9863f4": {
+  "verdict": "right",
+  "stated": "Too Early; RFC 8470",
+  "evidence": "\"425 | Too Early | RFC 8470\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "170ad556": {
+  "verdict": "right",
+  "stated": "two-thirds vote",
+  "evidence": "\"requires a TWO-THIRDS VOTE (2/3)\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bf7089e8": {
+  "verdict": "right",
+  "stated": "40 V differential; 1.25 V typical reference",
+  "evidence": "\"Input-output voltage differential -0.3 40 V\"; \"nominal reference is 1.25 V\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "c610f69f": {
+  "verdict": "right",
+  "stated": "40 V; 1.25 V typical",
+  "evidence": "\"Abs max VI-VO: +40 V / -0.3 V\"; \"VREF (typ): 1.25 V\"",
+  "outside_wrong": false,
+  "note": "Its worked R2=5k, 28 V example is doubtful but not contradicted by the packet."
+ },
+ "93b6e00e": {
+  "verdict": "right",
+  "stated": "40 V; 1.25 V typical",
+  "evidence": "\"Value: 40 V maximum forward differential\"; \"Value: 1.25 V typical.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ba2b2314": {
+  "verdict": "right",
+  "stated": "40 V; 1.25 V typical",
+  "evidence": "\"Answer: 40 V (maximum), with a lower absolute limit of -0.3 V\"; \"Answer: 1.25 V typical.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "549a69e0": {
+  "verdict": "right",
+  "stated": "683 lm/W; 540 x 10^12 Hz",
+  "evidence": "\"fixed numerical value 683 when expressed in the unit lm W^-1\"; \"frequency 540 x 10^12 Hz\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0b507ad9": {
+  "verdict": "right",
+  "stated": "no glider reserve stated; section covers airplanes and rotorcraft only",
+  "evidence": "\"a glider is required to carry no fuel reserve at all... Section 91.151 does not apply to gliders\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "cf265f1a": {
+  "verdict": "right",
+  "stated": "not Class 3 flammable; combustible liquid, flash point above 60 C and below 93 C",
+  "evidence": "\"No. The liquid is not a Class 3 flammable liquid. It is a combustible liquid under 49 CFR 173.120(b)(1)\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "3a8dc12a": {
+  "verdict": "right",
+  "stated": "8 hours driving; 30 consecutive minute interruption",
+  "evidence": "\"8 hours of cumulative driving time... 30-consecutive-minute interruption of driving status\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "cf94e4b7": {
+  "verdict": "right",
+  "stated": "0.1 rem (1 mSv) per year; 0.002 rem (0.02 mSv) in any one hour",
+  "evidence": "\"0.1 rem (1 mSv) total effective dose equivalent per year... 0.002 rem (0.02 mSv) in any one hour\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "c391bb8a": {
+  "verdict": "right",
+  "stated": "0.04 or greater",
+  "evidence": "\"alcohol concentration of 0.04 or greater\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "45c7b6d9": {
+  "verdict": "right",
+  "stated": "less than 55 lb on takeoff; includes everything on board or attached",
+  "evidence": "\"weighing less than 55 pounds on takeoff, including everything that is on board or otherwise attached\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "fa32fd2a": {
+  "verdict": "right",
+  "stated": "4 + 1.6 = 5.6 weeks; cap 28 days",
+  "evidence": "\"4 weeks + 1.6 weeks = 5.6 weeks\"; \"28 days is the statutory cap\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f1d7c243": {
+  "verdict": "right",
+  "stated": "4 + 1.6 = 5.6 weeks; cap 28 days",
+  "evidence": "\"Statutory entitlement: 5.6 weeks per leave year (4 weeks + 1.6 weeks). Cap: 28 days\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "fb7caba6": {
+  "verdict": "right",
+  "stated": "4 + 1.6 = 5.6 weeks; cap 28 days",
+  "evidence": "\"4 weeks (reg 13) + 1.6 weeks (reg 13A) = 5.6 weeks\"; \"Statutory cap... 28 days\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6d78500a": {
+  "verdict": "right",
+  "stated": "4 + 1.6 = 5.6 weeks; cap 28 days",
+  "evidence": "\"The total - 4 + 1.6 = 5.6 weeks\"; \"subject to a maximum of 28 days\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "809aeae6": {
+  "verdict": "right",
+  "stated": "3 SM; 500 below, 1,000 above, 2,000 horizontal",
+  "evidence": "\"Flight visibility: 3 statute miles... 500 feet below 1,000 feet above 2,000 feet horizontal\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "add010c9": {
+  "verdict": "right",
+  "stated": "label 63 octets; name 255 octets",
+  "evidence": "\"labels 63 octets or less; names 255 octets or less\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d84b3abd": {
+  "verdict": "right",
+  "stated": "PEL 50 ug/m3 8-hr TWA; action level 25 ug/m3 8-hr TWA",
+  "evidence": "\"PEL... 50 ug/m3 (0.05 mg/m3), 8-hour TWA\"; \"Action level (AL) 25 ug/m3\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ae1e2a89": {
+  "verdict": "right",
+  "stated": "4.0 ng/L (4.0 ppt); as listed given as ppt/ng/L, converts to 0.000004 mg/L",
+  "evidence": "\"4.0 ng/L = 0.004 ug/L\"; \"0.004 ug/L x (1 mg/L / 1,000 ug/L) = 0.000004 mg/L\"",
+  "outside_wrong": false,
+  "note": "Gives the listed form as ppt/ng/L, with the mg/L form only by conversion; value is equivalent."
+ },
+ "36e0f99e": {
+  "verdict": "right",
+  "stated": "4.0 ng/L; equivalent 4.0e-6 mg/L",
+  "evidence": "\"4.0 ng/L = 4.0 ppt = 0.004 ug/L = 4.0e-6 mg/L\"",
+  "outside_wrong": false,
+  "note": "Says the rule lists it as '4.0 ng/l' and gives mg/L only as an equivalent; equivalent notation."
+ },
+ "7068cf21": {
+  "verdict": "right",
+  "stated": "0.0000040 mg/L as listed; 4.0 ng/L",
+  "evidence": "\"4.0 nanograms per litre = 4.0 parts per trillion (ppt) = 0.0000040 mg/L\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d2ffb6d5": {
+  "verdict": "right",
+  "stated": "0.0000040 mg/L as listed; 4.0 ng/L",
+  "evidence": "\"lists PFOA... as 0.0000040 mg/L\"; \"0.0000040 mg/L x 1,000,000 ng/mg = 4.0 ng/L\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0889d2fa": {
+  "verdict": "right",
+  "stated": "10.0; CRITICAL",
+  "evidence": "\"CVSS v3.1 base score (NVD) 10.0\"; \"Severity... CRITICAL\"",
+  "outside_wrong": false,
+  "note": "Its impact-subscore derivation (7.52 x 1.68 = 12.63 shown as 6.0) is muddled but the answer is unaffected."
+ },
+ "b2ff8b7d": {
+  "verdict": "right",
+  "stated": "10 years after the instrument has been placed on the market",
+  "evidence": "\"keep the technical documentation and the EU declaration of conformity for 10 years after the measuring instrument has been placed on the market\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0c16e169": {
+  "verdict": "right",
+  "stated": "500 p.s.i.g. maximum",
+  "evidence": "\"shall not be in excess of 500 p.s.i.g.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1df16ccb": {
+  "verdict": "right",
+  "stated": "Day 30 min; night 45 min",
+  "evidence": "DAY: 30 minutes; NIGHT: 45 minutes",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b6d233d5": {
+  "verdict": "right",
+  "stated": "Average 48 hours per seven days; written agreement obtained first by employer",
+  "evidence": "an average of 48 hours for each seven days; employer must have \"first obtained\" the worker's written agreement",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6442dbf8": {
+  "verdict": "right",
+  "stated": "0.070 ppm daily max 8-hr avg; 3-yr average of annual 4th-highest <= 0.070 ppm",
+  "evidence": "is 0.070 ppm, daily maximum 8-hour average; 3-year average of the annual fourth-highest ... less than or equal to 0.070 ppm",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1c97771a": {
+  "verdict": "right",
+  "stated": "1 year after expiration; OTC without expiry 3 years after distribution",
+  "evidence": "at least 1 YEAR AFTER THE EXPIRATION DATE; 3 YEARS AFTER DISTRIBUTION OF THE BATCH",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "3ff4ee94": {
+  "verdict": "right",
+  "stated": "12 workweeks in any 12-month period",
+  "evidence": "Amount: 12 workweeks. (b) Period: during any 12-month period",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "2e9bc214": {
+  "verdict": "right",
+  "stated": "15 chars single-factor; 8 chars MFA-only; permit at least 64",
+  "evidence": "minimum 15 characters; minimum eight characters; at least 64 characters",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a8671962": {
+  "verdict": "right",
+  "stated": "Text line 1000 octets incl CRLF; reply line 512 octets incl code and CRLF",
+  "evidence": "Text line ... 1000 octets ... including the trailing <CRLF>; Reply line ... 512 octets",
+  "outside_wrong": false,
+  "note": "Also gives command line 512 as extra context."
+ },
+ "00e4df4d": {
+  "verdict": "right",
+  "stated": "10 hours off duty; 14 consecutive hours; 11 hours driving",
+  "evidence": "10 hours; 14 hours; 11 hours",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "9fa526e3": {
+  "verdict": "right",
+  "stated": "Without unreasonable delay; 60 calendar days; from discovery",
+  "evidence": "'without unreasonable delay' and 'in no case later than 60 calendar days after discovery of a breach.'",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b43ee3c9": {
+  "verdict": "right",
+  "stated": "Midnight of third business day after last of consummation/notice/disclosures; 3 years after consummation (earliest of transfer or sale)",
+  "evidence": "midnight of the third business day following the LAST to occur of three events; 3 years after consummation",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "22feeb7f": {
+  "verdict": "right",
+  "stated": "Midnight of third business day after last of three events; 3 years after consummation or earlier transfer/sale",
+  "evidence": "Until midnight of the third business day following the last to occur of three events; expires 3 years after consummation",
+  "outside_wrong": false,
+  "note": "Jesinoski reporter cite differs but outside the key."
+ },
+ "29af5d70": {
+  "verdict": "right",
+  "stated": "Midnight of third business day after last of three events; 3 years after consummation or earlier transfer/sale",
+  "evidence": "midnight of the third business day following the last to occur of three events; 3 years after consummation",
+  "outside_wrong": true,
+  "note": "Says business day is a day creditor offices are open (Saturday depends on creditor hours), contradicting the rescission-specific definition shown in other answers."
+ },
+ "b9b90454": {
+  "verdict": "right",
+  "stated": "Midnight of third business day after last of three events; 3 years after consummation or earlier transfer/sale",
+  "evidence": "midnight of the third business day following the last of three events; 3 years after consummation",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6909a8b9": {
+  "verdict": "right",
+  "stated": "1.5 kW PEP; 200 W PEP on 10.10-10.15 MHz",
+  "evidence": "1.5 kW PEP; 200 W PEP",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "2bb96b57": {
+  "verdict": "right",
+  "stated": "TEDE 5 rems (0.05 Sv); lens 15 rems (0.15 Sv); skin 50 rems (0.5 Sv)",
+  "evidence": "5 rems 0.05 Sv; 15 rems 0.15 Sv; 50 rems 0.5 Sv",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "9453a12e": {
+  "verdict": "right",
+  "stated": "Not more than 60 C (140 F)",
+  "evidence": "flash point of not more than 60 \u00b0C (140 \u00b0F)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "c3f6df60": {
+  "verdict": "right",
+  "stated": "6 feet (1.8 m) or more; guardrail, safety net, personal fall arrest systems",
+  "evidence": "6 feet (1.8 m) or more above a lower level ... guardrail systems, safety net systems, or personal fall arrest systems",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d676d1df": {
+  "verdict": "right",
+  "stated": "10.0.0.0-10.255.255.255 (10/8); 172.16.0.0-172.31.255.255 (172.16/12); 192.168.0.0-192.168.255.255 (192.168/16)",
+  "evidence": "172.16.0.0 - 172.31.255.255 (172.16/12 prefix)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1741cdf3": {
+  "verdict": "right",
+  "stated": "+8.00 V; 2.00 mA",
+  "evidence": "V_out = +8.00 V relative to ground; I = 2.00 mA",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7dc4c052": {
+  "verdict": "right",
+  "stated": "Set 120 C, wait for coupon probe in 118-122 inclusive then start timer; hold 600 s with any excursion failing, no restart; PASS; switch off heating, cool to <=40 C then remove",
+  "evidence": "Verdict: PASS; Set the oven setpoint to 120 C ... first sample with 118.0 <= T <= 122.0; removal only at probe <= 40 C",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "21c79ad0": {
+  "verdict": "right",
+  "stated": "300 rpm; counterclockwise; 9.00 N m",
+  "evidence": "300 rpm in the counterclockwise direction; 9.00 N\u00b7m",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7af8de9d": {
+  "verdict": "right",
+  "stated": "Arsenic 0.010 mg/L; fluoride 4.0 mg/L; nitrate 10 mg/L as nitrogen",
+  "evidence": "Arsenic: 0.010 mg/L; Fluoride: 4.0 mg/L; Nitrate: 10 mg/L as N",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "44f8ebd1": {
+  "verdict": "right",
+  "stated": "tau 1.00 s; Vc 8.65 V (8.6466); i +0.135 mA",
+  "evidence": "\u03c4 = 1.00 s; Vc = 8.65 V; i = +0.135 mA",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "5a42c6c9": {
+  "verdict": "right",
+  "stated": "Ordered sequence without re-zeroing; limits 0.020 and 0.010 inclusive; errors +0.010, -0.030, +0.005; FAIL due to 2.000 mm point",
+  "evidence": "E_2.000 = 1.970 - 2.000 = -0.030 mm ... FAIL; overall verdict is FAIL",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "44f32cab": {
+  "verdict": "right",
+  "stated": "0.480 mm; 0.80048 m",
+  "evidence": "\u0394L = 0.480 mm; L = 0.80048 m",
+  "outside_wrong": false,
+  "note": "Adds a note that 3 s.f. rounding gives 0.800 m but commits to 0.80048 m."
+ },
+ "ab8136f9": {
+  "verdict": "right",
+  "stated": "No less than 50 pounds; at least annually",
+  "evidence": "No less than 50 pounds; At least annually",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "455fb20a": {
+  "verdict": "right",
+  "stated": "500 N m; 7.20e-7 m^4; 20.83 MPa; 1.157 mm downward",
+  "evidence": "M_max 500 N\u00b7m; I = 7.20 \u00d7 10^-7 m^4; 20.83 MPa; 1.157 mm downward",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a327b0ed": {
+  "verdict": "right",
+  "stated": "330 ohm, 20.0 mA; 270 gives 24.44 mA too high; 390 gives 16.92 mA too low; 0.132 W; need >=0.264 W, select 0.500 W; three sections",
+  "evidence": "Final specified resistor: 330 \u03a9, 0.500 W",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "c18a7ad8": {
+  "verdict": "right",
+  "stated": "Deficient: less than 19.5% O2 by volume; enriched: more than 23.5% by volume",
+  "evidence": "oxygen-deficient = less than 19.5 percent oxygen by volume; oxygen-enriched = more than 23.5 percent oxygen by volume",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "250c4700": {
+  "verdict": "right",
+  "stated": "Correct ordered sequence; Qref 11.76 L/min; error +2.04%; limit |E|<=3.0%; PASS",
+  "evidence": "Q_ref = 11.76 L/min; E = +2.04 %; Verdict PASS",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d45db498": {
+  "verdict": "right",
+  "design": "F2, N_f=34, Vdot 0.03809, Re 2861, Rth 0.04746, Tb 69.17, m 2.521",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass",
+   "R5": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "Selected design: N_f = 34 fins, Fan_ID = F2.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bd0eb352": {
+  "verdict": "right",
+  "design": "S4, G2, m_b 91.86, sigma_vm 229.6, delta_v 38.43, f1 2.553, cost 261.80",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass",
+   "R5": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "Section S4 ... Grade G2 ... exactly one compliant pair, S4 + G2.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "3895471d": {
+  "verdict": "right",
+  "design": "VT-50, FC-300, VX-200 at 55 Hz, Q 21.6, H_sys 31.19, H_pump 32.09, NPSHa 3.06, 3.21 kW",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass",
+   "R5": "pass",
+   "R6": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "Selected pump: VX-200. Selected VFD frequency: 55 Hz.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "32836319": {
+  "verdict": "right",
+  "design": "KV-100-250, D_trim 228, H_sys 43.10, NPSHA 2.364, H_pump 43.47, eta 0.7579, P_shaft 16.18",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass",
+   "R5": "pass",
+   "R6": "pass",
+   "R7": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "KV-100-250 has the lower shaft power, so it is selected.",
+  "outside_wrong": false,
+  "note": "f=0.01807 is the true Colebrook value, within tolerance of the 0.0181 reference."
+ },
+ "22d5b46e": {
+  "verdict": "right",
+  "design": "KGD-90-10, mass 7.0, T_rms 72.45, derated limit 77.49, F_r_eq 2880, L10h 23710, motor peak 15.11",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass",
+   "R5": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "The lightest KGD-Series gearhead that satisfies all ... limits is KGD-90-10.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "396b82cb": {
+  "verdict": "right",
+  "design": "VFC-9100-M DN100, 79.0 kg, Fp 0.964, Cv 60.72, travel 75.91/12.89, dP_ic 1064.96",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "SELECTED VALVE: VFC-9100-M",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7d14baf5": {
+  "verdict": "right",
+  "design": "TVC-250-AL 1.85 kg, v 1.56, dP 35.6, Tout 48.6, Tb 91.3",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "SELECTION: Thermovance TVC-250-AL (Al 6061-T6), 1.85 kg",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "9edd7b3b": {
+  "verdict": "right",
+  "design": "5 x EPC-1200-60, 650 USD, 300 uF, Vlim 1038, 42.0 A, 94.24 C",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "Selected bank: 5 x EPC-1200-60 in parallel = 300 uF, 650 USD.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7be54e1b": {
+  "verdict": "right",
+  "design": "HC-50, I_allow 36.125, Ith_allow 57.8, altitude margin 1500, 76 EUR",
+  "requirements": {
+   "R1_ac3": "pass",
+   "R2_ith": "pass",
+   "R3_voltage": "pass",
+   "R4_altitude": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "HC-50 ... PASS - lowest price",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "18f0703e": {
+  "verdict": "right",
+  "design": "PP-2, Q_del 0.006396, H_del 32.4, P_shaft 5.14, NPSHr_visc 2.99, 1280 EUR",
+  "requirements": {
+   "R1_flow": "pass",
+   "R2_head": "pass",
+   "R3_power": "pass",
+   "R4_npsh": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "Only PP-2 is accepted ... PP-2, EUR 1280.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "95c865f0": {
+  "verdict": "right",
+  "design": "VX-320, R_sa 0.525, 115 mm, 0.88 kg, 36 EUR",
+  "requirements": {
+   "R1_resistance": "pass",
+   "R2_length": "pass",
+   "R3_mass": "pass",
+   "R4_power_band": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "VX-320 - EUR 36",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "965ced66": {
+  "verdict": "right",
+  "design": "WR-260, 33 kg, T 1729.6, n 11.94, F 8648, P 2162",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "The lightest unit satisfying all four output limits is WR-260, mass 33 kg.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a29af400": {
+  "verdict": "wrong",
+  "design": "VL-25, 410 EUR, I_n 33 A compared with RMS 28.64 A",
+  "requirements": {
+   "R1": "fail",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass"
+  },
+  "reference_design_chosen": false,
+  "evidence": "This selection compares I_n directly with the motor's RMS line current ... Selected: VL-25, 410 EUR.",
+  "outside_wrong": false,
+  "note": "Crest current is 40.5 A, above 33 A; the answer notes the peak reading but commits to VL-25."
+ },
+ "1ec0e432": {
+  "verdict": "right",
+  "design": "CP-40, 1720 EUR, H_req 56.33, 10.08 kW, NPSH margin 1.3",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "CP-40 is the lower price (1720 EUR vs 2100 EUR).",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8dc28eec": {
+  "verdict": "right",
+  "design": "KJ-55, q 58.4 W/m, Ts 35.1 C, 39 EUR/m",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "KJ-55 is the only jacket that satisfies all four limits simultaneously",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d30171a5": {
+  "verdict": "right",
+  "design": "A60, peak 1.999, rms 0.836, 235.6 rad/s, 690 EUR",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "the lowest-cost compliant drive is A60.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "53f4b998": {
+  "verdict": "right",
+  "design": "V95, 301 A, 2.98 V, 18.6 EUR/m",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "Selected cable: V95.",
+  "outside_wrong": false,
+  "note": "Results table lists all four cables with V95 bolded; V95 is clearly the committed choice."
+ },
+ "130edefa": {
+  "verdict": "right",
+  "design": "K-55, 55 N.m rated, 1200 rpm, 13.2 A, 1280 EUR",
+  "requirements": {
+   "R_torque": "pass",
+   "R_speed": "pass",
+   "R_current": "pass",
+   "R_mass": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "K-55 ... Accept - cheapest compliant",
+  "outside_wrong": false,
+  "note": "Results Torque shows catalogue 55 rather than the 46.875 demand; the catalogue value is correct and the demand 46.875 is derived in the text."
+ },
+ "3c46352d": {
+  "verdict": "right",
+  "design": "PF-80x10, 145.2 MPa, 9.42 kg, 80 mm",
+  "requirements": {
+   "R_stress": "pass",
+   "R_width": "pass",
+   "R_thickness": "pass",
+   "R_mass": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "Selected bar: PF-80x10, 80 mm x 10 mm, 1.5 m long, mass 9.42 kg",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7af044a0": {
+  "verdict": "right",
+  "design": "H-280, NPSHa 8.30, 30 m, 24 L/s, 4550 EUR",
+  "requirements": {
+   "R_flow": "pass",
+   "R_head": "pass",
+   "R_npsh": "pass",
+   "R_power": "pass",
+   "R_temp": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "Selected pump: H-280.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "44022ec5": {
+  "verdict": "partly",
+  "design": "B-500, reported drop 3.0 %, current 108.3 A, 6100 EUR",
+  "requirements": {
+   "R_drop": "pass",
+   "R_current": "pass",
+   "R_voltage": "pass",
+   "R_frequency": "pass"
+  },
+  "reference_design_chosen": false,
+  "evidence": "Drop (%) = 75x ... B-500 is exactly at 3.0% ... Only B-500 satisfies the voltage-drop limit.",
+  "note": "Omitted sin(phi)=0.6, so reported drops are wrong (true B-500 drop 1.80 %) and B-320 (2.475 %) is the cheaper valid design; B-500 itself meets every requirement."
+ },
+ "3df75d49": {
+  "verdict": "right",
+  "stated": "Ceiling GBP 5,000; period of 12 months ending with the donation date",
+  "evidence": "\"Ceiling: \u00a35,000.\" / \"the period of 12 months ending with the date on which the donation in question is made\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "74fa7dc6": {
+  "verdict": "right",
+  "stated": "Ceiling GBP 5,000; rolling 12-month period",
+  "evidence": "\"Ceiling: \u00a35,000.\" / \"the period of 12 months ending with the date on which the donation is made\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "610892e5": {
+  "verdict": "right",
+  "stated": "One-quarter of nominal value plus whole of any premium",
+  "evidence": "\"One-quarter (25%) of the nominal value of each share, plus the whole (100%) of any premium\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0dcdf296": {
+  "verdict": "right",
+  "stated": "One-quarter of nominal value plus whole premium",
+  "evidence": "\"One-quarter (1/4 = 25%) of the nominal value of the share, plus the whole (100%) of any premium on it.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "cffa5271": {
+  "verdict": "right",
+  "stated": "Dispositive 10,000 words; other motions 2,500 words",
+  "evidence": "\"Memorandum in support of a dispositive motion | 10,000 words\" / \"any other (non-dispositive) motion | 2,500 words\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "660fe180": {
+  "verdict": "right",
+  "stated": "Dispositive 10,000 words; other motions 2,500 words",
+  "evidence": "\"10,000 words for a dispositive-motion memorandum; 2,500 words for a memorandum on any other motion.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "3c0bf4fd": {
+  "verdict": "wrong",
+  "stated": "Does not apply (No) but threshold given as EUR 5,000,000 over 12 months, not EUR 1,000,000",
+  "evidence": "\"EUR 5,000,000 total consideration in the Union, calculated over a period of 12 months. That is the operative figure on 21 November 2026.\"",
+  "outside_wrong": true,
+  "note": "First key item right (No) but the stated threshold contradicts the signed EUR 1,000,000."
+ },
+ "a398da7d": {
+  "verdict": "right",
+  "stated": "Service: 14 days from conclusion; sales: 14 days from physical possession (consumer or third party other than carrier)",
+  "evidence": "\"(a) in the case of service contracts, the day of the conclusion of the contract.\" / \"acquires physical possession of the goods\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b80343e5": {
+  "verdict": "right",
+  "stated": "Service: 14 days from conclusion of contract; sales: 14 days from physical possession",
+  "evidence": "\"The withdrawal period will expire after 14 days from the day of the conclusion of the contract.\" / \"acquire... physical possession of the goods\"",
+  "outside_wrong": false,
+  "note": "Article sub-paragraph letters differ from the other answer's quoted text, but the key items are right."
+ },
+ "891e76c6": {
+  "verdict": "right",
+  "stated": "Presumed innocent until proved guilty according to law",
+  "evidence": "\"Everyone charged with a criminal offence shall be presumed innocent until proved guilty according to law.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "363e79a0": {
+  "verdict": "right",
+  "stated": "Presumed innocent until proved guilty according to law",
+  "evidence": "\"Everyone charged with a criminal offence shall be presumed innocent until proved guilty according to law.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ad665adc": {
+  "verdict": "right",
+  "stated": "24 days (14 + 10)",
+  "evidence": "\"Combined interval: 14 + 10 = 24 days.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1ebd33d1": {
+  "verdict": "right",
+  "stated": "24 days (14 + 10)",
+  "evidence": "\"SHORT ANSWER: 24 days (14 + 10), stated in calendar days.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "31d71dbd": {
+  "verdict": "right",
+  "stated": "Excess 400, 50, 25 EUR million",
+  "evidence": "\"5,400 \u2212 5,000 = 400\" / \"300 \u2212 250 = 50\" / \"275 \u2212 250 = 25\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "05fb1dad": {
+  "verdict": "right",
+  "stated": "Excess 400, 50, 25 EUR million",
+  "evidence": "\"EUR 400 million (worldwide), EUR 50 million (Community-wide, undertaking A) and EUR 25 million (Community-wide, undertaking B)\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "49211e10": {
+  "verdict": "right",
+  "stated": "Total EUR 55; exclusion does not cover the pair",
+  "evidence": "\"Threshold total: EUR 55.\" / \"EUR 55 > EUR 50. The condition is not met.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f9bc2dca": {
+  "verdict": "right",
+  "stated": "Total EUR 55; exclusion does not cover the pair, exceeds by EUR 5",
+  "evidence": "\"Total for the threshold: EUR 55\" / \"EUR 55 exceeds EUR 50 (exceeds by EUR 5)\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "029321dd": {
+  "verdict": "right",
+  "stated": "Abrogated (Apr. 29, 2015); effective Dec. 1, 2015",
+  "evidence": "\"APPENDIX OF FORMS [Abrogated (Apr. 29, 2015, eff. Dec. 1, 2015).]\" / \"EFFECTIVE DATE \u2014 DECEMBER 1, 2015.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bcabc969": {
+  "verdict": "right",
+  "stated": "Abrogated by April 29, 2015 order; effective Dec. 1, 2015",
+  "evidence": "\"the Appendix of Forms has been ABROGATED.\" / \"Effective date of that change: December 1, 2015\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f0147e60": {
+  "verdict": "right",
+  "stated": "Nine years; may not be re-elected",
+  "evidence": "\"The judges shall be elected for a period of nine years. They may not be re-elected.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "471d29fe": {
+  "verdict": "right",
+  "stated": "Nine years; re-election not permitted",
+  "evidence": "\"(a) Term: nine years. (b) Re-election: not permitted.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bb00a4ed": {
+  "verdict": "right",
+  "stated": "No; Council Decision of 10 December 2010 (2010/787/EU)",
+  "evidence": "\"(1) NO.\" / \"Council Decision No 2010/787/EU of 10 December 2010 on State aid to facilitate the closure of uncompetitive coal mines\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "94a0c3b1": {
+  "verdict": "right",
+  "stated": "No; Council Decision 2010/787/EU of 10 December 2010",
+  "evidence": "\"1. No.\" / \"Council Decision 2010/787/EU of 10 December 2010 on State aid to facilitate the closure of uncompetitive coal mines\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "3eff19dc": {
+  "verdict": "right",
+  "stated": "No derogation from Article 3; Article 2 exception for deaths resulting from lawful acts of war",
+  "evidence": "\"1. No.\" / \"deaths resulting from lawful acts of war\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "da5acd26": {
+  "verdict": "right",
+  "stated": "No derogation from Article 3; exception is deaths resulting from lawful acts of war",
+  "evidence": "\"No. It may not.\" / \"deaths resulting from lawful acts of war\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0d193b8d": {
+  "verdict": "right",
+  "stated": "UNCITRAL Model Law on International Commercial Arbitration",
+  "evidence": "\"Retrieve the UNCITRAL Model Law on International Commercial Arbitration (1985), with amendments as adopted in 2006.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "32196eaf": {
+  "verdict": "right",
+  "stated": "UNCITRAL Model Law on International Commercial Arbitration (1985, as amended 2006)",
+  "evidence": "\"Retrieve the UNCITRAL Model Law on Internarional Commercial Arbitration (1985, as amended in 2006) as the model text for all four topics.\"",
+  "outside_wrong": false,
+  "note": "Typo 'Internarional' only."
+ },
+ "6ed006d4": {
+  "verdict": "right",
+  "stated": "Directive: sealed, hand-carried, neither industrial nor automotive; Regulation: 5 kg or less, not designed for industrial use, not EV/LMT/SLI",
+  "evidence": "\"any battery or accumulator that is sealed, can be hand-carried and is neither an industrial battery or accumulator nor an automotive battery or accumulator\" / \"sealed, weighs 5 kg or less, is not designed specifically for industrial use and is neither an electric vehicle battery, an LMT battery, nor an SLI battery\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "43109276": {
+  "verdict": "right",
+  "stated": "Yes, rules also apply to further procedure in pending actions; where not feasible or would work injustice, former evidentiary principles apply",
+  "evidence": "\"also apply to further procedure in actions, cases, and proceedings then pending\"; \"in which event former evidentiary principles apply\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ee147445": {
+  "verdict": "right",
+  "stated": "Yes, presumptively; former evidentiary principles apply to the extent of infeasibility or injustice",
+  "evidence": "\"VERDICT: YES_SUBJECT_TO_EXCEPTION\"; \"former evidentiary principles apply\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "4200313c": {
+  "verdict": "right",
+  "stated": "Yes, rules govern further procedure; former evidentiary principles apply to the extent of infeasibility or injustice",
+  "evidence": "\"Yes - presumptively and as to further procedure only\"; \"the former evidentiary principles apply\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "079faa17": {
+  "verdict": "right",
+  "stated": "Yes, rules govern further procedure in pending actions; former evidentiary principles apply to the excepted extent",
+  "evidence": "\"YES - the Rules govern further procedure in an action pending on the effective date\"; \"in which event former evidentiary principles apply\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "98d8b043": {
+  "verdict": "right",
+  "stated": "Yes; former evidentiary principles apply only to the extent of infeasibility or injustice",
+  "evidence": "\"Yes. The rules apply to further procedure in actions, cases, and proceedings then pending\"; \"Former evidentiary principles apply\"",
+  "outside_wrong": false,
+  "note": "Cites the enabling-act proviso as 28 U.S.C. 2073(a)(2), which other answers cite as 2074; not a key item and not shown wrong by the packet."
+ },
+ "3c1ea3f0": {
+  "verdict": "right",
+  "stated": "CET1 4.5%, tier 1 6%, total 8%, leverage 4%",
+  "evidence": "\"A common equity tier 1 capital ratio of 4.5 percent\"; \"A leverage ratio of 4 percent\"",
+  "outside_wrong": false,
+  "note": "Adds 3% SLR for advanced approaches/Category III, correctly conditional."
+ },
+ "a655bbfc": {
+  "verdict": "right",
+  "stated": "CET1 4.5%, tier 1 6%, total 8%, leverage 4%",
+  "evidence": "\"The four ratios asked for are therefore 4.5 / 6 / 8 / 4 percent.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "65187bfa": {
+  "verdict": "right",
+  "stated": "6 a.m. to 10 p.m. Eastern (EST or EDT whichever in effect); excludes Saturdays, Sundays, Federal holidays",
+  "evidence": "\"6 a.m. to 10 p.m., Eastern Standard Time or Eastern Daylight Saving Time, whichever is currently in effect\"; \"Saturdays, Sundays, and Federal holidays\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "993ba9d0": {
+  "verdict": "right",
+  "stated": "6 a.m. to 10 p.m. Eastern (EST or EDT whichever in effect); excludes Saturdays, Sundays, Federal holidays",
+  "evidence": "\"permits submission from 6:00 a.m. to 10:00 p.m., Eastern Standard Time or Eastern Daylight Saving Time\"; \"Saturdays, Sundays, and Federal holidays\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "321f0517": {
+  "verdict": "right",
+  "stated": "As quickly as possible, and no later than the close of the following working day",
+  "evidence": "\"AS QUICKLY AS POSSIBLE, AND NO LATER THAN THE CLOSE OF THE FOLLOWING WORKING DAY\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0e7862f5": {
+  "verdict": "right",
+  "stated": "As quickly as possible, no later than the close of the following working day",
+  "evidence": "\"as quickly as possible, and no later than the close of the following working day\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "43f04e1d": {
+  "verdict": "right",
+  "stated": "3.8%, applied to the lesser of NII or MAGI over the filing-status threshold",
+  "evidence": "\"RATE: 3.8 percent.\"; \"the LESSER of (a) your net investment income, or (b) the amount of your MAGI that is over a threshold\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "deae7b3f": {
+  "verdict": "right",
+  "stated": "3.8%, applied to the lesser of NII or MAGI excess over the filing-status threshold",
+  "evidence": "\"RATE - 3.8%\"; \"the LESSER of two candidate amounts\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "36bb4347": {
+  "verdict": "right",
+  "stated": "99,5% over one year/following 12 months; ruin no more often than once in every 200 cases",
+  "evidence": "\"probability of at least 99,5 %, to meet their obligations ... over the following 12 months\"; \"ruin occurs no more often than once in every 200 cases\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f84a406d": {
+  "verdict": "wrong",
+  "stated": "99,5% confidence over one year; ruin frequency given as once in 200 years, said to be only a derived gloss not stated in the Directive",
+  "evidence": "\"Once in 200 years - a mean return period of 200 years\"; \"The Directive's original text does not contain the phrase 'once in 200 years'... \"",
+  "outside_wrong": true,
+  "note": "Gives 200 years rather than the stated once in every 200 cases and denies the Directive states a ruin frequency (recitals not checked); the key states it explicitly."
+ },
+ "26997241": {
+  "verdict": "right",
+  "stated": "Level 2A $68M, level 2B $15M, sum $83M",
+  "evidence": "\"Level 2A liquid asset amount: $68,000,000\"; \"Sum: $83,000,000\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b3f9cd1a": {
+  "verdict": "right",
+  "stated": "Level 2A $68M, level 2B $15M, sum $83M",
+  "evidence": "\"Level 2A liquid asset amount: $68 million (85% x $80 million)\"; \"Sum: $83 million\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f6f03d64": {
+  "verdict": "right",
+  "stated": "Level 2A $68M, level 2B $15M, sum $83M",
+  "evidence": "\"Level 2A liquid asset amount = $68,000,000\"; \"Sum ... = $83,000,000\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a17a5b5f": {
+  "verdict": "right",
+  "stated": "Level 2A $68M, level 2B $15M, sum $83M",
+  "evidence": "\"RESULT: Level 2A liquid asset amount = $68,000,000.\"; \"RESULT: Sum = $83,000,000.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "645433bf": {
+  "verdict": "right",
+  "stated": "Level 2A $68M, level 2B $15M, sum $83M",
+  "evidence": "\"Level 2B liquid asset amount = 0.50 x $30,000,000 = $15,000,000\"; \"Sum = $83,000,000\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f6e3ef86": {
+  "verdict": "right",
+  "stated": "Cap $10B; excess $1B; assessment triggered (5% = $2B, exposure $11B exceeds)",
+  "evidence": "\"Answer to ask 2: $10,000,000,000\"; \"Answer to ask 3: $1,000,000,000\"; \"Answer to ask 4: Yes\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "5b70b358": {
+  "verdict": "right",
+  "stated": "Cap $10B; excess $1B; assessment triggered ($2B threshold exceeded)",
+  "evidence": "\"25% exposure cap = $10.0 billion\"; \"Exposure exceeds that cap by $1.0 billion\"; \"YES - the separate 5% ... assessment IS triggered\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f9d34c8c": {
+  "verdict": "right",
+  "stated": "No, cannot exclude; threshold $25,000; only the $26,000 item quantified",
+  "evidence": "\"No. The registrant may not exclude perquisites altogether\"; \"greater of $25,000 or $12,000 = $25,000\"; \"The $26,000 item must be quantified\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b1b42b74": {
+  "verdict": "right",
+  "stated": "No, cannot exclude; threshold $25,000; only the $26,000 item quantified",
+  "evidence": "\"Operative threshold for this NEO = $25,000\"; \"Only the item valued at $26,000.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e3a3288e": {
+  "verdict": "right",
+  "stated": "2014: CET1 4.0%, tier 1 5.5%; Part 3 text: CET1 4.5%, tier 1 6%",
+  "evidence": "\"4.0% | 5.5%\"; \"4.5% | 6.0%\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "09ad161c": {
+  "verdict": "right",
+  "stated": "2014: CET1 4.0%, tier 1 5.5%; Part 3 text: CET1 4.5%, tier 1 6.0%",
+  "evidence": "\"Common equity tier 1 | 4.0%\"; \"Common equity tier 1 | 4.5%\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d2ffd6e2": {
+  "verdict": "right",
+  "stated": "2014: CET1 4.0%, tier 1 5.5%; Part 3 text: CET1 4.5%, tier 1 6.0%",
+  "evidence": "\"Common equity tier 1 (CET1) minimum: 4.0 percent\"; \"Common equity tier 1 minimum in Part 3, 3.10(a): 4.5 percent\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "50f316f1": {
+  "verdict": "right",
+  "stated": "2014: CET1 4%, tier 1 5.5%; Part 3 text: CET1 4.5%, tier 1 6%",
+  "evidence": "\"Common equity tier 1 (CET1) capital ratio: 4 percent\"; \"Common equity tier 1 capital ratio: 4.5 percent\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b132bf8f": {
+  "verdict": "right",
+  "stated": "2014: CET1 4.0%, tier 1 5.5%; Part 3 text: CET1 4.5%, tier 1 6.0%",
+  "evidence": "\"CET1 ... 4.0%\"; \"Tier 1 ... 6.0%\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "957054d8": {
+  "verdict": "right",
+  "stated": "10 December 1948",
+  "evidence": "\"proclaimed by the United Nations General Assembly in Paris on 10 December 1948\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a076a975": {
+  "verdict": "right",
+  "stated": "25 feet (7.62 m)",
+  "evidence": "\"within 25 feet (7.62 m) of battery handling areas\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1b4c893c": {
+  "verdict": "wrong",
+  "stated": "General repeal 1 Sep 2021 (right); early repeal of Article 3(2) and Article 4 (whole article, not paragraph 2)",
+  "evidence": "\"Article 3(2) and Article 4 of Delegated Regulation (EU) No 874/2012\"",
+  "outside_wrong": false,
+  "note": "Second paragraph is Article 4 as a whole instead of Article 4(2); quotation admitted to be a reconstruction and it hedges on Article 3(3)."
+ },
+ "643b4d09": {
+  "verdict": "right",
+  "stated": "Current in amperes a conductor can carry continuously under conditions of use without exceeding its temperature rating",
+  "evidence": "\"The current in amperes a conductor can carry continuously under the conditions of use without exceeding its temperature rating.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "089a25e1": {
+  "verdict": "right",
+  "stated": "2.0 nW; -56.99 dBm",
+  "evidence": "\"2.0 nanowatts\"; \"-56.99 dBm\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "9e2f5569": {
+  "verdict": "right",
+  "stated": "No-trip zone ends at 4 seconds",
+  "evidence": "\"The voltage no-trip zone ends at 4 seconds for applicability to PRC-024.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8bdc809f": {
+  "verdict": "right",
+  "stated": "Removed the Dec. 23, 2024 amendments; reverted to Dec. 22, 2024 version",
+  "evidence": "\"removed the amendments to several sections in part 431 made effective on Dec. 23, 2024\"; \"reverted to the Dec. 22, 2024 version\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "944422d1": {
+  "verdict": "right",
+  "stated": "Both tables: on or after Jan 1, 2016 but before April 23, 2029",
+  "evidence": "\"manufactured on or after January 1, 2016, but before April 23, 2029\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "61911751": {
+  "verdict": "right",
+  "stated": "Max prospective short circuit current at supply terminals; max earth loop impedance of earth fault path outside installation (LV); type and rating of nearest protective devices; type of earthing system",
+  "evidence": "\"the maximum prospective short circuit current at the supply terminals\"; \"the type of earthing system applicable to the connection\"",
+  "outside_wrong": false,
+  "note": "Also mentions 28(e) reg 27(1) information, which is outside the four asked."
+ },
+ "201f96b0": {
+  "verdict": "right",
+  "stated": "250 psig",
+  "evidence": "\"rated working pressure of at least 250 p.s.i.g.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f677302f": {
+  "verdict": "right",
+  "stated": "Applies and Directive repealed 20 January 2027; Directive still in force on 17 Nov 2026",
+  "evidence": "\"applies from 20 January 2027\"; \"on 17 November 2026 ... the Directive is still in force\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e40083dd": {
+  "verdict": "right",
+  "stated": "56 hours",
+  "evidence": "\"The most the driver may drive in the following week ... is 56 hours.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "366b6179": {
+  "verdict": "right",
+  "stated": "(a) 200 kOhm; (b) 40 kOhm",
+  "evidence": "\"= 200 k\u03a9\"; \"= 40 k\u03a9\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "db166195": {
+  "verdict": "wrong",
+  "stated": "TI 8; limit 10; within limit yes",
+  "evidence": "\"Assigned TI = 8; applicable non-exclusive-use TI limit = 10\"",
+  "outside_wrong": true,
+  "note": "Ignores Table 7 factor and asserts no area-dependent TI exists in the current edition, contradicting the key; wrong TI and wrong limit."
+ },
+ "5f215677": {
+  "verdict": "right",
+  "stated": "TI 16; limit 50; within limit",
+  "evidence": "\"assigned TI = 16; applicable TI limit = 50; within limit = yes\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "4cf5d795": {
+  "verdict": "right",
+  "stated": "TI 16; limit 50; within limit",
+  "evidence": "\"TI = 16; it is within the limit of 50\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f8db10ba": {
+  "verdict": "right",
+  "stated": "TI 16.0; limit 50; within limit",
+  "evidence": "\"ASSIGNED TI .................. 16.0\"; \"Applicable limit ............. 50\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ab100329": {
+  "verdict": "right",
+  "stated": "No employee threshold; 250 is Article 30(5)",
+  "evidence": "\"There is no employee-count threshold in the GDPR.\"; \"The GDPR's actual 250-employee rule \u2014 Article 30(5)\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0b781ad0": {
+  "verdict": "right",
+  "stated": "No threshold; 250 is Article 30(5) records exemption",
+  "evidence": "\"The GDPR does not make DPO appointment mandatory at any number of employees.\"; \"250 is the Art. 30(5) record-keeping exemption\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "4b8befac": {
+  "verdict": "right",
+  "stated": "None; 250 employees is Article 30(5)",
+  "evidence": "\"None. The GDPR ... does not make DPO appointment mandatory at any number of employees.\"; \"250 employees \u2014 this is Article 30(5)\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "91ade401": {
+  "verdict": "right",
+  "stated": "No threshold; 250 is Article 30(5)",
+  "evidence": "\"There is no employee-count threshold.\"; \"250 employees: this is Article 30(5) GDPR\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "cbb9ed16": {
+  "verdict": "wrong",
+  "stated": "Applicability: YES (d) and (e) apply; date 1 August 2025 (right)",
+  "evidence": "\"Ask 1 \u2014 verdict: YES\"; \"it contains no exclusion for products covered by Regulation (EU) 2017/745\"",
+  "outside_wrong": false,
+  "note": "Misses the Article 2(1) disapplication for MDR devices; date is right."
+ },
+ "3ecb1a9d": {
+  "verdict": "right",
+  "stated": "SC 2.5.8; 24x24 px; 24 px circle; AAA 2.5.5 44x44",
+  "evidence": "\"SC 2.5.8 Target Size (Minimum)\"; \"at least 44 by 44 CSS pixels\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "02940916": {
+  "verdict": "right",
+  "stated": "No; obsolete and removed; AT no longer needs to parse HTML",
+  "evidence": "\"Assistive technology no longer has any need to directly parse HTML.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7296a7d5": {
+  "verdict": "right",
+  "stated": "No; removed; AT no longer needs to directly parse HTML",
+  "evidence": "\"Assistive technology no longer has any need to directly parse HTML.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f44497b7": {
+  "verdict": "right",
+  "stated": "No (obsolete and removed); reason given via errata about HTML standard handling and AT no longer parsing",
+  "evidence": "\"A page does not need to pass it to conform at Level AA.\"; \"accessibility errors due to assistive technology directly parsing HTML no longer exist\"",
+  "outside_wrong": false,
+  "note": "Main quoted reason is the 2.0 errata wording rather than the 2.2 note; the AT-parsing rationale appears only in a corroborating quote."
+ },
+ "f5726291": {
+  "verdict": "right",
+  "stated": "No; removed in 2.2; AT now relies on browser instead of parsing",
+  "evidence": "\"The verdict ... is No\"; \"assistive technology used to do their own parsing of markup, but now rely on the browser\"",
+  "outside_wrong": false,
+  "note": "Splits into two branches (2.1 and 2.2) but commits to No."
+ },
+ "849b4567": {
+  "verdict": "right",
+  "stated": "14 rounds; 128 bits; 15 round keys",
+  "evidence": "\"Nr 14\"; \"128 bits\"; \"15 round keys\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "27cc3bb0": {
+  "verdict": "right",
+  "stated": "96 bits; 2^32; 2^36 - 32 bytes = 68,719,476,704",
+  "evidence": "\"IV length: 96 bits\"; \"2^32\"; \"68,719,476,704 bytes\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "54853873": {
+  "verdict": "right",
+  "stated": "256 bits",
+  "evidence": "256 bits of entropy in the 32-octet sequence",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a0c74f78": {
+  "verdict": "right",
+  "stated": "default plain; S256-capable client MUST use S256",
+  "evidence": "Value: plain / the client MUST use S256",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ec1d6644": {
+  "verdict": "right",
+  "stated": "16384 bytes",
+  "evidence": "Final answer: 16384 bytes (decimal)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f7ddcfea": {
+  "verdict": "right",
+  "stated": "certificateHold (6); January 1, 1970",
+  "evidence": "MUST specify the revocation reason certificateHold (6)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6e4c0802": {
+  "verdict": "right",
+  "stated": "MUST use trusted DNSSEC-validating resolver",
+  "evidence": "MUST perform CAA validation using a trusted DNSSEC-validating resolver",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "af16dfcc": {
+  "verdict": "right",
+  "stated": "auto 40 mg/m3; manual 60 mg/m3",
+  "evidence": "40 mg/m3 for automatically stoked ... 60 mg/m3 for manually stoked",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "3baf81af": {
+  "verdict": "right",
+  "stated": "HTTP 1.0 or higher; https; text/plain charset utf-8",
+  "evidence": "MUST be accessed via HTTP 1.0 or a higher version ... https ... text/plain with utf-8",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b9d23956": {
+  "verdict": "right",
+  "stated": "none; directive MUST be ignored in meta",
+  "evidence": "imposes zero framing restrictions ... MUST be ignored",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "2ac73e6b": {
+  "verdict": "right",
+  "stated": "2048 bytes",
+  "evidence": "2048 bytes (2 KiB) of input per call to G",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d5e1f18e": {
+  "verdict": "right",
+  "stated": "UTF-8",
+  "evidence": "UTF-8 (as defined by RFC 3629)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ae7f75fa": {
+  "verdict": "right",
+  "stated": "[-(2**53)+1, (2**53)-1]",
+  "evidence": "[-(2**53)+1, (2**53)-1]",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "37f2fbcb": {
+  "verdict": "right",
+  "stated": "UTF-8 and UTF-16",
+  "evidence": "UTF-8 and UTF-16.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bc9b907a": {
+  "verdict": "right",
+  "stated": "48 bytes",
+  "evidence": "REPORTED WOFF2 VALUE: 48 bytes",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "59374fe0": {
+  "verdict": "right",
+  "stated": "0x774F4632 'wOF2'; reject as invalid",
+  "evidence": "user agents MUST reject the file as invalid",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "956bac3a": {
+  "verdict": "right",
+  "stated": "2^53 - 1 elements",
+  "evidence": "2^53 - 1 elements",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e0bcb3e3": {
+  "verdict": "right",
+  "stated": "65% of EEE placed on market (3-yr avg) or 85% of WEEE generated",
+  "evidence": "65 % ... or alternatively 85 % of WEEE generated",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b3404896": {
+  "verdict": "right",
+  "stated": "clear Go 1.21; min/max Go 1.21",
+  "evidence": "clear ... Go 1.21; min and max ... Go 1.21",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bf7e5a51": {
+  "verdict": "right",
+  "stated": "smallest page 512; max reserved 32",
+  "evidence": "minimum page size = 512 bytes; maximum reserved_bytes = 32",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6c209b9a": {
+  "verdict": "right",
+  "stated": "none; 49152-65535 not assigned",
+  "evidence": "none \u2014 there is no IANA-assigned service name to report",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "17d19371": {
+  "verdict": "right",
+  "stated": "none; no subtype can be registered",
+  "evidence": "none, and none can be",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8585487d": {
+  "verdict": "right",
+  "stated": "ub-emailaddress-length; 128 -> 255",
+  "evidence": "ub-emailaddress-length was changed from 128 to 255",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f56189b5": {
+  "verdict": "right",
+  "stated": "number of solutions returned",
+  "evidence": "upper bound on the number of solutions returned",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "18970cb2": {
+  "verdict": "right",
+  "stated": "4 primitive, 2 structured",
+  "evidence": "four primitive types ... two structured types",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0c4efd83": {
+  "verdict": "right",
+  "stated": "4 octets",
+  "evidence": "Maximum ... 4 octets",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8609c9ea": {
+  "verdict": "right",
+  "stated": "76 characters",
+  "evidence": "76 characters",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6e3758ac": {
+  "verdict": "right",
+  "stated": "1,0 W; 1000 mW",
+  "evidence": "1,0 W (0,50 W + 0,50 W) ... 1000 mW",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1365aa71": {
+  "verdict": "right",
+  "stated": "00 through 23",
+  "evidence": "only allows values between 00 and 23",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "fb61f084": {
+  "verdict": "right",
+  "stated": "add, remove, replace, move, copy, test",
+  "evidence": "one of add, remove, replace, move, copy, or test",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f64c0b86": {
+  "verdict": "right",
+  "stated": "12 characters; MUST include pad characters unless spec says otherwise",
+  "evidence": "9 octets produce 12 encoded base64 characters ... MUST include appropriate '=' pad characters",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e1f7d933": {
+  "verdict": "partly",
+  "stated": "max 255; UTIME through 2049; old value not determined, 128 only as unverified candidate",
+  "evidence": "Finding 2: OLD RFC 3280 VALUE: NOT DETERMINED (BLOCKED) ... 'publish prior value: unverified'",
+  "outside_wrong": false,
+  "note": "Old value 128 mentioned only as an unverified candidate, not committed."
+ },
+ "f71eefc6": {
+  "verdict": "right",
+  "stated": "2022: 10 973 731.568 157 m^-1; u 0.000 012; 2018: 10 973 731.568 160(21)",
+  "evidence": "R_infinity (2022 CODATA) = 10 973 731.568 157 m^-1 ; u = 0.000 012 m^-1 ; 2018 = 10 973 731.568 160(21)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7c264cf7": {
+  "verdict": "right",
+  "stated": "No ohms-at-frequency limit in the standard; Class R is 2.5 milliohm dc per joint with low inductance",
+  "evidence": "There is no maximum RF impedance in ohms at a stated frequency for a Class R bond in NASA-STD-4003A.",
+  "outside_wrong": false,
+  "note": "Says exact EBR paragraph not verified; values match key."
+ },
+ "970a07df": {
+  "verdict": "right",
+  "stated": "Current 1983-2001; replacement 2002-2020; proposed release 2029",
+  "evidence": "NOAA currently utilizes the 1983-2001 National Tidal Datum Epoch; 2002-2020; proposed release date ... is in 2029",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "82991fd8": {
+  "verdict": "right",
+  "stated": "11th Ed buffer 2 s; default 3.5 ft/s; 2009 buffer 3 s",
+  "evidence": "2 seconds (minimum, 'at least'); 3.5 feet per second; 3 seconds (minimum, 'at least')",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "80863081": {
+  "verdict": "right",
+  "stated": "11th Ed buffer 2 s; default 3.5 ft/s; 2009 buffer 3 s",
+  "evidence": "minimum buffer interval = 2 seconds; default walking speed = 3.5 feet per second; 2009 minimum buffer interval = 3 seconds",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a3c4810f": {
+  "verdict": "right",
+  "stated": "11th Ed buffer 2 s; default 3.5 ft/s; 2009 buffer 3 s",
+  "evidence": "Default walking speed ... 3.5 feet per second; 2 seconds; 2009 ... 3 seconds",
+  "outside_wrong": false,
+  "note": "Cites paragraph 10 rather than 7 for the speed but the value is right."
+ },
+ "9ad8b4fc": {
+  "verdict": "right",
+  "stated": "11th Ed buffer 2 s; default 3.5 ft/s; 2009 buffer 3 s",
+  "evidence": "2 seconds (minimum; a floor, not a target); 3.5 ft/s; 3 seconds",
+  "outside_wrong": false,
+  "note": "Cites 2009 para 3 and admits the 2009 quote is from memory; values match."
+ },
+ "4a33fdac": {
+  "verdict": "right",
+  "stated": "Aboveground 1,320 gal; only containers of 55 gal or greater counted; buried 42,000 gal; both must hold",
+  "evidence": "1,320 U.S. gallons ... 42,000 U.S. gallons ... Both must hold; only containers with a capacity of 55 U.S. gallons or greater are counted",
+  "outside_wrong": true,
+  "note": "Cites 112.1(f)(2) where the key gives 112.1(d)(2); values are correct."
+ },
+ "2881dc38": {
+  "verdict": "right",
+  "stated": "20 mSv/yr averaged over 5 years (100 mSv in 5 yr), 50 mSv in any single year; previous 150 mSv/yr",
+  "evidence": "20 mSv per year averaged over five consecutive years (100 mSv in 5 years) and of 50 mSv in any single year; Previously ... 150 mSv per year",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "03a76e8f": {
+  "verdict": "right",
+  "stated": "Factor 3.516 853 E+03 W; 10 tons = 35.17 kW (35 168.53 W)",
+  "evidence": "10 tons of refrigeration = 35.17 kW (four significant figures). Unrounded: 35.168 53 kW.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ce206f39": {
+  "verdict": "wrong",
+  "stated": "Says both values blocked/not retrieved; does not state that the datasheet gives none; offers about 60 degC/W assumption and derived 1.10 W ceiling",
+  "evidence": "both requested values are BLOCKED pending a direct read of the PDF",
+  "outside_wrong": false,
+  "note": "Only says absence is 'the expected outcome'; does not commit."
+ },
+ "9e61104a": {
+  "verdict": "wrong",
+  "stated": "Says both asks not answered, blocked; interim theta-JA band 40-70 degC/W and Tj 125 degC as placeholders",
+  "evidence": "Ask 2 (theta-JA, 28-pin PDIP) - NOT ANSWERED. Blocked.",
+  "outside_wrong": false,
+  "note": "Does not commit that the datasheet states none."
+ },
+ "c6a21db5": {
+  "verdict": "right",
+  "stated": "PD 130 W at TC 25 C; derating 0.87 W/degC; 64.75 W at 100 C",
+  "evidence": "PD(100) = 130 W - 0.87 W/degC x 75 degC = 64.75 W",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1770941f": {
+  "verdict": "right",
+  "stated": "AC 50-1000 V; DC 75-1500 V; 24 V AC not in scope",
+  "evidence": "between 50 and 1000 V for alternating current and between 75 and 1500 V for direct current; No - not on the basis of a 24 V AC rating alone",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1c4a7bca": {
+  "verdict": "right",
+  "stated": "Above 0.1% w/w; within 45 days; free of charge",
+  "evidence": "above 0,1 % weight by weight (w/w); within 45 days of receipt of the request; free of charge",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7d8c7dd0": {
+  "verdict": "right",
+  "stated": "Trust service provider 24 h; other entities 72 h",
+  "evidence": "24 hours for trust service providers, 72 hours for everyone else, for the same stage (the incident notification)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ee6ae85b": {
+  "verdict": "wrong",
+  "stated": "Yes, applies now; early warning 24 h; vulnerability notification 72 h; final report 14 days from submission of the vulnerability notification",
+  "evidence": "Final report | 14 days | from submission of the vulnerability notification (i.e. from the 72-hour notification, not from awareness)",
+  "outside_wrong": false,
+  "note": "Key: final report within 14 days after a corrective or mitigating measure is available; the answer gives a wrong trigger and a 4 Dec 2026 date."
+ },
+ "5e0c5471": {
+  "verdict": "right",
+  "stated": "10 substances; cadmium at 0,01 %; 22 July 2021 for medical devices",
+  "evidence": "Number of restricted substances: 10; cadmum (Cd) ... 0,01 %; from 22 July 2021",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "19c7780c": {
+  "verdict": "right",
+  "stated": "12,500 lb; 7 occupants authorized; 6 passengers",
+  "evidence": "12,500 lb | 7 (including any required flightcrew members) | 6",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "db9d49a5": {
+  "verdict": "right",
+  "stated": "$184,500",
+  "evidence": "For 2026, the maximum amount of earnings subject to the Social Security (OASDI) payroll tax is $184,500.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "730b4f70": {
+  "verdict": "right",
+  "stated": "150 air miles (172.6 statute); released within 14 consecutive hours",
+  "evidence": "150 air miles (172.6 statute miles); 14 consecutive hours",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bc99f34f": {
+  "verdict": "right",
+  "stated": "$24,500",
+  "evidence": "the limit on an employee's elective deferrals ... is $24,500.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bcd41c89": {
+  "verdict": "right",
+  "stated": "Annual 9.0 ug/m3; 24-hour 35 ug/m3",
+  "evidence": "annual primary PM2.5 = 9.0 ug/m3; 24-hour primary PM2.5 = 35 ug/m3",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "30331f21": {
+  "verdict": "right",
+  "stated": "10 hours driving; 8 consecutive hours off duty; 15 hours on duty",
+  "evidence": "10 hours of driving time following 8 consecutive hours off duty; 15 hours on duty",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "da5eeef8": {
+  "verdict": "right",
+  "stated": "4 feet (1.2 m) or more above a lower level",
+  "evidence": "when that surface is 4 feet (1.2 m) or more above a lower level",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "85a90cac": {
+  "verdict": "right",
+  "stated": "At least 9 consecutive hours; reducible to 8 if next rest is at least 10 consecutive hours",
+  "evidence": "At least 9 consecutive hours; 8 consecutive hours - conditional ... subsequent rest period of at least 10 consecutive hours",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "3151230f": {
+  "verdict": "right",
+  "stated": "At least 20 minutes at normal cruising speed",
+  "evidence": "at least 20 minutes of fuel at normal cruising speed",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ea2354af": {
+  "verdict": "right",
+  "stated": "RFC 9113; obsoletes RFC 7540 and RFC 8740",
+  "evidence": "Obsoletes: 7540, 8740",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6b637199": {
+  "verdict": "right",
+  "stated": "RFC 8996; RFC 2246 and RFC 4346 moved to Historic",
+  "evidence": "those documents have been moved to Historic status",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "90bd950e": {
+  "verdict": "right",
+  "stated": "NLW 21+ 12.71 pounds; 18-20 rate 10.85 pounds",
+  "evidence": "National Living Wage - 21 and over: 12.71 per hour; 18-20: 10.85 per hour",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "5a503066": {
+  "verdict": "right",
+  "stated": "No number, period or duration stated; all organization-defined; fixes that a limit and automatic action be enforced",
+  "evidence": "AC-7 does not require any specific number of consecutive invalid logon attempts, any specific counting time period, or any specific lockout duration",
+  "outside_wrong": false,
+  "note": "Worked example 5/15/30 is labelled an organizational choice, not a NIST requirement."
+ },
+ "cfc0a76d": {
+  "verdict": "right",
+  "stated": "All three are organization-defined; control mandates a limit plus automatic action",
+  "evidence": "AC-7 PRESCRIBES NO NUMERIC VALUES",
+  "outside_wrong": false,
+  "note": "Illustrative starting values labelled as not NIST."
+ },
+ "0a14970a": {
+  "verdict": "right",
+  "stated": "None stated by Rev. 5; organization-defined; requirement is to enforce a limit and an action",
+  "evidence": "SP 800-53 Rev. 5 does not require any specific number of consecutive invalid logon attempts, any specific time period, or any specific lockout duration",
+  "outside_wrong": false,
+  "note": "Tarleton example explicitly not NIST."
+ },
+ "eb9d311e": {
+  "verdict": "right",
+  "stated": "None stated; all organization-defined parameters; control fixes enforcement and automatic action",
+  "evidence": "does NOT require a specific number ... a specific counting time period, or a specific lockout duration",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "fbb482e8": {
+  "verdict": "right",
+  "stated": "31 Dec 2028; application 26 May 2024; agreement 26 Sep 2024",
+  "evidence": "formal application deadline = 26 May 2024; written-agreement deadline = 26 September 2024",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8447157e": {
+  "verdict": "right",
+  "stated": "Rev 3: 17; Rev 2: 14; Rev 2 withdrawn 14 May 2024, superseded by Rev 3",
+  "evidence": "Withdrawn on May 14, 2024. Superseded by SP 800-171 Rev. 3",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "5f3a8006": {
+  "verdict": "right",
+  "stated": "17; 14; withdrawn May 14, 2024 superseded in entirety by Rev 3",
+  "evidence": "NIST SP 800-171r2 is withdrawn and superseded in its entirety by NIST SP 800-171r3",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "3ab7797a": {
+  "verdict": "wrong",
+  "stated": "17; 14; status given only as superseded, no withdrawal",
+  "evidence": "Ask 3 | ... | Superseded (by SP 800-171 Rev. 3)",
+  "outside_wrong": false,
+  "note": "Misses that NIST's copy is stamped Withdrawn 14 May 2024; says it could not confirm and offers only a superseded label."
+ },
+ "f99cca08": {
+  "verdict": "right",
+  "stated": "17; 14; Withdrawn on May 14, 2024, superseded by Rev 3",
+  "evidence": "Withdrawn on May 14, 2024. Superseded by SP 800-171 Rev. 3",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "5ee9a6fd": {
+  "verdict": "right",
+  "stated": "Yes enabled by default; initdb --no-data-checksums; old and new must match",
+  "evidence": "pg_upgrade requires matching cluster checksum settings",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a10289ea": {
+  "verdict": "right",
+  "stated": "0 to 200; default 60; 133",
+  "evidence": "Final answers: range 0-200, default 60, recommended value 133",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b565d130": {
+  "verdict": "right",
+  "stated": "forkserver; fork before 3.14; spawn when no writable temp dir (3.15.1)",
+  "evidence": "Changed in version 3.15.1: spawn is now the default start method when there is no writable temporary directory",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "aa558668": {
+  "verdict": "right",
+  "stated": "v1.28 not supported; v1.25 supported; v1.24 not supported",
+  "evidence": "only kubelet v1.25 is inside the supported skew",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "4919609b": {
+  "verdict": "right",
+  "stated": "30000-32767; static 30000-30085; dynamic 30086-32767",
+  "evidence": "Static band: 30000-30085 (86 ports). Dynamic band: 30086-32767",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "17011887": {
+  "verdict": "right",
+  "stated": "65536 bytes; 65536 pages; 4 GiB; 2^48 pages for i64",
+  "evidence": "Max pages declarable by an i32 memory 65,536 pages; i64 2^48 pages",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "109d5e49": {
+  "verdict": "right",
+  "stated": "L3 300000-600000 ms default 300000; L2 discouraged 30000-180000 default 120000",
+  "evidence": "Recommended range: 300000 milliseconds to 600000 milliseconds",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f21a099d": {
+  "verdict": "right",
+  "stated": "536 IPv4; 1220 IPv6; MUST (MUST-15)",
+  "evidence": "MUST assume a default send MSS of 536 (576 - 40) for IPv4 or 1220 (1280 - 60) for IPv6 (MUST-15)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8b98ebe8": {
+  "verdict": "right",
+  "stated": "Canada 1.0; US pre-acquisition 1; US thereafter 5 mW/cm2",
+  "evidence": "(a) 1.0 mW/cm2 (b) 1 mW/cm2 (c) 5 mW/cm2",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ce417b8c": {
+  "verdict": "right",
+  "stated": "SO2 24h 40; NO2 annual 10 ug/m3",
+  "evidence": "(a) SO2 24-hour mean = 40 ug/m3; (b) NO2 annual mean = 10 ug/m3",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "81113d28": {
+  "verdict": "right",
+  "stated": "2 hours at 93 dBA; L(ex,8) ceiling 87 dBA",
+  "evidence": "the longest permitted exposure at a steady 93 dBA is 2 hours; ceiling on L(ex,8) is 87 dBA",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "49fd58a3": {
+  "verdict": "right",
+  "stated": "4 W; 25 mW per 3 kHz; 2025 licence, commenced 1 Oct 2025",
+  "evidence": "Maximum EIRP ... 4 W; 25 mW per 3 kHz; Class Licence 2025",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "fa8b350b": {
+  "verdict": "wrong",
+  "stated": "Year 2025 only; EIRP and PSD explicitly not answered",
+  "evidence": "ASKS 2 AND 4 - NOT ANSWERED, AND WHY",
+  "outside_wrong": false,
+  "note": "Declines to state 4 W and 25 mW per 3 kHz; key requires them."
+ },
+ "9b1c2681": {
+  "verdict": "right",
+  "stated": "4 W; 25 mW per 3 kHz; 2025",
+  "evidence": "Ask 2 ... 4 W. Ask 3 ... 25 mW per 3 kHz. Ask 4 ... 2025",
+  "outside_wrong": false,
+  "note": "Calls it Table 1 rather than Table 8; immaterial."
+ },
+ "d321bb76": {
+  "verdict": "right",
+  "stated": "4 W; 25 mW per 3 kHz; 2025 licence",
+  "evidence": "4 W (36.0 dBm); 25 mW per 3 kHz; Class Licence 2025",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "866a5841": {
+  "verdict": "right",
+  "stated": "87 dB(A); 140 dB(C); no, protector attenuation not counted for action values",
+  "evidence": "but not in applying the lower and upper exposure action values",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "dc9d791a": {
+  "verdict": "right",
+  "stated": "20 ppm; 100 ppm; second pair 30/200 for underground mining and tunnelling only; no longer applies (ended 21 Aug 2023)",
+  "evidence": "Underground mining and tunnelling industries ONLY; No - it expired on 21 August 2023",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e7e775fd": {
+  "verdict": "right",
+  "stated": "more than 11 m; 30 m; 18 m or more; 30 September 2026",
+  "evidence": "11 m; 30 m; 18 m or more; 30 September 2026",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "816074d3": {
+  "verdict": "right",
+  "stated": "more than 11 m; 30 m; 18 m or more; 30 September 2026",
+  "evidence": "(a) 11 m (b) 30 m (c) 18 m, 30 September 2026",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "171d0cff": {
+  "verdict": "right",
+  "stated": "more than 11 m; more than 30 m; 18 m or more; 30 September 2026",
+  "evidence": "(a) MORE THAN 11 m ... (c) 18 m OR MORE ... 30 SEPTEMBER 2026",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "109497d1": {
+  "verdict": "right",
+  "stated": "more than 11 m; 30 m; 18 m or more; 30 September 2026",
+  "evidence": "11 m; 30 m; 18 m; 30 September 2026",
+  "outside_wrong": false,
+  "note": "Cites sprinkler text from Table B4 note 2 rather than para 7.4; values match."
+ },
+ "25fa2683": {
+  "verdict": "right",
+  "stated": "No single rate; 19% for <=50,000; 25% above 250,000; between: main rate less marginal relief",
+  "evidence": "\"NO. HMRC states verbatim: 'From 1 April 2023, there is no longer a single Corporation Tax rate'\"; \"Taxed at the main rate of 25%, then reduced by marginal relief\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d6d1373e": {
+  "verdict": "right",
+  "stated": "No; 19% small profits rate; 25% main rate; main rate reduced by marginal relief",
+  "evidence": "\"Is there still a single Corporation Tax rate? \u2014 No\"; \"charged at the 25% main rate, and the resulting tax is then reduced by Marginal Relief\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "889f07c4": {
+  "verdict": "right",
+  "stated": "No Part 3 minimum applies directly; Part 3 excludes Federal branches",
+  "evidence": "\"There is NO minimum CET1 capital ratio that 12 CFR Part 3 imposes directly on a Federal branch\"; \"This part does not apply to Federal branches and agencies of foreign banks.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "70da0bfc": {
+  "verdict": "right",
+  "stated": "None; Part 3 does not apply to Federal branches; 4.5% not applicable",
+  "evidence": "\"None. 12 CFR Part 3 imposes no minimum CET1 ratio\"; \"the number the question invites (4.5%) is the wrong answer\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bdcabe0e": {
+  "verdict": "right",
+  "stated": "Companies: No; business-purpose individuals: No",
+  "evidence": "\"No. Apart from 248.30(b), subpart A ... does not cover information about companies, and does not cover information about individuals who obtain financial products or services primarily for business purposes.\"",
+  "outside_wrong": false,
+  "note": "Hedges on paragraph letters but commits to No/No."
+ },
+ "c3daa42a": {
+  "verdict": "right",
+  "stated": "Companies: No; business-purpose individuals: No",
+  "evidence": "\"No \u2014 to both limbs.\"; \"This subpart does not apply to information about companies or about individuals who obtain financial products or services primarily for business, commercial, or agricultural purposes.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a111edd6": {
+  "verdict": "right",
+  "stated": "EUR 20 000 for point (6) only, maintained at all times as a floor",
+  "evidence": "\"EUR 20 000.\"; \"it is a continuous ('at all times') minimum\"",
+  "outside_wrong": false,
+  "note": "Flags the at-all-times reading as interpretive but still commits to EUR 20 000."
+ },
+ "c53d45a2": {
+  "verdict": "right",
+  "stated": "EUR 20,000 initial capital and permanent floor at all times",
+  "evidence": "\"EUR 20,000 ... both (i) the initial capital ... and (ii) the permanent floor on own funds it must hold at all times\"",
+  "outside_wrong": true,
+  "note": "Cites own-funds as Article 8/Annex III and gives Method B slices (5% up to 5m) that conflict with the Article 9 account in the other answer."
+ },
+ "c0c45b04": {
+  "verdict": "right",
+  "stated": "Report no later than the working day following; keep records at least five years following termination",
+  "evidence": "\"No later than the working day following the conclusion, modification or termination\"; \"At least five years following the termination of the contract\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "2d942d78": {
+  "verdict": "right",
+  "stated": "Report no later than the working day following; keep records at least five years after termination",
+  "evidence": "\"no later than the working day following the conclusion, modification or termination of the contract\"; \"at least five years following the termination of the contract\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "cfec9452": {
+  "verdict": "right",
+  "stated": "As soon as possible, no later than 7 calendar days after initial receipt",
+  "evidence": "\"as soon as possible, but in no case later than 7 calendar days after the sponsor's initial receipt of the information\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1c3772d6": {
+  "verdict": "right",
+  "stated": "As soon as possible, outer bound 7 calendar days after initial receipt",
+  "evidence": "\"Seven (7) calendar days after the sponsor's initial receipt of the information.\"; \"as soon as possible\" independent obligation",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1c2d120b": {
+  "verdict": "right",
+  "stated": "At least 90 days before proposed introduction",
+  "evidence": "\"At least 90 days.\"; \"at least 90 days before he proposes to begin the introduction or delivery for introduction\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0270cedd": {
+  "verdict": "right",
+  "stated": "At least 90 days (calendar) before proposed introduction",
+  "evidence": "\"AT LEAST 90 DAYS BEFORE the person proposes to begin the introduction\"; \"Value: 90. Unit: days (calendar days).\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "c77e9b06": {
+  "verdict": "right",
+  "stated": "At least 5 members; at least one nonscientific member; at least one independent of institution/trial site",
+  "evidence": "\"(a) At least five members.\"; \"(b) ... nonscientific area\"; \"(c) ... independent of the institution/trial site\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "7cf4555c": {
+  "verdict": "right",
+  "stated": "At least 5 members; nonscientific member; member independent of institution/trial site",
+  "evidence": "\"5 members (five members), stated as 'At least five members.'\"; bullets (b) and (c) quoted",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "c929cf5b": {
+  "verdict": "right",
+  "stated": "Not more than 8,000 individuals in the US per year",
+  "evidence": "\"8,000 individuals in the United States per year, stated as an inclusive ceiling: 'not more than 8,000'\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "89ae5ad4": {
+  "verdict": "right",
+  "stated": "Not more than 8,000 individuals in the US per year",
+  "evidence": "\"The checklist must use a ceiling of 8,000 individuals in the United States per year.\"; \"exactly 8,000 qualifies\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "9ebdd8f9": {
+  "verdict": "right",
+  "stated": "After 48-72 hours; trained health care worker",
+  "evidence": "\"After 48-72 hours, the skin test reaction must be examined by a trained health care worker.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d680fb9a": {
+  "verdict": "right",
+  "stated": "48-72 hours after placement; trained health care worker, not the patient",
+  "evidence": "\"48-72 hours after the tuberculin is injected\"; \"A trained health care worker. The patient must not read their own test.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "929f014a": {
+  "verdict": "right",
+  "stated": "over 500 languages",
+  "evidence": "\"has been translated into over 500 languages.\"; \"reported exactly as written, not rounded ... to '500'\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ebf02371": {
+  "verdict": "right",
+  "stated": "45 days after FDA receives the PMA",
+  "evidence": "\"45 days. Under 21 CFR 814.42(a), FDA must notify the applicant whether a ... PMA has been filed within 45 days after FDA receives the PMA.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "482e2bb4": {
+  "verdict": "right",
+  "stated": "Within 45 days after FDA receives the PMA",
+  "evidence": "\"FDA must notify the applicant whether a PMA has been filed within 45 days after FDA receives the PMA.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "c47f90fc": {
+  "verdict": "right",
+  "stated": "ISO 13485:2016(E), Third edition, March 1, 2016",
+  "evidence": "\"ISO 13485:2016(E), Medical devices\u2014Quality management systems\u2014Requirements for regulatory purposes, Third edition, March 1, 2016\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "21fbc06a": {
+  "verdict": "right",
+  "stated": "ISO 13485:2016(E), Third edition, March 1, 2016",
+  "evidence": "\"incorporates by reference ISO 13485:2016(E) ... Third edition, March 1, 2016\"; \"ISO 13485:2003 is not the incorporated edition.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "57f167a9": {
+  "verdict": "right",
+  "stated": "15 days for acceptance notification; 120 days for order, both from receipt",
+  "evidence": "\"15 days\" (860.230(a)); \"120 days\" (860.240(a)); \"the two clocks run from the same start date\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "3c654258": {
+  "verdict": "right",
+  "stated": "15 days acceptance notification; 120 days review and order, both from receipt",
+  "evidence": "\"Acceptance notification: 15 days after FDA receives the De Novo request.\"; \"120 days after FDA receives the De Novo request.\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d31ce793": {
+  "verdict": "right",
+  "stated": "No later than 7 calendar days after first knowledge; follow-up by day 15 from day 0",
+  "evidence": "\"7 calendar days after first knowledge by the sponsor\"; \"by day 15 measured from day 0 (day 7 + 8 calendar days)\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b922435f": {
+  "verdict": "right",
+  "stated": "As soon as possible, no later than 7 calendar days; follow-up by day 15",
+  "evidence": "\"7 calendar days after first knowledge ... Measured from day 0, the outer limit is day 7\"; \"follow-up deadline measured from day 0: day 15\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "5326cbf0": {
+  "verdict": "right",
+  "stated": "20 percent of nominal breaking strength",
+  "evidence": "20 percent. Under 29 CFR 1910.179(h)(2)(i)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "54f3fd98": {
+  "verdict": "right",
+  "stated": "1- to 12-month periodic interval, or as manufacturer recommends",
+  "evidence": "Periodic inspection: 1- to 12-month intervals",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "336d68f3": {
+  "verdict": "right",
+  "stated": "15 percent throat opening; 10 degrees twist",
+  "evidence": "opened more than 15 percent ... twisted more than 10 degrees",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f6c4222e": {
+  "verdict": "right",
+  "stated": "200 F both; difference 0 F",
+  "evidence": "= 200 F - 200 F = 0 F",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e1c079d4": {
+  "verdict": "right",
+  "stated": "5 inspections, 5 certification records",
+  "evidence": "5 thorough rope inspections; 5 certification records",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "81f883e9": {
+  "verdict": "right",
+  "stated": "January 1, 2018; three years",
+  "evidence": "January 1, 2018; three years; 40 CFR 82.156(a)(3)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "248f7dfc": {
+  "verdict": "right",
+  "stated": "0 points (90-90); 0 points (80-80)",
+  "evidence": "90 - 90 = 0 percentage points; 80 - 80 = 0",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "96050d81": {
+  "verdict": "right",
+  "stated": "No; air-cooled under 65,000 Btu/h excluded",
+  "evidence": "do NOT apply ... expressly excluded",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ab8fb97b": {
+  "verdict": "right",
+  "stated": "No requirement; Directive does not apply to means of transport",
+  "evidence": "This Directive shall not apply to means of transport for persons or goods",
+  "outside_wrong": false,
+  "note": "Adds a repeal-by-ESPR remark with a slightly off date; not contradicting the key."
+ },
+ "d87179fc": {
+  "verdict": "right",
+  "stated": "No; standards do not apply above 39 cu ft",
+  "evidence": "No. ... the energy conservation standards in that section do not apply",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a11127ad": {
+  "verdict": "right",
+  "stated": "competent person for both drawing up/certifying and review",
+  "evidence": "a COMPETENT PERSON ... a COMPETENT PERSON",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "971b45e8": {
+  "verdict": "right",
+  "stated": "6 months; 12 months; 6 months shorter",
+  "evidence": "6 months for lifting equipment for lifting persons or an accessory ... 6 months shorter",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "9d01c2d0": {
+  "verdict": "right",
+  "stated": "10-year; 50-year",
+  "evidence": "at least as great as that for a 10-year frequency, except that a 50-year frequency",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "9894ac42": {
+  "verdict": "right",
+  "stated": "side slope not steeper than 4H:1V; rounded bottom at least 4 ft",
+  "evidence": "not steeper than 4 horizontal to 1 vertical; Rounded bottom: at least 4 feet wide",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "59fe8c03": {
+  "verdict": "wrong",
+  "stated": "area about 200 acres (right); minimum tc: says HDS-4 states none",
+  "evidence": "Ask 1 - minimum time of concentration: not stated in HDS-4; nothing attributes a minimum tc to HDS-4",
+  "outside_wrong": false,
+  "note": "Denies the 5-minute minimum the key requires; only suggests 5 min from other documents."
+ },
+ "c4882a46": {
+  "verdict": "right",
+  "stated": "0.015",
+  "evidence": "delta_n = 0.030 - 0.015 = 0.015",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "25fa0b57": {
+  "verdict": "right",
+  "stated": "2-percent chance of exceedance in any year",
+  "evidence": "not be less than the flood with a 2-percent chance of being exceeded",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bcd3a3e0": {
+  "verdict": "right",
+  "stated": "not to exceed 1 foot",
+  "evidence": "1 foot ... (not to exceed 1 foot ...)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6adf0297": {
+  "verdict": "right",
+  "stated": "3 ft base, +1 ft, total 4 ft",
+  "evidence": "3.0 + 1.0 = 4.0 ft above the base-flood water-surface level",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "4cdd15f3": {
+  "verdict": "right",
+  "stated": "None; motors above 1000 V outside scope",
+  "evidence": "Answer (verdict): NONE. No minimum energy-efficiency class is set",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "2786b0c5": {
+  "verdict": "right",
+  "stated": "2 openings; 1 sq in per sq ft; bottom no higher than 1 ft",
+  "evidence": "A minimum of two openings ... one square inch for every square foot ... no higher than one foot above grade",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "037a73bd": {
+  "verdict": "right",
+  "stated": "not to exceed 24 months; 70 percent or greater",
+  "evidence": "24 months (not to exceed); 70 percent or greater",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "be6a3e00": {
+  "verdict": "right",
+  "stated": "more than 20 feet; temporary and under-construction (open portions) bridges covered",
+  "evidence": "MORE THAN 20 FEET ... YES. 23 CFR 650.303 names both categories",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "42676cb8": {
+  "verdict": "right",
+  "stated": "No, not covered; Manning condition: discharge, cross section, roughness, slope constant over sufficient distance",
+  "evidence": "Ask 1 ... NO. ... must be constant over a sufficient distance to establish uniform flow conditions",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "383b604f": {
+  "verdict": "right",
+  "stated": "No wind speed; 25 Hz passage: filters removed all input above 25 Hz",
+  "evidence": "all input above 25 Hz has been removed thus accounting for the low energy content above this value",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f5191fc2": {
+  "verdict": "right",
+  "stated": "No wind speed; filter removed input above 25 Hz",
+  "evidence": "all input above 2 5 Hz has been removed ... The correct reading is 25 Hz",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0a02025f": {
+  "verdict": "wrong",
+  "stated": "No wind speed (right); 25 Hz described as upper bound of 15-25 Hz energy range, not the filter statement",
+  "evidence": "the '25 Hz' figure is the UPPER BOUND OF A VIBRATION-FREQUENCY RANGE (15-25 Hz)",
+  "outside_wrong": false,
+  "note": "Misses the key sentence that signal-conditioning filters removed input above 25 Hz."
+ },
+ "26394413": {
+  "verdict": "right",
+  "stated": "Yes; greater than 50 lots or 5 acres, whichever is lesser",
+  "evidence": "greater than 50 lots or 5 acres, whichever is the lesser ... Yes",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b03eebae": {
+  "verdict": "right",
+  "stated": "dune bed as large as 0.040; plane bed as low as 0.010",
+  "evidence": "with a dune bed, the Manning n could be as large as 0.040 ... plane bed ... as low as 0.010",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "5f4b49e5": {
+  "verdict": "right",
+  "stated": "Final temperature 35.0 C (308.15 K)",
+  "evidence": "T_f = 35.0 \u00b0C = 308.15 K",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "76d4ffba": {
+  "verdict": "right",
+  "stated": "6 months; at least 14 hours; within 30 days",
+  "evidence": "Within 6 months of first exposure; At least 14 hours without exposure to workplace noise; Within 30 days",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "4f307fbc": {
+  "verdict": "right",
+  "stated": "delta 0.88235 mm (0.882); Al 61.76 MPa, steel 176.47 MPa (176); Al 12.3529 kN, steel 17.6471 kN (rounded 12.4/17.6)",
+  "evidence": "P_al = 30.0 kN * 14.0/34.0 = 12.3529 kN -> 12.4 kN; delta = 0.882 mm (0.88235 mm unrounded)",
+  "outside_wrong": false,
+  "note": "Final summary rounds forces to 12.4 and 17.6 kN, outside the key tolerance, but the exact 12.3529 and 17.6471 kN are stated and labelled the same values."
+ },
+ "aa1b9657": {
+  "verdict": "right",
+  "stated": "240 mm, ratio 3; 500 rpm, same direction, 12.0 N m; 6.283 m/s; three sections",
+  "evidence": "Smallest qualifying driven pulley: D_2 = 240 mm; same direction; T_2 = 12.0 N m; 6.283 m/s",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "c658df53": {
+  "verdict": "right",
+  "stated": "J 6.1359e-7 m^4; tau 20.37 MPa; twist 0.010186 rad",
+  "evidence": "J = 6.13592315154e-7 m^4; \u03c4max = 20.37188739 MPa; \u03c6 = 0.010185916 rad",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d3ce64af": {
+  "verdict": "right",
+  "stated": "20.0x3.00x500 mm, A 60.0 mm^2; 100 MPa passes at equality; 2.00 mm gives 150 MPa fails; V 3.00e-5 m^3; m 0.2355 kg; three sections",
+  "evidence": "Passes (equality permitted); 150 MPa ... not acceptable; m = 0.2355 kg",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ef87fbec": {
+  "verdict": "right",
+  "stated": "Fill/vent, close vent, 6.00 bar, isolate then time, 300 s hold no additions, criteria drop <=0.20 bar and no leakage, drop 0.10 bar, PASS, release, confirm 0, disconnect",
+  "evidence": "Start the 300 s hold timer only after pump isolation is complete; the verdict is PASS",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f7dd43e5": {
+  "verdict": "right",
+  "stated": "Y = A XOR B; outputs 0,1,1,0",
+  "evidence": "Y = A \u2295 B = A\u00b7B\u0304 + \u0100\u00b7B; Alarm outputs for 00, 01, 10, 11 in that order: 0, 1, 1, 0",
+  "outside_wrong": false,
+  "note": "A claim that the SOP realization glitches on simultaneous change is loose but not contradicted by the key."
+ },
+ "94e200b3": {
+  "verdict": "right",
+  "stated": "90 dBA 8 h; 95 dBA 4 h; 100 dBA 2 h",
+  "evidence": "90 dBA -> 8 hours per day; 95 dBA -> 4 hours per day; 100 dBA -> 2 hours per day",
+  "outside_wrong": false,
+  "note": "Side remark that NIOSH REL at 95 dBA is 2 h 32 min looks doubtful but is outside the packet and the key."
+ },
+ "f6180ffc": {
+  "verdict": "right",
+  "stated": "R_A 0.250 K/W; R_B 0.0500 K/W; 133.3 W hot to cold; interface 26.7 C",
+  "evidence": "R_A = 0.250 K/W; q = 133.3 W; T_interface = 26.7 degC",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d3e1c800": {
+  "verdict": "right",
+  "stated": "10.0 N/mm; 12.0 mm passes at limit; 8.00 N/mm gives 15.0 mm fails; 0.720 J; three sections",
+  "evidence": "it passes exactly at the limit; 8.00 N/mm, gives x = 120 / 8.00 = 15.0 mm ... fails; = 720 N*mm = 0.720 J",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a1c2ec46": {
+  "verdict": "right",
+  "stated": "S = 110.4 K; document value too small by 0.4 K",
+  "evidence": "Enter S = 110.4 K.; too small by 0.4 K",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8a82ad5d": {
+  "verdict": "right",
+  "stated": "S = 110.4 K; 0.4 K too small",
+  "evidence": "enter S = 110.4 K; too small by 0.4 K",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "38d456eb": {
+  "verdict": "right",
+  "stated": "2.5362e-2 = 0.025362 J/(m s K); same in W/(m K)",
+  "evidence": "kt_corrected = 2.5362 x 10^-2 J/(m\u00b7s\u00b7K) = 0.025362; = 0.025362 W/(m\u00b7K)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6dd1be78": {
+  "verdict": "right",
+  "stated": "2.5362e-2 (0.025362) J/(m s K); 0.025362 W/(m K)",
+  "evidence": "2.5362 \u00d7 10\u207b\u00b2 (0.025362) J/(m\u00b7s\u00b7K); 0.025362 W/(m\u00b7K)",
+  "outside_wrong": false,
+  "note": "Calls it turbulent k_t then molecular; does not affect values."
+ },
+ "20ff9630": {
+  "verdict": "right",
+  "stated": "No; region 0.1 to 1000, few percent, dimensionless",
+  "evidence": "No. ... lower bound of the stated region is \u03b2\u03b3 = 0.1; 0.1 \u2272 \u03b2\u03b3 \u2272 1000",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6d70be7f": {
+  "verdict": "right",
+  "stated": "No; region 0.1 to 1000, dimensionless",
+  "evidence": "NO.; 0.1 \u2272 \u03b2\u03b3 \u2272 1000 (dimensionless)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "64dba4d7": {
+  "verdict": "right",
+  "stated": "90 days (ninetieth day)",
+  "evidence": "enters into force on the ninetieth day \u2014 i.e. 90 days",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f32f328e": {
+  "verdict": "right",
+  "stated": "No measured value; upper limit Sum m_nu < 0.12 eV; 95%",
+  "evidence": "No. ... one-sided upper limit; \u03a3m\u03bd < 0.12 eV at 95% CL",
+  "outside_wrong": false,
+  "note": "Mentions 0.16 eV for TT+lowE+BAO as a variant but commits to 0.12 as headline."
+ },
+ "ee301385": {
+  "verdict": "right",
+  "stated": "No measured value; < 0.12 eV; 95%",
+  "evidence": "NO. It quotes a one-sided 95%-confidence UPPER LIMIT; Sigma m_nu < 0.12 eV (95% CL)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "94165f1e": {
+  "verdict": "right",
+  "stated": "Rj = 71,398 km, Jovian model radius",
+  "evidence": "Rj = 71,398 km.; \"Rj denotes Jovian model radius, defined here to be 71,398 km\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "35ac86dc": {
+  "verdict": "right",
+  "stated": "Rj = 71,398 km, Jovian model radius",
+  "evidence": "Rj = 71,398 km; Rj denotes Jovian model radius, defined here to be 71,398 km",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "4ed9aca7": {
+  "verdict": "right",
+  "stated": "One collision with Te > 10 keV on average per 90 cm argon gas",
+  "evidence": "on average only one collision with Te > 10 keV will occur along a path length of 90 cm of argon gas",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ba329ba0": {
+  "verdict": "right",
+  "stated": "One collision on average per 90 cm argon gas",
+  "evidence": "N(Te > 10 keV; 90 cm Ar) = 1 (as stated by the 2024 PDG review)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1ffd705c": {
+  "verdict": "right",
+  "stated": "2005",
+  "evidence": "by 2005, have made demonstrable progress; Year: 2005",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8109a10c": {
+  "verdict": "right",
+  "stated": "AC 50-1000 V; DC 75-1500 V",
+  "evidence": "between 50 V and 1000 V for alternating current and between 75 V and 1500 V for direct current",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "58d02689": {
+  "verdict": "right",
+  "stated": "196 days",
+  "evidence": "196 calendar days elapsed from 22 April 2016 to 4 November 2016",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "902b3af3": {
+  "verdict": "right",
+  "stated": "55 Parties; 55% emissions; thirty days",
+  "evidence": "55 Parties to the Convention; at least an estimated 55 per cent; thirtieth day",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "472e698b": {
+  "verdict": "right",
+  "stated": "1 year (1975 to 1976)",
+  "evidence": "Difference in calendar years: 1976 \u2212 1975 = 1",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "69fce3a4": {
+  "verdict": "right",
+  "stated": "12 nautical miles",
+  "evidence": "12 nautical miles.; C \u2212 T = 24 \u2212 12 = 12 nm",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "095a334f": {
+  "verdict": "right",
+  "stated": "No; 24 nautical miles",
+  "evidence": "No. ... Maximum entrance-point distance: 24 nautical miles",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "172aec88": {
+  "verdict": "right",
+  "stated": "No monetary cap; launching State absolutely liable to pay compensation for damage on surface of earth or to aircraft in flight",
+  "evidence": "No. Article II contains no monetary cap.; A launching State shall be absolutely liable to pay compensation...",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "25fa8f36": {
+  "verdict": "right",
+  "stated": "not less than twelve months",
+  "evidence": "Minimum notice period: twelve (12) months.; not less than twelve months' notice",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ddd48def": {
+  "verdict": "right",
+  "stated": "7 months (2 + 5)",
+  "evidence": "2 months ... + 5 months ... = 7 months",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "242c08a9": {
+  "verdict": "right",
+  "stated": "Fourth edition incorporating the first and second addenda; first addendum updates the fourth edition, reflects new evidence, adds explanations",
+  "evidence": "Guidelines for drinking-water quality - Fourth edition incorporating the first and second addenda; This first addendum updates the fourth edition.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e7a44d18": {
+  "verdict": "right",
+  "stated": "Claim Names MUST be unique; parsers MUST reject or use parser returning only lexically last duplicate",
+  "evidence": "MUST be unique; JWT parsers MUST either reject JWTs with duplicate Claim Names or use a JSON parser that returns only the lexically last duplicate member name",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "29c92a6a": {
+  "verdict": "right",
+  "stated": "15 years",
+  "evidence": "15 years, counted from the point at which the final unit of the model has been placed on the market",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e5ca1d4a": {
+  "verdict": "right",
+  "stated": "HS256 and none",
+  "evidence": "only HMAC SHA-256 (\"HS256\") and \"none\" MUST be implemented",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d22d4ff9": {
+  "verdict": "right",
+  "stated": "One signature/MAC; no syntax for JWS Unprotected Header",
+  "evidence": "Only one signature/MAC is supported ... no syntax to represent a JWS Unprotected Header value",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "28948ebe": {
+  "verdict": "right",
+  "stated": "None; interaction beyond the scope of RFC 6749",
+  "evidence": "RFC 6749 imposes no mandatory ... rule on the interaction between the authorization server and the resource server; beyond the scope of this specification",
+  "outside_wrong": false,
+  "note": "Does not invent requirements; mentions RFC 7662 as separate."
+ },
+ "ea053a4e": {
+  "verdict": "right",
+  "stated": "GET",
+  "evidence": "GET. ... the \"GET\" method MUST NOT be used",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "dfaa788b": {
+  "verdict": "right",
+  "stated": "1 September 2021; paragraph 2 of Article 3 and paragraph 2 of Article 4 repealed 25 December 2019",
+  "evidence": "\"repealed with effect from 1 September 2021, with the exception of paragraph 2 of Article 3 and paragraph 2 of Article 4 which are repealed with effect from 25 December 2019\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "2367d7e1": {
+  "verdict": "right",
+  "stated": "1 September 2021; paragraph 2 of Article 3 and paragraph 2 of Article 4 on 25 December 2019",
+  "evidence": "\"paragraph 2 of Article 3 and paragraph 2 of Article 4 of Delegated Regulation (EU) No 874/2012\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ed848bfb": {
+  "verdict": "right",
+  "stated": "1 September 2021; Article 3(2) and Article 4(2) on 25 December 2019",
+  "evidence": "\"The two paragraphs repealed earlier, with effect from 25 December 2019, are Article 3(2) and Article 4(2)\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "19a1fb0a": {
+  "verdict": "wrong",
+  "stated": "No (right); threshold EUR 12,000,000 (key: EUR 1,000,000)",
+  "evidence": "\"Ask 3 (value): EUR 12 000 000 - Article 3(2), point (b)\"",
+  "outside_wrong": true,
+  "note": "Treats the small-offer scope exemption as superseded and gives 12M/5M; contradicts the key's EU-level 1M threshold."
+ },
+ "5c4b09fe": {
+  "verdict": "right",
+  "stated": "No, Regulation does not apply; threshold EUR 1,000,000 total consideration in the Union over 12 months",
+  "evidence": "\"Verdict (ask 2): NO.\" \"Threshold (ask 3): EUR 1 000 000, calculated over a 12-month period, measured on total consideration in the Union.\"",
+  "outside_wrong": false,
+  "note": "Also lists a separate 12M Art 3(2)(b) exemption as context; not offered as the threshold asked."
+ },
+ "bb5409a8": {
+  "verdict": "wrong",
+  "stated": "No (right); threshold EUR 5,000,000 (key: EUR 1,000,000)",
+  "evidence": "\"The automatic EU-wide Article 1(3) threshold in force on 2026-11-21 is EUR 5,000,000\"",
+  "outside_wrong": true,
+  "note": "Says EUR 1,000,000 is the old threshold; contradicts key."
+ },
+ "3605394e": {
+  "verdict": "right",
+  "stated": "255; 128; 2049",
+  "evidence": "\"new = 255, old = 128\"; \"the answer is 2049\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "27e28c21": {
+  "verdict": "right",
+  "stated": "255; 128; 2049",
+  "evidence": "\"Maximum email address length after the change from RFC 3280: 255 (octets).\" \"Old value under RFC 3280: 128 (octets).\" \"through the year 2049\"",
+  "outside_wrong": false,
+  "note": "Says octets rather than characters; equivalent for IA5String."
+ },
+ "fa004e85": {
+  "verdict": "right",
+  "stated": "255; 128; 2049",
+  "evidence": "\"RFC 5280 raised the profile's email-address length bound from 128 characters ... to 255 characters\"; \"through the year 2049\"",
+  "outside_wrong": false,
+  "note": "Flags 128 as not in the fetched bundle but still states it."
+ },
+ "a7a644f0": {
+  "verdict": "right",
+  "stated": "60 calendar days of receipt; 60 calendar days of change unless requester directs reporting not required; 3 years or until next audit, whichever is longer",
+  "evidence": "\"3 years or until the next audit, whichever is longer\"; \"unless directed by the requesting Planning Coordinator or Transmission Planner that the reporting of protection setting changes is not required\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1860f3ca": {
+  "verdict": "partly",
+  "stated": "60 calendar days (right); 60 days with requester-direction exception (right); retention given as 3 calendar years, with a note that a longer period since the last audit governs",
+  "evidence": "\"Period: THREE CALENDAR YEARS.\"; \"The three years is a floor ... if that period is longer than three years, the longer period governs\"",
+  "outside_wrong": false,
+  "note": "Headline retention is a flat 3 years; the 'or until next audit, whichever is longer' rule appears only as a caveat and is attributed to CEA requests."
+ },
+ "e348918f": {
+  "verdict": "wrong",
+  "stated": "60 days (right); 60 days with exception (right); retention not answered (blocked)",
+  "evidence": "\"Not answered. The retention period is not in Requirement R4 or Measure M4\"",
+  "outside_wrong": false,
+  "note": "Retention item left unanswered; PRC-024-2 recollection explicitly marked unverified."
+ },
+ "ecaca810": {
+  "verdict": "wrong",
+  "stated": "minimum time of concentration 10 minutes (key: 5); area limit about 200 acres (right)",
+  "evidence": "\"Minimum time of concentration when selecting rainfall intensity: 10 minutes.\"",
+  "outside_wrong": true,
+  "note": "Gives 10 minutes, the confusion the key warns about, and dismisses 5 minutes as an inlet-time floor."
+ },
+ "0976ba93": {
+  "verdict": "wrong",
+  "stated": "minimum tc 10 minutes (key: 5); area less than 80 ha (200 acres) (right)",
+  "evidence": "\"Recommended value: 10 minutes.\"",
+  "outside_wrong": true,
+  "note": "Attributes 10 minutes to TxDOT guidance; wrong against the key."
+ },
+ "5872e388": {
+  "verdict": "right",
+  "stated": "5 minutes minimum; less than 80 ha (about 200 acres)",
+  "evidence": "\"A minimum time of concentration of 5 minutes is recommended for finding the intensity used for estimating the design discharge.\"; \"restricted to drainage areas less than 80 hectares ... about 200 acres\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "93ac992e": {
+  "verdict": "right",
+  "stated": "Yes, Art 14 applies from 11 Sep 2026 and the 2025 placement does not defer it; 24 h; 72 h; 14 days after corrective measure available",
+  "evidence": "\"Yes - the manufacturer is obliged to report now\"; \"Within 14 days of a corrective or mitigating measure being made available\"",
+  "outside_wrong": false,
+  "note": "Does not cite Art 69(3) but reaches the right conclusion and says to confirm no transitional postponement."
+ },
+ "db45dd85": {
+  "verdict": "right",
+  "stated": "Yes, Art 14 applies from 11 Sep 2026 including products already on the market; 24 h; 72 h; 14 days after a corrective or mitigating measure is available",
+  "evidence": "\"reporting obligations apply to all products with digital elements ... including those already placed on the market before 11 December 2027\"; \"14 days after a corrective or mitigating measure is available\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e3a797b1": {
+  "verdict": "right",
+  "stated": "Yes via Art 71(2) and Art 69(3); 24 h; 72 h; no later than 14 days after a corrective or mitigating measure is available",
+  "evidence": "\"Article 69(3) removes the transitional objection\"; \"no later than 14 days after that measure is available\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d2ba87d4": {
+  "verdict": "right",
+  "stated": "No, disapplied by Art 2(1)(a) of 2022/30; 1 August 2025",
+  "evidence": "\"Answer: NO. They are expressly disapplied by Article 2(1)(a)\"; \"Answer: 1 August 2025\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bfb627c3": {
+  "verdict": "right",
+  "stated": "No, Art 2(1) derogation for MDR devices; 1 August 2025",
+  "evidence": "\"Verdict: No. They are expressly excluded for this equipment.\"; \"Value: 1 August 2025 (2025-08-01).\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f8f52464": {
+  "verdict": "right",
+  "stated": "No, Art 2(1)(a) excludes (d), (e), (f); 1 August 2025",
+  "evidence": "\"VERDICT: NO.\"; \"applies ... from 1 AUGUST 2025\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "fe07518c": {
+  "verdict": "wrong",
+  "design": "VL-25, 410 EUR, I_n 33 A compared with RMS 28.64 A",
+  "requirements": {
+   "R1": "fail",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass"
+  },
+  "reference_design_chosen": false,
+  "evidence": "\"I_n >= 28.64 A\"; \"The lowest-price qualifying unit is VL-25 at 410 EUR\"",
+  "outside_wrong": false,
+  "note": "Compares RMS current with amplitude I_n; 33/40.50 = 0.815 fails R1. Mentions the peak reading only as a sensitivity."
+ },
+ "b2c5e83a": {
+  "verdict": "right",
+  "design": "VL-42, 640 EUR, 28.64 A RMS, 40.50 A crest vs I_n 46 A",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "\"Selected: VL-42 ... lowest price among qualifying\"; \"current compared with I_n (A) | 40.50\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "41684110": {
+  "verdict": "right",
+  "design": "VL-42, 640 EUR, 28.64 A RMS, 40.50 A crest vs I_n 46 A",
+  "requirements": {
+   "R1": "pass",
+   "R2": "pass",
+   "R3": "pass",
+   "R4": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "\"The lowest-price qualifying unit is therefore VL-42 at 640 EUR.\"; \"current compared with I_n (A) | 40.50\"",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f3ea95b3": {
+  "verdict": "partly",
+  "design": "B-500, 6100 EUR, drop stated 3.00% (true value 1.80%), current shown 108.3 A (rated 721.7 A)",
+  "requirements": {
+   "R_drop": "pass",
+   "R_current": "pass",
+   "R_voltage": "pass",
+   "R_frequency": "pass"
+  },
+  "reference_design_chosen": false,
+  "evidence": "\"Drop (%) = ... = 75x %\"; \"B-500 ... 3.00\"",
+  "outside_wrong": false,
+  "note": "Omits sin(phi) so drop figures are wrong (3.00 vs 1.80 for B-500); chosen part is valid but not the cheapest passing unit (B-320)."
+ },
+ "54a07b96": {
+  "verdict": "right",
+  "design": "B-320, 4500 EUR, drop 2.475% (2.48), Results current 108.3 A (rated 461.9 A)",
+  "requirements": {
+   "R_drop": "pass",
+   "R_current": "pass",
+   "R_voltage": "pass",
+   "R_frequency": "pass"
+  },
+  "reference_design_chosen": true,
+  "evidence": "\"Selection: lowest price among compliant models -> B-320, 4,500 EUR. Voltage drop 2.475 %\"",
+  "outside_wrong": false,
+  "note": "Results Current row gives the load current 108.3 A rather than the catalogue rated 461.9 A, but this is explained and meets the threshold."
+ },
+ "4d38a226": {
+  "verdict": "partly",
+  "design": "B-500, 6100 EUR, drop stated 3.0% (true value 1.80%), current shown 108.3 A (rated 721.7 A)",
+  "requirements": {
+   "R_drop": "pass",
+   "R_current": "pass",
+   "R_voltage": "pass",
+   "R_frequency": "pass"
+  },
+  "reference_design_chosen": false,
+  "evidence": "\"%drop = ... = 75x\"; \"Only the B-500 meets the 3.0% limit\"",
+  "outside_wrong": false,
+  "note": "Omits sin(phi) so drop figures are wrong; B-500 is valid but not the cheapest passing unit (B-320)."
+ }
+}

@@ -261,6 +261,9 @@ for r in sorted([r for r in rows if r["verdict"] != "right"], key=lambda r: (r["
         print("      caution:", c[:180])
     for g in r["gaps"] or []:
         print("      gap:", g[:180])
+    if r["confirmed"]:
+        # Bar 3 is read by hand: a confirmation is bad only beside a wrong figure, so print what it confirms.
+        print("      confirms:", str(r["backed"])[:300])
 # ---- The fresh test of the caution fix (docs/preregistration-20261123-caution-test.md) ----------------------------------------
 # Never seen by the design's 681 answers: the tier-2, golden and tier-4 sets and the two questions of the second hold-out they did not
 # cover (docs/probes/caution_replay.py's pool). Every other question was in the 681, so its answers here are fresh and it is not.

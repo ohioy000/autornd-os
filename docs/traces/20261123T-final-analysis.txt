@@ -1,0 +1,219 @@
+units in the records 737; stopped by the key's limit and left out 286; made 451 (arm E 56, the re-asks 84, the tally 311 over 311 distinct questions)
+answers read 442 of 451 made; missing verdicts 0; unclear 0
+questions made more than once in the tally (should be none): []
+
+BAR 1  right on the unseen set: 167 of 174 made   (bar: at least 138 of 174)
+BAR 2  no set collapses (each set and each group of the unseen set at least 50% right of those made):
+   professional                15 right of  15 made (15 delivered) = 100.0%   (a set under 25 questions: reported, not read as a rate)
+   professional-hard           17 right of  17 made (17 delivered) = 100.0%   (a set under 25 questions: reported, not read as a rate)
+   professional-misleading     12 right of  12 made (12 delivered) = 100.0%   (a set under 25 questions: reported, not read as a rate)
+   professional-holdout        37 right of  42 made (41 delivered) =  88.1%
+   tier2                       23 right of  25 made (23 delivered) =  92.0%
+   golden                       2 right of   2 made (2 delivered) = 100.0%   (a set under 25 questions: reported, not read as a rate)
+   tier4                       19 right of  24 made (21 delivered) =  79.2%   (a set under 25 questions: reported, not read as a rate)
+   professional-holdout-2     167 right of 174 made (174 delivered) =  96.0%
+   group  1 of the unseen set     11 right of  13 =  84.6%
+   group  2 of the unseen set     14 right of  14 = 100.0%
+   group  3 of the unseen set     13 right of  14 =  92.9%
+   group  4 of the unseen set     12 right of  12 = 100.0%
+   group  5 of the unseen set     13 right of  14 =  92.9%
+   group  6 of the unseen set     14 right of  14 = 100.0%
+   group  7 of the unseen set      9 right of  10 =  90.0%
+   group  8 of the unseen set     13 right of  13 = 100.0%
+   group  9 of the unseen set     13 right of  14 =  92.9%
+   group 10 of the unseen set     14 right of  14 = 100.0%
+   group 11 of the unseen set     14 right of  14 = 100.0%
+   group 12 of the unseen set     14 right of  14 = 100.0%
+   group 13 of the unseen set     13 right of  14 =  92.9%
+   the seven sets used to build the harness: 125 right of 137 made = 91.2%; the unseen set: 167 of 174 = 96.0%; all 292 of 311 = 93.9%
+
+BAR 3  not-right answers carrying a confirmation: 2 of 13 (whether the ask it covers is the wrong one is read off the listing below)
+BAR 4  right answers with no caution: 217 of 292   (bar: at least half)
+BAR 5  wrong answers with a pointing caution (the two phrases): 5 of 13   (bar: at least half; any other caution is read by hand below)
+BAR 6  cost of every unit of both runs, the stopped ones included: $4.2354; of the made ones $4.2035; mean of the 305 delivered tally answers $0.0116   (bar: within $9.00 with the probes' $0.0344; at most $0.02 an answer)
+BAR 7  tally answers that ended blocked or raised: 6 of 311 (+56 of arm E: 0)   (bar: at most 9 of the 367)
+       professional-holdout X41 X-2 resume blocked Implementation blocked on an ask it cannot satisfy: implementation names an ask it cannot satisfy: ask 2
+       tier2 Q14 T2 resume blocked ProviderFailure: model returned no text (provider=Tencent, finish_reason=length, completion_tokens=16384 of ma
+       tier2 Q25 T2 resume blocked ProviderFailure: model returned no text (provider=Tencent, finish_reason=length, completion_tokens=16384 of ma
+       tier4 T4-02 T4 first blocked ProviderFailure: model returned no text (provider=Tencent, finish_reason=length, completion_tokens=16384 of ma
+       tier4 T4-03 T4 first blocked ProviderFailure: model returned no text (provider=Tencent, finish_reason=length, completion_tokens=16384 of ma
+       tier4 T4-15 T4 resume blocked ProviderFailure: model returned no text (provider=Tencent, finish_reason=length, completion_tokens=16384 of ma
+BAR 8  units whose engineering seat was not the global answer model or triage seat not the second triage model: 0; units with a call on a reader tier: 0   (bar: none)
+       served, by function: {'architecture': {'xiaomi/mimo-v2.6-pro': 8}, 'engineering': {'deepseek/deepseek-v4.1-flash-1017': 354}, 'recompute': {'anthropic/claude-haiku-5.5': 93}, 'research': {'z-ai/glm-5.3': 362}, 'search': {'perplexity/sonar': 325}, 'triage': {'tencent/hy4-flash': 367}}
+
+COMPARISON arm E against arm F on the 56 field questions (right on the key):
+   questions made on both arms 56 of 56; F right 55, E right 56, F - E = -1   (better at +4 or more; no difference shown from -3 to +3; worse at -4 or less)
+   group 10: F 14 right, E 14 right, of 14
+   group 11: F 14 right, E 14 right, of 14
+   group 12: F 14 right, E 14 right, of 14
+   group 13: F 13 right, E 14 right, of 14
+   pairs (F right, E right): both 55, F only 0, E only 1, neither 0
+   arm E cost $0.6070 over 56 delivered; arm F $0.6610
+
+SCREENS (tier2 and golden scripts), beside the reading, never the result:
+   tier2: screen PASS on 22 of 23; reading right on 23; they agree on 22
+   golden: screen PASS on 0 of 2; reading right on 2; they agree on 0
+
+EVERY ANSWER NOT RIGHT (the tally, arm E and the re-asks, arm R):
+  professional-holdout X12 tally resume db166195 wrong confirmed=False points=False cautions=1 gaps=0 figures=[(3, 8.0), (4, 'Yes — within the TI limit of 10 (TI = 8)')]
+      caution: The recompute vote worded ask 4 differently from this answer; a decision model judged the two to say the same thing.
+  professional-holdout X14 tally resume cbb9ed16 wrong confirmed=False points=False cautions=0 gaps=0 figures=[(1, 'yes'), (2, '2025-08-01')]
+  professional-holdout X20 R rerun1 3ab7797a wrong confirmed=True points=True cautions=1 gaps=0 figures=[(1, 17.0), (2, 14.0), (3, 'superseded')]
+      caution: Two pages handed on give different figures for the same thing: 18 on csrc.nist.gov/files/pubs/sp/800/171/r1/final/docs/sp800-171r1-20161220.pdf and 19 on nvlpubs.nist.gov/nistpubs/
+      confirms: [1]
+  professional-holdout X31 tally resume fa8b350b wrong confirmed=False points=True cautions=3 gaps=4 figures=[(5, 2025.0)]
+      caution: Two pages handed on give different figures for the same thing: 2025 on legislation.gov.au/f2025l01047/asmade/text and 2000 on legislation.gov.au/f2005b00339/2005-08-24. The first r
+      caution: Two pages handed on give different figures for the same thing: 2025 on legislation.gov.au/f2025l01047/asmade/text and 2015 on legislation.gov.au/f2015l01438/asmade. The first reads
+      caution: Two pages handed on give different figures for the same thing: 2000 on legislation.gov.au/f2005b00339/2005-08-24 and 2015 on legislation.gov.au/f2015l01438/asmade. The first reads:
+      gap: The answer gives no result for ask 2: "what maximum EIRP".
+      gap: The answer gives no result for ask 4: "what additional limit on radiated peak power spectral density applies to that class".
+      gap: The answer marks part of the request as one it could not answer: The maximum EIRP in watts for a 'digital modulation' transmitter in 2400–2483.5 MHz under the in-force LIPD Class L
+      gap: The answer marks part of the request as one it could not answer: The additional radiated peak power spectral density limit for that class could not be read: no Schedule text was re
+  professional-holdout X41 R rerun1 ce206f39 wrong confirmed=False points=False cautions=0 gaps=2 figures=[]
+      gap: The answer marks part of the request as one it could not answer: Ask 2 (RθJA of ATmega328P, 28-pin PDIP, per DS40002061B): the fetched passages contain no thermal-properties table 
+      gap: The answer marks part of the request as one it could not answer: Ask 3 (maximum junction temperature or total power dissipation specified in DS40002061B): the Absolute Maximum Rati
+  professional-holdout X41 R rerun1 9e61104a wrong confirmed=False points=False cautions=0 gaps=2 figures=[]
+      gap: The answer marks part of the request as one it could not answer: Ask 2 (junction-to-ambient thermal resistance in degC/W, ATmega328P, 28-pin PDIP, from DS40002061B): the retrieved 
+      gap: The answer marks part of the request as one it could not answer: Ask 3 (maximum junction temperature or total power dissipation specified in DS40002061B): neither parameter appears
+  professional-holdout X8 tally resume ee6ae85b wrong confirmed=False points=False cautions=2 gaps=0 figures=[(1, 'Yes'), (2, '24 hours (early warning); 72 hours (vulnerability notification
+      caution: The recompute vote reached no majority on ask 2; that part of the answer was not compared.
+      caution: A lookup ran, but no page it named could be read, so nothing in this answer was checked against a source.
+  professional-holdout-2 Y115 R rerun2 ecaca810 wrong confirmed=True points=False cautions=0 gaps=0 figures=[(1, 10.0), (2, 200.0)]
+      confirms: [1, 2]
+  professional-holdout-2 Y115 R rerun2 0976ba93 wrong confirmed=True points=False cautions=0 gaps=0 figures=[(1, 10.0), (2, 200.0)]
+      confirms: [1, 2]
+  professional-holdout-2 Y115 tally resume 59fe8c03 wrong confirmed=True points=False cautions=0 gaps=2 figures=[(2, 200.0)]
+      gap: The answer gives no result for ask 1: "what minimum time of concentration is recommended when finding the rainfall intensity".
+      gap: The answer marks part of the request as one it could not answer: Ask 1 (minimum time of concentration recommended when finding rainfall intensity): FHWA HDS-4 does not state one. I
+      confirms: [2]
+  professional-holdout-2 Y124 R rerun1 0a02025f wrong confirmed=True points=False cautions=0 gaps=0 figures=[(2, 'no'), (3, "15-25 Hz energy range in the floor's spectral decomposition, wi
+      confirms: [3]
+  professional-holdout-2 Y13 R rerun2 19a1fb0a wrong confirmed=False points=True cautions=2 gaps=0 figures=[(2, 'No'), (3, 12000000.0)]
+      caution: The recompute vote did not run, so no figure in this answer was recomputed.
+      caution: The answer gives 1.2e+07 EUR for ask 3, and that figure is in none of the passages found on their pages.
+  professional-holdout-2 Y13 R rerun2 bb5409a8 wrong confirmed=False points=True cautions=2 gaps=0 figures=[(3, 'does_not_apply'), (4, 5000000.0)]
+      caution: The recompute vote did not run, so no figure in this answer was recomputed.
+      caution: The answer gives 5e+06 EUR for ask 4, and that figure is in none of the passages found on their pages.
+  professional-holdout-2 Y13 tally resume 3c0bf4fd wrong confirmed=False points=True cautions=2 gaps=0 figures=[(3, 'No'), (4, 5000000.0)]
+      caution: The recompute vote did not run, so no figure in this answer was recomputed.
+      caution: The answer gives 5e+06 EUR for ask 4, and that figure is in none of the passages found on their pages.
+  professional-holdout-2 Y170 F resume 3108c5c5 wrong confirmed=False points=True cautions=2 gaps=1 figures=[(2, 1e+17), (3, 'exclusive')]
+      caution: The recompute vote did not run, so no figure in this answer was recomputed.
+      caution: The answer gives 1e+17 eV for ask 2, and that figure is in none of the passages found on their pages.
+      gap: The answer marks part of the request as one it could not answer: Ask 1 (the constraint that the threshold be located in 'the 2024 PDG cosmic-ray review', i.e., Chapter 30 'Cosmic R
+  professional-holdout-2 Y170 R rerun1 a5e7f0cc wrong confirmed=False points=True cautions=2 gaps=0 figures=[(1, '1e17'), (2, 'exclusive')]
+      caution: The recompute vote did not run, so no figure in this answer was recomputed.
+      caution: The answer gives 1e+17 eV for ask 1, and that figure is in none of the passages found on their pages.
+  professional-holdout-2 Y37 tally first e1f7d933 partly confirmed=False points=False cautions=0 gaps=2 figures=[(1, 255.0), (3, 2049.0)]
+      gap: The answer gives no result for ask 2: "what was the old value".
+      gap: The answer marks part of the request as one it could not answer: Ask 2 — the old (RFC 3280) maximum email address length: the source set contains only RFC 5280 text (rfc-editor.org
+  professional-holdout-2 Y68 R rerun1 7edcffe6 partly confirmed=False points=False cautions=0 gaps=0 figures=[(1, 'wheel'), (2, "UI Events §5.4.2 'wheel' (present in WD-uievents-20151215, W
+  professional-holdout-2 Y68 R rerun1 9aea5edf partly confirmed=False points=False cautions=0 gaps=0 figures=[(1, 'wheel'), (2, "Wheel Event Types (§5.5) / Interface WheelEvent (§5.5.1): a 
+  professional-holdout-2 Y68 R rerun1 af6310da partly confirmed=False points=False cautions=0 gaps=1 figures=[(1, 'wheel')]
+      gap: The answer gives no result for ask 2: "What does the specification say about that section?".
+  professional-holdout-2 Y68 tally first 1d43e12f wrong confirmed=False points=False cautions=0 gaps=0 figures=[(1, 'wheel'), (2, 'UI Events wheel section: MUST dispatch wheel on wheel rotati
+  professional-holdout-2 Y88 R rerun2 1860f3ca partly confirmed=True points=False cautions=0 gaps=0 figures=[(2, 60.0), (3, '60 calendar days from the change, unless the requesting Plannin
+      confirms: [2, 3]
+  professional-holdout-2 Y88 R rerun2 e348918f wrong confirmed=True points=False cautions=0 gaps=2 figures=[(1, 60.0), (2, '60 calendar days after any change to the previously requested s
+      gap: The answer gives no result for ask 3: "How long must the Generator Owner keep data or evidence for Requirements R1 through R4?".
+      gap: The answer marks part of the request as one it could not answer: Ask 3 (How long must the Generator Owner keep data or evidence for Requirements R1 through R4?): the retention peri
+      confirms: [1, 2]
+  professional-holdout-2 Y88 tally resume fe2b4a15 wrong confirmed=True points=False cautions=0 gaps=2 figures=[(2, 60.0)]
+      gap: The answer gives no result for ask 4: "How long must the Generator Owner keep data or evidence for Requirements R1 through R4?".
+      gap: The answer marks part of the request as one it could not answer: Ask 4 — 'How long must the Generator Owner keep data or evidence for Requirements R1 through R4?': the Evidence Ret
+      confirms: [2]
+  professional-holdout-2 Y9 tally resume 1b4c893c wrong confirmed=False points=False cautions=2 gaps=0 figures=[(2, '1 September 2021'), (3, 'Article 3(2) and Article 4')]
+      caution: The recompute vote did not run, so no figure in this answer was recomputed.
+      caution: A lookup ran, but no page it named could be read, so nothing in this answer was checked against a source.
+  tier4 T4-42 R rerun2 fe07518c wrong confirmed=False points=True cautions=3 gaps=0 figures=[(1, 'VL-25'), (2, 'VL catalogue only (T4-42-1.md)'), (3, 410.0), (4, 400.0), (5
+      caution: The recompute vote disagrees with this answer on ask 1.
+      caution: The answer gives 410 EUR for ask 3, and that figure is in none of the passages found on their pages.
+      caution: The answer gives 28.64 A for ask 7, and that figure is in none of the passages found on their pages.
+  tier4 T4-42 tally resume a29af400 wrong confirmed=False points=True cautions=2 gaps=0 figures=[(1, 'VL-25'), (3, 'VL-25'), (4, 'pass'), (5, 'pass'), (6, 'pass'), (7, 'pass'),
+      caution: The answer gives 28.6 A for ask 9, and that figure is in none of the passages found on their pages.
+      caution: The answer gives 4.4 A for ask 10, and that figure is in none of the passages found on their pages.
+  tier4 T4-58 R rerun2 4d38a226 partly confirmed=False points=True cautions=3 gaps=0 figures=[(1, 'B-500'), (2, 3.0), (3, 108.3), (4, 400.0), (5, 50.0), (6, 'Bay series cata
+      caution: Two pages handed on give different figures for the same thing: 13.8 on ewh.ieee.org/soc/pes/switchgear/minutes/2010-1/s10hvcba11.pdf and 13 on studocu.com/in/document/aaa-college-o
+      caution: The answer gives 108.3 A for ask 3, and that figure is in none of the passages found on their pages.
+      caution: The answer gives 400 V for ask 4, and that figure is in none of the passages found on their pages.
+  tier4 T4-58 R rerun2 f3ea95b3 partly confirmed=False points=True cautions=2 gaps=0 figures=[(1, 'B-500'), (2, 3.0), (3, 108.3), (4, '400 V / 50 Hz'), (5, 'pass')]
+      caution: Two pages handed on give different figures for the same thing: 13.8 on ewh.ieee.org/soc/pes/switchgear/minutes/2010-1/s10hvcba11.pdf and 13 on studocu.com/in/document/aaa-college-o
+      caution: The answer gives 108.3 A for ask 3, and that figure is in none of the passages found on their pages.
+  tier4 T4-58 tally resume 44022ec5 partly confirmed=False points=True cautions=2 gaps=0 figures=[(1, 'B-500'), (2, 3.0), (3, 721.7), (4, 400.0), (5, 50.0), (6, 'Bay')]
+      caution: The answer gives 721.7 A for ask 3, and that figure is in none of the passages found on their pages.
+      caution: The answer gives 400 V for ask 4, and that figure is in none of the passages found on their pages.
+
+THE CAUTION FIX ON FRESH ANSWERS (branch fix/20261123-caution-flaw, design frozen at b66498e, gaps replayed on the stored rows;
+  in-sample on the 681 it designed on: gaps beside 8 of 658 right answers and 5 of 23 not right):
+                                                  answers  right not right   gap beside right      gap beside not right  shipped or gap, not right
+   A  the tally and arm E                             361    348        13      7 ( 2.0%)            5 of  13            11 of 13
+        on questions the 681 covered                  313    303        10      7 ( 2.3%)            5 of  10            8 of 10
+        on questions the design never saw              48     45         3      0 ( 0.0%)            0 of   3            3 of 3
+   B  the re-asks                                      81     64        17      1 ( 1.6%)            4 of  17            11 of 17
+   pooled fresh, A + B                                442    412        30      8 ( 1.9%)            9 of  30            22 of 30
+   (design: right answers marked at most 3 percent; every not-right one marked pointing at the wrong part, read by hand)
+   RIGHT ANSWERS THAT GET A GAP (fresh):
+      professional-holdout-2 Y4 tally first af16dfcc: ['The answer gives no result for ask 2: "what are the seasonal space heating particulate mat']
+      professional-holdout-2 Y89 tally resume a076a975: ['The answer gives no result for ask 2: "within what distance of battery handling areas must']
+      professional-holdout-2 Y104 tally resume f6c4222e: ['The answer gives no result for ask 2: "how many degrees Fahrenheit higher is the permanent']
+      professional-holdout X22 tally first a10289ea: ['The answer gives no result for ask 4: "what value fits a swap device (for example zram) wh']
+      professional-holdout X36 tally resume 7c264cf7: ["The answer marks part of the request as one it could not answer: 1 — 'maximum RF impedance"]
+      professional-holdout-2 Y158 E first 89ae5ad4: ['The answer gives no result for ask 2: "what prevalence ceiling must the checklist use for ']
+      professional-holdout-2 Y129 F first 660fe180: ['The answer gives no result for ask 2: "what are the word limits for memoranda supporting o']
+      professional-holdout X19 R rerun1 0a14970a: ['The answer marks part of the request as one it could not answer.', 'The answer marks part of the request as one it could not answer.', 'The answer marks part of the request as one it could not answer.']
+   the re-asks: made 84, delivered 81, cost $1.0879, seat not as set 0, a reader call 0
+
+THE DECISION TIER'S OWN JUDGMENTS OF THE QUOTES, per answer (secondary; all 442 delivered answers, arm E included):
+                                                             right                   not right
+   the lookup found a quote on its page, so the tier judged one 365 of 412 ( 88.6%)      28 of  30 ( 93.3%)
+   the shipped label: some quote judged not to answer         362 of 412 ( 87.9%)      28 of  30 ( 93.3%)
+   NO QUOTE JUDGED TO STATE AN ANSWER (the rule)              120 of 412 ( 29.1%)      15 of  30 ( 50.0%)
+     ... and not a request judged a calculation                79 of 412 ( 19.2%)       9 of  30 ( 30.0%)
+     ... and the answer otherwise comes clean                  80 of 412 ( 19.4%)       2 of  30 (  6.7%)
+   every judgment a confident no (none unsure)                 60 of 412 ( 14.6%)       8 of  30 ( 26.7%)
+   the answers that come clean (no shipped and no gap caution): right  302 of 412 ( 73.3%), not right    8 of  30 ( 26.7%)
+   EVERY ANSWER NOT RIGHT, its quotes judged yes/unsure/no and whether it comes clean:
+      professional-holdout X12 tally db166195 wrong: 0/5/13  rule=YES  comes clean=False
+      professional-holdout X14 tally cbb9ed16 wrong: 3/1/2  rule=no  comes clean=True
+      professional-holdout X20 R 3ab7797a wrong: 1/0/11  rule=no  comes clean=False
+      professional-holdout X31 tally fa8b350b wrong: 0/0/7  rule=YES  comes clean=False
+      professional-holdout X41 R ce206f39 wrong: 0/0/18  rule=YES  comes clean=False
+      professional-holdout X41 R 9e61104a wrong: 0/0/18  rule=YES  comes clean=False
+      professional-holdout X8 tally ee6ae85b wrong: 0/0/0  rule=no  comes clean=False
+      professional-holdout-2 Y115 R ecaca810 wrong: 1/5/12  rule=no  comes clean=True
+      professional-holdout-2 Y115 R 0976ba93 wrong: 2/1/15  rule=no  comes clean=True
+      professional-holdout-2 Y115 tally 59fe8c03 wrong: 2/1/15  rule=no  comes clean=False
+      professional-holdout-2 Y124 R 0a02025f wrong: 2/0/14  rule=no  comes clean=True
+      professional-holdout-2 Y13 R 19a1fb0a wrong: 0/4/2  rule=YES  comes clean=False
+      professional-holdout-2 Y13 R bb5409a8 wrong: 1/1/2  rule=no  comes clean=False
+      professional-holdout-2 Y13 tally 3c0bf4fd wrong: 1/0/2  rule=no  comes clean=False
+      professional-holdout-2 Y170 F 3108c5c5 wrong: 0/1/13  rule=YES  comes clean=False
+      professional-holdout-2 Y170 R a5e7f0cc wrong: 0/0/16  rule=YES  comes clean=False
+      professional-holdout-2 Y37 tally e1f7d933 partly: 0/6/12  rule=YES  comes clean=False
+      professional-holdout-2 Y68 R 7edcffe6 partly: 1/3/14  rule=no  comes clean=True
+      professional-holdout-2 Y68 R 9aea5edf partly: 0/1/17  rule=YES  comes clean=True
+      professional-holdout-2 Y68 R af6310da partly: 3/2/13  rule=no  comes clean=False
+      professional-holdout-2 Y68 tally 1d43e12f wrong: 1/1/16  rule=no  comes clean=True
+      professional-holdout-2 Y88 R 1860f3ca partly: 0/3/9  rule=YES  comes clean=True
+      professional-holdout-2 Y88 R e348918f wrong: 1/2/6  rule=no  comes clean=False
+      professional-holdout-2 Y88 tally fe2b4a15 wrong: 2/1/12  rule=no  comes clean=False
+      professional-holdout-2 Y9 tally 1b4c893c wrong: 0/0/0  rule=no  comes clean=False
+      tier4 T4-42 R fe07518c wrong: 0/0/18  rule=YES  comes clean=False
+      tier4 T4-42 tally a29af400 wrong: 0/0/15  rule=YES  comes clean=False
+      tier4 T4-58 R 4d38a226 partly: 0/2/15  rule=YES  comes clean=False
+      tier4 T4-58 R f3ea95b3 partly: 0/0/18  rule=YES  comes clean=False
+      tier4 T4-58 tally 44022ec5 partly: 0/0/16  rule=YES  comes clean=False
+
+WHAT THE DECISION TIER ROUTED (its two live routing switches, over the 361 delivered answers of the tally and arm E):
+   needs_calculation: routed yes 91, no 266, other or none 4  -> the three-sample recompute ran on 95 and was skipped on 266
+   needs_sources:     confident yes 278, unsure (taken as yes) 26, confident no 37, unavailable 2, not asked 18  -> a lookup ran on 324
+      professional                15 answers: recompute ran   2, lookup switch yes  15 / no   0
+      professional-hard           17 answers: recompute ran   0, lookup switch yes  17 / no   0
+      professional-misleading     12 answers: recompute ran   0, lookup switch yes  12 / no   0
+      professional-holdout        41 answers: recompute ran   8, lookup switch yes  39 / no   0
+      tier2                       23 answers: recompute ran  18, lookup switch yes   5 / no  18
+      golden                       2 answers: recompute ran   1, lookup switch yes   1 / no   1
+      tier4                       21 answers: recompute ran  21, lookup switch yes  17 / no   3
+      professional-holdout-2     230 answers: recompute ran  45, lookup switch yes 198 / no  15
+
+BY RUN (which run made each answer): {('first', True): 79, ('resume', True): 282, ('resume', False): 4, ('first', False): 2, ('rerun1', True): 54, ('rerun1', False): 3, ('rerun2', True): 27}

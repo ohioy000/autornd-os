@@ -1,0 +1,212 @@
+{
+ "54853873": {
+  "verdict": "right",
+  "stated": "256 bits",
+  "evidence": "256 bits of entropy in the 32-octet sequence",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "a0c74f78": {
+  "verdict": "right",
+  "stated": "default plain; S256-capable client MUST use S256",
+  "evidence": "Value: plain / the client MUST use S256",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ec1d6644": {
+  "verdict": "right",
+  "stated": "16384 bytes",
+  "evidence": "Final answer: 16384 bytes (decimal)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f7ddcfea": {
+  "verdict": "right",
+  "stated": "certificateHold (6); January 1, 1970",
+  "evidence": "MUST specify the revocation reason certificateHold (6)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6e4c0802": {
+  "verdict": "right",
+  "stated": "MUST use trusted DNSSEC-validating resolver",
+  "evidence": "MUST perform CAA validation using a trusted DNSSEC-validating resolver",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "af16dfcc": {
+  "verdict": "right",
+  "stated": "auto 40 mg/m3; manual 60 mg/m3",
+  "evidence": "40 mg/m3 for automatically stoked ... 60 mg/m3 for manually stoked",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "3baf81af": {
+  "verdict": "right",
+  "stated": "HTTP 1.0 or higher; https; text/plain charset utf-8",
+  "evidence": "MUST be accessed via HTTP 1.0 or a higher version ... https ... text/plain with utf-8",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b9d23956": {
+  "verdict": "right",
+  "stated": "none; directive MUST be ignored in meta",
+  "evidence": "imposes zero framing restrictions ... MUST be ignored",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "2ac73e6b": {
+  "verdict": "right",
+  "stated": "2048 bytes",
+  "evidence": "2048 bytes (2 KiB) of input per call to G",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "d5e1f18e": {
+  "verdict": "right",
+  "stated": "UTF-8",
+  "evidence": "UTF-8 (as defined by RFC 3629)",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ae7f75fa": {
+  "verdict": "right",
+  "stated": "[-(2**53)+1, (2**53)-1]",
+  "evidence": "[-(2**53)+1, (2**53)-1]",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "37f2fbcb": {
+  "verdict": "right",
+  "stated": "UTF-8 and UTF-16",
+  "evidence": "UTF-8 and UTF-16.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bc9b907a": {
+  "verdict": "right",
+  "stated": "48 bytes",
+  "evidence": "REPORTED WOFF2 VALUE: 48 bytes",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "59374fe0": {
+  "verdict": "right",
+  "stated": "0x774F4632 'wOF2'; reject as invalid",
+  "evidence": "user agents MUST reject the file as invalid",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "956bac3a": {
+  "verdict": "right",
+  "stated": "2^53 - 1 elements",
+  "evidence": "2^53 - 1 elements",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e0bcb3e3": {
+  "verdict": "right",
+  "stated": "65% of EEE placed on market (3-yr avg) or 85% of WEEE generated",
+  "evidence": "65 % ... or alternatively 85 % of WEEE generated",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "b3404896": {
+  "verdict": "right",
+  "stated": "clear Go 1.21; min/max Go 1.21",
+  "evidence": "clear ... Go 1.21; min and max ... Go 1.21",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "bf7e5a51": {
+  "verdict": "right",
+  "stated": "smallest page 512; max reserved 32",
+  "evidence": "minimum page size = 512 bytes; maximum reserved_bytes = 32",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6c209b9a": {
+  "verdict": "right",
+  "stated": "none; 49152-65535 not assigned",
+  "evidence": "none \u2014 there is no IANA-assigned service name to report",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "17d19371": {
+  "verdict": "right",
+  "stated": "none; no subtype can be registered",
+  "evidence": "none, and none can be",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8585487d": {
+  "verdict": "right",
+  "stated": "ub-emailaddress-length; 128 -> 255",
+  "evidence": "ub-emailaddress-length was changed from 128 to 255",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f56189b5": {
+  "verdict": "right",
+  "stated": "number of solutions returned",
+  "evidence": "upper bound on the number of solutions returned",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "18970cb2": {
+  "verdict": "right",
+  "stated": "4 primitive, 2 structured",
+  "evidence": "four primitive types ... two structured types",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "0c4efd83": {
+  "verdict": "right",
+  "stated": "4 octets",
+  "evidence": "Maximum ... 4 octets",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "8609c9ea": {
+  "verdict": "right",
+  "stated": "76 characters",
+  "evidence": "76 characters",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "6e3758ac": {
+  "verdict": "right",
+  "stated": "1,0 W; 1000 mW",
+  "evidence": "1,0 W (0,50 W + 0,50 W) ... 1000 mW",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "1365aa71": {
+  "verdict": "right",
+  "stated": "00 through 23",
+  "evidence": "only allows values between 00 and 23",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "fb61f084": {
+  "verdict": "right",
+  "stated": "add, remove, replace, move, copy, test",
+  "evidence": "one of add, remove, replace, move, copy, or test",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "f64c0b86": {
+  "verdict": "right",
+  "stated": "12 characters; MUST include pad characters unless spec says otherwise",
+  "evidence": "9 octets produce 12 encoded base64 characters ... MUST include appropriate '=' pad characters",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "e1f7d933": {
+  "verdict": "partly",
+  "stated": "max 255; UTIME through 2049; old value not determined, 128 only as unverified candidate",
+  "evidence": "Finding 2: OLD RFC 3280 VALUE: NOT DETERMINED (BLOCKED) ... 'publish prior value: unverified'",
+  "outside_wrong": false,
+  "note": "Old value 128 mentioned only as an unverified candidate, not committed."
+ }
+}
