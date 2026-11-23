@@ -248,3 +248,39 @@ print("\nTHE RECOMPUTE VOTE:")
 print(f"  ran                                                        {share(right, ran):24s} {share(not_right, ran)}")
 print(f"  flagged a disagreement                                     {share(right, flagged):24s} {share(not_right, flagged)}")
 
+
+
+# ---- Could the decision tier carry a caution? (the owner's question of 2026-11-23) ---------------------------------------
+# The tier already judges, for every quote a lookup found on its page, whether the passage states an answer to the question it was
+# quoted for (switch quote_answers, live as a label), and every run stores the judgments. They are read per answer here and no
+# call is made: the lookup found quotes and none was judged to state an answer (no confident yes). One rule, not tuned, read
+# in-sample; the final tally's analysis reads it again on answers made after it was stated. Prose is never read.
+def quote_choices(u):
+    switched = last(u["verdicts"], "answer_switches") or {}
+    return [r.get("choice") for r in switched.get("records") or [] if r.get("switch") == "quote_answers"]
+
+
+for u in pool:
+    c = quote_choices(u)
+    u["q_judged"], u["q_yes"], u["q_unsure"], u["q_no"] = len(c), c.count("yes"), c.count("unsure"), c.count("no")
+    u["calculation"] = routes._judged_a_calculation(u["verdicts"])
+    u["no_yes"] = u["q_judged"] > 0 and u["q_yes"] == 0
+    u["clean"] = not (u["old"] or u["gaps"])
+silent = [u for u in not_right if u["clean"]]
+print("\nTHE DECISION TIER'S OWN JUDGMENTS OF THE QUOTES (switch quote_answers; stored records read per answer, no call made):")
+print(f"  answers with a stored judgment of at least one quote: {sum(u['q_judged'] > 0 for u in pool)} of {len(pool)}")
+print("                                                             right answers            not-right answers")
+for label, key in (("some quote judged not to answer (the label as shipped)", lambda u: u["q_no"] > 0),
+                   ("NO QUOTE JUDGED TO STATE AN ANSWER (the rule)", lambda u: u["no_yes"]),
+                   ("  ... and not a request judged a calculation", lambda u: u["no_yes"] and not u["calculation"]),
+                   ("  ... and the answer otherwise comes clean", lambda u: u["no_yes"] and u["clean"]),
+                   ("every judgment a confident no (none unsure)", lambda u: u["q_judged"] > 0 and u["q_yes"] == 0 and u["q_unsure"] == 0)):
+    print(f"  {label:58s} {share(right, key):24s} {share(not_right, key)}")
+print(f"  the 11 not-right answers that come clean: {sum(u['no_yes'] for u in silent)} of {len(silent)} meet the rule")
+print(f"  the shipped and gap cautions, then with the rule added (right answers marked / not-right answers marked): "
+      f"{share(right, lambda u: not u['clean'])} / {share(not_right, lambda u: not u['clean'])}  then  "
+      f"{share(right, lambda u: not u['clean'] or u['no_yes'])} / {share(not_right, lambda u: not u['clean'] or u['no_yes'])}")
+print("  EVERY ANSWER NOT RIGHT: its quotes judged yes/unsure/no, whether the rule holds and whether it comes clean:")
+for u in not_right:
+    print(f"    {u['run'][:22]:22s} {u['q']:5s} {u['code']} {u['label']:6s} {u['q_yes']}/{u['q_unsure']}/{u['q_no']}  "
+          f"rule={'YES' if u['no_yes'] else 'no ':3s}  comes clean={u['clean']}")

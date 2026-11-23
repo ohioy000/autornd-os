@@ -74,3 +74,38 @@ WORDS IN THE ANSWER TEXT:
 THE RECOMPUTE VOTE:
   ran                                                        72 of 658 (10.9%)        4 of 23 (17.4%)
   flagged a disagreement                                     7 of 658 (1.1%)          2 of 23 (8.7%)
+
+THE DECISION TIER'S OWN JUDGMENTS OF THE QUOTES (switch quote_answers; stored records read per answer, no call made):
+  answers with a stored judgment of at least one quote: 660 of 681
+                                                             right answers            not-right answers
+  some quote judged not to answer (the label as shipped)     632 of 658 (96.0%)       23 of 23 (100.0%)
+  NO QUOTE JUDGED TO STATE AN ANSWER (the rule)              114 of 658 (17.3%)       11 of 23 (47.8%)
+    ... and not a request judged a calculation               101 of 658 (15.3%)       9 of 23 (39.1%)
+    ... and the answer otherwise comes clean                 86 of 658 (13.1%)        4 of 23 (17.4%)
+  every judgment a confident no (none unsure)                37 of 658 (5.6%)         4 of 23 (17.4%)
+  the 11 not-right answers that come clean: 4 of 11 meet the rule
+  the shipped and gap cautions, then with the rule added (right answers marked / not-right answers marked): 173 of 658 (26.3%) / 12 of 23 (52.2%)  then  259 of 658 (39.4%) / 16 of 23 (69.6%)
+  EVERY ANSWER NOT RIGHT: its quotes judged yes/unsure/no, whether the rule holds and whether it comes clean:
+    holdout-1 (2026-11-17) X13   0d815e39 wrong  4/2/10  rule=no   comes clean=True
+    holdout-1 (2026-11-17) X19   fd11a3fa wrong  0/2/1  rule=YES  comes clean=True
+    holdout-1 (2026-11-17) X31   f19cb915 wrong  0/2/3  rule=YES  comes clean=True
+    holdout-1 (2026-11-17) X16   7c596ecb wrong  2/0/16  rule=no   comes clean=False
+    holdout-1 (2026-11-17) X34   a0b8e4d6 wrong  0/6/3  rule=YES  comes clean=True
+    holdout-1 (2026-11-17) X20   e69584da wrong  0/0/6  rule=YES  comes clean=True
+    holdout-1 (2026-11-17) X38   0708d1ab wrong  0/1/2  rule=YES  comes clean=False
+    holdout-1 (2026-11-17) X41   567dc511 wrong  0/0/9  rule=YES  comes clean=False
+    holdout-1 (2026-11-17) X12   d095157e wrong  2/5/6  rule=no   comes clean=False
+    acceptance (2026-11-17 H4    2da97790 partly 3/3/12  rule=no   comes clean=True
+    acceptance (2026-11-17 H12   8211c748 wrong  0/0/2  rule=YES  comes clean=False
+    acceptance (2026-11-17 H8    4d3012aa partly 2/4/6  rule=no   comes clean=True
+    acceptance (2026-11-17 P4    5980d8ef partly 6/3/9  rule=no   comes clean=True
+    acceptance (2026-11-17 P4    2cbf73d5 partly 5/3/10  rule=no   comes clean=True
+    eleven-question rerun  X12   fbdd46c5 wrong  0/1/5  rule=YES  comes clean=False
+    eleven-question rerun  X31   90e1534b wrong  0/7/1  rule=YES  comes clean=False
+    eleven-question rerun  X12   d35fd003 wrong  0/2/1  rule=YES  comes clean=False
+    holdout-2 (2026-11-22) Y68   c83af71b wrong  3/3/18  rule=no   comes clean=True
+    holdout-2 (2026-11-22) Y124  8eaf653e partly 3/3/18  rule=no   comes clean=True
+    holdout-2 (2026-11-22) Y149  0dd1859c partly 4/0/20  rule=no   comes clean=False
+    holdout-2 (2026-11-22) Y140  1fd651cf wrong  1/2/21  rule=no   comes clean=False
+    holdout-2 (2026-11-22) Y146  4fb02bd5 wrong  4/3/17  rule=no   comes clean=False
+    holdout-2 (2026-11-22) Y170  e596ec2f wrong  0/0/24  rule=YES  comes clean=False

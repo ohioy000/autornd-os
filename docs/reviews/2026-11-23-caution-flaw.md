@@ -125,11 +125,44 @@ because each changes what is delivered:
   hold-out run ('$0.00013': '$0.036' over 268 answers) and the reader tier's ('$0.0028': '$0.756' over 268). Measuring it is a
   replay over the 681 stored rows, about '$0.09' to '$1.9' of calls, and **needs the owner's amount stated first.** It can only
   see what the passages handed on show: a trap like Y68, where the document states no figure and the answer gave one, is the
-  case the proof of absence below was built for.
+  case the proof of absence below was built for. The decision tier as the reader would make it cost about a tenth as much, but see the section above: 7 of the 11 answers that come clean have a passage it already judged to state an answer.
 * **B. A second answer from another model, compared on the typed results.** About '$0.0085' more an answer (the engineering tier's
   mean spend per delivered answer in the second hold-out run: '$2.29' over 268), so it about doubles the answer tier's spend. The
   recompute vote is this design for calculations: it ran on 72 of the 658 right answers and 4 of the 23 not right, and flagged 7 of
   those 72 and 2 of those 4 (X12, twice). It has not been measured on look-ups.
+
+### The decision tier, asked about by the owner on 2026-11-23 (measured free; nothing is built)
+
+The small yes/no model already feeds the delivery in two places: its judgment of each quote a lookup found on its page
+(`quote_answers`) stops a passage that does not answer from backing a figure, and `same_meaning` clears a worded-differently
+flag. Every run stores its judgments, so a third use can be tried on the 681 answers with no call. The one rule tried, not tuned:
+the lookup found quotes and **none was judged to state an answer** (no confident yes). Read per answer:
+
+| Rule read off the stored judgments | Right answers | Not-right answers |
+|---|---|---|
+| some quote judged not to answer (the label as shipped) | 632 of 658 (96.0%) | 23 of 23 |
+| **no quote judged to state an answer** | 114 of 658 (17.3%) | 11 of 23 (47.8%) |
+| ... and the answer otherwise comes clean | 86 of 658 (13.1%) | 4 of 23 (17.4%) |
+
+The label as shipped separates nothing: most quotes found on a page do not state the answer to the question they were quoted for.
+The rule separates a little (17% against 48%), but it reaches only **4 of the 11 answers that come clean** (X19, X20, X31, X34) and
+marks 86 right answers to do it; added to the shipped and gap cautions it takes the right answers marked from 26.3% to 39.4% for 4
+more of the 23. That is not a trade worth making, and it is in-sample.
+
+The other 7 of the 11 have a quote the tier judged to state an answer, and the readers' notes say why they are wrong: a right figure
+with a condition the answer left out or misstated (X34 "more than 18 m" for "18 m or more"; P4's business-day definition, twice; H4's
+missing components; H8's missing as-listed form), a right headline with a missing second item (X13), and the second hold-out's two
+traps (Y68, a figure given where the document says none; Y124, the right verdict for the wrong reason). In each the figure stands on a
+page, which the free check already confirms, so a yes/no model handed the same passage and the answer's figure would say yes. **The
+tier compares texts; these answers' texts agree with their passages. It is the wrong instrument for the silent half.** What would see
+them is a second answer or a reader that holds the key's insight (the two levers below), not a cheaper yes/no on the same evidence.
+
+Cost is not the reason: the stored runs' decision-tier spend divided by its questions is about '$0.00001' a question, so one new
+question per ask would add under '$0.0002' an answer and a replay of it over the 681 would cost about '$0.02' to '$0.12'. Two uses
+are untried and neither reaches the silent half: clearing a "pages differ" caution with the same-meaning question (108 right answers
+carry one against 3 not right; it would cut false alarms and add no catch), and guarding a second answer (lever B) so that only the
+answers it judged risky pay for one, which waits on lever B being measured. The final tally's analysis prints the rule again on the
+answers made after it was written down.
 
 ## 6. Found and not touched (each needs a ruling, none is decided here)
 
@@ -187,4 +220,4 @@ python -I docs/probes/caution_replay.py REPO TRACES_DIR [TRACES_DIR ...]
 runs, and the second hold-out's (`20261122T-holdout2-*`) are on branch `evals/20261122-holdout2-harness-run`; give both
 directories. The probe prints every table above (the shipped cautions by kind, the new ones, the two discarded checks, the
 hedging count, the words, the vote) and every not-right answer and every right answer that gets a gap. The output of the run
-recorded here is `docs/traces/20261123-caution-replay.txt`.
+recorded here is `docs/traces/20261123-caution-replay.txt` (sha256 `94f86c58ecd9bd6479a4d67a3d311350ceea9ae3824be211260a81a921104842`; its first 76 lines are the output as first committed, byte for byte, and the decision-tier section is added after them).
