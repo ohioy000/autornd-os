@@ -218,7 +218,7 @@ def resume() -> None:
 # The owner's approval of 2026-11-23 ("I approve that plan perfect"): re-ask every question that has produced a not-right answer,
 # three times each, on the shipped line-up, so that the caution fix meets enough fresh wrong answers to say what it catches.
 # Measured beforehand: those 19 questions were not right on 23 of the 83 answers made to them (28 percent; 3.4 percent over all 681).
-RERUN_REPEATS = 3
+RERUN_REPEATS = int(os.environ.get("TALLY_RERUN_REPEATS", "3"))   # the revised caution fix's test (docs/preregistration-20261123-caution-v2-test.md): 3, and 1 for its control
 RERUN_PER_ANSWER_CAP = 0.022    # as the tally's
 RERUN_TIER4_PER_ANSWER_CAP = 0.030
 RERUN_MIN_CAP = 0.10
@@ -239,7 +239,9 @@ def rerun_pairs(stage: str) -> list[tuple[str, str]]:
     if stage == "1":
         return RERUN_KNOWN
     extra = json.loads(Path(os.environ["TALLY_RERUN_EXTRA"]).read_text(encoding="utf-8"))
-    return [(s, q) for s, q in extra if (s, q) not in RERUN_KNOWN]
+    # TALLY_RERUN_KEEP_KNOWN=1: the revised fix's test asks the known questions again, on the tree that carries the revision.
+    keep = os.environ.get("TALLY_RERUN_KEEP_KNOWN") == "1"
+    return [(s, q) for s, q in extra if keep or (s, q) not in RERUN_KNOWN]
 
 
 def rerun_lanes(stage: str) -> list[list[dict]]:
