@@ -207,6 +207,14 @@ async def name_terms(client, request: str, asks: list[Any] | None) -> dict[int, 
             temperature=0.0,
             max_tokens=TERMS_MAX_TOKENS,
             schema=TermsVerdict,
+            # Thinking off (owner's "do it" of 2026-11-23, probed the same day): the cheapest tier is a
+            # reasoning model, and at the default it spent all 2000 tokens thinking and returned no text,
+            # three tries in a row, on all three requests probed, so the words, and with them every proof,
+            # were missing for 188 of the 199 eligible units of the second hold-out run (the swallowed
+            # failure below is why nobody saw it). With thinking off the same three requests came back in
+            # 48 to 76 tokens at about '$0.00002' each, the words being the ones the key of X41 lists.
+            # Medium effort and a budget of 6000 both still returned nothing.
+            reasoning={"enabled": False},
         )
         verdict = TermsVerdict(**data)
     except BudgetExceeded:

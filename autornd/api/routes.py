@@ -745,8 +745,19 @@ def _gaps(verdicts: list[tuple[str, Any]], request: str) -> list[str]:
     out: list[str] = []
     if results:
         answered = checks.asks_named(results, anchored) | stated_none
-        for ask in anchored:
-            if ask["kind"] in RESULT_KINDS and ask["number"] not in answered:
+        open_asks = [ask for ask in anchored
+                     if ask["kind"] in RESULT_KINDS and ask["number"] not in answered]
+        # A result that names an ask which wants none (a constraint, a format, a step) is a numbering
+        # slip, not a missing result: the model counted its results from 1 and not the asks. Each such
+        # result stands in for one ask left open, and an answer is told it left asks open only when it
+        # left more of them than it had slips. Measured on the 442 fresh answers of 2026-11-23: all six
+        # right answers that were told "gives no result for ask N" had a constraint as ask 1 and one
+        # result numbered 1 per ask wanted, and every not-right answer told so had fewer results than
+        # asks wanted (docs/reviews/2026-11-23-final-tally.md).
+        slipped = len(checks.asks_named(
+            results, [a for a in anchored if a["kind"] not in RESULT_KINDS]))
+        if len(open_asks) > slipped:
+            for ask in open_asks:
                 out.append(f"The answer gives no result for ask {ask['number']}: "
                            f"\"{ask['quote'][:ASK_QUOTE_CHARS]}\".")
     for entry in blocked:

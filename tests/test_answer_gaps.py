@@ -112,6 +112,36 @@ class TestAnAskWithNoResult:
         assert checks.numbered_asks(proposals, REQUEST) == []
         assert _gaps(_run(results=[_result(1)], proposals=proposals), REQUEST) == []
 
+    def test_a_result_numbered_at_a_constraint_is_a_slip_not_a_missing_result(self):
+        """The six right answers of the fresh test that were told they gave no result had a constraint as
+        ask 1 and one result per ask wanted, numbered from 1: the model counted its results, not the
+        asks. Told "no result for ask 3" beside a text that answers it, they were marked for nothing."""
+        proposals = [{"quote": CONSTRAINT, "kind": "constraint"}, {"quote": ASK_1, "kind": "value"},
+                     {"quote": ASK_2, "kind": "value"}]
+        slipped = _run(results=[_result(1), _result(2)], proposals=proposals)
+        assert _gaps(slipped, REQUEST) == []
+
+    def test_a_slip_stands_in_for_one_open_ask_and_no_more(self):
+        """With a constraint first and two asks wanted, one result numbered 1 leaves both open and the one
+        slip covers only one of them, so both are said: the answer is short, as the not-right ones were.
+        With four asks (three wanted) and two results, the slip covers one of the two left open and both
+        are still said."""
+        proposals = [{"quote": CONSTRAINT, "kind": "constraint"}, {"quote": ASK_1, "kind": "value"},
+                     {"quote": ASK_2, "kind": "value"}]
+        assert _gaps(_run(results=[_result(1)], proposals=proposals), REQUEST) == [
+            f'The answer gives no result for ask 2: "{ASK_1}".',
+            f'The answer gives no result for ask 3: "{ASK_2}".']
+        three = proposals + [{"quote": "state the date of the filing", "kind": "value"}]
+        out = _gaps(_run(results=[_result(1), _result(2)], proposals=three),
+                    REQUEST + " Also state the date of the filing.")
+        assert len(out) == 2 and "ask 3" in out[0] and "ask 4" in out[1]
+
+    def test_a_result_naming_an_ask_that_does_not_exist_is_no_slip(self):
+        """A slip is a result that names an ask of the request that wants none. One that names nothing
+        in the request answers no ask, and the ask it was meant for is still said."""
+        out = _gaps(_run(results=[_result(9)], kinds=("value", "constraint")), REQUEST)
+        assert len(out) == 1 and "ask 1" in out[0]
+
     def test_a_long_quote_is_cut(self):
         long_quote = "what minimum ratio applied " + "and still " * 30 + "for the bank"
         request = f"First, {long_quote}? Then more."
