@@ -40,11 +40,14 @@ As the earlier runs (D50): one blind reader on codes that hide the question's dr
 seeded right ones before I look at the cautions or the old labels. Not right is `wrong` or `partly`. The second look is read from the
 documents' `request` field (2) in the run's records, and the cost from the run's own accounting.
 
-## Baseline (the same questions on 2026-11-24, the harness before the repairs)
+## Baseline (the same questions in the first hold-out asked again, 2026-11-24, the harness before the repairs)
 
-Of 15 answers to the five target questions: 3 wrong (X3 draw 1, X26 draw 3, X35 draw 3), 3 undelivered by provider failures (X18 d3, X31 d2
-harness block, X26 none... counted as the run recorded), the rest right. Of 12 control answers: all delivered ones right except X41 partly
-once (the re-ask).
+Corrected before any spend (the paragraph first pushed in 38685b8 was loose; this one is read from the stored records). Targets, three
+draws each: X26 right, right, **wrong** (the 4 GiB refused); X35 right, right, **wrong** (the 2018 value refused); X3 **wrong** (no figure,
+the 33-character PDF), right, right; X31 right, blocked by the harness's own rule, right; X18 right, right, no answer (a 504, later
+answered right in the retry check). That is **3 wrong and 1 harness block of 15**, and one provider failure. Controls: X19, X36 and X40
+right in every draw that delivered; X41 right, no answer (a 429), right, and partly once in the retry check (it did not commit that the
+datasheet states none).
 
 ## Predictions (written before any answer is read)
 
