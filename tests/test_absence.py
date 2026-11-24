@@ -26,7 +26,9 @@ from autornd.routing.openrouter import BudgetExceeded
 # The words X41's key names, and the way a datasheet that states the figure would print them.
 WORDS = ["thermal resistance", "junction-to-ambient", "θJA", "°C/W"]
 DATASHEET = ("Absolute Maximum Ratings. Operating Temperature -55°C to +125°C. "
-             "DC Current per I/O Pin 40.0 mA. DC Current VCC and GND Pins 200.0 mA.")
+             "DC Current per I/O Pin 40.0 mA. DC Current VCC and GND Pins 200.0 mA. "
+             # long enough to be a document: a page under MIN_PROOF_PAGE_CHARS (200) proves nothing
+             "Supply Voltage 1.8V to 5.5V. Clock Frequency 0 to 20 MHz. Package options: 28-pin SOIC, 32-pin TQFP.")
 
 
 def page(text, url="https://example.org/ds.pdf", pages=0):
@@ -158,6 +160,15 @@ class TestTheProof:
     def test_a_word_split_across_a_line_break_still_means_no_proof(self):
         text = DATASHEET + " The thermal resis-\ntance is 45."
         assert prove({1: WORDS}, {"u": page(text)}) == []
+
+    def test_an_empty_extraction_proves_nothing(self):
+        """A PDF that extracted as 33 characters was read "in full" and proved both asks of X3 absent on
+        2026-11-24; a page with no text finds no word, so it cannot be a search of a document."""
+        from autornd.knowledge.absence import MIN_PROOF_PAGE_CHARS
+        assert MIN_PROOF_PAGE_CHARS == 200
+        assert prove({1: WORDS}, {"u": page("x" * 33)}) == []
+        assert prove({1: WORDS}, {"u": page("x" * (MIN_PROOF_PAGE_CHARS - 1))}) == []
+        assert len(prove({1: WORDS}, {"u": page("x" * MIN_PROOF_PAGE_CHARS)})) == 1
 
     def test_fewer_than_the_least_words_is_no_proof(self):
         assert MIN_TERMS == 3
