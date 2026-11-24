@@ -60,6 +60,15 @@ SQUASH_FROM = 6
 PROVABLE_KINDS = ("value", "verdict", "")
 
 TERMS_MAX_TOKENS = 2000
+# A page with fewer characters than this is an empty extraction, not a document, and proves nothing: a search
+# of a page with no text finds no word, so "none stated" would be proved on nothing. Measured on the first
+# hold-out asked again (2026-11-24): a PDF that extracted as 33 characters was read "in full", proved both
+# asks of X3 absent, and the answer went out saying the figures the page holds were not stated, wrong. Cut at
+# 200 and not higher on purpose: the proofs on pages of 1,770 to 2,079 characters (X31's) stood beside right
+# answers in every draw that carries one, so only an empty extraction is excluded, and the cut is not tuned
+# to a page that was wrong at a larger size. Whether this turns the X3 answer right is not claimed: with no
+# proof the lookup hands on the blocked note, as it does for any ask it cannot prove.
+MIN_PROOF_PAGE_CHARS = 200
 
 TERMS_PROMPT = """\
 Below is a request and its asks, numbered. For each ask that wants a figure, a name, a date or a rule, \
@@ -266,6 +275,8 @@ def prove(terms: dict[int, list[str]], read: dict[str, Any]) -> list[Proof]:
         if len(words) < MIN_TERMS:
             continue
         for url, page in read.items():
+            if len(page.text) < MIN_PROOF_PAGE_CHARS:
+                continue
             if any(texts[url].has(word) for word in words):
                 continue
             proofs.append(Proof(
