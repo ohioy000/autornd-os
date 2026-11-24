@@ -538,6 +538,12 @@ class TestTheAnswerReachesTheCaller:
         assert workflow.status is WorkflowStatus.COMPLETED, workflow.error
 
 
+# A delivered answer is a report, not a letter. The tests below carry typed results beside an answer text,
+# and a text of one word beside typed results is itself told as a gap (routes._gaps, MIN_ANSWER_WORDS),
+# so the stand-in is as long as a real answer is.
+A_REPORT = " ".join(["The answer states its results in full."] * 6)
+
+
 class TestTheRecordsBesideTheAnswer:
     def _workflow(self, *phases):
         import json
@@ -639,7 +645,7 @@ class TestTheRecordsBesideTheAnswer:
             ("asks", {"asks": [{"quote": "q", "kind": "value"}] * asks}),
             ("sources", {"lookup": "grounding", "findings": [{"quotes": [
                 dict({"status": quote_status, "text": self.QUOTE}, **quote)]}]}),
-            ("implement", {"summary": "a", "results": results}),
+            ("implement", {"summary": A_REPORT, "results": results}),
             ("recompute_vote", vote)))
 
     def test_a_figure_in_a_found_passage_is_said_and_quiets_the_vote(self):
@@ -802,7 +808,7 @@ class TestTheRecordsBesideTheAnswer:
             ("sources", {"lookup": "grounding", "findings": [{"quotes": [
                 {"status": "found", "text": first, "url": urls[0]},
                 {"status": "found", "text": second, "url": urls[1]}]}]}),
-            ("implement", {"summary": "a", "results": [
+            ("implement", {"summary": A_REPORT, "results": [
                 {"ask": 1, "value": value, "unit": "hours"}]}),
             ("recompute_vote", {"flagged": False, "checked": True})))
 
@@ -898,7 +904,7 @@ class TestTheRecordsBesideTheAnswer:
             ("sources", {"lookup": "grounding", "findings": [{"quotes": [
                 {"status": "found", "text": long[:600], "whole": long,
                  "url": "u"}]}]}),
-            ("implement", {"summary": "a", "results": [
+            ("implement", {"summary": A_REPORT, "results": [
                 {"ask": 1, "value": 10, "unit": "hours"}]}),
             ("recompute_vote", {"flagged": False, "checked": True})))
         assert detail.cautions == []
