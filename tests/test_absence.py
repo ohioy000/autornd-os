@@ -276,6 +276,14 @@ class TestNamingTheWords:
         for left_out in ("list the steps in order", "answer in a table", "stay under the stated limit"):
             assert left_out not in message
 
+    async def test_the_call_is_made_with_thinking_off(self):
+        """The cheapest tier is a reasoning model: at its default it spent all 2000 tokens thinking and
+        returned no text on every request probed on 2026-11-23, so no proof was ever made. With thinking
+        off the same requests came back in under 80 tokens. Medium effort and a bigger budget did not help."""
+        client, calls = double({"terms": []})
+        await name_terms(client, "r", ASKS)
+        assert calls[0]["reasoning"] == {"enabled": False}
+
     async def test_no_provable_ask_is_no_call_and_no_cost(self):
         client, calls = double({"terms": []})
         assert await name_terms(client, "r", [ASKS[2], ASKS[3]]) == {}
