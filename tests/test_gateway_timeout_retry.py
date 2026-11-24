@@ -179,3 +179,76 @@ class TestAGatewayTimeoutIsRetried:
         assert client.reserved == pytest.approx(0.0, abs=1e-9), (
             "the retry's reservation was left held")
         assert client._in_flight == 0
+
+
+class _LocalGateway:
+    """A real HTTP server on loopback that answers the chat endpoint with the 504 the provider gave, then
+    a good reply: the client's own transport carries the retry, nothing is mocked."""
+
+    def __init__(self, statuses):
+        import http.server
+        import json
+        import threading
+
+        outer = self
+        self.statuses = list(statuses)
+        self.requests = 0
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):  # noqa: N802 (the method name http.server dispatches on)
+                self.rfile.read(int(self.headers.get("Content-Length", 0)))
+                outer.requests += 1
+                status = outer.statuses.pop(0) if outer.statuses else 200
+                if status == 200:
+                    body = json.dumps({"choices": [{"message": {"content": "{}"},
+                                                    "finish_reason": "stop"}],
+                                       "usage": {"prompt_tokens": 1, "completion_tokens": 1,
+                                                 "cost": 0.001}}).encode()
+                else:
+                    body = json.dumps({"error": {"message": "The operation was aborted"}}).encode()
+                self.send_response(status)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        self.server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        self.url = f"http://127.0.0.1:{self.server.server_address[1]}"
+
+    def close(self):
+        self.server.shutdown()
+        self.server.server_close()
+
+
+@pytest.mark.asyncio
+class TestAgainstARealServer:
+    async def test_two_real_504s_then_a_reply_deliver_the_answer(self, monkeypatch):
+        gateway = _LocalGateway([504, 504, 200])
+        monkeypatch.setattr(orm, "_GATEWAY_TIMEOUT_BACKOFF_S", 0.01)
+        client = OpenRouterClient(api_key="test", base_url=gateway.url)
+        try:
+            out = await _chat(client)
+        finally:
+            await client._client.aclose()
+            gateway.close()
+        assert out.content == "{}"
+        assert gateway.requests == 3, "the real server was not asked three times"
+        assert client.retries_by_kind.get("gateway_timeout") == 2
+
+    async def test_three_real_504s_end_the_unit_after_the_bound(self, monkeypatch):
+        gateway = _LocalGateway([504] * 5)
+        monkeypatch.setattr(orm, "_GATEWAY_TIMEOUT_BACKOFF_S", 0.01)
+        client = OpenRouterClient(api_key="test", base_url=gateway.url)
+        try:
+            with pytest.raises(httpx.HTTPStatusError) as raised:
+                await _chat(client)
+        finally:
+            await client._client.aclose()
+            gateway.close()
+        assert gateway.requests == 3, "a pinned tier cannot fall back: three requests and no more"
+        assert "The operation was aborted" in str(raised.value)
