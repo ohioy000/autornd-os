@@ -1,0 +1,1474 @@
+{
+ "spend": 0.0601,
+ "results": [
+  {
+   "set": "professional-hard",
+   "q": "H9",
+   "ask": 1,
+   "claimed_none": true,
+   "ours": [
+    "CVSS 3.1 Base Score",
+    "CVSS v3.1 Base Score",
+    "CVSS Version 3.1 Base Score",
+    "Base Score",
+    "CVSS 3.1 score",
+    "CVSS v3.1 score"
+   ],
+   "stronger": [
+    "CVSS v3.1 Base Score",
+    "Base Score",
+    "CVSS v3.1",
+    "CVSS:3.1",
+    "CVSS v3 Score"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "CVSS v3.1",
+    "CVSS:3.1",
+    "CVSS v3 Score"
+   ]
+  },
+  {
+   "set": "professional-hard",
+   "q": "H9",
+   "ask": 2,
+   "claimed_none": true,
+   "ours": [],
+   "stronger": [
+    "CRITICAL",
+    "Severity",
+    "Base Severity"
+   ],
+   "stronger_exact_in_ours": 0,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": [
+    "CRITICAL",
+    "Severity",
+    "Base Severity"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X19",
+   "ask": 1,
+   "claimed_none": true,
+   "ours": [
+    "number of consecutive invalid logon attempts",
+    "consecutive invalid logon attempts",
+    "invalid logon attempts",
+    "unsuccessful logon attempts",
+    "failed logon attempts"
+   ],
+   "stronger": [
+    "number of consecutive invalid logon attempts",
+    "consecutive invalid logon attempts",
+    "limit of consecutive invalid logon attempts",
+    "invalid logon attempts",
+    "unsuccessful logon attempts",
+    "maximum number of unsuccessful attempts"
+   ],
+   "stronger_exact_in_ours": 4,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "limit of consecutive invalid logon attempts",
+    "maximum number of unsuccessful attempts"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X19",
+   "ask": 2,
+   "claimed_none": true,
+   "ours": [
+    "time period",
+    "specified period of time",
+    "period of time",
+    "time interval",
+    "configured time period"
+   ],
+   "stronger": [
+    "organization-defined time period",
+    "time period",
+    "defined time period",
+    "during [Assignment: organization-defined time period]"
+   ],
+   "stronger_exact_in_ours": 1,
+   "stronger_in_longer_or_shorter_form": 3,
+   "stronger_missing_from_ours": [
+    "organization-defined time period",
+    "defined time period",
+    "during [Assignment: organization-defined time period]"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X19",
+   "ask": 3,
+   "claimed_none": true,
+   "ours": [
+    "lockout duration",
+    "account lockout duration",
+    "lockout period",
+    "time period that the account is locked",
+    "duration of the lockout"
+   ],
+   "stronger": [
+    "lockout duration",
+    "account lockout",
+    "locked account",
+    "organization-defined time period"
+   ],
+   "stronger_exact_in_ours": 1,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "account lockout",
+    "locked account",
+    "organization-defined time period"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X31",
+   "error": "ProviderFailure: model returned no text (provider=StreamLake, finish_reason=length, completion_tokens=6000 of max_tokens=6000 — a reasoning model can spend its whole budget befo"
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X36",
+   "ask": 1,
+   "claimed_none": true,
+   "ours": [
+    "RF impedance",
+    "impedance",
+    "maximum RF impedance",
+    "2.5 mΩ",
+    "2.5 milliohms",
+    "2.5 mohms",
+    "0.0025 Ω"
+   ],
+   "stronger": [
+    "RF impedance",
+    "impedance",
+    "bond impedance",
+    "joint impedance",
+    "milliohms",
+    "mΩ",
+    "ohms"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 5,
+   "stronger_missing_from_ours": [
+    "bond impedance",
+    "joint impedance",
+    "milliohms",
+    "mΩ",
+    "ohms"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X41",
+   "ask": 1,
+   "claimed_none": true,
+   "ours": [
+    "RθJA",
+    "Thermal Resistance",
+    "Junction-to-Ambient",
+    "28-pin PDIP",
+    "PDIP",
+    "°C/W"
+   ],
+   "stronger": [
+    "θJA",
+    "Junction-to-Ambient Thermal Resistance",
+    "RθJA",
+    "°C/W",
+    "PDIP",
+    "28-lead, 0.300\" Wide, Plastic Dual Inline Package (PDIP)",
+    "28P3"
+   ],
+   "stronger_exact_in_ours": 3,
+   "stronger_in_longer_or_shorter_form": 3,
+   "stronger_missing_from_ours": [
+    "θJA",
+    "Junction-to-Ambient Thermal Resistance",
+    "28-lead, 0.300\" Wide, Plastic Dual Inline Package (PDIP)",
+    "28P3"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X41",
+   "ask": 2,
+   "claimed_none": true,
+   "ours": [
+    "TJ",
+    "Junction Temperature",
+    "Maximum Junction Temperature",
+    "PTOT",
+    "Power Dissipation",
+    "Total Power Dissipation"
+   ],
+   "stronger": [
+    "Maximum Junction Temperature",
+    "Junction Temperature",
+    "TJ",
+    "Total Power Dissipation",
+    "PD",
+    "mW"
+   ],
+   "stronger_exact_in_ours": 4,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": [
+    "PD",
+    "mW"
+   ]
+  },
+  {
+   "set": "tier4",
+   "q": "T4-52",
+   "ask": 5,
+   "claimed_none": false,
+   "ours": [
+    "Drive",
+    "A20",
+    "A40",
+    "A60",
+    "A80",
+    "Cost EUR"
+   ],
+   "stronger": [
+    "A60",
+    "Drive A60",
+    "Arc A60",
+    "Arc geared servo A60",
+    "Helion Motion A60",
+    "Helion Motion Arc geared servo A60"
+   ],
+   "stronger_exact_in_ours": 1,
+   "stronger_in_longer_or_shorter_form": 5,
+   "stronger_missing_from_ours": [
+    "Drive A60",
+    "Arc A60",
+    "Arc geared servo A60",
+    "Helion Motion A60",
+    "Helion Motion Arc geared servo A60"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y43",
+   "ask": 1,
+   "claimed_none": false,
+   "ours": [
+    "UTF-8",
+    "UTF8",
+    "8-bit Unicode Transformation Format",
+    "Unicode Transformation Format - 8 bit",
+    "RFC 3629"
+   ],
+   "stronger": [
+    "UTF-8",
+    "UTF8",
+    "Unicode",
+    "Unicode Transformation Format, 8-bit",
+    "UTF-16",
+    "UTF-32"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "Unicode",
+    "Unicode Transformation Format, 8-bit",
+    "UTF-16",
+    "UTF-32"
+   ]
+  },
+  {
+   "set": "tier4",
+   "q": "T4-58",
+   "ask": 1,
+   "claimed_none": false,
+   "ours": [
+    "Lumenford",
+    "Bay series reactors",
+    "Bay reactor",
+    "Model",
+    "B-160",
+    "B-200",
+    "B-320",
+    "B-500"
+   ],
+   "stronger": [
+    "B-320",
+    "Bay reactor",
+    "Bay series reactors",
+    "Lumenford",
+    "Model"
+   ],
+   "stronger_exact_in_ours": 5,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": []
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X14",
+   "ask": 1,
+   "claimed_none": false,
+   "ours": [
+    "Article 3(3), points (d), (e) and (f)",
+    "Article 3(3)(d), (e) and (f)",
+    "Article 3(3)",
+    "Radio Equipment Directive 2014/53/EU",
+    "Directive 2014/53/EU",
+    "RED",
+    "Delegated Regulation (EU) 2022/30",
+    "Regulation (EU) 2022/30"
+   ],
+   "stronger": [
+    "Delegated Regulation (EU) 2022/30",
+    "Directive 2014/53/EU",
+    "Radio Equipment Directive",
+    "Article 3(3), points (d), (e) and (f)",
+    "essential requirements",
+    "Regulation (EU) 2017/745",
+    "Medical Devices Regulation",
+    "medical device"
+   ],
+   "stronger_exact_in_ours": 3,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "Radio Equipment Directive",
+    "essential requirements",
+    "Regulation (EU) 2017/745",
+    "Medical Devices Regulation",
+    "medical device"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X14",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "1 August 2025",
+    "from 1 August 2025",
+    "shall apply from 1 August 2025",
+    "date of application",
+    "Delegated Regulation (EU) 2022/30",
+    "Regulation (EU) 2022/30"
+   ],
+   "stronger": [
+    "1 August 2025",
+    "01/08/2025",
+    "1.8.2025",
+    "2025-08-01",
+    "August 1, 2025",
+    "August 2025"
+   ],
+   "stronger_exact_in_ours": 1,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "01/08/2025",
+    "1.8.2025",
+    "2025-08-01",
+    "August 1, 2025",
+    "August 2025"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y4",
+   "ask": 3,
+   "claimed_none": false,
+   "ours": [
+    "seasonal space heating particulate matter emissions",
+    "particulate matter emissions",
+    "PM",
+    "mg/m3",
+    "automatically stoked boilers",
+    "manually stoked boilers"
+   ],
+   "stronger": [
+    "particulate matter",
+    "PM",
+    "emission limit values",
+    "automatically stoked solid fuel boilers",
+    "manually stoked solid fuel boilers",
+    "seasonal space heating energy efficiency",
+    "mg/kWh"
+   ],
+   "stronger_exact_in_ours": 1,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "particulate matter",
+    "emission limit values",
+    "automatically stoked solid fuel boilers",
+    "manually stoked solid fuel boilers",
+    "seasonal space heating energy efficiency",
+    "mg/kWh"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y37",
+   "ask": 1,
+   "claimed_none": false,
+   "ours": [
+    "255",
+    "255 characters",
+    "255 octets",
+    "maximum email address length",
+    "email address length"
+   ],
+   "stronger": [
+    "255",
+    "255 characters",
+    "255 octets",
+    "emailAddress",
+    "electronic mail address",
+    "RFC 5280",
+    "255 characters in length"
+   ],
+   "stronger_exact_in_ours": 3,
+   "stronger_in_longer_or_shorter_form": 2,
+   "stronger_missing_from_ours": [
+    "emailAddress",
+    "electronic mail address",
+    "RFC 5280",
+    "255 characters in length"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y37",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "128",
+    "128 characters",
+    "128 octets",
+    "RFC 3280",
+    "maximum email address length"
+   ],
+   "stronger": [
+    "128",
+    "128 characters",
+    "128 octets",
+    "emailAddress",
+    "RFC 3280",
+    "128 characters in length"
+   ],
+   "stronger_exact_in_ours": 4,
+   "stronger_in_longer_or_shorter_form": 2,
+   "stronger_missing_from_ours": [
+    "emailAddress",
+    "128 characters in length"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y37",
+   "ask": 3,
+   "claimed_none": false,
+   "ours": [
+    "2049",
+    "through 2049",
+    "UTCTime",
+    "GeneralizedTime",
+    "certificate validity dates"
+   ],
+   "stronger": [
+    "2049",
+    "the year 2049",
+    "UTCTime",
+    "GeneralizedTime",
+    "certificate validity dates",
+    "through the year 2049",
+    "2050"
+   ],
+   "stronger_exact_in_ours": 4,
+   "stronger_in_longer_or_shorter_form": 2,
+   "stronger_missing_from_ours": [
+    "the year 2049",
+    "through the year 2049",
+    "2050"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y35",
+   "ask": 1,
+   "claimed_none": false,
+   "ours": [
+    "plain",
+    "default",
+    "code_challenge_method"
+   ],
+   "stronger": [
+    "plain",
+    "code_challenge_method",
+    "code_verifier"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": [
+    "code_verifier"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y130",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "withdrawal period",
+    "expire",
+    "14 days",
+    "fourteen days",
+    "from the day of the conclusion of the contract",
+    "service contract",
+    "sales contract"
+   ],
+   "stronger": [
+    "right of withdrawal",
+    "service contract",
+    "sales contract",
+    "14 days",
+    "day of the conclusion of the contract",
+    "physical possession of the goods",
+    "last good",
+    "withdrawal period"
+   ],
+   "stronger_exact_in_ours": 4,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "right of withdrawal",
+    "day of the conclusion of the contract",
+    "physical possession of the goods",
+    "last good"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y102",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "every month",
+    "monthly",
+    "month",
+    "each month",
+    "once a month",
+    "1 month"
+   ],
+   "stronger": [
+    "12-month intervals",
+    "12-month interval",
+    "12 months",
+    "one year",
+    "annually",
+    "1 year"
+   ],
+   "stronger_exact_in_ours": 0,
+   "stronger_in_longer_or_shorter_form": 3,
+   "stronger_missing_from_ours": [
+    "12-month intervals",
+    "12-month interval",
+    "12 months",
+    "one year",
+    "annually",
+    "1 year"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y129",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "4,500 words",
+    "3,500 words",
+    "memorandum supporting or opposing a dispositive motion",
+    "memorandum supporting or opposing any other motion",
+    "dispositive motion",
+    "any other motion",
+    "word limits"
+   ],
+   "stronger": [
+    "word limit",
+    "words",
+    "word count",
+    "memorandum in support of or in opposition to a motion",
+    "memorandum in support of or in opposition to any motion",
+    "memorandum",
+    "dispositive motion",
+    "motion for summary decision"
+   ],
+   "stronger_exact_in_ours": 1,
+   "stronger_in_longer_or_shorter_form": 3,
+   "stronger_missing_from_ours": [
+    "word limit",
+    "words",
+    "word count",
+    "memorandum in support of or in opposition to a motion",
+    "memorandum in support of or in opposition to any motion",
+    "memorandum",
+    "motion for summary decision"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y158",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "4,000 individuals per year",
+    "4,000 individuals in the United States per year",
+    "fewer than 4,000 individuals in the United States per year",
+    "no more than 4,000 individuals in the United States per year",
+    "prevalence of the disease or condition",
+    "HUD ceiling",
+    "humanitarian use device definition"
+   ],
+   "stronger": [
+    "8,000",
+    "8,000 individuals",
+    "not more than 8,000 individuals",
+    "8,000 individuals in the United States",
+    "not more than 8,000 individuals in the United States",
+    "humanitarian use device (HUD)",
+    "HUD"
+   ],
+   "stronger_exact_in_ours": 0,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "8,000",
+    "8,000 individuals",
+    "not more than 8,000 individuals",
+    "8,000 individuals in the United States",
+    "not more than 8,000 individuals in the United States",
+    "humanitarian use device (HUD)",
+    "HUD"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y156",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "at least 90 days",
+    "90 days",
+    "ninety days",
+    "at least ninety days"
+   ],
+   "stronger": [
+    "90 days",
+    "at least 90 days",
+    "ninety days",
+    "days",
+    "premarket notification",
+    "510(k)",
+    "premarket notification (510(k))"
+   ],
+   "stronger_exact_in_ours": 3,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "days",
+    "premarket notification",
+    "510(k)",
+    "premarket notification (510(k))"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y163",
+   "ask": 1,
+   "claimed_none": false,
+   "ours": [
+    "7 calendar days",
+    "seven calendar days",
+    "7 days",
+    "seven days",
+    "7-day",
+    "seven-day"
+   ],
+   "stronger": [
+    "7 calendar days",
+    "7 days",
+    "seven days",
+    "7-day expedited reporting",
+    "as soon as possible but no later than 7 calendar days",
+    "7 calendar days of the sponsor's initial receipt"
+   ],
+   "stronger_exact_in_ours": 3,
+   "stronger_in_longer_or_shorter_form": 3,
+   "stronger_missing_from_ours": [
+    "7-day expedited reporting",
+    "as soon as possible but no later than 7 calendar days",
+    "7 calendar days of the sponsor's initial receipt"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y163",
+   "ask": 3,
+   "claimed_none": false,
+   "ours": [
+    "day 8",
+    "8th day",
+    "eighth day",
+    "day eight"
+   ],
+   "stronger": [
+    "15 days",
+    "15 calendar days",
+    "an additional 8 days",
+    "8 days",
+    "day 15",
+    "within 15 calendar days of the sponsor's initial receipt",
+    "follow-up report as complete as possible"
+   ],
+   "stronger_exact_in_ours": 0,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": [
+    "15 days",
+    "15 calendar days",
+    "an additional 8 days",
+    "8 days",
+    "day 15",
+    "within 15 calendar days of the sponsor's initial receipt",
+    "follow-up report as complete as possible"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y3",
+   "ask": 3,
+   "claimed_none": false,
+   "ours": [
+    "five years",
+    "5 years",
+    "five (5) years",
+    "period of five years",
+    "period of 5 years",
+    "for five years",
+    "for 5 years"
+   ],
+   "stronger": [
+    "5 years",
+    "five years",
+    "a period of 5 years",
+    "years"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 2,
+   "stronger_missing_from_ours": [
+    "a period of 5 years",
+    "years"
+   ]
+  },
+  {
+   "set": "professional",
+   "q": "P14",
+   "ask": 1,
+   "claimed_none": false,
+   "ours": [
+    "15 characters",
+    "at least 15 characters",
+    "minimum of 15 characters",
+    "15",
+    "characters"
+   ],
+   "stronger": [
+    "15 characters",
+    "15",
+    "minimum length of 15 characters",
+    "15-character",
+    "minimum password length",
+    "characters"
+   ],
+   "stronger_exact_in_ours": 3,
+   "stronger_in_longer_or_shorter_form": 2,
+   "stronger_missing_from_ours": [
+    "minimum length of 15 characters",
+    "15-character",
+    "minimum password length"
+   ]
+  },
+  {
+   "set": "professional",
+   "q": "P14",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "8 characters",
+    "at least 8 characters",
+    "minimum of 8 characters",
+    "characters"
+   ],
+   "stronger": [
+    "8 characters",
+    "minimum length of 8 characters",
+    "8-character",
+    "minimum password length",
+    "characters"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "minimum length of 8 characters",
+    "8-character",
+    "minimum password length"
+   ]
+  },
+  {
+   "set": "professional",
+   "q": "P14",
+   "ask": 3,
+   "claimed_none": false,
+   "ours": [
+    "64 characters",
+    "at least 64 characters",
+    "maximum of 64 characters",
+    "64",
+    "characters"
+   ],
+   "stronger": [
+    "64 characters",
+    "64",
+    "at least 64 characters",
+    "64-character",
+    "maximum password length",
+    "characters"
+   ],
+   "stronger_exact_in_ours": 4,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "64-character",
+    "maximum password length"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X22",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "0 to 200",
+    "0-200",
+    "0..200",
+    "0 through 200",
+    "0 <= vm.swappiness <= 200"
+   ],
+   "stronger": [
+    "vm.swappiness",
+    "swappiness",
+    "sysctl vm.swappiness",
+    "vm.swappiness sysctl",
+    "/proc/sys/vm/swappiness"
+   ],
+   "stronger_exact_in_ours": 0,
+   "stronger_in_longer_or_shorter_form": 2,
+   "stronger_missing_from_ours": [
+    "vm.swappiness",
+    "swappiness",
+    "sysctl vm.swappiness",
+    "vm.swappiness sysctl",
+    "/proc/sys/vm/swappiness"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X22",
+   "ask": 3,
+   "claimed_none": false,
+   "ours": [
+    "60",
+    "vm.swappiness = 60",
+    "default is 60",
+    "default value is 60"
+   ],
+   "stronger": [
+    "vm.swappiness",
+    "swappiness",
+    "sysctl vm.swappiness",
+    "vm.swappiness sysctl",
+    "/proc/sys/vm/swappiness"
+   ],
+   "stronger_exact_in_ours": 0,
+   "stronger_in_longer_or_shorter_form": 2,
+   "stronger_missing_from_ours": [
+    "vm.swappiness",
+    "swappiness",
+    "sysctl vm.swappiness",
+    "vm.swappiness sysctl",
+    "/proc/sys/vm/swappiness"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X22",
+   "ask": 4,
+   "claimed_none": false,
+   "ours": [
+    "120",
+    "vm.swappiness = 120",
+    "swappiness=120",
+    "set vm.swappiness to 120"
+   ],
+   "stronger": [],
+   "stronger_exact_in_ours": 0,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": []
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y142",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "8:00 a.m. to 10:00 p.m.",
+    "8:00 a.m.",
+    "10:00 p.m.",
+    "Eastern Standard Time",
+    "Eastern Daylight Time",
+    "daily submission window"
+   ],
+   "stronger": [
+    "6:00 a.m. to 10:00 p.m.",
+    "6:00 a.m.",
+    "10:00 p.m.",
+    "Eastern Standard Time",
+    "Eastern Daylight Time",
+    "Washington, D.C.",
+    "hours"
+   ],
+   "stronger_exact_in_ours": 3,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "6:00 a.m. to 10:00 p.m.",
+    "6:00 a.m.",
+    "Washington, D.C.",
+    "hours"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y142",
+   "ask": 3,
+   "claimed_none": false,
+   "ours": [
+    "Saturdays",
+    "Sundays",
+    "Federal holidays",
+    "weekends",
+    "holidays"
+   ],
+   "stronger": [
+    "Saturdays",
+    "Sundays",
+    "federal holidays",
+    "holidays"
+   ],
+   "stronger_exact_in_ours": 4,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": []
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y115",
+   "ask": 1,
+   "claimed_none": false,
+   "ours": [
+    "minimum time of concentration",
+    "time of concentration",
+    "Tc",
+    "t_c",
+    "minimum Tc",
+    "rainfall intensity"
+   ],
+   "stronger": [
+    "5 minutes",
+    "5 min",
+    "5 min.",
+    "five minutes",
+    "time of concentration",
+    "tc"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": [
+    "5 minutes",
+    "5 min",
+    "5 min.",
+    "five minutes"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y115",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "maximum drainage area",
+    "drainage area",
+    "area",
+    "acre",
+    "acres",
+    "sq mi",
+    "square miles",
+    "square mile"
+   ],
+   "stronger": [
+    "200 acres",
+    "200 acres (80 ha)",
+    "80 ha",
+    "drainage area",
+    "watershed",
+    "catchment area"
+   ],
+   "stronger_exact_in_ours": 1,
+   "stronger_in_longer_or_shorter_form": 3,
+   "stronger_missing_from_ours": [
+    "200 acres",
+    "200 acres (80 ha)",
+    "80 ha",
+    "watershed",
+    "catchment area"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X34",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "more than 11m",
+    "11m",
+    "more than 11 metres",
+    "top storey more than 11m above ground level"
+   ],
+   "stronger": [
+    "11m",
+    "11 metres",
+    "11m above ground level",
+    "11 metres above ground level",
+    "more than 11m above ground level"
+   ],
+   "stronger_exact_in_ours": 1,
+   "stronger_in_longer_or_shorter_form": 4,
+   "stronger_missing_from_ours": [
+    "11 metres",
+    "11m above ground level",
+    "11 metres above ground level",
+    "more than 11m above ground level"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X34",
+   "ask": 3,
+   "claimed_none": false,
+   "ours": [
+    "more than 30m",
+    "30m",
+    "more than 30 metres",
+    "top storey more than 30m above ground level"
+   ],
+   "stronger": [
+    "30m",
+    "30 metres",
+    "30m above ground level",
+    "30 metres above ground level",
+    "more than 30m above ground level"
+   ],
+   "stronger_exact_in_ours": 1,
+   "stronger_in_longer_or_shorter_form": 4,
+   "stronger_missing_from_ours": [
+    "30 metres",
+    "30m above ground level",
+    "30 metres above ground level",
+    "more than 30m above ground level"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X34",
+   "ask": 4,
+   "claimed_none": false,
+   "ours": [
+    "more than 11m",
+    "11m",
+    "more than 11 metres",
+    "top storey more than 11m above ground level"
+   ],
+   "stronger": [
+    "18m",
+    "18 metres",
+    "18m above ground level",
+    "18 metres above ground level",
+    "more than 18m above ground level"
+   ],
+   "stronger_exact_in_ours": 0,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": [
+    "18m",
+    "18 metres",
+    "18m above ground level",
+    "18 metres above ground level",
+    "more than 18m above ground level"
+   ]
+  },
+  {
+   "set": "professional-holdout",
+   "q": "X34",
+   "ask": 5,
+   "claimed_none": false,
+   "ours": [
+    "1 October 2023",
+    "1st October 2023",
+    "October 2023",
+    "01/10/2023"
+   ],
+   "stronger": [
+    "the 2025 amendment",
+    "Amendment 2025",
+    "2025 amendment",
+    "takes effect",
+    "come into force"
+   ],
+   "stronger_exact_in_ours": 0,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": [
+    "the 2025 amendment",
+    "Amendment 2025",
+    "2025 amendment",
+    "takes effect",
+    "come into force"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y68",
+   "ask": 1,
+   "claimed_none": false,
+   "ours": [
+    "wheel",
+    "wheel event",
+    "mouse wheel event",
+    "DOM wheel event",
+    "wheel event type"
+   ],
+   "stronger": [
+    "wheel",
+    "WheelEvent",
+    "mouse wheel",
+    "DOMMouseScroll"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "mouse wheel",
+    "DOMMouseScroll"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y68",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [],
+   "stronger": [
+    "wheel",
+    "WheelEvent",
+    "user agent",
+    "MUST",
+    "mouse wheel"
+   ],
+   "stronger_exact_in_ours": 0,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": [
+    "wheel",
+    "WheelEvent",
+    "user agent",
+    "MUST",
+    "mouse wheel"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y61",
+   "ask": 3,
+   "claimed_none": false,
+   "ours": [],
+   "stronger": [
+    "add",
+    "remove",
+    "replace",
+    "move",
+    "copy",
+    "test",
+    "op"
+   ],
+   "stronger_exact_in_ours": 0,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": [
+    "add",
+    "remove",
+    "replace",
+    "move",
+    "copy",
+    "test",
+    "op"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y120",
+   "ask": 1,
+   "claimed_none": false,
+   "ours": [
+    "two openings",
+    "minimum of two openings",
+    "at least two openings",
+    "2 openings"
+   ],
+   "stronger": [
+    "two or more openings",
+    "two openings",
+    "minimum of two openings",
+    "at least two openings",
+    "openings",
+    "flood openings"
+   ],
+   "stronger_exact_in_ours": 3,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "two or more openings",
+    "openings",
+    "flood openings"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y120",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "one square inch for every square foot",
+    "1 square inch per square foot",
+    "net area",
+    "square inch",
+    "square foot"
+   ],
+   "stronger": [
+    "one square inch for every square foot",
+    "one square inch per square foot of enclosed area",
+    "1 square inch",
+    "square inch",
+    "total net open area",
+    "net open area",
+    "enclosed area"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 2,
+   "stronger_missing_from_ours": [
+    "one square inch per square foot of enclosed area",
+    "1 square inch",
+    "total net open area",
+    "net open area",
+    "enclosed area"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y120",
+   "ask": 3,
+   "claimed_none": false,
+   "ours": [
+    "no higher than one foot above grade",
+    "one foot above grade",
+    "1 foot above grade",
+    "bottom of all openings"
+   ],
+   "stronger": [
+    "one foot above grade",
+    "1 foot above grade",
+    "bottom of all openings",
+    "above grade",
+    "grade"
+   ],
+   "stronger_exact_in_ours": 3,
+   "stronger_in_longer_or_shorter_form": 2,
+   "stronger_missing_from_ours": [
+    "above grade",
+    "grade"
+   ]
+  },
+  {
+   "set": "professional-hard",
+   "q": "H1",
+   "ask": 1,
+   "claimed_none": false,
+   "ours": [
+    "rest",
+    "minimum rest",
+    "rest period",
+    "rest requirement",
+    "time off",
+    "days off",
+    "hours off",
+    "between duty periods"
+   ],
+   "stronger": [
+    "minimum rest",
+    "minimum rest period",
+    "rest period",
+    "required rest",
+    "hours of rest",
+    "hours",
+    "10 consecutive hours",
+    "minimum rest requirement"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 5,
+   "stronger_missing_from_ours": [
+    "minimum rest period",
+    "required rest",
+    "hours of rest",
+    "hours",
+    "10 consecutive hours",
+    "minimum rest requirement"
+   ]
+  },
+  {
+   "set": "professional-misleading",
+   "q": "M1",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [
+    "maximum takeoff weight",
+    "6,000 pounds",
+    "6,000 lbs",
+    "MTW"
+   ],
+   "stronger": [
+    "maximum certificated takeoff weight",
+    "maximum takeoff weight",
+    "MTOW",
+    "6,000 pounds",
+    "6,000 lbs",
+    "certificated maximum weight"
+   ],
+   "stronger_exact_in_ours": 3,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": [
+    "maximum certificated takeoff weight",
+    "MTOW",
+    "certificated maximum weight"
+   ]
+  },
+  {
+   "set": "professional-misleading",
+   "q": "M1",
+   "ask": 3,
+   "claimed_none": false,
+   "ours": [
+    "authorized to carry no more than six occupants",
+    "six occupants",
+    "6 occupants",
+    "occupants"
+   ],
+   "stronger": [
+    "6 occupants",
+    "occupants",
+    "maximum occupancy",
+    "seats",
+    "authorized occupants"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 1,
+   "stronger_missing_from_ours": [
+    "maximum occupancy",
+    "seats",
+    "authorized occupants"
+   ]
+  },
+  {
+   "set": "professional-misleading",
+   "q": "M1",
+   "ask": 4,
+   "claimed_none": false,
+   "ours": [
+    "no more than five passengers",
+    "five passengers",
+    "5 passengers",
+    "passengers"
+   ],
+   "stronger": [
+    "5 passengers",
+    "passengers",
+    "passengers on board",
+    "number of passengers"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 2,
+   "stronger_missing_from_ours": [
+    "passengers on board",
+    "number of passengers"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y170",
+   "ask": 1,
+   "claimed_none": false,
+   "ours": [
+    "E ≳ 10^18 eV",
+    "10^18 eV",
+    "1 EeV",
+    "ultra-high-energy cosmic rays",
+    "UHECR"
+   ],
+   "stronger": [
+    "10^18 eV",
+    "1 EeV",
+    "EeV",
+    "1000 PeV",
+    "eV",
+    "E > 10^18 eV",
+    "ultra-high-energy cosmic rays (UHECRs)"
+   ],
+   "stronger_exact_in_ours": 2,
+   "stronger_in_longer_or_shorter_form": 4,
+   "stronger_missing_from_ours": [
+    "EeV",
+    "1000 PeV",
+    "eV",
+    "E > 10^18 eV",
+    "ultra-high-energy cosmic rays (UHECRs)"
+   ]
+  },
+  {
+   "set": "professional-holdout-2",
+   "q": "Y170",
+   "ask": 2,
+   "claimed_none": false,
+   "ours": [],
+   "stronger": [
+    "E > 10^18 eV",
+    "greater than",
+    "exceeds"
+   ],
+   "stronger_exact_in_ours": 0,
+   "stronger_in_longer_or_shorter_form": 0,
+   "stronger_missing_from_ours": [
+    "E > 10^18 eV",
+    "greater than",
+    "exceeds"
+   ]
+  }
+ ]
+}

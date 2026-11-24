@@ -99,3 +99,27 @@ read the same figure on every stored "none stated" claim from now on.
   cautions, not of accuracy, and the accuracy figures are not a bar.
 * One reading each by five blind readers plus the executor's reading of 28 answers (every not-right and 20 sampled right ones).
 * The control's one not-right answer (H9) is a probable regression from the working proofs; one answer.
+
+## Addendum: are the words made with thinking off good enough? (the owner asked, 2026-11-23)
+
+The earlier finding that thinking off hurts (`docs/reviews/2026-11-22-triage-model-hy4-flash.md`: 41, 51 and 15 units below a risk floor
+against 1, 6 and 1) is for the **triage call that reads a request's risk**, on the same model. This change is to a different call, the one that
+lists the words a document prints, and nothing about triage changed. What was not shown is that those word lists are as good as a
+stronger model's, so it was measured (probe `docs/probes/absence_words_comparison.py`, the architecture tier at its default thinking,
+**'$0.0601'** of a cap of '$0.40'; results `docs/traces/20261123T-caution-v2-words-comparison.json`):
+
+* 30 questions (every question whose answer said none stated, then a seeded sample), 52 asks. Of the stronger model's 293 words the run's lists
+  held 98 exactly and 81 in a longer or shorter form (61 percent); 114 were absent, mostly variants (θJA for RθJA, "organization-defined time
+  period", units such as mΩ). The stronger model **also failed to answer once** (X31: it spent 6000 tokens thinking and returned nothing), so
+  thinking on is not a safe setting for this call at any budget tried.
+* The test that matters: the pages the real proofs searched were fetched again and each proof made with both lists
+  (`docs/traces/20261123T-caution-v2-words-veto-test.txt`). **Equal** on 5 of 8 asks. **Ours made more proofs** on two: X19 ask 3 (10 against 3: the
+  stronger list's "organization-defined time period" and "account lockout" appear in the standard) and X41 ask 2 (5 against 0: the stronger list's
+  short words "PD" and "mW" appear in any datasheet). **Ours made fewer** on H9 ask 2 (0 against 5, the run's list was empty there).
+* **For the two wrong "none stated" answers the word lists are not the cause.** H9: the stronger list proves the same six pages (a 72-character
+  page proves anything). X31: the stronger model returned nothing, so no comparison.
+
+Reading: the lists made with thinking off are neither systematically narrower nor wider than a stronger model's; each direction costs
+something (broader words refuse true proofs on X41, narrower ones let a proof through on X19 ask 3, where the document does print the
+parameter as "organization-defined"). The failure that was seen is the size of the page, not the words. Not shown: that a different
+model would do better on the words.
