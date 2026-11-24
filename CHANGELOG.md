@@ -6,6 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Added (2026-11-23, the owner's instruction to plan and implement a fix for the warning flaw; on a branch, for the owner's ruling):
+the delivery says what the answer itself leaves open, read off its typed fields and never off its prose. An ask of kind value or
+verdict with no typed result and no claim that the document states none, a `blocked_on` note the run completed on, an ask the
+answer reports as not stated (with what the check behind that was), and an answer text under 30 words beside typed results each
+add a caution that names the ask or the text. Replayed over the 681 labelled answers of four runs, the new cautions stand beside
+8 of the 658 right answers (1.2 percent) and 5 of the 23 that were not right, each pointing at the part that was wrong, where the
+shipped cautions stand beside 25 percent of the right and 35 percent of the not-right and rarely at the wrong part; 11 of the 23
+still come clean. The five are in-sample, and the review says why free checks cannot reach the rest and what two paid levers would
+cost to measure. 30 new tests, each of 16 guarded lines broken once. Nothing is paid for and no answer changes. The record is
+`docs/reviews/2026-11-23-caution-flaw.md`, and `docs/probes/caution_replay.py` reproduces every figure from the committed traces.
+
+Fixed (2026-11-23): the suite's one warning, a class-level asyncio mark on a class that holds one async test and one that is not.
+
 Changed (2026-11-22, the owner's ruling: "make sure any model can be used for any tier ... plug and play"): the spend guard bounds
 any catalogue price at its highest rate instead of leaving a model blind. The worst case now takes, for each side of a call, the
 highest rate across the entry and its time-of-day or prompt-size `overrides`, with every cache component counted on the prompt

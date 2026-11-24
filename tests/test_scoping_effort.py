@@ -52,7 +52,6 @@ class TestTheResearchCallsAskForMediumEffort:
         assert all(kw["reasoning"] == {"effort": "medium"} for kw in seen)
 
 
-@pytest.mark.asyncio
 class TestTheResearchTierHasItsOwnCeiling:
     async def test_the_three_research_calls_carry_the_ceiling(self, monkeypatch):
         """Break-proof: take `max_tokens=settings.research_max_tokens` out of any

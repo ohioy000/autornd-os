@@ -1,0 +1,111 @@
+LEFT OUT eleven-question rerun (2026-11-19): 27 answers of a frontier model (no harness run, so no cautions)
+labelled delivered answers: 681  right 658  not right 23  unread 0
+  the not-right ones by the two readers' verdict: {'wrong': 17, 'partly': 6}
+  holdout-1 (2026-11-17): 122 answers, 9 not right
+  acceptance (2026-11-17): 264 answers, 5 not right
+  eleven-question rerun (2026-11-19): 27 answers, 3 not right
+  holdout-2 (2026-11-22): 226 answers, 6 not right
+  holdout-2 unpinned arm (2026-11-22): 42 answers, 0 not right
+
+                                  right answers              not-right answers
+  a caution as shipped       167 of 658 (25.4%)         8 of 23 (34.8%)
+  a gap caution (new)        8 of 658 (1.2%)            5 of 23 (21.7%)
+  either                     173 of 658 (26.3%)         12 of 23 (52.2%)
+  neither (comes clean)      485 of 658 (73.7%)         11 of 23 (47.8%)
+
+gap cautions by kind (answers carrying one):
+  no_result    right   3   not right   2
+  blocked      right   4   not right   2
+  not_stated   right   2   not right   2
+  short_text   right   0   not right   1
+
+EVERY ANSWER NOT RIGHT:
+  holdout-1 (2026-11-17) X13   0d815e39 wrong  shipped cautions 0  gaps: []
+  holdout-1 (2026-11-17) X19   fd11a3fa wrong  shipped cautions 0  gaps: []
+  holdout-1 (2026-11-17) X31   f19cb915 wrong  shipped cautions 0  gaps: []
+  holdout-1 (2026-11-17) X16   7c596ecb wrong  shipped cautions 1  gaps: []
+  holdout-1 (2026-11-17) X34   a0b8e4d6 wrong  shipped cautions 0  gaps: []
+  holdout-1 (2026-11-17) X20   e69584da wrong  shipped cautions 0  gaps: []
+  holdout-1 (2026-11-17) X38   0708d1ab wrong  shipped cautions 0  gaps: ['The answer gives no result for ask 3: "what was the buffer-interval minimum in the 2009 MU', 'The answer marks part of the request as one it could not answer: No text from the 2009 MUT']
+  holdout-1 (2026-11-17) X41   567dc511 wrong  shipped cautions 3  gaps: []
+  holdout-1 (2026-11-17) X12   d095157e wrong  shipped cautions 2  gaps: []
+  acceptance (2026-11-17 H4    2da97790 partly shipped cautions 0  gaps: []
+  acceptance (2026-11-17 H12   8211c748 wrong  shipped cautions 3  gaps: []
+  acceptance (2026-11-17 H8    4d3012aa partly shipped cautions 0  gaps: []
+  acceptance (2026-11-17 P4    5980d8ef partly shipped cautions 0  gaps: []
+  acceptance (2026-11-17 P4    2cbf73d5 partly shipped cautions 0  gaps: []
+  eleven-question rerun  X12   fbdd46c5 wrong  shipped cautions 2  gaps: []
+  eleven-question rerun  X31   90e1534b wrong  shipped cautions 1  gaps: []
+  eleven-question rerun  X12   d35fd003 wrong  shipped cautions 2  gaps: []
+  holdout-2 (2026-11-22) Y68   c83af71b wrong  shipped cautions 0  gaps: []
+  holdout-2 (2026-11-22) Y124  8eaf653e partly shipped cautions 0  gaps: []
+  holdout-2 (2026-11-22) Y149  0dd1859c partly shipped cautions 0  gaps: ['The answer gives no result for ask 2: "what are the corresponding minimum ratios in the te', "The answer marks part of the request as one it could not answer: Ask 2 ('what are the corr"]
+  holdout-2 (2026-11-22) Y140  1fd651cf wrong  shipped cautions 0  gaps: ['The text of this answer is only 1 word long, so it may not state the results listed for it']
+  holdout-2 (2026-11-22) Y146  4fb02bd5 wrong  shipped cautions 1  gaps: ['The answer says ask 2 is not stated in the document. The only check behind that is a searc']
+  holdout-2 (2026-11-22) Y170  e596ec2f wrong  shipped cautions 0  gaps: ['The answer says ask 1 is not stated in the document. The only check behind that is a searc', 'The answer says ask 2 is not stated in the document. The only check behind that is a searc']
+
+EVERY RIGHT ANSWER THAT GETS A GAP:
+  holdout-1 (2026-11-17) X41   3e53be3f gaps: ['The answer marks part of the request as one it could not answer: DS40002061B (09/2020) doe', 'The answer marks part of the request as one it could not answer: The same datasheet specif']
+  holdout-1 (2026-11-17) X36   0dffde29 gaps: ['The answer gives no result for ask 1: "what maximum RF impedance, in ohms at a stated freq', 'The answer marks part of the request as one it could not answer.']
+  eleven-question rerun  X41   e7fde2ce gaps: ['The answer marks part of the request as one it could not answer: Ask 1 (RθJA of ATmega328P', 'The answer marks part of the request as one it could not answer: Ask 2 (maximum junction t']
+  holdout-2 (2026-11-22) Y28   0e06ad63 gaps: ["The answer marks part of the request as one it could not answer: Ask 1 ('In the supplied W"]
+  holdout-2 (2026-11-22) Y129  9256f31b gaps: ['The answer gives no result for ask 2: "what are the word limits for memoranda supporting o']
+  holdout-2 (2026-11-22) Y151  ced94993 gaps: ['The answer says ask 1 is not stated in the document. The only check behind that is a searc']
+  holdout-2 (2026-11-22) Y180  645126de gaps: ['The answer says ask 1 is not stated in the document. The only check behind that is a searc']
+  holdout-2 unpinned arm Y132  dd57e54c gaps: ['The answer gives no result for ask 3: "what is the combined interval from service of the c']
+
+SHIPPED CAUTIONS BY KIND (answers carrying one; an answer can carry several):
+  a figure on no page                                          52 of 658 (7.9%)         5 of 23 (21.7%)
+  two pages give different figures                             108 of 658 (16.4%)       3 of 23 (13.0%)
+  the vote did not run, compared nothing or had no majority    45 of 658 (6.8%)         3 of 23 (13.0%)
+  any caution of the vote                                      50 of 658 (7.6%)         5 of 23 (21.7%)
+  the lookup ran and nothing was read, or none ran             5 of 658 (0.8%)          0 of 23 (0.0%)
+
+THE TWO FREE CHECKS THE DELIVERY NEVER SURFACES (criteria_addressed, numbers_consistent):
+  criteria_addressed finds an ask missing    24 of 658 (3.6%)         3 of 23 (13.0%)  not right: [('X41', '567dc511', 'has a caution'), ('Y140', '1fd651cf', 'has a caution'), ('Y146', '4fb02bd5', 'has a caution')]
+  numbers_consistent finds a conflict        23 of 658 (3.5%)         2 of 23 (8.7%)  not right: [('X20', 'e69584da', 'comes clean'), ('Y149', '0dd1859c', 'has a caution')]
+
+HEDGING IN THE ANSWER'S OWN PROSE (analysis only; the harness never reads prose for control flow):
+  a hedging phrase present                                   168 of 658 (25.5%)       4 of 23 (17.4%)
+
+WORDS IN THE ANSWER TEXT:
+  shortest right answers: [70, 95, 131, 133, 166]   shortest not-right answers: [1, 135, 218, 397, 425]
+
+THE RECOMPUTE VOTE:
+  ran                                                        72 of 658 (10.9%)        4 of 23 (17.4%)
+  flagged a disagreement                                     7 of 658 (1.1%)          2 of 23 (8.7%)
+
+THE DECISION TIER'S OWN JUDGMENTS OF THE QUOTES (switch quote_answers; stored records read per answer, no call made):
+  answers with a stored judgment of at least one quote: 660 of 681
+                                                             right answers            not-right answers
+  some quote judged not to answer (the label as shipped)     632 of 658 (96.0%)       23 of 23 (100.0%)
+  NO QUOTE JUDGED TO STATE AN ANSWER (the rule)              114 of 658 (17.3%)       11 of 23 (47.8%)
+    ... and not a request judged a calculation               101 of 658 (15.3%)       9 of 23 (39.1%)
+    ... and the answer otherwise comes clean                 86 of 658 (13.1%)        4 of 23 (17.4%)
+  every judgment a confident no (none unsure)                37 of 658 (5.6%)         4 of 23 (17.4%)
+  the 11 not-right answers that come clean: 4 of 11 meet the rule
+  the shipped and gap cautions, then with the rule added (right answers marked / not-right answers marked): 173 of 658 (26.3%) / 12 of 23 (52.2%)  then  259 of 658 (39.4%) / 16 of 23 (69.6%)
+  EVERY ANSWER NOT RIGHT: its quotes judged yes/unsure/no, whether the rule holds and whether it comes clean:
+    holdout-1 (2026-11-17) X13   0d815e39 wrong  4/2/10  rule=no   comes clean=True
+    holdout-1 (2026-11-17) X19   fd11a3fa wrong  0/2/1  rule=YES  comes clean=True
+    holdout-1 (2026-11-17) X31   f19cb915 wrong  0/2/3  rule=YES  comes clean=True
+    holdout-1 (2026-11-17) X16   7c596ecb wrong  2/0/16  rule=no   comes clean=False
+    holdout-1 (2026-11-17) X34   a0b8e4d6 wrong  0/6/3  rule=YES  comes clean=True
+    holdout-1 (2026-11-17) X20   e69584da wrong  0/0/6  rule=YES  comes clean=True
+    holdout-1 (2026-11-17) X38   0708d1ab wrong  0/1/2  rule=YES  comes clean=False
+    holdout-1 (2026-11-17) X41   567dc511 wrong  0/0/9  rule=YES  comes clean=False
+    holdout-1 (2026-11-17) X12   d095157e wrong  2/5/6  rule=no   comes clean=False
+    acceptance (2026-11-17 H4    2da97790 partly 3/3/12  rule=no   comes clean=True
+    acceptance (2026-11-17 H12   8211c748 wrong  0/0/2  rule=YES  comes clean=False
+    acceptance (2026-11-17 H8    4d3012aa partly 2/4/6  rule=no   comes clean=True
+    acceptance (2026-11-17 P4    5980d8ef partly 6/3/9  rule=no   comes clean=True
+    acceptance (2026-11-17 P4    2cbf73d5 partly 5/3/10  rule=no   comes clean=True
+    eleven-question rerun  X12   fbdd46c5 wrong  0/1/5  rule=YES  comes clean=False
+    eleven-question rerun  X31   90e1534b wrong  0/7/1  rule=YES  comes clean=False
+    eleven-question rerun  X12   d35fd003 wrong  0/2/1  rule=YES  comes clean=False
+    holdout-2 (2026-11-22) Y68   c83af71b wrong  3/3/18  rule=no   comes clean=True
+    holdout-2 (2026-11-22) Y124  8eaf653e partly 3/3/18  rule=no   comes clean=True
+    holdout-2 (2026-11-22) Y149  0dd1859c partly 4/0/20  rule=no   comes clean=False
+    holdout-2 (2026-11-22) Y140  1fd651cf wrong  1/2/21  rule=no   comes clean=False
+    holdout-2 (2026-11-22) Y146  4fb02bd5 wrong  4/3/17  rule=no   comes clean=False
+    holdout-2 (2026-11-22) Y170  e596ec2f wrong  0/0/24  rule=YES  comes clean=False

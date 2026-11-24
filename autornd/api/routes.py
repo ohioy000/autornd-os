@@ -22,6 +22,7 @@ from autornd.engine.workflow import (
     WorkflowEngine, WorkflowNotOffered, offered_workflows, requested_workflow,
     workflow_path,
 )
+from autornd.graph import checks
 from autornd.models.workflow import PhaseResult, Workflow, WorkflowStatus
 from autornd.routing.openrouter import OpenRouterClient
 from autornd.routing.pins import tier_model
@@ -269,8 +270,10 @@ class WorkflowDetail(WorkflowSummary):
     # What a reader should know before relying on the answer, in plain
     # sentences: a vote that flagged or compared nothing, a lookup that did
     # not run or read nothing, a figure that is on no page read, two pages
-    # that give different figures for one thing. For people; nothing routes
-    # on it.
+    # that give different figures for one thing, and what the answer itself
+    # leaves open: an ask with no result, a part it says it could not answer,
+    # an ask it reports as not stated, a text too short to state its results.
+    # For people; nothing routes on it.
     cautions: list[str] = Field(default_factory=list)
     # What was checked against a source, in plain sentences (owner's ruling,
     # 2026-11-15): the asks whose figures stand in a passage found on its
@@ -702,6 +705,103 @@ def _cautions(vote: dict | None, sources: list[dict],
     return out
 
 
+# The asks that want a typed result: the implement prompt asks for one entry per ask of kind value or
+# verdict. A step, a constraint or a format is something to do, not something to state.
+RESULT_KINDS = ("value", "verdict")
+# The fewest words an answer's text can have, beside typed results, and still be a report. Set on the
+# 681 labelled answers of the four runs of 2026-11-17 to 2026-11-23 (docs/reviews/2026-11-23-caution-flaw.md):
+# the shortest of the 658 right ones has 70 words; the one answer that was the single word PLACEHOLDER
+# had 1, beside two typed results that were right, and shipped with no caution at all.
+MIN_ANSWER_WORDS = 30
+# The most of an ask's quote, and of the answer's own reason for leaving a part open, a caution prints.
+ASK_QUOTE_CHARS = 120
+BLOCKED_REASON_CHARS = 240
+
+
+def _largest_page_searched(verdicts: list[tuple[str, Any]]) -> dict[int, int]:
+    """For each ask, the character count of the largest page its proof of absence searched.
+
+    Read off the lookup's stored proofs (typed `ask` and `chars`), never from prose. A proof made on a
+    page of a few thousand characters stood beside two wrong "not stated" answers (72 and 1,770
+    characters; docs/reviews/2026-11-23-caution-v2-test.md), while the right ones were searched on
+    pages of 195 thousand characters and more, so the size is what a reader needs to weigh the claim;
+    it is shown, not judged: no cut is made on it here.
+    """
+    sizes: dict[int, int] = {}
+    for name, verdict in verdicts:
+        if name != "sources" or not isinstance(verdict, dict):
+            continue
+        for finding in verdict.get("findings") or []:
+            for proof in (finding.get("proofs") or []) if isinstance(finding, dict) else []:
+                try:
+                    ask, chars = int(proof["ask"]), int(proof["chars"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                sizes[ask] = max(sizes.get(ask, 0), chars)
+    return sizes
+
+
+def _gaps(verdicts: list[tuple[str, Any]], request: str) -> list[str]:
+    """What the answer itself leaves open, read off its typed fields.
+
+    The cautions above read the vote and the pages. These read the answer's own record, which the
+    delivery never read: an ask with no typed result and no claim that the document states none, a
+    part the answer says it could not answer (a `blocked_on` entry that names no ask is a note the
+    run completes on, and nothing showed it), an ask the answer reports as not stated, and a text
+    too short to state the results typed beside it. Free and deterministic; no prose is read for any
+    of them. An answer that typed no results is not told it left an ask without one: only an answer
+    asked for results (answer-and-recompute) has typed any, and an empty list cannot tell the two
+    apart.
+    """
+    implement = next((v for name, v in reversed(verdicts)
+                      if name == "implement" and isinstance(v, dict)), None)
+    if implement is None:
+        return []
+    proposals = next((v.get("asks") or [] for name, v in reversed(verdicts)
+                      if name == "asks" and isinstance(v, dict)), [])
+    anchored = checks.numbered_asks(proposals, request)
+    results = implement.get("results")
+    results = results if isinstance(results, list) else []
+    claims = [c for c in implement.get("not_stated") or [] if c is not None]
+    blocked = [b for b in implement.get("blocked_on") or [] if b is not None]
+    stated_none = checks.asks_named(claims, anchored)
+    out: list[str] = []
+    if results:
+        answered = checks.asks_named(results, anchored) | stated_none
+        open_asks = [ask for ask in anchored
+                     if ask["kind"] in RESULT_KINDS and ask["number"] not in answered]
+        # A result that names an ask which wants none (a constraint, a format, a step) is a numbering
+        # slip, not a missing result: the model counted its results from 1 and not the asks. Each such
+        # result stands in for one ask left open, and an answer is told it left asks open only when it
+        # left more of them than it had slips. Measured on the 442 fresh answers of 2026-11-23: all six
+        # right answers that were told "gives no result for ask N" had a constraint as ask 1 and one
+        # result numbered 1 per ask wanted, and every not-right answer told so had fewer results than
+        # asks wanted (docs/reviews/2026-11-23-final-tally.md).
+        slipped = len(checks.asks_named(
+            results, [a for a in anchored if a["kind"] not in RESULT_KINDS]))
+        if len(open_asks) > slipped:
+            for ask in open_asks:
+                out.append(f"The answer gives no result for ask {ask['number']}: "
+                           f"\"{ask['quote'][:ASK_QUOTE_CHARS]}\".")
+    for entry in blocked:
+        why = str((entry.get("why") if isinstance(entry, dict) else "") or "").strip()
+        out.append("The answer marks part of the request as one it could not answer"
+                   + (f": {why[:BLOCKED_REASON_CHARS]}" if why else "."))
+    searched = _largest_page_searched(verdicts)
+    for number in sorted(stated_none):
+        size = searched.get(number)
+        out.append(f"The answer says ask {number} is not stated in the document. The only check "
+                   f"behind that is a search of the pages read in full for the words a model "
+                   f"listed as the ones such an answer would be printed with, and it found "
+                   f"none."
+                   + (f" The largest page searched for it had {size:,} characters." if size else ""))
+    words = len(str(implement.get("summary") or "").split())
+    if results and words < MIN_ANSWER_WORDS:
+        out.append(f"The text of this answer is only {words} word{'' if words == 1 else 's'} "
+                   f"long, so it may not state the results listed for it.")
+    return out
+
+
 def _summarize(w: Workflow) -> WorkflowSummary:
     return WorkflowSummary(
         id=w.id,
@@ -909,7 +1009,8 @@ def _detail(w: Workflow) -> WorkflowDetail:
         sources=sources,
         cautions=_cautions(vote, sources, answer is not None, asked,
                            unconfirmed, differing,
-                           calculation=_judged_a_calculation(verdicts)),
+                           calculation=_judged_a_calculation(verdicts))
+        + (_gaps(verdicts, w.request) if answer is not None else []),
         confirmations=_confirmations(backed, answer is not None),
         id=w.id,
         request=w.request,
