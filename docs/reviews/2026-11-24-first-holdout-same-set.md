@@ -77,3 +77,17 @@ caution. X14 is the known stale-page weakness. X26 and X35 were made with the re
 - Which addition did what. The code, the model line-up and the provider's condition all moved since 2026-11-17.
 - That 95.4 percent is the harness's rate. The 17 units that delivered nothing are left out of it, and the old run's 4 were left out the same way.
 - That the first hold-out is a fresh set. It is the set the fixes were made against.
+
+## Addendum: the 16 provider-failed units asked once more, with the 504 retry (preregistered in `docs/preregistration-20261124-retry-check.md`)
+
+'$0.23' of a ceiling of '$0.45'. **All 16 delivered** (prediction: at least 14), read blind by one reader and by me on both non-right answers and 4 right ones
+drawn by seed, with no difference: **14 right, 2 partly** (X13: the second key item, that the 250 figure is the Art. 30(5) records derogation, is missing;
+X41: gives no thermal figure but does not commit that the datasheet states none, the known limit). Files: `docs/traces/20261124T-retry-check-MANIFEST.sha256`.
+
+- **The retry did not fire.** The log holds no "504 for" line: the provider's bad window was over, so the 16 delivered without it. **This run does not show
+  that the retry rescues a call.** It shows the retried code breaks nothing on 16 real calls. The retry stays measured only by its simulated tests;
+  the next time a 504 window occurs, the log line and the unit's outcome are what will say.
+- **With the 16 added to the 109** (a different hour, so a supplement, not the preregistered count): 118 right of 125 made (94.4 percent) and 118 of
+  126 counting X31's blocked draw (93.7 percent), against the bar of 119 and the old 113. The 31 never-failed questions still hold 4 not-right answers
+  (the re-asks of ten of them were all right); the eleven hold 3 more not-right answers (X13, X41 partly).
+- **Conclusion unchanged:** per answer made the harness is at 93 to 95 percent on this set both times; the preregistered bars of the main run stand as missed.
