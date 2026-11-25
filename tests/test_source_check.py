@@ -757,6 +757,82 @@ class TestWhatTheFetchCanRead:
             assert fetch.readable_address(url) == url
 
 
+class TestAPageThatIsAFrameIsNotAPage:
+    """Measured 2026-11-24 over the stored runs: legislation.gov.au and NVD addresses came back as a
+    script's frame of 72 to 2,081 characters, were recorded as fetched, and a word search of them
+    was reported as proof that the document does not state a figure. The document was never read."""
+
+    FRAME = ("<html><head><title>Instrument - Federal Register</title></head><body>"
+             "<app-root></app-root><noscript>Please enable JavaScript.</noscript></body></html>")
+    API = ("https://api.prod.legislation.gov.au/v1/documents/find(titleId='F2015L01438',"
+           "asAtSpecification='{v}',type='Primary',format='Pdf',uniqueTypeNumber=0,"
+           "volumeNumber=0,rectificationVersionNumber=0)")
+
+    @pytest.mark.parametrize("reader, version", [
+        ("https://www.legislation.gov.au/F2015L01438", "latest"),
+        ("https://www.legislation.gov.au/F2015L01438/latest/text", "latest"),
+        ("https://legislation.gov.au/F2015L01438/latest", "latest"),
+        ("https://www.legislation.gov.au/F2015L01438/asmade/text", "asmade"),
+        ("https://www.legislation.gov.au/f2015l01438/ASMADE", "asmade"),
+    ])
+    def test_an_instrument_is_read_through_the_registers_document_route(self, reader, version):
+        assert fetch.readable_address(reader) == self.API.format(v=version)
+
+    @pytest.mark.parametrize("url", [
+        "https://www.legislation.gov.au/F2015L01438/2023-03-02/text",   # a dated compilation
+        "https://www.legislation.gov.au/",
+        "https://www.legislation.gov.au/search?q=F2015L01438",
+        "https://example.org/F2015L01438/latest",
+    ])
+    def test_a_form_the_route_does_not_cover_is_left_alone(self, url):
+        assert fetch.readable_address(url) == url
+
+    def test_a_cve_record_is_read_through_the_nvd_api(self):
+        api = "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2021-44228"
+        for url in ("https://nvd.nist.gov/vuln/detail/CVE-2021-44228",
+                    "https://nvd.nist.gov/vuln/detail/cve-2021-44228?ci%3D2558",
+                    "https://nvd.nist.gov/vuln/detail/CVE-2021-44228#vulnCurrentDescriptionTitle"):
+            assert fetch.readable_address(url) == api
+        assert fetch.readable_address("https://nvd.nist.gov/vuln/search") == (
+            "https://nvd.nist.gov/vuln/search")
+
+    async def test_an_instrument_is_read_from_its_pdf(self, monkeypatch):
+        reader = "https://www.legislation.gov.au/F2015L01438/latest/text"
+        api = self.API.format(v="latest")
+        seen: list[str] = []
+        text = "The maximum field strength is 5 mW at 868 MHz. " * 8
+        monkeypatch.setattr(fetch, "_transport", _served({api: _pdf(text)}, seen))
+        source = await fetch.fetch_source(reader)
+        assert source.status == "fetched" and seen == [api]
+        assert "5 mW at 868 MHz" in source.text and source.url == reader
+
+    async def test_a_frame_the_script_fills_is_not_read(self, monkeypatch):
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(self.FRAME)}))
+        source = await fetch.fetch_source(PAGE)
+        assert source.status == "failed" and not source.fetched and source.text == ""
+        assert "shell" in source.reason
+
+    async def test_a_page_the_script_has_filled_is_a_page(self, monkeypatch):
+        full = self.FRAME.replace("<app-root></app-root>",
+                                  "<app-root><p>" + "The limit is stated here. " * 200
+                                  + "</p></app-root>")
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(full)}))
+        source = await fetch.fetch_source(PAGE)
+        assert source.fetched and fetch.SHELL_MAX_CHARS < len(source.text)
+
+    async def test_a_short_page_with_no_frame_is_a_page(self, monkeypatch):
+        short = "<html><body><p>Charge each cell to 3.65 V.</p></body></html>"
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(short)}))
+        assert (await fetch.fetch_source(PAGE)).fetched
+
+    async def test_a_frame_is_recorded_as_unfetched_and_proves_nothing(self, monkeypatch):
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(self.FRAME)}))
+        finding, = await research_gaps(
+            _client(_documents((PAGE, PASSAGE))), "a radio", ["The EU 868 MHz limit"])
+        quote, = finding.quotes
+        assert quote.status == "unfetched" and "shell" in quote.reason
+
+
 class TestTheSourcesAreReturned:
     async def test_a_lookup_record_names_each_page_and_what_was_found(self, monkeypatch):
         monkeypatch.setattr(fetch, "_transport",
