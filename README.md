@@ -458,6 +458,8 @@ The suite takes about 90 seconds to 3 minutes. It makes no network call and spen
 - **With no key set, a same-host proxy that does not pass `X-Forwarded-For` serves everyone.** The loopback rule reads the caller's address. Set `API_KEY` or `JWT_SECRET` whenever anything other than this machine can reach the server.
 - **Some sites refuse to be read.** A page behind a login or a challenge, or a scanned PDF, stays unread, and the delivery says so. A page that does not answer within its time limit is unread too, and an answer built on few pages was wrong more often in our measurements.
 - **On new questions it is less often right than a frontier model asked directly,** and its misses scatter: the same question can be right on one run and wrong on the next. See `docs/MODELS.md`.
+- **It can say "not stated" about something the sources do state.** When a page was fetched empty or only partly read, or a figure sits under other words, a question can come back as unanswered. The delivery carries a caution that says the only check behind it was a word search of the pages read in full; it is a flag, not a stop.
+- **More machinery has not been shown to make it more accurate.** Measured on the same questions before and after the additions, the rate per answer made stayed within noise; what moved it was reading the right page (a page that was an empty frame, a host that never answered, a stale edition), not a tier or a pin. Read the records before trusting a figure.
 - **The recompute vote cannot see an omission,** nor an error every sample shares. It is off unless a request is judged to need a calculation.
 - **Word-matching checks cannot see negation or paraphrase.** That is why they are notes.
 - **No code execution.** AutoRnD produces text.
