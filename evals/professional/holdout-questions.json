@@ -1,6 +1,6 @@
 {
- "version": "professional-holdout-1.1",
- "status": "Approved by the owner on 2026-11-17 and frozen; version 1.1 of 2026-11-25 removes X41 on the owner's instruction (its key names the datasheet PDF, which states no thermal figure, while Microchip's online documentation for the same part does). A change is a new version the owner ratifies (D44). The set as signed is evals/professional/holdout-questions-v1.json.",
+ "version": "professional-holdout-1",
+ "status": "Approved by the owner on 2026-11-17 and frozen. A change is a new version the owner ratifies (D44).",
  "drafted": "2026-11-17",
  "passages_verified_against_live_pages": "2026-11-17",
  "purpose": "A hold-out set: questions written after the harness was tuned, by authors who never saw its answers, across fields the other sets do not cover.",
@@ -1425,6 +1425,32 @@
    "commonly_confused": "Using the thermochemical Btu (Btu_th/h = 2.928 751 E-01 W, giving about 35 145 W for 10 tons) or the 3.5 kW-per-ton rule of thumb (35 kW)."
   },
   {
+   "id": "X41",
+   "field": "Microcontroller datasheet, Microchip ATmega328P (DS40002061B)",
+   "difficulty": [
+    "trap: document states no such value",
+    "plain-looking lookup"
+   ],
+   "question": "From Microchip's ATmega48A/PA/88A/PA/168A/PA/328/328P complete datasheet (DS40002061B, 09/2020), what is the junction-to-ambient thermal resistance (in degC/W) of the ATmega328P in the 28-pin PDIP package, and what maximum junction temperature or total power dissipation does the datasheet specify?",
+   "sources": [
+    {
+     "url": "https://ww1.microchip.com/downloads/aemDocuments/documents/MCU08/ProductDocuments/DataSheets/ATmega48A-PA-88A-PA-168A-PA-328-P-DS-DS40002061B.pdf",
+     "passage": "DC Current per I/O Pin . . . . . . . . . . . . . . . . . . 40.0mA"
+    },
+    {
+     "url": "https://ww1.microchip.com/downloads/aemDocuments/documents/MCU08/ProductDocuments/DataSheets/ATmega48A-PA-88A-PA-168A-PA-328-P-DS-DS40002061B.pdf",
+     "passage": "DC Current VCC and GND Pins. . . . . . . . . . . 200.0mA"
+    }
+   ],
+   "key": [
+    {
+     "item": "Junction-to-ambient thermal resistance, maximum junction temperature, maximum power dissipation",
+     "answer": "None of these is stated: the datasheet gives no thermal resistance, junction-temperature or power-dissipation value for any package; a search of its full text for 'junction', 'thermal resistance', 'dissipation' and degC/W finds none"
+    }
+   ],
+   "commonly_confused": "Quoting a theta-JA figure from another vendor's or another family's datasheet or a distributor page; this Microchip datasheet publishes none, so the safe-power budget has to be derived from the per-pin and VCC/GND current ratings."
+  },
+  {
    "id": "X42",
    "field": "Power MOSFET datasheet, Infineon IRF540NPbF",
    "difficulty": [
@@ -1458,17 +1484,6 @@
     }
    ],
    "commonly_confused": "Using 130 W at every temperature, or the junction-to-ambient figure (62 degC/W) that applies to free-air operation without a heatsink and is a different limit."
-  }
- ],
- "changes": [
-  {
-   "version": "professional-holdout-1.1",
-   "date": "2026-11-25",
-   "removed": [
-    "X41"
-   ],
-   "reason": "key-scope: the keyed PDF has no thermal figure, a real page for the same part does",
-   "previous": "evals/professional/holdout-questions-v1.json"
   }
  ]
 }
