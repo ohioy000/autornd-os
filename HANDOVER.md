@@ -838,6 +838,8 @@ surface, and the tiers nobody has measured. §5.
 
 **No failing unit tests — 2710/2710 pass.** Everything below is a live-behaviour
 
+**Accuracy, as measured and as it may be said (2026-11-25).** The first hold-out asked again with every addition on read 104 of 126 right (82.5 percent) against 113 of 126 (89.7 percent) before; 16 of the 17 missing answers were provider failures, and of the answers made 104 of 109 (95.4 percent) were right against 113 of 122 (92.6 percent), p = 0.27 one-sided. So the data show no clear gain and no clear loss from the additions; per answer made the harness sits at 93 to 95 percent on this set both times, and the second hold-out's figure is the fresh one. The failures traced since were retrieval, not reasoning, and are fixed at their roots: an empty script frame read as a page, a fetch that hung on an IPv6 address first, a wrong edition of a rule. Record: `docs/reviews/2026-11-24-first-holdout-same-set.md` on the evals record branch, and the 2026-11-25 reviews there.
+
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were
 closed by discovering the premise was wrong rather than by fixing what was
